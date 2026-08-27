@@ -78,6 +78,42 @@ that was never a judgement call.
     `horizon_weeks` to a positive integer. Enforced by
     `task lint-roadmap-complexity` (plate-token detection skipped when
     `horizon_weeks > 0`).
+17b. **A carried deferral is annotated, or it blocks archival forever.**
+    `archive_completed_roadmaps` used to refuse any roadmap with
+    `count_deferred > 0` unconditionally. Three of the four council-decidable
+    dispositions in the preservation test — carry to a follow-up, merge into
+    existing work, restore to open — leave the `[~]` glyph in place, so a
+    genuinely UNEXECUTABLE item (one needing elapsed time rather than effort)
+    had no council-reachable path to an archived roadmap. The only glyph that
+    cleared the gate was `[-]`, which is owner-reserved AND pinned to "won't
+    happen at all"; using it for a carried item makes cancellation and transfer
+    indistinguishable to every later reader.
+    Since 2026-08-27 (AI council, 2 seats, convergent) a `[~]` step may carry
+    a machine-readable resolution, inside the step's own block:
+    ```markdown
+    - [~] **4.2 Measure the false-positive rate.**
+          <!-- deferred-resolution: carried-to=road-to-some-followup -->
+    ```
+    `merged-into=<slug>` is the second accepted form, for a merge into
+    pre-existing work rather than a new follow-up. `[-]` stays cancellation-only.
+    **Validation fails closed at every step** — a bare `[~]`, a malformed
+    annotation, a destination that does not exist, a destination in `archive/`
+    or `skipped/`, and (for `carried-to`) a destination with no
+    `parent_roadmap: <source-slug>` back-link each refuse the archive and print
+    which door closed. `merged-into` needs no back-link but the destination must
+    still mention the source slug. An annotation is cheap to write, so it is
+    made expensive to satisfy.
+    **Not checked, and stated rather than implied:** that the destination's copy
+    of the criterion is faithful. Both council seats asked for stable item
+    identity over verbatim text matching, and neither exists today — the
+    back-link plus the source mention is the strongest link the sweep can verify
+    without inventing an identity scheme, and the human reviewing the carry is
+    still the one reading it.
+    Eligibility differs from representation: an item that is merely
+    **unfinished** (needs effort nobody spent) stays `[ ]`. Carrying it would be
+    scope laundering. Only an item that **cannot** be executed now qualifies.
+    Contract: `agents/roadmaps/*` · `src/agent-src/scripts/archive_completed_roadmaps.ts`
+    § `deferralProblems` · `tests/scripts/archive_deferral_resolution.test.ts`.
 17. **Follow-up roadmaps from deferred items carry `parent_roadmap`.**
     When a roadmap closes with `[~]` deferred items, the
     [`roadmap-management`](../skills/roadmap-management/SKILL.md) skill
