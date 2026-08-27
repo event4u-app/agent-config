@@ -58,6 +58,12 @@ export interface DimensionResult {
     grade: Grade | null;
     /** Required when `grade` is null: why detection is impossible, not merely absent. */
     notDetectable?: string;
+    /**
+     * Facts observed without being scored. An empty array means "nothing was
+     * observed", which is NOT the same as a failing grade and NOT the same as
+     * `notDetectable` — the three states are kept apart deliberately.
+     */
+    observations?: string[];
     evidence: string;
 }
 
@@ -174,17 +180,38 @@ export function grade(root: string): Matrix {
         evidence: testCfg ? 'a test-runner config is present' : 'no test-runner config',
     });
 
-    // 3. test strength — mutation or property-based
+    // 3. advanced testing signals — OBSERVED, never graded.
+    //
+    // This dimension used to be `test-strength`, graded on config presence. It
+    // was unscored on 2026-08-27: a dormant `stryker.conf` and an unused
+    // `fast-check` dependency both scored, while a rigorous conventional suite
+    // with neither scored 0 — so the number ordered targets by ADOPTION and
+    // read as EFFECTIVENESS. Detection is kept because presence is a real fact
+    // about the repository; the grade is dropped because the inference from it
+    // was not. Three epistemic states are held apart on purpose: a signal was
+    // observed, no signal was observed, and effectiveness is not evaluable at
+    // all — the last is permanent under static inspection and is why
+    // `notDetectable` is emitted whether or not any observation fires.
     const mutation =
         _glob1(root, '.', /^stryker\.conf\./) || _exists(root, 'infection.json', 'infection.json.dist') ||
         /\[tool\.mutmut\]/.test(pyproject) || /\[mutmut\]/.test(_readIfAny(root, 'setup.cfg'));
     const property =
         /fast-check/.test(_readIfAny(root, 'package.json')) || /hypothesis/.test(pyproject + _readIfAny(root, 'requirements.txt'));
+    const mutationCi = mutation && _ciBlocks(ci, 'stryker', 'infection', 'mutmut');
     dims.push({
-        id: 'test-strength',
-        label: 'test strength',
+        id: 'advanced-testing-signals',
+        label: 'advanced testing signals',
         knockout: false,
-        grade: _graded(mutation || property, _ciBlocks(ci, 'stryker', 'infection', 'mutmut')),
+        grade: null,
+        observations: [
+            ...(mutation ? ['mutation-testing-config-detected'] : []),
+            ...(property ? ['property-testing-library-detected'] : []),
+            ...(mutationCi ? ['mutation-testing-ci-enforcement-detected'] : []),
+        ],
+        notDetectable:
+            'test effectiveness — static config and dependency signals cannot establish mutation sensitivity, ' +
+            'property quality, or whether either was ever executed. Outcome evidence would be needed: survivor and ' +
+            'timeout counts from a real mutation run, or executed property-test results.',
         evidence: mutation ? 'mutation config present' : property ? 'property-based library present' : 'neither mutation nor property testing',
     });
 
@@ -319,6 +346,10 @@ export function renderMatrix(m: Matrix): string {
     for (const d of m.dimensions) {
         const val = d.grade === null ? `not detectable — ${d.notDetectable ?? ''}` : `${String(d.grade)} ${GRADE_WORD[d.grade] ?? ''}`;
         L.push(`  ${d.knockout ? '!' : ' '} ${d.label.padEnd(28)} ${val}`);
+        // Observations are printed under their dimension, never folded into the
+        // level. An unscored dimension that printed nothing would read as an
+        // omission rather than as a deliberate refusal to grade.
+        for (const o of d.observations ?? []) L.push(`  ${' '.repeat(31)} observed: ${o}`);
     }
     L.push('');
     L.push('  ! = knockout dimension. The level is the MINIMUM over knockouts;');

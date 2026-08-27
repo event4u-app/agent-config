@@ -70,23 +70,24 @@
     "mutation-sensitivity": {
       "axis": "target",
       "owner_surface": "src/scripts/grade_target_readiness.ts",
-      "projection": "test-strength",
+      "projection": "advanced-testing-signals",
       "state": "degraded",
       "limitations": [
         "detection only — the grader reads stryker/infection/mutmut config presence and never runs a mutation pass",
+        "the projected dimension is UNSCORED as of 2026-08-27 — `advanced-testing-signals` emits `grade: null` plus an `observations` array, because config presence orders targets by adoption and was being read as effectiveness",
         "no universal min-MSI constant exists here and none may be added (AC-8)",
         "a tool-assisted rig for THIS package was refused on measured grounds by the sibling roadmap"
       ],
       "rationale": "Config presence is detected; sensitivity is never measured by this tree. For AC's own suite the manual control-inversion probe in testing-anti-patterns is the substitute, and it is a named substitute rather than a silent one.",
       "evidence": "src/skills/testing-anti-patterns/SKILL.md:185 — 'No mutation-testing rig required: comment the control out, run that one spec, put it back.' · agents/roadmaps/archive/road-to-test-independence-and-mutation-evidence.md — rig REFUSED (measured), 10 hand probes in minutes",
-      "revisit_if": "a mutation adapter ships that runs a changed-surface pass and reports survivors and timeouts separately"
+      "revisit_if": "a mutation adapter ships that runs a changed-surface pass and reports survivors and timeouts separately — but read this as a DESCRIPTION of what would lift the degraded state, never as authorization to build one. Council 2026-08-27 (anthropic + openai, 2/2 convergent) applied the mechanism-match test and found a changed-surface adapter to be the SAME mechanism the sibling roadmap measured and refused; changed-surface narrows the scope, which weakens the automation case rather than strengthening it. The governing condition is that refusal's own: a survivor population too large to hand-probe. Nothing has measured one."
     },
     "property-test": {
       "axis": "target",
       "owner_surface": "src/scripts/grade_target_readiness.ts",
-      "projection": "test-strength",
+      "projection": "advanced-testing-signals",
       "state": "available",
-      "rationale": "fast-check and Hypothesis are probed as property-based libraries.",
+      "rationale": "fast-check and Hypothesis are probed as property-based libraries. Probed and reported, never graded: since 2026-08-27 the projected dimension emits the observation `property-testing-library-detected` and no grade, because a declared dependency does not establish that any property test was written or run.",
       "evidence": "src/scripts/grade_target_readiness.ts — 'fast-check' and 'hypothesis' tokens present; asserted > 0 in the full fixture",
       "revisit_if": "the probe stops distinguishing a present property library from an absent one"
     },
