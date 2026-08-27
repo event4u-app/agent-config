@@ -20,6 +20,7 @@ import {
   splitFences,
   ledgerFileFor,
   pendingFileFor,
+  humanTypedThisTurn,
   run as ledgerRun,
   STATE_FILE,
   type GitOp,
@@ -558,5 +559,97 @@ describe("concurrent sessions", () => {
       }),
     );
     expect(preTool("gh pr merge 1 --merge", "mine")).toBe(0);
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// A notification is not a user turn.
+//
+// The payload fixture below is quoted from a REAL capture, not from
+// documentation: `agents/runtime/.agent-chat-history` records prompts tagged
+// `"source": "hook:claude:UserPromptSubmit"` — what the hook received, not what
+// the host stored in its transcript. 9 of the 16 hook-sourced user records in
+// this project's capture begin with `<task-notification>`.
+// ---------------------------------------------------------------------------
+
+const MACHINE_WAKE = `<task-notification>
+<task-id>a768c2951088a0b2c</task-id>
+<tool-use-id>toolu_01V1b9MmjHycdGkp7tRidadq</tool-use-id>
+<status>completed</status>
+<summary>Agent "Screen roadmap group A" finished</summary>
+</task-notification>`;
+
+describe("humanTypedThisTurn — the wake predicate", () => {
+  it("a captured task notification is not a human turn", () => {
+    expect(humanTypedThisTurn(MACHINE_WAKE)).toBe(false);
+  });
+
+  it("leading whitespace does not smuggle a wake past the prefix match", () => {
+    expect(humanTypedThisTurn(`\n\n  ${MACHINE_WAKE}`)).toBe(false);
+  });
+
+  it("a typed turn is a human turn", () => {
+    expect(humanTypedThisTurn("push it")).toBe(true);
+    expect(humanTypedThisTurn("/roadmap:next und erstelle am ende einen PR")).toBe(true);
+  });
+
+  it("UNKNOWN ANSWERS YES — an unrecognised payload clears, never retains", () => {
+    // The safe direction, asserted rather than intended. A predicate that
+    // answered "machine" here would retain authorization across turns: a
+    // strictly worse failure than the one being repaired, and a silent one.
+    expect(humanTypedThisTurn("<some-future-host-envelope>whatever</some-future-host-envelope>")).toBe(true);
+    expect(humanTypedThisTurn("{\"role\":\"user\"}")).toBe(true);
+  });
+
+  it("a human QUOTING a notification keeps their turn", () => {
+    // Prefix-matched on purpose. Matching anywhere would make the question
+    // "why did this <task-notification> clear my authorization?" clear it again.
+    expect(
+      humanTypedThisTurn(`why did this ${MACHINE_WAKE} clear my authorization?`),
+    ).toBe(true);
+  });
+});
+
+describe("a machine wake leaves per-turn state standing", () => {
+  it("the ledger file is untouched — same content, same mtime", async () => {
+    submit("push it");
+    const file = path.join(tmp, ledgerFileFor("s1"));
+    expect(ledger().authorized).toContain("push");
+    const before = fs.readFileSync(file, "utf8");
+    const beforeStat = fs.statSync(file).mtimeMs;
+
+    // mtime has 1 ms resolution on some filesystems; make a rewrite visible.
+    await new Promise((r) => setTimeout(r, 15));
+    submit(MACHINE_WAKE);
+
+    expect(fs.readFileSync(file, "utf8")).toBe(before);
+    expect(fs.statSync(file).mtimeMs).toBe(beforeStat);
+    expect(ledger().authorized).toContain("push");
+  });
+
+  it("the pending refusal survives, so the user's later `ja` still confirms", () => {
+    // takePending() rmSync's the record BEFORE any affirmative or origin check,
+    // so a notification arriving between a refusal and the confirmation used to
+    // delete the record and make the `ja` confirm nothing.
+    const pendingPath = path.join(tmp, pendingFileFor("s1"));
+    fs.mkdirSync(path.dirname(pendingPath), { recursive: true });
+    fs.writeFileSync(
+      pendingPath,
+      JSON.stringify({ op: "push", session_id: "s1", refused_at: new Date().toISOString() }),
+    );
+
+    submit(MACHINE_WAKE);
+    expect(fs.existsSync(pendingPath), "the wake consumed the pending refusal").toBe(true);
+
+    submit("ja");
+    expect(ledger().authorized).toContain("push");
+  });
+
+  it("a human turn still replaces the ledger — the fix does not become retention", () => {
+    submit("push it");
+    expect(ledger().authorized).toContain("push");
+    submit("what does this function do?");
+    expect(ledger().authorized).not.toContain("push");
   });
 });

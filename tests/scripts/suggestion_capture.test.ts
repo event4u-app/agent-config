@@ -389,4 +389,55 @@ describe('main() under the dispatcher call shape', () => {
         expect(CONCERN_REGISTRY[SCRIPT]!(['--platform', 'claude'])).toBe(0);
         expect(fs.existsSync(path.join(root, LATCH_REL))).toBe(false);
     });
+
+    // ---------------------------------------------------------------------------
+    // A machine wake must not consume the latch.
+    //
+    // Same defect and same predicate as the git-authorization ledger: a background
+    // task notification arrives on `user_prompt_submit`, and the latch is
+    // consume-once. Without the guard the notification eats the latch, and the
+    // user's actual pick then classifies as `other` — the instrument records a miss
+    // that never happened, which is worse than recording nothing.
+    // ---------------------------------------------------------------------------
+    describe('a machine wake does not consume the suggestion latch', () => {
+        const MACHINE_WAKE = [
+            '<task-notification>',
+            '<task-id>a768c2951088a0b2c</task-id>',
+            '<status>completed</status>',
+            '</task-notification>',
+        ].join('\n');
+
+        it('the latch survives a notification, and the later pick still records option_n', () => {
+            enable();
+            writeLatch(root, { prompt_id: 'p1', options_count: 3, at: Date.now() });
+
+            setHookStdinOverride(
+                envelope('user_prompt_submit', 'UserPromptSubmit', {
+                    hook_event_name: 'UserPromptSubmit',
+                    cwd: root,
+                    prompt_id: 'p2',
+                    prompt: MACHINE_WAKE,
+                }),
+            );
+            expect(CONCERN_REGISTRY[SCRIPT]!(['--platform', 'claude'])).toBe(0);
+            expect(fs.existsSync(path.join(root, LATCH_REL)), 'the wake consumed the latch').toBe(true);
+            expect(fs.existsSync(path.join(root, SINK_REL)), 'the wake wrote a record').toBe(false);
+
+            setHookStdinOverride(
+                envelope('user_prompt_submit', 'UserPromptSubmit', {
+                    hook_event_name: 'UserPromptSubmit',
+                    cwd: root,
+                    prompt_id: 'p3',
+                    prompt: '1',
+                }),
+            );
+            expect(CONCERN_REGISTRY[SCRIPT]!(['--platform', 'claude'])).toBe(0);
+            const rec = JSON.parse(
+                fs.readFileSync(path.join(root, SINK_REL), 'utf8').trim(),
+            ) as Record<string, unknown>;
+            expect(rec['turn_classification']).toBe('option_n');
+            expect(rec['evidence_class']).toBe('latch-consumed');
+        });
+    });
+
 });

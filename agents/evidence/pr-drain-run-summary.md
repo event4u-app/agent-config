@@ -13,6 +13,25 @@ choice: a background wait produces a task notification, the notification counts
 as a prompt, and the prompt rewrites the git-authorization ledger to
 `authorized: []` mid-run.
 
+> **RETIRED 2026-08-27 — the foreground-wait requirement was a workaround, and
+> the defect it routed around is repaired.** The replacement semantics were
+> never the bug: `git_authorization_hook.ts` replaces the ledger every user turn
+> on purpose, so a consent given three turns ago cannot authorize today's push.
+> What was broken is the INPUT CLASSIFICATION — a background task notification
+> arrives on the same `user_prompt_submit` slot as a typed prompt, and the
+> writer could not tell them apart. The repair is a predicate,
+> `humanTypedThisTurn` in `src/scripts/_lib/machine_wake.ts`: a machine wake
+> returns before any per-turn record is touched, and an unrecognised payload
+> falls back to clearing, never to retaining.
+>
+> Making the ledger *durable* — the shape the source request asked for — would
+> have broken the single-turn property to hide a symptom of a different bug.
+>
+> Landed by `road-to-turn-bound-authorization-integrity`; see that roadmap for
+> the captured payload evidence, the sensitivity proof, and the sibling sweep
+> that found the same defect in the suggestion-capture latch. **Background waits
+> are safe again**; the two authorization stalls recorded below are historical.
+
 ## The run
 
 | # | Queue pos | Sync conflicts + resolution class | CI iterations | Disposition |

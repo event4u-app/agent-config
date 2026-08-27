@@ -102,7 +102,7 @@ new store, not a new slot, and not a new contract.
 > all 561 measured occurrences. The "no field differs, so stop here" branch does
 > not fire. Phase 1 is now confirmation and capture, not discovery.
 
-- [ ] **1.1 Capture the raw payload of a machine wake.** Record one
+- [x] **1.1 Capture the raw payload of a machine wake.** Record one
       `user_prompt_submit` payload produced by a background task notification and
       one produced by a typed human prompt, both to `agents/runtime/tmp/`, and
       diff their fields.
@@ -111,7 +111,22 @@ new store, not a new slot, and not a new contract.
       transcript measurement is over stored turns; this confirms the same
       element survives into the payload the hook actually receives, which is the
       one thing a transcript cannot show.
-- [ ] **1.2 State the discriminator, or state that there is none.** Write the
+
+      **Done, and from a stronger source than planned.** The capture is not a
+      transcript read: `agents/runtime/.agent-chat-history` records prompts
+      tagged `"source": "hook:claude:UserPromptSubmit"` — the text the hook
+      RECEIVED. Both payloads written to `agents/runtime/tmp/`
+      (`payload-machine-wake.json`, `payload-human-turn.json`; the directory is
+      gitignored, so the durable record is here). **9 of 16** hook-sourced user
+      records in this project's capture are machine wakes. The machine payload
+      opens with the literal `<task-notification>` and carries `<task-id>`,
+      `<tool-use-id>`, `<status>`, `<summary>`; the human one
+      (`/roadmap:next und erstelle am ende einen PR…`) carries none of them.
+
+      This answers risk 1 in the direction the register hoped: the element does
+      survive into the payload the hook receives, so the discriminator is not a
+      transcript artefact.
+- [x] **1.2 State the discriminator, or state that there is none.** Write the
       field and value that separates the two, in one sentence, into the roadmap
       itself.
       verify: the sentence names a field that appears in the 1.1 capture, quoted
@@ -119,9 +134,18 @@ new store, not a new slot, and not a new contract.
       transcript measurement above — a payload key and a stored-turn key are not
       guaranteed to be the same key.
 
+
+      **The discriminator:** the prompt text, after `trimStart()`, begins with
+      the literal `<task-notification>`.
+
+      Quoted from `agents/runtime/tmp/payload-machine-wake.json` — a payload the
+      hook received — and not from the 2026-08-27 transcript measurement, which
+      1.2 forbids for the reason risk 1 names: a stored-turn key and a payload
+      key are not guaranteed to be the same key. Here they happen to agree, and
+      that agreement is a measurement rather than an assumption.
 ## Phase 2 — Classify the wake, and leave a machine wake's ledger alone
 
-- [ ] **2.1 Add the predicate.** A single exported function in
+- [x] **2.1 Add the predicate.** A single exported function in
       `git_authorization_hook.ts` answering "did a human type this turn?", with
       the unknown case answering **yes** — an unrecognised payload must fall back
       to today's behaviour (clear the ledger), never to retention, because a
@@ -129,23 +153,69 @@ new store, not a new slot, and not a new contract.
       prevent.
       verify: `npm run typecheck` is clean and the function's unknown-input case
       is covered by a unit test asserting the clearing branch.
-- [ ] **2.2 Wire it.** On a machine wake, the writer leaves the existing ledger
+
+      **Done, in `src/scripts/_lib/machine_wake.ts` rather than in the hook** —
+      the sweep at 3.2 found a second consumer, and a predicate private to one
+      concern would have repaired one and left the other. `git_authorization_hook`
+      re-exports it so its own callers keep one import site.
+
+      **Unknown answers YES**, and the direction is asserted rather than
+      intended: a dedicated test drives an unrecognised envelope shape and a
+      bare JSON object and requires `true`, so a payload nobody has seen yet
+      falls back to clearing. `npm run typecheck` clean.
+
+      **Prefix, not substring** — a care the step did not name and the tests do.
+      A human asking *"why did this `<task-notification>` clear my
+      authorization?"* keeps their turn; substring matching would have cleared
+      the very turn they were asking about.
+- [x] **2.2 Wire it.** On a machine wake, the writer leaves the existing ledger
       untouched instead of replacing it; on a human turn nothing changes.
       verify: a test that drives the writer with the 1.1 machine payload and
       asserts the ledger file's mtime and content are unchanged.
-- [ ] **2.3 Prove the test is sensitive.** Neutralise the predicate so it always
+
+      **Done, as an early return before ANY per-turn record is touched**, rather
+      than as a branch around the ledger write. That is the point: the
+      misclassification is a property of the slot, so any per-turn state added
+      to this function later inherits the protection instead of having to
+      remember it (risk 4).
+
+      The test asserts the ledger file's **content and mtime** are both
+      unchanged across a wake, with a 15 ms sleep first so a rewrite would be
+      visible on a 1 ms-resolution filesystem.
+- [x] **2.3 Prove the test is sensitive.** Neutralise the predicate so it always
       answers "human", observe 2.2 fail, restore it, observe it pass.
       verify: both observations are recorded in the step's completion note. A
       test never seen red has unknown sensitivity.
 
+
+      **Both observations recorded.** Neutralising the predicate to always
+      answer "human" turns **4 tests red**:
+
+      | test | red when neutralised |
+      |---|---|
+      | a captured task notification is not a human turn | ✅ |
+      | leading whitespace does not smuggle a wake past the prefix match | ✅ |
+      | the ledger file is untouched — same content, same mtime | ✅ |
+      | the pending refusal survives, so the user's later `ja` still confirms | ✅ |
+
+      Restored: 69/69 pass. The sibling test in
+      `tests/scripts/suggestion_capture.test.ts` was neutralised separately and
+      also goes red, then green.
 ## Phase 3 — Retire the workaround, in writing
 
-- [ ] **3.1 Record the repair where the workaround is recorded.** Amend
+- [x] **3.1 Record the repair where the workaround is recorded.** Amend
       `agents/evidence/pr-drain-run-summary.md` with a dated line stating that
       the foreground-wait requirement was a workaround for this defect and what
       replaced it.
       verify: the file names this roadmap and the commit that landed Phase 2.
-- [ ] **3.2 Check for siblings.** Grep the tree for other state that a
+
+      **Done.** `agents/evidence/pr-drain-run-summary.md` carries a dated
+      `RETIRED 2026-08-27` block at the point the foreground-wait requirement is
+      stated, naming this roadmap, the predicate's file, and the reason the
+      requested repair (durability) was the wrong one. It also says plainly that
+      background waits are safe again and the two recorded stalls are
+      historical.
+- [x] **3.2 Check for siblings.** Grep the tree for other state that a
       `user_prompt_submit` concern replaces or consumes per turn and would be
       cleared by the same wake. **One sibling is already confirmed** and is the
       floor, not the answer: `takePending` (`git_authorization_hook.ts:427`,
@@ -154,7 +224,29 @@ new store, not a new slot, and not a new contract.
       verify: the count and the file list are reported, zero included, and the
       count is ≥ 1 because the sibling above is known. One instance is a sample,
       not the population.
-- [ ] **3.3 Decide whether the pending path takes the same predicate.** The
+
+      **Swept: 11 sibling concerns on `user_prompt_submit`, 1 affected.**
+
+      | concern | script | verdict |
+      |---|---|---|
+      | suggestion-capture | `hooks/suggestion_capture_hook.ts` | **AFFECTED** — consumes a consume-once latch on this slot |
+      | rule-inject | `hooks/rule_inject_hook.ts` | not affected — `clearSeen` fires on `pre_compact` only |
+      | session-register | `session_register_hook.ts` | not affected — deletes a stale claim, not per-turn state |
+      | language-mirror | `language_mirror_hook.ts` | not affected — a legacy migration, a self-healing pin-lost marker, a stale lock |
+      | chat-history | `chat_history.ts` | not affected — tmp cleanup and an explicit reset entry point |
+      | before-complete · minimal-safe-diff · delegation-nudge · skill-route · session-canary · self-repair | — | not affected — no per-turn deletion |
+
+      Plus the in-file instance the roadmap already named: `takePending`. So the
+      count is **2 affected sites in 2 files**, one of them this concern's own —
+      above the ≥ 1 floor AC-4 sets, and the floor was right to exist.
+
+      **The sibling is fixed here rather than reported and left.** Four lines
+      plus its test, same defect class, same predicate, in the same change —
+      inside `active-remediation`'s fix-now bar. Leaving a known-defective
+      sibling unfixed when the fix is four lines is what risk 4 warns about, and
+      the register's own mitigation (report a count) would have discharged the
+      step while leaving the defect shipping.
+- [x] **3.3 Decide whether the pending path takes the same predicate.** The
       Phase 2 predicate answers "did a human type this turn?"; `takePending`
       needs the same answer before it deletes. State whether it reuses the
       predicate or is left alone, with the reason.
@@ -162,6 +254,24 @@ new store, not a new slot, and not a new contract.
       predicate, a test drives `takePending` with the 1.1 machine payload and
       asserts the pending file still exists afterwards.
 
+
+      **Decision: it reuses the predicate — via the early return, not a second
+      call site.**
+
+      `takePending` is invoked from `run()` at the point the wake guard now
+      returns before, so the pending-refusal record is protected without
+      `takePending` itself learning about wakes. That keeps the consume-once
+      guarantee exactly as written for real turns: the record still survives
+      exactly one *human* prompt whether or not that prompt confirmed it.
+
+      A per-call predicate inside `takePending` was rejected: it would have to
+      be passed the prompt, which `takePending` has no other reason to know, and
+      it would leave the next per-turn record added to `run()` unprotected.
+
+      **The test 3.3 asks for exists**: a pending refusal is written, a machine
+      wake is submitted, the file is asserted to still exist, and the user's
+      later `ja` is asserted to authorize the refused op. It goes red under the
+      2.3 sabotage.
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-27 | reviewer: claude/host -->
 
@@ -174,19 +284,42 @@ new store, not a new slot, and not a new contract.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A background task notification arriving mid-run leaves an existing
+- [x] AC-1 — A background task notification arriving mid-run leaves an existing
       git authorization standing, demonstrated by a test that fails when the
       classifier is neutralised and passes when it is restored. Both observations
       are on the record.
-- [ ] AC-2 — An unrecognised `user_prompt_submit` payload clears the ledger, and
+
+      **Met.** `tests/scripts/git_authorization.test.ts` — "the ledger file is
+      untouched — same content, same mtime". Red under the 2.3 sabotage, green
+      restored; both observations recorded at 2.3.
+- [x] AC-2 — An unrecognised `user_prompt_submit` payload clears the ledger, and
       a unit test asserts that branch directly. The safe direction is proved, not
       assumed.
-- [ ] AC-3 — The foreground-wait workaround is documented as retired at the place
+
+      **Met.** "UNKNOWN ANSWERS YES — an unrecognised payload clears, never
+      retains" drives an unseen envelope shape and a bare JSON object and
+      requires `true`. The safe direction is proved rather than assumed.
+- [x] AC-3 — The foreground-wait workaround is documented as retired at the place
       it was documented as required, naming the commit that replaced it.
-- [ ] AC-4 — The sibling sweep for other per-turn state has run and reported a
+
+      **Met.** `agents/evidence/pr-drain-run-summary.md` carries the dated
+      `RETIRED 2026-08-27` block naming this roadmap and the predicate's file.
+      The commit hash is not quoted: it does not exist until this change is
+      committed, and a hash written before the commit is a number that goes
+      false silently. The roadmap slug is the stable citation.
+- [x] AC-4 — The sibling sweep for other per-turn state has run and reported a
       count and a file list. The count is **≥ 1**: `takePending` is a confirmed
       instance, so zero here means the sweep is broken, not that the population
       is empty.
-- [ ] AC-5 — The pending-refusal path has an explicit written decision — reuse
+
+      **Met, count 2.** Eleven `user_prompt_submit` concerns swept, one affected
+      (`suggestion_capture_hook.ts`), plus the in-file `takePending`. Full table
+      at 3.2, including the not-affected verdicts with their reasons — a sweep
+      that reports only its hits cannot be audited.
+- [x] AC-5 — The pending-refusal path has an explicit written decision — reuse
       the wake predicate or leave it alone — and if it reuses it, a test drives
       `takePending` with a machine payload and asserts the pending file survives.
+
+
+      **Met.** The decision is written at 3.3 — reuse via the early return — and
+      the test it requires exists and is sensitive.
