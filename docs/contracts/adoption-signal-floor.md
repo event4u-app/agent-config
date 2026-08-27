@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-26
+keep-beta-until: 2026-11-25
 roadmap_ref: road-to-adoption-proof-and-ci-green.md
 ---
 
@@ -11,6 +11,12 @@ roadmap_ref: road-to-adoption-proof-and-ci-green.md
 > Defines the privacy-floor for adoption-signal collection — what
 > the package may measure, what it may NOT, and the opt-in gate
 > consumer-side telemetry would need to clear before it could ship.
+>
+> **Beta review 2026-08-27** · window extended to 2026-11-25 (90 days, the
+> maximum this contract's own frontmatter table allows). Reviewed during a
+> PR-drain run: the text is unchanged since 2026-05-26 and no consumer count
+> is established, so promotion to `stable` is not evidenced. The extension is
+> a recorded review outcome, not a deferral.
 
 ## The Iron Law
 
