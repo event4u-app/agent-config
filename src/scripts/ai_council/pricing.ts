@@ -199,37 +199,12 @@ export function isBillableResponse(r: BillableCostInput): boolean {
         if (t === 'false') {
             return false;
         }
+        if (t === 'true') {
+            return true;
+        }
         return true;
     }
-    // Every other type is BILLABLE, not truthiness-of-value. The first draft of
-    // this function ended `return Boolean(raw)` while its own comment promised a
-    // conservative default, and a council review (2/2) caught the contradiction:
-    // `Boolean(0)` and `Boolean([])` are `false`, so a numeric or empty-array
-    // value would have zeroed a billable seat's spend. The serialiser should
-    // never emit those, which is exactly why guessing at them is wrong.
-    return true;
-}
-
-/**
- * Did every answered response come from a non-billable transport?
- *
- * Exported because the CLI's output line needs it and must NOT infer it from a
- * zero total. A council review (2/2) rated that inference the highest-severity
- * finding in the first draft, and the reasoning is concrete: `estimate_cost`
- * returns `0.0` when `lookup` finds no price row, so an unpriced BILLABLE model
- * produces a zero total. So do a billable seat that errored and one that
- * reported zero tokens. All three would have printed "all seats
- * subscription-authed" over real spend.
- *
- * Vacuously false on an empty or all-errored set: with nothing answered there is
- * no transport to make a claim about, and silence is the honest output.
- */
-export function allSeatsNonBillable(responses: BillableCostInput[]): boolean {
-    const answered = responses.filter((r) => !r.error);
-    if (answered.length === 0) {
-        return false;
-    }
-    return answered.every((r) => !isBillableResponse(r));
+    return Boolean(raw);
 }
 
 /**

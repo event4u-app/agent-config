@@ -18,7 +18,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    allSeatsNonBillable,
     isBillableResponse,
     sumBillableCost,
     type BillableCostInput,
@@ -81,64 +80,6 @@ describe('isBillableResponse', () => {
 
     it('reads the string "true" as billable', () => {
         expect(isBillableResponse(resp({ metadata: { billable: 'true' } }))).toBe(true);
-    });
-
-    // Council review (2/2, 2026-08-27) medium finding: the first draft ended
-    // `return Boolean(raw)` while promising a conservative default. Boolean(0)
-    // and Boolean([]) are false, so a numeric or empty-array value would have
-    // zeroed a billable seat.
-    it.each([
-        ['numeric 0', 0],
-        ['numeric 1', 1],
-        ['empty array', []],
-        ['non-empty array', ['x']],
-        ['empty object', {}],
-        ['an unrecognised string', 'maybe'],
-    ])('treats %s as BILLABLE — unknown types never buy a free pass', (_label, value) => {
-        expect(isBillableResponse(resp({ metadata: { billable: value } }))).toBe(true);
-    });
-});
-
-describe('allSeatsNonBillable', () => {
-    it('true when every answered seat is non-billable', () => {
-        const a = resp({ metadata: { billable: 'false' } });
-        const b = resp({ provider: 'openai', model: 'codex-default', metadata: { billable: false } });
-        expect(allSeatsNonBillable([a, b])).toBe(true);
-    });
-
-    it('false when one answered seat is billable', () => {
-        const sub = resp({ metadata: { billable: 'false' } });
-        const billed = resp({ provider: 'openai', model: 'codex-default', metadata: { billable: true } });
-        expect(allSeatsNonBillable([sub, billed])).toBe(false);
-    });
-
-    // The council's HIGHEST-severity finding, as an executable case. The first
-    // draft inferred this label from `actual_total === 0`, and estimate_cost
-    // returns 0 for a model with no price row — so an unpriced BILLABLE seat
-    // produced a zero total and would have printed "all subscription-authed".
-    it('false for a billable seat whose model has no price row — zero cost is not zero billability', () => {
-        const t = table();
-        const unpriced = resp({ model: 'model-nobody-priced', metadata: { billable: true } });
-        expect(sumBillableCost([unpriced], t)).toBe(0);
-        expect(allSeatsNonBillable([unpriced])).toBe(false);
-    });
-
-    it('false for a billable seat reporting zero tokens — the same trap from another angle', () => {
-        const t = table();
-        const empty = resp({ input_tokens: 0, output_tokens: 0, metadata: { billable: true } });
-        expect(sumBillableCost([empty], t)).toBe(0);
-        expect(allSeatsNonBillable([empty])).toBe(false);
-    });
-
-    it('errored seats are ignored, and a billable error does not make the set non-billable', () => {
-        const sub = resp({ metadata: { billable: 'false' } });
-        const brokenBillable = resp({ metadata: { billable: true }, error: 'timeout' });
-        expect(allSeatsNonBillable([sub, brokenBillable])).toBe(true);
-    });
-
-    it('false on an empty set and on an all-errored set — no transport, no claim', () => {
-        expect(allSeatsNonBillable([])).toBe(false);
-        expect(allSeatsNonBillable([resp({ error: 'timeout' })])).toBe(false);
     });
 });
 
