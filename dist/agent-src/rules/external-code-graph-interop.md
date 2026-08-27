@@ -19,8 +19,6 @@ workspaces: [engineering]
 packs: [meta]
 # obligation: line 37
 obligation_frequency: "per-turn"
-enforced_by:
-  - "hook:code-graph-nudge"
 ---
 
 # External Code-Graph Interop

@@ -510,3 +510,16 @@ jobs:
 
       - name: Stub inventory table stays deleted
         run: ./scripts-run src/scripts/check_no_stub_inventory_table
+
+      # Two backstops that existed and no workflow ran, found by declaring the
+      # rules that name them (`road-to-undeclared-obligation-disposition`
+      # Phase 1.3). `tests/scripts/rule_backstops_ci_wired.test.ts` says the fix
+      # in as many words: "A backstop only a human can start is not what 'can
+      # fail a build' means — add it to .github/workflows/rule-backstops.yml."
+      # Wiring them is what makes the declaration true; the alternative was to
+      # delete a declaration that is otherwise correct.
+      - name: Legal pack disclaimers and jurisdiction tags
+        run: ./scripts-run src/scripts/lint_legal_pack
+
+      - name: Roadmaps schedule no full-pipeline CI steps
+        run: ./scripts-run src/scripts/lint_roadmap_ci_steps

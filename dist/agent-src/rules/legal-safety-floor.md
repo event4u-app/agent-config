@@ -33,8 +33,6 @@ collision_ok:
   "review this contract": "the legal-pack contract-review gate — both floors must fire"
 # obligation: line 103
 obligation_frequency: "per-task"
-enforced_by:
-  - "validator:src/scripts/lint_legal_pack.ts"
 ---
 <!-- agent-config:human-review-banner -->
 > HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown

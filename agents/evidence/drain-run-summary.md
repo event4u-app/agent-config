@@ -48,7 +48,7 @@ linked, because council artefacts are gitignored and auto-pruned.
 | small-table indexing wording | 2/2 — FK/uniqueness is the rule; three concepts kept apart |
 | three beta contracts | 2/2 — extend · promote · extend |
 | adoption-floor **recheck** | 2/2 — **reversed** an earlier PROMOTE from the same day |
-| 221 preamble tokens | **1–1, no convergence** |
+| 221 preamble tokens | **1–1, no convergence — and moot, on a framing I got wrong** |
 
 **The reversal is recorded, not hidden.** Round 1 decided a contract on a framing
 *I* wrote that asserted "nothing in the file is marked open" — which was false.
@@ -57,6 +57,12 @@ seats to say plainly if they were holding it. Both changed their answer, one
 writing *"I am not holding an earlier verdict; on the corrected record, my
 verdict is B."* The other two contracts were **not** re-put: a correction is to
 one framing, not a second bite at the round.
+
+**A second framing error surfaced after that.** The 221-token question was put to
+the council as though the preamble ceiling were enforced only by a report-only
+workflow; it is enforced by a test too, so the option that "won" was never
+available. Recorded rather than quietly dropped — twice in one run is a pattern,
+and the pattern is mine: I write the framings.
 
 **Four council verdicts came back stricter than the roadmap's own
 recommendation**, and that is the useful part: each seat independently found a
@@ -79,8 +85,9 @@ label names.
 - **Four folklore passages** in database guidance that ships to every consumer
   install — composite-index ordering, `type=ALL` as a defect, unconditional
   subquery rewriting, and two absolute rules colliding on every small child table.
-- **82 → 68 undeclared rules**, and the headline coverage number deliberately
-  unchanged: nothing there made an obligation safer at runtime.
+- **Two linters that nothing ran are now wired into CI**, taking the enforcement
+  headline from 15/120 to 17/120. Found by declaring the rules that name them —
+  and the declarations themselves could not ship, see below.
 
 ## Findings that were not on any roadmap
 
@@ -93,8 +100,11 @@ label names.
   one can only *raise* both counters.
 - **A cluster gate read the canonical metric but not its canonical exceptions**,
   on a pair sitting **14 millionths** below its threshold.
-- **`origin/main` measures exactly the preamble grace ceiling, to the token** — so
-  *any* rule-metadata addition is currently blocked, not just this run's.
+- **`origin/main` measures exactly the preamble grace ceiling, to the token**, and
+  the ceiling is enforced by a test as well as by CI. So **no rule may gain an
+  `enforced_by` field at all** right now: all 14 dispositions overshoot by 221,
+  seven of them by 72, none by −17. The 82-rule cohort is fully dispositioned in
+  the evidence report with exact declaration strings; not one could be written.
 
 ## Descoped, and where each went
 
@@ -105,7 +115,7 @@ header:
 | stub | why it is human-only |
 |---|---|
 | `road-to-kernel-clause-1-restore` | `block_kernel_rule_writes` denies the write; `scope-control` requires an own PR with a ≥ 24 h soak no autonomous mandate lifts |
-| `road-to-preamble-transfer-debt-221` | 221 tokens above a ceiling that may never move up, with a numeric repayment target and no ceiling raise |
+| `road-to-preamble-transfer-debt-221` | 14 decided declarations the ceiling will not admit, listed verbatim so applying them is mechanical |
 
 **The kernel edit has not been made.** `check_rule_invariants` still exits
 non-zero on `main`, and AC-1 of that roadmap is recorded as **NOT MET**. Its

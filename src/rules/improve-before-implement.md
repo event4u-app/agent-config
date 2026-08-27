@@ -22,8 +22,6 @@ collision_ok:
   "implement": "its own core trigger — pre-implementation validation"
 # obligation: line 45
 obligation_frequency: "per-task"
-enforced_by:
-  - "instruction-only: runs before implementation, no artefact"
 ---
 
 # Improve Before Implement

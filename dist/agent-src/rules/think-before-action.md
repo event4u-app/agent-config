@@ -24,8 +24,6 @@ collision_ok:
   "fix": "no blind trial-and-error on fixes — max 2 retries"
 # obligation: line 50
 obligation_frequency: "per-edit"
-enforced_by:
-  - "instruction-only: a pre-action read set, unobservable"
 ---
 
 # think-before-action

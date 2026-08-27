@@ -21,7 +21,12 @@ enforcement coverage · 15/120 rules (12.5%) have a backstop that fails a CI bui
   denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120
 ```
 
-## After Phase 1.3
+## After Phase 1.3 — measured, then REVERTED, and the reversion is the finding
+
+The 14 declarations were written, measured, and **taken back out**. What they
+produced is recorded here because the numbers are real; what stopped them from
+shipping is recorded below, because it is a repo-wide constraint that has nothing
+to do with this cohort.
 
 ```
 enforcement coverage · 15/120 rules (12.5%) have a backstop that fails a CI build
@@ -42,6 +47,70 @@ a backstop that fails a CI build" did not move at all**, and that is correct —
 nothing in this change made an obligation safer at runtime. Risk 3 of the roadmap
 names exactly this trap, and the instrument's own class separation is what
 prevents it.
+
+## Why none of the 14 landed
+
+`check_preamble_payload_budget` blocks in CI **and in a test**
+(`tests/scripts/check_preamble_payload_budget.test.ts` — *"exits 0 under the
+grace ceiling the CI step passes"*) against a grace ceiling of **138,212** whose
+config says it **may never move UP**.
+
+Measured on this tree, each figure from a real run:
+
+| tree | tokens | vs ceiling |
+|---|---|---|
+| `origin/main` | **138,212** | **exactly on it, to the token** |
+| + all 14 declarations, reasons compressed to clauses | 138,433 | +221 |
+| + only the 7 carrier declarations | 138,284 | **+72** |
+| + none | 138,195 | **−17** |
+
+**Even seven declarations do not fit.** The constraint is not a matter of
+trimming a reason: main sits *on* the ceiling, so a rule-metadata addition of any
+size is refused. That is a repo-wide fact this cohort merely happened to
+discover.
+
+A council was asked how to pay for the 221 and split 1–1 —
+ship-with-recorded-debt versus find-the-offset-in-the-same-change
+(`agents/evidence/council/preamble-vs-declaration.md`). **The split is now moot,
+and in the dissenting seat's favour:** the question was framed as though the
+ceiling were enforced only by a report-only workflow, and it is enforced by a
+test. "Recorded debt" is not an available option — the repo refuses the commit,
+not just the report. The framing was mine and it was wrong, exactly as the
+adoption-floor framing was earlier in the same run.
+
+The offset was attempted at three sizes and not found. Re-wrapping saves
+newlines, and the gate counts tokens; removing words from rules this change does
+not otherwise touch is a drive-by edit; and rushing a compression is what the
+dissenting seat named as the cost of its own preferred option.
+
+**So the 14 dispositions are decided and not written.** They are listed below in
+full, with their exact declaration strings, so applying them when headroom exists
+is a mechanical step rather than a re-derivation.
+
+## The 14, ready to apply
+
+| rule | declaration |
+|---|---|
+| `cli-output-handling` | `hook:rtk-wrap` |
+| `delegation-policy` | `hook:delegation-nudge` |
+| `source-discovery-gate` | `hook:source-first-gate` |
+| `external-code-graph-interop` | `hook:code-graph-nudge` |
+| `legal-safety-floor` | `validator:src/scripts/lint_legal_pack.ts` |
+| `roadmap-ci-steps-policy` | `validator:src/scripts/lint_roadmap_ci_steps.ts` |
+| `token-budget-discipline` | `validator:src/scripts/lint_token_budget_discipline.ts` |
+| `architecture` | `instruction-only: a placement decision before any file exists` |
+| `domain-adoption-policy` | `instruction-only: a pre-harvest judgement, no artefact` |
+| `guidelines` | `instruction-only: consulting leaves no signature` |
+| `improve-before-implement` | `instruction-only: runs before implementation, no artefact` |
+| `invite-challenge` | `instruction-only: the owed-a-checkpoint judgement is invisible` |
+| `senior-engineering-discipline` | `instruction-only: overfit code looks like working code` |
+| `think-before-action` | `instruction-only: a pre-action read set, unobservable` |
+
+**Two of them are worth more than the row suggests.** `legal-safety-floor` and
+`roadmap-ci-steps-policy` named validators that **no workflow ran**. Declaring
+them is what surfaced it, and the fix landed anyway:
+`.github/workflows/rule-backstops.yml` now runs both. The declarations do not
+ship; the CI coverage does.
 
 ## The four buckets
 

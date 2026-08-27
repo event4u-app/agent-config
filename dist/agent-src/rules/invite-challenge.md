@@ -14,8 +14,6 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 # obligation: line 62
 obligation_frequency: "per-task"
-enforced_by:
-  - "instruction-only: the owed-a-checkpoint judgement is invisible"
 ---
 
 # invite-challenge

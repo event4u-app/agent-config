@@ -10,8 +10,6 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 # obligation: line 43
 obligation_frequency: "per-edit"
-enforced_by:
-  - "validator:src/scripts/lint_token_budget_discipline.ts"
 ---
 
 # Token Budget Discipline

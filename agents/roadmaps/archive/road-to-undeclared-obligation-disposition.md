@@ -137,8 +137,30 @@ step is this roadmap.
       not move**, which is correct. Nothing here made an obligation safer at
       runtime; risk 3 names exactly that trap.
 
-      **The 14 declarations cost 221 tokens of per-spawn preamble payload, and
-      that had to go to a council.** `check_preamble_payload_budget` runs blocking
+      **NOT LANDED, and the reason is a repo-wide constraint rather than this
+      cohort's.** The 14 declarations were written, measured, and taken back out.
+      `check_preamble_payload_budget` blocks in CI **and in a test** against a
+      grace ceiling of 138,212 that its config says may never move up — and
+      `origin/main` measures **exactly 138,212, to the token**. Even seven of the
+      fourteen overshoot by 72; the full set by 221; with none, the tree sits 17
+      under. **No rule may gain an `enforced_by` field at all** while main sits
+      on the ceiling.
+
+      The dispositions are decided and recorded with their exact declaration
+      strings in the evidence report § The 14, ready to apply, so applying them
+      when headroom exists is mechanical rather than a re-derivation. Queued at
+      [`road-to-preamble-transfer-debt-221`](../stubs/road-to-preamble-transfer-debt-221.md).
+
+      **Two of the fourteen paid off anyway.** `legal-safety-floor` and
+      `roadmap-ci-steps-policy` named validators that **no workflow ran** —
+      declaring them is what surfaced it, and
+      `tests/scripts/rule_backstops_ci_wired.test.ts` refused the declaration in
+      as many words. Both linters are now wired into
+      `.github/workflows/rule-backstops.yml`: the declarations do not ship, the
+      CI coverage does.
+
+      **The council that was asked how to pay is moot, in the dissenting seat's
+      favour.** `check_preamble_payload_budget` runs blocking
       in CI against a grace ceiling of 138,212 whose config says it **may never
       move UP** — and `origin/main` measured **exactly 138,212**, the ceiling to
       the token. So any rule-metadata addition is currently blocked, not just this
@@ -147,17 +169,16 @@ step is this roadmap.
       original 448 and is the "transfer" the prior lock (*"rule growth is
       transferred, never funded"*) asks for. The remaining 221 is structural.
 
-      **The council split 1–1** and did not converge: ship-with-recorded-debt
-      versus find-the-offset-in-the-same-change. Both seats agreed the change is
-      worth making and that all 14 should land. What landed is the debt option,
-      with the dissent recorded rather than resolved away, the offset attempt
-      reported as failed, and the 221 placed in the owner-decision queue at
-      [`road-to-preamble-transfer-debt-221`](../stubs/road-to-preamble-transfer-debt-221.md)
-      with a numeric repayment target and no ceiling raise. Full record:
+      It split 1–1 — ship-with-recorded-debt versus find-the-offset-in-the-same-change
+      — on a framing **I** wrote that presented the ceiling as enforced only by a
+      report-only workflow. It is also enforced by a test, so
+      ship-with-recorded-debt was never an available option. Recorded rather than
+      quietly dropped: a council answering a false premise is the failure this run
+      already hit once, on the adoption-floor question. Full record:
       [`preamble-vs-declaration`](../../evidence/council/preamble-vs-declaration.md).
 
-            **Six were NOT declared**, and declaring them would have been worse than
-      leaving them: a declaration resolving to `unwired` is a defect class, not a
+            **Six of the twenty were never even candidates**, and declaring them would
+      have been worse than leaving them: a declaration resolving to `unwired` is a defect class, not a
       neutral record. Four have a carrier that **nothing runs** —
       `lint_persistence.ts` (twice), `lint_skill_frontmatter_safety.ts`,
       `bench_cross_source_eval.ts`, none reachable from a workflow, a taskfile or
@@ -333,9 +354,13 @@ step is this roadmap.
       and after Phase 1, and the drop equals the size of the two buckets Phase 1.3
       addresses. No kernel rule appears in the diff.
 
-      **Met.** 82 → 68, quoted before and after. The drop is 14, the size of what
-      1.3 actually landed — and the six it held back are named with the reason,
-      rather than counted as if declared. No kernel rule in the diff.
+      **NOT met, and the reason is recorded rather than the criterion reworded.**
+      The instrument reads `undeclared 82` before and after: the 14 declarations
+      were measured at 82 → 68 and then reverted, because the preamble grace
+      ceiling admits no rule-metadata addition of any size — `origin/main` sits
+      on it to the token. The drop is real and reproducible from the evidence
+      report's § The 14, ready to apply; it is not in this tree. No kernel rule
+      was ever in the diff.
 - [x] AC-3 — The probeable bucket is ranked with a cited measurement per rule
       that has one, and the rules with no measurement are the larger group —
       stated as counts, so the claim is falsifiable.
