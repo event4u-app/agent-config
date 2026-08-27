@@ -37,6 +37,91 @@ FLOOR PER BEHAVIOR: 1 HAPPY + 1 BOUNDARY + 1 ERROR (+1 ABUSE ON SECURITY PATHS).
 CAP PER BEHAVIOR: 5–8 CASES — EACH MUST FAIL FOR A DISTINCT REASON.
 ```
 
+## Does this change owe an executable behavior contract?
+
+Cases and contracts are not the same artifact. A **case** is something you assert
+in the project's unit runner. An **executable behavior contract** — a
+specification written in the language of whoever asked for the change, and run
+by a tool that reads it — is a heavier thing, and most changes do not owe one.
+Ask for one everywhere and it degrades into a second, slower unit suite; ask for
+one nowhere and behavior nobody can read stays unstated.
+
+### The observable-behavior test
+
+> **Does this change alter behavior someone outside the code can observe, and
+> would that person describe it in their own words?**
+
+Both halves have to hold: observable behavior with no outside audience is
+still only a case. *Observable* rules out anything a caller cannot see. *In their own
+words* rules out behavior that is real but has no audience outside the codebase —
+if the only person who can state the rule is the person reading the
+implementation, a case in the unit runner states it better and cheaper.
+
+**Yes → a contract is owed.** A refund is issued when an order is cancelled
+within 14 days; a member on a lapsed plan is denied the export; a rejected
+upload tells the uploader which rule it broke.
+
+**No → cases, not a contract.** At least these:
+
+- **A refactor with no behavior change.** Nothing outside the code can observe
+  it, by definition. If something can, it was not a refactor.
+- **An internal invariant with no external vocabulary.** Cache key derivation,
+  retry backoff, connection-pool sizing, a query plan. Real behavior, no
+  audience — the failure is stated as a case, not as a sentence somebody outside
+  the code would say.
+- **A pure boundary or error path with no business reading.** Rejecting a
+  malformed UTF-8 sequence is a case; *"we do not accept expired coupons"* is a
+  contract.
+- **A change whose only observer is another part of this system.** A consumer
+  written by the same team is a caller, not an audience. Contract tests between
+  services are a different tool and a different question.
+
+When the answer is yes, the ordering is unchanged: the contract fails before the
+implementation exists and passes after — see
+[`test-driven-development`](../test-driven-development/SKILL.md). A contract
+first seen green has the same unknown sensitivity as any other test never seen
+red.
+
+### The anti-script rule
+
+```
+A CONTRACT STEP NAMING A SELECTOR, A TIMEOUT, OR A KEYSTROKE IS A DEFECT
+IN THE CONTRACT — NOT AN IMPLEMENTATION DETAIL THAT HAPPENS TO BE THERE.
+WRITE WHAT IS TRUE, NEVER WHAT IS CLICKED.
+```
+
+A contract that scripts the interface is pinned to the interface: it goes red on
+every redesign that changes nothing anyone cares about, and stays green through
+the redesign that breaks the rule. It also stops being readable by the person
+whose words it was supposed to be in — which was the only reason to pay for it.
+
+**Wrong** — this is a click script wearing Given-When-Then:
+
+```gherkin
+Given I open "/cart?id=42"
+When I click #apply-coupon
+And I type "SUMMER" into input[name=code]
+And I wait 2 seconds
+Then .cart-total should contain "€45.00"
+```
+
+Every line is about the page. Change the button id and it fails; move the
+discount rule and it passes.
+
+**Right** — same behavior, stated as the rule it is:
+
+```gherkin
+Given a cart of €50
+When the customer applies a valid 10% coupon
+Then the order total is €45
+```
+
+The rule survives the redesign, and the person who asked for it can read it.
+
+**The test for a step:** could it still be true if the product were a CLI, an
+API, and a web page? If not, it belongs in the implementation the contract calls
+into, not in the contract.
+
 ## Procedure — the five-step funnel
 
 ### 1. Behavior inventory (30 seconds)
