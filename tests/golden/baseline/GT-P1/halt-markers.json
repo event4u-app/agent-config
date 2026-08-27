@@ -27,6 +27,18 @@
   {
     "cycle": 3,
     "exit_code": 1,
+    "directive": "observe-red",
+    "recipe_action": "observe-red",
+    "questions": [
+      "@agent-directive: observe-red ticket=(no id)",
+      "> Ticket (no id) — implement gate refused: no `state.tests.red` recorded. Write the failing test for the next single behaviour and observe it fail first.",
+      "> 1. Continue — write and run that one failing test",
+      "> 2. Record an exemption — `state.tests.red = {exempt: \"<reason>\"}`"
+    ]
+  },
+  {
+    "cycle": 4,
+    "exit_code": 1,
     "directive": "apply-plan",
     "recipe_action": "apply-plan",
     "questions": [
@@ -37,7 +49,7 @@
     ]
   },
   {
-    "cycle": 4,
+    "cycle": 5,
     "exit_code": 1,
     "directive": "run-tests",
     "recipe_action": "run-tests",
@@ -49,7 +61,7 @@
     ]
   },
   {
-    "cycle": 5,
+    "cycle": 6,
     "exit_code": 1,
     "directive": "review-changes",
     "recipe_action": "review-changes",
@@ -61,7 +73,7 @@
     ]
   },
   {
-    "cycle": 6,
+    "cycle": 7,
     "exit_code": 0,
     "directive": null,
     "recipe_action": null,

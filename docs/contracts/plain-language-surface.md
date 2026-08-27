@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-26
+promote-to: stable
 roadmap_ref: road-to-frictionless-employee-workspace.md
 ---
 
@@ -10,7 +10,37 @@ roadmap_ref: road-to-frictionless-employee-workspace.md
 > relabel matrix for non-developer audiences. Phase C of
 > `road-to-frictionless-employee-workspace.md`. The matrix is the
 > single source of truth; lint enforcement lives in
-> `scripts/lint_role_experiences.py --plain-language`.
+> `src/scripts/lint_role_experiences.ts --plain-language`.
+>
+> **Beta review, 2026-08-27 — marked `promote-to: stable`.** All three
+> `STABILITY.md` criteria are met and were checked rather than assumed:
+> ≥ 30 days in beta (since 2026-05-26), no breaking change in the last 14 days,
+> and ≥ 1 consumer reference — `src/scripts/lint_role_experiences.ts:237` fails
+> with a pointer back to this file by path.
+>
+> What settles it rather than merely leaving it quiet: the matrix is a **closed**
+> six-row table with no placeholders, the carve-outs are exhaustive and
+> enumerated, there is no open-question section anywhere in the file, and **the
+> one thing it listed as future work has landed** — § Enforcement said "Phase C
+> Step 5 wires the flag into `task ci`", and it is wired, with `--plain-language`
+> passed unconditionally rather than behind an opt-in.
+>
+> The marker is `promote-to: stable`, not `stability: stable`: per
+> `STABILITY.md` § Beta markers that schedules the promotion for the next
+> release, which is the sanctioned step and keeps the flip a release decision.
+>
+> **Decided by AI council 2026-08-27, 2/2 convergent**, under the maintainer's
+> delegation of owner-reserved decisions for an autonomous drain run. Both seats
+> were explicit that the delegation is **bounded to that run** and establishes
+> no standing authority to promote a beta contract; the next one still needs an
+> owner decision or its own delegation. One seat added the discriminator this
+> review turned on — *settled* means enforced, actively referenced, carrying
+> zero open clauses, and reviewed on a trigger appropriate to its concern, while
+> *quiet* means merely unedited. The stale `.py` path both seats called ordinary
+> documentation drift rather than beta evidence is fixed in the same change.
+> **Revisit if** `lint_role_experiences` reports a pattern class the matrix does
+> not cover, or a non-developer reader hits a term-mismatch it does not handle —
+> the lint proves internal conformance, never that the labels are understood.
 
 ## What this is
 
@@ -79,7 +109,7 @@ The matrix MUST NOT apply to:
 
 ## Lint enforcement
 
-`scripts/lint_role_experiences.py --plain-language` scans every
+`src/scripts/lint_role_experiences.ts --plain-language` scans every
 `agents/roles/<slug>/index.md` body for the six jargon terms.
 Frontmatter and fenced code blocks are excluded. Any hit fails the
 lint with a pointer back to this contract. Phase C Step 5 wires the
@@ -113,5 +143,5 @@ Re-audit on each of:
 
 - [`docs/getting-started-by-role.md`](../getting-started-by-role.md) — the entry surface.
 - [`docs/contracts/role-experience.md`](role-experience.md) — role artefact shape.
-- [`scripts/lint_role_experiences.py`](../../src/scripts/lint_role_experiences.ts) — lint enforcement.
+- [`src/scripts/lint_role_experiences.ts`](../../src/scripts/lint_role_experiences.ts) — lint enforcement.
 - `road-to-frictionless-employee-workspace.md` § Phase C — the roadmap step.

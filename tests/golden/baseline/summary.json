@@ -3,7 +3,7 @@
     "gt_id": "GT-1",
     "outcome": "success",
     "exit_code": 0,
-    "cycles": 5
+    "cycles": 6
   },
   {
     "gt_id": "GT-2",
@@ -15,7 +15,7 @@
     "gt_id": "GT-3",
     "outcome": "success",
     "exit_code": 0,
-    "cycles": 6
+    "cycles": 7
   },
   {
     "gt_id": "GT-4",
@@ -27,19 +27,19 @@
     "gt_id": "GT-5",
     "outcome": "success",
     "exit_code": 0,
-    "cycles": 5
+    "cycles": 6
   },
   {
     "gt_id": "GT-P1",
     "outcome": "success",
     "exit_code": 0,
-    "cycles": 6
+    "cycles": 7
   },
   {
     "gt_id": "GT-P2",
     "outcome": "success",
     "exit_code": 0,
-    "cycles": 7
+    "cycles": 8
   },
   {
     "gt_id": "GT-P3",
