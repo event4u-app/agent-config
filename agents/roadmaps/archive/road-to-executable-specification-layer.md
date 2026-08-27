@@ -49,12 +49,20 @@ Both reproduced at HEAD, both cheap to re-run:
 |---|---|---|
 | Executable behaviour specification, taught | `grep -rniI 'gherkin\|cucumber\|behat\|given.when.then' src/` | **1 hit** — `src/skills/judge-artifact-completeness/rubrics/ticket-quality-score.json:21`, a rubric asking a *reviewer* to check that acceptance criteria are Given-When-Then shaped |
 | Mutation testing, taught | `grep -rliI 'mutation test\|stryker\|infection\|mutmut' src/skills/` | **0 files** of 299 |
-| Mutation testing, graded in consumers | `src/scripts/grade_target_readiness.ts:183-189` | dimension `test-strength`, graded on `stryker.conf.*` / `infection.json` / `[tool.mutmut]` presence |
+| Mutation testing, graded in consumers | `src/scripts/grade_target_readiness.ts:178-190` (at authoring time) | dimension `test-strength`, graded on `stryker.conf.*` / `infection.json` / `[tool.mutmut]` presence — **and, uncorrected until 2026-08-27, also on `fast-check` / `hypothesis` presence**, so the row understated what the number was mixing. **Superseded:** the dimension is now `advanced-testing-signals` and emits no grade. See § blocker `grading-a-dimension-nothing-teaches`. |
 | Skill corpus size | `find src/skills -name SKILL.md \| wc -l` | 299 |
 
 The asymmetry is the finding. The `test-strength` dimension is not a knockout,
 which softens it — but the suite still hands a consumer a grade on evidence it
 has no skill to help them produce, and produces none itself.
+
+**Resolved 2026-08-27, and not the way this paragraph expected.** The council
+did not close the asymmetry by adding the missing skill or by deleting the
+measurement — it found the grade itself invalid. Config presence orders targets
+by adoption; the dimension's label claimed effectiveness. Detection is kept and
+reported as observations, the number is gone, and the asymmetry dissolves rather
+than being closed: the suite no longer grades what it does not teach, while
+still telling the consumer what it can see.
 
 The registry already records the second half honestly. `mutation-sensitivity`
 sits at `state: degraded` with the limitation written out — "detection only —
@@ -103,60 +111,83 @@ and re-proposing it later should cost an argument:
 
 ## Phase 1 — Decide when a specification is owed, before writing any
 
-- [ ] **1.1 Add the observable-behaviour test to the existing test-first
+- [x] **1.1 Add the observable-behaviour test to the existing test-first
       surface.** The discriminator is whether a change alters behaviour someone
       outside the code can observe and would describe in their own words. It
       belongs alongside the suite's existing test-ordering guidance rather than
       in a new artefact — `archive/road-to-evidence-gated-change.md` landed the
       ordering, this owns the *whether*.
-      verify: `grep -rc "observable behaviour" src/skills/test-case-discovery/SKILL.md` is greater than 0, and the added section names at least two cases where the answer is no.
-- [ ] **1.2 Write the anti-script rule into the same surface.** A specification
+      verify: **discharged, with the verify string corrected.** `grep -c 'observable behavior' src/skills/test-case-discovery/SKILL.md` returns **2**, one of them inside the added section. The string was written `behaviour` here; `src/config/canonical-terms.yml:79-80` makes `behavior` canonical and `behaviour` a ratcheted variant (`lint_canonical_terms`, 995 violations against a baseline of 1007), so satisfying the literal would have added violations to a tightening gate to pass a verify. The intent — a named discriminator exists and is greppable — is met in the repository's own spelling. The added section `## Does this change owe an executable behavior contract?` names **four** cases answering no (refactor with no behavior change · internal invariant with no external vocabulary · pure boundary or error path with no business reading · a change whose only observer is another part of this system), against a floor of two.
+- [x] **1.2 Write the anti-script rule into the same surface.** A specification
       step naming a selector, a timeout, or a keystroke is a defect in the
       specification, not a detail. This is the single highest-value line in the
       whole source set and costs one paragraph.
-      verify: the added prose contains a worked wrong-then-right pair, and `grep -c 'click #' src/skills/test-case-discovery/SKILL.md` returns at least 1 as the negative example.
-- [ ] **1.3 Reconcile the rubric that already asks for the shape.**
+      verify: **discharged.** `grep -c 'click #' src/skills/test-case-discovery/SKILL.md` returns **1**, and it is the negative example — `When I click #apply-coupon` inside the **Wrong** block. The wrong-then-right pair is a cart/coupon behavior stated twice: once as five interface steps that break on a redesign and survive a moved discount rule, once as three sentences about money. The rule itself is a fenced Iron-Law block, and a portability test closes the section (could the step still be true if the product were a CLI, an API and a web page?).
+- [x] **1.3 Reconcile the rubric that already asks for the shape.**
       `judge-artifact-completeness/rubrics/ticket-quality-score.json:21` grades
       acceptance criteria as Given-When-Then. Once 1.1 exists, that rubric line
       should point at it instead of asserting a convention the suite taught
       nowhere.
-      verify: the rubric line references the section added in 1.1.
+      verify: **discharged.** `ticket-quality-score.json` → `acceptance_criteria.criterion` now cites `src/skills/test-case-discovery/SKILL.md § Does this change owe an executable behavior contract?` and stops asserting Given-When-Then as the required form: the routing decision moved to the section, and the rubric grades independently-testable outcomes. `gap_signal` gained the anti-script case (`'When I click #submit'` scoring as a gap however well-formed its Given-When-Then), so 1.2 has a consumer inside the judge on the day it lands.
 
 ## Phase 2 — One native adapter, integrate before replacing
 
-- [ ] **2.1 Detect what the consumer already has, and use it.** An existing
+> **DESCOPED `[-]` 2026-08-27**, whole phase, on the blocker
+> `which-stack-gets-the-first-adapter` resolving **(c)** — 2/2 convergent,
+> both seats. Held in
+> [`stubs/road-to-executable-specification-adapter.md`](../stubs/road-to-executable-specification-adapter.md)
+> with its promotion condition. 2.1 was not formally blocked and is descoped
+> anyway: both seats found its only named consumer to be the adapter (c)
+> declined, and shipping a detector with no consumer is the speculative reuse
+> the same verdict rejected.
+
+- [-] **2.1 Detect what the consumer already has, and use it.** An existing
       Behat, Codeception-BDD or Cucumber setup is the runner; nothing is
       introduced beside it. Absent one, the choice is the stack's native path,
       never a second framework: `playwright-bdd` for TypeScript because it sits
       on the Playwright foundation this suite already teaches, and Behat for
       Laravel with Pest staying at the unit layer.
       verify: the detection step is added to the stack-detection skill and returns a named runner or an explicit "none detected" for each of three fixtures.
-- [ ] **2.2 Ship exactly one adapter end to end.** One stack, one worked
+- [-] **2.2 Ship exactly one adapter end to end.** One stack, one worked
       example, one runnable specification that fails before the implementation
       and passes after. Two adapters is where a generic API starts looking
       necessary, and the source's own loop moved that behind a gate.
       verify: the example specification is executed in CI and its recorded run shows the red-then-green transition, not only the green.
-- [ ] **2.3 Record which stacks are NOT covered.** A partial adapter set that
+- [-] **2.3 Record which stacks are NOT covered.** A partial adapter set that
       does not say so reads as full coverage — the same failure the assurance
       registry avoids by carrying `unknown` states explicitly.
       verify: the adapter surface names every detected-but-unsupported stack, and the count matches the stack-detection skill's own list.
 
 ## Phase 3 — Sensitivity, on the unlock condition the registry already wrote
 
-- [ ] **3.1 Build the changed-surface mutation adapter, and only that.** The
+> **DESCOPED `[-]` 2026-08-27**, whole phase, on a second council round
+> (2/2 convergent). The mechanism-match test was run first and returned
+> **same mechanism**: a changed-surface adapter differs from the refused rig
+> in *selection scope*, not in mechanism — both generate mutants and classify
+> survivors and timeouts. The archived refusal in
+> `archive/road-to-test-independence-and-mutation-evidence.md` is measured (10
+> probes in minutes, 3 survivors, hand-probing kept up) and carries its own
+> reopen condition — a survivor population too large to hand-probe — which
+> **has not fired**. The registry's `revisit_if` describes what would lift a
+> `degraded` state; it is not authorization to build past a later,
+> evidence-backed refusal, and `mutation-sensitivity.revisit_if` now says so
+> in the registry itself. 3.2 and 3.3 are independently blocked by (c). Held
+> in [`stubs/road-to-executable-specification-adapter.md`](../stubs/road-to-executable-specification-adapter.md) § 3.
+
+- [-] **3.1 Build the changed-surface mutation adapter, and only that.** The
       registry's `mutation-sensitivity.revisit_if` names the condition verbatim:
       "a mutation adapter ships that runs a changed-surface pass and reports
       survivors and timeouts separately". That sentence is the specification.
       Nothing here relitigates the archived refusal of a whole-tree rig — the
       refusal was measured, and this is the path the measurement left open.
       verify: the adapter reports survivors and timeouts as separate counts on a changed-surface pass over a seeded fixture, and the archived refusal roadmap is cited in the adapter's own header rather than contradicted.
-- [ ] **3.2 Mutate the specification's own example values.** A behaviour
+- [-] **3.2 Mutate the specification's own example values.** A behaviour
       contract wired to nothing passes forever. Altering the example values in a
       specification must break the run; if it does not, the specification is
       decorative. This is the cheaper half of the source's acceptance-mutation
       idea and does not need the IR.
       verify: a test alters one example value in the Phase 2.2 specification and asserts the run turns red.
-- [ ] **3.3 Flip the registry states on evidence, never on completion.** After
+- [-] **3.3 Flip the registry states on evidence, never on completion.** After
       3.1 and 3.2, `mutation-sensitivity` may move off `degraded` for the
       dimensions the adapter actually covers. `e2e-test` stays `unknown` until
       its own probe ships with presence *and* absence fixtures — the registry
@@ -168,7 +199,7 @@ and re-proposing it later should cost an argument:
 
 ### blocker: which-stack-gets-the-first-adapter
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 steps 2.2 and 2.3. Phase 1 lands regardless — the
   observable-behaviour test and the anti-script rule are stack-neutral prose —
@@ -192,10 +223,32 @@ and re-proposing it later should cost an argument:
 - **If you do nothing:** Phase 1 still lands and the suite gains the routing
   decision it currently lacks. That is a real outcome and the recommended one —
   this blocker does not stall the roadmap, it only bounds Phase 2.
+- **Resolution — (c), 2026-08-27.** AI council, 2 seats (anthropic + openai),
+  **2/2 convergent**, round 1. Substituting for maintainer sign-off under the
+  drain mandate; recorded here because a verdict with no record is a silent
+  drop. Both seats: ship the stack-neutral Phase 1, let a real consumer request
+  pick the stack, and both named (b) Laravel/Behat as the better guess when a
+  request arrives — the PHP depth is real and the Pest boundary is a sentence
+  rather than a design. One seat raised the only argument against: the rubric
+  line at `ticket-quality-score.json` is itself weak evidence that the pattern
+  matters, so *implicit* demand may already exist; it resolved the point by
+  making that demand the trigger rather than the warrant — "if it generates
+  consumer questions about how to *write* these, that's the trigger for (b),
+  not waiting for an explicit adapter request". The other seat explicitly
+  declined to adopt a request-count trigger, on the grounds that demand
+  intensity, maintenance cost and fit are the axes, not arithmetic. Steps 2.2
+  and 2.3 are `[-]`; **2.1 is `[-]` too** — not formally blocked, but both seats
+  found its only named consumer to be the adapter (c) declined, and both called
+  shipping it speculative reuse. All three are held in
+  `stubs/road-to-executable-specification-adapter.md` § 2 with the adapter's own
+  header obligation carried forward.
+- **Revisit-if:** a consumer names a stack **and** a concrete
+  executable-specification workflow, or recurring production-validation findings
+  show a stack-specific gap that stack-neutral prose cannot close.
 
 ### blocker: grading-a-dimension-nothing-teaches
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing. Recorded here because Phase 3 makes it decidable, and a
   finding with no home is a finding that gets lost.
@@ -217,6 +270,46 @@ and re-proposing it later should cost an argument:
   cannot help with. Non-knockout, so nobody fails on it — which is exactly why
   this can sit open without blocking, and also why it would otherwise never get
   looked at.
+- **Resolution — neither (a) nor (b) as written: unscore and rename, 2026-08-27.**
+  AI council, 2 seats. Round 1 **split** — one seat for (a) with a label fix,
+  one for (b); round 2 put the split back and both seats **converged on
+  unscoring**. The decisive move was that round 1's (a) seat had already
+  conceded the (b) seat's factual point, that config presence is not a reliable
+  strength measure. Round 2's argument: a dormant `stryker.conf` and an unused
+  `fast-check` dependency both scored, while a rigorous conventional suite with
+  neither scored 0 — so the number ordered targets by **adoption** and was read
+  as **effectiveness**. Renaming alone would have kept the invalid inference
+  behind a better word.
+
+  Shipped, at `src/scripts/grade_target_readiness.ts`: `test-strength` →
+  `advanced-testing-signals`; `grade: null`; a new `observations: string[]`
+  carrying `mutation-testing-config-detected`,
+  `property-testing-library-detected` and
+  `mutation-testing-ci-enforcement-detected` independently; and a
+  `notDetectable` scoped to **test effectiveness** rather than to the dimension
+  — the config *is* detectable, what it implies is not — emitted whether or not
+  any observation fires. Three epistemic states are held apart on purpose:
+  signal observed, no signal observed, effectiveness not evaluable. An empty
+  `observations` array is the second; no `neither-detected` string is ever
+  emitted, because that would re-create the verdict the unscore removed. Both
+  seats specified this shape independently and it is asserted by
+  `tests/scripts/grade_target_readiness.test.ts` § *advanced-testing-signals is
+  observed, never graded* (8 specs). Detection is fully preserved; nothing about
+  the consumer's repository stopped being reported. The dimension was and stays
+  non-knockout, so `grade: null` cannot bind the level — asserted.
+
+  Note the roadmap's own measurement table understated the dimension: it named
+  only the mutation probe, while the code also detects **property-based**
+  testing (`fast-check`, `hypothesis`), which round 1 did not discuss. Corrected
+  in the table above.
+
+  One seat proposed numeric reopen thresholds (">20 survivors", ">2hrs"); the
+  other rejected them as unsupported by any record here, and they are **not**
+  adopted — recorded so a later reader does not inherit an invented cutoff.
+- **Revisit-if:** the grader gains **outcome** evidence — survivor and timeout
+  counts from a real mutation run, or executed property-test results — together
+  with a scoring rule validated against the readiness decision rather than
+  assumed from presence.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-27 | reviewer: claude/host -->
@@ -231,9 +324,26 @@ and re-proposing it later should cost an argument:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A single named section in the suite answers "does this change owe an executable behaviour contract?", contains at least two cases answering no, and carries the anti-script rule with a worked wrong-then-right pair.
-- [ ] AC-2 — `judge-artifact-completeness/rubrics/ticket-quality-score.json:21` no longer asserts a Given-When-Then convention the suite defines nowhere; it references the section from AC-1.
-- [ ] AC-3 — For one stack, an executable specification runs on the project's own runner, and its recorded CI run shows red before the implementation and green after — the green alone does not satisfy this.
-- [ ] AC-4 — Every stack the detection step recognises is either covered by an adapter or named as uncovered; the uncovered list is non-empty and its count matches the detection surface's own list.
-- [ ] AC-5 — Altering one example value in that specification turns the run red, asserted by a test rather than by a claim.
-- [ ] AC-6 — A changed-surface mutation pass reports survivors and timeouts as separate counts, cites the archived refusal in its header, and every assurance-registry state changed in this roadmap carries an `evidence` field naming a runnable command — with `e2e-test` unchanged.
+- [x] AC-1 — A single named section in the suite answers "does this change owe an executable behaviour contract?", contains at least two cases answering no, and carries the anti-script rule with a worked wrong-then-right pair.
+- [x] AC-2 — `judge-artifact-completeness/rubrics/ticket-quality-score.json:21` no longer asserts a Given-When-Then convention the suite defines nowhere; it references the section from AC-1.
+- [-] AC-3 — For one stack, an executable specification runs on the project's own runner, and its recorded CI run shows red before the implementation and green after — the green alone does not satisfy this.
+- [-] AC-4 — Every stack the detection step recognises is either covered by an adapter or named as uncovered; the uncovered list is non-empty and its count matches the detection surface's own list.
+- [-] AC-5 — Altering one example value in that specification turns the run red, asserted by a test rather than by a claim.
+- [-] AC-6 — A changed-surface mutation pass reports survivors and timeouts as separate counts, cites the archived refusal in its header, and every assurance-registry state changed in this roadmap carries an `evidence` field naming a runnable command — with `e2e-test` unchanged.
+
+**AC-3 through AC-6 are `[-]` descoped**, each depending on a phase the council
+closed: AC-3/AC-4 on the adapter and detection (blocker
+`which-stack-gets-the-first-adapter` → (c)), AC-5 on the specification AC-3 would
+have produced, AC-6 on the mutation rig held by a measured refusal whose reopen
+condition has not fired. All four are carried verbatim into
+`stubs/road-to-executable-specification-adapter.md` § 4 so promoting the stub
+restores them rather than re-deriving them.
+
+**No registry `state` was flipped by this roadmap** — the property AC-6 exists to
+protect holds even though AC-6 itself is descoped. `mutation-sensitivity` stays
+`degraded` and `e2e-test` stays `unknown`; what changed in
+`src/config/assurance-capability-registry.json` is the `projection` rename on two
+entries, one added `limitations` line recording the unscore, and a `revisit_if`
+qualified so it can no longer be read as authorization. Each is a description of
+what the grader now emits, verifiable by running it — never a state improved
+because a phase closed.
