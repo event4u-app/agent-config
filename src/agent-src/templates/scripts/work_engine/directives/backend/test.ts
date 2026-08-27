@@ -25,6 +25,13 @@
  *   be silently skipped, and the loop cannot report one as success.
  * - Optional keys (`targeted`, `full`, `duration_ms`,
  *   `followups`) feed the delivery report.
+ * - `red` is NOT a verdict. It is the per-behaviour RED evidence
+ *   `./implement.ts` gates on, written before any production edit, and it
+ *   says nothing about the suite. A `state.tests` carrying `red` and no
+ *   `verdict` therefore means the runner has not been invoked for the suite
+ *   yet → delegate, exactly as an empty `state.tests` does. A `verdict` that
+ *   is present and unrecognised still blocks on shape; this is a
+ *   not-yet-run case, never a relaxed verdict check.
  */
 
 import type { DeliveryState} from '../../delivery_state.js';
@@ -86,7 +93,7 @@ export function run(state: DeliveryState): StepResult {
     }
 
     const tests = state.tests;
-    if (!_pyTruthy(tests)) {
+    if (!_pyTruthy(tests) || _isRedOnly(tests)) {
         return _delegate_to_run_tests(state, policy.widen_tests);
     }
 
@@ -102,6 +109,21 @@ export function run(state: DeliveryState): StepResult {
     }
 
     return new StepResult({ outcome: Outcome.SUCCESS });
+}
+
+/**
+ * True when `state.tests` carries only the pre-implement RED record.
+ *
+ * `red` is written by the `implement` gate's `observe-red` directive; it is
+ * evidence about one behaviour's first failing run, not a suite verdict. Only
+ * a MISSING `verdict` routes here — a present-but-wrong one still blocks.
+ */
+function _isRedOnly(tests: Any): boolean {
+    if (!_isPlainObject(tests)) {
+        return false;
+    }
+    const d = tests as Record<string, unknown>;
+    return !('verdict' in d) && _pyTruthy(d.red);
 }
 
 function _diagnose_tests(tests: Any): string[] {

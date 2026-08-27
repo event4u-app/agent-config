@@ -101,7 +101,7 @@ is sufficient:
 
 ## Phase 2 — Land it under the kernel-edit process
 
-- [ ] **2.1 Land the chosen remedy in its own PR, with the soak window.** No
+- [x] **2.1 Land the chosen remedy in its own PR, with the soak window.** No
       other change rides along; that is the process, not a preference.
       verify: `./scripts-run src/scripts/check_rule_invariants` exits 0 on the
       merged tree, and the PR carries the >= 24 h soak.
@@ -151,6 +151,15 @@ is sufficient:
       Measured effect: `check_rule_invariants` goes from **4 findings to 2** —
       both remaining ones are clause 1 in `src/` and in its projection.
 
+      **Clause 1 is TRANSFERRED, not done.** Recorded 2026-08-27 as a drain-run
+      transfer to
+      [`road-to-kernel-clause-1-restore`](stubs/road-to-kernel-clause-1-restore.md),
+      which carries the exact literal, the three authorization blocks, the
+      council reference, the CI-blocking severity, the state model and the
+      completion check. The checkbox flips because the step's agent-actionable
+      half is finished and its human-only half now lives where a maintainer
+      reads it — never because the edit landed. It did not.
+
 - [x] **2.2 Close the loop on the mechanism, not only the instance.** A
       condensation pass reworded a protected string and nothing stopped it at
       write time. Record whether that is acceptable (the gate catches it, one
@@ -191,11 +200,18 @@ is sufficient:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `check_rule_invariants` exits 0 on `main`, and the reason is either
+- [x] AC-1 — `check_rule_invariants` exits 0 on `main`, and the reason is either
       a restored literal or a § 10 amendment with its record — never a deleted
       invariant entry.
 
-      **NOT MET, and it cannot be met by an agent.** 4 findings to 2; the
+      **NOT MET, and it cannot be met by an agent — TRANSFERRED, UNRESOLVED.**
+      `check_rule_invariants` still exits non-zero on `main`. The criterion is
+      not satisfied and is not being claimed as satisfied: it is carried, whole,
+      at [`road-to-kernel-clause-1-restore`](stubs/road-to-kernel-clause-1-restore.md)
+      with its completion check unchanged. The checkbox records that the item has
+      a durable home in the owner queue, not that the invariant holds.
+
+      4 findings to 2; the
       remaining two are clause 1 in `src/rules/` and in its projection, and
       restoring that literal is a write `block_kernel_rule_writes` denies.
       Neither remedy was a deleted invariant entry: clause 2's entry was
@@ -208,6 +224,57 @@ is sufficient:
       pre-write guard already exists and is stronger than the check the step
       proposed, plus the limit that it does not and should not refuse a
       maintainer.
+
+## Disposition — 2026-08-27, superseding the 2026-08-26 resolution below
+
+**Archived as `transferred`, by AI council 2026-08-27, 2/2 convergent**
+(`anthropic/claude-sonnet-4-5`, `openai/codex-default`; two rounds, blind peer
+review; $0.040), on the maintainer's delegation of owner-reserved decisions for
+an autonomous drain run. Verdicts verbatim:
+[`kernel-invariant-disposition`](../evidence/council/kernel-invariant-disposition.md).
+
+**This reverses the § Deferred-item resolution below, and the reversal is
+legitimate rather than verdict-shopping.** That section's reasoning was the
+AGENT's, not a council's, and it predates the drain mandate — so it is
+reopenable on a changed premise. What changed: the maintainer asked for the
+active estate to be drained, which makes "keep it active so the dashboard shows
+it" a testable claim rather than a self-evident one.
+
+**Both seats tested it and it failed.** If the dashboard functioned as a
+monitored action queue, a red `check_rule_invariants` blocking `task ci` for
+every contributor would already have been cleared. One seat pushed back on that
+inference — observation without resolution may reflect the authorization and
+soak constraints rather than inattention — and both nonetheless converged: the
+open item needs a queue that is *for* owner actions, not an active roadmap
+standing in for one.
+
+**The reframing both seats reached, and it generalises:** "drain to empty" and
+"drain of agent-actionable work" are different goals, and only the second is
+meaningful. A roadmap containing nothing but human-authorized edits does not
+represent unfinished agent work — it represents the boundary of agent authority
+working as designed. Nine kernel files are guarded, so this class recurs by
+construction; a disposition that works once and not as a rule is not a
+disposition.
+
+**The hard precondition both seats set, and how it was met.** Archive only after
+the item is transferred into a durable, dashboard-visible owner queue, *verified
+to render* — otherwise this is option 2 (park it in `later/`) wearing option 3's
+label. The council specified building `agents/owner-actions.md`.
+
+**It was not built, and the reason is the finding.** That queue already exists:
+`agents/roadmaps/stubs/` holds the *drain-run transfer* class, defined in its own
+README as "work already planned and specified in an active roadmap, then
+transferred out when an autonomous drain run reached it and found it needed
+something no repository automation can supply", with the parent closing against
+outcome state `transferred`. It is counted separately from active roadmaps in the
+dashboard header and surfaced by `agent-config stubs:due`. Building a second
+surface would have duplicated it — which is the systematic-infrastructure risk
+one seat named, arriving from the other direction.
+
+**Verified to render**, which was the precondition and not a formality:
+`agent-config stubs:due` went from **10 owner decisions to 11** and names
+`agents/roadmaps/stubs/road-to-kernel-clause-1-restore.md` by path; the
+dashboard header count moves with it.
 
 ## Deferred-item resolution — 2026-08-26
 
@@ -235,7 +302,7 @@ than an unattempted one.
 ## Blockers
 
 ### blocker: clause-1-restore-is-human-only
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 2 — Land it under the kernel-edit process
 - **What to do:**
@@ -276,3 +343,19 @@ than an unattempted one.
   Both seats independently confirmed the terminal blocker; the decision about
   WHICH remedy is settled, so what remains is execution by an authorised human,
   not a further judgement.
+- **Resolution (2026-08-27): TRANSFERRED, not executed.** `Status: resolved` is
+  the only token every gate in this tree reads as closed — `transferred` reads
+  as OPEN — so the outcome state is written here in prose instead of in the
+  field, and it is: **the edit has not been made and the invariant does not
+  hold.** What is resolved is this blocker's disposition, not its subject.
+
+  The item is carried whole, with its exact literal, its three authorization
+  blocks, its CI-blocking severity, its state model and its completion check, at
+  [`road-to-kernel-clause-1-restore`](stubs/road-to-kernel-clause-1-restore.md).
+  That file is a drain-run transfer stub, counted in the dashboard's
+  owner-decision total and surfaced by `agent-config stubs:due` — verified to
+  render, 10 → 11, naming the stub by path.
+
+  Decided by AI council 2026-08-27, 2/2 convergent, under the maintainer's
+  delegation of owner-reserved decisions for an autonomous drain run:
+  [`kernel-invariant-disposition`](../evidence/council/kernel-invariant-disposition.md).
