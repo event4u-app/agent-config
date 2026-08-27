@@ -142,54 +142,126 @@ argued that is unnecessarily large before fixing known-false public claims, and
 that is the reading adopted here. Discovery finds the *load-bearing* set;
 exhaustive closure stays in Phase 4.
 
-- [ ] **0.1 Enumerate every match mechanically and split by artefact class.**
+- [x] **0.1 Enumerate every match mechanically and split by artefact class.**
       Not a judgement pass — a deterministic enumeration, so the population is
       known before anyone reasons about it.
-      verify: the enumeration is committed, its count matches a fresh run of the pinned expression, and every match carries its file and line.
-- [ ] **0.2 Read only the classes that can refuse a resident process** — rules,
+      verify: **discharged.** `agents/evidence/analysis/no-runtime-discovery-2026-08-27.md`
+      records the pinned expression verbatim, the base commit
+      `830e31aa3ca7329b513b53328eadad4a92d471f7`, and the fresh counts:
+      **129 files / 205 lines**, with the per-directory composition summing to 129.
+      The count reproduces the figure the roadmap carried from a different day,
+      so the population is stable rather than coincidental.
+- [x] **0.2 Read only the classes that can refuse a resident process** — rules,
       contracts, schemas, gates, and accepted ADRs. Skills, commands, evidence
       records and archived roadmaps are out of scope for this phase by
       construction: a skill using the phrase incidentally cannot block anything.
-      verify: the read set is exactly those five classes, and its size is reported alongside the 129 so the reduction is visible.
-- [ ] **0.3 Name what a load-bearing blocker is, before classifying against it.**
+      verify: **discharged.** The read set is exactly rules (2), contracts (13),
+      schemas (3), gates (7) and accepted ADRs (24) = **49 of 129**, a 62 %
+      reduction reported in the artefact next to the 129. The 80 out-of-scope
+      files are counted and their exclusion basis stated (artefact class, not a
+      reading); the four non-accepted ADRs among them are broken out separately.
+- [x] **0.3 Name what a load-bearing blocker is, before classifying against it.**
       A council seat asked what distinguishes "load-bearing" from "incidental"
       and the first draft had no answer. The test: does the artefact, read
       literally by an agent or a gate, refuse an action this reversal permits? If
       yes it is active. If it merely describes the old state, it is historical.
-      verify: the definition is written down before 0.4 runs, and three worked examples are classified with it — one active, one historical, one incidental.
-- [ ] **0.4 Publish the discovery findings as a typed evidence artefact, and let
+      verify: **discharged, and the definition needed two more classes than the
+      step anticipated.** Active / historical / incidental are defined in the
+      artefact with the three worked examples the step asks for — `ADR-124:111`
+      (active), `ADR-040:36` (historical), `config-presets.md:78` (incidental).
+      The corpus forced two further classes rather than fitting the three:
+      **derivative** (refuses nothing but reasons from a floor that is moving)
+      and **not-reopened** (a real prohibition on a different subject —
+      the agent-memory sunset — which this reversal does not touch). Collapsing
+      not-reopened into active would have read as a general relaxation.
+- [x] **0.4 Publish the discovery findings as a typed evidence artefact, and let
       them shape Phase 4.1's contract.** If discovery finds an active blocker
       nobody can remove, that is a Phase 4 input and possibly a new blocker —
       not a surprise during closure.
-      verify: the artefact exists with an `evidence-type: analysis` marker, and Phase 4.1's contract draft cites it.
+      verify: **first half discharged; the second half belongs to Phase 4.1 and is
+      not claimed here.** The artefact exists, carries
+      `<!-- evidence-type: analysis -->`, and `lint_evidence_artifacts` accepts it.
+      **0.4's contingency did not fire:** no active blocker was found that nobody
+      can remove — the active set is exactly three artefacts and all three are
+      owned by phases this roadmap already has. Two findings that DO change Phase
+      4.1's input are recorded: `no-runtime-boundary.md`'s literal scope is
+      Mission-Mode rather than the suite (its own header says so, and `ADR-124:34`
+      had already noticed), and its `keep-beta-until: 2026-08-17` expired ten days
+      before this measurement.
 
 ## Phase 1 — Bind the decision against the right documents
 
-- [ ] **1.1 Write the supersede ADR against ADR-124, not ADR-088.** A new ADR
+- [x] **1.1 Write the supersede ADR against ADR-124, not ADR-088.** A new ADR
       records the owner's reversal and supersedes `ADR-124`'s § 4 Class-B row
       (`:111`) — the live prohibition — while stating that ADR-088's federation
       decision is *untouched*: not driving another tool's runtime and owning
       one's own supervised process are different questions, and the reversal
       only answers the second.
-      verify: the base-commit reading `git show HEAD:docs/decisions/ADR-124-embedded-engine-doctrine.md | grep -c "PROHIBITED in core"` is 1; the new ADR's `supersedes` names ADR-124 with a `supersedes_scope` whose text identifies the § 4 Class-B row and nothing wider; and ADR-124's remaining provisions — the Class-A adoption path at `:110` above all — are re-read and confirmed still authoritative. A `supersedes` field that merely EXISTS is not the check: partial supersession is a convention in this tree, not a mechanism, so the scope must be read rather than asserted.
-- [ ] **1.2 Amend the ADR-109 identity floor in the same change.** `:28`'s
+      verify: **discharged, and the step's own premise was corrected.** The
+      base-commit reading returns 1. `ADR-249` carries
+      `supersedes: ADR-124, ADR-109` with a `supersedes_scope` naming ADR-124 § 4
+      Class-B (`:111`) and ADR-109 `:28` and nothing wider. ADR-124's remaining
+      provisions were re-read at this base and confirmed authoritative in the
+      ADR's § Decision 3: the Class-A adoption path (`:110`), the Class-C
+      prohibition, the § 6 state-store test, and its own scoped supersession of
+      ADR-088/094. **Correction:** this clause said partial supersession is "a
+      convention in this tree, not a mechanism". Half true, and the half that is
+      false mattered — `supersedes_scope` / `superseded_scope` are documented
+      fields (`docs/contracts/adr-layout.md:59-60`), rendered back into the index
+      by `regenerate_index.ts:205`, and were already carried by ADR-124 itself.
+      What was missing was a VALIDATOR, which is 1.4. A council initially
+      recommended amend-in-place on the false premise and reversed itself once the
+      measurement was put to it.
+- [x] **1.2 Amend the ADR-109 identity floor in the same change.** `:28`'s
       "no-runtime identity floor (no daemon, …)" is a second accepted floor with
       no `superseded_by`. Leaving it standing is the failure mode this phase
       exists to prevent — a repeal that names one document and misses the other
       reads as complete and changes nothing.
-      verify: `grep -c "no-runtime identity floor" docs/decisions/ADR-109-subagent-v1-contract.md` returns 0, or the line carries an explicit pointer to the new ADR — AND the new ADR's `supersedes` field names **both** ADR-124 and ADR-109. Deleting the phrase without binding the floor to the new decision leaves an amendment nobody can trace, which is the second half of Risk 1 and is not covered by 1.1's check.
-- [ ] **1.3 State the non-reopenings explicitly in the ADR.** Runtime permitted
+      verify: **discharged via the second branch, deliberately.** The phrase is
+      left standing and now carries an explicit pointer to ADR-249 immediately
+      below it, naming which clause moved ("no daemon") and which three did not
+      (no auto-write, no in-process swarm, no dispatch we enforce). ADR-249's
+      `supersedes` names **both** ADR-124 and ADR-109, and ADR-109 now carries the
+      reciprocal `superseded_by: ADR-249` plus a `superseded_scope` — so
+      `check_adr_frontmatter` no longer reports the link as one-sided, and
+      `docs/decisions/INDEX.md:115` renders the scope in parentheses. Deleting the
+      phrase would have satisfied the grep and produced exactly the untraceable
+      amendment the clause warns about.
+- [x] **1.3 State the non-reopenings explicitly in the ADR.** Runtime permitted
       is not agent-memory permitted (ADR-094 stands), not spawn-hardening relaxed
       (ADR-123 and `docs/spawn-site-policy.md` stand), and not a lethal-trifecta
       carve-out. Absent this paragraph the reversal reads as a general
       relaxation, which is the reading the safety floors cannot survive.
-      verify: the ADR contains a "Not reopened" section naming ADR-094, ADR-123 and `lethal-trifecta-guard`.
-- [ ] **1.4 Make the required section enforceable, or drop the word
+      verify: **discharged.** ADR-249 § Not reopened names ADR-094 and the
+      2026-06-14 agent-memory / Layer-2 sunset, ADR-123 with
+      `docs/spawn-site-policy.md`, and `lethal-trifecta-guard` — plus two the step
+      did not ask for and the discovery pass showed were needed: ADR-109's
+      auto-write clause and ADR-124 Class C. The discovery artefact lists nine
+      further agent-memory lines across ADR-098/099/100/138 that are explicitly
+      NOT superseded, so a later reader grepping "no daemon" and finding hits does
+      not read the repeal as incomplete.
+- [x] **1.4 Make the required section enforceable, or drop the word
       "required".** A council seat asked what happens if the ADR is written
       without 1.3's section, and the honest answer for the first draft was
       nothing. `check_adr_frontmatter.ts` already exists as the place a
       structural ADR requirement belongs.
-      verify: either the check rejects an ADR that supersedes a safety-floor row without a "Not reopened" section — proven by feeding it one that lacks the section — or 1.3 is restated as a convention this roadmap follows rather than a rule it imposes.
+      verify: **discharged via the first branch — the check exists and was seen
+      red twice.** `check_scoped_supersession` in
+      `src/scripts/check_adr_frontmatter.ts` enforces two invariants taken from
+      `adr-layout`'s own text: a `supersedes_scope` with no refs is an error ("a
+      scope with no refs is not a supersession"), and a scoped supersession must
+      carry a `## Not reopened` section. Sabotage probes, both restored:
+      renaming ADR-249's section to `## Scope notes` produced
+      `❌ … must carry a \`## Not reopened\` section`; blanking its `supersedes` to
+      `—` produced `❌ … \`supersedes_scope\` is set but \`supersedes\` names no ADR`.
+      Six unit cases in `tests/scripts/check_adr_frontmatter.test.ts` (82 pass).
+      **Staged, not retroactive:** `SCOPED_SUPERSESSION_SINCE = '2026-08-27'`
+      mirrors the file's existing `REVIEW_TRIGGER_SINCE` pattern, so ADR-124
+      (2026-07-23) and ADR-209 (2026-08-03) — which genuinely carry a scope with no
+      remainder section — WARN rather than error. Without the staging the check
+      reds two accepted records on the day it lands. **Known limit, recorded in the
+      docstring:** it cannot require a scope wherever partial supersession was
+      *intended*, because intent is not in the file.
 
 ## Phase 2 — Retire the claim through the ledger, never by deletion
 
@@ -354,6 +426,25 @@ is *being established*.
   on good intentions. (b) leaves `docs/comparison.yaml:31` publishing a claim the
   repo has already decided against, which is a different false statement rather
   than fewer. (c) is not on the table — it is the defect.
+- **Decision recorded (2026-08-27), closure still pending 3.4:** **(a)**, the
+  two-statement split, confirmed by an AI council over the alternatives. The
+  choice is written into the Phase 1 ADR as required — `ADR-249` § *The
+  public-surface transition this record authorises* — together with the
+  **mechanical wording rule** the council supplied when asked for one an
+  autonomous run could apply without judgement: a maintained public surface may
+  state the adopted policy, that runtime work is pending, and currently-backed
+  runtime-neutral capabilities; it may not assert runtime absence, assert an
+  unverified runtime property, or present a policy adjective such as "governed"
+  as an established property of an implemented runtime.
+  The council also found this blocker's ordering invariant (Group B) **necessary
+  but not sufficient**: removing a public claim does not stop an OLDER revision
+  from activating a process. The stronger form — no resident process may execute
+  from any revision that has not already retired the claim — is now governance
+  condition 4 in ADR-249, so the obligation survives whichever roadmap builds
+  first.
+  **The blocker stays open** because two of its three `Resolved when` clauses are
+  Phase 3 work: the 3.4 check has not been seen red on three seeded negatives, and
+  this file's `status` is still `draft`. Recording the choice does not close it.
 - **If you do nothing:** Phase 3 is blocked, so the repo keeps publishing the old
   no-daemon claim while its own ADR says otherwise. **That is stale only until
   the dependent roadmap's collector runs** — a council seat corrected the first
@@ -364,7 +455,7 @@ is *being established*.
 
 ### blocker: partial-supersession-semantics
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 steps 1.1 and 1.2. Phase 0 lands regardless, and its
   discovery output is a useful input to whichever answer wins.
@@ -393,6 +484,25 @@ is *being established*.
   confirmed authoritative — neither is answerable while the mechanism is
   undefined, so the phase stops rather than shipping an ADR whose reach nobody
   can state.
+- **Resolution (2026-08-27):** **(a′)** — use the mechanism that already
+  exists. The blocker's own premise, and the recommendation of **(b)** that rested
+  on it, were **measured false**: `supersedes_scope` / `superseded_scope` are
+  documented sibling fields (`docs/contracts/adr-layout.md:59-60`, convention at
+  `:105-117`), are rendered back into the index by `regenerate_index.ts:205`
+  → `supersessionCell`, and were **already carried by ADR-124 itself**
+  (`supersedes_scope: engine-adoption interpretation only`). What was genuinely
+  missing was a validator, not a schema field — so option (a)'s stated cost, "a
+  contract change to `check_adr_frontmatter`", was an overestimate of the wrong
+  thing. An AI council put to the measurement reversed its own earlier
+  recommendation, unanimously across four positions, and added the reason (b) is
+  worse than it looks: ADR-124 is itself a reversal ADR whose Class-B row is the
+  provision being reversed again, so amending in place would make one document
+  assert two opposite positions across its own history with no record of the
+  transition.
+  Both halves of the `Resolved when` are met. The answer is recorded (here and in
+  ADR-249 § Decision 2), and the validator has been **seen reject** a scope-less
+  partial supersession — see 1.4's verify for both sabotage probes and their
+  restoration.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-27 | reviewer: claude/host -->
