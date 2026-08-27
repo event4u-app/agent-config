@@ -194,14 +194,13 @@ allowance the modeling sibling is arguing about — recorded as
 
 ## Phase 3 — Close the loop that let this sit for six days
 
-- [ ] **3.1 Record why a finished branch went unlanded, as a finding rather than an anecdote.**
+- [x] **3.1 Record why a finished branch went unlanded, as a finding rather than an anecdote.**
       The mechanism is identifiable: `road-to-session-closeout` step 7.2 required
       "a merged change or a recorded disposal" per rescued worktree and was
       marked `[x]` with neither for this branch. Write the finding to
       `agents/evidence/analysis/` — what the step asked for, what it got, and
       why the checkbox could be flipped anyway.
-      verify: the evidence file exists and names the step, the branch, and the
-      six-day gap.
+      verify: **discharged, and it is the one step in this roadmap whose whole deliverable is in this change.** `agents/evidence/analysis/unlanded-finished-branch-2026-08-27.md` names the step (`archive/road-to-session-closeout.md:596-599`), the branch (`feat/schema-erd-diff`, five commits dated 2026-08-20) and the gap — **seven** days, not six. The mechanism is identified rather than asserted: 7.2's verify joins two clauses with **and** that have different observability. "None appears in a fresh dirty-worktree scan" is a command that answered yes; "each has a merged change or a recorded disposal" is a fact about `origin` the step never queries plus the absence of a record, which is indistinguishable from the absence of a need for one. The observable half passed and the conjunction reported its value — the same shape as a gate that scans an empty corpus and exits 0.
 
 - [ ] **3.2 Make an unlanded finished branch findable by something other than memory.**
       The analysis found this branch by scanning every local ref for commits
