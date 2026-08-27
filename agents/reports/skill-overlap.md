@@ -5,13 +5,14 @@
 
 - Skills scanned: **299**
 
-- Overlap pairs ≥ 70%: **0** (0 same-domain merge candidates, 0 cross-domain)
+- Overlap pairs ≥ 70%: **1** (1 same-domain merge candidates, 0 cross-domain)
 
 
 ## Merge candidates — same-domain, ≥ threshold
 
-None — no same-domain pair exceeds the overlap threshold.
-
+| Skill A | Skill B | similarity | shared packs |
+|---|---|--:|---|
+| `test-driven-development` | `testing-anti-patterns` | 71% | engineering-base |
 
 ## Cross-domain overlaps (informational, not merge candidates)
 
