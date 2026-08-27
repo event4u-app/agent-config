@@ -27,6 +27,8 @@ collision_ok:
   "component": "component work = generalize + reuse duty"
 # obligation: line 69
 obligation_frequency: "per-edit"
+enforced_by:
+  - "instruction-only: overfit code looks like working code"
 ---
 
 # Senior Engineering Discipline

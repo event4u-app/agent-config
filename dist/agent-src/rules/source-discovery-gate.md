@@ -22,6 +22,8 @@ collision_ok:
   "schema": "a DB schema is the canonical structure to verify from a real source"
 # obligation: line 44
 obligation_frequency: "per-edit"
+enforced_by:
+  - "hook:source-first-gate"
 ---
 
 # Source Discovery — evidence before structure

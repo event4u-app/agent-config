@@ -15,6 +15,8 @@ collision_ok:
   "controller": "thin-handler floor on controller work"
 # obligation: line 26
 obligation_frequency: "per-edit"
+enforced_by:
+  - "instruction-only: a placement decision before any file exists"
 ---
 
 # Architecture Rules

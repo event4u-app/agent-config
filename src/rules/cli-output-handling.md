@@ -37,6 +37,8 @@ collision_ok:
   "rector": "rector output is verbose — rtk wrap applies"
 # obligation: line 42
 obligation_frequency: "per-edit"
+enforced_by:
+  - "hook:rtk-wrap"
 ---
 
 # Cli Output Handling

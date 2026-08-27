@@ -22,6 +22,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 # obligation: line 35
 obligation_frequency: "per-task"
+enforced_by:
+  - "hook:delegation-nudge"
 ---
 
 # Delegation Policy

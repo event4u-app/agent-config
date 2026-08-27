@@ -11,6 +11,8 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 # obligation: line 16
 obligation_frequency: "per-edit"
+enforced_by:
+  - "instruction-only: consulting leaves no signature"
 ---
 
 # Guidelines

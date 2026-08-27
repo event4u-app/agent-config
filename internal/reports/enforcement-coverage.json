@@ -1,16 +1,22 @@
 {
-  "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. `frequency_gap` counts rules whose carrier does not fire often enough to cover their declared obligation on some hook-capable platform \u2014 a rule can be blocking and in that bucket at once. Coverage is a ratchet: --check fails when blocking falls, or unwired / local_only / missing / frequency_gap rises. Regenerate intentionally with --write-baseline when the change is the point. 2026-08-23, frequency_gap 8 -> 9 and observer 8 -> 9: road-to-frontend-power E2.2 moved `ui-audit-gate` from `enforced_by: none` to a declared carrier (hook:design-pass). The rise is VISIBILITY, not regression, and the mechanism is in this script: a rule whose every declaration is `none` returns verdict `declared-gap` and is never counted in the frequency join at all (check_enforcement_coverage.ts:474). Declaring a carrier enters it, and the carrier is observer-grade (`fail_closed: false`, `severity: advisory`) against a per-edit obligation, so it reads as a frequency gap. The alternative readings were both worse: reverting to `none` would hide a carrier that now exists, and declaring `severity: blocking` needs an entry in concern_severity.test.ts's BLOCKING_ALLOWLIST -- a security-relevant decision by that file's own header, and the third turn-END refusal in the tree, which is transferred to the owner with the default flip rather than taken in a frontend change. Closing this gap for real is that allowlist entry, and it is recorded as probe reading 0 in agents/roadmaps/stubs/road-to-frontend-power-default-flip.md.",
+  "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. `frequency_gap` counts rules whose carrier does not fire often enough to cover their declared obligation on some hook-capable platform — a rule can be blocking and in that bucket at once. Coverage is a ratchet: --check fails when blocking falls, or unwired / local_only / missing / frequency_gap rises. Regenerate intentionally with --write-baseline when the change is the point.",
   "summary": {
     "total": 120,
-    "declared": 34,
+    "declared": 52,
     "blocking": 15,
-    "local_only": 0,
-    "observer": 10,
+    "local_only": 3,
+    "observer": 14,
     "unwired": 0,
     "missing": 0,
-    "undeclared": 86,
+    "undeclared": 68,
     "blocking_pct": 12.5,
-    "frequency_gap": 9,
-    "frequency_unclassified": 10
+    "frequency_gap": 14,
+    "frequency_unclassified": 9,
+    "frames": {
+      "in_scope": 120,
+      "governed_total": 120,
+      "agree": true,
+      "source": "src/rules/*.md"
+    }
   }
 }
