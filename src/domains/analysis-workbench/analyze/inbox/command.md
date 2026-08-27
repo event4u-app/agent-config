@@ -433,7 +433,7 @@ The question is never "what does the file say" but **"what does it become here"*
 | reference material read on demand | a `guideline` or `context` |
 | a measured finding | a `decision-record`/ADR, not a rule |
 | a defect claim | a roadmap item, once verified |
-| a consolidation omitting a parent | **not an artefact — a discharge, see below** |
+| a consolidation omitting a parent | **not an artifact — a discharge, see below** |
 
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
 column read anything but `n/a` or `complete`, this phase says what happened to
@@ -444,7 +444,7 @@ operator's:
    the consolidation, marking them as coming from it.
 2. **Record a kill ID for it** — the consolidation's kill register gains a row
    naming the parent and why its content does not survive.
-3. **State that it was read and adds nothing** — one sentence, in the artefact,
+3. **State that it was read and adds nothing** — one sentence, in the artifact,
    naming the parent.
 
 **Silence is the failure mode; any of the three is a complete discharge.** The

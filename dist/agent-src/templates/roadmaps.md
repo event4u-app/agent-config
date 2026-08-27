@@ -193,7 +193,7 @@ that was never a judgement call.
     gap-table ritual. When it fires:
     - **(a) Gap-table before drafting.** Audit each proposed item against
       the existing skill / command / rule surface and keep only verified
-      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artefact) /
+      gaps — `KEEP` (genuine gap) / `FOLD` (into an existing artifact) /
       `CUT` (already covered). The plan integrates, it does not dump.
     - **(b) `## Provenance` block** — source named by a **neutral
       descriptor** (never the raw competitor / tool name, per
@@ -462,7 +462,7 @@ that was never a judgement call.
     NOT required: a failure register written to satisfy a template stops
     being a forecast, and boilerplate in a failure register is worse than
     its absence. Include it when the plan is heavy or irreversible enough
-    that a named tripwire changes behaviour; omit it entirely otherwise —
+    that a named tripwire changes behavior; omit it entirely otherwise —
     never ship an empty or perfunctory one. Distinct from rule 24's Risk
     Register: the register ranks *known* risks with mitigations; the
     pre-mortem imagines the *whole plan dead* and reconstructs why.
@@ -479,7 +479,7 @@ that was never a judgement call.
     ```
 
     The field is the *only* spelling a tracked roadmap may use. Five
-    legacy spellings exist in inbox artefacts and are read by
+    legacy spellings exist in inbox artifacts and are read by
     `lint_consolidation_lineage` so a legacy folder parses to the same
     parent set rather than to an empty one — `supersedes_analysis:`, a
     prose `**Inputs consolidated:**` list, a prose `**Ersetzt als
@@ -490,7 +490,7 @@ that was never a judgement call.
     Why the field rather than prose: a consolidation presents its content
     as adjudicated — parents named, conflicts resolved, a kill register
     for what was rejected. A parent missing from that list is not
-    *killed*, it is *undiscussed*, and nothing in the artefact
+    *killed*, it is *undiscussed*, and nothing in the artifact
     distinguishes those two states. Measured
     (`agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md`):
     four inbox folders carrying a declared consolidation, four with an
@@ -499,7 +499,7 @@ that was never a judgement call.
     An omission is discharged in exactly one of three ways, never by
     silence: fold the parent in · record a kill ID for it · state that it
     was read and adds nothing. `/analyze:inbox` carries the obligation at
-    the point the artefacts are produced.
+    the point the artifacts are produced.
 
     Reported by `lint_consolidation_lineage` — report-mode, not blocking
     (council 2026-08-27, 2/2 convergent: the four measured cases come from
@@ -616,7 +616,7 @@ complexity: lightweight
 {Optional: edge cases, decisions, links to related docs.}
 
 <!-- ## Pre-mortem — INCLUDE ONLY when the plan is heavy or irreversible
-     enough that a failure forecast changes behaviour (rule 25). OMIT
+     enough that a failure forecast changes behavior (rule 25). OMIT
      entirely otherwise — a perfunctory register is worse than none.
      Shape: the four-part failure register from the premortem skill.
 1. Causes of death, ranked: {three, one paragraph each — mechanisms, not topics}

@@ -66,7 +66,7 @@ describe('lint_consolidation_lineage — the six declaration shapes', () => {
     });
 });
 
-describe('lint_consolidation_lineage — normalisation', () => {
+describe('lint_consolidation_lineage — normalization', () => {
     it('strips the download-collision suffix, the extension, and trailing prose', () => {
         expect(normalizeParent('- `road-to-a(1).md`')).toBe('road-to-a');
         expect(normalizeParent('road-to-b')).toBe('road-to-b');

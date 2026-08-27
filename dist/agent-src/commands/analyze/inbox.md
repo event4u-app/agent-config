@@ -6,7 +6,7 @@ visibility: internal
 sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
-description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
+description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artifacts, emit a roadmap each.
 argument-hint: "[<file> | <dir>] [--triage-only] [--no-roadmap] [--keep-inbox] [--worktree]"
 suggestion:
   eligible: false
@@ -210,7 +210,7 @@ With a `drafted-against` SHA the distinction is mechanical — the claim either
 falls inside `<SHA>..HEAD` or it does not. Report the two separately: a draft
 that was 87 % overtaken was not a bad draft, and a draft that was wrong at its
 own SHA is a different signal about its source. Two limits hold regardless: a
-SHA is **not** a clearance for claims about a third system (host behaviour,
+SHA is **not** a clearance for claims about a third system (host behavior,
 provider pricing, an external tool — those are `unverifiable` until probed), and
 the narrowed surface still gets verified, just not re-derived from zero.
 
@@ -223,7 +223,7 @@ naming a flag the CLI dropped, a path that moved, or a decision point the file
 never resolves reads perfectly and fails on first contact.
 
 It runs **before** Phase 5 for the same reason the sibling's interop probe runs
-before its convergence pass: Phase 5 decides what becomes an artefact, and a step
+before its convergence pass: Phase 5 decides what becomes an artifact, and a step
 nobody could execute must not become a skill.
 
 **User-authored instructions go first.** In a transcript, a prompt file, or a
@@ -246,7 +246,7 @@ which is what makes the set reproducible between two readers — and two traps a
 worth naming because the obvious third criterion falls into both:
 
 - **Membership never depends on Phase 5.** "Every instruction Phase 5 would turn
-  into an artefact" is circular: 4b runs first, and Phase 5 consumes 4b's
+  into an artifact" is circular: 4b runs first, and Phase 5 consumes 4b's
   verdicts. The dependency runs one way only.
 - **Author sets the order, never the membership.** "Every user-authored
   instruction" looks like a natural third criterion and is a sweep in disguise:
@@ -277,7 +277,7 @@ them without mutating anything:
   a credentials file is `out-of-bound`, not a cheap probe.
 - **No network** — no fetch, no clone, no API call. An outbound fetch adds a
   *second* untrusted layer whose content then steers the run, and combined with
-  repo reads and a findings artefact that is the full trifecta
+  repo reads and a findings artifact that is the full trifecta
   ([`lethal-trifecta-guard`](../../../../rules/lethal-trifecta-guard.md)). The
   sibling states the same limit for a phase that does not even execute; the phase
   that does execute cannot be looser.
@@ -314,7 +314,7 @@ attempt. At the third, write the row with what was observed and move on.
 This cap is **this phase's own**, and the divergence from
 [`autonomous-execution`](../../../../rules/autonomous-execution.md)
 § Validation-loop budget is deliberate rather than an oversight: that rule's N=3
-governs a *validation target* it defines as "a single identifiable artefact (file
+governs a *validation target* it defines as "a single identifiable artifact (file
 path, lint rule ID, test name)", explicitly excluding natural-language clusters —
 and a verbatim step out of a prose file is exactly such a cluster. Its remedy is
 also different (STOP and ask the user). Borrowing the number while failing the
@@ -416,24 +416,24 @@ next run.
 
 What this phase adds on top, because it is specific to an inbox artifact: the
 recurrence goes in the **triage table** as its own column, so a re-arrived file is
-visibly not a new one, and the resulting learning is emitted as an artefact in
+visibly not a new one, and the resulting learning is emitted as an artifact in
 Phase 5 like any other survivor — never as a line in the reply that nothing reads
 again.
 
-### Phase 5 — Map survivors onto this suite's artefact types
+### Phase 5 — Map survivors onto this suite's artifact types
 
 The question is never "what does the file say" but **"what does it become here"**:
 
-| The file contains | Candidate artefact |
+| The file contains | Candidate artifact |
 |---|---|
 | a reusable prompt / procedure | a `skill` (or a section on an existing one) |
-| a behavioural constraint, always true | a `rule` — check `always` vs `auto` per `rule-type-governance` |
+| a behavioral constraint, always true | a `rule` — check `always` vs `auto` per `rule-type-governance` |
 | a multi-step workflow with a trigger | a `command` |
 | a role, voice, or reviewer stance | a `persona`, `profile`, or `user-type` |
 | reference material read on demand | a `guideline` or `context` |
 | a measured finding | a `decision-record`/ADR, not a rule |
 | a defect claim | a roadmap item, once verified |
-| a consolidation omitting a parent | **not an artefact — a discharge, see below** |
+| a consolidation omitting a parent | **not an artifact — a discharge, see below** |
 
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
 column read anything but `n/a` or `complete`, this phase says what happened to
@@ -444,7 +444,7 @@ operator's:
    the consolidation, marking them as coming from it.
 2. **Record a kill ID for it** — the consolidation's kill register gains a row
    naming the parent and why its content does not survive.
-3. **State that it was read and adds nothing** — one sentence, in the artefact,
+3. **State that it was read and adds nothing** — one sentence, in the artifact,
    naming the parent.
 
 **Silence is the failure mode; any of the three is a complete discharge.** The
@@ -461,17 +461,17 @@ Three hard defaults, from this repo's own scar tissue:
 
 - **Extend before you create.** Run the four-surface overlap scan from
   [`artifact-drafting-protocol`](../../../../rules/artifact-drafting-protocol.md)
-  and name the nearest existing artefact. A near-duplicate skill is worse than
+  and name the nearest existing artifact. A near-duplicate skill is worse than
   no skill.
 - **A measurement is not a gate.** Something the file proposes to enforce needs
   a *measured* false-positive rate before it becomes CI. Absent that, it is a
   one-shot audit or an ADR.
-- **An `unexecutable` step does not become an artefact.** It becomes either the
+- **An `unexecutable` step does not become an artifact.** It becomes either the
   corrected step from Phase 4b or a roadmap item to make it executable — never a
   skill carrying the wording that failed. The other two unreproduced verdicts are
   **not interchangeable** and each has its own rule, because one means somebody
   looked and one means nobody did: an **`out-of-bound`** step may become an
-  artefact marked unreproduced-by-bound (a decision was taken), while a
+  artifact marked unreproduced-by-bound (a decision was taken), while a
   **`not-attempted`** step may only do so carrying the one-line reason the Iron
   Law demands — which is "outside the selection" or "past the ceiling", named, not
   left blank. `not-attempted` is the default bucket and therefore the largest;
@@ -489,7 +489,7 @@ started.
 Write the Phase 4b wording, not the file's original, and tag the item
 `corrected-from-reproduction` so a reader can tell an improvement from a
 transcription. Phase 4b states this obligation for Phases 5 and 6 both; it is
-repeated here because this is the phase that writes the artefact, and an
+repeated here because this is the phase that writes the artifact, and an
 obligation named only upstream is one a Phase-6 executor never sees.
 
 Then the inbox contract from
@@ -506,7 +506,7 @@ each one is and why it is spent, and let the user remove it.
 
 1. The triage table (all files).
 2. Per surviving file: instruction set · verification table · **reproduction
-   table** · artefact mapping.
+   table** · artifact mapping.
 3. The roadmaps written, and for each dropped file one line on why.
 4. One closing summary: files in, roadmaps out, items prevented by
    `already-fixed`, and steps corrected by reproduction — plus the reproduction

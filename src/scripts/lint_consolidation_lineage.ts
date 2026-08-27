@@ -2,11 +2,11 @@
 /**
  * Consolidation-lineage checker — an incomplete lineage becomes a finding.
  *
- * A *consolidating* artefact declares itself a master over sibling proposals.
+ * A *consolidating* artifact declares itself a master over sibling proposals.
  * It presents its content as adjudicated: parents named, conflicts resolved, a
  * kill register saying what was rejected and why. When a parent is missing from
  * that list its content is not killed, it is **undiscussed** — and nothing in
- * the artefact distinguishes those two states. This gate makes the omission
+ * the artifact distinguishes those two states. This gate makes the omission
  * visible; it never judges whether the omission was correct.
  *
  * Measured population that motivated it:
@@ -17,7 +17,7 @@
  * ## What it reads
  *
  * The canonical declaration is the frontmatter list `consolidates:`. Five
- * legacy spellings are recognised so a legacy artefact parses to the SAME
+ * legacy spellings are recognised so a legacy artifact parses to the SAME
  * parent set rather than to an empty one — an empty set would report every
  * legacy consolidation as declaring zero parents, which is a finding storm that
  * discredits the check on its first run:
@@ -31,7 +31,7 @@
  *
  * Shape 6 is a correction to the roadmap's count of five, recorded rather than
  * applied silently. The five are the shapes the census GREPPED for, i.e. the
- * ways an artefact announces "I am a consolidation". Shape 6 announces the same
+ * ways an artifact announces "I am a consolidation". Shape 6 announces the same
  * relation in prose and is invisible to that grep — but the overlap finding
  * (F3) needs it, because in `evolve/` the omitted sibling declares supersession
  * over exactly the master's two parents in a prose sentence and in no field.
@@ -44,8 +44,8 @@
  *                       parent set does not name.
  * - `missing-parent`    a declared parent with no matching file — the lineage
  *                       names something nobody can open.
- * - `overlapping-sets`  two artefacts in one folder declaring overlapping parent
- *                       sets while neither names the other: an artefact that
+ * - `overlapping-sets`  two artifacts in one folder declaring overlapping parent
+ *                       sets while neither names the other: an artifact that
  *                       reads as the settled answer while a peer of equal
  *                       standing exists.
  * - `claims-without-field`  consolidation vocabulary and no parseable
@@ -76,7 +76,7 @@ const FM_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const ROADMAP_RE = /^road-to-.*\.md$/i;
 
 /**
- * Vocabulary that makes an artefact CLAIM to be a consolidation — restricted to
+ * Vocabulary that makes an artifact CLAIM to be a consolidation — restricted to
  * a SELF-declaration in the header.
  *
  * Deliberately narrow, and the narrowness is risk 1 from the roadmap: an inbox
@@ -113,7 +113,7 @@ export interface Declaration {
     /** Normalised parent stems, e.g. `road-to-shared-spine`. */
     parents: string[];
     /**
-     * True when the artefact claims a consolidation but no shape yielded a
+     * True when the artifact claims a consolidation but no shape yielded a
      * parent set. Deliberately distinct from `parents: []` with `kind: 'none'`,
      * which means "makes no claim".
      */
@@ -272,7 +272,7 @@ export function parseDeclaration(text: string, surface: Surface = 'inbox'): Decl
     return { kind: 'none', parents: [], unparseable: false };
 }
 
-interface Artefact {
+interface Artifact {
     stem: string;
     file: string;
     decl: Declaration;
@@ -285,7 +285,7 @@ interface Artefact {
  * `inbox` — a drafting folder holding one session's sibling proposals
  * (`agents/tmp/`, `agents/tmp.old/`). Every `road-to-*.md` beside the master is
  * a candidate parent, so an omission is a finding; and the declaration may be
- * in any of the six spellings, because these artefacts predate the canonical
+ * in any of the six spellings, because these artifacts predate the canonical
  * field. This is the shape the census measured.
  *
  * `estate` — the active roadmap set under `agents/roadmaps/`. Two differences,
@@ -303,7 +303,7 @@ interface Artefact {
  *      turned two such descriptions into parent sets, one of them a `road-to-*`
  *      glob. A tracked roadmap declares its lineage in the canonical field —
  *      that is what step 1.1 of the roadmap fixed the field name FOR — so the
- *      legacy readers are scoped to the artefacts that need them.
+ *      legacy readers are scoped to the artifacts that need them.
  */
 export type Surface = 'inbox' | 'estate';
 
@@ -319,14 +319,14 @@ export function analyseFolder(
     } catch {
         return findings;
     }
-    const artefacts: Artefact[] = names.map((n) => ({
+    const artifacts: Artifact[] = names.map((n) => ({
         stem: n.replace(/\.md$/i, ''),
         file: n,
         decl: parseDeclaration(fs.readFileSync(path.join(dir, n), 'utf-8'), surface),
     }));
-    const present = new Set(artefacts.map((a) => a.stem));
+    const present = new Set(artifacts.map((a) => a.stem));
 
-    for (const a of artefacts) {
+    for (const a of artifacts) {
         if (a.decl.unparseable) {
             findings.push({
                 code: 'claims-without-field',
@@ -350,25 +350,25 @@ export function analyseFolder(
         }
         const omitted =
             surface === 'inbox'
-                ? artefacts.filter((b) => b.stem !== a.stem && !a.decl.parents.includes(b.stem)).map((b) => b.stem)
+                ? artifacts.filter((b) => b.stem !== a.stem && !a.decl.parents.includes(b.stem)).map((b) => b.stem)
                 : [];
         if (omitted.length > 0) {
             findings.push({
                 code: 'omitted-sibling',
                 folder: folderLabel,
                 file: a.file,
-                detail: `declared ${a.decl.parents.length}, present ${artefacts.length - 1}, omitted ${omitted
+                detail: `declared ${a.decl.parents.length}, present ${artifacts.length - 1}, omitted ${omitted
                     .map((o) => `\`${o}\``)
                     .join(', ')}`,
             });
         }
     }
 
-    const declaring = artefacts.filter((a) => a.decl.parents.length > 0);
+    const declaring = artifacts.filter((a) => a.decl.parents.length > 0);
     for (let i = 0; i < declaring.length; i += 1) {
         for (let j = i + 1; j < declaring.length; j += 1) {
-            const a = declaring[i] as Artefact;
-            const b = declaring[j] as Artefact;
+            const a = declaring[i] as Artifact;
+            const b = declaring[j] as Artifact;
             const shared = a.decl.parents.filter((p) => b.decl.parents.includes(p));
             if (shared.length === 0) continue;
             if (a.decl.parents.includes(b.stem) || b.decl.parents.includes(a.stem)) continue;
