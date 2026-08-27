@@ -19,7 +19,8 @@
  *   3. add a percentage to `renderMatrix` → **2 red** (the anti-vanity assertions).
  * Restoring gives 17/17 and `git diff --stat` over the script is empty.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -40,7 +41,6 @@ describe('grade_target_readiness — 1.1 detection: presence detected, absence n
         for (const id of [
             'behaviour-contract',
             'test-presence',
-            'test-strength',
             'static-analysis',
             'architecture-gates',
             'security-supply-chain',
@@ -122,6 +122,164 @@ describe('grade_target_readiness — 1.4 not-detectable is not zero', () => {
     it('a target with package.json is not read as Python', () => {
         expect(isPythonTarget(python)).toBe(true);
         expect(isPythonTarget(full)).toBe(false);
+    });
+});
+
+/**
+ * Build a throwaway target repo. The shipped fixtures cannot express the two
+ * cases this dimension most needs — a target with NO advanced-testing signal at
+ * all, and one whose CI actually runs the mutation tool — because `full/` and
+ * `ci-absent/` both carry `fast-check` and `python/` carries `[tool.mutmut]`
+ * with no workflow. A grade of "nothing observed" that no fixture can reach is
+ * a branch no assertion covers.
+ */
+function _target(files: Record<string, string>): string {
+    const d = mkdtempSync(join(tmpdir(), 'ats-'));
+    for (const [rel, body] of Object.entries(files)) {
+        const f = join(d, rel);
+        mkdirSync(dirname(f), { recursive: true });
+        writeFileSync(f, body);
+    }
+    return d;
+}
+
+describe('grade_target_readiness — advanced-testing-signals is observed, never graded', () => {
+    it('emits the dimension unscored in every fixture, including the ones that carry a signal', () => {
+        // Before 2026-08-27 all three of these scored, because all three carry
+        // at least one signal. That is what makes them the right fixtures for
+        // the unscore: the targets that would have graded highest are the ones
+        // that must now produce no number at all.
+        for (const root of [full, ciAbsent, python]) {
+            const d = grade(root).dimensions.find((x) => x.id === 'advanced-testing-signals');
+            expect(d, root).toBeDefined();
+            expect(d?.grade, root).toBeNull();
+            expect(d?.knockout, root).toBe(false);
+        }
+    });
+
+    it('keeps both probes alive and reports them independently', () => {
+        // `python/` has `[tool.mutmut]` and `hypothesis`; `full/` has
+        // `fast-check` and no mutation config. Asserting both directions is
+        // what distinguishes a live probe from one that returns a constant.
+        const py = grade(python).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(py?.observations).toContain('mutation-testing-config-detected');
+        expect(py?.observations).toContain('property-testing-library-detected');
+
+        const ts = grade(full).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(ts?.observations).toContain('property-testing-library-detected');
+        expect(ts?.observations).not.toContain('mutation-testing-config-detected');
+    });
+
+    it('observes nothing — an empty array, not a failure-shaped string — when no signal is present', () => {
+        // The third epistemic state. A `neither-detected` observation here
+        // would re-create the verdict the unscore removed.
+        const bare = _target({ 'package.json': '{"name":"bare"}', 'README.md': '# bare' });
+        const d = grade(bare).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(d?.observations).toEqual([]);
+        expect(d?.grade).toBeNull();
+    });
+
+    it('separates a mutation tool CI REFERENCES from one that merely sits in the repo', () => {
+        // "references", not "runs" — an independent review flagged the original
+        // name as overclaiming what static workflow matching can establish. The
+        // probe is unchanged; the token it emits no longer promises execution.
+        const files = { 'package.json': '{"name":"m"}', 'stryker.conf.json': '{}' };
+        const noCi = grade(_target(files)).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(noCi?.observations).toContain('mutation-testing-config-detected');
+        expect(noCi?.observations).not.toContain('mutation-testing-ci-reference-detected');
+
+        const withCi = grade(_target({
+            ...files,
+            '.github/workflows/ci.yml': 'jobs:\n  t:\n    steps:\n      - run: npx stryker run\n',
+        })).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(withCi?.observations).toContain('mutation-testing-ci-reference-detected');
+    });
+
+    it('states that EFFECTIVENESS is what cannot be evaluated, whether or not a signal fired', () => {
+        // `notDetectable` scopes to the inference, not to the dimension: the
+        // config IS detectable, what it implies is not.
+        for (const root of [full, python]) {
+            const d = grade(root).dimensions.find((x) => x.id === 'advanced-testing-signals');
+            expect(d?.notDetectable, root).toMatch(/test effectiveness/);
+        }
+        const bare = _target({ 'package.json': '{"name":"bare"}' });
+        expect(grade(bare).dimensions.find((x) => x.id === 'advanced-testing-signals')?.notDetectable)
+            .toMatch(/test effectiveness/);
+    });
+
+    it('does not bind the level — an unscored non-knockout must stay advisory', () => {
+        // An INDEPENDENT review caught the first version of this spec: it asserted
+        // only `grade(full).level > 0`, which stays green if the dimension is
+        // deleted outright, so it proved nothing about the mechanism its own
+        // comment claimed. Both reviewing seats named it deletion-insensitive.
+        //
+        // The mechanism is "the level is the MINIMUM over KNOCKOUTS", so the
+        // assertion has to be about the relationship between this dimension and
+        // that computation, not about the level being nonzero.
+        const m = grade(full);
+        const d = m.dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(d, 'the dimension must exist for this spec to mean anything').toBeDefined();
+
+        // 1. It is present AND unscored AND not a knockout — the exact
+        //    combination that would bind at L0 if `null` were read as 0 by the
+        //    knockout fold. Deleting the dimension fails the assertion above.
+        expect(d?.grade).toBeNull();
+        expect(d?.knockout).toBe(false);
+
+        // 2. The level equals the minimum over knockouts ONLY, computed here
+        //    independently of the implementation. If the fold started including
+        //    non-knockouts, this diverges — and a `null` non-knockout would drag
+        //    it to 0 while the knockout minimum stays above it.
+        const knockoutMin = Math.min(...m.dimensions.filter((x) => x.knockout).map((x) => x.grade ?? 0));
+        expect(m.level).toBe(knockoutMin);
+        expect(knockoutMin).toBeGreaterThan(0); // otherwise this fixture proves nothing
+    });
+
+    it('renders each observation under its dimension, never as a grade word', () => {
+        const out = renderMatrix(grade(python));
+        expect(out).toContain('observed: mutation-testing-config-detected');
+        expect(out).toContain('observed: property-testing-library-detected');
+        expect(out).toMatch(/advanced testing signals\s+not detectable/);
+    });
+
+    it('`evidence` agrees with `observations` — one fact, not two representations', () => {
+        // The original code built `evidence` as a ternary independent of the
+        // observation array, so on the `python` fixture — which carries BOTH
+        // `[tool.mutmut]` and `hypothesis` — the string said only "mutation
+        // config present" while the array reported both signals. An independent
+        // review caught the divergence; this pins it.
+        //
+        // Sabotage-checked: restoring the parallel ternary turns this red. The
+        // first version of the fix had NO spec behind it and that sabotage
+        // passed, which is the same defect class the review had just named.
+        for (const root of [full, ciAbsent, python]) {
+            const d = grade(root).dimensions.find((x) => x.id === 'advanced-testing-signals');
+            const obs = d?.observations ?? [];
+            if (obs.length === 0) {
+                expect(d?.evidence, root).toBe('no advanced-testing signal detected');
+                continue;
+            }
+            // Every observed signal appears in the human-readable string, and the
+            // string introduces nothing the array does not have.
+            for (const o of obs) expect(d?.evidence, `${root} / ${o}`).toContain(o);
+            expect(d?.evidence?.split(', ').sort(), root).toEqual([...obs].sort());
+        }
+    });
+
+    it('`evidence` names BOTH signals when both fire', () => {
+        // The concrete case the review named. `python/` has mutmut AND hypothesis.
+        const d = grade(python).dimensions.find((x) => x.id === 'advanced-testing-signals');
+        expect(d?.observations?.length).toBeGreaterThan(1);
+        expect(d?.evidence).toContain('mutation-testing-config-detected');
+        expect(d?.evidence).toContain('property-testing-library-detected');
+    });
+
+    it('the old graded dimension id is gone', () => {
+        // A rename that left the old id emitted would keep every downstream
+        // reader on the graded reading.
+        for (const root of [full, ciAbsent, python]) {
+            expect(grade(root).dimensions.map((d) => d.id), root).not.toContain('test-strength');
+        }
     });
 });
 
