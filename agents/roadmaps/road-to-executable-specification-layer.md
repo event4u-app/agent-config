@@ -11,9 +11,10 @@ relates: []
 # Two hits, both consumed rather than related: the archived
 # road-to-test-independence-and-mutation-evidence.md records the MEASURED
 # refusal of a self-mutation rig, which Phase 3 respects rather than
-# relitigates, and road-to-evidence-gated-change.md owns test ORDERING
-# (red-before-green), which is a different question from whether an
-# executable behaviour contract exists at all.
+# relitigates, and archive/road-to-evidence-gated-change.md owned test ORDERING
+# (red-before-green) and completed on 2026-08-27 while this file was being
+# authored — a different question from whether an executable behaviour
+# contract exists at all, and now a landed one.
 estate_growth_exempt: "Charges +1 on the count half. Warranted on a measurement, not an opinion: `grep -rniI 'gherkin|cucumber|behat|given.when.then' src/` returns exactly ONE hit across 299 skills, and that hit is a rubric line in judge-artifact-completeness telling a reviewer that acceptance criteria should be Given-When-Then — the suite grades the shape and teaches nobody to execute it. The companion measurement is harder: zero of 299 skills mention mutation testing (`grep -rliI 'mutation test|stryker|infection|mutmut' src/skills/` is empty) while `grade_target_readiness.ts:183-189` grades consumer repos on exactly that dimension."
 estate_offset_exempt: "No archive move is available in this change. Sixteen source proposals across four generations are reduced to two roadmaps plus one stub; the seven infrastructure tracks the sources wanted as their own files (Concern DAG, resident code intelligence, confidence ladder, independence classes, evidence graph, workspace leases, multi-repo pilot) are consolidated into that single stub rather than landed as seven roadmaps."
 ---
@@ -21,8 +22,9 @@ estate_offset_exempt: "No archive move is available in this change. Sixteen sour
 
 > **Source:** `agents/tmp.old/uncle-bob-swarm/` (2026-08-27) — a two-session
 > agent swarm analysing this tree against an external acceptance-pipeline
-> reference, plus the transcript. Drafted against `f2ed85e`, which **is**
-> `origin/main` at authoring time. Sibling roadmap:
+> reference, plus the transcript. Drafted against `f2ed85e`, which **was**
+> `origin/main` at authoring time; `d55d1f10` merged mid-authoring and every
+> anchor cited below was re-verified against it. Sibling roadmap:
 > `road-to-runtime-governance-flip.md` from the same source. **Second arrival:**
 > the same external source was analysed on 2026-08-22
 > (`agents/tmp.old/robert-c-martin/`) and that round is what produced
@@ -105,8 +107,8 @@ and re-proposing it later should cost an argument:
       surface.** The discriminator is whether a change alters behaviour someone
       outside the code can observe and would describe in their own words. It
       belongs alongside the suite's existing test-ordering guidance rather than
-      in a new artefact — `road-to-evidence-gated-change.md` owns the ordering,
-      this owns the *whether*.
+      in a new artefact — `archive/road-to-evidence-gated-change.md` landed the
+      ordering, this owns the *whether*.
       verify: `grep -rc "observable behaviour" src/skills/test-case-discovery/SKILL.md` is greater than 0, and the added section names at least two cases where the answer is no.
 - [ ] **1.2 Write the anti-script rule into the same surface.** A specification
       step naming a selector, a timeout, or a keystroke is a defect in the

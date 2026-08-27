@@ -21,9 +21,11 @@ estate_offset_exempt: "No archive move is available in this change. Sixteen sour
 > **Source:** `agents/tmp.old/uncle-bob-swarm/` (2026-08-27) — a two-session
 > agent swarm that analysed this tree against an external process-integrity
 > reference across four generations of roadmap, plus the transcript that
-> produced them. Drafted against `f2ed85e`, which **is** `origin/main` at
+> produced them. Drafted against `f2ed85e`, which **was** `origin/main` at
 > authoring time: zero commits of staleness window, so every claim below is
-> either true at HEAD or was never true.
+> either true at HEAD or was never true. `d55d1f10` merged mid-authoring and
+> touched `docs/CLAIMS.md` and `docs/proof.md`; both anchors below were
+> re-verified against it and both still resolve.
 
 ## The owner decision this executes
 
