@@ -30,7 +30,7 @@ Do NOT use when:
 
 1. **Inspect call site & choose approach** — identify every dynamic value flowing into the query, then pick: query builder when possible. Raw SQL only when query builder can't express the query.
 2. **Parameterize** — Every variable must use `?` binding or named `:param`. Never interpolate PHP variables into SQL strings.
-3. **Use MariaDB syntax** — Not PostgreSQL or MSSQL. Check `php/sql.md` for MariaDB-specific patterns.
+3. **Read the engine, then choose the syntax** — check, in order: the project's DB config (`config/database.php` default connection, `DB_CONNECTION`), a `docker-compose.yml` service image, a migration using engine-specific syntax. MySQL and MariaDB share the query-syntax world this skill writes in; PostgreSQL and MSSQL do not. **If none of those declare an engine, say so and ask — do not assume one.** A query written for the wrong engine passes review and fails in production.
 4. **Verify** — Run EXPLAIN on complex queries. Check that no PHP interpolation (`"$var"`, `'{$var}'`) appears in SQL.
 
 ```
@@ -65,6 +65,12 @@ DB::select("SELECT * FROM users WHERE email = '{$email}'");
 2. EXPLAIN output for performance-critical queries
 
 ## Gotcha
+
+**MySQL and MariaDB share a query-syntax world. They never share a migration
+one.** Same principle as `database`: one engine for writing a `SELECT`, two for
+online-DDL semantics, lock behavior under `ALTER`, feature availability and
+`EXPLAIN` output. Never carry a claim from the second group across the two
+without naming the engine and version it was measured on.
 
 - MariaDB and MySQL have subtle syntax differences.
 - The model writes `$variable` in SQL strings instead of `?` placeholders.
