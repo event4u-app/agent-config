@@ -55,7 +55,9 @@ was the same: a threshold with no measurement behind it reads as evidence.
 
 ## Where the run was wrong
 
-Recorded because a drain that only lists its successes is not a report.
+Recorded because a drain that only lists its successes is not a report. Five
+process failures are below; **twelve defects in the code itself** were found by
+the neutral review and have their own section further down.
 
 1. **I wrote off a real CI red as environmental.** `check_preamble_payload_budget`
    failed shard 3/4 on PR #1693. I compared against the **design** ceiling
@@ -137,6 +139,109 @@ than silently worked around:
   with a stated reason, after four shrink passes. `--write-baseline` was declined
   because it also re-anchored five unrelated ceilings downward: real gains, but
   ones this run neither made nor measured.
+
+## The neutral review, and the twelve defects it found in this run's own work
+
+A stop-gate observed that 118 non-doc lines had been mutated with no neutral
+review, and it was right. A cross-model review was commissioned afterwards —
+2 seats per round, neither having written the code or the prompt's expectations.
+Scope was the **complete** non-doc delta, selected by `git diff` over
+code/config/test/CI paths, split into four parts **by file group mechanically**
+because it exceeded the 51,200-byte transport ceiling. No file was excluded.
+
+**Twelve findings. All twelve were real. All twelve are fixed**, each with a
+sensitivity probe proving the new assertion catches the defect it was written
+for.
+
+### The readiness grader (3)
+
+1. `mutation-testing-ci-enforcement-detected` overclaimed — static matching over
+   a workflow proves a tool is *referenced*, not that the step is enabled,
+   blocking, reached or executed. Renamed to `-ci-reference-detected`.
+2. The level spec was **deletion-insensitive**: `grade(full).level > 0` stays
+   green if the dimension is deleted outright, so it proved nothing about the
+   mechanism its own comment claimed. Rewritten; deleting the dimension now turns
+   8 red, folding non-knockouts into the level 4.
+3. `evidence` and `observations` were two representations of one fact — the
+   ternary named only the mutation signal when both fired. Derived now.
+
+### The new advisory gate (5)
+
+4. **The contract over-claimed.** The docstring and both schema descriptions said
+   a lint checks that `candidate` resolves, while `command:` and `guideline:`
+   were silently exempt. `artefactIds` now walks all four trees.
+5. `composition_review: []` — present, saying nothing — was accepted.
+6. A **git failure read as "no additions"**: an unresolvable base ref exited 0
+   with zero advisories, a blind run indistinguishable from a clean one.
+7. The advisory path had **zero** coverage despite a comment calling its
+   `ls-files --others` union load-bearing. Real-git fixture now.
+8. Two parser holes: a YAML block scalar captured `|` and produced a
+   one-character value; the candidate grammar admitted `guideline:/foo`, `foo/`
+   and `foo//bar`.
+
+### The archival relaxation (4)
+
+9. The back-link slug was interpolated into a `RegExp` **raw** — `road.parent`
+   matched `roadXparent`, and `[` made it THROW and abort the sweep, inside a
+   function whose whole contract is failing closed.
+10. A roadmap could name **itself** as destination: passes every check, then dies
+    with its own archival.
+11. **The sharpest finding of the review.** A destination could go dead in the
+    **same sweep** — two roadmaps both complete, parent carries to child, both
+    validated live, both archived, carried item left with no receiver. The
+    mechanism meant to prevent the loss produced it.
+12. `merged-into` was satisfied by a substring: a filename, an example or a
+    comment counted as a link. Structured now.
+
+Plus the coverage gap both seats named independently: every unit spec stayed
+green if `deferralProblems()` were deleted from `archive_completed()`, so nothing
+proved the validation was **wired**. Three integration specs now drive the real
+CLI over a real git repo; unwiring the call turns 2 red.
+
+### What the review changed about how this run should be read
+
+Part 4's findings were claim-accuracy, and they matter more than they look: the
+gate said a record pointing at a non-existent incumbent "reads as evidence of a
+search that cannot have happened" — in the docstring, the operator message and
+the manifest note. That is a claim about the search, and the gate has none to
+make. What it certifies is **referential consistency**. Narrowed in all three
+places.
+
+**Two of my own specs had to be corrected rather than kept**, and both are the
+same shape as the defects the review was finding: one asserted the very carve-out
+that turned out to BE the defect, and one measured a coverage floor against the
+wrong quantity so it reddened when candidate resolution widened — while the floor
+it checked had not changed.
+
+**And one more of my own, worth naming plainly:** the first version of fix 3
+(deriving `evidence` from `observations`) had **no spec behind it**, and its
+sabotage passed green — one commit after the review had named exactly that class
+of defect. Two specs were added and the sabotage now reds.
+
+## Cross-branch contamination, found while fixing the review
+
+`git checkout -B` carries uncommitted changes across branches, and a later
+`git add -A` committed three ERD artifacts into PR #1693, where none of them
+belongs:
+
+- the ERD roadmap with all phases `[x]` and both blockers resolved — which would
+  have marked that roadmap complete on `main` with **none** of its work landed,
+  and made the archival sweep archive it;
+- its Phase-3 evidence file;
+- a `schema-erd` **skill-admission row** — a row admitting a skill that is in
+  neither PR, which is a claim nothing backs.
+
+All three reverted from #1693. The evidence file moved to #1694 where its roadmap
+lives; the admission row is in **neither**, because it goes with the landing.
+
+Two fixture traps surfaced in the same cleanup, both mine and both recorded at
+the specs: a destination built from the unit helper had its checkbox outside any
+`## Phase` heading, so it read as zero-open and archived itself — which then
+correctly tripped the new same-sweep guard and failed the happy-path spec for a
+reason unrelated to the feature. And a bare `## Phase 1` heading is absorbing:
+`PHASE_RE`'s optional trailing-name group can consume the blank line and the
+checkbox after it. Real roadmaps always carry a name, which is why nothing else
+hits it.
 
 ## Seven roadmaps never reached
 
