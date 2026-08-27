@@ -28,16 +28,16 @@ expectation of the outcome was stated in it and the scope was not narrowed, per
 the evaluator-independence rule.
 
 **The review ran against scope `561db04c` (head `333a18a9c`).** This artefact is
-bound to `b6a8d44b` because every finding below was fixed in `80de6f69a`, which
+bound to `b6a8d44b` because every finding below was fixed in `1a88531c6`, which
 moved the reviewed content. Both seats converged on the same two defects **in the
 fix under review** and independently rated the display-logic one highest.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-| 1 | high | src/scripts/council_cli.ts:2822 | `_all_subscription` inferred "all seats subscription-authed" from `actual_total === 0 && all_responses.some(r => !r.error)`. Zero spend does not prove zero billability: `estimate_cost` returns 0.0 when `lookup` finds no price row, so an unpriced BILLABLE model yields a zero total — as do a billable seat that errored and one reporting zero tokens. All three would have printed the subscription claim over real spend. | fixed | `80de6f69a` — replaced by the exported `allSeatsNonBillable`, which reads metadata (`answered.every(r => !isBillableResponse(r))`) and is vacuously false on an empty or all-errored set. The unpriced-model and zero-token cases are now executable tests. |
-| 2 | medium | src/scripts/ai_council/pricing.ts:206 | `isBillableResponse` ended `return Boolean(raw)` while its own comment promised a conservative default. `Boolean(0)` and `Boolean([])` are `false`, so a numeric or empty-array value would have zeroed a billable seat, and the inconsistency covered every non-string, non-boolean type rather than only `0`. | fixed | `80de6f69a` — now `return true` for all unknown types. Sensitivity proven rather than asserted: restoring `Boolean(raw)` reds exactly the `numeric 0` case (1 failed / 21 passed); the fix greens it again. |
-| 3 | low | tests/scripts/ai_council/billable_cost.test.ts | No coverage for numeric / array / object metadata values, nor for the label predicate the CLI prints. | fixed | `80de6f69a` — six parametrised type cases plus six `allSeatsNonBillable` cases. The label became an exported predicate instead of an inline expression, which is what made an assertion possible at all. 10 tests to 22. |
-| 4 | low | agents/roadmaps/stubs/road-to-council-cost-truth.md | § 3 called the field name misleading and listed three fixes as if equally valid, without picking one. | fixed | `80de6f69a` — § 3 now recommends bumping `SCHEMA_VERSION` over renaming, and states plainly that the decision is the maintainer's rather than an agent's. |
+| 1 | high | src/scripts/council_cli.ts:2822 | `_all_subscription` inferred "all seats subscription-authed" from `actual_total === 0 && all_responses.some(r => !r.error)`. Zero spend does not prove zero billability: `estimate_cost` returns 0.0 when `lookup` finds no price row, so an unpriced BILLABLE model yields a zero total — as do a billable seat that errored and one reporting zero tokens. All three would have printed the subscription claim over real spend. | fixed | `1a88531c6` — replaced by the exported `allSeatsNonBillable`, which reads metadata (`answered.every(r => !isBillableResponse(r))`) and is vacuously false on an empty or all-errored set. The unpriced-model and zero-token cases are now executable tests. |
+| 2 | medium | src/scripts/ai_council/pricing.ts:206 | `isBillableResponse` ended `return Boolean(raw)` while its own comment promised a conservative default. `Boolean(0)` and `Boolean([])` are `false`, so a numeric or empty-array value would have zeroed a billable seat, and the inconsistency covered every non-string, non-boolean type rather than only `0`. | fixed | `1a88531c6` — now `return true` for all unknown types. Sensitivity proven rather than asserted: restoring `Boolean(raw)` reds exactly the `numeric 0` case (1 failed / 21 passed); the fix greens it again. |
+| 3 | low | tests/scripts/ai_council/billable_cost.test.ts | No coverage for numeric / array / object metadata values, nor for the label predicate the CLI prints. | fixed | `1a88531c6` — six parametrised type cases plus six `allSeatsNonBillable` cases. The label became an exported predicate instead of an inline expression, which is what made an assertion possible at all. 10 tests to 22. |
+| 4 | low | agents/roadmaps/stubs/road-to-council-cost-truth.md | § 3 called the field name misleading and listed three fixes as if equally valid, without picking one. | fixed | `1a88531c6` — § 3 now recommends bumping `SCHEMA_VERSION` over renaming, and states plainly that the decision is the maintainer's rather than an agent's. |
 
 ## Verification at the bound scope
 
@@ -59,3 +59,15 @@ the stub rather than fixed here.
 **No second review ran against the fixes.** The findings above are dispositioned
 by the author with fresh evidence per row, which is weaker than an independent
 re-review and is stated as such rather than implied away.
+
+**The commit order was wrong and was corrected forward, not hidden.** Contract
+§2.5 requires this artefact committed BEFORE the fixes, so backdating a review is
+detectable. I fixed first and recorded second, and `check_completion_review`
+caught it (`fix-before-artifact`). Rather than rewrite history — which
+`git-history-discipline` gates on an explicit ask I did not have — the fix commit
+`80de6f69a` was reverted (`03554235b`) and re-landed unchanged as `1a88531c6`,
+which now sits after this artefact's first-add. The referenced content is
+byte-identical; only its position moved. The review itself genuinely preceded the
+fixes — the council ran against scope `561db04c` before a line was changed — so
+what the recorded order now shows and what happened agree. The three-commit
+detour is visible in the log on purpose.
