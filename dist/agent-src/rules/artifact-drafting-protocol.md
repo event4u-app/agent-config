@@ -46,6 +46,12 @@ Fires once per creation task, not once per edit.
 
 **A — Understand** (≤ 5 clarifying questions: problem, trigger surface, should-trigger examples, near-misses, artifact type) · **B — Research** (mandatory four-surface overlap scan; open + skim the 3 nearest matches; extend-vs-create decision) · **C — Draft** (2-3 description variants first, then the body; live size enforcement). Per-phase procedure + the roadmap batch-mode carve-out: the mechanics guideline below.
 
+**Phase B's verdict is written into the artefact**, as a `composition_review:`
+frontmatter entry per incumbent searched — the scan was mandatory and left no
+artefact, and 1 of the 20 most recently added skills and rules carried a
+machine-readable record of it. Shape and the four dispositions: the mechanics
+guideline below.
+
 ## Golden rules
 
 - Every phase ends with a numbered-options prompt. No silent progression.

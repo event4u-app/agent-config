@@ -6,7 +6,7 @@
         "active-remediation": 1595,
         "analysis-skill-routing": 76,
         "architecture": 955,
-        "artifact-drafting-protocol": 680,
+        "artifact-drafting-protocol": 754,
         "augment-edit-discipline": 137,
         "autonomous-execution": 1633,
         "brand-consistency": 133,
@@ -117,6 +117,13 @@
             "from": 845,
             "to": 1385,
             "reason": "road-to-evidence-gated-change Phase 3 lands D5 in this rule: the existence question was inert on bug fixes and trivial changes, which are the classes that most often re-add a helper the tree already has. +540 tokens, and each of the four additions is obligation surface rather than lookup material — the narrowed exclusion (the three heavy checks stay excluded, the one cheap question does not) with the diff-decidable skip that keeps it cheap, the six named verdicts with negative evidence owed for `new`, the two clauses that keep the set from degrading into a ranking or into similarity-driven abstraction, and the recorded reason the gate is not routed through /tdd. Migrating any of it to the pointer target is the one move that is not available: docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md sits at 15,992 of the 16,000-char check_depth_budget ceiling — eight characters — and that gate is a shrink-only ratchet already carrying four baseline violations whose own note says a FIFTH over-ceiling file reds. Raised rather than condensed because the clauses that would compress are the ones carrying the decision: drop the heavy/cheap split and the question becomes a tax on the highest-frequency change class (risk-register row 3 of that roadmap), drop the negative-evidence clause and `new` becomes the default verdict again."
+        },
+        {
+            "date": "2026-08-27",
+            "rule": "artifact-drafting-protocol",
+            "from": 680,
+            "to": 754,
+            "reason": "road-to-composition-before-creation Phase 3.3 makes Phase B's verdict a WRITTEN record rather than only a reasoned one, so the rule has to name the field that carries it. +74 tokens, 680 -> 754, and the split was deliberate: everything that is lookup material \u2014 the field's YAML shape, the four dispositions with their discriminators, why `none_found` must exist so an author is never pushed to invent an incumbent, why `create_separate` is the value no incumbent vocabulary can express, and what the lint can and cannot check \u2014 went to the pointer target (`docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md` \u00a7 Where the answer is written). What stayed is obligation surface and cannot be moved without the rule mandating a field it does not name: that the verdict is written into the artefact, the field's name, and the measurement behind it (1 of the 20 most recently added skills and rules carried a machine-readable record \u2014 `agents/evidence/analysis/authoring-search-record-sample-2026-08-27.md`). Two shrink passes were run before the ceiling was raised at all: 928 -> 783 -> 754 tokens. The ceiling is set to the exact measured count with no slack, so the next growth is caught rather than absorbed."
         }
     ]
 }
