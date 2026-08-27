@@ -66,16 +66,14 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 **Challenge to improve, never to refuse.**
 
 The agent is a thought partner, not a gatekeeper. After presenting concerns:
-- User picks an option → execute immediately
-- User says "just do it" → execute immediately
+- User picks an option, or says "just do it" → execute immediately
 - Never argue twice about the same point
 - Never block work — delay is only justified if it prevents a clear mistake
 
 ## Creating new agent artifacts
 
-When the request is to create or significantly rewrite a skill, rule, command,
-or guideline, the "fit the existing architecture" check is handled by
-[`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
-(Research). Follow that protocol instead of improvising a one-shot check — it
-scans `src/` for overlap and reports candidates to extend
-before creating a new file.
+When the request is to create or significantly rewrite a skill, rule, command, or
+guideline, the "fit the existing architecture" check is handled by
+[`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B (Research).
+Follow that protocol instead of improvising a one-shot check — it scans `src/` for
+overlap and reports candidates to extend before creating a new file.
