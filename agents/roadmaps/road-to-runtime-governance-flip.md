@@ -85,7 +85,7 @@ known, and a 129-file sweep must not gate the four that were verified by hand.
       decision is *untouched*: not driving another tool's runtime and owning
       one's own supervised process are different questions, and the reversal
       only answers the second.
-      verify: the base-commit reading `git show HEAD:docs/decisions/ADR-124-embedded-engine-doctrine.md | grep -c "PROHIBITED in core"` is 1, and the new ADR's `supersedes` field names ADR-124 with a scope string.
+      verify: the base-commit reading `git show HEAD:docs/decisions/ADR-124-embedded-engine-doctrine.md | grep -c "PROHIBITED in core"` is 1; the new ADR's `supersedes` names ADR-124 with a `supersedes_scope` whose text identifies the § 4 Class-B row and nothing wider; and ADR-124's remaining provisions — the Class-A adoption path at `:110` above all — are re-read and confirmed still authoritative. A `supersedes` field that merely EXISTS is not the check: partial supersession is a convention in this tree, not a mechanism, so the scope must be read rather than asserted.
 - [ ] **1.2 Amend the ADR-109 identity floor in the same change.** `:28`'s
       "no-runtime identity floor (no daemon, …)" is a second accepted floor with
       no `superseded_by`. Leaving it standing is the failure mode this phase
@@ -284,7 +284,8 @@ after Phase 5.2. This phase ships the first. The second is Phase 6.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -rniI 'zero.runtime|no runtime daemon' README.md docs/positioning-evidence.md docs/comparison.yaml` returns zero matches, and each of those three files states the governed *policy*. No present-tense supervision guarantee appears on any public surface until AC-7 holds.
+- [ ] AC-1 — `grep -rniIE 'zero.runtime|no runtime daemon' README.md docs/positioning-evidence.md docs/comparison.yaml` returns zero matches, and each of those three files states the governed *policy*. No present-tense supervision guarantee appears on any public surface until AC-7 holds.
+      **The `-E` is the fix, not a detail.** The first draft omitted it, and in a basic regex `|` is a literal pipe — so the pattern matched nothing and the criterion would have passed with the forbidden text still in place. Proved on a one-line fixture before writing this: without `-E`, count 0 and exit 1; with `-E`, count 1. A criterion that cannot fail is not a criterion, which is the failure class this repository names as gates-that-scan-nothing-exit-green. Every other grep-shaped verify in this file was re-read for the same defect.
 - [ ] AC-2 — The Phase 3.4 atomicity check exists, has been **seen red** on a seeded public-surface supervision claim, and is green at close.
 - [ ] AC-3 — No accepted ADR in `docs/decisions/` prohibits a resident process in core without naming the superseding record: `ADR-124:111` and `ADR-109:28` both resolve to the Phase 1 ADR, and ADR-124's provisions outside that row are still authoritative — asserted by reading the file, not by the `supersedes` field alone.
 - [ ] AC-4 — `docs/contracts/no-runtime-boundary.md` is no longer a live authority, its successor contract classifies resident processes by lifecycle and supervision, and `check_references` exits 0.
