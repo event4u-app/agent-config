@@ -29,8 +29,7 @@ built and structured, so it is the cheap first question for "who calls X",
 "where is Y used", "what does this import". This suite is an **orchestrator
 first, owner where it wins** (ADR-124): query a consumer-shipped index when it
 is present and fresh; where none is shipped, the native engine (default-off,
-benchmark-gated) covers the gap. Either way — query first, grep as fallback,
-and name which source answered.
+benchmark-gated) covers the gap.
 
 ## The rule
 
@@ -59,16 +58,10 @@ AND the repo contains a detectable index:
 3. **Fall back to `grep`/read** only for what the index does not cover, and say
    so ("the index has no entry for X, so I grepped").
 
-## No class is graph-first — measured 2026-08-28
-
-```
-QUERY-FIRST IS AN ORDERING HEURISTIC: AN INDEX THAT EXISTS IS CHEAP TO ASK.
-IT IS NEVER A CLAIM THAT THE INDEX ANSWERS BETTER THAN GREP.
-ZERO OF FOUR GRAPH-SHAPED CLASSES MET THE PRE-REGISTERED WIN CRITERION, SO NO
-CLASS IS ROUTED GRAPH-FIRST. ROUTING CHANGES; PERMISSION DOES NOT.
-THAT RUN MEASURED THE NATIVE ENGINE ON THIS REPO'S TYPESCRIPT — IT SAYS NOTHING
-ABOUT A CONSUMER-SHIPPED INDEX, WHICH IS MOST OF WHAT THE RULE ABOVE GOVERNS.
-```
+Query-first is an **ordering** heuristic, never a claim the index answers better:
+measured 2026-08-28, zero of four graph-shaped classes beat `grep`, so no class
+is graph-first. Routing changes; permission does not. Figures:
+[`code-intelligence`](../skills/code-intelligence/SKILL.md) § Measured.
 
 ## When NOT to fire
 
