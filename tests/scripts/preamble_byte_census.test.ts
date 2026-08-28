@@ -219,7 +219,11 @@ describe('buildByteCensus', () => {
 
         expect(c.measurable_tokens_total).toBeCloseTo(measurable, 6);
         expect(names(c.sources)).toContain('tool definitions + dispatch prompt (residual)');
-        const residual = c.sources.find((s) => s.provenance === 'residual');
+        // `residual` -> `estimated` (road-to-delivered-cost-truth 4.1): the
+        // bucket is unchanged, its private spelling of "derived by subtraction"
+        // is now the shared vocabulary's word for it. The NAME is still the
+        // discriminator here, so the assertion above still pins the bucket.
+        const residual = c.sources.find((s) => s.name.includes('residual'));
         expect(residual?.tokens_estimate).toBeCloseTo(median - measurable, 6);
         // Grand total reconstructs the median exactly — disclosed as
         // by-construction in the report, not presented as an independent check.

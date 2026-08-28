@@ -71,6 +71,11 @@ quality:
       assertion: <regex-string>
       assertion_kind: rubric.must_include | quality_assertion
       passed: <bool | "not_collected">
+provenance:                                        # REQUIRED — see below
+  host_binary_hash: <sha256> | { unavailable: <reason> }
+  harness_commit: <git-sha> | { unavailable: <reason> }
+  harness_dirty: <bool> | { unavailable: <reason> }
+  reproducibility: <one sentence> | { unavailable: <reason> }
 cache:                                             # REQUIRED — see below
   read_write_ratio: <float> | { unavailable: <reason> }
   stable_prefix_share: <float 0.0-1.0> | { unavailable: <reason> }
@@ -80,6 +85,31 @@ verdict:
   overall: pass | fail | partial                   # partial = quality not_collected
   ranking_metric: tokens | cost-per-solved         # OPTIONAL, default `tokens`
 ```
+
+## The `provenance` block — what produced this report
+
+`road-to-delivered-cost-truth` step 4.2. A benchmark number without its
+provenance is a number nobody can reproduce or challenge, and this repository
+already carries a measured instance of the failure: an external benchmark's
+headline figures are recorded as `unverifiable` in a roadmap precisely because
+the run that produced them cannot be reached. These four fields are what keep a
+report in this tree from becoming that.
+
+| Field | What it pins |
+|---|---|
+| `host_binary_hash` | the agent binary that ran the corpus — a version string is not enough, since two installs can share one |
+| `harness_commit` | the commit of THIS repository the harness ran from |
+| `harness_dirty` | whether that tree had uncommitted changes; a dirty run is reproducible only by accident |
+| `reproducibility` | one sentence a reader can act on — the command, and what is not pinned |
+
+All four are **required**. A report that cannot supply one emits
+`{ unavailable: "<reason>" }` and **names the field** — the same discipline the
+`cache` block uses, and for the same reason: an omitted key reads as "this did
+not apply", which is a claim, and rarely the true one.
+
+`harness_dirty: true` is not a failure. It is a fact that changes how much a
+reader may lean on the number, which is exactly what the
+[evidence-basis contract](evidence-basis.md) exists to make sayable.
 
 ## The `cache` block — required, never omitted
 
@@ -152,6 +182,10 @@ Headers in order:
 - **Quality stub honesty.** When agent outputs are not provided, set
   `quality.source: not_collected` and `verdict.overall: partial`. Score
   stays `0.0`; never inflate by assuming pass.
+- **The `provenance` block is never omitted.** A missing `host_binary_hash`,
+  `harness_commit`, `harness_dirty` or `reproducibility` is a schema failure
+  naming the field (`check_benchmark_report_fields`). Uncomputable →
+  `{ unavailable: <reason> }`.
 - **The `cache` block is never omitted.** A missing `read_write_ratio` or
   `stable_prefix_share` is a schema failure naming the field
   (`check_benchmark_report_fields`). Uncomputable → `{ unavailable: <reason> }`,

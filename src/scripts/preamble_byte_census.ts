@@ -48,6 +48,7 @@ import { censusRuleDir, type RuleDirCensus } from './_lib/carrier_divergence.js'
 import { DEFAULT_PROJECTS_ROOT, scanTranscripts } from './_lib/cc_transcript.js';
 import { censusDuplicateScope } from './_lib/duplicate_scope_census.js';
 import { computeColdStarts } from './cache_realization_report.js';
+import type { EvidenceBasis } from './_lib/evidence_basis.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -187,12 +188,19 @@ export interface SkillsCatalogCensus {
     chars: number;
 }
 
-interface RawSkillFrontmatter {
+export interface RawSkillFrontmatter {
     name?: unknown;
     description?: unknown;
 }
 
-function parseFrontmatter(text: string): RawSkillFrontmatter {
+/**
+ * Exported since `road-to-delivered-cost-truth` 2.1: the per-asset ledger must
+ * build the catalogue line the SAME way this census does, or the two disagree
+ * about the same corpus. A second regex-based reader was tried and reconciled
+ * 17.1 % low, because a `[^\n]+` capture truncates every folded multi-line
+ * `description:` — the reconciliation caught it, which is what it is for.
+ */
+export function parseFrontmatter(text: string): RawSkillFrontmatter {
     if (!text.startsWith('---')) return {};
     const end = text.indexOf('\n---', 3);
     if (end === -1) return {};
@@ -242,8 +250,15 @@ export interface ByteCensusSource {
     files: number;
     chars: number;
     tokens_estimate: number;
-    /** Estimate vs residual — see module doc comment. */
-    provenance: 'measured_local_file' | 'residual';
+    /**
+     * Migrated onto the shared evidence-basis vocabulary
+     * (`road-to-delivered-cost-truth` 4.1). `measured_local_file` was this
+     * file's private spelling of `measured`, and `residual` was its spelling of
+     * a figure derived by subtraction — which the contract calls `estimated`.
+     * Two names for one idea is how a vocabulary forks; the old literals are
+     * gone rather than aliased.
+     */
+    provenance: Extract<EvidenceBasis, 'measured' | 'estimated'>;
     /** How this figure was derived — mandatory for anything not a plain file-size sum. */
     basis: string;
 }
@@ -358,7 +373,7 @@ export function buildByteCensus(opts: {
             files: opts.userRules.files,
             chars: opts.userRules.chars,
             tokens_estimate: tokensFromChars(opts.userRules.chars),
-            provenance: 'measured_local_file',
+            provenance: 'measured',
             basis: 'Σ byte size of every .md file in the user-scope rules directory, chars/4.',
         },
         {
@@ -366,7 +381,7 @@ export function buildByteCensus(opts: {
             files: opts.projectRules.files,
             chars: opts.projectRules.chars,
             tokens_estimate: tokensFromChars(opts.projectRules.chars),
-            provenance: 'measured_local_file',
+            provenance: 'measured',
             basis: 'Σ byte size of every .md file in the project-scope rules directory, chars/4.',
         },
         {
@@ -374,7 +389,7 @@ export function buildByteCensus(opts: {
             files: claudeMdFiles,
             chars: claudeMdChars,
             tokens_estimate: tokensFromChars(claudeMdChars),
-            provenance: 'measured_local_file',
+            provenance: 'measured',
             basis:
                 'Byte size of project CLAUDE.md + project CLAUDE.local.md (if present) + user ~/.claude/CLAUDE.md ' +
                 '+ every file pulled in by a top-level "@<path>" import line in the user CLAUDE.md, chars/4.',
@@ -384,7 +399,7 @@ export function buildByteCensus(opts: {
             files: opts.globalProfile.present ? 1 : 0,
             chars: opts.globalProfile.chars,
             tokens_estimate: tokensFromChars(opts.globalProfile.chars),
-            provenance: 'measured_local_file',
+            provenance: 'measured',
             basis: opts.globalProfile.present
                 ? `Byte size of ${opts.globalProfile.path as string}, chars/4.`
                 : 'Layer not written yet on this machine (resolveGlobalProfilePath() returned null) — treated as 0, per the roadmap\'s own honesty caveat.',
@@ -394,7 +409,7 @@ export function buildByteCensus(opts: {
             files: opts.skillsCatalog.skills,
             chars: opts.skillsCatalog.chars,
             tokens_estimate: tokensFromChars(opts.skillsCatalog.chars),
-            provenance: 'measured_local_file',
+            provenance: 'measured',
             basis:
                 'Σ "- <name>: <description>\\n" over every SKILL.md frontmatter, chars/4 — the description-text ' +
                 'component only; the host\'s exact on-wire catalog format is not independently file-measurable.',
@@ -411,7 +426,7 @@ export function buildByteCensus(opts: {
             files: 0,
             chars: 0,
             tokens_estimate: residualTokens,
-            provenance: 'residual',
+            provenance: 'estimated',
             basis:
                 'measured_cold_start_median minus the sum of the file-measurable buckets above. No local transcript ' +
                 'or file carries the request\'s raw tool-definition JSON or the per-spawn dispatch-prompt text ' +

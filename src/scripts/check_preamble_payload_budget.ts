@@ -20,12 +20,15 @@
  *
  * Exit codes: 0 within budget · 1 over budget · 2 misuse / unreadable budget.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
+import { attributeGrowth, buildLedger, renderAttribution } from './_lib/asset_delivery_ledger.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -139,6 +142,67 @@ export function evaluate(repoRoot?: string, budgetFile?: string, overrideCeiling
     return { measured, baseline: budget.baseline_tokens, ceiling, withinBudget: measured <= ceiling, buckets };
 }
 
+/**
+ * Per-asset attribution for a refusal, against the merge-base tree.
+ *
+ * Reads the base tree through `git worktree`-free plumbing: the ledger is built
+ * over a temporary checkout of `git merge-base HEAD origin/main`. Every failure
+ * mode returns an empty list — the caller treats attribution as an explanation,
+ * never as a precondition for refusing.
+ */
+function attributeGrowthAgainstBase(): string[] | null {
+    try {
+        const base = execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], {
+            cwd: REPO_ROOT,
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+        if (base.length === 0) return null;
+
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-base-'));
+        try {
+            for (const rel of prefixStableRoots()) {
+                // `git archive` of one subtree, extracted into the scratch root.
+                // A root absent at the base ref simply yields nothing.
+                try {
+                    const tar = execFileSync('git', ['archive', base, '--', rel], {
+                        cwd: REPO_ROOT,
+                        maxBuffer: 256 * 1024 * 1024,
+                        stdio: ['ignore', 'pipe', 'ignore'],
+                    });
+                    // `-f -` is not optional: without it BSD tar reads its
+                    // default device rather than stdin, and the extraction
+                    // silently produces nothing — which reads downstream as
+                    // "the base tree was unavailable" rather than as a bug.
+                    execFileSync('tar', ['-x', '-f', '-', '-C', tmp], {
+                        input: tar,
+                        stdio: ['pipe', 'ignore', 'ignore'],
+                    });
+                } catch {
+                    /* root absent at base — nothing to extract */
+                }
+            }
+            const [rulesRel, skillsRel] = prefixStableRoots();
+            const before = buildLedger(
+                path.join(tmp, rulesRel ?? ''),
+                path.join(tmp, skillsRel ?? ''),
+                tmp,
+            );
+            const after = buildLedger(
+                path.join(REPO_ROOT, rulesRel ?? ''),
+                path.join(REPO_ROOT, skillsRel ?? ''),
+                REPO_ROOT,
+            );
+            if (before.rows.length === 0) return null;
+            return renderAttribution(attributeGrowth(before.rows, after.rows));
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    } catch {
+        return null;
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const json = argv.includes('--format=json') || argv.includes('--json');
     // `--ceiling <n>`: the grace ceiling the CI step reads out of
@@ -189,12 +253,40 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `(baseline ${verdict.baseline}, ${sign}${delta}; ceiling ${verdict.ceiling})\n`,
     );
     if (!verdict.withinBudget) {
+        // road-to-delivered-cost-truth 2.2 — a gate names its own "no". The
+        // ceiling message alone states a fact and leaves the reader to find the
+        // cause; naming the assets and their token deltas makes the refusal
+        // actionable, which is the difference between a refusal that gets fixed
+        // and one that gets suppressed.
+        //
+        // Attribution is BEST-EFFORT and never changes the verdict: the
+        // comparison needs the merge-base tree, and a shallow clone, a detached
+        // build or a first commit legitimately has none. A gate that failed to
+        // refuse because it could not explain itself would be strictly worse
+        // than one that refuses without the explanation.
+        const attribution = attributeGrowthAgainstBase();
         process.stderr.write(
             `❌  per-spawn preamble payload grew past the ratchet: ${verdict.measured} > ${verdict.ceiling} tok.\n` +
                 `    Every rule and skill description here is re-written on EVERY subagent spawn, so growth\n` +
                 `    is paid per spawn, not once. Either shrink the addition, or raise baseline_tokens in\n` +
                 `    src/config/preamble-payload-budget.json with the reason in the same commit.\n`,
         );
+        // Three distinct states, and conflating the last two is a diagnostic
+        // defect rather than a cosmetic one: "I could not look" and "I looked
+        // and nothing changed" send a reader to completely different places.
+        if (attribution === null) {
+            process.stderr.write(
+                '\n    (no per-asset attribution: the merge-base tree could not be read here, so the\n' +
+                    '     growth cannot be traced to specific assets. The refusal stands regardless.)\n',
+            );
+        } else if (attribution.length === 0) {
+            process.stderr.write(
+                '\n    Per-asset attribution: NO standing asset changed against the merge base — this\n' +
+                    '    diff did not cause the overage, it inherited it.\n',
+            );
+        } else {
+            process.stderr.write('\n' + attribution.join('\n') + '\n');
+        }
         return 1;
     }
     process.stdout.write('✅  per-spawn preamble payload within the ratchet.\n');

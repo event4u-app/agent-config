@@ -442,6 +442,20 @@ jobs:
             fi
           }
 
+      - name: No cost surface prints a currency figure
+        # road-to-delivered-cost-truth AC-7. Tokens only: the suite does not know
+        # the consumer's contract, so a monetary figure would be extrapolated
+        # from an invented rate.
+        run: |
+          ./scripts-run src/scripts/check_no_currency_in_cost_surfaces || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_no_currency_in_cost_surfaces internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
       - name: No mid-session mutation of a prefix-stable surface
         # The runtime half of prefix stability (road-to-runtime-context-floors
         # 1.2). The surface list is LOADED from _lib/prefix_stable_surfaces.ts,

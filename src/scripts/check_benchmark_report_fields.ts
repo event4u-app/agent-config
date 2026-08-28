@@ -22,7 +22,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { describeProblem, validateCacheBlock } from './_lib/benchmark_cache_fields.js';
+import { describeProblem, validateCacheBlock, validateProvenanceBlock } from './_lib/benchmark_cache_fields.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
@@ -75,11 +75,11 @@ export function evaluate(dir: string = DEFAULT_DIR, ledger?: GateLedger): FieldV
             continue;
         }
         scanned += 1;
-        const problems = validateCacheBlock(doc);
+        const problems = [...validateCacheBlock(doc), ...validateProvenanceBlock(doc)];
         for (const p of problems) {
             findings.push({ file: path.relative(REPO_ROOT, file), message: describeProblem(p) });
         }
-        if (problems.length > 0) ledger?.fail(name, `${String(problems.length)} missing or malformed cache field(s)`);
+        if (problems.length > 0) ledger?.fail(name, `${String(problems.length)} missing or malformed required field(s)`);
         else ledger?.complete(name);
     }
     return { scanned, findings };
@@ -89,20 +89,31 @@ export function evaluate(dir: string = DEFAULT_DIR, ledger?: GateLedger): FieldV
 
 const BASE = { schema_version: 1, corpus: { id: 'x' }, selection: { top_k: 3 } };
 
-function plant(dir: string, cache: unknown): void {
+const GOOD_CACHE = { read_write_ratio: 2, stable_prefix_share: 0.5 };
+
+/** A provenance block that passes, so a cache-field case tests only cache fields. */
+const GOOD_PROVENANCE = {
+    host_binary_hash: 'sha256:deadbeef',
+    harness_commit: 'abc1234',
+    harness_dirty: false,
+    reproducibility: 'task bench-run --corpus x at the commit above',
+};
+
+function plant(dir: string, cache: unknown, provenance: unknown = GOOD_PROVENANCE): void {
     const doc: Record<string, unknown> = { ...BASE };
     if (cache !== undefined) doc['cache'] = cache;
+    if (provenance !== undefined) doc['provenance'] = provenance;
     fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify(doc));
 }
 
 function selfTestCases(): SelfTestCase[] {
-    const mk = (name: string, expect: 'reject' | 'accept', cache: unknown): SelfTestCase => ({
+    const mk = (name: string, expect: 'reject' | 'accept', cache: unknown, provenance?: unknown): SelfTestCase => ({
         name,
         expect,
         run: () => {
             const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'brf-'));
             try {
-                plant(dir, cache);
+                plant(dir, cache, provenance === undefined ? GOOD_PROVENANCE : provenance);
                 return runGateCli(REPO_ROOT, 'src/scripts/check_benchmark_report_fields.ts', ['--dir', dir, '--quiet'], REPO_ROOT);
             } finally {
                 fs.rmSync(dir, { recursive: true, force: true });
@@ -123,6 +134,19 @@ function selfTestCases(): SelfTestCase[] {
             stable_prefix_share: 0.5,
         }),
         mk('a share above 1 → reject', 'reject', { read_write_ratio: 2, stable_prefix_share: 1.5 }),
+        // Provenance half (step 4.2) — the four reproducibility fields.
+        mk('no provenance block at all → reject', 'reject', GOOD_CACHE, null),
+        mk('harness_commit missing → reject', 'reject', GOOD_CACHE, { ...GOOD_PROVENANCE, harness_commit: undefined }),
+        mk('reproducibility is an empty string → reject', 'reject', GOOD_CACHE, { ...GOOD_PROVENANCE, reproducibility: '  ' }),
+        mk('harness_dirty as a string → reject', 'reject', GOOD_CACHE, { ...GOOD_PROVENANCE, harness_dirty: 'no' }),
+        // `false` is the GOOD case for a dirty flag, and a truthiness check
+        // would silently reject it. Pinned so it cannot regress.
+        mk('harness_dirty: false → accept', 'accept', GOOD_CACHE, { ...GOOD_PROVENANCE, harness_dirty: false }),
+        mk('harness_dirty: true → accept — a fact, not a failure', 'accept', GOOD_CACHE, { ...GOOD_PROVENANCE, harness_dirty: true }),
+        mk('a field unavailable WITH a reason → accept', 'accept', GOOD_CACHE, {
+            ...GOOD_PROVENANCE,
+            host_binary_hash: { unavailable: 'the host binary is not on PATH in this runner' },
+        }),
     ];
 }
 
@@ -130,7 +154,7 @@ function selfTestCases(): SelfTestCase[] {
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('--self-test')) {
-        return runSelfTest({ gate: 'check_benchmark_report_fields', cases: selfTestCases(), minCases: 6, minRejectCases: 4 });
+        return runSelfTest({ gate: 'check_benchmark_report_fields', cases: selfTestCases(), minCases: 12, minRejectCases: 8 });
     }
     const quiet = argv.includes('--quiet');
     const di = argv.indexOf('--dir');
@@ -172,7 +196,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(`\n    Contract: docs/contracts/benchmark-report-schema.md § The \`cache\` block.\n`);
         return 1;
     }
-    if (!quiet) process.stdout.write(`✅  every benchmark report carries the required cache fields (${String(v.scanned)} report(s)).\n`);
+    if (!quiet) process.stdout.write(`✅  every benchmark report carries its required cache and provenance fields (${String(v.scanned)} report(s)).\n`);
     return 0;
 }
 
