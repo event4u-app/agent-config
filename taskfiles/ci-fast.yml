@@ -1153,6 +1153,51 @@ tasks:
       a contributor sees it before pushing.
     cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
 
+  check-no-currency-in-cost-surfaces:
+    silent: true
+    desc: |
+      No cost surface prints a currency figure or a per-token rate. The suite
+      does not know a consumer's contract, so a monetary figure would be
+      extrapolated from a rate it invented — actionable and wrong, which is worse
+      than absent. Scope is a named watchlist of four files, not a pattern:
+      `cache_realization_report` legitimately carries a cost_usd block, and a
+      pattern gate would be neutered with an allowlist within a release.
+    cmd: ./scripts-run src/scripts/check_no_currency_in_cost_surfaces {{.QUIET_FLAG}}
+
+  check-prefix-stable-mutation:
+    silent: true
+    desc: |
+      The RUNTIME half of prefix stability. `check_kernel_prefix_stability`
+      guards the kernel prefix at authoring time and `payload_hash_drift`
+      measures churn after the fact; neither can see a hook rewriting a
+      prefix-stable surface DURING a session, which invalidates the prompt cache
+      for the rest of it and makes the next call pay the cache-write rate over
+      the whole prefix. Fails a mid-session writer that declares no `re_arm:`
+      boundary. Fails CLOSED on a write target it cannot classify when the same
+      file carries a literal resolving into a declared surface.
+    cmd: ./scripts-run src/scripts/check_prefix_stable_mutation {{.QUIET_FLAG}}
+
+  check-loss-class-declared:
+    silent: true
+    desc: |
+      A module that shortens, summarises, redacts or drops content on a path
+      that reaches the model declares its loss class, and a `recoverable-lossy`
+      declaration carries the recovery locator that distinguishes it from
+      `ephemeral-lossy`. Scoped to model-facing paths per the council that
+      resolved the strictness question; unknown reachability counts as
+      model-reaching.
+    cmd: ./scripts-run src/scripts/check_loss_class_declared {{.QUIET_FLAG}}
+
+  check-benchmark-report-fields:
+    silent: true
+    desc: |
+      Cache read:write ratio and stable-prefix share are REQUIRED fields on a
+      benchmark report. A report that cannot compute one emits
+      `{ unavailable: "<reason>" }` — never a blank and never a zero standing in
+      for "not measured", which is the shape that turns a blind report into a
+      believed one.
+    cmd: ./scripts-run src/scripts/check_benchmark_report_fields {{.QUIET_FLAG}}
+
   lint-composition-review:
     silent: true
     desc: |

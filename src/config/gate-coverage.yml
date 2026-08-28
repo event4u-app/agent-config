@@ -40,17 +40,17 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-25)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
 # ----------------------------------------------------------
-# 296 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 304 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying these rows, with `check_skill_admissions`,
-# `check_command_examples`, `check_routing_coverage`, `description_route_check`
-# and `lint_skill_trigger_corpus` counted).
-# **71 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 69 of those 71 are listed below.** The manifest is
-# therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~23 % of the population.
+# re-run on the tree carrying these rows, which now include the four gates the
+# two runtime-cost roadmaps add: check_prefix_stable_mutation,
+# check_loss_class_declared, check_benchmark_report_fields, and
+# check_no_currency_in_cost_surfaces).
+# **77 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
+# complete for every gate that can carry a floor, covering ~24 % of the population.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -2055,3 +2055,177 @@ gates:
       so the floor can be honest: `lint_evidence_artifacts` declines
       registration here because a diff-scoped gate legitimately scans 0, and
       this gate narrows to the diff only for the advisory half.
+
+  - id: check_prefix_stable_mutation
+    argv: []
+    min_scanned: 35
+    corpus: "hook-manifest concerns bound on at least one mid-session slot, whose script exists (45 at baseline, across 45 mid-session concerns)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_prefix_stable__.ts
+      content: |
+        // A canary hook that writes a prefix-stable surface mid-session.
+        // The gate reads the MANIFEST, so this file alone cannot trip it —
+        // which is why DISCRIMINATION is carried by --self-test, not here.
+        import * as fs from 'node:fs';
+        fs.writeFileSync('dist/agent-src/rules/__canary__.md', 'x');
+    note: >
+      road-to-runtime-context-floors step 1.2 — the RUNTIME half of prefix
+      stability. `check_kernel_prefix_stability` guards the kernel prefix at
+      authoring time against a committed snapshot, and `_lib/payload_hash_drift`
+      measures churn after the fact from an audit ledger; neither can see a hook
+      rewriting a prefix-stable surface DURING a session, which invalidates the
+      prompt cache for the rest of it.
+
+      THE SURFACE LIST IS LOADED, NOT RESTATED. Both this gate and
+      `check_preamble_payload_budget` import `PREFIX_STABLE_SURFACES` from
+      `_lib/prefix_stable_surfaces.ts`. That refactor is part of the same change:
+      the budget gate previously stated its three roots twice inside its own
+      file, and a third statement here would be the drift shape this repository
+      already pays for elsewhere.
+
+      DISCRIMINATION is carried by `--self-test` (7 cases, 2 rejecting), NOT by
+      the canary. The gate's corpus is the hook manifest, so a planted script
+      that no manifest binds is invisible to it by construction — the canary
+      above documents the violating SHAPE for a reader and is honestly not the
+      discriminator. The self-test plants a manifest as well as a script, which
+      is what actually proves the red path: a fixture concern on `post_tool_use`
+      writing `dist/agent-src/rules/` fails, and the same concern with
+      `re_arm: pre_compact` passes.
+
+      FAIL-CLOSED on an undecidable target, per the council that resolved
+      `which-surfaces-are-prefix-stable` (2026-08-28, 2/2): a write whose target
+      is computed at runtime, in a file that ALSO carries a literal resolving
+      into a declared surface, fails. Narrow on purpose — a dynamic write in a
+      file with no such literal is not reported, because a gate that flagged
+      every dynamic write in every hook is one nobody can keep green.
+
+      The floor is 35 against a live 45: room for real concern deletions, far
+      above a collapse. `{{.QUIET_FLAG}}` against `argv: []` is safe here —
+      `--quiet` suppresses only the success line, and `scanned:` is emitted
+      outside that guard.
+
+  - id: check_loss_class_declared
+    argv: []
+    min_scanned: 45
+    corpus: "every hook-manifest concern whose script exists (53 at baseline); of those, the model-facing lossy subset is the gated population"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_loss_class__.ts
+      content: |
+        // A model-facing lossy transform with no loss_class declaration.
+        // As with the sibling gate, the manifest is the corpus, so the
+        // discriminator is --self-test rather than this plant.
+        const WORD_CAP = 400;
+        export function run() {
+          return { context: redactLines(body).slice(0, WORD_CAP).join('\n') };
+        }
+    note: >
+      road-to-runtime-context-floors step 3.2. Strictness was decided, not
+      assumed: council 2026-08-28 (2/2 convergent) resolved
+      `how-strict-the-loss-class-lint-is` as option (b) — FAIL on transforms
+      whose output reaches the model, WARN elsewhere. Option (a) (fail
+      everywhere in `src/`) buys a first-run backlog whose usual answer is a
+      broad allowlist, which this repository has measured emptying a gate;
+      option (c) (warn everywhere, ratchet later) is the shape this repository
+      has measurably never ratcheted. Both seats added the refinement adopted
+      here: unknown reachability is classified as model-reaching.
+
+      MEASURED AT LANDING: **1** module qualifies — `hot_context_hook`, which is
+      exactly the `ephemeral-lossy` exemplar `docs/contracts/loss-classes.md`
+      classifies. A gated population of one is the honest state of this tree,
+      not a broken detector, and it is why the floor below is set on the SCANNED
+      corpus (53 hook scripts) rather than on the gated subset.
+
+      THE DETECTOR READS CODE, NOT PROSE. Its first cut matched `truncat` inside
+      three docblocks that describe truncation without performing any and
+      reported a corpus of four; three of those four were comments. Comments are
+      stripped before matching, and one self-test case pins that direction
+      ("prose about truncation is not truncation"), because a gate that fires on
+      writing about a defect is how a real corpus of one becomes a pro-forma
+      corpus of four.
+
+      DISCRIMINATION: `--self-test`, 8 cases, 3 rejecting — including the two
+      that matter beyond "missing declaration": a `recoverable-lossy` with no
+      `loss_recovery` locator (without it the class is indistinguishable from
+      `ephemeral-lossy`) and a misspelled class name.
+
+  - id: check_benchmark_report_fields
+    argv: []
+    min_scanned: 4
+    corpus: "committed benchmark reports under internal/bench/reports/ that announce a schema_version and a corpus/selection block (6 at baseline)"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: internal/bench/reports/__canary_missing_cache__.json
+      content: |
+        {
+          "schema_version": 1,
+          "corpus": { "id": "__canary__" },
+          "selection": { "top_k": 3 }
+        }
+    note: >
+      road-to-runtime-context-floors step 4.1. `cache.read_write_ratio` and
+      `cache.stable_prefix_share` are REQUIRED fields; a report that cannot
+      compute one emits `{ unavailable: "<reason>" }` rather than omitting the
+      key or emitting a zero. A blank reads as "no cache activity" and a zero
+      reads as "the worst possible ratio" — both are claims, and neither is the
+      claim "this was not measured".
+
+      The canary IS the discriminator here, unlike its two siblings: this gate's
+      corpus is a directory of files, so a planted report is genuinely in scope
+      and a create-only plant exercises the real red path. `--self-test` adds 7
+      cases (5 rejecting) covering the forms a plant cannot reach — a blank
+      `unavailable` reason, and a share above 1.
+
+      COMPATIBILITY: six committed reports predate the requirement, and all six
+      were backfilled in the landing change with a stated reason rather than a
+      fabricated number — additively, 48 insertions and 0 deletions, so no
+      historical measurement moved.
+
+      The floor is 4 against a live 6. `allowEmpty` is declared
+      (`OPTIONAL_INPUT:`) because benchmark reports are run artefacts rather
+      than source and a checkout may legitimately carry none; the floor applies
+      whenever any are present.
+
+  - id: check_no_currency_in_cost_surfaces
+    argv: []
+    min_scanned: 4
+    corpus: "the four cost surfaces road-to-delivered-cost-truth built (4 at baseline) — a named watchlist, not a tree walk"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_currency__.ts
+      content: |
+        // A planted file is NOT in this gate's corpus by construction — the
+        // watchlist is four named files. Discrimination is --self-test's job.
+        out.push(`total: $42`);
+    note: >
+      road-to-delivered-cost-truth AC-7. The suite does not know a consumer's
+      contract — subscription, per-token, committed spend, a reseller rate — so
+      any monetary figure it printed would be extrapolated from a rate it
+      invented. That is worse than no number, because it is actionable and wrong,
+      and it is exactly the thing someone reasonably adds back later on the
+      grounds that a cost report should show cost.
+
+      SCOPE IS A NAMED LIST, NOT A PATTERN, and that is the load-bearing choice.
+      `cache_realization_report` legitimately carries a `cost_usd` block for
+      back-compat with downstream consumers; a gate sweeping `src/scripts/*cost*`
+      would fail on it and be neutered with an allowlist inside a release. The
+      watchlist is asserted by `assertWatchlistResolves`, so a renamed surface is
+      a dead scope (exit 2) rather than a silent pass.
+
+      THE DETECTOR TOOK TWO CORRECTIONS, BOTH FROM ITS OWN SELF-TEST, and both
+      are pinned as accepting cases so a future widening cannot reintroduce them:
+      a bare `$` substring matches TEMPLATE INTERPOLATION (`${value}`), and
+      excluding `${` alone still matched a REGEX END ANCHOR (`/\.md$/`). The
+      shipped pattern is positive rather than subtractive — a currency `$` is
+      followed by a digit or by an interpolated amount — because a gate whose
+      first real run produces dozens of false positives gets an allowlist within
+      a release and then guards nothing.
+
+      DISCRIMINATION: `--self-test`, 9 cases, 4 rejecting. The canary above
+      documents the violating shape for a reader and is honestly NOT the
+      discriminator, because a created file lands outside a four-name watchlist.

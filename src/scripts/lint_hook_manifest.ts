@@ -29,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 
 // src/scripts/lint_hook_manifest.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(
@@ -212,6 +213,24 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
             );
           }
         }
+      }
+    }
+    // `re_arm:` — the named boundary at which a rebuilt prompt prefix is
+    // expected and paid for once (`road-to-runtime-context-floors` step 1.2).
+    // `check_prefix_stable_mutation` reads this key to decide whether a
+    // mid-session write into a declared prefix-stable surface is a violation or
+    // a declared, budgeted rebuild. Validated here for the same reason
+    // `needs_payload_bodies` is: the gate treats an unrecognised value as
+    // "undeclared" and fails, so a typo would look like a real violation and
+    // send the author hunting the wrong defect.
+    if ("re_arm" in spec) {
+      const ev = spec["re_arm"];
+      if (typeof ev !== "string" || !RE_ARM_EVENTS.includes(ev)) {
+        errors.push(
+          `concerns.${name}: 're_arm' must name a declared re-arm event ` +
+            `(${RE_ARM_EVENTS.join(" | ")}), got ${JSON.stringify(ev)} — ` +
+            `see docs/contracts/prefix-stable-surfaces.md`,
+        );
       }
     }
     // `nudge_rank:` — the nudge-exclusivity ordering `injection_budget`

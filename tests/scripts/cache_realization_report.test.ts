@@ -23,12 +23,65 @@ import {
     computeColdStarts,
     computeCouncilMispricing,
     computeDuplicateScope,
+    computePrefixStability,
     computeWorktreeFragmentation,
     encodeProjectPath,
     mean,
     median,
     parseArgs,
+    renderText,
+    type Report,
 } from '../../src/scripts/cache_realization_report.js';
+
+/** A minimally-populated report, so a renderer test asserts on ONE section. */
+function baseReport(): Report {
+    const emptyBucket = {
+        calls: 0,
+        input_tokens: 0,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+        ephemeral_5m_input_tokens: 0,
+        ephemeral_1h_input_tokens: 0,
+        output_tokens: 0,
+        read_share: 0,
+        weighted_input_units: 0,
+    };
+    return {
+        schema: 'cache-realization-report/v1',
+        host_version: 'test',
+        window_days: 14,
+        root: '/dev/null',
+        metric_definition: { billable_input: 'x', note: 'y' },
+        dedup_ratio: 1,
+        total_seen: 0,
+        deduped_count: 0,
+        buckets: {
+            main: { ...emptyBucket, bucket: 'main' as const },
+            subagent: { ...emptyBucket, bucket: 'subagent' as const },
+        },
+        subagent_cold_start: computeColdStarts([]),
+        by_agent: [],
+        duplicate_scope: {
+            duplicated_rule_names: [],
+            duplicated_bytes: 0,
+            duplicated_tokens: 0,
+            subagent_cache_creation_tokens: 0,
+            share_of_subagent_cache_creation: 0,
+            cold_start_legs: 0,
+        } as unknown as Report['duplicate_scope'],
+        council_mispricing: {} as unknown as Report['council_mispricing'],
+        worktree_fragmentation: {} as unknown as Report['worktree_fragmentation'],
+        prefix_stability: computePrefixStability({
+            total_lines: 0,
+            lines_with_data: 0,
+            groups: [],
+            stable_cohort: { n: 0, hit_count: 0, hit_rate: null },
+            unstable_cohort: { n: 0, hit_count: 0, hit_rate: null },
+            drift_visible: false,
+        }),
+        claims: [],
+    };
+}
 
 const _tmpDirs: string[] = [];
 
@@ -503,5 +556,75 @@ describe('computeColdStarts — write-share signature', () => {
         expect(cs.write_share_of_billable).toBe(0);
         expect(cs.read_share_of_billable).toBe(0);
         expect(cs.uncached_share_of_billable).toBe(0);
+    });
+});
+
+describe('prefix stability — road-to-runtime-context-floors step 1.3', () => {
+    // The one outcome that matters and was previously latent: a STABLE cohort
+    // whose read share sits BELOW the unstable cohort means a prefix-stable
+    // surface is being rewritten between repeat dispatches.
+    it('reports an inversion rather than leaving it in a separate CLI', () => {
+        const r = computePrefixStability({
+            total_lines: 5,
+            lines_with_data: 5,
+            groups: [],
+            stable_cohort: { n: 2, hit_count: 0, hit_rate: 0 },
+            unstable_cohort: { n: 2, hit_count: 2, hit_rate: 1 },
+            drift_visible: false,
+        });
+        expect(r.verdict).toBe('inverted');
+        expect(r.reason).toContain('LESS often');
+        expect(r.stable_cohort.read_share).toBe(0);
+        expect(r.unstable_cohort.read_share).toBe(1);
+    });
+
+    it('reports the expected ordering as stable-higher', () => {
+        const r = computePrefixStability({
+            total_lines: 4,
+            lines_with_data: 4,
+            groups: [],
+            stable_cohort: { n: 2, hit_count: 2, hit_rate: 1 },
+            unstable_cohort: { n: 2, hit_count: 0, hit_rate: 0 },
+            drift_visible: true,
+        });
+        expect(r.verdict).toBe('stable-higher');
+    });
+
+    it('states "insufficient data" instead of a number when either cohort is empty', () => {
+        for (const [stable, unstable] of [
+            [null, 0.5],
+            [0.5, null],
+            [null, null],
+        ] as Array<[number | null, number | null]>) {
+            const r = computePrefixStability({
+                total_lines: 1,
+                lines_with_data: 1,
+                groups: [],
+                stable_cohort: { n: stable === null ? 0 : 2, hit_count: 0, hit_rate: stable },
+                unstable_cohort: { n: unstable === null ? 0 : 2, hit_count: 0, hit_rate: unstable },
+                drift_visible: false,
+            });
+            expect(r.verdict).toBe('insufficient-data');
+            expect(r.reason).toContain('empty');
+            // A fabricated 0.0% for "nothing was measured" is the failure this
+            // three-valued verdict exists to prevent.
+            expect(r.reason).not.toMatch(/\b0\.0%/);
+        }
+    });
+
+    it('renders both cohorts and never prints a share for an empty one', () => {
+        const empty = computePrefixStability({
+            total_lines: 0,
+            lines_with_data: 0,
+            groups: [],
+            stable_cohort: { n: 0, hit_count: 0, hit_rate: null },
+            unstable_cohort: { n: 0, hit_count: 0, hit_rate: null },
+            drift_visible: false,
+        });
+        const text = renderText({ ...baseReport(), prefix_stability: empty });
+        expect(text).toContain('Prefix stability');
+        expect(text).toContain('stable cohort:');
+        expect(text).toContain('unstable cohort:');
+        expect(text).toContain('read_share=insufficient data');
     });
 });

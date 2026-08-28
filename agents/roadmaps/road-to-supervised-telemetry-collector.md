@@ -115,6 +115,42 @@ is why platform scope is a blocker rather than an assumption.
 5. Exactly one collector is live after every transition — within a **declared
    namespace** (blocker below).
 
+## Precondition — the resident-process floors
+
+`docs/contracts/resident-process-floors.md` is a **precondition** of everything
+below, not a restatement of it. It landed first, deliberately, so this file
+inherits the bounds rather than inventing them: a floor written after the
+process it bounds is a description of that process.
+
+Three things it owns and this roadmap therefore does not:
+
+- **The observation-only contract** (§ 1) — a resident module reads static,
+  versioned configuration on the dispatch path and nothing else, and its
+  falsifiable form is *if the module were killed, every dispatch would resolve
+  identically*. This collector is an observer by construction; the contract is
+  what makes that checkable rather than asserted.
+- **The daemon anti-pattern checklist** (§ 2) — five questions, answered below.
+- **The fail-closed delivery ladder** (§ 3) — what happens to an obligation
+  whose runtime carrier is not running.
+
+### The five checklist answers
+
+Answered here because § 2 requires them answered or named open; two are open and
+say so rather than being guessed.
+
+| # | Question | Answer |
+|---|---|---|
+| 1 | Failure mode when it is not running | Static mode. Dispatch capture falls back to the current hook-carried path; capture rate drops to the measured static baseline and nothing else changes. Phase 4.2 proves the unregressed claim rather than asserting it. |
+| 2 | What it does to a dispatch it cannot serve | Nothing — it degrades to the no-collector path. A dispatch is never blocked, delayed past its budget, or altered. This is § 1's boundary applied to the one case that would break it. |
+| 3 | State on an unclean stop | **Open** — carried by `blocker: supervisor-mechanism-and-platform-scope`, because fencing a stale owner record (supervision property 3) is a property of the chosen supervisor, not of this collector. Phase 5.1 tests it on real processes once the mechanism is chosen. |
+| 4 | Supervisor and privileges | **Open** — the same blocker. The floor's requirement is that the answer be *named*, and the blocker names it as undecided with three costed options rather than defaulting to one. |
+| 5 | Uniqueness namespace across concurrent checkouts | **Open** — carried by `blocker: uniqueness-namespace`. Worktrees make concurrent checkouts the common case in this repository, which is why it is a blocker and not an assumption. |
+
+Three open answers is a legitimate state for a `draft` roadmap and an illegitimate
+one for a design note under review: § 2's rule is that unanswered is
+*unreviewable*, so the three blockers below are what stand between this file and
+`ready`.
+
 ## Phase 1 — Decide the architecture before writing the schema
 
 - [ ] **1.1 Resolve the three blockers.** Supervisor mechanism and platform

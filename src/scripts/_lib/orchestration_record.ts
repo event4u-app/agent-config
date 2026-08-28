@@ -17,6 +17,7 @@
  */
 
 import type { LookupClass } from './auto_dispatch.js';
+import type { EvidenceBasis } from './evidence_basis.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
 /** Which route the rung took: deterministic primitive (lean-init L0),
@@ -24,7 +25,19 @@ export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 
  *  subagent spawn. */
 export type RouteTaken = 'primitive' | 'subagent' | 'ask';
 export type VerifyMode = 'deterministic' | 'judge' | 'none';
-export type Provenance = 'measured' | 'estimated';
+/**
+ * Migrated onto the shared evidence-basis vocabulary
+ * (`road-to-delivered-cost-truth` 4.1). The two literals are unchanged on the
+ * wire — `measured` and `estimated` mean here exactly what the contract says
+ * they mean — but they are no longer declared privately, so this surface and
+ * the census can no longer drift apart on what "measured" is.
+ *
+ * Narrowed to the two values this field can actually take: an orchestration
+ * record's floor is either read from the transcript ledger or arithmetic over
+ * it, and admitting `model-judged` here would be widening a type to match a
+ * vocabulary rather than a fact.
+ */
+export type Provenance = Extract<EvidenceBasis, 'measured' | 'estimated'>;
 export type TierChosen = 'lite' | 'medium' | 'high';
 export type TierSource = 'static' | 'inferred' | 'inherit';
 export type Band = 'low' | 'medium' | 'high';

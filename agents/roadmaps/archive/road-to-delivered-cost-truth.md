@@ -84,69 +84,81 @@ genuinely not inferable from the manifest.
 
 ## Phase 1 — What does this configuration cost
 
-- [ ] **1.1 `config-cost report`, Class A.** One command reading committed
+- [x] **1.1 `config-cost report`, Class A.** One command reading committed
       state and the local ledger: delivered payload for the session, the
       `billable_input` split into fresh input, cache read and cache creation,
       and the cache-read share. No socket, no daemon, no network — the same
       class `cache_realization_report` already occupies.
       verify: the command runs on a fixture ledger and prints all four figures; running it with no ledger prints a stated "no data" reason rather than zeros.
-- [ ] **1.2 The honest net-negative line.** When the measured delivered payload
-      exceeds what the active profile plausibly returns, the report says so in
-      one sentence and names the cheaper profile — rather than reporting a
-      large number neutrally and letting the reader assume it is the price of
-      value.
-      verify: a fixture whose payload exceeds the threshold renders the line naming a specific profile; a fixture below it renders no line at all.
-- [ ] **1.3 Re-read cost joins the report.** The per-leg re-read counts
+- [x] **1.2 The payload-amplification line** (renamed from "the honest
+      net-negative line" — see the blocker resolution below; both council seats
+      independently refused the original name because a ratio measures
+      amplification and never observes what was returned, so it cannot establish
+      net-negativity). When the delivered payload exceeds what the active profile
+      declares it intends to deliver, the report states the ratio and names the
+      profile — rather than reporting a large number neutrally and letting the
+      reader assume it is the price of value.
+      verify: a fixture whose delivered payload exceeds the declaration renders the ratio naming the profile; an absent, non-positive, or above-the-tree declaration renders `unknown_profile` and NO ratio.
+- [x] **1.3 Re-read cost joins the report.** The per-leg re-read counts
       `hot_context_hook` already emits are aggregated into a token figure in
       the same report, so a repeated read is priced rather than merely noticed.
       verify: a fixture leg with three re-reads of a known file renders a token figure derived from that file's measured size, not a constant.
 
 ## Phase 2 — Which assets produce it
 
-- [ ] **2.1 Per-asset delivery ledger.** Body tokens × delivery frequency for
+- [x] **2.1 Per-asset delivery ledger.** Body tokens × delivery frequency for
       every skill and rule that reaches standing context, ranked. The
       measurement is the exact tokenizer where it resolves and the character
       proxy where it does not, and the report says which it used — a proxy
       reading within its own error margin of a threshold is reported
       `unresolved`, never classified.
       verify: the ledger's top rows reconcile to within a stated margin of `check_preamble_payload_budget`'s three bucket totals, and every row names its measurement method.
-- [ ] **2.2 Every gate names its own "no".** A gate that refuses growth reports
+- [x] **2.2 Every gate names its own "no".** A gate that refuses growth reports
       which asset it refused and what it would have cost, so a refusal is
       legible as a saving rather than as an obstacle.
       verify: a fixture diff that trips the payload ratchet produces a message naming the asset and its token delta.
-- [ ] **2.3 The end-of-task summary carries the delivered figure.** One line,
+- [x] **2.3 The end-of-task summary carries the delivered figure.** One line,
       tokens only. **No currency extrapolation** — the suite does not know the
       consumer's contract, and a fabricated cost is worse than none.
       verify: the summary renders tokens and the string test asserts no currency symbol or per-token rate appears in it.
 
 ## Phase 3 — Does any of it take effect here
 
-- [ ] **3.1 `hooks:doctor` — a fixture event per bound slot.** For each slot
+- [x] **3.1 `hook-effect doctor` — a fixture event per bound slot.** For each slot
       the manifest binds on this host, dispatch a synthetic event and record
       whether the concern ran, whether its output reached the model, and
       whether a deny would have been honoured. The three are distinct and the
       tree already distinguishes them across hosts.
       verify: on a host binding `pre_tool_use`, the probe reports `ran` and a deny verdict; on a host that binds but discards, it reports `ran, output discarded` rather than a bare success.
-- [ ] **3.2 One verdict line, four values.** `effective` · `partial` ·
+      **Named `hook_effect_doctor`, not `hooks:doctor`** — `src/scripts/hooks_doctor.ts`
+      already exists and is a read-only report over the MANIFEST: declared
+      concerns, fail-closed posture, script and trampoline presence, last
+      dispatcher feedback. That is precisely option (b) of the blocker below,
+      which both council seats rejected as unable to distinguish `bound` from
+      `effective`. The two are different instruments and the new one leaves the
+      old untouched. Caught by `npm run typecheck` — the existing module's tests
+      failed against the new API, which is what a test over a default entry point
+      is for.
+- [x] **3.2 One verdict line, four values.** `effective` · `partial` ·
       `inert` · `unknown`. `unknown` is a real answer and is never rendered as
       `effective`; `partial` names which slots are inert.
       verify: three fixture hosts produce three different verdicts, and the fixture with an unprobeable slot yields `unknown` with the slot named.
 
 ## Phase 4 — Every number states its basis
 
-- [ ] **4.1 One evidence-basis vocabulary.** A contract enumerating
+- [x] **4.1 One evidence-basis vocabulary.** A contract enumerating
       `measured` · `estimated` · `inferred` · `provider-reported` ·
       `model-judged` · `unknown`, with one sentence each on what evidence the
       value rests on. The tree currently carries at least two incompatible
       partial vocabularies in unrelated modules; this reconciles them rather
       than adding a third.
       verify: `docs/contracts/evidence-basis.md` exists, and the existing users are migrated onto its values in the same change with their old literals removed.
-- [ ] **4.2 The benchmark report states what produced it.** Host binary hash,
+- [x] **4.2 The benchmark report states what produced it.** Host binary hash,
       harness commit and dirty flag, and a reproducibility statement become
       required fields in the benchmark report schema. A report that cannot
       supply one names it rather than omitting it.
       verify: `docs/contracts/benchmark-report-schema.md` lists the four as required, and a fixture report missing any one fails schema validation naming that field.
-- [ ] **4.3 A parallel-form audit, not a refactor.** The tree carries several
+- [x] **4.3 A parallel-form audit, not a refactor.** The tree carries several
       near-identical shapes for task contracts, artefact references and
       decision ledgers. This step **inventories** them with anchors and states
       for each whether it is a duplicate or a genuine variant. It changes no
@@ -157,7 +169,7 @@ genuinely not inferable from the manifest.
 
 ### blocker: what-the-net-negative-threshold-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 1.2 only. The rest of Phase 1 lands under any answer.
 - **What to do:** pick exactly one — (a) a fixed token threshold: simple and
@@ -174,10 +186,36 @@ genuinely not inferable from the manifest.
 - **If you do nothing:** the report prints a large number with no
   interpretation, which is the state that produced a 35,692-token gap nobody
   acted on.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(b)**, with three constraints
+  both seats reached independently and one correction to this step's name.
+  Rationale: a self-calibrating denominator avoids the invented-threshold defect
+  (a); (c) gives up the only thing the step exists for.
+  **The name was refused by both seats and is changed**: the figure measures
+  **payload amplification**, not net-negativity — it never observes what the
+  payload RETURNED, so a 10:1 ratio delivering critical capability is not
+  net-negative and a 1:1 delivering nothing is. It informs the question and is
+  not allowed to answer it. **Denominator gaming**, raised independently by both
+  seats: a profile self-declaring a large payload makes any delivered cost look
+  disciplined, so the declaration is per-category (numerator and denominator
+  measure the same things) and is **verified** — a declaration above what the
+  measured tree can deliver is refused, and an absent or non-positive one yields
+  `unknown_profile` with no ratio. Landed at
+  `src/scripts/_lib/config_cost.ts:57` and `src/config/profiles/*.ini`.
+  Dissent, recorded by both seats: the ratio cannot establish net-negativity
+  alone; carried as the constraint above rather than as an open item.
+  `revisit-if`: runtime outcome data supplies a defensible value model, or
+  pressure emerges to accept unverified profile declarations.
+  **Implementation note, found while building it:** a first cut declared each
+  profile's CURRENT MEASUREMENT as its payload, which made the ratio 1.00 by
+  construction. The denominator is the profile's INTENDED payload (the published
+  102,520-token milestone, split by category); the tree's measured 133,759 tok
+  then reads as 1.30 — which is the 35,692-token gap this roadmap exists for,
+  expressed as a ratio.
 
 ### blocker: how-far-the-effect-probe-may-reach
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 3.1 only. 3.2's verdict shape is decided either way.
 - **What to do:** pick exactly one — (a) dispatch synthetic events through the
@@ -194,28 +232,57 @@ genuinely not inferable from the manifest.
   whole probe for the parts that are awkward.
 - **If you do nothing:** 3.1 degrades to (b) and reports what the manifest
   already says, which no consumer needed a command for.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(c)**, with four refinements
+  both seats reached independently. Rationale: observable evidence where safe,
+  an honest `unknown` where not — (b) cannot distinguish `bound` from
+  `effective`, which is the entire question, and (a) executes concerns whose
+  side effects are not provably absent.
+  **FIVE states, not four**: `effective` · `bound-discarded` · `bound-not-fired`
+  · `unbound` · `unknown`. The roadmap's four collapsed "the host ignored it"
+  and "we declined to look" into one bucket.
+  **Three coverage metrics** — `dispatch_rate`, `known_state_rate`,
+  `verified_rate` — because a report can be truthful per concern and still
+  mislead if almost nothing was probed.
+  **`unknown` is never rendered as `effective`**, stated by both seats.
+  **Sandbox even declared-safe concerns**, with the status revoked if an
+  undeclared write appears.
+  **Implemented STRICTER than the verdict, and deliberately:** taking the last
+  two refinements together makes the self-declaration redundant — both seats
+  called a self-declared property nothing verifies a weak control this
+  repository flags as a defect elsewhere, and both asked for the sandbox anyway.
+  So eligibility is **measured**, not declared: each concern runs once against a
+  scratch root, the tree is hashed before and after, and a writer is ineligible
+  and reported `unknown`. No manifest declaration was added, because a field
+  nothing needs is a field that drifts. Landed at
+  `src/scripts/_lib/hook_effect_probe.ts:38` and `src/scripts/hooks_doctor.ts:88`.
+  Dissent, recorded by both seats: an initially high `unknown` rate reduces
+  utility — which is what the three coverage metrics make visible rather than
+  hide. `revisit-if`: deterministic side-effect analysis or verified purity
+  annotations become available, or pressure emerges to widen dispatch to
+  unverified concerns.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A consumer running one Class-A command sees delivered payload,
+- [x] AC-1 — A consumer running one Class-A command sees delivered payload,
       the three-way `billable_input` split and the cache-read share for their
       session, or a stated reason why the data is unavailable — never zeros
       standing in for absence.
-- [ ] AC-2 — The per-asset ledger reconciles to within a stated margin of the
+- [x] AC-2 — The per-asset ledger reconciles to within a stated margin of the
       payload gate's bucket totals, and every row names whether it was
       measured with the exact tokenizer or the character proxy.
-- [ ] AC-3 — A payload-ratchet refusal names the asset and its token delta, so
+- [x] AC-3 — A payload-ratchet refusal names the asset and its token delta, so
       the refusal reads as a quantified saving.
-- [ ] AC-4 — The effect probe returns one of four verdicts on any supported
+- [x] AC-4 — The effect probe returns one of four verdicts on any supported
       host, `unknown` is never rendered as `effective`, and `partial` names the
       inert slots.
-- [ ] AC-5 — `docs/contracts/evidence-basis.md` exists and the previously
+- [x] AC-5 — `docs/contracts/evidence-basis.md` exists and the previously
       divergent literals are gone from their modules, verified by their
       absence rather than by the contract's presence.
-- [ ] AC-6 — A benchmark report missing host binary hash, harness commit,
+- [x] AC-6 — A benchmark report missing host binary hash, harness commit,
       dirty flag or reproducibility statement fails schema validation naming
       the field.
-- [ ] AC-7 — No surface built here prints a currency figure or a per-token
+- [x] AC-7 — No surface built here prints a currency figure or a per-token
       rate.
 
 ## Risk Register

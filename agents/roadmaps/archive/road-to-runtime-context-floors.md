@@ -75,27 +75,27 @@ is the field that distinguishes them.
 
 ## Phase 1 — The runtime half of prefix stability
 
-- [ ] **1.1 Declare the prefix-stable surface set.** One list, in a contract
+- [x] **1.1 Declare the prefix-stable surface set.** One list, in a contract
       document, naming every surface whose bytes sit in the cached prefix:
       the kernel bodies the existing snapshot already covers, the skill
       catalogue, the `CLAUDE.md` hierarchy, and any standing-context carrier a
       hook can write to. The list is data, not prose — the gate in 1.2 reads it.
       verify: the contract exists and its surface list is loaded by the 1.2 gate rather than restated in it; `check_kernel_prefix_stability` still passes unchanged.
-- [ ] **1.2 A mid-session mutation of a declared surface is a violation.**
+- [x] **1.2 A mid-session mutation of a declared surface is a violation.**
       A gate over the hook manifest and the scripts it binds: any writer whose
       target resolves inside the 1.1 surface set and whose slot fires
       mid-session fails, unless it declares a **named re-arm event** — the
       event after which a rebuilt prefix is expected and paid for once
       (`session_start`, `pre_compact`).
       verify: a fixture hook declaring a write to a prefix-stable surface on `post_tool_use` with no re-arm declaration fails the gate; the same hook with `re_arm: pre_compact` passes.
-- [ ] **1.3 The existing drift measurement becomes the after-the-fact check.**
+- [x] **1.3 The existing drift measurement becomes the after-the-fact check.**
       `payload_hash_drift` is wired into the cost report so a stable-cohort
       read share below its unstable cohort is reported rather than latent.
       verify: the report renders both cohorts and their read shares on a fixture ledger, and states "insufficient data" rather than a number when either cohort is empty.
 
 ## Phase 2 — Observation-only, before the observer exists
 
-- [ ] **2.1 Write the observation-only contract.** A resident or long-lived
+- [x] **2.1 Write the observation-only contract.** A resident or long-lived
       module in this suite reads **static, versioned configuration** on the
       dispatch path and nothing else. It may not consult its own accumulated
       state, a learned model, or a live counter to decide what the dispatch
@@ -103,7 +103,7 @@ is the field that distinguishes them.
       candidate, a finding — consumed at a release or restart boundary, never
       inside the dispatch it observed.
       verify: the contract document exists and states the boundary in one falsifiable sentence; `road-to-supervised-telemetry-collector` cites it as a precondition rather than restating it.
-- [ ] **2.2 The daemon anti-pattern checklist.** Five questions every
+- [x] **2.2 The daemon anti-pattern checklist.** Five questions every
       resident-process design note answers before it is reviewed: what is the
       failure mode when it is not running · what does it do to a dispatch it
       cannot serve · what is its state on an unclean stop · who supervises it
@@ -111,7 +111,7 @@ is the field that distinguishes them.
       checkouts of the same repository run at once. Unanswered is not a
       warning, it is an unreviewable note.
       verify: the checklist exists in the same contract as 2.1 and the collector roadmap's design note answers all five, or names which are open and why.
-- [ ] **2.3 Fail-closed ladder for obligations migrated out of standing context.**
+- [x] **2.3 Fail-closed ladder for obligations migrated out of standing context.**
       The delivery migration in the adjacent cost-truth workstream moves rules
       out of the always-loaded prefix onto a runtime carrier. This step states
       what happens when that carrier fails: an obligation classified
@@ -122,7 +122,7 @@ is the field that distinguishes them.
 
 ## Phase 3 — Loss classes get names before they get constraints
 
-- [ ] **3.1 Name the classes over what the tree already does.** Five values —
+- [x] **3.1 Name the classes over what the tree already does.** Five values —
       `exact`, `lossless`, `recoverable-lossy`, `ephemeral-lossy`, `forbidden` —
       each defined by what recovery it guarantees. The definitions are written
       **against existing behaviour**: `fold_intake` is `recoverable-lossy` with
@@ -130,23 +130,23 @@ is the field that distinguishes them.
       the classification is checked against those two before it is applied to
       anything new.
       verify: the contract classifies both existing transforms and its classification matches their source docblocks; neither transform's behaviour changes in this phase.
-- [ ] **3.2 An undeclared lossy transform fails the lint.** Any module that
+- [x] **3.2 An undeclared lossy transform fails the lint.** Any module that
       shortens, summarises, redacts or drops content on a path that reaches the
       model declares its class and, for `recoverable-lossy`, the recovery path.
       verify: a fixture transform with no declaration fails; the same transform with `loss_class: recoverable-lossy` and a recovery locator passes.
-- [ ] **3.3 The passthrough invariant.** A transform that cannot parse its
+- [x] **3.3 The passthrough invariant.** A transform that cannot parse its
       input, cannot store the recovery, or does not make the input smaller
       returns the input unchanged. Degradation is never silent and never lossy.
       verify: four fixtures — unparseable, storage unavailable, no recovery path, output not smaller — each return input bytes unchanged, and each is covered by its own test.
 
 ## Phase 4 — The ratio becomes a field, not a footnote
 
-- [ ] **4.1 Cache read:write ratio and stable-prefix share are mandatory
+- [x] **4.1 Cache read:write ratio and stable-prefix share are mandatory
       fields.** Both join the benchmark report schema and the cost report as
       required, not optional. A report that cannot compute them says so with a
       reason; it does not omit them.
       verify: `docs/contracts/benchmark-report-schema.md` lists both as required and a fixture report missing either fails schema validation with a named field.
-- [ ] **4.2 `cost-per-solved` becomes an available ranking metric.** Not the
+- [x] **4.2 `cost-per-solved` becomes an available ranking metric.** Not the
       default and not a replacement — an option, so a future comparison can
       rank on cost at held quality rather than on tokens.
       verify: the ranking option exists and a fixture run ranks two arms differently under the two metrics, demonstrating the choice is not cosmetic.
@@ -155,7 +155,7 @@ is the field that distinguishes them.
 
 ### blocker: which-surfaces-are-prefix-stable
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 only. Phases 2, 3 and 4 proceed under either answer.
 - **What to do:** pick exactly one — (a) the declared set is the three buckets
@@ -174,10 +174,26 @@ is the field that distinguishes them.
   not exist yet, so enumerating them now would be enumerating a plan.
 - **If you do nothing:** the runtime half of prefix stability has no surface
   list, so 1.2's gate has nothing to check and the invariant stays prose.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(c)**. Rationale: (a)'s
+  boundary is already measured and maintained by
+  `check_preamble_payload_budget`, so the gate inherits a live list instead of a
+  second one that drifts from it; (b) requires a first enumeration of carriers
+  that do not exist yet, which is enumerating a plan rather than a surface.
+  Both seats added the same refinement, adopted: the gate **fails closed on an
+  undecidable target** rather than treating an unclassifiable write as clean.
+  Dissent, recorded by both seats: a carrier could land in the window before the
+  reopen condition fires — which is why the reopen is written as an obligation
+  on the change that lands the carrier, not as a future review. Landed at
+  `src/scripts/_lib/prefix_stable_surfaces.ts:53` (the list),
+  `docs/contracts/prefix-stable-surfaces.md:60` (the verdict and its reopen
+  condition). `revisit-if`: any hook, delivery carrier or resident process able
+  to write standing context outside the four declared roots lands, or
+  `check_prefix_stable_mutation` reports an `undecidable` finding.
 
 ### blocker: how-strict-the-loss-class-lint-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 3.2 only. 3.1 and 3.3 land under either answer.
 - **What to do:** pick exactly one — (a) fail the build on any undeclared
@@ -192,23 +208,36 @@ is the field that distinguishes them.
   such risk, and gating it buys baseline churn instead of safety.
 - **If you do nothing:** 3.1 lands a vocabulary nothing enforces, which is the
   weaker half of the item and the half the tree already had implicitly.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(b)**. Rationale: the
+  classification exists to protect what the model is given, and (b) is the only
+  option that clears both recorded repository failure modes — (a) buys a large
+  first-run baseline that becomes the allowlist this repo already measures
+  emptying a gate, and (c) is the warn-only shape this repo has measurably never
+  ratcheted. Both seats added the same refinement, adopted: **unknown
+  reachability is classified as model-reaching**, so ambiguity is not an
+  accidental exemption. Dissent, recorded by both seats: a non-model transform
+  can become model-facing without being reclassified — carried as the
+  `revisit-if`. `revisit-if`: a warn-only transform becomes model-reachable, an
+  indirect path bypasses the reachability predicate, or the predicate cannot
+  decide and the fail-closed branch fires in normal work.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A hook that writes a declared prefix-stable surface on a
+- [x] AC-1 — A hook that writes a declared prefix-stable surface on a
       mid-session slot cannot land without a named re-arm event: the fixture
       fails the gate, and the same hook with a declared re-arm passes.
-- [ ] AC-2 — The observation-only contract exists and the roadmap that lands
+- [x] AC-2 — The observation-only contract exists and the roadmap that lands
       the first resident process cites it as a precondition, so the floor is
       reachable from the process rather than only from here.
-- [ ] AC-3 — Every resident-process design note in the tree answers the five
+- [x] AC-3 — Every resident-process design note in the tree answers the five
       checklist questions or names which are open and why; none is silent.
-- [ ] AC-4 — A critical-B obligation whose delivery carrier is unavailable
+- [x] AC-4 — A critical-B obligation whose delivery carrier is unavailable
       arrives eagerly in a fixture run; none is dropped.
-- [ ] AC-5 — The two existing transforms are classified and their declared
+- [x] AC-5 — The two existing transforms are classified and their declared
       class matches their behaviour, verified against their own source, not
       against this roadmap's summary of it.
-- [ ] AC-6 — A benchmark or cost report that omits cache read:write ratio or
+- [x] AC-6 — A benchmark or cost report that omits cache read:write ratio or
       stable-prefix share fails schema validation naming the missing field;
       one that cannot compute them emits a stated reason instead of a blank.
 

@@ -475,5 +475,27 @@
   "verdict": {
     "overall": "measured",
     "errors": 0
+  },
+  "cache": {
+    "read_write_ratio": {
+      "unavailable": "this report predates the cache-block requirement (road-to-runtime-context-floors step 4.1); its runner recorded no cache_read/cache_creation token fields, so the ratio cannot be computed from it"
+    },
+    "stable_prefix_share": {
+      "unavailable": "this report predates the cache-block requirement (road-to-runtime-context-floors step 4.1); no dispatch in this run recorded payload_hash, so the stable-prefix share cannot be computed from it"
+    }
+  },
+  "provenance": {
+    "host_binary_hash": {
+      "unavailable": "this report predates the provenance requirement (road-to-delivered-cost-truth step 4.2); its runner recorded no host binary hash, and it cannot be reconstructed after the fact"
+    },
+    "harness_commit": {
+      "unavailable": "this report predates the provenance requirement (road-to-delivered-cost-truth step 4.2); its runner recorded no harness commit, and it cannot be reconstructed after the fact"
+    },
+    "harness_dirty": {
+      "unavailable": "this report predates the provenance requirement (road-to-delivered-cost-truth step 4.2); its runner recorded no harness dirty flag, and it cannot be reconstructed after the fact"
+    },
+    "reproducibility": {
+      "unavailable": "this report predates the provenance requirement (road-to-delivered-cost-truth step 4.2); its runner recorded no reproducibility statement, and it cannot be reconstructed after the fact"
+    }
   }
 }
