@@ -130,7 +130,18 @@ interface Row {
     missed_by_grep: string[]; wrong_by_grep: string[];
 }
 
-function classVerdict(rows: Row[]): { verdict: string; recall_delta_pp: number; precision_ok: boolean; grep: { p: number; r: number }; graph: { p: number; r: number } } {
+/**
+ * A class where BOTH arms returned the empty set measured nothing. The
+ * registered arithmetic calls that a TIE, and that output is preserved
+ * verbatim — but a tie between two silences is not comparative evidence, so
+ * the validity flag says so beside it rather than in place of it.
+ *
+ * Resolved by AI council 2026-08-28: publish the mechanically computed
+ * registered verdict AND the validity assessment, never silently replacing one
+ * with the other. Relabelling after seeing a result is itself a post-hoc
+ * judgement; showing both is what makes it auditable.
+ */
+function classVerdict(rows: Row[]): { verdict: string; validity: string; validity_note: string; recall_delta_pp: number; precision_ok: boolean; grep: { p: number; r: number }; graph: { p: number; r: number } } {
     const gR = mean(rows.map((r) => r.grep.recall));
     const gP = mean(rows.map((r) => r.grep.precision));
     const cR = mean(rows.map((r) => r.graph.recall));
@@ -141,7 +152,12 @@ function classVerdict(rows: Row[]): { verdict: string; recall_delta_pp: number; 
     if (delta >= RECALL_DELTA_REQUIRED_PP && precision_ok) verdict = 'WIN';
     else if (delta <= -RECALL_DELTA_REQUIRED_PP) verdict = 'NULL';
     else verdict = precision_ok ? 'TIE' : 'NULL';
-    return { verdict, recall_delta_pp: delta, precision_ok, grep: { p: r3(gP), r: r3(gR) }, graph: { p: r3(cP), r: r3(cR) } };
+    const noSignal = rows.every((r) => r.grep.recall === 0 && r.graph.recall === 0 && r.grep.precision === 0 && r.graph.precision === 0);
+    const validity = noSignal ? 'VOID — INSTRUMENT FAILURE' : 'VALID';
+    const validity_note = noSignal
+        ? 'Both arms returned the empty set on every question in this class, so nothing was measured. The registered verdict above is the runner\'s arithmetic and is preserved; it is not a defensible substantive interpretation.'
+        : '';
+    return { verdict, validity, validity_note, recall_delta_pp: delta, precision_ok, grep: { p: r3(gP), r: r3(gR) }, graph: { p: r3(cP), r: r3(cR) } };
 }
 
 function main(): number {
@@ -233,7 +249,8 @@ function main(): number {
         graph: { precision: r3(mean(graphShaped.map((r) => r.graph.precision))), recall: r3(mean(graphShaped.map((r) => r.graph.recall))) },
     };
 
-    const wins = Object.entries(perClass).filter(([, v]) => v.verdict === 'WIN').map(([k]) => k);
+    const wins = Object.entries(perClass).filter(([, v]) => v.verdict === 'WIN' && v.validity === 'VALID').map(([k]) => k);
+    const voidClasses = Object.entries(perClass).filter(([, v]) => v.validity !== 'VALID').map(([k]) => k);
     const summary = {
         benchmark: 'code-graph-vs-grep-inrepo',
         generated: new Date().toISOString().slice(0, 10),
@@ -252,6 +269,11 @@ function main(): number {
         negative_controls: { n: negatives.length, grep_recall: r3(negGrep), graph_recall: r3(negGraph), floor_ok: negativeControlOk },
         macro_average_reported_only: macro,
         classes_won: wins,
+        classes_void: voidClasses,
+        negative_control_construct_caveat:
+            'The four controls are literal-string searches (a config key, a log filename, an env var name, a comment fragment). This engine indexes SYMBOLS and call relations, not string literals, so it scores 0.000 on all four by construction. The pre-registered floor is reported FAILED because it was registered and cannot be discarded after the fact — but a reader must not read it as an implementation defect. AI council 2026-08-28 split on this and resolved it by naming the claim: if the claim were "graph retrieval replaces grep for repository investigation" the controls are valid and the failure matters; if the claim is "graph retrieval improves structural code questions" the controls sit outside that construct. This benchmark makes only the second claim. A v2 registration must separate IN-DOMAIN negative controls (symbol-shaped probes whose correct answer is empty, testing false positives) from CAPABILITY-BOUNDARY tests (literals, filenames, config keys), reported separately.',
+        overall_verdict_withheld:
+            'No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID, and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is "zero classes met the pre-registered win criterion", NOT "grep proved superior across all classes". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one.',
         rows,
     };
 
@@ -276,17 +298,32 @@ function main(): number {
     md.push('');
     md.push('Bar per class: recall delta ≥ +10 pp **and** precision within 5 pp.');
     md.push('');
-    md.push('| Class | n | grep R | graph R | Δ recall (pp) | grep P | graph P | precision ok | verdict |');
-    md.push('|---|---|---|---|---|---|---|---|---|');
+    md.push('| Class | n | grep R | graph R | Δ recall (pp) | grep P | graph P | precision ok | registered verdict | validity |');
+    md.push('|---|---|---|---|---|---|---|---|---|---|');
     for (const c of GRAPH_CLASSES) {
         const v = perClass[c];
         if (!v) continue;
-        md.push(`| \`${c}\` | ${v.n} | ${v.grep.r} | ${v.graph.r} | ${v.recall_delta_pp >= 0 ? '+' : ''}${v.recall_delta_pp} | ${v.grep.p} | ${v.graph.p} | ${v.precision_ok ? 'yes' : 'no'} | **${v.verdict}** |`);
+        md.push(`| \`${c}\` | ${v.n} | ${v.grep.r} | ${v.graph.r} | ${v.recall_delta_pp >= 0 ? '+' : ''}${v.recall_delta_pp} | ${v.grep.p} | ${v.graph.p} | ${v.precision_ok ? 'yes' : 'no'} | ${v.verdict} | **${v.validity}** |`);
+    }
+    md.push('');
+    md.push('Two columns, deliberately. **Registered verdict** is the runner\'s arithmetic under the pre-registered bars, preserved verbatim. **Validity** is whether that arithmetic measured anything. Neither replaces the other.');
+    for (const c of GRAPH_CLASSES) {
+        const v = perClass[c];
+        if (v && v.validity !== 'VALID') { md.push(''); md.push(`> **\`${c}\` — ${v.validity}.** ${v.validity_note}`); }
     }
     md.push('');
     md.push(`**Negative controls** (n=${negatives.length}): grep recall ${r3(negGrep)}, graph recall ${r3(negGraph)} — floor (graph ≥ 0.9 × grep) **${negativeControlOk ? 'held' : 'FAILED'}**.`);
     md.push('');
-    md.push(`**Classes won:** ${wins.length > 0 ? wins.map((w) => `\`${w}\``).join(', ') : 'none'}.`);
+    md.push(`**Classes won (valid classes only):** ${wins.length > 0 ? wins.map((w) => `\`${w}\``).join(', ') : 'none'}.`);
+    if (voidClasses.length > 0) md.push(`**Classes void:** ${voidClasses.map((w) => `\`${w}\``).join(', ')} — measured nothing, excluded from any win count.`);
+    md.push('');
+    md.push('## Negative controls — the floor failed, and what that does and does not mean');
+    md.push('');
+    md.push(summary.negative_control_construct_caveat);
+    md.push('');
+    md.push('## No overall engine verdict is derived from this run');
+    md.push('');
+    md.push(summary.overall_verdict_withheld);
     md.push('');
     md.push('## Macro average — reported only, NOT a pass criterion');
     md.push('');

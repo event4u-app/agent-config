@@ -128,16 +128,16 @@ by a measurement of absent code.
 
 ## Phase 2 — Measure, and publish whichever way it lands
 
-- [ ] **2.1 Run both arms on the repaired build.** Native graph and
+- [x] **2.1 Run both arms on the repaired build.** Native graph and
       disciplined grep, same questions, same scoring, current `HEAD`.
       verify: the report records the commit under measurement, and that commit postdates the 2026-08-22 repair — asserted mechanically, not read by eye.
-- [ ] **2.2 Publish the result unchanged.** Into `internal/bench/reports/` with
+- [x] **2.2 Publish the result unchanged.** Into `internal/bench/reports/` with
       its own date, and a `docs/CLAIMS.md` entry carrying `measured_on:` and
       the incomparability note. **A result worse than the pre-registered bar is
       published identically** — an honest null is the outcome this roadmap is
       most likely to produce and is a complete success of it.
-      verify: the claim entry exists with `measured_on:` set to the measured commit's date and `check_claims` passes; the report states the pre-registered bar beside the result.
-- [ ] **2.3 The stale figure is re-scoped, never deleted.** The 2026-07-28
+      verify: **re-scoped by the `whether-a-non-comparable-number-is-worth-publishing` resolution to (b)** — no second claims entry is created; instead `claim:code-graph-retrieval-null` carries a pointer to the report plus an explicit superseded-build note, `check_claims` passes, and the report states the pre-registered bar beside every result.
+- [x] **2.3 The stale figure is re-scoped, never deleted.** The 2026-07-28
       entry keeps its number and gains a pointer to the new one, so the record
       shows a question answered twice rather than a number quietly replaced.
       verify: both entries are present in `docs/CLAIMS.md` and each names the build it measured.
@@ -309,6 +309,59 @@ its completion has **no dependency relationship** with this phase.
   laundering two prior councils and this one all refused.
 
 
+### blocker: what-to-do-with-a-class-that-measured-nothing
+
+- **Status:** resolved
+- **Owner:** maintainer
+- **Discovered during the run, not before it.** The pinned corpus encodes the
+  three `path-between` questions with a TWO-ENDPOINT probe (`"cmdBuild ->
+  getParser"`), and the registered runner gives both arms a single probe token.
+  Neither arm can match a token containing ` -> `, so all three questions
+  returned the empty set from **both** arms. The inconsistency existed at
+  registration time; finding it required running the benchmark. It was found
+  independently by the corpus's own author, who restored the file to its
+  registered bytes rather than editing a corpus that had already been pinned and
+  run.
+- **Resolution:** **(a) publish v1 as-is with the class relabelled VOID —
+  INSTRUMENT FAILURE, and record the fix as a v2 registration.** AI council
+  2026-08-28 (anthropic + openai, 1 round, $0.00), 2/2 convergent. Option (c) —
+  repair just that class and re-run it under the existing registration — was
+  refused by both seats as changing the method after seeing the outcome, which
+  is the single thing a pre-registration exists to prevent. One seat added the
+  refinement that is implemented: publish **both** the mechanically computed
+  registered verdict (`TIE`) **and** the validity assessment (`VOID`), never
+  silently replacing one with the other, because relabelling after seeing a
+  result is itself a post-hoc judgement and showing both is what makes it
+  auditable.
+- **Second decision, split and resolved by naming the claim.** On whether the
+  failed negative-control floor is a finding or a category error, one seat said
+  category error (a symbol index cannot find string literals; a floor a correct
+  implementation cannot clear is a design flaw) and the other said a genuine
+  finding, narrowly stated. The resolver both accept: it depends which claim is
+  made. *"Graph retrieval replaces grep for repository investigation"* makes the
+  controls valid; *"graph retrieval improves structural code questions"* — the
+  only claim this benchmark makes — puts them outside the construct. Either way
+  **the registered floor stays reported as FAILED**, because it was registered
+  and cannot be discarded after the fact; what changes is the caveat printed
+  beside it, and the v2 requirement to separate in-domain negative controls from
+  capability-boundary tests.
+- **Third decision, 2/2:** no overall engine verdict is derived from v1. The
+  defensible statement is "zero classes met the pre-registered win criterion",
+  never "grep proved superior". A v2 registration is a new confirmatory
+  experiment, never a repaired continuation.
+- **Blocks:** step 2.2's framing only. The run itself completed.
+- **What to do:** relabel the class VOID in the runner's own output, print the
+  registered verdict beside the validity assessment, print the construct caveat
+  beside the control floor, withhold the overall verdict, and open a v2
+  registration stub carrying the corrected corpus as an unregistered seed.
+- **Resolved when:** the published report carries both columns, names the void
+  class and its cause, and withholds an overall engine verdict; and the v2 stub
+  exists.
+- **If you do nothing:** the report publishes `TIE` for a class where both arms
+  measured nothing, which is a fabricated result — the exact defect this
+  roadmap's own Risk 1 exists to prevent, in the opposite direction.
+
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
@@ -337,6 +390,9 @@ its completion has **no dependency relationship** with this phase.
 - [ ] AC-9 — Phase 4's retirement text cites no benchmark figure as a reason for
       closure, and Phase 2 does not read Phase 4 — the two are independent in
       both directions, checkable from the diff.
+- [ ] AC-10 — No class where both arms returned the empty set is published as a
+      TIE. The registered verdict and the validity assessment are both printed,
+      and no overall engine verdict is derived from a run with a void class.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-28 | reviewer: claude/host -->
