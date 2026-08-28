@@ -238,7 +238,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
     const json = argv.includes('--json');
     const ri = argv.indexOf('--root');
-    const root = ri !== -1 && argv[ri + 1] !== undefined ? path.resolve(argv[ri + 1]) : REPO_ROOT;
+    const rootArg = ri !== -1 ? argv[ri + 1] : undefined;
+    const root = rootArg !== undefined ? path.resolve(rootArg) : REPO_ROOT;
 
     const ledger = new GateLedger('check_loss_class_declared');
     let v: LossVerdict;

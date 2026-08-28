@@ -134,7 +134,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
     const quiet = argv.includes('--quiet');
     const di = argv.indexOf('--dir');
-    const dir = di !== -1 && argv[di + 1] !== undefined ? path.resolve(argv[di + 1]) : DEFAULT_DIR;
+    const dirArg = di !== -1 ? argv[di + 1] : undefined;
+    const dir = dirArg !== undefined ? path.resolve(dirArg) : DEFAULT_DIR;
 
     const ledger = new GateLedger('check_benchmark_report_fields');
     let v: FieldVerdict;

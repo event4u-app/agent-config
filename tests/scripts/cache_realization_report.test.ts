@@ -55,7 +55,10 @@ function baseReport(): Report {
         dedup_ratio: 1,
         total_seen: 0,
         deduped_count: 0,
-        buckets: { main: { ...emptyBucket }, subagent: { ...emptyBucket } },
+        buckets: {
+            main: { ...emptyBucket, bucket: 'main' as const },
+            subagent: { ...emptyBucket, bucket: 'subagent' as const },
+        },
         subagent_cold_start: computeColdStarts([]),
         by_agent: [],
         duplicate_scope: {

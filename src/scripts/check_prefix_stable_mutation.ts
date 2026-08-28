@@ -196,12 +196,12 @@ export function classifyScript(source: string): Array<{ kind: 'literal' | 'undec
         }
     }
 
-    if (found.length === 0 && sawDynamic && fileSurfaces.length > 0) {
-        const s = fileSurfaces[0];
+    const firstSurface = fileSurfaces[0];
+    if (found.length === 0 && sawDynamic && firstSurface !== undefined && firstSurface.s !== null) {
         found.push({
             kind: 'undecidable',
-            surface: s.s!.id,
-            evidence: `a write target is computed at runtime and this file carries the literal '${s.lit}'`,
+            surface: firstSurface.s.id,
+            evidence: `a write target is computed at runtime and this file carries the literal '${firstSurface.lit}'`,
         });
     }
     return found;
@@ -304,7 +304,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
     const json = argv.includes('--json');
     const ri = argv.indexOf('--root');
-    const root = ri !== -1 && argv[ri + 1] !== undefined ? path.resolve(argv[ri + 1]) : REPO_ROOT;
+    const rootArg = ri !== -1 ? argv[ri + 1] : undefined;
+    const root = rootArg !== undefined ? path.resolve(rootArg) : REPO_ROOT;
 
     const ledger = new GateLedger('check_prefix_stable_mutation');
     let verdict: Verdict;
