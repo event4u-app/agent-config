@@ -178,12 +178,24 @@ by a measurement of absent code.
       existing three-state freshness verdict is surfaced at every consumer
       added here.
       verify: a fixture query against a stale graph returns a degraded verdict naming the staleness; against an absent graph, `unavailable`.
-- [~] **3.4 The ADR-246 reopen, if the evidence supports it.** Deferred by
-      construction: this step is a decision for the owner on fresh evidence,
-      taken in its own change under `decision-revisit-gate`, never a checkbox
-      flipped by the run that produced the evidence. The roadmap that measures
-      a lock does not get to lift it.
-      verify: the measurement from Phase 2 is cited in an ADR-246 reopen record, or the ADR is confirmed on the fresh number — either outcome recorded, neither performed here.
+- [x] **3.4 The ADR-246 reopen, if the evidence supports it.** — **the second
+      branch of this step's own verify: the ADR is CONFIRMED on the fresh
+      number, and no reopen is performed here.** ADR-246 was evaluated before
+      being cited (`adr_cite_check ADR-246`: status `accepted`, unsuperseded,
+      trigger state `indeterminate` — a semantic condition the tool cannot
+      decide, so it was decided against the tree). Its second reopen trigger
+      reads "a post-repair retrieval measurement that beats grep on graph-shaped
+      questions". The measurement ran and **lost every valid class**, so the
+      trigger is evaluated and does **not** fire.
+
+      Recorded as a `## Confirmation on fresh evidence` section on the ADR
+      itself, which states what it is not as carefully as what it is: not the
+      trigger's own run (that run's inputs are irrecoverable — see 4.1), not
+      comparable to the 2026-07-28 figures, and carrying no overall engine
+      verdict. The ADR's **other** trigger — a consumer case the graph answers
+      and disciplined grep cannot — is untouched and stays live, as does its
+      standing exclusion that an extraction improvement is not a trigger.
+      Status unchanged: `accepted`. Nothing was performed.
 
 ## Phase 4 — Close the transferred stub on its own null path
 
@@ -201,21 +213,21 @@ determination that the original inputs are irrecoverable. That determination is
 the sole closure authority. The benchmark carries **zero closure credit** and
 its completion has **no dependency relationship** with this phase.
 
-- [ ] **4.1 Record the irrecoverability determination.** The four SHA-256-pinned
+- [x] **4.1 Record the irrecoverability determination.** The four SHA-256-pinned
       question files and the three registered corpus clones are not reasonably
       obtainable: they are private third-party repositories that cannot be
       published, vendored or synthesized, so the obstacle is a permission and
       ownership fact rather than a lost file. The probe is re-run and its
       readings recorded before the determination is written, not after.
       verify: an evidence file records every probe reading at a named date, and states the determination in terms a probe alone cannot supply — that the project has no present or reasonably obtainable authorized access and will not pursue reacquisition.
-- [ ] **4.2 Retire the stub as CLOSED UNMET, on that determination alone.** The
+- [x] **4.2 Retire the stub as CLOSED UNMET, on that determination alone.** The
       outcome line names irrecoverability as the closure authority, states that
       the transferred criterion was **not** met and no re-run was performed, and
       states that the in-repo benchmark neither satisfied, replaced, nor
       contributed to the closure. "Archived" must not read as "achieved" — the
       stub's own words.
       verify: the retired stub's outcome line names irrecoverability as the authority and carries the words "closed unmet"; it states the criterion was not met; and it disclaims the benchmark's contribution to closure. The benchmark report is linked as independent evidence only, with no claims entry.
-- [ ] **4.3 The two phases are independent, checkably.** Nothing in Phase 4
+- [x] **4.3 The two phases are independent, checkably.** Nothing in Phase 4
       reads a Phase 2 result, and nothing in Phase 2 depends on Phase 4.
       verify: the retirement text cites no benchmark figure as a reason for closure — checkable from the diff.
 
@@ -385,33 +397,33 @@ its completion has **no dependency relationship** with this phase.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
+- [x] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
       longer open.
-- [ ] AC-2 — The pre-registration commit precedes the first result commit,
+- [x] AC-2 — The pre-registration commit precedes the first result commit,
       checkable from history rather than asserted.
-- [ ] AC-3 — Every corpus item resolves inside this repository or to a
+- [x] AC-3 — Every corpus item resolves inside this repository or to a
       committed fixture; none references an external clone or a consumer
       identity.
-- [ ] AC-4 — The published report names the commit it measured and that commit
+- [x] AC-4 — The published report names the commit it measured and that commit
       postdates 2026-08-22, asserted mechanically.
-- [ ] AC-5 — The result is published whichever way it lands, and the report
+- [x] AC-5 — The result is published whichever way it lands, and the report
       states the pre-registered bar beside it.
-- [ ] AC-6 — Both figures are present in the tree and each names the build it
+- [x] AC-6 — Both figures are present in the tree and each names the build it
       measured; neither replaces the other. **Re-scoped by the
       `whether-a-non-comparable-number-is-worth-publishing` resolution:** the new
       figure lives in the report rather than in a second claims entry, and the
       2026-07-28 entry carries the pointer to it, so the published claim surface
       never holds two subtractable recall numbers.
-- [ ] AC-7 — No setting default changed in this roadmap's diff, and no
+- [x] AC-7 — No setting default changed in this roadmap's diff, and no
       dependency moved between `devDependencies` and `dependencies`.
-- [ ] AC-8 — The retired stub's outcome line names the **irrecoverability
+- [x] AC-8 — The retired stub's outcome line names the **irrecoverability
       determination** as the closure authority, says the transferred criterion
       was **not** met and no re-run was performed, and disclaims any contribution
       of the in-repo benchmark to the closure.
-- [ ] AC-9 — Phase 4's retirement text cites no benchmark figure as a reason for
+- [x] AC-9 — Phase 4's retirement text cites no benchmark figure as a reason for
       closure, and Phase 2 does not read Phase 4 — the two are independent in
       both directions, checkable from the diff.
-- [ ] AC-10 — No class where both arms returned the empty set is published as a
+- [x] AC-10 — No class where both arms returned the empty set is published as a
       TIE. The registered verdict and the validity assessment are both printed,
       and no overall engine verdict is derived from a run with a void class.
 

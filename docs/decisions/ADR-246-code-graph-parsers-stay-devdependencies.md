@@ -132,3 +132,62 @@ establish that the engine is worth re-enabling — that question is open and its
 answer is a measurement nobody has taken. It also does not establish that the
 consumer-index path is sufficient in practice; that path has consumers in
 principle and none measured here.
+
+## Confirmation on fresh evidence — 2026-08-28
+
+**Status unchanged: accepted.** This section records that one of the two reopen
+triggers above was **evaluated and did not fire**. It is not a reopen and
+performs none of the actions a reopen would.
+
+The trigger read: *"a post-repair retrieval measurement that beats grep on
+graph-shaped questions"*, and named
+`road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh` step 3.1 as the
+run that would supply it — blocked, at the time this record was written, on
+benchmark inputs this repository does not hold.
+
+**Both halves of that sentence have now been settled, in opposite directions.**
+
+1. **The named run is irrecoverable.** Its four SHA-256-pinned question files
+   and three registered private corpora were re-probed on 2026-08-28 and read
+   absent again, unchanged from the 2026-08-26 control. The obligation was
+   retired **unmet** — see
+   [`code-graph-rerun-irrecoverability-2026-08-28.md`](../../agents/evidence/analysis/code-graph-rerun-irrecoverability-2026-08-28.md).
+   That arm of the trigger cannot fire from this repository.
+
+2. **A different, smaller, explicitly non-comparable measurement was run
+   instead, and it did not beat grep.** Pre-registered before the run
+   (`internal/bench/code-graph/PREREGISTRATION-inrepo-2026-08-28.md`) with
+   per-class bars, over three in-repo TypeScript roots, measured at a commit the
+   runner asserts postdates the 2026-08-22 repair:
+
+   | Class | grep recall | graph recall | Δ pp | verdict |
+   |---|---|---|---|---|
+   | `callers` | 1.000 | 1.000 | +0.0 | NULL — precision floor failed |
+   | `transitive-impact` | 0.611 | 0.500 | −11.1 | NULL |
+   | `path-between` | 0.000 | 0.000 | +0.0 | **VOID** — both arms measured nothing |
+   | `references` | 1.000 | 0.333 | −66.7 | NULL |
+
+   **Zero of four graph-shaped classes met the pre-registered win criterion.**
+
+**What this does and does not establish.** It does not fire the trigger — that
+required a measurement beating grep, and this one lost every valid class. It
+therefore confirms this decision on evidence measured against the repaired
+extractor rather than against the pre-repair build the original figures
+describe, which is the specific gap that made the trigger worth writing.
+
+It is **not** the trigger's own run, and must not be read as one: different
+corpus, different question set, different bars, and no delta may be computed
+between it and the 2026-07-28 figures. It also withholds an overall engine
+verdict, because two of its five classes measured the instrument rather than the
+engine (`path-between` void; the literal-string controls fail by construction
+against a symbol index).
+
+**The other trigger is untouched and stays live:** a **consumer** case the graph
+answers and disciplined grep cannot, stated by a consumer rather than inferred
+from the engine's capability. Nothing here bears on it. So does the standing
+exclusion: an improvement in EXTRACTION quality is still not a reopen trigger.
+
+**Nothing moved.** No setting default changed and no dependency moved between
+`devDependencies` and `dependencies` in the change that recorded this. The
+roadmap that produced the measurement states in its own acceptance criteria that
+it may change routing and may not change permission.

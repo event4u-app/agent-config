@@ -5,6 +5,57 @@ review_by: 2026-09-25
 
 # Stub: road to a code-graph benchmark re-run on the repaired extractor
 
+## OUTCOME — CLOSED UNMET, 2026-08-28
+
+```
+CLOSURE AUTHORITY: THE IRRECOVERABILITY DETERMINATION. NOTHING ELSE.
+THE TRANSFERRED CRITERION WAS NOT MET. NO RE-RUN WAS PERFORMED.
+THE IN-REPO BENCHMARK PUBLISHED THE SAME DAY NEITHER SATISFIED, REPLACED,
+NOR CONTRIBUTED TO THIS CLOSURE. IT CARRIES ZERO CLOSURE CREDIT.
+"ARCHIVED" DOES NOT READ AS "ACHIEVED" HERE, AND MUST NOT BE READ THAT WAY.
+```
+
+An authorized determination — recorded in
+[`code-graph-rerun-irrecoverability-2026-08-28.md`](../../evidence/analysis/code-graph-rerun-irrecoverability-2026-08-28.md)
+— concluded that the project has no present or reasonably obtainable authorized
+access to the four SHA-256-pinned question files or to the three registered
+corpus clones, and will not pursue reacquisition. The corpora are private
+third-party repositories; the obstacle is a permission and ownership fact, not a
+lost file. The comparable re-run is therefore **irrecoverable for project
+purposes**, and this stub closes on the null direction its own
+§ Closing in the other direction documents.
+
+**The probe was re-run before the determination, not after.** All four pinned
+files absent; `find` across the whole projects tree returns 0 for both patterns;
+exactly one commit has ever touched the original report. Identical to the
+2026-08-26 control.
+
+**On the disjunction.** This stub's null path offers two branches — retire the
+obligation outright, *or* approve a separately named non-comparable benchmark
+"under its own claim id". The second branch is unavailable: a council decision
+the same day established that the in-repo benchmark receives **no claims
+entry**, because the `kind` enum is `{quant, qual, comparative}` and none of
+those makes two recall figures incomparable by construction. The disjunction
+collapses to the first branch, which both seats confirmed remains valid alone.
+
+**On the benchmark that ran anyway.** `road-to-code-graph-evidence-that-exists`
+published an in-repo benchmark on 2026-08-28
+(`internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md`). It is linked
+here as **independent evidence only**. It measured a different corpus, a
+different question set and different bars, and it is explicitly not comparable
+to the 2026-07-28 figures — no delta may be computed. It is **not** why this
+stub closed. Two prior councils ruled that a non-comparable benchmark "neither
+replaces this obligation nor closes this stub"; a third (2026-08-28, anthropic +
+openai, 2/2 convergent) agreed that closing on that basis would launder a
+substitution into a completion however honestly it was worded, and re-scoped the
+closing roadmap's Phase 4 so that the determination above is the sole authority.
+
+**Still true after closure:** the 2026-07-28 figures remain the only measurement
+of the registered corpora, and `claim:code-graph-retrieval-null` still describes
+a build that no longer exists. Closing this stub does not fix that; it records
+that this project cannot fix it.
+
+
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated stub.
 > Created 2026-08-26 when
 > [`road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh`](../archive/road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh.md)
