@@ -139,16 +139,16 @@ accepts.
 
 ## Phase 4 — The tiers get names and a contract
 
-- [ ] **4.1 T0–T3 named over what exists.** T0 process-lifetime · T1 session
+- [x] **4.1 T0–T3 named over what exists.** T0 process-lifetime · T1 session
       register and seen-set · T2 `agents/runtime/state/` and its SQLite twins ·
       T3 the aggregated store a resident process would own. The contract
       **describes existing surfaces** and creates no new store and no package.
       verify: each tier names at least one existing file, and the contract adds no new storage path; a reviewer can check the second claim from the diff alone.
-- [ ] **4.2 Promotion into T3 is always supervised.** observe → candidate →
+- [x] **4.2 Promotion into T3 is always supervised.** observe → candidate →
       evidence → review → promote. No step promotes on a threshold alone, and
       nothing here reopens agent memory (ADR-094 stays closed).
       verify: the contract states the five stages and names ADR-094 as untouched; no code in this roadmap writes into a T3 path.
-- [ ] **4.3 Health and degradation states over the existing freshness
+- [x] **4.3 Health and degradation states over the existing freshness
       verdicts.** With the one binding line: no claim requiring transitive
       certainty on a stale or absent journal.
       verify: a fixture query against a stale journal returns a degraded verdict naming the staleness, never a confident answer; a fixture against an absent journal returns `unavailable`, never an empty success.
@@ -157,8 +157,38 @@ accepts.
 
 ### blocker: journal-retention-and-size
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) — TTL plus an explicit, time-bounded, human-only hold.**
+  AI council 2026-08-28 (anthropic + openai, 1 round, $0.00, both seats
+  subscription-authed), **2/2 convergent on the letter** and convergent on four
+  design constraints neither the blocker nor the recommendation had stated:
+
+  1. **Default TTL 30 days, anchored on episode close** — `episode_closed_at`;
+     absent, `session_end`; absent, the last event timestamp past an inactivity
+     threshold. A TTL anchored on write rather than close would expire a live
+     episode.
+  2. **A hold is an append-only record, never a mutable pin table.**
+     `retention_hold` / `retention_release` pairs carrying `episode_id`,
+     `created_at`, `created_by`, `reason`, `retain_until`. No pin-management UI
+     in Phase 1.
+  3. **Only a human may set a hold. The observed agent may never pin its own
+     episodes** — both seats independently. An agent that can hold its own
+     records can defeat retention, and it need not do so deliberately.
+  4. **Holds expire too.** Default 180 days, renewable. Permanently-kept
+     evidence belongs in an explicit archive/export path, never in the live
+     journal.
+
+  Both seats raised the same counter-argument — a hold surface can quietly
+  recreate the unbounded store the TTL exists to prevent — and it is answered by
+  (2) and (4) rather than waved away. One seat's alternative, a large size-capped
+  ring, is recorded as the fallback if the hold surface proves to cost more than
+  it returns; it is not adopted, because "oldest dropped" is unpredictable from a
+  reader's side, which is exactly what a retention policy must not be.
+- **Interaction with the boundary blocker — see its own resolution.** Both seats
+  independently identified the same combined failure: a hold makes a mis-derived
+  episode boundary **durable**. The mitigation is recorded there, because it
+  constrains the boundary record rather than the retention rule.
 - **Blocks:** Phase 1 only in its retention half; the record shape and the
   spine land under any answer.
 - **What to do:** pick exactly one — (a) time-based TTL with a fixed window:
@@ -177,8 +207,57 @@ accepts.
 
 ### blocker: what-counts-as-an-episode-boundary
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) — one episode per task — with the opening rule REPLACED.**
+  AI council 2026-08-28 (anthropic + openai, 1 round, $0.00), 2/2 convergent on
+  the letter, and **both seats rejected this blocker's own proposed opening
+  condition.** That rejection is the substance of the resolution, so it is
+  recorded rather than summarised away.
+
+  The blocker proposed opening the episode at "the first mutating action after a
+  user prompt", and conceded it is a judgement no field records. Neither seat
+  accepted it:
+
+  - One seat noted that the obvious mechanical proxy — reading the
+    interrupt classification — inherits a judgement rather than removing one,
+    and that `user-interrupt-priority`'s own "in doubt → treat as interrupt"
+    default would fragment a 20-turn task into 20 half-episodes.
+  - The other rejected it on a stronger ground: opening at the first *mutation*
+    **omits the reads, dispatch decisions and reasoning that explain why the
+    mutation happened** — precisely the evidence the journal exists to preserve.
+
+  **Adopted instead — open on envelope correlation, not on mutation:**
+
+  1. The envelope assigns a stable `task_id` when it accepts or dispatches work.
+  2. Every journal event carries `task_id`, `session_id` and, where applicable,
+     `prompt_id`.
+  3. The **first event carrying that `task_id`** opens the episode.
+  4. An explicit terminal envelope event closes it.
+  5. An event with no `task_id` stays session-scoped and is marked
+     `boundary_status: session_fallback` — which is (a) kept as the fallback key,
+     as the recommendation intended, but **marked** rather than silent.
+
+- **The combined failure both seats found, and its mitigation.** A retention hold
+  makes a mis-derived boundary durable: pin an episode that was really three
+  tasks, and two unrelated tasks are retained forever as collateral, while the
+  genuinely relevant adjacent events expire. Boundary error stops being a
+  confusing view and becomes a retention-policy violation. Adopted mitigations,
+  taken from both seats:
+
+  - **Record boundary provenance** on every episode: `explicit` · `derived` ·
+    `session_fallback`, plus the derivation rule version.
+  - **A derived or unresolved boundary may not carry an episode-only hold.**
+    Such a hold widens automatically to the containing session or to an explicit
+    time range.
+  - **A later reconstruction may create a corrected episode definition without
+    rewriting journal records** — the records are append-only; the episode is a
+    view over them.
+  - One seat additionally proposed **event-level holds** rather than
+    episode-level, which would dissolve the interaction entirely. Recorded as
+    the preferred shape if the widening rule proves awkward; not adopted in
+    Phase 1, because it costs a second addressing scheme before anything has
+    used the first.
 - **Blocks:** Phase 2 only. Phase 1 records events without needing the answer;
   Phases 3 and 4 depend on Phase 2.
 - **What to do:** pick exactly one — (a) one episode per host session:
@@ -212,7 +291,7 @@ accepts.
 - [ ] AC-5 — A non-success return with no consumption acknowledgment is
       reported by the ignored-blocker detector; one with an acknowledgment is
       not.
-- [ ] AC-6 — The tier contract names existing files for all four tiers and
+- [x] AC-6 — The tier contract names existing files for all four tiers and
       introduces no new storage path.
 - [ ] AC-7 — A query against a stale or absent journal returns a degraded or
       unavailable verdict naming the cause; none returns a confident answer.
