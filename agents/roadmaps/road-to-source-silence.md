@@ -217,8 +217,45 @@ correction from the verification pass and say so inline.
 
 ### blocker: where-the-key-lives
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) as the target architecture — and the cutover is NOT
+  performed in this roadmap.** AI council 2026-08-28 (anthropic + openai, 1
+  round, $0.00, both seats subscription-authed). The seats differed on the
+  interim step and **converged, independently and without qualification, on the
+  thing that actually binds: shipping the executable part of (c) as a
+  REPLACEMENT for the current gate is net-NEGATIVE.**
+
+  The agent executing this roadmap has no access to CI secrets, cannot provision
+  private storage, and cannot create a repository secret. So the half it can
+  build — digest generation, the gitignored master convention, the matching
+  code, the tests against a fixture key — is precisely the half that enforces
+  nothing. Landing it as the replacement leaves the gate either failing every
+  run for want of a key, or **silently degraded to warn mode**, which is the
+  exact failure this roadmap was written about. One seat: "you've added
+  complexity without adding protection, and you've broken a gate that at least
+  worked before." The other: "the security cutover must be atomic … missing keys
+  in CI must fail, never warn."
+
+  **What ships here:** the scaffolding, DORMANT, **alongside** the existing
+  plaintext gate, which stays in force and is not deleted. Executable now —
+  HMAC matching, digest generation, the gitignored master-file convention, tests
+  on a non-production fixture key, fail-closed CI behaviour wired but not
+  activated, and the documentation plus secret-validation tooling a maintainer
+  needs.
+
+  **What does NOT ship here, and is a maintainer action:** provisioning the CI
+  secret, generating production digests, removing the tracked plaintext
+  denylist, and switching CI to strict mode. Those four are **one atomic
+  change**, and splitting them is the failure mode above.
+
+  One seat's interim alternative — a gitignored local denylist with graceful
+  degradation to warn mode — is recorded and **not adopted**: the other seat
+  names warn-on-missing-key as the specific thing that must never happen, and a
+  gate that quietly warns is what this roadmap exists to remove.
+- **Residual, stated rather than implied:** keyed exact-match digests still
+  cannot discover a source name nobody has listed. The slug/URL heuristic in the
+  sibling blocker remains essential and is not made redundant by this.
 - **Blocks:** Phase 1 steps 1.1 and 1.2, and through them the deletion of the
   plaintext deny array. Phase 0 and Phase 2's codename rewrites proceed
   regardless.
@@ -241,8 +278,22 @@ correction from the verification pass and say so inline.
 
 ### blocker: how-loud-the-slug-heuristic-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) — block in `agents/**`, warn elsewhere.** AI council
+  2026-08-28 (anthropic + openai, 1 round, $0.00), **2/2 convergent**:
+  enforcement should follow risk, attribution is concentrated in `agents/**`,
+  and repository slugs and GitHub URLs are ordinary content in integration code
+  and documentation, where blocking globally would generate enough noise to
+  drive broad allowlisting — which is worse than the gap it closes.
+- **Both seats named the same residual risk:** attribution can be moved out of
+  `agents/**`, deliberately or accidentally, leaving only a warning. It is
+  accepted rather than dismissed, and two requirements come from it:
+  **warnings must be visible and RETAINED in CI artifacts** rather than only
+  printed, so the warn tier is auditable after the fact; and the heuristic must
+  be **narrowly defined and tested against its likely false positives** —
+  filesystem paths, scoped package names (`@scope/name`), and Markdown links —
+  which is what 3.2's fixtures assert.
 - **Blocks:** the enforcement level of the slug/URL class in 3.2 and 4.3 only;
   the Source-header and tmp-quote classes block unconditionally either way.
 - **What to do:** pick exactly one — (a) block on any un-allowlisted
@@ -261,8 +312,24 @@ correction from the verification pass and say so inline.
 
 ### blocker: whether-history-gets-rewritten
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(a) — no rewrite.** AI council 2026-08-28 (anthropic +
+  openai, 1 round, $0.00), **2/2 convergent, one seat "strongly"**. This
+  repository's evidence discipline is built on stable commit pins: every
+  `reproduced at <sha>` is falsifiable only because that sha is stable. A
+  rewrite converts the whole evidence estate into unverifiable claims — it
+  solves a bounded disclosure problem by destroying the primary verification
+  mechanism, which for this package is the differentiator.
+- **The counter-argument is accepted, not waved away.** Both seats noted that
+  half-measures do not erase anything: anyone with a pre-rewrite clone can
+  `git log --grep` the names, and forks, caches and PR mirrors may retain them.
+  A rewrite would not have fixed that either. What follows is a **wording
+  obligation**, adopted: the confidentiality claim must explicitly exclude
+  historical artifacts, and the result is **never** described as historical
+  eradication. Edit the mutable PR metadata, inventory the immutable
+  occurrences, prevent new disclosures, and say plainly that the old ones
+  remain recoverable by anyone with repository access.
 - **Blocks:** Phase 5.2 only. Everything else in this roadmap is worth doing
   under either answer.
 - **What to do:** pick exactly one — (a) no rewrite: accept commit messages
