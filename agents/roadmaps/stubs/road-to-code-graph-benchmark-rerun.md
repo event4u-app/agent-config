@@ -55,6 +55,26 @@ And the blocker it is gated on, also verbatim:
 >   `road-to-published-number-truth` exists to stop, on a surface that roadmap's
 >   population does not reach.
 
+## Disposition of `b-bench-inputs-absent` — option (b), recorded 2026-08-28
+
+**Recorded by `road-to-code-graph-evidence-that-exists` step 0.1.** Of the three
+options the blocker offers, (a) needs the four pinned files and three private
+clones — re-probed 2026-08-28 and all still absent — and (c) already landed on
+the parent. **(b) is therefore the disposition: re-pre-register a smaller
+benchmark against corpora this repository already contains, accepting that its
+numbers are not comparable to the 2026-07-28 run and saying so.** That work
+happens in `road-to-code-graph-evidence-that-exists`, whose pre-registration is
+`internal/bench/code-graph/PREREGISTRATION-inrepo-2026-08-28.md`.
+
+**Read the scope of this disposition precisely, because the distinction is the
+whole point.** (b) settles *what to do given inputs that are absent*. It does
+**not** settle, satisfy, replace, or close **the transferred criterion this stub
+carries** — the comparable re-run against the registered corpora. Two prior
+councils ruled that a non-comparable benchmark cannot do that, and a third
+(2026-08-28, anthropic + openai, 1 round, $0.00) re-confirmed it: the substitute
+benchmark carries **zero closure credit**, and this stub closes only on the
+irrecoverability path documented below in § Closing in the other direction.
+
 Disposition **(c) landed on the parent** — `docs/CLAIMS.md` gained a
 `measured_on:` field, parsed by `check_claims` and printed as a column in
 `docs/proof.md`. **(c) scopes the stale figure; it does not answer the

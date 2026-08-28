@@ -95,7 +95,7 @@ by a measurement of absent code.
 
 ## Phase 0 — Resolve the blocker that made the re-run impossible
 
-- [ ] **0.1 Record the disposition of `b-bench-inputs-absent` as option (b).**
+- [x] **0.1 Record the disposition of `b-bench-inputs-absent` as option (b).**
       The blocker in `agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md`
       offers three options; (a) needs three external repository clones and four
       pinned files this environment does not hold, and (c) — scoping the stale
@@ -104,25 +104,25 @@ by a measurement of absent code.
       that its numbers are not comparable to the 2026-07-28 run and saying so
       in `docs/CLAIMS.md`**.
       verify: the blocker carries `Status: resolved` with (b) named, and this roadmap is cited as where the work happens.
-- [ ] **0.2 Pre-register before measuring.** The question set, the corpus, the
+- [x] **0.2 Pre-register before measuring.** The question set, the corpus, the
       scoring rule and the pass bar are written and committed **before** the
       first run. A bar chosen after seeing a number is not a bar.
       verify: the pre-registration file is committed in a commit that precedes the first result commit, checkable from `git log --follow` on the two paths.
 
 ## Phase 1 — A corpus this repository contains
 
-- [ ] **1.1 Shapes, never consumer identity.** The corpus is built from code
+- [x] **1.1 Shapes, never consumer identity.** The corpus is built from code
       shapes present in this tree — the ambiguous-class cases the existing
       classification analysis already enumerated are its first items. No
       external clone, no consumer repository, no borrowed identity.
       verify: every corpus item resolves to a path inside this repository or to a synthetic fixture committed with it; a test asserts no item references an out-of-tree path.
-- [ ] **1.2 The question set covers what the graph claims to answer.**
+- [x] **1.2 The question set covers what the graph claims to answer.**
       Callers, references, implementations of an interface, transitive impact,
       and path-between — the relations the shipped query surface exposes.
       Questions where grep is obviously sufficient are included deliberately,
       as the negative control.
       verify: every one of the shipped query verbs has at least one question, and at least a quarter of the set is negative control, both asserted by a test over the corpus file.
-- [ ] **1.3 The corpus states its own limits.** In the same file: what it does
+- [x] **1.3 The corpus states its own limits.** In the same file: what it does
       not cover, and why its numbers are not comparable to the 2026-07-28 run.
       verify: the limits section exists and names the incomparability explicitly, so no later reader can quote a delta between the two runs.
 
@@ -164,20 +164,56 @@ by a measurement of absent code.
       a lock does not get to lift it.
       verify: the measurement from Phase 2 is cited in an ADR-246 reopen record, or the ADR is confirmed on the fresh number — either outcome recorded, neither performed here.
 
-## Phase 4 — Close the transferred stub honestly
+## Phase 4 — Close the transferred stub on its own null path
 
-- [ ] **4.1 Retire `stubs/road-to-code-graph-benchmark-rerun.md`.** With its
-      outcome recorded as what actually happened: the criterion was answered by
-      a **different, smaller, non-comparable** benchmark, not by the run it
-      described. "Archived" must not read as "achieved" — the stub's own words.
-      verify: the stub is retired with an outcome line naming the substitution, and a reader of the retired stub can reach this roadmap's report in one hop.
+**Re-scoped 2026-08-28 by AI council (anthropic + openai, 1 round, $0.00, 2/2
+convergent that the phase as originally written must not be executed).** The
+original 4.1 retired the stub *as a consequence of* the substitute benchmark
+landing. Two prior councils had already ruled that a non-comparable benchmark
+"neither replaces this obligation nor closes this stub", and both seats today
+agreed that retiring on that basis would launder a substitution into a
+completion however honest the outcome line was — one seat put it as: honest
+wording "does not cure the invalid causal basis for closure".
+
+What both seats endorsed instead is the stub's **own** documented null path: a
+determination that the original inputs are irrecoverable. That determination is
+the sole closure authority. The benchmark carries **zero closure credit** and
+its completion has **no dependency relationship** with this phase.
+
+- [ ] **4.1 Record the irrecoverability determination.** The four SHA-256-pinned
+      question files and the three registered corpus clones are not reasonably
+      obtainable: they are private third-party repositories that cannot be
+      published, vendored or synthesized, so the obstacle is a permission and
+      ownership fact rather than a lost file. The probe is re-run and its
+      readings recorded before the determination is written, not after.
+      verify: an evidence file records every probe reading at a named date, and states the determination in terms a probe alone cannot supply — that the project has no present or reasonably obtainable authorized access and will not pursue reacquisition.
+- [ ] **4.2 Retire the stub as CLOSED UNMET, on that determination alone.** The
+      outcome line names irrecoverability as the closure authority, states that
+      the transferred criterion was **not** met and no re-run was performed, and
+      states that the in-repo benchmark neither satisfied, replaced, nor
+      contributed to the closure. "Archived" must not read as "achieved" — the
+      stub's own words.
+      verify: the retired stub's outcome line names irrecoverability as the authority and carries the words "closed unmet"; it states the criterion was not met; and it disclaims the benchmark's contribution to closure. The benchmark report is linked as independent evidence only, with no claims entry.
+- [ ] **4.3 The two phases are independent, checkably.** Nothing in Phase 4
+      reads a Phase 2 result, and nothing in Phase 2 depends on Phase 4.
+      verify: the retirement text cites no benchmark figure as a reason for closure — checkable from the diff.
 
 ## Blockers
 
 ### blocker: what-the-pre-registered-bar-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — per-question-class bars.** AI council 2026-08-28,
+  members anthropic + openai, 1 round, $0.00 (both seats subscription-authed),
+  **2/2 convergent**. The decision this evidence feeds is a routing decision per
+  question class, so a single aggregate answers a question nobody is asking; one
+  seat added that an aggregate "produces a verdict that doesn't match how the
+  feature would actually be used". Both seats named the same cost — per-class
+  bars add degrees of freedom for cherry-picking — and both named the same
+  mitigation: every class and its bar is pre-registered before any result exists,
+  which is what step 0.2 and AC-2 already require. A secondary macro-average is
+  reported but is explicitly **not** the pass criterion.
 - **Blocks:** step 0.2, and through it Phase 2. Phase 1's corpus is built under
   any answer.
 - **What to do:** pick exactly one — (a) the graph must beat grep on recall
@@ -201,8 +237,31 @@ by a measurement of absent code.
 
 ### blocker: whether-a-non-comparable-number-is-worth-publishing
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — publish the report, make no new claims entry, and
+  re-scope the 2026-07-28 entry so its superseded build is unmistakable.**
+  AI council 2026-08-28, members anthropic + openai, 1 round, $0.00, **split on
+  the letter and convergent on the resolver**: both seats made their answer
+  conditional on the same checkable fact — whether `docs/CLAIMS.md`'s `kind`
+  field admits a value that makes two recall figures incomparable *by
+  construction*. One seat said (c) if it does and (b) if it does not; the other
+  said (b) because (c) was underspecified until such a value is named. **The
+  fact was then measured, not argued:** the enum in use is
+  `{quant, qual, comparative}`, and none of the three makes two recall figures
+  structurally incomparable — `comparative` is if anything an invitation to
+  compare, and `qual` cannot license a number at all
+  (`src/scripts/check_claims.ts:541`: "a `kind: qual` claim cannot license a
+  number"). (c) is therefore unrealisable within the existing schema, and both
+  seats' own stated fallback is (b). Adding a fourth enum value was not pursued:
+  the question was framed to both seats under the existing-schema constraint, and
+  widening it afterwards to reach the answer the roadmap preferred would be
+  verdict shopping.
+- **Consequence for the steps:** 2.2's claims-entry half and AC-6 are re-scoped
+  accordingly — the new figure lives in the report, and the 2026-07-28 entry
+  gains a pointer to it plus an explicit superseded-build note, so the record
+  still shows a question answered twice without putting two subtractable numbers
+  on the published claim surface.
 - **Blocks:** step 2.2's claims entry only. The report itself lands either way.
 - **What to do:** pick exactly one — (a) publish it as a `backed` claim with
   the incomparability stated in the claim text: the record shows the question
@@ -219,6 +278,37 @@ by a measurement of absent code.
 - **If you do nothing:** the fresh number lands in `internal/` where the
   published surface never sees it, and the stale claim stays the only answer.
 
+### blocker: is-the-original-rerun-irrecoverable
+
+- **Status:** resolved
+- **Owner:** maintainer
+- **Resolution:** **yes — determined irrecoverable, and that determination is
+  the ONLY authority under which the transferred stub closes.** AI council
+  2026-08-28, members anthropic + openai, 1 round, $0.00. The two seats split on
+  whether probe evidence alone suffices — one held that the stub's own wording
+  ("access lapsed") already covers private third-party corpora, the other that
+  irrecoverability is "a governance judgment about future access, not a
+  filesystem fact a probe can prove" and must therefore be asserted explicitly.
+  That split is resolved by *making the assertion* rather than by inferring it:
+  the determination is recorded in step 4.1 in the terms the second seat asked
+  for, on top of the probe readings and not in place of them. Both seats
+  converged without qualification on the two things that actually bind: the
+  substitute benchmark carries **zero closure credit**, and the outcome line
+  must read **closed unmet**.
+- **Blocks:** Phase 4 only. Phases 0-3 are independent of it in both directions.
+- **What to do:** re-run the stub's probe, record every reading with its date,
+  then write the determination as an explicit statement that the project has no
+  present or reasonably obtainable authorized access to the pinned inputs and
+  will not pursue reacquisition — and retire the stub citing that determination
+  alone.
+- **Resolved when:** the determination is recorded with its probe readings, and
+  the stub's outcome line names irrecoverability as the closure authority rather
+  than the benchmark.
+- **If you do nothing:** either the stub stays open forever against inputs that
+  will never arrive, or it is closed on the substitute benchmark — which is the
+  laundering two prior councils and this one all refused.
+
+
 ## Acceptance Criteria
 
 - [ ] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
@@ -232,12 +322,21 @@ by a measurement of absent code.
       postdates 2026-08-22, asserted mechanically.
 - [ ] AC-5 — The result is published whichever way it lands, and the report
       states the pre-registered bar beside it.
-- [ ] AC-6 — Both the 2026-07-28 and the new figure are present and each names
-      the build it measured; neither replaces the other.
+- [ ] AC-6 — Both figures are present in the tree and each names the build it
+      measured; neither replaces the other. **Re-scoped by the
+      `whether-a-non-comparable-number-is-worth-publishing` resolution:** the new
+      figure lives in the report rather than in a second claims entry, and the
+      2026-07-28 entry carries the pointer to it, so the published claim surface
+      never holds two subtractable recall numbers.
 - [ ] AC-7 — No setting default changed in this roadmap's diff, and no
       dependency moved between `devDependencies` and `dependencies`.
-- [ ] AC-8 — The retired stub's outcome line says a different benchmark
-      answered a different question, not that the transferred criterion was met.
+- [ ] AC-8 — The retired stub's outcome line names the **irrecoverability
+      determination** as the closure authority, says the transferred criterion
+      was **not** met and no re-run was performed, and disclaims any contribution
+      of the in-repo benchmark to the closure.
+- [ ] AC-9 — Phase 4's retirement text cites no benchmark figure as a reason for
+      closure, and Phase 2 does not read Phase 4 — the two are independent in
+      both directions, checkable from the diff.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-28 | reviewer: claude/host -->
