@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 # Parallel-form inventory — duplicates and genuine variants
 
 > `road-to-delivered-cost-truth` step 4.3 · 2026-08-28 · **Changes no code.**
