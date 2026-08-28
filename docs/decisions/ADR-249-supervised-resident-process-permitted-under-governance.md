@@ -192,6 +192,34 @@ relaxation — which is the reading the safety floors cannot survive.
 - **ADR-124 Class C is not reopened.** A resident process may not become a route
   to a network- or model-dependent build path.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| Exactly three artefacts in the tree refuse a resident process if read literally | `agents/evidence/analysis/no-runtime-discovery-2026-08-27.md` — 129 files / 205 lines enumerated at base `830e31aa3`, reduced to the 49 in classes that can refuse anything, every one classified. Later corrected to **six** by a second reader; see the row below |
+| The class-based half of that reduction was unsound, and the correction is recorded rather than the first number | `agents/evidence/analysis/no-runtime-surface-census.md` § Second-reader review — an AI council split, the rejection was upheld on evidence, and re-reading the 28 operationally-loaded files found three further blockers, including `src/skills/verify-repair-loop/SKILL.md:140` (item 5 of a "Before finalizing, confirm" checklist) |
+| `ADR-088` is not the anchor the source analysis named | `docs/decisions/ADR-088-no-external-runtime-federation.md:78` decides federation — not driving another tool's runtime — and already carries `superseded_by: ADR-124` |
+| The live prohibition is ADR-124's Class-B row, and a second floor sits in ADR-109 | `ADR-124:111` ("Resident service / daemon … PROHIBITED in core") and `ADR-109:28` ("the no-runtime identity floor (no daemon, …)"), the latter `status: accepted` with `superseded_by: —` at the time of writing |
+| Scoped supersession is a mechanism this repository already has, not one this record invents | `docs/contracts/adr-layout.md:59-60` declares `supersedes_scope` / `superseded_scope`; `src/scripts/adr/regenerate_index.ts:205` renders the scope back into the index; ADR-124 itself carried `supersedes_scope: engine-adoption interpretation only` before this change |
+| The owner decision is durably recorded rather than quoted from a disposable path | `agents/evidence/analysis/runtime-reversal-owner-decision.md` |
+| The predecessor contract's literal scope was narrower than its citations assumed | `docs/contracts/no-runtime-boundary.md` header ("for the Mission-Mode layer"); `ADR-124:34` had already recorded that "the 'no runtime' identity rests on instruments whose literal scope is narrower"; `src/scripts/validate_reach_prescriptions.ts:13` cites it as the general Class-A boundary |
+
+**The grade is E2 — repeated and comparative, and it is deliberately one band
+below what the corpus census proposes.** `agents/evidence/analysis/adr-evidence-census-2026-08.md`
+classifies this record **E3** on the strength of its `docs/CLAIMS.md` reference.
+E2 is kept: every row above is read off a named file at a named line in this
+tree, which is what E2 describes, and the CLAIMS entry this record touches is one
+it **withdrew** rather than one that backs it. Declaring the lower band is the
+conservative direction, and a grade is a measurement rather than a permission —
+nothing in this record depends on which of the two it carries.
+
+**What no evidence here establishes**, stated because `authority_basis:
+owner_intent` is the load-bearing field: **that a resident process is the right
+shape for this package.** No measurement in this tree says so. The owner decided
+it. Every row above is evidence about *what the tree currently says* and *which
+artefacts would refuse the decision* — never about whether the decision is
+correct.
+
 ## Consequences
 
 **Positive.** The tree stops asserting a property the owner has decided against.
