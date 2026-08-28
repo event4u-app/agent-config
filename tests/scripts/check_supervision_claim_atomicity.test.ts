@@ -77,7 +77,10 @@ describe('evidenceRefusal', () => {
     });
 
     it('refuses an unnamed suite', () => {
-        const r = evidenceRefusal({ ...sufficient, suite: undefined }, HEAD);
+        // Built by omission rather than `suite: undefined` — `exactOptionalPropertyTypes`
+        // makes those two different types, and the real artifact omits the key.
+        const { suite: _dropped, ...withoutSuite } = sufficient;
+        const r = evidenceRefusal(withoutSuite, HEAD);
         expect(r).toContain('names no');
     });
 
@@ -102,8 +105,9 @@ describe('evidenceRefusal', () => {
     });
 
     it('names the artifact path in every refusal it can', () => {
+        const { suite: _dropped, ...withoutSuite } = sufficient;
         for (const ev of [
-            { ...sufficient, suite: undefined },
+            withoutSuite,
             { ...sufficient, revision: 'c'.repeat(40) },
             { ...sufficient, processes_exercised: false },
             { ...sufficient, cases_run: 0 },

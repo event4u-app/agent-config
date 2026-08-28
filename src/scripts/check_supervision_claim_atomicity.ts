@@ -158,7 +158,7 @@ export function scan(
         // positive control, whose fixture repo has README.md and nothing else.
         ledger?.plan(rel);
         if (!fs.existsSync(abs)) {
-            ledger?.skip(rel, 'absent_target');
+            ledger?.skip(rel, 'dead_scan_root');
             continue;
         }
         const lines = fs.readFileSync(abs, 'utf8').split('\n');
