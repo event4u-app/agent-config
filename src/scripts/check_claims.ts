@@ -489,7 +489,6 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 reason: 'status is withdrawn but no `retired_by` names the decision that retired it',
             });
         }
-        continue;
     }
     for (const entry of ledger.values()) {
         if (entry.retired_by && entry.status !== 'withdrawn') {

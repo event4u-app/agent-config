@@ -1816,14 +1816,21 @@ gates:
       `check_no_automerge_key` and `check_condensation`.
       Discrimination is proven instead by the gate's own `--self-test`, which is
       the step that created it: road-to-runtime-governance-flip 3.4 required
-      three seeded negatives to be OBSERVED red, not asserted. It plants a
-      supervision claim with (1) no evidence at all, (2) an emptied suite whose
-      cases all skipped, and (3) a result recorded against a different revision,
-      and asserts a distinct refusal for each — then plants sufficient evidence
-      as a positive control and asserts the same claim passes. 4/4. The three
-      refusals are separate because a suite that ran on a parent commit, a suite
-      that skipped everything, and a suite that mocked the process layer are
-      three different lies, and a file-presence check catches none of them.
+      seeded negatives to be OBSERVED red, not asserted. **7/7, 5 rejecting**,
+      each building a throwaway git repo so the revision check is real and each
+      driving the real CLI. The rejecting cases: no evidence at all; an emptied
+      suite whose cases all skipped; a result recorded against a different
+      revision; a suite that did not exercise real processes; and a non-integer
+      case count. Two accepting controls: sufficient evidence lets the claim
+      through, and a DENIAL of supervision needs no evidence at all.
+      The refusals are separate because a suite that ran on a parent commit, one
+      that skipped everything, and one that mocked the process layer are three
+      different lies, and a file-presence check catches none of them.
+      **Grown from 4/4 by a neutral council review of the code**, which found the
+      docstring advertising a mocked-process negative the case list did not
+      contain, and — worse — that the pattern matched `is NOT supervised`, so the
+      gate would have refused a truthful denial. Both are closed with regression
+      cases; the second is the `denial` accepting control above.
   - id: check_score_contract
     argv: ["--quiet"]
     min_scanned: 20

@@ -459,3 +459,52 @@ Its window is extended to 2026-11-23 with the reason in the file. It was **not**
 promoted to `stable`: `STABILITY.md` reserves that for contracts settled through
 a major release, and this one's surface changed as recently as `e5e4c48d6`.
 Promotion is a maintainer review this run is not entitled to make.
+
+## Post-hoc: a neutral code review, and it found an inversion
+
+The stop-hook flagged that the session had mutated ~98 non-doc lines with no
+neutral review. A council round was run over the **whole** code delta — every
+change under `src/scripts/` and `tests/scripts/`, scope not chosen by the author
+— with a prompt stating no expected outcome, per `evaluator-independence`. The prompt and the exact diff it reviewed are committed at
+`agents/evidence/reviews/runtime-governance-code.review-input/` — that path
+rather than `agents/runtime/council/questions/`, which is gitignored and would
+have made the prompt unrecoverable. A recorded verdict whose prompt nobody can
+read is not evidence.
+
+**Verdict: "do not merge as written."** It was right.
+
+The worst finding **inverted the gate this run had just built**:
+`SUPERVISION_CLAIM_RE` matched `The resident process is **not** supervised.` —
+`not` was absorbed by the 0-to-3-word gap — so `check_supervision_claim_atomicity`
+would have **refused a truthful denial** of the capability while the false claim
+it exists to catch reads identically minus one word. The test suite claimed to
+cover "negative statements" and tested a different grammatical form. Both seats
+found it independently; neither was told what to look for.
+
+Six more, every one reproduced before being fixed:
+
+| Finding | Was |
+|---|---|
+| markdown emphasis escapes | `**supervised**` never matched — `\b` does not match inside `**`, i.e. a false negative on the formatting a README actually uses |
+| type coercion in evidence | `cases_run: "abc"` passed every comparison and read as **sufficient evidence**; `"12"` was refused for a wrong reason by lexicographic compare |
+| negative counts | `cases_run: -5` accepted as a count |
+| blank suite name | `suite: "   "` accepted as named |
+| `## Not reopened` too loose | accepted `###`, and accepted an **empty** section — both forbidden by the check's own error message |
+| malformed `date:` | bought the grandfathered warning instead of failing to the error |
+| self-test over-advertised | the docstring named a mocked-process negative the case list did not contain |
+
+All closed with regression cases. Self-test **4/4 → 7/7, 5 rejecting**, including
+a `denial needs no evidence` accepting control. 141 unit cases across the three
+touched test files.
+
+A **§ Known limits** section was added rather than the pattern widened — one
+physical line at a time, copula-only so active voice escapes, no grammatical
+subject resolution, no markdown-structure awareness, a bounded-window negation
+heuristic. The gate is a **floor, not a proof**.
+
+**The lesson is about the run, not the regex.** Everything else in this run was
+verified against gates and measurements, and the gates all passed on the broken
+code — the self-test was green at 4/4 while the pattern was inverted, because a
+self-test only proves the cases someone thought to write. Nothing in the run's
+own discipline would have caught it. The neutral read did, and it was prompted by
+a hook rather than by the plan.
