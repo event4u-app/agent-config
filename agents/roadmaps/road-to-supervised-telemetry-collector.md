@@ -262,8 +262,46 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ### blocker: supervisor-mechanism-and-platform-scope
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(a), narrowed to USER-SCOPED service managers — and (c) is
+  reclassified as a scope constraint rather than a competing mechanism.** AI
+  council 2026-08-28 (anthropic + openai, 1 round, $0.00, both seats
+  subscription-authed). The seats **split**, and the split resolves on a factual
+  premise in this blocker's own text that one seat refuted:
+
+  > "requires installation privileges and breaks the 'nothing else installed'
+  > wedge"
+
+  That is **too broad**. A per-user `launchd` agent and a `systemd --user`
+  service generally require **no administrator privileges**, and registration
+  can stay inside `~/.event4u/agent-config/`. The option (a) this blocker
+  described — and rejected on privilege grounds — is not the option that was
+  actually available.
+
+  With that premise corrected, the decisive argument is the one this roadmap's
+  own § 4 question raises: **a silently dead collector makes incomplete
+  telemetry look healthy.** Option (b) does not solve that, it relocates it —
+  the single point of failure moves from child to parent, and the parent is
+  unsupervised by construction. For a process whose entire purpose is moving a
+  0.27 % capture rate, silent permanent death defeats the measurement even
+  though it loses no user work.
+
+  **Adopted:** ship only where a supported user service manager is **positively
+  detected** — probed, never assumed — and fall back to static mode elsewhere.
+  That is what (c) actually is: a platform-scope constraint layered on (a), not
+  a third mechanism.
+
+  **(b) is refused as the normal production design**, and permitted only as an
+  explicitly **degraded, observable** mode — never labelled "supervised
+  telemetry". Where it runs, the other seat's mechanism is what makes it
+  observable: a heartbeat file carrying pid, `started_at` and `last_heartbeat`,
+  written on an interval, and checked by every CLI invocation — missing means
+  not running, stale beyond a threshold means likely dead, and the operator is
+  told rather than left with a healthy-looking gap.
+- **Consequence for Phase 5's death detection:** it is a real requirement under
+  either branch, and under (b) it is the *only* thing standing between a dead
+  collector and an understated capture figure.
 - **Blocks:** everything from Phase 3 onward, and Phase 5 entirely. Phases 1.2,
   1.3 and 2 are mechanism-independent and land regardless.
 - **What to do:** pick exactly one — (a) an OS service manager per platform
@@ -291,8 +329,27 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ### blocker: uniqueness-namespace
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — exactly one collector per OS user.** AI council
+  2026-08-28 (anthropic + openai, 1 round, $0.00), **2/2 convergent**.
+  Configuration is already user-global at `~/.event4u/agent-config/`, user
+  service managers naturally supervise user services, and one process can
+  multiplex every repository and worktree that user touches without a process
+  fleet. (c) and (d) multiply processes by checkout — and this repository runs
+  12+ worktrees at once, so (d) is a dozen residents for one developer.
+
+  (a) per-machine was rejected on a **security** ground rather than a resource
+  one: on a shared system it is the wrong boundary, because one user's collector
+  must not discover, read, lock, or attribute another user's repositories.
+
+- **Requirements that come with (b), adopted from the seat that named them:**
+  one per-user runtime directory and lock; a Unix socket or equivalent local IPC
+  endpoint **restricted to that user**; event payloads carrying stable
+  repository and worktree identifiers so attribution survives multiplexing; **no
+  filesystem-wide repository discovery** — producers register or submit
+  explicitly; and bounded registration expiry, so a deleted worktree does not
+  linger in the registry forever.
 - **Blocks:** Phase 3.4, Phase 5.1 and Phase 5's fencing test. The data contract
   in Phase 2 is unaffected.
 - **What to do:** pick exactly one — (a) per machine, one collector for
@@ -316,8 +373,33 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ### blocker: activation-and-installation-model
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — installation registers the service definition, an
+  explicit action starts it.** AI council 2026-08-28 (anthropic + openai, 1
+  round, $0.00), **2/2 convergent**, and both seats **refused (c) outright**.
+
+  The refusal is on security grounds, not ergonomics, which is how it was put to
+  them. *"Users who clone a repo reasonably expect zero resident processes until
+  they opt in"*; *"3(c) is not acceptable as stated"*. A package may execute when
+  it is invoked; starting a **persistent background process** as a side effect of
+  cloning or of first use crosses a boundary that the content being telemetry
+  does not weaken.
+
+  (a) was not chosen because it leaves the friction entirely on the operator and
+  invites the failure this blocker already names — capture stays near zero, and
+  the 0.27 % figure fails to move for a reason that has nothing to do with the
+  collector's quality. (b) keeps the consent and removes the discoverability
+  problem: the first CLI invocation after install detects the registered-but-
+  stopped state and offers to start it, with a decline and a **never-ask** answer
+  both honoured.
+
+- **Incoherent combination, named independently by both seats:** **(d)
+  per-worktree × (c) automatic start.** Ordinary use of a 12-worktree checkout
+  would spawn a fleet of residents with duplicated upgrades, locks, health state
+  and uploads. Per-repository automatic start has the same defect at smaller
+  scale. Both are excluded by the resolutions above; the exclusion is recorded
+  so a later reader does not reintroduce either half.
 - **Blocks:** Phase 4.1's default-off test and Phase 6.2's enablement flip.
 - **What to do:** pick exactly one — (a) explicit operator action starts it,
   never installation and never cloning, which is the most conservative and means
