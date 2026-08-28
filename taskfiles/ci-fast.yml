@@ -1153,6 +1153,17 @@ tasks:
       a contributor sees it before pushing.
     cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
 
+  check-no-currency-in-cost-surfaces:
+    silent: true
+    desc: |
+      No cost surface prints a currency figure or a per-token rate. The suite
+      does not know a consumer's contract, so a monetary figure would be
+      extrapolated from a rate it invented — actionable and wrong, which is worse
+      than absent. Scope is a named watchlist of four files, not a pattern:
+      `cache_realization_report` legitimately carries a cost_usd block, and a
+      pattern gate would be neutered with an allowlist within a release.
+    cmd: ./scripts-run src/scripts/check_no_currency_in_cost_surfaces {{.QUIET_FLAG}}
+
   check-prefix-stable-mutation:
     silent: true
     desc: |

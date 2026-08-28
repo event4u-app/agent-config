@@ -42,15 +42,15 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
 # ----------------------------------------------------------
-# 303 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 304 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
-# re-run on the tree carrying these rows, which now include the three gates
-# road-to-runtime-context-floors adds: check_prefix_stable_mutation,
-# check_loss_class_declared and check_benchmark_report_fields).
-# **76 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 73 of those 76 are listed below.** The manifest is
-# therefore complete with respect to its own contract for every gate that can
-# carry a floor, and covers ~24 % of the population.
+# re-run on the tree carrying these rows, which now include the four gates the
+# two runtime-cost roadmaps add: check_prefix_stable_mutation,
+# check_loss_class_declared, check_benchmark_report_fields, and
+# check_no_currency_in_cost_surfaces).
+# **77 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
+# complete for every gate that can carry a floor, covering ~24 % of the population.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -2189,3 +2189,43 @@ gates:
       (`OPTIONAL_INPUT:`) because benchmark reports are run artefacts rather
       than source and a checkout may legitimately carry none; the floor applies
       whenever any are present.
+
+  - id: check_no_currency_in_cost_surfaces
+    argv: []
+    min_scanned: 4
+    corpus: "the four cost surfaces road-to-delivered-cost-truth built (4 at baseline) — a named watchlist, not a tree walk"
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_currency__.ts
+      content: |
+        // A planted file is NOT in this gate's corpus by construction — the
+        // watchlist is four named files. Discrimination is --self-test's job.
+        out.push(`total: $42`);
+    note: >
+      road-to-delivered-cost-truth AC-7. The suite does not know a consumer's
+      contract — subscription, per-token, committed spend, a reseller rate — so
+      any monetary figure it printed would be extrapolated from a rate it
+      invented. That is worse than no number, because it is actionable and wrong,
+      and it is exactly the thing someone reasonably adds back later on the
+      grounds that a cost report should show cost.
+
+      SCOPE IS A NAMED LIST, NOT A PATTERN, and that is the load-bearing choice.
+      `cache_realization_report` legitimately carries a `cost_usd` block for
+      back-compat with downstream consumers; a gate sweeping `src/scripts/*cost*`
+      would fail on it and be neutered with an allowlist inside a release. The
+      watchlist is asserted by `assertWatchlistResolves`, so a renamed surface is
+      a dead scope (exit 2) rather than a silent pass.
+
+      THE DETECTOR TOOK TWO CORRECTIONS, BOTH FROM ITS OWN SELF-TEST, and both
+      are pinned as accepting cases so a future widening cannot reintroduce them:
+      a bare `$` substring matches TEMPLATE INTERPOLATION (`${value}`), and
+      excluding `${` alone still matched a REGEX END ANCHOR (`/\.md$/`). The
+      shipped pattern is positive rather than subtractive — a currency `$` is
+      followed by a digit or by an interpolated amount — because a gate whose
+      first real run produces dozens of false positives gets an allowlist within
+      a release and then guards nothing.
+
+      DISCRIMINATION: `--self-test`, 9 cases, 4 rejecting. The canary above
+      documents the violating shape for a reader and is honestly NOT the
+      discriminator, because a created file lands outside a four-name watchlist.
