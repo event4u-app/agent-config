@@ -25,6 +25,7 @@ import * as path from 'node:path';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
+import { PREFIX_STABLE_SURFACES, prefixStableRoots } from './_lib/prefix_stable_surfaces.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -63,12 +64,30 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
     };
 }
 
+/** Look one surface root up by id. Throws on an unknown id — a renamed surface
+ *  must fail loudly here rather than degrade this gate to measuring nothing. */
+function surfaceRoot(id: string): string {
+    const s = PREFIX_STABLE_SURFACES.find((x) => x.id === id);
+    if (s === undefined) {
+        throw new Error(
+            `prefix-stable surface '${id}' is not declared in _lib/prefix_stable_surfaces.ts — ` +
+                `the payload census cannot measure a bucket whose root it cannot resolve`,
+        );
+    }
+    return s.root;
+}
+
 /** Measure only what the repo tree determines — no `~`, no transcripts, no network. */
 export function measureDeterministicPayload(
     repoRoot: string = REPO_ROOT,
 ): Array<{ name: string; tokens: number; files: number }> {
-    const projectRules = censusRuleDir(path.join(repoRoot, 'dist', 'agent-src', 'rules'));
-    const skills = censusSkillsCatalog(path.join(repoRoot, 'dist', 'agent-src', 'skills'));
+    // Roots come from the canonical prefix-stable surface registry, never from a
+    // literal here: `check_prefix_stable_mutation` guards the same boundary, and
+    // two independent lists of one boundary is the drift shape this repository
+    // has already paid for. `surfaceRoot` throws rather than silently measuring
+    // nothing if an id is renamed out from under it.
+    const projectRules = censusRuleDir(path.join(repoRoot, surfaceRoot('project-scope-rules')));
+    const skills = censusSkillsCatalog(path.join(repoRoot, surfaceRoot('preloaded-skills-catalog')));
     // Only the PROJECT half of the CLAUDE.md hierarchy is deterministic — the
     // user file and its @-imports live on whatever machine runs this.
     const claudeMd = censusClaudeMdHierarchy(repoRoot, path.join(repoRoot, '.no-such-home'));
@@ -145,7 +164,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             gate: 'check_preamble_payload_budget',
             scanned: verdict.buckets.reduce((n, b) => n + b.files, 0),
             units: 'payload source file(s)',
-            roots: ['dist/agent-src/rules', 'dist/agent-src/skills', 'CLAUDE.md'],
+            roots: prefixStableRoots(),
         });
     } catch (err) {
         if (err instanceof DeadScopeError) {

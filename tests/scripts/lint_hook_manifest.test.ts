@@ -141,6 +141,38 @@ describe("lint_hook_manifest — nudge_rank uniqueness", () => {
   });
 });
 
+describe("lint_hook_manifest — re_arm validation", () => {
+  function withReArm(v: string): string {
+    return TWO_CONCERNS.replace(
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n",
+      `  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n${v}`,
+    );
+  }
+
+  it("accepts an absent re_arm — almost every concern declares none", () => {
+    expect(lint(fixtureManifest(TWO_CONCERNS), false)).toBe(0);
+  });
+
+  it("accepts each declared re-arm boundary", () => {
+    for (const ev of ["session_start", "pre_compact"]) {
+      expect(lint(fixtureManifest(withReArm(`    re_arm: ${ev}\n`)), false), ev).toBe(0);
+    }
+  });
+
+  it("rejects an undeclared boundary rather than letting it read as a declaration", () => {
+    // `check_prefix_stable_mutation` treats an unrecognised value as UNDECLARED
+    // and fails, so an unvalidated typo would look like a real mid-session
+    // mutation and send the author hunting the wrong defect.
+    for (const bad of ["    re_arm: whenever\n", "    re_arm: post_tool_use\n", "    re_arm: true\n"]) {
+      expect(lint(fixtureManifest(withReArm(bad)), false), bad.trim()).toBe(1);
+    }
+  });
+
+  it("the real manifest declares no invalid re_arm", () => {
+    expect(lint(REAL_MANIFEST, false)).toBe(0);
+  });
+});
+
 describe("lint_hook_manifest — red fixtures", () => {
   it("returns 2 for a missing file", () => {
     expect(lint("/nonexistent/hook_manifest.yaml", false)).toBe(2);
