@@ -36,6 +36,8 @@ import { homedir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { buildReport as buildDriftReport } from './orchestration_payload_hash_drift.js';
+import type { PayloadHashDriftReport } from './_lib/payload_hash_drift.js';
 import {
     aggregateByBucket,
     billableInputTokens,
@@ -635,6 +637,7 @@ export interface Options {
     councilRoot: string;
     userRulesDir: string;
     projectRulesDir: string;
+    auditDir: string;
 }
 
 function defaultOptions(): Options {
@@ -646,6 +649,7 @@ function defaultOptions(): Options {
         councilRoot: REPO_ROOT,
         userRulesDir: path.join(homedir(), '.claude', 'rules'),
         projectRulesDir: path.join(REPO_ROOT, 'dist', 'agent-src', 'rules'),
+        auditDir: path.join(REPO_ROOT, 'agents', 'runtime', 'state', 'audit'),
     };
 }
 
@@ -668,9 +672,80 @@ export function parseArgs(argv: string[]): Options {
         else if (a.startsWith('--user-rules-dir=')) opts.userRulesDir = a.slice('--user-rules-dir='.length);
         else if (a === '--project-rules-dir') opts.projectRulesDir = argv[++i] ?? opts.projectRulesDir;
         else if (a.startsWith('--project-rules-dir=')) opts.projectRulesDir = a.slice('--project-rules-dir='.length);
+        else if (a === '--audit-dir') opts.auditDir = argv[++i] ?? opts.auditDir;
+        else if (a.startsWith('--audit-dir=')) opts.auditDir = a.slice('--audit-dir='.length);
     }
     if (opts.format !== 'text' && opts.format !== 'json') opts.format = 'text';
     return opts;
+}
+
+/**
+ * Prefix-stability verdict, carried in the cost report rather than left latent
+ * in a separate CLI (`road-to-runtime-context-floors` step 1.3).
+ *
+ * `_lib/payload_hash_drift` already splits dispatches into a STABLE cohort
+ * (repeat occurrences of one payload hash) and an UNSTABLE one (hashes seen
+ * once). Nothing read the split, so the one outcome that matters — a stable
+ * cohort whose cache-read share is BELOW its unstable cohort, which means the
+ * prefix is being rewritten between repeats — was measurable and unreported.
+ *
+ * `verdict` is deliberately three-valued. `insufficient-data` is not a number
+ * and must never be rendered as one: with either cohort empty there is no
+ * comparison to make, and printing `0.0%` for "nothing was measured" is the
+ * shape that turns a blind report into a believed one.
+ */
+export type PrefixStabilityVerdict = 'stable-higher' | 'inverted' | 'insufficient-data';
+
+export interface PrefixStabilityResult {
+    verdict: PrefixStabilityVerdict;
+    /** Why, in one sentence — always populated, including for `insufficient-data`. */
+    reason: string;
+    stable_cohort: { n: number; read_share: number | null };
+    unstable_cohort: { n: number; read_share: number | null };
+    lines_with_data: number;
+}
+
+export function computePrefixStability(drift: PayloadHashDriftReport): PrefixStabilityResult {
+    const stable = { n: drift.stable_cohort.n, read_share: drift.stable_cohort.hit_rate };
+    const unstable = { n: drift.unstable_cohort.n, read_share: drift.unstable_cohort.hit_rate };
+
+    if (stable.read_share === null || unstable.read_share === null) {
+        const empty = [stable.read_share === null ? 'stable' : null, unstable.read_share === null ? 'unstable' : null]
+            .filter((x) => x !== null)
+            .join(' and ');
+        const plural = empty.includes(' and ') ? 'cohorts are' : 'cohort is';
+        return {
+            verdict: 'insufficient-data',
+            reason:
+                `the ${empty} ${plural} empty (${drift.lines_with_data} audit line(s) carry both ` +
+                'payload_hash and cache_hit) — no comparison exists, and a share is not reported for one',
+            stable_cohort: stable,
+            unstable_cohort: unstable,
+            lines_with_data: drift.lines_with_data,
+        };
+    }
+    if (stable.read_share < unstable.read_share) {
+        return {
+            verdict: 'inverted',
+            reason:
+                `repeat dispatches of the same payload shape hit the cache LESS often ` +
+                `(${(stable.read_share * 100).toFixed(1)}%) than one-off shapes ` +
+                `(${(unstable.read_share * 100).toFixed(1)}%) — a prefix-stable surface is being ` +
+                'rewritten between repeats',
+            stable_cohort: stable,
+            unstable_cohort: unstable,
+            lines_with_data: drift.lines_with_data,
+        };
+    }
+    return {
+        verdict: 'stable-higher',
+        reason:
+            `repeat dispatches hit the cache at ${(stable.read_share * 100).toFixed(1)}% against ` +
+            `${(unstable.read_share * 100).toFixed(1)}% for one-off shapes, which is the expected ordering`,
+        stable_cohort: stable,
+        unstable_cohort: unstable,
+        lines_with_data: drift.lines_with_data,
+    };
 }
 
 export interface Report {
@@ -688,6 +763,7 @@ export interface Report {
     duplicate_scope: DuplicateScopeResult;
     council_mispricing: CouncilMispricingResult;
     worktree_fragmentation: WorktreeFragmentationResult;
+    prefix_stability: PrefixStabilityResult;
     claims: Claim[];
 }
 
@@ -709,6 +785,22 @@ export function buildReport(opts: Options): Report {
     const worktreePaths = listGitWorktrees(opts.repoRoot);
     const worktreeFragmentation = computeWorktreeFragmentation(opts.root, worktreePaths, opts.maxAgeDays);
 
+    // A missing or unreadable audit directory is a real, expected state — the
+    // two fields are lean-init extensions and no caller wires them yet — so it
+    // resolves to `insufficient-data` with a reason, never to a fabricated share.
+    let prefixStability: PrefixStabilityResult;
+    try {
+        prefixStability = computePrefixStability(buildDriftReport(opts.auditDir));
+    } catch (err) {
+        prefixStability = {
+            verdict: 'insufficient-data',
+            reason: `the audit ledger at ${opts.auditDir} could not be read: ${(err as Error).message}`,
+            stable_cohort: { n: 0, read_share: null },
+            unstable_cohort: { n: 0, read_share: null },
+            lines_with_data: 0,
+        };
+    }
+
     const claims = buildClaims({ subagentColdStart, duplicateScope, councilMispricing, worktreeFragmentation });
 
     return {
@@ -729,6 +821,7 @@ export function buildReport(opts: Options): Report {
         duplicate_scope: duplicateScope,
         council_mispricing: councilMispricing,
         worktree_fragmentation: worktreeFragmentation,
+        prefix_stability: prefixStability,
         claims,
     };
 }
@@ -746,6 +839,16 @@ export function renderText(r: Report): string {
     out.push(`  metric: billable_input = ${r.metric_definition.billable_input}`);
     out.push(`          ${r.metric_definition.note}`);
     out.push(`  dedup: ${r.deduped_count}/${r.total_seen} unique records kept (dedup_ratio ${pct(r.dedup_ratio)})`);
+    out.push('');
+
+    const ps = r.prefix_stability;
+    const share = (v: number | null): string => (v === null ? 'insufficient data' : pct(v));
+    const mark = ps.verdict === 'inverted' ? '⚠️ ' : '';
+    out.push('Prefix stability (payload_hash × cache_hit):');
+    out.push(`  ${mark}verdict: ${ps.verdict}`);
+    out.push(`  stable cohort:   n=${ps.stable_cohort.n} read_share=${share(ps.stable_cohort.read_share)}`);
+    out.push(`  unstable cohort: n=${ps.unstable_cohort.n} read_share=${share(ps.unstable_cohort.read_share)}`);
+    out.push(`  ${ps.reason}`);
     out.push('');
 
     out.push('By bucket:');
