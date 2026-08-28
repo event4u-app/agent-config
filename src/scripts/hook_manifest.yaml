@@ -1003,6 +1003,48 @@ concerns:
     fail_closed: false
     severity: advisory
     needs_payload_bodies: [input]
+  # road-to-runtime-event-journal Phase 1 step 1.4 — the journal's hook binding
+  # (AI council 2026-08-28, decision 3). `_lib/runtime_journal.ts` shipped bound
+  # in no slot, so production capture was ZERO BY CONSTRUCTION and 1.4's
+  # measurement had neither a numerator nor a denominator. Both seats read the
+  # honest `undefined` as correct and as NOT discharging the step: "zero
+  # numerator does not establish 0 % when the population itself was not
+  # observed." This entry is the population.
+  #
+  # DEFAULT-OFF, gated on `hooks.runtime_journal.enabled`. The append-a-JSONL
+  # instruments on this slot (orchestration-record, tool-result-bytes,
+  # subagent-ledger) ship ON with no setting because they append to a gitignored
+  # directory that already exists; the journal CREATES a storage surface — a
+  # SQLite database under `<git-common-dir>/agent-journal/` — which is
+  # engine-shaped, and ADR-124 § 3's default-off floor is explicitly NOT
+  # superseded by ADR-249. The consequence is stated in the hook header rather
+  # than hidden: a default install still records nothing, so 1.4 moves from
+  # "zero by construction" to "zero until opted in".
+  #
+  # Class A, checkable from the file (AC-8): open, write, close, exit. No
+  # resident process, no timer, no state spanning invocations. Emits NOTHING to
+  # the model and returns 0 on every path — a locked database, an unreadable
+  # settings file, a malformed envelope and a full disk all degrade to silence,
+  # never to a failed turn. Carries no hook-token-budget row for the same reason
+  # orchestration-record does not: it writes to disk and injects no context.
+  #
+  # No `tools:` filter: it records the dispatch stream itself, and every one of
+  # the ten vocabulary members is in scope. No `needs_payload_bodies`, and this
+  # is provable by reading the hook — it touches neither `tool_input` nor
+  # `tool_response`; the only payload strings it reads are ids and the tool
+  # NAME, all of which ride in the stub.
+  #
+  # `pre_tool_use` is DELIBERATELY UNBOUND, and the omission is a binding
+  # decision rather than a coverage claim: that slot is on the critical path of
+  # every tool call, and `post_tool_use` already records the same call once it
+  # has happened. The journal's own RECORDED_EVENTS / NOT_RECORDED partition is
+  # unchanged — it governs the vocabulary, not the bindings — so the capture
+  # evidence states the unbound slot instead of the partition implying coverage.
+  journal-record:
+    script: src/scripts/hooks/journal_record_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
@@ -1061,12 +1103,12 @@ platforms:
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, design-pass]
 
   claude:
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, run-continuation]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, journal-record]
+    session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror, design-pass]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
     # marker is set, then clears it. One extra injection per compaction EVENT —
@@ -1083,12 +1125,12 @@ platforms:
     # already bound on `stop` and `session_start`; this adds the write at the
     # moment the loss actually happens. Deterministic rebuild, emits nothing
     # here — the 4,096-byte row it carries is for its session_start restore.
-    pre_compact:      [language-mirror, hot-context, rule-inject]
+    pre_compact:      [language-mirror, hot-context, rule-inject, journal-record]
     # road-to-subagent-lifecycle-integrity Phase 1 Step 1. `claude` is the only
     # platform where both native events were measured present on the installed
     # binary (2.1.229 — see the evidence page cited on the alias rows below).
-    subagent_start:   [subagent-ledger]
-    subagent_stop:    [subagent-ledger]
+    subagent_start:   [subagent-ledger, journal-record]
+    subagent_stop:    [subagent-ledger, journal-record]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same

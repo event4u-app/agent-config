@@ -1264,6 +1264,31 @@ hooks:
   rtk_wrap:
     enabled: false
 
+  # Runtime event journal (road-to-runtime-event-journal Phase 1, step 1.4).
+  # Default-OFF. When enabled, the `journal-record` concern appends one
+  # durable, episode-keyed event record per dispatched hook event to
+  # `<git-common-dir>/agent-journal/journal.sqlite` — a Class-A write that
+  # opens, writes and exits. It emits nothing to the model, never warns and
+  # never blocks: a locked database, a missing `node:sqlite`, a malformed
+  # envelope or a full disk all degrade to silence.
+  #
+  # OFF rather than ON — unlike the sibling append-a-JSONL instruments — because
+  # this one CREATES a storage surface (a SQLite database and a directory under
+  # your `.git/`) rather than appending to a gitignored directory that already
+  # exists. ADR-124 § 3's default-off floor for engine-shaped state is not
+  # superseded by ADR-249.
+  #
+  # The record type has no field able to hold free-form content: ids, an event
+  # name, a bounded capability identifier, repo-relative locators, and two
+  # 12-hex digests (`repository_id`, `worktree_id`). No prompt, no file body, no
+  # absolute path — enforced by a committed key set, a compile-time guard and a
+  # write-time value check, not by a scrubbing pass.
+  #
+  # Retention: a 30-day TTL anchored on episode close, plus explicit,
+  # time-bounded, human-only holds that themselves expire (180 days).
+  runtime_journal:
+    enabled: false
+
   # PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default-OFF.
   # When enabled, runs the lint_design_slop registry against about-to-be-written
   # UI content (html/css/jsx/…) and WARNS (exit 2, never blocks) on P0/P1

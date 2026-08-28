@@ -43,11 +43,60 @@ describe('runtime persistence tiers — 4.1 named over what exists', () => {
         expect(missing, missing.join('\n')).toEqual([]);
     });
 
-    it('T3 names its ADR rather than a storage path — a tier nothing writes into has no path to name', () => {
+    // Rewritten 2026-08-28. These assertions used to pin `/does not exist/i`
+    // and `/ADR-124/` — i.e. they pinned a SUPERSEDED lock. ADR-249 (accepted
+    // 2026-08-27, `supersedes: ADR-124, ADR-109`) reversed ADR-124's Class-B
+    // row, so a T3 row justified by "Class B is prohibited in core" cites a
+    // provision that no longer stands. The tier itself did not move: it is a
+    // STORE tier, and the store is still prohibited by the P3 row of
+    // resident-process-governance. The tests below pin that, and pin the
+    // OVERCORRECTION shut as well.
+    it('T3 names its governing contract rather than a storage path — a tier nothing writes into has no path to name', () => {
         const t3 = tierTableRows().find((r) => r.tier === 'T3');
         expect(t3, 'no T3 row').toBeDefined();
-        expect((t3 as { cells: string }).cells).toMatch(/does not exist/i);
-        expect((t3 as { cells: string }).cells).toMatch(/ADR-124/);
+        const cells = (t3 as { cells: string }).cells;
+        // The live anchor, not the superseded one.
+        expect(cells).toMatch(/resident-process-governance\.md/);
+        expect(cells).toMatch(/ADR-249/);
+        // Still closed, and said so.
+        expect(cells).toMatch(/prohibited/i);
+        expect(cells).toMatch(/P3/);
+    });
+
+    it('T3 does NOT justify itself on the superseded Class-B prohibition', () => {
+        const cells = (tierTableRows().find((r) => r.tier === 'T3') as { cells: string }).cells;
+        // ADR-124 may be cited elsewhere in the document (its Class-A path and
+        // its section-6 state-store test both stand); what the ROW may not do
+        // is rest on the row ADR-249 superseded.
+        expect(cells).not.toMatch(/Class B is prohibited/i);
+        expect(cells).not.toMatch(/does not exist/i);
+    });
+
+    it('T3 does not OVERcorrect into "a resident store is now permitted"', () => {
+        // The failure in the other direction: ADR-249 permits a supervised
+        // PROCESS (P1), never the aggregated cross-session STORE (P3). A row
+        // that read the reversal as opening T3 would be as wrong as the row it
+        // replaced, and would be wrong in the more expensive direction.
+        const cells = (tierTableRows().find((r) => r.tier === 'T3') as { cells: string }).cells;
+        expect(cells).toMatch(/not built/i);
+        expect(text).toMatch(/P1 does not weaken P3|the aggregated store it would own is not/i);
+    });
+
+    it('the correction is recorded in the document, not applied silently', () => {
+        // The wrong row shipped in a commit that is already on the branch, so
+        // the contract states what changed rather than reading as if it had
+        // always been right.
+        expect(text).toMatch(/Corrected 2026-08-28/);
+        expect(text).toMatch(/superseded lock/i);
+    });
+
+    it('both files the corrected T3 row cites actually exist', () => {
+        for (const rel of [
+            'docs/contracts/resident-process-governance.md',
+            'docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md',
+        ]) {
+            expect(existsSync(join(REPO_ROOT, rel)), `${rel} is cited but missing`).toBe(true);
+        }
     });
 
     it('the contract states it creates no store, directory or package', () => {
@@ -79,6 +128,14 @@ describe('runtime persistence tiers — 4.2 promotion is supervised', () => {
 
     it('states that no code in this repository writes into a T3 path', () => {
         expect(text).toMatch(/No code in this repository writes into a T3 path/i);
+    });
+
+    it('prices opening T3 on the live gate — reopening P3 — not on ADR-124 alone', () => {
+        expect(text).toMatch(/reopens the \*\*P3\*\* prohibition|decision that reopens P3/);
+        expect(text).toMatch(/four governance conditions/i);
+        // ADR-124 section 5 is NOT superseded and is still part of the price;
+        // what changed is that it is no longer the whole of it.
+        expect(text).toMatch(/measured Class-A failure/);
     });
 });
 

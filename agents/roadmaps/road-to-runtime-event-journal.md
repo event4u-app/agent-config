@@ -85,55 +85,120 @@ accepts.
 
 ## Phase 1 — The journal, written by hooks that terminate
 
-- [ ] **1.1 Record shape and storage.** An append-only, `episode_id`-keyed
-      record in `agents/runtime/state/`, backed by SQLite in WAL mode so a
-      concurrent hook invocation cannot corrupt a partial write. The record
-      type carries **no field able to hold free-form content** — no prompt, no
-      file body, no path outside a repo-relative locator — so privacy is a
-      property of the schema, not of a scrubbing pass that can fail.
+- [x] **1.1 Record shape and storage.** An append-only, `episode_id`-keyed
+      record at **`<git-common-dir>/agent-journal/journal.sqlite`**, backed by
+      SQLite in WAL mode so a concurrent hook invocation cannot corrupt a
+      partial write. The record type carries **no field able to hold free-form
+      content** — no prompt, no file body, no path outside a repo-relative
+      locator — so privacy is a property of the schema, not of a scrubbing pass
+      that can fail.
       verify: the schema is asserted by a test against a committed key set; a fixture attempting to write a free-form field fails to type-check.
-- [ ] **1.2 All ten events are covered.** Each of the ten members of
+
+      > **AMENDED 2026-08-28 by AI council decision** (anthropic + openai, 2/2
+      > convergent). This step originally specified `agents/runtime/state/`.
+      > That directory is **worktree-local** — `_lib/session_register.ts`
+      > records the 2026-08-07 measurement that concerns run with
+      > `CWD = envelope.workspace_root` — so the journal would have had one
+      > database per checkout, and **AC-3 would have been unfalsifiable by
+      > construction**: two writers to two different files always both land, and
+      > its test could never go red. The store therefore lives under the common
+      > git directory, which every worktree of a repo shares. The real
+      > contention that creates found three genuine durability bugs, one of
+      > which deleted a healthy database holding another process's 120 committed
+      > records. The path above is now the NORMATIVE one, stated here and in
+      > `docs/contracts/runtime-persistence-tiers.md` (whose T2 reach paragraph
+      > was amended in the same pass, because "T2 is worktree-local" is true of
+      > `test_red_state.ts` and false of this member — reach is a property of
+      > the path, not of the tier). Deletion behaviour is specified there too,
+      > including where the honest answer is "nothing happens".
+- [x] **1.2 All ten events are covered.** Each of the ten members of
       `EVENT_VOCABULARY` maps to a record, or is explicitly listed as
       not-recorded with a reason. Silence about an event is not coverage.
       verify: a test enumerates `EVENT_VOCABULARY` and fails when a member is neither recorded nor listed in the not-recorded set — so adding an eleventh event breaks the test rather than being missed.
-- [ ] **1.3 Two concurrent writers do not corrupt or lose a record.** Two hook
+- [x] **1.3 Two concurrent writers do not corrupt or lose a record.** Two hook
       invocations writing the same episode from two checkouts of the same
       repository both land.
       verify: a concurrency test writes from two processes and asserts both records present; the mechanism is then neutralised and the same test observed **failing**, so its sensitivity is established rather than assumed.
-- [ ] **1.4 First capture measurement, published whichever way it lands.**
-      What fraction of host events reach a record, measured against the
-      recorded 0.27 % baseline for the existing telemetry path.
-      verify: the measurement is written to `agents/evidence/`, states its denominator, and is published unchanged if it is worse than the baseline — an honest null is a result here, not a failure.
+- [~] **1.4 First capture measurement, published whichever way it lands.** —
+      **DEFERRED AND UNMET on the delivery axis; carried, not dropped.**
+
+      Produced and published: **dispatch-path capture 100.00 %, denominator
+      1,000 envelopes** (100 × each of the ten vocabulary members), 0 skips,
+      default-OFF control 10/10 `disabled`. That is a floor on the **writer**.
+
+      Not produced: the **host** capture rate, which is what this step asked
+      for. It stays **`undefined`** — numerator unobserved, denominator unknown
+      — and both council seats (2026-08-28) read that as honest and as **not
+      discharging the step**: *"zero numerator does not establish 0 % when the
+      population itself was not observed."* Comparing the dispatch figure to the
+      0.27 % delivery baseline is a category error and is refused rather than
+      caveated.
+
+      **Two closers, both named, neither autonomously reachable:** no
+      host-emitted-event denominator exists anywhere in the tree, and the
+      concern is default-OFF, so a default install records nothing. What did
+      change is a change in kind rather than degree — the journal was bound in
+      **no** hook slot before this roadmap, so capture was zero *by
+      construction*; it is now bound, exercisable, and measured on the path that
+      exists.
+
+      **Carried to** `agents/roadmaps/stubs/road-to-journal-host-capture-measurement.md`,
+      created in this same change, with both closers as its promotion gate and
+      the `session_fallback` finding recorded. Disposition preserves the item in
+      the active estate, so it is council-decidable rather than owner-reserved
+      per `roadmap-progress-sync` Iron Law 3.
+      verify: the stub exists, names both closers, and refuses the dispatch-for-host substitution in its own words; the evidence page states the denominator problem rather than reporting a number it cannot support.
 
 ## Phase 2 — The episode spine
 
-- [ ] **2.1 The spine fields.** `episode_id`, the capability invoked, the
+- [x] **2.1 The spine fields.** `episode_id`, the capability invoked, the
       return reference, the verification reference, and the terminal state —
       **reused verbatim from `outcome_envelope.ts`'s six**, never a parallel
       vocabulary.
       verify: the spine's state enum is imported from `outcome_envelope.ts` rather than redeclared, asserted by a test that fails if a literal is introduced.
-- [ ] **2.2 One fixture episode traverses end to end.** task → action → result
+- [x] **2.2 One fixture episode traverses end to end.** task → action → result
       → outcome, joinable by `episode_id` across records written by different
       hook slots.
       verify: the fixture episode is reconstructed from the journal alone, with no in-memory state, and the reconstruction asserts every field non-null or explicitly absent.
-- [ ] **2.3 The namespace survives two checkouts and a branch switch.** The
-      episode key includes the git common directory, so two worktrees of the
-      same repository never collide, and a branch switch invalidates a
-      projection rather than silently reusing it.
-      verify: a test writes from two worktrees of one repository and asserts distinct namespaces; a branch switch fixture invalidates the projection.
+- [x] **2.3 Repository and worktree identity survive two checkouts and a branch
+      switch.** Two worktrees of one repository **share** `repository_id` and
+      the physical store, so their records join into one episode; their records
+      carry **distinct** `worktree_id`, so each stays attributable to the
+      checkout that wrote it; two unrelated repositories get distinct stores
+      **and** distinct `repository_id`. A branch switch changes neither, and
+      invalidates a projection rather than silently reusing it.
+      verify: a test over two real worktrees of one repository asserts shared `repository_id` + shared store path + distinct `worktree_id`; a second repository asserts distinct store and distinct `repository_id`; a branch-switch fixture leaves both ids unchanged and changes the projection key.
+
+      > **AMENDED 2026-08-28 by AI council decision** (anthropic + openai, 2/2
+      > convergent). The original verify line read: *"a test writes from two
+      > worktrees of one repository and asserts **distinct namespaces**"*. That
+      > is **contradictory** and was not quietly reworded. The single
+      > `namespace` was a digest of the common git directory — the one directory
+      > every worktree of a repo shares by definition — so two worktrees could
+      > never resolve distinct values from it, and the test that shipped had to
+      > assert the opposite of its own step while reporting the discrepancy in a
+      > comment.
+      >
+      > openai's seat found the sharper half: describing that single field as
+      > keeping records *"attributable when read together"* was **underspecified
+      > and potentially false**, because it cannot attribute a record to a
+      > particular worktree at all. The concept is therefore **split** —
+      > `repository_id` (the join key) and `worktree_id` (the attribution key),
+      > both bounded digests, never paths — `JOURNAL_SCHEMA_VERSION` is bumped
+      > to 2, and the three properties above are what the contract actually has.
 
 ## Phase 3 — Consumption acknowledgment
 
-- [ ] **3.1 The orchestrator records what it did with a return.**
+- [x] **3.1 The orchestrator records what it did with a return.**
       `consumed` · `partially-consumed` · `rejected-with-reason`, added to the
       existing envelope as a field set. A return in a non-success state that
       carries no acknowledgment is a **detectable ignored blocker**.
       verify: a fixture `blocked` return with no acknowledgment is reported by the detector; the same return with `rejected-with-reason` is not.
-- [ ] **3.2 The acknowledgment joins the spine.** So "was this blocker
+- [x] **3.2 The acknowledgment joins the spine.** So "was this blocker
       ignored" is answerable from the journal after the fact, not only in the
       session that produced it.
       verify: the fixture episode from 2.2 carries the acknowledgment field and the ignored-blocker query returns it.
-- [ ] **3.3 Adoption is measured, not assumed.** What share of returns carry an
+- [x] **3.3 Adoption is measured, not assumed.** What share of returns carry an
       acknowledgment, published.
       verify: the measurement exists with its denominator; a share below any stated expectation is published as measured rather than re-scoped.
 
@@ -278,24 +343,24 @@ accepts.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every member of `EVENT_VOCABULARY` is either recorded or listed
+- [x] AC-1 — Every member of `EVENT_VOCABULARY` is either recorded or listed
       as not-recorded with a reason, enforced by a test that fails when a new
       member is added — so coverage cannot silently regress.
-- [ ] AC-2 — The record type has no field capable of holding a prompt, a file
+- [x] AC-2 — The record type has no field capable of holding a prompt, a file
       body or an absolute path, asserted against a committed key set.
-- [ ] AC-3 — Two concurrent writers from two worktrees of one repository both
+- [x] AC-3 — Two concurrent writers from two worktrees of one repository both
       land, and the test has been observed failing with the mechanism
       neutralised.
-- [ ] AC-4 — One fixture episode is reconstructed from the journal alone,
+- [x] AC-4 — One fixture episode is reconstructed from the journal alone,
       end to end, with no in-memory state.
-- [ ] AC-5 — A non-success return with no consumption acknowledgment is
+- [x] AC-5 — A non-success return with no consumption acknowledgment is
       reported by the ignored-blocker detector; one with an acknowledgment is
       not.
 - [x] AC-6 — The tier contract names existing files for all four tiers and
       introduces no new storage path.
-- [ ] AC-7 — A query against a stale or absent journal returns a degraded or
+- [x] AC-7 — A query against a stale or absent journal returns a degraded or
       unavailable verdict naming the cause; none returns a confident answer.
-- [ ] AC-8 — Nothing in the landed change is a resident process: every writer
+- [x] AC-8 — Nothing in the landed change is a resident process: every writer
       is a hook invocation that terminates, checkable from the diff.
 
 ## Risk Register

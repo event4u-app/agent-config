@@ -76,6 +76,7 @@ import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
 import { main as sourceFirstGateMain } from './source_first_gate_hook.js';
 import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as runContinuationMain } from './run_continuation_hook.js';
+import { main as journalRecordMain } from './journal_record_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
 export type ConcernMain = (argv?: string[]) => number | undefined | void;
@@ -134,4 +135,5 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/source_first_gate_hook.ts': sourceFirstGateMain as ConcernMain,
     'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
     'src/scripts/hooks/run_continuation_hook.ts': runContinuationMain as ConcernMain,
+    'src/scripts/hooks/journal_record_hook.ts': journalRecordMain as ConcernMain,
 };
