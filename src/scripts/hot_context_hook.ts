@@ -10,6 +10,22 @@
  * Contract (per the verdict):
  *   - `agents/runtime/state/hot-context.md`, gitignored, OVERWRITTEN on every
  *     `stop` (cache, not journal). 400-word hard cap.
+ *
+ * loss_class: ephemeral-lossy
+ *
+ * Named, not changed (`road-to-runtime-context-floors` step 3.1). The two losses
+ * here are both deliberate and both unrecoverable, which is exactly what the
+ * class asserts: the 400-word cap discards the older half of the window, and
+ * `_redact_lines` DROPS any line the low-impact redactor refuses — including on
+ * a redactor error, which is fail-closed per line. Neither is retrievable from
+ * the output, and neither should be: this file is a privacy-floored cache whose
+ * source of truth is the transcript it was built from, and storing a recovery
+ * for a line dropped for privacy would defeat the reason it was dropped.
+ *
+ * `recoverable-lossy` would be the WRONG class here even though the transcript
+ * still exists, and the distinction is the point of the vocabulary: the class
+ * describes what THIS transform guarantees to its consumer, and this one
+ * guarantees nothing about the dropped content on purpose.
  *   - Written by DETERMINISTIC extraction from the chat-history JSONL
  *     (`agents/runtime/.agent-chat-history`) — never LLM summarization.
  *   - Every extracted line passes the low-impact privacy floor

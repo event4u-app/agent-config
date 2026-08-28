@@ -16,6 +16,16 @@
  *   - **Idempotent** — an existing `fold-<id>.md` is skipped, so re-runs are
  *     no-ops and interrupted runs resume cleanly.
  *
+ * loss_class: recoverable-lossy
+ * loss_recovery: the fold page's per-child `<file>:<first-line>-<last-line>` link-backs
+ *
+ * Named, not changed (`road-to-runtime-context-floors` step 3.1). The fold is
+ * smaller than its children and the children are still there, byte-identical,
+ * addressable by the link-back range the fold page carries — which is precisely
+ * the guarantee `recoverable-lossy` makes and `ephemeral-lossy` does not. The
+ * locator is the load-bearing half: without it this class would be
+ * indistinguishable from the ephemeral one by anything except intention.
+ *
  * MANUAL TRIGGER ONLY (council decision): this script is deliberately NOT
  * wired into hooks or CI. The Phase-0 intake tripwire
  * (`lint_knowledge_scale.ts`, intake > 2000 events) names this script as its
