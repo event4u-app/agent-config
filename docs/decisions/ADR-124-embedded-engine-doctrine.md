@@ -5,7 +5,13 @@ date: 2026-07-23
 decision: embedded-engine-doctrine
 supersedes: ADR-088, ADR-094
 supersedes_scope: engine-adoption interpretation only
-superseded_by: —
+superseded_by: ADR-249
+superseded_scope: >-
+  § 4 Class-B row only (`:111`, "Resident service / daemon … PROHIBITED in
+  core"), superseded by ADR-249 on a maintainer-directed reversal. Everything
+  else in this record stands: the Class-A adoption path (`:110`), the Class-C
+  network/LLM build-path prohibition, the § 6 state-store test, and this
+  record's own scoped supersession of ADR-088 and ADR-094.
 phase: road-to-native-code-intelligence
 type: structural
 ---
@@ -110,6 +116,15 @@ whatever index a consumer happens to ship.
 | **A — Embedded engine** | Deterministic, in-process, invoked-per-command, no resident process, no listening socket, no network in the build path; state only as gitignored, rebuildable build/index artifacts under the suite's own runtime dirs (`agents/runtime/state/`). **Termination clause (council patch, 2026-07-23): a Class-A engine terminates after command completion; in-memory state never spans CLI invocations** — a memory-only long-lived process that "never touches disk" is Class B regardless of its storage story. The sole exception is an explicit `--watch` flag on a stateless file-regeneration command where (a) the process lifecycle is bounded to file-system event observation, (b) **each regeneration cycle is a fresh Class-A invocation with no shared in-memory state between cycles**, and (c) the flag emits a first-launch notice that a long-running process started; any other persistent process (REPL, server, daemon, background worker) is Class B regardless of flag naming, and the `--watch` mode itself is a Class-B escalation under § 5. Implementation preference in order: Node built-ins / stdlib → exact-pinned pure-npm or WASM dependencies (admissible with a per-dependency justification in the adopting ADR — the justification states why a lighter dependency does not suffice, and the maintainer approves it in that ADR, not in a downstream feature PR) → native-compiled (node-gyp) deps only via an explicit per-dependency exception on the same terms. Every subprocess it spawns routes through `hardenedSpawnEnv()` per ADR-123 and `docs/spawn-site-policy.md`. | **ADOPTABLE.** This suite may build, fork, or vendor Class-A engines natively. |
 | **B — Resident service / daemon** | Anything with a lifecycle beyond one command: DB servers, MCP *servers* run as memory/retrieval backends, watchers, browser daemons, background workers, web consoles. (In-process actor runtimes/swarms are equally out of scope, but by the ADR-109 identity floor preserved in § 3 — not by this lifecycle definition; they can terminate within one command and are still excluded.) | **PROHIBITED in core**, unchanged. Route to `agent-ide-plugin` or a sibling package where genuinely needed. ADR-088/094 remain authoritative here. |
 | **C — Network/LLM-dependent build path** | Any index/graph/corpus *build* step that requires network or model calls (embedding pipelines included — ADR-061's "embeddings only on measured recall failure" remains the sole doorway). | **PROHIBITED by default**, unchanged. Query-time LLM use follows existing council/budget governance. |
+
+> **Class B was reversed on 2026-08-27 — see [ADR-249](ADR-249-supervised-resident-process-permitted-under-governance.md).**
+> A **supervised** resident process is permitted in core, under the four
+> governance conditions that record states. The row above is retained as the
+> superseded text rather than rewritten, so a reader who cited it finds the
+> transition instead of a silent change. **Classes A and C are unaffected**, as
+> is the § 6 state-store test, and the ADR-109 identity-floor clause this row
+> cites is itself only partially superseded — its `no auto-write`, `no
+> in-process swarm` and `no dispatch we enforce` clauses stand.
 
 ### 2. What is explicitly superseded
 

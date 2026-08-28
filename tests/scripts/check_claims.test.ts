@@ -275,7 +275,10 @@ describe('check_claims — mechanism', () => {
         write('README.md', 'No markers here.\n');
         const r = run();
         expect(r.code).toBe(2);
-        expect(r.stderr).toContain('only meaningful on a resolved-null entry');
+        // Wording widened when `withdrawn` joined `resolved-null` as a closure
+        // that may carry a successor. The BEHAVIOUR under test is unchanged:
+        // a `backed` entry still may not point at one.
+        expect(r.stderr).toContain('only meaningful on a closed entry');
     });
 
     it('rejects a successor pointer at its own entry', () => {
@@ -285,6 +288,73 @@ describe('check_claims — mechanism', () => {
         const r = run();
         expect(r.code).toBe(2);
         expect(r.stderr).toContain('points at its own entry');
+    });
+
+    // road-to-runtime-governance-flip Phase 2 — `withdrawn`, the ledger's third
+    // closure. A claim that was TRUE and was retired by a decision fits neither
+    // `unbacked` (debt somebody should discharge) nor `resolved-null` (a
+    // pre-registered threshold was missed), and the status column in
+    // `docs/proof.md` is what a reader scans.
+    function withdrawnLedger(fields: string, status = 'withdrawn'): string {
+        return [
+            '# Claims Ledger',
+            '',
+            '### claim: retired',
+            '- claim: A property the package decided to stop having.',
+            '- kind: qual',
+            '- evidence: docs/evidence.md#ANCHOR',
+            `- status: ${status}`,
+            '- last_verified: 2026-07-04',
+            fields,
+            '',
+            '### claim: successor',
+            '- claim: The policy that replaced it.',
+            '- kind: qual',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: unbacked',
+            '- last_verified: 2026-08-27',
+            '',
+        ].join('\n');
+    }
+
+    it('accepts a withdrawn entry that names its decision and its successor', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write(
+            'docs/CLAIMS.md',
+            withdrawnLedger('- retired_by: ADR-249\n- superseded_by: successor'),
+        );
+        write('README.md', 'No markers here.\n');
+        expect(run().code).toBe(0);
+    });
+
+    it('rejects a withdrawal that cannot name the decision that retired it', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write('docs/CLAIMS.md', withdrawnLedger('- superseded_by: successor'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('no `retired_by` names the decision');
+    });
+
+    it('rejects retired_by on an entry that is not withdrawn', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write('docs/CLAIMS.md', withdrawnLedger('- retired_by: ADR-249', 'unbacked'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('retired_by is only meaningful on a withdrawn entry');
+    });
+
+    it('still refuses a marker in public prose for a withdrawn claim', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write(
+            'docs/CLAIMS.md',
+            withdrawnLedger('- retired_by: ADR-249\n- superseded_by: successor'),
+        );
+        write('README.md', 'We have no daemon.<!-- claim:retired -->\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain("ledger status is 'withdrawn', not 'backed'");
     });
 
 });

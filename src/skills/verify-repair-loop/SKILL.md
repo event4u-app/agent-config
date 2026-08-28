@@ -15,7 +15,8 @@ packs:
 > **executed verdict** — the project's real test/quality output, scored against a
 > numeric threshold — escalated to a **judge** for qualitative confirmation only
 > *after* the numeric gate passes (staged escalation). The loop is the
-> conversation, not a process: no daemon, no persistent cross-session state. Use
+> conversation, not a process: this loop introduces no resident process of its
+> own and no persistent cross-session state. Use
 > it to drive a change to green when the verdict source is *runtime execution*,
 > not a judge reading a diff.
 
@@ -126,7 +127,7 @@ iterating against a stale contract.
 
 State lives in the conversation, optionally mirrored to a re-read working file —
 **never** a daemon or persistent cross-session store (honors
-[`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md)).
+[`resident-process-governance`](../../../docs/contracts/resident-process-governance.md)).
 
 ## Validation
 
@@ -137,7 +138,11 @@ Before finalizing, confirm:
 3. The loop stopped at `max_attempts`, a plateau, or a judge `apply` — never
    ran unbounded.
 4. The judge saw only the diff + results, dispatched in fresh context.
-5. No daemon / persistent runtime introduced.
+5. No **unsupervised** resident process introduced — and none of the four
+   governance conditions in `resident-process-governance.md` left unmet if a
+   supervised one is. (Amended 2026-08-27, ADR-249: this read "No daemon /
+   persistent runtime introduced" when a daemon was prohibited outright. The
+   check still fires; what it tests moved from existence to governance.)
 
 ## Output format
 
@@ -211,7 +216,7 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 * [`playwright-testing`](../playwright-testing/SKILL.md),
   [`quality-tools`](../quality-tools/SKILL.md) — verdict sources.
 * [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 cap.
-* [`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md) — the
+* [`resident-process-governance`](../../../docs/contracts/resident-process-governance.md) — the
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run
   `agent-config code-graph affected --since <ref>` to scope which symbols a

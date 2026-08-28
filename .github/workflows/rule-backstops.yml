@@ -250,6 +250,21 @@ jobs:
       - name: no auto-merge settings key (ADR-239 namespace ratchet)
         run: ./scripts-run src/scripts/check_no_automerge_key --quiet
 
+      # ADR-249 permits a supervised resident process in core and asserts nothing
+      # about one behaving as described — nothing supervised has shipped. This is
+      # the gate on that gap: a public surface may state the adopted policy and
+      # may not assert, in the present tense, that a resident process IS
+      # supervised / bounded / isolated / auto-restarted while no lifecycle
+      # evidence exists for the revision under test. The evidence side refuses
+      # four things separately rather than checking a file is present, because a
+      # suite that ran on a parent commit, a suite that skipped everything, and a
+      # suite that mocked the process layer are three different lies. No canary
+      # recipe: the corpus is a committed constant (PUBLIC_SURFACES), so a
+      # create-only plant lands in no row; discrimination is proven by the gate's
+      # own --self-test. Reason recorded in src/config/gate-coverage.yml.
+      - name: no unbacked supervision claim on a public surface (ADR-249)
+        run: ./scripts-run src/scripts/check_supervision_claim_atomicity --quiet
+
       # A gate's verdict is a function of the tree, not of the hour it ran. 17
       # `check_*` / `lint_*` scripts read the clock inline until 2026-08-23, so
       # none of their staleness verdicts was reproducible from the commit. The

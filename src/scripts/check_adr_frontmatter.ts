@@ -60,6 +60,20 @@ const ADR_DIR = path.join(REPO_ROOT, 'docs', 'decisions');
  */
 export const REVIEW_TRIGGER_SINCE = '2026-07-25';
 
+/**
+ * Staging date for the `## Not reopened` obligation on a scoped supersession
+ * (road-to-runtime-governance-flip step 1.4). Same shape and same reason as
+ * `REVIEW_TRIGGER_SINCE`: a new structural requirement is an error on records
+ * written after it and a warning on records written before, so the gate does
+ * not retroactively red the corpus it is being added to.
+ *
+ * Two records predate it and warn: `ADR-124` (2026-07-23) and `ADR-209`
+ * (2026-08-03). Both carry a real `supersedes_scope` and neither states its
+ * remainder in a section — measured, not assumed, and left visible as a warning
+ * rather than silenced with a baseline file.
+ */
+export const SCOPED_SUPERSESSION_SINCE = '2026-08-27';
+
 /** Fields every ADR must carry — the shape that already exists in practice. */
 const REQUIRED = ['adr', 'status', 'date', 'decision'] as const;
 
@@ -264,6 +278,7 @@ export function check_one(rel: string, text: string): AdrFinding[] {
     }
     check_reopen_authority(rel, fm, findings);
     check_amendment_shape(rel, fm, findings);
+    check_scoped_supersession(rel, fm, text, findings);
     const parsed = readAdrFrontmatter(text);
     if (parsed !== null) check_descriptive_axes(rel, parsed, findings);
     return findings;
@@ -549,6 +564,79 @@ export function check_amendment_shape(
                 });
             }
         }
+    }
+}
+
+/**
+ * Validate a SCOPED supersession — the `supersedes_scope` / `superseded_scope`
+ * pair documented at `docs/contracts/adr-layout.md:59-60, 105-117`.
+ *
+ * Two invariants, both decidable from one file, both taken from that contract's
+ * own text rather than invented here:
+ *
+ * 1. **A scope with no refs is not a supersession.** The contract says so
+ *    literally — "A scope with no refs is not a supersession and renders as
+ *    `—`" — and `regenerate_index.ts` → `supersessionCell` silently drops the
+ *    scope in that case, so the author's intent disappears with no signal.
+ * 2. **A scoped supersession names what it did NOT reopen.** Narrowing a
+ *    prohibition to one row is precisely when a reader needs the boundary
+ *    stated, and a `## Not reopened` section is where this corpus states it.
+ *    Without the section, "supersedes ADR-NNN, partially" is an assertion with
+ *    no stated remainder, and the remainder is the whole content of a partial
+ *    supersession.
+ *
+ * **What this deliberately does NOT check**, because it is not observable: it
+ * cannot require a scope wherever partial supersession was *intended*. Intent
+ * is not in the file. A whole-document supersession that should have been
+ * scoped passes this check, and closing that gap needs stable section
+ * identifiers rather than prose scopes — recorded as the known limit rather
+ * than implied away.
+ *
+ * road-to-runtime-governance-flip step 1.4, which asked for exactly one thing:
+ * make the required section enforceable, or drop the word "required".
+ */
+export function check_scoped_supersession(
+    rel: string,
+    fm: Record<string, string>,
+    text: string,
+    findings: AdrFinding[],
+): void {
+    const placeholder = (v: string | undefined): boolean =>
+        v === undefined || v.trim() === '' || v.trim() === '—' || v.trim() === '-';
+
+    for (const [scopeKey, refKey] of [
+        ['supersedes_scope', 'supersedes'],
+        ['superseded_scope', 'superseded_by'],
+    ] as const) {
+        if (placeholder(fm[scopeKey])) continue;
+        if (placeholder(fm[refKey])) {
+            findings.push({
+                file: rel,
+                level: 'error',
+                message:
+                    `\`${scopeKey}\` is set but \`${refKey}\` names no ADR. A scope with no refs ` +
+                    'is not a supersession (adr-layout § Frontmatter) — the index renders it as ' +
+                    '`—` and the scope text is lost. Name the record, or drop the scope.',
+            });
+        }
+    }
+
+    // The "Not reopened" obligation is on the record that PERFORMS the scoped
+    // supersession, never on the one that receives it: the successor is what
+    // has to state the remainder.
+    if (placeholder(fm['supersedes_scope'])) return;
+    if (!/^#{2,3}\s+Not reopened\s*$/im.test(text)) {
+        const date = fm['date'] ?? '';
+        const staged = date !== '' && date < SCOPED_SUPERSESSION_SINCE;
+        findings.push({
+            file: rel,
+            level: staged ? 'warn' : 'error',
+            message:
+                'a scoped supersession (`supersedes_scope`) must carry a `## Not reopened` ' +
+                'section naming what the narrowing leaves standing. Partially superseding a ' +
+                'record without stating the remainder reads as a general relaxation, which is ' +
+                'the reading a safety floor cannot survive.',
+        });
     }
 }
 

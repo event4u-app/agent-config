@@ -121,8 +121,20 @@ once.
       `docs/contracts/audit-log-v1.md` as the already-sanctioned evidence-state
       precedent. Whether the adaptive class splits in two (E8) is decided here.
       Explicitly out of scope: the `no-runtime-daemon` public claim.
-      verify: `grep -c 'claim:no-runtime-daemon' README.md` still returns 1 and
-      `docs/CLAIMS.md` shows no diff for that entry.
+      verify: `grep -c 'claim:no-runtime-daemon' README.md` returns **0** and
+      `docs/CLAIMS.md` shows no diff for that entry attributable to THIS
+      roadmap.
+      <!-- corrected 2026-08-27: the clause read "still returns 1", which was
+      true when written and is now false. `road-to-runtime-governance-flip`
+      Phase 2 retired the claim under ADR-249 — the ledger entry moved from
+      `backed` to the new `withdrawn` status and the README marker was removed
+      as part of that roadmap's delivery Group B. The clause's PURPOSE is
+      unchanged and is the reason it is repaired rather than deleted: it is a
+      no-collateral-damage guard asserting that step 0.3 does not touch the
+      public claim while labelling state classes. It was keyed to a literal
+      count, and a guard keyed to a count breaks the moment a different
+      roadmap legitimately changes it. The count is now 0 and the guard reads
+      against the post-retirement state. -->
 - [ ] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private

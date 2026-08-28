@@ -31,8 +31,37 @@ estate_offset_exempt: "The offset is the governance roadmap flipping ready to dr
 > decision and the surface census is
 > `agents/evidence/analysis/runtime-reversal-owner-decision.md`.
 
-> **Hard dependency:** `road-to-runtime-governance-flip.md` Phase 1. Nothing
-> here is buildable while `ADR-124:111` stands.
+> **Hard dependency — DISCHARGED 2026-08-27.** `road-to-runtime-governance-flip.md`
+> Phase 1 landed and that roadmap is closed. **ADR-249** supersedes `ADR-124:111`
+> in scope — a supervised resident process is permitted in core — and also amends
+> `ADR-109:28`'s "no daemon" clause, which this note did not name and which would
+> have blocked the collector on its own. Both targets carry the reciprocal
+> `superseded_by` + `superseded_scope`.
+>
+> **What the discharge does NOT hand over.** Three obligations arrive with it,
+> and each is a condition on the collector rather than a permission:
+>
+> 1. **The four governance conditions** in
+>    `docs/contracts/resident-process-governance.md` (class **P1**) — supervised,
+>    scoped writes, stoppable, claim-consistent. A process missing any one is
+>    class **P2** and still prohibited.
+> 2. **The same-revision activation guard.** A council found the
+>    documentation-ordering rule *necessary but not sufficient*: removing a public
+>    absence claim does not stop an **older** revision from activating a process.
+>    That guard does not exist yet and is this roadmap's to build — it is
+>    governance condition 4, and ADR-249 records it here rather than leaving it to
+>    whichever change ships first.
+> 3. **The lifecycle evidence contract.** `check_supervision_claim_atomicity`
+>    already refuses any present-tense supervision claim on a public surface
+>    unless `internal/reports/supervision-lifecycle.json` names a suite, records
+>    THIS revision, sets `processes_exercised: true`, and ran more cases than it
+>    skipped. The successor claim
+>    `resident-process-permitted-under-governance` sits at `status: unbacked` in
+>    `docs/CLAIMS.md` and may not be markered in public prose until that evidence
+>    exists. Producing it is what closes this roadmap.
+>
+> Nothing here is buildable while its own blockers stand; the *governance*
+> blocker is no longer one of them.
 
 ## Why this is its own file
 

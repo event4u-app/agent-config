@@ -1,61 +1,55 @@
 ---
-stability: beta
-keep-beta-until: 2026-08-17
+stability: superseded
+superseded_by: resident-process-governance.md
 ---
 
-# No-Runtime Boundary Contract
+# No-Runtime Boundary Contract — SUPERSEDED
 
-> **Audience:** Every Mission-Mode decision, skill author, and recipe reviewer.
-> Read this before asking "is X allowed in a mission step?"
+> **This contract is superseded.** Read
+> [`resident-process-governance.md`](resident-process-governance.md) instead.
+>
+> Superseded 2026-08-27 by
+> **[ADR-249](../decisions/ADR-249-supervised-resident-process-permitted-under-governance.md)**,
+> a maintainer-directed reversal: a **supervised** resident process is permitted
+> in core under four governance conditions. This document's blanket prohibition
+> on background processes no longer holds.
 
-AC is a **file-first, no-runtime suite** — skills and missions emit text and
-files; they do not spawn processes, own state stores, or poll the environment.
-This contract makes that boundary explicit for the Mission-Mode layer.
+This file is kept as a pointer rather than deleted. Fifty files across the tree
+referenced it, and a deleted contract turns every one of them into a dead link
+that a reader resolves by guessing.
 
-See also: `lethal-trifecta-guard` (no private-data + untrusted-content +
-external-comms in one autonomous path), and the internal agent-memory sunset
-decision (cross-session persistent stores rejected as architecturally unsound
-and violating the no-runtime principle).
+## What moved, and what did not
 
----
-
-## Allowed
-
-| Category | Examples | Notes |
-|---|---|---|
-| **Codegen / file emit** | Write a migration file, emit a `UPGRADE.md` plan, produce a diff patch | The canonical mission output |
-| **File I/O** | Read `composer.json`, write `.work-state.json`, append to a report | Single-invocation scope only |
-| **Multi-turn prompting** | Agent asks user to run `php artisan migrate`, user pastes result back | Human stays in the loop; agent interprets the pasted output |
-| **git-as-state** | `git commit -m "mission:upgrade step=11 status=ok"`, `git revert HEAD`, `git reset --soft HEAD~1` | AC shells out to git constantly — structured commit messages are logging, not a daemon; rollback is `git revert` / branch reset on a provisional `mission/…` branch |
-| **Shell invocation (single-shot)** | `composer install`, `php artisan test --filter=…` run once per step and their output piped back | One-shot, result returned immediately; never a background job |
-| **Report / plan files** | Write `agents/evidence/mission-upgrade-decision.md`, emit a breaking-change checklist | Authoring-time output, not a runtime artifact |
-
----
-
-## Prohibited
-
-| Category | Why |
+| This document said | Now |
 |---|---|
-| **Background processes / daemons** | No spawned subprocesses that outlive the current agent turn |
-| **Cross-session persistent state stores** | No SQLite, pgvector, MCP memory servers, Redis, or any store that persists beyond the git working tree — agent-memory layer sunset applies here. **Carve-out (ADR-124 § 6): a gitignored, deterministic, rebuildable build/index artifact under `agents/runtime/state/` is a build output, not a state store** — it carries no authority, is reproducible from the working tree, and is never auto-written memory. State-store test: if deleting the artifact changes *what* the tool can answer rather than only *how fast* it answers, it is a state store and prohibited (a code-graph cache passes — deletion only slows recompute; a vector/embedding index fails — it enables query semantics absent from source, and stays Class C). |
-| **Event loops / polling** | No `while true; do …; done`, no `inotifywait`, no cron-inside-mission |
-| **Auto-PR / auto-push** | Hard-Floor (`non-destructive-by-default`): missions never push to remote or open PRs autonomously; those gates require explicit user confirmation every turn |
-| **Network egress from mission scripts** | Mission scripts may not initiate outbound HTTP calls; skills that need network access declare `allowed_tools` explicitly and go through the normal lethal-trifecta gate |
+| **Background processes / daemons** — prohibited outright | **Governed.** A supervised process is class **P1** in the successor and is permitted under four conditions; an unsupervised one is class **P2** and stays prohibited. |
+| **Cross-session persistent state stores** — prohibited | **Unchanged.** Class **P3**. The 2026-06-14 agent-memory / Layer-2 sunset is explicitly **not reopened** (ADR-249 § Not reopened). The ADR-124 § 6 build-artifact carve-out and its state-store test survive verbatim. |
+| **Event loops / polling** | Folded into P1/P2: the question is now whether the loop has a supervisor, a declared write scope and a stop path — not whether it exists. |
+| **Auto-PR / auto-push** | **Unchanged**, and never this contract's to decide — it is the `non-destructive-by-default` Hard Floor. |
+| **Network egress from mission scripts** | **Unchanged.** |
+| The whole **Allowed** table | **Unchanged**, carried over almost verbatim. |
 
----
+## Two things a citation of this file should know
 
-## Gray — requires council review before adopting
+**Its literal scope was Mission-Mode.** The header read *"every Mission-Mode
+decision, skill author, and recipe reviewer"*, and the prohibited row spoke of
+subprocesses outliving *"the current agent turn"*. It was nonetheless cited as
+the suite's general no-runtime authority — including by
+`src/scripts/validate_reach_prescriptions.ts:13`. `ADR-124:34` had already noticed
+that *"the 'no runtime' identity rests on instruments whose literal scope is
+narrower"*. The successor is **suite-wide and says so**, which is a deliberate
+widening rather than an inherited one.
 
-| Pattern | Risk | Gate |
-|---|---|---|
-| **Conditional branching on prior step outputs** | Missions could become implicit state machines, defeating the no-runtime constraint | Must be expressed as a skill decision tree with explicit LLM judgment — not a script `if`/`else`; council sign-off required per mission |
-| **File-based state within a single invocation** | `.work-state.json` already exists and may gain a `mission_history` key — that is allowed; adding new control-flow primitives (loops, conditional keys that drive execution) is **not** | Extension of `.work-state.json` for logging is OK; adding execution-control semantics requires a new ADR |
-| **Nested sub-missions** | Could create unbounded depth; Phase 1 PoC must first prove a flat sequence is sufficient | Defer until Phase 1 evidence shows a real need |
+**Its beta window had expired.** The frontmatter carried
+`keep-beta-until: 2026-08-17` — ten days before it was superseded — while it was
+being cited as settled. The successor ships `stability: stable`.
 
----
+**A citation of this file is therefore not automatically re-scoped.** Read it
+against the successor's class table rather than assuming the mapping above
+covers your case.
 
-## Decision authority
+## Where the original text is
 
-A mission step that is unclear against this contract goes to the AI Council
-(`./scripts-run src/scripts/council_cli`) before any build work starts.
-The council verdict becomes an ADR if it changes this table.
+Git history, and — for the public claim that rested on it —
+`docs/CLAIMS.md`'s `no-runtime-daemon` entry, preserved at `status: withdrawn`
+with a `retired_by: ADR-249` pointer rather than deleted.

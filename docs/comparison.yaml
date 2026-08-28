@@ -27,14 +27,28 @@
 # CI actively defended. A pointer can go stale and be re-derived; a pin makes
 # staleness the passing condition.
 
-rows:
-  - claim: "No resident runtime — no background daemon, no state database or service, no auto-write memory; deterministic, rebuildable file indexes only."
-    our_evidence: "docs/contracts/no-runtime-boundary.md#file-first"
-    their_evidence: "Swarm-runtime tools in this category ship a background process and/or a resident state store by design; that is an architectural fact of the runtime approach, not a defect."
-    checkable: true
-    failure_mode: >-
-      A background process keeps running after you stop using it, holds state you did not write, and has to be kept alive and upgraded.
+# ROW REMOVED 2026-08-27 — the runtime-absence row.
+# road-to-runtime-governance-flip Phase 3.3. It published an absence claim as
+# `checkable: true`, and the claim it rested on was retired the same day:
+# ADR-249 permits a supervised resident process in core, and
+# `docs/CLAIMS.md`'s `no-runtime-daemon` entry now carries `status: withdrawn`.
+# A published `checkable: true` row is exactly the surface that must not carry a
+# claim the repository has decided against, and its `failure_mode` argued
+# against daemons as a competitive position — an argument this package would now
+# have to answer about itself.
+#
+# NO SUCCESSOR ROW IS WRITTEN HERE, and the default is deterministic rather than
+# a later judgement: no row is published unless a lifecycle suite fully supports
+# the template it would use. Nothing supervised has shipped, so nothing supports
+# one. `road-to-supervised-telemetry-collector` owns that decision; if its suite
+# never lands, the correct outcome is no row at all rather than a weaker one.
+#
+# The removal is recorded here rather than done silently because a comparison
+# table that quietly loses a row reads as an oversight. The retired claim itself
+# is preserved at `status: withdrawn` in the ledger with its `retired_by`
+# pointer, per the repository's retire-never-delete lifecycle.
 
+rows:
   - claim: "Capability/benchmark results are published — including the runs where the package changed nothing."
     our_evidence: "docs/benchmark.md"
     their_evidence: "A category headline figure (e.g. an '84.8%' score) appears across marketing surfaces with no reproducible methodology published — so it cannot be verified either way."

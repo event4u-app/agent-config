@@ -27,6 +27,28 @@
   overstates what is open and leaves the claim quietly available to be
   re-argued; the honest lifecycle ends here. Same enforcement as `unbacked`:
   a `resolved-null` claim may not carry a marker in public prose.
+- `status: withdrawn` entries are **closed by DECISION, not by measurement**:
+  the claim was true and asserted, and the package decided to stop having the
+  property. No threshold was missed and nothing failed. The status exists
+  because the other two closures both misstate the reason — filing a
+  decision-withdrawal as `unbacked` says someone should go bind it, and filing it
+  as `resolved-null` says a measurement was attempted and came back empty. A
+  reader scanning the status column in `docs/proof.md` gets the real cause, which
+  is the whole point of having a column. Same enforcement as the other two: a
+  `withdrawn` claim may not carry a marker in public prose.
+
+  **The definition is deliberately narrow, and stays narrow.** `withdrawn` is
+  *a previously asserted claim retired by an explicit reversal decision, with no
+  evidentiary failure*. It is not for a claim that was never backed
+  (`unbacked`), not for one that missed a pre-registered threshold
+  (`resolved-null`), and not for one that became moot because a scope narrowed —
+  that case has no status yet and should get its own rather than being absorbed
+  here. A fourth status that becomes a dumping ground is worse than three that
+  are wrong in a knowable way.
+
+  Every `withdrawn` entry carries **`retired_by`**, naming the decision record
+  that retired it. Machine-checked: a withdrawal that cannot name its decision is
+  an unexplained deletion wearing a status.
 
 ## Entry schema
 
@@ -35,9 +57,10 @@
 - claim: <the sentence, roughly as it appears publicly>
 - kind: quant | qual | comparative
 - evidence: <pointer>            # see grammar below
-- status: backed | unbacked | resolved-null
+- status: backed | unbacked | resolved-null | withdrawn
 - last_verified: <YYYY-MM-DD>
-- superseded_by: <kebab-id>      # optional; resolved-null entries only
+- retired_by: <ADR-NNN>          # required on withdrawn entries; the decision that retired it
+- superseded_by: <kebab-id>      # optional; resolved-null and withdrawn entries only
 - non_inference: <what this data does NOT license>   # optional; ratcheted on backed quant
 ```
 
@@ -67,7 +90,7 @@ Three rules, all machine-checked by `check_claims`:
 
 - It may name only an id that exists in this ledger. A dangling successor sends
   the reader nowhere, which is worse than no link.
-- It is only meaningful on `resolved-null`. On a `backed` or `unbacked` entry it
+- It is only meaningful on `resolved-null` and `withdrawn`. On a `backed` or `unbacked` entry it
   claims a closure that never happened, and is rejected.
 - It never points at its own entry.
 
@@ -121,8 +144,19 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: The whole layer is compiled into host agents with zero runtime daemon.
 - kind: qual
 - evidence: docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite
-- status: backed
+- status: withdrawn
 - last_verified: 2026-07-04
+- retired_by: ADR-249
+- superseded_by: resident-process-permitted-under-governance
+- non_inference: WITHDRAWN BY DECISION, 2026-08-27, not by a failed measurement. The property was true on 2026-07-04 when it was last verified and the evidence pointer still resolves; the package decided to stop having it. ADR-249 permits a supervised resident process in core under four governance conditions, superseding ADR-124's Class-B row and ADR-109's no-daemon clause. Read this entry as "we no longer claim this", never as "we tried to show this and could not" -- the ledger's other closure, resolved-null, is the one that means the latter. The successor is deliberately unbacked rather than backed: it records a POLICY, and no supervised process has shipped for a property claim to be about.
+
+### claim: resident-process-permitted-under-governance
+- claim: The suite's doctrine permits a supervised resident process in core, under the four governance conditions ADR-249 states -- supervised, scoped writes, stoppable, and claim-consistent.
+- kind: qual
+- evidence: docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md
+- status: unbacked
+- last_verified: 2026-08-27
+- non_inference: This records a POLICY and licenses nothing about a property. Nothing supervised ships today, so this entry asserts no supervision guarantee, no lifecycle guarantee, no isolation guarantee and no reliability guarantee -- and it may not be markered in public prose while it is unbacked, which is the enforcement that keeps the distinction real rather than stylistic. Binding it needs the lifecycle evidence road-to-supervised-telemetry-collector is written to produce; until that exists the honest public statement is the policy, never the property.
 
 ### claim: red-before-production-edit-rate
 - claim: The share of work-engine runs that carry an observed failing test for the behavior under change BEFORE the first production edit rises after the Phase-1 instruction corrections and the Phase-4 RED-run record land. PRE-REGISTERED 2026-08-26, before any post-change measurement exists.
