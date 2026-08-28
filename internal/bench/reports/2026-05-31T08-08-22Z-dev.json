@@ -256,5 +256,13 @@
     "selection": "fail",
     "quality": "not_collected",
     "overall": "partial"
+  },
+  "cache": {
+    "read_write_ratio": {
+      "unavailable": "this report predates the cache-block requirement (road-to-runtime-context-floors step 4.1); its runner recorded no cache_read/cache_creation token fields, so the ratio cannot be computed from it"
+    },
+    "stable_prefix_share": {
+      "unavailable": "this report predates the cache-block requirement (road-to-runtime-context-floors step 4.1); no dispatch in this run recorded payload_hash, so the stable-prefix share cannot be computed from it"
+    }
   }
 }
