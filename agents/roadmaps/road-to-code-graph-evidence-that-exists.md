@@ -158,7 +158,21 @@ by a measurement of absent code.
       added here.
       verify: a fixture query against a stale graph returns a degraded verdict naming the staleness; against an absent graph, `unavailable`.
 - [~] **3.4 The ADR-246 reopen, if the evidence supports it.** Deferred by
-      construction: this step is a decision for the owner on fresh evidence,
+      construction. **Disposition decided by AI council 2026-08-28 (2/2
+      convergent): CARRY** — a named follow-up stub created in the same change
+      that lands the measurement, so the reopen keeps a home in the active
+      estate rather than becoming an indefinite deferral. The preservation test
+      routes this to the council because carrying preserves the item; only a
+      `[-]` cancellation would be owner-reserved.
+      **Both seats attached the same condition, adopted: a carry without a named
+      owner, an evidence trigger, and a binding review event is "cancel with
+      extra steps", not a carry.** The seats disagreed on one point and the
+      narrower reading is taken: one would drop the follow-up if the measurement
+      is an honest null across every class; the other holds that the follow-up
+      then OWNS the explicit decision that the evidence does not justify a
+      reopen, because silently dropping it recreates the ambiguity the
+      disposition exists to remove. The follow-up is created either way.
+      Original text: this step is a decision for the owner on fresh evidence,
       taken in its own change under `decision-revisit-gate`, never a checkbox
       flipped by the run that produced the evidence. The roadmap that measures
       a lock does not get to lift it.
@@ -176,7 +190,7 @@ by a measurement of absent code.
 
 ### blocker: what-the-pre-registered-bar-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 0.2, and through it Phase 2. Phase 1's corpus is built under
   any answer.
@@ -198,10 +212,29 @@ by a measurement of absent code.
 - **If you do nothing:** the measurement runs without a bar and its result is
   argued about afterwards, which is the shape a pre-registration exists to
   prevent.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(b)**, per-question-class bars
+  with the verdict reported per class. Rationale: the decision this evidence
+  feeds is a routing decision per class, so a single aggregate answers a question
+  nobody is asking, and (c) is the "cannot be wrong because it asserts nothing"
+  shape this repository treats as a failure mode rather than as safety.
+  **Non-negotiable constraint both seats attached, adopted:** the classes AND
+  their bars are locked BEFORE any measurement run — without that, (b) is data
+  mining with a per-class label.
+  Dissent, recorded: per-class reporting alone is not a decision rule. One seat
+  proposed a flat "≥5 questions per class" floor; the other rejected an
+  arbitrary count and asked instead for pre-registered rules covering ties,
+  conflicting class verdicts, and what counts as a practically meaningful
+  difference. **The second reading is adopted** — a count is a proxy for
+  adequacy and the rules are the thing itself — and 0.2's pre-registration
+  therefore states the tie and conflict rules explicitly.
+  `revisit-if`: the corpus cannot support stable class-level conclusions even
+  after classes are merged pre-measurement, or classes are found to have been
+  selected post-hoc.
 
 ### blocker: whether-a-non-comparable-number-is-worth-publishing
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 2.2's claims entry only. The report itself lands either way.
 - **What to do:** pick exactly one — (a) publish it as a `backed` claim with
@@ -218,6 +251,23 @@ by a measurement of absent code.
   different kinds removes the arithmetic rather than warning against it.
 - **If you do nothing:** the fresh number lands in `internal/` where the
   published surface never sees it, and the stale claim stays the only answer.
+- **Resolution (AI council, 2026-08-28 — anthropic + openai, 2 rounds, 2/2
+  convergent, subscription transport, $0.00):** **(c)**, a claim of a distinct
+  kind. Rationale: the failure both other options trade against is a reader
+  computing a delta between two incomparable runs, and making them different
+  kinds removes the arithmetic rather than warning against it.
+  **Constraint both seats attached, adopted:** a label is not enough — the
+  incomparability has to be structural. The claim NAME must differ (one seat's
+  example: "monorepo corpus" against "multi-repo corpus"), and the entry must
+  carry build identity, corpus, protocol, metric definition and an explicit
+  `not-comparable-to` pointer. A reader who skips a note still cannot compute
+  the delta if the two claims are not the same claim.
+  Dissent, recorded: if `docs/CLAIMS.md`'s schema cannot structurally enforce
+  those distinctions, one seat would fall back to **(b)** — publish the report
+  and make no claims entry — rather than ship a comparable-looking pair. That
+  fallback is the `revisit-if`.
+  `revisit-if`: the claims schema cannot carry the distinguishing metadata, or
+  the new corpus turns out to be comparable to the 2026-07-28 run after all.
 
 ## Acceptance Criteria
 
