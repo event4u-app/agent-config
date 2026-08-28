@@ -442,6 +442,51 @@ jobs:
             fi
           }
 
+      - name: No mid-session mutation of a prefix-stable surface
+        # The runtime half of prefix stability (road-to-runtime-context-floors
+        # 1.2). The surface list is LOADED from _lib/prefix_stable_surfaces.ts,
+        # the same module check_preamble_payload_budget resolves its census
+        # roots from — two lists describing one boundary is the drift shape this
+        # repository already pays for. Exit 2 is degraded-advisory, matching
+        # every sibling step.
+        run: |
+          ./scripts-run src/scripts/check_prefix_stable_mutation || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_prefix_stable_mutation internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Every model-facing lossy transform declares its loss class
+        # road-to-runtime-context-floors 3.2. Scoped to model-facing paths by
+        # council verdict: failing every transform in src/ buys a first-run
+        # backlog whose usual answer is a broad allowlist, and this repository
+        # has measured an allowlist emptying a gate.
+        run: |
+          ./scripts-run src/scripts/check_loss_class_declared || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_loss_class_declared internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Benchmark reports carry the required cache fields
+        # road-to-runtime-context-floors 4.1. Uncomputable is a stated reason,
+        # never a blank and never a zero.
+        run: |
+          ./scripts-run src/scripts/check_benchmark_report_fields || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_benchmark_report_fields internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
       - name: The authoring-search record is well-formed where it exists
         # Two halves with different teeth. STRUCTURAL is hard: a present
         # `composition_review` whose candidate resolves to no artefact, or whose

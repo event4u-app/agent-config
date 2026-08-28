@@ -194,6 +194,12 @@ tasks:
       - task: check-gate-completeness
       - task: check-suppression-hygiene
       - task: check-review-dispositions
+      # road-to-runtime-context-floors — the three runtime floors: no
+      # mid-session mutation of a cached-prefix surface, every model-facing
+      # lossy transform declares its class, and the cache fields are required.
+      - task: check-prefix-stable-mutation
+      - task: check-loss-class-declared
+      - task: check-benchmark-report-fields
       - task: lint-composition-review
       - task: lint-evidence-artifacts
       - task: lint-plan-risk-register
