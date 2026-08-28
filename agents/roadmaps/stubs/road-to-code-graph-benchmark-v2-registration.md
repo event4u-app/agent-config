@@ -98,3 +98,22 @@ and a v2 buys precision on a result that pointed one way in every valid class.
 Promote when a decision actually turns on the per-class detail — most likely a
 reopen of ADR-246, which would need the `path-between` class to have measured
 something.
+
+## Trigger carried from the cancelled step 3.2
+
+`road-to-code-graph-evidence-that-exists` step 3.2 was **cancelled by
+measurement** on 2026-08-28: it was conditional on the graph winning a class,
+and the v1 run found none. AI council the same day (2/2) added the condition
+under which that work becomes live again, recorded here so the cancellation is
+not permanent by accident:
+
+> If a v2 registration produces a **winning class**, that creates a NEW
+> consumer-integration step — structural candidate selection, provenance
+> ("which source answered"), stale/absent fallback, and fixtures — rather than
+> reviving the cancelled one.
+
+Both seats were explicit that the fallback half must **not** be built ahead of
+that trigger: step 3.3 already enforces stale/absent degradation at the CLI
+boundary, and no route reaches the composition-before-creation consumer through
+the graph, so building its escape hatch first is machinery for a path nothing
+takes.

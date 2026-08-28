@@ -59,6 +59,38 @@ AND the repo contains a detectable index:
 3. **Fall back to `grep`/read** only for what the index does not cover, and say
    so ("the index has no entry for X, so I grepped").
 
+## What the measurement says — no class is graph-first (2026-08-28)
+
+```
+NO QUESTION CLASS IS ROUTED GRAPH-FIRST ON THE STRENGTH OF A MEASUREMENT.
+THE 2026-08-28 RUN FOUND NONE THAT QUALIFIED. QUERY-FIRST IS AN ORDERING
+HEURISTIC — AN INDEX THAT EXISTS IS CHEAP TO ASK — NEVER A CLAIM THAT THE
+INDEX ANSWERS BETTER THAN GREP.
+```
+
+A pre-registered in-repo benchmark
+(`internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md`) scored the
+**native** engine against disciplined `git grep` on 16 questions in five
+classes. **Zero of four graph-shaped classes met the pre-registered win
+criterion**; `references` lost by 66.7 pp. One class (`path-between`) is VOID —
+both arms measured nothing — and the literal-string controls fail by
+construction against a symbol index, so no overall engine verdict is derived.
+
+Two limits on how far that reaches, and both matter here:
+
+- **It measured the native engine on this repository's own TypeScript.** It says
+  nothing about a **consumer-shipped** index (a SCIP index, a committed
+  `graph.json`), which is what the Iron Law above is mostly about and which this
+  benchmark never touched.
+- **It changes routing, never permission.** No setting default moved and no
+  dependency moved between `devDependencies` and `dependencies`; that is
+  ADR-246's question, reopened only under `decision-revisit-gate`.
+
+So the Iron Law stands unchanged — ask an index that already exists before
+grepping blind, and say which source answered. What it does **not** license is
+telling a reader the graph is the better answer. On this repository's own code,
+measured, it was not.
+
 ## When NOT to fire
 
 - No such index in the repo — normal `grep`/read is the right first move.

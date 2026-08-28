@@ -77,6 +77,31 @@ Every answer built with this skill MUST:
   That is the engine being honest, not broken — do not "resolve" them yourself
   by guessing.
 
+## Measured, and it did not win (2026-08-28)
+
+Pre-registered, published whichever way it landed:
+`internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md`. The native
+engine scored against disciplined `git grep` over three in-repo TypeScript
+roots, 16 questions, per-class bars fixed before the run.
+
+| Class | grep recall | graph recall | verdict |
+|---|---|---|---|
+| `callers` | 1.000 | 1.000 | NULL — precision floor failed |
+| `transitive-impact` | 0.611 | 0.500 | NULL |
+| `path-between` | 0.000 | 0.000 | **VOID** — both arms measured nothing |
+| `references` | 1.000 | 0.333 | NULL |
+
+**No class is graph-first.** Query the index first because an index that already
+exists is cheap to ask and its answer is structured — not because it answers
+better. When it returns nothing, that is the common case, and grep is not a
+grudging fallback but the arm that won every valid class on this corpus.
+
+Scope, stated so this table is not over-read: it measured the **native** engine
+on **this repository's TypeScript**, with a corpus of 16 questions. It is not
+comparable to the 2026-07-28 external-corpus run, it says nothing about a
+consumer-shipped SCIP index, and it withholds an overall engine verdict because
+two of its five classes measured the instrument rather than the engine.
+
 ## Do NOT
 
 - Do NOT rebuild a **fresh** consumer-shipped index — query it (interop

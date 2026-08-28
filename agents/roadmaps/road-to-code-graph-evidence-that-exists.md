@@ -144,16 +144,37 @@ by a measurement of absent code.
 
 ## Phase 3 — What the result is allowed to change
 
-- [ ] **3.1 Route, never permit.** If the repaired engine wins on a question
+- [x] **3.1 Route, never permit.** If the repaired engine wins on a question
       class, the routing rule and the code-intelligence skill state that class
       as a graph-first case. **The benchmark changes routing; it never changes
       permission** — the default and the dependency question stay ADR-246's.
       verify: the skill and rule name the winning classes, and neither file changes any setting default; checkable from the diff.
-- [ ] **3.2 The consumers that already exist get the better answer.** Where
-      the graph wins, the composition-before-creation `new` verdict cites a
-      structural closest candidate rather than a textual one.
-      verify: a fixture `new` verdict cites a candidate obtained from the graph query surface, and falls back to the textual path with a stated reason when the graph is stale or absent.
-- [ ] **3.3 A stale or absent graph never produces a confident answer.** The
+- [-] **3.2 The consumers that already exist get the better answer.** —
+      **CANCELLED BY MEASUREMENT, 2026-08-28.** The step is conditional ("Where
+      the graph wins"), and the pre-registered run found the graph won **zero**
+      classes: `callers` NULL (precision floor failed), `transitive-impact` NULL
+      (−11.1 pp), `references` NULL (−66.7 pp), `path-between` VOID. There is no
+      winning class whose consumer could be switched to a structural candidate,
+      so nothing was built and nothing is claimed.
+
+      AI council 2026-08-28 (anthropic + openai, 1 round, $0.00, **2/2
+      convergent**, after one seat first failed on a transport error and the run
+      was retried rather than accepted degraded). Both seats rejected `[x]`
+      outright: the step is written as a behaviour change with implementation-
+      level verification, not as a decision gate, so "the benchmark completed;
+      the roadmap step did not". Both also rejected building the verify's second
+      half — the stale/absent textual fallback — on its own: step 3.3 already
+      enforces that degradation at the CLI boundary, and no route reaches this
+      consumer through the graph, so adding the machinery there is "gold-plating
+      a dead branch" with no evidence of value. `[~]` deferred was rejected as
+      deferring a decision the measurement already made.
+
+      **v2 trigger, recorded so this cancellation is not permanent by accident:**
+      if a v2 registration produces a winning class, that creates a NEW
+      consumer-integration step — structural selection, provenance, stale/absent
+      fallback and fixtures — rather than reviving this one. Carried in
+      `agents/roadmaps/stubs/road-to-code-graph-benchmark-v2-registration.md`.
+- [x] **3.3 A stale or absent graph never produces a confident answer.** The
       existing three-state freshness verdict is surfaced at every consumer
       added here.
       verify: a fixture query against a stale graph returns a degraded verdict naming the staleness; against an absent graph, `unavailable`.
