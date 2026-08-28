@@ -25,7 +25,6 @@
  *     [--max-age-days <n>] [--summary-line]
  */
 import * as fs from 'node:fs';
-import { homedir } from 'node:os';
 import * as path from 'node:path';
 
 import { buildLedger } from './_lib/asset_delivery_ledger.js';

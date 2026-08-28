@@ -89,15 +89,19 @@ describe("AC-4 — the roadmap's own verify, as a fixture carrier failure", () =
 });
 
 describe('delivery-manifest schema', () => {
+    interface EntrySchema {
+        required: string[];
+        properties: { criticality: { enum: string[] } };
+    }
     const schema = JSON.parse(
         fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'schemas', 'delivery-manifest.schema.json'), 'utf-8'),
-    ) as Record<string, any>;
+    ) as { definitions: { entry: EntrySchema } };
 
     it('requires the classification field on every entry', () => {
-        expect(schema['definitions']['entry']['required']).toContain('criticality');
+        expect(schema.definitions.entry.required).toContain('criticality');
     });
 
     it("the schema enum and the resolver's enum cannot drift", () => {
-        expect(schema['definitions']['entry']['properties']['criticality']['enum']).toEqual([...DELIVERY_CRITICALITY]);
+        expect(schema.definitions.entry.properties.criticality.enum).toEqual([...DELIVERY_CRITICALITY]);
     });
 });
