@@ -91,6 +91,13 @@ roots, 16 questions, per-class bars fixed before the run.
 | `path-between` | 0.000 | 0.000 | **VOID** — both arms measured nothing |
 | `references` | 1.000 | 0.333 | NULL |
 
+**The rule's own wording was corrected by this result.** `external-code-graph-interop`
+used to open by saying a committed index answers "far more precisely than a fresh
+`grep`". That was never measured, and when it was, it was false for the native
+engine on this repository's own code. The rule now gives the reasons that survive
+measurement — an index that exists is already built and structured, so it is the
+cheap first question — and drops the precision claim its own benchmark refuted.
+
 **No class is graph-first.** Query the index first because an index that already
 exists is cheap to ask and its answer is structured — not because it answers
 better. When it returns nothing, that is the common case, and grep is not a

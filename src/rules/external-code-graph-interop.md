@@ -24,13 +24,13 @@ obligation_frequency: "per-turn"
 # External Code-Graph Interop
 
 Some repos commit a pre-built code-intelligence index — a `graph.json`-shaped
-artifact or a SCIP index (`index.scip`, `*.scip`). When one exists, it already
-answers "who calls X", "where is Y used", "what does this import" far more
-precisely than a fresh `grep`. This suite is an **orchestrator first, owner
-where it wins** (ADR-124): query a consumer-shipped index when it is present
-and fresh; where none is shipped or ours is measurably better, the suite's own
-native code-graph engine (default-off, benchmark-gated) covers the gap. Either
-way — query first, grep as fallback, and name which source answered.
+artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is already
+built and structured, so it is the cheap first question for "who calls X",
+"where is Y used", "what does this import". This suite is an **orchestrator
+first, owner where it wins** (ADR-124): query a consumer-shipped index when it
+is present and fresh; where none is shipped, the native engine (default-off,
+benchmark-gated) covers the gap. Either way — query first, grep as fallback,
+and name which source answered.
 
 ## The rule
 
@@ -59,37 +59,16 @@ AND the repo contains a detectable index:
 3. **Fall back to `grep`/read** only for what the index does not cover, and say
    so ("the index has no entry for X, so I grepped").
 
-## What the measurement says — no class is graph-first (2026-08-28)
+## No class is graph-first — measured 2026-08-28
 
 ```
-NO QUESTION CLASS IS ROUTED GRAPH-FIRST ON THE STRENGTH OF A MEASUREMENT.
-THE 2026-08-28 RUN FOUND NONE THAT QUALIFIED. QUERY-FIRST IS AN ORDERING
-HEURISTIC — AN INDEX THAT EXISTS IS CHEAP TO ASK — NEVER A CLAIM THAT THE
-INDEX ANSWERS BETTER THAN GREP.
+QUERY-FIRST IS AN ORDERING HEURISTIC: AN INDEX THAT EXISTS IS CHEAP TO ASK.
+IT IS NEVER A CLAIM THAT THE INDEX ANSWERS BETTER THAN GREP.
+ZERO OF FOUR GRAPH-SHAPED CLASSES MET THE PRE-REGISTERED WIN CRITERION, SO NO
+CLASS IS ROUTED GRAPH-FIRST. ROUTING CHANGES; PERMISSION DOES NOT.
+THAT RUN MEASURED THE NATIVE ENGINE ON THIS REPO'S TYPESCRIPT — IT SAYS NOTHING
+ABOUT A CONSUMER-SHIPPED INDEX, WHICH IS MOST OF WHAT THE RULE ABOVE GOVERNS.
 ```
-
-A pre-registered in-repo benchmark
-(`internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md`) scored the
-**native** engine against disciplined `git grep` on 16 questions in five
-classes. **Zero of four graph-shaped classes met the pre-registered win
-criterion**; `references` lost by 66.7 pp. One class (`path-between`) is VOID —
-both arms measured nothing — and the literal-string controls fail by
-construction against a symbol index, so no overall engine verdict is derived.
-
-Two limits on how far that reaches, and both matter here:
-
-- **It measured the native engine on this repository's own TypeScript.** It says
-  nothing about a **consumer-shipped** index (a SCIP index, a committed
-  `graph.json`), which is what the Iron Law above is mostly about and which this
-  benchmark never touched.
-- **It changes routing, never permission.** No setting default moved and no
-  dependency moved between `devDependencies` and `dependencies`; that is
-  ADR-246's question, reopened only under `decision-revisit-gate`.
-
-So the Iron Law stands unchanged — ask an index that already exists before
-grepping blind, and say which source answered. What it does **not** license is
-telling a reader the graph is the better answer. On this repository's own code,
-measured, it was not.
 
 ## When NOT to fire
 
@@ -99,11 +78,9 @@ measured, it was not.
 ## See also
 
 - [`code-intelligence`](../skills/code-intelligence/SKILL.md) — the executable
-  routing skill: `agent-config code-graph detect|query|affected|path` over the
-  native engine or a consumer-shipped index, grep as the stated fallback. On
-  hook-capable hosts the PreToolUse `code-graph` nudge surfaces this once per
-  session; on instruction-file hosts this rule is the surface. Which of the two
-  you are on is `agent-config hooks:status`, not a guess from the host name.
+  routing skill (`agent-config code-graph detect|query|affected|path`), the
+  measured per-class figures, and the hook-vs-instruction-file surface question
+  (`agent-config hooks:status`, never a guess from the host name).
 - [`discovery_graph`](../scripts/discovery_graph.ts) — this suite's OWN artefact
   relation-graph (`affected`/`explain`); the external code-graph is the
   *source-code* analogue this rule defers to for code questions.
