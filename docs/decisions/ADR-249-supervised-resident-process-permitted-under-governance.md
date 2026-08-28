@@ -239,5 +239,5 @@ to prevent.
 - `agents/evidence/analysis/runtime-reversal-owner-decision.md` — the owner decision, verbatim, with its scope.
 - `agents/evidence/analysis/no-runtime-discovery-2026-08-27.md` — the 129-file census and the three-artefact active set.
 - ADR-124 § 4 (`:110` Class A, `:111` Class B) · ADR-109 `:28` · ADR-088 `:78`.
-- `docs/contracts/no-runtime-boundary.md` — replaced by a governance contract in Phase 4.1 of the roadmap.
+- `docs/contracts/resident-process-governance.md` — the governance contract implementing this record: the P0-P4 process classes, the four conditions restated as a class table, and the suite-wide scope stated as a deliberate widening. `docs/contracts/no-runtime-boundary.md` is kept as a pointer stub, because fifty files referenced it.
 - `docs/contracts/adr-layout.md:59-60, 105-117` — the `supersedes_scope` / `superseded_scope` convention this record uses.

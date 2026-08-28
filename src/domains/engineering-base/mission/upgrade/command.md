@@ -122,7 +122,7 @@ catalog fixes are test-driven — a bounded generate→run→revise→re-run loo
 a numeric threshold (then a judge confirms), reusing the same N=3 cap. Use
 test/quality verdicts only; the live-app Playwright verdict stays deferred. The
 loop is multi-turn reasoning, not a runtime — it honors
-[`no-runtime-boundary`](../../docs/contracts/no-runtime-boundary.md) exactly as
+[`resident-process-governance`](../../docs/contracts/resident-process-governance.md) exactly as
 the mission does.
 
 Handle exit codes per the `/work` contract:

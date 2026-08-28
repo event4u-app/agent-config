@@ -104,10 +104,22 @@ doing its job; the orchestrator verifies (or revises) the parent first.
 ## Rollback guardrails — surfaced, not auto-disabled
 
 ```
-A CONFIG PACKAGE RUNS NO DAEMON. THERE IS NO AUTOMATIC COHORT-DISABLE.
+A RESIDENT PROCESS HERE IS GOVERNED, NEVER AUTOMATIC. NO COHORT-DISABLE.
 BREACHES ARE SURFACED FROM THE AUDIT LOG FOR THE MAINTAINER / USER TO ACT ON.
 THE ONLY AUTOMATIC STOP IS THE PER-TARGET N=3 BUDGET.
 ```
+
+> **Amended 2026-08-27 (ADR-249).** The first line used to read *"A CONFIG
+> PACKAGE RUNS NO DAEMON"*, and that premise no longer holds: a **supervised**
+> resident process is permitted in core under four governance conditions
+> (`docs/contracts/resident-process-governance.md`, class P1). The block's force
+> is unchanged, because the daemon clause was never what it governed — the rule
+> here is that a breach never stops a cohort by itself, and that is if anything
+> more load-bearing now than when nothing could be running. The replacement
+> states the adopted constraint rather than an absence, which is the wording rule
+> the same reversal imposes on every surface: name what the repository holds
+> itself to, never a state of the world.
+
 
 The guardrail thresholds (`breachedGuardrails()`), read off the
 [`orchestration-telemetry`](orchestration-telemetry.md) audit signals:
