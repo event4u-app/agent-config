@@ -595,6 +595,34 @@ export function check_amendment_shape(
  * road-to-runtime-governance-flip step 1.4, which asked for exactly one thing:
  * make the required section enforceable, or drop the word "required".
  */
+/**
+ * Is there a `## Not reopened` section WITH content under it?
+ *
+ * Two corrections a neutral review made to the first version, both real:
+ *
+ * 1. **The level is exactly `##`.** The first pattern was `#{2,3}`, so a `###`
+ *    subsection satisfied a contract and a diagnostic that both say `##`. A gate
+ *    accepting a shape its own message forbids teaches the message is decorative.
+ * 2. **The section must say something.** Matching the heading alone let an empty
+ *    section pass while the error text promises one "naming what the narrowing
+ *    leaves standing". A heading with nothing under it is the absence the check
+ *    exists to catch, wearing the right title.
+ *
+ * "Content" is deliberately weak — one non-blank, non-heading line. No gate can
+ * judge whether the prose is true, and pretending otherwise would be the
+ * masquerade the sibling gate's docstring warns about.
+ */
+export function hasNotReopenedSection(text: string): boolean {
+    const lines = text.split('\n');
+    const start = lines.findIndex((l) => /^##\s+Not reopened\s*$/i.test(l));
+    if (start === -1) return false;
+    for (const line of lines.slice(start + 1)) {
+        if (/^#{1,6}\s/.test(line)) break;
+        if (line.trim() !== '') return true;
+    }
+    return false;
+}
+
 export function check_scoped_supersession(
     rel: string,
     fm: Record<string, string>,
@@ -625,9 +653,13 @@ export function check_scoped_supersession(
     // supersession, never on the one that receives it: the successor is what
     // has to state the remainder.
     if (placeholder(fm['supersedes_scope'])) return;
-    if (!/^#{2,3}\s+Not reopened\s*$/im.test(text)) {
+    if (!hasNotReopenedSection(text)) {
+        // A well-formed ISO date, or no grandfathering. A malformed `date:`
+        // sorts unpredictably against the staging constant, and the safe
+        // direction for an unreadable date is the error, not the warning.
         const date = fm['date'] ?? '';
-        const staged = date !== '' && date < SCOPED_SUPERSESSION_SINCE;
+        const wellFormed = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        const staged = wellFormed && date < SCOPED_SUPERSESSION_SINCE;
         findings.push({
             file: rel,
             level: staged ? 'warn' : 'error',

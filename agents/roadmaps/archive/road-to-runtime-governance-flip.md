@@ -458,6 +458,27 @@ is *being established*.
       carries such a claim. That is the correct state and the reason the
       self-test exists — a gate that scans a corpus and finds nothing is
       indistinguishable from a blind one.
+      **Corrected after a neutral council review of the code, same run.** The
+      gate shipped with a defect that INVERTED it: `SUPERVISION_CLAIM_RE` matched
+      `The resident process is **not** supervised.` — `not` was absorbed by the
+      0-to-3-word gap — so it would have refused a truthful DENIAL of the
+      capability while the claim it exists to catch reads identically minus one
+      word. The test suite claimed to cover "negative statements" and tested a
+      different grammatical form. Both council seats found it independently.
+      Six further findings, all reproduced before being fixed: markdown emphasis
+      (`**supervised**`) escaped the pattern entirely; `cases_run: "abc"` passed
+      every comparison and read as sufficient evidence; a negative count and a
+      whitespace-only suite name likewise; the `## Not reopened` check accepted
+      `###` and an empty section, both of which its own message forbids; a
+      malformed `date:` bought the grandfathered warning; and the self-test's
+      docstring advertised a mocked-process negative the case list did not
+      contain. All closed with regression cases — self-test **7/7, 5 rejecting**;
+      141 unit cases across the three touched test files.
+      A **§ Known limits** section was added rather than the pattern widened: one
+      physical line at a time, copula-only so active voice escapes, no
+      grammatical subject resolution, no markdown-structure awareness, and a
+      bounded-window negation heuristic. The gate is a **floor, not a proof**, and
+      saying so is cheaper than a regex that pretends otherwise.
 - [-] **3.5 Correct the stale figure only if the rewritten argument uses it.**
       `docs/positioning-evidence.md` states "261 skills, 93 rules"; the measured
       count is 299 (`find src/skills -name SKILL.md | wc -l`). The first draft

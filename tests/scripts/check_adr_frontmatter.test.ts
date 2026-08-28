@@ -8,6 +8,7 @@ import {
     check_one,
     check_reopen_authority,
     check_scoped_supersession,
+    hasNotReopenedSection,
     check_supersession_links,
     parse_adr_refs,
     split_dimensions,
@@ -690,5 +691,58 @@ describe('check_scoped_supersession', () => {
             findings,
         );
         expect(findings).toEqual([]);
+    });
+});
+
+/**
+ * `hasNotReopenedSection` — two corrections a neutral review made to the
+ * scoped-supersession check, both of which let a shape through that the
+ * check's own error message forbids.
+ */
+describe('hasNotReopenedSection', () => {
+    const doc = (body: string): string => ['# ADR-900 — a title', '', body].join('\n');
+
+    it('accepts a `## Not reopened` section with content', () => {
+        expect(hasNotReopenedSection(doc('## Not reopened\n\nADR-094 stands.\n'))).toBe(true);
+    });
+
+    it('rejects a `###` subsection — the contract and the message both say `##`', () => {
+        expect(hasNotReopenedSection(doc('### Not reopened\n\nADR-094 stands.\n'))).toBe(false);
+    });
+
+    it('rejects an EMPTY section — a heading is not a statement of the remainder', () => {
+        expect(hasNotReopenedSection(doc('## Not reopened\n\n## Consequences\n\nSomething.\n'))).toBe(
+            false,
+        );
+    });
+
+    it('rejects the section being absent entirely', () => {
+        expect(hasNotReopenedSection(doc('## Decision\n\nSomething.\n'))).toBe(false);
+    });
+});
+
+/**
+ * A malformed `date:` sorts unpredictably against the staging constant, so it
+ * must not buy the grandfathered warning. The safe direction for an unreadable
+ * date is the error.
+ */
+describe('check_scoped_supersession — staging on a malformed date', () => {
+    it('errors rather than warns when `date` is not an ISO date', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-900-x.md',
+            {
+                adr: '900',
+                status: 'accepted',
+                date: '2026-8-3',
+                decision: 'a-slug',
+                supersedes: 'ADR-124',
+                supersedes_scope: 'the Class-B row only',
+            },
+            '# ADR-900\n\n## Decision\n\nSomething.\n',
+            findings,
+        );
+        expect(findings.length).toBe(1);
+        expect(findings[0]?.level).toBe('error');
     });
 });

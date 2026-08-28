@@ -1,0 +1,882 @@
+diff --git a/src/scripts/check_adr_frontmatter.ts b/src/scripts/check_adr_frontmatter.ts
+index 2d6b55c6a..2b15ec8d2 100644
+--- a/src/scripts/check_adr_frontmatter.ts
++++ b/src/scripts/check_adr_frontmatter.ts
+@@ -60,6 +60,20 @@ const ADR_DIR = path.join(REPO_ROOT, 'docs', 'decisions');
+  */
+ export const REVIEW_TRIGGER_SINCE = '2026-07-25';
+ 
++/**
++ * Staging date for the `## Not reopened` obligation on a scoped supersession
++ * (road-to-runtime-governance-flip step 1.4). Same shape and same reason as
++ * `REVIEW_TRIGGER_SINCE`: a new structural requirement is an error on records
++ * written after it and a warning on records written before, so the gate does
++ * not retroactively red the corpus it is being added to.
++ *
++ * Two records predate it and warn: `ADR-124` (2026-07-23) and `ADR-209`
++ * (2026-08-03). Both carry a real `supersedes_scope` and neither states its
++ * remainder in a section — measured, not assumed, and left visible as a warning
++ * rather than silenced with a baseline file.
++ */
++export const SCOPED_SUPERSESSION_SINCE = '2026-08-27';
++
+ /** Fields every ADR must carry — the shape that already exists in practice. */
+ const REQUIRED = ['adr', 'status', 'date', 'decision'] as const;
+ 
+@@ -264,6 +278,7 @@ export function check_one(rel: string, text: string): AdrFinding[] {
+     }
+     check_reopen_authority(rel, fm, findings);
+     check_amendment_shape(rel, fm, findings);
++    check_scoped_supersession(rel, fm, text, findings);
+     const parsed = readAdrFrontmatter(text);
+     if (parsed !== null) check_descriptive_axes(rel, parsed, findings);
+     return findings;
+@@ -552,6 +567,79 @@ export function check_amendment_shape(
+     }
+ }
+ 
++/**
++ * Validate a SCOPED supersession — the `supersedes_scope` / `superseded_scope`
++ * pair documented at `docs/contracts/adr-layout.md:59-60, 105-117`.
++ *
++ * Two invariants, both decidable from one file, both taken from that contract's
++ * own text rather than invented here:
++ *
++ * 1. **A scope with no refs is not a supersession.** The contract says so
++ *    literally — "A scope with no refs is not a supersession and renders as
++ *    `—`" — and `regenerate_index.ts` → `supersessionCell` silently drops the
++ *    scope in that case, so the author's intent disappears with no signal.
++ * 2. **A scoped supersession names what it did NOT reopen.** Narrowing a
++ *    prohibition to one row is precisely when a reader needs the boundary
++ *    stated, and a `## Not reopened` section is where this corpus states it.
++ *    Without the section, "supersedes ADR-NNN, partially" is an assertion with
++ *    no stated remainder, and the remainder is the whole content of a partial
++ *    supersession.
++ *
++ * **What this deliberately does NOT check**, because it is not observable: it
++ * cannot require a scope wherever partial supersession was *intended*. Intent
++ * is not in the file. A whole-document supersession that should have been
++ * scoped passes this check, and closing that gap needs stable section
++ * identifiers rather than prose scopes — recorded as the known limit rather
++ * than implied away.
++ *
++ * road-to-runtime-governance-flip step 1.4, which asked for exactly one thing:
++ * make the required section enforceable, or drop the word "required".
++ */
++export function check_scoped_supersession(
++    rel: string,
++    fm: Record<string, string>,
++    text: string,
++    findings: AdrFinding[],
++): void {
++    const placeholder = (v: string | undefined): boolean =>
++        v === undefined || v.trim() === '' || v.trim() === '—' || v.trim() === '-';
++
++    for (const [scopeKey, refKey] of [
++        ['supersedes_scope', 'supersedes'],
++        ['superseded_scope', 'superseded_by'],
++    ] as const) {
++        if (placeholder(fm[scopeKey])) continue;
++        if (placeholder(fm[refKey])) {
++            findings.push({
++                file: rel,
++                level: 'error',
++                message:
++                    `\`${scopeKey}\` is set but \`${refKey}\` names no ADR. A scope with no refs ` +
++                    'is not a supersession (adr-layout § Frontmatter) — the index renders it as ' +
++                    '`—` and the scope text is lost. Name the record, or drop the scope.',
++            });
++        }
++    }
++
++    // The "Not reopened" obligation is on the record that PERFORMS the scoped
++    // supersession, never on the one that receives it: the successor is what
++    // has to state the remainder.
++    if (placeholder(fm['supersedes_scope'])) return;
++    if (!/^#{2,3}\s+Not reopened\s*$/im.test(text)) {
++        const date = fm['date'] ?? '';
++        const staged = date !== '' && date < SCOPED_SUPERSESSION_SINCE;
++        findings.push({
++            file: rel,
++            level: staged ? 'warn' : 'error',
++            message:
++                'a scoped supersession (`supersedes_scope`) must carry a `## Not reopened` ' +
++                'section naming what the narrowing leaves standing. Partially superseding a ' +
++                'record without stating the remainder reads as a general relaxation, which is ' +
++                'the reading a safety floor cannot survive.',
++        });
++    }
++}
++
+ /**
+  * Corpus-level check: every `amends:` has its reciprocal `amended_by:` and vice
+  * versa. Its absence for the `supersedes:` / `superseded_by:` pair is exactly
+diff --git a/src/scripts/check_claims.ts b/src/scripts/check_claims.ts
+index 38493e5e9..c911b17f7 100644
+--- a/src/scripts/check_claims.ts
++++ b/src/scripts/check_claims.ts
+@@ -178,6 +178,19 @@ export interface LedgerEntry {
+      * ledger exists to make impossible.
+      */
+     superseded_by: string;
++    /**
++     * REQUIRED on a `withdrawn` entry: the decision record that retired the
++     * claim. Empty everywhere else.
++     *
++     * `road-to-runtime-governance-flip` Phase 2, on an AI council ruling
++     * (2026-08-27, 4/4 across two rounds). `withdrawn` is the ledger's third
++     * closure — a claim that was true and asserted, and that the package decided
++     * to stop having. The status alone does not say WHOSE decision, and a
++     * withdrawal nobody can trace to a record is an unexplained deletion wearing
++     * a status. Requiring the pointer is what keeps the fourth status from
++     * becoming the dumping ground both council rounds warned about.
++     */
++    retired_by: string;
+     /**
+      * Optional: the build a quantitative measurement describes, when that is not
+      * the current one.
+@@ -256,6 +269,7 @@ function load_ledger(): Map<string, LedgerEntry> {
+                 status: cur.status ?? '',
+                 last_verified: cur.last_verified ?? '',
+                 superseded_by: cur.superseded_by ?? '',
++                retired_by: cur.retired_by ?? '',
+                 measured_on: cur.measured_on ?? '',
+                 non_inference: cur.non_inference ?? '',
+             });
+@@ -275,7 +289,7 @@ function load_ledger(): Map<string, LedgerEntry> {
+         // would have silently ignored the second and dropped whichever field
+         // came from the other branch. One union, both fields.
+         const field = line.match(
+-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|measured_on|non_inference):\s*(.*)$/,
++            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference):\s*(.*)$/,
+         );
+         if (field) {
+             const key = field[1] as keyof LedgerEntry;
+@@ -431,13 +445,19 @@ function main(argv: string[] = process.argv.slice(2)): number {
+     //     reader arriving at a `resolved-null` learns the question was reopened
+     //     by a different mechanism — a dangling id would send them nowhere, and
+     //     the field on a live entry would claim a closure that never happened.
++    //
++    //     `withdrawn` joins `resolved-null` as a closure that may carry a
++    //     successor (road-to-runtime-governance-flip Phase 2). The two are
++    //     different closures — one is "we measured and the threshold was missed",
++    //     the other is "we decided to stop having the property" — but both are
++    //     closed, and both leave a reader who needs the forward link.
+     for (const entry of ledger.values()) {
+         if (!entry.superseded_by) continue;
+-        if (entry.status !== 'resolved-null') {
++        if (entry.status !== 'resolved-null' && entry.status !== 'withdrawn') {
+             findings.push({
+                 id: entry.id,
+                 file: LEDGER_REL,
+-                reason: `superseded_by is only meaningful on a resolved-null entry (status: ${entry.status || 'missing'})`,
++                reason: `superseded_by is only meaningful on a closed entry — resolved-null or withdrawn (status: ${entry.status || 'missing'})`,
+             });
+             continue;
+         }
+@@ -456,6 +476,31 @@ function main(argv: string[] = process.argv.slice(2)): number {
+         }
+     }
+ 
++    // 2c. A withdrawal names the decision that retired it. Without the pointer
++    //     `withdrawn` says only "this closed for a reason that was not a
++    //     measurement", which is the half of the statement a reader can already
++    //     infer from the absence of `resolved-null`.
++    for (const entry of ledger.values()) {
++        if (entry.status !== 'withdrawn') continue;
++        if (!entry.retired_by) {
++            findings.push({
++                id: entry.id,
++                file: LEDGER_REL,
++                reason: 'status is withdrawn but no `retired_by` names the decision that retired it',
++            });
++        }
++        continue;
++    }
++    for (const entry of ledger.values()) {
++        if (entry.retired_by && entry.status !== 'withdrawn') {
++            findings.push({
++                id: entry.id,
++                file: LEDGER_REL,
++                reason: `retired_by is only meaningful on a withdrawn entry (status: ${entry.status || 'missing'})`,
++            });
++        }
++    }
++
+     // 3. Witness sweep (road-to-opt-subagent-harvest P1.2): a QUANTIFIED
+     //    capability claim on a marketing-class surface must be witnessed — a
+     //    `<!-- claim:ID -->` marker on the same line, or an explicit
+diff --git a/src/scripts/check_supervision_claim_atomicity.ts b/src/scripts/check_supervision_claim_atomicity.ts
+new file mode 100644
+index 000000000..065a0803c
+--- /dev/null
++++ b/src/scripts/check_supervision_claim_atomicity.ts
+@@ -0,0 +1,339 @@
++/**
++ * A present-tense supervision claim on a public surface must be backed by a
++ * lifecycle result from THIS revision, or it does not ship.
++ *
++ * `road-to-runtime-governance-flip` step 3.4. ADR-249 permits a supervised
++ * resident process in core and deliberately does **not** assert that one behaves
++ * as described — nothing supervised has shipped. The gap between "we adopted
++ * this policy" and "this property holds" is exactly where an unproven capability
++ * claim lands on a public page, and the roadmap's Phase 3 exists because the
++ * first draft would have let it.
++ *
++ * **What the gate refuses.** A public surface asserting, in the present tense,
++ * that a resident process IS supervised / bounded / isolated / auto-restarted /
++ * lifecycle-managed — while no lifecycle evidence for the current revision
++ * exists. The policy statement ADR-249 authorises is not a claim of this kind
++ * and is not matched: "resident processes are permitted only under the
++ * supervision contract" names an adopted rule, and the patterns below are
++ * written to require a copula plus a property, not a permission.
++ *
++ * **Why a file-presence check is not enough.** A council seat named this
++ * directly: "a file-presence check can masquerade as evidence". So the evidence
++ * artifact must establish four separate things, and each is a distinct refusal:
++ *
++ * 1. the named suite exists at all;
++ * 2. it ran on **this** revision (`revision` equals `git rev-parse HEAD`);
++ * 3. it exercised **real processes** (`processes_exercised: true`);
++ * 4. its result was neither empty nor skipped (`cases_run > 0`, and
++ *    `cases_run > cases_skipped`).
++ *
++ * A suite that ran on a parent commit, a suite with every case skipped, and a
++ * suite that mocked the process layer are three different lies, and a gate that
++ * collapses them into "the file is there" catches none of them.
++ *
++ * **Today it passes vacuously, and says so.** No public surface carries a
++ * supervision claim, so the evidence side is never reached. That is the correct
++ * state — but a gate that scans a corpus and finds nothing is indistinguishable
++ * from a blind one, which is why `--self-test` plants all three seeded negatives
++ * and asserts each one reds.
++ */
++
++import { execFileSync } from 'node:child_process';
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { GateLedger } from './_lib/gate_ledger.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++import { reportScanned } from './_lib/scan_scope.js';
++
++/** Public surfaces a reader of this project actually lands on. */
++export const PUBLIC_SURFACES = [
++    'README.md',
++    'docs/comparison.yaml',
++    'docs/positioning-evidence.md',
++    'docs/proof.md',
++    'docs/us-vs-the-category.md',
++    'docs/getting-started-by-role.md',
++    'docs/governance-advantage.md',
++    'docs/featured-skills.md',
++] as const;
++
++/** Where the dependent roadmap's lifecycle suite writes its result. */
++export const EVIDENCE_REL = path.join('internal', 'reports', 'supervision-lifecycle.json');
++
++/**
++ * A present-tense assertion that a resident process HAS a runtime property.
++ *
++ * The subject is a process noun, the verb is a copula, and the object is a
++ * property word. All three are required together, which is what keeps the
++ * adopted-policy sentence out: "resident processes **are permitted** only under
++ * the supervision contract" carries no property word, and "the supervision
++ * contract ADR-249 **establishes**" has no copula binding a property to a
++ * process.
++ */
++const PROCESS = String.raw`(?:resident process(?:es)?|daemon|background (?:process|worker)|collector|supervisor)`;
++const COPULA = String.raw`(?:is|are|stays?|remains?|runs?)`;
++const PROPERTY = String.raw`(?:supervised|bounded|isolated|sandboxed|auto-restarted|restart(?:ed|s)? automatically|lifecycle-managed|always (?:up|available)|crash-safe|self-healing)`;
++
++export const SUPERVISION_CLAIM_RE = new RegExp(
++    String.raw`\b${PROCESS}\b[^.\n]{0,60}?\b${COPULA}\b\s+(?:\w+\s+){0,3}?\b${PROPERTY}\b`,
++    'i',
++);
++
++export interface Finding {
++    readonly file: string;
++    readonly line: number;
++    readonly text: string;
++    readonly reason: string;
++}
++
++export interface LifecycleEvidence {
++    readonly suite?: string;
++    readonly revision?: string;
++    readonly processes_exercised?: boolean;
++    readonly cases_run?: number;
++    readonly cases_skipped?: number;
++}
++
++/**
++ * The four evidence conditions, each returning its own refusal.
++ *
++ * Returns `null` when the evidence is sufficient. Separated from I/O so the
++ * self-test can drive it with literal objects.
++ */
++export function evidenceRefusal(ev: LifecycleEvidence | null, headRevision: string): string | null {
++    if (ev === null) {
++        return `no lifecycle evidence at ${EVIDENCE_REL} — the suite that would back this claim does not exist`;
++    }
++    if (!ev.suite) {
++        return `${EVIDENCE_REL} names no \`suite\` — an unnamed suite cannot be re-run by a reader`;
++    }
++    if (ev.revision !== headRevision) {
++        return (
++            `${EVIDENCE_REL} records revision ${ev.revision ?? '(none)'}, but HEAD is ${headRevision} — ` +
++            'a result from another revision says nothing about the code being shipped'
++        );
++    }
++    if (ev.processes_exercised !== true) {
++        return `${EVIDENCE_REL} does not record \`processes_exercised: true\` — a suite that mocked the process layer did not test supervision`;
++    }
++    const run = ev.cases_run ?? 0;
++    const skipped = ev.cases_skipped ?? 0;
++    if (run <= 0) {
++        return `${EVIDENCE_REL} records ${String(run)} cases run — an empty suite is not evidence`;
++    }
++    if (run <= skipped) {
++        return `${EVIDENCE_REL} records ${String(run)} run against ${String(skipped)} skipped — a suite that skipped at least as much as it ran is not evidence`;
++    }
++    return null;
++}
++
++/** Read the evidence artifact, or `null` when it is absent or unparsable. */
++export function readEvidence(root: string): LifecycleEvidence | null {
++    const p = path.join(root, EVIDENCE_REL);
++    if (!fs.existsSync(p)) return null;
++    try {
++        return JSON.parse(fs.readFileSync(p, 'utf8')) as LifecycleEvidence;
++    } catch {
++        return null;
++    }
++}
++
++/** Scan the public surfaces. Pure over an explicit file list. */
++export function scan(
++    root: string,
++    files: readonly string[],
++    headRevision: string,
++    ledger?: GateLedger,
++): Finding[] {
++    const findings: Finding[] = [];
++    let refusal: string | null | undefined;
++
++    for (const rel of files) {
++        const abs = path.join(root, rel);
++        // Plan BEFORE resolving, always. Resolving an unplanned target is a
++        // ledger usage error, and it only shows up where a surface is missing —
++        // never on the real tree, where all eight exist. Found by the self-test's
++        // positive control, whose fixture repo has README.md and nothing else.
++        ledger?.plan(rel);
++        if (!fs.existsSync(abs)) {
++            ledger?.skip(rel, 'dead_scan_root');
++            continue;
++        }
++        const lines = fs.readFileSync(abs, 'utf8').split('\n');
++        let failedHere = '';
++        for (const [i, line] of lines.entries()) {
++            if (!SUPERVISION_CLAIM_RE.test(line)) continue;
++            // Resolve the evidence once, and only when a claim is actually
++            // found: an absent artifact is not a finding on its own, because
++            // the correct state today is "no claim, no evidence, no gate".
++            if (refusal === undefined) refusal = evidenceRefusal(readEvidence(root), headRevision);
++            if (refusal === null) continue;
++            findings.push({
++                file: rel,
++                line: i + 1,
++                text: line.trim().slice(0, 160),
++                reason: refusal,
++            });
++            if (failedHere === '') failedHere = `${rel}:${String(i + 1)} — ${refusal}`;
++        }
++        if (failedHere === '') ledger?.complete(rel);
++        else ledger?.fail(rel, failedHere);
++    }
++    return findings;
++}
++
++function headRevisionOf(root: string): string {
++    try {
++        return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
++    } catch {
++        return '';
++    }
++}
++
++/**
++ * Three seeded negatives and one positive control, each driving the REAL CLI.
++ *
++ * Step 3.4 required the seeded negatives to be OBSERVED red rather than
++ * asserted, and the three are separate on purpose: a suite that ran on a parent
++ * commit, a suite that skipped every case, and a suite that mocked the process
++ * layer are three different lies, and a file-presence check catches none of
++ * them. The positive control is what stops the suite passing by rejecting
++ * everything.
++ *
++ * Shelling out through {@link runGateCli} rather than calling `scan()` is the
++ * point of the harness: the thing under test is the binary a contributor runs,
++ * argv parsing and entry guard included.
++ */
++const SELF_TEST_MIN_CASES = 4;
++const SELF_TEST_MIN_REJECTING = 3;
++
++function selfTest(): number {
++    const repoRoot = process.cwd();
++    const rel = path.join('src', 'scripts', 'check_supervision_claim_atomicity.ts');
++    const CLAIM = 'The resident process is supervised and auto-restarted.\n';
++
++    /** Build a throwaway repo whose HEAD is real, so the revision check is meaningful. */
++    const fixture = (evidence: LifecycleEvidence | null): { dir: string; head: string } => {
++        const dir = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR ?? '/tmp'), 'supclaim-'));
++        fs.writeFileSync(path.join(dir, 'README.md'), CLAIM);
++        const git = (...a: string[]): void => {
++            execFileSync('git', ['-C', dir, ...a], { stdio: 'ignore' });
++        };
++        git('init', '-q');
++        git('config', 'user.email', 'selftest@example.com');
++        git('config', 'user.name', 'self test');
++        git('add', 'README.md');
++        git('commit', '-q', '-m', 'fixture');
++        const head = execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
++        if (evidence !== null) {
++            const abs = path.join(dir, EVIDENCE_REL);
++            fs.mkdirSync(path.dirname(abs), { recursive: true });
++            fs.writeFileSync(abs, JSON.stringify({ ...evidence, revision: evidence.revision ?? head }));
++        }
++        return { dir, head };
++    };
++
++    const run = (evidence: LifecycleEvidence | null): number => {
++        const { dir } = fixture(evidence);
++        try {
++            return runGateCli(repoRoot, rel, [], dir);
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    };
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'a seeded supervision claim with no lifecycle evidence at all',
++            expect: 'reject',
++            run: () => run(null),
++        },
++        {
++            name: 'an emptied suite — every case skipped, none run',
++            expect: 'reject',
++            run: () =>
++                run({ suite: 'supervision-lifecycle', processes_exercised: true, cases_run: 0, cases_skipped: 12 }),
++        },
++        {
++            name: 'a result recorded against a different revision',
++            expect: 'reject',
++            run: () =>
++                run({
++                    suite: 'supervision-lifecycle',
++                    revision: 'b'.repeat(40),
++                    processes_exercised: true,
++                    cases_run: 12,
++                    cases_skipped: 0,
++                }),
++        },
++        {
++            name: 'sufficient evidence on this revision lets the same claim through',
++            expect: 'accept',
++            run: () =>
++                run({ suite: 'supervision-lifecycle', processes_exercised: true, cases_run: 12, cases_skipped: 1 }),
++        },
++    ];
++
++    return runSelfTest({
++        gate: 'check_supervision_claim_atomicity',
++        cases,
++        minCases: SELF_TEST_MIN_CASES,
++        minRejectCases: SELF_TEST_MIN_REJECTING,
++    });
++}
++
++export function main(argv: readonly string[]): number {
++    const root = process.cwd();
++    if (argv.includes('--self-test')) return selfTest();
++
++    const ledger = new GateLedger('check_supervision_claim_atomicity');
++    const findings = scan(root, PUBLIC_SURFACES, headRevisionOf(root), ledger);
++    ledger.report();
++    reportScanned({
++        gate: 'check_supervision_claim_atomicity',
++        scanned: PUBLIC_SURFACES.filter((f) => fs.existsSync(path.join(root, f))).length,
++        units: 'public surfaces',
++        roots: ['README.md', 'docs/'],
++    });
++
++    if (findings.length > 0) {
++        for (const f of findings) {
++            process.stderr.write(`    ❌ ${f.file}:${String(f.line)} — ${f.text}\n       ${f.reason}\n`);
++        }
++        process.stderr.write(
++            `❌  check_supervision_claim_atomicity: ${String(findings.length)} present-tense supervision claim(s) ` +
++                'on a public surface without lifecycle evidence for this revision.\n' +
++                '    ADR-249 permits a supervised resident process; it does not assert that one behaves as described.\n' +
++                '    State the adopted policy, or land the evidence first.\n',
++        );
++        return 1;
++    }
++    process.stdout.write(
++        '✅  check_supervision_claim_atomicity: no unbacked present-tense supervision claim on a public surface.\n',
++    );
++    return 0;
++}
++
++const _HERE = fileURLToPath(import.meta.url);
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry() || process.argv[1] === _HERE) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/tests/scripts/check_adr_frontmatter.test.ts b/tests/scripts/check_adr_frontmatter.test.ts
+index a369b360e..5f57a0688 100644
+--- a/tests/scripts/check_adr_frontmatter.test.ts
++++ b/tests/scripts/check_adr_frontmatter.test.ts
+@@ -7,6 +7,7 @@ import {
+     check_amendment_shape,
+     check_one,
+     check_reopen_authority,
++    check_scoped_supersession,
+     check_supersession_links,
+     parse_adr_refs,
+     split_dimensions,
+@@ -590,3 +591,104 @@ describe('reciprocal links — per-area numbers never collide with flat ADR numb
+         expect(f.some((x) => x.kind === 'supersession_link')).toBe(true);
+     });
+ });
++
++/**
++ * Scoped supersession — `supersedes_scope` / `superseded_scope`, the pair
++ * `docs/contracts/adr-layout.md:59-60, 105-117` documents and nothing validated
++ * until road-to-runtime-governance-flip step 1.4.
++ *
++ * Sensitivity: each case below was seen red before the check existed, and the
++ * staging case is the one that matters most — without it the check retroactively
++ * reds ADR-124 and ADR-209, two accepted records that predate the requirement.
++ */
++describe('check_scoped_supersession', () => {
++    const body = (extra = ''): string =>
++        [
++            '# ADR-900 — a title',
++            '',
++            '## Decision',
++            '',
++            'Something.',
++            extra,
++        ].join('\n');
++
++    const fm = (over: Record<string, string> = {}): Record<string, string> => ({
++        adr: '900',
++        status: 'accepted',
++        date: '2026-09-01',
++        decision: 'a-slug',
++        review_trigger: 'Reopen when the measured condition below stops holding.',
++        ...over,
++    });
++
++    it('errors when a scope names no refs — a scope with no refs is not a supersession', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-900-x.md',
++            fm({ supersedes: '—', supersedes_scope: 'the Class-B row only' }),
++            body('\n## Not reopened\n\nEverything else.\n'),
++            findings,
++        );
++        expect(findings.length).toBe(1);
++        expect(findings[0]?.level).toBe('error');
++        expect(findings[0]?.message).toContain('names no ADR');
++    });
++
++    it('errors on a scoped supersession with no `## Not reopened` section', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-900-x.md',
++            fm({ supersedes: 'ADR-124', supersedes_scope: 'the Class-B row only' }),
++            body(),
++            findings,
++        );
++        expect(findings.length).toBe(1);
++        expect(findings[0]?.level).toBe('error');
++        expect(findings[0]?.message).toContain('Not reopened');
++    });
++
++    it('accepts a scoped supersession that states its remainder', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-900-x.md',
++            fm({ supersedes: 'ADR-124', supersedes_scope: 'the Class-B row only' }),
++            body('\n## Not reopened\n\nADR-094 stands.\n'),
++            findings,
++        );
++        expect(findings).toEqual([]);
++    });
++
++    it('WARNS rather than errors on a record predating the staging date', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-124-embedded-engine-doctrine.md',
++            fm({ date: '2026-07-23', supersedes: 'ADR-088', supersedes_scope: 'engine-adoption interpretation only' }),
++            body(),
++            findings,
++        );
++        expect(findings.length).toBe(1);
++        expect(findings[0]?.level).toBe('warn');
++    });
++
++    it('is silent when no scope is claimed at all', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-900-x.md',
++            fm({ supersedes: 'ADR-124' }),
++            body(),
++            findings,
++        );
++        expect(findings).toEqual([]);
++    });
++
++    it('puts the `## Not reopened` duty on the successor, never on the superseded record', () => {
++        const findings: AdrFinding[] = [];
++        check_scoped_supersession(
++            'docs/decisions/ADR-124-embedded-engine-doctrine.md',
++            fm({ superseded_by: 'ADR-249', superseded_scope: 'the Class-B row only' }),
++            body(),
++            findings,
++        );
++        expect(findings).toEqual([]);
++    });
++});
+diff --git a/tests/scripts/check_claims.test.ts b/tests/scripts/check_claims.test.ts
+index a26746eff..bbd4a8781 100644
+--- a/tests/scripts/check_claims.test.ts
++++ b/tests/scripts/check_claims.test.ts
+@@ -275,7 +275,10 @@ describe('check_claims — mechanism', () => {
+         write('README.md', 'No markers here.\n');
+         const r = run();
+         expect(r.code).toBe(2);
+-        expect(r.stderr).toContain('only meaningful on a resolved-null entry');
++        // Wording widened when `withdrawn` joined `resolved-null` as a closure
++        // that may carry a successor. The BEHAVIOUR under test is unchanged:
++        // a `backed` entry still may not point at one.
++        expect(r.stderr).toContain('only meaningful on a closed entry');
+     });
+ 
+     it('rejects a successor pointer at its own entry', () => {
+@@ -287,4 +290,71 @@ describe('check_claims — mechanism', () => {
+         expect(r.stderr).toContain('points at its own entry');
+     });
+ 
++    // road-to-runtime-governance-flip Phase 2 — `withdrawn`, the ledger's third
++    // closure. A claim that was TRUE and was retired by a decision fits neither
++    // `unbacked` (debt somebody should discharge) nor `resolved-null` (a
++    // pre-registered threshold was missed), and the status column in
++    // `docs/proof.md` is what a reader scans.
++    function withdrawnLedger(fields: string, status = 'withdrawn'): string {
++        return [
++            '# Claims Ledger',
++            '',
++            '### claim: retired',
++            '- claim: A property the package decided to stop having.',
++            '- kind: qual',
++            '- evidence: docs/evidence.md#ANCHOR',
++            `- status: ${status}`,
++            '- last_verified: 2026-07-04',
++            fields,
++            '',
++            '### claim: successor',
++            '- claim: The policy that replaced it.',
++            '- kind: qual',
++            '- evidence: docs/evidence.md#ANCHOR',
++            '- status: unbacked',
++            '- last_verified: 2026-08-27',
++            '',
++        ].join('\n');
++    }
++
++    it('accepts a withdrawn entry that names its decision and its successor', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write(
++            'docs/CLAIMS.md',
++            withdrawnLedger('- retired_by: ADR-249\n- superseded_by: successor'),
++        );
++        write('README.md', 'No markers here.\n');
++        expect(run().code).toBe(0);
++    });
++
++    it('rejects a withdrawal that cannot name the decision that retired it', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write('docs/CLAIMS.md', withdrawnLedger('- superseded_by: successor'));
++        write('README.md', 'No markers here.\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('no `retired_by` names the decision');
++    });
++
++    it('rejects retired_by on an entry that is not withdrawn', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write('docs/CLAIMS.md', withdrawnLedger('- retired_by: ADR-249', 'unbacked'));
++        write('README.md', 'No markers here.\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('retired_by is only meaningful on a withdrawn entry');
++    });
++
++    it('still refuses a marker in public prose for a withdrawn claim', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write(
++            'docs/CLAIMS.md',
++            withdrawnLedger('- retired_by: ADR-249\n- superseded_by: successor'),
++        );
++        write('README.md', 'We have no daemon.<!-- claim:retired -->\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain("ledger status is 'withdrawn', not 'backed'");
++    });
++
+ });
+diff --git a/tests/scripts/check_supervision_claim_atomicity.test.ts b/tests/scripts/check_supervision_claim_atomicity.test.ts
+new file mode 100644
+index 000000000..86ef3ce85
+--- /dev/null
++++ b/tests/scripts/check_supervision_claim_atomicity.test.ts
+@@ -0,0 +1,118 @@
++import { describe, expect, it } from 'vitest';
++
++import {
++    EVIDENCE_REL,
++    type LifecycleEvidence,
++    SUPERVISION_CLAIM_RE,
++    evidenceRefusal,
++} from '../../src/scripts/check_supervision_claim_atomicity.js';
++
++/**
++ * `road-to-runtime-governance-flip` step 3.4.
++ *
++ * The gate's own `--self-test` proves the CLI reds on three seeded negatives and
++ * passes its positive control. These cases cover the half a self-test cannot
++ * reach cheaply: the DISCRIMINATION of the pattern — which sentences are
++ * capability claims and which are the adopted policy ADR-249 authorises.
++ *
++ * That boundary is the whole point of the step. A pattern that also matched the
++ * policy statement would make the gate refuse the very sentence Phase 3 was
++ * written to publish, and one that matched neither would be decorative.
++ */
++describe('SUPERVISION_CLAIM_RE — capability claim vs adopted policy', () => {
++    const MUST_MATCH = [
++        'The resident process is supervised and auto-restarted.',
++        'Our daemon is bounded and isolated.',
++        'The collector runs sandboxed.',
++        'The background worker stays crash-safe under load.',
++        'Every resident process is always available.',
++        'The supervisor is lifecycle-managed by the host.',
++    ];
++
++    const MUST_NOT_MATCH = [
++        // The sentence Phase 3.1 actually publishes. If this ever matches, the
++        // gate refuses the policy statement it exists to permit.
++        'Resident processes are permitted only under the supervision contract ADR-249 establishes.',
++        'ADR-249 establishes a supervision contract for resident processes.',
++        'A supervised resident process is permitted in core under four governance conditions.',
++        // Historical and negative statements are not present-tense property claims.
++        'This package shipped no daemon before 2026-08-27.',
++        'Swarm-runtime tools ship a background process by design.',
++        // Adjacent vocabulary with no process subject.
++        'The build is sandboxed.',
++        'Every claim is machine-checked.',
++    ];
++
++    it.each(MUST_MATCH)('matches a present-tense property claim: %s', (line) => {
++        expect(SUPERVISION_CLAIM_RE.test(line)).toBe(true);
++    });
++
++    it.each(MUST_NOT_MATCH)('does not match: %s', (line) => {
++        expect(SUPERVISION_CLAIM_RE.test(line)).toBe(false);
++    });
++});
++
++/**
++ * Four evidence conditions, four distinct refusals. They are separate because a
++ * suite that ran on a parent commit, a suite that skipped everything, and a
++ * suite that mocked the process layer are three different lies — and a gate
++ * that collapses them into "the file is there" catches none of them.
++ */
++describe('evidenceRefusal', () => {
++    const HEAD = 'a'.repeat(40);
++    const sufficient: LifecycleEvidence = {
++        suite: 'supervision-lifecycle',
++        revision: HEAD,
++        processes_exercised: true,
++        cases_run: 12,
++        cases_skipped: 1,
++    };
++
++    it('accepts sufficient evidence', () => {
++        expect(evidenceRefusal(sufficient, HEAD)).toBeNull();
++    });
++
++    it('refuses an absent artifact', () => {
++        expect(evidenceRefusal(null, HEAD)).toContain('does not exist');
++    });
++
++    it('refuses an unnamed suite', () => {
++        // Built by omission rather than `suite: undefined` — `exactOptionalPropertyTypes`
++        // makes those two different types, and the real artifact omits the key.
++        const { suite: _dropped, ...withoutSuite } = sufficient;
++        const r = evidenceRefusal(withoutSuite, HEAD);
++        expect(r).toContain('names no');
++    });
++
++    it('refuses a result from another revision', () => {
++        const r = evidenceRefusal({ ...sufficient, revision: 'b'.repeat(40) }, HEAD);
++        expect(r).toContain('says nothing about the code being shipped');
++    });
++
++    it('refuses a suite that did not exercise real processes', () => {
++        const r = evidenceRefusal({ ...sufficient, processes_exercised: false }, HEAD);
++        expect(r).toContain('mocked the process layer');
++    });
++
++    it('refuses an empty suite', () => {
++        const r = evidenceRefusal({ ...sufficient, cases_run: 0, cases_skipped: 0 }, HEAD);
++        expect(r).toContain('empty suite is not evidence');
++    });
++
++    it('refuses a suite that skipped at least as much as it ran', () => {
++        const r = evidenceRefusal({ ...sufficient, cases_run: 4, cases_skipped: 4 }, HEAD);
++        expect(r).toContain('skipped at least as much as it ran');
++    });
++
++    it('names the artifact path in every refusal it can', () => {
++        const { suite: _dropped, ...withoutSuite } = sufficient;
++        for (const ev of [
++            withoutSuite,
++            { ...sufficient, revision: 'c'.repeat(40) },
++            { ...sufficient, processes_exercised: false },
++            { ...sufficient, cases_run: 0 },
++        ]) {
++            expect(evidenceRefusal(ev, HEAD)).toContain(EVIDENCE_REL);
++        }
++    });
++});
