@@ -4,7 +4,11 @@ status: accepted
 date: 2026-07-04
 decision: subagent-v1-contract
 supersedes: —
-superseded_by: —
+superseded_by: ADR-249
+superseded_scope: >-
+  The "no daemon" clause of the no-runtime identity floor (`:28`) only,
+  superseded by ADR-249. The rest of that floor — no auto-write, no in-process
+  swarm, no dispatch we enforce — and the whole subagent-v1 contract stand.
 phase: road-to-final-state-and-market-readiness
 type: standing
 review_trigger: >-
@@ -27,6 +31,14 @@ The wedge — `production-validator` — already ships hand-written in that nati
 format. A1 turns that one hand-written file into a governed, projected artifact
 type without breaching the no-runtime identity floor (no daemon, no auto-write,
 no in-process swarm, no dispatch we enforce).
+
+> **Amended 2026-08-27 — the "no daemon" clause of that floor is superseded by
+> [ADR-249](ADR-249-supervised-resident-process-permitted-under-governance.md).**
+> A supervised resident process is permitted in core under the four governance
+> conditions ADR-249 states. **The other three clauses of the floor are
+> untouched**: no auto-write, no in-process swarm, no dispatch we enforce. The
+> sentence above is left standing rather than rewritten, so that a reader who
+> cited the floor finds the transition instead of a silent change.
 
 The council was asked to converge the contract shape. Both members agreed on the
 category and the schema completeness; the residual dissent was a documentation

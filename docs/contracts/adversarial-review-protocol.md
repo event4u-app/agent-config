@@ -1,7 +1,28 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-27
+keep-beta-until: 2026-11-23
 ---
+
+<!--
+keep-beta-until extended 2026-08-27 -> 2026-11-23, with the reason, because the
+window lapsed on the calendar rather than on evidence and now reds every PR.
+
+NOT promoted to `stable`, deliberately. `docs/contracts/STABILITY.md` reserves
+that level for "fully released contracts that have shipped through one major
+release without breaking", and this contract's surface changed as recently as
+`e5e4c48d6` ("close all fourteen R2 findings") -- three corrective commits in its
+most recent history. Marking it stable would assert a settledness its own git log
+contradicts, which is a worse outcome than an extended window.
+
+The new date is the 2026-11-23 horizon the frozen lapsed-beta baseline already
+uses, so this contract's review lands with that cohort rather than on a date
+invented for it. Adding it to that baseline is not an option and was not
+attempted: the baseline is frozen and "may not grow".
+
+Extended by an autonomous run that met the red on an unrelated PR. The promotion
+decision is a maintainer review this run is not entitled to make; what it can do
+is keep the lapse visible with its reason instead of silent.
+-->
 
 # Adversarial Review Protocol — structure over exhortation
 

@@ -7,6 +7,7 @@ import {
     check_amendment_shape,
     check_one,
     check_reopen_authority,
+    check_scoped_supersession,
     check_supersession_links,
     parse_adr_refs,
     split_dimensions,
@@ -588,5 +589,106 @@ describe('reciprocal links — per-area numbers never collide with flat ADR numb
         };
         const f = check_supersession_links([flat, masking]);
         expect(f.some((x) => x.kind === 'supersession_link')).toBe(true);
+    });
+});
+
+/**
+ * Scoped supersession — `supersedes_scope` / `superseded_scope`, the pair
+ * `docs/contracts/adr-layout.md:59-60, 105-117` documents and nothing validated
+ * until road-to-runtime-governance-flip step 1.4.
+ *
+ * Sensitivity: each case below was seen red before the check existed, and the
+ * staging case is the one that matters most — without it the check retroactively
+ * reds ADR-124 and ADR-209, two accepted records that predate the requirement.
+ */
+describe('check_scoped_supersession', () => {
+    const body = (extra = ''): string =>
+        [
+            '# ADR-900 — a title',
+            '',
+            '## Decision',
+            '',
+            'Something.',
+            extra,
+        ].join('\n');
+
+    const fm = (over: Record<string, string> = {}): Record<string, string> => ({
+        adr: '900',
+        status: 'accepted',
+        date: '2026-09-01',
+        decision: 'a-slug',
+        review_trigger: 'Reopen when the measured condition below stops holding.',
+        ...over,
+    });
+
+    it('errors when a scope names no refs — a scope with no refs is not a supersession', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-900-x.md',
+            fm({ supersedes: '—', supersedes_scope: 'the Class-B row only' }),
+            body('\n## Not reopened\n\nEverything else.\n'),
+            findings,
+        );
+        expect(findings.length).toBe(1);
+        expect(findings[0]?.level).toBe('error');
+        expect(findings[0]?.message).toContain('names no ADR');
+    });
+
+    it('errors on a scoped supersession with no `## Not reopened` section', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-900-x.md',
+            fm({ supersedes: 'ADR-124', supersedes_scope: 'the Class-B row only' }),
+            body(),
+            findings,
+        );
+        expect(findings.length).toBe(1);
+        expect(findings[0]?.level).toBe('error');
+        expect(findings[0]?.message).toContain('Not reopened');
+    });
+
+    it('accepts a scoped supersession that states its remainder', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-900-x.md',
+            fm({ supersedes: 'ADR-124', supersedes_scope: 'the Class-B row only' }),
+            body('\n## Not reopened\n\nADR-094 stands.\n'),
+            findings,
+        );
+        expect(findings).toEqual([]);
+    });
+
+    it('WARNS rather than errors on a record predating the staging date', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-124-embedded-engine-doctrine.md',
+            fm({ date: '2026-07-23', supersedes: 'ADR-088', supersedes_scope: 'engine-adoption interpretation only' }),
+            body(),
+            findings,
+        );
+        expect(findings.length).toBe(1);
+        expect(findings[0]?.level).toBe('warn');
+    });
+
+    it('is silent when no scope is claimed at all', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-900-x.md',
+            fm({ supersedes: 'ADR-124' }),
+            body(),
+            findings,
+        );
+        expect(findings).toEqual([]);
+    });
+
+    it('puts the `## Not reopened` duty on the successor, never on the superseded record', () => {
+        const findings: AdrFinding[] = [];
+        check_scoped_supersession(
+            'docs/decisions/ADR-124-embedded-engine-doctrine.md',
+            fm({ superseded_by: 'ADR-249', superseded_scope: 'the Class-B row only' }),
+            body(),
+            findings,
+        );
+        expect(findings).toEqual([]);
     });
 });

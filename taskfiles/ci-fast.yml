@@ -1469,6 +1469,22 @@ tasks:
       against all six plus a dead-scan-root case.
     cmd: ./scripts-run src/scripts/check_score_contract {{.QUIET_FLAG}}
 
+  check-supervision-claim-atomicity:
+    silent: true
+    desc: >-
+      Atomicity gate for the runtime reversal (ADR-249). A public surface may
+      state the adopted policy — resident processes are permitted only under the
+      supervision contract — and may NOT assert, in the present tense, that a
+      resident process IS supervised, bounded, isolated or auto-restarted while
+      no lifecycle evidence exists for THIS revision. The evidence side refuses
+      four separate things rather than checking a file is present: an unnamed
+      suite, a result from another revision, a suite that did not exercise real
+      processes, and a suite that ran nothing or skipped at least as much as it
+      ran. `--self-test` drives the real binary against three seeded negatives
+      (no evidence, an emptied suite, a foreign revision) plus a positive
+      control, in a throwaway git repo so the revision check is meaningful.
+    cmd: ./scripts-run src/scripts/check_supervision_claim_atomicity {{.QUIET_FLAG}}
+
   lint-skill-router-head:
     silent: true
     desc: >-
