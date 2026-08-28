@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "delivery-manifest.schema.json",
+  "title": "Delivery manifest",
+  "description": "Obligations that may travel on a runtime carrier instead of standing context, and what happens to each when that carrier is unavailable. Contract: docs/contracts/resident-process-floors.md § 3. Resolver: src/scripts/_lib/delivery_criticality.ts.",
+  "type": "object",
+  "required": ["schema_version", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/entry" }
+    }
+  },
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "required": ["id", "criticality"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Logical obligation id — the rule, gate or floor being delivered."
+        },
+        "criticality": {
+          "enum": ["critical-A", "critical-B", "standard"],
+          "description": "critical-A never migrates off standing context. critical-B may migrate and is delivered EAGERLY when the carrier is unavailable, never dropped. standard may fail open. Required here even though the resolver defaults an omitted value to critical-B: a manifest is authored, and an author who has not decided should be made to, while a RUNTIME value that is merely absent must still fail closed."
+        },
+        "carrier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The runtime carrier that would deliver this obligation."
+        },
+        "why": {
+          "type": "string",
+          "description": "Why this class and not the next one down. Required by review, not by schema."
+        }
+      }
+    }
+  }
+}
