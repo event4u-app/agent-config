@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Irrecoverability determination — the 2026-07-28 code-graph benchmark re-run
 
 **Date:** 2026-08-28.
