@@ -293,18 +293,18 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ## Phase 2 — The data contract, field by field
 
-- [ ] **2.1 Build the schema as an allowlist with per-field purpose.** "No
+- [x] **2.1 Build the schema as an allowlist with per-field purpose.** "No
       free-form field" is necessary and **not sufficient** — a council seat
       listed the leaks structured fields still carry: repository and worktree
       identifiers, command names and arguments, error enums with interpolated
       values, hashes stable enough to identify a user or repo, timestamps
       combined with a machine identifier. Every field states its purpose, its
       cardinality limit, and why a coarser form does not suffice.
-      verify: each field has a purpose line, and a test asserts an unknown field is REJECTED rather than dropped.
-- [ ] **2.2 Test the privacy boundary with fixtures, not with a rule.** Named
+      verify: DONE — `src/scripts/_lib/collector_record.ts`. Nine fields, each carrying all three lines in `FIELD_PURPOSE`: purpose, cardinality limit, and why a coarser form does not suffice. `ALLOWED_FIELDS` is DERIVED from `FIELD_PURPOSE` rather than hand-listed, and a test asserts the allowlist equals the record's own keys — so a field cannot be added without stating its purpose, which is the property that makes the contract self-enforcing rather than aspirational. `validateRecord` reports an unknown key as `unknown field '<name>' — REJECTED, not dropped`, and a test asserts that exact wording per leak class. Dropping is refused on purpose: a producer whose extra field is silently discarded has been told the field is fine, and the leak then lives upstream where this schema cannot see it. Each of the five council-named leak classes is answered by CONSTRUCTION and the answer is written in the module's own table — no field can hold a path, a repo name, a branch or a command; `event`, `outcome` and `platform` are closed enums carrying no payload, so an interpolated error message has nowhere to ride; `machine_id`/`episode_id` are required to be locally generated random UUIDs, because a hash of a host fact is a pseudonym for that fact and is re-identifiable by anyone holding the same inputs; and `occurred_on` is a UTC calendar DATE, since a per-second timestamp beside a stable machine id reconstructs working hours, session lengths and idle gaps. 35 tests green, `tsc --noEmit` clean.
+- [x] **2.2 Test the privacy boundary with fixtures, not with a rule.** Named
       serialization fixtures for the leak classes in 2.1, each asserting the
       record cannot carry it.
-      verify: a fixture exists per named leak class and each one fails when the corresponding field constraint is removed — a constraint never seen enforced has unknown sensitivity.
+      verify: DONE — `tests/scripts/collector_record.test.ts`, and the sensitivity half was OBSERVED rather than argued. `LEAK_FIXTURES` is a named table of six: repository/worktree identifier (`repo_path`), branch name, command name and arguments, error enum with an interpolated value, a hash stable enough to identify a user or repo, and a free-form escape hatch (`extra`). Each fixture asserts both that the record refuses the field and that it says `REJECTED, not dropped`. The timestamp class gets its OWN block because it differs in kind — the field is legitimate and required, and it is its RESOLUTION that leaks, so it is a value constraint rather than a field ban; a precise ISO timestamp and a smuggled unix epoch are both refused. Identifier derivation gets a third block: a sha256 and a hostname are both refused as `machine_id`. **Sensitivity probe, run and reversed:** admitting a single leak field (`repo_path`) to `FIELD_PURPOSE` reds **5 of the 35 tests**, including that class's own fixture and the allowlist-equals-record-keys assertion — so the fixtures are enforcing, not decorating. Restored and re-verified: 35 green, `tsc --noEmit` clean. Each fixture additionally carries a `removing_this_constraint_reds_it` line naming the exact edit that would turn it green, so the sensitivity claim is written down per class instead of asserted once for the suite.
 - [ ] **2.3 Implement deletion and opt-out, then test them.** AC-7 of the
       governance roadmap's first draft required these to be *documented*. A
       documented deletion path that nobody executed is a claim.
@@ -618,8 +618,42 @@ one for a design note under review: § 2's rule is that unanswered is
   council verdict, is the point at which repo rule 12 binds and this file moves
   to `later/`. Doing nothing therefore does not keep the roadmap active; it
   defers the parking decision to the moment it is most expensive.
+- **Decision (AI council, 2026-08-29, UNANIMOUS — 2/2 seats present, anthropic
+  `claude-sonnet-4-5` + openai `codex-default`): (b).** Run the process-level
+  lifecycle suite on the one platform CI already provides; record the other
+  platform row as **unverified**. The maintainer delegated this decision to the
+  council for the autonomous drain run of 2026-08-29; the council took it, and
+  this line is the record that delegation requires.
+
+  Both seats reached (b) independently and for the same reason: it is the only
+  option that neither claims unverified platform support nor stalls Phase 5 on
+  infrastructure nobody has provisioned. Both rejected (c) explicitly — a
+  release-time manual gate is the "presence check masquerading as proof" that
+  step 5.2 exists to prevent. (a) remains the target, not the interim.
+
+  Two conditions the seats attached, both binding on Phase 5 and neither
+  optional. From anthropic: the public capability claim narrows to the verified
+  platform, and the limitation is documented rather than implied. From openai,
+  sharper and the one most easily lost: **the unverified platform stays excluded
+  from release claims even if its static fallback appears to work** — an
+  appearance of function is not evidence of the five lifecycle properties. The
+  capability matrix and AC-8 are to be revised to match the evidence rather than
+  the aspiration, and the runner-provisioning question gets an owned follow-up
+  with a target date.
+
+  *Revisit-if:* a reliable runner for the second platform row becomes available;
+  or lifecycle support there is proposed for public advertisement; or a field
+  failure exposes material cross-platform divergence.
 - **Resolved when:** the choice is recorded here and, for (a) or (b), the CI
   workflow that runs the suite names the platforms it runs on.
+- **Why this is still `open` after the decision:** the first clause above is now
+  met and the second is not, and a blocker whose criterion is half-met is open.
+  The CI workflow that clause requires cannot exist yet — it runs the Phase 5
+  lifecycle suite, which is not built, because Phases 2–4 are the current
+  execution frontier. Flipping this to `resolved` on the strength of the
+  recorded choice alone would be exactly the silent-green this repository's own
+  records name as a recurring defect. It closes when Phase 5 lands a workflow
+  that names its platforms.
 
 
 ## Risk Register
