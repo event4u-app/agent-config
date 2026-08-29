@@ -378,3 +378,41 @@ describe('round 4: the round-3 false-positive reproducers, now actually retained
         expect(declaresRouter('const re = /`a`/g;\nexport const S = "class CouncilTopologyRouter";\n')).toBe(false);
     });
 });
+
+// ── R2 ROUND 5 ────────────────────────────────────────────────────────────
+// Round 4 widened WHICH files are read without widening HOW they are parsed:
+// every file was handed to the parser as non-JSX TypeScript, so a `.tsx`
+// module's JSX text tokenized as ordinary TS and rounds 2 and 3's defect
+// classes were both live again INSIDE the repair that added the extension.
+//
+// The round-4 test could not see it, and the reason is the second principle
+// the council asked to be recorded: it wrote a `.tsx` file containing no JSX —
+// the reproducer's spelling rather than the property. These arms carry real
+// JSX, which is the discriminator.
+describe('round 5: a .tsx module is parsed AS JSX', () => {
+    it('a comment-opener inside JSX TEXT does not hide the router below it', () => {
+        const src = 'export const Nav = () => <p>files live in src/*/ui</p>;\nexport class CouncilTopologyRouter {}\n';
+        expect(declaresRouter(src, 'src/ui/Nav.tsx')).toBe(true);
+    });
+
+    it('a backtick inside JSX TEXT does not hide the router below it', () => {
+        const src = 'export const Nav = () => <p>use `npm run x`</p>;\nexport class CouncilTopologyRouter {}\n';
+        expect(declaresRouter(src, 'src/ui/Nav.tsx')).toBe(true);
+    });
+
+    it('end-to-end: a router below JSX carrying a comment opener is NOT green', () => {
+        expectCleanBaseline();
+        write(
+            'src/ui/Nav.tsx',
+            'export const Nav = () => <p>files live in src/*/ui</p>;\nexport class CouncilTopologyRouter {}\n',
+        );
+        const r = checkOneResolver(tmp);
+        expect(r.violations.map((v) => v.kind)).toEqual(['second-resolver']);
+        expect(r.scanned.some((f) => f.endsWith('Nav.tsx'))).toBe(true);
+    });
+
+    it('a .tsx module with JSX does not lose its ordinary exports', () => {
+        const src = 'export const Nav = () => <p>a/*b</p>;\nexport function run() {\n    return 1;\n}\n';
+        expect(exportedNames(src, 'src/ui/Nav.tsx')).toContain('run');
+    });
+});

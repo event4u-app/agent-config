@@ -44,7 +44,17 @@
  *
  * `typescript` is already a dependency. Comments, strings, template literals
  * and regex literals are therefore the parser's problem, which is where they
- * belong, and the entire defect class above is gone rather than relocated.
+ * belong.
+ *
+ * **That sentence used to end "and the entire defect class above is gone rather
+ * than relocated", and round 5 showed it was false by one line.** Round 4
+ * widened WHICH files are read to include `.tsx` without widening HOW they are
+ * parsed — every file was handed over as non-JSX TypeScript — so a `.tsx`
+ * module's JSX text tokenized as ordinary TS and rounds 2 and 3's defect
+ * classes were both live again inside the repair that added the extension. The
+ * script kind is now derived from the extension. For that class the claim is
+ * true; the limits below are what remains, and they are limits rather than
+ * defects.
  *
  * ## The frozen claim — what this guard does and does not assert
  *
@@ -57,8 +67,30 @@
  * **Does NOT assert, and no reading of it should:** anything requiring symbol
  * resolution or a module graph. A router exported under an unrelated name, or
  * reached through an alias chain this file cannot follow, is outside the claim.
- * Closing that needs semantic analysis and is a separate decision.
- */
+ *
+ * **Known limits, recorded by R2 round 5 and deliberately NOT repaired**, because
+ * each repair moved the review scope and forced another round; the loop was
+ * terminated on the one blocking finding. All are measured, none is a hole a
+ * second resolver reaches by accident:
+ *
+ * 1. A **dotted** namespace (`namespace A.B { … }`) nests a `ModuleDeclaration`
+ *    where the block form nests a `ModuleBlock`, so its body is unwalked while
+ *    the block form is covered.
+ * 2. {@link exportsRouterFunction} never received the namespace walk
+ *    {@link exportedNames} got, so the two disagree on a router declared inside
+ *    a namespace in the sanctioned file.
+ * 3. `export declare function classifyLadder(…)` — an AMBIENT declaration with
+ *    no body — is accepted as a callable resolver.
+ * 4. A namespace the module does not export has its members counted as module
+ *    exports, so a non-exported `namespace Internal { export class … }` reports
+ *    `second-resolver`. A false positive.
+ * 5. A **symlinked directory** is invisible (`isDirectory()` is false for a
+ *    symlink), and a UTF-16 file is counted in `scanned` while being read as
+ *    mojibake. Both are silent-green.
+ *
+ * Limits 1-4 are syntactic and repairable; 5 is discovery. They are written
+ * here rather than in a helper's docstring because a buried caveat is not a
+ * disclosure. */
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -109,8 +141,21 @@ export interface ScanResult {
     readonly scanned: readonly string[];
 }
 
-function parse(text: string): ts.SourceFile {
-    return ts.createSourceFile('probe.ts', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+/**
+ * Parse one module.
+ *
+ * `fileName` is not cosmetic. R2 round-5 finding, and it is the sharpest of the
+ * five rounds: the previous version hard-coded `'probe.ts'` and
+ * `ts.ScriptKind.TS` for EVERY file, while round 4 had just widened
+ * {@link SCANNED_EXTS} to admit `.tsx`. A `.tsx` module was therefore parsed as
+ * non-JSX TypeScript, so JSX text tokenized as ordinary TS — resurrecting the
+ * two defect classes that killed rounds 2 and 3, inside the repair that
+ * introduced the extension. The script kind is now derived from the extension,
+ * so the parser is told what it is reading.
+ */
+function parse(text: string, fileName = 'probe.ts'): ts.SourceFile {
+    const kind = fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+    return ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, kind);
 }
 
 function hasExportModifier(node: ts.Node): boolean {
@@ -134,9 +179,9 @@ function bindingNames(name: ts.BindingName, out: string[]): void {
  * declarations with an `export` modifier, `export default`, named exports,
  * aliased exports, re-exports, type-only exports, and `export * as NS from`.
  */
-export function exportedNames(text: string): string[] {
+export function exportedNames(text: string, fileName?: string): string[] {
     const names: string[] = [];
-    collect(parse(text).statements, names);
+    collect(parse(text, fileName).statements, names);
     return names;
 }
 
@@ -202,8 +247,8 @@ function collect(statements: readonly ts.Statement[], names: string[]): void {
  * constant satisfies this. Closing THAT needs semantic analysis and is outside
  * the frozen claim.
  */
-export function exportsRouterFunction(text: string): boolean {
-    const sf = parse(text);
+export function exportsRouterFunction(text: string, fileName?: string): boolean {
+    const sf = parse(text, fileName);
     const named = (n: string): boolean => ROUTER_NAMES.some((re) => re.test(n));
 
     /** Peel `(x)`, `x as T`, `x satisfies T`, `x!` — none of them changes the value. */
@@ -280,8 +325,8 @@ export function exportsRouterFunction(text: string): boolean {
 }
 
 /** Does this file declare a task-side council/dispatch router? */
-export function declaresRouter(text: string): boolean {
-    return exportedNames(text).some((n) => ROUTER_NAMES.some((re) => re.test(n)));
+export function declaresRouter(text: string, fileName?: string): boolean {
+    return exportedNames(text, fileName).some((n) => ROUTER_NAMES.some((re) => re.test(n)));
 }
 
 /**
@@ -290,8 +335,8 @@ export function declaresRouter(text: string): boolean {
  * no-substitution-template specifiers both count; a specifier built by
  * interpolation is outside the frozen claim and is not guessed at.
  */
-export function moduleSpecifiers(text: string): string[] {
-    const sf = parse(text);
+export function moduleSpecifiers(text: string, fileName?: string): string[] {
+    const sf = parse(text, fileName);
     const out: string[] = [];
     const literal = (n: ts.Node | undefined): void => {
         if (n === undefined) return;
@@ -313,8 +358,8 @@ export function moduleSpecifiers(text: string): string[] {
 }
 
 /** Does this file import from the council's internal directory? */
-export function importsCouncilInternal(text: string): boolean {
-    return moduleSpecifiers(text).some((spec) => /(?:^|\/)ai_council(?:\/|$)/.test(spec));
+export function importsCouncilInternal(text: string, fileName?: string): boolean {
+    return moduleSpecifiers(text, fileName).some((spec) => /(?:^|\/)ai_council(?:\/|$)/.test(spec));
 }
 
 /** Walk `.ts` files under a directory, skipping tests and build output. */
@@ -356,7 +401,7 @@ export function checkOneResolver(root: string): ScanResult {
                 'the sanctioned task-side resolver does not exist. "Exactly one" is ' +
                 'violated by zero as well as by two; a tree with no resolver must not scan green.',
         });
-    } else if (!exportsRouterFunction(fs.readFileSync(resolverAbs, 'utf-8'))) {
+    } else if (!exportsRouterFunction(fs.readFileSync(resolverAbs, 'utf-8'), SANCTIONED_RESOLVER)) {
         // R2 round-2 finding: existence is not identity. A `judgment_ladder.ts`
         // gutted to `export const NOTE = "moved"` passed the existence check,
         // so `rm` was caught and hollowing-out was not.
@@ -379,7 +424,7 @@ export function checkOneResolver(root: string): ScanResult {
         if (rel.startsWith(COUNCIL_INTERNAL_DIR + path.sep)) continue;
         scanned.push(rel);
         const text = fs.readFileSync(abs, 'utf-8');
-        if (rel !== SANCTIONED_RESOLVER && declaresRouter(text)) {
+        if (rel !== SANCTIONED_RESOLVER && declaresRouter(text, rel)) {
             violations.push({
                 file: rel,
                 kind: 'second-resolver',
@@ -389,7 +434,7 @@ export function checkOneResolver(root: string): ScanResult {
                     `a second one makes routing depend on which classifier ran first.`,
             });
         }
-        if (rel === SANCTIONED_RESOLVER && importsCouncilInternal(text)) {
+        if (rel === SANCTIONED_RESOLVER && importsCouncilInternal(text, rel)) {
             violations.push({
                 file: rel,
                 kind: 'council-import-in-resolver',

@@ -183,7 +183,7 @@ called a larger risk than feature absence.
       the ladder with every gate in this tree green.
 
       Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
-      `tests/scripts/one_resolver_invariant.test.ts` — **76 tests, all green**;
+      `tests/scripts/one_resolver_invariant.test.ts` — **80 tests, all green**;
       `tsc --noEmit` and `eslint` clean.
 
       **It parses. It does not lex, and that is the whole finding.** Three
@@ -298,6 +298,51 @@ called a larger risk than feature absence.
       below are stated at the claim level rather than in a helper's docstring,
       which the stopping rule declares insufficient.
 
+      **ROUND 5 — the terminating round, 1 blocking finding and 5 recorded
+      limits.** Dispatched with an explicit rule: report a blocking defect if
+      one exists, and mark everything else non-blocking, because each prior
+      round's repair moved the review scope and forced another round.
+
+      The blocking one was the sharpest of all five, and it was **inside the
+      round-4 repair**: `parse()` hard-coded `ts.ScriptKind.TS` for every file
+      while round 4 had just widened the extension list to admit `.tsx`. Round 4
+      therefore widened WHICH files are read without widening HOW they are
+      parsed, so a `.tsx` module's JSX text tokenized as ordinary TypeScript and
+      **rounds 2 and 3's defect classes were both live again** — a `/*` in JSX
+      text opening a block comment, a backtick in JSX text opening a template.
+      All 28 non-test `.tsx` files in the tree parse differently as `.ts`. Fixed
+      by deriving the script kind from the extension; three tests go red without
+      it, verified by reverting the one expression.
+
+      **The round-4 test could not have caught it, and the reason is the second
+      council principle again:** it wrote a `.tsx` file containing **no JSX** —
+      the reproducer's spelling rather than the property. The new arms carry
+      real JSX, which is the actual discriminator.
+
+      One sentence in the module was false and is corrected rather than
+      softened: "the entire defect class above is gone rather than relocated"
+      was true of `.ts` and **not** of `.tsx`, where round 4 relocated it. Both
+      the module and this record now say so.
+
+      **The five non-blocking findings are RECORDED, not repaired**, and that is
+      a deliberate stop rather than an omission: a dotted `namespace A.B` body is
+      unwalked while the block form is covered; `exportsRouterFunction` never
+      got the namespace walk `exportedNames` received, so the two disagree on
+      one source; an ambient `export declare function` is accepted as callable;
+      a non-exported namespace's members are reported as a second resolver (a
+      false positive); and a symlinked directory is invisible while a UTF-16
+      file is counted as scanned but read as mojibake. All five are in the
+      module's own frozen-claim block, because a buried caveat is not a
+      disclosure. Four are syntactic and repairable by whoever needs them.
+
+      **Why the loop stopped here rather than at a clean round.** Five rounds,
+      21 findings, and every repair moved the scope hash and forced the next
+      round. The terminating rule was set before this round ran, not after
+      seeing its result: fix what blocks, record what does not. A sixth round
+      would be measuring a guard that has already had four defect classes
+      removed from it, and the honest cost of stopping is the five limits above,
+      written where a reader meets them.
+
       **What this step does NOT close, stated at the claim level:**
 
       - **The third clause of 0.5** — "topology refinement begins only after the
@@ -310,6 +355,8 @@ called a larger risk than feature absence.
         decision and not this step's.
       - **A specifier built by interpolation is not resolved.** Both limits are
         pinned by tests, so neither can be quietly read as coverage.
+      - **The five round-5 limits above**, recorded in the module's frozen-claim
+        block with their measurements.
       - **Withdrawing the guard entirely** remains a live OWNER decision. One
         council seat argued for it — enforce by review, automate nothing — on
         the ground that four rounds of escalating false-negative damage from
