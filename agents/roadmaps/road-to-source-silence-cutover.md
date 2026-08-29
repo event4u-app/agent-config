@@ -13,7 +13,9 @@ research_pin: "agent-config @ 63d06b7eb (origin/main, 2026-08-29) plus the drain
 ---
 # Road to source-silence cutover — the four things an agent cannot do, and the one it would not
 
-> **Source:** carry-forward from `road-to-source-silence`, archived 2026-08-29.
+> **Origin:** carry-forward from `road-to-source-silence`, archived 2026-08-29.
+> Internally originated — no external source, so no `Source:` header, per the
+> roadmap template's Provenance rule.
 > The AI council (2026-08-29, anthropic + openai, 2/2) directed this roadmap's
 > creation in decision **D3(a)**: *"Carry both items, with their blocker, into a
 > follow-up roadmap created in the same change, immediately active in the

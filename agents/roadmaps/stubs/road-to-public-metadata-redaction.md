@@ -5,7 +5,7 @@ review_by: 2026-11-27
 
 # Road to public-metadata redaction — stub
 
-> **Source:** descoped out of `road-to-source-silence` step 5.1 on 2026-08-29,
+> **Origin:** descoped out of `road-to-source-silence` step 5.1 on 2026-08-29,
 > at the moment the executing agent reached it. The step's own text already
 > classified it as Hard Floor; this stub is where it goes rather than where it
 > stalls.
