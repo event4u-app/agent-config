@@ -36,6 +36,25 @@ The tracked tree must not reveal which third-party packages seeded ideas
 (established by the 2026-06-13 source-confidentiality sweep). Git history is
 not rewritten — this rule and its backstop guard **new** commits only.
 
+### What "source-anonymous" claims, and what it explicitly does not
+
+```
+THE CLAIM IS ABOUT WHAT IS WRITTEN NEXT, NEVER ABOUT WHAT IS ALREADY RECORDED.
+NEVER DESCRIBE THIS AS ERADICATION, REMOVAL FROM HISTORY, OR A CLEAN REPOSITORY.
+COMMIT MESSAGES, MERGED PR BODIES AND OLD DIFFS REMAIN RECOVERABLE BY ANYONE
+WITH REPOSITORY ACCESS, AND NO PHASE OF THIS PROGRAMME CHANGES THAT.
+```
+
+The `whether-history-gets-rewritten` decision resolved **no rewrite** (AI
+council 2026-08-28, 2/2): the evidence estate rests on stable commit pins, and a
+`git filter-repo` would convert every past `reproduced at <sha>` into an
+unverifiable claim — a larger loss than the residual it removes, and one that
+would still not reach a pre-rewrite clone, a fork or a PR mirror. So the
+residual is **counted, not hidden**: the census artefact
+(`agents/evidence/reports/source-attribution-census.md`) carries a `residual:`
+field for the immutable surfaces, and "clean" always means "clean minus the
+recorded residual".
+
 ## Fires when
 
 Authoring or editing a skill, rule, command, guideline, context, ADR, doc,
@@ -49,6 +68,27 @@ something we learned from, harvested, compared against, or copied.
 - **License-required attribution** for genuinely vendored Apache/MIT code —
   the one place an upstream name legitimately stays (see `ADR-061`; the
   vendored cluster is carved out in `external_sources_denylist.json`).
+
+### The two classes are opposites, and only one of them is a leak
+
+```
+HARVEST ATTRIBUTION IS PROHIBITED EVERYWHERE.
+LICENSE-REQUIRED ATTRIBUTION IS MANDATORY, AND LIVES ONLY IN THE LICENSE SURFACES.
+CONFLATING THEM IN EITHER DIRECTION IS A DEFECT: SCRUBBING A LICENSE NOTICE
+BREAKS A LEGAL OBLIGATION, AND HIDING A HARVEST BEHIND ONE IS THE LEAK.
+```
+
+The three license surfaces, by path — no others:
+
+- `CREDITS.md`
+- `docs/THIRD-PARTY-NOTICES.md`
+- `provenance/borrows.jsonl`
+
+An upstream name there is required by the license or by
+[`code-provenance`](code-provenance.md) and is never scrubbed. The same name in
+a roadmap, skill, rule, ADR or commit message is harvest attribution and is a
+defect. Every other `skip_paths` entry is a gate-own file or a vendored-cluster
+member carrying its own notice.
 
 ## Required instead
 
@@ -80,6 +120,25 @@ A ROADMAP THAT CITES A SOURCE IS ANONYMIZED AND TRACKED IN agents/roadmaps/.
 IT IS NEVER HIDDEN IN .harvest-local/ JUST BECAUSE IT MENTIONS A SOURCE.
 .harvest-local/ IS FOR RAW EVIDENCE THAT CANNOT BE ANONYMIZED — NOT FOR PLANS.
 ```
+
+## The gate also checks SHAPE, not only names
+
+A deny list can only catch a name somebody already wrote down; the next unknown
+source walks straight through it. `check_no_external_sources` therefore also
+flags attribution by **form** — a `> **Source:**` header whose value is neither
+an opaque round identifier nor an `ENC1:` token, a quoted
+`agents/tmp(.old)/<name>/` directory whose name is not opaque, and an
+un-allowlisted `github.com/<owner>/<repo>` URL — and it matches tracked **paths**
+against the deny set, not only file contents.
+
+Tiering, per the resolved `how-loud-the-slug-heuristic-is` decision (AI council
+2026-08-28, 2/2): **block inside `agents/**`, warn elsewhere** — slugs are
+ordinary content in integration code and docs, where blocking globally would
+drive the broad allowlisting that is worse than the gap it closes. The warn tier
+is written to a retained CI report (`--report <path>`), not merely printed, so
+it stays auditable. Pre-existing occurrences are a **shrink-only count** in
+`src/config/gate-violation-baselines.json`, never an allowlist: nothing is
+excused and a new occurrence fails immediately.
 
 ## Backstop
 

@@ -175,6 +175,30 @@ jobs:
       - name: Verify the roadmap dashboard is not committed
         run: task roadmap-dashboard-untracked-check
 
+      # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
+      # no workflow invokes `task ci` — so the check that exists to keep harvest
+      # sources out of the tracked tree could not fail a pull request. Same
+      # reason the archive-index and condensed-paths steps above sit here.
+      #
+      # The report is uploaded rather than only printed because the resolved
+      # `how-loud-the-slug-heuristic-is` decision requires it: the heuristic
+      # blocks inside agents/** and WARNS elsewhere, and both seats named the
+      # same residual risk — attribution moved out of agents/** leaves only a
+      # warning. Their condition for accepting that risk was that warnings be
+      # "visible and RETAINED in CI artifacts", so a warn-tier hit is auditable
+      # after the run instead of scrolling away in a log.
+      - name: Block readable external inspiration/harvest source names
+        run: task check-no-external-sources
+
+      - name: Retain the attribution-shape report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: source-shape-report
+          path: agents/runtime/reports/source-shape.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Verify dist == rewrite(src) byte-for-byte
         run: task check-condensation
 
