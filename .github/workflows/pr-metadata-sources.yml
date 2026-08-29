@@ -1,0 +1,85 @@
+name: PR metadata sources
+
+# road-to-source-silence Phase 4.3 — the surface no content gate can see.
+#
+# `check_no_external_sources` scans the tracked tree. It cannot see a branch
+# name, a PR title, a PR body, or a commit message, and Phase 0's census
+# measured what lives there: 10 hits across branch refs and 124 across 1,666
+# authored pull requests, including a third-party system named in a PR body that
+# appears NOWHERE in the tracked tree — so no content gate could ever have
+# caught it.
+#
+# These four surfaces become public the moment the PR opens and are effectively
+# immutable once merged: a trunk commit message and a merged PR body are the
+# residual the `whether-history-gets-rewritten` blocker resolved to ACCEPT
+# rather than rewrite. That is exactly why the check runs here, before they join
+# it. The same check runs locally on pre-push
+# (`src/scripts/hooks/prepush_metadata_sources.sh`) so an author sees it while
+# the metadata is still private.
+#
+# `edited` is in the trigger list on purpose: a title or body edited after
+# opening is a new disclosure, and a gate that only ran on `opened` would miss
+# the most likely way a name gets added.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: pr-metadata-sources-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  metadata:
+    name: gate off-tree metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          # The commit-message surface needs the real range, not the shallow
+          # single commit a default checkout leaves behind.
+          fetch-depth: 0
+
+      - name: Fetch base ref
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      # The body goes through a FILE, never an argument or an inline expansion:
+      # a PR body is untrusted, attacker-influencable text and interpolating it
+      # into a shell command is a command-injection surface. `env:` puts it in
+      # the process environment and `printf '%s'` writes it verbatim.
+      - name: Materialise the PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s' "${PR_BODY}" > "${RUNNER_TEMP}/pr-body.txt"
+
+      - name: Gate branch name, PR title, PR body and commit messages
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          ./scripts-run src/scripts/sweep_source_surfaces --gate-metadata \
+            --branch "${HEAD_REF}" \
+            --title "${PR_TITLE}" \
+            --body-file "${RUNNER_TEMP}/pr-body.txt" \
+            --commit-range "${BASE_SHA}..${HEAD_SHA}"
