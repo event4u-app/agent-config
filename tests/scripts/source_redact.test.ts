@@ -88,25 +88,62 @@ describe('source_redact — redactSourceTokens', () => {
         expect(lines[5]).toBe('+new line');
     });
 
-    it('a reused compiled pattern does not skip hits — lastIndex is reset per call', () => {
-        // A `g` RegExp carries lastIndex across .replace calls. Reusing one
-        // compiled set over many files is the intended usage, so this is the
-        // bug the reset guards against.
+    it('a reused compiled pattern set does not skip hits across many files', () => {
+        // The review noted that global String.replace resets regex state on its
+        // own, so this does not prove the explicit lastIndex reset is load
+        // bearing — it is belt-and-braces, and the test is kept for the
+        // property that actually matters: reusing one compiled set over many
+        // files is the intended usage and must be stable.
         const pats = patterns();
-        const first = redactSourceTokens('example-denied-slug', pats);
-        const second = redactSourceTokens('example-denied-slug', pats);
-        expect(first.count).toBe(1);
-        expect(second.count).toBe(1);
+        for (let i = 0; i < 5; i += 1) {
+            expect(redactSourceTokens('example-denied-slug', pats).count).toBe(1);
+        }
     });
 
-    // SENSITIVITY PROBE. If the matcher were neutralised — the deny list empty,
-    // the pattern never compiled — every assertion above would still pass on
-    // clean input. This one fails in that case, so the suite can tell "nothing
-    // to redact" from "redaction is broken".
-    it('SENSITIVITY: a token absent from the deny set is NOT redacted', () => {
-        const r = redactSourceTokens('a-token-that-is-not-denied', patterns());
-        expect(r.count).toBe(0);
-        expect(r.text).toBe('a-token-that-is-not-denied');
+    // A cross-model review correctly called the previous version of this test
+    // BACKWARDS: it asserted that a non-denied token survives, which a totally
+    // neutered matcher also satisfies. It proved nothing about sensitivity. The
+    // real discriminator is a paired assertion — the denied token must go AND
+    // the neighbouring one must stay — because no single broken implementation
+    // satisfies both.
+    it('discriminates: the denied token goes, the non-denied neighbour stays', () => {
+        const r = redactSourceTokens('example-denied-slug and a-token-that-is-not-denied', patterns());
+        expect(r.count).toBe(1);
+        expect(r.text).toBe(`${REDACTION_MARKER} and a-token-that-is-not-denied`);
+    });
+});
+
+describe('source_redact — overlapping patterns cannot partially expose a token', () => {
+    // This is a LIVE defect class, not a hypothetical: two pairs in the shipped
+    // denylist have this shape, where a `\b`-bounded entry matches inside a
+    // longer hyphenated entry because a hyphen is a word boundary. Applying
+    // patterns sequentially let the short one consume the head and leave the
+    // tail in the clear, emitting `[REDACTED:src-conf]-<tail>` — which still
+    // names the source. The real pairs are NOT quoted here: this repo's own
+    // step 2.2 had to fix a gate test that published real names, and repeating
+    // it inside the redactor's own suite would be the same defect. The fixture
+    // below reproduces the shape with invented tokens.
+    const overlapping = () =>
+        loadDenyPatterns(fixtureConfig(['\\bexample-denied\\b', 'example-denied-labs']));
+
+    it('redacts the WHOLE longer token, not just its head', () => {
+        const r = redactSourceTokens('see example-denied-labs for details', overlapping());
+        expect(r.text).toBe(`see ${REDACTION_MARKER} for details`);
+        expect(r.text).not.toContain('-labs');
+    });
+
+    it('still redacts the shorter token when it stands alone', () => {
+        const r = redactSourceTokens('see example-denied for details', overlapping());
+        expect(r.text).toBe(`see ${REDACTION_MARKER} for details`);
+    });
+
+    it('order in the config file does not change the outcome', () => {
+        const reversed = loadDenyPatterns(
+            fixtureConfig(['example-denied-labs', '\\bexample-denied\\b']),
+        );
+        expect(redactSourceTokens('x example-denied-labs y', reversed).text).toBe(
+            `x ${REDACTION_MARKER} y`,
+        );
     });
 });
 
