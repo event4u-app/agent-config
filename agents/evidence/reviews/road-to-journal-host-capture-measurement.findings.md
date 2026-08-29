@@ -8,8 +8,8 @@ inputs:
   diff_sha: ec0a35cb8d15f898e724da853edce7745f032c5a
   scope_hash: e4f5ad6bf6d31b4b6d3dc68111151c6d9eb1abf2e3de736b297a7106ca7d796c
   roadmap: agents/roadmaps/archive/road-to-journal-host-capture-measurement.md
-  roadmap_hash: 24fa2c7a29bf5f89e7ae1bd8afee8e5f0298a60fe372c53ad4dce5af08814fc0
-  ac_hash: 06e8d0e9ff7141df5e1c340f69e5a05409d995e26fe076d416a12126af9529ab
+  roadmap_hash: 46d0613a4cff60120579afaaa46849865e947c9da566c599c47b35adfb9560a3
+  ac_hash: 8ce8d8d2713f3dc09b3f5779549508b625838170ce669b2efc9d1a13a60d1881
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-29T17:07:46Z
@@ -19,7 +19,18 @@ dispatched: 2026-08-29T17:07:46Z
 > skeleton). The review ran against scope `0f9f108e…` / head `2765332d`. Acting
 > on its findings moved the reviewed content, so the scope hash moved with it;
 > the artefact is re-bound to the scope the fixes produced (`e4f5ad6b…` / head `ec0a35cb`) rather than archived or re-dispatched, because archiving would
-> leave the shipping content with no review at all. Every row was already
+> leave the shipping content with no review at all.
+>
+> **Corrected 2026-08-29: the first re-bind moved only TWO of the four input
+> hashes.** `scope_hash` and `diff_sha` were updated and `roadmap_hash` /
+> `ac_hash` were left at their pre-fix values, so Gate R2
+> (`dispatch_r2_reviewer --verify-current`) reported `manifest mismatch (stale
+> review): roadmap_hash, ac_hash diverged` and reddened the Sync + Generate
+> Tools Consistency job on the PR. Both are now re-derived. Worth stating
+> rather than fixing silently: a re-bind is only complete when EVERY input
+> hash the manifest records is re-derived — the marker line and the
+> context-manifest are two surfaces of one binding, and updating the visible
+> one leaves a manifest that verifies against nothing. Every row was already
 > terminal before the re-bind. The rows below are the ORIGINAL findings against
 > the original scope — the re-bind changes what they are bound to, never what
 > was found.
