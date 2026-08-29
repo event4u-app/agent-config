@@ -309,6 +309,7 @@ one for a design note under review: § 2's rule is that unanswered is
       governance roadmap's first draft required these to be *documented*. A
       documented deletion path that nobody executed is a claim.
       verify: DONE — `src/scripts/_lib/collector_store.ts` + `tests/scripts/collector_store.test.ts`. Both clauses are driven against the real store on a temp user root; nothing is mocked, because a mocked deletion is a documented deletion with extra steps.
+      **The count is runtime-conditional and is NOT CI evidence.** Those tests require `node:sqlite`, which `.github/workflows/tests.yml` does not offer — CI pins Node 20 and the module did not exist before 22.5 — so on CI the `withSqlite` blocks do not execute and this platform row is **unverified**, exactly as `blocker: lifecycle-ci-runner-provisioning` resolved for the lifecycle suite. The counts below were executed on a Node 26 runtime. `tests/scripts/collector_store.test.ts` enforces this qualifier: on a runtime without `node:sqlite` it asserts this very paragraph exists, so deleting it reds the suite on CI.
 
       **Deletion.** `deleteMachine` is the supported path and returns how many
       records it removed. The test writes 4 records for one machine and 1 for a
@@ -342,7 +343,7 @@ one for a design note under review: § 2's rule is that unanswered is
       backward compatibility, what an older package does when it meets newer
       records, whether a rollback migrates or quarantines, what uninstall
       removes, and recovery after a crash mid-migration.
-      verify: DONE — five transitions, five named tests, each driven over a store seeded to the state it tests. `tests/scripts/collector_store.test.ts` § *2.4 — the five upgrade transitions*.
+      verify: DONE — five transitions, five named tests, each driven over a store seeded to the state it tests. `tests/scripts/collector_store.test.ts` § *2.4 — the five upgrade transitions*. Runtime-conditional on `node:sqlite`, per the qualifier recorded under 2.3 — unverified on CI, executed on Node 26.
 
       | # | Transition | Contract | Test |
       |---|---|---|---|

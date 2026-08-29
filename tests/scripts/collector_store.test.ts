@@ -77,20 +77,64 @@ const withSqlite = isStoreAvailable() ? describe : describe.skip;
 // 2.4 degraded to ZERO executed assertions with no distinguishing signal, in a
 // roadmap whose own AC-8 holds that a skip counts as a failure.
 //
-// The sibling suite (`runtime_journal.test.ts:56`) uses the same silent
-// `describe.runIf` pattern, and this file deliberately differs rather than
-// matching it: its evidence line names a test COUNT, and a count nobody executed
-// is not evidence. This block is NOT skipped, so an unavailable runtime is a red
-// test rather than a silent zero.
+// The sibling suite (`runtime_journal.test.ts:56`) uses the silent
+// `describe.runIf` pattern, and this file deliberately differs: its evidence line
+// names a test COUNT, and a count nobody executed is not evidence.
+//
+// CORRECTED 2026-08-29, and the correction is the point rather than a softening.
+// The first fix asserted `isStoreAvailable()` unconditionally, which is red on
+// every CI runner: `.github/workflows/tests.yml` pins **Node 20**, and
+// `node:sqlite` did not exist before 22.5. So the assertion was green only on the
+// author's own Node 26 machine — a measurement taken in the wrong environment —
+// and on CI it became a PERMANENT red. A permanently red test is exactly as
+// little signal as the silent zero it replaced: it stops being read.
+//
+// What actually needed fixing was the CLAIM, not the runtime. The count belongs
+// to a runtime that offers `node:sqlite`; where the runtime does not, the honest
+// record is "unverified on this platform" — which is the disposition the AI
+// council already reached for this roadmap's own lifecycle suite
+// (`lifecycle-ci-runner-provisioning`, option (b), unanimous 2/2): run where the
+// platform allows it, record the other as unverified, and never let an
+// appearance of coverage stand in for evidence.
+//
+// So the gate is falsifiable in BOTH directions, and neither branch is a skip:
+//   - runtime HAS node:sqlite  -> the blocks below ran, and this asserts it;
+//   - runtime LACKS it         -> the roadmap must SAY the count is
+//                                 runtime-conditional. Delete that qualifier and
+//                                 this test reds, on CI, where it matters.
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const ROADMAP_REL = 'agents/roadmaps/road-to-supervised-telemetry-collector.md';
+
 describe('the runtime this suite’s evidence line depends on', () => {
-    it('has node:sqlite — a skip here would make every count below unearned', () => {
-        expect(
-            isStoreAvailable(),
-            'node:sqlite is unavailable, so every `withSqlite` block below SKIPPED and the ' +
-                'recorded test count is unearned. This is a failure, not an absence — AC-8 of ' +
-                'this roadmap holds exactly that for its own lifecycle suite.',
-        ).toBe(true);
-    });
+    const available = isStoreAvailable();
+
+    it.runIf(available)(
+        'has node:sqlite, so every `withSqlite` count below was actually executed',
+        () => {
+            expect(available).toBe(true);
+        },
+    );
+
+    it.skipIf(available)(
+        'lacks node:sqlite — so the roadmap records the count as runtime-conditional, never as CI evidence',
+        () => {
+            // Not a tautology and not a skip: on a runtime without `node:sqlite`
+            // this is the ONLY thing standing between a skipped block and a
+            // roadmap that reads as if it had been verified here.
+            const roadmapPath = path.join(REPO_ROOT, ROADMAP_REL);
+            const roadmap = fs.readFileSync(roadmapPath, 'utf8');
+            expect(
+                roadmap,
+                `${ROADMAP_REL} must name \`node:sqlite\` as the condition its ` +
+                    'collector_store test counts depend on, because this runtime does not offer it ' +
+                    `(node ${process.versions.node}) and the counts were therefore NOT executed here.`,
+            ).toContain('node:sqlite');
+            expect(
+                roadmap,
+                `${ROADMAP_REL} must record the unverified-runtime disposition, not just mention the module.`,
+            ).toMatch(/runtime-conditional/);
+        },
+    );
 });
 
 withSqlite('2.3 — deletion is a path, and it is exercised', () => {
