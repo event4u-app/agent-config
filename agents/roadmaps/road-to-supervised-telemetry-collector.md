@@ -394,10 +394,12 @@ one for a design note under review: § 2's rule is that unanswered is
       test *named* per row, and a name is not coverage. So each row's test
       carries its state explicitly — `EXISTS` with the file, or `OWED BY <step>`
       — because a matrix whose test column reads like seven green checks when
-      four of them are future work is the "presence check masquerading as proof"
-      that step 5.2 exists to prevent, one section earlier. Three of the seven
-      are enforced today; four are owed by the steps that build what they test,
-      and they are owed by name rather than by hope.
+      five of them are future work is the "presence check masquerading as proof"
+      that step 5.2 exists to prevent, one section earlier. **Two** of the seven
+      are enforced today — rows 1 and 5 — and **five** are owed by the steps
+      that build what they test, by name rather than by hope. (The first draft
+      of this paragraph said three and four. Counted against the table below it
+      is two and five, and the table is what a reader checks.)
 
       | # | Trigger | Activation mechanism | Owner | Recovery procedure | Test |
       |---|---|---|---|---|---|
@@ -771,7 +773,7 @@ one for a design note under review: § 2's rule is that unanswered is
 - [x] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
       MET by 2.4. Five named tests, one per transition, each over a store seeded to the state it tests — plus a sixth on the quarantine directory's growth budget. Transition 3 asserts the quarantined file's BYTES are unchanged, which is what "preserve without reading or rewriting" has to mean to be checkable. Sensitivity observed: 3 of 14 red when a newer store is read instead of quarantined, 1 of 14 when the crash marker is checked after the version stamp.
 - [ ] AC-6 — Every rollback-trigger row has an activation mechanism, an owner, a recovery procedure and a named test; resource budgets are numbers with headroom; and the kill switch has been exercised against an unresponsive process.
-      FIRST CLAUSE MET by 3.1 — seven rows, four columns each, no empty test cell, and each test carries its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage. THREE of the seven are enforced today; four are owed by the steps that build what they test. The second and third clauses are 3.2 and 3.3 and are OPEN: both need the collector, which is Phase 4. Deliberately not flipped — a partly-met AC reading met is the silent-green this roadmap's own § 4 warns about.
+      FIRST CLAUSE MET by 3.1 — seven rows, four columns each, no empty test cell, and each test carries its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage. TWO of the seven are enforced today (rows 1 and 5); five are owed by the steps that build what they test. The second and third clauses are 3.2 and 3.3 and are OPEN: both need the collector, which is Phase 4. Deliberately not flipped — a partly-met AC reading met is the silent-green this roadmap's own § 4 warns about.
 - [ ] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
 - [ ] AC-8 — The five lifecycle properties are demonstrated by process-level tests on every declared platform, executed in CI on each — a skip counts as a failure on that platform.
 - [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
