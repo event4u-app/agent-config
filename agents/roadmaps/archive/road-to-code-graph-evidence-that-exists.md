@@ -349,12 +349,29 @@ its completion has **no dependency relationship** with this phase.
 - **Discovered during the run, not before it.** The pinned corpus encodes the
   three `path-between` questions with a TWO-ENDPOINT probe (`"cmdBuild ->
   getParser"`), and the registered runner gives both arms a single probe token.
-  Neither arm can match a token containing ` -> `, so all three questions
-  returned the empty set from **both** arms. The inconsistency existed at
-  registration time; finding it required running the benchmark. It was found
-  independently by the corpus's own author, who restored the file to its
-  registered bytes rather than editing a corpus that had already been pinned and
-  run.
+  Neither arm can match a token containing ` -> `, so all three questions scored
+  zero on every metric. The inconsistency existed at registration time; finding
+  it required running the benchmark. It was found independently by the corpus's
+  own author, who restored the file to its registered bytes rather than editing a
+  corpus that had already been pinned and run.
+- **CORRECTED 2026-08-29 — the cause recorded here and published on five
+  surfaces was FALSE.** This entry, the runner, the report, the v2 stub, the
+  code-intelligence skill and ADR-246 all said the class returned the empty set
+  from **both** arms. Only the grep arm did — a word-boundary search for a token
+  containing ` -> ` matches no text. **The graph arm answered all three
+  questions and the runner's scorer discarded the answer**, because its relevance
+  filter compares each returned node's symbol segment against the entire probe
+  string. Confirmed by direct execution: `affected "cmdBuild -> getParser"`
+  returns all four truth files. The zero was shared; the cause was not, and the
+  published claim attributed to the engine a silence that belonged to the
+  harness. Two further scorer defects were found in the same pass — the run never
+  invoked the shipped `path <a> <b>` verb, and it counted unresolved `symbol:`
+  pseudo-nodes as files, which is the sole reason `callers` was ruled NULL with
+  recall tied at 1.000/1.000. **No v1 number is retro-edited**: the arithmetic was
+  faithful to the registration it ran under. The repair is a v2 registration,
+  run on 2026-08-29 — `internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md`.
+  v2 finds zero winning classes: `path-between` is a TIE at +8.3 pp, the graph
+  scoring 1.000/1.000 against a repaired grep arm at 0.917.
 - **Resolution:** **(a) publish v1 as-is with the class relabelled VOID —
   INSTRUMENT FAILURE, and record the fix as a v2 registration.** AI council
   2026-08-28 (anthropic + openai, 1 round, $0.00), 2/2 convergent. Option (c) —
@@ -390,9 +407,17 @@ its completion has **no dependency relationship** with this phase.
 - **Resolved when:** the published report carries both columns, names the void
   class and its cause, and withholds an overall engine verdict; and the v2 stub
   exists.
-- **If you do nothing:** the report publishes `TIE` for a class where both arms
-  measured nothing, which is a fabricated result — the exact defect this
-  roadmap's own Risk 1 exists to prevent, in the opposite direction.
+- **If you do nothing:** the report publishes `TIE` for a class where the
+  measurement produced no usable signal, which is a fabricated result — the exact
+  defect this roadmap's own Risk 1 exists to prevent, in the opposite direction.
+- **What this blocker's resolution got wrong, kept as the lesson.** The
+  resolution above is sound on process — publish both columns, do not repair a
+  class under its own registration — and it shipped a false *diagnosis* alongside
+  it. Nobody asked which arm was silent and why; a shared zero was read as a
+  shared cause. `run_bench_inrepo_v2.ts` encodes the correction in its own VOID
+  note: a class where every metric reads zero for both arms is flagged, and the
+  note says the cause must be established by reading each arm rather than assumed
+  to be symmetric.
 
 
 ## Acceptance Criteria
