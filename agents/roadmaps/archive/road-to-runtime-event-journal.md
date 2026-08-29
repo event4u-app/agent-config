@@ -143,7 +143,7 @@ accepts.
       construction*; it is now bound, exercisable, and measured on the path that
       exists.
 
-      **Carried to** `agents/roadmaps/road-to-journal-host-capture-measurement.md`
+      **Carried to** `agents/roadmaps/archive/road-to-journal-host-capture-measurement.md`
       — an ACTIVE roadmap, `status: ready`, carrying both closers as blockers
       with recorded option sets and the `session_fallback` finding.
 
