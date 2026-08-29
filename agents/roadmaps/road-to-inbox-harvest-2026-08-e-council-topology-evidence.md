@@ -174,8 +174,8 @@ called a larger risk than feature absence.
       verify: a deliberately-added second task-side council router makes the
       new architecture test fail; sabotage the guard, watch it go red, restore
 
-      **Closed 2026-08-29, after three review rounds killed three
-      implementations.** The invariant was documented and enforced by nothing:
+      **Closed 2026-08-29, after SEVEN review rounds, four of which killed an
+      implementation outright.** The invariant was documented and enforced by nothing:
       `judgment_ladder.ts`'s docstring states all three clauses — one resolver,
       "never a fourth parallel classifier bolted on beside it", and
       "deliberately independent of `ai_council/necessity.ts`" — and a docstring
@@ -366,8 +366,8 @@ called a larger risk than feature absence.
       with the stop: *"a sixth round on these four would move the scope hash
       again for changes that open no hole."*
 
-      **Why the loop stopped here rather than at a clean round.** Six rounds,
-      25 findings, and every repair moved the scope hash and forced the next
+      **Why the loop stopped here rather than at a clean round.** Seven rounds,
+      33 findings, and every repair moved the scope hash and forced the next
       round. The terminating rule was set before this round ran, not after
       seeing its result: fix what blocks, record what does not. A sixth round
       would be measuring a guard that has already had four defect classes

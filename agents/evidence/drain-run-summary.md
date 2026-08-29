@@ -14,7 +14,7 @@ another session) and was excluded as claimed. Six entered the queue.
 | # | Roadmap | Start | End | PR |
 |---|---|---|---|---|
 | 1 | runtime-event-journal | 20/21 | archived | [#1712](https://github.com/event4u-app/agent-config/pull/1712) — merged |
-| 2 | supervised-telemetry-collector | 0/28 | 3/28, `draft` → `ready` | [#1714](https://github.com/event4u-app/agent-config/pull/1714) |
+| 2 | supervised-telemetry-collector | 0/28 | 3/28, `draft` → `ready` | [#1714](https://github.com/event4u-app/agent-config/pull/1714) — merged |
 | 3 | experience-loop-broadening | 0/47 | 1/47 | [#1716](https://github.com/event4u-app/agent-config/pull/1716) — merged |
 | 4 | capability-native-execution | 1/54 | 2/54 | [#1717](https://github.com/event4u-app/agent-config/pull/1717) — merged |
 | 5 | governed-harness-evolution | 0/58 | 0/58 | [#1718](https://github.com/event4u-app/agent-config/pull/1718) — merged |
@@ -78,7 +78,7 @@ refused to infer the assignments — *"sequence position is not an ownership
 criterion"* — and required a fresh deliberation, which was held and
 back-propagated to both roadmaps.
 
-## The one-resolver guard: six review rounds, 25 findings
+## The one-resolver guard: seven review rounds, 33 findings
 
 Step 0.5 asked for an invariant to be locked "in documentation **and** in a
 test". Six fresh-subagent R2 rounds — none of whose prompts this session
@@ -92,6 +92,7 @@ authored — killed four implementations:
 | 4 | TypeScript parser | four isolated omissions; model judged **adequate** |
 | 5 | + `.tsx` in the file list | `ScriptKind.TS` hard-coded, so `.tsx` parsed as non-JSX — **rounds 2 and 3 live again inside round 4's repair** |
 | 6 | confirmation | blocking finding **closed**; 4 recorded as `accepted-risk` |
+| 7 | binding | 0 blocking; 3 documentation inaccuracies in this summary and the roadmap, **including a findings total that understated by five** |
 
 Two principles the council asked be recorded, both now in the module:
 
