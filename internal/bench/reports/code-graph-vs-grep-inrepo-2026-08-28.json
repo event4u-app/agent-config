@@ -61,8 +61,8 @@
     },
     "path-between": {
       "verdict": "TIE",
-      "validity": "VOID — INSTRUMENT FAILURE",
-      "validity_note": "Both arms returned the empty set on every question in this class, so nothing was measured. The registered verdict above is the runner's arithmetic and is preserved; it is not a defensible substantive interpretation.",
+      "validity": "VOID \u2014 INSTRUMENT FAILURE",
+      "validity_note": "Every metric read zero for both arms in this class, so this run measured nothing here \u2014 but NOT symmetrically, and the two arms did not fail for the same reason. CORRECTED 2026-08-29, replacing a note that claimed both arms returned the empty set: on `path-between` the grep arm genuinely found nothing (a word-boundary search for a token containing \" -> \" matches no text), while the GRAPH ARM ANSWERED ALL THREE QUESTIONS and this runner's relevance filter discarded the answer, because it compares each returned symbol against the whole two-endpoint probe string. The defect is in this scorer, not in the engine. The registered verdict above is this runner's arithmetic and is preserved unchanged; the repaired measurement is a separate registration, `PREREGISTRATION-inrepo-v2-2026-08-29.md`.",
       "recall_delta_pp": 0,
       "precision_ok": true,
       "grep": {
@@ -99,7 +99,7 @@
     "floor_ok": false
   },
   "macro_average_reported_only": {
-    "note": "REPORTED ONLY — not a pass criterion. Printed so a reader can see the aggregate the 2026-07-28 run would have reported. No verdict is derived from it.",
+    "note": "REPORTED ONLY \u2014 not a pass criterion. Printed so a reader can see the aggregate the 2026-07-28 run would have reported. No verdict is derived from it.",
     "grep": {
       "precision": 0.653,
       "recall": 0.653
@@ -113,8 +113,8 @@
   "classes_void": [
     "path-between"
   ],
-  "negative_control_construct_caveat": "The four controls are literal-string searches (a config key, a log filename, an env var name, a comment fragment). This engine indexes SYMBOLS and call relations, not string literals, so it scores 0.000 on all four by construction. The pre-registered floor is reported FAILED because it was registered and cannot be discarded after the fact — but a reader must not read it as an implementation defect. AI council 2026-08-28 split on this and resolved it by naming the claim: if the claim were \"graph retrieval replaces grep for repository investigation\" the controls are valid and the failure matters; if the claim is \"graph retrieval improves structural code questions\" the controls sit outside that construct. This benchmark makes only the second claim. A v2 registration must separate IN-DOMAIN negative controls (symbol-shaped probes whose correct answer is empty, testing false positives) from CAPABILITY-BOUNDARY tests (literals, filenames, config keys), reported separately.",
-  "overall_verdict_withheld": "No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID, and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is \"zero classes met the pre-registered win criterion\", NOT \"grep proved superior across all classes\". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one.",
+  "negative_control_construct_caveat": "The four controls are literal-string searches (a config key, a log filename, an env var name, a comment fragment). This engine indexes SYMBOLS and call relations, not string literals, so it scores 0.000 on all four by construction. The pre-registered floor is reported FAILED because it was registered and cannot be discarded after the fact \u2014 but a reader must not read it as an implementation defect. AI council 2026-08-28 split on this and resolved it by naming the claim: if the claim were \"graph retrieval replaces grep for repository investigation\" the controls are valid and the failure matters; if the claim is \"graph retrieval improves structural code questions\" the controls sit outside that construct. This benchmark makes only the second claim. A v2 registration must separate IN-DOMAIN negative controls (symbol-shaped probes whose correct answer is empty, testing false positives) from CAPABILITY-BOUNDARY tests (literals, filenames, config keys), reported separately.",
+  "overall_verdict_withheld": "No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID \u2014 and CORRECTED 2026-08-29, because of a defect in THIS RUNNER rather than a symmetric silence, the graph arm having answered and been discarded by the scorer \u2014 and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is \"zero classes met the pre-registered win criterion\", NOT \"grep proved superior across all classes\". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one; it exists at PREREGISTRATION-inrepo-v2-2026-08-29.md and its result is at internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md.",
   "rows": [
     {
       "id": "cg-callers-01",
@@ -555,5 +555,16 @@
       "missed_by_grep": [],
       "wrong_by_grep": []
     }
-  ]
+  ],
+  "corrections": {
+    "date": "2026-08-29",
+    "what_changed": "Narrative only. No score, bar, arm, or verdict in this report was altered \u2014 this run's arithmetic was faithful to its own pre-registration, which defines arm B as `affected` + `query`.",
+    "false_claim_withdrawn": "\"Both arms returned the empty set on every question in this class\" \u2014 false for the graph arm on `path-between`. It answered all three questions; the runner's relevance filter compared each returned symbol against the entire probe string \"cmdBuild -> getParser\", which no symbol contains, and discarded every correct relation.",
+    "two_further_scorer_defects_recorded_here_not_repaired_here": [
+      "This run never invoked the shipped `path <a> <b>` verb; its graph arm ran only `affected` and `query`.",
+      "Unresolved `symbol:` pseudo-nodes were counted as files (`p.split('#')[0]` on `symbol:DatabaseSync` returns the whole token), deflating graph precision in every class holding one. `callers` was ruled NULL on the precision floor alone with recall tied at 1.000/1.000, so that verdict is harness-caused as well."
+    ],
+    "measured_commit_reachability": "`c454648af6996db2affa6f76c86c349677cee703` is NOT an ancestor of `main` \u2014 it exists only on the local branch `drain/code-graph-evidence-that-exists`, so this pointer resolves to nothing in a fresh clone. The measured content is reachable: the three measured roots are byte-identical at `6a5670b78` (the squash merge of PR #1705, on `main`) \u2014 `src/scripts/code_graph` e55fc87c7081359e1c0e2bf8263f17358de2e315, `src/shared` dcdc68073e0f2340b3734678cc4e82f34c241dba, `src/scripts/ai_council` 778a493ba915795159adcb0bb789e93b89d6a86a \u2014 and the corpus file is byte-identical at both. The scoring functions did not change between the two commits, so this run reproduces at `6a5670b78`.",
+    "repaired_measurement": "internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md"
+  }
 }

@@ -1,0 +1,458 @@
+# In-repo code-structure benchmark corpus, v2 (pre-registered, neutral).
+#
+# Derived from `inrepo-corpus-v2-SEED-NOT-REGISTERED.yaml`, the corpus author's
+# corrected file, with three registered changes recorded in
+# `PREREGISTRATION-inrepo-v2-2026-08-29.md`: `path-between` carries both
+# endpoints, the four literal probes move to their own `capability-boundary`
+# class, and three in-domain negative controls are added. Every question body
+# the seed carried is otherwise byte-unchanged.
+#
+# 19 questions over three TypeScript roots INSIDE this repository. Each question
+# names one bare probe token that both arms receive verbatim (`path-between`
+# names two, start and goal); `truth` is the set
+# of files that genuinely answer the question, established by reading the source
+# rather than by trusting any one tool.
+#
+# Ground-truth conventions, applied uniformly to every question:
+#   - Paths are repo-relative to the NAMED ROOT (e.g. `build.ts` under the
+#     `code_graph` root), matching how the graph engine ids nodes relative to
+#     `--root`.
+#   - A mention inside a prose comment, a docstring, or a string literal is NOT
+#     an answer to a `callers` / `transitive-impact` / `references` question and
+#     is excluded. Where such mentions exist they are listed under `distractors`.
+#   - `callers` truth is the set of files holding a real call site; the declaring
+#     file is excluded unless it also calls the symbol.
+#   - `references` truth includes the declaration, imports, and use sites.
+#   - `transitive-impact` truth is the multi-hop closure of files that would have
+#     to be re-read if the probe's contract changed, within the named root only.
+#   - `path-between` names two endpoints, and carries BOTH of them: `probe` is
+#     the start symbol ("from A") and `probe_to` is the goal symbol ("to B").
+#     Truth is every file ON the path, endpoints included, and nothing else --
+#     a file that merely reaches the start symbol from upstream is a distractor,
+#     not an answer. The rule is mechanical and fixed here, before any run; it
+#     is not chosen per question.
+#     The v1 corpus encoded the pair as one string (`"cmdBuild -> getParser"`)
+#     and the v1 runner handed that string to both arms as a single token, which
+#     no symbol and no word-boundary search can match. Two structured fields
+#     replace it. See PREREGISTRATION-inrepo-v2-2026-08-29.md § The v1 defects.
+#   - Only files INSIDE the named root count. Out-of-root reaches (e.g.
+#     `../_lib/lexical_index.ts`) are out of scope by construction.
+#
+# `grep_behaviour`, where present, records how a word-boundary text search over
+# the root compares to truth for that question. It is a labelled property of the
+# item, not a prediction of the run, and it was measured after ground truth was
+# fixed -- never used to select truth.
+#
+# This corpus was constructed by a party that is not running the benchmark and is
+# not tuned for or against any retrieval strategy.
+
+corpus_version: 2
+generated: "2026-08-29"
+
+roots:
+  - name: code_graph
+    path: src/scripts/code_graph
+  - name: shared
+    path: src/shared
+  - name: ai_council
+    path: src/scripts/ai_council
+
+questions:
+
+  # ── callers (3) ────────────────────────────────────────────────────────────
+
+  - id: cg-callers-01
+    root: code_graph
+    category: callers
+    question: "Which files contain a call site of emitSqliteTwin (excluding its own declaration)?"
+    probe: emitSqliteTwin
+    probe_kind: symbol
+    truth:
+      - path: build.ts
+        why: "imports it at :19 and calls it at :497 inside buildFromRepo"
+      - path: query.ts
+        why: "imports it at :12 and calls it at :39 inside loadGraph, on the twin-miss path"
+    distractors:
+      - path: sqlite_store.ts
+        why: "declaration at :54; excluded by the callers convention, not by any judgement about it"
+
+  - id: sh-callers-01
+    root: shared
+    category: callers
+    question: "Which files contain a call site of isConservativeDefault (excluding its own declaration)?"
+    probe: isConservativeDefault
+    probe_kind: symbol
+    truth:
+      - path: settingsAsks.ts
+        why: "imports it at :30 and calls it at :146 inside planSettingsAsks"
+      - path: settingsConsent.ts
+        why: "imports it at :36 and calls it at :126 inside consentVerdict"
+    distractors:
+      - path: settingsClasses.ts
+        why: "declaration at :208; excluded by the callers convention"
+
+  - id: ac-callers-01
+    root: ai_council
+    category: callers
+    question: "Which files contain a call site of classifyCliFailure (excluding its own declaration)?"
+    probe: classifyCliFailure
+    probe_kind: symbol
+    truth:
+      - path: mid_flight_fallback.ts
+        why: "imports it at :21 and calls it at :163 inside establishTwin"
+      - path: quorum_wiring.ts
+        why: "imports it at :43 and calls it at :211 while classifying an absent member"
+    distractors:
+      - path: qualification.ts
+        why: "prose only -- a docblock mention at :185 and a line comment at :280; no call site"
+      - path: transport_resolver.ts
+        why: "declaration at :477 plus a docblock mention; excluded by the callers convention"
+    grep_behaviour: over-answers
+    notes: >-
+      DESIGNATED over-answer case. A word-boundary text search for the identifier
+      returns four files; qualification.ts contains only prose about the function
+      and is not an answer under any reading.
+
+  # ── transitive-impact (3) ──────────────────────────────────────────────────
+
+  - id: cg-impact-01
+    root: code_graph
+    category: transitive-impact
+    question: "Which files would be affected if the contract of getParser changed?"
+    probe: getParser
+    probe_kind: symbol
+    truth:
+      - path: loader.ts
+        why: "declares getParser at :138"
+      - path: extract.ts
+        why: "direct caller: imports at :23, awaits getParser(lang) at :507 inside extractFile"
+      - path: build.ts
+        why: "one hop further: calls extractFile at :483 inside buildFromRepo"
+      - path: cli.ts
+        why: "two hops further: cmdBuild calls buildFromRepo at :127"
+    grep_behaviour: under-answers
+    notes: >-
+      DESIGNATED textual-under-answer case. A word-boundary search returns only
+      loader.ts and extract.ts; build.ts and cli.ts reach the symbol through
+      extractFile and buildFromRepo and contain no textual occurrence of it.
+
+  - id: sh-impact-01
+    root: shared
+    category: transitive-impact
+    question: "Which files would be affected if the SETTINGS_CLASSES value tuple changed?"
+    probe: SETTINGS_CLASSES
+    probe_kind: symbol
+    truth:
+      - path: settingsClasses.ts
+        why: "declares the tuple at :19, derives the SettingsClass union from it at :21, guards it at :23"
+      - path: settingsAsks.ts
+        why: "one hop: imports the derived SettingsClass type at :30, uses it in the planSettingsAsks signature at :90"
+      - path: settingsConsent.ts
+        why: "one hop: imports the derived SettingsClass type at :36, uses it on ConsentQuery.cls at :87"
+    grep_behaviour: under-answers
+    notes: >-
+      DESIGNATED textual-under-answer case. A word-boundary search returns
+      settingsClasses.ts alone; both consumers depend on the tuple only through
+      the type alias derived from it.
+
+  - id: ac-impact-01
+    root: ai_council
+    category: transitive-impact
+    question: "Which files would be affected if the behaviour of would_exceed changed?"
+    probe: would_exceed
+    probe_kind: symbol
+    truth:
+      - path: budget_guard.ts
+        why: "declares would_exceed at :473"
+      - path: spend_gate.ts
+        why: "imports it aliased as _would_exceed_daily at :20 and calls it at :110 inside _breach"
+      - path: orchestrator.ts
+        why: "one hop further: calls _breach at :669 and :764, so the daily-cap branch is on its path"
+    notes: >-
+      Neither over- nor under-answers: a word-boundary search returns exactly
+      these three files. It reaches orchestrator.ts for the wrong reason, though
+      -- through an aliased import at :31 whose binding the file body never uses.
+      The file is a genuine answer via _breach regardless.
+
+  # ── path-between (3) ───────────────────────────────────────────────────────
+  # `probe` = the START symbol, `probe_to` = the GOAL symbol, per the header.
+
+  - id: cg-path-01
+    root: code_graph
+    category: path-between
+    question: "Is there a call path from cmdBuild to getParser, and through what?"
+    probe: cmdBuild
+    probe_to: getParser
+    probe_kind: symbol
+    truth:
+      - path: cli.ts
+        why: "start: cmdBuild at :119 calls buildFromRepo at :127"
+      - path: build.ts
+        why: "intermediate: buildFromRepo at :449 calls extractFile at :483"
+      - path: extract.ts
+        why: "intermediate: extractFile at :495 awaits getParser at :507"
+      - path: loader.ts
+        why: "end: getParser declared at :138"
+
+  - id: ac-path-01
+    root: ai_council
+    category: path-between
+    question: "Is there a call path from estimate_cost to priceKey, and through what?"
+    probe: estimate_cost
+    probe_to: priceKey
+    probe_kind: symbol
+    truth:
+      - path: pricing.ts
+        why: "start: estimate_cost at :121 calls lookup at :128; lookup at :71 calls priceKey at :72 and :80"
+      - path: _default_prices.ts
+        why: "end: priceKey declared at :47"
+    distractors:
+      - path: orchestrator.ts
+        why: >-
+          calls estimate_cost at :324, so it reaches the start symbol, but it is
+          upstream of the path rather than on it; the question asks what lies
+          between estimate_cost and priceKey.
+    notes: >-
+      The two-file truth is the path itself. orchestrator.ts is recorded as a
+      distractor rather than silently dropped because it is a defensible extra
+      answer for a scorer who reads the class as 'everything touching the path'.
+
+  - id: ac-path-02
+    root: ai_council
+    category: path-between
+    question: "Is there a call path from classify_impact_with_corpus_fuzzy to load_validated_phrases, and through what?"
+    probe: classify_impact_with_corpus_fuzzy
+    probe_to: load_validated_phrases
+    probe_kind: symbol
+    truth:
+      - path: low_impact.ts
+        why: "start: the function at :940 destructures load_validated_phrases from a dynamic await import('./low_impact_corpus.js') at :947 and calls it at :982"
+      - path: low_impact_corpus.ts
+        why: "end: load_validated_phrases declared at :433"
+    distractors:
+      - path: necessity.ts
+        why: >-
+          holds a second, static route to the same name -- imports it aliased as
+          _load at :29 and re-exports a same-named shim at :772 called at :812 --
+          but the probed function does not take that route.
+    notes: >-
+      The edge under test is a DYNAMIC import. See the ambiguity paragraph in
+      Limits: this is the one item in the set whose truth is a judgement call.
+
+  # ── references (3) ─────────────────────────────────────────────────────────
+
+  - id: cg-references-01
+    root: code_graph
+    category: references
+    question: "Where is EXT_LANG declared, imported, or used?"
+    probe: EXT_LANG
+    probe_kind: symbol
+    truth:
+      - path: types.ts
+        why: "declares the extension-to-language map at :87"
+      - path: build.ts
+        why: "imports it at :24; uses it at :79 (discoverFiles extension filter), :132 (langOf) and :482 (per-file lang)"
+
+  - id: sh-references-01
+    root: shared
+    category: references
+    question: "Where is the SettingsClass type declared, imported, or used?"
+    probe: SettingsClass
+    probe_kind: symbol
+    truth:
+      - path: settingsClasses.ts
+        why: "declares the alias at :21; used at :23, :185, :186, :266, :268 and :314"
+      - path: settingsAsks.ts
+        why: "type-imports it at :30 and uses it in the planSettingsAsks signature at :90"
+      - path: settingsConsent.ts
+        why: "type-imports it at :36 and uses it on ConsentQuery.cls at :87"
+    notes: >-
+      Longer identifiers in the same tree contain the probe as a substring
+      (SettingsClassRow, isSettingsClass, buildSettingsClassIndex,
+      parseSettingsClassRows). A word-boundary search does not match them, so no
+      over-answer arises; a naive substring search would still land in these same
+      three files. Recorded so the absence of a collision effect is not mistaken
+      for the absence of a collision.
+
+  - id: ac-references-01
+    root: ai_council
+    category: references
+    question: "Where is evaluateQuorum declared, imported, or used?"
+    probe: evaluateQuorum
+    probe_kind: symbol
+    truth:
+      - path: quorum.ts
+        why: "declares evaluateQuorum at :92 (docblock reference at :24)"
+      - path: quorum_wiring.ts
+        why: "imports it at :42 and calls it at :218 in the returned quorum result"
+    distractors:
+      - path: events_log.ts
+        why: "prose only -- :287 is a docblock sentence about which of the two call sites produced a record"
+      - path: config.ts
+        why: "prose only -- :519 is a docblock listing the consumers of QuorumSetting"
+    grep_behaviour: over-answers
+    notes: >-
+      DESIGNATED over-answer case. A word-boundary text search returns four
+      files; two of them contain nothing but comments naming the function.
+
+  # ── negative-control-in-domain (3) ─────────────────────────────────────────
+  # SYMBOL-shaped probes whose correct answer is the EMPTY SET. Each names a
+  # plausible near-miss of a real symbol in the same root -- `extractFileCached`
+  # beside `extractFile`, `planSettingsGate` beside `planSettingsAsks`,
+  # `evaluateQuorumWeights` beside `evaluateQuorum`. Absence was verified with a
+  # word-boundary search over the root at registration time; the graph arm was
+  # NOT run on any of them before registration.
+  #
+  # These test FALSE POSITIVES, which is the failure a lexical-fallback seed
+  # resolver can produce and a text search cannot. An arm passes an item iff it
+  # returns the empty set. This class is scored as a clean-rate, never as recall
+  # -- recall over an empty truth set is undefined, and v1's convention of
+  # scoring it 1.0 would make every arm pass every item for free.
+
+  - id: cg-negctl-01
+    root: code_graph
+    category: negative-control-in-domain
+    question: "Which files reach extractFileCached?"
+    probe: extractFileCached
+    probe_kind: symbol
+    truth: []
+    notes: >-
+      No such symbol exists in this root. `extractFile` (extract.ts:495) does,
+      and a resolver that falls back to lexical ranking may reach for it.
+
+  - id: sh-negctl-01
+    root: shared
+    category: negative-control-in-domain
+    question: "Which files reach planSettingsGate?"
+    probe: planSettingsGate
+    probe_kind: symbol
+    truth: []
+    notes: >-
+      No such symbol exists in this root. `planSettingsAsks` (settingsAsks.ts:90)
+      does, and shares two of three tokens with the probe.
+
+  - id: ac-negctl-01
+    root: ai_council
+    category: negative-control-in-domain
+    question: "Which files reach evaluateQuorumWeights?"
+    probe: evaluateQuorumWeights
+    probe_kind: symbol
+    truth: []
+    notes: >-
+      No such symbol exists in this root. `evaluateQuorum` (quorum.ts:92) does
+      and is a strict prefix of the probe.
+
+  # ── capability-boundary (4) ────────────────────────────────────────────────
+  # LITERAL-STRING probes: a config key, a severity literal, a log filename, an
+  # env-var name. A plain text search is fully sufficient; a symbol index cannot
+  # answer them AT ALL, by construction, because it indexes symbols and call
+  # relations rather than string content.
+  #
+  # These were `negative-control` in v1 and are RENAMED, not repaired. v1 folded
+  # them into a recall FLOOR the graph arm could not clear by construction, and
+  # then reported that floor FAILED. v2 reports this class separately and derives
+  # no floor from it: it is a statement about where grep stays necessary, never a
+  # verdict on the engine.
+
+  - id: cg-negative-01
+    root: code_graph
+    category: capability-boundary
+    question: "Where does the refresh path emit the message fragment 'old cache kept'?"
+    probe: "old cache kept"
+    probe_kind: literal
+    truth:
+      - path: cli.ts
+        why: "four stderr writes carry the fragment: :311, :336, :342 and :347"
+
+  - id: sh-negative-01
+    root: shared
+    category: capability-boundary
+    question: "Where does the severity literal 'must_fix' appear?"
+    probe: must_fix
+    probe_kind: literal
+    truth:
+      - path: settingsSurface.ts
+        why: "documented at :163, declared in the ChangeSeverity union at :170, returned at :175, :179 and :187"
+
+  - id: ac-negative-01
+    root: ai_council
+    category: capability-boundary
+    question: "Where does the ledger filename 'council-spend.jsonl' appear?"
+    probe: "council-spend.jsonl"
+    probe_kind: literal
+    truth:
+      - path: budget_guard.ts
+        why: "module docblock at :11 and :13, and the LEDGER_FILENAME constant value at :46"
+
+  - id: ac-negative-02
+    root: ai_council
+    category: capability-boundary
+    question: "Where does the environment-variable name 'AI_COUNCIL_CONFIG' appear?"
+    probe: AI_COUNCIL_CONFIG
+    probe_kind: literal
+    truth:
+      - path: config.ts
+        why: "the COUNCIL_CONFIG_ENV constant value at :629 and the resolution-order docblock at :670"
+
+# ## Limits
+#
+# What this corpus does NOT cover.
+#
+# Language. Every root is TypeScript. Nothing here exercises PHP, JavaScript, or
+# any other language the extractor claims to handle, so no result over this
+# corpus says anything about multi-language behaviour.
+#
+# Scope. Every question is scoped to ONE root and every truth path is a file
+# inside that root. Reaches that leave the root are invisible by construction:
+# query.ts depends on ../_lib/lexical_index.ts, build.ts on ../_lib/fs_atomic.ts,
+# budget_guard.ts on ../_lib/user_global_paths.ts, and none of those can appear in
+# any answer. Cross-repository and consumer-repository behaviour is absent
+# entirely.
+#
+# Dynamic dispatch. Exactly one question (ac-path-02) turns on a runtime
+# construct: a dynamic await import(...) whose bindings are destructured. Beyond
+# that single listed case, nothing here probes runtime dispatch, reflection,
+# string-keyed registries, or dependency injection. A tool that handles none of
+# those is not penalised by this corpus.
+#
+# Test files. capabilities.test.ts sits inside the `shared` root and is a real
+# consumer of capabilities.ts, but no question targets it. Test-to-source
+# reachability is untested here.
+#
+# Two-endpoint questions carry two probes. Both arms are told both endpoints:
+# the graph arm through the engine's own `path <a> <b>` verb, the grep arm
+# through the UNION of two word-boundary searches. The grep arm is therefore
+# given strictly more than it had in v1, so a graph result on this class cannot
+# be attributed to withholding information from the other arm.
+#
+# Not blind on this class, declared. The `path` verb's behaviour on all three of
+# these questions was observed on 2026-08-29 while diagnosing why v1 scored the
+# class 0/0, BEFORE this corpus was registered. `path-between` is therefore a
+# CONFIRMATORY measurement here, not a discovery, and the pre-registration says
+# so. The protection that remains is that the bars are v1's, unchanged, and the
+# truth sets are the corpus author's, unchanged.
+#
+# In-domain negative controls are scored as a clean-rate. Three items carry an
+# empty truth set and pass iff the arm returns nothing. Recall is undefined over
+# an empty truth set and is not computed for them; they are excluded from every
+# recall figure and from the macro average.
+#
+# Ambiguity, recorded rather than smoothed. In ac-path-02 the name
+# load_validated_phrases denotes TWO functions inside one root: the parser at
+# low_impact_corpus.ts:433 and a same-named re-export shim at necessity.ts:772.
+# The truth set names the dynamic route the probed function actually takes; a
+# defensible reading that also credits the static necessity.ts route exists, and
+# an evaluator counting necessity.ts as a correct extra answer is not obviously
+# wrong. It is the one item in this set whose ground truth is a judgement call
+# rather than a reading, and it is flagged here so the scorer decides
+# deliberately instead of inheriting the constructor's choice unaware.
+#
+# Comparability. THESE NUMBERS ARE NOT COMPARABLE TO THE 2026-07-28
+# code-graph-vs-grep RUN, AND NO DELTA MAY BE COMPUTED BETWEEN THE TWO. That run
+# used a different corpus (three private third-party repository clones, none of
+# them this one), a different question set (18 questions, sharing no item with
+# these 19), and a graph built before the 2026-08-22 extractor repair. Three
+# independent variables moved at once. Any figure produced here stands on its own
+# as a fresh baseline; it neither confirms nor refutes the earlier result, and
+# subtracting one from the other yields a number with no meaning in either
+# direction.

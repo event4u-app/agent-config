@@ -164,10 +164,23 @@ benchmark inputs this repository does not hold.
    |---|---|---|---|---|
    | `callers` | 1.000 | 1.000 | +0.0 | NULL — precision floor failed |
    | `transitive-impact` | 0.611 | 0.500 | −11.1 | NULL |
-   | `path-between` | 0.000 | 0.000 | +0.0 | **VOID** — both arms measured nothing |
+   | `path-between` | 0.000 | 0.000 | +0.0 | **VOID** — nothing measured |
    | `references` | 1.000 | 0.333 | −66.7 | NULL |
 
    **Zero of four graph-shaped classes met the pre-registered win criterion.**
+
+   **CORRECTED 2026-08-29 — the `path-between` row's stated cause was FALSE.**
+   This table read *"both arms measured nothing"*. Only the grep arm did. The
+   graph arm answered all three questions and v1's scorer discarded the answer:
+   its relevance filter compared each returned symbol against the whole probe
+   string `"cmdBuild -> getParser"`, which no symbol contains. Two further v1
+   scorer defects were found in the same pass — it never invoked the shipped
+   `path <a> <b>` verb, and it counted unresolved `symbol:` pseudo-nodes as
+   files, which is the sole reason `callers` was ruled NULL with recall tied at
+   1.000/1.000. The v1 figures above are **not retro-edited**: they were faithful
+   to v1's own registration. The repair is a separate v2 registration, run
+   2026-08-29 — and the v2 result is evaluated against this record's trigger
+   below.
 
 **What this does and does not establish.** It does not fire the trigger — that
 required a measurement beating grep, and this one lost every valid class. It
@@ -182,12 +195,50 @@ verdict, because two of its five classes measured the instrument rather than the
 engine (`path-between` void; the literal-string controls fail by construction
 against a symbol index).
 
+### v2 evaluated against the trigger, 2026-08-29 — it does NOT fire
+
+The benchmark was re-registered and re-run after the three v1 scorer defects
+were confirmed by execution (`PREREGISTRATION-inrepo-v2-2026-08-29.md`,
+19 questions, bars identical to v1's, report at
+`internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md`):
+
+| Class | grep R | graph R | Δ pp | grep P | graph P | verdict |
+|---|---|---|---|---|---|---|
+| `callers` | 1.000 | 1.000 | +0.0 | 0.611 | 0.667 | TIE |
+| `transitive-impact` | 0.611 | 0.500 | −11.1 | 1.000 | 0.667 | NULL |
+| `path-between` | 0.917 | **1.000** | +8.3 | 0.778 | **1.000** | TIE |
+| `references` | 1.000 | 0.333 | −66.7 | 0.833 | 0.333 | NULL |
+
+**The trigger reads "a post-repair retrieval measurement that beats grep on
+graph-shaped questions". v2 is exactly that measurement, and the graph does not
+beat grep: zero of four classes met the registered win criterion.** The trigger
+does **not** fire, and nothing in this change performs a reopen. `adr_cite_check
+ADR-246` reports the trigger state as `indeterminate` — semantic, not
+tool-decidable — and this section is the evaluation that state asks for.
+
+**Stated honestly, because it is closer than v1 suggested.** On two of four
+classes the graph is now at or above grep on *both* metrics: `callers` ties on
+recall and gains 5.6 pp of precision, and on `path-between` the graph is exact —
+recall 1.000, precision 1.000, no missed file and no wrong one — while grep,
+given the fair union of two searches, reaches 0.917/0.778. That is a different
+picture from v1's "NULL in every valid class". It is still not a win. The recall
+bar is +10 pp, `path-between` delivers +8.3 pp, and the bar was v1's, fixed
+before the run: reading +8.3 as sufficient would be the post-hoc bar-shifting a
+pre-registration exists to prevent.
+
+**Do not quote the larger figure.** Running the `path` verb for the graph arm
+while leaving the grep arm on v1's single unmatched probe gives grep 0.000 and a
+delta near +89 pp, an apparent decisive win. That number repairs one arm and not
+the other and is an artifact in its own right; v2 repairs both.
+
 **The other trigger is untouched and stays live:** a **consumer** case the graph
 answers and disciplined grep cannot, stated by a consumer rather than inferred
 from the engine's capability. Nothing here bears on it. So does the standing
 exclusion: an improvement in EXTRACTION quality is still not a reopen trigger.
 
-**Nothing moved.** No setting default changed and no dependency moved between
-`devDependencies` and `dependencies` in the change that recorded this. The
+**Nothing moved, in either change.** No setting default changed and no
+dependency moved between `devDependencies` and `dependencies` — not in the change
+that recorded this, and not in the 2026-08-29 change that corrected it and ran
+v2. The
 roadmap that produced the measurement states in its own acceptance criteria that
 it may change routing and may not change permission.
