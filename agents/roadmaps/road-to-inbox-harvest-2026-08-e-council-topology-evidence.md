@@ -112,10 +112,10 @@ called a larger risk than feature absence.
 | Proposed | Already shipped at | Disposition |
 |---|---|---|
 | Blind / anonymised peer-review machinery | `src/scripts/ai_council/blind_review.ts`; delivered by `agents/roadmaps/archive/road-to-council-blind-review.md` | Deleted — exists |
-| Dissent quota, novelty gate, anti-conformity directive | `ai_council/debate_gates.ts:15,18,32,51,61,81`; directive text `ai_council/prompts.ts:180`; default-off at `ai_council/config.ts:1113` | Deleted — exists (default-off is a config decision, not a gap) |
+| Dissent quota, novelty gate, anti-conformity directive | `ai_council/debate_gates.ts:15,18,32,51,61,81`; directive text `ai_council/prompts.ts:180`; default-off at `ai_council/config.ts:1118` (re-measured 2026-08-29; `:1113` is the docstring, the default literal is `:1118`) | Deleted — exists (default-off is a config decision, not a gap) |
 | Multi-round debate | `ai_council/orchestrator.ts:389-393`; steel-man pass `:1036-1040` | Deleted — exists |
 | Finding-level consensus + minority retention | `ai_council/consensus.ts:22-23,43-44,157,235,267`; `ai_council/stance_tally.ts` | Deleted — exists |
-| Decision replay | `ai_council/replay.ts:1-14,210`, wired at `src/scripts/council_cli.ts:1270,1280` | Deleted — exists |
+| Decision replay | `ai_council/replay.ts:1-14,210`, wired at `src/scripts/council_cli.ts:1270,1280` — re-measured 2026-08-29: those two lines are the AUTOMATIC writer, not the `replay` subcommand; the subcommand wiring is elsewhere and is recorded in the 0.1 baseline | Deleted — exists |
 | Low-impact fast path **and** its governing rule | `ai_council/low_impact.ts:1-20` + [`fast-path-marker-visibility`](../../src/rules/fast-path-marker-visibility.md) | Deleted — exists on both layers |
 | Five thinking-style advisor personas | `src/agent-src/personas/advisors/{contrarian,executor,expansionist,first-principles,outsider}.md`; engine `ai_council/advisors.ts:1-32` | Deleted — exists (seating is the real gap, see P9) |
 | Necessity classifier, CLI transport, model-size downgrade | `ai_council/necessity.ts`; delivered by `agents/roadmaps/archive/step-1-ai-council-cli-transport.md` | Deleted — exists |
@@ -128,10 +128,10 @@ called a larger risk than feature absence.
 
 | # | Source claim | Correction | Basis |
 |---|---|---|---|
-| 1 | "Blind review is default-on" | Blind **chairman synthesis** is default-on; blind **peer review** is **opt-in**. The two were conflated in the originating transcript. | `council_cli.ts:3557` sets `blind_chairman: true`; `_peer_review_active` at `council_cli.ts:1288-1294` requires an explicit flag or `peer_review.enabled` |
+| 1 | "Blind review is default-on" | Blind **chairman synthesis** is default-on; blind **peer review** is **opt-in**. The two were conflated in the originating transcript. | `council_cli.ts:3551` sets `blind_chairman: true` (re-measured 2026-08-29; the `:3557` reading below was already stale); `_peer_review_active` at `council_cli.ts:1289-1295` requires an explicit flag or `peer_review.enabled` |
 | 2 | Parallel first-round fan-out is unbuilt work | It is a **deliberately reversed decision**. Phase 4 is therefore framed as *reopening a closed decision* under [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md), and must address the interactive-overrun prompt the reversal bought and the byte-pinned dispatch-order tests. | `ai_council/orchestrator.ts:8-12` records that *"the previous parallel ThreadPoolExecutor was traded for predictable mid-flow user prompts"*; `grep -c 'Promise.all'` over that file returns **0**; the historical contract is pinned byte-for-byte by tests (`:3-6`) |
 | 3 | Round-count bias bench carried no citation | Grafted the research citation the round-count phase rests on: **arXiv 2505.19477** (round-1 debate bias amplification). It appeared in a dissolving sibling draft and **0** times in the master, leaving Phase 2.7 an unsourced measurement request. | Sibling draft in the same inbox directory |
-| 4 | `council_cli.ts:3555` | → `council_cli.ts:3557` (+2) | Read at landing HEAD |
+| 4 | `council_cli.ts:3555` | → `council_cli.ts:3551` (-4) | Re-measured 2026-08-29 under step 0.1. The landing correction said `:3557` (+2); it drifted again, in the other direction. A line-number correction has the same shelf life as the number it corrects — this row is kept rather than rewritten so that fact stays visible. |
 | 5 | `prompts.ts:204` | → `prompts.ts:206` (+2) | Read at landing HEAD |
 | 6 | `judgment_ladder.ts:15-19` for the no-parallel-classifier warning | → `:16-20`; the sentence ends one line later than the source cited | Read at landing HEAD |
 | 7 | P0 provenance framed as new work | Marked **EXTEND**, not create: `CREDITS.md` (69 lines) and `provenance/harvests.jsonl` (**5** rows) both already exist | Read at landing HEAD |
@@ -141,7 +141,7 @@ called a larger risk than feature absence.
 
 ## Phase 0 — Provenance and the one-resolver lock
 
-- [ ] 0.1 Pin current council behaviour in
+- [x] 0.1 Pin current council behaviour in
   `agents/evidence/analysis/council-intelligence-baseline.md`: ladder council
   rung, necessity gate, advisor wiring, round resolution, blind-review
   ordering, consensus semantics, anti-conformity and novelty gates, spend /
@@ -150,12 +150,86 @@ called a larger risk than feature absence.
       verify: every behavioural claim in the file carries a `file:line` or an
       executable probe; a reviewer can refute any single line without reading
       the code twice
-- [ ] 0.2 Inventory every council-related rule, command, script and config
+- [x] 0.2 Inventory every council-related rule, command, script and config
   surface, classified as task-side routing / council-internal necessity /
   topology-depth / rendering / spend governance / replay-evidence /
   compatibility / dead-duplicate.
       verify: no council-routing surface is left uncategorized, and the
       dead-duplicate column is either empty or each entry names its successor
+
+      **0.1 and 0.2 CLOSED 2026-08-29.** Two artefacts, both opening with
+      `<!-- evidence-type: analysis -->` (`analysis` is a valid type —
+      `src/scripts/lint_evidence_artifacts.ts:59-64`):
+
+      - `agents/evidence/analysis/council-intelligence-baseline.md` — 1,673
+        lines, the twelve behaviours in the order 0.1 lists, plus a doc-vs-code
+        section, a `## Not established` section, and the `_lib/` council surfaces
+        and `auto_dispatch.ts` that 0.1's own list omitted. **340 lines carry a
+        `path:line` citation; 19 items landed in `## Not established`** rather
+        than being asserted — that section is the step's honesty surface, not a
+        shortfall.
+      - `agents/evidence/analysis/council-surface-inventory-2026-08-29.md` —
+        **164 surfaces**, one per row, every row in exactly one of the eight
+        fixed categories with no blank cell: `task-side routing` 48 ·
+        `compatibility` 39 · `topology-depth` 27 · `replay-evidence` 18 ·
+        `council-internal necessity` 14 · `rendering` 10 · `spend governance` 6 ·
+        `dead-duplicate` 2. Both `dead-duplicate` rows name a successor
+        (`ai_council/one_off_archive/` → `council_cli.ts`; ADR-093 → ADR-104).
+        A `## Contested classifications` section covers four arguable rows with
+        the evidence that would decide each, and an `## Incidental mentions`
+        section accounts for the ~70 files that match a `council` grep but only
+        cite a past decision — so nothing is silently dropped.
+
+      **This step's own numbers were wrong and are corrected here:** the text
+      said "~55 modules" in `ai_council/` and "12 top-level scripts". Measured,
+      `ls src/scripts/ai_council/*.ts | wc -l` is **53**, and 11 top-level
+      scripts match `*council*` — the twelfth match is the `ai_council`
+      directory itself.
+
+      **The four defects worth carrying forward, all independently re-verified
+      at the cited lines rather than taken on report:**
+
+      1. **`effective_mode` is pinned.** `ai_council/config.ts:1700` sets
+         `default_mode = 'auto'` and `:1722` reads
+         `const effective_mode = default_mode;`, with `member_mode` hardcoded
+         `null` at `:1721`. So `defaults.mode` and per-member `mode:` are
+         **ignored**, and four surfaces of
+         `docs/contracts/ai-council-config.md` still assert they override
+         `auto` — including two validation rules that describe unreachable code.
+      2. **The rung-4 degradation is unrecorded, and the asymmetry is the
+         finding.** `_lib/judgment_ladder.ts` returns `rung: null` at `:374`
+         (`emergency.orchestration_halt`) and `:377` (no `subagent_spawn`
+         primitive) **before** the contested-judgment check at `:379`, whose
+         match would have returned `rung: 4` at `:382`. The rung-3 path records
+         its degradation (`degraded_from: 3` at `:396` and `:403`); these two
+         early returns set no `degraded_from`, because they never reached the
+         rung they dropped. Recorded with the corrected line numbers — the
+         reported ones were off by a few.
+      3. **Twelve contradictions in `docs/contracts/ai-council-config.md`**, in
+         three families: the un-propagated transport-key removal (four
+         surfaces), two validation rules describing unreachable code, and three
+         copy-paste hazards — the worst being `fast_path:` documented at the
+         wrong nesting level, where a pasted config silently falls back to
+         defaults with **no error**. Enumerated in the baseline artefact. Not
+         fixed here: 0.1 and 0.2 are read-and-record steps, and rewriting a
+         contract is a separate change with its own review.
+      4. **Named dead paths**, reported rather than assumed:
+         `argument_exhaustion.ts`, `seating.ts`, `route_decision`, both corpus
+         classifiers, `resolve_low_impact`, `plan_fast_path`,
+         `probation_gate.run_gate`, `confidence_gate` via
+         `dispatch_with_escalation`, and `assert_synthesis_sections` have zero
+         production callers. `on_overrun` has no producer at all, so the
+         documented mid-flow overrun prompt is agent-carried prose, not code.
+
+      **One reported correction was itself wrong, and rejecting it is part of
+      the record.** The 0.1 pass reported step 0.5's "80 tests, all green" as
+      actually 47. It is **80**: `npx vitest run
+      tests/scripts/one_resolver_invariant.test.ts` prints `Tests 80 passed
+      (80)`. The 47 is the count of line-anchored `it(` blocks; the remaining 33
+      come from parameterised `it.each` blocks, which a grep cannot see. The
+      roadmap's original number stands, and this paragraph exists because a
+      correction accepted on report would have replaced a true number with a
+      false one.
 - [ ] 0.3 **EXTEND** `CREDITS.md` and `provenance/harvests.jsonl` (5 rows
   today) with the method lineage as **Source A / B / C** — method inspiration,
   not incorporated code. Real links land as `ENC1:` tokens only.

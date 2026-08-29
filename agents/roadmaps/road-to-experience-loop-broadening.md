@@ -135,7 +135,7 @@ parents must restate the letter's meaning rather than carry it.
       verify: a fixture proves real emission of the new field from a live phase.
       A "collector exists" proxy is not evidence — the tree's own 0-of-89
       finding (`telemetry_usage_hook.ts:11`) is what that mistake costs.
-- [ ] **1.3 Reconcile the two outcome vocabularies before extending either.**
+- [x] **1.3 Reconcile the two outcome vocabularies before extending either.**
       `corrected-from-reproduction`, and no proposal in either folder noticed:
       this tree holds **two** outcome enums. `audit-log-v1:77` has four values
       (`success · blocked · skipped · error`);
@@ -150,11 +150,89 @@ parents must restate the letter's meaning rather than carry it.
       Phase 2 itself. This step owns the reconciliation; the sibling roadmap
       `road-to-governed-harness-evolution.md` names the same defect and defers to
       this one.
-      verify: one module is the single definition, `outcome_envelope.ts` imports
-      it rather than declaring its own, and the contract's enum table is either
-      generated from it or lint-checked against it — a markdown contract cannot
-      import, so the binding is the check, not an import. A lint rejects an
-      inline duplicate.
+      verify (**AMENDED 2026-08-29 by AI council, and the amendment was owed**):
+      the original clause prescribed UNIFICATION — "one module is the single
+      definition" of one vocabulary — and the council's verdict is (b), keep the
+      vocabularies separate. Closing the step against the unamended clause would
+      have been the silent-green defect this roadmap's own Phase 0 warns about,
+      so the clause is replaced with openai's wording, quoted verbatim from the
+      round-2 response: *"One authoritative module defines the phase, step, and
+      run outcome vocabularies and every permitted cross-domain mapping. Code
+      imports its applicable definition; the audit-log contract is lint-checked
+      against the phase definition; lint rejects inline duplicates."*
+
+      **CLOSED 2026-08-29.** Evidence, all at this branch's HEAD:
+
+      - The authoritative module is `src/scripts/_lib/outcome_vocabularies.ts` —
+        `PHASE_OUTCOMES` (4), `STEP_OUTCOMES` (3), `RUN_TERMINAL_STATES` (6),
+        `CROSS_DOMAIN_MAPPINGS` (1 row), plus two guards.
+      - Code imports its applicable definition:
+        `src/scripts/_lib/orchestration_record.ts:45` now reads
+        `export type LineOutcome = PhaseOutcome;` and
+        `src/scripts/_lib/outcome_envelope.ts:34` reads
+        `export type TerminalState = RunTerminalState;`. Both keep their old
+        names because other modules and a pinned test import them.
+      - The contract binding is a check, not an import:
+        `tests/contracts/outcome_vocabularies.test.ts` — 9 tests, all green.
+        Its sensitivity is proven, not assumed: dropping one value from the
+        contract's `outcome` row turned it red, and it was restored.
+      - The anti-duplicate check found a real duplicate on its first run —
+        `TERMINAL_STATES` in `src/scripts/_lib/runtime_journal.ts:312`, a second
+        literal list of the six run states. It is now
+        `export const TERMINAL_STATES = RUN_TERMINAL_STATES;` and the two
+        type-level assertions that guarded the duplicate are gone with it.
+
+      **Three defects found while executing this step, all fixed here, none of
+      which the step predicted:**
+
+      1. **This step's own premise was wrong in both halves.** There are
+         **three** vocabularies, not two — the third is the work-engine STEP
+         enum at
+         `src/agent-src/templates/scripts/work_engine/delivery_state.ts:39`
+         (`success · blocked · partial`). And the audit-log 4-value set is not
+         documentation-only: `LineOutcome` was declared in code at
+         `orchestration_record.ts:45` all along, `envelopeOutcome` at `:195`
+         returns all four, and `review_skipped_record.ts:89` writes
+         `outcome: 'skipped'` onto a real line. An earlier reading of this tree
+         concluded `skipped` and `error` "exist nowhere in code" because it
+         grepped for enum MEMBER ASSIGNMENTS (`SKIPPED: 'skipped'`) and these
+         are string-literal union members. That correction is recorded in the
+         new module's header so it cannot be made a third time.
+      2. **`docs/contracts/audit-log-v1.md:77` carried a false mirror claim** —
+         *"Mirrors `Outcome` from `work_engine.directives`"* — false twice: no
+         such module path exists, and work_engine's real `Outcome` carries
+         `partial` and neither `skipped` nor `error`. It has pointed at the
+         wrong enum since the contract was created (`032a244a3`, PR #183). Now
+         points at `PHASE_OUTCOMES` and its check.
+      3. **The same contract named an enforcer that does not exist.** Its
+         privacy floor claimed enforcement by
+         tests/contracts/test_audit_log_redaction.py — absent from this tree.
+         Replaced with what is actually true: privacy holds by CONSTRUCTION on
+         the two validated builder paths, is unscanned, and a third producer
+         would not be caught. Step 1.4 owns closing that; the contract no longer
+         claims otherwise.
+      4. **The only consumer validated nothing.**
+         `src/scripts/extract_audit_patterns.ts` typed `outcome` as bare
+         `string`, so a typo became its own pattern silently. It now classifies
+         against `isPhaseOutcome` and reports off-vocabulary values on stderr.
+         Grouping is deliberately UNCHANGED — that file mirrors a retired Python
+         CLI byte-for-byte and dropping a record would break pinned stdout — so
+         what changed is that an off-vocabulary value is observable rather than
+         silent.
+
+      **Council record.** AI council 2026-08-29, anthropic + openai, 2 rounds,
+      $0.00 (both seats subscription-authed), quorum 2/2 present after the run.
+      The seats SPLIT on the verdict — anthropic leaned (c) unify phase+step,
+      openai (b) map-don't-unify — and named the **same discriminator**: trace
+      the producers before choosing. That trace is what settled it, and it
+      settled it against a preference: three distinct subjects (phase / step /
+      run), all three produced today, and one cross-domain mapping already in
+      the tree. A superset would admit states that are nonsense for their
+      subject — a step ending `approval-required`, a run ending `partial`. Both
+      seats independently confirmed no OWNER-RESERVED boundary is crossed.
+      Dissent preserved: anthropic's (c) remains live if producer analysis ever
+      shows phase and step share identical terminal semantics with a lossless
+      mapping — carried as the module's own `revisit-if`.
 - [ ] **1.4 Carry a privacy class on every captured event, and a redaction rule
       for anything free-form.** `from-skipped-parent`, and this is the gap with
       the sharpest consequence. The master has **no** privacy, redaction or
@@ -552,8 +630,28 @@ parents must restate the letter's meaning rather than carry it.
 - [ ] AC-5 — A failing case is classifiable into one of the five
       activation/adherence states, and `unknown` is used wherever no evidence
       exists rather than a model's inference.
-- [ ] AC-6 — One outcome vocabulary is authoritative, or the mapping between the
+- [x] AC-6 — One outcome vocabulary is authoritative, or the mapping between the
       two is a committed module both readers import.
+
+      **MET 2026-08-29 via the second disjunct, and the first is refused on
+      evidence.** `src/scripts/_lib/outcome_vocabularies.ts` is the committed
+      module, and both readers import it —
+      `orchestration_record.ts` for `PhaseOutcome`, `outcome_envelope.ts` for
+      `RunTerminalState`; `runtime_journal.ts` imports its value list too. The
+      first disjunct is not taken because the producer trace under step 1.3
+      showed three vocabularies with three different subjects, so declaring one
+      authoritative would make the other two wrong rather than derived.
+
+      **Stated precisely, because the AC's wording invites an over-claim:** what
+      the module holds is the three vocabularies plus a REGISTRY of the crossings
+      (`CROSS_DOMAIN_MAPPINGS`, one row). The mapping FUNCTION itself
+      (`envelopeOutcome`) stays at its call site in `orchestration_record.ts`,
+      where the translation actually happens; the module records that it exists
+      and `tests/contracts/outcome_vocabularies.test.ts` asserts the named
+      function resolves in the named file. Moving the function would relocate
+      logic away from its only caller for no gain. So: both readers import the
+      committed module — the AC as written — and the one real translation is
+      registered and checked rather than relocated.
 - [ ] AC-7 — Nothing in any selection or routing path imports the experience
       report, until and unless the Phase 9 blocker is resolved with a yes.
 - [ ] AC-8 — The retention rule is written into the contract, and every claim
@@ -679,8 +777,48 @@ is refuted, cheaply.
   with an explicit mapping rather than unify.
 - **E2 — audit-log v2:** confirm the schema-bump procedure — supersede lines, or
   a new file generation?
+
+  **RESOLVED 2026-08-29 — (a) additive field, no version bump.** AI council,
+  anthropic + openai, **2/2 convergent**, and both seats called the roadmap's
+  own wording a misreading. Step 1.2 says *"Migrate by `type=supersede` lines,
+  exactly as that contract already prescribes for corrections"*. The contract's
+  supersede clause (`docs/contracts/audit-log-v1.md:114`) governs **corrections**
+  to a line that is wrong; adding a field makes no existing line wrong. The
+  clause that governs an addition is the forward-compat rule at `:96` —
+  *"Unknown trailing fields are forward-compat extensions; readers MUST NOT
+  raise on them."* So `skills_applied` lands as an optional bounded trailing
+  field, `schema_version` stays `1`, and no supersede lines are emitted.
+  Restating historical entries would also **fabricate historical skill data**,
+  which is the sharper reason.
+
+  **The distinction that has to ship with it:** absence means *unknown / not
+  recorded*; an empty array means *recorded, and none applied*. Collapsing the
+  two would retroactively assign information to lines that never captured it —
+  which is what turns an extension into a semantic migration.
+
+  **`revisit-if`:** the field becomes mandatory, it changes another field's
+  meaning, or readers cannot distinguish absent from empty. Any of those is a
+  case for `schema_version: 2`, never for automatic historical supersedes.
 - **E3 — Does `clean-no-op` count as its own outcome in the report?
   (Recommendation: yes.)**
+
+  **RESOLVED 2026-08-29 — yes, as a tracked subtype of `neutral`, not a fourth
+  top-level impact category.** AI council, anthropic + openai, **2/2
+  convergent**. Two dimensions, kept apart: `outcome: clean-no-op` and
+  `impact: neutral`. The neutral total is reported with a separate
+  `clean-no-op` count, and empty-cycle / double-trigger metrics (step 2.3) stay
+  separate from impact classification.
+
+  **The attribution rule the council added, which the roadmap did not ask for
+  and needs:** `clean-no-op` is a RUN terminal state while Phase 6 reports **per
+  asset**. A run-level no-op must not be copied onto every asset that was merely
+  loaded — each asset needs evidence it was actually evaluated. Without that,
+  one no-op run makes every loaded asset look meaningfully consulted, which is
+  the inverse of what the report is for.
+
+  **`revisit-if`:** the helpfulness metric is redefined to measure assurance
+  value and evidence shows verified no-op evaluations deliver it. Then the
+  outcome distinction stays and only its impact mapping is reconsidered.
 - **E4 — Card location** under `agents/memory/<type>/`, the per-card size
   budget, and — given risk 2 — whether cards belong in a tracked path at all.
 - **E5 — SQLite index:** only at a measured JSONL latency limit, or not at all.

@@ -173,6 +173,7 @@ import type { DatabaseSync } from 'node:sqlite';
 
 import { current_branch, git_common_dir, git_dir } from './git_common_dir.js';
 import type { TerminalState } from './outcome_envelope.js';
+import { RUN_TERMINAL_STATES } from './outcome_vocabularies.js';
 import {
     isSqliteAvailableSync,
     loadSqliteSync,
@@ -304,26 +305,19 @@ export type Consumption = (typeof CONSUMPTION_STATES)[number];
 /**
  * The six terminal states as a runtime array.
  *
- * The TYPE is imported from `outcome_envelope.ts` and never redeclared — this
- * is a value list, and the two assertions below bind it to that import in both
- * directions, so a state added, removed or renamed upstream breaks this file at
- * compile time instead of drifting into a parallel vocabulary.
+ * Re-export of `RUN_TERMINAL_STATES` from `outcome_vocabularies.ts`. It used to
+ * be a second literal list here, guarded by two type-level assertions that
+ * bound it to the imported TYPE in both directions. That guard worked — but a
+ * guarded duplicate is still a duplicate, and it was the only one the step-1.3
+ * anti-duplicate check found in this tree
+ * (`road-to-experience-loop-broadening` 1.3). Re-exporting removes the second
+ * list, which makes the assertions tautological, so they are gone too: there is
+ * now nothing to drift.
+ *
+ * The name is kept because it is exported and pinned by
+ * `tests/scripts/runtime_journal.test.ts:205,207`.
  */
-export const TERMINAL_STATES = [
-    'success',
-    'clean-no-op',
-    'blocked',
-    'approval-required',
-    'exhausted',
-    'stagnated',
-] as const;
-
-type _TerminalStatesCoverTheUnion = Assert<
-    Exclude<TerminalState, (typeof TERMINAL_STATES)[number]> extends never ? true : false
->;
-type _TerminalStatesAddNothing = Assert<
-    Exclude<(typeof TERMINAL_STATES)[number], TerminalState> extends never ? true : false
->;
+export const TERMINAL_STATES = RUN_TERMINAL_STATES;
 
 /**
  * Keys a record may never carry. Not an exhaustive list of every bad name — it
