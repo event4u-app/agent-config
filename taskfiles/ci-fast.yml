@@ -941,8 +941,8 @@ tasks:
 
   check-no-external-sources:
     silent: true
-    desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep)
-    cmd: ./scripts-run src/scripts/check_no_external_sources
+    desc: Block readable external inspiration/harvest source names from the tracked tree (source-confidentiality rule + 2026-06-13 sweep); --report retains the warn tier, per the how-loud-the-slug-heuristic-is decision
+    cmd: ./scripts-run src/scripts/check_no_external_sources --report agents/runtime/reports/source-shape.json
 
   check-source-pointer-freshness:
     silent: true

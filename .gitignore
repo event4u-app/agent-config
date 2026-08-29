@@ -67,6 +67,12 @@ __pycache__/
 .agent-settings.local.yml
 .agent-settings
 .agent-settings.backup.key-value
+# Private master for the source deny set (road-to-source-silence Phase 1.1).
+# The readable list of harvest-source names lives HERE and nowhere else; the
+# tracked external_sources_denylist.json carries only HMAC digests derived from
+# it by src/scripts/build_source_digests.ts. Committing this file would restore
+# exactly the plaintext disclosure the digests exist to remove.
+src/scripts/external_sources_denylist.private.json
 # Personal user-identity file. Lives at agents/settings/.agent-user.yml
 # post-migration; legacy .agent-user.md at agents/ or CWD is read for
 # auto-migration and deleted on successful wizard finish.
