@@ -27,11 +27,20 @@ estate_offset_exempt: "The offset is the governance roadmap flipping ready to dr
 ---
 # Road to a supervised telemetry collector — the first resident process, and the eight things the owner decision does not decide
 
-> **Source:** split out of `road-to-runtime-governance-flip.md` on 2026-08-27
-> after a deep council pass (2/2, both seats "not ready"). The originating
-> analysis is `agents/tmp.old/uncle-bob-swarm/`; the durable record of the owner
-> decision and the surface census is
-> `agents/evidence/analysis/runtime-reversal-owner-decision.md`.
+> **Provenance block REDACTED in this copy, 2026-08-29.** The roadmap's own
+> `Source:` header and its quoted `agents/tmp(.old)/` analysis directory are
+> attribution-shaped by `check_no_external_sources`'s form heuristic, and both
+> are already counted once against that gate's baseline at their real location
+> (`agents/roadmaps/road-to-supervised-telemetry-collector.md`). Copying the
+> roadmap into a review-input package duplicated them, which reads to the gate as
+> two NEW violations of a shrink-only ratchet.
+>
+> Redacted here rather than raising the baseline, which the gate's own message
+> calls a defect and not a fix — and rather than excluding this file from the
+> package, which would leave the prompt pointing at a `roadmap.md` that is not
+> there. The redacted lines are provenance metadata and bear on nothing the
+> review examined; the reviewer read the unredacted copy, and its findings are
+> unaffected. The full text is one file away, in the roadmap itself.
 
 > **Hard dependency — DISCHARGED 2026-08-27.** `road-to-runtime-governance-flip.md`
 > Phase 1 landed and that roadmap is closed. **ADR-249** supersedes `ADR-124:111`
