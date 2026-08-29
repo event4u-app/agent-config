@@ -1,12 +1,12 @@
 # Findings: road-to-supervised-telemetry-collector
-<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: 9029cb67c8ed6ebcbcfa40c84b7ba956898e1eb12324e70f749344ed03ce2cfc | diff: d18786b032cfdc80c1ee1de61b8c0cd3f1782bb4 | reviewer: r2-fresh-subagent-road-to-supervised-telemetry-collector | prompt_hash: 0cc8b3c481062acd425ca9ec79a85f0119f64dea0d08146d1c335f7a936bc33b -->
+<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: e4a167acdc830fce8e3918d3329907597fd11753305445396cd5328fb37b02c8 | diff: 6a6762010ca0639e12afe7e017371cc984589a51 | reviewer: r2-fresh-subagent-road-to-supervised-telemetry-collector | prompt_hash: 0cc8b3c481062acd425ca9ec79a85f0119f64dea0d08146d1c335f7a936bc33b -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-supervised-telemetry-collector"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-29 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: d18786b032cfdc80c1ee1de61b8c0cd3f1782bb4
-  scope_hash: 9029cb67c8ed6ebcbcfa40c84b7ba956898e1eb12324e70f749344ed03ce2cfc
+  diff_sha: 6a6762010ca0639e12afe7e017371cc984589a51
+  scope_hash: e4a167acdc830fce8e3918d3329907597fd11753305445396cd5328fb37b02c8
   roadmap: agents/roadmaps/road-to-supervised-telemetry-collector.md
   roadmap_hash: 1d432258a3f0cc18c0afd5c803d6cd12884f53eb8c65cfbad62ea0a74d42d72d
   ac_hash: dcf41e95bfe37e0459d43763a01b20c60bdf07d9d42e3ea09ea364e15ded7b8d
@@ -18,8 +18,7 @@ dispatched: 2026-08-29T18:24:18Z
 > **RE-BOUND IN PLACE, 2026-08-29** (contract §2.7 path 1, not a fresh
 > skeleton). The review ran against scope `b614ba41…` / head `2e708585`. Acting
 > on its findings moved the reviewed content, so the scope hash moved with it;
-> the artefact is re-bound to the scope the fixes produced (`9029cb67…` / head
-> `d18786b0`) rather than archived or re-dispatched, because archiving would
+> the artefact is re-bound to the scope the fixes produced (`e4a167ac…` / head `6a676201`) rather than archived or re-dispatched, because archiving would
 > leave the shipping content with no review at all. Every row was already
 > terminal before the re-bind.
 >
