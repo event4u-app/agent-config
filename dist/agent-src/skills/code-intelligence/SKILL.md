@@ -77,19 +77,34 @@ Every answer built with this skill MUST:
   That is the engine being honest, not broken — do not "resolve" them yourself
   by guessing.
 
-## Measured, and it did not win (2026-08-28)
+## Measured twice, and it has not won (v2, 2026-08-29)
 
 Pre-registered, published whichever way it landed:
-`internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md`. The native
+`internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md`. The native
 engine scored against disciplined `git grep` over three in-repo TypeScript
-roots, 16 questions, per-class bars fixed before the run.
+roots, 19 questions, per-class bars fixed before the run and unchanged from v1.
 
-| Class | grep recall | graph recall | verdict |
-|---|---|---|---|
-| `callers` | 1.000 | 1.000 | NULL — precision floor failed |
-| `transitive-impact` | 0.611 | 0.500 | NULL |
-| `path-between` | 0.000 | 0.000 | **VOID** — both arms measured nothing |
-| `references` | 1.000 | 0.333 | NULL |
+| Class | grep R | graph R | Δ pp | grep P | graph P | verdict |
+|---|---|---|---|---|---|---|
+| `callers` | 1.000 | 1.000 | +0.0 | 0.611 | 0.667 | TIE |
+| `transitive-impact` | 0.611 | 0.500 | −11.1 | 1.000 | 0.667 | NULL |
+| `path-between` | 0.917 | **1.000** | +8.3 | 0.778 | **1.000** | TIE |
+| `references` | 1.000 | 0.333 | −66.7 | 0.833 | 0.333 | NULL |
+
+**Zero classes met the win bar.** On `path-between` the graph is exact and is the
+only class where it out-precises grep; it still ties, because the delta is +8.3 pp
+against a +10 pp bar that was fixed before the run.
+
+**The v1 run of 2026-08-28 published a false root cause, corrected 2026-08-29.**
+It reported `path-between` as `VOID` because *"both arms measured nothing"*. Only
+the grep arm did. The graph answered all three questions and v1's scorer discarded
+the answer — it compared each returned symbol against the whole probe string
+`"cmdBuild -> getParser"`. v1 also never invoked the shipped `path <a> <b>` verb,
+and counted unresolved `symbol:` pseudo-nodes as files, which is the sole reason
+its `callers` verdict was NULL with recall tied. v1's numbers are not retro-edited
+— they were faithful to v1's own registration — and v1's report now carries the
+correction. Do not quote a `path-between` delta near +89 pp: that figure comes
+from repairing the graph arm and leaving grep on the broken probe.
 
 **The rule's own wording was corrected by this result.** `external-code-graph-interop`
 used to open by saying a committed index answers "far more precisely than a fresh
@@ -100,14 +115,24 @@ cheap first question — and drops the precision claim its own benchmark refuted
 
 **No class is graph-first.** Query the index first because an index that already
 exists is cheap to ask and its answer is structured — not because it answers
-better. When it returns nothing, that is the common case, and grep is not a
-grudging fallback but the arm that won every valid class on this corpus.
+better. When it returns nothing, that is the common case, and grep remains the
+arm to fall back to rather than a grudging afterthought.
+
+The sentence that stood here — *"the arm that won every valid class on this
+corpus"* — is withdrawn. It is the framing v1's own report forbids: that report
+says the defensible statement is *"zero classes met the pre-registered win
+criterion"*, **not** that grep proved superior. It was also false on its own
+terms under v2: grep wins two classes, ties two, and is out-precised on both
+ties.
 
 Scope, stated so this table is not over-read: it measured the **native** engine
-on **this repository's TypeScript**, with a corpus of 16 questions. It is not
-comparable to the 2026-07-28 external-corpus run, it says nothing about a
-consumer-shipped SCIP index, and it withholds an overall engine verdict because
-two of its five classes measured the instrument rather than the engine.
+on **this repository's TypeScript**, with a corpus of 19 questions. It is not
+comparable to the 2026-07-28 external-corpus run, it is not comparable to v1
+either (corpus, arm-B verb set and scorer all moved), and it says nothing about a
+consumer-shipped SCIP index. Literal-string probes are reported as a separate
+`capability-boundary` class with no floor derived from them: a symbol index
+cannot answer them at all, which is where grep stays necessary rather than a
+defect in the engine.
 
 ## Do NOT
 

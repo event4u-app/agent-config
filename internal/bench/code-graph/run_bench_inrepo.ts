@@ -131,15 +131,27 @@ interface Row {
 }
 
 /**
- * A class where BOTH arms returned the empty set measured nothing. The
+ * A class where every metric read zero for both arms measured nothing. The
  * registered arithmetic calls that a TIE, and that output is preserved
- * verbatim — but a tie between two silences is not comparative evidence, so
- * the validity flag says so beside it rather than in place of it.
+ * verbatim — but a tie between two zeros is not comparative evidence, so the
+ * validity flag says so beside it rather than in place of it.
  *
  * Resolved by AI council 2026-08-28: publish the mechanically computed
  * registered verdict AND the validity assessment, never silently replacing one
  * with the other. Relabelling after seeing a result is itself a post-hoc
  * judgement; showing both is what makes it auditable.
+ *
+ * CORRECTED 2026-08-29 — the note this function used to print was FALSE.
+ * It said both arms had returned the empty set. Only the grep arm had. On the
+ * `path-between` class the graph arm answered every question and `armGraph`
+ * above discarded the answer: its relevance filter compares each returned
+ * node's symbol segment against the ENTIRE probe string, which for that class
+ * is `"cmdBuild -> getParser"` — a string no symbol contains. Confirmed by
+ * direct execution; see `PREREGISTRATION-inrepo-v2-2026-08-29.md` § The v1
+ * defects. Only the note changes here. No score, bar, or arm is touched: this
+ * runner's arithmetic was faithful to its own registration, and repairing the
+ * scorer under that registration would convert a published result into a
+ * different one. The repair lives in `run_bench_inrepo_v2.ts`.
  */
 function classVerdict(rows: Row[]): { verdict: string; validity: string; validity_note: string; recall_delta_pp: number; precision_ok: boolean; grep: { p: number; r: number }; graph: { p: number; r: number } } {
     const gR = mean(rows.map((r) => r.grep.recall));
@@ -155,7 +167,7 @@ function classVerdict(rows: Row[]): { verdict: string; validity: string; validit
     const noSignal = rows.every((r) => r.grep.recall === 0 && r.graph.recall === 0 && r.grep.precision === 0 && r.graph.precision === 0);
     const validity = noSignal ? 'VOID — INSTRUMENT FAILURE' : 'VALID';
     const validity_note = noSignal
-        ? 'Both arms returned the empty set on every question in this class, so nothing was measured. The registered verdict above is the runner\'s arithmetic and is preserved; it is not a defensible substantive interpretation.'
+        ? 'Every metric read zero for both arms in this class, so this run measured nothing here — but NOT symmetrically, and the two arms did not fail for the same reason. CORRECTED 2026-08-29, replacing a note that claimed both arms returned the empty set: on `path-between` the grep arm genuinely found nothing (a word-boundary search for a token containing " -> " matches no text), while the GRAPH ARM ANSWERED ALL THREE QUESTIONS and this runner\'s relevance filter discarded the answer, because it compares each returned symbol against the whole two-endpoint probe string. The defect is in this scorer, not in the engine. The registered verdict above is this runner\'s arithmetic and is preserved unchanged; the repaired measurement is a separate registration, `PREREGISTRATION-inrepo-v2-2026-08-29.md`.'
         : '';
     return { verdict, validity, validity_note, recall_delta_pp: delta, precision_ok, grep: { p: r3(gP), r: r3(gR) }, graph: { p: r3(cP), r: r3(cR) } };
 }
@@ -273,7 +285,7 @@ function main(): number {
         negative_control_construct_caveat:
             'The four controls are literal-string searches (a config key, a log filename, an env var name, a comment fragment). This engine indexes SYMBOLS and call relations, not string literals, so it scores 0.000 on all four by construction. The pre-registered floor is reported FAILED because it was registered and cannot be discarded after the fact — but a reader must not read it as an implementation defect. AI council 2026-08-28 split on this and resolved it by naming the claim: if the claim were "graph retrieval replaces grep for repository investigation" the controls are valid and the failure matters; if the claim is "graph retrieval improves structural code questions" the controls sit outside that construct. This benchmark makes only the second claim. A v2 registration must separate IN-DOMAIN negative controls (symbol-shaped probes whose correct answer is empty, testing false positives) from CAPABILITY-BOUNDARY tests (literals, filenames, config keys), reported separately.',
         overall_verdict_withheld:
-            'No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID, and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is "zero classes met the pre-registered win criterion", NOT "grep proved superior across all classes". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one.',
+            'No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID — and CORRECTED 2026-08-29, because of a defect in THIS RUNNER rather than a symmetric silence, the graph arm having answered and been discarded by the scorer — and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is "zero classes met the pre-registered win criterion", NOT "grep proved superior across all classes". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one; it exists at PREREGISTRATION-inrepo-v2-2026-08-29.md and its result is at internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md.',
         rows,
     };
 
@@ -293,6 +305,10 @@ function main(): number {
     md.push(`Corpus \`${CORPUS_FILE}\` bound by SHA-256 \`${got.slice(0, 16)}…\`; the runner refuses on mismatch.`);
     md.push('');
     md.push(`**Measured commit:** \`${head}\` (${headDate}) — postdates the ${REPAIR_DATE} extractor repair, asserted by the runner rather than read by eye.`);
+    md.push('');
+    md.push('A commit id is not a durable pointer under this repository\'s squash-merge');
+    md.push('workflow — see the reachability note in the published report. Verify the');
+    md.push('measured CONTENT by tree hash instead: `git rev-parse <ref>:src/scripts/code_graph`.');
     md.push('');
     md.push('## Per-class verdicts — the pre-registered bars');
     md.push('');

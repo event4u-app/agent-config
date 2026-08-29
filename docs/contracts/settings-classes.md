@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 109 |
-| **Total** | **138** |
+| C — guarded | 110 |
+| **Total** | **139** |
 
 The total was 140 until 2026-08-12, when five of the six keys no code path read were
 deleted, minus the one held open (§ The six unread keys, below): one A
@@ -338,9 +338,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 40 |
+| consent | 41 |
 | policy | 6 |
-| **Total** | **138** |
+| **Total** | **139** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -555,6 +555,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner | derivable — the scanner's own signature match on the tool envelope; warn-only and silent on no hit |
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call | derivable — the rule-registry match plus the hook's own per-signature silence cap |
+| `hooks.runtime_journal.enabled` | C | `false` | configures code that runs on every dispatched hook event | consent |
 | `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call | derivable — the UI-surface predicate plus the hook's own two-nudges-per-session cap |
 | `hooks.design_pass.enabled` | C | `false` | C-test 1 — it configures code that runs on every tool call and at every turn end, and unlike its two `hooks.*` neighbours its stop pass can BLOCK rather than warn | policy — whether an operator accepts a gate that can refuse a turn is a risk preference, not a fact the tree can compute. The two neighbours are `derivable` because they only ever warn; the block is the discriminator. `road-to-frontend-power` transfers the default flip to the owner for the same reason |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call | derivable — the index-detection probe the nudge already runs; no index means silence |

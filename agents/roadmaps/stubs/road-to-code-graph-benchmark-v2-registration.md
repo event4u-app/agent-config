@@ -5,11 +5,13 @@ review_by: 2026-11-28
 
 # Stub: road to a v2 registration of the in-repo code-graph benchmark
 
-> **Stub — not active work.** Created 2026-08-28 by
-> `road-to-code-graph-evidence-that-exists`, whose v1 run is complete and
-> published. This carries the **v2 registration**, which AI council 2026-08-28
-> was explicit must be a **new confirmatory experiment, never a repaired
-> continuation of v1**.
+> **DISCHARGED 2026-08-29 — v2 is registered, run and published.** Created
+> 2026-08-28 by `road-to-code-graph-evidence-that-exists`. It carried the **v2
+> registration**, which AI council 2026-08-28 was explicit must be a **new
+> confirmatory experiment, never a repaired continuation of v1** — and that is
+> what shipped. Kept as the record of the design guidance v2 implemented and of
+> the seed-vs-stub contradiction that had to be resolved. See § PROMOTED and
+> DISCHARGED. Nothing here is open work.
 
 ## Why a v2 is needed — three defects, all found before or during v1's publication
 
@@ -17,14 +19,22 @@ None of these is a reason to withhold v1. All three are reasons v1 must not be
 read as a clean five-class benchmark, which is why its own report withholds an
 overall engine verdict.
 
-**1. `path-between` measured nothing (material).** Its three probes are
-two-token strings — `"cmdBuild -> getParser"`. The registered runner gives both
-arms a single probe token: the grep arm builds `-P '\b<probe>\b'` and the graph
-arm matches node symbols containing the probe, and neither can match a token
-containing ` -> `. All three rows are `0/0` for **both** arms. It does not favour
-either arm; the class simply produced no information, and v1 reports it as
-`VOID — INSTRUMENT FAILURE` beside the registered arithmetic rather than in place
-of it.
+**1. `path-between` measured nothing (material) — and NOT symmetrically.
+CORRECTED 2026-08-29.** Its three probes are two-token strings — `"cmdBuild ->
+getParser"`. The registered runner gives both arms a single probe token: the grep
+arm builds `-P '\b<probe>\b'` and the graph arm keeps only relations whose symbol
+segment matches the probe, and neither can match a token containing ` -> `. All
+three rows are `0/0` for both arms.
+
+This paragraph used to end *"It does not favour either arm; the class simply
+produced no information."* **That was false, and it is withdrawn.** Confirmed by
+direct execution: `affected "cmdBuild -> getParser"` returns all four truth files,
+and the runner's filter then discards every one of them. The grep arm genuinely
+found nothing — there is no such text. The graph arm **answered and the scorer
+threw the answer away.** The zero is shared; the cause is not, and reading a
+shared zero as symmetric is the specific mistake this stub inherited from v1's
+report. v1 still reports the class as `VOID` beside the registered arithmetic,
+which stands; only its stated cause was wrong.
 
 **Found by the corpus's own author**, in a review pass after the corpus had
 already been committed, pinned and run. They restored the file to its registered
@@ -74,6 +84,46 @@ v1 registration conflated**:
 And on the run itself: **re-run the entire benchmark under v2**, not merely the
 repaired class. A registration is a coherent protocol or it is not one.
 
+## Two further v1 defects, found 2026-08-29 — both in the scorer
+
+**4. v1 never invoked the shipped `path` verb.** `cli.ts` dispatches
+`path <a> <b>` and implements it; v1's graph arm ran `affected` and `query` only.
+
+**5. `symbol:` pseudo-nodes were counted as files.** `p.split('#')[0]` on an
+unresolved endpoint such as `symbol:DatabaseSync` returns the whole token, which
+v1 added to a set the scorer treats as files — 152 such endpoints in the
+`code_graph` root alone. `callers` was ruled `NULL` on the **precision floor
+alone**, with recall tied at 1.000/1.000, so that verdict was harness-caused as
+well. Under v2's fix graph precision on that class moves 0.258 → 0.667 and the
+verdict becomes a TIE.
+
+## PROMOTED and DISCHARGED — v2 was registered and run on 2026-08-29
+
+Everything below was written while this was parked. It is kept because it is the
+design guidance v2 implemented, and because the seed-vs-stub contradiction it
+contains had to be resolved rather than inherited.
+
+- **v2 registration:** `internal/bench/code-graph/PREREGISTRATION-inrepo-v2-2026-08-29.md`
+- **v2 corpus:** `internal/bench/code-graph/inrepo-corpus-v2-2026-08-29.yaml` (19 questions)
+- **v2 runner:** `internal/bench/code-graph/run_bench_inrepo_v2.ts`
+- **v2 result:** `internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md`
+
+**The seed contradicted this stub, and the contradiction is resolved in favour of
+this stub.** § Seed content on promotion below requires a runner change so
+`path-between` uses `path <a> <b>`. The seed corpus it names mandates the
+opposite — *"the probe is ALWAYS THE START SYMBOL"*, one token, which `path`
+cannot consume. The single-token rule was a workaround for v1's runner, not a
+property of the question; v2 ships a new runner, so v2's corpus carries two
+structured fields (`probe` + `probe_to`) and the grep arm gets the union of two
+searches. The seed's *truth sets* are kept unchanged, including its narrowing of
+`ac-path-01` to the path itself.
+
+**v2 result: zero classes win.** `callers` TIE, `path-between` TIE,
+`transitive-impact` NULL, `references` NULL. On `path-between` the graph is
+exact — recall 1.000, precision 1.000 — and still ties, because the repaired grep
+arm reaches 0.917 and the delta is +8.3 pp against the +10 pp bar. The trigger
+below therefore does **not** fire.
+
 ## Seed content on promotion
 
 - `internal/bench/code-graph/inrepo-corpus-v2-SEED-NOT-REGISTERED.yaml` — the
@@ -111,6 +161,12 @@ not permanent by accident:
 > consumer-integration step — structural candidate selection, provenance
 > ("which source answered"), stale/absent fallback, and fixtures — rather than
 > reviving the cancelled one.
+
+**Evaluated 2026-08-29: the trigger does NOT fire.** v2 produced no winning
+class. `path-between` is the closest — the graph answers it exactly and is the
+only class where it out-precises grep — and it is a TIE at +8.3 pp against the
+registered +10 pp bar. A TIE is not a win, and the bar was v1's, fixed before
+the run, precisely so this reading could not be negotiated afterwards.
 
 Both seats were explicit that the fallback half must **not** be built ahead of
 that trigger: step 3.3 already enforces stale/absent degradation at the CLI
