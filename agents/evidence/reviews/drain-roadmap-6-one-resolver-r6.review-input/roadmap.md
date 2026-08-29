@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -335,39 +337,8 @@ called a larger risk than feature absence.
       module's own frozen-claim block, because a buried caveat is not a
       disclosure. Four are syntactic and repairable by whoever needs them.
 
-      **ROUND 6 — a bounded confirmation, and the blocking finding is closed.**
-      Round 5's own verdict named the condition: *"Fix the ScriptKind and the
-      sentence becomes true; findings 2–6 are then genuine limits to record
-      rather than to close."* Round 6 was dispatched to check exactly that, and
-      confirmed it: `.tsx` → `TSX`, everything else → `TS`, all three call sites
-      threading the real path; **12 of 12 legal TSX constructs** detected above a
-      literal router with **0 parse diagnostics**; live blast radius **0 names
-      gained, 0 lost, identical `scanned`, 0 violations**. *"The defect class is
-      closed, not relocated."*
-
-      It also found the recurring principle a fifth time, in my own test: of the
-      four new JSX arms, **three discriminate and one does not.** The backtick
-      arm uses a **balanced** pair — `` `npm run x` `` — which closes the
-      template on its own line, so it passes under both parsers; round 5's
-      reproducer had an **odd** backtick and does discriminate. Three arms pin
-      the comment-opener class and **none** pins the backtick class in `.tsx`.
-      The roadmap's "three tests go red without it" was measured and is exactly
-      right — it never claimed four — but the gap is real and is recorded rather
-      than quietly closed.
-
-      **Round 6's four findings are `accepted-risk`, not repaired**, on the rule
-      set before round 5 ran: one medium (the balanced-backtick arm), two lows
-      where a recorded limit carries only the first of its source finding's two
-      halves, and one low the delta itself introduced — the guard never inspects
-      `parseDiagnostics`, so a `.tsx` that fails to parse loses its exports
-      silent-green while still counting in `scanned`. That last one is bounded
-      by `tsc --noEmit` gating the tree, so no second resolver can sit in
-      non-compiling source in a green tree. The reviewer's own risk note agrees
-      with the stop: *"a sixth round on these four would move the scope hash
-      again for changes that open no hole."*
-
-      **Why the loop stopped here rather than at a clean round.** Six rounds,
-      25 findings, and every repair moved the scope hash and forced the next
+      **Why the loop stopped here rather than at a clean round.** Five rounds,
+      21 findings, and every repair moved the scope hash and forced the next
       round. The terminating rule was set before this round ran, not after
       seeing its result: fix what blocks, record what does not. A sixth round
       would be measuring a guard that has already had four defect classes
