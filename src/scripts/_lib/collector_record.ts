@@ -199,8 +199,37 @@ export interface ValidationResult {
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-/** RFC-4122 shape. The generator is local and random; this checks the FORM only. */
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * A date must be REAL, not merely date-SHAPED. `2026-99-99` matches the regex
+ * above and is not a day; letting it through would put a record in no window at
+ * all while looking well-formed. Round-tripping through `Date` is what
+ * distinguishes the two — `2026-02-30` normalises to March and fails to match.
+ */
+function isRealDate(value: string): boolean {
+    if (!DATE_RE.test(value)) {
+        return false;
+    }
+    const d = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+}
+/**
+ * RFC-4122 **version 4** shape. The version nibble is pinned deliberately: a v1
+ * UUID embeds a MAC address and a timestamp, and a v5 UUID is a HASH of a name
+ * in a namespace — both are derived identifiers wearing a UUID's clothes, which
+ * is exactly the leak class `machine_id` exists to avoid.
+ *
+ * Stated honestly, because a review raised it and the answer is a real limit:
+ * **syntax cannot establish randomness.** A v4-shaped value can still be
+ * produced deterministically. What this check buys is the elimination of the
+ * two derived forms that are *identifiable by construction*; the remaining
+ * guarantee has to come from the generator being trusted code, and that is a
+ * property of the (not yet written) collector, not of this validator.
+ */
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** A package version. Bounded and shaped so the field cannot carry prose. */
+const VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]{1,32})?$/;
 
 /**
  * Validate a candidate record against the allowlist.
@@ -212,6 +241,21 @@ export function validateRecord(candidate: unknown): ValidationResult {
 
     if (typeof candidate !== 'object' || candidate === null || Array.isArray(candidate)) {
         return { ok: false, errors: ['record must be a JSON object'] };
+    }
+    // Reject anything that is not a PLAIN object. `Object.keys` sees only own
+    // keys while `in` and property reads see inherited ones, so an object whose
+    // PROTOTYPE carries `repo_path` would pass the unknown-key sweep below and
+    // still read that value downstream. Pinning the prototype closes the gap at
+    // the boundary rather than trying to out-think it field by field.
+    const proto = Object.getPrototypeOf(candidate) as unknown;
+    if (proto !== Object.prototype && proto !== null) {
+        return {
+            ok: false,
+            errors: [
+                'record must be a plain object — a prototype can carry fields the ' +
+                    'own-key scan cannot see',
+            ],
+        };
     }
     const rec = candidate as Record<string, unknown>;
 
@@ -225,17 +269,27 @@ export function validateRecord(candidate: unknown): ValidationResult {
         }
     }
     for (const key of ALLOWED_FIELDS) {
-        if (!(key in rec)) {
+        // `key in rec` is TRUE for a key present with an `undefined` value, and
+        // every type guard below is `!== undefined`-gated — so testing presence
+        // alone let `{ platform: undefined }` through with no constraint applied
+        // at all. Explicit-undefined is treated as missing, which is what it is.
+        if (!(key in rec) || rec[key] === undefined) {
             errors.push(`missing required field '${key}'`);
         }
     }
 
-    if (rec.schema_version !== undefined && !Number.isInteger(rec.schema_version)) {
-        errors.push('schema_version must be an integer');
+    if (rec.schema_version !== undefined && rec.schema_version !== COLLECTOR_SCHEMA_VERSION) {
+        // Any-integer was too weak: -50 and 999999 both passed, and a record
+        // claiming an unshipped version is a migration decision, not a datum.
+        errors.push(
+            `schema_version must be ${COLLECTOR_SCHEMA_VERSION} — the only shipped schema. ` +
+                `A record naming another version is handled by the 2.4 migration path, ` +
+                `not accepted here.`,
+        );
     }
     for (const key of ['machine_id', 'episode_id'] as const) {
         const v = rec[key];
-        if (v !== undefined && (typeof v !== 'string' || !UUID_RE.test(v))) {
+        if (v !== undefined && (typeof v !== 'string' || !UUID_V4_RE.test(v))) {
             errors.push(
                 `${key} must be a locally generated random UUID — a value derived from a ` +
                     `hostname, username or repository path is a pseudonym for it, not an ` +
@@ -258,14 +312,23 @@ export function validateRecord(candidate: unknown): ValidationResult {
     if (rec.sequence !== undefined && (!Number.isInteger(rec.sequence) || (rec.sequence as number) < 0)) {
         errors.push('sequence must be a non-negative integer');
     }
-    if (rec.occurred_on !== undefined && (typeof rec.occurred_on !== 'string' || !DATE_RE.test(rec.occurred_on))) {
+    if (rec.occurred_on !== undefined && (typeof rec.occurred_on !== 'string' || !isRealDate(rec.occurred_on))) {
         errors.push(
             'occurred_on must be a UTC calendar date (YYYY-MM-DD). A precise timestamp beside ' +
                 'a stable machine_id is a behavioural fingerprint and is refused here.',
         );
     }
-    if (rec.collector_version !== undefined && typeof rec.collector_version !== 'string') {
-        errors.push('collector_version must be a string');
+    if (
+        rec.collector_version !== undefined &&
+        (typeof rec.collector_version !== 'string' || !VERSION_RE.test(rec.collector_version))
+    ) {
+        // `typeof === 'string'` was an unrestricted leak channel in a schema
+        // whose entire claim is that no field can hold free-form content: a
+        // path, a command line or a paragraph all passed it.
+        errors.push(
+            'collector_version must be a bounded semver-shaped string — an unconstrained ' +
+                'string is a free-form field, which is the thing this schema refuses',
+        );
     }
 
     return { ok: errors.length === 0, errors };

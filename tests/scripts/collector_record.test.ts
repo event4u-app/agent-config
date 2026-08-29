@@ -26,7 +26,7 @@ import {
 function validRecord(over: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
     return {
         schema_version: COLLECTOR_SCHEMA_VERSION,
-        machine_id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
+        machine_id: '3f2504e0-4f89-4d3a-9a0c-0305e82c3301',
         episode_id: 'a1b2c3d4-5e6f-4a8b-9c0d-1e2f3a4b5c6d',
         event: 'pre_tool_use',
         sequence: 0,
@@ -135,9 +135,14 @@ describe('collector_record — Phase 2.2 leak-class fixtures', () => {
         });
     }
 
-    it('every leak class names the edit that would red it — sensitivity is stated per class', () => {
+    // A review called the previous version of this test documentary: it asserted
+    // a string contains 'FIELD_PURPOSE', which proves nothing about the code.
+    // The probative version checks the property the table exists for — that
+    // every fixture field is genuinely absent from the allowlist, so no entry
+    // has quietly become a declared field while its test still reads as a leak.
+    it('no leak-fixture field is in the allowlist — the table cannot go stale silently', () => {
         for (const fx of LEAK_FIXTURES) {
-            expect(fx.removing_this_constraint_reds_it).toContain('FIELD_PURPOSE');
+            expect(ALLOWED_FIELDS.has(fx.field), `${fx.field} became a declared field`).toBe(false);
         }
         expect(LEAK_FIXTURES.length).toBeGreaterThanOrEqual(6);
     });
@@ -206,7 +211,7 @@ describe('collector_record — deduplication key of metric item 4', () => {
     it('is exactly (machine_id, episode_id, event, sequence)', () => {
         const rec = validRecord() as unknown as CollectorRecord;
         expect(dedupKey(rec)).toBe(
-            '3f2504e0-4f89-11d3-9a0c-0305e82c3301|a1b2c3d4-5e6f-4a8b-9c0d-1e2f3a4b5c6d|pre_tool_use|0',
+            '3f2504e0-4f89-4d3a-9a0c-0305e82c3301|a1b2c3d4-5e6f-4a8b-9c0d-1e2f3a4b5c6d|pre_tool_use|0',
         );
     });
 
@@ -220,6 +225,88 @@ describe('collector_record — deduplication key of metric item 4', () => {
         const a = validRecord() as unknown as CollectorRecord;
         const b = validRecord({ sequence: 1 }) as unknown as CollectorRecord;
         expect(dedupKey(a)).not.toBe(dedupKey(b));
+    });
+});
+
+describe('collector_record — regressions found by adversarial probe, not by the happy path', () => {
+    // Both were found by probing the validator directly AFTER the first 35 tests
+    // were green. The suite passed and the validator was wrong, which is the
+    // reason a passing suite is not evidence on its own.
+
+    it.each(['platform', 'event', 'outcome', 'machine_id'])(
+        'a required field present with an explicit `undefined` is MISSING, not valid (%s)',
+        (field) => {
+            // `key in rec` is true here, and every type guard is
+            // `!== undefined`-gated — so presence-only checking applied NO
+            // constraint at all and the record validated clean.
+            const r = validateRecord(validRecord({ [field]: undefined }));
+            expect(r.ok, `${field}: undefined was accepted`).toBe(false);
+            expect(r.errors.join(' ')).toContain(`missing required field '${field}'`);
+        },
+    );
+
+    it.each(['2026-99-99', '2026-02-30', '2026-13-01', '2026-00-10'])(
+        'occurred_on must be a REAL date, not merely date-shaped (%s)',
+        (value) => {
+            expect(validateRecord(validRecord({ occurred_on: value })).ok).toBe(false);
+        },
+    );
+
+    it.each(['2026-02-28', '2024-02-29', '2026-12-31'])('accepts the real date %s', (value) => {
+        expect(validateRecord(validRecord({ occurred_on: value })).ok).toBe(true);
+    });
+});
+
+describe('collector_record — findings from the neutral cross-model review', () => {
+    it('refuses an object whose PROTOTYPE carries a leak field', () => {
+        // Object.keys sees own keys only, while `in` and property reads see
+        // inherited ones — so a prototype-borne repo_path passed the unknown-key
+        // sweep and was still readable downstream.
+        const carrier = Object.create({ repo_path: '/Users/someone/private-repo' }) as Record<
+            string,
+            unknown
+        >;
+        Object.assign(carrier, validRecord());
+        const r = validateRecord(carrier);
+        expect(r.ok).toBe(false);
+        expect(r.errors.join(' ')).toContain('plain object');
+    });
+
+    it('refuses an inherited required field masquerading as present', () => {
+        const partial = validRecord();
+        delete partial.platform;
+        const carrier = Object.create({ platform: 'claude' }) as Record<string, unknown>;
+        Object.assign(carrier, partial);
+        expect(validateRecord(carrier).ok).toBe(false);
+    });
+
+    it.each([-50, 0, 2, 999999])('refuses schema_version %s — only the shipped one', (v) => {
+        expect(validateRecord(validRecord({ schema_version: v })).ok).toBe(false);
+    });
+
+    it.each([
+        '/Users/alice/repo',
+        'psql --host prod-db.internal',
+        'a whole sentence of prose that should never be in a telemetry record',
+        '',
+    ])('refuses collector_version %j — an unbounded string is a free-form field', (v) => {
+        expect(validateRecord(validRecord({ collector_version: v })).ok).toBe(false);
+    });
+
+    it.each(['12.4.0', '1.0.0', '12.4.0-rc.1'])('accepts the version-shaped %s', (v) => {
+        expect(validateRecord(validRecord({ collector_version: v })).ok).toBe(true);
+    });
+
+    it('refuses a UUIDv1 machine_id — it embeds a MAC address and a timestamp', () => {
+        expect(
+            validateRecord(validRecord({ machine_id: '3f2504e0-4f89-11d3-9a0c-0305e82c3301' })).ok,
+        ).toBe(false);
+    });
+
+    it('refuses a UUIDv5 machine_id — it is a hash of a name in a namespace', () => {
+        expect(
+            validateRecord(validRecord({ machine_id: '886313e1-3b8a-5372-9b90-0c9aee199e5d' })).ok,
+        ).toBe(false);
     });
 });
 
