@@ -190,7 +190,7 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       verify asked for *at least one* property, and it has one; it does not have
       the three it went looking for.
 
-- [ ] **0.4 Map existing runtime-routing primitives and forbid a second
+- [x] **0.4 Map existing runtime-routing primitives and forbid a second
       router.** Read `tool_probe.ts`, `reach_doctor.ts`, `judgment_ladder.ts`,
       `tier_budget_routing.ts`, missing-tool handling and missing-skill
       recovery. Every proposed code path either extends one of them or states
@@ -199,6 +199,34 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       extend-or-not with a reason; no new module duplicates
       `ToolProbeStatus`/`ChannelStatus` or re-implements a priority-ordered
       resolver.
+
+      **CLOSED 2026-08-29.** All six read at this branch's HEAD. Line numbers
+      are citations, not recollections.
+
+      | Primitive | File | Decision | Reason |
+      |---|---|---|---|
+      | `ToolProbeStatus` (`ok · missing · broken · timeout · error`), `ToolProbeDescriptor`, `ToolProbeResult`, `probeTool` | `src/scripts/_lib/tool_probe.ts:59,70,88,266` | **EXTEND** | This IS the cheap static availability probe Phase 2.2 asks for. A new status enum next to it is the duplication this step forbids. |
+      | `ChannelStatus` (`ToolProbeStatus \| 'removed' \| 'not-ready'`), `ChannelRow`, `runDeepProbe`, `ReachDoctorPayload` | `src/scripts/reach_doctor.ts:110,204,425,219` | **EXTEND** | Phase 2.3 already says so. The load-bearing detail is HOW: `:110` adds two states by **composing** `ToolProbeStatus`, never by restating it. Phase 2.3's `dispatchable` state is added the same way or not at all. |
+      | `LadderRung`, `LadderVerdict`, `classifyLadder`, `explainLadder`, `RungStatus` (`taken · rejected · not-reached`) | `src/scripts/_lib/judgment_ladder.ts:40,42,342,499,467` | **DO NOT extend the resolver; IMPORT the reason-code shape** | Different input and different domain: the ladder classifies TASK TEXT to pick a fixed delegation rung; the Phase 4 selector filters ADAPTERS by capability coverage against a host-dependent set. Merging them would give one module two unrelated input types and two unrelated rung sets. But `explainLadder`'s per-rung `taken / rejected / not-reached` is exactly what 4.5 and AC-7 need, so the selector imports `RungStatus`-shaped reason codes rather than inventing a parallel vocabulary. **This is the closest thing in the tree to the second router 0.4 warns about, and it is named here so Phase 4 cannot drift into one unnoticed.** |
+      | `BudgetTier`, `TIER_ORDER`, cooldown read/write | `src/scripts/_lib/tier_budget_routing.ts:32,35,37,49` | **DO NOT extend; adopt the shape** | It routes MODEL tiers under a spend budget with cooldowns — nothing about capability coverage, and an adapter is not a price tier. What transfers is `TIER_ORDER`: a fixed ordered array with no numeric weight, which is the existing precedent for AC-7. |
+      | `missing-tool-handling` (ask before working around a missing CLI; never install silently) | `src/rules/missing-tool-handling.md`, routing to `guideline:agent-infra/missing-tool-handling` | **ROUTE INTO IT** | When no adapter is dispatchable the terminal behaviour already exists. The selector must hand off to it, not grow its own install-or-workaround path. |
+      | `rank()` — keyword scoring over skill frontmatter, returns `[name, score, tags]` | `src/scripts/skill_tools/score_skill_relevance.ts:247,249` | **DO NOT extend — cite as the ANTI-precedent** | `RankRow` carries a NUMERIC score, and AC-7 forbids numeric weight anywhere in selection. This is the one place the tree ranks numerically; reusing it for adapters would violate AC-7 by construction. Recorded so a future step cannot reach for it as the obvious ready-made ranker. |
+
+      **The negative half is a CHECK, not a promise.** At Phase 0 "no new module
+      duplicates `ToolProbeStatus`/`ChannelStatus`" is trivially true because no
+      adapter code exists — which is precisely when the assurance is worthless.
+      `tests/contracts/runtime_routing_primitives.test.ts` (4 tests, green)
+      asserts each vocabulary is declared exactly once, that no other module
+      re-lists a full member set, and that `ChannelStatus` still composes rather
+      than forks. Sensitivity proven: a temporary second `ToolProbeStatus`
+      declaration turned 2 of the 4 red, and it was removed.
+
+      **What the check deliberately does NOT cover:** *"re-implements a
+      priority-ordered resolver"* is not decidable from a file's text — a
+      resolver is recognisable by what it does, and a pattern guess would either
+      miss the real case or fire on every `sort`. That half stays model-carried
+      and is carried into Phase 4's exit criteria, with `explainLadder` named
+      above as the specific thing Phase 4 must import from rather than mirror.
 
 - [ ] **0.5 Freeze the browser benchmark fixtures.** Minimum set: project
       Playwright available; playwright-cli only; MCP only; CLI + MCP; backend
@@ -768,7 +796,8 @@ Do not expand because capability names are cheap to invent.
   *both* halves — "records the deterministic class as outside the boundary with
   its reason, **and** the two parked classes as gated on a named federation
   ADR". One half is owner-reserved by its own subject matter. Amended below.
-- **Resolved when (AMENDED 2026-08-29):** the parked half is already recorded
+- **Resolved when:** *(AMENDED 2026-08-29 — the marker moved inside the value on
+  purpose; see the note under this field.)* the parked half is already recorded
   above. The blocker closes when the owner either (i) confirms in ADR-088 or a
   clarifying ADR that deterministic, local browser engines were never within
   "external tool runtimes", or (ii) states that they are within it, at which
@@ -793,9 +822,24 @@ Do not expand because capability names are cheap to invent.
 - **If you do nothing:** a `semantic-single-step` adapter lands as
   "experimental" and the category boundary is crossed without the ADR ADR-088
   requires.
-- **Resolved when:** a disposition records the deterministic class as outside the
-  boundary with its reason, and the two parked classes as gated on a named
-  federation ADR that does not yet exist.
+
+  **Why this field had a stale twin until 2026-08-29, and why removing it was
+  not a formatting fix.** The 2026-08-29 amendment added a second
+  `Resolved when` and left the original in place, three fields below, stating
+  the opposite: that the blocker closes when *"a disposition records the
+  deterministic class as outside the boundary"* — the very thing the amendment
+  had just established no council may do. Two contradictory closure conditions
+  on one blocker, and `lint_roadmap_blockers` was green throughout.
+
+  It was green **because of** the stale line. Its check is
+  `/^-[ \t]*\*\*Resolved when:\*\*/im`
+  (`src/scripts/lint_roadmap_blockers.ts:52`) — a literal label. The amendment
+  had written `**Resolved when (AMENDED 2026-08-29):**`, which does not match,
+  so the field the reader was meant to follow did not satisfy the five-field
+  contract at all, and the contradictory line was the only thing keeping this
+  blocker legal. Deleting the stale line first would have turned the gate red;
+  renaming the amended one first makes the deletion safe. Both are done here, in
+  that order, which is why the marker now sits inside the value.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-24 | reviewer: claude/host -->
