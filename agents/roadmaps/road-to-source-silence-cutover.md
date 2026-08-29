@@ -136,8 +136,8 @@ missing keys in CI must fail, never warn."* The recipe is
   atomic change and cannot be split.
 - **What to do:** the four steps of `docs/maintainers/source-deny-digests.md`,
   in one change: (a) `gh secret set SOURCE_DENY_KEY`; (b) create the gitignored
-  `src/scripts/external_sources_denylist.private.json` from the current
-  plaintext `deny` array; (c) `./scripts-run src/scripts/build_source_digests`
+  `src/scripts/external_sources_denylist.private.json` <!-- ref-ignore --> from
+  the current plaintext `deny` array; (c) `./scripts-run src/scripts/build_source_digests`
   then delete the tracked `deny` array in the same commit; (d) add the key and
   the strict flag to the gate's CI step behind a key-presence assertion.
 - **Resolved when:** the tracked config carries digests and no `deny` array, a
