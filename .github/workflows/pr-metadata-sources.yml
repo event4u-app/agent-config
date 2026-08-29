@@ -72,14 +72,22 @@ jobs:
         run: printf '%s' "${PR_BODY}" > "${RUNNER_TEMP}/pr-body.txt"
 
       - name: Gate branch name, PR title, PR body and commit messages
+        shell: bash -euo pipefail {0}
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # The MERGE BASE, not `base.sha`. `base.sha` is the base branch tip
+          # recorded on the event, so once the branch merges a newer `main` every
+          # base commit between the two enters the range and other authors'
+          # commits get gated as this change's own. Over-reporting only, but it
+          # makes a red job blame the wrong commits. Falls back to `base.sha` if
+          # the merge base cannot be computed, so the range is never empty.
+          BASE="$(git merge-base "${BASE_SHA}" "${HEAD_SHA}" 2>/dev/null || echo "${BASE_SHA}")"
           ./scripts-run src/scripts/sweep_source_surfaces --gate-metadata \
             --branch "${HEAD_REF}" \
             --title "${PR_TITLE}" \
             --body-file "${RUNNER_TEMP}/pr-body.txt" \
-            --commit-range "${BASE_SHA}..${HEAD_SHA}"
+            --commit-range "${BASE}..${HEAD_SHA}"

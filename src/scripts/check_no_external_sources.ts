@@ -460,7 +460,11 @@ function main(argv: readonly string[]): number {
         try {
             targets.set(rel, hunkTargets(fs.readFileSync(path.join(ROOT, rel), 'utf-8')));
         } catch {
-            // Unreadable patch — no targets, so every finding in it fails closed.
+            // Unreadable patch — no hunk targets, so no finding in it can take
+            // Leg 1. It does NOT follow that they fail closed: Leg 2 still
+            // excludes a finding whose value is block-counted elsewhere in the
+            // scanned tree. Corrected after the R2 review of this branch, which
+            // caught this comment claiming a guarantee the code does not give.
         }
     }
     const dedupInput = { blockIndex, targets, trackedPaths };

@@ -160,6 +160,27 @@ describe('fails closed — the polarity the council asked for', () => {
         expect(v.excluded).toBe(false);
     });
 
+    // The case the module docstring used to claim fell the other way. Pinned
+    // executably so the contract cannot drift back into prose: no resolvable
+    // hunk target does NOT hold a finding at block on its own — a positive
+    // block-counted match elsewhere still excludes it, via the `tree` leg.
+    // Measured on the branch that introduced this: 8 of 61 snapshot findings
+    // take exactly this path, and each carries a value the gate already counts
+    // in the current tree, so excluding it removes a double count rather than
+    // hiding a disclosure.
+    it('NO hunk target but a tree match IS excluded, via tree — not held at block', () => {
+        const v = dedupVerdict(
+            { file: SNAP, line: 4, cls: 'tmp-quote', value: 'moved-round' },
+            inputWith(
+                { [findingKey('tmp-quote', 'moved-round')]: ['agents/roadmaps/road-to-x.md'] },
+                { [SNAP]: [] },
+                ['agents/roadmaps/road-to-x.md'],
+            ),
+        );
+        expect(v.excluded).toBe(true);
+        expect(v.leg).toBe('tree');
+    });
+
     it('DELETED-ONLY finding: no hunk target and no tree match stays at block', () => {
         const v = dedupVerdict(
             { file: SNAP, line: 4, cls: 'tmp-quote', value: 'deleted-round' },

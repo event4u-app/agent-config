@@ -49,6 +49,10 @@ RANGE=""
 ZERO="0000000000000000000000000000000000000000"
 while read -r _local_ref local_sha _remote_ref remote_sha; do
     [ -z "${local_sha:-}" ] && continue
+    # An all-zero LOCAL sha is a branch DELETION: nothing is being added, so
+    # there is no commit range, and building one from zeros made `git log` fail
+    # and the failure read as a confidentiality finding.
+    [ "${local_sha}" = "0000000000000000000000000000000000000000" ] && continue
     if [ "${remote_sha:-${ZERO}}" = "${ZERO}" ]; then
         base="$(git merge-base "${local_sha}" origin/main 2>/dev/null || true)"
         [ -n "${base}" ] && RANGE="${base}..${local_sha}"
@@ -62,7 +66,28 @@ if [ -n "${RANGE}" ]; then
     ARGS+=(--commit-range "${RANGE}")
 fi
 
-if ! ./scripts-run src/scripts/sweep_source_surfaces "${ARGS[@]}"; then
+# Exit codes are NOT interchangeable and were being conflated: 1 is a real
+# finding, 2 is a usage error or an unreadable config, and anything else is the
+# tool failing rather than the change failing. Reporting all of them as
+# "carries source attribution" told an author to rewrite a clean branch name.
+set +e
+./scripts-run src/scripts/sweep_source_surfaces "${ARGS[@]}"
+rc=$?
+set -e
+
+if [ "${rc}" -eq 2 ]; then
+    echo "pre-push: the source-metadata gate could not RUN (exit 2 — usage or unreadable config)." >&2
+    echo "          This is not a finding about your branch. CI runs the same check." >&2
+    exit 0
+fi
+
+if [ "${rc}" -ne 0 ] && [ "${rc}" -ne 1 ]; then
+    echo "pre-push: the source-metadata gate exited ${rc} — unexpected, and not a finding." >&2
+    echo "          Letting the push through; CI runs the same check." >&2
+    exit 0
+fi
+
+if [ "${rc}" -eq 1 ]; then
     cat >&2 <<'EOF'
 
 pre-push: BLOCKED by the source-metadata gate.
@@ -81,3 +106,5 @@ Bypass, deliberately: AGENT_CONFIG_SKIP_METADATA_GATE=1 git push ...
 EOF
     exit 1
 fi
+
+exit 0

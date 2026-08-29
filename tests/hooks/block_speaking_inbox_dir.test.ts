@@ -21,8 +21,10 @@ import {
     denyMessage,
     inboxDirName,
     isAcceptableInboxDir,
+    main,
     verdictFor,
 } from '../../src/scripts/hooks/block_speaking_inbox_dir.js';
+import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 
 const never = (): boolean => false;
 const always = (): boolean => true;
@@ -120,5 +122,85 @@ describe('the deny message', () => {
     it('names the rule and the maintainer kill switch', () => {
         expect(msg).toContain('src/rules/source-confidentiality.md');
         expect(msg).toContain('AGENT_CONFIG_ALLOW_SPEAKING_INBOX');
+    });
+});
+
+/**
+ * `main()` — the envelope surface, added after the R2 review of this branch
+ * observed that the 14 cases above exercise only the pure helpers. For a concern
+ * registered `severity: blocking`, the envelope shape, the path-key loop, the
+ * command path and the kill switch are exactly where a bypass hides, and none of
+ * them was covered.
+ *
+ * `repoRoot` is left empty (no `project_dir`) so the exists-probe resolves
+ * relative to the test's cwd and finds nothing — which is the "new directory"
+ * branch these cases are about.
+ */
+describe('main() — the envelope surface', () => {
+    const run = (envelope: unknown): number => {
+        setHookStdinOverride(JSON.stringify(envelope));
+        try {
+            return main();
+        } finally {
+            clearHookStdinOverride();
+        }
+    };
+
+    it('BLOCKS a Write whose file_path creates a speaking directory', () => {
+        expect(run({ tool_name: 'Write', tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(1);
+    });
+
+    it('reads a PAYLOAD-WRAPPED envelope, not only a top-level one', () => {
+        expect(run({ payload: { tool_name: 'Write', tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } } })).toBe(1);
+    });
+
+    it('ALLOWS an opaque round id through the same path', () => {
+        expect(run({ tool_name: 'Write', tool_input: { file_path: 'agents/tmp/inbox-2026-08-h/x.md' } })).toBe(0);
+    });
+
+    it('covers every _PATH_KEYS alias, not just file_path', () => {
+        for (const key of ['path', 'target_file', 'filename', 'filePath', 'notebook_path']) {
+            expect(run({ tool_input: { [key]: 'agents/tmp/a-speaking-round/x.md' } }), key).toBe(1);
+        }
+    });
+
+    it('BLOCKS a shell command that creates the directory — the bypass the review found', () => {
+        expect(run({ tool_name: 'Bash', tool_input: { command: 'mkdir -p agents/tmp/a-speaking-round' } })).toBe(1);
+        expect(run({ tool_name: 'Bash', tool_input: { command: 'git mv old agents/tmp/a-speaking-round/note.md' } })).toBe(1);
+        expect(run({ tool_name: 'Bash', tool_input: { command: 'echo hi > agents/tmp/a-speaking-round/note.md' } })).toBe(1);
+    });
+
+    it('does not block a command naming an opaque round id', () => {
+        expect(run({ tool_name: 'Bash', tool_input: { command: 'mkdir -p agents/tmp/inbox-2026-08-h' } })).toBe(0);
+    });
+
+    it('a malformed or empty envelope ALLOWS — fail_closed is false', () => {
+        expect(run({})).toBe(0);
+        setHookStdinOverride('not json at all');
+        try {
+            expect(main()).toBe(0);
+        } finally {
+            clearHookStdinOverride();
+        }
+        setHookStdinOverride('');
+        try {
+            expect(main()).toBe(0);
+        } finally {
+            clearHookStdinOverride();
+        }
+    });
+
+    it('the kill switch silences it', () => {
+        process.env['AGENT_CONFIG_ALLOW_SPEAKING_INBOX'] = '1';
+        try {
+            expect(run({ tool_input: { file_path: 'agents/tmp/a-speaking-round/x.md' } })).toBe(0);
+        } finally {
+            delete process.env['AGENT_CONFIG_ALLOW_SPEAKING_INBOX'];
+        }
+    });
+
+    it('a path outside the inbox is untouched', () => {
+        expect(run({ tool_input: { file_path: 'src/rules/source-confidentiality.md' } })).toBe(0);
+        expect(run({ tool_input: { file_path: 'agents/tmp/scratch.ts' } })).toBe(0);
     });
 });

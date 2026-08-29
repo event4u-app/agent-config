@@ -60,6 +60,12 @@ jobs:
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
       - name: Sweep all five surfaces
+        # `pipefail` is REQUIRED, not stylistic: the command is piped into `tee`,
+        # and Actions' default shell is `bash -e` WITHOUT it — so the pipeline's
+        # status would be tee's, which is always 0. The one failure mode this job
+        # declares (its own inability to measure) would then be silently green,
+        # which is the exact class of defect the sweep exists to report on.
+        shell: bash -euo pipefail {0}
         env:
           # `gh pr list` backs the PR surface. Without a token that surface
           # reports `unavailable` with a reason rather than a false zero.

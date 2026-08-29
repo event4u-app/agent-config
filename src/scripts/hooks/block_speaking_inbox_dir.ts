@@ -84,6 +84,22 @@ function _isObject(v: JsonValue | undefined): v is JsonObject {
 const INBOX_RE = /(?:^|\/)agents\/tmp(?:\.old)?\/([^/]+)\/./;
 
 /**
+ * A DIRECTORY-TERMINAL inbox path — `agents/tmp/<name>` with nothing after it.
+ *
+ * `mkdir -p agents/tmp/<name>` names the directory with no trailing slash and no
+ * file after it, so `INBOX_RE` cannot see it. That is the exact bypass the R2
+ * review of this branch found, and the test that pins it caught this second
+ * form on the first run.
+ *
+ * The last segment is read as a DIRECTORY only when it carries no `.` — so
+ * `cat agents/tmp/scratch.ts` stays a file reference and is not judged as a
+ * round name. That is a heuristic and its limit is real: a directory whose name
+ * genuinely contains a dot is missed by this form. It is still caught the moment
+ * anything is written INSIDE it, which is the path `INBOX_RE` covers.
+ */
+const INBOX_DIR_TERMINAL_RE = /(?:^|\/)agents\/tmp(?:\.old)?\/([^/.]+)\/?$/;
+
+/**
  * The first-level directory name this path would place a file under, or `null`
  * when the path is not inside an inbox subdirectory at all.
  *
@@ -96,7 +112,11 @@ export function inboxDirName(filePath: string): string | null {
     }
     const normalized = filePath.replace(/\\/g, '/').replace(/^(\.\/)+/, '');
     const m = INBOX_RE.exec(normalized);
-    return m ? (m[1] as string) : null;
+    if (m) {
+        return m[1] as string;
+    }
+    const d = INBOX_DIR_TERMINAL_RE.exec(normalized);
+    return d ? (d[1] as string) : null;
 }
 
 /**
@@ -127,10 +147,22 @@ export function verdictFor(
     }
     // Already created — a rename is the fix, and refusing every later write
     // would wedge the round without removing the name.
+    //
+    // The probe path is derived from the SAME anchored match that found the
+    // directory, not from `indexOf('agents/tmp')`. That prefix also matches
+    // `agents/tmp-notes/` and `agents/tmpfiles/`, and taking the FIRST
+    // occurrence meant a path carrying a decoy earlier segment probed the wrong
+    // directory — in either direction. Found by the R2 review of this branch.
     const normalized = filePath.replace(/\\/g, '/').replace(/^(\.\/)+/, '');
-    const idx = normalized.indexOf('agents/tmp');
-    const rel = idx >= 0 ? normalized.slice(idx) : normalized;
-    const upto = rel.split('/').slice(0, 3).join('/');
+    const m =
+        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/]+)\//.exec(normalized) ??
+        /(?:^|\/)(agents\/tmp(?:\.old)?\/[^/.]+)\/?$/.exec(normalized);
+    if (m === null) {
+        // `inboxDirName` matched but this did not — treat as unattributable and
+        // BLOCK, since the name is speaking and we cannot prove it pre-exists.
+        return { block: true, dir, reason: 'new inbox directory with a speaking name (path not re-anchorable)' };
+    }
+    const upto = m[1] as string;
     const probe = repoRoot === '' ? upto : path.join(repoRoot, upto);
     if (exists(probe)) {
         return { block: false, dir, reason: 'directory already exists — rename, do not re-refuse' };
@@ -184,11 +216,30 @@ export function main(): number {
             return 0;
         }
         const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
+        const candidates: string[] = [];
         for (const key of _PATH_KEYS) {
             const v = ti[key];
-            if (typeof v !== 'string' || !v) {
-                continue;
+            if (typeof v === 'string' && v) {
+                candidates.push(v);
             }
+        }
+        // A shell command creates the directory just as effectively as a Write,
+        // and this guard read only the path keys — so `mkdir -p
+        // agents/tmp/<speaking-name>`, a `git mv` into one, or a redirect
+        // bypassed it entirely. Both siblings on this slot (`block_no_verify`,
+        // `block_kernel_rule_writes`) parse the command string; this one did
+        // not, and the R2 review of this branch caught it. Every whitespace
+        // token of the command is offered to the same pure verdict, so the
+        // decision logic is shared rather than duplicated.
+        const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
+        if (typeof cmd === 'string' && cmd) {
+            for (const tok of cmd.split(/[\s"'`(){};|&<>]+/)) {
+                if (tok) {
+                    candidates.push(tok);
+                }
+            }
+        }
+        for (const v of candidates) {
             const verdict = verdictFor(v, (p) => fs.existsSync(p), repoRoot);
             if (verdict.block && verdict.dir !== null) {
                 process.stderr.write(denyMessage(verdict.dir));

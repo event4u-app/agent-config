@@ -105,8 +105,27 @@ function sh(cmd: string, args: string[], cwd = ROOT): { ok: boolean; out: string
 }
 
 function loadDeny(): Array<[string, RegExp]> {
-    const cfg = JSON.parse(fs.readFileSync(CONFIG, 'utf-8')) as { deny?: string[] };
-    if (!cfg.deny || cfg.deny.length === 0) throw new Error('config error: empty deny list');
+    const cfg = JSON.parse(fs.readFileSync(CONFIG, 'utf-8')) as { deny?: string[]; deny_digests?: string[] };
+    if (!cfg.deny || cfg.deny.length === 0) {
+        // After the atomic digest cutover (road-to-source-silence-cutover Phase
+        // 1.3) the tracked config carries `deny_digests` and NO `deny` array.
+        // This used to throw, and the CLI entry wraps `main` in no try/catch, so
+        // the cutover would have turned every sweep into an unhandled crash —
+        // caught by the R2 review of the branch that WROTE that step, before it
+        // could bite. Degrade loudly and keep the shape half working: it is
+        // name-list-independent by construction, so it is exactly the half that
+        // still has something to say without a deny set.
+        if ((cfg.deny_digests ?? []).length > 0) {
+            process.stderr.write(
+                '⚠️  no plaintext `deny` array — the digest cutover has happened.\n' +
+                    '    This sweep does NOT match hashed digests: it is a discovery/census tool\n' +
+                    '    and matching them needs the key. The SHAPE half still runs and the\n' +
+                    '    counts below are shape-only for the denylist column.\n',
+            );
+            return [];
+        }
+        throw new Error('config error: empty deny list');
+    }
     return cfg.deny.map((p) => [p, new RegExp(p, 'i')] as [string, RegExp]);
 }
 
@@ -399,6 +418,16 @@ export function gateMetadata(argv: readonly string[]): number {
     const branch = arg('--branch');
     if (branch !== '') {
         scanned += 1;
+        // The `true` flag scans the branch name as a PATH, so only the two
+        // path-shaped classes can fire on it: a literal `agents/tmp(.old)/<name>/`
+        // segment or a `github.com/<owner>/<repo>` URL. An ordinary speaking
+        // branch name (`feat/some-project-parity`) matches NEITHER — verified by
+        // the R2 review. So the branch surface is covered by the DENY SET, and
+        // by the shape half only in those two literal forms. Stated here rather
+        // than implied, because "branch names are shape-checked" would be an
+        // over-claim; closing it needs a branch-name class the heuristic does
+        // not have, and inventing one to match a doc sentence is how a
+        // false-positive-heavy class gets shipped.
         findings.push(...scanText(branch, `branch ${branch}`, 'branch', 'block', deny, true));
     }
     const title = arg('--title');
@@ -430,9 +459,15 @@ export function gateMetadata(argv: readonly string[]): number {
         scanned += recs.length;
         for (const rec of recs) {
             const [sha, subject, body] = rec.split('\x1f');
-            findings.push(
-                ...scanText(`${subject ?? ''}\n${body ?? ''}`, `commit ${(sha ?? '').slice(0, 9)}`, 'commit', 'block', deny),
-            );
+            const anchor = `commit ${(sha ?? '').slice(0, 9)}`;
+            // PER LINE, not as one blob. `SOURCE_HEADER_RE` is anchored `^…$`
+            // with no `m` flag, so `sourceHeaderHits` returns nothing for any
+            // multi-line input — a commit body carrying a speaking `Source:`
+            // line was therefore invisible to the shape half while the PR body,
+            // scanned per line 14 lines above, was not. Found by the R2 review.
+            for (const ln of `${subject ?? ''}\n${body ?? ''}`.split('\n')) {
+                findings.push(...scanText(ln, anchor, 'commit', 'block', deny));
+            }
         }
     }
 
@@ -452,7 +487,17 @@ export function gateMetadata(argv: readonly string[]): number {
     }
     process.stdout.write(`❌  ${String(findings.length)} source-attribution hit(s) in off-tree metadata:\n\n`);
     for (const f of findings) {
-        process.stdout.write(`  ${f.anchor}  [${f.matcher}:${f.kind}]\n`);
+        // The CLASS only, never `kind`. For a `denylist` finding `kind` IS the
+        // deny PATTERN — i.e. the readable source name this gate exists to keep
+        // out of public surfaces — and this line runs in a PUBLIC GitHub Actions
+        // job log. Printing it disclosed the protected name at exactly the
+        // moment the gate fired, which is worse than the leak it was catching.
+        // Found by the R2 completion review of this branch, verified
+        // empirically. The shape classes are safe to name (`tmp-quote`,
+        // `source-header`, `repo-slug` describe a FORM), so they are printed —
+        // but the discriminator is the matcher, not the author's care.
+        const cls = f.matcher === 'denylist' ? 'denylist' : `shape:${f.kind}`;
+        process.stdout.write(`  ${f.anchor}  [${cls}]\n`);
     }
     process.stdout.write(
         '\nBranch names, PR titles, PR bodies and commit messages are PUBLIC and\n' +

@@ -31,7 +31,7 @@
  * | Leg | Test | Measured 2026-08-29 |
  * |---|---|---:|
  * | `hunk` | identical class+value is block-counted in the file THIS hunk targets (`+++ b/<path>`) | 12 of 26 |
- * | `tree` | identical class+value is block-counted in some other independently-scanned file | 12 of 26 |
+ * | `tree` | identical class+value is block-counted in ANY scanned non-snapshot file — used both when the hunk target resolves to a different file and when it does not resolve at all | 14 of 26 |
  *
  * The literal reading of the recorded option is the `hunk` leg alone, and it
  * accounts for less than half the mirrors: a value moves between files, or the
@@ -41,12 +41,36 @@
  * for exactly that distinction to stay visible, so the two counts are reported
  * separately and every exclusion records its leg and its matched path.
  *
- * ## Fail-closed
+ * ## What actually fails closed — corrected after the R2 review of this branch
  *
- * A finding is deduped only on a positive match. No hunk target, an untracked
- * target, a malformed patch, a value seen only at the warn tier — all stay at
- * block. The two findings that survived this rule on first run were real: both
- * were documentation placeholder slugs in test fixtures, fixed in
+ * The single necessary condition is a **positive `blockIndex` match**: an
+ * identical class+value counted at the BLOCK tier in a scanned, non-snapshot
+ * file. With no such match a finding stays at block, whatever else is true of
+ * it. That includes a value seen only at the warn tier, and it is the condition
+ * the AI council required — the mirror premise is verified per finding, never
+ * assumed.
+ *
+ * **What does NOT independently fail closed, stated because this docstring
+ * previously claimed it did.** Given a positive match, Leg 2 excludes. So a
+ * patch finding whose hunk target cannot be resolved — a `/dev/null`
+ * post-image, an unparsed header, a malformed patch — is excluded via `tree`
+ * rather than held at block, PROVIDED its value is block-counted somewhere.
+ * Measured on this branch: 10 findings take Leg 1, 42 take Leg 2 with a
+ * resolved target, **8 take Leg 2 with no resolvable target**, and 1 has no
+ * match anywhere and stays at block.
+ *
+ * That is deliberate rather than merely tolerated: those 8 carry a value the
+ * gate already counts in the current tree, so excluding them removes a DOUBLE
+ * COUNT and discloses nothing. Holding them would raise the ratchet by 8 for
+ * findings that are provably not new disclosures. The behaviour is pinned by
+ * `tests/scripts/source_snapshot_dedup.test.ts`, including a case asserting
+ * exactly this — so the contract is executable rather than prose.
+ *
+ * The ONE structural fail-closed beyond the match itself: an untracked hunk
+ * target returns `no`, because an exclusion may never cite a path that is gone.
+ *
+ * The two findings that survived this rule on first run were real: both were
+ * documentation placeholder slugs in test fixtures, fixed in
  * `source_shape.ts`'s placeholder allowlist rather than by widening this rule.
  */
 
@@ -73,7 +97,10 @@ export function isSnapshotPatch(rel: string): boolean {
  * Map each 1-based line of a unified diff to the path its hunk targets.
  *
  * `/dev/null` (a deletion's post-image) yields no target, so a finding on a
- * deleted-only line is unattributable and stays at block by construction.
+ * deleted-only line is UNATTRIBUTABLE — which routes it to Leg 2 rather than
+ * holding it at block. It is still excluded only if its value is block-counted
+ * somewhere in the current tree; with no such match it stays at block. See the
+ * module docstring's fail-closed section, which this comment used to contradict.
  */
 export function hunkTargets(patchText: string): Map<number, string> {
     const out = new Map<number, string>();
