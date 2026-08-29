@@ -6,16 +6,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     checkOneResolver,
     declaresRouter,
+    exportedNames,
+    exportsRouterFunction,
     importsCouncilInternal,
+    moduleSpecifiers,
     SANCTIONED_RESOLVER,
-    segment,
 } from '../../src/scripts/_lib/one_resolver_invariant.js';
 
 const REPO = path.resolve(__dirname, '..', '..');
 
 let tmp: string;
 
-/** Build a synthetic tree with a `judgment_ladder.ts` that satisfies the guard. */
 function seed(): void {
     const libDir = path.join(tmp, 'src', 'scripts', '_lib');
     fs.mkdirSync(libDir, { recursive: true });
@@ -52,25 +53,19 @@ describe('the real tree holds the invariant', () => {
         expect(checkOneResolver(REPO).violations).toEqual([]);
     });
 
-    // R2 finding 1. The previous version of this test called `fs.existsSync`
-    // and `declaresRouter` directly and never invoked the scanner, so a
-    // scanner walking ZERO files passed it — the reviewer proved it by
-    // mutating the scan root to a typo. Anti-vacuity has to be asserted on
-    // the scanner's OWN report of what it read, or it asserts nothing.
+    // R2 round 1, finding 1: the previous anti-vacuity test never called the
+    // scanner, so one walking ZERO files passed it.
     it('actually walked files, and read the resolver among them', () => {
         const r = checkOneResolver(REPO);
         expect(r.scanned.length).toBeGreaterThan(100);
         expect(r.scanned).toContain(SANCTIONED_RESOLVER);
     });
 
-    it('a scan root that resolves to nothing is NOT reported as clean-and-scanned', () => {
-        // The discriminator itself, exercised: an empty tree yields an empty
-        // `scanned`, so `violations.length === 0` alone is never sufficient.
+    it('an empty tree is not reported as clean-and-scanned', () => {
         const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-empty-'));
         try {
             const r = checkOneResolver(empty);
             expect(r.scanned).toEqual([]);
-            // …and it is not silently green either: the resolver is missing.
             expect(r.violations.map((v) => v.kind)).toEqual(['resolver-missing']);
         } finally {
             fs.rmSync(empty, { recursive: true, force: true });
@@ -81,13 +76,9 @@ describe('the real tree holds the invariant', () => {
 describe('sensitivity — the guard is observed RED, not assumed', () => {
     it('goes red when a second task-side council router lands beside the ladder', () => {
         expectCleanBaseline();
-        write(
-            'src/scripts/council_topology_router.ts',
-            'export class CouncilTopologyRouter {\n    route() {\n        return "council";\n    }\n}\n',
-        );
+        write('src/scripts/council_topology_router.ts', 'export class CouncilTopologyRouter {}\n');
         const v = checkOneResolver(tmp).violations;
-        expect(v).toHaveLength(1);
-        expect(v[0]?.kind).toBe('second-resolver');
+        expect(v.map((x) => x.kind)).toEqual(['second-resolver']);
         expect(v[0]?.file).toContain('council_topology_router.ts');
     });
 
@@ -98,9 +89,7 @@ describe('sensitivity — the guard is observed RED, not assumed', () => {
             "import { NECESSARY_TRIGGERS } from '../ai_council/necessity.js';\n" +
                 'export function classifyLadder() {\n    return NECESSARY_TRIGGERS;\n}\n',
         );
-        const v = checkOneResolver(tmp).violations;
-        expect(v).toHaveLength(1);
-        expect(v[0]?.kind).toBe('council-import-in-resolver');
+        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['council-import-in-resolver']);
     });
 
     it('goes red on a second function-shaped resolver, not only a class', () => {
@@ -109,7 +98,6 @@ describe('sensitivity — the guard is observed RED, not assumed', () => {
         expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['second-resolver']);
     });
 
-    // R2 finding 4.
     it('goes red when the sanctioned resolver is deleted — zero is not one', () => {
         expectCleanBaseline();
         fs.rmSync(path.join(tmp, SANCTIONED_RESOLVER));
@@ -117,20 +105,64 @@ describe('sensitivity — the guard is observed RED, not assumed', () => {
     });
 });
 
-// R2 finding 2. The same NAME evaded via ordinary export SYNTAX; nine of
-// eleven measured shapes passed the first version. Each is asserted here so a
-// future narrowing of the patterns cannot pass silently.
-describe('evasion by export syntax — every shape the reviewer measured', () => {
+// ── The three killed implementations, kept as permanent regressions ───────
+//
+// Each case below is a reproducer a fresh R2 reviewer used to kill a previous
+// text-scanning implementation. They are retained not because a parser is at
+// risk from them, but because their absence is what let each round's repair
+// look complete.
+describe('regressions from the three text-scanning implementations this replaced', () => {
+    it('round 1: a router name in a STRING is not a declaration', () => {
+        expect(declaresRouter('export const NOTE = "export class CouncilTopologyRouter";')).toBe(false);
+    });
+
+    it('round 1: a router name in a COMMENT is not a declaration', () => {
+        expect(declaresRouter('// export class CouncilTopologyRouter\nexport const x = 1;')).toBe(false);
+    });
+
+    it('round 2: a line comment containing a glob does not hide the code after it', () => {
+        expect(declaresRouter('// Routes live under packages/*/commands/\nexport class CouncilTopologyRouter {}')).toBe(
+            true,
+        );
+    });
+
+    it('round 3: a BACKTICK inside a regex literal does not hide the code after it', () => {
+        // `check_portability.ts:741` holds a regex of exactly this shape — the
+        // trigger that cost 231 exports was ordinary, not exotic.
+        const src = 'const re = /`([^`]+)`/g;\nexport class CouncilTopologyRouter {}\n';
+        expect(declaresRouter(src)).toBe(true);
+    });
+
+    it('round 3: a real block comment IS still invisible', () => {
+        expect(declaresRouter('/* export class CouncilTopologyRouter {} */\nexport const x = 1;')).toBe(false);
+    });
+
+    it('parsing does not lose ordinary exports the way the strippers did', () => {
+        // Rounds 2 and 3 lost 12 and 54 files' worth of top-level exports.
+        const src = '// glob packages/*/x\nconst re = /`a`/g;\nexport function run() {\n    return re;\n}\n';
+        expect(exportedNames(src)).toContain('run');
+    });
+});
+
+// R2 rounds 2 and 3: every export syntax that evaded a pattern matrix.
+describe('export syntax — every shape three review rounds found evading', () => {
     const shapes: ReadonlyArray<readonly [string, string]> = [
-        ['default-exported class', 'export default class CouncilTopologyRouter {}\n'],
-        ['abstract class', 'export abstract class CouncilTopologyRouter {}\n'],
-        ['const class expression', 'export const CouncilTopologyRouter = class {};\n'],
-        ['arrow const', 'export const resolveCouncilRoute = () => "council";\n'],
-        ['separate export statement', 'class CouncilTopologyRouter {}\nexport { CouncilTopologyRouter };\n'],
-        ['aliased export', 'class Inner {}\nexport { Inner as CouncilTopologyRouter };\n'],
-        ['re-export', "export { CouncilTopologyRouter } from './x.js';\n"],
-        ['async function', 'export async function resolveCouncilRoute() {\n    return "council";\n}\n'],
-        ['exported type alias', 'export type CouncilTopologyRouter = () => string;\n'],
+        ['plain class', 'export class CouncilTopologyRouter {}'],
+        ['default-exported class', 'export default class CouncilTopologyRouter {}'],
+        ['abstract class', 'export abstract class CouncilTopologyRouter {}'],
+        ['declare class', 'export declare class CouncilTopologyRouter {}'],
+        ['enum', 'export enum CouncilTopologyRouter { a }'],
+        ['generator function', 'export function* resolveCouncilRoute() {}'],
+        ['const class expression', 'export const CouncilTopologyRouter = class {};'],
+        ['arrow const', 'export const resolveCouncilRoute = () => "council";'],
+        ['separate export statement', 'class CouncilTopologyRouter {}\nexport { CouncilTopologyRouter };'],
+        ['aliased export', 'class Inner {}\nexport { Inner as CouncilTopologyRouter };'],
+        ['re-export', "export { CouncilTopologyRouter } from './x.js';"],
+        ['type-only re-export', "export type { CouncilTopologyRouter } from './impl.js';"],
+        ['namespace re-export', "export * as CouncilTopologyRouter from './impl.js';"],
+        ['destructured const', 'export const { CouncilTopologyRouter } = mod;'],
+        ['type alias', 'export type CouncilTopologyRouter = () => string;'],
+        ['async function', 'export async function resolveCouncilRoute() {\n    return "council";\n}'],
     ];
 
     for (const [label, body] of shapes) {
@@ -139,52 +171,87 @@ describe('evasion by export syntax — every shape the reviewer measured', () =>
         });
     }
 
-    it('a tree carrying three differently-exported routers is not green', () => {
+    it('a NON-exported router declaration is not a violation', () => {
+        expect(declaresRouter('class CouncilTopologyRouter {}')).toBe(false);
+    });
+
+    it('a tree carrying three differently-exported routers reports three', () => {
         expectCleanBaseline();
         write('src/scripts/a.ts', 'export default class CouncilTopologyRouter {}\n');
-        write('src/scripts/b.ts', 'export abstract class CouncilTopologyRouter {}\n');
-        write('src/scripts/c.ts', 'export const resolveCouncilRoute = () => "council";\n');
+        write('src/scripts/b.ts', "export type { CouncilTopologyRouter } from './impl.js';\n");
+        write('src/scripts/c.ts', 'export const { resolveCouncilRoute } = mod;\n');
         expect(checkOneResolver(tmp).violations).toHaveLength(3);
     });
 });
 
-// R2 finding 3.
-describe('scan scope — a second resolver outside src/scripts is still a second resolver', () => {
-    for (const dir of ['src/cli', 'src/shared', 'src/server', 'src/agent-src/templates/scripts/work_engine']) {
-        it(`sees a router placed in ${dir}`, () => {
-            expectCleanBaseline();
-            write(`${dir}/router.ts`, 'export class CouncilTopologyRouter {}\n');
-            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
+// R2 round 3, finding 2: the previous check tested the NAME, so a stub that
+// kept the name passed while round 2's reproducer that dropped it failed.
+describe('the resolver must be CALLABLE, not merely named', () => {
+    it('goes red when the resolver is gutted to a string of the same name', () => {
+        expectCleanBaseline();
+        write(SANCTIONED_RESOLVER, 'export const classifyLadder = "moved";\n');
+        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
+    });
+
+    it('goes red when the resolver is gutted to an unrelated const', () => {
+        expectCleanBaseline();
+        write(SANCTIONED_RESOLVER, 'export const NOTE = "moved";\n');
+        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
+    });
+
+    it('goes red when the resolver only re-exports the name from elsewhere', () => {
+        expectCleanBaseline();
+        write(SANCTIONED_RESOLVER, "export { classifyLadder } from './moved_elsewhere.js';\n");
+        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
+    });
+
+    for (const [label, body] of [
+        ['function declaration', 'export function classifyLadder() {\n    return 1;\n}'],
+        ['arrow const', 'export const classifyLadder = () => 1;'],
+        ['class', 'export class CouncilTopologyRouter {}'],
+    ] as const) {
+        it(`accepts a resolver declared as a ${label}`, () => {
+            expect(exportsRouterFunction(body)).toBe(true);
         });
     }
+
+    it('the real resolver satisfies it', () => {
+        expect(checkOneResolver(REPO).violations.map((v) => v.kind)).not.toContain('resolver-is-not-a-resolver');
+    });
 });
 
-// R2 finding 5.
-describe('the council-import check covers every import form, and only real ones', () => {
+describe('module specifiers — every import form three rounds found missing', () => {
     for (const [label, body] of [
-        ['static from', "import { x } from '../ai_council/necessity.js';\n"],
-        ['index form, no trailing slash', "import { x } from '../ai_council';\n"],
-        ['dynamic import()', "const m = await import('../ai_council/necessity.js');\n"],
-        ['require()', "const m = require('../ai_council/necessity.js');\n"],
+        ['static from', "import { x } from '../ai_council/necessity.js';"],
+        ['side-effect import', "import '../ai_council/necessity.js';"],
+        ['index form, no trailing slash', "import { x } from '../ai_council';"],
+        ['type-only import', "import type { X } from '../ai_council/necessity.js';"],
+        ['dynamic import()', "const m = await import('../ai_council/necessity.js');"],
+        ['dynamic import() with a template specifier', 'const m = await import(`../ai_council/necessity.js`);'],
+        ['require()', "const m = require('../ai_council/necessity.js');"],
+        ['re-export from', "export { x } from '../ai_council/necessity.js';"],
     ] as const) {
         it(`detects ${label}`, () => {
             expect(importsCouncilInternal(body)).toBe(true);
         });
     }
 
-    it('does NOT fire on a comment mentioning the path — a docstring reword must not red the gate', () => {
+    it('does NOT fire on a comment mentioning the path', () => {
         expect(
-            importsCouncilInternal(
-                "// Deliberately independent: we do not import from '../ai_council/necessity.js'.\n" +
-                    'export function classifyLadder() {\n    return 1;\n}\n',
-            ),
+            importsCouncilInternal("// we do not import from '../ai_council/necessity.js'\nexport const x = 1;"),
         ).toBe(false);
     });
 
-    it('does NOT fire on a block comment mentioning the path', () => {
-        expect(
-            importsCouncilInternal("/**\n * See `from '../ai_council/necessity.js'` — we do not.\n */\nexport const x = 1;\n"),
-        ).toBe(false);
+    it('does NOT fire on a plain string containing the path — R1 finding 5 moved here in round 3', () => {
+        expect(importsCouncilInternal('export const S = "../ai_council/necessity.js";')).toBe(false);
+    });
+
+    it('does NOT fire on a similarly-named neighbour directory', () => {
+        expect(importsCouncilInternal("import { x } from '../ai_councilish/y.js';")).toBe(false);
+    });
+
+    it('collects specifiers without inventing them', () => {
+        expect(moduleSpecifiers("import 'a';\nconst b = require('c');")).toEqual(['a', 'c']);
     });
 });
 
@@ -193,8 +260,7 @@ describe('polarity — the guard must also DENY, or it is a pattern that always 
         expectCleanBaseline();
         write(
             'src/scripts/council_report.ts',
-            '// Renders a council run for the operator. Routes nothing.\n' +
-                'export function renderCouncilReport(rows: string[]) {\n    return rows.join("\\n");\n}\n',
+            'export function renderCouncilReport(rows: string[]) {\n    return rows.join("\\n");\n}\n',
         );
         expect(checkOneResolver(tmp).violations).toEqual([]);
     });
@@ -211,102 +277,32 @@ describe('polarity — the guard must also DENY, or it is a pattern that always 
         expect(checkOneResolver(tmp).violations).toEqual([]);
     });
 
-    it('stays green on a router name inside a comment or a string', () => {
-        expectCleanBaseline();
-        write(
-            'src/scripts/prose.ts',
-            '// A second `export class CouncilTopologyRouter` would be a violation.\n' +
-                'export const NOTE = "export class CouncilTopologyRouter";\n',
-        );
-        expect(checkOneResolver(tmp).violations).toEqual([]);
-    });
-
     it('does not treat an ai_council import in a NON-resolver file as a violation', () => {
         expectCleanBaseline();
         write('src/scripts/consumer.ts', "import { x } from './ai_council/necessity.js';\nexport const y = x;\n");
-        // The import itself is detectable…
         expect(importsCouncilInternal(fs.readFileSync(path.join(tmp, 'src/scripts/consumer.ts'), 'utf-8'))).toBe(true);
-        // …but the invariant only constrains the resolver.
         expect(checkOneResolver(tmp).violations).toEqual([]);
     });
 });
 
-// ── R2 ROUND 2 ────────────────────────────────────────────────────────────
-// Round 1's repair of the comment false-positive introduced a wider false
-// NEGATIVE: comments were stripped by ordered regexes, block-first, with an
-// unbounded lazy match. Any `//` comment containing the two characters `/*` —
-// an ordinary glob path — opened a spurious block comment that ran to the next
-// `*` `/` anywhere in the file and deleted the real code between. Measured on
-// the live tree at the time: 34 non-test files under `src/` carried such a
-// comment and 12 of them lost top-level `export` declarations.
-describe('the comment scanner is single-pass, so a glob in a line comment cannot swallow code', () => {
-    const GLOB_COMMENT = '// Routes live under packages/*/commands/\n';
-
-    it('still detects a router declared after a line comment containing a glob', () => {
-        expect(declaresRouter(GLOB_COMMENT + 'export class CouncilTopologyRouter {}\n')).toBe(true);
-    });
-
-    it('still detects a council import after a line comment containing a glob', () => {
-        expect(importsCouncilInternal(GLOB_COMMENT + "import { x } from '../ai_council/necessity.js';\n")).toBe(true);
-    });
-
-    it('end-to-end: a second resolver hidden behind such a comment is NOT green', () => {
-        expectCleanBaseline();
-        write('src/scripts/hidden.ts', GLOB_COMMENT + 'export class CouncilTopologyRouter {}\n');
-        const r = checkOneResolver(tmp);
-        expect(r.violations.map((v) => v.kind)).toEqual(['second-resolver']);
-        // The file WAS scanned — which is why anti-vacuity could not catch this.
-        expect(r.scanned.some((f) => f.endsWith('hidden.ts'))).toBe(true);
-    });
-
-    it('does not lose code that follows a line comment containing a glob', () => {
-        const src = GLOB_COMMENT + 'export function run() {\n    return 1;\n}\n';
-        expect(segment(src).codeOnly).toContain('export function run');
-    });
-
-    it('a real block comment IS still removed', () => {
-        expect(segment('/* export class CouncilTopologyRouter {} */\nexport const x = 1;\n').codeOnly).not.toContain(
-            'CouncilTopologyRouter',
-        );
-    });
-
-    it('an apostrophe in a line comment does not open a string that eats the file', () => {
-        const src = "// the council's own gate\nexport class CouncilTopologyRouter {}\n";
-        expect(declaresRouter(src)).toBe(true);
-    });
-});
-
-describe('export forms that evaded round 1s repair', () => {
-    for (const [label, body] of [
-        ['export declare class', 'export declare class CouncilTopologyRouter {}\n'],
-        ['export enum', 'export enum CouncilTopologyRouter { a }\n'],
-        ['export generator function', 'export function* resolveCouncilRoute() {}\n'],
-    ] as const) {
-        it(`detects a router declared as ${label}`, () => {
-            expect(declaresRouter(body)).toBe(true);
+// R2 round 2, finding 3.
+describe('scan scope — a second resolver outside src/scripts is still a second resolver', () => {
+    for (const dir of ['src/cli', 'src/shared', 'src/server', 'src/agent-src/templates/scripts/work_engine']) {
+        it(`sees a router placed in ${dir}`, () => {
+            expectCleanBaseline();
+            write(`${dir}/router.ts`, 'export class CouncilTopologyRouter {}\n');
+            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
         });
     }
 });
 
-describe('the side-effect import form, missed under a test titled "every import form"', () => {
-    it('detects a bare side-effect import of the council internals', () => {
-        expect(importsCouncilInternal("import '../ai_council/necessity.js';\n")).toBe(true);
+// The frozen claim's own limit, asserted so nobody reads the guard as wider.
+describe('the frozen claim — what this guard deliberately does NOT see', () => {
+    it('does not follow a router exported under an unrelated name', () => {
+        expect(declaresRouter('export class Dispatcher {}\n')).toBe(false);
     });
 
-    it('detects the side-effect index form with no trailing slash', () => {
-        expect(importsCouncilInternal("import '../ai_council';\n")).toBe(true);
-    });
-});
-
-describe('the sanctioned path must BE a resolver, not merely exist', () => {
-    it('goes red when the resolver is gutted to a stub', () => {
-        expectCleanBaseline();
-        write(SANCTIONED_RESOLVER, 'export const NOTE = "moved";\n');
-        const v = checkOneResolver(tmp).violations;
-        expect(v.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
-    });
-
-    it('the real resolver satisfies it', () => {
-        expect(checkOneResolver(REPO).violations.map((v) => v.kind)).not.toContain('resolver-is-not-a-resolver');
+    it('does not resolve a specifier built by interpolation', () => {
+        expect(importsCouncilInternal('const m = await import(`../${dir}/necessity.js`);')).toBe(false);
     });
 });

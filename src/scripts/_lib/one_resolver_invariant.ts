@@ -5,8 +5,8 @@
  * dispatch rung a task takes, council included. Its own module docstring says
  * so, and says two further things that were equally unenforced: that no fourth
  * parallel classifier may be "bolted on beside it", and that it is
- * "deliberately independent of `ai_council/necessity.ts`", which is the
- * council's OWN council-internal necessity gate.
+ * "deliberately independent of `ai_council/necessity.ts`", the council's OWN
+ * council-internal necessity gate.
  *
  * All three were prose. A docstring cannot fail, so a second task-side council
  * router could land beside the ladder and every gate in this tree would stay
@@ -14,89 +14,81 @@
  * `road-to-inbox-harvest-2026-08-e-council-topology-evidence` step 0.5 asks to
  * be closed: "lock the one-resolver invariant in documentation AND in a test".
  *
- * This module is the scanner half. It is deliberately a pure function over
- * file text so the test can drive it against a synthetic tree and observe it
- * going red — a guard never seen red has unknown sensitivity.
+ * ## This file PARSES. It does not lex. That is the whole point.
  *
- * ## Revised 2026-08-29 after an R2 completion review (6 findings, 2 high)
+ * Three successive R2 review rounds killed three successive text-scanning
+ * implementations, each defect introduced by the repair for the last:
  *
- * The first version was reviewed by a fresh subagent and was wrong in ways the
- * implementing session had asserted were right. Recorded here rather than in a
- * commit message alone, because each one is a property a future reader will
- * otherwise re-assume:
+ * | Round | Approach | What a fresh reviewer measured |
+ * |---|---|---|
+ * | 1 | no comment/string handling | false POSITIVE: a router name in a comment or string counted as a declaration |
+ * | 2 | ordered regexes, block comments first | false NEGATIVE: a line comment containing a glob opened a spurious block comment. 12 files under `src/` lost top-level exports |
+ * | 3 | hand-written character scanner | false NEGATIVE, worse: a backtick inside a REGEX LITERAL read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost** |
  *
- * 1. **It could scan nothing and pass.** The result now carries `scanned`, the
- *    exact file list, so "green" and "walked zero files" are distinguishable by
- *    a caller instead of by inspection. The reviewer proved the old version by
- *    mutating the scan root to a typo and watching both real-tree tests pass.
- * 2. **The patterns were evadable by export SYNTAX, not just naming.** The old
- *    set matched `export class` and `export function` only, so
- *    `export default class CouncilTopologyRouter`, `export abstract class …`,
- *    `export const X = class`, an arrow-const, and a bare `export { X }` all
- *    passed. Nine of eleven measured shapes evaded it.
- * 3. **The scan root was `src/scripts` alone**, leaving `src/cli`,
- *    `src/shared`, `src/server` and the `work_engine` template tree invisible.
- * 4. **It never asserted the resolver EXISTS**, so deleting `judgment_ladder.ts`
- *    scanned green — the positive half of the invariant was enforced by nothing.
- * 5. **The import check missed `import()`, `require()` and the index form**, and
- *    false-positived on a comment, so a docstring reword could red the gate.
+ * Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
+ * contains a regex with a backtick in it.
+ *
+ * The AI council was asked for guidance at the N=3 budget and **split** —
+ * one seat for withdrawing the guard, one for parsing properly. Both seats
+ * classified withdrawal and narrowing as OWNER-RESERVED and both refused
+ * another hand-lexing round, so parsing is the only option a council may
+ * execute. Both recorded the same principle:
+ *
+ * > A gate must not implement a partial lexer or parser for a language when an
+ * > authoritative parser for it is already a dependency.
+ *
+ * and a second, which is the one that explains three rounds of near-misses:
+ *
+ * > A repair is tested against the violated PROPERTY and representative
+ * > mutations, never against the reproducer's literal spelling.
+ *
+ * `typescript` is already a dependency. Comments, strings, template literals
+ * and regex literals are therefore the parser's problem, which is where they
+ * belong, and the entire defect class above is gone rather than relocated.
+ *
+ * ## The frozen claim — what this guard does and does not assert
+ *
+ * **Asserts, syntactically:** no module outside the sanctioned resolver
+ * EXPORTS A BINDING WHOSE NAME matches a router pattern, in any export form the
+ * TypeScript parser recognises; the sanctioned resolver itself exports one; and
+ * the sanctioned resolver names no council-internal module in any import,
+ * re-export, dynamic import or `require` specifier.
+ *
+ * **Does NOT assert, and no reading of it should:** anything requiring symbol
+ * resolution or a module graph. A router exported under an unrelated name, or
+ * reached through an alias chain this file cannot follow, is outside the claim.
+ * Closing that needs semantic analysis and is a separate decision.
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 /** The single sanctioned task-side resolver, repo-relative. */
 export const SANCTIONED_RESOLVER = path.join('src', 'scripts', '_lib', 'judgment_ladder.ts');
 
-/** The council's own internal surface. Task-side code does not import from it. */
+/** The council's own internal surface. The resolver does not import from it. */
 export const COUNCIL_INTERNAL_DIR = path.join('src', 'scripts', 'ai_council');
 
-/**
- * Roots walked by {@link checkOneResolver}, repo-relative.
- *
- * Finding 3: `src/scripts` alone left a second resolver invisible anywhere
- * else in `src/`. The root is now `src/` entire, minus the exclusions below —
- * a positive list of directories would have the same defect one directory
- * later.
- */
+/** Root walked by {@link checkOneResolver}, repo-relative. */
 export const SCAN_ROOT = 'src';
 
 /** Directory names never walked. */
 const SKIP_DIRS = new Set(['node_modules', '__tests__', 'dist', '.git']);
 
-/**
- * Names that mark a module as a task-side council/dispatch ROUTER — the thing
- * there may be only one of.
- *
- * Split from the export SYNTAX (below) after finding 2. Keeping the two apart
- * is the point: a name list that also has to enumerate every way TypeScript
- * can export a binding will always be one syntax behind.
- */
+/** Names that mark an exported binding as a task-side council/dispatch ROUTER. */
 export const ROUTER_NAMES: readonly RegExp[] = [
-    /\w*Council\w*Router\b/,
-    /\bclassifyLadder\b/,
-    /\w*resolveCouncilRoute\w*\b/,
-];
-
-/**
- * Export forms a router name can arrive in. Deliberately exhaustive over the
- * shapes the reviewer measured evading the first version.
- */
-export const EXPORT_FORMS: readonly RegExp[] = [
-    // export [default] [declare] [abstract] [async] <kw> [*] NAME
-    // `declare`, `enum` and the generator `function*` were added after an R2
-    // round-2 finding: `export declare class` sits ONE keyword from
-    // `export abstract class`, which was covered, so a reader had no signal
-    // that the neighbouring form was not.
-    /\bexport\s+(?:default\s+)?(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(?:class|interface|type|enum|const|let|var|function)\b\s*\*?\s*(NAME)\b/,
-    // export default NAME
-    /\bexport\s+default\s+(NAME)\b/,
-    // export { NAME } / export { NAME as X } / export { X as NAME } / re-export
-    /\bexport\s*\{[^}]*\b(NAME)\b[^}]*\}/,
+    /^\w*Council\w*Router$/,
+    /^classifyLadder$/,
+    /^\w*resolveCouncilRoute\w*$/,
 ];
 
 export interface Violation {
     readonly file: string;
-    readonly kind: 'second-resolver' | 'council-import-in-resolver' | 'resolver-missing' | 'resolver-is-not-a-resolver';
+    readonly kind:
+        | 'second-resolver'
+        | 'council-import-in-resolver'
+        | 'resolver-missing'
+        | 'resolver-is-not-a-resolver';
     readonly detail: string;
 }
 
@@ -106,145 +98,141 @@ export interface ScanResult {
     readonly scanned: readonly string[];
 }
 
-/**
- * Single-pass source scanner: classify every character as code, comment or
- * string literal, in ONE left-to-right pass.
- *
- * ## Why this is a scanner and not a sequence of regexes
- *
- * The previous version stripped block comments first with an unbounded
- * `/\*[\s\S]*?\*\/`, then line comments, then strings. An R2 review round
- * found that unsound and measured it on the live tree: any `//` comment
- * containing the two characters `/*` — a glob such as
- * `packages/<star>/commands/` — opened a spurious block comment that ran to the
- * next `*\/` anywhere in the file and deleted the real code between them.
- * **34 non-test `.ts` files under `src/` already carry such a comment, and in
- * 12 of them top-level `export` declarations vanished** (one lost 6,510 of
- * 13,270 characters, including its `export function run`). A second resolver
- * hidden behind such a comment scanned green WHILE its file appeared in
- * `scanned`, so the anti-vacuity discriminator could not catch it either.
- *
- * The defect is not fixable by reordering: comment-vs-string precedence is
- * positional, so whichever opens FIRST wins, and only a left-to-right pass
- * knows which that is.
- *
- * ## Known limit, stated rather than claimed away
- *
- * Regex literals are NOT tracked. A regex literal whose body contains a
- * comment opener is read as a comment start. Distinguishing division from a regex
- * literal needs a real parser, and the failure is a false NEGATIVE (code
- * dropped, so a router could hide there). It is left uncovered deliberately
- * rather than papered over: the round-1 lesson here was that claiming
- * exhaustiveness is what made the gap invisible.
- */
-export interface Segments {
-    /** Source with comments blanked; string literals preserved verbatim. */
-    readonly codeAndStrings: string;
-    /** Source with comments AND string contents blanked. */
-    readonly codeOnly: string;
+function parse(text: string): ts.SourceFile {
+    return ts.createSourceFile('probe.ts', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 }
 
-const BACKTICK = '\u0060';
-const QUOTES = new Set(["'", '\u0022', BACKTICK]);
+function hasExportModifier(node: ts.Node): boolean {
+    const mods = (node as { modifiers?: readonly ts.ModifierLike[] }).modifiers;
+    return (mods ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+}
 
-export function segment(text: string): Segments {
-    const keepStrings: string[] = [];
-    const dropStrings: string[] = [];
-    let i = 0;
-    const n = text.length;
-
-    const push = (ch: string, inString: boolean): void => {
-        keepStrings.push(ch);
-        dropStrings.push(inString && ch !== '\n' ? ' ' : ch);
-    };
-
-    while (i < n) {
-        const c = text[i] as string;
-        const d = text[i + 1];
-
-        if (c === '/' && d === '/') {
-            while (i < n && text[i] !== '\n') {
-                keepStrings.push(' ');
-                dropStrings.push(' ');
-                i++;
-            }
-            continue;
-        }
-        if (c === '/' && d === '*') {
-            const close = text.indexOf('*/', i + 2);
-            const stop = close === -1 ? n : close + 2;
-            for (; i < stop; i++) {
-                const ch = text[i] as string;
-                keepStrings.push(ch === '\n' ? '\n' : ' ');
-                dropStrings.push(ch === '\n' ? '\n' : ' ');
-            }
-            continue;
-        }
-        if (QUOTES.has(c)) {
-            const quote = c;
-            push(c, false);
-            i++;
-            while (i < n) {
-                const ch = text[i] as string;
-                if (ch === '\\') {
-                    push(ch, true);
-                    if (i + 1 < n) push(text[i + 1] as string, true);
-                    i += 2;
-                    continue;
-                }
-                push(ch, ch !== quote);
-                i++;
-                if (ch === quote) break;
-                // A template literal may span lines; the others may not.
-                if (ch === '\n' && quote !== BACKTICK) break;
-            }
-            continue;
-        }
-        push(c, false);
-        i++;
+/** Every name a binding pattern introduces, so `export const { X } = mod` is seen. */
+function bindingNames(name: ts.BindingName, out: string[]): void {
+    if (ts.isIdentifier(name)) {
+        out.push(name.text);
+        return;
     }
-    return { codeAndStrings: keepStrings.join(''), codeOnly: dropStrings.join('') };
+    for (const el of name.elements) {
+        if (ts.isBindingElement(el)) bindingNames(el.name, out);
+    }
 }
 
-/** Source with comments and string CONTENTS blanked — for declaration matching. */
-export function stripNonCode(text: string): string {
-    return segment(text).codeOnly;
+/**
+ * Every identifier this module exports, by any syntax the parser recognises:
+ * declarations with an `export` modifier, `export default`, named exports,
+ * aliased exports, re-exports, type-only exports, and `export * as NS from`.
+ */
+export function exportedNames(text: string): string[] {
+    const sf = parse(text);
+    const names: string[] = [];
+    for (const st of sf.statements) {
+        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
+            for (const d of st.declarationList.declarations) bindingNames(d.name, names);
+            continue;
+        }
+        if (
+            (ts.isClassDeclaration(st) ||
+                ts.isInterfaceDeclaration(st) ||
+                ts.isTypeAliasDeclaration(st) ||
+                ts.isEnumDeclaration(st) ||
+                ts.isFunctionDeclaration(st) ||
+                ts.isModuleDeclaration(st)) &&
+            hasExportModifier(st)
+        ) {
+            if (st.name && ts.isIdentifier(st.name)) names.push(st.name.text);
+            continue;
+        }
+        if (ts.isExportAssignment(st)) {
+            if (ts.isIdentifier(st.expression)) names.push(st.expression.text);
+            if (ts.isClassExpression(st.expression) && st.expression.name) names.push(st.expression.name.text);
+            continue;
+        }
+        if (ts.isExportDeclaration(st)) {
+            const clause = st.exportClause;
+            if (clause === undefined) continue;
+            if (ts.isNamespaceExport(clause)) {
+                names.push(clause.name.text);
+                continue;
+            }
+            for (const el of clause.elements) names.push(el.name.text);
+        }
+    }
+    return names;
 }
 
-/** Source with comments blanked, string literals kept — import specifiers live in one. */
-export function stripComments(text: string): string {
-    return segment(text).codeAndStrings;
-}
-
-/** Does this file text declare a task-side council/dispatch router? */
-export function declaresRouter(text: string): boolean {
-    const code = stripNonCode(text);
-    for (const name of ROUTER_NAMES) {
-        for (const form of EXPORT_FORMS) {
-            const re = new RegExp(form.source.replace('NAME', name.source), 'm');
-            if (re.test(code)) return true;
+/**
+ * Does this file export a router-named binding that is actually CALLABLE?
+ *
+ * R2 round-3 finding: the previous resolver check tested for the identifier
+ * `classifyLadder` in an export position, so `export const classifyLadder =
+ * "moved"` scanned green while round 2's own reproducer `export const NOTE =
+ * "moved"` was caught — the two differ only in whether the stub kept the name.
+ * That is repairing to the reproducer rather than to the property, which is one
+ * of the two principles the council asked to be recorded.
+ *
+ * The property is "this file still holds a resolver", so the declaration KIND
+ * is what is checked: a function, a class, or a binding initialised to one. A
+ * string, a number or an object literal is a stub whatever it is called.
+ *
+ * Still syntactic, and deliberately so — a function that merely `return`s a
+ * constant satisfies this. Closing THAT needs semantic analysis and is outside
+ * the frozen claim.
+ */
+export function exportsRouterFunction(text: string): boolean {
+    const sf = parse(text);
+    const named = (n: string): boolean => ROUTER_NAMES.some((re) => re.test(n));
+    const callable = (init: ts.Expression | undefined): boolean =>
+        init !== undefined &&
+        (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || ts.isClassExpression(init));
+    for (const st of sf.statements) {
+        if (ts.isFunctionDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
+        if (ts.isClassDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
+        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
+            for (const d of st.declarationList.declarations) {
+                if (ts.isIdentifier(d.name) && named(d.name.text) && callable(d.initializer)) return true;
+            }
         }
     }
     return false;
 }
 
+/** Does this file declare a task-side council/dispatch router? */
+export function declaresRouter(text: string): boolean {
+    return exportedNames(text).some((n) => ROUTER_NAMES.some((re) => re.test(n)));
+}
+
 /**
- * Does this file import from the council's internal directory?
- *
- * Covers static `from`, the SIDE-EFFECT form (which needs neither `from` nor a
- * paren, and was missed by the round-1 repair under a test titled "covers every
- * import form"), dynamic `import()`, `require()`, and the index form with no
- * trailing slash. Runs over comment-stripped text with string literals intact,
- * so a docstring mentioning the path cannot red the gate.
+ * Every module specifier this file names — static import (side-effect included),
+ * re-export, dynamic `import()`, and `require()`. String and
+ * no-substitution-template specifiers both count; a specifier built by
+ * interpolation is outside the frozen claim and is not guessed at.
  */
+export function moduleSpecifiers(text: string): string[] {
+    const sf = parse(text);
+    const out: string[] = [];
+    const literal = (n: ts.Node | undefined): void => {
+        if (n === undefined) return;
+        if (ts.isStringLiteralLike(n)) out.push(n.text);
+    };
+    const visit = (n: ts.Node): void => {
+        if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) literal(n.moduleSpecifier);
+        else if (ts.isImportEqualsDeclaration(n) && ts.isExternalModuleReference(n.moduleReference)) {
+            literal(n.moduleReference.expression);
+        } else if (ts.isCallExpression(n)) {
+            const isDynamic = n.expression.kind === ts.SyntaxKind.ImportKeyword;
+            const isRequire = ts.isIdentifier(n.expression) && n.expression.text === 'require';
+            if (isDynamic || isRequire) literal(n.arguments[0]);
+        }
+        ts.forEachChild(n, visit);
+    };
+    visit(sf);
+    return out;
+}
+
+/** Does this file import from the council's internal directory? */
 export function importsCouncilInternal(text: string): boolean {
-    const code = stripComments(text);
-    return [
-        /\bfrom\s+['"][^'"]*ai_council(?:\/|['"])/,
-        /\bimport\s+['"][^'"]*ai_council(?:\/|['"])/,
-        /\bimport\s*\(\s*['"][^'"]*ai_council(?:\/|['"])/,
-        /\brequire\s*\(\s*['"][^'"]*ai_council(?:\/|['"])/,
-    ].some((re) => re.test(code));
+    return moduleSpecifiers(text).some((spec) => /(?:^|\/)ai_council(?:\/|$)/.test(spec));
 }
 
 /** Walk `.ts` files under a directory, skipping tests and build output. */
@@ -286,7 +274,7 @@ export function checkOneResolver(root: string): ScanResult {
                 'the sanctioned task-side resolver does not exist. "Exactly one" is ' +
                 'violated by zero as well as by two; a tree with no resolver must not scan green.',
         });
-    } else if (!declaresRouter(fs.readFileSync(resolverAbs, 'utf-8'))) {
+    } else if (!exportsRouterFunction(fs.readFileSync(resolverAbs, 'utf-8'))) {
         // R2 round-2 finding: existence is not identity. A `judgment_ladder.ts`
         // gutted to `export const NOTE = "moved"` passed the existence check,
         // so `rm` was caught and hollowing-out was not.
@@ -294,9 +282,10 @@ export function checkOneResolver(root: string): ScanResult {
             file: SANCTIONED_RESOLVER,
             kind: 'resolver-is-not-a-resolver',
             detail:
-                'the sanctioned path exists but declares no resolver. Presence is not ' +
-                'identity: a file gutted to a stub satisfies `existsSync` while the ' +
-                'invariant it anchors has quietly moved somewhere unscanned.',
+                'the sanctioned path exists but exports no CALLABLE router-named binding. ' +
+                'Presence is not identity, and neither is the name: a stub such as ' +
+                '`export const classifyLadder = \"moved\"` keeps both while the resolver ' +
+                'it anchors has gone somewhere this guard does not look.',
         });
     }
 

@@ -174,140 +174,96 @@ called a larger risk than feature absence.
       verify: a deliberately-added second task-side council router makes the
       new architecture test fail; sabotage the guard, watch it go red, restore
 
-      **Closed 2026-08-29.** The invariant was documented and enforced by
-      nothing: `judgment_ladder.ts`'s own docstring states all three clauses —
-      one resolver, "never a fourth parallel classifier bolted on beside it",
-      and "deliberately independent of `ai_council/necessity.ts`" — and a
-      docstring cannot fail. A second task-side council router could have landed
-      beside the ladder with every gate in this tree green.
+      **Closed 2026-08-29, after three review rounds killed three
+      implementations.** The invariant was documented and enforced by nothing:
+      `judgment_ladder.ts`'s docstring states all three clauses — one resolver,
+      "never a fourth parallel classifier bolted on beside it", and
+      "deliberately independent of `ai_council/necessity.ts`" — and a docstring
+      cannot fail. A second task-side council router could have landed beside
+      the ladder with every gate in this tree green.
 
-      Landed: `src/scripts/_lib/one_resolver_invariant.ts` (a pure scanner over
-      file text, so it can be driven against a synthetic tree) and
-      `tests/scripts/one_resolver_invariant.test.ts` — **45 tests, all green**.
+      Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
+      `tests/scripts/one_resolver_invariant.test.ts` — **60 tests, all green**;
+      `tsc --noEmit` and `eslint` clean.
 
-      > **The first version of this step was WRONG, and an R2 completion review
-      > caught it.** A fresh subagent was dispatched at the deterministically
-      > generated review package — the implementing session did not author the
-      > reviewer's prompt and did not review its own work — and returned **6
-      > findings, 2 high**, recorded at
-      > `agents/evidence/reviews/drain-roadmap-6-one-resolver.findings.md` and
-      > committed BEFORE any of them was repaired.
-      >
-      > **The headline finding was against this step's own closure claim.** The
-      > first version said "a fifth test guards the guard … by asserting it
-      > actually read `judgment_ladder.ts` and recognised it as the resolver".
-      > That test never called `checkOneResolver` at all — it called
-      > `fs.existsSync` and `declaresRouter` directly — so **a scanner walking
-      > zero files passed both real-tree tests**, which is precisely the failure
-      > mode the sentence claimed to exclude. The reviewer proved it by mutating
-      > the scan root to a typo and watching the suite stay green. The claim was
-      > asserted, not checked.
-      >
-      > All six are repaired and each has a test that fails without the repair:
-      > (1) the scanner now returns `scanned`, the exact file list, so a caller
-      > cannot confuse *clean* with *unscanned*; (2) the router patterns were
-      > evadable by export **syntax** rather than naming — nine of eleven
-      > measured shapes passed, including `export default class`, `export
-      > abstract class`, a const class expression and a bare `export { X }` —
-      > and name and export-form are now separate axes with all nine shapes
-      > pinned; (3) the scan root was `src/scripts` alone, leaving `src/cli`,
-      > `src/shared`, `src/server` and the `work_engine` template tree invisible,
-      > and is now `src/` entire; (4) deleting `judgment_ladder.ts` scanned green
-      > — zero is not one — and is now its own violation kind; (5) the import
-      > check missed `import()`, `require()` and the index form while
-      > false-positiving on a comment, so a docstring reword could red the gate;
-      > (6) "each asserts the baseline clean first" was true of one arm of three
-      > and is now true of all of them.
-      >
-      > **The repair is verified against the finding's own reproducer**, not
-      > against a rerun: with `SCAN_ROOT` mutated to a typo the suite now fails
-      > **15 of 32** tests, where the reviewed version passed both real-tree
-      > tests under the identical mutation.
+      **It parses. It does not lex, and that is the whole finding.** Three
+      fresh-subagent R2 rounds — each dispatched at a deterministically
+      generated package, none of them authored by the implementing session —
+      killed three successive text-scanning implementations, and each defect
+      was introduced by the repair for the last:
 
-      > **ROUND 2 — a second fresh reviewer, 5 findings, 1 high, and the high
-      > one was a correctness bug the round-1 repair INTRODUCED.** Recorded at
-      > `agents/evidence/reviews/drain-roadmap-6-one-resolver-r2.findings.md`,
-      > committed before repair like round 1.
-      >
-      > Round 1's fix for a comment FALSE POSITIVE created a wider false
-      > NEGATIVE. Comments were stripped by ordered regexes, block-comments
-      > first, with an unbounded lazy match — so any `//` line comment
-      > containing the two characters `/` `*`, an ordinary glob path, opened a
-      > spurious block comment that ran to the next closer anywhere in the file
-      > and **deleted the real code between them**. A second resolver hidden
-      > behind such a comment scanned green *while its file appeared in
-      > `scanned`*, so the anti-vacuity discriminator added in round 1 could not
-      > catch it either. Both halves of the invariant fell to one comment.
-      >
-      > **It was live, not hypothetical.** The reviewer measured **34 non-test
-      > `.ts` files under `src/` already carrying such a comment, 12 of which
-      > lost top-level `export` declarations** — one losing 6,510 of 13,270
-      > characters including its `export function run`.
-      >
-      > The defect is not fixable by reordering, because comment-versus-string
-      > precedence is **positional**: whichever opens first wins, and only a
-      > left-to-right pass knows which that is. The ordered regexes are replaced
-      > by a **single-pass scanner** (`segment`) that classifies every character
-      > as code, comment or string literal in one traversal.
-      >
-      > **Sensitivity, by direct contrast rather than by rerun.** On the source
-      > `// Routes live under packages/*/commands/` followed by
-      > `export class CouncilTopologyRouter {}`, the round-1 stripper reduces
-      > **104 characters to 2** and loses the declaration; the scanner preserves
-      > all 104. Six tests pin the behaviour, including one asserting that a
-      > real block comment IS still removed, so the repair cannot degrade into
-      > "strip nothing".
-      >
-      > Three further findings, each a partial repair from round 1 rather than a
-      > new defect, and each now closed: `export declare class`, `export enum`
-      > and `export function*` still evaded the pattern matrix — `declare` sits
-      > one keyword from `abstract`, which was covered; the **side-effect**
-      > import form `import '../ai_council/necessity.js'` was missed under a
-      > test titled *"covers every import form"*; and the resolver check
-      > asserted only that the path EXISTS, so `judgment_ladder.ts` gutted to
-      > `export const NOTE = "moved"` scanned green — `rm` was caught and
-      > hollowing-out was not. That last one is now its own violation kind,
-      > `resolver-is-not-a-resolver`.
-      >
-      > **One limit is stated rather than claimed away:** the scanner does not
-      > track regex literals, so a regex whose body contains a comment opener is
-      > read as a comment start. Distinguishing division from a regex literal
-      > needs a real parser. The failure is a false negative and is left
-      > uncovered deliberately — round 1's lesson here was that claiming
-      > exhaustiveness is exactly what made the gap invisible.
+      | Round | Approach | What the reviewer measured |
+      |---|---|---|
+      | 1 | no comment/string handling | false POSITIVE: a router name in a comment or a string counted as a declaration |
+      | 2 | ordered regexes, block comments stripped first | false NEGATIVE: a `//` comment containing a glob opened a spurious block comment. **12 files under `src/` lost top-level exports** |
+      | 3 | hand-written single-pass character scanner | false NEGATIVE, **worse**: a backtick inside a *regex literal* read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost**, plus a reachable false positive |
 
-      **Sensitivity is established, not assumed.** Four arms add the defect and
-      observe the guard go red inside the test rather than reasoning that it
-      would: a `CouncilTopologyRouter` class beside the ladder, a
-      function-shaped `resolveCouncilRoute` beside it, an `ai_council/` import
-      added to the resolver itself, and the resolver deleted outright. Each
-      asserts the baseline clean **and non-empty** first, so the red is caused by
-      the sabotage and not by a tree that was already dirty or never walked.
+      Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
+      contains a regex with a backtick in it. Round 1's headline was sharper
+      still — the test advertised as "guards the guard" never called the scanner
+      at all, so one walking **zero files** passed it, which is precisely the
+      failure it claimed to exclude.
 
-      **Polarity is tested too, because a pattern that only ever fires is not a
-      guard.** **Five** denial arms must stay GREEN: a file that merely mentions
-      the council and routes nothing; a council-INTERNAL module even when it
-      literally declares `CouncilTopologyRouter`, since the invariant is about
-      task-side resolvers; a `.test.ts` file naming one; a router name appearing
-      inside a comment or a string literal; and an `ai_council` import in a
-      non-resolver file, which is legal by construction. (The count read "four"
-      and the arms numbered five — an R2 round-2 finding, and the unlisted one
-      was the arm exercising the comment stripper that same round found
-      unsound.)
+      **The N=3 budget fired and the decision went to the AI council, which
+      SPLIT.** One seat argued for withdrawing the guard and enforcing the
+      invariant by review; one for parsing with the TypeScript compiler API.
+      Both refused another hand-lexing round, and — decisively — **both
+      classified withdrawal and narrowing as owner-reserved**, since each
+      changes what "done" guarantees. Parsing was therefore the only option
+      either seat permits a council to execute, and it is what landed. The
+      withdrawal option is recorded here as a live owner decision, not as a road
+      not taken.
 
-      **Anti-vacuity is asserted on the scanner's own report**, which is the
-      correction the review forced. `checkOneResolver` returns `{ violations,
-      scanned }`; the real-tree test asserts `scanned` exceeds 100 files and
-      contains `judgment_ladder.ts` by path. A third arm drives an empty
-      directory and asserts the pair a vacuous scan produces — empty `scanned`
-      **and** a `resolver-missing` violation — so "green" and "walked nothing"
-      are distinguishable by the caller rather than by inspection.
+      Both seats asked the same two principles be recorded:
 
-      **What this step does NOT close:** the third clause, "topology refinement
-      begins only after the ladder resolves to `council`", is a *sequencing*
-      property of code that does not exist yet — no topology refiner is built.
-      It is unenforceable today and is left to the phase that builds one, rather
-      than covered by a check that would pass vacuously.
+      > A gate must not implement a partial lexer or parser for a language when
+      > an authoritative parser for it is already a dependency.
+
+      > A repair is tested against the violated PROPERTY and representative
+      > mutations, never against the reproducer's literal spelling.
+
+      The second explains the pattern the reviewers kept finding underneath the
+      lexing bugs. The clearest instance: the resolver check tested for the
+      identifier `classifyLadder`, so round 2's reproducer
+      `export const NOTE = "moved"` was caught while
+      `export const classifyLadder = "moved"` — the same stub keeping the name —
+      scanned green. It now tests the declaration KIND, so a resolver must be
+      callable rather than merely named.
+
+      **The frozen claim, stated so nobody reads the guard as wider.** It
+      asserts syntactically that no module outside the sanctioned resolver
+      exports a binding whose NAME matches a router pattern, in any export form
+      the parser recognises; that the resolver itself exports a callable one;
+      and that the resolver names no council-internal module in any import,
+      re-export, dynamic-import or `require` specifier. It asserts **nothing**
+      requiring symbol resolution or a module graph — a router exported under an
+      unrelated name is outside the claim, and two tests pin that limit so it
+      cannot be quietly read as coverage.
+
+      **Sensitivity and polarity, both established rather than assumed.** Four
+      sensitivity arms add a defect and observe the guard go red, each asserting
+      the baseline clean **and non-empty** first: a second router beside the
+      ladder, a function-shaped one, an `ai_council` import in the resolver, and
+      the resolver deleted. Five denial arms must stay green — a file that
+      merely mentions the council, a council-INTERNAL module even when it
+      literally declares `CouncilTopologyRouter`, a `.test.ts` naming one, a
+      router name inside a comment or a string, and an `ai_council` import in a
+      non-resolver file. Every reproducer from all three killed rounds is
+      retained as a permanent regression, because their absence is exactly what
+      let each round's repair look complete.
+
+      **Anti-vacuity is asserted on the scanner's own report**, which was round
+      1's correction: `checkOneResolver` returns `{ violations, scanned }`, the
+      real-tree test asserts `scanned` exceeds 100 files and contains
+      `judgment_ladder.ts` by path, and an empty directory is driven to pin the
+      pair a vacuous scan produces.
+
+      **What this step does NOT close:** the third clause of 0.5, "topology
+      refinement begins only after the ladder resolves to `council`", is a
+      sequencing property of code that does not exist — no topology refiner is
+      built — so any check for it today would pass vacuously. It is left to the
+      phase that builds one.
+
 
 ## Phase 1 — Stop paying for information the tree already has
 
