@@ -1,12 +1,12 @@
 # Findings: drain-source-silence
-<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: dbdbec72d4bb7821b081867e4e851b6de16e17b1a33432e36efb47f060e42940 | diff: 8088d6b83e9ec66427d800f237aff919c962fffd | reviewer: r2-fresh-subagent-drain-source-silence | prompt_hash: c4fa599bc6176d8c0387fa725f3941a61e6b640253025ae834adf001b8948a72 -->
+<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: bdf90bcffe3d46b493e45263bc4da79e0c9064673a18c0102e214ac1e929adfe | diff: 38b950e318e5d728a65fd3225ccee9b22a7153b5 | reviewer: r2-fresh-subagent-drain-source-silence | prompt_hash: c4fa599bc6176d8c0387fa725f3941a61e6b640253025ae834adf001b8948a72 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-source-silence"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-29 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 8088d6b83e9ec66427d800f237aff919c962fffd
-  scope_hash: dbdbec72d4bb7821b081867e4e851b6de16e17b1a33432e36efb47f060e42940
+  diff_sha: 38b950e318e5d728a65fd3225ccee9b22a7153b5
+  scope_hash: bdf90bcffe3d46b493e45263bc4da79e0c9064673a18c0102e214ac1e929adfe
   roadmap: agents/roadmaps/archive/road-to-source-silence.md
   roadmap_hash: 1f26f078e14d8a07dfee2bdc18d49621ff7620d11a4f15138a9a6c7d105d666c
   ac_hash: 3e7402daa537ba90c537611f15b4782e9c9b223ff68481fd626a863cd3fcb55b
@@ -36,6 +36,18 @@ dispatched: 2026-08-29T18:12:04Z
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
 
 ## Disposition round 1 — re-bound in place, 8088d6b83
+
+> **Re-bound a second time, 2026-08-29, to `bdf90bcf…` / head `38b950e3`.**
+> Cause was NOT a further response to these findings: the `Rule backstops`
+> job reported the committed ADR evidence census stale — drift on the base
+> branch, a new decision record landing on `main` while this work was in
+> flight — and regenerating it moved the reviewed content, so the scope hash
+> moved with it. Contract §2.7 path 1 again, and this commit touches only
+> this artefact so it is a fixed point rather than another one-commit-late
+> chase. The rows below are unchanged: they are the original findings
+> against the original scope, and a re-bind changes what they bind to, never
+> what was found.
+
 
 Sixteen findings: **15 fixed, 1 accepted-risk, 0 deferred.** Re-bound rather
 than re-skeletoned, per contract §2.7 path 1 — the reviewer's finding text,
