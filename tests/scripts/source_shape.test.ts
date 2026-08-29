@@ -170,3 +170,25 @@ describe('source_shape — paths are judged too', () => {
         expect(shapePathHits('docs/Source.md')).toEqual([]);
     });
 });
+
+describe('tmp-quote — a working-set directory is not a harvest round', () => {
+    // Pinned from a MEASURED false positive: four hits in the code-graph
+    // irrecoverability evidence, whose probe table quotes the pinned benchmark
+    // inputs by path because the path IS the reading it records. The quoted
+    // filenames are already anonymised, so there is no name to protect.
+    it('bench-local is allowlisted — it names the work, not a source', () => {
+        expect(tmpQuoteHits('| 1 | `agents/tmp/bench-local/repo-a-questions.yaml` | **ABSENT** |')).toEqual([]);
+        expect(tmpQuoteHits('`agents/tmp.old/bench-local/probes.yaml`')).toEqual([]);
+    });
+
+    it('the allowlist is narrow — a round-named directory still fires', () => {
+        // Without this the entry above could be widened into a general escape.
+        const hits = tmpQuoteHits('`agents/tmp.old/runtime-code-intelligence/`');
+        expect(hits).toHaveLength(1);
+        expect(hits[0]?.cls).toBe('tmp-quote');
+    });
+
+    it('the match is exact, not a prefix — bench-local-something still fires', () => {
+        expect(tmpQuoteHits('`agents/tmp/bench-local-harvest/`')).toHaveLength(1);
+    });
+});

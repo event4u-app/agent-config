@@ -134,6 +134,31 @@ const ALLOWED_OWNERS: readonly string[] = [
     'denoland', 'pnpm', 'npm', 'astral-sh', 'go-task', 'charmbracelet',
 ];
 
+/**
+ * `agents/tmp(.old)/<name>/` directories whose `<name>` names a WORKING SET, not
+ * a harvest round.
+ *
+ * The `tmp-quote` class exists because a harvest round lands in a directory
+ * named after its source, so quoting that path republishes the name the deny
+ * list hides. A directory named after the *work* leaks nothing — and the
+ * distinction is not decorative: `bench-local` was added on a MEASURED false
+ * positive, four hits in
+ * `agents/evidence/analysis/code-graph-rerun-irrecoverability-2026-08-28.md`,
+ * whose probe table quotes the four pinned benchmark input files by path
+ * BECAUSE THE PATH IS THE EVIDENCE. The filenames it quotes are already
+ * anonymised (`repo-a`, `repo-b`, `repo-c`), so there is no name to protect,
+ * and rewriting the table would have destroyed the reading it records.
+ *
+ * Kept as small as `ALLOWED_OWNERS` and for the same reason: an entry here is a
+ * reviewed code change with its evidence beside it. Anything that names a
+ * ROUND, a source, or an external project does NOT belong in this list — the
+ * fix for those is an opaque round id, per `isOpaqueRoundId`.
+ */
+const NON_HARVEST_TMP_DIRS: ReadonlySet<string> = new Set([
+    // Benchmark inputs. Pinned by SHA-256, filenames already anonymised.
+    'bench-local',
+]);
+
 const DEFAULT_ALLOWLIST: SlugAllowlist = { owners: ALLOWED_OWNERS };
 
 /** Normalise for allowlist comparison. */
@@ -166,6 +191,7 @@ export function tmpQuoteHits(line: string): ShapeHit[] {
     while ((m = TMP_QUOTE_RE.exec(line)) !== null) {
         const name = m[1] as string;
         if (isOpaqueRoundId(name)) continue;
+        if (NON_HARVEST_TMP_DIRS.has(name.toLowerCase())) continue;
         out.push({ cls: 'tmp-quote', value: name.slice(0, 120) });
     }
     return out;
