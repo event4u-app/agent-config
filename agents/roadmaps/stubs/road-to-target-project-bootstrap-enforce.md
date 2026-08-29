@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Road to target-project bootstrap and enforcement — stub
 
-> **Source:** `agents/tmp.old/robert-c-martin/road-to-target-project-bootstrap-enforce.md` — landed by `/analyze:inbox` on 2026-08-22.
+> **Source:** `agents/tmp.old/inbox-2026-08-f/road-to-target-project-bootstrap-enforce.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
 > summary for the verification and reproduction tables.
 

@@ -20,7 +20,7 @@ estate_offset_exempt: "FLIPPED TO READY on the owner's explicit instruction, 202
 > targets* (Nx, Turborepo, Storybook, shadcn, Base UI) are unaffected — naming a
 > tool this package works with is not derivation-attribution.
 
-> **Source:** `agents/tmp.old/robert-c-martin/road-to-agentic-engineering-assurance.md` — landed by `/analyze:inbox` on 2026-08-22.
+> **Source:** `agents/tmp.old/inbox-2026-08-f/road-to-agentic-engineering-assurance.md` — landed by `/analyze:inbox` on 2026-08-22.
 > Claims re-verified against `577bdbf88` (main after ADR-243); see the run
 > summary for the verification and reproduction tables.
 

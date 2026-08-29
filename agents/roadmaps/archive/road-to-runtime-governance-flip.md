@@ -39,7 +39,7 @@ estate_offset_exempt: "No archive move is available in this change, and the cons
 ---
 # Road to runtime governance — the doctrine the owner repealed is anchored in five places, and only one of them is the ADR the analysis named
 
-> **Source:** `agents/tmp.old/uncle-bob-swarm/` (2026-08-27) — a two-session
+> **Source:** `agents/tmp.old/inbox-2026-08-h/` (2026-08-27) — a two-session
 > agent swarm that analysed this tree against an external process-integrity
 > reference across four generations of roadmap, plus the transcript that
 > produced them. Drafted against `f2ed85e`, which **was** `origin/main` at

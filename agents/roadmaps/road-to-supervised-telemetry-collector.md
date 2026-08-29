@@ -27,7 +27,7 @@ estate_offset_exempt: "The offset is the governance roadmap flipping ready to dr
 
 > **Source:** split out of `road-to-runtime-governance-flip.md` on 2026-08-27
 > after a deep council pass (2/2, both seats "not ready"). The originating
-> analysis is `agents/tmp.old/uncle-bob-swarm/`; the durable record of the owner
+> analysis is `agents/tmp.old/inbox-2026-08-h/`; the durable record of the owner
 > decision and the surface census is
 > `agents/evidence/analysis/runtime-reversal-owner-decision.md`.
 
