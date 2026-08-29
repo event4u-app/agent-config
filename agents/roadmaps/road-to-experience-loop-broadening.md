@@ -640,9 +640,43 @@ is refuted, cheaply.
   not, and it permanently changes the unit the estate ratchet counts. A council
   may recommend a fold; it may not manufacture that approval.
 
+  **The canonical ownership matrix — ADDED 2026-08-29, and it was OWED.** The
+  resolution above stated the *rule* (one authoritative roadmap per shared
+  mechanism) and never assigned the mechanisms, so E1 recorded an obligation and
+  did not discharge it. That gap was caught when the sibling roadmap's E2 asked
+  whether this verdict transfers: both seats ruled it transfers **only by
+  copying the exact matrix**, refused to infer the assignments — *"sequence
+  position is not an ownership criterion"* — and required a fresh deliberation.
+  It was held, 2/2 convergent. The criterion is **acceptance authority**: which
+  roadmap may declare a mechanism complete so others may depend on it.
+
+  | Overlap | Owner | What the non-owner does |
+  |---|---|---|
+  | Trigger corpus / trigger evals | `road-to-governed-harness-evolution` (its Phase 2) | **This roadmap's Phase 8** references the released corpus. Before release it may use a **non-canonical** labelled overlay for exploratory work only, and never claims trigger-corpus completion. |
+  | Paired-verdict mechanism | `road-to-governed-harness-evolution` (its 4.3) | **This roadmap's 9.4** is pre-registration and evidence capture only. It does not build a partial mechanism and does not claim paired-verdict completion. |
+  | Outcome-vocabulary reconciliation | **This roadmap, step 1.3** | The sibling's 1.4 is re-scoped to a non-blocking consumption reference with a provenance-carrying adapter. |
+
+  On the third row the criterion decides against the intuition: the vocabulary
+  materially shapes harness evaluation, which makes the harness look like its
+  natural owner — but it governs captured outcomes, subagent returns, delayed
+  amendments and episode integrity, and the harness *consumes* those semantics
+  rather than originating their lifecycle.
+
+  **A reference must not become a hidden gate.** Owner completion is neither an
+  entry nor an exit criterion for the non-owner's phase; the non-owner continues
+  in an explicitly non-canonical degraded mode, and every compatibility output
+  carries provenance — source snapshot or version, adapter version, and
+  `canonical: false` — so exploratory work can never later be read as owner
+  acceptance. This clause is what keeps the matrix consistent with the "may
+  reference, may not block" rule above rather than quietly reintroducing
+  blocking dependencies under another name.
+
   **`revisit-if`:** further overlap emerges beyond the three named, or either
   roadmap can no longer state an independent completion condition, or cross-
-  roadmap sequencing repeatedly blocks delivery.
+  roadmap sequencing repeatedly blocks delivery, or the outcome vocabulary
+  becomes an independently governed cross-system taxonomy, or a reconciliation
+  finds the two vocabularies serve incompatible purposes and must stay separate
+  with an explicit mapping rather than unify.
 - **E2 — audit-log v2:** confirm the schema-bump procedure — supersede lines, or
   a new file generation?
 - **E3 — Does `clean-no-op` count as its own outcome in the report?
