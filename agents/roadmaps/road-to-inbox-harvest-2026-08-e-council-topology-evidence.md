@@ -167,12 +167,235 @@ called a larger risk than feature absence.
   texts. Rewrite anything substantively verbatim.
       verify: the evidence file records the scan result **and** the commits
       read; blocked on `blocker: unlicensed-source-verbatim-scan`
-- [ ] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
+- [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
   `judgment_ladder.ts` stays the one task-side resolver, no
   `CouncilTopologyRouter` beside it, topology refinement begins only after the
   ladder resolves to `council`, `necessity.ts` keeps its council-internal role.
       verify: a deliberately-added second task-side council router makes the
       new architecture test fail; sabotage the guard, watch it go red, restore
+
+      **Closed 2026-08-29, after SEVEN review rounds, four of which killed an
+      implementation outright.** The invariant was documented and enforced by nothing:
+      `judgment_ladder.ts`'s docstring states all three clauses — one resolver,
+      "never a fourth parallel classifier bolted on beside it", and
+      "deliberately independent of `ai_council/necessity.ts`" — and a docstring
+      cannot fail. A second task-side council router could have landed beside
+      the ladder with every gate in this tree green.
+
+      Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
+      `tests/scripts/one_resolver_invariant.test.ts` — **80 tests, all green**;
+      `tsc --noEmit` and `eslint` clean.
+
+      **It parses. It does not lex, and that is the whole finding.** Three
+      fresh-subagent R2 rounds — each dispatched at a deterministically
+      generated package, none of them authored by the implementing session —
+      killed three successive text-scanning implementations, and each defect
+      was introduced by the repair for the last:
+
+      | Round | Approach | What the reviewer measured |
+      |---|---|---|
+      | 1 | no comment/string handling | false POSITIVE: a router name in a comment or a string counted as a declaration |
+      | 2 | ordered regexes, block comments stripped first | false NEGATIVE: a `//` comment containing a glob opened a spurious block comment. **12 files under `src/` lost top-level exports** |
+      | 3 | hand-written single-pass character scanner | false NEGATIVE, **worse**: a backtick inside a *regex literal* read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost**, plus a reachable false positive |
+
+      Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
+      contains a regex with a backtick in it. Round 1's headline was sharper
+      still — the test advertised as "guards the guard" never called the scanner
+      at all, so one walking **zero files** passed it, which is precisely the
+      failure it claimed to exclude.
+
+      **The N=3 budget fired and the decision went to the AI council, which
+      SPLIT.** One seat argued for withdrawing the guard and enforcing the
+      invariant by review; one for parsing with the TypeScript compiler API.
+      Both refused another hand-lexing round, and — decisively — **both
+      classified withdrawal and narrowing as owner-reserved**, since each
+      changes what "done" guarantees. Parsing was therefore the only option
+      either seat permits a council to execute, and it is what landed. The
+      withdrawal option is recorded here as a live owner decision, not as a road
+      not taken.
+
+      Both seats asked the same two principles be recorded:
+
+      > A gate must not implement a partial lexer or parser for a language when
+      > an authoritative parser for it is already a dependency.
+
+      > A repair is tested against the violated PROPERTY and representative
+      > mutations, never against the reproducer's literal spelling.
+
+      The second explains the pattern the reviewers kept finding underneath the
+      lexing bugs. The clearest instance: the resolver check tested for the
+      identifier `classifyLadder`, so round 2's reproducer
+      `export const NOTE = "moved"` was caught while
+      `export const classifyLadder = "moved"` — the same stub keeping the name —
+      scanned green. It now tests the declaration KIND, so a resolver must be
+      callable rather than merely named.
+
+      **The frozen claim, stated so nobody reads the guard as wider.** It
+      asserts syntactically that no module outside the sanctioned resolver
+      exports a binding whose NAME matches a router pattern, in any export form
+      the parser recognises; that the resolver itself exports a callable one;
+      and that the resolver names no council-internal module in any import,
+      re-export, dynamic-import or `require` specifier. It asserts **nothing**
+      requiring symbol resolution or a module graph — a router exported under an
+      unrelated name is outside the claim, and two tests pin that limit so it
+      cannot be quietly read as coverage.
+
+      **Sensitivity and polarity, both established rather than assumed.** Four
+      sensitivity arms add a defect and observe the guard go red, each asserting
+      the baseline clean **and non-empty** first: a second router beside the
+      ladder, a function-shaped one, an `ai_council` import in the resolver, and
+      the resolver deleted. Five denial arms must stay green — a file that
+      merely mentions the council, a council-INTERNAL module even when it
+      literally declares `CouncilTopologyRouter`, a `.test.ts` naming one, a
+      router name inside a comment or a string, and an `ai_council` import in a
+      non-resolver file. Every reproducer from all three killed rounds is
+      retained as a permanent regression, because their absence is exactly what
+      let each round's repair look complete.
+
+      **Anti-vacuity is asserted on the scanner's own report**, which was round
+      1's correction: `checkOneResolver` returns `{ violations, scanned }`, the
+      real-tree test asserts `scanned` exceeds 100 files and contains
+      `judgment_ladder.ts` by path, and an empty directory is driven to pin the
+      pair a vacuous scan produces.
+
+      **ROUND 4 — 4 findings, and the fourth round is the one that did not find
+      a new failure class.** The reviewer's verdict on the model: *"yes, for the
+      frozen claim as written. None of the four findings requires symbol
+      resolution or module-graph analysis."* Under the council's stopping rule
+      that makes them repairable rather than an owner exit, and all four are
+      repaired.
+
+      The high one is the mirror of every previous round and worth the space:
+      `exportsRouterFunction` recognised a router only when declared **inline**,
+      so five behaviour-preserving spellings of the *genuine* resolver were
+      reported as `resolver-is-not-a-resolver` — `export { classifyLadder }`
+      after a function declaration, `export default classifyLadder`, an
+      `as`-cast arrow, a `satisfies`-annotated arrow, and an aliased local
+      export. It was **internally inconsistent**: `declaresRouter` accepted the
+      identical syntax, so one spelling counted as "declares a router" for every
+      other file and as "is not a resolver" for this one, and the emitted
+      diagnostic asserted the resolver had "gone somewhere this guard does not
+      look" while the function sat two lines above. A false POSITIVE, so it
+      opened no hole — but a gate that reds on a legitimate refactor is a gate
+      that gets bypassed, which is the risk the reviewer named and it is not
+      cosmetic. Now resolved through local declarations, with the re-export and
+      stub refusals from round 3 preserved.
+
+      The other three: `.tsx`, `.mts` and `.cts` were never read, so a second
+      resolver in any of the tree's **28 live `.tsx` files** scanned green —
+      and the gap was *masked*, because `src/ui/` contributes `.ts` paths to
+      `scanned` and the directory therefore looked covered. That is the third
+      time in four rounds a blind spot hid behind a non-empty `scanned`, which
+      is the honest limit of that discriminator. A namespace's own name was read
+      and its body was not, so a router inside `export namespace Dispatch { … }`
+      was invisible while the enclosing form was caught — worse than omitting
+      the kind, because the visitor listed it. And two claims in this record
+      were wider than the artefact.
+
+      **Both of those claims are corrected here rather than softened.** "Every
+      reproducer from all three killed rounds is retained" is now true: round
+      3's two false-POSITIVE reproducers had no pin and now do. And the limits
+      below are stated at the claim level rather than in a helper's docstring,
+      which the stopping rule declares insufficient.
+
+      **ROUND 5 — the terminating round, 1 blocking finding and 5 recorded
+      limits.** Dispatched with an explicit rule: report a blocking defect if
+      one exists, and mark everything else non-blocking, because each prior
+      round's repair moved the review scope and forced another round.
+
+      The blocking one was the sharpest of all five, and it was **inside the
+      round-4 repair**: `parse()` hard-coded `ts.ScriptKind.TS` for every file
+      while round 4 had just widened the extension list to admit `.tsx`. Round 4
+      therefore widened WHICH files are read without widening HOW they are
+      parsed, so a `.tsx` module's JSX text tokenized as ordinary TypeScript and
+      **rounds 2 and 3's defect classes were both live again** — a `/*` in JSX
+      text opening a block comment, a backtick in JSX text opening a template.
+      All 28 non-test `.tsx` files in the tree parse differently as `.ts`. Fixed
+      by deriving the script kind from the extension; three tests go red without
+      it, verified by reverting the one expression.
+
+      **The round-4 test could not have caught it, and the reason is the second
+      council principle again:** it wrote a `.tsx` file containing **no JSX** —
+      the reproducer's spelling rather than the property. The new arms carry
+      real JSX, which is the actual discriminator.
+
+      One sentence in the module was false and is corrected rather than
+      softened: "the entire defect class above is gone rather than relocated"
+      was true of `.ts` and **not** of `.tsx`, where round 4 relocated it. Both
+      the module and this record now say so.
+
+      **The five non-blocking findings are RECORDED, not repaired**, and that is
+      a deliberate stop rather than an omission: a dotted `namespace A.B` body is
+      unwalked while the block form is covered; `exportsRouterFunction` never
+      got the namespace walk `exportedNames` received, so the two disagree on
+      one source; an ambient `export declare function` is accepted as callable;
+      a non-exported namespace's members are reported as a second resolver (a
+      false positive); and a symlinked directory is invisible while a UTF-16
+      file is counted as scanned but read as mojibake. All five are in the
+      module's own frozen-claim block, because a buried caveat is not a
+      disclosure. Four are syntactic and repairable by whoever needs them.
+
+      **ROUND 6 — a bounded confirmation, and the blocking finding is closed.**
+      Round 5's own verdict named the condition: *"Fix the ScriptKind and the
+      sentence becomes true; findings 2–6 are then genuine limits to record
+      rather than to close."* Round 6 was dispatched to check exactly that, and
+      confirmed it: `.tsx` → `TSX`, everything else → `TS`, all three call sites
+      threading the real path; **12 of 12 legal TSX constructs** detected above a
+      literal router with **0 parse diagnostics**; live blast radius **0 names
+      gained, 0 lost, identical `scanned`, 0 violations**. *"The defect class is
+      closed, not relocated."*
+
+      It also found the recurring principle a fifth time, in my own test: of the
+      four new JSX arms, **three discriminate and one does not.** The backtick
+      arm uses a **balanced** pair — `` `npm run x` `` — which closes the
+      template on its own line, so it passes under both parsers; round 5's
+      reproducer had an **odd** backtick and does discriminate. Three arms pin
+      the comment-opener class and **none** pins the backtick class in `.tsx`.
+      The roadmap's "three tests go red without it" was measured and is exactly
+      right — it never claimed four — but the gap is real and is recorded rather
+      than quietly closed.
+
+      **Round 6's four findings are `accepted-risk`, not repaired**, on the rule
+      set before round 5 ran: one medium (the balanced-backtick arm), two lows
+      where a recorded limit carries only the first of its source finding's two
+      halves, and one low the delta itself introduced — the guard never inspects
+      `parseDiagnostics`, so a `.tsx` that fails to parse loses its exports
+      silent-green while still counting in `scanned`. That last one is bounded
+      by `tsc --noEmit` gating the tree, so no second resolver can sit in
+      non-compiling source in a green tree. The reviewer's own risk note agrees
+      with the stop: *"a sixth round on these four would move the scope hash
+      again for changes that open no hole."*
+
+      **Why the loop stopped here rather than at a clean round.** Seven rounds,
+      33 findings, and every repair moved the scope hash and forced the next
+      round. The terminating rule was set before this round ran, not after
+      seeing its result: fix what blocks, record what does not. A sixth round
+      would be measuring a guard that has already had four defect classes
+      removed from it, and the honest cost of stopping is the five limits above,
+      written where a reader meets them.
+
+      **What this step does NOT close, stated at the claim level:**
+
+      - **The third clause of 0.5** — "topology refinement begins only after the
+        ladder resolves to `council`" — is a sequencing property of code that
+        does not exist, since no topology refiner is built. Any check for it
+        today would pass vacuously. Left to the phase that builds one.
+      - **The guard is name-pattern based.** A second resolver exported under a
+        name outside `ROUTER_NAMES` is undetectable by construction. Closing
+        that needs symbol resolution and a module graph, which is a separate
+        decision and not this step's.
+      - **A specifier built by interpolation is not resolved.** Both limits are
+        pinned by tests, so neither can be quietly read as coverage.
+      - **The five round-5 limits above**, recorded in the module's frozen-claim
+        block with their measurements.
+      - **Withdrawing the guard entirely** remains a live OWNER decision. One
+        council seat argued for it — enforce by review, automate nothing — on
+        the ground that four rounds of escalating false-negative damage from
+        ordinary valid syntax is evidence about the cost of the automation. That
+        seat's own verdict classed withdrawal as owner-reserved, which is why it
+        was not executed, and it is recorded here rather than dropped because
+        the argument does not expire with the defects that prompted it.
+
 
 ## Phase 1 — Stop paying for information the tree already has
 

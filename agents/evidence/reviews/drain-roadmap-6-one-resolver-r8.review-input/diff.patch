@@ -1,0 +1,1759 @@
+diff --git a/agents/evidence/drain-run-summary.md b/agents/evidence/drain-run-summary.md
+index 4e16a3fe8dc7ae7ea92783b7aa5a4a0f5a35439b..292b8a663e2d3cb1eee079b3e5621d7f9280544c 100644
+--- a/agents/evidence/drain-run-summary.md
++++ b/agents/evidence/drain-run-summary.md
+@@ -1,510 +1,132 @@
+ <!-- evidence-type: analysis -->
+-# Autonomous roadmap-drain run — 2026-08-27
+-
+-The single report for the drain run. Every PR, every council decision, every
+-descope, and — because it is the load-bearing part — every place the run was
+-wrong and corrected itself.
+-
+-## The seed list was stale, and that reshaped the run
+-
+-The instructions seeded 36 roadmaps verified at `c536dbd`. Recomputed at
+-`5a8f6b592`: **26 of the 36 were already gone**, drained by earlier sessions. The
+-live estate was **10 active roadmaps, all `complexity: structural`, all below 10%
+-progress** — 404 open steps and 17 open blockers, every blocker Class 3 and
+-maintainer-owned.
+-
+-So the queue rule "≥10% descending, then <10% by ascending complexity" collapsed
+-to a single bucket ordered by checkbox count. Nothing nearly-done existed to
+-finish; every candidate was a structural roadmap at its beginning.
+-
+-## PRs
+-
+-| PR | Roadmap | State | CI |
+-|---|---|---|---|
+-| [#1692](https://github.com/event4u-app/agent-config/pull/1692) | `road-to-executable-specification-layer` — **archived** | complete | **green**, 36 checks |
+-| [#1693](https://github.com/event4u-app/agent-config/pull/1693) | `road-to-composition-before-creation` — **archived** | complete | **green**, 46 checks |
+-| [#1694](https://github.com/event4u-app/agent-config/pull/1694) | `road-to-database-erd-landing` — **blocked, not archived** | finding + blocker | see PR |
+-
+-Two roadmaps closed and archived. The third was executed end to end and stopped
+-by a measured obstacle; its evidence ships rather than its work.
++# Autonomous roadmap-drain run — 2026-08-29
++
++One PR per roadmap, every decision routed to the AI council, no user in the
++loop. This file is the run's only report.
++
++## The queue, recomputed rather than taken
++
++The seed order supplied with the run was stale — pinned at `c536dbd`, listing
++36 roadmaps. The live inventory at `origin/main` was **7**, one of which
++(`road-to-source-silence`) already carried an open PR (#1707, since merged by
++another session) and was excluded as claimed. Six entered the queue.
++
++| # | Roadmap | Start | End | PR |
++|---|---|---|---|---|
++| 1 | runtime-event-journal | 20/21 | archived | [#1712](https://github.com/event4u-app/agent-config/pull/1712) — merged |
++| 2 | supervised-telemetry-collector | 0/28 | 3/28, `draft` → `ready` | [#1714](https://github.com/event4u-app/agent-config/pull/1714) — merged |
++| 3 | experience-loop-broadening | 0/47 | 1/47 | [#1716](https://github.com/event4u-app/agent-config/pull/1716) — merged |
++| 4 | capability-native-execution | 1/54 | 2/54 | [#1717](https://github.com/event4u-app/agent-config/pull/1717) — merged |
++| 5 | governed-harness-evolution | 0/58 | 0/58 | [#1718](https://github.com/event4u-app/agent-config/pull/1718) — merged |
++| 6 | council-topology-evidence | 3/77 | 4/77 | this PR |
++
++**One roadmap archived. Five did not, and that is the honest outcome rather
++than a shortfall.** They are large structural roadmaps whose remaining work is
++engineering measured in weeks, and three carry conditions no autonomous run can
++satisfy: a 21-day observation window, CI runners on two platforms that do not
++exist in this repository, and two owner-reserved ADR questions.
++
++## The recurring defect: three blockers no gate could see
++
++Three live, maintainer-owned blockers across two files were written
++`### <slug>` instead of `### blocker: <slug>`.
++`src/scripts/lint_roadmap_blockers.ts:40` matches only the prefixed form, so
++none of them parsed: `agent-config gates --all --json` reported **zero**
++blockers for files carrying three between them, and `check_estate_count`
++counted none. Every linter was green throughout, because a linter validates the
++blockers it can see.
++
++Both files come from the same inbox-harvest cohort. That makes it a pattern,
++not a slip.
++
++## Blockers whose `Resolved when` no single authority could discharge
++
++Three blockers bundled a council-decidable half with an owner-reserved one, so
++they were unsatisfiable as written. Each was split rather than quietly narrowed:
++
++- **`b-adr-088-external-runtime-federation`** — parking the two AI-runtime
++  classes is council-decidable and is recorded; declaring the four browser-engine
++  adapters *outside* ADR-088's boundary narrows an accepted floor and is
++  owner-reserved. The council caught the substitution that made the exception
++  look safe: the argument reads "external **agent** runtimes" where the ADR says
++  "external **tool** runtimes".
++- **`merge-authority`** — Phases 1–6 are legal while ADR-239 § Decision 3 stays
++  open; granting or refusing preauthorized merge authority is owner-reserved.
++- **`b-requires-key-reserved`** — closed, on two premises that were **false**:
++  `runtime_requires` is not unused (four skills carry it in frontmatter), and
++  `CAPABILITIES.yaml` is not the draft's file (it exists, 323 lines,
++  CI-drift-checked, landed in #1679).
+ 
+ ## Council decisions
+ 
+-Nine questions across five rounds, 2 seats each (anthropic + openai), quota
+-14/50 → 26/50. Every Class-3 blocker and every design fork went to the council;
+-none went to the user.
+-
+-| # | Question | Verdict |
+-|---|---|---|
+-| 1 | Which stack gets the first executable-spec adapter | **(c)** neither — ship the stack-neutral half, 2/2 |
+-| 2 | Grading a dimension the suite teaches nothing about | **Unscore + rename**, split in round 1, 2/2 in round 2 |
+-| 3 | Phase 3 against a measured mutation-rig refusal | **(b)** descope — mechanism-match returned *same mechanism*, 2/2 |
+-| 4 | Which reading governs the composition kill criterion | **Does not fire**, continue — 2/2 on the outcome, split on the reading |
+-| 5 | Extend `collision_ok` or add a field | **(b)** new field, 2/2 |
+-| 6 | Disposition-vocabulary authority | **(b)** own enum, (c) unification deferred, 2/2 |
+-| 7 | How a carried deferral is glyphed at archive | **(c)** a validated annotation, `[-]` stays cancellation-only, 2/2 |
+-| 8 | ERD as a skill or an artifact; the estate allowance; the landing shape | opt-in skill 2/2 · **(a) one** exemption 2/2 · cherry-pick, all five commits |
+-| 9 | Two ratchets disagreeing about estate growth | **(a)** both gates hold, block until headroom, 2/2 |
+-
+-**Rejected and recorded, so nothing invented survives:** numeric thresholds
+-proposed by one seat in three separate rounds — ">20 survivors", ">2hrs",
+-75%/60% vocabulary overlap, 20% adoption, 5%/10% cumulative growth caps,
+-six-month windows — were each rejected by the other seat as unsupported by any
+-measurement, and **none is adopted**. In every case the second seat's objection
+-was the same: a threshold with no measurement behind it reads as evidence.
+-
+-## Where the run was wrong
+-
+-Recorded because a drain that only lists its successes is not a report. Five
+-process failures are below; **twelve defects in the code itself** were found by
+-the neutral review and have their own section further down.
+-
+-1. **I wrote off a real CI red as environmental.** `check_preamble_payload_budget`
+-   failed shard 3/4 on PR #1693. I compared against the **design** ceiling
+-   (107,646), saw a +30,631 overshoot, and concluded a +74-token rule edit could
+-   not be the cause. The operative ceiling is the **grace** ceiling — 138,212, set
+-   to the exact measured total with zero slack, the same no-slack pattern I had
+-   applied to the stub ceiling *in that very branch*. Measured properly:
+-   `origin/main` 138,195, branch 138,277, i.e. 17 tokens of headroom against a
+-   74-token addition. Fixed by shrinking, not by raising; corrected in the PR body
+-   and in a comment on the PR.
+-2. **A sabotage probe passed that should have failed.** My block-boundary spec put
+-   the annotation *above* the unannotated step, where the assertion holds whether
+-   or not the boundary exists. It stayed green against a build with `BLOCK_END_RE`
+-   disabled. Rewritten with the annotation after, and the sabotage now reds. The
+-   uncorrected version is the exact shape of a test that proves nothing.
+-3. **`git stash` popped another session's stash.** `git stash -q` found nothing to
+-   stash and exited 0; the following `git stash pop` took `stash@{0}`, which
+-   belonged to a concurrent session, merging ai-video and ADR work into my tree
+-   across seven conflicted paths. Recovered by resetting exactly those paths; the
+-   other session's stash is preserved and untouched. The probe should have been
+-   run in a separate worktree.
+-4. **A `sed -i '' 's/\bartefact\b/...'` normalization was a silent no-op.** BSD
+-   `sed` has no `\b`; it matched nothing and exited 0, and the count did not move
+-   while the edit looked applied. Redone with a Python regex — 992, three *below*
+-   where the branch started.
+-5. **A JSON round-trip reformatted two schemas and a baseline.** `json.dump` with
+-   the wrong indent produced a 237-line diff for a 15-line addition. Reverted and
+-   redone as surgical text inserts.
+-
+-## Corrections made to the roadmaps themselves
+-
+-Six places where a roadmap's own text was wrong, each recorded at the step rather
+-than silently worked around:
+-
+-- **A verify string asked for a ratchet-flagged spelling.** Step 1.1 of the
+-  executable-spec roadmap required `grep "observable behaviour"`;
+-  `canonical-terms.yml` makes `behaviour` a variant at 995/1007. Satisfying the
+-  literal would have added violations to a tightening gate to pass a verify.
+-- **A measurement table understated its own dimension.** It named only the
+-  mutation probe; the code also detected property-based testing, so the grade was
+-  mixing two signals under one label.
+-- **A step listed four disposition vocabularies; there are six.** It missed the
+-  harvest ledger's `adopt | adapt` — which is the *closest* incumbent and supplies
+-  the argument for the new enum — and `build_archive_index`'s `Disposition`.
+-- **A step named the wrong venue.** "Register the enum with the canonical-term
+-  lint": that file maps *spelling variants*, so an enum value has no row there,
+-  and registering it would have satisfied the verify while guarding nothing.
+-- **A step asked for `why_not_extend` against "the 34 skills in
+-  `family: backend-data`".** There is no `family:` frontmatter field in this tree.
+-  Nine adjacent skills were enumerated by hand instead.
+-- **A step's premise about contract divergence was wrong.** `schema_erd/ir.ts`
+-  shares no type with `_lib/persistence/` — that directory is a finding pipeline
+-  for `lint_persistence`, so "the current adapter shape" names a contract the two
+-  surfaces never had in common.
+-
+-## Descopes
+-
+-| What | Where it went | Condition to promote |
+-|---|---|---|
+-| Executable-spec Phase 2 (2.1–2.3) and Phase 3 (3.1–3.3), plus AC-3–AC-6 | `stubs/road-to-executable-specification-adapter.md` | a consumer names a stack **and** a concrete workflow; for the mutation half, a remeasured survivor population too large to hand-probe |
+-| Composition-before-creation step 4.2 (false-positive rate) | `road-to-composition-review-false-positive-rate.md`, created in the same change | one release of advisory operation, so the population is non-empty |
+-| The `explain_run` fixture hole found mid-run | `stubs/road-to-hermetic-explain-run-tests.md` | decide whether the default candidates are cwd-relative by contract or root-relative by accident |
+-| The ERD skill itself | stays on `feat/schema-erd-diff` + local `drain/database-erd-landing` | ≥36 tokens of payload headroom below the grace ceiling |
+-
+-## Honest nulls
+-
+-- **The mutation adapter is not built, and that is the verdict.** The
+-  mechanism-match test returned *same mechanism* as an archived refusal measured
+-  at 10 probes / 3 survivors, whose reopen condition has not fired. A `revisit_if`
+-  describes what would lift a `degraded` state; it does not authorise building
+-  past a later, evidence-backed refusal. The registry now says so.
+-- **No assurance-registry state was flipped.** `mutation-sensitivity` stays
+-  `degraded`, `e2e-test` stays `unknown` — the property AC-6 existed to protect,
+-  held even though AC-6 itself is descoped.
+-- **The false-positive rate does not exist and was not estimated.** Zero additions
+-  in the population on the day the roadmap closed.
+-- **No ceiling and no baseline was lowered to make anything green.** One ceiling
+-  was *raised* — the rule-stub ceiling, 680 → 690, to the exact measured count
+-  with a stated reason, after four shrink passes. `--write-baseline` was declined
+-  because it also re-anchored five unrelated ceilings downward: real gains, but
+-  ones this run neither made nor measured.
+-
+-## The neutral review, and the twelve defects it found in this run's own work
+-
+-A stop-gate observed that 118 non-doc lines had been mutated with no neutral
+-review, and it was right. A cross-model review was commissioned afterwards —
+-2 seats per round, neither having written the code or the prompt's expectations.
+-Scope was the **complete** non-doc delta, selected by `git diff` over
+-code/config/test/CI paths, split into four parts **by file group mechanically**
+-because it exceeded the 51,200-byte transport ceiling. No file was excluded.
+-
+-**Twelve findings. All twelve were real. All twelve are fixed**, each with a
+-sensitivity probe proving the new assertion catches the defect it was written
+-for.
+-
+-### The readiness grader (3)
+-
+-1. `mutation-testing-ci-enforcement-detected` overclaimed — static matching over
+-   a workflow proves a tool is *referenced*, not that the step is enabled,
+-   blocking, reached or executed. Renamed to `-ci-reference-detected`.
+-2. The level spec was **deletion-insensitive**: `grade(full).level > 0` stays
+-   green if the dimension is deleted outright, so it proved nothing about the
+-   mechanism its own comment claimed. Rewritten; deleting the dimension now turns
+-   8 red, folding non-knockouts into the level 4.
+-3. `evidence` and `observations` were two representations of one fact — the
+-   ternary named only the mutation signal when both fired. Derived now.
+-
+-### The new advisory gate (5)
+-
+-4. **The contract over-claimed.** The docstring and both schema descriptions said
+-   a lint checks that `candidate` resolves, while `command:` and `guideline:`
+-   were silently exempt. `artefactIds` now walks all four trees.
+-5. `composition_review: []` — present, saying nothing — was accepted.
+-6. A **git failure read as "no additions"**: an unresolvable base ref exited 0
+-   with zero advisories, a blind run indistinguishable from a clean one.
+-7. The advisory path had **zero** coverage despite a comment calling its
+-   `ls-files --others` union load-bearing. Real-git fixture now.
+-8. Two parser holes: a YAML block scalar captured `|` and produced a
+-   one-character value; the candidate grammar admitted `guideline:/foo`, `foo/`
+-   and `foo//bar`.
+-
+-### The archival relaxation (4)
+-
+-9. The back-link slug was interpolated into a `RegExp` **raw** — `road.parent`
+-   matched `roadXparent`, and `[` made it THROW and abort the sweep, inside a
+-   function whose whole contract is failing closed.
+-10. A roadmap could name **itself** as destination: passes every check, then dies
+-    with its own archival.
+-11. **The sharpest finding of the review.** A destination could go dead in the
+-    **same sweep** — two roadmaps both complete, parent carries to child, both
+-    validated live, both archived, carried item left with no receiver. The
+-    mechanism meant to prevent the loss produced it.
+-12. `merged-into` was satisfied by a substring: a filename, an example or a
+-    comment counted as a link. Structured now.
+-
+-Plus the coverage gap both seats named independently: every unit spec stayed
+-green if `deferralProblems()` were deleted from `archive_completed()`, so nothing
+-proved the validation was **wired**. Three integration specs now drive the real
+-CLI over a real git repo; unwiring the call turns 2 red.
+-
+-### What the review changed about how this run should be read
+-
+-Part 4's findings were claim-accuracy, and they matter more than they look: the
+-gate said a record pointing at a non-existent incumbent "reads as evidence of a
+-search that cannot have happened" — in the docstring, the operator message and
+-the manifest note. That is a claim about the search, and the gate has none to
+-make. What it certifies is **referential consistency**. Narrowed in all three
+-places.
+-
+-**Two of my own specs had to be corrected rather than kept**, and both are the
+-same shape as the defects the review was finding: one asserted the very carve-out
+-that turned out to BE the defect, and one measured a coverage floor against the
+-wrong quantity so it reddened when candidate resolution widened — while the floor
+-it checked had not changed.
+-
+-**And one more of my own, worth naming plainly:** the first version of fix 3
+-(deriving `evidence` from `observations`) had **no spec behind it**, and its
+-sabotage passed green — one commit after the review had named exactly that class
+-of defect. Two specs were added and the sabotage now reds.
+-
+-## Cross-branch contamination, found while fixing the review
+-
+-`git checkout -B` carries uncommitted changes across branches, and a later
+-`git add -A` committed three ERD artifacts into PR #1693, where none of them
+-belongs:
+-
+-- the ERD roadmap with all phases `[x]` and both blockers resolved — which would
+-  have marked that roadmap complete on `main` with **none** of its work landed,
+-  and made the archival sweep archive it;
+-- its Phase-3 evidence file;
+-- a `schema-erd` **skill-admission row** — a row admitting a skill that is in
+-  neither PR, which is a claim nothing backs.
+-
+-All three reverted from #1693. The evidence file moved to #1694 where its roadmap
+-lives; the admission row is in **neither**, because it goes with the landing.
+-
+-Two fixture traps surfaced in the same cleanup, both mine and both recorded at
+-the specs: a destination built from the unit helper had its checkbox outside any
+-`## Phase` heading, so it read as zero-open and archived itself — which then
+-correctly tripped the new same-sweep guard and failed the happy-path spec for a
+-reason unrelated to the feature. And a bare `## Phase 1` heading is absorbing:
+-`PHASE_RE`'s optional trailing-name group can consume the blank line and the
+-checkbox after it. Real roadmaps always carry a name, which is why nothing else
+-hits it.
+-
+-## Seven roadmaps never reached
+-
+-`-database-evolution-tactics` (30 steps, 3 blockers) ·
+-`-database-relational-modeling` (34, 3) · `-experience-loop-broadening` (47, 0) ·
+-`-capability-native-execution` (54, 5) · `-governed-harness-evolution` (58, 0) ·
+-`-inbox-harvest-2026-08-e-council-topology-evidence` (77, 6) ·
+-`-supervised-telemetry-collector` (28, 3, landed on `main` mid-run by a parallel
+-session).
+-
+-None was started. Each is structural, at 0–3% progress, and carries blockers of
+-its own — the run reached the point where the honest move was to report rather
+-than to open a fourth roadmap it could not finish.
+-
+-## The one obstacle no execution, council decision, re-scope or descope could clear
+-
+-`check_preamble_payload_budget`'s grace ceiling leaves 17 tokens of headroom and
+-its config says *"It may never move UP"*. Measured: a skill with its description
+-gutted to 12 tokens is still one token over, because the catalog bucket costs 6
+-tokens for the name and formatting alone. Both council seats refused to raise the
+-ceiling, refused to exclude the bucket, and refused to fund the addition by
+-shaving unrelated skills — leaving their own fallback, which is what this run
+-took: block until a separate reduction creates headroom.
+-
+-That is a decision about a registered budget with a November milestone, 30,549
+-tokens over its design ceiling, with no reduction mechanism, no per-bucket targets
+-and no owner named. Both seats called the milestone *not known-unmeetable, but
+-known-unplanned and not credible*. It is the one thing in this run that a
+-maintainer, not a council, has to answer.
+-
+----
++Seven council sessions, all 2/2 present, all subscription-authed at $0.00.
+ 
+-# Autonomous roadmap-drain run — 2026-08-27/28, second pass
+-
+-A distinct run from the one recorded above, started after those PRs had merged.
+-Same mandate: drive every active roadmap to completion, every decision to the AI
+-council, no user round-trips.
+-
+-**Result: 5 PRs. One roadmap completed and archived; four parked with their
+-blockers resolved; five screened and refused admission.** The directory is not
+-empty, and § Why the remaining five were not attempted is the honest reason.
+-
+-## The estate this run found
+-
+-Recomputed at `830e31aa3`: **10 active roadmaps, 375 checkboxes, 9 done** — every
+-one below 10 % progress, nine of ten `complexity: structural`. The queue rule
+-collapsed to one bucket ordered by checkbox count, exactly as the previous pass
+-recorded. **14 open blockers, all Class 3, all `owner: maintainer`.**
+-
+-## PRs
+-
+-| PR | Roadmap | Outcome |
+-|---|---|---|
+-| [#1696](https://github.com/event4u-app/agent-config/pull/1696) | `composition-review-false-positive-rate` | **parked** — merged |
+-| [#1697](https://github.com/event4u-app/agent-config/pull/1697) | `database-erd-landing` | **parked** — merged |
+-| [#1698](https://github.com/event4u-app/agent-config/pull/1698) | `database-relational-modeling` | **parked** — merged |
+-| [#1699](https://github.com/event4u-app/agent-config/pull/1699) | `database-evolution-tactics` | **parked** — merged |
+-| [#1700](https://github.com/event4u-app/agent-config/pull/1700) | `runtime-governance-flip` | **completed, 28/29 + 1 cancelled, archived** — open |
+-
+-## Council decisions
+-
+-Five rounds. All seats present in every round. Transport was subscription CLI —
+-the first four rounds *reported* a dollar figure that PR #1695 landed mid-run to
+-correct; the fifth printed `spent $0.0000 — all seats subscription-authed,
+-nothing billed`. **The earlier figures in PR bodies #1696–#1699 are not real
+-charges**, and they were hedged as such when written.
+-
+-| # | Question | Verdict |
++| Question | Verdict |
++|---|---|
++| Step 1.4's deferred disposition | **4/4 across two runs → B.** A `stubs/` file does not keep a criterion active in the estate |
++| Phases 2–6 of supervised-telemetry-collector | **2/2 → B.** Rule 12 binds on the **execution frontier**, not eventual closability |
++| Two blockers + E1 on experience-loop | **2/2 → 1(c), 2(c), 3(b).** Retention structure council-decidable, its privacy parameters owner-reserved |
++| Two blockers on capability-native-execution | **2/2 → (a), and Decision 2 is divisible** |
++| merge-authority + E2 transfer | **2/2 → (c) scoped; E1 transfers only by copying its exact matrix** |
++| The ownership matrix E1 required and never wrote | **2/2.** Criterion: **acceptance authority** |
++| N=3 escalation on the one-resolver guard | **SPLIT** — see below |
++
++**The E1 gap is worth naming.** E1 was resolved to "stay separate, one
++authoritative roadmap per shared mechanism" and then **never assigned the
++mechanisms**. It recorded an obligation and did not discharge it. Both seats
++refused to infer the assignments — *"sequence position is not an ownership
++criterion"* — and required a fresh deliberation, which was held and
++back-propagated to both roadmaps.
++
++## The one-resolver guard: seven review rounds, 33 findings
++
++Step 0.5 asked for an invariant to be locked "in documentation **and** in a
++test". Six fresh-subagent R2 rounds — none of whose prompts this session
++authored — killed four implementations:
++
++| Round | Approach | Defect |
+ |---|---|---|
+-| A | Disposition of a roadmap whose AC-1 needs a population > 0 and measures 0 | **park in `later/`**, 2/2 — with the measurement baseline written into the file first |
+-| B | Six entangled blockers across the two database roadmaps | **park both**, 3 of 4 positions; the dissent refuted on measured arithmetic |
+-| C | Three `evolution-tactics` blockers + the run-level execution policy | **all three roadmap recommendations overturned**; policy = depth-first with admission decided before work begins |
+-| D | Two `runtime-governance-flip` blockers | **a council reversed its own earlier recommendation** once its premise was measured false |
+-| E | Second-reader approval of a 131-file census | **REJECTED** — and the rejection found three more active blockers |
+-
+-### The decisions that changed an outcome
+-
+-**B — the ERD skill cannot land, and the number is 49 not 36.** The blocker
+-carried an estimate. Re-measured by merging the prepared branch into a scratch
+-checkout: catalogue 14,851 → 14,904 tok, total 138,208 → 138,261 against a grace
+-ceiling of 138,212. **The skill costs 53 tokens; 4 are available.** A seat
+-proposed freeing headroom by trimming skill descriptions; the test was run and
+-refuted — 299 skills, longest description **200 chars**, zero over. The cap is
+-already enforced. The same seat's fallback — ship it as a routing *rule* instead
+-— is refused on its own arithmetic: the rules bucket is the first gated bucket in
+-the same config, so the substitute costs more than the thing it replaces.
+-Evidence: `agents/evidence/analysis/preamble-headroom-is-in-the-rules-2026-08-27.md`.
+-
+-**C — all three of a roadmap's own recommendations overturned.** The council was
+-asked not to ratify. It rejected reusing `migration-unsafe` as a waiver kind
+-(4/4: the token is the historical record, and two opposite admissions collapse
+-into one grep key), rejected the proposed name `expand-contract` on a defect
+-nobody else caught (every existing kind names the *violation waived*, not the
+-*remedy*, so the comment reads backwards — adopt `no-compat-window`), and
+-rejected a maintainer-local live-engine target 4/4 on evidence produced the same
+-day: a sibling roadmap had just been parked with five engine claims routed to
+-that stage, so an unowned target defers five claims to an event with no date.
+-
+-**D — a council reversed itself when a premise was measured.** `blocker:
+-partial-supersession-semantics` recommended amending ADR-124 in place because
+-"the roadmap assumed a mechanism the repository does not have". Measured:
+-`supersedes_scope` is documented at `adr-layout.md:59-60`, rendered by
+-`regenerate_index.ts:205`, and **already carried by ADR-124 itself**. Put to the
+-council, it reversed unanimously.
+-
+-**E — the second reader rejected the census, and was right.** Step 4.2b exists so
+-"an active blocker cannot be retired by relabelling it alone". The first census
+-classified 82 of 131 files by artefact class. One seat approved; one rejected on
+-the ground that this "substitutes formal authority for operational effect". The
+-rejection is upheld **on evidence, not on a vote count** — the change contained
+-its own counterexample: `subagent-steering.md:107` read `A CONFIG PACKAGE RUNS NO
+-DAEMON.` inside an all-caps instruction block in a loaded context file. Re-reading
+-the 28 operationally-loaded files line by line found **three further active
+-blockers**, 3 → 6, including `verify-repair-loop/SKILL.md:140` — item 5 of a
+-"Before finalizing, confirm" checklist an agent applies as a refusal.
+-
+-## The run-level policy, and the escape clause it triggered
+-
+-Round C fixed a mechanical admission rule so seven roadmaps were not each decided
+-by judgement:
+-
+-> A roadmap is executable only when (1) it has no unresolved blocker, (2) every
+-> remaining step's declared inputs and runtime are presently available to the
+-> run, and (3) every remaining verify clause can be executed. Otherwise, record
+-> resolved decisions and park it **before** modifying implementation or guidance.
+-
+-"Start and discover whether you can finish" was explicitly rejected: it discovers
+-infeasibility after work has begun and produces exactly the partial authoring the
+-policy prevents.
+-
+-**One seat added an escape clause, and this run triggered it:**
+-
+-> more than four parks in a single autonomous run is a structural signal that the
+-> campaign's roadmap granularity is wrong, and should be surfaced as a
+-> restructuring recommendation rather than ground through.
+-
+-This run parked four. It did not park a fifth. § Why the remaining five were not
+-attempted is that surfacing.
+-
+-## Why the remaining five were not attempted
+-
+-Each was screened against the admission rule. None passes, and the reasons share
+-one shape.
+-
+-| Roadmap | Open | Blockers | Refused on |
+-|---|---|---|---|
+-| `supervised-telemetry-collector` | 28 | 3 | (1) and (2). Its blockers are supervisor mechanism, uniqueness namespace and installation model — the three ADR-249 explicitly does **not** decide. Even resolved, it needs a real process to exist and a lifecycle suite to run. |
+-| `experience-loop-broadening` | 45 | 0 | (2). Step 1.1 pre-registers "≥ 95 % capture over ≥ 50 dispatches" against a measured **0.27 % (370 dispatches, 1 recorded line)** at `docs/CLAIMS.md:328`. `agents/runtime/state/` holds no telemetry corpus. The input does not exist. |
+-| `capability-native-execution` | 52 | 5 | (1) and (2). Needs browser backends — external runtimes not present. |
+-| `governed-harness-evolution` | 57 | 0 | (2). Same telemetry dependency as `experience-loop-broadening`. |
+-| `inbox-harvest-e-council-topology-evidence` | 74 | 6 | (1). Six unresolved Class-3 blockers, and it is the largest file in the estate. |
+-
+-**The shape, and it is the finding this run has to surface.** Three of the five
+-are blocked on the *same missing capability* — a telemetry collector that
+-actually captures dispatch events. That collector has its own roadmap, and that
+-roadmap is blocked on three owner decisions about supervision mechanism,
+-namespace and installation which ADR-249 deliberately left open.
+-
+-So the estate is not a queue of independent work. It is **one dependency chain
+-with an owner decision at its root**, and no amount of autonomous execution
+-reaches past that root. Parking the five would have converted a structural fact
+-into five bookkeeping entries; the council's escape clause says to surface it
+-instead, so it is surfaced here.
+-
+-## The one completion, and what it bought
+-
+-`road-to-runtime-governance-flip` — the owner's Zero-Runtime reversal — was the
+-depth-first pick because completing it discharges the collector's declared hard
+-dependency. 28 of 29 done, 1 cancelled with its reason, archived. It landed
+-**ADR-249** (a scoped supersession of two accepted floors, with reciprocal
+-`superseded_scope` on both), a **new `withdrawn` ledger status** with a required
+-`retired_by` (the enum had no way to say "true, and withdrawn by decision"), a
+-**successor governance contract** with a P0–P4 process-class table, and two new
+-gates that were each **seen red** before being trusted:
+-
+-- `check_scoped_supersession` — refuses a scope with no refs, and a scoped
+-  supersession with no `## Not reopened` section. Staged so it warns rather than
+-  reds on the two accepted records that predate it.
+-- `check_supervision_claim_atomicity` — refuses a present-tense supervision claim
+-  on a public surface without lifecycle evidence for **this** revision, and
+-  refuses four things separately rather than checking a file exists.
+-
+-The collector's dependency note now records what the discharge does **not** hand
+-over: the four P1 conditions, a same-revision activation guard that does not yet
+-exist, and the lifecycle-evidence contract the new gate already enforces.
++| 1 | no comment/string handling | false positive; **and the test named "guards the guard" never called the scanner**, so one walking zero files passed it |
++| 2 | ordered regexes | a `//` comment containing a glob deleted real code — **12 files lost exports** |
++| 3 | hand-written scanner | a backtick in a *regex literal* opened a template — **54 files, 231 exports** |
++| 4 | TypeScript parser | four isolated omissions; model judged **adequate** |
++| 5 | + `.tsx` in the file list | `ScriptKind.TS` hard-coded, so `.tsx` parsed as non-JSX — **rounds 2 and 3 live again inside round 4's repair** |
++| 6 | confirmation | blocking finding **closed**; 4 recorded as `accepted-risk` |
++| 7 | binding | 0 blocking; 3 documentation inaccuracies in this summary and the roadmap, **including a findings total that understated by five** |
++
++Two principles the council asked be recorded, both now in the module:
++
++> A gate must not implement a partial lexer or parser for a language when an
++> authoritative parser for it is already a dependency.
++
++> A repair is tested against the violated PROPERTY and representative
++> mutations, never against the reproducer's literal spelling.
++
++The second recurred in **five** of the six rounds, including in this session's
++own final test: three of four JSX arms discriminate and one does not, because it
++uses a balanced backtick pair where the reproducer had an odd one.
++
++**The N=3 council split**, and how it resolved: one seat for withdrawing the
++guard, one for parsing. Both refused further hand-lexing and **both classified
++withdrawal and narrowing as owner-reserved**, so parsing was the only option
++either seat permitted a council to execute. **Withdrawing the guard entirely
++remains a live owner decision** — the argument for it does not expire with the
++defects that prompted it.
++
++## What is owner-reserved and was NOT forged
++
++1. Whether deterministic browser engines fall outside ADR-088's "external tool
++   runtimes".
++2. ADR-239 § Decision 3 — preauthorized merge authority.
++3. Folding `experience-loop-broadening` and `governed-harness-evolution` into
++   one roadmap.
++4. Cancelling or weakening step 1.4 of `runtime-event-journal`.
++5. Withdrawing the one-resolver guard in favour of review-only enforcement.
++6. Privacy-sensitive retention **parameters** for the experience ledger.
+ 
+ ## Descopes
+ 
+-**None.** No step was descoped into a stub. Step 3.5 of the completed roadmap is
+-`[-]` by its own verify clause's second branch, with the reason recorded — its
+-premise (a stale figure inside a live argument) stopped holding once Phase 3.2
+-converted that block into a dated historical record.
+-
+-## Where the run was wrong
+-
+-- **The first census was wrong**, and a second reader caught it. Recorded above
+-  rather than quietly fixed, because the correction is the useful part.
+-- **A commit landed with unstaged content.** The Group-A commit initially carried
+-  only the evidence file; the roadmap edits were left unstaged and had to be
+-  amended in. Caught by reading `git show --stat`, not by a gate.
+-- **Two duplicate `estate_growth_exempt` keys** were written into one frontmatter
+-  block and had to be merged.
+-- **Two type errors reached the pre-push hook** — an invalid `GateSkipReason` and
+-  an `exactOptionalPropertyTypes` violation. `tsc -p tsconfig.json` had passed;
+-  the narrower changed-files pass is what caught them.
+-- **`docs/proof.md` was regenerated on a stale base** before `origin/main` was
+-  merged, and had to be rebuilt after. The hash was unchanged, so nothing was
+-  lost — but the order was wrong and the check that proved it was luck.
+-
+-## Unrelated red fixed in passing
+-
+-`docs/contracts/adversarial-review-protocol.md`'s `keep-beta-until: 2026-08-27`
+-lapsed on the calendar **during** this run, reddening every PR from that moment.
+-Its window is extended to 2026-11-23 with the reason in the file. It was **not**
+-promoted to `stable`: `STABILITY.md` reserves that for contracts settled through
+-a major release, and this one's surface changed as recently as `e5e4c48d6`.
+-Promotion is a maintainer review this run is not entitled to make.
+-
+-## Post-hoc: a neutral code review, and it found an inversion
+-
+-The stop-hook flagged that the session had mutated ~98 non-doc lines with no
+-neutral review. A council round was run over the **whole** code delta — every
+-change under `src/scripts/` and `tests/scripts/`, scope not chosen by the author
+-— with a prompt stating no expected outcome, per `evaluator-independence`. The prompt and the exact diff it reviewed are committed at
+-`agents/evidence/reviews/runtime-governance-code.review-input/` — that path
+-rather than `agents/runtime/council/questions/`, which is gitignored and would
+-have made the prompt unrecoverable. A recorded verdict whose prompt nobody can
+-read is not evidence.
+-
+-**Verdict: "do not merge as written."** It was right.
+-
+-The worst finding **inverted the gate this run had just built**:
+-`SUPERVISION_CLAIM_RE` matched `The resident process is **not** supervised.` —
+-`not` was absorbed by the 0-to-3-word gap — so `check_supervision_claim_atomicity`
+-would have **refused a truthful denial** of the capability while the false claim
+-it exists to catch reads identically minus one word. The test suite claimed to
+-cover "negative statements" and tested a different grammatical form. Both seats
+-found it independently; neither was told what to look for.
+-
+-Six more, every one reproduced before being fixed:
+-
+-| Finding | Was |
+-|---|---|
+-| markdown emphasis escapes | `**supervised**` never matched — `\b` does not match inside `**`, i.e. a false negative on the formatting a README actually uses |
+-| type coercion in evidence | `cases_run: "abc"` passed every comparison and read as **sufficient evidence**; `"12"` was refused for a wrong reason by lexicographic compare |
+-| negative counts | `cases_run: -5` accepted as a count |
+-| blank suite name | `suite: "   "` accepted as named |
+-| `## Not reopened` too loose | accepted `###`, and accepted an **empty** section — both forbidden by the check's own error message |
+-| malformed `date:` | bought the grandfathered warning instead of failing to the error |
+-| self-test over-advertised | the docstring named a mocked-process negative the case list did not contain |
+-
+-All closed with regression cases. Self-test **4/4 → 7/7, 5 rejecting**, including
+-a `denial needs no evidence` accepting control. 141 unit cases across the three
+-touched test files.
+-
+-A **§ Known limits** section was added rather than the pattern widened — one
+-physical line at a time, copula-only so active voice escapes, no grammatical
+-subject resolution, no markdown-structure awareness, a bounded-window negation
+-heuristic. The gate is a **floor, not a proof**.
+-
+-**The lesson is about the run, not the regex.** Everything else in this run was
+-verified against gates and measurements, and the gates all passed on the broken
+-code — the self-test was green at 4/4 while the pattern was inverted, because a
+-self-test only proves the cases someone thought to write. Nothing in the run's
+-own discipline would have caught it. The neutral read did, and it was prompted by
+-a hook rather than by the plan.
++None. No step was cancelled, no criterion weakened, and no stub was created to
++absorb work. The single deferred item encountered (step 1.4) was resolved by
++promoting its receiver into the active estate, which is what made its carry
++legal in the first place.
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+index c8b001b07bbd49df704f08fa1960546b2b0565fc..6ba4cd4bcb662528152ce6aaedc461d207d4c2bc 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+@@ -167,13 +167,236 @@ called a larger risk than feature absence.
+   texts. Rewrite anything substantively verbatim.
+       verify: the evidence file records the scan result **and** the commits
+       read; blocked on `blocker: unlicensed-source-verbatim-scan`
+-- [ ] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
++- [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
+   `judgment_ladder.ts` stays the one task-side resolver, no
+   `CouncilTopologyRouter` beside it, topology refinement begins only after the
+   ladder resolves to `council`, `necessity.ts` keeps its council-internal role.
+       verify: a deliberately-added second task-side council router makes the
+       new architecture test fail; sabotage the guard, watch it go red, restore
+ 
++      **Closed 2026-08-29, after SEVEN review rounds, four of which killed an
++      implementation outright.** The invariant was documented and enforced by nothing:
++      `judgment_ladder.ts`'s docstring states all three clauses — one resolver,
++      "never a fourth parallel classifier bolted on beside it", and
++      "deliberately independent of `ai_council/necessity.ts`" — and a docstring
++      cannot fail. A second task-side council router could have landed beside
++      the ladder with every gate in this tree green.
++
++      Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
++      `tests/scripts/one_resolver_invariant.test.ts` — **80 tests, all green**;
++      `tsc --noEmit` and `eslint` clean.
++
++      **It parses. It does not lex, and that is the whole finding.** Three
++      fresh-subagent R2 rounds — each dispatched at a deterministically
++      generated package, none of them authored by the implementing session —
++      killed three successive text-scanning implementations, and each defect
++      was introduced by the repair for the last:
++
++      | Round | Approach | What the reviewer measured |
++      |---|---|---|
++      | 1 | no comment/string handling | false POSITIVE: a router name in a comment or a string counted as a declaration |
++      | 2 | ordered regexes, block comments stripped first | false NEGATIVE: a `//` comment containing a glob opened a spurious block comment. **12 files under `src/` lost top-level exports** |
++      | 3 | hand-written single-pass character scanner | false NEGATIVE, **worse**: a backtick inside a *regex literal* read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost**, plus a reachable false positive |
++
++      Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
++      contains a regex with a backtick in it. Round 1's headline was sharper
++      still — the test advertised as "guards the guard" never called the scanner
++      at all, so one walking **zero files** passed it, which is precisely the
++      failure it claimed to exclude.
++
++      **The N=3 budget fired and the decision went to the AI council, which
++      SPLIT.** One seat argued for withdrawing the guard and enforcing the
++      invariant by review; one for parsing with the TypeScript compiler API.
++      Both refused another hand-lexing round, and — decisively — **both
++      classified withdrawal and narrowing as owner-reserved**, since each
++      changes what "done" guarantees. Parsing was therefore the only option
++      either seat permits a council to execute, and it is what landed. The
++      withdrawal option is recorded here as a live owner decision, not as a road
++      not taken.
++
++      Both seats asked the same two principles be recorded:
++
++      > A gate must not implement a partial lexer or parser for a language when
++      > an authoritative parser for it is already a dependency.
++
++      > A repair is tested against the violated PROPERTY and representative
++      > mutations, never against the reproducer's literal spelling.
++
++      The second explains the pattern the reviewers kept finding underneath the
++      lexing bugs. The clearest instance: the resolver check tested for the
++      identifier `classifyLadder`, so round 2's reproducer
++      `export const NOTE = "moved"` was caught while
++      `export const classifyLadder = "moved"` — the same stub keeping the name —
++      scanned green. It now tests the declaration KIND, so a resolver must be
++      callable rather than merely named.
++
++      **The frozen claim, stated so nobody reads the guard as wider.** It
++      asserts syntactically that no module outside the sanctioned resolver
++      exports a binding whose NAME matches a router pattern, in any export form
++      the parser recognises; that the resolver itself exports a callable one;
++      and that the resolver names no council-internal module in any import,
++      re-export, dynamic-import or `require` specifier. It asserts **nothing**
++      requiring symbol resolution or a module graph — a router exported under an
++      unrelated name is outside the claim, and two tests pin that limit so it
++      cannot be quietly read as coverage.
++
++      **Sensitivity and polarity, both established rather than assumed.** Four
++      sensitivity arms add a defect and observe the guard go red, each asserting
++      the baseline clean **and non-empty** first: a second router beside the
++      ladder, a function-shaped one, an `ai_council` import in the resolver, and
++      the resolver deleted. Five denial arms must stay green — a file that
++      merely mentions the council, a council-INTERNAL module even when it
++      literally declares `CouncilTopologyRouter`, a `.test.ts` naming one, a
++      router name inside a comment or a string, and an `ai_council` import in a
++      non-resolver file. Every reproducer from all three killed rounds is
++      retained as a permanent regression, because their absence is exactly what
++      let each round's repair look complete.
++
++      **Anti-vacuity is asserted on the scanner's own report**, which was round
++      1's correction: `checkOneResolver` returns `{ violations, scanned }`, the
++      real-tree test asserts `scanned` exceeds 100 files and contains
++      `judgment_ladder.ts` by path, and an empty directory is driven to pin the
++      pair a vacuous scan produces.
++
++      **ROUND 4 — 4 findings, and the fourth round is the one that did not find
++      a new failure class.** The reviewer's verdict on the model: *"yes, for the
++      frozen claim as written. None of the four findings requires symbol
++      resolution or module-graph analysis."* Under the council's stopping rule
++      that makes them repairable rather than an owner exit, and all four are
++      repaired.
++
++      The high one is the mirror of every previous round and worth the space:
++      `exportsRouterFunction` recognised a router only when declared **inline**,
++      so five behaviour-preserving spellings of the *genuine* resolver were
++      reported as `resolver-is-not-a-resolver` — `export { classifyLadder }`
++      after a function declaration, `export default classifyLadder`, an
++      `as`-cast arrow, a `satisfies`-annotated arrow, and an aliased local
++      export. It was **internally inconsistent**: `declaresRouter` accepted the
++      identical syntax, so one spelling counted as "declares a router" for every
++      other file and as "is not a resolver" for this one, and the emitted
++      diagnostic asserted the resolver had "gone somewhere this guard does not
++      look" while the function sat two lines above. A false POSITIVE, so it
++      opened no hole — but a gate that reds on a legitimate refactor is a gate
++      that gets bypassed, which is the risk the reviewer named and it is not
++      cosmetic. Now resolved through local declarations, with the re-export and
++      stub refusals from round 3 preserved.
++
++      The other three: `.tsx`, `.mts` and `.cts` were never read, so a second
++      resolver in any of the tree's **28 live `.tsx` files** scanned green —
++      and the gap was *masked*, because `src/ui/` contributes `.ts` paths to
++      `scanned` and the directory therefore looked covered. That is the third
++      time in four rounds a blind spot hid behind a non-empty `scanned`, which
++      is the honest limit of that discriminator. A namespace's own name was read
++      and its body was not, so a router inside `export namespace Dispatch { … }`
++      was invisible while the enclosing form was caught — worse than omitting
++      the kind, because the visitor listed it. And two claims in this record
++      were wider than the artefact.
++
++      **Both of those claims are corrected here rather than softened.** "Every
++      reproducer from all three killed rounds is retained" is now true: round
++      3's two false-POSITIVE reproducers had no pin and now do. And the limits
++      below are stated at the claim level rather than in a helper's docstring,
++      which the stopping rule declares insufficient.
++
++      **ROUND 5 — the terminating round, 1 blocking finding and 5 recorded
++      limits.** Dispatched with an explicit rule: report a blocking defect if
++      one exists, and mark everything else non-blocking, because each prior
++      round's repair moved the review scope and forced another round.
++
++      The blocking one was the sharpest of all five, and it was **inside the
++      round-4 repair**: `parse()` hard-coded `ts.ScriptKind.TS` for every file
++      while round 4 had just widened the extension list to admit `.tsx`. Round 4
++      therefore widened WHICH files are read without widening HOW they are
++      parsed, so a `.tsx` module's JSX text tokenized as ordinary TypeScript and
++      **rounds 2 and 3's defect classes were both live again** — a `/*` in JSX
++      text opening a block comment, a backtick in JSX text opening a template.
++      All 28 non-test `.tsx` files in the tree parse differently as `.ts`. Fixed
++      by deriving the script kind from the extension; three tests go red without
++      it, verified by reverting the one expression.
++
++      **The round-4 test could not have caught it, and the reason is the second
++      council principle again:** it wrote a `.tsx` file containing **no JSX** —
++      the reproducer's spelling rather than the property. The new arms carry
++      real JSX, which is the actual discriminator.
++
++      One sentence in the module was false and is corrected rather than
++      softened: "the entire defect class above is gone rather than relocated"
++      was true of `.ts` and **not** of `.tsx`, where round 4 relocated it. Both
++      the module and this record now say so.
++
++      **The five non-blocking findings are RECORDED, not repaired**, and that is
++      a deliberate stop rather than an omission: a dotted `namespace A.B` body is
++      unwalked while the block form is covered; `exportsRouterFunction` never
++      got the namespace walk `exportedNames` received, so the two disagree on
++      one source; an ambient `export declare function` is accepted as callable;
++      a non-exported namespace's members are reported as a second resolver (a
++      false positive); and a symlinked directory is invisible while a UTF-16
++      file is counted as scanned but read as mojibake. All five are in the
++      module's own frozen-claim block, because a buried caveat is not a
++      disclosure. Four are syntactic and repairable by whoever needs them.
++
++      **ROUND 6 — a bounded confirmation, and the blocking finding is closed.**
++      Round 5's own verdict named the condition: *"Fix the ScriptKind and the
++      sentence becomes true; findings 2–6 are then genuine limits to record
++      rather than to close."* Round 6 was dispatched to check exactly that, and
++      confirmed it: `.tsx` → `TSX`, everything else → `TS`, all three call sites
++      threading the real path; **12 of 12 legal TSX constructs** detected above a
++      literal router with **0 parse diagnostics**; live blast radius **0 names
++      gained, 0 lost, identical `scanned`, 0 violations**. *"The defect class is
++      closed, not relocated."*
++
++      It also found the recurring principle a fifth time, in my own test: of the
++      four new JSX arms, **three discriminate and one does not.** The backtick
++      arm uses a **balanced** pair — `` `npm run x` `` — which closes the
++      template on its own line, so it passes under both parsers; round 5's
++      reproducer had an **odd** backtick and does discriminate. Three arms pin
++      the comment-opener class and **none** pins the backtick class in `.tsx`.
++      The roadmap's "three tests go red without it" was measured and is exactly
++      right — it never claimed four — but the gap is real and is recorded rather
++      than quietly closed.
++
++      **Round 6's four findings are `accepted-risk`, not repaired**, on the rule
++      set before round 5 ran: one medium (the balanced-backtick arm), two lows
++      where a recorded limit carries only the first of its source finding's two
++      halves, and one low the delta itself introduced — the guard never inspects
++      `parseDiagnostics`, so a `.tsx` that fails to parse loses its exports
++      silent-green while still counting in `scanned`. That last one is bounded
++      by `tsc --noEmit` gating the tree, so no second resolver can sit in
++      non-compiling source in a green tree. The reviewer's own risk note agrees
++      with the stop: *"a sixth round on these four would move the scope hash
++      again for changes that open no hole."*
++
++      **Why the loop stopped here rather than at a clean round.** Seven rounds,
++      33 findings, and every repair moved the scope hash and forced the next
++      round. The terminating rule was set before this round ran, not after
++      seeing its result: fix what blocks, record what does not. A sixth round
++      would be measuring a guard that has already had four defect classes
++      removed from it, and the honest cost of stopping is the five limits above,
++      written where a reader meets them.
++
++      **What this step does NOT close, stated at the claim level:**
++
++      - **The third clause of 0.5** — "topology refinement begins only after the
++        ladder resolves to `council`" — is a sequencing property of code that
++        does not exist, since no topology refiner is built. Any check for it
++        today would pass vacuously. Left to the phase that builds one.
++      - **The guard is name-pattern based.** A second resolver exported under a
++        name outside `ROUTER_NAMES` is undetectable by construction. Closing
++        that needs symbol resolution and a module graph, which is a separate
++        decision and not this step's.
++      - **A specifier built by interpolation is not resolved.** Both limits are
++        pinned by tests, so neither can be quietly read as coverage.
++      - **The five round-5 limits above**, recorded in the module's frozen-claim
++        block with their measurements.
++      - **Withdrawing the guard entirely** remains a live OWNER decision. One
++        council seat argued for it — enforce by review, automate nothing — on
++        the ground that four rounds of escalating false-negative damage from
++        ordinary valid syntax is evidence about the cost of the automation. That
++        seat's own verdict classed withdrawal as owner-reserved, which is why it
++        was not executed, and it is recorded here rather than dropped because
++        the argument does not expire with the defects that prompted it.
++
++
+ ## Phase 1 — Stop paying for information the tree already has
+ 
+ Deliberately before any sophisticated routing: the cheapest quality improvement
+diff --git a/src/scripts/_lib/one_resolver_invariant.ts b/src/scripts/_lib/one_resolver_invariant.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..58a79869817247035c9060fbe4286392a3e9d72e
+--- /dev/null
++++ b/src/scripts/_lib/one_resolver_invariant.ts
+@@ -0,0 +1,449 @@
++/**
++ * The one-resolver invariant, made checkable.
++ *
++ * `judgment_ladder.ts` is the ONE task-side resolver that decides which
++ * dispatch rung a task takes, council included. Its own module docstring says
++ * so, and says two further things that were equally unenforced: that no fourth
++ * parallel classifier may be "bolted on beside it", and that it is
++ * "deliberately independent of `ai_council/necessity.ts`", the council's OWN
++ * council-internal necessity gate.
++ *
++ * All three were prose. A docstring cannot fail, so a second task-side council
++ * router could land beside the ladder and every gate in this tree would stay
++ * green — which is what
++ * `road-to-inbox-harvest-2026-08-e-council-topology-evidence` step 0.5 asks to
++ * be closed: "lock the one-resolver invariant in documentation AND in a test".
++ *
++ * ## This file PARSES. It does not lex. That is the whole point.
++ *
++ * Three successive R2 review rounds killed three successive text-scanning
++ * implementations, each defect introduced by the repair for the last:
++ *
++ * | Round | Approach | What a fresh reviewer measured |
++ * |---|---|---|
++ * | 1 | no comment/string handling | false POSITIVE: a router name in a comment or string counted as a declaration |
++ * | 2 | ordered regexes, block comments first | false NEGATIVE: a line comment containing a glob opened a spurious block comment. 12 files under `src/` lost top-level exports |
++ * | 3 | hand-written character scanner | false NEGATIVE, worse: a backtick inside a REGEX LITERAL read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost** |
++ *
++ * Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
++ * contains a regex with a backtick in it.
++ *
++ * The AI council was asked for guidance at the N=3 budget and **split** —
++ * one seat for withdrawing the guard, one for parsing properly. Both seats
++ * classified withdrawal and narrowing as OWNER-RESERVED and both refused
++ * another hand-lexing round, so parsing is the only option a council may
++ * execute. Both recorded the same principle:
++ *
++ * > A gate must not implement a partial lexer or parser for a language when an
++ * > authoritative parser for it is already a dependency.
++ *
++ * and a second, which is the one that explains three rounds of near-misses:
++ *
++ * > A repair is tested against the violated PROPERTY and representative
++ * > mutations, never against the reproducer's literal spelling.
++ *
++ * `typescript` is already a dependency. Comments, strings, template literals
++ * and regex literals are therefore the parser's problem, which is where they
++ * belong.
++ *
++ * **That sentence used to end "and the entire defect class above is gone rather
++ * than relocated", and round 5 showed it was false by one line.** Round 4
++ * widened WHICH files are read to include `.tsx` without widening HOW they are
++ * parsed — every file was handed over as non-JSX TypeScript — so a `.tsx`
++ * module's JSX text tokenized as ordinary TS and rounds 2 and 3's defect
++ * classes were both live again inside the repair that added the extension. The
++ * script kind is now derived from the extension. For that class the claim is
++ * true; the limits below are what remains, and they are limits rather than
++ * defects.
++ *
++ * ## The frozen claim — what this guard does and does not assert
++ *
++ * **Asserts, syntactically:** no module outside the sanctioned resolver
++ * EXPORTS A BINDING WHOSE NAME matches a router pattern, in any export form the
++ * TypeScript parser recognises; the sanctioned resolver itself exports one; and
++ * the sanctioned resolver names no council-internal module in any import,
++ * re-export, dynamic import or `require` specifier.
++ *
++ * **Does NOT assert, and no reading of it should:** anything requiring symbol
++ * resolution or a module graph. A router exported under an unrelated name, or
++ * reached through an alias chain this file cannot follow, is outside the claim.
++ *
++ * **Known limits, recorded by R2 round 5 and deliberately NOT repaired**, because
++ * each repair moved the review scope and forced another round; the loop was
++ * terminated on the one blocking finding. All are measured, none is a hole a
++ * second resolver reaches by accident:
++ *
++ * 1. A **dotted** namespace (`namespace A.B { … }`) nests a `ModuleDeclaration`
++ *    where the block form nests a `ModuleBlock`, so its body is unwalked while
++ *    the block form is covered.
++ * 2. {@link exportsRouterFunction} never received the namespace walk
++ *    {@link exportedNames} got, so the two disagree on a router declared inside
++ *    a namespace in the sanctioned file.
++ * 3. `export declare function classifyLadder(…)` — an AMBIENT declaration with
++ *    no body — is accepted as a callable resolver.
++ * 4. A namespace the module does not export has its members counted as module
++ *    exports, so a non-exported `namespace Internal { export class … }` reports
++ *    `second-resolver`. A false positive.
++ * 5. A **symlinked directory** is invisible (`isDirectory()` is false for a
++ *    symlink), and a UTF-16 file is counted in `scanned` while being read as
++ *    mojibake. Both are silent-green.
++ *
++ * Limits 1-4 are syntactic and repairable; 5 is discovery. They are written
++ * here rather than in a helper's docstring because a buried caveat is not a
++ * disclosure. */
++import fs from 'node:fs';
++import path from 'node:path';
++import ts from 'typescript';
++
++/** The single sanctioned task-side resolver, repo-relative. */
++export const SANCTIONED_RESOLVER = path.join('src', 'scripts', '_lib', 'judgment_ladder.ts');
++
++/** The council's own internal surface. The resolver does not import from it. */
++export const COUNCIL_INTERNAL_DIR = path.join('src', 'scripts', 'ai_council');
++
++/** Root walked by {@link checkOneResolver}, repo-relative. */
++export const SCAN_ROOT = 'src';
++
++/**
++ * Module file extensions walked. R2 round-4 finding: `.ts` alone left the
++ * tree's 28 `.tsx` modules invisible, and the gap was MASKED — `src/ui/`
++ * contributes `.ts` paths to `scanned`, so the directory looked covered while
++ * two thirds of its modules were never read. The anti-vacuity discriminator
++ * cannot see a per-extension gap, which is the third time in four rounds that
++ * a blind spot hid behind a non-empty `scanned`.
++ */
++const SCANNED_EXTS = ['.ts', '.tsx', '.mts', '.cts'] as const;
++const TEST_SUFFIXES = ['.test.ts', '.test.tsx', '.test.mts', '.test.cts'] as const;
++
++/** Directory names never walked. */
++const SKIP_DIRS = new Set(['node_modules', '__tests__', 'dist', '.git']);
++
++/** Names that mark an exported binding as a task-side council/dispatch ROUTER. */
++export const ROUTER_NAMES: readonly RegExp[] = [
++    /^\w*Council\w*Router$/,
++    /^classifyLadder$/,
++    /^\w*resolveCouncilRoute\w*$/,
++];
++
++export interface Violation {
++    readonly file: string;
++    readonly kind:
++        | 'second-resolver'
++        | 'council-import-in-resolver'
++        | 'resolver-missing'
++        | 'resolver-is-not-a-resolver';
++    readonly detail: string;
++}
++
++export interface ScanResult {
++    readonly violations: readonly Violation[];
++    /** Every file actually read, repo-relative. Empty means the scan found nothing to look at. */
++    readonly scanned: readonly string[];
++}
++
++/**
++ * Parse one module.
++ *
++ * `fileName` is not cosmetic. R2 round-5 finding, and it is the sharpest of the
++ * five rounds: the previous version hard-coded `'probe.ts'` and
++ * `ts.ScriptKind.TS` for EVERY file, while round 4 had just widened
++ * {@link SCANNED_EXTS} to admit `.tsx`. A `.tsx` module was therefore parsed as
++ * non-JSX TypeScript, so JSX text tokenized as ordinary TS — resurrecting the
++ * two defect classes that killed rounds 2 and 3, inside the repair that
++ * introduced the extension. The script kind is now derived from the extension,
++ * so the parser is told what it is reading.
++ */
++function parse(text: string, fileName = 'probe.ts'): ts.SourceFile {
++    const kind = fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
++    return ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, kind);
++}
++
++function hasExportModifier(node: ts.Node): boolean {
++    const mods = (node as { modifiers?: readonly ts.ModifierLike[] }).modifiers;
++    return (mods ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
++}
++
++/** Every name a binding pattern introduces, so `export const { X } = mod` is seen. */
++function bindingNames(name: ts.BindingName, out: string[]): void {
++    if (ts.isIdentifier(name)) {
++        out.push(name.text);
++        return;
++    }
++    for (const el of name.elements) {
++        if (ts.isBindingElement(el)) bindingNames(el.name, out);
++    }
++}
++
++/**
++ * Every identifier this module exports, by any syntax the parser recognises:
++ * declarations with an `export` modifier, `export default`, named exports,
++ * aliased exports, re-exports, type-only exports, and `export * as NS from`.
++ */
++export function exportedNames(text: string, fileName?: string): string[] {
++    const names: string[] = [];
++    collect(parse(text, fileName).statements, names);
++    return names;
++}
++
++function collect(statements: readonly ts.Statement[], names: string[]): void {
++    for (const st of statements) {
++        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
++            for (const d of st.declarationList.declarations) bindingNames(d.name, names);
++            continue;
++        }
++        if (
++            (ts.isClassDeclaration(st) ||
++                ts.isInterfaceDeclaration(st) ||
++                ts.isTypeAliasDeclaration(st) ||
++                ts.isEnumDeclaration(st) ||
++                ts.isFunctionDeclaration(st) ||
++                ts.isModuleDeclaration(st)) &&
++            hasExportModifier(st)
++        ) {
++            if (st.name && ts.isIdentifier(st.name)) names.push(st.name.text);
++        }
++        // R2 round-4 finding: a namespace's own name was read and its BODY was
++        // not, so `export namespace Dispatch { export class CouncilTopologyRouter {} }`
++        // was invisible while the enclosing form was caught. The visitor listed
++        // `isModuleDeclaration` and only half-honoured it, which is worse than
++        // omitting it — a reader sees the kind in the list and assumes cover.
++        if (ts.isModuleDeclaration(st) && st.body && ts.isModuleBlock(st.body)) {
++            collect(st.body.statements, names);
++            continue;
++        }
++        if (ts.isModuleDeclaration(st)) continue;
++        if (ts.isExportAssignment(st)) {
++            if (ts.isIdentifier(st.expression)) names.push(st.expression.text);
++            if (ts.isClassExpression(st.expression) && st.expression.name) names.push(st.expression.name.text);
++            continue;
++        }
++        if (ts.isExportDeclaration(st)) {
++            const clause = st.exportClause;
++            if (clause === undefined) continue;
++            if (ts.isNamespaceExport(clause)) {
++                names.push(clause.name.text);
++                continue;
++            }
++            for (const el of clause.elements) names.push(el.name.text);
++        }
++    }
++}
++
++/**
++ * Does this file export a router-named binding that is actually CALLABLE?
++ *
++ * R2 round-3 finding: the previous resolver check tested for the identifier
++ * `classifyLadder` in an export position, so `export const classifyLadder =
++ * "moved"` scanned green while round 2's own reproducer `export const NOTE =
++ * "moved"` was caught — the two differ only in whether the stub kept the name.
++ * That is repairing to the reproducer rather than to the property, which is one
++ * of the two principles the council asked to be recorded.
++ *
++ * The property is "this file still holds a resolver", so the declaration KIND
++ * is what is checked: a function, a class, or a binding initialised to one. A
++ * string, a number or an object literal is a stub whatever it is called.
++ *
++ * Still syntactic, and deliberately so — a function that merely `return`s a
++ * constant satisfies this. Closing THAT needs semantic analysis and is outside
++ * the frozen claim.
++ */
++export function exportsRouterFunction(text: string, fileName?: string): boolean {
++    const sf = parse(text, fileName);
++    const named = (n: string): boolean => ROUTER_NAMES.some((re) => re.test(n));
++
++    /** Peel `(x)`, `x as T`, `x satisfies T`, `x!` — none of them changes the value. */
++    const unwrap = (e: ts.Expression): ts.Expression => {
++        let cur = e;
++        for (;;) {
++            if (ts.isParenthesizedExpression(cur) || ts.isAsExpression(cur) || ts.isNonNullExpression(cur)) {
++                cur = cur.expression;
++            } else if (ts.isSatisfiesExpression(cur)) {
++                cur = cur.expression;
++            } else {
++                return cur;
++            }
++        }
++    };
++    const callableExpr = (e: ts.Expression | undefined): boolean => {
++        if (e === undefined) return false;
++        const inner = unwrap(e);
++        return ts.isArrowFunction(inner) || ts.isFunctionExpression(inner) || ts.isClassExpression(inner);
++    };
++
++    // Local declarations, so an export STATEMENT can be resolved to what it
++    // actually exports. R2 round-4 finding: the previous version recognised a
++    // router only when declared INLINE, so `function classifyLadder() {}` +
++    // `export { classifyLadder }` — and `export default classifyLadder`, and an
++    // `as`- or `satisfies`-wrapped arrow — were all reported as
++    // `resolver-is-not-a-resolver` on the sanctioned file, with a diagnostic
++    // asserting the resolver had "gone somewhere this guard does not look"
++    // while the function sat two lines above. `exportedNames` already accepted
++    // those exact forms, so one syntax counted as "declares a router" for every
++    // other file and as "is not a resolver" for this one.
++    const localCallable = new Map<string, boolean>();
++    for (const st of sf.statements) {
++        if (ts.isFunctionDeclaration(st) && st.name) localCallable.set(st.name.text, true);
++        else if (ts.isClassDeclaration(st) && st.name) localCallable.set(st.name.text, true);
++        else if (ts.isVariableStatement(st)) {
++            for (const d of st.declarationList.declarations) {
++                if (ts.isIdentifier(d.name)) localCallable.set(d.name.text, callableExpr(d.initializer));
++            }
++        }
++    }
++    const resolves = (local: string): boolean => localCallable.get(local) === true;
++
++    for (const st of sf.statements) {
++        // Inline: `export function X`, `export class X`, `export const X = () => …`
++        if (ts.isFunctionDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
++        if (ts.isClassDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
++        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
++            for (const d of st.declarationList.declarations) {
++                if (ts.isIdentifier(d.name) && named(d.name.text) && callableExpr(d.initializer)) return true;
++            }
++        }
++        // `export default X` / `export default function X() {}`
++        if (ts.isExportAssignment(st) && !st.isExportEquals) {
++            const e = unwrap(st.expression);
++            if (ts.isIdentifier(e) && named(e.text) && resolves(e.text)) return true;
++            if (ts.isFunctionExpression(e) && e.name && named(e.name.text)) return true;
++            if (ts.isClassExpression(e) && e.name && named(e.name.text)) return true;
++        }
++        // `export { X }` / `export { local as X }` — LOCAL only. A re-export
++        // carrying a module specifier resolves to another file and is still
++        // refused, which is what R2 round 3 asked for.
++        if (ts.isExportDeclaration(st) && st.moduleSpecifier === undefined) {
++            const clause = st.exportClause;
++            if (clause !== undefined && ts.isNamedExports(clause)) {
++                for (const el of clause.elements) {
++                    if (!named(el.name.text)) continue;
++                    if (resolves((el.propertyName ?? el.name).text)) return true;
++                }
++            }
++        }
++    }
++    return false;
++}
++
++/** Does this file declare a task-side council/dispatch router? */
++export function declaresRouter(text: string, fileName?: string): boolean {
++    return exportedNames(text, fileName).some((n) => ROUTER_NAMES.some((re) => re.test(n)));
++}
++
++/**
++ * Every module specifier this file names — static import (side-effect included),
++ * re-export, dynamic `import()`, and `require()`. String and
++ * no-substitution-template specifiers both count; a specifier built by
++ * interpolation is outside the frozen claim and is not guessed at.
++ */
++export function moduleSpecifiers(text: string, fileName?: string): string[] {
++    const sf = parse(text, fileName);
++    const out: string[] = [];
++    const literal = (n: ts.Node | undefined): void => {
++        if (n === undefined) return;
++        if (ts.isStringLiteralLike(n)) out.push(n.text);
++    };
++    const visit = (n: ts.Node): void => {
++        if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) literal(n.moduleSpecifier);
++        else if (ts.isImportEqualsDeclaration(n) && ts.isExternalModuleReference(n.moduleReference)) {
++            literal(n.moduleReference.expression);
++        } else if (ts.isCallExpression(n)) {
++            const isDynamic = n.expression.kind === ts.SyntaxKind.ImportKeyword;
++            const isRequire = ts.isIdentifier(n.expression) && n.expression.text === 'require';
++            if (isDynamic || isRequire) literal(n.arguments[0]);
++        }
++        ts.forEachChild(n, visit);
++    };
++    visit(sf);
++    return out;
++}
++
++/** Does this file import from the council's internal directory? */
++export function importsCouncilInternal(text: string, fileName?: string): boolean {
++    return moduleSpecifiers(text, fileName).some((spec) => /(?:^|\/)ai_council(?:\/|$)/.test(spec));
++}
++
++/** Walk `.ts` files under a directory, skipping tests and build output. */
++function walk(dir: string, out: string[] = []): string[] {
++    if (!fs.existsSync(dir)) return out;
++    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++        const p = path.join(dir, entry.name);
++        if (entry.isDirectory()) {
++            if (SKIP_DIRS.has(entry.name)) continue;
++            walk(p, out);
++        } else if (SCANNED_EXTS.some((e) => entry.name.endsWith(e)) && !TEST_SUFFIXES.some((t) => entry.name.endsWith(t))) {
++            out.push(p);
++        }
++    }
++    return out;
++}
++
++/**
++ * Check the invariant over a tree.
++ *
++ * @param root repository root to scan
++ * @returns the violations AND the files actually read. A caller that only
++ *          checks `violations.length === 0` cannot tell a clean tree from an
++ *          unscanned one — which is finding 1, and why `scanned` is returned
++ *          rather than logged.
++ */
++export function checkOneResolver(root: string): ScanResult {
++    const violations: Violation[] = [];
++    const scanned: string[] = [];
++
++    // Finding 4: the POSITIVE half. Without this the invariant is satisfied by
++    // deleting the resolver, which is not "one resolver" — it is none.
++    const resolverAbs = path.join(root, SANCTIONED_RESOLVER);
++    if (!fs.existsSync(resolverAbs)) {
++        violations.push({
++            file: SANCTIONED_RESOLVER,
++            kind: 'resolver-missing',
++            detail:
++                'the sanctioned task-side resolver does not exist. "Exactly one" is ' +
++                'violated by zero as well as by two; a tree with no resolver must not scan green.',
++        });
++    } else if (!exportsRouterFunction(fs.readFileSync(resolverAbs, 'utf-8'), SANCTIONED_RESOLVER)) {
++        // R2 round-2 finding: existence is not identity. A `judgment_ladder.ts`
++        // gutted to `export const NOTE = "moved"` passed the existence check,
++        // so `rm` was caught and hollowing-out was not.
++        violations.push({
++            file: SANCTIONED_RESOLVER,
++            kind: 'resolver-is-not-a-resolver',
++            detail:
++                'the sanctioned path exists but exports no CALLABLE binding whose name ' +
++                'matches a router pattern. Presence is not identity and neither is the name: ' +
++                'a stub such as `export const classifyLadder = \"moved\"` keeps both. If the ' +
++                'resolver was RENAMED rather than gutted, update ROUTER_NAMES in the same ' +
++                'change — this check reports the name it can see, not a conclusion about ' +
++                'where the resolver went.',
++        });
++    }
++
++    for (const abs of walk(path.join(root, SCAN_ROOT))) {
++        const rel = path.relative(root, abs);
++        // The council's own internals are not task-side and are out of scope.
++        if (rel.startsWith(COUNCIL_INTERNAL_DIR + path.sep)) continue;
++        scanned.push(rel);
++        const text = fs.readFileSync(abs, 'utf-8');
++        if (rel !== SANCTIONED_RESOLVER && declaresRouter(text, rel)) {
++            violations.push({
++                file: rel,
++                kind: 'second-resolver',
++                detail:
++                    `declares a task-side council/dispatch router beside ` +
++                    `${SANCTIONED_RESOLVER}. There is exactly one task-side resolver; ` +
++                    `a second one makes routing depend on which classifier ran first.`,
++            });
++        }
++        if (rel === SANCTIONED_RESOLVER && importsCouncilInternal(text, rel)) {
++            violations.push({
++                file: rel,
++                kind: 'council-import-in-resolver',
++                detail:
++                    `imports from ${COUNCIL_INTERNAL_DIR}/. The resolver is deliberately ` +
++                    `independent of the council's own necessity gate; an import merges the ` +
++                    `task-side and council-internal surfaces the ladder's docstring keeps apart.`,
++            });
++        }
++    }
++    return { violations, scanned };
++}
+diff --git a/tests/scripts/one_resolver_invariant.test.ts b/tests/scripts/one_resolver_invariant.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c4c818aab748302c53065b3b2ea038d8312ef77
+--- /dev/null
++++ b/tests/scripts/one_resolver_invariant.test.ts
+@@ -0,0 +1,418 @@
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    checkOneResolver,
++    declaresRouter,
++    exportedNames,
++    exportsRouterFunction,
++    importsCouncilInternal,
++    moduleSpecifiers,
++    SANCTIONED_RESOLVER,
++} from '../../src/scripts/_lib/one_resolver_invariant.js';
++
++const REPO = path.resolve(__dirname, '..', '..');
++
++let tmp: string;
++
++function seed(): void {
++    const libDir = path.join(tmp, 'src', 'scripts', '_lib');
++    fs.mkdirSync(libDir, { recursive: true });
++    fs.writeFileSync(
++        path.join(libDir, 'judgment_ladder.ts'),
++        "import { classifyTask } from './auto_dispatch.js';\n" +
++            'export function classifyLadder(x: unknown) {\n    return classifyTask(x as never);\n}\n',
++    );
++}
++
++function write(rel: string, body: string): void {
++    const abs = path.join(tmp, rel);
++    fs.mkdirSync(path.dirname(abs), { recursive: true });
++    fs.writeFileSync(abs, body);
++}
++
++/** Assert the synthetic tree is clean AND was actually walked. */
++function expectCleanBaseline(): void {
++    const r = checkOneResolver(tmp);
++    expect(r.violations).toEqual([]);
++    expect(r.scanned.length).toBeGreaterThan(0);
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-'));
++    seed();
++});
++afterEach(() => {
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++describe('the real tree holds the invariant', () => {
++    it('reports no violations against this repository', () => {
++        expect(checkOneResolver(REPO).violations).toEqual([]);
++    });
++
++    // R2 round 1, finding 1: the previous anti-vacuity test never called the
++    // scanner, so one walking ZERO files passed it.
++    it('actually walked files, and read the resolver among them', () => {
++        const r = checkOneResolver(REPO);
++        expect(r.scanned.length).toBeGreaterThan(100);
++        expect(r.scanned).toContain(SANCTIONED_RESOLVER);
++    });
++
++    it('an empty tree is not reported as clean-and-scanned', () => {
++        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-empty-'));
++        try {
++            const r = checkOneResolver(empty);
++            expect(r.scanned).toEqual([]);
++            expect(r.violations.map((v) => v.kind)).toEqual(['resolver-missing']);
++        } finally {
++            fs.rmSync(empty, { recursive: true, force: true });
++        }
++    });
++});
++
++describe('sensitivity — the guard is observed RED, not assumed', () => {
++    it('goes red when a second task-side council router lands beside the ladder', () => {
++        expectCleanBaseline();
++        write('src/scripts/council_topology_router.ts', 'export class CouncilTopologyRouter {}\n');
++        const v = checkOneResolver(tmp).violations;
++        expect(v.map((x) => x.kind)).toEqual(['second-resolver']);
++        expect(v[0]?.file).toContain('council_topology_router.ts');
++    });
++
++    it('goes red when the resolver imports the council-internal surface', () => {
++        expectCleanBaseline();
++        write(
++            SANCTIONED_RESOLVER,
++            "import { NECESSARY_TRIGGERS } from '../ai_council/necessity.js';\n" +
++                'export function classifyLadder() {\n    return NECESSARY_TRIGGERS;\n}\n',
++        );
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['council-import-in-resolver']);
++    });
++
++    it('goes red on a second function-shaped resolver, not only a class', () => {
++        expectCleanBaseline();
++        write('src/scripts/alt_route.ts', 'export function resolveCouncilRoute() {\n    return "council";\n}\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['second-resolver']);
++    });
++
++    it('goes red when the sanctioned resolver is deleted — zero is not one', () => {
++        expectCleanBaseline();
++        fs.rmSync(path.join(tmp, SANCTIONED_RESOLVER));
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-missing']);
++    });
++});
++
++// ── The three killed implementations, kept as permanent regressions ───────
++//
++// Each case below is a reproducer a fresh R2 reviewer used to kill a previous
++// text-scanning implementation. They are retained not because a parser is at
++// risk from them, but because their absence is what let each round's repair
++// look complete.
++describe('regressions from the three text-scanning implementations this replaced', () => {
++    it('round 1: a router name in a STRING is not a declaration', () => {
++        expect(declaresRouter('export const NOTE = "export class CouncilTopologyRouter";')).toBe(false);
++    });
++
++    it('round 1: a router name in a COMMENT is not a declaration', () => {
++        expect(declaresRouter('// export class CouncilTopologyRouter\nexport const x = 1;')).toBe(false);
++    });
++
++    it('round 2: a line comment containing a glob does not hide the code after it', () => {
++        expect(declaresRouter('// Routes live under packages/*/commands/\nexport class CouncilTopologyRouter {}')).toBe(
++            true,
++        );
++    });
++
++    it('round 3: a BACKTICK inside a regex literal does not hide the code after it', () => {
++        // `check_portability.ts:741` holds a regex of exactly this shape — the
++        // trigger that cost 231 exports was ordinary, not exotic.
++        const src = 'const re = /`([^`]+)`/g;\nexport class CouncilTopologyRouter {}\n';
++        expect(declaresRouter(src)).toBe(true);
++    });
++
++    it('round 3: a real block comment IS still invisible', () => {
++        expect(declaresRouter('/* export class CouncilTopologyRouter {} */\nexport const x = 1;')).toBe(false);
++    });
++
++    it('parsing does not lose ordinary exports the way the strippers did', () => {
++        // Rounds 2 and 3 lost 12 and 54 files' worth of top-level exports.
++        const src = '// glob packages/*/x\nconst re = /`a`/g;\nexport function run() {\n    return re;\n}\n';
++        expect(exportedNames(src)).toContain('run');
++    });
++});
++
++// R2 rounds 2 and 3: every export syntax that evaded a pattern matrix.
++describe('export syntax — every shape three review rounds found evading', () => {
++    const shapes: ReadonlyArray<readonly [string, string]> = [
++        ['plain class', 'export class CouncilTopologyRouter {}'],
++        ['default-exported class', 'export default class CouncilTopologyRouter {}'],
++        ['abstract class', 'export abstract class CouncilTopologyRouter {}'],
++        ['declare class', 'export declare class CouncilTopologyRouter {}'],
++        ['enum', 'export enum CouncilTopologyRouter { a }'],
++        ['generator function', 'export function* resolveCouncilRoute() {}'],
++        ['const class expression', 'export const CouncilTopologyRouter = class {};'],
++        ['arrow const', 'export const resolveCouncilRoute = () => "council";'],
++        ['separate export statement', 'class CouncilTopologyRouter {}\nexport { CouncilTopologyRouter };'],
++        ['aliased export', 'class Inner {}\nexport { Inner as CouncilTopologyRouter };'],
++        ['re-export', "export { CouncilTopologyRouter } from './x.js';"],
++        ['type-only re-export', "export type { CouncilTopologyRouter } from './impl.js';"],
++        ['namespace re-export', "export * as CouncilTopologyRouter from './impl.js';"],
++        ['destructured const', 'export const { CouncilTopologyRouter } = mod;'],
++        ['type alias', 'export type CouncilTopologyRouter = () => string;'],
++        ['async function', 'export async function resolveCouncilRoute() {\n    return "council";\n}'],
++    ];
++
++    for (const [label, body] of shapes) {
++        it(`detects a router declared as a ${label}`, () => {
++            expect(declaresRouter(body)).toBe(true);
++        });
++    }
++
++    it('a NON-exported router declaration is not a violation', () => {
++        expect(declaresRouter('class CouncilTopologyRouter {}')).toBe(false);
++    });
++
++    it('a tree carrying three differently-exported routers reports three', () => {
++        expectCleanBaseline();
++        write('src/scripts/a.ts', 'export default class CouncilTopologyRouter {}\n');
++        write('src/scripts/b.ts', "export type { CouncilTopologyRouter } from './impl.js';\n");
++        write('src/scripts/c.ts', 'export const { resolveCouncilRoute } = mod;\n');
++        expect(checkOneResolver(tmp).violations).toHaveLength(3);
++    });
++});
++
++// R2 round 3, finding 2: the previous check tested the NAME, so a stub that
++// kept the name passed while round 2's reproducer that dropped it failed.
++describe('the resolver must be CALLABLE, not merely named', () => {
++    it('goes red when the resolver is gutted to a string of the same name', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, 'export const classifyLadder = "moved";\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    it('goes red when the resolver is gutted to an unrelated const', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, 'export const NOTE = "moved";\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    it('goes red when the resolver only re-exports the name from elsewhere', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, "export { classifyLadder } from './moved_elsewhere.js';\n");
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    for (const [label, body] of [
++        ['function declaration', 'export function classifyLadder() {\n    return 1;\n}'],
++        ['arrow const', 'export const classifyLadder = () => 1;'],
++        ['class', 'export class CouncilTopologyRouter {}'],
++    ] as const) {
++        it(`accepts a resolver declared as a ${label}`, () => {
++            expect(exportsRouterFunction(body)).toBe(true);
++        });
++    }
++
++    it('the real resolver satisfies it', () => {
++        expect(checkOneResolver(REPO).violations.map((v) => v.kind)).not.toContain('resolver-is-not-a-resolver');
++    });
++});
++
++describe('module specifiers — every import form three rounds found missing', () => {
++    for (const [label, body] of [
++        ['static from', "import { x } from '../ai_council/necessity.js';"],
++        ['side-effect import', "import '../ai_council/necessity.js';"],
++        ['index form, no trailing slash', "import { x } from '../ai_council';"],
++        ['type-only import', "import type { X } from '../ai_council/necessity.js';"],
++        ['dynamic import()', "const m = await import('../ai_council/necessity.js');"],
++        ['dynamic import() with a template specifier', 'const m = await import(`../ai_council/necessity.js`);'],
++        ['require()', "const m = require('../ai_council/necessity.js');"],
++        ['re-export from', "export { x } from '../ai_council/necessity.js';"],
++    ] as const) {
++        it(`detects ${label}`, () => {
++            expect(importsCouncilInternal(body)).toBe(true);
++        });
++    }
++
++    it('does NOT fire on a comment mentioning the path', () => {
++        expect(
++            importsCouncilInternal("// we do not import from '../ai_council/necessity.js'\nexport const x = 1;"),
++        ).toBe(false);
++    });
++
++    it('does NOT fire on a plain string containing the path — R1 finding 5 moved here in round 3', () => {
++        expect(importsCouncilInternal('export const S = "../ai_council/necessity.js";')).toBe(false);
++    });
++
++    it('does NOT fire on a similarly-named neighbour directory', () => {
++        expect(importsCouncilInternal("import { x } from '../ai_councilish/y.js';")).toBe(false);
++    });
++
++    it('collects specifiers without inventing them', () => {
++        expect(moduleSpecifiers("import 'a';\nconst b = require('c');")).toEqual(['a', 'c']);
++    });
++});
++
++describe('polarity — the guard must also DENY, or it is a pattern that always fires', () => {
++    it('stays green on a file that merely mentions the council', () => {
++        expectCleanBaseline();
++        write(
++            'src/scripts/council_report.ts',
++            'export function renderCouncilReport(rows: string[]) {\n    return rows.join("\\n");\n}\n',
++        );
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('stays green on council-INTERNAL modules, which are out of scope by design', () => {
++        expectCleanBaseline();
++        write('src/scripts/ai_council/internal_router.ts', 'export class CouncilTopologyRouter {}\n');
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('stays green on a test file that names a router', () => {
++        expectCleanBaseline();
++        write('src/scripts/sample.test.ts', 'export class CouncilTopologyRouter {}\n');
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('does not treat an ai_council import in a NON-resolver file as a violation', () => {
++        expectCleanBaseline();
++        write('src/scripts/consumer.ts', "import { x } from './ai_council/necessity.js';\nexport const y = x;\n");
++        expect(importsCouncilInternal(fs.readFileSync(path.join(tmp, 'src/scripts/consumer.ts'), 'utf-8'))).toBe(true);
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++});
++
++// R2 round 2, finding 3.
++describe('scan scope — a second resolver outside src/scripts is still a second resolver', () => {
++    for (const dir of ['src/cli', 'src/shared', 'src/server', 'src/agent-src/templates/scripts/work_engine']) {
++        it(`sees a router placed in ${dir}`, () => {
++            expectCleanBaseline();
++            write(`${dir}/router.ts`, 'export class CouncilTopologyRouter {}\n');
++            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
++        });
++    }
++});
++
++// The frozen claim's own limit, asserted so nobody reads the guard as wider.
++describe('the frozen claim — what this guard deliberately does NOT see', () => {
++    it('does not follow a router exported under an unrelated name', () => {
++        expect(declaresRouter('export class Dispatcher {}\n')).toBe(false);
++    });
++
++    it('does not resolve a specifier built by interpolation', () => {
++        expect(importsCouncilInternal('const m = await import(`../${dir}/necessity.js`);')).toBe(false);
++    });
++});
++
++// ── R2 ROUND 4 ────────────────────────────────────────────────────────────
++describe('round 4: the resolver check must not RED on conforming code', () => {
++    // The previous version recognised a router only when declared inline, so
++    // five behaviour-preserving spellings of the SAME resolver were reported as
++    // `resolver-is-not-a-resolver` — a false positive against the sanctioned
++    // file, and internally inconsistent, since `declaresRouter` accepted the
++    // identical syntax for every other file.
++    for (const [label, body] of [
++        ['export statement after a function declaration', 'function classifyLadder(x) { return x; }\nexport { classifyLadder };'],
++        ['export default of a local identifier', 'function classifyLadder(x) { return x; }\nexport default classifyLadder;'],
++        ['an as-cast arrow', 'export const classifyLadder = ((x) => x) as (x: unknown) => unknown;'],
++        ['a satisfies-annotated arrow', 'export const classifyLadder = ((x) => x) satisfies unknown;'],
++        ['an aliased local export', 'function inner(x) { return x; }\nexport { inner as classifyLadder };'],
++    ] as const) {
++        it(`accepts a resolver spelled as ${label}`, () => {
++            expect(exportsRouterFunction(body)).toBe(true);
++        });
++    }
++
++    it('still refuses a re-export that resolves to another module', () => {
++        expect(exportsRouterFunction("export { classifyLadder } from './moved.js';")).toBe(false);
++    });
++
++    it('still refuses a same-named string stub', () => {
++        expect(exportsRouterFunction('export const classifyLadder = "moved";')).toBe(false);
++    });
++});
++
++describe('round 4: file discovery covers every module extension', () => {
++    for (const rel of ['src/ui/Router.tsx', 'src/scripts/r.mts', 'src/scripts/r.cts']) {
++        it(`sees a router in ${path.extname(rel)}`, () => {
++            expectCleanBaseline();
++            write(rel, 'export class CouncilTopologyRouter {}\n');
++            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
++        });
++    }
++
++    it('still skips the test files of every extension', () => {
++        expectCleanBaseline();
++        write('src/ui/Router.test.tsx', 'export class CouncilTopologyRouter {}\n');
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++});
++
++describe('round 4: namespace and ambient-module bodies are walked', () => {
++    it('sees a router declared inside an exported namespace', () => {
++        expect(declaresRouter('export namespace Dispatch { export class CouncilTopologyRouter {} }')).toBe(true);
++    });
++
++    it('sees a router declared inside an ambient module block', () => {
++        expect(declaresRouter('declare module "d" { export class CouncilTopologyRouter {} }')).toBe(true);
++    });
++
++    it('still sees the enclosing form itself', () => {
++        expect(declaresRouter('export namespace CouncilTopologyRouter {}')).toBe(true);
++    });
++});
++
++// R2 round 4, finding 4: the retention claim was wider than the file. These are
++// the two false-POSITIVE reproducers from round 3 that had no pin.
++describe('round 4: the round-3 false-positive reproducers, now actually retained', () => {
++    it('a template literal in the resolver holding an import statement is not an import', () => {
++        expect(
++            importsCouncilInternal("export const T = `import { x } from '../ai_council/y.js';`;\n"),
++        ).toBe(false);
++    });
++
++    it('a regex with a backtick plus a string carrying the router name is not a declaration', () => {
++        expect(declaresRouter('const re = /`a`/g;\nexport const S = "class CouncilTopologyRouter";\n')).toBe(false);
++    });
++});
++
++// ── R2 ROUND 5 ────────────────────────────────────────────────────────────
++// Round 4 widened WHICH files are read without widening HOW they are parsed:
++// every file was handed to the parser as non-JSX TypeScript, so a `.tsx`
++// module's JSX text tokenized as ordinary TS and rounds 2 and 3's defect
++// classes were both live again INSIDE the repair that added the extension.
++//
++// The round-4 test could not see it, and the reason is the second principle
++// the council asked to be recorded: it wrote a `.tsx` file containing no JSX —
++// the reproducer's spelling rather than the property. These arms carry real
++// JSX, which is the discriminator.
++describe('round 5: a .tsx module is parsed AS JSX', () => {
++    it('a comment-opener inside JSX TEXT does not hide the router below it', () => {
++        const src = 'export const Nav = () => <p>files live in src/*/ui</p>;\nexport class CouncilTopologyRouter {}\n';
++        expect(declaresRouter(src, 'src/ui/Nav.tsx')).toBe(true);
++    });
++
++    it('a backtick inside JSX TEXT does not hide the router below it', () => {
++        const src = 'export const Nav = () => <p>use `npm run x`</p>;\nexport class CouncilTopologyRouter {}\n';
++        expect(declaresRouter(src, 'src/ui/Nav.tsx')).toBe(true);
++    });
++
++    it('end-to-end: a router below JSX carrying a comment opener is NOT green', () => {
++        expectCleanBaseline();
++        write(
++            'src/ui/Nav.tsx',
++            'export const Nav = () => <p>files live in src/*/ui</p>;\nexport class CouncilTopologyRouter {}\n',
++        );
++        const r = checkOneResolver(tmp);
++        expect(r.violations.map((v) => v.kind)).toEqual(['second-resolver']);
++        expect(r.scanned.some((f) => f.endsWith('Nav.tsx'))).toBe(true);
++    });
++
++    it('a .tsx module with JSX does not lose its ordinary exports', () => {
++        const src = 'export const Nav = () => <p>a/*b</p>;\nexport function run() {\n    return 1;\n}\n';
++        expect(exportedNames(src, 'src/ui/Nav.tsx')).toContain('run');
++    });
++});

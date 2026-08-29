@@ -1,0 +1,750 @@
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+index c8b001b07bbd49df704f08fa1960546b2b0565fc..c648aa8bdf24cff6a4b99c9f09f22e682a7ea7a5 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+@@ -167,13 +167,104 @@ called a larger risk than feature absence.
+   texts. Rewrite anything substantively verbatim.
+       verify: the evidence file records the scan result **and** the commits
+       read; blocked on `blocker: unlicensed-source-verbatim-scan`
+-- [ ] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
++- [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
+   `judgment_ladder.ts` stays the one task-side resolver, no
+   `CouncilTopologyRouter` beside it, topology refinement begins only after the
+   ladder resolves to `council`, `necessity.ts` keeps its council-internal role.
+       verify: a deliberately-added second task-side council router makes the
+       new architecture test fail; sabotage the guard, watch it go red, restore
+ 
++      **Closed 2026-08-29, after three review rounds killed three
++      implementations.** The invariant was documented and enforced by nothing:
++      `judgment_ladder.ts`'s docstring states all three clauses — one resolver,
++      "never a fourth parallel classifier bolted on beside it", and
++      "deliberately independent of `ai_council/necessity.ts`" — and a docstring
++      cannot fail. A second task-side council router could have landed beside
++      the ladder with every gate in this tree green.
++
++      Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
++      `tests/scripts/one_resolver_invariant.test.ts` — **60 tests, all green**;
++      `tsc --noEmit` and `eslint` clean.
++
++      **It parses. It does not lex, and that is the whole finding.** Three
++      fresh-subagent R2 rounds — each dispatched at a deterministically
++      generated package, none of them authored by the implementing session —
++      killed three successive text-scanning implementations, and each defect
++      was introduced by the repair for the last:
++
++      | Round | Approach | What the reviewer measured |
++      |---|---|---|
++      | 1 | no comment/string handling | false POSITIVE: a router name in a comment or a string counted as a declaration |
++      | 2 | ordered regexes, block comments stripped first | false NEGATIVE: a `//` comment containing a glob opened a spurious block comment. **12 files under `src/` lost top-level exports** |
++      | 3 | hand-written single-pass character scanner | false NEGATIVE, **worse**: a backtick inside a *regex literal* read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost**, plus a reachable false positive |
++
++      Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
++      contains a regex with a backtick in it. Round 1's headline was sharper
++      still — the test advertised as "guards the guard" never called the scanner
++      at all, so one walking **zero files** passed it, which is precisely the
++      failure it claimed to exclude.
++
++      **The N=3 budget fired and the decision went to the AI council, which
++      SPLIT.** One seat argued for withdrawing the guard and enforcing the
++      invariant by review; one for parsing with the TypeScript compiler API.
++      Both refused another hand-lexing round, and — decisively — **both
++      classified withdrawal and narrowing as owner-reserved**, since each
++      changes what "done" guarantees. Parsing was therefore the only option
++      either seat permits a council to execute, and it is what landed. The
++      withdrawal option is recorded here as a live owner decision, not as a road
++      not taken.
++
++      Both seats asked the same two principles be recorded:
++
++      > A gate must not implement a partial lexer or parser for a language when
++      > an authoritative parser for it is already a dependency.
++
++      > A repair is tested against the violated PROPERTY and representative
++      > mutations, never against the reproducer's literal spelling.
++
++      The second explains the pattern the reviewers kept finding underneath the
++      lexing bugs. The clearest instance: the resolver check tested for the
++      identifier `classifyLadder`, so round 2's reproducer
++      `export const NOTE = "moved"` was caught while
++      `export const classifyLadder = "moved"` — the same stub keeping the name —
++      scanned green. It now tests the declaration KIND, so a resolver must be
++      callable rather than merely named.
++
++      **The frozen claim, stated so nobody reads the guard as wider.** It
++      asserts syntactically that no module outside the sanctioned resolver
++      exports a binding whose NAME matches a router pattern, in any export form
++      the parser recognises; that the resolver itself exports a callable one;
++      and that the resolver names no council-internal module in any import,
++      re-export, dynamic-import or `require` specifier. It asserts **nothing**
++      requiring symbol resolution or a module graph — a router exported under an
++      unrelated name is outside the claim, and two tests pin that limit so it
++      cannot be quietly read as coverage.
++
++      **Sensitivity and polarity, both established rather than assumed.** Four
++      sensitivity arms add a defect and observe the guard go red, each asserting
++      the baseline clean **and non-empty** first: a second router beside the
++      ladder, a function-shaped one, an `ai_council` import in the resolver, and
++      the resolver deleted. Five denial arms must stay green — a file that
++      merely mentions the council, a council-INTERNAL module even when it
++      literally declares `CouncilTopologyRouter`, a `.test.ts` naming one, a
++      router name inside a comment or a string, and an `ai_council` import in a
++      non-resolver file. Every reproducer from all three killed rounds is
++      retained as a permanent regression, because their absence is exactly what
++      let each round's repair look complete.
++
++      **Anti-vacuity is asserted on the scanner's own report**, which was round
++      1's correction: `checkOneResolver` returns `{ violations, scanned }`, the
++      real-tree test asserts `scanned` exceeds 100 files and contains
++      `judgment_ladder.ts` by path, and an empty directory is driven to pin the
++      pair a vacuous scan produces.
++
++      **What this step does NOT close:** the third clause of 0.5, "topology
++      refinement begins only after the ladder resolves to `council`", is a
++      sequencing property of code that does not exist — no topology refiner is
++      built — so any check for it today would pass vacuously. It is left to the
++      phase that builds one.
++
++
+ ## Phase 1 — Stop paying for information the tree already has
+ 
+ Deliberately before any sophisticated routing: the cheapest quality improvement
+diff --git a/src/scripts/_lib/one_resolver_invariant.ts b/src/scripts/_lib/one_resolver_invariant.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..56817e8823980f12c41458da428457925fa50e9f
+--- /dev/null
++++ b/src/scripts/_lib/one_resolver_invariant.ts
+@@ -0,0 +1,320 @@
++/**
++ * The one-resolver invariant, made checkable.
++ *
++ * `judgment_ladder.ts` is the ONE task-side resolver that decides which
++ * dispatch rung a task takes, council included. Its own module docstring says
++ * so, and says two further things that were equally unenforced: that no fourth
++ * parallel classifier may be "bolted on beside it", and that it is
++ * "deliberately independent of `ai_council/necessity.ts`", the council's OWN
++ * council-internal necessity gate.
++ *
++ * All three were prose. A docstring cannot fail, so a second task-side council
++ * router could land beside the ladder and every gate in this tree would stay
++ * green — which is what
++ * `road-to-inbox-harvest-2026-08-e-council-topology-evidence` step 0.5 asks to
++ * be closed: "lock the one-resolver invariant in documentation AND in a test".
++ *
++ * ## This file PARSES. It does not lex. That is the whole point.
++ *
++ * Three successive R2 review rounds killed three successive text-scanning
++ * implementations, each defect introduced by the repair for the last:
++ *
++ * | Round | Approach | What a fresh reviewer measured |
++ * |---|---|---|
++ * | 1 | no comment/string handling | false POSITIVE: a router name in a comment or string counted as a declaration |
++ * | 2 | ordered regexes, block comments first | false NEGATIVE: a line comment containing a glob opened a spurious block comment. 12 files under `src/` lost top-level exports |
++ * | 3 | hand-written character scanner | false NEGATIVE, worse: a backtick inside a REGEX LITERAL read as a template opener, and templates do not end at a newline. **54 files, 231 exports lost** |
++ *
++ * Round 3's trigger was ordinary, not exotic: `check_portability.ts:741`
++ * contains a regex with a backtick in it.
++ *
++ * The AI council was asked for guidance at the N=3 budget and **split** —
++ * one seat for withdrawing the guard, one for parsing properly. Both seats
++ * classified withdrawal and narrowing as OWNER-RESERVED and both refused
++ * another hand-lexing round, so parsing is the only option a council may
++ * execute. Both recorded the same principle:
++ *
++ * > A gate must not implement a partial lexer or parser for a language when an
++ * > authoritative parser for it is already a dependency.
++ *
++ * and a second, which is the one that explains three rounds of near-misses:
++ *
++ * > A repair is tested against the violated PROPERTY and representative
++ * > mutations, never against the reproducer's literal spelling.
++ *
++ * `typescript` is already a dependency. Comments, strings, template literals
++ * and regex literals are therefore the parser's problem, which is where they
++ * belong, and the entire defect class above is gone rather than relocated.
++ *
++ * ## The frozen claim — what this guard does and does not assert
++ *
++ * **Asserts, syntactically:** no module outside the sanctioned resolver
++ * EXPORTS A BINDING WHOSE NAME matches a router pattern, in any export form the
++ * TypeScript parser recognises; the sanctioned resolver itself exports one; and
++ * the sanctioned resolver names no council-internal module in any import,
++ * re-export, dynamic import or `require` specifier.
++ *
++ * **Does NOT assert, and no reading of it should:** anything requiring symbol
++ * resolution or a module graph. A router exported under an unrelated name, or
++ * reached through an alias chain this file cannot follow, is outside the claim.
++ * Closing that needs semantic analysis and is a separate decision.
++ */
++import fs from 'node:fs';
++import path from 'node:path';
++import ts from 'typescript';
++
++/** The single sanctioned task-side resolver, repo-relative. */
++export const SANCTIONED_RESOLVER = path.join('src', 'scripts', '_lib', 'judgment_ladder.ts');
++
++/** The council's own internal surface. The resolver does not import from it. */
++export const COUNCIL_INTERNAL_DIR = path.join('src', 'scripts', 'ai_council');
++
++/** Root walked by {@link checkOneResolver}, repo-relative. */
++export const SCAN_ROOT = 'src';
++
++/** Directory names never walked. */
++const SKIP_DIRS = new Set(['node_modules', '__tests__', 'dist', '.git']);
++
++/** Names that mark an exported binding as a task-side council/dispatch ROUTER. */
++export const ROUTER_NAMES: readonly RegExp[] = [
++    /^\w*Council\w*Router$/,
++    /^classifyLadder$/,
++    /^\w*resolveCouncilRoute\w*$/,
++];
++
++export interface Violation {
++    readonly file: string;
++    readonly kind:
++        | 'second-resolver'
++        | 'council-import-in-resolver'
++        | 'resolver-missing'
++        | 'resolver-is-not-a-resolver';
++    readonly detail: string;
++}
++
++export interface ScanResult {
++    readonly violations: readonly Violation[];
++    /** Every file actually read, repo-relative. Empty means the scan found nothing to look at. */
++    readonly scanned: readonly string[];
++}
++
++function parse(text: string): ts.SourceFile {
++    return ts.createSourceFile('probe.ts', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
++}
++
++function hasExportModifier(node: ts.Node): boolean {
++    const mods = (node as { modifiers?: readonly ts.ModifierLike[] }).modifiers;
++    return (mods ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
++}
++
++/** Every name a binding pattern introduces, so `export const { X } = mod` is seen. */
++function bindingNames(name: ts.BindingName, out: string[]): void {
++    if (ts.isIdentifier(name)) {
++        out.push(name.text);
++        return;
++    }
++    for (const el of name.elements) {
++        if (ts.isBindingElement(el)) bindingNames(el.name, out);
++    }
++}
++
++/**
++ * Every identifier this module exports, by any syntax the parser recognises:
++ * declarations with an `export` modifier, `export default`, named exports,
++ * aliased exports, re-exports, type-only exports, and `export * as NS from`.
++ */
++export function exportedNames(text: string): string[] {
++    const sf = parse(text);
++    const names: string[] = [];
++    for (const st of sf.statements) {
++        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
++            for (const d of st.declarationList.declarations) bindingNames(d.name, names);
++            continue;
++        }
++        if (
++            (ts.isClassDeclaration(st) ||
++                ts.isInterfaceDeclaration(st) ||
++                ts.isTypeAliasDeclaration(st) ||
++                ts.isEnumDeclaration(st) ||
++                ts.isFunctionDeclaration(st) ||
++                ts.isModuleDeclaration(st)) &&
++            hasExportModifier(st)
++        ) {
++            if (st.name && ts.isIdentifier(st.name)) names.push(st.name.text);
++            continue;
++        }
++        if (ts.isExportAssignment(st)) {
++            if (ts.isIdentifier(st.expression)) names.push(st.expression.text);
++            if (ts.isClassExpression(st.expression) && st.expression.name) names.push(st.expression.name.text);
++            continue;
++        }
++        if (ts.isExportDeclaration(st)) {
++            const clause = st.exportClause;
++            if (clause === undefined) continue;
++            if (ts.isNamespaceExport(clause)) {
++                names.push(clause.name.text);
++                continue;
++            }
++            for (const el of clause.elements) names.push(el.name.text);
++        }
++    }
++    return names;
++}
++
++/**
++ * Does this file export a router-named binding that is actually CALLABLE?
++ *
++ * R2 round-3 finding: the previous resolver check tested for the identifier
++ * `classifyLadder` in an export position, so `export const classifyLadder =
++ * "moved"` scanned green while round 2's own reproducer `export const NOTE =
++ * "moved"` was caught — the two differ only in whether the stub kept the name.
++ * That is repairing to the reproducer rather than to the property, which is one
++ * of the two principles the council asked to be recorded.
++ *
++ * The property is "this file still holds a resolver", so the declaration KIND
++ * is what is checked: a function, a class, or a binding initialised to one. A
++ * string, a number or an object literal is a stub whatever it is called.
++ *
++ * Still syntactic, and deliberately so — a function that merely `return`s a
++ * constant satisfies this. Closing THAT needs semantic analysis and is outside
++ * the frozen claim.
++ */
++export function exportsRouterFunction(text: string): boolean {
++    const sf = parse(text);
++    const named = (n: string): boolean => ROUTER_NAMES.some((re) => re.test(n));
++    const callable = (init: ts.Expression | undefined): boolean =>
++        init !== undefined &&
++        (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || ts.isClassExpression(init));
++    for (const st of sf.statements) {
++        if (ts.isFunctionDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
++        if (ts.isClassDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
++        if (ts.isVariableStatement(st) && hasExportModifier(st)) {
++            for (const d of st.declarationList.declarations) {
++                if (ts.isIdentifier(d.name) && named(d.name.text) && callable(d.initializer)) return true;
++            }
++        }
++    }
++    return false;
++}
++
++/** Does this file declare a task-side council/dispatch router? */
++export function declaresRouter(text: string): boolean {
++    return exportedNames(text).some((n) => ROUTER_NAMES.some((re) => re.test(n)));
++}
++
++/**
++ * Every module specifier this file names — static import (side-effect included),
++ * re-export, dynamic `import()`, and `require()`. String and
++ * no-substitution-template specifiers both count; a specifier built by
++ * interpolation is outside the frozen claim and is not guessed at.
++ */
++export function moduleSpecifiers(text: string): string[] {
++    const sf = parse(text);
++    const out: string[] = [];
++    const literal = (n: ts.Node | undefined): void => {
++        if (n === undefined) return;
++        if (ts.isStringLiteralLike(n)) out.push(n.text);
++    };
++    const visit = (n: ts.Node): void => {
++        if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) literal(n.moduleSpecifier);
++        else if (ts.isImportEqualsDeclaration(n) && ts.isExternalModuleReference(n.moduleReference)) {
++            literal(n.moduleReference.expression);
++        } else if (ts.isCallExpression(n)) {
++            const isDynamic = n.expression.kind === ts.SyntaxKind.ImportKeyword;
++            const isRequire = ts.isIdentifier(n.expression) && n.expression.text === 'require';
++            if (isDynamic || isRequire) literal(n.arguments[0]);
++        }
++        ts.forEachChild(n, visit);
++    };
++    visit(sf);
++    return out;
++}
++
++/** Does this file import from the council's internal directory? */
++export function importsCouncilInternal(text: string): boolean {
++    return moduleSpecifiers(text).some((spec) => /(?:^|\/)ai_council(?:\/|$)/.test(spec));
++}
++
++/** Walk `.ts` files under a directory, skipping tests and build output. */
++function walk(dir: string, out: string[] = []): string[] {
++    if (!fs.existsSync(dir)) return out;
++    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++        const p = path.join(dir, entry.name);
++        if (entry.isDirectory()) {
++            if (SKIP_DIRS.has(entry.name)) continue;
++            walk(p, out);
++        } else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) {
++            out.push(p);
++        }
++    }
++    return out;
++}
++
++/**
++ * Check the invariant over a tree.
++ *
++ * @param root repository root to scan
++ * @returns the violations AND the files actually read. A caller that only
++ *          checks `violations.length === 0` cannot tell a clean tree from an
++ *          unscanned one — which is finding 1, and why `scanned` is returned
++ *          rather than logged.
++ */
++export function checkOneResolver(root: string): ScanResult {
++    const violations: Violation[] = [];
++    const scanned: string[] = [];
++
++    // Finding 4: the POSITIVE half. Without this the invariant is satisfied by
++    // deleting the resolver, which is not "one resolver" — it is none.
++    const resolverAbs = path.join(root, SANCTIONED_RESOLVER);
++    if (!fs.existsSync(resolverAbs)) {
++        violations.push({
++            file: SANCTIONED_RESOLVER,
++            kind: 'resolver-missing',
++            detail:
++                'the sanctioned task-side resolver does not exist. "Exactly one" is ' +
++                'violated by zero as well as by two; a tree with no resolver must not scan green.',
++        });
++    } else if (!exportsRouterFunction(fs.readFileSync(resolverAbs, 'utf-8'))) {
++        // R2 round-2 finding: existence is not identity. A `judgment_ladder.ts`
++        // gutted to `export const NOTE = "moved"` passed the existence check,
++        // so `rm` was caught and hollowing-out was not.
++        violations.push({
++            file: SANCTIONED_RESOLVER,
++            kind: 'resolver-is-not-a-resolver',
++            detail:
++                'the sanctioned path exists but exports no CALLABLE router-named binding. ' +
++                'Presence is not identity, and neither is the name: a stub such as ' +
++                '`export const classifyLadder = \"moved\"` keeps both while the resolver ' +
++                'it anchors has gone somewhere this guard does not look.',
++        });
++    }
++
++    for (const abs of walk(path.join(root, SCAN_ROOT))) {
++        const rel = path.relative(root, abs);
++        // The council's own internals are not task-side and are out of scope.
++        if (rel.startsWith(COUNCIL_INTERNAL_DIR + path.sep)) continue;
++        scanned.push(rel);
++        const text = fs.readFileSync(abs, 'utf-8');
++        if (rel !== SANCTIONED_RESOLVER && declaresRouter(text)) {
++            violations.push({
++                file: rel,
++                kind: 'second-resolver',
++                detail:
++                    `declares a task-side council/dispatch router beside ` +
++                    `${SANCTIONED_RESOLVER}. There is exactly one task-side resolver; ` +
++                    `a second one makes routing depend on which classifier ran first.`,
++            });
++        }
++        if (rel === SANCTIONED_RESOLVER && importsCouncilInternal(text)) {
++            violations.push({
++                file: rel,
++                kind: 'council-import-in-resolver',
++                detail:
++                    `imports from ${COUNCIL_INTERNAL_DIR}/. The resolver is deliberately ` +
++                    `independent of the council's own necessity gate; an import merges the ` +
++                    `task-side and council-internal surfaces the ladder's docstring keeps apart.`,
++            });
++        }
++    }
++    return { violations, scanned };
++}
+diff --git a/tests/scripts/one_resolver_invariant.test.ts b/tests/scripts/one_resolver_invariant.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e766dfc8e36a15c1c7c1c97838a962c15efb329b
+--- /dev/null
++++ b/tests/scripts/one_resolver_invariant.test.ts
+@@ -0,0 +1,308 @@
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    checkOneResolver,
++    declaresRouter,
++    exportedNames,
++    exportsRouterFunction,
++    importsCouncilInternal,
++    moduleSpecifiers,
++    SANCTIONED_RESOLVER,
++} from '../../src/scripts/_lib/one_resolver_invariant.js';
++
++const REPO = path.resolve(__dirname, '..', '..');
++
++let tmp: string;
++
++function seed(): void {
++    const libDir = path.join(tmp, 'src', 'scripts', '_lib');
++    fs.mkdirSync(libDir, { recursive: true });
++    fs.writeFileSync(
++        path.join(libDir, 'judgment_ladder.ts'),
++        "import { classifyTask } from './auto_dispatch.js';\n" +
++            'export function classifyLadder(x: unknown) {\n    return classifyTask(x as never);\n}\n',
++    );
++}
++
++function write(rel: string, body: string): void {
++    const abs = path.join(tmp, rel);
++    fs.mkdirSync(path.dirname(abs), { recursive: true });
++    fs.writeFileSync(abs, body);
++}
++
++/** Assert the synthetic tree is clean AND was actually walked. */
++function expectCleanBaseline(): void {
++    const r = checkOneResolver(tmp);
++    expect(r.violations).toEqual([]);
++    expect(r.scanned.length).toBeGreaterThan(0);
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-'));
++    seed();
++});
++afterEach(() => {
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++describe('the real tree holds the invariant', () => {
++    it('reports no violations against this repository', () => {
++        expect(checkOneResolver(REPO).violations).toEqual([]);
++    });
++
++    // R2 round 1, finding 1: the previous anti-vacuity test never called the
++    // scanner, so one walking ZERO files passed it.
++    it('actually walked files, and read the resolver among them', () => {
++        const r = checkOneResolver(REPO);
++        expect(r.scanned.length).toBeGreaterThan(100);
++        expect(r.scanned).toContain(SANCTIONED_RESOLVER);
++    });
++
++    it('an empty tree is not reported as clean-and-scanned', () => {
++        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-empty-'));
++        try {
++            const r = checkOneResolver(empty);
++            expect(r.scanned).toEqual([]);
++            expect(r.violations.map((v) => v.kind)).toEqual(['resolver-missing']);
++        } finally {
++            fs.rmSync(empty, { recursive: true, force: true });
++        }
++    });
++});
++
++describe('sensitivity — the guard is observed RED, not assumed', () => {
++    it('goes red when a second task-side council router lands beside the ladder', () => {
++        expectCleanBaseline();
++        write('src/scripts/council_topology_router.ts', 'export class CouncilTopologyRouter {}\n');
++        const v = checkOneResolver(tmp).violations;
++        expect(v.map((x) => x.kind)).toEqual(['second-resolver']);
++        expect(v[0]?.file).toContain('council_topology_router.ts');
++    });
++
++    it('goes red when the resolver imports the council-internal surface', () => {
++        expectCleanBaseline();
++        write(
++            SANCTIONED_RESOLVER,
++            "import { NECESSARY_TRIGGERS } from '../ai_council/necessity.js';\n" +
++                'export function classifyLadder() {\n    return NECESSARY_TRIGGERS;\n}\n',
++        );
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['council-import-in-resolver']);
++    });
++
++    it('goes red on a second function-shaped resolver, not only a class', () => {
++        expectCleanBaseline();
++        write('src/scripts/alt_route.ts', 'export function resolveCouncilRoute() {\n    return "council";\n}\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['second-resolver']);
++    });
++
++    it('goes red when the sanctioned resolver is deleted — zero is not one', () => {
++        expectCleanBaseline();
++        fs.rmSync(path.join(tmp, SANCTIONED_RESOLVER));
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-missing']);
++    });
++});
++
++// ── The three killed implementations, kept as permanent regressions ───────
++//
++// Each case below is a reproducer a fresh R2 reviewer used to kill a previous
++// text-scanning implementation. They are retained not because a parser is at
++// risk from them, but because their absence is what let each round's repair
++// look complete.
++describe('regressions from the three text-scanning implementations this replaced', () => {
++    it('round 1: a router name in a STRING is not a declaration', () => {
++        expect(declaresRouter('export const NOTE = "export class CouncilTopologyRouter";')).toBe(false);
++    });
++
++    it('round 1: a router name in a COMMENT is not a declaration', () => {
++        expect(declaresRouter('// export class CouncilTopologyRouter\nexport const x = 1;')).toBe(false);
++    });
++
++    it('round 2: a line comment containing a glob does not hide the code after it', () => {
++        expect(declaresRouter('// Routes live under packages/*/commands/\nexport class CouncilTopologyRouter {}')).toBe(
++            true,
++        );
++    });
++
++    it('round 3: a BACKTICK inside a regex literal does not hide the code after it', () => {
++        // `check_portability.ts:741` holds a regex of exactly this shape — the
++        // trigger that cost 231 exports was ordinary, not exotic.
++        const src = 'const re = /`([^`]+)`/g;\nexport class CouncilTopologyRouter {}\n';
++        expect(declaresRouter(src)).toBe(true);
++    });
++
++    it('round 3: a real block comment IS still invisible', () => {
++        expect(declaresRouter('/* export class CouncilTopologyRouter {} */\nexport const x = 1;')).toBe(false);
++    });
++
++    it('parsing does not lose ordinary exports the way the strippers did', () => {
++        // Rounds 2 and 3 lost 12 and 54 files' worth of top-level exports.
++        const src = '// glob packages/*/x\nconst re = /`a`/g;\nexport function run() {\n    return re;\n}\n';
++        expect(exportedNames(src)).toContain('run');
++    });
++});
++
++// R2 rounds 2 and 3: every export syntax that evaded a pattern matrix.
++describe('export syntax — every shape three review rounds found evading', () => {
++    const shapes: ReadonlyArray<readonly [string, string]> = [
++        ['plain class', 'export class CouncilTopologyRouter {}'],
++        ['default-exported class', 'export default class CouncilTopologyRouter {}'],
++        ['abstract class', 'export abstract class CouncilTopologyRouter {}'],
++        ['declare class', 'export declare class CouncilTopologyRouter {}'],
++        ['enum', 'export enum CouncilTopologyRouter { a }'],
++        ['generator function', 'export function* resolveCouncilRoute() {}'],
++        ['const class expression', 'export const CouncilTopologyRouter = class {};'],
++        ['arrow const', 'export const resolveCouncilRoute = () => "council";'],
++        ['separate export statement', 'class CouncilTopologyRouter {}\nexport { CouncilTopologyRouter };'],
++        ['aliased export', 'class Inner {}\nexport { Inner as CouncilTopologyRouter };'],
++        ['re-export', "export { CouncilTopologyRouter } from './x.js';"],
++        ['type-only re-export', "export type { CouncilTopologyRouter } from './impl.js';"],
++        ['namespace re-export', "export * as CouncilTopologyRouter from './impl.js';"],
++        ['destructured const', 'export const { CouncilTopologyRouter } = mod;'],
++        ['type alias', 'export type CouncilTopologyRouter = () => string;'],
++        ['async function', 'export async function resolveCouncilRoute() {\n    return "council";\n}'],
++    ];
++
++    for (const [label, body] of shapes) {
++        it(`detects a router declared as a ${label}`, () => {
++            expect(declaresRouter(body)).toBe(true);
++        });
++    }
++
++    it('a NON-exported router declaration is not a violation', () => {
++        expect(declaresRouter('class CouncilTopologyRouter {}')).toBe(false);
++    });
++
++    it('a tree carrying three differently-exported routers reports three', () => {
++        expectCleanBaseline();
++        write('src/scripts/a.ts', 'export default class CouncilTopologyRouter {}\n');
++        write('src/scripts/b.ts', "export type { CouncilTopologyRouter } from './impl.js';\n");
++        write('src/scripts/c.ts', 'export const { resolveCouncilRoute } = mod;\n');
++        expect(checkOneResolver(tmp).violations).toHaveLength(3);
++    });
++});
++
++// R2 round 3, finding 2: the previous check tested the NAME, so a stub that
++// kept the name passed while round 2's reproducer that dropped it failed.
++describe('the resolver must be CALLABLE, not merely named', () => {
++    it('goes red when the resolver is gutted to a string of the same name', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, 'export const classifyLadder = "moved";\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    it('goes red when the resolver is gutted to an unrelated const', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, 'export const NOTE = "moved";\n');
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    it('goes red when the resolver only re-exports the name from elsewhere', () => {
++        expectCleanBaseline();
++        write(SANCTIONED_RESOLVER, "export { classifyLadder } from './moved_elsewhere.js';\n");
++        expect(checkOneResolver(tmp).violations.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
++    });
++
++    for (const [label, body] of [
++        ['function declaration', 'export function classifyLadder() {\n    return 1;\n}'],
++        ['arrow const', 'export const classifyLadder = () => 1;'],
++        ['class', 'export class CouncilTopologyRouter {}'],
++    ] as const) {
++        it(`accepts a resolver declared as a ${label}`, () => {
++            expect(exportsRouterFunction(body)).toBe(true);
++        });
++    }
++
++    it('the real resolver satisfies it', () => {
++        expect(checkOneResolver(REPO).violations.map((v) => v.kind)).not.toContain('resolver-is-not-a-resolver');
++    });
++});
++
++describe('module specifiers — every import form three rounds found missing', () => {
++    for (const [label, body] of [
++        ['static from', "import { x } from '../ai_council/necessity.js';"],
++        ['side-effect import', "import '../ai_council/necessity.js';"],
++        ['index form, no trailing slash', "import { x } from '../ai_council';"],
++        ['type-only import', "import type { X } from '../ai_council/necessity.js';"],
++        ['dynamic import()', "const m = await import('../ai_council/necessity.js');"],
++        ['dynamic import() with a template specifier', 'const m = await import(`../ai_council/necessity.js`);'],
++        ['require()', "const m = require('../ai_council/necessity.js');"],
++        ['re-export from', "export { x } from '../ai_council/necessity.js';"],
++    ] as const) {
++        it(`detects ${label}`, () => {
++            expect(importsCouncilInternal(body)).toBe(true);
++        });
++    }
++
++    it('does NOT fire on a comment mentioning the path', () => {
++        expect(
++            importsCouncilInternal("// we do not import from '../ai_council/necessity.js'\nexport const x = 1;"),
++        ).toBe(false);
++    });
++
++    it('does NOT fire on a plain string containing the path — R1 finding 5 moved here in round 3', () => {
++        expect(importsCouncilInternal('export const S = "../ai_council/necessity.js";')).toBe(false);
++    });
++
++    it('does NOT fire on a similarly-named neighbour directory', () => {
++        expect(importsCouncilInternal("import { x } from '../ai_councilish/y.js';")).toBe(false);
++    });
++
++    it('collects specifiers without inventing them', () => {
++        expect(moduleSpecifiers("import 'a';\nconst b = require('c');")).toEqual(['a', 'c']);
++    });
++});
++
++describe('polarity — the guard must also DENY, or it is a pattern that always fires', () => {
++    it('stays green on a file that merely mentions the council', () => {
++        expectCleanBaseline();
++        write(
++            'src/scripts/council_report.ts',
++            'export function renderCouncilReport(rows: string[]) {\n    return rows.join("\\n");\n}\n',
++        );
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('stays green on council-INTERNAL modules, which are out of scope by design', () => {
++        expectCleanBaseline();
++        write('src/scripts/ai_council/internal_router.ts', 'export class CouncilTopologyRouter {}\n');
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('stays green on a test file that names a router', () => {
++        expectCleanBaseline();
++        write('src/scripts/sample.test.ts', 'export class CouncilTopologyRouter {}\n');
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++
++    it('does not treat an ai_council import in a NON-resolver file as a violation', () => {
++        expectCleanBaseline();
++        write('src/scripts/consumer.ts', "import { x } from './ai_council/necessity.js';\nexport const y = x;\n");
++        expect(importsCouncilInternal(fs.readFileSync(path.join(tmp, 'src/scripts/consumer.ts'), 'utf-8'))).toBe(true);
++        expect(checkOneResolver(tmp).violations).toEqual([]);
++    });
++});
++
++// R2 round 2, finding 3.
++describe('scan scope — a second resolver outside src/scripts is still a second resolver', () => {
++    for (const dir of ['src/cli', 'src/shared', 'src/server', 'src/agent-src/templates/scripts/work_engine']) {
++        it(`sees a router placed in ${dir}`, () => {
++            expectCleanBaseline();
++            write(`${dir}/router.ts`, 'export class CouncilTopologyRouter {}\n');
++            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
++        });
++    }
++});
++
++// The frozen claim's own limit, asserted so nobody reads the guard as wider.
++describe('the frozen claim — what this guard deliberately does NOT see', () => {
++    it('does not follow a router exported under an unrelated name', () => {
++        expect(declaresRouter('export class Dispatcher {}\n')).toBe(false);
++    });
++
++    it('does not resolve a specifier built by interpolation', () => {
++        expect(importsCouncilInternal('const m = await import(`../${dir}/necessity.js`);')).toBe(false);
++    });
++});
