@@ -108,7 +108,14 @@ parents must restate the letter's meaning rather than carry it.
       is the 0.27 % dispatch capture this roadmap cites in 1.1 — a collector
       whose consumer arrived after the data did.
       verify: a metric added without those three fields fails the lint.
-- [ ] **0.4 Settle estate placement.** See E1.
+- [x] **0.4 Settle estate placement.** See E1.
+
+      **Closed 2026-08-29.** E1 resolved by AI council 2/2 to **(b) stay
+      separate**, with every named overlap assigned a single canonical owner and
+      duplicate completion claims prohibited. The estate argument that E1 leaned
+      on was withdrawn — its number was stale *and* the property it appealed to
+      is a ratchet invariant rather than evidence. A fold is recorded as
+      owner-reserved and was not taken.
 
 ## Phase 1 — Broaden capture
 
@@ -394,9 +401,46 @@ parents must restate the letter's meaning rather than carry it.
 
 ## Blockers
 
-### runtime-consumption-of-experience
+> **REPAIRED 2026-08-29 — both entries below were invisible to every gate and to
+> the dashboard.** They were written as `### <slug>` without the literal
+> `blocker:` prefix. `lint_roadmap_blockers.ts:40` matches
+> `/^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/gim`, so neither entry parsed:
+> `agent-config gates --all --json` returned **zero** blockers for this file
+> while two live, maintainer-owned decisions sat in it, and `check_estate_count`
+> counted neither. A roadmap advertising no blockers while carrying two is a
+> silent miscount in the tracking layer, not a formatting nit — the gate is the
+> only thing that surfaces these to anyone not reading the file.
 
-- **Status:** open
+
+### blocker: runtime-consumption-of-experience
+
+- **Status:** resolved 2026-08-29 — **(c), defer until 9.4 has a measured
+  effect; (a) and (d) are OWNER-RESERVED and this council did not take them.**
+  AI council 2026-08-29, anthropic + openai, **2/2 convergent**, first review
+  these blockers have ever had (they were invisible to every gate until the same
+  change — see the § Blockers note).
+
+  Both seats reached (c) by the same route: the question is *cheap to answer
+  once 9.4 has a number and expensive to answer now*, and nothing in Phases 0–8
+  depends on it. Both seats also volunteered, unprompted in openai's case, that
+  **(a) and (d) require owner sign-off** because both cross
+  `docs/contracts/no-runtime-boundary.md:40`, a recorded architectural boundary
+  — a council may recommend crossing it and may not authorise it.
+
+  anthropic added the point neither round-one critique had made: **(d) is not a
+  weaker (a) but a different shape.** 7.2's epistemic split — observed and
+  derived statements may filter, inferred and hypothesized ones may not — is
+  load-bearing rather than arbitrary, because observed/derived are factual and
+  inferred/hypothesized are generative. That makes (d) the natural next decision
+  point after 9.4, not a fallback if (a) is refused.
+
+  openai added the constraint that decides whether 9.4's number is worth
+  anything: **runtime evidence must measure external efficacy, not agreement
+  with the experience report.** A loop scored on whether it agrees with its own
+  output validates itself. Carried into 9.4 rather than left here.
+- **`revisit-if`:** step 9.4 demonstrates a reproducible efficacy gain measured
+  externally, AND a proposal exists naming an observed/derived-only filter with
+  rollback criteria. At that point (d) goes to the owner, not to a council.
 - **Owner:** maintainer
 - **Blocks:** Phase 9 step 9.6 only. Phases 0–8 and steps 9.1–9.5 are
   unaffected by design — this roadmap is cut so that a "no" leaves them fully
@@ -420,9 +464,38 @@ parents must restate the letter's meaning rather than carry it.
   effectiveness report exists without being consumed. That is a real outcome,
   not a stalled one — evidence, integrity and hygiene all land.
 
-### experience-retention-policy
+### blocker: experience-retention-policy
 
-- **Status:** open
+- **Status:** resolved 2026-08-29 — **(c), measure growth first; the retention
+  STRUCTURE is council-decidable, the privacy-sensitive PARAMETERS are
+  owner-reserved.** AI council 2026-08-29, anthropic + openai, **2/2 convergent
+  on (c)** against the file's own recommendation of (a).
+
+  The file recommended (a) — append-only with an explicit rotation rule — on the
+  `docs/CLAIMS.md:691` precedent. Both seats refused (a) **now**, on a coupling
+  the file itself states and neither round-one critique had followed through:
+  this blocker and step 1.4 (a privacy class on every captured event) are *"the
+  same decision seen from two sides"*. anthropic put the consequence plainly —
+  approving (a) before 1.4 exists risks *"a commitment we must walk back"* the
+  moment 1.4 identifies an event class that is unsafe to retain. Privacy
+  classification precedes a retention commitment, not the reverse.
+
+  openai refused the obvious version of (c) as well, and the correction is kept
+  because it is the useful half: **a fixed one-month window is an arbitrary
+  duration, not an evidence threshold.** Sampling continues until growth
+  variability and the minimum viable retention window can be estimated, which
+  may be shorter or longer than a month.
+
+  **The refinement that changes what the rule must say:** retention must be
+  expressed in **eligible observations as well as time or storage**. A 30-day
+  policy still cannot support a ≥ 20-run claim if fewer than 20 privacy-safe,
+  qualifying runs occur in 30 days — which is the `CLAIMS.md:691` failure in a
+  new costume, and the reason (b) is not merely worse but actively misleading
+  when stated in days alone.
+- **`revisit-if`:** growth data exists sufficient to estimate variability, events
+  carry privacy classifications from 1.4, and a bounded window can be stated in
+  both eligible observations and time. The window VALUES then go to the owner;
+  the append-only-versus-rolling structure does not.
 - **Owner:** maintainer
 - **Blocks:** Phase 6 step 6.1 at the point where the report is expected to
   clear a pre-registered floor; Phase 9 step 9.4's power claim.
@@ -532,8 +605,44 @@ is refuted, cheaply.
   So flipping any of them to `ready` without a disposal in the same change raises
   a floor already at its ceiling. The question is whether this roadmap and
   `road-to-governed-harness-evolution.md` stay separate or fold into one — they
-  overlap on trigger evals, on the paired-verdict mechanism and on step 1.3 — and
-  on the estate axis folding is now the cheaper answer, not just the tidier one.
+  overlap on trigger evals, on the paired-verdict mechanism and on step 1.3.
+
+  **RESOLVED 2026-08-29 — (b): stay separate, with every overlap assigned to
+  exactly one canonical owner.** AI council, anthropic + openai, **2/2
+  convergent**.
+
+  **The estate argument is withdrawn, twice over.** First, the number above is
+  **stale**: measured this run the gate reports `active_roadmaps 3 (floor 3 at
+  origin/main)`, not 7 against 7. Second — and this is the part that matters,
+  because it survives any future re-measurement — openai identified that the
+  figure *"supplies no argument either way: because the floor is defined from the
+  base reference, 'zero headroom' is a ratchet invariant, not evidence favouring
+  a fold."* The sentence "folding is now the cheaper answer" was reasoning from a
+  property every value of that metric has. E1 is therefore decided on the
+  **overlap alone**, which is what it should always have been decided on.
+
+  On the overlap, both seats read folding as the more expensive answer, not the
+  tidier one: 47 + 58 steps in one file couples two large outcomes and makes
+  completion illegible, and openai named the test that decides it — separation
+  fails only if a shared mechanism *"cannot be independently completed"*. Nothing
+  in the named overlaps is of that kind.
+
+  **What (b) requires, and it is more than "stay separate".** Each shared
+  mechanism — trigger evals, the paired-verdict mechanism, step 1.3's outcome
+  vocabularies — gets **one authoritative roadmap**; the other may reference it
+  and may **not** block on it, and duplicate completion claims are prohibited.
+  anthropic named the failure this prevents, which neither round-one critique
+  had: without it, both roadmaps can declare "trigger eval" blocked and neither
+  owns resolving it. The assigned roadmap owns acceptance.
+
+  **A fold is OWNER-RESERVED.** Both seats, unprompted, on the load-bearing
+  question: the fold itself may be reversible, but the archival that follows is
+  not, and it permanently changes the unit the estate ratchet counts. A council
+  may recommend a fold; it may not manufacture that approval.
+
+  **`revisit-if`:** further overlap emerges beyond the three named, or either
+  roadmap can no longer state an independent completion condition, or cross-
+  roadmap sequencing repeatedly blocks delivery.
 - **E2 — audit-log v2:** confirm the schema-bump procedure — supersede lines, or
   a new file generation?
 - **E3 — Does `clean-no-op` count as its own outcome in the report?
