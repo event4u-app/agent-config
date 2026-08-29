@@ -8,8 +8,8 @@ inputs:
   diff_sha: 6a6762010ca0639e12afe7e017371cc984589a51
   scope_hash: e4a167acdc830fce8e3918d3329907597fd11753305445396cd5328fb37b02c8
   roadmap: agents/roadmaps/road-to-supervised-telemetry-collector.md
-  roadmap_hash: 1d432258a3f0cc18c0afd5c803d6cd12884f53eb8c65cfbad62ea0a74d42d72d
-  ac_hash: dcf41e95bfe37e0459d43763a01b20c60bdf07d9d42e3ea09ea364e15ded7b8d
+  roadmap_hash: 0c99a022d2fc5cb677f8bf278a15c021421db25cf92d3aa79082299e90b76ea0
+  ac_hash: 3556dc03413e579d1f295a1a0d44209e3230d4bdf0d547f276123eacded86cde
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-29T18:24:18Z
