@@ -254,3 +254,47 @@ observation window** (hard stop 63 days) and its Phase 5 needs CI runners nobody
 has provisioned. Roadmaps 4–7 carry 232 open structural steps. Draining this
 estate to empty is not a single-session terminal condition, and reporting it as
 one would have required claiming steps that were not done.
+
+## Neutral review round — and why the run's first "done" was premature
+
+The run initially closed with three PRs and a report. That closing claim was
+made **without a neutral review of the 98 non-doc lines the session had
+mutated**, and a stop-gate said so. The review then ran, over the **whole**
+code delta rather than a slice the author chose, with the prompt recorded
+alongside the verdict per `evaluator-independence`.
+
+**Both seats returned "do not approve as complete."** Six real defects came out
+of it — none of which the 46 green tests had caught, and two of the six were
+found by probing the validator directly *after* the suite passed:
+
+| Defect | Class |
+|---|---|
+| A shorter deny entry left the tail of a longer one in the clear | **security, live in the shipped config** |
+| A required field with an explicit `undefined` validated clean | correctness |
+| `occurred_on` accepted any date-*shaped* string | correctness |
+| Prototype-borne fields were invisible to the unknown-key sweep | privacy |
+| `schema_version` accepted any integer | correctness |
+| `collector_version` was an unrestricted free-form channel | **privacy** |
+| `machine_id` accepted derived UUIDs (v1 embeds a MAC, v5 is a name hash) | **privacy** |
+
+Two tests were also rewritten because they proved nothing: one named
+`SENSITIVITY` asserted that a *non-denied* token survives, which a totally
+neutered matcher also satisfies.
+
+One review recommendation was **rejected with a measurement** rather than
+adopted deferentially — escaping the deny entries' metacharacters would break
+the 13 of 65 that use `\b`, and would make the redactor miss tokens the gate
+still catches.
+
+Fixes are in [#1723](https://github.com/event4u-app/agent-config/pull/1723),
+a follow-up because #1720 and #1721 merged while the review was still running.
+Every fix is sensitivity-probed and restored: 12 of 61 red when the collector
+constraints are neutralised, the overlap test reds against sequential
+application, 8 of 46 red when only the `undefined`/date fix is reverted.
+
+**The lesson this run records against itself:** a green suite is not evidence,
+and the first completion claim here was made on one. The stop-gate that refused
+it was correct, and the review it forced found a live partial-disclosure defect
+in the very module written to prevent disclosure. While writing the comment that
+explains that fix, four real source names were pasted into it and caught by the
+gate — the same defect, committed inside its own repair.
