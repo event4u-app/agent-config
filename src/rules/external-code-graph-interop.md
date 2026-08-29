@@ -24,13 +24,12 @@ obligation_frequency: "per-turn"
 # External Code-Graph Interop
 
 Some repos commit a pre-built code-intelligence index — a `graph.json`-shaped
-artifact or a SCIP index (`index.scip`, `*.scip`). When one exists, it already
-answers "who calls X", "where is Y used", "what does this import" far more
-precisely than a fresh `grep`. This suite is an **orchestrator first, owner
-where it wins** (ADR-124): query a consumer-shipped index when it is present
-and fresh; where none is shipped or ours is measurably better, the suite's own
-native code-graph engine (default-off, benchmark-gated) covers the gap. Either
-way — query first, grep as fallback, and name which source answered.
+artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is already
+built and structured, so it is the cheap first question for "who calls X",
+"where is Y used", "what does this import". This suite is an **orchestrator
+first, owner where it wins** (ADR-124): query a consumer-shipped index when it
+is present and fresh; where none is shipped, the native engine (default-off,
+benchmark-gated) covers the gap.
 
 ## The rule
 
@@ -59,6 +58,11 @@ AND the repo contains a detectable index:
 3. **Fall back to `grep`/read** only for what the index does not cover, and say
    so ("the index has no entry for X, so I grepped").
 
+Query-first is an **ordering** heuristic, never a claim the index answers better:
+measured 2026-08-28, zero of four graph-shaped classes beat `grep`, so no class
+is graph-first. Routing changes; permission does not. Figures:
+[`code-intelligence`](../skills/code-intelligence/SKILL.md) § Measured.
+
 ## When NOT to fire
 
 - No such index in the repo — normal `grep`/read is the right first move.
@@ -67,11 +71,9 @@ AND the repo contains a detectable index:
 ## See also
 
 - [`code-intelligence`](../skills/code-intelligence/SKILL.md) — the executable
-  routing skill: `agent-config code-graph detect|query|affected|path` over the
-  native engine or a consumer-shipped index, grep as the stated fallback. On
-  hook-capable hosts the PreToolUse `code-graph` nudge surfaces this once per
-  session; on instruction-file hosts this rule is the surface. Which of the two
-  you are on is `agent-config hooks:status`, not a guess from the host name.
+  routing skill (`agent-config code-graph detect|query|affected|path`), the
+  measured per-class figures, and the hook-vs-instruction-file surface question
+  (`agent-config hooks:status`, never a guess from the host name).
 - [`discovery_graph`](../scripts/discovery_graph.ts) — this suite's OWN artefact
   relation-graph (`affected`/`explain`); the external code-graph is the
   *source-code* analogue this rule defers to for code questions.

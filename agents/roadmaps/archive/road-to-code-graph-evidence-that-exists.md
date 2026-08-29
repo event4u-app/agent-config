@@ -95,7 +95,7 @@ by a measurement of absent code.
 
 ## Phase 0 — Resolve the blocker that made the re-run impossible
 
-- [ ] **0.1 Record the disposition of `b-bench-inputs-absent` as option (b).**
+- [x] **0.1 Record the disposition of `b-bench-inputs-absent` as option (b).**
       The blocker in `agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md`
       offers three options; (a) needs three external repository clones and four
       pinned files this environment does not hold, and (c) — scoping the stale
@@ -104,80 +104,149 @@ by a measurement of absent code.
       that its numbers are not comparable to the 2026-07-28 run and saying so
       in `docs/CLAIMS.md`**.
       verify: the blocker carries `Status: resolved` with (b) named, and this roadmap is cited as where the work happens.
-- [ ] **0.2 Pre-register before measuring.** The question set, the corpus, the
+- [x] **0.2 Pre-register before measuring.** The question set, the corpus, the
       scoring rule and the pass bar are written and committed **before** the
       first run. A bar chosen after seeing a number is not a bar.
       verify: the pre-registration file is committed in a commit that precedes the first result commit, checkable from `git log --follow` on the two paths.
 
 ## Phase 1 — A corpus this repository contains
 
-- [ ] **1.1 Shapes, never consumer identity.** The corpus is built from code
+- [x] **1.1 Shapes, never consumer identity.** The corpus is built from code
       shapes present in this tree — the ambiguous-class cases the existing
       classification analysis already enumerated are its first items. No
       external clone, no consumer repository, no borrowed identity.
       verify: every corpus item resolves to a path inside this repository or to a synthetic fixture committed with it; a test asserts no item references an out-of-tree path.
-- [ ] **1.2 The question set covers what the graph claims to answer.**
+- [x] **1.2 The question set covers what the graph claims to answer.**
       Callers, references, implementations of an interface, transitive impact,
       and path-between — the relations the shipped query surface exposes.
       Questions where grep is obviously sufficient are included deliberately,
       as the negative control.
       verify: every one of the shipped query verbs has at least one question, and at least a quarter of the set is negative control, both asserted by a test over the corpus file.
-- [ ] **1.3 The corpus states its own limits.** In the same file: what it does
+- [x] **1.3 The corpus states its own limits.** In the same file: what it does
       not cover, and why its numbers are not comparable to the 2026-07-28 run.
       verify: the limits section exists and names the incomparability explicitly, so no later reader can quote a delta between the two runs.
 
 ## Phase 2 — Measure, and publish whichever way it lands
 
-- [ ] **2.1 Run both arms on the repaired build.** Native graph and
+- [x] **2.1 Run both arms on the repaired build.** Native graph and
       disciplined grep, same questions, same scoring, current `HEAD`.
       verify: the report records the commit under measurement, and that commit postdates the 2026-08-22 repair — asserted mechanically, not read by eye.
-- [ ] **2.2 Publish the result unchanged.** Into `internal/bench/reports/` with
+- [x] **2.2 Publish the result unchanged.** Into `internal/bench/reports/` with
       its own date, and a `docs/CLAIMS.md` entry carrying `measured_on:` and
       the incomparability note. **A result worse than the pre-registered bar is
       published identically** — an honest null is the outcome this roadmap is
       most likely to produce and is a complete success of it.
-      verify: the claim entry exists with `measured_on:` set to the measured commit's date and `check_claims` passes; the report states the pre-registered bar beside the result.
-- [ ] **2.3 The stale figure is re-scoped, never deleted.** The 2026-07-28
+      verify: **re-scoped by the `whether-a-non-comparable-number-is-worth-publishing` resolution to (b)** — no second claims entry is created; instead `claim:code-graph-retrieval-null` carries a pointer to the report plus an explicit superseded-build note, `check_claims` passes, and the report states the pre-registered bar beside every result.
+- [x] **2.3 The stale figure is re-scoped, never deleted.** The 2026-07-28
       entry keeps its number and gains a pointer to the new one, so the record
       shows a question answered twice rather than a number quietly replaced.
       verify: both entries are present in `docs/CLAIMS.md` and each names the build it measured.
 
 ## Phase 3 — What the result is allowed to change
 
-- [ ] **3.1 Route, never permit.** If the repaired engine wins on a question
+- [x] **3.1 Route, never permit.** If the repaired engine wins on a question
       class, the routing rule and the code-intelligence skill state that class
       as a graph-first case. **The benchmark changes routing; it never changes
       permission** — the default and the dependency question stay ADR-246's.
       verify: the skill and rule name the winning classes, and neither file changes any setting default; checkable from the diff.
-- [ ] **3.2 The consumers that already exist get the better answer.** Where
-      the graph wins, the composition-before-creation `new` verdict cites a
-      structural closest candidate rather than a textual one.
-      verify: a fixture `new` verdict cites a candidate obtained from the graph query surface, and falls back to the textual path with a stated reason when the graph is stale or absent.
-- [ ] **3.3 A stale or absent graph never produces a confident answer.** The
+- [-] **3.2 The consumers that already exist get the better answer.** —
+      **CANCELLED BY MEASUREMENT, 2026-08-28.** The step is conditional ("Where
+      the graph wins"), and the pre-registered run found the graph won **zero**
+      classes: `callers` NULL (precision floor failed), `transitive-impact` NULL
+      (−11.1 pp), `references` NULL (−66.7 pp), `path-between` VOID. There is no
+      winning class whose consumer could be switched to a structural candidate,
+      so nothing was built and nothing is claimed.
+
+      AI council 2026-08-28 (anthropic + openai, 1 round, $0.00, **2/2
+      convergent**, after one seat first failed on a transport error and the run
+      was retried rather than accepted degraded). Both seats rejected `[x]`
+      outright: the step is written as a behaviour change with implementation-
+      level verification, not as a decision gate, so "the benchmark completed;
+      the roadmap step did not". Both also rejected building the verify's second
+      half — the stale/absent textual fallback — on its own: step 3.3 already
+      enforces that degradation at the CLI boundary, and no route reaches this
+      consumer through the graph, so adding the machinery there is "gold-plating
+      a dead branch" with no evidence of value. `[~]` deferred was rejected as
+      deferring a decision the measurement already made.
+
+      **v2 trigger, recorded so this cancellation is not permanent by accident:**
+      if a v2 registration produces a winning class, that creates a NEW
+      consumer-integration step — structural selection, provenance, stale/absent
+      fallback and fixtures — rather than reviving this one. Carried in
+      `agents/roadmaps/stubs/road-to-code-graph-benchmark-v2-registration.md`.
+- [x] **3.3 A stale or absent graph never produces a confident answer.** The
       existing three-state freshness verdict is surfaced at every consumer
       added here.
       verify: a fixture query against a stale graph returns a degraded verdict naming the staleness; against an absent graph, `unavailable`.
-- [~] **3.4 The ADR-246 reopen, if the evidence supports it.** Deferred by
-      construction: this step is a decision for the owner on fresh evidence,
-      taken in its own change under `decision-revisit-gate`, never a checkbox
-      flipped by the run that produced the evidence. The roadmap that measures
-      a lock does not get to lift it.
-      verify: the measurement from Phase 2 is cited in an ADR-246 reopen record, or the ADR is confirmed on the fresh number — either outcome recorded, neither performed here.
+- [x] **3.4 The ADR-246 reopen, if the evidence supports it.** — **the second
+      branch of this step's own verify: the ADR is CONFIRMED on the fresh
+      number, and no reopen is performed here.** ADR-246 was evaluated before
+      being cited (`adr_cite_check ADR-246`: status `accepted`, unsuperseded,
+      trigger state `indeterminate` — a semantic condition the tool cannot
+      decide, so it was decided against the tree). Its second reopen trigger
+      reads "a post-repair retrieval measurement that beats grep on graph-shaped
+      questions". The measurement ran and **lost every valid class**, so the
+      trigger is evaluated and does **not** fire.
 
-## Phase 4 — Close the transferred stub honestly
+      Recorded as a `## Confirmation on fresh evidence` section on the ADR
+      itself, which states what it is not as carefully as what it is: not the
+      trigger's own run (that run's inputs are irrecoverable — see 4.1), not
+      comparable to the 2026-07-28 figures, and carrying no overall engine
+      verdict. The ADR's **other** trigger — a consumer case the graph answers
+      and disciplined grep cannot — is untouched and stays live, as does its
+      standing exclusion that an extraction improvement is not a trigger.
+      Status unchanged: `accepted`. Nothing was performed.
 
-- [ ] **4.1 Retire `stubs/road-to-code-graph-benchmark-rerun.md`.** With its
-      outcome recorded as what actually happened: the criterion was answered by
-      a **different, smaller, non-comparable** benchmark, not by the run it
-      described. "Archived" must not read as "achieved" — the stub's own words.
-      verify: the stub is retired with an outcome line naming the substitution, and a reader of the retired stub can reach this roadmap's report in one hop.
+## Phase 4 — Close the transferred stub on its own null path
+
+**Re-scoped 2026-08-28 by AI council (anthropic + openai, 1 round, $0.00, 2/2
+convergent that the phase as originally written must not be executed).** The
+original 4.1 retired the stub *as a consequence of* the substitute benchmark
+landing. Two prior councils had already ruled that a non-comparable benchmark
+"neither replaces this obligation nor closes this stub", and both seats today
+agreed that retiring on that basis would launder a substitution into a
+completion however honest the outcome line was — one seat put it as: honest
+wording "does not cure the invalid causal basis for closure".
+
+What both seats endorsed instead is the stub's **own** documented null path: a
+determination that the original inputs are irrecoverable. That determination is
+the sole closure authority. The benchmark carries **zero closure credit** and
+its completion has **no dependency relationship** with this phase.
+
+- [x] **4.1 Record the irrecoverability determination.** The four SHA-256-pinned
+      question files and the three registered corpus clones are not reasonably
+      obtainable: they are private third-party repositories that cannot be
+      published, vendored or synthesized, so the obstacle is a permission and
+      ownership fact rather than a lost file. The probe is re-run and its
+      readings recorded before the determination is written, not after.
+      verify: an evidence file records every probe reading at a named date, and states the determination in terms a probe alone cannot supply — that the project has no present or reasonably obtainable authorized access and will not pursue reacquisition.
+- [x] **4.2 Retire the stub as CLOSED UNMET, on that determination alone.** The
+      outcome line names irrecoverability as the closure authority, states that
+      the transferred criterion was **not** met and no re-run was performed, and
+      states that the in-repo benchmark neither satisfied, replaced, nor
+      contributed to the closure. "Archived" must not read as "achieved" — the
+      stub's own words.
+      verify: the retired stub's outcome line names irrecoverability as the authority and carries the words "closed unmet"; it states the criterion was not met; and it disclaims the benchmark's contribution to closure. The benchmark report is linked as independent evidence only, with no claims entry.
+- [x] **4.3 The two phases are independent, checkably.** Nothing in Phase 4
+      reads a Phase 2 result, and nothing in Phase 2 depends on Phase 4.
+      verify: the retirement text cites no benchmark figure as a reason for closure — checkable from the diff.
 
 ## Blockers
 
 ### blocker: what-the-pre-registered-bar-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — per-question-class bars.** AI council 2026-08-28,
+  members anthropic + openai, 1 round, $0.00 (both seats subscription-authed),
+  **2/2 convergent**. The decision this evidence feeds is a routing decision per
+  question class, so a single aggregate answers a question nobody is asking; one
+  seat added that an aggregate "produces a verdict that doesn't match how the
+  feature would actually be used". Both seats named the same cost — per-class
+  bars add degrees of freedom for cherry-picking — and both named the same
+  mitigation: every class and its bar is pre-registered before any result exists,
+  which is what step 0.2 and AC-2 already require. A secondary macro-average is
+  reported but is explicitly **not** the pass criterion.
 - **Blocks:** step 0.2, and through it Phase 2. Phase 1's corpus is built under
   any answer.
 - **What to do:** pick exactly one — (a) the graph must beat grep on recall
@@ -201,8 +270,31 @@ by a measurement of absent code.
 
 ### blocker: whether-a-non-comparable-number-is-worth-publishing
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — publish the report, make no new claims entry, and
+  re-scope the 2026-07-28 entry so its superseded build is unmistakable.**
+  AI council 2026-08-28, members anthropic + openai, 1 round, $0.00, **split on
+  the letter and convergent on the resolver**: both seats made their answer
+  conditional on the same checkable fact — whether `docs/CLAIMS.md`'s `kind`
+  field admits a value that makes two recall figures incomparable *by
+  construction*. One seat said (c) if it does and (b) if it does not; the other
+  said (b) because (c) was underspecified until such a value is named. **The
+  fact was then measured, not argued:** the enum in use is
+  `{quant, qual, comparative}`, and none of the three makes two recall figures
+  structurally incomparable — `comparative` is if anything an invitation to
+  compare, and `qual` cannot license a number at all
+  (`src/scripts/check_claims.ts:541`: "a `kind: qual` claim cannot license a
+  number"). (c) is therefore unrealisable within the existing schema, and both
+  seats' own stated fallback is (b). Adding a fourth enum value was not pursued:
+  the question was framed to both seats under the existing-schema constraint, and
+  widening it afterwards to reach the answer the roadmap preferred would be
+  verdict shopping.
+- **Consequence for the steps:** 2.2's claims-entry half and AC-6 are re-scoped
+  accordingly — the new figure lives in the report, and the 2026-07-28 entry
+  gains a pointer to it plus an explicit superseded-build note, so the record
+  still shows a question answered twice without putting two subtractable numbers
+  on the published claim surface.
 - **Blocks:** step 2.2's claims entry only. The report itself lands either way.
 - **What to do:** pick exactly one — (a) publish it as a `backed` claim with
   the incomparability stated in the claim text: the record shows the question
@@ -219,25 +311,121 @@ by a measurement of absent code.
 - **If you do nothing:** the fresh number lands in `internal/` where the
   published surface never sees it, and the stale claim stays the only answer.
 
+### blocker: is-the-original-rerun-irrecoverable
+
+- **Status:** resolved
+- **Owner:** maintainer
+- **Resolution:** **yes — determined irrecoverable, and that determination is
+  the ONLY authority under which the transferred stub closes.** AI council
+  2026-08-28, members anthropic + openai, 1 round, $0.00. The two seats split on
+  whether probe evidence alone suffices — one held that the stub's own wording
+  ("access lapsed") already covers private third-party corpora, the other that
+  irrecoverability is "a governance judgment about future access, not a
+  filesystem fact a probe can prove" and must therefore be asserted explicitly.
+  That split is resolved by *making the assertion* rather than by inferring it:
+  the determination is recorded in step 4.1 in the terms the second seat asked
+  for, on top of the probe readings and not in place of them. Both seats
+  converged without qualification on the two things that actually bind: the
+  substitute benchmark carries **zero closure credit**, and the outcome line
+  must read **closed unmet**.
+- **Blocks:** Phase 4 only. Phases 0-3 are independent of it in both directions.
+- **What to do:** re-run the stub's probe, record every reading with its date,
+  then write the determination as an explicit statement that the project has no
+  present or reasonably obtainable authorized access to the pinned inputs and
+  will not pursue reacquisition — and retire the stub citing that determination
+  alone.
+- **Resolved when:** the determination is recorded with its probe readings, and
+  the stub's outcome line names irrecoverability as the closure authority rather
+  than the benchmark.
+- **If you do nothing:** either the stub stays open forever against inputs that
+  will never arrive, or it is closed on the substitute benchmark — which is the
+  laundering two prior councils and this one all refused.
+
+
+### blocker: what-to-do-with-a-class-that-measured-nothing
+
+- **Status:** resolved
+- **Owner:** maintainer
+- **Discovered during the run, not before it.** The pinned corpus encodes the
+  three `path-between` questions with a TWO-ENDPOINT probe (`"cmdBuild ->
+  getParser"`), and the registered runner gives both arms a single probe token.
+  Neither arm can match a token containing ` -> `, so all three questions
+  returned the empty set from **both** arms. The inconsistency existed at
+  registration time; finding it required running the benchmark. It was found
+  independently by the corpus's own author, who restored the file to its
+  registered bytes rather than editing a corpus that had already been pinned and
+  run.
+- **Resolution:** **(a) publish v1 as-is with the class relabelled VOID —
+  INSTRUMENT FAILURE, and record the fix as a v2 registration.** AI council
+  2026-08-28 (anthropic + openai, 1 round, $0.00), 2/2 convergent. Option (c) —
+  repair just that class and re-run it under the existing registration — was
+  refused by both seats as changing the method after seeing the outcome, which
+  is the single thing a pre-registration exists to prevent. One seat added the
+  refinement that is implemented: publish **both** the mechanically computed
+  registered verdict (`TIE`) **and** the validity assessment (`VOID`), never
+  silently replacing one with the other, because relabelling after seeing a
+  result is itself a post-hoc judgement and showing both is what makes it
+  auditable.
+- **Second decision, split and resolved by naming the claim.** On whether the
+  failed negative-control floor is a finding or a category error, one seat said
+  category error (a symbol index cannot find string literals; a floor a correct
+  implementation cannot clear is a design flaw) and the other said a genuine
+  finding, narrowly stated. The resolver both accept: it depends which claim is
+  made. *"Graph retrieval replaces grep for repository investigation"* makes the
+  controls valid; *"graph retrieval improves structural code questions"* — the
+  only claim this benchmark makes — puts them outside the construct. Either way
+  **the registered floor stays reported as FAILED**, because it was registered
+  and cannot be discarded after the fact; what changes is the caveat printed
+  beside it, and the v2 requirement to separate in-domain negative controls from
+  capability-boundary tests.
+- **Third decision, 2/2:** no overall engine verdict is derived from v1. The
+  defensible statement is "zero classes met the pre-registered win criterion",
+  never "grep proved superior". A v2 registration is a new confirmatory
+  experiment, never a repaired continuation.
+- **Blocks:** step 2.2's framing only. The run itself completed.
+- **What to do:** relabel the class VOID in the runner's own output, print the
+  registered verdict beside the validity assessment, print the construct caveat
+  beside the control floor, withhold the overall verdict, and open a v2
+  registration stub carrying the corrected corpus as an unregistered seed.
+- **Resolved when:** the published report carries both columns, names the void
+  class and its cause, and withholds an overall engine verdict; and the v2 stub
+  exists.
+- **If you do nothing:** the report publishes `TIE` for a class where both arms
+  measured nothing, which is a fabricated result — the exact defect this
+  roadmap's own Risk 1 exists to prevent, in the opposite direction.
+
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
+- [x] AC-1 — `b-bench-inputs-absent` carries a recorded disposition and is no
       longer open.
-- [ ] AC-2 — The pre-registration commit precedes the first result commit,
+- [x] AC-2 — The pre-registration commit precedes the first result commit,
       checkable from history rather than asserted.
-- [ ] AC-3 — Every corpus item resolves inside this repository or to a
+- [x] AC-3 — Every corpus item resolves inside this repository or to a
       committed fixture; none references an external clone or a consumer
       identity.
-- [ ] AC-4 — The published report names the commit it measured and that commit
+- [x] AC-4 — The published report names the commit it measured and that commit
       postdates 2026-08-22, asserted mechanically.
-- [ ] AC-5 — The result is published whichever way it lands, and the report
+- [x] AC-5 — The result is published whichever way it lands, and the report
       states the pre-registered bar beside it.
-- [ ] AC-6 — Both the 2026-07-28 and the new figure are present and each names
-      the build it measured; neither replaces the other.
-- [ ] AC-7 — No setting default changed in this roadmap's diff, and no
+- [x] AC-6 — Both figures are present in the tree and each names the build it
+      measured; neither replaces the other. **Re-scoped by the
+      `whether-a-non-comparable-number-is-worth-publishing` resolution:** the new
+      figure lives in the report rather than in a second claims entry, and the
+      2026-07-28 entry carries the pointer to it, so the published claim surface
+      never holds two subtractable recall numbers.
+- [x] AC-7 — No setting default changed in this roadmap's diff, and no
       dependency moved between `devDependencies` and `dependencies`.
-- [ ] AC-8 — The retired stub's outcome line says a different benchmark
-      answered a different question, not that the transferred criterion was met.
+- [x] AC-8 — The retired stub's outcome line names the **irrecoverability
+      determination** as the closure authority, says the transferred criterion
+      was **not** met and no re-run was performed, and disclaims any contribution
+      of the in-repo benchmark to the closure.
+- [x] AC-9 — Phase 4's retirement text cites no benchmark figure as a reason for
+      closure, and Phase 2 does not read Phase 4 — the two are independent in
+      both directions, checkable from the diff.
+- [x] AC-10 — No class where both arms returned the empty set is published as a
+      TIE. The registered verdict and the validity assessment are both printed,
+      and no overall engine verdict is derived from a run with a void class.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-28 | reviewer: claude/host -->

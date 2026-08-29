@@ -1,0 +1,559 @@
+{
+  "benchmark": "code-graph-vs-grep-inrepo",
+  "generated": "2026-08-28",
+  "measured_commit": "c454648af6996db2affa6f76c86c349677cee703",
+  "measured_commit_date": "2026-08-28",
+  "postdates_extractor_repair": true,
+  "not_comparable_to": {
+    "report": "internal/bench/reports/code-graph-vs-grep.md",
+    "run_date": "2026-07-28",
+    "reason": "Different corpus (three private external repositories vs three in-repo TypeScript subtrees), different question set (18 vs 16, no shared item), different build (predates the 2026-08-22 extractor repair), different bars (single aggregate vs per-class). No delta may be computed between the two runs in either direction."
+  },
+  "corpus": {
+    "file": "internal/bench/code-graph/inrepo-corpus-2026-08-28.yaml",
+    "sha256": "52d69c1bd994cb326926fd1d0a77e3b70b122daac5d1222ea5528e382bf20372",
+    "questions": 16,
+    "graph_shaped": 12,
+    "negative_controls": 4
+  },
+  "bars": {
+    "per_class_recall_delta_required_pp": 10,
+    "per_class_precision_floor_pp": 5,
+    "negative_control_ratio": 0.9
+  },
+  "build_ms": {
+    "code_graph": 408,
+    "shared": 749,
+    "ai_council": 701
+  },
+  "per_class": {
+    "callers": {
+      "verdict": "NULL",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": 0,
+      "precision_ok": false,
+      "grep": {
+        "p": 0.611,
+        "r": 1
+      },
+      "graph": {
+        "p": 0.258,
+        "r": 1
+      },
+      "n": 3
+    },
+    "transitive-impact": {
+      "verdict": "NULL",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": -11.1,
+      "precision_ok": false,
+      "grep": {
+        "p": 1,
+        "r": 0.611
+      },
+      "graph": {
+        "p": 0.467,
+        "r": 0.5
+      },
+      "n": 3
+    },
+    "path-between": {
+      "verdict": "TIE",
+      "validity": "VOID — INSTRUMENT FAILURE",
+      "validity_note": "Both arms returned the empty set on every question in this class, so nothing was measured. The registered verdict above is the runner's arithmetic and is preserved; it is not a defensible substantive interpretation.",
+      "recall_delta_pp": 0,
+      "precision_ok": true,
+      "grep": {
+        "p": 0,
+        "r": 0
+      },
+      "graph": {
+        "p": 0,
+        "r": 0
+      },
+      "n": 3
+    },
+    "references": {
+      "verdict": "NULL",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": -66.7,
+      "precision_ok": false,
+      "grep": {
+        "p": 1,
+        "r": 1
+      },
+      "graph": {
+        "p": 0.333,
+        "r": 0.333
+      },
+      "n": 3
+    }
+  },
+  "negative_controls": {
+    "n": 4,
+    "grep_recall": 1,
+    "graph_recall": 0,
+    "floor_ok": false
+  },
+  "macro_average_reported_only": {
+    "note": "REPORTED ONLY — not a pass criterion. Printed so a reader can see the aggregate the 2026-07-28 run would have reported. No verdict is derived from it.",
+    "grep": {
+      "precision": 0.653,
+      "recall": 0.653
+    },
+    "graph": {
+      "precision": 0.265,
+      "recall": 0.458
+    }
+  },
+  "classes_won": [],
+  "classes_void": [
+    "path-between"
+  ],
+  "negative_control_construct_caveat": "The four controls are literal-string searches (a config key, a log filename, an env var name, a comment fragment). This engine indexes SYMBOLS and call relations, not string literals, so it scores 0.000 on all four by construction. The pre-registered floor is reported FAILED because it was registered and cannot be discarded after the fact — but a reader must not read it as an implementation defect. AI council 2026-08-28 split on this and resolved it by naming the claim: if the claim were \"graph retrieval replaces grep for repository investigation\" the controls are valid and the failure matters; if the claim is \"graph retrieval improves structural code questions\" the controls sit outside that construct. This benchmark makes only the second claim. A v2 registration must separate IN-DOMAIN negative controls (symbol-shaped probes whose correct answer is empty, testing false positives) from CAPABILITY-BOUNDARY tests (literals, filenames, config keys), reported separately.",
+  "overall_verdict_withheld": "No overall engine verdict is derived from this run. Two of five classes measured the instrument rather than the engine: path-between is VOID, and the negative-control floor tests a construct this benchmark does not claim. The defensible statement is \"zero classes met the pre-registered win criterion\", NOT \"grep proved superior across all classes\". A v2 registration is a NEW confirmatory experiment, never a repaired continuation of this one.",
+  "rows": [
+    {
+      "id": "cg-callers-01",
+      "root": "code_graph",
+      "category": "callers",
+      "question": "Which files contain a call site of emitSqliteTwin (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 38,
+        "output_bytes": 389
+      },
+      "graph": {
+        "precision": 0.125,
+        "recall": 1,
+        "wall_ms": 730,
+        "output_bytes": 2332
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "sqlite_store.ts",
+        "symbol:DatabaseSync",
+        "symbol:String",
+        "symbol:close",
+        "symbol:exec",
+        "symbol:isSqliteAvailableSync",
+        "symbol:loadSqliteSync",
+        "symbol:prepare",
+        "symbol:renameSync",
+        "symbol:rmSync",
+        "symbol:run",
+        "symbol:stampUserVersion"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "sqlite_store.ts"
+      ]
+    },
+    {
+      "id": "sh-callers-01",
+      "root": "shared",
+      "category": "callers",
+      "question": "Which files contain a call site of isConservativeDefault (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 18,
+        "output_bytes": 443
+      },
+      "graph": {
+        "precision": 0.4,
+        "recall": 1,
+        "wall_ms": 679,
+        "output_bytes": 1165
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "settingsClasses.ts",
+        "symbol:isArray",
+        "symbol:keys"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "settingsClasses.ts"
+      ]
+    },
+    {
+      "id": "ac-callers-01",
+      "root": "ai_council",
+      "category": "callers",
+      "question": "Which files contain a call site of classifyCliFailure (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.5,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 595
+      },
+      "graph": {
+        "precision": 0.25,
+        "recall": 1,
+        "wall_ms": 648,
+        "output_bytes": 2711
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "transport_resolver.ts",
+        "symbol:includes",
+        "symbol:startsWith",
+        "symbol:test",
+        "symbol:toLowerCase",
+        "symbol:trim"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "qualification.ts",
+        "transport_resolver.ts"
+      ]
+    },
+    {
+      "id": "cg-impact-01",
+      "root": "code_graph",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the contract of getParser changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 0.5,
+        "wall_ms": 16,
+        "output_bytes": 218
+      },
+      "graph": {
+        "precision": 0.4,
+        "recall": 0.5,
+        "wall_ms": 640,
+        "output_bytes": 1302
+      },
+      "missed_by_graph": [
+        "build.ts",
+        "cli.ts"
+      ],
+      "wrong_by_graph": [
+        "symbol:get",
+        "symbol:set",
+        "symbol:setLanguage"
+      ],
+      "missed_by_grep": [
+        "build.ts",
+        "cli.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-impact-01",
+      "root": "shared",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the SETTINGS_CLASSES value tuple changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 0.333,
+        "wall_ms": 16,
+        "output_bytes": 255
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 648,
+        "output_bytes": 240
+      },
+      "missed_by_graph": [
+        "settingsClasses.ts",
+        "settingsAsks.ts",
+        "settingsConsent.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "settingsAsks.ts",
+        "settingsConsent.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-impact-01",
+      "root": "ai_council",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the behaviour of would_exceed changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 384
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 646,
+        "output_bytes": 527
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "cg-path-01",
+      "root": "code_graph",
+      "category": "path-between",
+      "question": "Is there a call path from cmdBuild to getParser, and through what?",
+      "grep": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 15,
+        "output_bytes": 0
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 644,
+        "output_bytes": 2039
+      },
+      "missed_by_graph": [
+        "cli.ts",
+        "build.ts",
+        "extract.ts",
+        "loader.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "cli.ts",
+        "build.ts",
+        "extract.ts",
+        "loader.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-path-01",
+      "root": "ai_council",
+      "category": "path-between",
+      "question": "Is there a call path from the orchestrator's cost estimation to priceKey, and through what?",
+      "grep": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 16,
+        "output_bytes": 0
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 637,
+        "output_bytes": 6197
+      },
+      "missed_by_graph": [
+        "orchestrator.ts",
+        "pricing.ts",
+        "_default_prices.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "orchestrator.ts",
+        "pricing.ts",
+        "_default_prices.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-path-02",
+      "root": "ai_council",
+      "category": "path-between",
+      "question": "Is there a call path from classify_impact_with_corpus_fuzzy to load_validated_phrases, and through what?",
+      "grep": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 16,
+        "output_bytes": 0
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 655,
+        "output_bytes": 3876
+      },
+      "missed_by_graph": [
+        "low_impact.ts",
+        "low_impact_corpus.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "low_impact.ts",
+        "low_impact_corpus.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "cg-references-01",
+      "root": "code_graph",
+      "category": "references",
+      "question": "Where is EXT_LANG declared, imported, or used?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 15,
+        "output_bytes": 347
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 639,
+        "output_bytes": 248
+      },
+      "missed_by_graph": [
+        "types.ts",
+        "build.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-references-01",
+      "root": "shared",
+      "category": "references",
+      "question": "Where is the SettingsClass type declared, imported, or used?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 15,
+        "output_bytes": 930
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 650,
+        "output_bytes": 240
+      },
+      "missed_by_graph": [
+        "settingsClasses.ts",
+        "settingsAsks.ts",
+        "settingsConsent.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-references-01",
+      "root": "ai_council",
+      "category": "references",
+      "question": "Where is the _total_usd function declared, imported, or used?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 890
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 640,
+        "output_bytes": 1890
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "cg-negative-01",
+      "root": "code_graph",
+      "category": "negative-control",
+      "question": "Where does the refresh path emit the message fragment 'old cache kept'?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 453
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 618,
+        "output_bytes": 248
+      },
+      "missed_by_graph": [
+        "cli.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-negative-01",
+      "root": "shared",
+      "category": "negative-control",
+      "question": "Where does the severity literal 'must_fix' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 15,
+        "output_bytes": 465
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 625,
+        "output_bytes": 240
+      },
+      "missed_by_graph": [
+        "settingsSurface.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-negative-01",
+      "root": "ai_council",
+      "category": "negative-control",
+      "question": "Where does the ledger filename 'council-spend.jsonl' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 18,
+        "output_bytes": 259
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 618,
+        "output_bytes": 3584
+      },
+      "missed_by_graph": [
+        "budget_guard.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-negative-02",
+      "root": "ai_council",
+      "category": "negative-control",
+      "question": "Where does the environment-variable name 'AI_COUNCIL_CONFIG' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 156
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 627,
+        "output_bytes": 4843
+      },
+      "missed_by_graph": [
+        "config.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    }
+  ]
+}
