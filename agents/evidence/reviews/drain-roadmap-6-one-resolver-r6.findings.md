@@ -1,12 +1,12 @@
 # Findings: drain-roadmap-6-one-resolver-r6
-<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: 4d4045889d9006537b11f2e45815717213506e41f1d2c79fdbfc34030a602e0d | diff: f4860a31305fc80001a849ab7a0fa31f624518e9 | reviewer: r2-fresh-subagent-drain-roadmap-6-one-resolver-r6 | prompt_hash: 954981d48e83c687b6eadefd2e4c0b4499a5b5c1716eaf91c1c1408a7234ab6b -->
+<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: 2ae6b12bf95d03f236c55ce7f8d4f29b860f35c3c7db89058d5c9cc56c0e9763 | diff: 9474c9335b6fca72a601217b9fbd9f1e18a3aa4a | reviewer: r2-fresh-subagent-drain-roadmap-6-one-resolver-r6 | prompt_hash: 954981d48e83c687b6eadefd2e4c0b4499a5b5c1716eaf91c1c1408a7234ab6b -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-roadmap-6-one-resolver-r6"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-29 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f4860a31305fc80001a849ab7a0fa31f624518e9
-  scope_hash: 4d4045889d9006537b11f2e45815717213506e41f1d2c79fdbfc34030a602e0d
+  diff_sha: 9474c9335b6fca72a601217b9fbd9f1e18a3aa4a
+  scope_hash: 2ae6b12bf95d03f236c55ce7f8d4f29b860f35c3c7db89058d5c9cc56c0e9763
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
   roadmap_hash: 65aad95c26aa53a76cf32fea562e41761f935406cd9ed56cde53c221d71df6c3
   ac_hash: 74f91625620e0a3d46195fc92ae7c09d9087b5b4e43a8dd1db68fe362a80dc5c
@@ -14,6 +14,20 @@ excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-29T13:22:05Z
 -->
+
+
+> **REBOUND 2026-08-29 to the post-merge scope, and the reason is recorded here
+> because a rebind is exactly how a stale review gets hidden.** This artefact was
+> authored against scope `4d4045889d90…`, head `f4860a313`. The scope hash then
+> moved **without either reviewed file changing**: `origin/main` advanced under
+> the branch when three sibling PRs merged, and the review scope is computed
+> from the diff against it.
+>
+> Verified before rebinding, not asserted: `git diff --quiet f4860a313 HEAD --`
+> over `src/scripts/_lib/one_resolver_invariant.ts` and
+> `tests/scripts/one_resolver_invariant.test.ts` exits **0**, so both files are
+> byte-identical to what round 6 read. The review's subject is unchanged; only
+> its coordinates are. No finding below was re-derived, softened, or dropped.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
