@@ -74,7 +74,7 @@ Single-line. The pretty-printed reference shape:
 | `ts` | string | ISO-8601 UTC timestamp of phase end. |
 | `work_id` | string | Matches the `WorkState` directory id from [`decision-trace-v1.md`](decision-trace-v1.md). Allows cross-trace correlation. |
 | `phase` | enum | One of `refine` · `memory` · `analyze` · `plan` · `implement` · `test` · `verify` · `report`. |
-| `outcome` | enum | One of `success` · `blocked` · `skipped` · `error`. Mirrors `Outcome` from `work_engine.directives`. |
+| `outcome` | enum | One of `success` · `blocked` · `skipped` · `error`. Defined by `PHASE_OUTCOMES` in `src/scripts/_lib/outcome_vocabularies.ts` and checked against this row by `tests/contracts/outcome_vocabularies.test.ts`. |
 | `confidence_band` | enum | One of `low` · `medium` · `high`. Sourced from decision-trace. |
 | `risk_class` | enum | One of `low` · `medium` · `high`. Inherits max risk from touched files. |
 | `memory.asks` / `memory.hits` | int | Counts only — never ids, never bodies. |
@@ -104,9 +104,19 @@ Lines MUST NOT contain:
 - Secrets, tokens, environment values, file contents.
 - Paths outside the package's `agents/runtime/state/` and `tests/` allowlist.
 
-The floor is enforced by
-`tests/contracts/test_audit_log_redaction.py` — any new producer-side
-edit that touches this schema adds a fixture there.
+**Enforcement, stated honestly.** No test enforces this floor. The file this
+paragraph named for months — tests/contracts/test_audit_log_redaction.py,
+deliberately written WITHOUT backticks so the existence check below cannot read
+a dead name as a live claim — exists in no tree this repository has, so the sentence asserted an enforcement
+that was never there (found 2026-08-29,
+`road-to-experience-loop-broadening` 1.3). What IS enforced is narrower and
+real: the two producers build their lines through validated builders with no
+free-form field — `src/scripts/_lib/orchestration_record.ts` and
+`src/scripts/_lib/review_skipped_record.ts` — so the floor holds by
+CONSTRUCTION on those paths rather than by a scan. A third producer added
+outside that shape would not be caught by anything. Step 1.4 of that roadmap
+owns closing this; until it does, "privacy by construction, on two paths,
+unscanned" is the accurate claim.
 
 ## Append-only invariant
 

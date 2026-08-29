@@ -22,6 +22,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { isPhaseOutcome, PHASE_OUTCOMES } from './_lib/outcome_vocabularies.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/extract_audit_patterns.py → parent.parent.parent == repo root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -164,10 +166,21 @@ export function mine(auditDir: string, month: string | null, minCount: number): 
     const records = _resolveSupersedes([..._iterLines(auditDir, month)]);
     // Preserve insertion order of first-seen keys (Python dict ordering).
     const groups = new Map<string, Pattern>();
+    // `outcome` used to be read as a bare `string`, so a typo silently became
+    // its own pattern and nothing said so (`road-to-experience-loop-broadening`
+    // 1.3; AI council 2026-08-29 named this the consumer-side half). Grouping
+    // is UNCHANGED — this file mirrors a retired Python CLI byte-for-byte and
+    // dropping a record would change pinned stdout. What changes is that an
+    // off-vocabulary value is now observable instead of silent.
+    const unknownOutcomes = new Set<string>();
     for (const rec of records) {
         const t = rec.type;
         if (!(t === undefined || t === null || t === 'phase')) {
             continue;
+        }
+        const rawOutcome = rec.outcome;
+        if (rawOutcome !== undefined && rawOutcome !== null && !isPhaseOutcome(rawOutcome)) {
+            unknownOutcomes.add(String(rawOutcome));
         }
         const key = _patternKey(rec);
         let pat = groups.get(key);
@@ -193,6 +206,14 @@ export function mine(auditDir: string, month: string | null, minCount: number): 
         if (!pat.last_seen || ts > pat.last_seen) {
             pat.last_seen = ts;
         }
+    }
+    if (unknownOutcomes.size > 0) {
+        const seen = [...unknownOutcomes].sort().join(', ');
+        process.stderr.write(
+            `extract_audit_patterns: ${unknownOutcomes.size} off-vocabulary outcome value(s) ` +
+                `grouped as-is: ${seen}. Expected one of: ${PHASE_OUTCOMES.join(' | ')} ` +
+                `(docs/contracts/audit-log-v1.md, src/scripts/_lib/outcome_vocabularies.ts).\n`,
+        );
     }
     const out: Rec[] = [];
     for (const p of groups.values()) {
