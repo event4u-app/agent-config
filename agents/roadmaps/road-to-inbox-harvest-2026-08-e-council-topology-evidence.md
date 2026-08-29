@@ -550,8 +550,22 @@ is **seating**, and it already has a carrier.
 ## Blockers
 
 ### blocker: unlicensed-source-verbatim-scan
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) now — publish unreachability as the finding and scope the
+  step to prose this tree can diff — plus a follow-up stub for pinned-source
+  verification.** AI council 2026-08-28. Offline execution cannot establish
+  remote licence state; it can still scan and rewrite substantively-verbatim
+  prose that exists in the current tree, while reporting explicitly that upstream
+  provenance was unreachable.
+- **One correction to this blocker's own wording, adopted.** It says "confirm no
+  LICENSE → **no grant exists**". That is **too categorical**: a grant may appear
+  in file headers, package metadata, accompanying terms, or another document in
+  the same repository. The defensible conclusion is *"no licence grant was
+  located in the inspected material"*, followed by conservative treatment — not a
+  claim that no grant exists anywhere. The step text is read that way from here.
+- The source names stay **anonymized** in this roadmap in every branch, and no
+  branch of this makes it the license-required-attribution carve-out.
 - **Blocks:** 0.4 only. Phases 0.1-0.3, 0.5 and everything downstream ship
   without it.
 - **What to do:** two of the three harvest sources reportedly ship no LICENSE
@@ -575,8 +589,21 @@ is **seating**, and it already has a carrier.
   explicitly scoped out.
 
 ### blocker: parallel-fanout-reopens-a-closed-decision
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(a) — keep sequential dispatch and close Phase 4 as a
+  published null.** AI council 2026-08-28, **2/2**. Sequential dispatch is a
+  recorded decision, not an omission: the orchestrator states the trade (the
+  previous parallel executor was traded for predictable mid-flow user prompts),
+  `grep -c 'Promise.all'` returns 0, and the dispatch order is pinned
+  byte-for-byte by tests. Reopening it without new evidence — a real latency
+  complaint, not a topology experiment's convenience — is scope creep, and the
+  trade was made at 2-3 members, which is still the typical configuration.
+- **A published null here is honest completion**, and it discharges the revisit
+  gate: the decision was named, evaluated against the current tree, and left
+  standing with the reason recorded. If it is ever reopened, one seat named the
+  only shape worth considering — intra-round parallelism behind a ceiling flag,
+  preserving the interactive-prompt property that motivated going sequential.
 - **Blocks:** all of Phase 4. No other phase depends on it.
 - **What to do:** sequential dispatch is a **recorded decision**, not an
   omission — `src/scripts/ai_council/orchestrator.ts:8-12` states the trade
@@ -598,8 +625,24 @@ is **seating**, and it already has a carrier.
   `revisit-if` line — a null verdict resolves this blocker.
 
 ### blocker: maintainer-blind-ratings
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(b) — scope the affected phases to gradeable-only slices and
+  publish the human-rubric arms as deferred, with the originating rationale
+  intact.** AI council 2026-08-28, **2/2**, not actionable under this run's
+  constraints: no human raters are available, and the originating record is
+  explicit that *"blind human judgments cannot be substituted with an
+  architectural choice or inferred from existing nulls"*.
+- **The deterministic and executable-oracle arms are unaffected and land in
+  full.** The roadmap stays valuable while narrower — but only if it says so:
+  one seat's caveat is adopted, that deferring the rubric arms is fine when
+  clearly stated and misleading if a reader assumes "quality" meant
+  "human-judged usability".
+- **On an LLM-as-judge substitute, asked directly.** The rationale does not
+  forbid every model-graded number; it forbids using one **as a substitute for
+  blind human judgment**. A separate arm is defensible only if it is named as
+  what it is — a **model-graded exploratory arm**, never "the human-rubric arm" —
+  and never pooled with, averaged into, or reported as the human arm.
 - **Blocks:** the human-rubric arms inside 2.1 and 5.3. The deterministic and
   executable-oracle arms are unaffected.
 - **What to do:** this is an **inherited live blocker**, not a new one — it
@@ -619,8 +662,17 @@ is **seating**, and it already has a carrier.
   scoped out of this roadmap with the null recorded at the stub.
 
 ### blocker: persona-seating-gap
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **promote the existing stub; defer Phase 9's persona-diversity
+  claims; do not duplicate the stub's analysis here.** AI council 2026-08-28,
+  **2/2**. The decisive argument is that running the benchmark anyway would
+  produce **numbers that do not test the stated variable**: with a two-provider
+  configuration at most 2 of 5 personas seat, and which two is a config-order
+  accident, so the treatment is confounded before the first measurement. A
+  five-persona treatment cannot be realised on this configuration at all.
+- This is a **roadmap decision, not a benchmark execution** — the gap is already
+  measured and the stub already carries a pre-registered bench gate.
 - **Blocks:** all of Phase 9. Nothing else.
 - **What to do:** **the carrier already exists — point at it, do not duplicate
   it.** `agents/roadmaps/stubs/road-to-council-persona-fanout.md` records the
@@ -687,8 +739,22 @@ is **seating**, and it already has a carrier.
   been demonstrated red-then-green.
 
 ### blocker: evidence-integrity-unparsed-dependency
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **verify by lookup, and if the distinction did not ship, REOPEN
+  it as its own change — never scope it out quietly.** AI council 2026-08-28
+  (anthropic + openai, 1 round, $0.00). One seat called it actionable now (pure
+  in-tree lookup: read the archived roadmap's completion state, grep for the
+  mechanism, cite `file:line` or confirm its absence); the other declined to call
+  it actionable *from the material supplied to the council*, which is a statement
+  about the council's inputs rather than about the tree.
+- **Both converged on what actually matters, and it is a priority ruling:** of
+  the five blockers, **this is the one that must not be descoped.** The others
+  narrow which outcomes were measured; this one threatens the meaning of
+  measurements already reported. If a parse failure is observationally identical
+  to a genuine zero-findings result, Phase 1B's promotion gate cannot be trusted,
+  and the roadmap's remaining claims become **positively misleading rather than
+  merely incomplete**.
 - **Blocks:** all of 1B. 1A ships independently.
 - **What to do:** 1B needs the `unparsed` versus zero-findings distinction,
   which `agents/roadmaps/archive/road-to-council-evidence-integrity.md`
