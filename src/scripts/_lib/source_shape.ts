@@ -127,6 +127,17 @@ const ALLOWED_OWNERS: readonly string[] = [
     // Documentation placeholders.
     'example', 'acme', 'org', 'owner', 'user', 'username', 'myorg', 'your-org',
     'yourorg', 'my-org', 'youruser', 'your-username', 'some-org',
+    // Two further placeholders, added on a MEASURED false positive rather than
+    // on taste (road-to-source-silence Phase 3.4). `someone/other` in
+    // tests/scripts/envelope_grounding.test.ts and `o/r.git` in
+    // tests/scripts/unattended_guard.test.ts are literal fixture URLs naming
+    // nothing external. They were the only two of 26 review-snapshot findings
+    // that survived provenance-aware deduplication — and surviving is what
+    // identified them: the AI council's requirement was that unique and
+    // unverifiable findings stay at block so a human looks at them. A human
+    // looked; this is the answer. Fixing them here rather than by widening the
+    // dedup rule is what keeps that rule strict.
+    'someone', 'o',
     // Vendors whose tools this suite integrates or recommends (rule carve-out).
     'anthropics', 'anthropic', 'microsoft', 'github', 'modelcontextprotocol',
     'cloudflare', 'openai', 'nodejs', 'vitest-dev', 'vercel', 'tailwindlabs',
@@ -158,6 +169,18 @@ const NON_HARVEST_TMP_DIRS: ReadonlySet<string> = new Set([
     // Benchmark inputs. Pinned by SHA-256, filenames already anonymised.
     'bench-local',
 ]);
+
+/**
+ * Is `name` a named WORKING SET rather than a harvest round?
+ *
+ * Exported so the Phase 4.2 write-time guard
+ * (`hooks/block_speaking_inbox_dir.ts`) decides from the same set this module
+ * uses. Two copies of "which names are acceptable" is how a guard and its gate
+ * drift into disagreeing about the thing they both exist to enforce.
+ */
+export function isNonHarvestTmpDir(name: string): boolean {
+    return NON_HARVEST_TMP_DIRS.has(name.trim().toLowerCase());
+}
 
 const DEFAULT_ALLOWLIST: SlugAllowlist = { owners: ALLOWED_OWNERS };
 

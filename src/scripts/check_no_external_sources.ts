@@ -68,6 +68,13 @@ import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { DigestMatcher, digestMode, EXIT_NO_KEY, KEY_ENV, STRICT_ENV } from './_lib/source_digest.js';
 import { shapeHits as shapeHitsOf, shapePathHits, tierFor, type ShapeClass } from './_lib/source_shape.js';
+import {
+    dedupVerdict,
+    findingKey,
+    hunkTargets,
+    isSnapshotPatch,
+    isSnapshotPath,
+} from './_lib/source_snapshot_dedup.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // parents[2] of src/scripts/<file> is the repo root.
@@ -422,8 +429,58 @@ function main(argv: readonly string[]): number {
     }
 
     // --- Phase 3.2 + 3.3: tier the shape findings and ratchet the block tier.
-    const blockShapes = shapes.filter((s2) => s2.tier === 'block');
+    const blockShapesAll = shapes.filter((s2) => s2.tier === 'block');
     const warnShapes = shapes.filter((s2) => s2.tier === 'warn');
+
+    // --- Phase 3.4: provenance-aware deduplication of R2 snapshot mirrors. ----
+    // A finding inside a review-input snapshot is excluded from the ratchet ONLY
+    // when an identical class+value is independently block-counted in the
+    // current tracked tree. Earned per finding; fails closed. The refused
+    // alternative (lower the tier for the whole snapshot corpus) and the two
+    // legs are documented in `_lib/source_snapshot_dedup.ts`.
+    const trackedPaths = new Set(tracked);
+    const blockIndex = new Map<string, Set<string>>();
+    for (const s2 of blockShapesAll) {
+        if (isSnapshotPath(s2.file)) {
+            continue;
+        }
+        const k = findingKey(s2.cls, s2.value);
+        let set = blockIndex.get(k);
+        if (!set) {
+            set = new Set();
+            blockIndex.set(k, set);
+        }
+        set.add(s2.file);
+    }
+    const targets = new Map<string, ReadonlyMap<number, string>>();
+    for (const rel of tracked) {
+        if (!isSnapshotPatch(rel)) {
+            continue;
+        }
+        try {
+            targets.set(rel, hunkTargets(fs.readFileSync(path.join(ROOT, rel), 'utf-8')));
+        } catch {
+            // Unreadable patch — no targets, so every finding in it fails closed.
+        }
+    }
+    const dedupInput = { blockIndex, targets, trackedPaths };
+    const blockShapes: ShapeFinding[] = [];
+    const excluded: Array<ShapeFinding & { leg: string; matched: string }> = [];
+    for (const s2 of blockShapesAll) {
+        const v = isSnapshotPath(s2.file)
+            ? dedupVerdict({ file: s2.file, line: s2.line, cls: s2.cls, value: s2.value }, dedupInput)
+            : { excluded: false, leg: null, matchedPath: null, reason: 'not a snapshot finding' };
+        if (v.excluded) {
+            excluded.push({ ...s2, leg: v.leg ?? '?', matched: v.matchedPath ?? '' });
+        } else {
+            blockShapes.push(s2);
+        }
+    }
+    const dedupByLeg = {
+        hunk: excluded.filter((e) => e.leg === 'hunk').length,
+        tree: excluded.filter((e) => e.leg === 'tree').length,
+    };
+
     const verdict = checkRatchet({ repoRoot: ROOT, gate: SHAPE_GATE_KEY, actual: blockShapes.length });
 
     // The council's retention requirement: the warn tier is written where CI can
@@ -442,6 +499,15 @@ function main(argv: readonly string[]): number {
                     warn: warnShapes.length,
                     baseline: verdict.baseline,
                     status: verdict.status,
+                },
+                // Phase 3.4 — every exclusion names its leg and the tracked
+                // file whose independent block-count justified it, so the
+                // weaker `tree` leg is auditable after the fact rather than
+                // invisible. The council required exactly this.
+                snapshot_dedup: {
+                    excluded: excluded.length,
+                    by_leg: dedupByLeg,
+                    exclusions: excluded,
                 },
                 block_findings: blockShapes,
                 warn_findings: warnShapes,
@@ -465,6 +531,7 @@ function main(argv: readonly string[]): number {
                     baseline: verdict.baseline,
                     status: verdict.status,
                     ok: verdict.ok,
+                    snapshot_dedup: { excluded: excluded.length, by_leg: dedupByLeg },
                 },
             }) + '\n',
         );
@@ -490,6 +557,14 @@ function main(argv: readonly string[]): number {
             `\nattribution shape — block(agents/**) ${String(blockShapes.length)}` +
                 ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}\n`,
         );
+        if (excluded.length > 0) {
+            process.stdout.write(
+                `snapshot dedup — ${String(excluded.length)} review-snapshot finding(s) excluded` +
+                    ` (hunk-target ${String(dedupByLeg.hunk)} · tracked-tree ${String(dedupByLeg.tree)});` +
+                    ' each matched an identical class+value block-counted in a scanned file.' +
+                    ' Per-exclusion legs and matched paths: --report <path>.\n',
+            );
+        }
         process.stdout.write(`${verdict.ok ? '✅' : '❌'}  ${verdict.message}\n`);
         if (!verdict.ok) {
             process.stdout.write(
