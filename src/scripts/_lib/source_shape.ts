@@ -78,6 +78,18 @@ export function isOpaqueRoundId(name: string): boolean {
 const ENC_TOKEN_RE = /^ENC1:[A-Za-z0-9+/=]+$/;
 
 /**
+ * The write-time redaction marker from `_lib/source_redact.ts`, matched WITHOUT
+ * its brackets because the value normaliser below strips `[` and `]`.
+ *
+ * A redacted header is the compliant END STATE, not a violation: the marker
+ * carries no information about any source, which is its entire purpose. Without
+ * this the gate flagged its own marker — measured on the first review snapshot
+ * taken after shape redaction shipped, where `> **Source:** [REDACTED:src-conf]`
+ * counted as a speaking value.
+ */
+const REDACTION_VALUE_RE = /^REDACTED:src-conf$/;
+
+/**
  * A `> **Source:**` header line. The `>` and the bold markers are both optional
  * because the convention drifted across the roadmap corpus; matching only the
  * blockquoted form would miss the plain one for no reason.
@@ -198,6 +210,7 @@ export function sourceHeaderHits(line: string): ShapeHit[] {
     const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
     if (value === '') return [];
     if (ENC_TOKEN_RE.test(value)) return [];
+    if (REDACTION_VALUE_RE.test(value)) return [];
     if (isOpaqueRoundId(value)) return [];
     // A header pointing at an inbox directory is judged on the directory NAME,
     // so the tmp-quote class owns it and this class stays silent — otherwise one
