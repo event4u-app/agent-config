@@ -1,0 +1,92 @@
+name: Source surface sweep
+
+# road-to-source-silence Phase 5.3 — the standing observation, not a gate.
+#
+# Two per-change checks already refuse a new disclosure: `check_no_external
+# _sources` on the tracked tree (also the `exec:` evidence behind
+# `claim:plaintext-source-attribution`), and `pr-metadata-sources.yml` on the
+# branch name, PR text and commit messages of the change at hand.
+#
+# Neither observes DRIFT on the surfaces no per-PR run reaches: the accumulated
+# trunk commit log, every branch ref in the repository, and the bodies of pull
+# requests already merged. Those are the surfaces the `whether-history-gets-
+# rewritten` blocker resolved to ACCEPT as residual rather than rewrite, so the
+# only honest thing to do with them is COUNT them and watch the number.
+#
+# It runs weekly and it does NOT fail the repository. A rising residual is
+# information a maintainer acts on, not a build to break — and a scheduled job
+# that reds `main` for a count nobody can lower this week is a job that gets
+# disabled. What it fails on is its own inability to measure: an unreadable
+# config or a crashed sweep exits non-zero, because a sweep that silently
+# scanned nothing is worse than no sweep.
+#
+# The census artefact is NEVER written here. It is the most concentrated source
+# disclosure the repository could hold, and `sweep_source_surfaces --census`
+# refuses to write it without a link-encryption key, which CI does not have.
+# This job writes counts only.
+
+on:
+  schedule:
+    # Mondays 04:17 UTC — off the hour, so it does not queue behind the
+    # every-repository-on-GitHub cron spike.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sweep:
+    name: five-surface census (counts only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          # The commit surface is the whole trunk log; a shallow checkout would
+          # report a scanned count of 1 and look clean.
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Sweep all five surfaces
+        env:
+          # `gh pr list` backs the PR surface. Without a token that surface
+          # reports `unavailable` with a reason rather than a false zero.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts-run src/scripts/sweep_source_surfaces | tee "${RUNNER_TEMP}/sweep.txt"
+
+      - name: Publish the counts as a job summary
+        if: always()
+        run: |
+          {
+            echo '## Source-surface census'
+            echo
+            echo 'Counts only — no names. The residual on trunk commit messages and'
+            echo 'merged PR bodies is ACCEPTED debt by the recorded no-rewrite decision;'
+            echo 'what matters here is whether it moves.'
+            echo
+            echo '```'
+            cat "${RUNNER_TEMP}/sweep.txt" || echo '(sweep produced no output)'
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Retain the counts as an artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: source-surface-census
+          path: ${{ runner.temp }}/sweep.txt
+          if-no-files-found: warn
+          retention-days: 90

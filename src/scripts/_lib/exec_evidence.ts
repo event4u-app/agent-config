@@ -60,6 +60,14 @@ export const ALLOWLIST_PREFIXES: readonly (readonly string[])[] = [
     // report exists. Read-only, deterministic, model-free, and already run in
     // CI (`rule-backstops.yml`) for its own reasons.
     ['check_enforcement_denominator'],
+    // road-to-source-silence Phase 5.3. The source-confidentiality gate's exit
+    // code IS the verdict for `claim:plaintext-source-attribution`: 0 means zero
+    // deny-pattern matches in tracked content AND in every tracked path, plus the
+    // attribution-shape block count at or below its ratchet baseline. An
+    // existence-check pointer would have gone stale the first time somebody added
+    // a name. Read-only, deterministic, model-free, and already run in CI for its
+    // own reasons — the same class as its neighbours here.
+    ['check_no_external_sources'],
     ['check_token_regression'],
     ['lint_agent_security'],
     ['measure_lexical_ranking'],

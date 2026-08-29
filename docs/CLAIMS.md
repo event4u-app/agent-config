@@ -953,3 +953,38 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-08-23 (road-to-skill-link-integrity-and-manifest-sync Phase 4). POPULATION, measured and reproducible: 24 dangling links from 17 surviving skills, derived by `lint_handoffs --census-json` with `is_pruned_under_scoped` — the predicate `install.ts` itself applies, so the counted set cannot describe a projection the installer does not perform. METRIC: read attempts against `.claude/skills/<pruned-slug>/SKILL.md` over a 30-day window, from `agents/runtime/metrics/skill-usage.jsonl`. THRESHOLD, fixed now: zero attempts over a LIVE window closes this as a published null and the 24 links stay; a nonzero count promotes the fix, which is to rewrite each dangling link in the PROJECTED SKILL.md to name the slug and its pack instead of linking it — source tree untouched, using the same predicate the counter uses. INSTRUMENT STATUS: **dead, and the measurement was therefore not attempted.** Two independent reasons, both verified: (1) the store is gitignored and machine-local, so it is ABSENT in any fresh checkout, worktree, or CI run — that is the state the committed row `agents/evidence/metrics/scoped-dangle-follow-rate.json` records; in the maintainer's parent checkout it holds 181 records whose newest timestamp is 100 days old (2026-05-15T13:44:17.594Z), so it is stale there rather than absent. (2) **A LIVE clock would still not answer this**, which the drafting phase did not foresee: every one of those 181 records carries `kind: "exposure"`, and no event in `FOLLOW_KINDS` (`read`, `read_attempt`, `follow`) is emitted anywhere in the tree — the instrument records that a skill was SHOWN, never that a link was FOLLOWED. BLOCKED ON: emitting a follow event, which is not in this roadmap. FALSIFICATION: `attempts` is `null` and never `0` whenever `instrument_live` is false, asserted in `tests/scripts/scoped_dangle_window_guard.test.ts`; a `0` there would be the false null this whole phase exists to prevent, and reporting one is the failure, not the finding.
 - status: unbacked
 - last_verified: 2026-08-23
+
+### claim: plaintext-source-attribution
+- claim: No readable external-source attribution exists in the tracked tree — not in a file's content and not in a file's path — and every new occurrence fails CI rather than being discovered later.
+- kind: qual
+- evidence: exec:check_no_external_sources -> 0
+- status: backed
+- last_verified: 2026-08-29
+- non_inference: This does NOT claim the sources are unrecoverable, and it makes no historical claim whatsoever. Trunk commit messages and merged PR bodies still name sources and remain readable to anyone with repository access — 341 occurrences, counted in `agents/evidence/reports/source-attribution-census.md:50` as accepted residual by the recorded decision of the `whether-history-gets-rewritten` blocker (**no rewrite**). Nor does it claim the deny set is complete: an exact-match list structurally cannot find a family nobody listed, and the shape heuristic covers form rather than membership with a stated recall hole (a bare `owner/repo` slug with no URL and no deny entry is not detected). And it is not a claim about inference — someone who diffs this suite's features against the ecosystem can guess influences; the prohibited class is recorded attribution.
+
+  The `exec:` form is deliberate and is the only one that can tell a live claim
+  from a stale one. Exit 0 from that gate is a **stronger** condition than the
+  claim sentence: it requires zero deny-pattern matches in tracked CONTENT
+  (Phase 3.1 also matches every tracked PATH, so a filename carrying a source
+  token fails identically) **and** the attribution-shape block count at or below
+  its ratchet baseline in `src/config/gate-violation-baselines.json`. An
+  existence-check pointer would have gone stale the first time somebody added a
+  name; this one re-derives.
+
+  **What is still debt, stated because a claim that hides its remainder is
+  worse than no claim.** 243 attribution-SHAPE findings inside `agents/**` are
+  baselined, not cleared — the Phase 2.1 codename rewrite across the roadmap
+  corpus was scoped to the anchored occurrences and the rest is counted debt
+  whose baseline may only shrink. Those are shape findings, not readable source
+  names: the deny half of this claim is zero, which is what the sentence
+  asserts. The baseline entry expires 2026-10-24 and
+  `road-to-source-silence-cutover` owns lowering it, reaffirming it with a real
+  reason, or clearing it.
+
+  Off-tree surfaces are gated separately and are NOT covered by this pointer:
+  `.github/workflows/pr-metadata-sources.yml` checks branch name, PR title, PR
+  body and the change's commit messages on `pull_request`, and
+  `src/scripts/hooks/prepush_metadata_sources.sh` checks the local half before
+  a push makes them public. `.github/workflows/source-surface-sweep.yml` runs
+  the full five-surface census weekly so drift on the surfaces no per-PR gate
+  reaches is observed rather than assumed.
