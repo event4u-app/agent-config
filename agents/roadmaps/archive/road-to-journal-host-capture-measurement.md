@@ -7,7 +7,7 @@ owner: maintainer
 review_by: 2026-11-29
 parent_roadmap: road-to-runtime-event-journal
 relates:
-  - roadmap: road-to-runtime-event-journal
+  - slug: road-to-runtime-event-journal
     relation: extends
     note: carries the unmet delivery half of its step 1.4
 estate_growth_exempt: "Charges +2 open_blockers (29 to 31), both on this file. They are not new work invented here: they are the two closers the parent roadmap's step 1.4 named as unmet, written out as decidable option sets so a reader can act on them instead of re-deriving them from a deferral note. The AI council (4 verdicts, 2026-08-29) held that leaving them in a `stubs/` file did not keep them in the estate at all, so the honest cost of the correction is exactly this: two blockers that were always real become two blockers that are counted. active_roadmaps stays +0 — this file replaces the archived `road-to-runtime-event-journal` one-for-one."
@@ -167,11 +167,14 @@ that same table routes to the council. This file is that promotion.
 - [x] **2.1 Run the measurement and publish it.** A low host capture rate is the
       outcome this work is most likely to produce and is a complete result.
       Publish it as measured; do not re-scope the claim to fit the number.
-      verify: DONE — `agents/evidence/analysis/journal-host-capture-2026-08-29.md`, typed with an `<!-- evidence-type: analysis -->` marker on line 1. Its first caption carries all four required fields: numerator **0** journal records, denominator **152,151** host-emitted events on the five journal-bound counted cells (**296,216** across all six), population **2,281 Claude Code sessions** on one machine over **2026-07-30..2026-08-29**, install configuration **shipped defaults** with `hooks.runtime_journal.enabled` absent from every settings layer present. **Rate: 0.00 %.** The number was published as measured and the claim was not re-scoped to fit it — the low outcome the step predicted is exactly what landed, and it replaces `undefined` with a zero over a KNOWN denominator, which is the difference between a result and a non-number. The instruments are `src/scripts/_lib/host_denominator.ts` (typed denominator record, rules pinned at v1), `src/scripts/measure_host_capture.ts` (re-runnable: `./scripts-run src/scripts/measure_host_capture --json`), and `tests/scripts/host_denominator.test.ts` (20 tests green, `npm run typecheck` clean).
+      verify: DONE — `agents/evidence/analysis/journal-host-capture-2026-08-29.md` **revision 2**, typed with an `<!-- evidence-type: analysis -->` marker on line 1. Its first caption carries all four required fields: numerator **0** journal records, denominator **127,711** host-emitted events on the five journal-bound counted cells (**249,586** across all six), population **1,428 Claude Code sessions across the 476 worktrees of ONE repository** on one machine over **2026-07-31..2026-08-29** (30 calendar days), install configuration **shipped defaults** — 1 settings layer present, 0 carrying `hooks.runtime_journal.enabled` at all. **Rate: 0.00 %.** The number was published as measured and the claim was not re-scoped to fit it — the low outcome the step predicted is exactly what landed, and it replaces `undefined` with a zero over a KNOWN denominator, which is the difference between a result and a non-number. **Revision 1's denominator was wrong and the review caught it:** it walked every transcript on the machine while the numerator reads ONE repository's journal, so the ratio was over two populations (152,151 over a 31-day window). The published figure is now repository-scoped and 16 % lower. The instruments are `src/scripts/_lib/host_denominator.ts` (typed denominator record, rules pinned at v2, an explicit `scope` field), `src/scripts/measure_host_capture.ts` (re-runnable: `./scripts-run src/scripts/measure_host_capture --json`), and `tests/scripts/host_denominator.test.ts` (43 tests green, `npm run typecheck` clean, `npx eslint` clean).
 
       **The opted-in half is a MEASURED empty population, not a missing
-      number.** 1 settings layer observable on the measuring machine, 0 with the
-      key `true`, so there is no population for an opted-in rate to be over. The
+      number.** 1 settings LAYER observable on the measuring machine, 0 carrying
+      the key at all, so there is no population for an opted-in rate to be over.
+      The unit is layers and not installs — one machine with a project layer and
+      a user-global layer would report two, which revision 1 published as
+      "installs". The
       council of 2026-08-29 required that wording specifically over
       "unmeasurable": *"'population size = 0 in observable scope' (measured) …
       the former is honest; the latter invites misreading."*
@@ -202,6 +205,37 @@ that same table routes to the council. This file is that promotion.
       violation of a unanimous verdict. *Revisit-if:* any machine runs with
       `hooks.runtime_journal.enabled: true`, at which point the pair can be
       completed by re-running the same script there.
+
+      **R2 completion review, 2026-08-29 — 18 findings, and one of them moved
+      the published number.** A fresh blind reviewer subagent was dispatched at
+      the dispatcher-authored prompt package (never a prompt this session wrote,
+      per `evaluator-independence`), over the whole branch delta, and the
+      artefact was committed BEFORE any fix so the scope hash it pins is the
+      tree that was reviewed. Verdict: 1 high, 8 medium, 9 low, no honest null.
+
+      The **high** finding is the one worth carrying into this record: the
+      denominator walked every transcript on the machine while the numerator
+      reads ONE repository's journal, so the ratio was over two different
+      populations. It was invisible in the first published run only because the
+      numerator was `store-absent` — and this file's own `Revisit-if` told the
+      next reader to re-run the script on a machine where it would not have
+      been. Fixed with a recorded `scope` field defaulting to `repository`,
+      resolved from `git worktree list --porcelain` (a linked worktree may live
+      anywhere, so a path prefix cannot do it) and failing CLOSED to an empty
+      scope rather than widening. The published five-cell denominator moved from
+      152,151 to **127,711**, 16 % lower and over a population the numerator can
+      reach.
+
+      Two more changed a number: the window was inclusive at both ends while its
+      start was computed as `now − days`, so `--days 30` spanned 31 calendar
+      days against a 30-day TTL; and an after-window transcript was filed under
+      `sessions_before_window`. Four changed what the page SAYS rather than what
+      it computes — the sidechain rule for assistant records (97 % of the count)
+      was unstated, `session_start` was published as an iff it is not, the
+      numerator is host-agnostic against a `claude`-only denominator, and the
+      settings parse resolved silently toward `default`. Every finding reached a
+      terminal status in the findings artefact; 16 `fixed`, 2 `accepted-risk`
+      with their reasons recorded there.
 
 - [x] **2.2 Close or restate the parent's 1.4 in this roadmap's own words.**
       Either the number 1.4 asked for now exists, or the reason it cannot is
@@ -341,11 +375,11 @@ that same table routes to the council. This file is that promotion.
 - [x] AC-1 — A per-(platform, event) obtainability table exists in the evidence
       page with no blank cell, so "we did not look" and "the host does not
       publish it" are distinguishable.
-      MET: all 80 cells in `journal-host-capture-2026-08-29.md` § AC-1 (6 `counted`, 34 `emits-but-uncounted`, 40 `not-bound`), plus the derivation record in `host-denominator-obtainability-2026-08-29.md`. The `stop` row was re-opened on new evidence during 2.1 — a host-authored `hookInfos` record naming `--event stop` — and still resolves to `emits-but-uncounted` because that artefact is written selectively and under-counts; the three refused candidates read 305 / 95 / 7 on one session and are recorded in code as `STOP_CANDIDATES`.
+      MET: all 80 cells in `journal-host-capture-2026-08-29.md` § AC-1 (6 `counted`, 34 `emits-but-uncounted`, 40 `not-bound`), plus the derivation record in `host-denominator-obtainability-2026-08-29.md`. The `stop` row was re-opened on new evidence during 2.1 — a host-authored `hookInfos` record naming `--event stop` — and still resolves to `emits-but-uncounted` because that artefact is written selectively and under-counts; the three refused candidates read 305 / 95 / 7 on one session, are recorded in code as `STOP_CANDIDATES`, and a test pins their disagreement factor to the 43–44 band rather than to the loose `> 10` revision 1 shipped.
 - [x] AC-2 — A denominator exists and its record type is asserted against a
       committed key set, with a free-form write failing to type-check — the same
       privacy property the journal's own record carries.
-      MET: `HostDenominator` in `src/scripts/_lib/host_denominator.ts`. `DENOMINATOR_RECORD_KEYS` is bound to the type in both directions; `_RecordCarriesNoFreeFormField` applies the journal's own exported `NoFreeForm` guard — imported, not re-implemented, so the two halves of the ratio cannot drift. **Observed, not argued:** admitting `payload` to the record reds `npm run typecheck` with `host_denominator.ts(220,5): error TS2344: Type 'false' does not satisfy the constraint 'true'` and reds 10 of 20 tests; a second, independent probe binding `journal-record` to `claude` `pre_tool_use` reds exactly 1 of 20 — the manifest-binding assertion — with the other 19 green, so each probe is targeted rather than a blanket break. Both reverted from explicit backups and re-verified: 20/20 green, typecheck clean, eslint clean.
+      MET: `HostDenominator` in `src/scripts/_lib/host_denominator.ts`. `DENOMINATOR_RECORD_KEYS` is bound to the type in both directions; `_RecordCarriesNoFreeFormField` applies the journal's own exported `NoFreeForm` guard — imported, not re-implemented, so the two halves of the ratio cannot drift. **Observed, not argued:** admitting `payload` to the record reds `npm run typecheck` on `_RecordCarriesNoFreeFormField` with `error TS2344: Type 'false' does not satisfy the constraint 'true'`, plus the key-set and free-form assertions in the suite; a second, independent probe binding `journal-record` to `claude` `pre_tool_use` reds exactly ONE test — the manifest-binding assertion — with the rest green, so each probe is targeted rather than a blanket break. Both reverted from explicit backups and re-verified: 43/43 green, typecheck clean, eslint clean. The record also refuses an unrecognised `scope` and an INVERTED window, both added after the R2 review.
 - [x] AC-3 — The published rate carries numerator, denominator, population and
       install configuration in one caption; a reader can tell which population
       it is over without reading any other file.

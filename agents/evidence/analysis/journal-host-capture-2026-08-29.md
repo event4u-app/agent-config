@@ -7,6 +7,15 @@ steps 2.1 and 2.2 · **Instruments:**
 `src/scripts/_lib/host_denominator.ts`, `src/scripts/measure_host_capture.ts`,
 `tests/scripts/host_denominator.test.ts`
 
+**Revision 2 — rewritten after a blind R2 completion review of 2026-08-29
+returned 18 findings (1 high, 8 medium, 9 low).** Revision 1's headline rate was
+`0.00 %` over a denominator of 152,151, and the review established that
+denominator was over the wrong population: it counted every transcript on the
+machine while the numerator reads one repository's journal. The rate is still
+`0.00 %` — the numerator was and is zero — but the number under the line has
+changed, and § *What the review changed* records what and why. Revision 1's
+figures are superseded, not merely restated.
+
 This page is written to be decidable **on its own**: every acceptance criterion
 of the roadmap can be checked from here without opening the parent roadmap or
 the 1.1 survey. The survey
@@ -17,13 +26,16 @@ than pointed at, for that reason.
 ## The number, with its caption
 
 > **Host capture rate — DEFAULT install: 0.00 %**
-> Numerator **0** journal records · denominator **152,151** host-emitted events
-> on the five journal-bound counted cells (**296,216** across all six counted
-> cells) · population **2,281 Claude Code sessions** on one maintainer machine ·
-> platform **`claude`** · window **2026-07-30 .. 2026-08-29** (30 days, the
-> journal's own retention TTL) · install configuration **shipped defaults**,
-> `hooks.runtime_journal.enabled` absent from every settings layer present,
-> resolving to `false` · reconstruction rules **v1**.
+> Numerator **0** journal records · denominator **127,711** host-emitted events
+> on the five journal-bound counted cells (**249,586** across all six counted
+> cells) · population **1,428 Claude Code sessions across the 476 worktrees of
+> ONE repository** on one maintainer machine · platform **`claude`** · scope
+> **repository** — the same population the numerator's store can reach · window
+> **2026-07-31 .. 2026-08-29** (30 calendar days, inclusive both ends; the
+> journal's own retention TTL is 30) · install configuration **shipped
+> defaults**: 1 settings layer present, **0** carrying
+> `hooks.runtime_journal.enabled` at all, so the value resolves from the shipped
+> default `false` · reconstruction rules **v2**.
 >
 > **This is a product-adoption / configuration result, not a capture-quality
 > result.** The mechanism is behaving exactly as designed: the concern is
@@ -33,9 +45,10 @@ than pointed at, for that reason.
 > AI-council resolution of `measurement-population-default-off`.
 
 > **Host capture rate — OPTED-IN install: POPULATION EMPTY IN MEASUREMENT SCOPE**
-> Installs observable from the measuring machine: **1**. Of those, installs with
-> `hooks.runtime_journal.enabled: true`: **0**. There is therefore no population
-> for an opted-in rate to be over, and no denominator to construct.
+> Settings layers observable from the measuring machine: **1**. Of those, layers
+> carrying `hooks.runtime_journal.enabled` at all: **0**; layers setting it
+> `true`: **0**. There is therefore no population for an opted-in rate to be
+> over, and no denominator to construct.
 >
 > This is a **measured** finding, not a claim of principled impossibility. The
 > measurement ran; it found the population empty. The distinction is
@@ -43,6 +56,11 @@ than pointed at, for that reason.
 > opted-in finding is 'population size = 0 in observable scope' (measured), not
 > 'rate is unmeasurable' (principled impossibility). The former is honest; the
 > latter invites misreading."*
+>
+> The unit is **settings layers**, not installs, and the two are not the same:
+> one machine carrying both a project and a user-global layer would report two.
+> Revision 1 published the layer count under the word "installs"; the review
+> caught it.
 
 **Neither of the two is "the" capture rate.** That prohibition is the unanimous
 council resolution and it is repeated here because a later reader quoting one
@@ -52,12 +70,75 @@ figure without its caption is the failure mode both blockers exist to prevent.
 
 | | Before this measurement | After |
 |---|---|---|
-| Host capture rate | **`undefined`** — numerator unobserved, denominator unknown | **0.00 %** with a known denominator of 152,151, or 296,216 depending on scope, both stated |
-| Opted-in rate | not distinguished from the above | **population empty in scope**, measured: 1 install observable, 0 opted in |
+| Host capture rate | **`undefined`** — numerator unobserved, denominator unknown | **0.00 %** with a known denominator of 127,711, or 249,586 depending on cell scope, both stated |
+| Opted-in rate | not distinguished from the above | **population empty in scope**, measured: 1 settings layer observable, 0 carrying the key |
 | Why the numerator is zero | not established | named status **`store-absent`** — the journal database does not exist at `<git-common-dir>/agent-journal/journal.sqlite`, because the concern is default-OFF and never created it |
 
-The move from `undefined` to `0.00 % / 152,151` is the whole deliverable. A zero
+The move from `undefined` to `0.00 % / 127,711` is the whole deliverable. A zero
 over a known denominator is a result; a zero over an unknown one is not a number.
+
+## What the review changed, and why the denominator moved
+
+The review's single **high** finding is the one that moved the published figure,
+and it is worth stating as the defect it was rather than as a refinement:
+
+> The numerator reads `resolveJournal(process.cwd())` — **one repository's**
+> journal, at that repository's common git dir, shared by its worktrees and
+> reaching nothing else. Revision 1's denominator walked **every** project
+> directory under `~/.claude/projects`. The ratio was therefore over two
+> different populations. It was invisible in the published run only because the
+> numerator was `0 / store-absent`, and this page's own `Revisit-if` told the
+> next reader to re-run the script on a machine where it would not have been —
+> where it would have silently deflated the rate by every session outside the
+> measured repository.
+
+The fix is a recorded `scope` field on the denominator record, defaulting to
+`repository`, resolved from `git worktree list --porcelain` rather than from a
+path prefix (a linked worktree may live anywhere — this repository's own live
+under `/private/tmp/`). A failure to resolve the scope returns an **empty** scope
+rather than falling back to machine-wide, because a silent widening is the defect
+being fixed. `--scope machine` still exists and its rate is printed with an
+explicit `UNMATCHED` warning.
+
+**Both figures, so the size of the correction is visible:**
+
+| | repository scope (**published**) | machine scope (a different figure) |
+|---|---|---|
+| Sessions in window | **1,428** | 2,249 |
+| Denominator, 6 cells | **249,586** | 290,723 |
+| Denominator, 5 bound cells | **127,711** | 149,338 |
+| Divisible by this numerator | **yes** | **no** |
+
+Revision 1 published 152,151 for the five bound cells — a machine-scoped count
+over a 31-day window. The published figure is now 127,711: **16 % lower**, and
+over a population the numerator can actually reach.
+
+The second finding that moved a number: revision 1's window was inclusive at
+both ends while its start was computed as `now − days`, so `--days 30` spanned
+**31** calendar days and the caption said 30. The denominator therefore covered
+one day the numerator's 30-day TTL cannot retain. Fixed to `now − (days − 1)`;
+the window is now `2026-07-31 .. 2026-08-29`, exactly 30 days.
+
+Seventeen further findings and their dispositions are in
+`agents/evidence/reviews/road-to-journal-host-capture-measurement.findings.md`.
+The ones that changed what this page *says* rather than what it *computes*:
+
+- **The sidechain rule for assistant records was unstated** while governing
+  about 97 % of the count. It is now rule text, versioned, and the sidechain
+  share is published so a reader who disagrees can subtract it rather than
+  re-deriving the count.
+- **`session_start` was published as an iff and is not one** — the host fires it
+  again on resume, clear and compact, and a compacted session can produce a
+  second file. Both failure directions are now stated, and the population figure
+  inherits that imprecision.
+- **The numerator is host-agnostic while the denominator is `claude`-only.**
+  `JournalEvent` carries no platform field, so an event written by another bound
+  host on the same repository would count into the numerator. Unfixable without
+  widening the record; stated in Limits instead.
+- **The settings parse resolved silently toward `default`.** It is now anchored
+  to the `hooks:` parent, indentation-tolerant, and distinguishes an absent key
+  from a parse failure — with a published counter for each, because the
+  population label both captions rest on is read from exactly this.
 
 ## AC-4 — the dispatch figure is NOT this figure, and here is why they do not compare
 
@@ -117,8 +198,9 @@ new evidence during this measurement and still resolves to
 
 `stop` matters more than the other refused cells: it **is** journal-bound on
 `claude`, so a denominator for it would widen the measured set from five bound
-cells to six. Three candidate artefacts were examined. All three were read on
-the **same** session transcript, and they disagree by a factor of 44:
+cells to six. Three candidate artefacts were examined. All three were read on the
+**same** session transcript, and they disagree by a factor of about 44
+(305 / 7 = 43.6):
 
 | Reading | Candidate | Refused because |
 |---|---|---|
@@ -131,8 +213,9 @@ denominator chosen from among three mutually inconsistent candidates is a number
 whose footnote is load-bearing, so `stop` stays out of both counted sets. The
 three readings and their refusals are kept **in code**
 (`STOP_CANDIDATES` in `src/scripts/_lib/host_denominator.ts`) with a test
-asserting they remain mutually inconsistent, so a later attempt meets the
-measurement before it meets the idea.
+asserting the factor stays between 43 and 44 — a range, because revision 1's
+prose said 40 in one place and 44 in another while the only assertion was
+`> 10`, so neither number was pinned by anything.
 
 The 1.1 survey's own `Revisit-if` named this case — *"a host outside the six
 cells is found to publish an emission count this package can read"* — and it
@@ -141,18 +224,19 @@ widens nothing.
 
 ## The denominator, per cell
 
-Pinned run, `./scripts-run src/scripts/measure_host_capture --json`, 2026-08-29:
+Pinned run, `./scripts-run src/scripts/measure_host_capture --json`, 2026-08-29,
+`scope: repository`:
 
 | Cell (`claude`) | Host events | `journal-record` bound? |
 |---|---|---|
-| `session_start` | 2,281 | yes |
-| `user_prompt_submit` | 3,259 | yes |
-| `pre_tool_use` | 144,065 | **NO — numerator 0 by construction** |
-| `post_tool_use` | 144,065 | yes |
-| `subagent_start` | 1,273 | yes |
-| `subagent_stop` | 1,273 | yes |
-| **Total, 6 counted cells** | **296,216** | |
-| **Total, 5 journal-bound counted cells** | **152,151** | |
+| `session_start` | 1,428 | yes |
+| `user_prompt_submit` | 2,168 | yes |
+| `pre_tool_use` | 121,875 | **NO — numerator 0 by construction** |
+| `post_tool_use` | 121,875 | yes |
+| `subagent_start` | 1,120 | yes |
+| `subagent_stop` | 1,120 | yes |
+| **Total, 6 counted cells** | **249,586** | |
+| **Total, 5 journal-bound counted cells** | **127,711** | |
 
 `pre_tool_use` is separated rather than averaged in, because its zero means
 something different: that slot carries the safety guards (`block-no-verify`,
@@ -165,38 +249,52 @@ scope a rate is over. **This claim is self-checking**: a test in
 `JOURNAL_BOUND_COUNTED_EVENTS` — so binding the journal to `pre_tool_use` later
 breaks the test instead of quietly falsifying this table.
 
-### Session population
+### Session population, and everything the walk excluded
 
 | | Count |
 |---|---|
-| Transcripts found on the machine | 2,303 |
-| First record inside the window → **in population** | **2,281** |
-| First record before the window → excluded | 17 |
-| No parseable timestamped record → reported undatable | 5 |
-| `user` records excluded by refinement 1 (`isMeta`) | 768 |
-| `user` records excluded by refinement 2 (`isSidechain`) | 53,002 |
+| Worktrees the repository scope resolved to | 476 |
+| Transcripts inside the scope | 1,485 |
+| Project directories skipped as out of scope | 79 |
+| Earliest record inside the window → **in population** | **1,428** |
+| Earliest record before the window → excluded | 53 |
+| Earliest record after the window → excluded | 0 |
+| No parseable timestamped record → reported undatable | 4 |
+| Directories the walk could not read | 0 |
+| Transcript lines that did not parse as JSON | 6,650 |
+| `user` records excluded by refinement 1 (`isMeta`) | 675 |
+| `user` records excluded by refinement 2 (`isSidechain`) | 47,738 |
+| Of the tool_use total, sidechain-authored | 46,540 |
+| Of the Agent/Task total, sidechain-authored | 188 |
 
-The two exclusion counts are published, not folded away, because they are large
-enough to change the `user_prompt_submit` figure by an order of magnitude and a
-reader should be able to see the size of what a refinement removed.
+Every one of these is published rather than folded away, and four of them exist
+only because the review asked for them. **6,650 unparseable lines** were
+previously discarded with no counter at all, in a module whose own docstring
+argues that a denominator silently missing part of its population is worse than
+none. **0 unreadable directories** is a real answer and worth having: revision 1
+swallowed every `readdirSync` failure, so a non-zero would have been invisible.
+The two refinement counters are **independent** — a record carrying both flags
+increments both — which revision 1 published as though they partitioned.
 
-## The reconstruction rules, pinned at v1
+## The reconstruction rules, pinned at v2
 
 A denominator whose derivation can be adjusted after the numerator is known is
 not a denominator, so the rules carry a version
-(`RECONSTRUCTION_RULE_VERSION = 1`) that a published rate cites.
+(`RECONSTRUCTION_RULE_VERSION = 2`) that a published rate cites. v1 was the 1.1
+survey's four rules plus the two `user`-record refinements; v2 states two rules
+v1 left implicit and corrects one derivation.
 
 | Cell | Rule |
 |---|---|
-| `session_start` | One per transcript file. A transcript exists if and only if a session started. |
-| `user_prompt_submit` | A `type: "user"` record carrying no `tool_result` content block. **Refinement 1:** `isMeta: true` records excluded — an injected system reminder is not a user prompt submit. **Refinement 2:** `isSidechain: true` records excluded — a subagent's brief does not fire the host event in the parent session. |
-| `pre_tool_use` / `post_tool_use` | One per `tool_use` content block in a `type: "assistant"` record. |
-| `subagent_start` / `subagent_stop` | One per `tool_use` content block whose `name` is `Agent` or `Task`. A subset of the tool_use blocks, and a distinct host event. |
+| `session_start` | One per transcript file. **NOT an iff** — the host fires `SessionStart` again on resume, clear and compact while a resumed session appends to the SAME file (**under-count**), and a compacted or forked session can produce a SECOND file for one logical session (**over-count** on the population side). Both directions are present and neither is corrected, so this is the least precise of the six cells and the 1,428 population figure inherits that. |
+| `user_prompt_submit` | A `type: "user"` record carrying no `tool_result` content block. **Refinement 1:** `isMeta: true` excluded — an injected system reminder is not a user prompt submit. **Refinement 2:** `isSidechain: true` excluded — a subagent's brief does not fire the host event in the parent session. The two counters are **independent**. |
+| `pre_tool_use` / `post_tool_use` | One per `tool_use` content block in a `type: "assistant"` record. **Sidechain records ARE INCLUDED** — a subagent's tool call fires the parent session's tool hooks — and the share (46,540 of 121,875) is published so a reader who disagrees can subtract it. v1 left this rule unstated while it governed 97 % of the six-cell total. |
+| `subagent_start` / `subagent_stop` | One per `tool_use` content block whose `name` is `Agent` or `Task`. A subset of the tool_use blocks, and a distinct host event. Sidechain-nested spawns included, share published (188 of 1,120). |
 
-The four base rules are the 1.1 survey's own, carried verbatim. The two
-refinements are **new here and named as such** rather than folded in silently:
-both narrow the count, so adopting them quietly would have made the rate look
-better than the survey's rules would have.
+One derivation changed: a transcript's window placement is now decided by the
+**minimum** record timestamp, not the first timestamp in file order. A
+back-dated leading record would otherwise decide whether the whole file's counts
+land in the denominator at all.
 
 ## AC-2 — the denominator's record type, held to the numerator's standard
 
@@ -216,71 +314,84 @@ the two halves of one ratio would have been held to different privacy standards.
   `_RecordCarriesNoFreeFormField` applies the journal's exported `NoFreeForm`
   guard to `HostDenominator`. The guard is **imported, not re-implemented**, so
   the two records cannot drift apart.
-- **Every field is a bounded scalar.** Sixteen keys: thirteen counts, two ISO
-  **calendar dates**, and one platform literal. Nothing here can hold a path, a project
-  name, a session id, a prompt, or a tool name. `window_start` / `window_end`
-  are refused at runtime unless they match `YYYY-MM-DD`, on the same reasoning
-  the collector record states for its own date field: a per-second timestamp
-  beside a session count reconstructs working hours.
+- **Every field is a bounded scalar.** Twenty-three keys: nineteen counts, two
+  ISO **calendar** dates, one scope literal, one platform literal. Nothing here
+  can hold a path, a project name, a session id, a prompt, or a tool name.
+  `window_start` / `window_end` are refused at runtime unless they match
+  `YYYY-MM-DD`, on the same reasoning the collector record states for its own
+  date field: a per-second timestamp beside a session count reconstructs working
+  hours. An **inverted** window is refused too — it would otherwise file every
+  transcript as out-of-window and report a zero denominator instead of a bad
+  input.
 - **An unknown key is REJECTED, not dropped.** `validateDenominator` throws
   ``unknown field '<name>' — REJECTED, not dropped``. Dropping is refused on
   purpose: a producer whose extra field is silently discarded has been told the
   field is fine, and the leak then lives upstream where this schema cannot see
-  it.
+  it. An unrecognised `scope` is refused on the same terms, because an
+  unrecorded scope is exactly how a denominator ends up over a different
+  population than its numerator.
 
-### Sensitivity — observed, not argued
+### Sensitivity — observed in isolation, not argued
 
-A test never seen red has unknown sensitivity, so the guard was broken on
-purpose and the failure recorded:
+A test never seen red has unknown sensitivity, so each guard was broken on
+purpose, **separately**, and the reading recorded:
 
-**Probe:** add `payload: number` to `HostDenominator` and `'payload'` to
+**Probe 1:** add `payload: number` to `HostDenominator` and `'payload'` to
 `DENOMINATOR_RECORD_KEYS`.
+**Observed:** `npm run typecheck` → `src/scripts/_lib/host_denominator.ts:
+error TS2344: Type 'false' does not satisfy the constraint 'true'` on
+`_RecordCarriesNoFreeFormField`. **A free-form write does fail to type-check**,
+which is the literal wording AC-2 asks for. Plus a large fraction of the suite
+red on the key-set binding and the free-form-key assertions.
 
-**Observed:**
-- `npm run typecheck` → `src/scripts/_lib/host_denominator.ts(220,5): error
-  TS2344: Type 'false' does not satisfy the constraint 'true'.` — line 217 is
-  where `_RecordCarriesNoFreeFormField` is declared. **A free-form write does
-  fail to type-check**, which is the literal wording AC-2 asks for.
-- `npx vitest run tests/scripts/host_denominator.test.ts` → **10 of 20 tests
-  red**, including the key-set binding assertion and the free-form-key
-  assertion.
-
-**Second probe, on the table's own claim:** add `journal-record` to the `claude`
-`pre_tool_use` slot in `src/scripts/hook_manifest.yaml`. **Observed, in
-isolation:** exactly **1 of 20** reds — *"matches `journal-record` bindings on
-the claude platform"* — and the other 19 stay green, so the probe is targeted
-rather than a blanket break. The "0 by construction" column is enforced by a
-check, not by prose.
+**Probe 2, on the table's own claim:** add `journal-record` to the `claude`
+`pre_tool_use` slot in `src/scripts/hook_manifest.yaml`.
+**Observed, in isolation:** exactly **1** test reds — *"matches `journal-record`
+bindings on the claude platform"* — and the rest stay green, so the probe is
+targeted rather than a blanket break. The "0 by construction" column is enforced
+by a check, not by prose.
 
 Each probe was applied on its own, reverted from an explicit backup copy, and
-re-verified: **20 of 20 tests green, `npm run typecheck` clean, `npx eslint` clean
-on all three files.**
+re-verified. Current state: **43 of 43 tests green, `npm run typecheck` clean,
+`npx eslint` clean on all three files.**
 
 ## Limits — stated, because each one bounds the number above
 
-1. **One machine.** The denominator is 2,281 sessions on one maintainer machine.
-   This is **not** an ecosystem-wide capture rate and must not be quoted as one.
-   Every table and caption on this page carries its scope for that reason.
+1. **One machine, one repository.** The denominator is 1,428 sessions across one
+   repository's 476 worktrees on one maintainer machine. This is **not** an
+   ecosystem-wide capture rate and must not be quoted as one. Every table and
+   caption on this page carries its scope for that reason.
 2. **One platform.** `claude` only. The other seven have no host-published
    emission count within this package's reach, which is an absence of evidence
    inside a stated boundary — not a proof that those hosts publish nothing.
 3. **Six of 43 bound cells.** A rate over six cells is a different claim from a
    rate over all of them. Both totals are given; neither is generalised.
-4. **Self-observation.** The measuring session's own transcript is inside the
-   population, and the denominator grew by 174 events across three runs during
-   this work (296,042 → 296,154 → 296,216). The published figures are pinned to
-   the 2026-08-29 run recorded above. The direction of the effect is known and
-   harmless here — it inflates a denominator whose numerator is 0, so it can
-   only make the reported rate lower, never higher.
-5. **Reconstruction is derived, not published-as-a-count.** The transcript is
+4. **The numerator is host-agnostic; the denominator is not.** `JournalEvent`
+   carries no `platform` field, so a record written by another bound host on the
+   same repository (the `augment` or `cowork` slots) would count into the
+   numerator against a `claude`-only denominator. That can only bias the rate
+   **upward**. It is unfixable without widening the journal's record, which is
+   not this roadmap's to do, so it is stated instead of silently carried.
+5. **`session_start` is imprecise in both directions**, per the rule table — so
+   the 1,428 population figure is an estimate with a known failure mode, not a
+   count.
+6. **Self-observation.** The measuring session's own transcript is inside the
+   population, and the six-cell denominator grew by 13 events between two runs
+   minutes apart (249,573 → 249,586). The published figures are pinned to the
+   JSON run recorded above. The direction is known and harmless here — it
+   inflates a denominator whose numerator is 0, so it can only make the reported
+   rate lower, never higher.
+7. **Reconstruction is derived, not published-as-a-count.** The transcript is
    host-written and independent of the hook path, which is what makes it a
-   legitimate denominator, but the counts come from the four rules above rather
-   than from a tally the host publishes. The derivation is versioned and
-   re-runnable.
-6. **The opted-in half is an empty population, and one machine's emptiness is
-   not the world's.** 1 install observable, 0 opted in. A second machine with the
-   setting on would give the opted-in rate a denominator; nothing here forecloses
-   that, and it is the cheapest way to complete the pair.
+   legitimate denominator, but the counts come from the rules above rather than
+   from a tally the host publishes. The derivation is versioned and re-runnable.
+8. **The opted-in half is an empty population, and one machine's emptiness is
+   not the world's.** 1 settings layer observable, 0 carrying the key. A second
+   machine with the setting on would give the opted-in rate a denominator;
+   nothing here forecloses that, and it is the cheapest way to complete the pair.
+9. **6,650 lines did not parse**, out of a corpus of 1,485 transcripts. They are
+   counted and published rather than dropped, but they are not attributed: a
+   truncated tail line and a genuinely malformed record are not distinguished.
 
 ## The closure decision — AI council 2026-08-29, DEGRADED (1 of 2 seats)
 
@@ -304,9 +415,9 @@ reason it cannot exist is published in its place with the same rigour"* clause �
 **Verdict: (A), with three additions the seat made mandatory.** All three are
 implemented above:
 
-1. *Scope the default result explicitly* — one maintainer machine, `claude`,
-   2026-07-30..2026-08-29, six counted cells. Done in the caption, in every
-   table, and in Limits 1–3.
+1. *Scope the default result explicitly* — one maintainer machine, one
+   repository, `claude`, 2026-07-31..2026-08-29, six counted cells. Done in the
+   caption, in every table, and in Limits 1–3.
 2. *State the opted-in half as "population empty in measurement scope", NOT as
    "unmeasurable"* — the measurement ran and found the population empty, which
    reads differently to a later reader. Done verbatim in the second caption.
@@ -317,12 +428,10 @@ implemented above:
 
 **Rationale (seat's own):** *"The roadmap Goal explicitly permits 'the reason it
 cannot exist is published in its place with the same rigour.' One measured rate
-(0.00 % over 152,061 bound events) [sic — the seat was given the figure from an
-earlier run of the same measurement; the pinned figure above is 152,151, and the
-drift is the self-observation effect of Limit 4] plus one rigorously documented
-empty-population finding satisfies that Goal. Replay (B) would measure the wrong
-thing (dispatch path, not host capture) and risk AC-4 substitution violation.
-Parking (C) makes completion hostage to external condition with no timeline."*
+plus one rigorously documented empty-population finding satisfies that Goal.
+Replay (B) would measure the wrong thing (dispatch path, not host capture) and
+risk AC-4 substitution violation. Parking (C) makes completion hostage to
+external condition with no timeline."*
 
 **Counter-argument, recorded because the seat required it be recorded rather
 than resolved away:** the earlier unanimous (c) required *two rates with two
@@ -332,12 +441,13 @@ requirement for the opted-in half. That reading is recorded here explicitly so a
 future reader does not mistake the closure for a silent violation of a unanimous
 verdict.
 
-***Revisit-if:*** a second machine, or any machine, runs with
-`hooks.runtime_journal.enabled: true` — the opted-in population stops being
-empty and the pair can be completed by re-running
-`measure_host_capture` there. Or: `hooks.runtime_journal.enabled` ships default-ON,
-at which point the default-install figure above measures something else entirely
-and must be re-taken rather than re-quoted.
+***Revisit-if:*** any machine runs with `hooks.runtime_journal.enabled: true` —
+the opted-in population stops being empty and the pair can be completed by
+re-running `measure_host_capture` **on that machine and in that repository**, the
+scope qualifier being the correction this revision exists for. Or:
+`hooks.runtime_journal.enabled` ships default-ON, at which point the
+default-install figure above measures something else entirely and must be
+re-taken rather than re-quoted.
 
 ## AC-5 — both blockers carry a recorded choice
 
@@ -350,12 +460,13 @@ was tested by the 1.1 survey and came back false: six cells, not near-zero);
 ## Reproducing this
 
 ```bash
-./scripts-run src/scripts/measure_host_capture              # human-readable
-./scripts-run src/scripts/measure_host_capture --json       # machine-readable
-./scripts-run src/scripts/measure_host_capture --days 7     # a shorter window
-npx vitest run tests/scripts/host_denominator.test.ts       # the rules, on fixtures
+./scripts-run src/scripts/measure_host_capture                    # published scope
+./scripts-run src/scripts/measure_host_capture --json             # machine-readable
+./scripts-run src/scripts/measure_host_capture --scope machine    # a DIFFERENT figure
+./scripts-run src/scripts/measure_host_capture --days 7           # a shorter window
+npx vitest run tests/scripts/host_denominator.test.ts             # the rules, on fixtures
 ```
 
-The numbers will differ on another machine and will drift on this one as new
-sessions land — that is the point of a population, and the reason the published
-figures name their run.
+The numbers will differ in another repository or on another machine, and will
+drift on this one as new sessions land — that is the point of a population, and
+the reason the published figures name their run and their scope.
