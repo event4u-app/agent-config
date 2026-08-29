@@ -305,19 +305,78 @@ one for a design note under review: § 2's rule is that unanswered is
       serialization fixtures for the leak classes in 2.1, each asserting the
       record cannot carry it.
       verify: DONE — `tests/scripts/collector_record.test.ts`, and the sensitivity half was OBSERVED rather than argued. `LEAK_FIXTURES` is a named table of six: repository/worktree identifier (`repo_path`), branch name, command name and arguments, error enum with an interpolated value, a hash stable enough to identify a user or repo, and a free-form escape hatch (`extra`). Each fixture asserts both that the record refuses the field and that it says `REJECTED, not dropped`. The timestamp class gets its OWN block because it differs in kind — the field is legitimate and required, and it is its RESOLUTION that leaks, so it is a value constraint rather than a field ban; a precise ISO timestamp and a smuggled unix epoch are both refused. Identifier derivation gets a third block: a sha256 and a hostname are both refused as `machine_id`. **Sensitivity probe, run and reversed:** admitting a single leak field (`repo_path`) to `FIELD_PURPOSE` reds **5 of the 35 tests**, including that class's own fixture and the allowlist-equals-record-keys assertion — so the fixtures are enforcing, not decorating. Restored and re-verified: 35 green, `tsc --noEmit` clean. Each fixture additionally carries a `removing_this_constraint_reds_it` line naming the exact edit that would turn it green, so the sensitivity claim is written down per class instead of asserted once for the suite.
-- [ ] **2.3 Implement deletion and opt-out, then test them.** AC-7 of the
+- [x] **2.3 Implement deletion and opt-out, then test them.** AC-7 of the
       governance roadmap's first draft required these to be *documented*. A
       documented deletion path that nobody executed is a claim.
-      verify: a test deletes a machine's records through the supported path and asserts the store no longer serves them; a second asserts opt-out prevents the write rather than filtering the read.
-- [ ] **2.4 Write the upgrade and schema-rollback contract.** Forward and
+      verify: DONE — `src/scripts/_lib/collector_store.ts` + `tests/scripts/collector_store.test.ts`. Both clauses are driven against the real store on a temp user root; nothing is mocked, because a mocked deletion is a documented deletion with extra steps.
+
+      **Deletion.** `deleteMachine` is the supported path and returns how many
+      records it removed. The test writes 4 records for one machine and 1 for a
+      second, deletes the first, and asserts through **both** query shapes —
+      `readRecords(handle, machineId)` and `readRecords(handle)` with no filter
+      — because "gone" has to mean gone from the store and not merely absent
+      from the one query that happened to filter it. Deletion is BY MACHINE and
+      nothing coarser is offered: `machine_id` is the only identity a record
+      carries, so a "delete everything" verb would make a targeted Art. 17
+      request impossible to serve honestly.
+
+      **Opt-out prevents the WRITE.** The step's wording is an architectural
+      requirement, not a phrasing preference, so the assertion is the one that
+      can tell the two apart: after a refused write the **row count is
+      unchanged** (`SELECT COUNT(*)` = 0), which a read filter cannot achieve.
+      `writeRecord` refuses before touching SQLite and returns
+      `refusal: 'opted-out'`; the check lives INSIDE `writeRecord` rather than
+      at the call site, and a test pins that by making the identical one-argument
+      call refuse or write purely on the marker's presence — a consent check a
+      caller can forget is a consent check that will be forgotten. The marker is
+      a FILE under the store directory, not a settings key, and therefore
+      reachable without the package running: the same property 3.3's kill switch
+      needs.
+
+      **Sensitivity, observed rather than argued.** Moving the opt-out check out
+      of `writeRecord` into a filter inside `readRecords` reds **3 of 14** tests,
+      including the row-count assertion; making `deleteMachine` a no-op that
+      still returns the count reds **2 of 14**. Both reverted from an explicit
+      backup and re-verified at 14/14.
+- [x] **2.4 Write the upgrade and schema-rollback contract.** Forward and
       backward compatibility, what an older package does when it meets newer
       records, whether a rollback migrates or quarantines, what uninstall
       removes, and recovery after a crash mid-migration.
-      verify: a test drives each of those five transitions over a seeded store.
+      verify: DONE — five transitions, five named tests, each driven over a store seeded to the state it tests. `tests/scripts/collector_store.test.ts` § *2.4 — the five upgrade transitions*.
+
+      | # | Transition | Contract | Test |
+      |---|---|---|---|
+      | 1 | Fresh store | created at `COLLECTOR_SCHEMA_VERSION`, `quarantined: false` | *TRANSITION 1 — a fresh store is created at the current schema version* |
+      | 2 | **Backward** compat — older records, newer package | migrated forward inside a marked window; records survive; the marker does not outlive a success | *TRANSITION 2 — an OLDER store is migrated forward and its records survive* |
+      | 3 | **Forward** compat — newer records, older package | **QUARANTINED**: renamed, never read, never rewritten. Writes refuse with `schema-quarantined`, reads return nothing, and the moved file's BYTES are asserted equal to what the newer revision wrote | *TRANSITION 3 — a NEWER store is quarantined, never read and never rewritten* |
+      | 4 | Crash mid-migration | the marker survives the crash, so the next open quarantines rather than resuming a migration whose progress nothing recorded — and leaves a WORKING store, not a wedge | *TRANSITION 4 — a crash mid-migration quarantines rather than resuming* |
+      | 5 | Uninstall | removes the database, its WAL sidecars and the markers; **KEEPS** the quarantine directory | *TRANSITION 5 — uninstall removes the store and the markers, and KEEPS the quarantine* |
+
+      **Three decisions inside that table are decisions and are recorded as
+      such.** (a) A rollback **quarantines rather than migrates** — reading a
+      record shape you do not understand is how a field gets silently dropped,
+      and dropping is what this schema refuses; it also matches the row 3.1's
+      matrix already owes for incompatible schemas. (b) The crash marker is
+      checked **before** the version stamp is read, because a half-migrated
+      store's stamp cannot be trusted to say which half it is in. (c) Uninstall
+      keeps the quarantine because a quarantined store is the *record of an
+      incompatible-schema event*, and uninstall is not the moment to destroy
+      evidence about one.
+
+      A sixth test covers the growth budget the quarantine directory would
+      otherwise have none of: the quarantine filename carries a **content
+      digest** rather than a timestamp, so repeated incompatible opens of the
+      same bytes are idempotent instead of unbounded — R-A7 applied to a
+      directory nobody prunes.
+
+      **Sensitivity:** reading a newer store instead of quarantining it reds
+      **3 of 14**; checking the crash marker after the version instead of before
+      reds **1 of 14** — the transition-4 test alone, which is the targeted
+      result rather than a blanket break. Both reverted and re-verified at 14/14.
 
 ## Phase 3 — The operational contract
 
-- [ ] **3.1 Write the rollback trigger matrix.** Each trigger names its
+- [x] **3.1 Write the rollback trigger matrix.** Each trigger names its
       activation mechanism, its owner, its recovery procedure, and its test.
       The minimum set, from the council: privacy-contract violation (immediate
       disable and quarantine) · orphan or duplicate collector (disable
@@ -326,7 +385,38 @@ one for a design note under review: § 2's rule is that unanswered is
       schema or failed migration (preserve without reading or rewriting) ·
       static-mode regression (block release) · lifecycle-suite failure on any
       supported platform (prohibit the public capability claim).
-      verify: every row has all four columns filled and a test named; a row with an empty test column fails this step.
+      verify: DONE — seven rows below, every one carrying all four columns and a named test. No row has an empty test column.
+
+      **The matrix, committed 2026-08-29.** Seven rows — the council's minimum
+      set, none dropped and none added. Every row carries all four columns.
+
+      **What the "Test" column is and is not.** The step's `verify:` asks for a
+      test *named* per row, and a name is not coverage. So each row's test
+      carries its state explicitly — `EXISTS` with the file, or `OWED BY <step>`
+      — because a matrix whose test column reads like seven green checks when
+      four of them are future work is the "presence check masquerading as proof"
+      that step 5.2 exists to prevent, one section earlier. Three of the seven
+      are enforced today; four are owed by the steps that build what they test,
+      and they are owed by name rather than by hope.
+
+      | # | Trigger | Activation mechanism | Owner | Recovery procedure | Test |
+      |---|---|---|---|---|---|
+      | 1 | **Privacy-contract violation** — a record reaches the store carrying a field the schema does not allow | `validateRecord` returns `ok: false` at the write boundary; `writeRecord` refuses with `refusal: 'invalid-record'` and surfaces every error. The violation is a REFUSAL, never a drop | maintainer | Immediate disable (`optOut`, which prevents the write and needs no running collector) + `quarantine()` of the store, preserved unread; then `deleteMachine` for any affected machine id | **EXISTS** — `tests/scripts/collector_record.test.ts` (six named leak-class fixtures, each with its `removing_this_constraint_reds_it` line) + `tests/scripts/collector_store.test.ts` § *refuses an invalid record with its errors rather than silently dropping it* |
+      | 2 | **Orphan or duplicate collector** — more than one live collector inside the declared namespace (one per OS user, `uniqueness-namespace` (b)) | Per-user runtime lock in the user runtime directory; a second acquirer fails to take it and exits rather than proceeding | maintainer | Disable activation (the `activation-and-installation-model` (b) answer makes starting an explicit action, so activation is revocable without uninstalling); fence the stale owner record on the next start | **OWED BY 5.1** — the fencing and exactly-one-live property are process facts and a mocked assertion proves neither; 5.1's suite spawns real processes. Named, not written |
+      | 3 | **Crash-loop threshold exceeded** | Supervisor restart counter crossing its bound within a window; the bound belongs to the supervisor chosen in `supervisor-mechanism-and-platform-scope` | maintainer | Bounded retries, then **static fallback** — the no-collector dispatch path, which is the documented degradation and not an outage. `resident-process-floors` § 3 owns the ladder | **OWED BY 5.1** — a restart counter is only observable across real process deaths |
+      | 4 | **CPU, memory, disk or file-descriptor budget exceeded** | Per-resource ceiling from 3.2 crossed, measured against the headroom-at-peak that step records | maintainer | Stop the collector (not throttle it): an observer that has become a load is no longer an observer, and § 1's falsifiable form — *if the module were killed, every dispatch would resolve identically* — is what makes stopping safe | **OWED BY 3.2** — that step's own `verify:` is *"a test asserts the collector is stopped when each is exceeded"*, so the test is that step's deliverable and this row must not pre-claim it |
+      | 5 | **Incompatible schema or failed migration** | `openCollectorStore` reads `user_version`; a value ABOVE this revision's, or an in-flight migration marker surviving a crash, both route to `quarantine()` | maintainer | **Preserve without reading or rewriting** — a rename, never a read and never a migration; a fresh store is created beside it and the moved file's bytes are asserted unchanged. `uninstall` deliberately keeps the quarantine directory: it is evidence about the event | **EXISTS** — `tests/scripts/collector_store.test.ts` § TRANSITION 3 (newer store: not read, not written, bytes preserved) and § TRANSITION 4 (crash mid-migration quarantines rather than resuming). Both probed red |
+      | 6 | **Static-mode regression** | The existing suite diverging between collector-absent and collector-present-but-off | maintainer | **Block release.** Not a rollback of the collector but a refusal to ship: static operation is the Goal's own floor, and a regression there means the observer changed the observed | **OWED BY 4.2** — that step compares the two runs rather than declaring each green, and the comparison IS the test. Cannot exist before the collector does |
+      | 7 | **Lifecycle-suite failure on any supported platform** | The 5.1 suite red, or **skipped**, on a platform the platform table declares supported — AC-8 makes a skip a failure on that platform rather than an absence | maintainer | **Prohibit the public capability claim.** `check_supervision_claim_atomicity` already refuses a present-tense supervision claim without a lifecycle record for THIS revision, so the prohibition is mechanical rather than remembered. Per the `lifecycle-ci-runner-provisioning` (b) verdict the unverified platform row stays excluded from release claims **even if its static fallback appears to work** | **OWED BY 5.2** — that step's `verify:` requires the check to red against a deliberately emptied suite and against a result from a different revision, two seeded negatives, both observed |
+
+      **Row 4's owner column is the one worth arguing about, and it is not
+      argued away.** Every row reads `maintainer`, which looks like a column
+      that says nothing. It is the honest entry: this package has one
+      maintainer, no on-call rotation, and no second party a trigger could page.
+      Writing a team name into six of seven rows would have made the column look
+      informative while naming nobody who exists. What the column will carry
+      once there is someone else to name is a `revisit-if`, not a placeholder.
+
 - [ ] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
       footprint, and file-descriptor count, each with the ceiling and the
       headroom at expected peak. An unquantified ceiling is not headroom.
@@ -670,12 +760,18 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — All three blockers carry a `resolved` status naming the chosen option, and the supported platform list is written down.
-- [ ] AC-2 — The metric definition answers all nine questions from 1.2, and the target plus window were committed in a commit preceding the first collector commit — checked by commit order.
-- [ ] AC-3 — Every schema field carries a purpose and a cardinality limit; an unknown field is rejected rather than dropped; and a serialization fixture exists per named leak class, each proven to fail when its constraint is removed.
-- [ ] AC-4 — Deletion and opt-out are exercised by tests, not documented: records are gone after deletion, and opt-out prevents the write rather than filtering the read.
-- [ ] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
+- [x] AC-1 — All three blockers carry a `resolved` status naming the chosen option, and the supported platform list is written down.
+      MET by 1.1, and the scope of "three" is stated rather than assumed. The three blockers this AC was written against — `supervisor-mechanism-and-platform-scope`, `uniqueness-namespace`, `activation-and-installation-model` — each carry `Status: resolved` naming a chosen option, and the supported platform list is a table inside the first of them, with Windows recorded as **unevaluated** rather than refused. A **fourth** blocker, `lifecycle-ci-runner-provisioning`, is `open` and is deliberately NOT counted here: it was added on 2026-08-29 by council instruction, after this AC was written, and its own closure condition is tracked by AC-8's Phase 5 dependency rather than by this line. Flipping this with the fourth blocker unnamed would have been the more convenient reading and a worse record.
+- [x] AC-2 — The metric definition answers all nine questions from 1.2, and the target plus window were committed in a commit preceding the first collector commit — checked by commit order.
+      MET by 1.2 and 1.3, and the commit-order clause was CHECKED rather than asserted: the target and window landed in `df8ab5c68` (PR #1714) and the first commit touching any collector code — `src/scripts/_lib/collector_record.ts` — is `1468231fa` (PR #1721). `git merge-base --is-ancestor df8ab5c68 1468231fa` exits 0, so the order holds by ancestry and not by date-stamp comparison. The nine answers are numbered 1–9 in 1.2 against the nine questions the step names.
+- [x] AC-3 — Every schema field carries a purpose and a cardinality limit; an unknown field is rejected rather than dropped; and a serialization fixture exists per named leak class, each proven to fail when its constraint is removed.
+      MET by 2.1 and 2.2. All three clauses: `FIELD_PURPOSE` in `src/scripts/_lib/collector_record.ts` carries purpose, cardinality limit and why-a-coarser-form-does-not-suffice for all nine fields, and `ALLOWED_FIELDS` is DERIVED from it so a field cannot be added without stating its purpose; `validateRecord` reports an unknown key as `unknown field '<name>' — REJECTED, not dropped`; and `LEAK_FIXTURES` in `tests/scripts/collector_record.test.ts` is a named table of six leak classes, each carrying a `removing_this_constraint_reds_it` line, with the sensitivity claim OBSERVED — admitting `repo_path` reds 5 of 35.
+- [x] AC-4 — Deletion and opt-out are exercised by tests, not documented: records are gone after deletion, and opt-out prevents the write rather than filtering the read.
+      MET by 2.3. `tests/scripts/collector_store.test.ts` deletes through `deleteMachine` and asserts absence through BOTH query shapes (filtered and unfiltered), and asserts a refused write leaves `SELECT COUNT(*)` at 0 — the assertion that distinguishes a prevented write from a filtered read. Sensitivity observed: moving the check into `readRecords` reds 3 of 14, a no-op `deleteMachine` reds 2 of 14.
+- [x] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
+      MET by 2.4. Five named tests, one per transition, each over a store seeded to the state it tests — plus a sixth on the quarantine directory's growth budget. Transition 3 asserts the quarantined file's BYTES are unchanged, which is what "preserve without reading or rewriting" has to mean to be checkable. Sensitivity observed: 3 of 14 red when a newer store is read instead of quarantined, 1 of 14 when the crash marker is checked after the version stamp.
 - [ ] AC-6 — Every rollback-trigger row has an activation mechanism, an owner, a recovery procedure and a named test; resource budgets are numbers with headroom; and the kill switch has been exercised against an unresponsive process.
+      FIRST CLAUSE MET by 3.1 — seven rows, four columns each, no empty test cell, and each test carries its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage. THREE of the seven are enforced today; four are owed by the steps that build what they test. The second and third clauses are 3.2 and 3.3 and are OPEN: both need the collector, which is Phase 4. Deliberately not flipped — a partly-met AC reading met is the silent-green this roadmap's own § 4 warns about.
 - [ ] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
 - [ ] AC-8 — The five lifecycle properties are demonstrated by process-level tests on every declared platform, executed in CI on each — a skip counts as a failure on that platform.
 - [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
