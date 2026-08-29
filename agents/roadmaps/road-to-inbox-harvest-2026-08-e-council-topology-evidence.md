@@ -167,12 +167,49 @@ called a larger risk than feature absence.
   texts. Rewrite anything substantively verbatim.
       verify: the evidence file records the scan result **and** the commits
       read; blocked on `blocker: unlicensed-source-verbatim-scan`
-- [ ] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
+- [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
   `judgment_ladder.ts` stays the one task-side resolver, no
   `CouncilTopologyRouter` beside it, topology refinement begins only after the
   ladder resolves to `council`, `necessity.ts` keeps its council-internal role.
       verify: a deliberately-added second task-side council router makes the
       new architecture test fail; sabotage the guard, watch it go red, restore
+
+      **Closed 2026-08-29.** The invariant was documented and enforced by
+      nothing: `judgment_ladder.ts`'s own docstring states all three clauses —
+      one resolver, "never a fourth parallel classifier bolted on beside it",
+      and "deliberately independent of `ai_council/necessity.ts`" — and a
+      docstring cannot fail. A second task-side council router could have landed
+      beside the ladder with every gate in this tree green.
+
+      Landed: `src/scripts/_lib/one_resolver_invariant.ts` (a pure scanner over
+      file text, so it can be driven against a synthetic tree) and
+      `tests/scripts/one_resolver_invariant.test.ts` — **9 tests, all green**.
+
+      **Sensitivity is established, not assumed.** Three arms add the defect and
+      observe the guard go red inside the test rather than reasoning that it
+      would: a `CouncilTopologyRouter` class beside the ladder, a
+      function-shaped `resolveCouncilRoute` beside it, and an `ai_council/`
+      import added to the resolver itself. Each asserts the baseline clean
+      first, so the red is caused by the sabotage and not by a tree that was
+      already dirty.
+
+      **Polarity is tested too, because a pattern that only ever fires is not a
+      guard.** Four denial arms must stay GREEN: a file that merely mentions the
+      council and routes nothing; a council-INTERNAL module even when it
+      literally declares `CouncilTopologyRouter`, since the invariant is about
+      task-side resolvers; a `.test.ts` file naming one; and an `ai_council`
+      import in a non-resolver file, which is legal by construction.
+
+      A fifth test guards the guard: the scanner walking zero files would also
+      return `[]`, so the green run on the real tree is distinguished from a
+      scanner that found nothing to look at by asserting it actually read
+      `judgment_ladder.ts` and recognised it as the resolver.
+
+      **What this step does NOT close:** the third clause, "topology refinement
+      begins only after the ladder resolves to `council`", is a *sequencing*
+      property of code that does not exist yet — no topology refiner is built.
+      It is unenforceable today and is left to the phase that builds one, rather
+      than covered by a check that would pass vacuously.
 
 ## Phase 1 — Stop paying for information the tree already has
 
