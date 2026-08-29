@@ -234,8 +234,11 @@ that same table routes to the council. This file is that promotion.
       was unstated, `session_start` was published as an iff it is not, the
       numerator is host-agnostic against a `claude`-only denominator, and the
       settings parse resolved silently toward `default`. Every finding reached a
-      terminal status in the findings artefact; 16 `fixed`, 2 `accepted-risk`
-      with their reasons recorded there.
+      terminal status in the findings artefact: **17 `fixed`** against this
+      change's own commit, and **1 `accepted-risk`** — the numerator is
+      host-agnostic while the denominator is `claude`-only, which cannot be
+      fixed without widening `JournalEvent` and is now stated as a limit whose
+      bias direction (upward only) is known.
 
 - [x] **2.2 Close or restate the parent's 1.4 in this roadmap's own words.**
       Either the number 1.4 asked for now exists, or the reason it cannot is
