@@ -15,10 +15,11 @@ estate_offset_exempt: "Charges +1 active and is offset in this same change by th
 ---
 # Road to a HOST capture rate for the runtime event journal
 
-> **Source:** promoted 2026-08-29 from
-> `agents/roadmaps/stubs/road-to-journal-host-capture-measurement.md`, which was
-> created by `road-to-runtime-event-journal` to carry its **`[~]` deferred and
-> unmet** step 1.4. The promotion was decided by the AI council — see
+> **Source:** promoted 2026-08-29 out of the `stubs/` directory, where this file
+> was created by `road-to-runtime-event-journal` to carry its **`[~]` deferred
+> and unmet** step 1.4. The stub path is deliberately not cited: it no longer
+> exists, and a dead path in a Source line is exactly what `check_references`
+> refuses. The promotion was decided by the AI council — see
 > § Why this is an active roadmap and not a stub.
 
 ## Goal
