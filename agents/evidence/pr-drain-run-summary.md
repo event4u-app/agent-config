@@ -1,260 +1,156 @@
-# PR-drain run summary — 2026-08-26
+<!-- evidence-type: analysis -->
 
-One row per pull request the run touched, in the order the queue produced them.
-The queue was recomputed after every merge, which is why the ordering is not
-monotonic in PR number: **four PRs (#1670–#1673) and three more (#1674–#1677)
-were opened by other sessions while the drain was running**, so the queue grew
-twice before it emptied.
+# PR drain run — 2026-08-29
 
-Method per PR: `git fetch` → `gh pr checkout` → `git merge origin/main`
-(never a rebase) → resolve → regenerate every generated artifact → push → wait
-for CI in the **foreground** → merge. Waiting in the foreground is not a style
-choice: a background wait produces a task notification, the notification counts
-as a prompt, and the prompt rewrites the git-authorization ledger to
-`authorized: []` mid-run.
+One row per PR. The run's mandate named a six-PR queue and a first merge of
+`#1499`; **the recomputed queue held one open PR**, and every PR the mandate
+named was already merged before the run started. That correction is the first
+row-level fact below, not a footnote, because acting on the stated queue would
+have meant re-processing merged work.
 
-> **RETIRED 2026-08-27 — the foreground-wait requirement was a workaround, and
-> the defect it routed around is repaired.** The replacement semantics were
-> never the bug: `git_authorization_hook.ts` replaces the ledger every user turn
-> on purpose, so a consent given three turns ago cannot authorize today's push.
-> What was broken is the INPUT CLASSIFICATION — a background task notification
-> arrives on the same `user_prompt_submit` slot as a typed prompt, and the
-> writer could not tell them apart. The repair is a predicate,
-> `humanTypedThisTurn` in `src/scripts/_lib/machine_wake.ts`: a machine wake
-> returns before any per-turn record is touched, and an unrecognised payload
-> falls back to clearing, never to retaining.
->
-> Making the ledger *durable* — the shape the source request asked for — would
-> have broken the single-turn property to hide a symptom of a different bug.
->
-> Landed by `road-to-turn-bound-authorization-integrity`; see that roadmap for
-> the captured payload evidence, the sensitivity proof, and the sibling sweep
-> that found the same defect in the suggestion-capture latch. **Background waits
-> are safe again**; the two authorization stalls recorded below are historical.
+## Step 0 — the authorisation premise, verified read-only
 
-## The run
+`dist/hooks/dispatch.js:26307` reads `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3`.
+The 6h TTL is in the effective bundle. A `30 * 60 * 1e3` literal does occur in
+the file at `:32468`, and it is **not** the ledger constant — it is an entry in
+a duration-label table (`{ label: "30m", ms: … }`). Verified by locating both by
+line rather than by presence of the pattern, because the pattern alone would
+have produced a false STOP. Nothing was modified; the check was read-only.
 
-| # | Queue pos | Sync conflicts + resolution class | CI iterations | Disposition |
+## Rows
+
+| # | Queue pos | Sync conflicts → resolution class | CI iters | Disposition |
 |---|---|---|---|---|
-| 1493 | pre-run | — | — | merged before this run |
-| 1488 | pre-run | — | — | merged before this run |
-| 1480 | pre-run | — | — | merged before this run |
-| 1489 | pre-run | — | — | merged before this run |
-| 1482 | pre-run | — | — | merged before this run |
-| 1499 | pre-run | — | — | merged `dd6a144` before this run |
-| 1668 | 1 | none — clean auto-merge, twice (`main` moved mid-flight) | 2 | **merged** `580cb11` |
-| 1666 | — | — | — | **merged** `7a91be7` by a parallel session |
-| 1667 | — | stacked on #1666's branch, not on `main` | — | **merged** `5dcb6c5` with its base |
-| 1672 | 2 | none; branch held by another worktree, so synced **detached** and pushed to the ref | 1 | **merged** `0fcec0f` |
-| 1670 | 3 | none — clean auto-merge | 1 | **merged** `d2a4fef` |
-| 1674 | 4 | none — clean auto-merge | 1 | **merged** `2d7cca0` |
-| 1671 | 5 | none — clean auto-merge | 1 | **merged** `e6fdfd4` |
-| 1669 | — | synced clean, 0 conflicts | — | **merged** `1899f92` by a parallel session while awaiting authorization |
-| 1673 | 6 | none | 3 | **merged** `387dd3e` |
-| 1676 | 7 | none | 1 | **merged** `82e47ce` |
-| 1661 | 8 | **83 conflicts** — 76 stubs, 4 code files, 1 metrics file, 1 add/add archive | 1 | **merged** `9e8344a` |
-| 1677 | 9 | none — already current | 0 | **merged** `15447f4` |
-| 1675 | 10 | 1 conflict (`docs/decisions/INDEX.md`, generated) | 5 | **twice-exhausted, diagnosis on the PR** |
+| 1493 | pre-run | — | — | merged `9b7934e6c` (before this run) |
+| 1488 | pre-run | — | — | merged `46837f58b` (before this run) |
+| 1480 | pre-run | — | — | merged `b593d8c00` (before this run) |
+| 1489 | pre-run | — | — | merged `d0fad2ccd` (before this run) |
+| 1482 | pre-run | — | — | merged `52cfb4bb8` (before this run) |
+| 1499 | pre-run | — | — | merged `dd6a14406` (before this run) — the mandate's "merge this first" target was already merged |
+| 1701 | pre-run | — | — | merged `43a819363` **without its final commit** — see § Dropped edits |
+| 1707 | 1 (only open PR) | none — `git merge origin/main` applied clean, no conflicted paths | 1 | **merged `e9f4b318b`** (squash) |
+| 1712 | not in queue (merged during the run) | — | — | merged `7a2a6f883` by another session; **left `main` red** — see § A red nobody's CI could see |
+| 1713 | follow-up, authored this run | none on sync | 0 | **merged `b9019f1ad`** (squash) |
 
-**11 merged this run. One left open, deliberately.**
+## `#1707` — what the one CI iteration fixed
 
-## Conflict resolution, by class
+Three checks were red on arrival. Only one was a defect in the PR.
 
-**Generated artifacts — regenerated, never hand-merged.** `docs/proof.md`,
-`agents/roadmaps-progress.md`, `docs/decisions/INDEX.md`, `docs/catalog.md`,
-`agents/index.md`, `agents/reports/skill-overlap.json`, the ADR evidence census
-and the `.md` projections. Every merge was followed by a regeneration pass; in
-all but three cases the regeneration produced an empty delta, which is the
-evidence the merge was already correct.
+**Root cause, single:** the PR grew `src/rules/source-confidentiality.md` by
+**+770 delivered tokens**. That rule is re-written into the preamble on *every*
+subagent spawn, and `main` sits roughly 2 tokens under the 138,212 grace
+ceiling, so the addition had no room. Measured total went to 138,948. This
+reddened `Node Tests` shard 3/4 on both runners (the budget gate's own test
+asserts the CI step exits 0) and `Standing payload delta`.
 
-**#1661's 83 conflicts, resolved by class rather than by file:**
+**Fixed at the source, not at the threshold.** The gate offers two remedies and
+the second — raising `baseline_tokens` — is the config-weakening move this
+repository refuses and the run mandate forbids. So:
 
-- **67 stubs** — pure `review_by:` date collisions. `main`'s later date wins; a
-  parked stub's next-read date is a maintained field, not a branch contribution.
-- **9 stubs** — `review_by:` (main) plus `probe: none` (branch). **Union**: the
-  branch's real contribution is the `probe` field, and the date is main's.
-- **`road-to-owner-authority-decisions.md`** — both sides added "unresolved
-  decisions 5–8". Not a union: the same four decisions, and **main's version is
-  strictly richer** — it carries provenance corrections, per-decision
-  owner-reserved reasoning, and it demonstrates the branch's own Decision 8
-  premise to be stale (`0/2 slots used` against the branch's "third in a queue
-  of two"). Main's side taken whole.
-- **`_dispatch.bash` + `src/cli/registry.ts`** — the auto-merge **silently
-  duplicated** `stubs:due`: once in the help text, once in the `case` block, once
-  in the registry. `registry.ts` reported **no conflict at all**, and the
-  duplicate only surfaced because the pinned counting method read 110 against a
-  budget of 109. A clean auto-merge of a generated or list-shaped file is not
-  evidence of a correct merge.
-- **`evaluator-budgets.json`, `evaluator-measurements.json`, both
-  `update_roadmap_progress.ts`** — main's side; its `109` already accounted for
-  both verbs, the branch's `108` for only one.
-- **add/add on the archived roadmap** — archived end-state wins; both sides
-  carried the same 10 checked boxes, so no completion was lost.
+1. Three sections the PR added to the rule are reference material rather than
+   obligations the agent carries into every spawn — the claim/residual honesty
+   clause, the two-class license split by path, and the gate's shape checks and
+   tiering. They moved **verbatim** into a new guideline,
+   `docs/guidelines/agent-infra/source-confidentiality-mechanics.md`, and the
+   rule kept one pointer bullet. That left `+55`, still over.
+2. The rule's own pre-existing *"Why this rule is not path-scoped"* rationale —
+   630 tokens of council record, rejected alternatives and a token
+   measurement, paid on every spawn — moved to the same guideline behind a
+   four-line factual stub that keeps the decision itself.
 
-## Root-cause fixes made to get CI green
+**Result: `+770 → −350` delivered tokens; measured total 138,948 → 137,828
+against the 138,212 ceiling.** No Iron Law heading, fenced block or negation
+clause moved; `check_condensation` passes byte-for-byte. Guideline count
+116 → 117, with `README.md`, `docs/architecture.md`, `agents/index.md` and
+`docs/catalog.md` regenerated rather than hand-edited.
 
-None of these was a threshold move.
+**Residual, disclosed:** `lint commit subjects` stayed red — an intermediate
+commit on the branch carries the blocklisted token `tmp` in its subject. It is
+**advisory**, not one of the 16 checks that block this PR shape (only
+`Sync + Generate Tools Consistency` blocks, and it passed). The only fix is
+rewriting a pushed commit subject, which the run mandate forbids; squash-merge
+removes it from `main`'s history, and the merged subject carries no blocklisted
+token. Verified against the linter's own set: `leftover(s)`, `wip`, `temp`,
+`tmp`, `fixup`.
 
-- **#1673** — regenerated a stale ADR evidence census (twice: the second run was
-  caused by the first fix); added the missing `## Evidence` section to ADR-247;
-  repaired a `lint_canonical_terms` regression that had entered on **`main`**
-  via #1669 (two `behaviour` occurrences in
-  `docs/contracts/installed-tools-lockfile.md`), isolated by running the linter
-  on `e6fdfd49d` versus `1899f92b9`.
-- **#1675** — see the PR comment; four gates repaired, three left.
-
-## The one PR left open
-
-**#1675 `drain/evidence-gated-change`** — twice-exhausted, full diagnosis posted
-on the PR. CI went 10 → 7 failing checks, and the 7 are 3 causes across 6 test
-shards. All three are the author's decision because each has only two exits, a
-threshold move or a content deletion:
-
-1. `check_preamble_payload_budget` is **347 tok** over a grace ceiling whose
-   config states it *"may never move UP"*. The branch's remaining rule growth is
-   exactly those 347 tok, after everything movable was already extracted to a
-   guideline.
-2. `lint_skill_descriptions.test.ts` pins `(0 clustered)`; the branch's TDD body
-   additions genuinely cluster, and the branch **already records that as
-   structural** with a 2/2 council disposition in the overlap allowlist.
-3. `audit_skill_overlap.test.ts` pins an empty allowlist — the same decision as
-   (2), seen from the other side.
-
-(2) and (3) are one decision; (1) constrains how it can be answered, because the
-sibling-routing clause that clears the linter costs payload there is none of.
+**Also disclosed:** the branch carries no completion-review artefact for a diff
+with 9 code paths. Advisory in preflight; not fixed here.
 
 ## Dropped edits
 
-One, named rather than buried: **#1661's shorter version of "unresolved
-decisions 5–8"** in `road-to-owner-authority-decisions.md`. Dropped in favour of
-main's longer version of the same four decisions, which supersedes it on
-content — see the conflict-class section above.
+**`#1701` merged without its last commit.** That commit corrected four claims
+that `main` had overtaken while the branch was open — ADR-249 superseded
+ADR-124's Class-B row on 2026-08-27, `docs/contracts/resident-process-governance.md`
+landed, and `road-to-runtime-governance-flip` archived. The push carrying it was
+interrupted and never resent.
 
-## What the run cost that was not PR work
+Disposition, per file:
 
-- **Two authorization stalls.** The ledger is rewritten by every prompt, and a
-  short prompt with no git prose (`mach weiter`, `1`) resets it to
-  `authorized: []`. The 6h TTL does not help: the failure is overwrite, not
-  expiry. A re-authorization must itself contain the word.
-- **One self-inflicted loss.** Checking out `origin/main` to take a comparison
-  measurement **discarded a conflict merge in progress** — during a conflicted
-  merge `HEAD` is still the pre-merge commit, so the SHA saved beforehand did not
-  point at the merge. Redone from scratch; no work lost, because every fix was
-  reproducible from a script. Measure on a second worktree, or from `git show`,
-  never by moving the ref you are standing on.
-- **One false green.** `ci_settle` reported `SETTLED GREEN` seconds after a push,
-  reading the *previous* head's checks. Verified against `headRefOid` afterwards
-  and found all 34 checks still queued. Every green in the table above was
-  confirmed against the head SHA.
+- Three of the five roadmaps (`road-to-runtime-context-floors`,
+  `road-to-delivered-cost-truth`, `road-to-code-graph-evidence-that-exists`)
+  were executed and archived overnight by other sessions. Their stale framing
+  is moot; **dropped deliberately**, not carried.
+- `road-to-runtime-event-journal` was executed to 20/20 by `#1706`. Its Context
+  section still reads against ADR-124, but the roadmap is complete and the
+  contract that supersedes its framing now exists. **Dropped.**
+- The P3 state-store collision that commit raised as a blocker — whether an
+  append-only journal is a prohibited cross-session store — was resolved
+  independently and **better** by `docs/contracts/runtime-persistence-tiers.md`
+  on 2026-08-28, which splits T2 into worktree-local and repo-wide and states
+  that P1 does not weaken P3. **Not re-raised**; re-opening it would be
+  re-litigation.
+- One file still mattered: the durable evidence record. Carried into `#1713`.
 
----
+## Follow-up authored this run
 
-# PR-drain run summary — 2026-08-27
+`#1713` — `agents/evidence/analysis/runtime-execution-directive-2026-08-28.md`
+cited ADR-124 § 5 as a live price for the first resident process. ADR-249
+superseded that clause the same day the record was written, so a durable
+artefact written to be cited has been citing a dead lock. Corrected with both
+halves kept.
 
-A second run against the same file, appended rather than overwriting: the
-2026-08-26 record above is the previous run and is still the only account of
-those PRs.
+It carries one finding that is **not** fixed and belongs to the owner:
+condition 4 of `resident-process-governance.md` — a P1 process may not execute
+from a revision that still publishes a runtime-absence claim — **is unmet on
+`main` today**. `README.md:30` publishes "no background daemon" and
+`docs/CLAIMS.md` carries `claim: no-runtime-daemon`. The roadmap that owned
+that public-surface rewrite archived without doing it, and no active roadmap
+owns it. Changing a published commitment is owner-reserved, so it is recorded
+rather than performed.
 
-Method unchanged — `git fetch` → detached checkout of the PR head →
-`git merge origin/main` (never a rebase) → resolve → regenerate every generated
-artifact → push → wait for CI → merge. Two deviations from the previous run,
-both deliberate:
+## A red nobody's CI could see
 
-- **Own scratch worktree, never the PR author's.** Every PR in this run already
-  had a worktree belonging to a live parallel session. Working in one would have
-  shared that session's index and stash stack, so this run used a single
-  detached worktree of its own and pushed by refspec. No peer worktree was
-  touched, and no peer commit was dropped: every push was a fast-forward, and
-  the two the peer beat to the remote were rejected non-ff and re-synced.
-- **Foreground CI waits were still used**, and are no longer required. The
-  ledger repair described in the retirement notice above landed *during* this
-  run, in #1686.
+`main` went red on `check_no_external_sources:shape-block` between two green
+PRs, and this is a merge-order class worth naming rather than just fixing.
 
-## The run
+`#1707` introduced the attribution-shape heuristic with a baseline of **275**.
+`#1712` merged **after** it and added a roadmap whose header reads
+`> **Source:** promoted 2026-08-29 out of the stubs/ directory …`. The detector
+flags any `Source:` value that is not an `ENC1:` token, an opaque round
+identifier or an `agents/tmp*` path, so the tree went to **276** — one over a
+ratchet that only turns down. Neither PR's CI could observe it: `#1712` was
+tested before the gate existed, and `#1707` was tested before that file existed.
 
-| # | Queue pos | Sync conflicts + resolution class | CI iterations | Disposition |
-|---|---|---|---|---|
-| 1499 | pre-run | — | — | already merged 2026-08-21, before this run began; the opening instruction to merge it first rested on a stale reading |
-| 1679 | 1 | none — two clean merges of `origin/main` | 3 pushes, 6 settle rounds | merged `10949a37b` |
-| 1675 | 2 | 1 × generated artifact (`adr-evidence-census-2026-08.md`) — took main, regenerated, committed | 3 pushes, 8 settle rounds | merged `d55d1f101` |
-| 1685 | 3 | none | 1 push, 1 settle round | merged `d26edc97b` |
-| 1687 | 4 | 3 × `docs/contracts/*.md` — took the PR side wholesale, see below | 1 push, 1 settle round | merged `258d1a1bd` |
-| 1686 | 5 | none | 1 push, 5 settle rounds (peer pushed mid-flight) | merged `1beae8d9a` |
-| 1683 | 6 | none | 1 push, 2 settle rounds | merged `915898447` |
-| 1689 | 7 | none | 1 push, 3 settle rounds | merged `bc16645b3` |
-| 1682 | 8 | none | 1 push, 2 settle rounds | merged `b547dc8bb` |
+Fixed at the cause. The header was **wrong**, not merely inconvenient: that
+roadmap was promoted internally out of `stubs/` and has no external source to
+declare. Relabelled `Provenance:` — one word, same sentence, same information.
+Raising the baseline was available and is what the gate's own message calls a
+defect; it was not taken.
 
-Queue at authorization: 3 PRs, one of them already merged. Queue at close: 0.
-**Five of the eight PRs in the table did not exist when the run was
-authorized** — #1682, #1683, #1685, #1686, #1687 and #1689 were opened by a
-parallel session while the drain was running, so the queue was recomputed after
-every merge and grew twice before it emptied. Nothing was merged that the run
-had not first synced onto the then-current `main`.
+Measured: 276 → 275, at baseline.
 
-## The blocker that stopped the run twice
+## Process note — one mistake made and repaired
 
-**Three contracts lapsed at midnight UTC and reddened the single required
-check on every branch in the repository.** `adoption-signal-floor.md`,
-`ci-green-floor.md` and `plain-language-surface.md` all carried
-`keep-beta-until: 2026-08-26`, outside the frozen no-growth baseline, so
-`check_beta_review_markers` failed with three fresh lapses. It was not caused by
-any PR in the queue; it was the calendar.
+While attributing that violation I ran `git stash` in a worktree whose tree was
+already clean, so it created nothing; the `git stash pop` that followed then
+unpacked **another session's preserved stash** (`concurrent-session
+video-foundation + mcp-discovery work`) into the worktree and conflicted. No
+data was lost: `pop` retains the entry on conflict, the working tree was
+restored to `HEAD`, the two files the pop had added were removed only after
+confirming both are still inside `stash@{0}`, and all five stash entries remain.
+Recorded because the failure mode is silent — a stash probe on a clean tree
+pops somebody else's work.
 
-The gate names three sanctioned outcomes — promote, extend with a reason,
-supersede — and its own docstring lists *"given a reviewed new deadline"*. The
-run attempted exactly that and was refused: the host's auto-mode classifier
-denied the write to the `keep-beta-until` line three times, across two different
-tools. That refusal was correct in substance. Extending a governance deadline to
-turn CI green is the boundary of *"never go green by loosening a threshold"*,
-and the run stopped and asked rather than deciding it.
+## Terminal PRs
 
-The resolution took three owner turns: an approval, a permission rule the owner
-added themselves (the run declined to grant itself the allowlist entry that
-would lift its own denial), and the wording the classifier could read — a bare
-`1` carries no content a classifier can act on.
-
-**The extension the run then landed was superseded within the hour.** #1687
-carried a council-backed review of the same three contracts, with dates derived
-from real anchors rather than a 90-day default, a recorded verdict reversal, and
-a `promote-to: stable` on the third. On the conflict, the run took that side
-whole and dropped its own. That is the correct outcome and it is worth naming as
-a cost: the drain-run version existed only because the queue was blocked, and
-producing it duplicated work a better-founded pass was already doing.
-
-## Dropped edits
-
-Three, named rather than buried:
-
-1. **The run's own beta-review extension** (`keep-beta-until: 2026-11-25` on all
-   three contracts, plus a review note). Superseded by #1687 as described above.
-   The one durable fragment — the corrected lint path in
-   `plain-language-surface.md` — survived, because #1687 had fixed the same
-   stale `.py` pointer independently.
-2. **`fix(ci): wire the two newly declared validators, and refresh the stale
-   proof`**, authored against #1689 and never pushed. The peer session hit the
-   same two failures and landed its own fix first; the run verified the peer
-   head passed all three previously failing test files and discarded its commit
-   rather than merge two fixes for one defect.
-3. Nothing else. No peer commit was excluded, reset away, or rebased out.
-
-## What the run cost that was not PR work
-
-- **Three classifier denials** on the same governance edit, and one transient
-  denial of `ci_settle` that cleared on retry. The governance denials were
-  substantive; the `ci_settle` one was not, and a single retry is the whole
-  remedy.
-- **One duplicated governance pass**, described above.
-- **One false red.** `ci_settle` reported #1689 as `SETTLED RED — lint commit
-  subjects` while the current run of that workflow was green; the red was a
-  superseded, cancelled duplicate run on the same SHA. Confirmed against the
-  rollup before merging. The mirror of the previous run's false *green*, and the
-  same remedy: read the aggregate for the head SHA, never one run row.
-- **A budget wall that main is still standing against.** #1689 first failed
-  `check_preamble_payload_budget` at 138,416 tok against a grace ceiling of
-  138,212 that its own config says *"may never move UP"*. Measured on
-  `origin/main` at the same hour: **138,202 — ten tokens of headroom.** The peer
-  session paid it down inside the PR rather than raising the ceiling, which is
-  the right answer and not a repeatable one. Every future change that adds a
-  rule, a frontmatter key, or a skill description meets this wall, the design
-  ceiling drops to 107,646 on 2026-11-10, and the config records no committed
-  reduction mechanism. That is the finding this run leaves behind.
+None. The queue is at zero.
