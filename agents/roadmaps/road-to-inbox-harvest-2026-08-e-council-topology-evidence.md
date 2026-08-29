@@ -183,15 +183,54 @@ called a larger risk than feature absence.
 
       Landed: `src/scripts/_lib/one_resolver_invariant.ts` (a pure scanner over
       file text, so it can be driven against a synthetic tree) and
-      `tests/scripts/one_resolver_invariant.test.ts` — **9 tests, all green**.
+      `tests/scripts/one_resolver_invariant.test.ts` — **32 tests, all green**.
 
-      **Sensitivity is established, not assumed.** Three arms add the defect and
+      > **The first version of this step was WRONG, and an R2 completion review
+      > caught it.** A fresh subagent was dispatched at the deterministically
+      > generated review package — the implementing session did not author the
+      > reviewer's prompt and did not review its own work — and returned **6
+      > findings, 2 high**, recorded at
+      > `agents/evidence/reviews/drain-roadmap-6-one-resolver.findings.md` and
+      > committed BEFORE any of them was repaired.
+      >
+      > **The headline finding was against this step's own closure claim.** The
+      > first version said "a fifth test guards the guard … by asserting it
+      > actually read `judgment_ladder.ts` and recognised it as the resolver".
+      > That test never called `checkOneResolver` at all — it called
+      > `fs.existsSync` and `declaresRouter` directly — so **a scanner walking
+      > zero files passed both real-tree tests**, which is precisely the failure
+      > mode the sentence claimed to exclude. The reviewer proved it by mutating
+      > the scan root to a typo and watching the suite stay green. The claim was
+      > asserted, not checked.
+      >
+      > All six are repaired and each has a test that fails without the repair:
+      > (1) the scanner now returns `scanned`, the exact file list, so a caller
+      > cannot confuse *clean* with *unscanned*; (2) the router patterns were
+      > evadable by export **syntax** rather than naming — nine of eleven
+      > measured shapes passed, including `export default class`, `export
+      > abstract class`, a const class expression and a bare `export { X }` —
+      > and name and export-form are now separate axes with all nine shapes
+      > pinned; (3) the scan root was `src/scripts` alone, leaving `src/cli`,
+      > `src/shared`, `src/server` and the `work_engine` template tree invisible,
+      > and is now `src/` entire; (4) deleting `judgment_ladder.ts` scanned green
+      > — zero is not one — and is now its own violation kind; (5) the import
+      > check missed `import()`, `require()` and the index form while
+      > false-positiving on a comment, so a docstring reword could red the gate;
+      > (6) "each asserts the baseline clean first" was true of one arm of three
+      > and is now true of all of them.
+      >
+      > **The repair is verified against the finding's own reproducer**, not
+      > against a rerun: with `SCAN_ROOT` mutated to a typo the suite now fails
+      > **15 of 32** tests, where the reviewed version passed both real-tree
+      > tests under the identical mutation.
+
+      **Sensitivity is established, not assumed.** Four arms add the defect and
       observe the guard go red inside the test rather than reasoning that it
       would: a `CouncilTopologyRouter` class beside the ladder, a
-      function-shaped `resolveCouncilRoute` beside it, and an `ai_council/`
-      import added to the resolver itself. Each asserts the baseline clean
-      first, so the red is caused by the sabotage and not by a tree that was
-      already dirty.
+      function-shaped `resolveCouncilRoute` beside it, an `ai_council/` import
+      added to the resolver itself, and the resolver deleted outright. Each
+      asserts the baseline clean **and non-empty** first, so the red is caused by
+      the sabotage and not by a tree that was already dirty or never walked.
 
       **Polarity is tested too, because a pattern that only ever fires is not a
       guard.** Four denial arms must stay GREEN: a file that merely mentions the
@@ -200,10 +239,13 @@ called a larger risk than feature absence.
       task-side resolvers; a `.test.ts` file naming one; and an `ai_council`
       import in a non-resolver file, which is legal by construction.
 
-      A fifth test guards the guard: the scanner walking zero files would also
-      return `[]`, so the green run on the real tree is distinguished from a
-      scanner that found nothing to look at by asserting it actually read
-      `judgment_ladder.ts` and recognised it as the resolver.
+      **Anti-vacuity is asserted on the scanner's own report**, which is the
+      correction the review forced. `checkOneResolver` returns `{ violations,
+      scanned }`; the real-tree test asserts `scanned` exceeds 100 files and
+      contains `judgment_ladder.ts` by path. A third arm drives an empty
+      directory and asserts the pair a vacuous scan produces — empty `scanned`
+      **and** a `resolver-missing` violation — so "green" and "walked nothing"
+      are distinguishable by the caller rather than by inspection.
 
       **What this step does NOT close:** the third clause, "topology refinement
       begins only after the ladder resolves to `council`", is a *sequencing*
