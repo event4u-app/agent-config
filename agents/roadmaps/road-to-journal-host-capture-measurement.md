@@ -93,27 +93,27 @@ that same table routes to the council. This file is that promotion.
 
 ## Phase 1 — The denominator, which is the part that does not exist
 
-- [ ] **1.1 Establish whether a host-emitted-event count is obtainable at all.**
+- [x] **1.1 Establish whether a host-emitted-event count is obtainable at all.**
       Enumerate, per bound platform, whether the host exposes any durable count
       of events it emitted — a log, a counter, a settings-visible tally — and
       record the answer per (platform, event) cell rather than as one verdict.
       A cell where the host emits but publishes no count is the finding, not a
       gap in the survey.
-      verify: a table in the evidence page covers every bound (platform, event) cell with one of `counted` / `emits-but-uncounted` / `not-bound`, and no cell is blank.
+      verify: DONE — `agents/evidence/analysis/host-denominator-obtainability-2026-08-29.md`. The table covers all **80** `(platform, event)` cells with **no blank**: 6 `counted`, 34 `emits-but-uncounted`, 40 `not-bound` (43 bound = counted + emits-but-uncounted). Bindings were read from `src/scripts/hook_manifest.yaml` at execution rather than carried. The `counted` six are on `claude` and rest on a HOST artefact this package does not write — the per-session transcript at `~/.claude/projects/<slug>/<session-id>.jsonl`, which exists whether or not any hook is bound; 156 were present for this project and the newest was analysed record by record, yielding `session_start` (1/file), `user_prompt_submit` (3 real prompts, discriminated from 163 `user` records that are tool results), `pre_tool_use`/`post_tool_use` (164 `tool_use` blocks) and `subagent_start`/`subagent_stop` (0 Agent/Task calls — correct for that session). **`stop` was deliberately NOT classified `counted` although it looked reconstructable:** all 305 assistant records carry `stop_reason: tool_use` and none `end_turn`, so the field counts assistant MESSAGES while the hook fires once per TURN, and using it would have over-counted the denominator by about two orders of magnitude. The seven other platforms are `emits-but-uncounted` on an explicitly stated **absence of evidence within this package's reach** — no reader for a host-published emission count exists anywhere in the tree — never on a claim that those hosts publish nothing.
 
 - [ ] **1.2 If no host count exists, build the narrowest thing that counts.**
       A counter that increments per dispatched event and nothing else — no
       payload, no free-form field, per the parent's 1.1 schema discipline. It is
       an instrument, so it is built as one: no resident process, hook-invocation
       writes only, per ADR-124's Class-A bar.
-      verify: the counter's record type is asserted against a committed key set the same way the journal's is, and a fixture attempting a free-form write fails to type-check.
+      verify: NOT REQUIRED UNDER THE RESOLVED BLOCKER, AND DELIBERATELY LEFT OPEN RATHER THAN CANCELLED. This step is conditional — *"if no host count exists"* — and `host-denominator-obtainability` resolved to **(b)**, which measures only cells where a host count DOES exist. The 1.1 survey found six such cells, so the antecedent is false for the population 2.1 will measure and no dispatch counter is owed. It is not flipped to `[-]`: converting a step to cancelled is an **owner-reserved** disposition under `roadmap-progress-sync` Iron Law 3's preservation test, which no council verdict and no autonomous mandate lifts. It therefore stays `[ ]` with this note, and the owner decides whether it is cancelled or kept as the fallback instrument should a future survey find the six cells unusable. <!-- The council explicitly rejected building this counter AND reporting it as a host rate — option (a) — as a category substitution; that refusal is about the REPORTING, not about the instrument, so the step is moot rather than forbidden. -->
 
-- [ ] **1.3 State the population the rate is over, before measuring it.**
+- [x] **1.3 State the population the rate is over, before measuring it.**
       An opted-in install and a default install are different populations and
       yield different true answers; the parent's evidence page already refuses
       to conflate them. Write the choice down first so the number cannot be
       re-scoped after it lands.
-      verify: the evidence page names the population and the install configuration in its first section, and the published rate carries both in its caption.
+      verify: FIRST CLAUSE DONE, SECOND CLAUSE IS A STANDING OBLIGATION ON 2.1. The evidence page's § *Population and install configuration — committed here, before any measurement* names both populations and both install configurations: opted-in (`hooks.runtime_journal.enabled: true`) and default (key absent, resolving to `false`), each scoped to the six `counted` cells rather than to all 43 bound ones. It is committed on the SURVEY page, before any measurement exists, which is the whole point of the step — a population written after the number can be chosen to suit it. The caption half cannot be satisfied before 2.1 produces a caption; the required four fields (numerator, denominator, population, install configuration) are specified there, together with the openai seat's refinement that a default-install 0 % is captioned as a product-adoption result and not a capture-quality one.
 
 ## Phase 2 — The measurement, published whichever way it lands
 
@@ -131,7 +131,7 @@ that same table routes to the council. This file is that promotion.
 
 ### blocker: host-denominator-obtainability
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 step 1.2 and, through it, all of Phase 2. Step 1.1 is the
   survey that answers this blocker and is not itself blocked.
@@ -150,12 +150,54 @@ that same table routes to the council. This file is that promotion.
 - **If you do nothing:** Phase 2 cannot run, the rate stays `undefined`, and
   the parent's 1.4 stays unmet with no active receiver — the exact state the
   council refused on 2026-08-29.
+- **Decision (AI council 2026-08-29, SPLIT — resolved by measurement, not by
+  tie-break): (b).** Restrict the measurement to the cells whose host publishes
+  a durable count; report the rate for those and leave the rest explicitly
+  unmeasured.
+
+  Both seats (2/2 present, anthropic `claude-sonnet-4-5` + openai
+  `codex-default`) **rejected (a)** — and (a) was this blocker's own written
+  recommendation. Their reason is the one that matters: a per-event *dispatch*
+  counter begins counting after dispatch, so it measures a different population
+  than the host emits, and reporting it as a host rate is exactly the category
+  substitution the parent's evidence page already had to refuse once. openai put
+  it plainly: *"incomplete valid evidence is preferable to complete evidence for
+  the wrong metric."* Recording that here because a future reader will find the
+  recommendation above and should know it was examined and overruled.
+
+  The seats then split, anthropic for (c) and openai for (b), and the split was
+  **not** resolved by preference, by seniority, or by re-asking. anthropic's
+  case for (c) rested on an explicitly stated prediction — *"if most platforms
+  don't publish host counts, (b) yields near-zero measurable cells and
+  functionally collapses to (c)"* — which is a testable claim, and 1.1 is the
+  test. **It came back false.** The survey found **6 `counted` cells** of 43
+  bound, on Claude, whose host writes a durable per-session transcript from
+  which `session_start`, `user_prompt_submit`, `pre_tool_use`, `post_tool_use`,
+  `subagent_start` and `subagent_stop` are reconstructable. (b) therefore does
+  not collapse into (c), and the condition anthropic itself attached to its own
+  choice is unmet. Evidence:
+  `agents/evidence/analysis/host-denominator-obtainability-2026-08-29.md`.
+
+  Both seats also proposed the same absent option **(d)** — publish the dispatch
+  metric under a distinct name while host capture stays undefined where no host
+  denominator exists. It is not adopted here because (b) subsumes its honest
+  half: the dispatch figure already exists and is already published under its own
+  name by the parent roadmap, and nothing in this file renames it.
+
+  *Revisit-if:* a host outside the six cells is found to publish an emission
+  count this package can read — which would widen the measurement rather than
+  overturn it; or the Claude transcript format stops carrying the four
+  reconstruction rules the survey depends on.
 - **Resolved when:** the choice is recorded here and 1.1's survey table exists
   to support it.
+- **Both clauses met.** The choice is recorded above, and the survey table
+  exists with all 80 cells filled and no blank — 6 `counted`, 34
+  `emits-but-uncounted`, 40 `not-bound`. This blocker is closed on evidence
+  produced in the same change, not on a decision taken ahead of one.
 
 ### blocker: measurement-population-default-off
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** step 1.3's population choice and 2.1's published caption.
 - **What to do:** pick exactly one — (a) measure against a locally opted-in
@@ -170,8 +212,38 @@ that same table routes to the council. This file is that promotion.
 - **If you do nothing:** 2.1 publishes a rate whose population a reader must
   infer, which is the failure mode that made the dispatch figure unusable as a
   host figure in the first place.
+- **Decision (AI council 2026-08-29, UNANIMOUS — 2/2 seats): (c).** Measure both
+  populations and publish two rates with two captions. Neither may be presented
+  as "the" capture rate.
+
+  Both seats reached (c) independently: the two populations answer different
+  questions, and publishing only one invites the substitution the parent's
+  evidence page already had to refuse once. A default-install rate says what the
+  installed base records today; an opted-in rate says whether the mechanism
+  works for a user who asked for it. Publishing the second alone would flatter
+  the mechanism; publishing the first alone would indict a mechanism that is
+  behaving exactly as designed.
+
+  **This blocker was very nearly moot and is not.** It is downstream of
+  `host-denominator-obtainability`, and had that resolved to (c) — declare the
+  rate unobtainable — there would have been no measurement to split across
+  populations. The 1.1 survey resolved it to (b) instead, so two real rates are
+  owed.
+
+  One refinement from the openai seat is adopted rather than summarised away: a
+  default-install 0 % must be captioned as a **product-adoption / configuration**
+  result, not a capture-*quality* one. A reader who meets 0 % without that label
+  reads a working mechanism as a broken one, and the caption is the only place
+  that distinction survives.
+
+  *Revisit-if:* the journal ships default-ON, either configuration stops being
+  supported, or the measured population stops matching real installations.
 - **Resolved when:** the choice is recorded here and 1.3's verify names the same
   population.
+- **Both clauses met.** The choice is recorded above, and 1.3's population
+  statement — committed in the evidence page's own first section, before any
+  measurement exists — names the same two populations with the same install
+  configurations, scoped to the same six `counted` cells.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
