@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **736 artefacts** in this package.
+Maintainer-facing index of all **737 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -642,7 +642,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (116)
+## Guidelines (117)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -708,6 +708,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | guideline | [`six-hats`](../docs/guidelines/agent-infra/six-hats.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
+| guideline | [`source-confidentiality-mechanics`](../docs/guidelines/agent-infra/source-confidentiality-mechanics.md) | agent-infra |  |
 | guideline | [`symptom-driven-harvest-loop`](../docs/guidelines/agent-infra/symptom-driven-harvest-loop.md) | agent-infra |  |
 | guideline | [`systems-thinking`](../docs/guidelines/agent-infra/systems-thinking.md) | agent-infra |  |
 | guideline | [`tool-description-as-policy`](../docs/guidelines/agent-infra/tool-description-as-policy.md) | agent-infra |  |
