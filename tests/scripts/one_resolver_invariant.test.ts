@@ -306,3 +306,75 @@ describe('the frozen claim — what this guard deliberately does NOT see', () =>
         expect(importsCouncilInternal('const m = await import(`../${dir}/necessity.js`);')).toBe(false);
     });
 });
+
+// ── R2 ROUND 4 ────────────────────────────────────────────────────────────
+describe('round 4: the resolver check must not RED on conforming code', () => {
+    // The previous version recognised a router only when declared inline, so
+    // five behaviour-preserving spellings of the SAME resolver were reported as
+    // `resolver-is-not-a-resolver` — a false positive against the sanctioned
+    // file, and internally inconsistent, since `declaresRouter` accepted the
+    // identical syntax for every other file.
+    for (const [label, body] of [
+        ['export statement after a function declaration', 'function classifyLadder(x) { return x; }\nexport { classifyLadder };'],
+        ['export default of a local identifier', 'function classifyLadder(x) { return x; }\nexport default classifyLadder;'],
+        ['an as-cast arrow', 'export const classifyLadder = ((x) => x) as (x: unknown) => unknown;'],
+        ['a satisfies-annotated arrow', 'export const classifyLadder = ((x) => x) satisfies unknown;'],
+        ['an aliased local export', 'function inner(x) { return x; }\nexport { inner as classifyLadder };'],
+    ] as const) {
+        it(`accepts a resolver spelled as ${label}`, () => {
+            expect(exportsRouterFunction(body)).toBe(true);
+        });
+    }
+
+    it('still refuses a re-export that resolves to another module', () => {
+        expect(exportsRouterFunction("export { classifyLadder } from './moved.js';")).toBe(false);
+    });
+
+    it('still refuses a same-named string stub', () => {
+        expect(exportsRouterFunction('export const classifyLadder = "moved";')).toBe(false);
+    });
+});
+
+describe('round 4: file discovery covers every module extension', () => {
+    for (const rel of ['src/ui/Router.tsx', 'src/scripts/r.mts', 'src/scripts/r.cts']) {
+        it(`sees a router in ${path.extname(rel)}`, () => {
+            expectCleanBaseline();
+            write(rel, 'export class CouncilTopologyRouter {}\n');
+            expect(checkOneResolver(tmp).violations.map((v) => v.kind)).toEqual(['second-resolver']);
+        });
+    }
+
+    it('still skips the test files of every extension', () => {
+        expectCleanBaseline();
+        write('src/ui/Router.test.tsx', 'export class CouncilTopologyRouter {}\n');
+        expect(checkOneResolver(tmp).violations).toEqual([]);
+    });
+});
+
+describe('round 4: namespace and ambient-module bodies are walked', () => {
+    it('sees a router declared inside an exported namespace', () => {
+        expect(declaresRouter('export namespace Dispatch { export class CouncilTopologyRouter {} }')).toBe(true);
+    });
+
+    it('sees a router declared inside an ambient module block', () => {
+        expect(declaresRouter('declare module "d" { export class CouncilTopologyRouter {} }')).toBe(true);
+    });
+
+    it('still sees the enclosing form itself', () => {
+        expect(declaresRouter('export namespace CouncilTopologyRouter {}')).toBe(true);
+    });
+});
+
+// R2 round 4, finding 4: the retention claim was wider than the file. These are
+// the two false-POSITIVE reproducers from round 3 that had no pin.
+describe('round 4: the round-3 false-positive reproducers, now actually retained', () => {
+    it('a template literal in the resolver holding an import statement is not an import', () => {
+        expect(
+            importsCouncilInternal("export const T = `import { x } from '../ai_council/y.js';`;\n"),
+        ).toBe(false);
+    });
+
+    it('a regex with a backtick plus a string carrying the router name is not a declaration', () => {
+        expect(declaresRouter('const re = /`a`/g;\nexport const S = "class CouncilTopologyRouter";\n')).toBe(false);
+    });
+});

@@ -183,7 +183,7 @@ called a larger risk than feature absence.
       the ladder with every gate in this tree green.
 
       Landed: `src/scripts/_lib/one_resolver_invariant.ts` and
-      `tests/scripts/one_resolver_invariant.test.ts` — **60 tests, all green**;
+      `tests/scripts/one_resolver_invariant.test.ts` — **76 tests, all green**;
       `tsc --noEmit` and `eslint` clean.
 
       **It parses. It does not lex, and that is the whole finding.** Three
@@ -258,11 +258,65 @@ called a larger risk than feature absence.
       `judgment_ladder.ts` by path, and an empty directory is driven to pin the
       pair a vacuous scan produces.
 
-      **What this step does NOT close:** the third clause of 0.5, "topology
-      refinement begins only after the ladder resolves to `council`", is a
-      sequencing property of code that does not exist — no topology refiner is
-      built — so any check for it today would pass vacuously. It is left to the
-      phase that builds one.
+      **ROUND 4 — 4 findings, and the fourth round is the one that did not find
+      a new failure class.** The reviewer's verdict on the model: *"yes, for the
+      frozen claim as written. None of the four findings requires symbol
+      resolution or module-graph analysis."* Under the council's stopping rule
+      that makes them repairable rather than an owner exit, and all four are
+      repaired.
+
+      The high one is the mirror of every previous round and worth the space:
+      `exportsRouterFunction` recognised a router only when declared **inline**,
+      so five behaviour-preserving spellings of the *genuine* resolver were
+      reported as `resolver-is-not-a-resolver` — `export { classifyLadder }`
+      after a function declaration, `export default classifyLadder`, an
+      `as`-cast arrow, a `satisfies`-annotated arrow, and an aliased local
+      export. It was **internally inconsistent**: `declaresRouter` accepted the
+      identical syntax, so one spelling counted as "declares a router" for every
+      other file and as "is not a resolver" for this one, and the emitted
+      diagnostic asserted the resolver had "gone somewhere this guard does not
+      look" while the function sat two lines above. A false POSITIVE, so it
+      opened no hole — but a gate that reds on a legitimate refactor is a gate
+      that gets bypassed, which is the risk the reviewer named and it is not
+      cosmetic. Now resolved through local declarations, with the re-export and
+      stub refusals from round 3 preserved.
+
+      The other three: `.tsx`, `.mts` and `.cts` were never read, so a second
+      resolver in any of the tree's **28 live `.tsx` files** scanned green —
+      and the gap was *masked*, because `src/ui/` contributes `.ts` paths to
+      `scanned` and the directory therefore looked covered. That is the third
+      time in four rounds a blind spot hid behind a non-empty `scanned`, which
+      is the honest limit of that discriminator. A namespace's own name was read
+      and its body was not, so a router inside `export namespace Dispatch { … }`
+      was invisible while the enclosing form was caught — worse than omitting
+      the kind, because the visitor listed it. And two claims in this record
+      were wider than the artefact.
+
+      **Both of those claims are corrected here rather than softened.** "Every
+      reproducer from all three killed rounds is retained" is now true: round
+      3's two false-POSITIVE reproducers had no pin and now do. And the limits
+      below are stated at the claim level rather than in a helper's docstring,
+      which the stopping rule declares insufficient.
+
+      **What this step does NOT close, stated at the claim level:**
+
+      - **The third clause of 0.5** — "topology refinement begins only after the
+        ladder resolves to `council`" — is a sequencing property of code that
+        does not exist, since no topology refiner is built. Any check for it
+        today would pass vacuously. Left to the phase that builds one.
+      - **The guard is name-pattern based.** A second resolver exported under a
+        name outside `ROUTER_NAMES` is undetectable by construction. Closing
+        that needs symbol resolution and a module graph, which is a separate
+        decision and not this step's.
+      - **A specifier built by interpolation is not resolved.** Both limits are
+        pinned by tests, so neither can be quietly read as coverage.
+      - **Withdrawing the guard entirely** remains a live OWNER decision. One
+        council seat argued for it — enforce by review, automate nothing — on
+        the ground that four rounds of escalating false-negative damage from
+        ordinary valid syntax is evidence about the cost of the automation. That
+        seat's own verdict classed withdrawal as owner-reserved, which is why it
+        was not executed, and it is recorded here rather than dropped because
+        the argument does not expire with the defects that prompted it.
 
 
 ## Phase 1 — Stop paying for information the tree already has

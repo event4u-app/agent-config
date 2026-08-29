@@ -72,6 +72,17 @@ export const COUNCIL_INTERNAL_DIR = path.join('src', 'scripts', 'ai_council');
 /** Root walked by {@link checkOneResolver}, repo-relative. */
 export const SCAN_ROOT = 'src';
 
+/**
+ * Module file extensions walked. R2 round-4 finding: `.ts` alone left the
+ * tree's 28 `.tsx` modules invisible, and the gap was MASKED — `src/ui/`
+ * contributes `.ts` paths to `scanned`, so the directory looked covered while
+ * two thirds of its modules were never read. The anti-vacuity discriminator
+ * cannot see a per-extension gap, which is the third time in four rounds that
+ * a blind spot hid behind a non-empty `scanned`.
+ */
+const SCANNED_EXTS = ['.ts', '.tsx', '.mts', '.cts'] as const;
+const TEST_SUFFIXES = ['.test.ts', '.test.tsx', '.test.mts', '.test.cts'] as const;
+
 /** Directory names never walked. */
 const SKIP_DIRS = new Set(['node_modules', '__tests__', 'dist', '.git']);
 
@@ -124,9 +135,13 @@ function bindingNames(name: ts.BindingName, out: string[]): void {
  * aliased exports, re-exports, type-only exports, and `export * as NS from`.
  */
 export function exportedNames(text: string): string[] {
-    const sf = parse(text);
     const names: string[] = [];
-    for (const st of sf.statements) {
+    collect(parse(text).statements, names);
+    return names;
+}
+
+function collect(statements: readonly ts.Statement[], names: string[]): void {
+    for (const st of statements) {
         if (ts.isVariableStatement(st) && hasExportModifier(st)) {
             for (const d of st.declarationList.declarations) bindingNames(d.name, names);
             continue;
@@ -141,8 +156,17 @@ export function exportedNames(text: string): string[] {
             hasExportModifier(st)
         ) {
             if (st.name && ts.isIdentifier(st.name)) names.push(st.name.text);
+        }
+        // R2 round-4 finding: a namespace's own name was read and its BODY was
+        // not, so `export namespace Dispatch { export class CouncilTopologyRouter {} }`
+        // was invisible while the enclosing form was caught. The visitor listed
+        // `isModuleDeclaration` and only half-honoured it, which is worse than
+        // omitting it — a reader sees the kind in the list and assumes cover.
+        if (ts.isModuleDeclaration(st) && st.body && ts.isModuleBlock(st.body)) {
+            collect(st.body.statements, names);
             continue;
         }
+        if (ts.isModuleDeclaration(st)) continue;
         if (ts.isExportAssignment(st)) {
             if (ts.isIdentifier(st.expression)) names.push(st.expression.text);
             if (ts.isClassExpression(st.expression) && st.expression.name) names.push(st.expression.name.text);
@@ -158,7 +182,6 @@ export function exportedNames(text: string): string[] {
             for (const el of clause.elements) names.push(el.name.text);
         }
     }
-    return names;
 }
 
 /**
@@ -182,15 +205,74 @@ export function exportedNames(text: string): string[] {
 export function exportsRouterFunction(text: string): boolean {
     const sf = parse(text);
     const named = (n: string): boolean => ROUTER_NAMES.some((re) => re.test(n));
-    const callable = (init: ts.Expression | undefined): boolean =>
-        init !== undefined &&
-        (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || ts.isClassExpression(init));
+
+    /** Peel `(x)`, `x as T`, `x satisfies T`, `x!` — none of them changes the value. */
+    const unwrap = (e: ts.Expression): ts.Expression => {
+        let cur = e;
+        for (;;) {
+            if (ts.isParenthesizedExpression(cur) || ts.isAsExpression(cur) || ts.isNonNullExpression(cur)) {
+                cur = cur.expression;
+            } else if (ts.isSatisfiesExpression(cur)) {
+                cur = cur.expression;
+            } else {
+                return cur;
+            }
+        }
+    };
+    const callableExpr = (e: ts.Expression | undefined): boolean => {
+        if (e === undefined) return false;
+        const inner = unwrap(e);
+        return ts.isArrowFunction(inner) || ts.isFunctionExpression(inner) || ts.isClassExpression(inner);
+    };
+
+    // Local declarations, so an export STATEMENT can be resolved to what it
+    // actually exports. R2 round-4 finding: the previous version recognised a
+    // router only when declared INLINE, so `function classifyLadder() {}` +
+    // `export { classifyLadder }` — and `export default classifyLadder`, and an
+    // `as`- or `satisfies`-wrapped arrow — were all reported as
+    // `resolver-is-not-a-resolver` on the sanctioned file, with a diagnostic
+    // asserting the resolver had "gone somewhere this guard does not look"
+    // while the function sat two lines above. `exportedNames` already accepted
+    // those exact forms, so one syntax counted as "declares a router" for every
+    // other file and as "is not a resolver" for this one.
+    const localCallable = new Map<string, boolean>();
     for (const st of sf.statements) {
+        if (ts.isFunctionDeclaration(st) && st.name) localCallable.set(st.name.text, true);
+        else if (ts.isClassDeclaration(st) && st.name) localCallable.set(st.name.text, true);
+        else if (ts.isVariableStatement(st)) {
+            for (const d of st.declarationList.declarations) {
+                if (ts.isIdentifier(d.name)) localCallable.set(d.name.text, callableExpr(d.initializer));
+            }
+        }
+    }
+    const resolves = (local: string): boolean => localCallable.get(local) === true;
+
+    for (const st of sf.statements) {
+        // Inline: `export function X`, `export class X`, `export const X = () => …`
         if (ts.isFunctionDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
         if (ts.isClassDeclaration(st) && hasExportModifier(st) && st.name && named(st.name.text)) return true;
         if (ts.isVariableStatement(st) && hasExportModifier(st)) {
             for (const d of st.declarationList.declarations) {
-                if (ts.isIdentifier(d.name) && named(d.name.text) && callable(d.initializer)) return true;
+                if (ts.isIdentifier(d.name) && named(d.name.text) && callableExpr(d.initializer)) return true;
+            }
+        }
+        // `export default X` / `export default function X() {}`
+        if (ts.isExportAssignment(st) && !st.isExportEquals) {
+            const e = unwrap(st.expression);
+            if (ts.isIdentifier(e) && named(e.text) && resolves(e.text)) return true;
+            if (ts.isFunctionExpression(e) && e.name && named(e.name.text)) return true;
+            if (ts.isClassExpression(e) && e.name && named(e.name.text)) return true;
+        }
+        // `export { X }` / `export { local as X }` — LOCAL only. A re-export
+        // carrying a module specifier resolves to another file and is still
+        // refused, which is what R2 round 3 asked for.
+        if (ts.isExportDeclaration(st) && st.moduleSpecifier === undefined) {
+            const clause = st.exportClause;
+            if (clause !== undefined && ts.isNamedExports(clause)) {
+                for (const el of clause.elements) {
+                    if (!named(el.name.text)) continue;
+                    if (resolves((el.propertyName ?? el.name).text)) return true;
+                }
             }
         }
     }
@@ -243,7 +325,7 @@ function walk(dir: string, out: string[] = []): string[] {
         if (entry.isDirectory()) {
             if (SKIP_DIRS.has(entry.name)) continue;
             walk(p, out);
-        } else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) {
+        } else if (SCANNED_EXTS.some((e) => entry.name.endsWith(e)) && !TEST_SUFFIXES.some((t) => entry.name.endsWith(t))) {
             out.push(p);
         }
     }
@@ -282,10 +364,12 @@ export function checkOneResolver(root: string): ScanResult {
             file: SANCTIONED_RESOLVER,
             kind: 'resolver-is-not-a-resolver',
             detail:
-                'the sanctioned path exists but exports no CALLABLE router-named binding. ' +
-                'Presence is not identity, and neither is the name: a stub such as ' +
-                '`export const classifyLadder = \"moved\"` keeps both while the resolver ' +
-                'it anchors has gone somewhere this guard does not look.',
+                'the sanctioned path exists but exports no CALLABLE binding whose name ' +
+                'matches a router pattern. Presence is not identity and neither is the name: ' +
+                'a stub such as `export const classifyLadder = \"moved\"` keeps both. If the ' +
+                'resolver was RENAMED rather than gutted, update ROUTER_NAMES in the same ' +
+                'change — this check reports the name it can see, not a conclusion about ' +
+                'where the resolver went.',
         });
     }
 
