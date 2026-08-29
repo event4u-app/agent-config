@@ -44,7 +44,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as readline from 'node:readline';
 
-import { FREE_FORM_KEYS, type NoFreeForm } from './runtime_journal.js';
+import type { NoFreeForm } from './runtime_journal.js';
 
 type Assert<T extends true> = T;
 
@@ -209,8 +209,10 @@ type _KeysAddNothing = Assert<
 >;
 /**
  * Fails to compile if {@link HostDenominator} ever grows a key from the
- * journal's {@link FREE_FORM_KEYS} — the numerator's guard, reused rather than
- * re-implemented, so the two halves cannot drift apart.
+ * journal's `FREE_FORM_KEYS` — the numerator's guard, reused rather than
+ * re-implemented, so the two halves cannot drift apart. The list itself is not
+ * imported as a value here: only the type-level guard is needed, and the test
+ * asserts the runtime mirror against the journal's own export directly.
  */
 type _RecordCarriesNoFreeFormField = Assert<
     [NoFreeForm<HostDenominator>] extends [never] ? false : true

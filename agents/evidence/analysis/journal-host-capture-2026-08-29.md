@@ -237,21 +237,24 @@ purpose and the failure recorded:
 `DENOMINATOR_RECORD_KEYS`.
 
 **Observed:**
-- `npm run typecheck` → `src/scripts/_lib/host_denominator.ts(218,5): error
-  TS2344: Type 'false' does not satisfy the constraint 'true'.` — that line is
-  `_RecordCarriesNoFreeFormField`. **A free-form write does fail to type-check**,
-  which is the literal wording AC-2 asks for.
-- `npx vitest run tests/scripts/host_denominator.test.ts` → **11 of 20 tests
+- `npm run typecheck` → `src/scripts/_lib/host_denominator.ts(220,5): error
+  TS2344: Type 'false' does not satisfy the constraint 'true'.` — line 217 is
+  where `_RecordCarriesNoFreeFormField` is declared. **A free-form write does
+  fail to type-check**, which is the literal wording AC-2 asks for.
+- `npx vitest run tests/scripts/host_denominator.test.ts` → **10 of 20 tests
   red**, including the key-set binding assertion and the free-form-key
   assertion.
 
 **Second probe, on the table's own claim:** add `journal-record` to the `claude`
-`pre_tool_use` slot in `src/scripts/hook_manifest.yaml`. **Observed:** the
-manifest-binding test reds. So the "0 by construction" column is enforced by a
+`pre_tool_use` slot in `src/scripts/hook_manifest.yaml`. **Observed, in
+isolation:** exactly **1 of 20** reds — *"matches `journal-record` bindings on
+the claude platform"* — and the other 19 stay green, so the probe is targeted
+rather than a blanket break. The "0 by construction" column is enforced by a
 check, not by prose.
 
-Both probes were reverted from an explicit backup copy and re-verified: **20 of
-20 tests green, `npm run typecheck` clean.**
+Each probe was applied on its own, reverted from an explicit backup copy, and
+re-verified: **20 of 20 tests green, `npm run typecheck` clean, `npx eslint` clean
+on all three files.**
 
 ## Limits — stated, because each one bounds the number above
 
