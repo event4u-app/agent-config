@@ -50,18 +50,31 @@
  * - It does not redact SHAPE findings (a speaking `**Source:**` header, a
  *   quoted `agents/tmp/<name>/` path). Those are heuristics with a measured
  *   false-positive tail, and redacting on a heuristic silently corrupts a diff
- *   a reviewer has to read. The deny set is an exact-match list; a hit on it is
- *   a name, not a guess.
+ *   a reviewer has to read. A deny entry names a source; a shape match guesses
+ *   at one.
+ * - **The deny entries are REGEXES, not literals, and that is deliberate.** A
+ *   cross-model review recommended escaping their metacharacters to make them
+ *   exact-match. Measured before acting: 13 of the 65 shipped entries use `\b`
+ *   word boundaries, so escaping would turn a working boundary assertion into a
+ *   literal backslash-b and those 13 would stop matching entirely. More
+ *   importantly the GATE compiles them as regexes too, so escaping here would
+ *   make the redactor MISS tokens the gate still catches — a file that fails
+ *   the gate and that this module declined to clean. Matching the gate exactly
+ *   is the invariant; an earlier version of this docstring called the set
+ *   "exact-match", which was simply wrong.
  * - It does not preserve length or reversibility. The marker is deliberately
  *   fixed-width and opaque: a length-preserving redaction leaks the length.
  *
  * ## The evidence chain stays intact
  *
- * Redaction is line-local and leaves every surrounding byte alone, so a
- * reviewer reading `diff.patch` sees the same hunks, the same paths and the
- * same context; only the token is gone. The count of redactions performed is
- * returned so a caller can record it in the snapshot header rather than
- * silently changing what it wrote.
+ * Redaction is **token-local**: it replaces matched spans and leaves every other
+ * byte alone, so a reviewer reading `diff.patch` sees the same hunks, the same
+ * paths and the same context. It is NOT *line*-local — an earlier docstring
+ * claimed that, and it was false: the matcher runs over the whole string, and a
+ * deny pattern permitting `\s` could span a newline. Nothing in the shipped set
+ * does today, but the guarantee is written to match the code rather than the
+ * intention. The count of redactions is returned so a caller can record it
+ * rather than silently changing what it wrote.
  */
 
 import fs from 'node:fs';
@@ -90,8 +103,39 @@ export function loadDenyPatterns(configPath: string = CONFIG): RegExp[] {
     if (!data.deny || data.deny.length === 0) {
         throw new Error('source_redact: empty deny list');
     }
-    // `g` so every occurrence on a line is replaced, `i` to match the gate.
-    return data.deny.map((p) => new RegExp(p, 'gi'));
+    // Longest source first. Applying patterns SEQUENTIALLY lets a shorter one
+    // consume the head of a longer token and leave its tail in the clear: a
+    // `\b`-bounded entry can fire INSIDE a longer hyphenated entry, because a
+    // hyphen is a word boundary, so the naive order emits
+    // `[REDACTED:src-conf]-<tail>` — a partial disclosure that still names the
+    // source. **Two such pairs exist in the shipped set today** (verified by
+    // scanning the config; the pairs are deliberately not quoted here, because
+    // naming them is the disclosure this module exists to prevent). This is a
+    // live defect, not a hypothetical. Ordering feeds the alternation below,
+    // where
+    // JS picks the first alternative that matches at a position, so
+    // longest-first approximates longest-match.
+    //
+    // `g` so every occurrence is replaced, `i` to match the gate.
+    return [...data.deny]
+        .sort((a, b) => b.length - a.length)
+        .map((p) => new RegExp(p, 'gi'));
+}
+
+/**
+ * Combine the patterns into ONE alternation, preserving their order.
+ *
+ * Sequential application is what produces the partial-exposure defect above:
+ * each pass rewrites the output of the last, so an earlier pattern can destroy
+ * a later one's match. A single alternation makes every position decided once,
+ * against all patterns at the same time.
+ *
+ * Safe here because no shipped entry is anchored (`^`/`$`) — checked, 0 of 65 —
+ * and none carries a capturing group, so joining cannot change what any
+ * individual pattern means or shift a group index.
+ */
+function combine(patterns: RegExp[]): RegExp {
+    return new RegExp(patterns.map((rx) => `(?:${rx.source})`).join('|'), 'gi');
 }
 
 export interface RedactionResult {
@@ -107,17 +151,18 @@ export interface RedactionResult {
  * Pure: takes text, returns text. The caller decides what to do with the count.
  */
 export function redactSourceTokens(text: string, patterns: RegExp[]): RedactionResult {
-    let out = text;
-    let count = 0;
-    for (const rx of patterns) {
-        // A `g` RegExp carries lastIndex across calls; reset before each use so
-        // the same compiled pattern can be reused for many files.
-        rx.lastIndex = 0;
-        out = out.replace(rx, () => {
-            count += 1;
-            return REDACTION_MARKER;
-        });
+    if (patterns.length === 0) {
+        return { text, count: 0 };
     }
+    const rx = combine(patterns);
+    // A `g` RegExp carries lastIndex across calls; reset before use so the same
+    // compiled set can be reused across many files.
+    rx.lastIndex = 0;
+    let count = 0;
+    const out = text.replace(rx, () => {
+        count += 1;
+        return REDACTION_MARKER;
+    });
     return { text: out, count };
 }
 
