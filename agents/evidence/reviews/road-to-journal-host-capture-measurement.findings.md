@@ -1,12 +1,12 @@
 # Findings: road-to-journal-host-capture-measurement
-<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: 08d204e4880343d0a61d39b5287f057ecbbb41272725ef8dd3763ca11cdd6b43 | diff: da5e4e3ad53c7bedeb5edc4fcd4cc2c70288b382 | reviewer: r2-fresh-subagent-road-to-journal-host-capture-measurement | prompt_hash: 37771c9bf61af53cebb0b3e58322d63aaacf9680f63a8513e8f6ecb02f57eb70 -->
+<!-- completion-review: v1 | reviewed: 2026-08-29 | scope: e4f5ad6bf6d31b4b6d3dc68111151c6d9eb1abf2e3de736b297a7106ca7d796c | diff: ec0a35cb8d15f898e724da853edce7745f032c5a | reviewer: r2-fresh-subagent-road-to-journal-host-capture-measurement | prompt_hash: 37771c9bf61af53cebb0b3e58322d63aaacf9680f63a8513e8f6ecb02f57eb70 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-journal-host-capture-measurement"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-29 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: da5e4e3ad53c7bedeb5edc4fcd4cc2c70288b382
-  scope_hash: 08d204e4880343d0a61d39b5287f057ecbbb41272725ef8dd3763ca11cdd6b43
+  diff_sha: ec0a35cb8d15f898e724da853edce7745f032c5a
+  scope_hash: e4f5ad6bf6d31b4b6d3dc68111151c6d9eb1abf2e3de736b297a7106ca7d796c
   roadmap: agents/roadmaps/archive/road-to-journal-host-capture-measurement.md
   roadmap_hash: 24fa2c7a29bf5f89e7ae1bd8afee8e5f0298a60fe372c53ad4dce5af08814fc0
   ac_hash: 06e8d0e9ff7141df5e1c340f69e5a05409d995e26fe076d416a12126af9529ab
@@ -18,8 +18,7 @@ dispatched: 2026-08-29T17:07:46Z
 > **RE-BOUND IN PLACE, 2026-08-29** (contract §2.7 path 1, not a fresh
 > skeleton). The review ran against scope `0f9f108e…` / head `2765332d`. Acting
 > on its findings moved the reviewed content, so the scope hash moved with it;
-> the artefact is re-bound to the scope the fixes produced (`08d204e4…` / head
-> `da5e4e3a`) rather than archived or re-dispatched, because archiving would
+> the artefact is re-bound to the scope the fixes produced (`e4f5ad6b…` / head `ec0a35cb`) rather than archived or re-dispatched, because archiving would
 > leave the shipping content with no review at all. Every row was already
 > terminal before the re-bind. The rows below are the ORIGINAL findings against
 > the original scope — the re-bind changes what they are bound to, never what
