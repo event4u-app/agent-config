@@ -1632,7 +1632,7 @@ index 5b6b4ecc5f4b3becf0fa0b8c1de2a7bdc9d1053b..5ceea241e717f55d54d7de5d6ce02237
 +++ b/dist/agent-src/skills/design-intelligence/ATTRIBUTION.md
 @@ -8,9 +8,26 @@ upstream repository below. Keep this file shipping with the skill; update the
  
- - Repository: `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`
+ - Repository: `https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]-skill`
  - Commit SHA: `b7e3af80f6e331f6fb456667b82b12cade7c9d35`
 -- Last checked: 2026-06-07
 +- Last checked: 2026-08-13
@@ -1666,7 +1666,7 @@ index 5b6b4ecc5f4b3becf0fa0b8c1de2a7bdc9d1053b..5ceea241e717f55d54d7de5d6ce02237
 +`motion`, `stacks/*`) and the Python engine sources (`core.py`, `search.py`,
  `design_system.py`) are MIT-licensed. Obligation: **retain this notice**.
  
- ### Apache-2.0 — `ui-styling`-derived material ("claudekit")
+ ### Apache-2.0 — `ui-styling`-derived material ("[REDACTED:src-conf]")
 diff --git a/dist/agent-src/skills/design-intelligence/data/manifest.json b/dist/agent-src/skills/design-intelligence/data/manifest.json
 index 33267a7c7e5529d433edf6c2293381979dfdffe6..ae411e0246bf5eba0aa49da20805bf418b741309 100644
 --- a/dist/agent-src/skills/design-intelligence/data/manifest.json
@@ -1752,7 +1752,7 @@ index a2d1d3b5bcecd9e1b64d54a89b67d305ceaa240c..d7041e4cbfe7602ad4417c850470e694
  > any ledger change.
  
 -No third-party code borrows are currently recorded in `provenance/borrows.jsonl`.
-+## https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
++## https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]-skill
 +
 +- **License:** MIT
 +- **Source SHA:** 97eb2a20
@@ -1765,7 +1765,7 @@ index e69de29bb2d1d6434b8b29ae775ad8c2e48c5391..c533efec007a4d7c3656459a1df72943
 --- a/provenance/borrows.jsonl
 +++ b/provenance/borrows.jsonl
 @@ -0,0 +1 @@
-+{"source_url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill", "license": "MIT", "source_sha": "97eb2a20", "borrowed_at": "2026-08-13", "files": ["src/skills/corpus-grounding/scripts/decision_engine.ts", "src/skills/corpus-grounding/scripts/ground.ts"], "transformation_note": "Adopted the three design dials as a tier TABLE and re-derived the plumbing against this engine's own shape. Upstream threads variance/motion/density through a generate() and a set of render functions that do not exist here; this tree has ground(), so the dials enter as an optional fourth parameter and leave as an additive output block that is omitted entirely when no dial is passed, keeping the no-flag result byte-identical. Variance PREPENDS to the rule's existing corpus-grounded priority keywords rather than replacing the priority list, so a caller preference cannot silently override grounded evidence. Motion resolves through this repo's search_domain against a 'gsap' manifest domain added in the same change, and an empty tier or a manifest without that domain emits an evidence_gap instead of a silent empty block. Range clamping moved out of the resolver's caller into the resolver, and the CLI rejects a non-numeric dial rather than reading it as unset.", "cleared_by": "human"}
++{"source_url": "https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]-skill", "license": "MIT", "source_sha": "97eb2a20", "borrowed_at": "2026-08-13", "files": ["src/skills/corpus-grounding/scripts/decision_engine.ts", "src/skills/corpus-grounding/scripts/ground.ts"], "transformation_note": "Adopted the three design dials as a tier TABLE and re-derived the plumbing against this engine's own shape. Upstream threads variance/motion/density through a generate() and a set of render functions that do not exist here; this tree has ground(), so the dials enter as an optional fourth parameter and leave as an additive output block that is omitted entirely when no dial is passed, keeping the no-flag result byte-identical. Variance PREPENDS to the rule's existing corpus-grounded priority keywords rather than replacing the priority list, so a caller preference cannot silently override grounded evidence. Motion resolves through this repo's search_domain against a 'gsap' manifest domain added in the same change, and an empty tier or a manifest without that domain emits an evidence_gap instead of a silent empty block. Range clamping moved out of the resolver's caller into the resolver, and the CLI rejects a non-numeric dial rather than reading it as unset.", "cleared_by": "human"}
 diff --git a/src/config/pack-size-budget.json b/src/config/pack-size-budget.json
 index 267133d3859dd48ce2e4cf939156253648e8a721..ca4d24b354c86a748b68147d527cfc5431b3ca35 100644
 --- a/src/config/pack-size-budget.json
@@ -1791,67 +1791,67 @@ index 7b9d1075156f0869abb770c917a3e300baa65aae..fc34628b012fffd1176efc99738d9c47
  {
 -  "_README": "Denylist for check_no_external_sources.py — blocks readable inspiration/harvest/comparison source names from re-entering the tracked tree. See rule source-confidentiality + the 2026-06-13 source-confidentiality sweep. Recommending an integrated tool is allowed; recording that we copied/derived/were-inspired-by an external source is not. To intentionally retain a source link, encrypt it via src/scripts/_lib/link_crypto.py.",
 -  "deny": [
--    "kdcllc",
+-    "[REDACTED:src-conf]",
 -    "\\bmicrock\\b",
--    "obra/superpowers",
--    "composiohq",
--    "ordinary-claude-skills",
--    "ruvnet",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bruflo\\b",
--    "nextlevelbuilder",
--    "juliusbrussee",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bcaveman\\b",
--    "tenfoldmarc",
--    "grandamenium",
--    "ginobefun",
--    "deep-reading-analyst-skill",
--    "dustdustpy",
--    "aaddrick",
--    "gammalabtechnologies",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bharmonist\\b",
--    "mhattingpete",
--    "claude-skills-marketplace",
--    "dongitran",
--    "coreyhaines",
--    "marketingskills",
--    "neolabhq",
--    "context-engineering-kit",
--    "anthropics/skills",
--    "anthropics/knowledge-work-plugins",
--    "bmad-method",
--    "spec-kit",
--    "awesome-copilot",
--    "alirezarezvani",
--    "conorluddy",
--    "ios-simulator-skill",
--    "anton-abyzov",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bspecweave\\b",
--    "aj-geddes",
--    "jezweb",
--    "ui-ux-pro-max",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bdeepscan\\b",
 -    "\\bhoodini\\b",
--    "dream-skill",
+-    "[REDACTED:src-conf]",
 -    "\\bsmithery\\b",
--    "claudekit",
--    "affaan-m",
--    "agency-agents",
--    "msitarzewski",
--    "610ClaudeSubagents",
--    "ChrisRoyse",
--    "pbakaus",
--    "leonxlnx",
--    "gztchan",
--    "amaancoderx",
--    "npxskillui",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
 -    "\\bskillui\\b",
 -    "\\bgraphify\\b",
--    "graphify-labs",
--    "penpax",
+-    "[REDACTED:src-conf]-labs",
+-    "[REDACTED:src-conf]",
 -    "\\bagent-reach\\b",
--    "panniantong",
--    "virgiliojr94",
--    "book-to-skill"
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]",
+-    "[REDACTED:src-conf]"
 -  ],
 -  "skip_paths": [
 -    "src/scripts/check_no_external_sources.py",
@@ -1889,79 +1889,79 @@ index 7b9d1075156f0869abb770c917a3e300baa65aae..fc34628b012fffd1176efc99738d9c47
 -  ],
 -  "skip_reason": {
 -    "vendored_cluster": "design-intelligence/corpus-grounding/design-tokens/react-shadcn-ui/tailwind-engineer + cost/*.mjs ship vendored Apache/MIT code; their upstream attribution is license-required and must NOT be stripped (ADR-061). CREDITS.md is the repo-level attribution file FOR that same cluster — it names the upstreams because the licenses require it, which is the one case source-confidentiality explicitly exempts. It was missing here, so the gate flagged the very attribution the rule mandates.",
--    "recommendation_docs": "mcp.md, mcp-registries.md, DISTRIBUTION_CHECKLIST.md, ADR-086, marketing-copy.yml reference registries (Smithery/Glama) as recommendations/distribution targets — allowed.",
+-    "recommendation_docs": "mcp.md, mcp-registries.md, DISTRIBUTION_CHECKLIST.md, ADR-086, marketing-copy.yml reference registries ([REDACTED:src-conf]/Glama) as recommendations/distribution targets — allowed.",
 -    "generated_bundles": "content.json* bundle the vendored-cluster skill bodies above.",
 -    "self": "the linter + its denylist + the source-confidentiality rule necessarily contain the deny tokens as data.",
 -    "validate_safe_paths": "telegraph-derived (MIT) ported code; upstream attribution is license-required.",
--    "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the claudekit mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md was REMOVED from this list on 2026-07-28 (road-to-native-code-intelligence Phase 6): its two clear-text mentions named a gitignored borrow-catalogue inbox file, which carries no historical value that a neutral descriptor loses — so the mentions were rewritten and the exception retired rather than kept. Retiring an exception is preferred over holding one whenever the named token is not license-required attribution and not load-bearing for the record."
+-    "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the [REDACTED:src-conf] mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md was REMOVED from this list on 2026-07-28 (road-to-native-code-intelligence Phase 6): its two clear-text mentions named a gitignored borrow-catalogue inbox file, which carries no historical value that a neutral descriptor loses — so the mentions were rewritten and the exception retired rather than kept. Retiring an exception is preferred over holding one whenever the named token is not license-required attribution and not load-bearing for the record."
 -  },
 -  "_excluded_tokens": {
 -    "agent-os": "collides with our own coined 'Agent-OS primitive' term (universal-skills) — too FP-prone to auto-deny; scrub external 'agent-os' mentions by review.",
--    "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via 'caveman' + 'juliusbrussee' instead."
+-    "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via '[REDACTED:src-conf]' + '[REDACTED:src-conf]' instead."
 -  }
 +    "_README": "Denylist for check_no_external_sources.py — blocks readable inspiration/harvest/comparison source names from re-entering the tracked tree. See rule source-confidentiality + the 2026-06-13 source-confidentiality sweep. Recommending an integrated tool is allowed; recording that we copied/derived/were-inspired-by an external source is not. To intentionally retain a source link, encrypt it via src/scripts/_lib/link_crypto.py.",
 +    "deny": [
-+        "kdcllc",
++        "[REDACTED:src-conf]",
 +        "\\bmicrock\\b",
-+        "obra/superpowers",
-+        "composiohq",
-+        "ordinary-claude-skills",
-+        "ruvnet",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bruflo\\b",
-+        "nextlevelbuilder",
-+        "juliusbrussee",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bcaveman\\b",
-+        "tenfoldmarc",
-+        "grandamenium",
-+        "ginobefun",
-+        "deep-reading-analyst-skill",
-+        "dustdustpy",
-+        "aaddrick",
-+        "gammalabtechnologies",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bharmonist\\b",
-+        "mhattingpete",
-+        "claude-skills-marketplace",
-+        "dongitran",
-+        "coreyhaines",
-+        "marketingskills",
-+        "neolabhq",
-+        "context-engineering-kit",
-+        "anthropics/skills",
-+        "anthropics/knowledge-work-plugins",
-+        "bmad-method",
-+        "spec-kit",
-+        "awesome-copilot",
-+        "alirezarezvani",
-+        "conorluddy",
-+        "ios-simulator-skill",
-+        "anton-abyzov",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bspecweave\\b",
-+        "aj-geddes",
-+        "jezweb",
-+        "ui-ux-pro-max",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bdeepscan\\b",
 +        "\\bhoodini\\b",
-+        "dream-skill",
++        "[REDACTED:src-conf]",
 +        "\\bsmithery\\b",
-+        "claudekit",
-+        "affaan-m",
-+        "agency-agents",
-+        "msitarzewski",
-+        "610ClaudeSubagents",
-+        "ChrisRoyse",
-+        "pbakaus",
-+        "leonxlnx",
-+        "gztchan",
-+        "amaancoderx",
-+        "npxskillui",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
 +        "\\bskillui\\b",
 +        "\\bgraphify\\b",
-+        "graphify-labs",
-+        "penpax",
++        "[REDACTED:src-conf]-labs",
++        "[REDACTED:src-conf]",
 +        "\\bagent-reach\\b",
-+        "panniantong",
-+        "virgiliojr94",
-+        "book-to-skill"
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]",
++        "[REDACTED:src-conf]"
 +    ],
 +    "skip_paths": [
 +        "src/scripts/check_no_external_sources.py",
@@ -2001,16 +2001,16 @@ index 7b9d1075156f0869abb770c917a3e300baa65aae..fc34628b012fffd1176efc99738d9c47
 +    ],
 +    "skip_reason": {
 +        "vendored_cluster": "design-intelligence/corpus-grounding/design-tokens/react-shadcn-ui/tailwind-engineer + cost/*.mjs ship vendored Apache/MIT code; their upstream attribution is license-required and must NOT be stripped (ADR-061). CREDITS.md is the repo-level attribution file FOR that same cluster — it names the upstreams because the licenses require it, which is the one case source-confidentiality explicitly exempts. It was missing here, so the gate flagged the very attribution the rule mandates.",
-+        "recommendation_docs": "mcp.md, mcp-registries.md, DISTRIBUTION_CHECKLIST.md, ADR-086, marketing-copy.yml reference registries (Smithery/Glama) as recommendations/distribution targets — allowed.",
++        "recommendation_docs": "mcp.md, mcp-registries.md, DISTRIBUTION_CHECKLIST.md, ADR-086, marketing-copy.yml reference registries ([REDACTED:src-conf]/Glama) as recommendations/distribution targets — allowed.",
 +        "generated_bundles": "content.json* bundle the vendored-cluster skill bodies above.",
 +        "self": "the linter + its denylist + the source-confidentiality rule necessarily contain the deny tokens as data.",
 +        "validate_safe_paths": "telegraph-derived (MIT) ported code; upstream attribution is license-required.",
-+        "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the claudekit mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md was REMOVED from this list on 2026-07-28 (road-to-native-code-intelligence Phase 6): its two clear-text mentions named a gitignored borrow-catalogue inbox file, which carries no historical value that a neutral descriptor loses — so the mentions were rewritten and the exception retired rather than kept. Retiring an exception is preferred over holding one whenever the named token is not license-required attribution and not load-bearing for the record.",
++        "archived_roadmaps_newly_tracked": "Archived roadmaps (and their assets) that predate the source-confidentiality sweep became tracked via the 2026-07 agents-dir gitignore hygiene change. They are frozen historical records; the [REDACTED:src-conf] mentions are ADR-061 license-attribution work and the remaining names are historical planning references. New roadmaps stay subject to the gate. road-to-ecosystem-harvest-index.md is the sharpest case: the flagged line is its own acceptance criterion, 'No harvest-family artifact names a real external source' — it quotes the names in order to assert their absence, so the gate fires on the sentence that records the cleanup. road-to-opt-retrieval-and-memory.md was REMOVED from this list on 2026-07-28 (road-to-native-code-intelligence Phase 6): its two clear-text mentions named a gitignored borrow-catalogue inbox file, which carries no historical value that a neutral descriptor loses — so the mentions were rewritten and the exception retired rather than kept. Retiring an exception is preferred over holding one whenever the named token is not license-required attribution and not load-bearing for the record.",
 +        "provenance_ledger": "provenance/borrows.jsonl and the docs/THIRD-PARTY-NOTICES.md it generates are the license-attribution surfaces for CODE borrows, and code-provenance REQUIRES the upstream name in them: the ledger's `source_url` is a mandatory field (provenance/README.md), and lint_provenance fails when the notices file drifts from it. That is the same license-required-attribution case source-confidentiality already exempts for the vendored cluster and CREDITS.md — the rule forbids derivation-attribution, not the notice a license obliges. The collision only surfaced on 2026-08-13 because the ledger had been empty until its first record; before that there was no name to flag. Scope is deliberately these two paths and not `provenance/*`: the harvest ledger next door governs KNOWLEDGE claims, where anonymisation is the rule and no license compels a name."
 +    },
 +    "_excluded_tokens": {
 +        "agent-os": "collides with our own coined 'Agent-OS primitive' term (universal-skills) — too FP-prone to auto-deny; scrub external 'agent-os' mentions by review.",
-+        "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via 'caveman' + 'juliusbrussee' instead."
++        "telegraph-shrink / telegraph-condense": "collide with our own 'telegraph'/'telegraph-condensed' feature vocabulary; the telegraph upstream is guarded via '[REDACTED:src-conf]' + '[REDACTED:src-conf]' instead."
 +    }
  }
 diff --git a/src/skills/corpus-grounding/scripts/decision_engine.ts b/src/skills/corpus-grounding/scripts/decision_engine.ts
@@ -2245,7 +2245,7 @@ index 5b6b4ecc5f4b3becf0fa0b8c1de2a7bdc9d1053b..5ceea241e717f55d54d7de5d6ce02237
 +++ b/src/skills/design-intelligence/ATTRIBUTION.md
 @@ -8,9 +8,26 @@ upstream repository below. Keep this file shipping with the skill; update the
  
- - Repository: `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`
+ - Repository: `https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]-skill`
  - Commit SHA: `b7e3af80f6e331f6fb456667b82b12cade7c9d35`
 -- Last checked: 2026-06-07
 +- Last checked: 2026-08-13
@@ -2279,7 +2279,7 @@ index 5b6b4ecc5f4b3becf0fa0b8c1de2a7bdc9d1053b..5ceea241e717f55d54d7de5d6ce02237
 +`motion`, `stacks/*`) and the Python engine sources (`core.py`, `search.py`,
  `design_system.py`) are MIT-licensed. Obligation: **retain this notice**.
  
- ### Apache-2.0 — `ui-styling`-derived material ("claudekit")
+ ### Apache-2.0 — `ui-styling`-derived material ("[REDACTED:src-conf]")
 diff --git a/src/skills/design-intelligence/data/manifest.json b/src/skills/design-intelligence/data/manifest.json
 index 33267a7c7e5529d433edf6c2293381979dfdffe6..ae411e0246bf5eba0aa49da20805bf418b741309 100644
 --- a/src/skills/design-intelligence/data/manifest.json

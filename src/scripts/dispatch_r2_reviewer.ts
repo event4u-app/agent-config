@@ -54,6 +54,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // time, and each CLI entry guard only fires for its own argv[1].
 import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
 import { gitEnv } from './_lib/git_env.js';
+import { loadDenyPatterns, redactSourceTokens, writeRedacted } from './_lib/source_redact.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { artifactRelevance } from './check_completion_review.js';
 
@@ -1251,17 +1252,36 @@ function runDispatch(args: Args): number {
         acHash: hashes.ac_hash,
         dispatched,
     });
+    // Phase 3.4 of road-to-source-silence: redact deny-set hits AT WRITE TIME.
+    // This package's confidentiality gate carried a blanket `skip_paths`
+    // exemption over `*.review-input/diff.patch`, which did not stop the leak —
+    // it stopped the gate from seeing it. The generator is the only writer of
+    // these files, so it is the only place the content can be fixed instead of
+    // exempted. Redaction is line-local: hunks, paths and context are
+    // untouched, so the evidence chain a reviewer reads stays intact.
+    //
+    // ORDERING IS LOAD-BEARING. `prompt_hash` must re-derive from the bytes on
+    // disk (`check_review_prompt_binding` re-hashes `prompt.md`), so the prompt
+    // is redacted BEFORE it is hashed. Hashing the pre-redaction text and
+    // writing the post-redaction text would make every new artefact fail its
+    // own binding gate.
+    const denyPatterns = loadDenyPatterns();
+    let redactions = 0;
+    const promptRedacted = redactSourceTokens(promptText, denyPatterns);
+    redactions += promptRedacted.count;
+
     const skeleton = findingsSkeleton({
         slug,
         headSha,
         scopeHash: hashes.scope_hash,
         reviewedDate,
         manifest,
-        promptHash: sha256(promptText),
+        promptHash: sha256(promptRedacted.text),
     });
 
     fs.mkdirSync(inputDirAbs, { recursive: true });
-    fs.writeFileSync(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, 'utf-8');
+
+    redactions += writeRedacted(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, denyPatterns);
     if (roadmapText !== null) {
         // The snapshot lands under agents/evidence/, which check_references
         // walks, while the live roadmap layer is deliberately excluded from
@@ -1273,10 +1293,26 @@ function runDispatch(args: Args): number {
         const snapshotHeader =
             '<!-- check-refs: skip -->\n' +
             '<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->\n';
-        fs.writeFileSync(path.join(inputDirAbs, 'roadmap.md'), snapshotHeader + roadmapText, 'utf-8');
+        redactions += writeRedacted(
+            path.join(inputDirAbs, 'roadmap.md'),
+            snapshotHeader + roadmapText,
+            denyPatterns,
+        );
     }
-    fs.writeFileSync(path.join(inputDirAbs, 'acceptance-criteria.md'), acText ?? '', 'utf-8');
-    fs.writeFileSync(path.join(inputDirAbs, 'prompt.md'), promptText, 'utf-8');
+    redactions += writeRedacted(
+        path.join(inputDirAbs, 'acceptance-criteria.md'),
+        acText ?? '',
+        denyPatterns,
+    );
+    fs.writeFileSync(path.join(inputDirAbs, 'prompt.md'), promptRedacted.text, 'utf-8');
+    if (redactions > 0) {
+        // Never redact silently: a changed artefact nobody was told about is
+        // the failure mode this whole programme is about.
+        process.stderr.write(
+            `dispatch_r2_reviewer: redacted ${redactions} source-confidentiality hit(s) ` +
+                `from the review-input snapshot (marker: [REDACTED:src-conf]).\n`,
+        );
+    }
     fs.writeFileSync(findingsAbs, skeleton, 'utf-8');
 
     const inputDirRel = path.join(args.outDir, `${slug}.review-input`);
