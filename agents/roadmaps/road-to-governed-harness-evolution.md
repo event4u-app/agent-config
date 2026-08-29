@@ -206,8 +206,33 @@ once.
       source proposals planned to write `clean-no-op` into the audit stream,
       where that value does not exist, which is how the split was found. This
       step depends on that one; it does not duplicate it.
-      verify: one module exports the enum both readers import, and a lint
-      rejects an inline duplicate.
+      **RE-SCOPED 2026-08-29 by AI council (2/2) — this step no longer performs
+      the reconciliation and no longer carries its acceptance test.** The
+      ownership matrix assigns outcome-vocabulary reconciliation to
+      `road-to-experience-loop-broadening` **step 1.3**, on the criterion of
+      **acceptance authority**: the vocabulary governs captured outcomes,
+      subagent returns, delayed amendments and episode integrity, and this
+      harness *consumes* those semantics rather than originating their
+      lifecycle. The prose above already said the sibling owns it — but the old
+      `verify:` was the OWNER's acceptance test ("one module exports the enum
+      both readers import, and a lint rejects an inline duplicate"), so this
+      step could have declared the mechanism complete. That is the duplicate
+      completion claim the matrix prohibits, and it is why re-scoping was needed
+      even though the sentence looked right.
+
+      **It is a reference, and a reference must not become a hidden gate.**
+      Completion of `experience-loop-broadening` 1.3 is neither an entry nor an
+      exit criterion for this phase. Until it lands, this roadmap preserves its
+      current vocabulary and any cross-vocabulary translation is an **explicit
+      adapter** whose output carries provenance — the canonical snapshot or
+      version it mapped from, the adapter version, and `canonical: false` — so
+      exploratory work here can never later be mistaken for owner acceptance.
+      The adapter's behaviour on unknown, unmapped and lossy translations is
+      defined at the adapter, not assumed.
+      verify: this step declares no reconciliation complete; the enum module and its
+      anti-duplication lint are asserted by `experience-loop-broadening` 1.3 and not
+      here, and any translation emitted by this roadmap carries `canonical: false`
+      with its source version.
 
 ## Phase 2 — Trigger corpus: census first, coverage second
 
@@ -487,9 +512,53 @@ once.
 
 ## Blockers
 
-### merge-authority
+> **REPAIRED 2026-08-29 — the entry below was invisible to every gate.** It was
+> written `### merge-authority` without the literal `blocker:` prefix that
+> `lint_roadmap_blockers.ts:40` requires
+> (`/^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/gim`), so it never parsed:
+> `agent-config gates --all --json` returned **zero** blockers for this file
+> while a live maintainer-owned decision sat in it, and `check_estate_count`
+> counted it as nothing. The same defect was found in the sibling roadmap
+> `road-to-experience-loop-broadening` in the same run, where it hid two — which
+> makes it a pattern in this inbox-harvest cohort rather than one slip.
 
-- **Status:** open
+
+### blocker: merge-authority
+
+- **Status:** open — **SCOPED 2026-08-29, and it is divisible in the same shape
+  as `b-adr-088` on `road-to-capability-native-execution`. Option (c) is taken
+  and is council-decidable; options (a) and (b) are OWNER-RESERVED and were not
+  taken.** AI council 2026-08-29, anthropic + openai, **2/2 convergent**.
+
+  **Taken, council-decidable — the scoping half.** Phases 1–6 are declared legal
+  while ADR-239 § Decision 3 remains open. They build measurement and isolation
+  and promote nothing, so where merge authority lands does not touch them. Phase
+  7 stays gated on this blocker.
+
+  **Not taken, owner-reserved.** (a) **granting** preauthorized merge authority
+  weakens a human-in-the-loop promotion guarantee — the shape
+  `non-destructive-by-default` protects — and (b) refusing it settles an ADR §
+  Decision that is recorded as open. Either is a resolution of ADR-239 itself,
+  which a council may recommend and may not perform.
+
+  **The condition that makes (c) real rather than a promise, and it is an
+  addition to what the blocker proposed:** the non-promotion property of Phases
+  1–6 must be **mechanically enforced**, not merely stated. A phase that
+  promises to promote nothing while nothing prevents it from promoting is the
+  same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
+  0's exit criteria rather than left here.
+
+  **`Resolved when` (AMENDED 2026-08-29).** The original — *"ADR-239 § Decision 3
+  no longer reads as an open question and its `review_trigger` no longer names
+  the `merge-authority` blocker"* — is **unsatisfiable by option (c) and by any
+  council**, because (c) leaves § Decision 3 open by construction. It bundled
+  two things one authority cannot discharge, exactly as `b-adr-088` did. Split:
+  the Phases 1–6 scope decision is **recorded above and needs nothing further**;
+  this blocker now closes only when the **owner** settles ADR-239 § Decision 3 in
+  either direction, at which point Phase 7 becomes enterable or is redesigned.
+- **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
+  proposed that would promote anything — in which case the scoping decision above
+  no longer covers it and this blocker binds earlier than Phase 7.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
@@ -619,6 +688,52 @@ If this cut fails, the architecture is refuted before anything is built.
   its ceiling, which makes folding the cheaper path on the estate axis rather
   than merely the tidier one. 0.2's five-verb disposition is where it gets
   answered, and it should be answered before any status flip.
+
+  **RESOLVED 2026-08-29 — stay separate. E2 is the reciprocal of E1 on
+  `road-to-experience-loop-broadening`, which this council resolved 2/2 to (b)
+  earlier in the same run, and the transfer is council-decidable.**
+
+  **Both of the paragraphs above are withdrawn as arguments.** First, the figure
+  is **stale**: measured this run the gate reads `active_roadmaps 3 (floor 3 at
+  origin/main)`, not 7 against 7. Second — and this part survives any
+  re-measurement — *"at the floor, zero headroom"* is a **ratchet invariant**,
+  not evidence. The floor **is** the base-ref measurement, so there is never
+  incidental headroom at any value, and a property every value has cannot make
+  folding "the cheaper path". E2 is therefore decided on the overlap alone.
+
+  On the overlap, folding 47 + 58 steps couples two large outcomes and makes
+  completion illegible; separation fails only where a shared mechanism cannot be
+  independently completed, and none of the three named overlaps is of that kind.
+  **A fold remains OWNER-RESERVED** — the archival that follows one is not
+  reversible and changes the unit the estate ratchet counts.
+
+  **The canonical ownership matrix.** E1 recorded the *rule* — one authoritative
+  roadmap per shared mechanism — and did **not** assign the mechanisms, so the
+  matrix was owed and unwritten. Both seats refused to infer it (*"sequence
+  position is not an ownership criterion"*) and required a fresh deliberation,
+  which was held. The criterion is **acceptance authority**: which roadmap may
+  declare a mechanism complete so others may depend on it.
+
+  | Overlap | Owner | What the non-owner does |
+  |---|---|---|
+  | Trigger corpus / trigger evals | **`road-to-governed-harness-evolution`** (this file, Phase 2) | `experience-loop-broadening` Phase 8 references the released corpus. Before release it may use a **non-canonical** labelled overlay for exploratory work only, and never claims trigger-corpus completion. |
+  | Paired-verdict mechanism | **`road-to-governed-harness-evolution`** (this file, 4.3) | `experience-loop-broadening` 9.4 is pre-registration and evidence capture only. It does not build a partial mechanism and does not claim paired-verdict completion. |
+  | Outcome-vocabulary reconciliation | **`road-to-experience-loop-broadening`** (step 1.3) | This roadmap's 1.4 is re-scoped to a non-blocking consumption reference with an explicit provenance-carrying adapter. See 1.4. |
+
+  **A reference must not become a hidden gate.** Owner completion is neither an
+  entry nor an exit criterion for the non-owner's phase; the non-owner continues
+  in an explicitly non-canonical degraded mode, and every compatibility output
+  carries provenance — source snapshot or version, adapter version, and
+  `canonical: false` — so exploratory work cannot later be read as owner
+  acceptance. This is the clause that keeps the matrix consistent with E1's own
+  "may reference, may not block" rule, and it is why the matrix is recorded with
+  degraded modes rather than with blocking dependencies.
+
+  **`revisit-if`:** the outcome vocabulary becomes an independently governed
+  cross-system taxonomy; trigger overlays begin changing canonical corpus
+  semantics; a reconciliation finds the two vocabularies serve incompatible
+  purposes and must stay separate with an explicit mapping rather than unify; or
+  either roadmap's scope changes such that acceptance authority moves.
 - **E3 — Budget ceiling** for 0.5 (candidates × trials × spend per run) and the
   sampling strategy for the 5.1 body variant.
 - **E4 — Activation-ladder arity:** 4 states or 6? Recommendation: 6, because
