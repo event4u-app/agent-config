@@ -18,6 +18,7 @@
 
 import type { LookupClass } from './auto_dispatch.js';
 import type { EvidenceBasis } from './evidence_basis.js';
+import type { PhaseOutcome } from './outcome_vocabularies.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
 /** Which route the rung took: deterministic primitive (lean-init L0),
@@ -42,7 +43,13 @@ export type TierChosen = 'lite' | 'medium' | 'high';
 export type TierSource = 'static' | 'inferred' | 'inherit';
 export type Band = 'low' | 'medium' | 'high';
 export type LinePhase = 'refine' | 'memory' | 'analyze' | 'plan' | 'implement' | 'test' | 'verify' | 'report';
-export type LineOutcome = 'success' | 'blocked' | 'skipped' | 'error';
+/**
+ * Outcome of this audit-log line. Alias of the registry's `PhaseOutcome` —
+ * the name `LineOutcome` is kept because two modules import it, and the
+ * single definition now lives in `outcome_vocabularies.ts` so the contract
+ * table can be checked against it (`road-to-experience-loop-broadening` 1.3).
+ */
+export type LineOutcome = PhaseOutcome;
 /** Which capsule-emission trigger arm fired first (Phase 1 shadow comparison). */
 export type TriggerArm = 'watermark' | 'saturation' | 'tie';
 /** The orchestration form the form-gate selected (road-to-opt-subagent-harvest P2). */

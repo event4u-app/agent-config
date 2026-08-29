@@ -20,14 +20,18 @@
  * which is the failure a cap is supposed to prevent, arriving through the cap.
  */
 
-/** The six terminal states. Contract: `contexts/execution/terminal-states.md`. */
-export type TerminalState =
-    | 'success'
-    | 'clean-no-op'
-    | 'blocked'
-    | 'approval-required'
-    | 'exhausted'
-    | 'stagnated';
+import type { RunTerminalState } from './outcome_vocabularies.js';
+
+/**
+ * The six terminal states. Contract: `contexts/execution/terminal-states.md`.
+ *
+ * Alias of the registry's `RunTerminalState`. This module stays the public
+ * surface — `runtime_journal.test.ts:212` pins the import path and `:215`
+ * asserts no second declaration — while the single definition moved to
+ * `outcome_vocabularies.ts` so the contract's table can be checked against it
+ * (`road-to-experience-loop-broadening` 1.3).
+ */
+export type TerminalState = RunTerminalState;
 
 /** States that are NOT success. An error or an exhausted budget never reports as one. */
 export const NON_SUCCESS_STATES: ReadonlySet<TerminalState> = new Set([
