@@ -121,6 +121,7 @@ accepts.
       verify: a concurrency test writes from two processes and asserts both records present; the mechanism is then neutralised and the same test observed **failing**, so its sensitivity is established rather than assumed.
 - [~] **1.4 First capture measurement, published whichever way it lands.** —
       **DEFERRED AND UNMET on the delivery axis; carried, not dropped.**
+      <!-- deferred-resolution: carried-to=road-to-journal-host-capture-measurement -->
 
       Produced and published: **dispatch-path capture 100.00 %, denominator
       1,000 envelopes** (100 × each of the ten vocabulary members), 0 skips,
@@ -142,11 +143,44 @@ accepts.
       construction*; it is now bound, exercisable, and measured on the path that
       exists.
 
-      **Carried to** `agents/roadmaps/stubs/road-to-journal-host-capture-measurement.md`,
-      created in this same change, with both closers as its promotion gate and
-      the `session_fallback` finding recorded. Disposition preserves the item in
-      the active estate, so it is council-decidable rather than owner-reserved
-      per `roadmap-progress-sync` Iron Law 3.
+      **Carried to** `agents/roadmaps/road-to-journal-host-capture-measurement.md`
+      — an ACTIVE roadmap, `status: ready`, carrying both closers as blockers
+      with recorded option sets and the `session_fallback` finding.
+
+      > **CORRECTED 2026-08-29 by AI council decision** (anthropic + openai,
+      > **4 verdicts across two independent runs, no dissent**). This item was
+      > originally dispositioned as a carry into
+      > `agents/roadmaps/stubs/road-to-journal-host-capture-measurement.md`, and
+      > that disposition was **not legal**. Put the full Iron-Law-3 option set to
+      > the council, every seat answered the load-bearing sub-question **NO**: a
+      > file under `agents/roadmaps/stubs/` — explicitly "not active work", gated
+      > on promotion — does **not** keep a criterion active in the estate, so the
+      > carry failed the preservation test and the roadmap could not archive on
+      > it. Both seats' first-choice verdict was **B (restore 1.4 to `[ ]`)** on
+      > the state as it then stood, and both named the same remedy that changes
+      > the state: *"promote the stub into named active work"*, after which the
+      > disposition is a **merge into existing active work** — council-decidable
+      > on the same table. That promotion was executed in this change, so the
+      > carry is now to a live receiver.
+      >
+      > **The mechanism agrees independently, and was checked separately.**
+      > `src/agent-src/scripts/archive_completed_roadmaps.ts:443-446` resolves a
+      > carry destination against exactly two paths —
+      > `agents/roadmaps/<slug>.md` and `agents/roadmaps/later/<slug>.md`. A
+      > `stubs/` path is unreachable and reports *"names destination `<slug>`,
+      > which does not exist"*. The sweep would have refused this archival on the
+      > old annotation. Verdict and code were reached separately and say the same
+      > thing.
+      >
+      > **`revisit-if`** (both seats, converged): either a durable
+      > host-emitted-event denominator lands in the tree, or the criterion is
+      > revised by owner decision — weakened to accept the dispatch figure, or
+      > cancelled. Neither is taken here: both are owner-reserved and no owner
+      > was in the loop for this run.
+
+      Disposition preserves the item in the active estate, so it is
+      council-decidable rather than owner-reserved per `roadmap-progress-sync`
+      Iron Law 3.
       verify: the stub exists, names both closers, and refuses the dispatch-for-host substitution in its own words; the evidence page states the denominator problem rather than reporting a number it cannot support.
 
 ## Phase 2 — The episode spine
