@@ -106,14 +106,48 @@ external evidence, or a re-measurement on a build postdating the extractor
 repair of 2026-08-22, which the 2026-07-28 recall figures predate. That
 re-measurement is work; the flip is its outcome.
 
-### 3 — ADR-124 § 5 prices the first resident process, and nothing budgets it
+### 3 — the price of the first resident process, and what it became
 
-`ADR-124-embedded-engine-doctrine.md:110-111` keeps Class B — resident service
-or daemon — prohibited in core, and its § 5 extension clause states what
-opening it costs: an ADR carrying **a named consumer demand signal, a measured
-Class-A failure, and an ADR-123 security review**. The measured Class-A failure
-is the expensive one, and no wave in any inbox proposal budgets for producing
-it.
+**Recorded 2026-08-28, superseded within the day. Both halves stay, because the
+sequence is the finding and a record that quietly swaps its own basis teaches a
+later reader nothing.**
+
+As written: `ADR-124-embedded-engine-doctrine.md:110-111` kept Class B —
+resident service or daemon — prohibited in core, and its § 5 extension clause
+priced opening it at an ADR carrying a named consumer demand signal, a
+**measured Class-A failure**, and an ADR-123 security review. No wave in any
+inbox proposal budgeted for that measurement.
+
+**What actually holds, verified at `60e95826a` on 2026-08-29:** ADR-249 was
+accepted 2026-08-27 and its `supersedes_scope` names ADR-124 `:111` and
+ADR-109 `:28` and nothing wider. A **supervised** resident process is permitted
+in core, and `docs/contracts/resident-process-governance.md` carries the class
+table — P0 in-turn unconditional, P1 supervised under four conditions, P2
+unsupervised prohibited, P3 cross-session persistent state store prohibited and
+**explicitly not reopened**, P4 network build path prohibited.
+
+So the § 5 price is void for the Class-B question and a different one applies: a
+named supervisor with a start and stop path, a write scope declared before the
+run, a documented stop that degrades rather than corrupts, and
+claim-consistency — the process may not execute from a revision that still
+publishes a runtime-absence claim.
+
+Two things survive the correction, and they are why it is worth recording at
+all. First, the observation this conflict was written for is unchanged: no
+inbox proposal budgeted for the conditions its own runtime work must satisfy,
+and the bar moving did not make anyone start paying it. Second, the claim
+condition is **still open on `main`** — `README.md:30` publishes "no background
+daemon" and `docs/CLAIMS.md` still carries `claim: no-runtime-daemon`, so
+condition 4 is unmet for any P1 process today, and the roadmap that owned the
+public-surface rewrite archived without it.
+
+**Not a finding, recorded so it is not re-raised:** the P3 collision this record
+anticipated for an append-only event journal was resolved independently and
+better on 2026-08-28 — `docs/contracts/runtime-persistence-tiers.md` splits T2
+into worktree-local and repo-wide, places the shipped journal at
+`<git-common-dir>/agent-journal/journal.sqlite`, and states that P1 does not
+weaken P3 and that a T3 store would still need P3 reopened. That question is
+settled; reopening it would be re-litigation, not diligence.
 
 ## Disposition of the inbox round
 
