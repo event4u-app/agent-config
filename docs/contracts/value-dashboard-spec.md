@@ -1,6 +1,29 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-28
+keep-beta-until: 2026-09-30
+keep-beta-reason: >-
+  Extended 2026-08-29, on a review performed rather than deferred. The window
+  lapsed by one day and blocked every open pull request, so the three
+  dispositions were evaluated against the tree: `docs/value.md`,
+  `_lib/value_report.ts` and `render_value_md.ts` all exist and the contracts
+  are referenced from `render_value_md.ts` and `value_ladder.ts`, so these are
+  shipped-and-wired rather than aspirational; and every commit touching either
+  file since 2026-06 is cosmetic (dead-link repair, path repoint, slug-only
+  mentions, an English-prose sweep), so neither has churned semantically.
+  `superseded` is therefore false — nothing replaced them.
+  .
+  That leaves promote-or-extend, and PROMOTION IS NOT THIS RUN'S TO MAKE:
+  `stability: stable` on `value-v1` is a parser-visible JSON shape whose
+  consumers would then be entitled to rely on it, which is a compatibility
+  commitment, and `decision-revisit-gate`'s owner-reserved table assigns
+  "creates a compatibility commitment" to the owner. An autonomous run may not
+  issue one on the owner's behalf.
+  .
+  So this is an extension with a named decision, not a rolling one: the review
+  is DONE and its finding is "ready on the merits, blocked only on an owner
+  commitment". The new date is deliberately near-term so it forces that
+  decision rather than burying it, and a second extension on the same reasoning
+  would be the decoration failure the gate exists to catch.
 ---
 
 # Value Dashboard Spec — what the package costs and what it saves
