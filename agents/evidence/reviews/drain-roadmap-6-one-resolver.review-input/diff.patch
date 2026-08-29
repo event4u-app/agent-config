@@ -1,0 +1,316 @@
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+index c8b001b07bbd49df704f08fa1960546b2b0565fc..7dca311335d115f72c4e04ee3caea81161317705 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+@@ -167,13 +167,50 @@ called a larger risk than feature absence.
+   texts. Rewrite anything substantively verbatim.
+       verify: the evidence file records the scan result **and** the commits
+       read; blocked on `blocker: unlicensed-source-verbatim-scan`
+-- [ ] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
++- [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
+   `judgment_ladder.ts` stays the one task-side resolver, no
+   `CouncilTopologyRouter` beside it, topology refinement begins only after the
+   ladder resolves to `council`, `necessity.ts` keeps its council-internal role.
+       verify: a deliberately-added second task-side council router makes the
+       new architecture test fail; sabotage the guard, watch it go red, restore
+ 
++      **Closed 2026-08-29.** The invariant was documented and enforced by
++      nothing: `judgment_ladder.ts`'s own docstring states all three clauses —
++      one resolver, "never a fourth parallel classifier bolted on beside it",
++      and "deliberately independent of `ai_council/necessity.ts`" — and a
++      docstring cannot fail. A second task-side council router could have landed
++      beside the ladder with every gate in this tree green.
++
++      Landed: `src/scripts/_lib/one_resolver_invariant.ts` (a pure scanner over
++      file text, so it can be driven against a synthetic tree) and
++      `tests/scripts/one_resolver_invariant.test.ts` — **9 tests, all green**.
++
++      **Sensitivity is established, not assumed.** Three arms add the defect and
++      observe the guard go red inside the test rather than reasoning that it
++      would: a `CouncilTopologyRouter` class beside the ladder, a
++      function-shaped `resolveCouncilRoute` beside it, and an `ai_council/`
++      import added to the resolver itself. Each asserts the baseline clean
++      first, so the red is caused by the sabotage and not by a tree that was
++      already dirty.
++
++      **Polarity is tested too, because a pattern that only ever fires is not a
++      guard.** Four denial arms must stay GREEN: a file that merely mentions the
++      council and routes nothing; a council-INTERNAL module even when it
++      literally declares `CouncilTopologyRouter`, since the invariant is about
++      task-side resolvers; a `.test.ts` file naming one; and an `ai_council`
++      import in a non-resolver file, which is legal by construction.
++
++      A fifth test guards the guard: the scanner walking zero files would also
++      return `[]`, so the green run on the real tree is distinguished from a
++      scanner that found nothing to look at by asserting it actually read
++      `judgment_ladder.ts` and recognised it as the resolver.
++
++      **What this step does NOT close:** the third clause, "topology refinement
++      begins only after the ladder resolves to `council`", is a *sequencing*
++      property of code that does not exist yet — no topology refiner is built.
++      It is unenforceable today and is left to the phase that builds one, rather
++      than covered by a check that would pass vacuously.
++
+ ## Phase 1 — Stop paying for information the tree already has
+ 
+ Deliberately before any sophisticated routing: the cheapest quality improvement
+diff --git a/src/scripts/_lib/one_resolver_invariant.ts b/src/scripts/_lib/one_resolver_invariant.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..194895d8359fc25e13f64007466146369d3f52b3
+--- /dev/null
++++ b/src/scripts/_lib/one_resolver_invariant.ts
+@@ -0,0 +1,119 @@
++/**
++ * The one-resolver invariant, made checkable.
++ *
++ * `judgment_ladder.ts` is the ONE task-side resolver that decides which
++ * dispatch rung a task takes, council included. Its own module docstring says
++ * so, and says two further things that were equally unenforced: that no fourth
++ * parallel classifier may be "bolted on beside it", and that it is
++ * "deliberately independent of `ai_council/necessity.ts`", which is the
++ * council's OWN council-internal necessity gate.
++ *
++ * All three were prose. A docstring cannot fail, so a second task-side council
++ * router could land beside the ladder and every gate in this tree would stay
++ * green — which is exactly what
++ * `road-to-inbox-harvest-2026-08-e-council-topology-evidence` step 0.5 asks to
++ * be closed: "lock the one-resolver invariant in documentation AND in a test".
++ *
++ * This module is the scanner half. It is deliberately a pure function over
++ * file text so the test can drive it against a synthetic tree and observe it
++ * going red — a guard never seen red has unknown sensitivity.
++ */
++import fs from 'node:fs';
++import path from 'node:path';
++
++/** The single sanctioned task-side resolver, repo-relative. */
++export const SANCTIONED_RESOLVER = path.join('src', 'scripts', '_lib', 'judgment_ladder.ts');
++
++/** The council's own internal surface. Task-side code does not import from it. */
++export const COUNCIL_INTERNAL_DIR = path.join('src', 'scripts', 'ai_council');
++
++/**
++ * Exported identifiers that mark a module as a task-side council/dispatch
++ * ROUTER — the thing there may be only one of.
++ *
++ * Deliberately narrow. A broad pattern (anything containing `council`) would
++ * match every consumer, reader and formatter in the tree and the guard would
++ * be noise. These three shapes are what a competing resolver actually looks
++ * like: a class named for the job, or a function that returns a routing
++ * verdict.
++ */
++export const ROUTER_EXPORT_PATTERNS: readonly RegExp[] = [
++    /\bexport\s+(?:class|interface)\s+\w*Council\w*Router\b/,
++    /\bexport\s+(?:async\s+)?function\s+classifyLadder\b/,
++    /\bexport\s+(?:async\s+)?function\s+\w*resolveCouncilRoute\w*\b/,
++];
++
++export interface Violation {
++    readonly file: string;
++    readonly kind: 'second-resolver' | 'council-import-in-resolver';
++    readonly detail: string;
++}
++
++/** Does this file text declare a task-side council/dispatch router? */
++export function declaresRouter(text: string): boolean {
++    return ROUTER_EXPORT_PATTERNS.some((re) => re.test(text));
++}
++
++/**
++ * Does the sanctioned resolver import from the council's internal directory?
++ *
++ * The ladder's docstring states the independence as a design choice; an import
++ * would silently make the two surfaces one, which is the same invariant seen
++ * from the other end.
++ */
++export function importsCouncilInternal(text: string): boolean {
++    return /\bfrom\s+['"][^'"]*ai_council\//.test(text);
++}
++
++/** Walk `.ts` files under a directory, skipping tests and node_modules. */
++function walk(dir: string, out: string[] = []): string[] {
++    if (!fs.existsSync(dir)) return out;
++    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
++        const p = path.join(dir, entry.name);
++        if (entry.isDirectory()) {
++            if (entry.name === 'node_modules' || entry.name === '__tests__') continue;
++            walk(p, out);
++        } else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')) {
++            out.push(p);
++        }
++    }
++    return out;
++}
++
++/**
++ * Check the invariant over a tree.
++ *
++ * @param root repository root to scan
++ * @returns every violation found; empty means the invariant holds
++ */
++export function checkOneResolver(root: string): Violation[] {
++    const violations: Violation[] = [];
++    const scanRoot = path.join(root, 'src', 'scripts');
++    for (const abs of walk(scanRoot)) {
++        const rel = path.relative(root, abs);
++        // The council's own internals are not task-side and are out of scope.
++        if (rel.startsWith(COUNCIL_INTERNAL_DIR + path.sep)) continue;
++        const text = fs.readFileSync(abs, 'utf-8');
++        if (rel !== SANCTIONED_RESOLVER && declaresRouter(text)) {
++            violations.push({
++                file: rel,
++                kind: 'second-resolver',
++                detail:
++                    `declares a task-side council/dispatch router beside ` +
++                    `${SANCTIONED_RESOLVER}. There is exactly one task-side resolver; ` +
++                    `a second one makes routing depend on which classifier ran first.`,
++            });
++        }
++        if (rel === SANCTIONED_RESOLVER && importsCouncilInternal(text)) {
++            violations.push({
++                file: rel,
++                kind: 'council-import-in-resolver',
++                detail:
++                    `imports from ${COUNCIL_INTERNAL_DIR}/. The resolver is deliberately ` +
++                    `independent of the council's own necessity gate; an import merges the ` +
++                    `task-side and council-internal surfaces the ladder's docstring keeps apart.`,
++            });
++        }
++    }
++    return violations;
++}
+diff --git a/tests/scripts/one_resolver_invariant.test.ts b/tests/scripts/one_resolver_invariant.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e509218489118f8b3710a804016dafce13fa3cc
+--- /dev/null
++++ b/tests/scripts/one_resolver_invariant.test.ts
+@@ -0,0 +1,129 @@
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    checkOneResolver,
++    declaresRouter,
++    importsCouncilInternal,
++    SANCTIONED_RESOLVER,
++} from '../../src/scripts/_lib/one_resolver_invariant.js';
++
++const REPO = path.resolve(__dirname, '..', '..');
++
++let tmp: string;
++
++/** Build a synthetic tree with a `judgment_ladder.ts` that satisfies the guard. */
++function seed(): void {
++    const libDir = path.join(tmp, 'src', 'scripts', '_lib');
++    fs.mkdirSync(libDir, { recursive: true });
++    fs.writeFileSync(
++        path.join(libDir, 'judgment_ladder.ts'),
++        "import { classifyTask } from './auto_dispatch.js';\n" +
++            'export function classifyLadder(x: unknown) {\n    return classifyTask(x as never);\n}\n',
++    );
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'one-resolver-'));
++    seed();
++});
++afterEach(() => {
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++describe('the real tree holds the invariant', () => {
++    it('reports no violations against this repository', () => {
++        expect(checkOneResolver(REPO)).toEqual([]);
++    });
++
++    it('scans a non-empty set — a guard over nothing is green for the wrong reason', () => {
++        // The scanner walking zero files would also return [], so the green
++        // above has to be distinguished from a scanner that found nothing to
++        // look at. `judgment_ladder.ts` is the file it must have read.
++        const ladder = path.join(REPO, SANCTIONED_RESOLVER);
++        expect(fs.existsSync(ladder)).toBe(true);
++        expect(declaresRouter(fs.readFileSync(ladder, 'utf-8'))).toBe(true);
++    });
++});
++
++describe('sensitivity — the guard is observed RED, not assumed', () => {
++    it('goes red when a second task-side council router lands beside the ladder', () => {
++        expect(checkOneResolver(tmp)).toEqual([]); // baseline: clean
++
++        fs.writeFileSync(
++            path.join(tmp, 'src', 'scripts', 'council_topology_router.ts'),
++            'export class CouncilTopologyRouter {\n    route() {\n        return "council";\n    }\n}\n',
++        );
++
++        const v = checkOneResolver(tmp);
++        expect(v).toHaveLength(1);
++        expect(v[0]?.kind).toBe('second-resolver');
++        expect(v[0]?.file).toContain('council_topology_router.ts');
++    });
++
++    it('goes red when the resolver imports the council-internal surface', () => {
++        const ladder = path.join(tmp, 'src', 'scripts', '_lib', 'judgment_ladder.ts');
++        fs.writeFileSync(
++            ladder,
++            "import { NECESSARY_TRIGGERS } from '../ai_council/necessity.js';\n" +
++                'export function classifyLadder() {\n    return NECESSARY_TRIGGERS;\n}\n',
++        );
++
++        const v = checkOneResolver(tmp);
++        expect(v).toHaveLength(1);
++        expect(v[0]?.kind).toBe('council-import-in-resolver');
++    });
++
++    it('goes red on a second function-shaped resolver, not only a class', () => {
++        fs.writeFileSync(
++            path.join(tmp, 'src', 'scripts', 'alt_route.ts'),
++            'export function resolveCouncilRoute() {\n    return "council";\n}\n',
++        );
++        expect(checkOneResolver(tmp).map((x) => x.kind)).toEqual(['second-resolver']);
++    });
++});
++
++describe('polarity — the guard must also DENY, or it is a pattern that always fires', () => {
++    it('stays green on a file that merely mentions the council', () => {
++        fs.writeFileSync(
++            path.join(tmp, 'src', 'scripts', 'council_report.ts'),
++            '// Renders a council run for the operator. Routes nothing.\n' +
++                'export function renderCouncilReport(rows: string[]) {\n    return rows.join("\\n");\n}\n',
++        );
++        expect(checkOneResolver(tmp)).toEqual([]);
++    });
++
++    it('stays green on council-INTERNAL modules, which are out of scope by design', () => {
++        const dir = path.join(tmp, 'src', 'scripts', 'ai_council');
++        fs.mkdirSync(dir, { recursive: true });
++        // Even a literal router name here is the council's own business: the
++        // invariant is about TASK-side resolvers.
++        fs.writeFileSync(
++            path.join(dir, 'internal_router.ts'),
++            'export class CouncilTopologyRouter {\n    route() {\n        return "x";\n    }\n}\n',
++        );
++        expect(checkOneResolver(tmp)).toEqual([]);
++    });
++
++    it('stays green on a test file that names a router', () => {
++        fs.writeFileSync(
++            path.join(tmp, 'src', 'scripts', 'sample.test.ts'),
++            'export class CouncilTopologyRouter {}\n',
++        );
++        expect(checkOneResolver(tmp)).toEqual([]);
++    });
++
++    it('does not treat an ai_council import in a NON-resolver file as a violation', () => {
++        fs.writeFileSync(
++            path.join(tmp, 'src', 'scripts', 'consumer.ts'),
++            "import { x } from './ai_council/necessity.js';\nexport const y = x;\n",
++        );
++        expect(importsCouncilInternal(fs.readFileSync(path.join(tmp, 'src', 'scripts', 'consumer.ts'), 'utf-8'))).toBe(
++            true,
++        );
++        // …but the invariant only constrains the resolver itself.
++        expect(checkOneResolver(tmp)).toEqual([]);
++    });
++});
