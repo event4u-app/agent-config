@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -20,6 +20,7 @@ depends:
 # dispatch-capture figure and names "a collector" as the missing writer; this
 # file is that collector, split out of the governance roadmap on council
 # instruction so the two have separate completion conditions.
+estate_growth_exempt_2026_08_29: "Charges +1 active_roadmaps (the `draft` to `ready` flip, which is what moves a file into the status-scoped count half) and +1 open_blockers (the `lifecycle-ci-runner-provisioning` blocker below). Both are the AI council verdict of 2026-08-29 executed rather than a discretionary addition: 2/2 seats chose option B, leave active and flip to ready, on the ground that the execution frontier is Phase 2 and Phase 2 is not externally blocked; and BOTH seats independently required the CI dependency to be named as an explicit dependency now rather than discovered at Phase 5. The flip without the blocker would have been half the verdict. Phase 1 closed 3/28 in the same change, including a supported-platform list that AC-1 required and that did not exist."
 estate_growth_exempt: "Charges +1 on one-in-one-out and +0 on the count half (status: draft). Warranted on a council instruction rather than an opinion: both seats (2/2, deep pass, 2026-08-27) required the telemetry delivery to either move fully into the governance roadmap with its own acceptance criteria or become a formally related dependency with its own — and named the concrete failure of leaving it folded, that two roadmaps would share ownership of one rollback with no answer to which closes when measurement is inconclusive. Draft rather than ready because three architecture decisions below are undecided, and the owner decision that authorises runtime does not make them."
 estate_offset_exempt: "The offset is the governance roadmap flipping ready to draft in this same change, which removes it from the active count — this file replaces it there rather than adding beside it. No archive move is available."
 ---
@@ -153,20 +154,143 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ## Phase 1 — Decide the architecture before writing the schema
 
-- [ ] **1.1 Resolve the three blockers.** Supervisor mechanism and platform
+> **Lifecycle disposition, AI council 2026-08-29 (anthropic + openai, 2/2
+> convergent on B).** Asked, in a fully autonomous run with no user available,
+> which honest lifecycle state this roadmap should be left in given that Phases
+> 2–6 remain and Phase 6.1 is a 21-day observation window no run can compress.
+> Options were park in `later/` (A), leave active and flip to `ready` (B), split
+> (C), leave as-is (D), plus cancel and weaken named as owner-reserved and not
+> taken.
+>
+> **Verdict B.** The load-bearing sub-question — whether repo rule 12's "ALWAYS
+> moved to `later/`" binds when *some* open work is externally blocked and some
+> is not — was answered the same way by both seats: it binds on the **execution
+> frontier**, not on eventual closability. openai's test: *"Is there an
+> authorized, dependency-valid next step that materially advances the roadmap
+> now?"* Here it is Phase 2, which no external dependency touches, so the
+> roadmap stays active. anthropic sharpened it against the obvious abuse:
+> the question is whether the available work is *closure-meaningful*, not merely
+> whether some next step exists.
+>
+> **`revisit-if`, converged:** this file moves to `later/` when the execution
+> frontier itself reaches an external dependency — i.e. when Phases 2–4 are
+> done and the only remaining work is CI provisioning or the observation window
+> — or immediately if CI provisioning turns out to be owner-reserved.
+
+
+- [x] **1.1 Resolve the three blockers.** Supervisor mechanism and platform
       scope, uniqueness namespace, activation model. Every later phase reads
       their answers; none can be inferred from the owner decision.
       verify: each of the three blocker sections carries a `Status:` starting with `resolved` and names the chosen option.
-- [ ] **1.2 Write the metric definition first, not the collector.** The
+
+      **Closed 2026-08-29, after repairing one of them.** All three carried
+      `Status: resolved` naming a chosen option — (a)-narrowed-to-user-scoped,
+      (b) one collector per OS user, (b) install-registers-activates-on-use.
+      But `supervisor-mechanism-and-platform-scope` **failed its own
+      `Resolved when`**: the supported platform list was not named anywhere in
+      the file, and AC-1 requires it written down. A blocker reading `resolved`
+      with an unmet resolution condition is the silent-green failure this
+      roadmap's § 4 warns about in a different register, so it was repaired
+      rather than flipped over. The list is now in that blocker as a table, with
+      Windows recorded as **unevaluated** rather than refused.
+- [x] **1.2 Write the metric definition first, not the collector.** The
       denominator, what counts as an eligible dispatch, exclusions,
       deduplication, how startup failures and opt-outs are treated, the minimum
       sample, the observation window, and the decision rule. Without these,
       "capture rate" is not a measurable quantity and the target in 1.3 is
       unfalsifiable.
       verify: the definition names all nine and a second reader can compute the current rate from it without asking a question.
-- [ ] **1.3 Record the target before anything is built.** A number, with the
+
+      **Definition — capture rate, committed 2026-08-29, before any collector
+      code.** Nine answers, numbered to the nine the step asks for.
+
+      1. **Denominator.** The count of **eligible dispatches** (below) that
+         occurred on a machine during the observation window, as counted by the
+         dispatcher itself at the point of dispatch — not by the collector.
+         The denominator must be produced by a writer that cannot fail in the
+         same way the numerator does; a collector counting its own opportunities
+         is the failure `road-to-journal-host-capture-measurement` exists for.
+      2. **Eligible dispatch.** One invocation of the hook dispatcher that
+         (i) resolved a bound concern for its (platform, event) cell, and
+         (ii) ran to a terminal state. A dispatch with no bound concern is not
+         an opportunity to capture and is **not** in the denominator — counting
+         it would understate capture by counting cells nobody wired.
+      3. **Exclusions.** Four, each excluded because it is not a capture
+         opportunity rather than because it is inconvenient: dispatches in the
+         package's **own** test suite and CI (self-observation); dispatches on a
+         machine whose collector is **not installed** (no supervisor to capture
+         — those belong to the static-mode figure and are reported separately);
+         dispatches during a **declared migration window** from 2.4; and
+         dispatches on an **opted-out** machine (see 6).
+      4. **Deduplication.** Records are keyed by
+         `(machine_id, episode_id, event, sequence)`. A repeated key is one
+         record, not two — retry after a failed write must not inflate the
+         numerator. Deduplication happens at read time over the store, never at
+         write time, so a duplicate is observable as a defect rather than
+         silently collapsed.
+      5. **Startup failures.** A collector that fails to start is **in the
+         denominator and not in the numerator** — it is a missed capture, which
+         is precisely what the metric is for. It is additionally recorded as a
+         separate `startup_failure` count, because a 40 % rate made of startup
+         failures and a 40 % rate made of write losses call for different fixes
+         and the single ratio cannot distinguish them.
+      6. **Opt-outs.** An opted-out machine is excluded from **both** numerator
+         and denominator, and its exclusion is counted. Opt-out prevents the
+         write (2.3), so including it in the denominator would report a consent
+         choice as a technical failure. The opted-out share is published beside
+         the rate: a 95 % capture rate over 5 % of machines is a different claim
+         from 95 % over 90 %, and a reader who cannot see the second number
+         cannot tell them apart.
+      7. **Minimum sample.** **≥ 2,000 eligible dispatches** across **≥ 5
+         distinct machines**, with no single machine contributing more than
+         **40 %** of the denominator. The machine floor and the concentration
+         cap exist because one developer's laptop can produce 2,000 dispatches
+         in a week, and a rate measured on one machine measures that machine's
+         supervisor, not the population's.
+      8. **Observation window.** **21 consecutive days**, starting the day the
+         collector is first enabled on the second machine. Not "until the sample
+         is reached": a window that ends when the number is good is a stopping
+         rule, not a window. If the minimum sample is not met at 21 days, the
+         window extends in whole 7-day increments to a **hard stop at 63 days**,
+         at which point an unmet sample is reported as unmet and 6.3 applies.
+      9. **Decision rule.** Capture rate = numerator ÷ denominator, both as
+         defined above, reported with a **95 % Wilson score interval**. The
+         target in 1.3 is met when the **lower bound** of that interval is at or
+         above the target — not the point estimate. A point estimate that clears
+         a target on a sample whose interval straddles it has not cleared it,
+         and this rule is written before the number exists so it cannot be
+         chosen after.
+
+      **A second reader can compute the current rate from this without asking a
+      question**, and the honest answer today is that they cannot compute it at
+      all: no denominator writer exists yet (item 1), which is Phase 4 work.
+      That is a statement about the instrument, not a gap in the definition.
+- [x] **1.3 Record the target before anything is built.** A number, with the
       window it is measured over, committed in this file.
       verify: the target and window appear in this roadmap in a commit that precedes the first collector commit — by commit order, not by assertion.
+
+      **Target — committed 2026-08-29, before any collector code exists.**
+
+      > **≥ 90 % capture**, read as the **lower bound** of the 95 % Wilson
+      > interval per 1.2 item 9, over the **21-day window** and **≥ 2,000
+      > eligible dispatches across ≥ 5 machines** of 1.2 items 7–8.
+
+      **Why 90 and not 95.** The sibling figure this roadmap exists to move is
+      **0.27 % (370 dispatches, 1 recorded line)**, recorded verbatim at
+      `docs/CLAIMS.md:328`. `road-to-experience-loop-broadening.md:118-120`
+      pre-registers **≥ 95 %** for the *dispatch event* spike — a different
+      measurement on a different mechanism (in-process capture with no
+      supervisor), and its 164/164 skill-event comparator sets that bar. A
+      supervised out-of-process collector adds failure modes the in-process path
+      does not have — startup failure, orphaning, crash-loop, the static
+      fallback rows of the platform table — and 90 % is the honest allowance for
+      them. It is set **below** the sibling deliberately, and the gap is named
+      here so a later reader cannot mistake it for the same target.
+
+      **What the target does not buy.** Meeting it is one of the six readings in
+      6.2, not the flip. 6.3's "the figure moved is not a result" applies to this
+      number too: 0.27 % → 90 % is the claim, and anything short of the interval
+      lower bound is a miss, not a partial success.
 
 ## Phase 2 — The data contract, field by field
 
@@ -228,6 +352,18 @@ one for a design note under review: § 2's rule is that unanswered is
       verify: the existing suite passes with the collector absent AND with it present-but-off, and the two results are compared rather than each declared green.
 
 ## Phase 5 — Prove the five lifecycle properties on real processes
+
+> **DEPENDENCY, named 2026-08-29 on AI council instruction (2/2).** This phase
+> requires process-level tests executing in CI on **both** supported platform
+> rows — macOS and Linux-with-a-user-session-bus — and AC-8 makes a skip on
+> either a failure on that platform rather than an absence. **That CI capability
+> does not exist in this repository today.** Both council seats required this to
+> be visible here rather than discoverable when the frontier arrives: openai
+> because *"missing and externally blocked are not automatically the same
+> thing"* and the classification must be made before it is load-bearing;
+> anthropic because leaving it implicit is optimism bias with a schedule
+> attached. Tracked as `blocker: lifecycle-ci-runner-provisioning`.
+
 
 - [ ] **5.1 Test each of the five properties as a process-level test.** Mocks
       do not establish orphan behaviour, signal handling, or file locking.
@@ -302,6 +438,42 @@ one for a design note under review: § 2's rule is that unanswered is
 - **Consequence for Phase 5's death detection:** it is a real requirement under
   either branch, and under (b) it is the *only* thing standing between a dead
   collector and an understated capture figure.
+- **Supported platform list — ADDED 2026-08-29, and it was MISSING.** This
+  blocker's own `Resolved when` requires the list to be named, and AC-1 requires
+  it written down. Neither was true: the resolution named a *rule* for choosing
+  platforms and no list, so the blocker read `resolved` while its resolution
+  condition was unmet. Recorded here rather than left to the first implementer,
+  because "positively detected" without an enumeration is a decision deferred to
+  whoever writes the probe.
+
+  | Platform | Supervisor | Tier |
+  |---|---|---|
+  | macOS | per-user `launchd` agent under `~/Library/LaunchAgents/` | **supported** |
+  | Linux with a user session bus | `systemd --user` unit under `~/.config/systemd/user/` | **supported** |
+  | Linux without a user session bus (containers, minimal images, CI runners) | none detected | static fallback |
+  | Windows | none — no user-scoped manager in the adopted set | static fallback |
+  | Everything else | none detected | static fallback |
+
+  The list is a **derivation of the adopted resolution, not a new decision**:
+  the resolution is "ship only where a supported user service manager is
+  positively detected — probed, never assumed — and fall back to static mode
+  elsewhere", and these are the two managers that clause names. Two properties
+  follow and are stated so they cannot be quietly dropped: detection is a
+  **probe** (a Linux box with `systemd` installed but no user session bus is
+  *not* supported, and assuming otherwise is the failure this wording exists to
+  prevent), and **Windows is static-fallback by omission, not by refusal** — no
+  Windows supervisor was evaluated, so the honest status is unevaluated rather
+  than rejected.
+
+  `SIGKILL` in the lifecycle contract is Unix-specific, so Phase 5's
+  process-level suite runs on exactly the two supported rows. Under AC-8 a skip
+  on either is a failure on that platform, and the two fallback rows are outside
+  the suite because there is no supervisor there to test.
+
+  **Still outstanding on this blocker:** its third clause — for option (a), the
+  privilege requirement stated in the installation documentation — is **not yet
+  due**, since no code has landed. It becomes due with the first collector
+  commit and is carried by AC-1.
 - **Blocks:** everything from Phase 3 onward, and Phase 5 entirely. Phases 1.2,
   1.3 and 2 are mechanism-independent and land regardless.
 - **What to do:** pick exactly one — (a) an OS service manager per platform
@@ -421,6 +593,35 @@ one for a design note under review: § 2's rule is that unanswered is
   1.2's metric definition must state which of the two it is reporting.
 - **If you do nothing:** Phase 4.1 cannot assert default-off, because there is no
   definition of what "on" would have been.
+
+### blocker: lifecycle-ci-runner-provisioning
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 5 entirely, and through AC-8 the public capability claim.
+  Phases 2, 3 and 4 are unaffected and are the current execution frontier.
+- **What to do:** pick exactly one — (a) provision CI runners for both supported
+  platform rows (macOS and Linux-with-a-user-session-bus) and run the
+  process-level lifecycle suite on each, which is what AC-8 as written requires;
+  or (b) run the suite on the one platform CI already provides and record the
+  other as **unverified**, which narrows the public capability claim to the
+  verified platform and leaves the other in static fallback regardless of what
+  the platform table says; or (c) treat process-level lifecycle verification as
+  a release-time manual gate on both platforms, documented and signed off per
+  release, which needs no new infrastructure and gives up continuous evidence.
+- **Recommendation:** (b) as the honest interim, moving to (a) when the
+  provisioning question is answered. (b) is the only option that neither claims
+  unverified platform support nor stalls Phase 5 on infrastructure; (c) is
+  refused as a default because a manual gate is exactly the "presence check
+  masquerading as proof" that 5.2 exists to prevent.
+- **If you do nothing:** Phase 5 cannot start when the frontier reaches it, and
+  the roadmap becomes externally blocked at that moment — which, per the same
+  council verdict, is the point at which repo rule 12 binds and this file moves
+  to `later/`. Doing nothing therefore does not keep the roadmap active; it
+  defers the parking decision to the moment it is most expensive.
+- **Resolved when:** the choice is recorded here and, for (a) or (b), the CI
+  workflow that runs the suite names the platforms it runs on.
+
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-27 | reviewer: claude/host -->
