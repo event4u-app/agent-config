@@ -203,13 +203,24 @@ const mean = (xs: number[]): number => (xs.length > 0 ? xs.reduce((a, b) => a + 
 const pp = (x: number): number => +(x * 100).toFixed(1);
 const r3 = (x: number): number => +x.toFixed(3);
 
+/**
+ * `precision` and `recall` are `null` on an in-domain negative-control row.
+ * Recall over an empty truth set is undefined, and the pre-registration says it
+ * is not computed for that class — emitting the shared scorer's 1.0 there would
+ * put a number on the published surface the registration says does not exist.
+ * Those rows carry a clean-rate instead and are excluded from every aggregate.
+ */
 interface Row {
     id: string; root: string; category: string; question: string;
-    grep: { precision: number; recall: number; wall_ms: number; output_bytes: number; answered: number };
-    graph: { precision: number; recall: number; wall_ms: number; output_bytes: number; answered: number };
+    grep: { precision: number | null; recall: number | null; wall_ms: number; output_bytes: number; answered: number };
+    graph: { precision: number | null; recall: number | null; wall_ms: number; output_bytes: number; answered: number };
     missed_by_graph: string[]; wrong_by_graph: string[];
     missed_by_grep: string[]; wrong_by_grep: string[];
 }
+
+/** Aggregates only ever read rows of a scored class, where the value is a number. */
+const num = (x: number | null): number => x ?? 0;
+const fmt = (x: number | null): string => (x === null ? 'n/a' : String(x));
 
 /**
  * The VOID check is carried over from v1 unchanged in mechanism and corrected
@@ -221,17 +232,17 @@ interface Row {
  * to be symmetric.
  */
 function classVerdict(rows: Row[]): { verdict: string; validity: string; validity_note: string; recall_delta_pp: number; precision_ok: boolean; grep: { p: number; r: number }; graph: { p: number; r: number } } {
-    const gR = mean(rows.map((r) => r.grep.recall));
-    const gP = mean(rows.map((r) => r.grep.precision));
-    const cR = mean(rows.map((r) => r.graph.recall));
-    const cP = mean(rows.map((r) => r.graph.precision));
+    const gR = mean(rows.map((r) => num(r.grep.recall)));
+    const gP = mean(rows.map((r) => num(r.grep.precision)));
+    const cR = mean(rows.map((r) => num(r.graph.recall)));
+    const cP = mean(rows.map((r) => num(r.graph.precision)));
     const delta = pp(cR - gR);
     const precision_ok = cP >= gP - PRECISION_FLOOR_PP / 100;
     let verdict: string;
     if (delta >= RECALL_DELTA_REQUIRED_PP && precision_ok) verdict = 'WIN';
     else if (delta <= -RECALL_DELTA_REQUIRED_PP) verdict = 'NULL';
     else verdict = precision_ok ? 'TIE' : 'NULL';
-    const noSignal = rows.every((r) => r.grep.recall === 0 && r.graph.recall === 0 && r.grep.precision === 0 && r.graph.precision === 0);
+    const noSignal = rows.every((r) => num(r.grep.recall) === 0 && num(r.graph.recall) === 0 && num(r.grep.precision) === 0 && num(r.graph.precision) === 0);
     const validity = noSignal ? 'VOID — NOTHING MEASURED' : 'VALID';
     const validity_note = noSignal
         ? 'Every question in this class scored zero on every metric for both arms. The registered verdict above is the runner\'s arithmetic and is preserved, but it is not a defensible substantive interpretation. WHY each arm returned nothing must be established by reading that arm — a shared zero is not evidence that the two arms failed for the same reason, and in v1 it was not: the graph arm had answered and the scorer discarded it.'
@@ -257,6 +268,10 @@ function main(): number {
     // --- The measured build must postdate the extractor repair. ---
     const head = run('git', ['rev-parse', 'HEAD'], REPO_ROOT).stdout.trim();
     const headDate = run('git', ['show', '-s', '--format=%cs', 'HEAD'], REPO_ROOT).stdout.trim();
+    // A commit id is the WRONG durable pointer under a squash-merge workflow:
+    // v1 cited `c454648af`, which never became an ancestor of `main` and so
+    // resolves to nothing in a fresh clone. Tree hashes survive the squash, so
+    // the measured CONTENT is pinned here as well as the commit that carried it.
     if (headDate < REPAIR_DATE) {
         console.error(`measured commit ${head} dates ${headDate}, before the ${REPAIR_DATE} extractor repair — this benchmark is meaningless on that build`);
         return 2;
@@ -276,6 +291,11 @@ function main(): number {
             if (!abs.startsWith(REPO_ROOT + path.sep)) { console.error(`question ${q.id} truth path escapes the repository: ${t.path}`); return 2; }
             if (!fs.existsSync(abs)) { console.error(`question ${q.id} truth path does not exist: ${root.path}/${t.path}`); return 2; }
         }
+    }
+
+    const measuredTrees: Record<string, string> = {};
+    for (const root of corpus.roots) {
+        measuredTrees[root.path] = run('git', ['rev-parse', `HEAD:${root.path}`], REPO_ROOT).stdout.trim();
     }
 
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-inrepo-v2-'));
@@ -305,14 +325,16 @@ function main(): number {
         }
         const sa = score(a.files, q);
         const sg = score(g.files, q);
+        const scored = q.category !== IN_DOMAIN_NEGATIVE;
         rows.push({
             id: q.id, root: q.root, category: q.category, question: q.question,
-            grep: { precision: r3(sa.precision), recall: r3(sa.recall), wall_ms: Math.round(a.wall_ms), output_bytes: a.output_bytes, answered: a.files.size },
-            graph: { precision: r3(sg.precision), recall: r3(sg.recall), wall_ms: Math.round(g.wall_ms), output_bytes: g.output_bytes, answered: g.files.size },
+            grep: { precision: scored ? r3(sa.precision) : null, recall: scored ? r3(sa.recall) : null, wall_ms: Math.round(a.wall_ms), output_bytes: a.output_bytes, answered: a.files.size },
+            graph: { precision: scored ? r3(sg.precision) : null, recall: scored ? r3(sg.recall) : null, wall_ms: Math.round(g.wall_ms), output_bytes: g.output_bytes, answered: g.files.size },
             missed_by_graph: sg.missed, wrong_by_graph: sg.wrong.slice(0, 12),
             missed_by_grep: sa.missed, wrong_by_grep: sa.wrong.slice(0, 12),
         });
-        console.log(`${q.id} [${q.category}] grep P=${sa.precision.toFixed(2)} R=${sa.recall.toFixed(2)} n=${a.files.size} | graph P=${sg.precision.toFixed(2)} R=${sg.recall.toFixed(2)} n=${g.files.size}`);
+        const show = (v: number, on: boolean): string => (on ? v.toFixed(2) : 'n/a');
+        console.log(`${q.id} [${q.category}] grep P=${show(sa.precision, scored)} R=${show(sa.recall, scored)} n=${a.files.size} | graph P=${show(sg.precision, scored)} R=${show(sg.recall, scored)} n=${g.files.size}`);
     }
 
     const perClass: Record<string, ReturnType<typeof classVerdict> & { n: number }> = {};
@@ -339,15 +361,15 @@ function main(): number {
     const boundaryResult = {
         n: boundary.length,
         note: 'LITERAL-string probes. A symbol index cannot answer them by construction. v1 folded these four into a negative-control recall FLOOR and then reported the floor FAILED; v2 reports the class and derives NO verdict from it. It is a statement about where grep stays necessary, not a measurement of the engine.',
-        grep_recall: r3(mean(boundary.map((r) => r.grep.recall))),
-        graph_recall: r3(mean(boundary.map((r) => r.graph.recall))),
+        grep_recall: r3(mean(boundary.map((r) => num(r.grep.recall)))),
+        graph_recall: r3(mean(boundary.map((r) => num(r.graph.recall)))),
     };
 
     const graphShaped = rows.filter((r) => (GRAPH_CLASSES as readonly string[]).includes(r.category));
     const macro = {
         note: 'REPORTED ONLY — not a pass criterion. Covers the four graph-shaped classes; the in-domain controls (undefined recall) and the capability-boundary class (unanswerable by construction) are excluded.',
-        grep: { precision: r3(mean(graphShaped.map((r) => r.grep.precision))), recall: r3(mean(graphShaped.map((r) => r.grep.recall))) },
-        graph: { precision: r3(mean(graphShaped.map((r) => r.graph.precision))), recall: r3(mean(graphShaped.map((r) => r.graph.recall))) },
+        grep: { precision: r3(mean(graphShaped.map((r) => num(r.grep.precision)))), recall: r3(mean(graphShaped.map((r) => num(r.grep.recall)))) },
+        graph: { precision: r3(mean(graphShaped.map((r) => num(r.graph.precision)))), recall: r3(mean(graphShaped.map((r) => num(r.graph.recall)))) },
     };
 
     const wins = Object.entries(perClass).filter(([, v]) => v.verdict === 'WIN' && v.validity === 'VALID').map(([k]) => k);
@@ -358,6 +380,11 @@ function main(): number {
         measured_commit: head,
         measured_commit_date: headDate,
         postdates_extractor_repair: headDate >= REPAIR_DATE,
+        measured_trees: {
+            note: 'The durable pointer. A commit id does not survive a squash merge — v1 cited c454648af, which is not an ancestor of main and resolves to nothing in a fresh clone. These git tree hashes identify the exact measured content and are stable across the merge. Verify with `git rev-parse <ref>:<path>`.',
+            roots: measuredTrees,
+            corpus_sha256: got,
+        },
         not_comparable_to: {
             runs: [
                 { report: 'internal/bench/reports/code-graph-vs-grep.md', run_date: '2026-07-28', reason: 'Different corpus (three private external repositories), different question set, a build predating the 2026-08-22 extractor repair, and a single aggregate bar.' },
@@ -393,6 +420,16 @@ function main(): number {
     md.push('');
     md.push(`**Measured commit:** \`${head}\` (${headDate}) — postdates the ${REPAIR_DATE} extractor repair, asserted by the runner rather than read by eye.`);
     md.push('');
+    md.push('**Measured content, pinned by tree hash.** A commit id is not a durable');
+    md.push('pointer here: this repository squash-merges, so the branch commit above will');
+    md.push('not be an ancestor of `main`. v1 cited `c454648af` and that commit resolves to');
+    md.push('nothing in a fresh clone. Tree hashes survive the squash, so they are what a');
+    md.push('reader should verify (`git rev-parse <ref>:<path>`):');
+    md.push('');
+    md.push('| Measured path | tree |');
+    md.push('|---|---|');
+    for (const [k, v] of Object.entries(measuredTrees)) md.push(`| \`${k}\` | \`${v}\` |`);
+    md.push('');
     md.push('## What v1 got wrong, and why v2 exists');
     md.push('');
     md.push('v1 published `path-between` as `VOID — INSTRUMENT FAILURE` with the note');
@@ -413,6 +450,18 @@ function main(): number {
     md.push('registration, which defines arm B as `affected` + `query`. The correction is');
     md.push('this new registration, plus the correction of v1\'s false *explanation*.');
     md.push('');
+    md.push('## Post-registration correction to this runner — display only');
+    md.push('');
+    md.push('After the first v2 run, the in-domain negative-control rows were emitting the');
+    md.push('shared scorer\'s `recall = 1.0` for an empty truth set, which contradicts this');
+    md.push('benchmark\'s own registration ("recall is undefined over an empty truth set and');
+    md.push('is not computed"). Those three rows now carry `n/a`. The change is recorded');
+    md.push('rather than quietly made, because editing a runner after seeing a result is');
+    md.push('exactly what a pre-registration exists to constrain. It moved no verdict and no');
+    md.push('aggregate: `per_class`, the macro average, the capability-boundary figures and');
+    md.push('the clean rates are byte-identical between the two runs, and the only rows that');
+    md.push('differ are the three whose values the registration says do not exist.');
+    md.push('');
     md.push('## Per-class verdicts — bars identical to v1');
     md.push('');
     md.push('Bar per class: recall delta ≥ +10 pp **and** precision within 5 pp.');
@@ -431,6 +480,23 @@ function main(): number {
     md.push('');
     md.push(`**Classes won:** ${wins.length > 0 ? wins.map((w) => `\`${w}\``).join(', ') : 'none'}.`);
     if (voidClasses.length > 0) md.push(`**Classes void:** ${voidClasses.map((w) => `\`${w}\``).join(', ')}.`);
+    md.push('');
+    md.push('## How to read `path-between` — the graph is perfect and it is still a TIE');
+    md.push('');
+    md.push('The graph arm answers all three questions exactly: recall **1.000**, precision');
+    md.push('**1.000**, no missed file and no wrong one. It is the only class where the graph');
+    md.push('out-precises grep. It still does not clear the bar, because the grep arm is now');
+    md.push('fixed too: given the union of two word-boundary searches — the "fair two-probe');
+    md.push('equivalent" the v2 stub required — grep reaches recall 0.917. Δ is +8.3 pp');
+    md.push('against a +10 pp bar. **TIE, not WIN.**');
+    md.push('');
+    md.push('This is worth stating plainly because the obvious way to quantify the v1 defect');
+    md.push('produces a much larger number and a different verdict. Running the `path` verb');
+    md.push('for the graph arm while leaving the grep arm on v1\'s single unmatched probe');
+    md.push('gives grep 0.000 and the graph 0.889-1.000 — a delta near +89 pp and an');
+    md.push('apparent WIN. That figure is itself an artifact: it repairs one arm and not the');
+    md.push('other. v2 repairs both, and the honest answer is that the graph wins this class');
+    md.push('on precision and ties it on the registered recall bar.');
     md.push('');
     md.push('## In-domain negative controls — false positives, not recall');
     md.push('');
@@ -465,7 +531,7 @@ function main(): number {
     md.push('|---|---|---|---|---|---|');
     for (const r of rows) {
         const missed = r.missed_by_graph.length > 0 ? r.missed_by_graph.map((m) => `\`${m}\``).join(', ') : '—';
-        md.push(`| \`${r.id}\` | ${r.category} | ${r.root} | ${r.grep.precision}/${r.grep.recall} | ${r.graph.precision}/${r.graph.recall} | ${missed} |`);
+        md.push(`| \`${r.id}\` | ${r.category} | ${r.root} | ${fmt(r.grep.precision)}/${fmt(r.grep.recall)} | ${fmt(r.graph.precision)}/${fmt(r.graph.recall)} | ${missed} |`);
     }
     md.push('');
     md.push('## Build times');
