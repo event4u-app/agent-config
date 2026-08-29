@@ -195,7 +195,7 @@ once.
       `type=supersede` lines as that contract already prescribes.
       verify: the contract's schema table carries the new field and the
       append-only migration note; no new path under `agents/runtime/state/`.
-- [ ] **1.4 Reconcile the two outcome vocabularies before extending either.**
+- [x] **1.4 Reconcile the two outcome vocabularies before extending either.**
       `corrected-from-reproduction`, and no proposal in either folder noticed:
       this tree holds **two** outcome enums — `audit-log-v1:77` has four values
       (`success · blocked · skipped · error`) and
@@ -233,6 +233,49 @@ once.
       anti-duplication lint are asserted by `experience-loop-broadening` 1.3 and not
       here, and any translation emitted by this roadmap carries `canonical: false`
       with its source version.
+
+      **CLOSED 2026-08-29, and the accounting is per conjunct, because two of the
+      three are satisfiable in different ways and the third is vacuous.**
+
+      1. *"this step declares no reconciliation complete"* — **met.** The step
+         performs nothing and claims nothing. The old owner-style `verify:` that
+         could have declared the mechanism complete was already removed by the
+         2026-08-29 re-scoping above; this closure does not restore it.
+      2. *"the enum module and its anti-duplication lint are asserted by
+         `experience-loop-broadening` 1.3 and not here"* — **met.** That step is
+         now closed and its assertions exist:
+         `src/scripts/_lib/outcome_vocabularies.ts` is the registry and
+         `tests/contracts/outcome_vocabularies.test.ts` is the anti-duplicate
+         check, both authored under 1.3, neither under this roadmap. Read
+         precisely, this conjunct is a claim about **where the assertion lives**,
+         not about whether it has merged — which is the reading the clause
+         requires, because the paragraph above forbids sibling completion from
+         becoming an entry or exit criterion here. Landing on the sibling's
+         branch, not this one.
+      3. *"any translation emitted by this roadmap carries `canonical: false`
+         with its source version"* — **VACUOUS, and recorded as vacuous rather
+         than as met.** This roadmap emits no cross-vocabulary translation
+         today, so the conjunct quantifies over an empty set. A check would scan
+         nothing and exit green, which is worse than no check: it would look
+         like coverage. The obligation is therefore carried into the exit
+         criteria of the first phase that actually emits a translation, where
+         the set is non-empty and the provenance fields (source snapshot or
+         version, adapter version, `canonical: false`) can be asserted against
+         a real artefact.
+
+      **What this closure buys, since the step builds nothing:** it discharges
+      the E1 ownership matrix. Before this, both roadmaps carried a step for the
+      same mechanism and either could have declared it complete — the duplicate
+      completion claim the matrix prohibits. Now exactly one does, and this side
+      records the dependency without gating on it. The corrected FACTS from the
+      owner's side also land here: there are **three** vocabularies, not the two
+      this step's prose names — the third is the work-engine STEP enum at
+      `src/agent-src/templates/scripts/work_engine/delivery_state.ts:39`
+      (`success · blocked · partial`) — and the four audit-log values are not
+      documentation-only, since `LineOutcome` is declared in code and
+      `envelopeOutcome` returns all four. The prose above is left as written
+      because it is the record of what was believed when the step was authored;
+      the correction is here rather than as a silent edit to it.
 
 ## Phase 2 — Trigger corpus: census first, coverage second
 
