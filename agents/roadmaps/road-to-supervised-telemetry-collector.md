@@ -347,7 +347,7 @@ one for a design note under review: § 2's rule is that unanswered is
       | # | Transition | Contract | Test |
       |---|---|---|---|
       | 1 | Fresh store | created at `COLLECTOR_SCHEMA_VERSION`, `quarantined: false` | *TRANSITION 1 — a fresh store is created at the current schema version* |
-      | 2 | **Backward** compat — older records, newer package | migrated forward inside a marked window; records survive; the marker does not outlive a success | *TRANSITION 2 — an OLDER store is migrated forward and its records survive* |
+      | 2 | **Backward** compat — older records, newer package | walked forward through the explicit `MIGRATIONS` ladder inside a marked window; records survive; the marker does not outlive a success; a version with **no registered path** is quarantined rather than stamped | *TRANSITION 2* + `R2-2 — the migration ladder` (four pure `migrationPath` cases) + `R2-2 — an unmigratable store is quarantined, not stamped forward` |
       | 3 | **Forward** compat — newer records, older package | **QUARANTINED**: renamed, never read, never rewritten. Writes refuse with `schema-quarantined`, reads return nothing, and the moved file's BYTES are asserted equal to what the newer revision wrote | *TRANSITION 3 — a NEWER store is quarantined, never read and never rewritten* |
       | 4 | Crash mid-migration | the marker survives the crash, so the next open quarantines rather than resuming a migration whose progress nothing recorded — and leaves a WORKING store, not a wedge | *TRANSITION 4 — a crash mid-migration quarantines rather than resuming* |
       | 5 | Uninstall | removes the database, its WAL sidecars and the markers; **KEEPS** the quarantine directory | *TRANSITION 5 — uninstall removes the store and the markers, and KEEPS the quarantine* |
@@ -363,16 +363,85 @@ one for a design note under review: § 2's rule is that unanswered is
       incompatible-schema event*, and uninstall is not the moment to destroy
       evidence about one.
 
-      A sixth test covers the growth budget the quarantine directory would
-      otherwise have none of: the quarantine filename carries a **content
-      digest** rather than a timestamp, so repeated incompatible opens of the
-      same bytes are idempotent instead of unbounded — R-A7 applied to a
-      directory nobody prunes.
+      Two further tests cover the growth budget the quarantine directory would
+      otherwise have none of: the filename carries a **content digest** rather
+      than a timestamp, so quarantining **identical** bytes twice leaves exactly
+      one artefact, while **different** bytes leave two. Both directions are
+      asserted, because an exact-count assertion alone would let a
+      delete-the-old-one implementation satisfy it. (The first version of this
+      test was tautological — see the R2 record below — and its replacement is
+      the reason this paragraph is two tests rather than one.)
+
+      **And the table itself now has a retention policy**, which it did not:
+      `RETENTION_DAYS = 63` — the metric definition's own hard stop for the
+      observation window — with a tested `pruneOlderThan` job. An append-only
+      table with no TTL, pruning job, partition rotation or archive path is an
+      R-A7 violation, and this step had reasoned about R-A7 for the neighbouring
+      quarantine *directory* while leaving the table that actually grows per
+      event unbudgeted. The disk CEILING is still 3.2's; a retention policy is
+      not a ceiling.
 
       **Sensitivity:** reading a newer store instead of quarantining it reds
       **3 of 14**; checking the crash marker after the version instead of before
       reds **1 of 14** — the transition-4 test alone, which is the targeted
       result rather than a blanket break. Both reverted and re-verified at 14/14.
+
+> **R2 completion review, 2026-08-29 — 12 findings, and both highs were on steps
+> already flipped `[x]`.** A fresh blind reviewer subagent was dispatched at the
+> dispatcher-authored prompt package (never a prompt the implementing session
+> wrote, per `evaluator-independence`), over the whole branch delta, with the
+> artefact committed BEFORE any fix. Verdict: 2 high, 5 medium, 5 low; every
+> finding reached a terminal status — **11 `fixed`, 1 `accepted-risk`**.
+>
+> **The two highs were evidence failures, not code failures, which is the worse
+> place for them.** (1) The quarantine growth-budget test was *tautological*:
+> `new Set(names).size === names.length` is true of every `readdirSync` result by
+> definition, and `names.length >= 1` accepts unbounded growth — so the R-A7
+> claim in 2.4 was asserted, not enforced, and the fixture never even produced
+> the same bytes twice. (2) Transition 2's *migration* was a `user_version`
+> stamp: `db.exec(SCHEMA)` is `CREATE TABLE IF NOT EXISTS`, a no-op on an
+> existing table of any shape, and the test seeded only the version integer
+> backwards over the CURRENT shape, so it passed for a stamp-only implementation
+> and the first real column change would have stamped an old-shaped store as
+> current. Both steps' `verify:` lines above are rewritten to what is now
+> actually enforced.
+>
+> **One finding demoted itself, and the demotion is recorded rather than
+> smoothed over.** Medium 6 said `quarantine()` deleted WAL sidecars instead of
+> moving them, losing committed data behind a byte-equality assertion that could
+> not see it. The move is implemented — and measuring it showed the loss is *not
+> reachable* through `openCollectorStore`, which opens the database before
+> reading its version, and opening removes an unrecognised `-wal`. So the
+> assertion sits on `quarantine()` directly and a second test pins the
+> removal-on-open that makes the end-to-end path unreachable, which means
+> enabling WAL later reds it and re-opens the question deliberately.
+>
+> The remaining mediums were concrete state-machine defects: a crash *inside*
+> crash-recovery left a stale marker and evicted a healthy store one restart
+> later; `quarantined` implied a durable lockout it never was; `uninstall` left
+> the opt-out marker while its docstring said "the markers"; `deleteMachine`
+> returned a pre-delete SELECT count instead of the DELETE's `changes` on the one
+> path framed as serving an Art. 17 request. The lows added the retention policy
+> this phase owed under R-A7 (`RETENTION_DAYS = 63`, the metric definition's own
+> hard stop, with a tested pruning job), removed an unreachable enum member, and
+> made the `node:sqlite` skip a RED rather than a silent zero — on the finding's
+> own argument that AC-8 of this roadmap holds a skip to be a failure.
+>
+> The single `accepted-risk` is the one the finding itself labelled a trade-off:
+> one `existsSync` per write, the price of honouring a mid-session opt-out
+> immediately, now recorded as a line item owed to step 3.2's CPU budget so that
+> step meets it as a known cost instead of discovering it.
+>
+> Also self-caught before the review and fixed alongside it: the store
+> deduplicated at WRITE time via `PRIMARY KEY` + `INSERT OR REPLACE`, satisfying
+> metric item 4's *"a repeated key is one record"* by violating its *"observable
+> as a defect rather than silently collapsed"*. Read-time dedup now, with
+> `readSummary` reporting rows / unique / duplicates.
+>
+> Evidence after the fixes: **32 tests green** (was 14), typecheck and eslint
+> clean, and **seven sensitivity probes** each applied alone and reverted from an
+> explicit backup — write-time dedup restored reds 3, and the other six red
+> exactly 1 apiece, so every probe is targeted rather than a blanket break.
 
 ## Phase 3 — The operational contract
 
