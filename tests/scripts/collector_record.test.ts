@@ -223,6 +223,35 @@ describe('collector_record — deduplication key of metric item 4', () => {
     });
 });
 
+describe('collector_record — regressions found by adversarial probe, not by the happy path', () => {
+    // Both were found by probing the validator directly AFTER the first 35 tests
+    // were green. The suite passed and the validator was wrong, which is the
+    // reason a passing suite is not evidence on its own.
+
+    it.each(['platform', 'event', 'outcome', 'machine_id'])(
+        'a required field present with an explicit `undefined` is MISSING, not valid (%s)',
+        (field) => {
+            // `key in rec` is true here, and every type guard is
+            // `!== undefined`-gated — so presence-only checking applied NO
+            // constraint at all and the record validated clean.
+            const r = validateRecord(validRecord({ [field]: undefined }));
+            expect(r.ok, `${field}: undefined was accepted`).toBe(false);
+            expect(r.errors.join(' ')).toContain(`missing required field '${field}'`);
+        },
+    );
+
+    it.each(['2026-99-99', '2026-02-30', '2026-13-01', '2026-00-10'])(
+        'occurred_on must be a REAL date, not merely date-shaped (%s)',
+        (value) => {
+            expect(validateRecord(validRecord({ occurred_on: value })).ok).toBe(false);
+        },
+    );
+
+    it.each(['2026-02-28', '2024-02-29', '2026-12-31'])('accepts the real date %s', (value) => {
+        expect(validateRecord(validRecord({ occurred_on: value })).ok).toBe(true);
+    });
+});
+
 describe('collector_record — malformed input', () => {
     it.each([
         ['null', null],

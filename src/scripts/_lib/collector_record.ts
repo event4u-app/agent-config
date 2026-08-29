@@ -199,6 +199,20 @@ export interface ValidationResult {
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A date must be REAL, not merely date-SHAPED. `2026-99-99` matches the regex
+ * above and is not a day; letting it through would put a record in no window at
+ * all while looking well-formed. Round-tripping through `Date` is what
+ * distinguishes the two — `2026-02-30` normalises to March and fails to match.
+ */
+function isRealDate(value: string): boolean {
+    if (!DATE_RE.test(value)) {
+        return false;
+    }
+    const d = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+}
 /** RFC-4122 shape. The generator is local and random; this checks the FORM only. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -225,7 +239,11 @@ export function validateRecord(candidate: unknown): ValidationResult {
         }
     }
     for (const key of ALLOWED_FIELDS) {
-        if (!(key in rec)) {
+        // `key in rec` is TRUE for a key present with an `undefined` value, and
+        // every type guard below is `!== undefined`-gated — so testing presence
+        // alone let `{ platform: undefined }` through with no constraint applied
+        // at all. Explicit-undefined is treated as missing, which is what it is.
+        if (!(key in rec) || rec[key] === undefined) {
             errors.push(`missing required field '${key}'`);
         }
     }
@@ -258,7 +276,7 @@ export function validateRecord(candidate: unknown): ValidationResult {
     if (rec.sequence !== undefined && (!Number.isInteger(rec.sequence) || (rec.sequence as number) < 0)) {
         errors.push('sequence must be a non-negative integer');
     }
-    if (rec.occurred_on !== undefined && (typeof rec.occurred_on !== 'string' || !DATE_RE.test(rec.occurred_on))) {
+    if (rec.occurred_on !== undefined && (typeof rec.occurred_on !== 'string' || !isRealDate(rec.occurred_on))) {
         errors.push(
             'occurred_on must be a UTC calendar date (YYYY-MM-DD). A precise timestamp beside ' +
                 'a stable machine_id is a behavioural fingerprint and is refused here.',
