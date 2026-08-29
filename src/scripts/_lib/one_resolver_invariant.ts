@@ -82,19 +82,21 @@ export const ROUTER_NAMES: readonly RegExp[] = [
  * shapes the reviewer measured evading the first version.
  */
 export const EXPORT_FORMS: readonly RegExp[] = [
-    // export [default] [abstract] class|interface|function|const|let|var NAME
-    /\bexport\s+(?:default\s+)?(?:abstract\s+)?(?:class|interface|type|function|const|let|var)\s+(NAME)\b/,
+    // export [default] [declare] [abstract] [async] <kw> [*] NAME
+    // `declare`, `enum` and the generator `function*` were added after an R2
+    // round-2 finding: `export declare class` sits ONE keyword from
+    // `export abstract class`, which was covered, so a reader had no signal
+    // that the neighbouring form was not.
+    /\bexport\s+(?:default\s+)?(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(?:class|interface|type|enum|const|let|var|function)\b\s*\*?\s*(NAME)\b/,
     // export default NAME
     /\bexport\s+default\s+(NAME)\b/,
-    // export { NAME } / export { NAME as X } / export { X as NAME }
+    // export { NAME } / export { NAME as X } / export { X as NAME } / re-export
     /\bexport\s*\{[^}]*\b(NAME)\b[^}]*\}/,
-    // export async function NAME
-    /\bexport\s+async\s+function\s+(NAME)\b/,
 ];
 
 export interface Violation {
     readonly file: string;
-    readonly kind: 'second-resolver' | 'council-import-in-resolver' | 'resolver-missing';
+    readonly kind: 'second-resolver' | 'council-import-in-resolver' | 'resolver-missing' | 'resolver-is-not-a-resolver';
     readonly detail: string;
 }
 
@@ -105,18 +107,113 @@ export interface ScanResult {
 }
 
 /**
- * Strip line and block comments and string literals, so a mention in prose is
- * not read as code. Finding 5's false positive.
+ * Single-pass source scanner: classify every character as code, comment or
+ * string literal, in ONE left-to-right pass.
  *
- * Intentionally crude: it over-strips inside template literals, which costs a
- * missed detection in code nobody writes a router in, and never invents a hit.
+ * ## Why this is a scanner and not a sequence of regexes
+ *
+ * The previous version stripped block comments first with an unbounded
+ * `/\*[\s\S]*?\*\/`, then line comments, then strings. An R2 review round
+ * found that unsound and measured it on the live tree: any `//` comment
+ * containing the two characters `/*` — a glob such as
+ * `packages/<star>/commands/` — opened a spurious block comment that ran to the
+ * next `*\/` anywhere in the file and deleted the real code between them.
+ * **34 non-test `.ts` files under `src/` already carry such a comment, and in
+ * 12 of them top-level `export` declarations vanished** (one lost 6,510 of
+ * 13,270 characters, including its `export function run`). A second resolver
+ * hidden behind such a comment scanned green WHILE its file appeared in
+ * `scanned`, so the anti-vacuity discriminator could not catch it either.
+ *
+ * The defect is not fixable by reordering: comment-vs-string precedence is
+ * positional, so whichever opens FIRST wins, and only a left-to-right pass
+ * knows which that is.
+ *
+ * ## Known limit, stated rather than claimed away
+ *
+ * Regex literals are NOT tracked. A regex literal whose body contains a
+ * comment opener is read as a comment start. Distinguishing division from a regex
+ * literal needs a real parser, and the failure is a false NEGATIVE (code
+ * dropped, so a router could hide there). It is left uncovered deliberately
+ * rather than papered over: the round-1 lesson here was that claiming
+ * exhaustiveness is what made the gap invisible.
  */
+export interface Segments {
+    /** Source with comments blanked; string literals preserved verbatim. */
+    readonly codeAndStrings: string;
+    /** Source with comments AND string contents blanked. */
+    readonly codeOnly: string;
+}
+
+const BACKTICK = '\u0060';
+const QUOTES = new Set(["'", '\u0022', BACKTICK]);
+
+export function segment(text: string): Segments {
+    const keepStrings: string[] = [];
+    const dropStrings: string[] = [];
+    let i = 0;
+    const n = text.length;
+
+    const push = (ch: string, inString: boolean): void => {
+        keepStrings.push(ch);
+        dropStrings.push(inString && ch !== '\n' ? ' ' : ch);
+    };
+
+    while (i < n) {
+        const c = text[i] as string;
+        const d = text[i + 1];
+
+        if (c === '/' && d === '/') {
+            while (i < n && text[i] !== '\n') {
+                keepStrings.push(' ');
+                dropStrings.push(' ');
+                i++;
+            }
+            continue;
+        }
+        if (c === '/' && d === '*') {
+            const close = text.indexOf('*/', i + 2);
+            const stop = close === -1 ? n : close + 2;
+            for (; i < stop; i++) {
+                const ch = text[i] as string;
+                keepStrings.push(ch === '\n' ? '\n' : ' ');
+                dropStrings.push(ch === '\n' ? '\n' : ' ');
+            }
+            continue;
+        }
+        if (QUOTES.has(c)) {
+            const quote = c;
+            push(c, false);
+            i++;
+            while (i < n) {
+                const ch = text[i] as string;
+                if (ch === '\\') {
+                    push(ch, true);
+                    if (i + 1 < n) push(text[i + 1] as string, true);
+                    i += 2;
+                    continue;
+                }
+                push(ch, ch !== quote);
+                i++;
+                if (ch === quote) break;
+                // A template literal may span lines; the others may not.
+                if (ch === '\n' && quote !== BACKTICK) break;
+            }
+            continue;
+        }
+        push(c, false);
+        i++;
+    }
+    return { codeAndStrings: keepStrings.join(''), codeOnly: dropStrings.join('') };
+}
+
+/** Source with comments and string CONTENTS blanked — for declaration matching. */
 export function stripNonCode(text: string): string {
-    return text
-        .replace(/\/\*[\s\S]*?\*\//g, ' ')
-        .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
-        .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
-        .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
+    return segment(text).codeOnly;
+}
+
+/** Source with comments blanked, string literals kept — import specifiers live in one. */
+export function stripComments(text: string): string {
+    return segment(text).codeAndStrings;
 }
 
 /** Does this file text declare a task-side council/dispatch router? */
@@ -134,26 +231,20 @@ export function declaresRouter(text: string): boolean {
 /**
  * Does this file import from the council's internal directory?
  *
- * Covers static `from`, dynamic `import()`, `require()`, and the index form
- * with no trailing slash — all three misses in finding 5 — over comment- and
- * string-stripped text, which removes the false positive in the same pass.
- *
- * NOTE the ordering: literals are stripped, so the *specifier* is gone too.
- * The patterns therefore run over the ORIGINAL text with comments removed
- * only, which is what {@link stripComments} exists for.
+ * Covers static `from`, the SIDE-EFFECT form (which needs neither `from` nor a
+ * paren, and was missed by the round-1 repair under a test titled "covers every
+ * import form"), dynamic `import()`, `require()`, and the index form with no
+ * trailing slash. Runs over comment-stripped text with string literals intact,
+ * so a docstring mentioning the path cannot red the gate.
  */
 export function importsCouncilInternal(text: string): boolean {
     const code = stripComments(text);
     return [
         /\bfrom\s+['"][^'"]*ai_council(?:\/|['"])/,
+        /\bimport\s+['"][^'"]*ai_council(?:\/|['"])/,
         /\bimport\s*\(\s*['"][^'"]*ai_council(?:\/|['"])/,
         /\brequire\s*\(\s*['"][^'"]*ai_council(?:\/|['"])/,
     ].some((re) => re.test(code));
-}
-
-/** Remove comments only, preserving string literals (import specifiers live there). */
-export function stripComments(text: string): string {
-    return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
 }
 
 /** Walk `.ts` files under a directory, skipping tests and build output. */
@@ -186,13 +277,26 @@ export function checkOneResolver(root: string): ScanResult {
 
     // Finding 4: the POSITIVE half. Without this the invariant is satisfied by
     // deleting the resolver, which is not "one resolver" — it is none.
-    if (!fs.existsSync(path.join(root, SANCTIONED_RESOLVER))) {
+    const resolverAbs = path.join(root, SANCTIONED_RESOLVER);
+    if (!fs.existsSync(resolverAbs)) {
         violations.push({
             file: SANCTIONED_RESOLVER,
             kind: 'resolver-missing',
             detail:
                 'the sanctioned task-side resolver does not exist. "Exactly one" is ' +
                 'violated by zero as well as by two; a tree with no resolver must not scan green.',
+        });
+    } else if (!declaresRouter(fs.readFileSync(resolverAbs, 'utf-8'))) {
+        // R2 round-2 finding: existence is not identity. A `judgment_ladder.ts`
+        // gutted to `export const NOTE = "moved"` passed the existence check,
+        // so `rm` was caught and hollowing-out was not.
+        violations.push({
+            file: SANCTIONED_RESOLVER,
+            kind: 'resolver-is-not-a-resolver',
+            detail:
+                'the sanctioned path exists but declares no resolver. Presence is not ' +
+                'identity: a file gutted to a stub satisfies `existsSync` while the ' +
+                'invariant it anchors has quietly moved somewhere unscanned.',
         });
     }
 

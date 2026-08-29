@@ -183,7 +183,7 @@ called a larger risk than feature absence.
 
       Landed: `src/scripts/_lib/one_resolver_invariant.ts` (a pure scanner over
       file text, so it can be driven against a synthetic tree) and
-      `tests/scripts/one_resolver_invariant.test.ts` — **32 tests, all green**.
+      `tests/scripts/one_resolver_invariant.test.ts` — **45 tests, all green**.
 
       > **The first version of this step was WRONG, and an R2 completion review
       > caught it.** A fresh subagent was dispatched at the deterministically
@@ -224,6 +224,58 @@ called a larger risk than feature absence.
       > **15 of 32** tests, where the reviewed version passed both real-tree
       > tests under the identical mutation.
 
+      > **ROUND 2 — a second fresh reviewer, 5 findings, 1 high, and the high
+      > one was a correctness bug the round-1 repair INTRODUCED.** Recorded at
+      > `agents/evidence/reviews/drain-roadmap-6-one-resolver-r2.findings.md`,
+      > committed before repair like round 1.
+      >
+      > Round 1's fix for a comment FALSE POSITIVE created a wider false
+      > NEGATIVE. Comments were stripped by ordered regexes, block-comments
+      > first, with an unbounded lazy match — so any `//` line comment
+      > containing the two characters `/` `*`, an ordinary glob path, opened a
+      > spurious block comment that ran to the next closer anywhere in the file
+      > and **deleted the real code between them**. A second resolver hidden
+      > behind such a comment scanned green *while its file appeared in
+      > `scanned`*, so the anti-vacuity discriminator added in round 1 could not
+      > catch it either. Both halves of the invariant fell to one comment.
+      >
+      > **It was live, not hypothetical.** The reviewer measured **34 non-test
+      > `.ts` files under `src/` already carrying such a comment, 12 of which
+      > lost top-level `export` declarations** — one losing 6,510 of 13,270
+      > characters including its `export function run`.
+      >
+      > The defect is not fixable by reordering, because comment-versus-string
+      > precedence is **positional**: whichever opens first wins, and only a
+      > left-to-right pass knows which that is. The ordered regexes are replaced
+      > by a **single-pass scanner** (`segment`) that classifies every character
+      > as code, comment or string literal in one traversal.
+      >
+      > **Sensitivity, by direct contrast rather than by rerun.** On the source
+      > `// Routes live under packages/*/commands/` followed by
+      > `export class CouncilTopologyRouter {}`, the round-1 stripper reduces
+      > **104 characters to 2** and loses the declaration; the scanner preserves
+      > all 104. Six tests pin the behaviour, including one asserting that a
+      > real block comment IS still removed, so the repair cannot degrade into
+      > "strip nothing".
+      >
+      > Three further findings, each a partial repair from round 1 rather than a
+      > new defect, and each now closed: `export declare class`, `export enum`
+      > and `export function*` still evaded the pattern matrix — `declare` sits
+      > one keyword from `abstract`, which was covered; the **side-effect**
+      > import form `import '../ai_council/necessity.js'` was missed under a
+      > test titled *"covers every import form"*; and the resolver check
+      > asserted only that the path EXISTS, so `judgment_ladder.ts` gutted to
+      > `export const NOTE = "moved"` scanned green — `rm` was caught and
+      > hollowing-out was not. That last one is now its own violation kind,
+      > `resolver-is-not-a-resolver`.
+      >
+      > **One limit is stated rather than claimed away:** the scanner does not
+      > track regex literals, so a regex whose body contains a comment opener is
+      > read as a comment start. Distinguishing division from a regex literal
+      > needs a real parser. The failure is a false negative and is left
+      > uncovered deliberately — round 1's lesson here was that claiming
+      > exhaustiveness is exactly what made the gap invisible.
+
       **Sensitivity is established, not assumed.** Four arms add the defect and
       observe the guard go red inside the test rather than reasoning that it
       would: a `CouncilTopologyRouter` class beside the ladder, a
@@ -233,11 +285,15 @@ called a larger risk than feature absence.
       the sabotage and not by a tree that was already dirty or never walked.
 
       **Polarity is tested too, because a pattern that only ever fires is not a
-      guard.** Four denial arms must stay GREEN: a file that merely mentions the
-      council and routes nothing; a council-INTERNAL module even when it
+      guard.** **Five** denial arms must stay GREEN: a file that merely mentions
+      the council and routes nothing; a council-INTERNAL module even when it
       literally declares `CouncilTopologyRouter`, since the invariant is about
-      task-side resolvers; a `.test.ts` file naming one; and an `ai_council`
-      import in a non-resolver file, which is legal by construction.
+      task-side resolvers; a `.test.ts` file naming one; a router name appearing
+      inside a comment or a string literal; and an `ai_council` import in a
+      non-resolver file, which is legal by construction. (The count read "four"
+      and the arms numbered five — an R2 round-2 finding, and the unlisted one
+      was the arm exercising the comment stripper that same round found
+      unsound.)
 
       **Anti-vacuity is asserted on the scanner's own report**, which is the
       correction the review forced. `checkOneResolver` returns `{ violations,

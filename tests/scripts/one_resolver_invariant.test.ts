@@ -8,6 +8,7 @@ import {
     declaresRouter,
     importsCouncilInternal,
     SANCTIONED_RESOLVER,
+    segment,
 } from '../../src/scripts/_lib/one_resolver_invariant.js';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -227,5 +228,85 @@ describe('polarity — the guard must also DENY, or it is a pattern that always 
         expect(importsCouncilInternal(fs.readFileSync(path.join(tmp, 'src/scripts/consumer.ts'), 'utf-8'))).toBe(true);
         // …but the invariant only constrains the resolver.
         expect(checkOneResolver(tmp).violations).toEqual([]);
+    });
+});
+
+// ── R2 ROUND 2 ────────────────────────────────────────────────────────────
+// Round 1's repair of the comment false-positive introduced a wider false
+// NEGATIVE: comments were stripped by ordered regexes, block-first, with an
+// unbounded lazy match. Any `//` comment containing the two characters `/*` —
+// an ordinary glob path — opened a spurious block comment that ran to the next
+// `*` `/` anywhere in the file and deleted the real code between. Measured on
+// the live tree at the time: 34 non-test files under `src/` carried such a
+// comment and 12 of them lost top-level `export` declarations.
+describe('the comment scanner is single-pass, so a glob in a line comment cannot swallow code', () => {
+    const GLOB_COMMENT = '// Routes live under packages/*/commands/\n';
+
+    it('still detects a router declared after a line comment containing a glob', () => {
+        expect(declaresRouter(GLOB_COMMENT + 'export class CouncilTopologyRouter {}\n')).toBe(true);
+    });
+
+    it('still detects a council import after a line comment containing a glob', () => {
+        expect(importsCouncilInternal(GLOB_COMMENT + "import { x } from '../ai_council/necessity.js';\n")).toBe(true);
+    });
+
+    it('end-to-end: a second resolver hidden behind such a comment is NOT green', () => {
+        expectCleanBaseline();
+        write('src/scripts/hidden.ts', GLOB_COMMENT + 'export class CouncilTopologyRouter {}\n');
+        const r = checkOneResolver(tmp);
+        expect(r.violations.map((v) => v.kind)).toEqual(['second-resolver']);
+        // The file WAS scanned — which is why anti-vacuity could not catch this.
+        expect(r.scanned.some((f) => f.endsWith('hidden.ts'))).toBe(true);
+    });
+
+    it('does not lose code that follows a line comment containing a glob', () => {
+        const src = GLOB_COMMENT + 'export function run() {\n    return 1;\n}\n';
+        expect(segment(src).codeOnly).toContain('export function run');
+    });
+
+    it('a real block comment IS still removed', () => {
+        expect(segment('/* export class CouncilTopologyRouter {} */\nexport const x = 1;\n').codeOnly).not.toContain(
+            'CouncilTopologyRouter',
+        );
+    });
+
+    it('an apostrophe in a line comment does not open a string that eats the file', () => {
+        const src = "// the council's own gate\nexport class CouncilTopologyRouter {}\n";
+        expect(declaresRouter(src)).toBe(true);
+    });
+});
+
+describe('export forms that evaded round 1s repair', () => {
+    for (const [label, body] of [
+        ['export declare class', 'export declare class CouncilTopologyRouter {}\n'],
+        ['export enum', 'export enum CouncilTopologyRouter { a }\n'],
+        ['export generator function', 'export function* resolveCouncilRoute() {}\n'],
+    ] as const) {
+        it(`detects a router declared as ${label}`, () => {
+            expect(declaresRouter(body)).toBe(true);
+        });
+    }
+});
+
+describe('the side-effect import form, missed under a test titled "every import form"', () => {
+    it('detects a bare side-effect import of the council internals', () => {
+        expect(importsCouncilInternal("import '../ai_council/necessity.js';\n")).toBe(true);
+    });
+
+    it('detects the side-effect index form with no trailing slash', () => {
+        expect(importsCouncilInternal("import '../ai_council';\n")).toBe(true);
+    });
+});
+
+describe('the sanctioned path must BE a resolver, not merely exist', () => {
+    it('goes red when the resolver is gutted to a stub', () => {
+        expectCleanBaseline();
+        write(SANCTIONED_RESOLVER, 'export const NOTE = "moved";\n');
+        const v = checkOneResolver(tmp).violations;
+        expect(v.map((x) => x.kind)).toEqual(['resolver-is-not-a-resolver']);
+    });
+
+    it('the real resolver satisfies it', () => {
+        expect(checkOneResolver(REPO).violations.map((v) => v.kind)).not.toContain('resolver-is-not-a-resolver');
     });
 });
