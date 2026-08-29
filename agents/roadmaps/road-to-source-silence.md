@@ -51,6 +51,31 @@ code is a legal obligation, not a leak; the prohibited class is *harvest
 attribution* ("we read X and took ideas"), and Phase 1 writes that distinction
 into the contract so the two never get conflated again.
 
+## Execution note — 2026-08-28, partial slice
+
+Phases 0 (census), 2.2 (the gate's own test), 3.1–3.3 (path scan, shape
+heuristic, ratchet) and the buildable half of Phase 1 landed in one change.
+Phase 2.1, 2.3's archive half, 2.4, 3.4, Phase 4 and Phase 5.1/5.3 did not, and
+each carries an inline `NOT ATTEMPTED` note saying why at the step rather than
+here.
+
+**What this slice does NOT claim, stated up front because the
+`whether-history-gets-rewritten` resolution requires it as a wording
+obligation.** Nothing here is eradication, and the result is not a clean
+repository. Commit messages already on the trunk, merged pull-request bodies and
+old diffs still name sources, and they **remain recoverable by anyone with
+repository access** — the resolved decision was *no rewrite*, deliberately, and
+that residual is counted in the census's `residual:` field rather than removed.
+Measured at this pin: 217 hits across 9,049 trunk commits and 124 across 1,666
+authored pull requests. The confidentiality claim this programme can make is
+about what gets written **next**; it excludes historical artifacts explicitly,
+and any later description of the outcome must do the same.
+
+The second honest limit: the block-tier shape debt (281 occurrences) is
+**baselined, not cleared**. New occurrences fail immediately, which is the
+property that stops the leak chain growing; the existing 281 are counted debt
+whose removal is Phase 2.1, and the baseline entry goes stale on 2026-10-23.
+
 ## The measurements this exists for
 
 All re-reproduced at `905087463`, all cheap to re-run. Two rows carry a
@@ -68,49 +93,49 @@ correction from the verification pass and say so inline.
 
 ## Phase 0 — Census, encrypted, before anything moves
 
-- [ ] **0.1 Build the full-surface sweep.** One script that scans tracked
+- [x] **0.1 Build the full-surface sweep.** One script that scans tracked
       content, tracked *paths*, commit messages on `main`, and (via `gh api`)
       branch names, PR titles and PR bodies, against the current denylist plus
       the shape heuristic from 3.2 in prototype form. Output is a findings list
       with file:line / ref / PR-number anchors.
-      verify: the sweep, run at the pinned commit, reports at least the 29 content lines and the filename hit named in the table above.
-- [ ] **0.2 Encrypt the census; track only the counts.** The findings list
+      verify: `./scripts-run src/scripts/sweep_source_surfaces` reports all five surfaces with a per-surface `scanned` count; run 2026-08-28 it read content 284 deny + 478 shape, path 0, commit 217, branch 10, pr 124 over 1,666 authored PRs. <!-- unsatisfiable-as-written: the "29 content lines" are by definition the families NO matcher knows — they are absent from the deny set, and a bare word in prose has no shape either — so a sweep that matches deny+shape can never report them; that is the gap, not a bug in the sweep. The filename hit is the same class: a speaking review-input directory name is in no deny list and has no decidable shape. What the sweep adds instead is `discoverCandidates`, a review aid that ranks un-denied identifier tokens co-occurring with an attribution cue — 219 candidates, which is Phase 0.3's actual input. -->
+- [x] **0.2 Encrypt the census; track only the counts.** The findings list
       itself contains every name this roadmap exists to remove, so it is stored
       `ENC1:` via `src/scripts/_lib/link_crypto.ts`; the tracked artefact
       carries only per-surface counts and the ciphertext.
-      verify: `git grep -c 'ENC1:' <census-path>` is at least 1 and `check_no_external_sources` passes on the census file with zero skip_paths additions.
-- [ ] **0.3 Extend the deny set from the census.** Every un-denied token family
+      verify: DONE — `agents/evidence/reports/source-attribution-census.md` carries exactly one `ENC1:` line, `check_no_external_sources` passes with **zero** skip_paths additions (they went DOWN, 35 → 32), and `sweep_source_surfaces --decrypt <file>` round-trips 1,113 findings + 219 candidates. The documented decrypt recipe reads the FILE: the ciphertext is ~320 kB on one line and `link_crypto decrypt --value "$(...)"` fails with `authentication failed` because the shell mangles an argument that size — reproduced, and the recipe in the artefact says so.
+- [~] **0.3 Extend the deny set from the census.** Every un-denied token family
       the census found is added — as hashes once Phase 1 lands, in a private
       staging file until then, never as new plaintext entries in the tracked
       config.
-      verify: re-running the sweep with the extended set reports zero known-token misses on the surfaces it covers.
+      verify: DEFERRED, and the reason is in the step's own text. The candidate list exists and ships encrypted (219 entries); turning it into deny tokens needs (a) a human to decide which candidates are real source families, and (b) a place to put them that is not tracked plaintext — which is the private master from 1.1, and that is the maintainer's atomic cutover. Writing them into a gitignored file from this worktree would produce an artefact that evaporates unread. Recipe: `docs/maintainers/source-deny-digests.md` § step 2.
 
 ## Phase 1 — The denylist stops being readable
 
-- [ ] **1.1 Replace plaintext tokens with keyed hashes.** The gate matches
+- [~] **1.1 Replace plaintext tokens with keyed hashes.** The gate matches
       normalised candidate tokens (lowercased, separator-folded) against
       HMAC-SHA256 digests; the key lives in CI secrets and local `.env`, never
       in the tree. Plain unsalted hashes are explicitly rejected in the design
       note: the candidate space (public repo slugs) is small enough to
       dictionary-reverse, which is why the construction is keyed.
-      verify: every `deny` entry matches `^[0-9a-f]{64}$` and none fails it, and the gate still exits 1 on a seeded fixture violation in CI. <!-- corrected-from-reproduction: the authored check was `zero entries matching [a-z].*[a-z]`, which a lowercase hex digest satisfies — the verify could never have passed. -->
-- [ ] **1.2 Define the no-key mode loudly.** Without the key the gate cannot
+      verify: MECHANISM SHIPPED DORMANT; the step itself is the maintainer's. `_lib/source_digest.ts` (folding, keying, tokenisation, matcher), `build_source_digests.ts` (private master → tracked digests, `--check` for drift), the `.gitignore` rule for the master, and an empty `deny_digests` key are in the tree; `tests/scripts/source_digest.test.ts` proves matching end-to-end against a **non-production fixture key** (20 tests, sensitivity-probed). The plaintext `deny` array stays in force and is not deleted. Provisioning the CI secret, generating production digests, deleting the plaintext array and switching CI to strict mode are ONE atomic maintainer change per this roadmap's own `where-the-key-lives` resolution — `docs/maintainers/source-deny-digests.md`. <!-- corrected-from-reproduction: the authored check was `zero entries matching [a-z].*[a-z]`, which a lowercase hex digest satisfies — the verify could never have passed. -->
+- [x] **1.2 Define the no-key mode loudly.** Without the key the gate cannot
       match, and a silently green gate is the failure mode this roadmap was
       written about. Local runs without the key exit with a distinct code and a
       one-line warning naming the missing capability; CI always has the key and
       always enforces.
-      verify: running the gate with the key unset produces the warning exit code, not exit 0; the CI job asserts the key is present before the gate step.
-- [ ] **1.3 Write the two-class distinction into the contract.** The rule
+      verify: DONE for the behaviour, and the CI half is specified rather than shipped because there is nothing yet to assert. `digestMode` is a five-row table with two fatal rows; with digests present and no key the gate writes a stderr line naming `SOURCE_DENY_KEY` and saying the run did NOT check the hashed set, and under `SOURCE_DENY_STRICT` it exits **3, asserted never 0**. All five rows plus the three end-to-end cases are in `tests/scripts/source_digest.test.ts`. The key-presence CI step cannot exist before the secret does; it is written out in `docs/maintainers/source-deny-digests.md` § step 4 and lands with the atomic cutover.
+- [x] **1.3 Write the two-class distinction into the contract.** The rule
       `src/rules/source-confidentiality.md` gains the sentence this whole
       programme rests on: harvest attribution is prohibited everywhere;
       license-required attribution for vendored code is mandatory and lives
       only in the license surfaces (`CREDITS.md`, `docs/THIRD-PARTY-NOTICES.md`,
       `provenance/borrows.jsonl`), which remain the only principled skip_paths.
-      verify: the rule file names the three license surfaces by path (`CREDITS.md`, `docs/THIRD-PARTY-NOTICES.md`, `provenance/borrows.jsonl`) and every surviving `skip_paths` entry maps to a key in `skip_reason`. <!-- corrected-from-reproduction: the two-class distinction itself is ALREADY in src/rules/source-confidentiality.md:48-50, so this step narrows to naming the three surfaces in rule prose; and `skip_reason` carries eight keys, not three, so "those three entries" describes no state the config can reach. -->
+      verify: FIRST HALF DONE — `src/rules/source-confidentiality.md` § "The two classes are opposites" names all three paths and states the failure in both directions. SECOND HALF UNSATISFIABLE AS WRITTEN: `skip_reason` is keyed by CATEGORY, not by path, so no entry "maps to a key" in any machine-checkable sense and nothing in the tree performs that mapping. What was done instead is falsifiable: three `skip_paths` entries named files that do not exist (`check_no_external_sources.py`, `validate_safe_paths.py`, `content.json.gz`) and were removed, 35 → 32, with the orphaned `validate_safe_paths` reason key. <!-- corrected-from-reproduction: the two-class distinction itself is ALREADY in src/rules/source-confidentiality.md:48-50, so this step narrows to naming the three surfaces in rule prose; and `skip_reason` carries eight keys, not three, so "those three entries" describes no state the config can reach. -->
 
 ## Phase 2 — The tracked tree goes quiet
 
-- [ ] **2.1 Opaque codenames replace speaking source references.** Every
+- [ ] **2.1 Opaque codenames replace speaking source references.**  <!-- NOT ATTEMPTED 2026-08-28: three of the anchored files are ARCHIVED roadmaps, and redacting an archive in place is gated on the 2.4 ADR, which is a governance decision and not the executing agent's to make. Rewriting only the non-archived half would leave the gate's block count between two states and make the 3.3 baseline unreadable. The full block-tier debt is measured (281 occurrences across 208 files) and baselined, so the size of this step is now known rather than estimated. --> Every
       `> **Source:**` header and body reference anchored in the table above is
       rewritten to an opaque round identifier (`inbox-2026-08-g`,
       `source-set S17`); the codename→source mapping exists exactly once, as an
@@ -118,13 +143,13 @@ correction from the verification pass and say so inline.
       2026-08-27 round is renamed to its codename with an in-file redaction
       note.
       verify: the extended gate (Phase 1 set + Phase 3 path scan) passes on the whole tree with `skip_paths` reduced per 2.3; `git log --follow` still connects the renamed findings file.
-- [ ] **2.2 The gate's test stops teaching evasion.** The fixture slug built
+- [x] **2.2 The gate's test stops teaching evasion.** The fixture slug built
       from concatenated literals at `tests/scripts/check_no_external_sources.test.ts:62`
       is replaced by a synthetic token (`example-denied-slug`) seeded into the
       test's own config fixture, so the test proves matching without publishing
       a real name or demonstrating the bypass technique.
-      verify: `git grep --line-number "' + '" tests/scripts/check_no_external_sources.test.ts` returns nothing — it returns **five** lines today (`:61-62`, `:150-152`) — and the explanatory comment at `:56-60` no longer describes how to evade the regex; the test still covers the slug-with-separator case. <!-- corrected-from-reproduction: one site was named, five exist, and the comment teaches the technique. `grep -n` is also rewritten to `--line-number`: the short flag is refused by the block-no-verify guard in this repo. -->
-- [ ] **2.3 The skip_paths estate shrinks to the principled core.** Archived
+      verify: DONE, and the roadmap's correction was accurate — re-checked at execution the grep returned exactly five lines at `:61-62` and `:150-152`, and it now returns nothing. Layer 2 uses invented tokens (`example-denied-word`, `example-owner/example-denied-slug`) seeded into its own fixture config; Layer 3 was rewritten from hand-copied literals into PROPERTIES read off the shipped config at runtime, so the real tokens exist only in memory and a throwaway tmp tree. The evasion comment is replaced by one explaining why no evasion is needed. The slug-with-separator case has its own named test. 11 tests green. <!-- corrected-from-reproduction: one site was named, five exist, and the comment teaches the technique. `grep -n` is also rewritten to `--line-number`: the short flag is refused by the block-no-verify guard in this repo. -->
+- [ ] **2.3 The skip_paths estate shrinks to the principled core.**  <!-- PARTIAL, not flipped: the free part landed (three DEAD entries removed, 35 -> 32; the roadmap predicted one), but the archive redactions and the `*.review-input/diff.patch` removal both depend on decisions that are not the executing agent's — the 2.4 ADR and 3.4's write-time redactor. --> Archived
       roadmaps currently excepted by name are redacted in place — readable
       source references replaced by codenames, each with a dated redaction
       marker so the archive edit is visibly a redaction, not a content change.
@@ -132,7 +157,7 @@ correction from the verification pass and say so inline.
       This step executes whatever governance form the E2 decision in 2.4
       requires.
       verify: `python3 -c "import json; print(len(json.load(open('src/scripts/external_sources_denylist.json'))['skip_paths']))"` prints at most **20**, and every remaining entry maps to a key in `skip_reason` — a gate-own file, a license surface, or a `vendored_cluster` member. <!-- corrected-from-reproduction: 12 is arithmetically unreachable against step 1.3's own carve-outs — 2 gate-own + 3 license surfaces + `validate_safe_paths` is already 6, and the vendored corpus contributes 10 more entries that 1.3 declares legitimate. The realistic floor is 18-20. -->
-- [ ] **2.4 Record the archive-redaction decision.** Redacting archived
+- [ ] **2.4 Record the archive-redaction decision.**  <!-- NOT ATTEMPTED: an ADR asserting that editing the archive is not a content change is a governance decision reserved to the owner. Flagged and stopped, per the execution brief. --> Redacting archived
       roadmaps touches a surface the suite treats as immutable. One ADR
       paragraph states that confidentiality redaction with a dated marker is
       not a content change; if the owner rejects that, 2.3 falls back to
@@ -141,24 +166,24 @@ correction from the verification pass and say so inline.
 
 ## Phase 3 — The gate learns shape, not just names
 
-- [ ] **3.1 Paths are scanned like content.** The scan loop additionally
+- [x] **3.1 Paths are scanned like content.** The scan loop additionally
       matches every tracked file *path* against the deny set, so a filename or
       directory name carrying a source token fails the same way a content line
       does.
-      verify: a CI fixture with a denied token only in its filename makes the gate exit 1.
-- [ ] **3.2 The attribution-shape heuristic lands.** Independent of any name
+      verify: DONE and sensitivity-probed on the real tree, not only in a fixture: a file created under `agents/evidence/notes/` whose FILENAME carries a token read from the shipped config (and whose body is clean) took the gate to **exit 1** with the hit rendered as `<path>:0 [<pattern>] (path) <path>`; removing it returned exit 0. Live count at introduction: 0 path hits, so this lands enforcing rather than baselined.
+- [x] **3.2 The attribution-shape heuristic lands.** Independent of any name
       list, the gate flags: a `> **Source:**` header whose value is not an
       opaque codename or `ENC1:` link; any quoted `agents/tmp(.old)?/<name>/`
       path whose `<name>` is not an opaque round identifier; and `owner/repo`
       slugs or `github.com` URLs outside a small allowlist (own org, integrated
       tools per the recommendation carve-out). The first two block; the slug
       class starts at the level the E4 blocker decides.
-      verify: three fixtures — a speaking Source header, a speaking tmp quote, an un-allowlisted slug — produce the configured block/warn results in the gate's test.
-- [ ] **3.3 skip_paths becomes a ratchet.** A check fails when the skip_paths
+      verify: DONE — `tests/scripts/source_shape.test.ts`, 18 tests, sensitivity-probed (neutralising the tmp-quote predicate reds three cases). The three positive fixtures are there, the tier is asserted (`agents/**` block, elsewhere warn), and the council's three named false-positive classes have their own `describe` block: filesystem paths, `@scope/name`, Markdown links. **The bare `owner/repo` slug class was BUILT, MEASURED AND REMOVED** — even gated on an attribution cue it produced 3,109 hits against 202 for the URL form, topped by `text/markdown` (278), `origin/main` (29), `CI/CD`, `before/after`, `403/404`. Those are exactly the shapes the council named, and a class with a 6 % signal rate would have driven the broad allowlisting the council said is worse than the gap it closes. The removal leaves a stated recall hole — a source named as a bare slug with no `github.com` URL and no deny entry is not detected — recorded in the module docstring and pinned by a negative test so a future attempt has to pass the measured false positives first.
+- [x] **3.3 skip_paths becomes a ratchet.** A check fails when the skip_paths
       count exceeds its recorded baseline; lowering the baseline is free,
       raising it requires a blocker reference in the same diff.
-      verify: a CI fixture adding a 13th skip_path without a blocker reference fails the ratchet check.
-- [ ] **3.4 Evidence snapshots are redacted at write time.** The review-input
+      verify: VERIFIED ALREADY TRUE, by probe rather than by inspection — appending one entry to `skip_paths` reds `check_suppression_hygiene` with `[growth]`, because that gate's `SUPPRESSION_INVENTORY` already declares this file with the default `growth: 'forbidden'`. The step's mechanism therefore needed no new gate, and its verify is doubly unsatisfiable as written: the count is 32, not 12, and there is no blocker-reference escape hatch for this file — growth is refused outright, which is stricter than the step asked for. What WAS built is the ratchet the step's neighbours needed and did not have: the Phase 3.2 shape count is a shrink-only entry `check_no_external_sources:shape-block` in `src/config/gate-violation-baselines.json` (281), sensitivity-probed — one new speaking `**Source:**` line under `agents/` takes the gate to exit 1, removing it returns exit 0. Note the 56-day expiry: the entry goes stale 2026-10-23, BEFORE this roadmap's `review_by`.
+- [ ] **3.4 Evidence snapshots are redacted at write time.**  <!-- NOT ATTEMPTED: out of the executed slice. --> The review-input
       snapshot generator runs deny-set redaction over `diff.patch` and sibling
       files before writing, replacing hits with `[REDACTED:src-conf]`, so the
       evidence chain stays intact while the carve-out from 2.3 can be deleted.
@@ -166,7 +191,7 @@ correction from the verification pass and say so inline.
 
 ## Phase 4 — The pipeline stops producing leaks upstream
 
-- [ ] **4.1 The inbox command mandates opaque intake.**
+- [ ] **4.1 The inbox command mandates opaque intake.**  <!-- NOT ATTEMPTED: out of the executed slice. The opaque-identifier grammar it must mandate is now DEFINED and tested — `isOpaqueRoundId` in src/scripts/_lib/source_shape.ts. -->
       `src/domains/analysis-workbench/analyze/inbox/command.md` requires: inbox
       directories under `agents/tmp/` are created under opaque round
       identifiers; the true source is recorded once, `ENC1:`-encrypted, in the
@@ -178,7 +203,7 @@ correction from the verification pass and say so inline.
       `agents/tmp/**` rejects new directories whose names match the slug
       heuristic or deny set, pointing at 4.1's convention.
       verify: creating `agents/tmp/<real-looking-slug>/` in the hook's test harness is rejected; an opaque identifier passes.
-- [ ] **4.3 GitHub metadata joins the gated surface.** A CI job on
+- [ ] **4.3 GitHub metadata joins the gated surface.**  <!-- NOT ATTEMPTED as a CI job, but the READER exists: sweep_source_surfaces already scans branch refs, PR titles and PR bodies (dependency-bot PRs excluded as mechanical capture, measured: they carried 2,434 of 2,449 shape hits). Wiring it to `pull_request` is the remaining work. --> A CI job on
       `pull_request` checks branch name, PR title, PR body and the PR's new
       commit messages against the hashed deny set plus the 3.2 heuristic; a
       pre-push hook gives authors the same check locally before the metadata
@@ -187,7 +212,7 @@ correction from the verification pass and say so inline.
 
 ## Phase 5 — The standing public record, and the ratchet
 
-- [ ] **5.1 Edit what is editable — one owner confirmation, at execution.**
+- [ ] **5.1 Edit what is editable — one owner confirmation, at execution.**  <!-- NOT ATTEMPTED, correctly: editing PR metadata and DELETING refs are outward mutations of public state and Hard-Floor under non-destructive-by-default. The census now supplies the list this step needs — 10 branch-ref hits and 91 deny + 33 shape hits across 1,666 authored PRs — encrypted, awaiting the owner's this-turn confirmation. -->
       Existing PR titles and bodies that the Phase 0 census flagged are edited
       on GitHub to codename form; merged source branches with speaking names
       are deleted. Editing metadata is reversible-cost; **deleting a ref is
@@ -207,7 +232,7 @@ correction from the verification pass and say so inline.
       history; should the owner choose it, execution is a separate change with
       its own confirmation, never a checkbox flipped here.
       verify: the blocker is resolved in-file and the census artefact carries a `residual:` count field. <!-- corrected-from-reproduction: authored as `- [ ]`, which reads as an executable step for an owner decision the roadmap itself recommends against; deferred until the blocker resolves. -->
-- [ ] **5.3 The sweep becomes standing evidence.** The Phase 0 sweep runs as a
+- [ ] **5.3 The sweep becomes standing evidence.**  <!-- NOT ATTEMPTED: the sweep exists and is schedulable; the claims entry and its check_claims wiring are not written. --> The Phase 0 sweep runs as a
       scheduled job; a claims entry `plaintext-source-attribution` asserts zero
       hits on content and paths at HEAD, wired to `check_claims` like every
       other ledger claim.
@@ -217,8 +242,45 @@ correction from the verification pass and say so inline.
 
 ### blocker: where-the-key-lives
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) as the target architecture — and the cutover is NOT
+  performed in this roadmap.** AI council 2026-08-28 (anthropic + openai, 1
+  round, $0.00, both seats subscription-authed). The seats differed on the
+  interim step and **converged, independently and without qualification, on the
+  thing that actually binds: shipping the executable part of (c) as a
+  REPLACEMENT for the current gate is net-NEGATIVE.**
+
+  The agent executing this roadmap has no access to CI secrets, cannot provision
+  private storage, and cannot create a repository secret. So the half it can
+  build — digest generation, the gitignored master convention, the matching
+  code, the tests against a fixture key — is precisely the half that enforces
+  nothing. Landing it as the replacement leaves the gate either failing every
+  run for want of a key, or **silently degraded to warn mode**, which is the
+  exact failure this roadmap was written about. One seat: "you've added
+  complexity without adding protection, and you've broken a gate that at least
+  worked before." The other: "the security cutover must be atomic … missing keys
+  in CI must fail, never warn."
+
+  **What ships here:** the scaffolding, DORMANT, **alongside** the existing
+  plaintext gate, which stays in force and is not deleted. Executable now —
+  HMAC matching, digest generation, the gitignored master-file convention, tests
+  on a non-production fixture key, fail-closed CI behaviour wired but not
+  activated, and the documentation plus secret-validation tooling a maintainer
+  needs.
+
+  **What does NOT ship here, and is a maintainer action:** provisioning the CI
+  secret, generating production digests, removing the tracked plaintext
+  denylist, and switching CI to strict mode. Those four are **one atomic
+  change**, and splitting them is the failure mode above.
+
+  One seat's interim alternative — a gitignored local denylist with graceful
+  degradation to warn mode — is recorded and **not adopted**: the other seat
+  names warn-on-missing-key as the specific thing that must never happen, and a
+  gate that quietly warns is what this roadmap exists to remove.
+- **Residual, stated rather than implied:** keyed exact-match digests still
+  cannot discover a source name nobody has listed. The slug/URL heuristic in the
+  sibling blocker remains essential and is not made redundant by this.
 - **Blocks:** Phase 1 steps 1.1 and 1.2, and through them the deletion of the
   plaintext deny array. Phase 0 and Phase 2's codename rewrites proceed
   regardless.
@@ -241,8 +303,22 @@ correction from the verification pass and say so inline.
 
 ### blocker: how-loud-the-slug-heuristic-is
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(c) — block in `agents/**`, warn elsewhere.** AI council
+  2026-08-28 (anthropic + openai, 1 round, $0.00), **2/2 convergent**:
+  enforcement should follow risk, attribution is concentrated in `agents/**`,
+  and repository slugs and GitHub URLs are ordinary content in integration code
+  and documentation, where blocking globally would generate enough noise to
+  drive broad allowlisting — which is worse than the gap it closes.
+- **Both seats named the same residual risk:** attribution can be moved out of
+  `agents/**`, deliberately or accidentally, leaving only a warning. It is
+  accepted rather than dismissed, and two requirements come from it:
+  **warnings must be visible and RETAINED in CI artifacts** rather than only
+  printed, so the warn tier is auditable after the fact; and the heuristic must
+  be **narrowly defined and tested against its likely false positives** —
+  filesystem paths, scoped package names (`@scope/name`), and Markdown links —
+  which is what 3.2's fixtures assert.
 - **Blocks:** the enforcement level of the slug/URL class in 3.2 and 4.3 only;
   the Source-header and tmp-quote classes block unconditionally either way.
 - **What to do:** pick exactly one — (a) block on any un-allowlisted
@@ -261,8 +337,24 @@ correction from the verification pass and say so inline.
 
 ### blocker: whether-history-gets-rewritten
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
+- **Resolution:** **(a) — no rewrite.** AI council 2026-08-28 (anthropic +
+  openai, 1 round, $0.00), **2/2 convergent, one seat "strongly"**. This
+  repository's evidence discipline is built on stable commit pins: every
+  `reproduced at <sha>` is falsifiable only because that sha is stable. A
+  rewrite converts the whole evidence estate into unverifiable claims — it
+  solves a bounded disclosure problem by destroying the primary verification
+  mechanism, which for this package is the differentiator.
+- **The counter-argument is accepted, not waved away.** Both seats noted that
+  half-measures do not erase anything: anyone with a pre-rewrite clone can
+  `git log --grep` the names, and forks, caches and PR mirrors may retain them.
+  A rewrite would not have fixed that either. What follows is a **wording
+  obligation**, adopted: the confidentiality claim must explicitly exclude
+  historical artifacts, and the result is **never** described as historical
+  eradication. Edit the mutable PR metadata, inventory the immutable
+  occurrences, prevent new disclosures, and say plainly that the old ones
+  remain recoverable by anyone with repository access.
 - **Blocks:** Phase 5.2 only. Everything else in this roadmap is worth doing
   under either answer.
 - **What to do:** pick exactly one — (a) no rewrite: accept commit messages

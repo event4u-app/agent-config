@@ -23,11 +23,39 @@
  * - A retained source link must be stored encrypted via
  *   src/scripts/_lib/link_crypto.ts, never in plaintext.
  *
+ * ## What `road-to-source-silence` added (Phase 3.1, 3.2, 3.3, and dormant 1.1)
+ *
+ * The name-list scan above is unchanged and still authoritative. Three surfaces
+ * were added around it, because a list can only catch a name somebody already
+ * wrote down:
+ *
+ * - **3.1 — paths are scanned like content.** A denied token in a FILENAME or
+ *   directory name failed nothing before; `rel` reached the extension skip-list
+ *   and the hit record and nothing else. It is now matched against the same
+ *   deny set, and a hit blocks exactly like a content line. Measured at
+ *   introduction: 0 hits, so this lands enforcing rather than baselined.
+ * - **3.2 — an attribution-SHAPE heuristic** (`_lib/source_shape.ts`), which is
+ *   independent of any name list. Tiered per the resolved
+ *   `how-loud-the-slug-heuristic-is` blocker: **block inside `agents/**`, warn
+ *   elsewhere.** The warn tier is written to a machine-readable report
+ *   (`--report`) rather than only printed, which is the council's own
+ *   requirement — "warnings must be visible and RETAINED in CI artifacts …
+ *   so the warn tier is auditable after the fact".
+ * - **3.3 — both new classes are ratcheted**, not allowlisted. Pre-existing
+ *   shape debt is a committed count in `src/config/gate-violation-baselines.json`
+ *   that may only shrink; a new occurrence raises the count and fails the gate.
+ *   No individual violation is named or excused.
+ * - **1.1 — keyed-digest matching, DORMANT.** `deny_digests` ships empty and
+ *   this code path does nothing until a maintainer performs the atomic cutover
+ *   in `docs/maintainers/source-deny-digests.md`. The plaintext `deny` array
+ *   stays in force and is NOT deleted.
+ *
  * Exit codes: 0 = clean, 1 = at least one denied token in a non-skipped tracked
- * file, 2 = usage / config error.
+ * file (or a shape-count regression), 2 = usage / config error, 3 = strict
+ * digest mode requested with no key (`_lib/source_digest.ts`).
  *
  * Usage:
- *     node scripts/check_no_external_sources.ts [--json]
+ *     node scripts/check_no_external_sources.ts [--json] [--report <path>]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -36,7 +64,10 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { DigestMatcher, digestMode, EXIT_NO_KEY, KEY_ENV, STRICT_ENV } from './_lib/source_digest.js';
+import { shapeHits as shapeHitsOf, shapePathHits, tierFor, type ShapeClass } from './_lib/source_shape.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // parents[2] of src/scripts/<file> is the repo root.
@@ -52,16 +83,32 @@ const _SKIP_EXT = new Set([
 
 interface DenyConfig {
     deny: string[];
+    /** Phase 1.1 — HMAC-SHA256 digests of the deny set. Ships EMPTY (dormant). */
+    deny_digests?: string[];
     skip_paths?: string[];
     [k: string]: unknown;
 }
 
 interface Hit {
     file: string;
+    /** 0 for a PATH hit — there is no line to point at. */
     line: number;
     token: string;
     text: string;
 }
+
+/** One attribution-shape finding (Phase 3.2). */
+interface ShapeFinding {
+    file: string;
+    line: number;
+    cls: ShapeClass;
+    tier: 'block' | 'warn';
+    /** The offending value, truncated. Written to the report, never to stdout. */
+    value: string;
+}
+
+/** Baseline key for the block-tier shape count (Phase 3.3). */
+export const SHAPE_GATE_KEY = 'check_no_external_sources:shape-block';
 
 /** Thrown to mirror Python `raise SystemExit(msg)` (exit code derived by caller). */
 class ExitError extends Error {}
@@ -297,12 +344,40 @@ function main(argv: readonly string[]): number {
         throw exc;
     }
 
+    // Phase 1.1 — dormant unless a maintainer has performed the atomic cutover.
+    const digests = cfg.deny_digests ?? [];
+    const strict = (process.env[STRICT_ENV] ?? '') !== '';
+    const mode = digestMode({ digests, key: process.env[KEY_ENV], strict });
+    if (mode.strict && !mode.active) {
+        process.stderr.write(`❌  ${mode.message}\n`);
+        return EXIT_NO_KEY;
+    }
+    if (mode.message !== '') {
+        process.stderr.write(`${mode.message}\n`);
+    }
+    const matcher = mode.active ? new DigestMatcher(digests, process.env[KEY_ENV] as string) : null;
+
     const hits: Hit[] = [];
+    const shapes: ShapeFinding[] = [];
     for (const rel of tracked) {
-        if (_SKIP_EXT.has(_suffixLower(rel))) {
+        if (_skipped(rel, skipGlobs)) {
             continue;
         }
-        if (_skipped(rel, skipGlobs)) {
+        // --- Phase 3.1: the PATH is scanned exactly like a content line. -----
+        for (const [raw, rx] of patterns) {
+            if (rx.test(rel)) {
+                hits.push({ file: rel, line: 0, token: raw, text: `(path) ${rel}`.slice(0, 160) });
+            }
+        }
+        if (matcher) {
+            for (const tok of matcher.hits(rel)) {
+                hits.push({ file: rel, line: 0, token: `digest:${tok}`, text: `(path) ${rel}`.slice(0, 160) });
+            }
+        }
+        for (const h of shapePathHits(rel)) {
+            shapes.push({ file: rel, line: 0, cls: h.cls, tier: tierFor(rel), value: h.value });
+        }
+        if (_SKIP_EXT.has(_suffixLower(rel))) {
             continue;
         }
         let text: string;
@@ -317,6 +392,7 @@ function main(argv: readonly string[]): number {
             continue;
         }
         const lines = _splitlines(text);
+        const tier = tierFor(rel);
         for (let idx = 0; idx < lines.length; idx += 1) {
             const line = lines[idx] as string;
             for (const [raw, rx] of patterns) {
@@ -329,11 +405,69 @@ function main(argv: readonly string[]): number {
                     });
                 }
             }
+            if (matcher) {
+                for (const tok of matcher.hits(line)) {
+                    hits.push({
+                        file: rel,
+                        line: idx + 1,
+                        token: `digest:${tok}`,
+                        text: _pyStrip(line).slice(0, 160),
+                    });
+                }
+            }
+            for (const h of shapeHitsOf(line)) {
+                shapes.push({ file: rel, line: idx + 1, cls: h.cls, tier, value: h.value });
+            }
         }
     }
 
+    // --- Phase 3.2 + 3.3: tier the shape findings and ratchet the block tier.
+    const blockShapes = shapes.filter((s2) => s2.tier === 'block');
+    const warnShapes = shapes.filter((s2) => s2.tier === 'warn');
+    const verdict = checkRatchet({ repoRoot: ROOT, gate: SHAPE_GATE_KEY, actual: blockShapes.length });
+
+    // The council's retention requirement: the warn tier is written where CI can
+    // keep it, not merely printed into a log that scrolls away.
+    const ri = argv.indexOf('--report');
+    if (ri >= 0 && argv[ri + 1] !== undefined) {
+        const out = path.resolve(ROOT, argv[ri + 1] as string);
+        fs.mkdirSync(path.dirname(out), { recursive: true });
+        fs.writeFileSync(
+            out,
+            _jsonDumps2({
+                deny_hits: hits.length,
+                digest_mode: { active: mode.active, digests: mode.digests, key_missing: mode.keyMissing },
+                shape: {
+                    block: blockShapes.length,
+                    warn: warnShapes.length,
+                    baseline: verdict.baseline,
+                    status: verdict.status,
+                },
+                block_findings: blockShapes,
+                warn_findings: warnShapes,
+            }) + '\n',
+            'utf-8',
+        );
+    }
+
+    const ok = hits.length === 0 && verdict.ok;
+
     if (asJson) {
-        process.stdout.write(_jsonDumps2({ ok: hits.length === 0, hits }) + '\n');
+        // `ok` and `hits` keep their pinned meaning for the name-list scan; the
+        // shape block is additive so an existing consumer is unaffected.
+        process.stdout.write(
+            _jsonDumps2({
+                ok,
+                hits,
+                shape: {
+                    block: blockShapes.length,
+                    warn: warnShapes.length,
+                    baseline: verdict.baseline,
+                    status: verdict.status,
+                    ok: verdict.ok,
+                },
+            }) + '\n',
+        );
     } else {
         if (hits.length > 0) {
             process.stdout.write(`❌  ${hits.length} external-source reference(s) in the tracked tree:\n\n`);
@@ -350,8 +484,28 @@ function main(argv: readonly string[]): number {
         } else {
             process.stdout.write('✅  No external inspiration-source references in the tracked tree.\n');
         }
+        // The shape tier reports on every run — a count that is only printed
+        // when it fails is a count nobody watches shrink.
+        process.stdout.write(
+            `\nattribution shape — block(agents/**) ${String(blockShapes.length)}` +
+                ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}\n`,
+        );
+        process.stdout.write(`${verdict.ok ? '✅' : '❌'}  ${verdict.message}\n`);
+        if (!verdict.ok) {
+            process.stdout.write(
+                '\nThe shape heuristic flags attribution by FORM, not by name: a speaking\n' +
+                    '`**Source:**` value, a quoted agents/tmp(.old)/<name>/ directory, or an\n' +
+                    'un-allowlisted github.com/<owner>/<repo> URL. Rewrite the reference to an\n' +
+                    'opaque round identifier or an ENC1: token (src/scripts/_lib/link_crypto.ts).\n' +
+                    'Run with --report <path> for the per-finding list. See rule:\n' +
+                    'source-confidentiality and roadmap road-to-source-silence Phase 3.\n',
+            );
+        }
     }
-    return hits.length > 0 ? 1 : 0;
+    // No second `scanned:` line: `assertScanned` above already emits it, and this
+    // copy landed AFTER the --json payload, which made the pinned JSON output
+    // unparseable. Caught by the CLI-contract test, not by inspection.
+    return ok ? 0 : 1;
 }
 
 function _isCliEntry(): boolean {
