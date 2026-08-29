@@ -47,6 +47,38 @@ export const NON_SUCCESS_STATES: ReadonlySet<TerminalState> = new Set([
  */
 export type RetryClass = 'retryable' | 'hard-blocker' | 'not-applicable';
 
+/**
+ * What the orchestrator did with a return — the acknowledgment half of the
+ * channel (`road-to-runtime-event-journal` Phase 3.1).
+ *
+ * The envelope already refuses to report a failure as a success. What it could
+ * not record is whether the *reader* did anything with that failure: a
+ * `blocked` return the orchestrator dropped on the floor is byte-identical to
+ * one it read, weighed, and deliberately set aside. Both are "a blocked return
+ * exists"; only one of them is a defect, and no field distinguished them.
+ *
+ * Three values, and the absent case is the fourth and the load-bearing one:
+ * ABSENT means nobody recorded a decision, which is exactly the ignored
+ * blocker `_lib/ignored_blocker.ts` reports.
+ */
+export type ConsumptionState = 'consumed' | 'partially-consumed' | 'rejected-with-reason';
+
+/**
+ * The acknowledgment record. A discriminated union, so the reason that
+ * `rejected-with-reason` needs is enforced by the TYPE rather than by a
+ * runtime check the caller meets or does not: `{ consumption:
+ * 'rejected-with-reason' }` with no `reason` does not compile.
+ *
+ * The other two states may carry a reason and are not required to — a
+ * consumed return needs no justification, and demanding one would make the
+ * cheap path expensive, which is how a field stops being filled at all
+ * (Risk 5).
+ */
+export type Acknowledgment =
+    | { readonly consumption: 'consumed'; readonly reason?: string }
+    | { readonly consumption: 'partially-consumed'; readonly reason?: string }
+    | { readonly consumption: 'rejected-with-reason'; readonly reason: string };
+
 export interface OutcomeEnvelope<T = unknown> {
     state: TerminalState;
     /** Whether a retry can plausibly change the outcome. */
@@ -62,6 +94,16 @@ export interface OutcomeEnvelope<T = unknown> {
     /** Per-category counts BEFORE capping, so a reader sees what was dropped. */
     totals: Record<string, number>;
     payload: T;
+    /**
+     * What the orchestrator did with this return, when it recorded anything.
+     *
+     * OPTIONAL on purpose, and the optionality is the measurement surface: an
+     * absent acknowledgment on a non-success state is a detectable ignored
+     * blocker, not a defaulted-to-fine one. Never default it to `consumed` —
+     * that would make every unread return look read, which is the exact
+     * failure the field exists to expose.
+     */
+    acknowledgment?: Acknowledgment;
 }
 
 /** Raised when an envelope is constructed in a state its own contract forbids. */
@@ -81,6 +123,13 @@ export function envelope<T>(init: {
     truncated?: boolean;
     totals?: Record<string, number>;
     payload: T;
+    /**
+     * Optional at construction. A producer almost never knows what its reader
+     * will do, so the normal path is {@link acknowledge} at the consuming end;
+     * this entry exists so a caller that IS both ends does not have to
+     * round-trip through a second call.
+     */
+    acknowledgment?: Acknowledgment;
 }): OutcomeEnvelope<T> {
     const state = init.state;
     const suggestion = init.suggestion ?? '';
@@ -107,7 +156,23 @@ export function envelope<T>(init: {
         truncated,
         totals,
         payload: init.payload,
+        // Spread rather than assigned: under `exactOptionalPropertyTypes` an
+        // explicit `undefined` is NOT the same as an absent key, and the whole
+        // detector rests on absence meaning "nobody decided".
+        ...(init.acknowledgment === undefined ? {} : { acknowledgment: init.acknowledgment }),
     };
+}
+
+/**
+ * Record what a reader did with a return, without mutating the original.
+ *
+ * Returns a NEW envelope. The producer's value stays as it was emitted, so an
+ * acknowledgment can never be mistaken for something the producer claimed
+ * about its own output — which is the same author-is-not-the-evaluator
+ * boundary the rest of this tree keeps.
+ */
+export function acknowledge<T>(env: OutcomeEnvelope<T>, ack: Acknowledgment): OutcomeEnvelope<T> {
+    return { ...env, acknowledgment: ack };
 }
 
 /**

@@ -15481,6 +15481,11 @@ var settingsSchema = external_exports.object({
         "PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2). Default off. When on, scans tool output (file reads, web fetches, MCP responses) for injection signatures and WARNS in context (never blocks). Runtime backstop on top of the always-on untrusted-input-defense rule; detection is probabilistic."
       )
     }).default({}),
+    runtime_journal: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        "Runtime event journal (road-to-runtime-event-journal Phase 1). Default off. When on, one durable, episode-keyed record per dispatched hook event is appended to <git-common-dir>/agent-journal/journal.sqlite \u2014 a Class-A write that opens, writes and exits. It emits nothing to the model, never warns and never blocks: a locked database, a missing node:sqlite, a malformed envelope or a full disk all degrade to silence. Off rather than on because it CREATES a storage surface (a SQLite database under your .git/) rather than appending to a directory that already exists. The record type has no field able to hold free-form content \u2014 ids, an event name, a bounded capability identifier, repo-relative locators and two 12-hex digests; no prompt, no file body, no absolute path. Retention: a 30-day TTL anchored on episode close, plus explicit, time-bounded, human-only holds that themselves expire."
+      )
+    }).default({}),
     rtk_wrap: external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         'PreToolUse RTK-wrap nudge (token-saving Phase 3). Default off. When on AND the binary on PATH is verified as Rust Token Killer (a live two-stage identity probe \u2014 not a self-reported flag, and never a colliding same-name binary), warns (never blocks) "re-run wrapped with rtk" before a single verbose CLI command (git/npm/cargo/docker/\u2026) \u2014 upstream reports 60\u201390% output-token savings (their estimate). Skips completeness-critical / piped / compound commands and git diff. No-op when rtk is absent, unverified, or a different tool.'

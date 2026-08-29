@@ -50,7 +50,13 @@ function baseOpts(overrides: Partial<Options> = {}): Options {
         router: p('router.json'),
         auditDir: p('audit'),
         engagement: p('.agent-engagement.jsonl'),
-        hygiene: null,
+        // Fixture-scoped like every sibling option. `null` fell back to
+        // DEFAULT_HYGIENE_CANDIDATES, which resolve against process.cwd() —
+        // so a gitignored `agents/state/context-hygiene.json` left in the repo
+        // by any other test in the suite made the "every source is absent"
+        // case read REAL session state and go red. Invisible in CI, where that
+        // file does not exist; reproducible locally after a full run.
+        hygiene: p('context-hygiene.json'),
         output: null,
         ...overrides,
     };
