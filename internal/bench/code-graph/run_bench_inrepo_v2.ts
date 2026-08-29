@@ -138,6 +138,23 @@ export function fileOfEndpoint(endpoint: string): string | null {
 }
 
 /**
+ * Is this relation relevant to the question, for a verb that returns a
+ * NEIGHBOURHOOD (`affected` / `query`) rather than an answer?
+ *
+ * v1 called this with the whole probe string as the single token. For
+ * `path-between` that string was `"cmdBuild -> getParser"`, which no symbol
+ * contains, so every relation the engine returned was discarded — defect 1.
+ * Here the caller passes the question's probe TOKENS, and the class whose verb
+ * returns the answer itself does not call this at all.
+ */
+export function isRelevantRelation(parts: readonly string[], tokens: readonly string[]): boolean {
+    return parts.some((p) => {
+        const sym = p.includes('#') ? (p.split('#')[1] ?? '') : path.basename(p);
+        return tokens.some((t) => sym === t || sym.includes(t));
+    });
+}
+
+/**
  * Arm B — the code graph, through the verb that answers the class:
  *
  *   `path-between` → `path <probe> <probe_to>`; the verb returns the path
@@ -173,13 +190,7 @@ function armGraph(graphPath: string, q: Question): ArmResult {
         const m = line.match(/^\s+\w+\s+(\S+)\s+--\S+-->\s+(\S+)\s*$/);
         if (!m) continue;
         const parts = [m[1] as string, m[2] as string];
-        if (!isPath) {
-            const relevant = parts.some((p) => {
-                const sym = p.includes('#') ? (p.split('#')[1] ?? '') : path.basename(p);
-                return tokens.some((t) => sym === t || sym.includes(t));
-            });
-            if (!relevant) continue;
-        }
+        if (!isPath && !isRelevantRelation(parts, tokens)) continue;
         for (const p of parts) {
             const f = fileOfEndpoint(p);
             if (f !== null) files.add(f);
@@ -559,4 +570,17 @@ function main(): number {
     return 0;
 }
 
-process.exit(main());
+// Run only when invoked as the entry point. Without this guard a test that
+// imports `fileOfEndpoint` or `isRelevantRelation` would execute the whole
+// benchmark as an import side effect.
+const invokedDirectly = (() => {
+    const entry = process.argv[1];
+    if (entry === undefined) return false;
+    try {
+        return path.resolve(entry) === fileURLToPath(import.meta.url);
+    } catch {
+        return false;
+    }
+})();
+
+if (invokedDirectly) process.exit(main());

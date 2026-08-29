@@ -8,7 +8,7 @@
 Pre-registered in `internal/bench/code-graph/PREREGISTRATION-inrepo-v2-2026-08-29.md` before this run.
 Corpus `inrepo-corpus-v2-2026-08-29.yaml` bound by SHA-256 `719885107aae85f1…`; the runner refuses on mismatch.
 
-**Measured commit:** `13b0f00917fb98b32249e188c845090c586e431c` (2026-08-29) — postdates the 2026-08-22 extractor repair, asserted by the runner rather than read by eye.
+**Measured commit:** `bef1948db877f33993eb1923f234a3a7138faf29` (2026-08-29) — postdates the 2026-08-22 extractor repair, asserted by the runner rather than read by eye.
 
 **Measured content, pinned by tree hash.** A commit id is not a durable
 pointer here: this repository squash-merges, so the branch commit above will
@@ -137,9 +137,9 @@ REPORTED ONLY — not a pass criterion. Covers the four graph-shaped classes; th
 
 ## Build times
 
-- `code_graph` — 384 ms
-- `shared` — 383 ms
-- `ai_council` — 685 ms
+- `code_graph` — 389 ms
+- `shared` — 394 ms
+- `ai_council` — 736 ms
 
 ## What this result may and may not change
 

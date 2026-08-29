@@ -1,7 +1,7 @@
 {
   "benchmark": "code-graph-vs-grep-inrepo-v2",
   "generated": "2026-08-29",
-  "measured_commit": "13b0f00917fb98b32249e188c845090c586e431c",
+  "measured_commit": "bef1948db877f33993eb1923f234a3a7138faf29",
   "measured_commit_date": "2026-08-29",
   "postdates_extractor_repair": true,
   "measured_trees": {
@@ -41,9 +41,9 @@
     "note": "Identical to v1. Re-choosing a bar after diagnosing a defect is choosing a bar to fit a number."
   },
   "build_ms": {
-    "code_graph": 384,
-    "shared": 383,
-    "ai_council": 685
+    "code_graph": 389,
+    "shared": 394,
+    "ai_council": 736
   },
   "per_class": {
     "callers": {
@@ -147,14 +147,14 @@
       "grep": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 33,
+        "wall_ms": 18,
         "output_bytes": 389,
         "answered": 3
       },
       "graph": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 530,
+        "wall_ms": 583,
         "output_bytes": 2338,
         "answered": 3
       },
@@ -175,14 +175,14 @@
       "grep": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 16,
+        "wall_ms": 15,
         "output_bytes": 443,
         "answered": 3
       },
       "graph": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 533,
+        "wall_ms": 579,
         "output_bytes": 1171,
         "answered": 3
       },
@@ -203,14 +203,14 @@
       "grep": {
         "precision": 0.5,
         "recall": 1,
-        "wall_ms": 18,
+        "wall_ms": 16,
         "output_bytes": 595,
         "answered": 4
       },
       "graph": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 554,
+        "wall_ms": 598,
         "output_bytes": 2717,
         "answered": 3
       },
@@ -239,7 +239,7 @@
       "graph": {
         "precision": 1,
         "recall": 0.5,
-        "wall_ms": 556,
+        "wall_ms": 589,
         "output_bytes": 1308,
         "answered": 2
       },
@@ -262,14 +262,14 @@
       "grep": {
         "precision": 1,
         "recall": 0.333,
-        "wall_ms": 15,
+        "wall_ms": 17,
         "output_bytes": 255,
         "answered": 1
       },
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 562,
+        "wall_ms": 603,
         "output_bytes": 246,
         "answered": 0
       },
@@ -293,14 +293,14 @@
       "grep": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 20,
+        "wall_ms": 16,
         "output_bytes": 384,
         "answered": 3
       },
       "graph": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 585,
+        "wall_ms": 613,
         "output_bytes": 533,
         "answered": 3
       },
@@ -317,14 +317,14 @@
       "grep": {
         "precision": 1,
         "recall": 0.75,
-        "wall_ms": 35,
+        "wall_ms": 31,
         "output_bytes": 366,
         "answered": 3
       },
       "graph": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 292,
+        "wall_ms": 312,
         "output_bytes": 325,
         "answered": 4
       },
@@ -343,14 +343,14 @@
       "grep": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 31,
+        "wall_ms": 33,
         "output_bytes": 1475,
         "answered": 3
       },
       "graph": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 305,
+        "wall_ms": 295,
         "output_bytes": 267,
         "answered": 2
       },
@@ -369,14 +369,14 @@
       "grep": {
         "precision": 0.667,
         "recall": 1,
-        "wall_ms": 38,
+        "wall_ms": 33,
         "output_bytes": 1145,
         "answered": 3
       },
       "graph": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 326,
+        "wall_ms": 295,
         "output_bytes": 281,
         "answered": 2
       },
@@ -402,7 +402,7 @@
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 587,
+        "wall_ms": 596,
         "output_bytes": 254,
         "answered": 0
       },
@@ -422,14 +422,14 @@
       "grep": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 17,
+        "wall_ms": 16,
         "output_bytes": 930,
         "answered": 3
       },
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 583,
+        "wall_ms": 575,
         "output_bytes": 246,
         "answered": 0
       },
@@ -450,14 +450,14 @@
       "grep": {
         "precision": 0.5,
         "recall": 1,
-        "wall_ms": 20,
+        "wall_ms": 18,
         "output_bytes": 739,
         "answered": 4
       },
       "graph": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 554,
+        "wall_ms": 600,
         "output_bytes": 1048,
         "answered": 2
       },
@@ -477,14 +477,14 @@
       "grep": {
         "precision": null,
         "recall": null,
-        "wall_ms": 14,
+        "wall_ms": 16,
         "output_bytes": 0,
         "answered": 0
       },
       "graph": {
         "precision": null,
         "recall": null,
-        "wall_ms": 556,
+        "wall_ms": 609,
         "output_bytes": 254,
         "answered": 0
       },
@@ -501,14 +501,14 @@
       "grep": {
         "precision": null,
         "recall": null,
-        "wall_ms": 15,
+        "wall_ms": 16,
         "output_bytes": 0,
         "answered": 0
       },
       "graph": {
         "precision": null,
         "recall": null,
-        "wall_ms": 594,
+        "wall_ms": 604,
         "output_bytes": 246,
         "answered": 0
       },
@@ -525,14 +525,14 @@
       "grep": {
         "precision": null,
         "recall": null,
-        "wall_ms": 20,
+        "wall_ms": 17,
         "output_bytes": 0,
         "answered": 0
       },
       "graph": {
         "precision": null,
         "recall": null,
-        "wall_ms": 603,
+        "wall_ms": 624,
         "output_bytes": 254,
         "answered": 0
       },
@@ -549,14 +549,14 @@
       "grep": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 16,
+        "wall_ms": 15,
         "output_bytes": 453,
         "answered": 1
       },
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 596,
+        "wall_ms": 584,
         "output_bytes": 254,
         "answered": 0
       },
@@ -575,14 +575,14 @@
       "grep": {
         "precision": 1,
         "recall": 1,
-        "wall_ms": 16,
+        "wall_ms": 15,
         "output_bytes": 465,
         "answered": 1
       },
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 570,
+        "wall_ms": 601,
         "output_bytes": 246,
         "answered": 0
       },
@@ -608,7 +608,7 @@
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 583,
+        "wall_ms": 595,
         "output_bytes": 3590,
         "answered": 0
       },
@@ -634,7 +634,7 @@
       "graph": {
         "precision": 0,
         "recall": 0,
-        "wall_ms": 591,
+        "wall_ms": 586,
         "output_bytes": 4849,
         "answered": 0
       },
