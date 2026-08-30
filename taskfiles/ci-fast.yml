@@ -1485,6 +1485,16 @@ tasks:
       from the ledger.
     cmd: ./scripts-run src/scripts/lint_provenance {{.QUIET_FLAG}}
 
+  lint-metric-consumers:
+    silent: true
+    desc: >-
+      Metric-registry gate (road-to-experience-loop-broadening 0.3) — every
+      entry in src/config/metric-registry.yml names a consumer, the decision it
+      feeds, and what fails without it. A metric with no consumer is telemetry
+      decoration and should not land. Checks SHAPE, not truth: it makes the
+      omission impossible, not the answer correct.
+    cmd: ./scripts-run src/scripts/lint_metric_consumers {{.QUIET_FLAG}}
+
   lint-harvest-provenance:
     silent: true
     desc: >-

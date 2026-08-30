@@ -1,0 +1,792 @@
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 8fe71321677faee70791e3c38f4e14d561e6cf8a..cb6936f8d3465da821df2f5a2da7e3a8af666a6d 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -227,6 +227,7 @@ tasks:
+       - task: lint-trust-coherence
+       - task: lint-legal-pack
+       - task: lint-provenance
++      - task: lint-metric-consumers
+       - task: lint-harvest-provenance
+       - task: check-score-contract
+       - task: check-supervision-claim-atomicity
+diff --git a/agents/roadmaps/road-to-experience-loop-broadening.md b/agents/roadmaps/road-to-experience-loop-broadening.md
+index cb2b0137b6860f233423cedbe696fc7d40e4a56e..8c1944d78925b19c6e5615ca44dcde74fd752a4e 100644
+--- a/agents/roadmaps/road-to-experience-loop-broadening.md
++++ b/agents/roadmaps/road-to-experience-loop-broadening.md
+@@ -90,24 +90,113 @@ parents must restate the letter's meaning rather than carry it.
+ 
+ ## Phase 0 — Scope, classification, decisions
+ 
+-- [ ] **0.1 Write a classification note, not an ADR rewrite.** Every runtime
++- [x] **0.1 Write a classification note, not an ADR rewrite.** Every runtime
+       component lacking an explicit ADR-124 class label gets one. No ADR is
+       rewritten, because the taxonomy the parents wanted to author already
+       exists.
+-      verify: every entry in the runtime registry carries a class label, and
+-      `git diff docs/decisions/` is empty for ADR-124.
+-- [ ] **0.2 Fix the boundaries in writing.** ADR-094 untouched (Layer 2 revival
++      verify: DONE — `docs/contracts/runtime-component-classes.md` labels every runtime component against ADR-124, and `git diff docs/decisions/` is empty (no ADR is touched by this change).
++
++      **What "the runtime registry" turned out to be, because the step's own
++      wording points at the wrong file.** There is a `runtime_registry.ts` in
++      this tree and it is NOT this: it records how a SKILL declares execution
++      (`manual` / `assisted` / `automated`, plus a handler), which is a
++      different axis from ADR-124's process lifecycle — a skill with
++      `handler: shell` still runs inside a Class-A invocation. No inventory of
++      runtime COMPONENTS with class labels existed, which is why the step reads
++      as if one did. The note says this in its own § What is NOT in this table,
++      because the two registries sound alike and a reader who conflates them
++      looks for class labels in the wrong file.
++
++      **The inventory is eleven rows, each naming the file that DECIDES its
++      class** rather than asserting it: the hook dispatcher and its 47 concerns,
++      the work engine, the code-graph engine, the gate population, `ui:audit`,
++      `ui:render` and the council CLI as Class A; the UI/settings server and the
++      MCP server as Class B; and the supervised collector as the Class-B row
++      ADR-249 exists for. Two claims were checked rather than written from
++      memory: `ls src/scripts/hooks/*.ts` is 47, and a grep for
++      `createServer|.listen(|setInterval` across all 47 returns nothing.
++
++      **The collector row names no file, and that is deliberate.** It is not in
++      this tree — `road-to-supervised-telemetry-collector` builds it — and a
++      cross-branch citation would be a broken reference. Omitting the row would
++      have been worse: the table would read as if ADR-249 reversed a prohibition
++      for nothing.
++
++      **The two hazards the note is really for.** ADR-124's Class-B reversal is
++      SCOPED (`supersedes_scope` names ADR-124 `:111` and ADR-109 `:28`), so
++      "Class B is allowed now" is the misreading to prevent; and this roadmap's
++      own § A hazard the parents created records that the two source proposals
++      swap B and C, so a letter carried across from either silently exchanges
++      "the thing to build" for "the thing that is banned". Both are restated at
++      the point of use.
++
++      **Honest limit, stated in the note:** it is a labelling, not a gate.
++      Nothing refuses a new runtime component that arrives without a row, and a
++      script that guessed at what counts as a component would be worse than the
++      review obligation it replaced.
++- [x] **0.2 Fix the boundaries in writing.** ADR-094 untouched (Layer 2 revival
+       stays behind its own gate); the runtime-consumption question is carried
+       only as the Phase 9 gate, never assumed either way.
+-      verify: no step below reads experience data at selection or routing time.
+-- [ ] **0.3 Adopt consumer-before-producer for every metric.**
++      verify: DONE — audited, not asserted. Of this roadmap's 37 numbered steps exactly two mention runtime consumption: `6.3`, which FORBIDS it (*"Report only. No runtime consumption … nothing in selection or routing does"*), and `9.6`, which is the deferred owner decision. No step reads experience data at selection or routing time.
++
++      **Both boundaries are now in writing**, in
++      `docs/contracts/runtime-component-classes.md` § The two boundaries, rather
++      than held as an intention by whoever last read the roadmap.
++
++      **ADR-094 is untouched — `git diff docs/decisions/` is empty for this
++      change** — and the boundary is restated in the form the roadmap's own
++      `corrected-from-reproduction` note demands: Layer 2 revival is **gated**,
++      not forbidden (*"requires ≥2 funded consumer projects"*), the gate is
++      unmet, and citing the gate is what stops a re-litigation that citing a
++      prohibition invites.
++
++      **The runtime-consumption question is carried as the Phase 9 gate and
++      assumed in neither direction.** The reason it is a boundary rather than a
++      preference is written out: reading experience at runtime means deleting it
++      changes what the system does, which is ADR-124's state-store test for
++      Class C. So an accidental yes would reclassify the component, not merely
++      widen a feature.
++- [x] **0.3 Adopt consumer-before-producer for every metric.**
+       `from-skipped-parent`, and it is the rule this repository has already paid
+       for not having: each metric declares its `consumer`, the `decision` it
+       feeds, and what fails if it is missing. "A metric with no consumer is
+       telemetry decoration and should not land." The tree's own worked example
+       is the 0.27 % dispatch capture this roadmap cites in 1.1 — a collector
+       whose consumer arrived after the data did.
+-      verify: a metric added without those three fields fails the lint.
++      verify: DONE — `./scripts-run src/scripts/lint_metric_consumers --self-test` reports `7/7 case(s) behaved (6 rejecting, floor 7)`, and three of those six rejections are exactly one missing field apiece.
++
++      **The registry is `src/config/metric-registry.yml`, seeded with the seven
++      metrics this package actually produces** — the attribution-shape block
++      count, the `skip_paths` estate, the per-gate `scanned:` count, the
++      unhardened-gate population, the registered non-adopter count, the
++      always-rule budget, and council quorum. Each names its producer, so the
++      other three fields are checkable against something.
++
++      **The third field is the one that does the work, and the reason is worth
++      keeping.** `consumer` and `decision` are both answerable for a metric
++      nobody needs — "the report reads it", "it informs the roadmap" — and that
++      is precisely the number this step exists to catch. `absent` is
++      falsifiable: if the honest answer is *nothing fails*, the entry cannot be
++      written. The roadmap's own worked example is the 0.27 % dispatch capture
++      figure, a number that existed for months before anyone could say what
++      decision it fed.
++
++      **The lint refuses three shapes, not one.** Missing or empty; BOILERPLATE
++      (`TBD`, `unknown`, `see above` — placeholders that pass a length check and
++      answer nothing); and shorter than 20 characters. An empty registry is also
++      refused, because a gate that scans nothing exits green and this gate's
++      subject is numbers that exist without a purpose.
++
++      **Honest limit, in the gate's own docstring rather than only here: it
++      checks SHAPE, not truth.** It makes the OMISSION impossible; it cannot
++      tell a real consumer from a plausible sentence, because that is a review
++      judgement and no parser has it. Claiming otherwise would make the gate
++      look stronger than the thing it replaced.
++
++      Wired rather than orphaned: `task lint-metric-consumers`, in the `ci`
++      aggregate, with a `gate-coverage.yml` row carrying `min_scanned: 5` — a
++      floor rather than `> 0`, because the failure shape here is a truncated or
++      renamed registry where one surviving entry would still pass.
+ - [x] **0.4 Settle estate placement.** See E1.
+ 
+       **Closed 2026-08-29.** E1 resolved by AI council 2/2 to **(b) stay
+diff --git a/docs/contracts/runtime-component-classes.md b/docs/contracts/runtime-component-classes.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..244471e018ba37f40f219bad3fb154f6a4816aa2
+--- /dev/null
++++ b/docs/contracts/runtime-component-classes.md
+@@ -0,0 +1,150 @@
++# Runtime component classes — every runtime component, labelled against ADR-124
++
++`road-to-experience-loop-broadening` step 0.1. Every runtime component in this
++package carries an explicit ADR-124 class label, in one place, so a reader does
++not have to re-derive it from a docstring.
++
++**No ADR is rewritten by this page.** The taxonomy already exists — ADR-124 § 1,
++as scoped by ADR-249 — and the gap was that nothing applied it component by
++component. This is the application, not a new taxonomy, and `docs/decisions/`
++is untouched by the change that added it.
++
++## The three classes, restated once so a reader does not have to hold two tabs
++
++| Class | ADR-124's definition, compressed | Standing |
++|---|---|---|
++| **A — Embedded engine** | Deterministic, in-process, invoked per command, no resident process, no listening socket, no network in the build path. **It terminates when the command does**, and in-memory state never spans invocations. State only as gitignored, rebuildable artifacts under `agents/runtime/`. | Adoptable |
++| **B — Resident service / daemon** | Anything with a lifecycle beyond one command: servers, watchers, background workers, web consoles. A memory-only long-lived process is Class B whatever its storage story. | Prohibited in core by ADR-124 — **reversed for a SUPERVISED resident process by ADR-249** (2026-08-27), subject to its four governance conditions |
++| **C — Network/LLM-dependent build path** | An index / graph / corpus **build** step that requires network or model calls. | Prohibited by default |
++
++Two boundaries that decide most of the table below, and both are easy to get
++backwards:
++
++- **Class C is about the BUILD path, not about using a model.** Query-time LLM
++  use follows council and budget governance and is not Class C. A component that
++  calls a model to answer a question is not building an index from the network.
++- **A `--watch` flag is not an escape from Class A.** ADR-124 permits exactly
++  one shape — stateless file regeneration where each cycle is a fresh Class-A
++  invocation with no shared in-memory state — and calls the mode itself a
++  Class-B escalation. Any other persistent process is Class B regardless of
++  what the flag is called.
++
++## The inventory
++
++Every row names the file that decides its class, so the label is checkable
++rather than asserted.
++
++| Component | Entry point | Class | What decides it |
++|---|---|---|---|
++| Hook dispatcher | `src/scripts/hooks/dispatch_hook.ts` | **A** | One process per hook event, resolves the concern chain, exits. `main()` returns an exit code; nothing survives it. |
++| Hook concerns (47) | `src/scripts/hooks/*.ts` | **A** | Each runs inside the dispatcher's process and returns a verdict. No concern opens a socket or a timer. |
++| Work engine | `src/agent-src/templates/scripts/work_engine/` | **A** | Command-scoped dispatcher; state is the run's own files under `agents/runtime/`. |
++| Code-graph engine | `src/scripts/code_graph/` (`agent-config code-graph`) | **A** | `build\|detect\|query\|affected\|path\|explain\|validate` — each a per-invocation command over a rebuildable index. The index is a gitignored artifact, which is what Class A permits rather than what Class C forbids: it is built from the tree, never from the network. |
++| Gates and linters (`check_*`, `lint_*`, `audit_*`) | `src/scripts/` | **A** | Read the tree, print, exit. The largest population and the least interesting row. |
++| `ui:audit` | `src/cli/commands/uiAudit.ts` | **A** | Inventories a UI tree into `agents/runtime/state/ui-audit.json` and exits. |
++| `ui:render` | `src/cli/commands/uiRender.ts` | **A** | Headless capture; the CLI registry's own synopsis says *"no process survives"*, and that is the class test verbatim. |
++| Council CLI | `src/scripts/council_cli.ts` | **A**, with a query-time network call | Per-invocation. It calls providers at QUERY time, which is governed by the council budget rules — not a Class-C build path. It builds no index. |
++| **UI / settings server** | `src/cli/commands/uiServe.ts` → `src/server/app.ts` | **B** | Listens on `127.0.0.1`. Started by an explicit human action (`agent-config config`, `settings`, `install`, `setup`), bounded to that session. |
++| **MCP server** | `src/scripts/mcp_server/server.ts` | **B** | A stdio server with a lifecycle beyond one command; ADR-124's own Class-B text names "MCP *servers* run as memory/retrieval backends" explicitly. |
++| **A supervised telemetry collector** | not in this tree yet — `road-to-supervised-telemetry-collector` builds it | **B**, permitted under ADR-249 | Listed because ADR-249 exists FOR this row and a table that omitted it would read as if the reversal had no subject. It is the only planned component that runs unattended, and it is therefore the only one that needs ADR-249's four conditions rather than "a human started it". |
++
++### The Class-B rows are three, and each is permitted for a different reason
++
++Stating this per row rather than once, because "Class B is allowed now" is the
++misreading ADR-249's `supersedes_scope` was written to prevent:
++
++- **UI server** — human-started, session-bounded, loopback only. It is the
++  console shape ADR-124 names, and it is present because a browser wizard has
++  no other form. It does not run unattended.
++- **MCP server** — started by the host tool that speaks the protocol, for the
++  duration of that session. Same shape, different caller.
++- **The supervised collector** — the only row that would run unattended, and
++  therefore the only one that needs ADR-249's four governance conditions rather
++  than "a human started it". It does not exist in this tree yet; the row is here
++  because leaving it out would make the table look like ADR-249 reversed a
++  prohibition for nothing.
++
++### What is NOT in this table, and why that is not an omission
++
++- **Skills, rules, commands and personas.** Content, not runtime components.
++  They are projected text; nothing about them has a process lifecycle.
++- **The skill runtime registry** (`src/scripts/runtime_registry.ts`). It
++  describes how a SKILL declares execution (`manual` / `assisted` /
++  `automated`, and a handler), which is a different axis from ADR-124's process
++  lifecycle. A skill with `handler: shell` still runs inside a Class-A
++  invocation. Naming the overlap because the two registries sound alike and a
++  reader who conflates them will look for class labels in the wrong file.
++- **Third-party processes** the suite spawns (`git`, `gh`, `node`, a host's own
++  tooling). ADR-123 and `docs/spawn-site-policy.md` govern those; they are not
++  components of this package.
++
++## The two boundaries, in writing
++
++`road-to-experience-loop-broadening` step 0.2. Both are boundaries a plan can
++cross by accident, so they are written down rather than held as an intention.
++
++### 1. ADR-094 Layer 2 is GATED, not forbidden — and the gate is the thing to cite
++
++ADR-094 removed Layer 2 (the `@event4u/agent-memory` companion package) and
++kept Layer 1 (file-first `agents/memory/` plus intake JSONL). Its alternatives
++section records *"Revive Layer 2 later. Gated: requires ≥2 funded consumer
++projects …"*.
++
++The gate is unmet, so the practical answer today is the same as a prohibition.
++The wording still matters: a plan that says "forbidden" invites a
++re-litigation that a plan saying *"gated, gate unmet, here is the gate"* does
++not. **Nothing in this package's runtime may depend on Layer 2**, and the way
++to change that is to meet ADR-094's gate, not to argue the boundary.
++
++### 2. Runtime consumption of experience is an OPEN owner decision
++
++May selection or routing read experience data at runtime? Reading it at runtime
++means deleting it changes *what* the system does — which is what ADR-124's
++state-store test classifies as Class C. So the question is not a preference; it
++is a class boundary.
++
++It is carried as a gate and assumed in **neither** direction. Until an owner
++answers it, experience is a REPORT: a human or CI reads it, and nothing in
++selection or routing does.
++
++**Audited on the roadmap that owns this boundary**, because a boundary nobody
++checked is a sentence: of its 37 numbered steps, exactly two mention runtime
++consumption at all. One (`6.3`) FORBIDS it in those words — *"Report only. No
++runtime consumption … nothing in selection or routing does"* — and the other
++(`9.6`) is the deferred owner decision itself. No step reads experience data at
++selection or routing time, which is that step's verify clause, checked rather
++than asserted.
++
++## Two hazards this page exists to keep out of a citation
++
++**The parents' letters are swapped, and a cross-citation inverts the meaning.**
++Two same-lineage source proposals both use an `A/B/C/D` runtime-class taxonomy
++with **B and C exchanged**: one has B = resident runtime and C = derived
++persistence, the other the reverse. Neither matches ADR-124, where **C is the
++prohibited build-path class**. So a letter carried across from either document
++silently swaps "the thing to build" for "the thing that is banned". Every letter
++on this page is ADR-124's, and a future citation into those documents must
++restate what the letter means rather than carry it.
++
++**ADR-124's Class-B prohibition is reversed in a NAMED SCOPE, not in general.**
++ADR-249's `supersedes_scope` names ADR-124 `:111` and ADR-109 `:28` and nothing
++wider. A resident process is permitted when it is *supervised* under the four
++conditions; an unsupervised background process is not permitted by that record
++and was never requested.
++
++## What this page does not claim
++
++It is a labelling of what exists on the day it was written, checkable against
++the entry points in the third column. It is not a gate: nothing refuses a new
++runtime component that arrives without a row here, and adding one is a
++documentation obligation carried by review rather than by a script. Saying so
++is cheaper than implying an enforcement that does not exist.
++
++*Revisit-if:* a new component with a process lifecycle lands; ADR-249's scope
++changes; or ADR-124's class boundaries are amended.
++
++## See also
++
++- `docs/decisions/ADR-124-embedded-engine-doctrine.md` — the taxonomy.
++- `docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md` — the scoped Class-B reversal.
++- `docs/contracts/resident-process-floors.md` — the observation-only contract and the five questions every resident process answers.
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index c91d70c1d889d21cd749650773fc834ad55c9d95..676562dafb499d44dd316531b86d8b419e23cc5e 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -48,8 +48,8 @@
+ # two runtime-cost roadmaps add: check_prefix_stable_mutation,
+ # check_loss_class_declared, check_benchmark_report_fields, and
+ # check_no_currency_in_cost_surfaces).
+-# **77 of them emit the machine-readable `scanned: <N>` line under their
+-# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
++# **78 of them emit the machine-readable `scanned: <N>` line under their
++# CI-identical argv, and 75 of those 78 are listed below.** The manifest is
+ # complete for every gate that can carry a floor, covering ~24 % of the population.
+ #
+ # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
+@@ -356,6 +356,28 @@
+ # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
+ # workflow files) carries no recipe and is reported UNPROVEN, never green.
+ gates:
++  - id: lint_metric_consumers
++    argv: ["--quiet"]
++    min_scanned: 5
++    corpus: "entries in src/config/metric-registry.yml (7 at the time of writing). The floor is 5, not 1: the registry's failure shape is a scan that reads a truncated or renamed file, and a single surviving entry would still pass a `> 0` check while the other six went unchecked."
++    status: enforced
++    no_canary_reason: >-
++      A create-only canary cannot express this gate's violation. The corpus is
++      the `metrics:` list inside ONE tracked file, so a planted file lands in no
++      row; every violation it can have is a MODIFICATION — a field emptied, a
++      field replaced with boilerplate, an id duplicated. Same class as
++      `check_no_automerge_key` and `lint_memory_twin_parity`. Discrimination is
++      proven instead by the gate's own `--self-test`: 7 cases, 6 rejecting,
++      each driving the real CLI against a throwaway registry.
++    note: >
++      road-to-experience-loop-broadening step 0.3. Refuses a metric that does
++      not name its consumer, the decision it feeds, and what fails without it.
++      The third field is the falsifiable one: the first two are answerable for a
++      metric nobody needs, and if the honest answer to "what fails without it"
++      is nothing, the entry cannot be written. HONEST LIMIT, stated in the
++      gate's own docstring: it checks SHAPE, not truth — it makes the omission
++      impossible, not the answer correct, because telling a real consumer from a
++      plausible sentence is a review judgement no parser has.
+   - id: lint_consolidation_lineage
+     argv: []
+     min_scanned: 5
+diff --git a/src/config/metric-registry.yml b/src/config/metric-registry.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..4f42809b259dfa427127b30b3b79a2feb44a4b3f
+--- /dev/null
++++ b/src/config/metric-registry.yml
+@@ -0,0 +1,106 @@
++# Metric registry — consumer before producer
++#
++# `road-to-experience-loop-broadening` step 0.3. Every metric this package
++# produces declares three things before it lands:
++#
++#   consumer  — WHO reads it. A person, a gate, a report, a decision record.
++#   decision  — WHAT it changes. The decision it feeds, in one falsifiable line.
++#   absent    — WHAT FAILS without it. If nothing does, the metric is decoration.
++#
++# The rule the roadmap states, verbatim: *"A metric with no consumer is telemetry
++# decoration and should not land."* The tree's own worked example is the 0.27 %
++# dispatch capture figure — a collector whose consumer arrived after the data
++# did, so the number existed for months before anyone could say what it changed.
++#
++# ## What is a metric, for this file
++#
++# A number this package PRODUCES and keeps: a count in a report, a rate in a
++# ledger, a gauge in a gate's output. Not a threshold (that is a decision), not
++# a test count (that is a run), and not a number quoted from somewhere else
++# (that is a citation, and `docs/CLAIMS.md` governs those).
++#
++# ## The three fields are prose, and the lint checks shape rather than truth
++#
++# `lint_metric_consumers` refuses an entry with a missing, empty, or
++# boilerplate field. It cannot tell a real consumer from a plausible sentence —
++# that is a review judgement — so the honest claim is that the lint makes the
++# OMISSION impossible, not that it makes the answer true. Stated here rather
++# than discovered by someone who trusted it further than it goes.
++
++metrics:
++  - id: attribution-shape-block-count
++    producer: src/scripts/check_no_external_sources.ts
++    consumer: >-
++      the `check_no_external_sources:shape-block` ratchet, and the maintainer
++      reading its 56-day expiry.
++    decision: >-
++      whether a change that adds attribution-shaped text may merge. The ratchet
++      fails the build when the count rises above its baseline.
++    absent: >-
++      new attribution-shaped text lands unnoticed and the debt grows silently;
++      the deny-list half would still pass, because it only catches names
++      somebody already wrote down.
++
++  - id: skip-paths-estate
++    producer: src/scripts/check_suppression_hygiene.ts
++    consumer: the shrink-only suppression ratchet, and a reviewer reading its per-entry ledger.
++    decision: >-
++      whether a new scan exemption may be added. The count may only fall, so an
++      addition must be paired with a removal or an argued exception.
++    absent: >-
++      exemptions accumulate one defensible entry at a time until the gate covers
++      nothing, which is the failure mode the per-entry ledger exists to make
++      visible.
++
++  - id: gate-scanned-count
++    producer: src/scripts/_lib/scan_scope.ts (`reportScanned`, emitted by each gate)
++    consumer: src/scripts/check_gate_coverage.ts, against the per-gate `min_scanned` floor.
++    decision: >-
++      whether a gate's scan scope is still alive. A count below its floor fails
++      the build.
++    absent: >-
++      a gate whose root moved reports success over an empty corpus — "a gate
++      that scans nothing exits green", which is the specific way these gates
++      fail rather than a general worry.
++
++  - id: unhardened-gate-population
++    producer: src/scripts/check_gate_coverage.ts (`list_unhardened_gates`)
++    consumer: the `gate-hardening:unhardened-scan-scope` ratchet.
++    decision: whether a newly added gate may merge without publishing a scan count.
++    absent: >-
++      new gates arrive without scope assertions and the hardening effort silently
++      stops spreading; the existing gates keep their floors, so nothing else
++      would report the regression.
++
++  - id: registered-non-adopters
++    producer: src/scripts/check_gate_coverage.ts
++    consumer: the `gate-self-test:registered-non-adopters` shrink-only ratchet.
++    decision: >-
++      whether a newly registered gate may merge without a `--self-test` or an
++      explicit exemption marker.
++    absent: >-
++      a registered gate can prove it READ something (its `scanned:` floor) and
++      never that the reading changes its verdict, which is the difference
++      between a gate and a log line.
++
++  - id: always-rule-budget-chars
++    producer: src/scripts/check_always_budget.ts
++    consumer: the always-loaded budget ratchet, and any author adding a kernel rule.
++    decision: >-
++      whether a rule may be added to, or grown inside, the always-loaded
++      prefix. The cap is a ratchet that may only move down.
++    absent: >-
++      the standing context grows one justified rule at a time and every session
++      on every host pays for it, with no single change large enough to argue
++      about.
++
++  - id: council-quorum-present
++    producer: src/scripts/council_cli.ts
++    consumer: the human or agent reading a council verdict, and the release gate that holds on INCONCLUSIVE.
++    decision: >-
++      whether a council answer counts as convergence or as a degraded single
++      seat. A verdict with one of two seats present is recorded as DEGRADED and
++      is not convergence.
++    absent: >-
++      a one-seat answer reads as a council decision, which is exactly the
++      over-claim the quorum line exists to prevent.
+diff --git a/src/scripts/lint_metric_consumers.ts b/src/scripts/lint_metric_consumers.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a5de16f94ca890bb4a44114cd3b4a9c1141dd94
+--- /dev/null
++++ b/src/scripts/lint_metric_consumers.ts
+@@ -0,0 +1,316 @@
++/**
++ * lint_metric_consumers — a metric with no consumer does not land.
++ *
++ * `road-to-experience-loop-broadening` step 0.3, whose rule is quoted from the
++ * roadmap verbatim: *"A metric with no consumer is telemetry decoration and
++ * should not land."* Every entry in `src/config/metric-registry.yml` declares
++ * three things, and this gate refuses one that does not:
++ *
++ * - `consumer` — who reads it;
++ * - `decision` — what it changes;
++ * - `absent` — what fails without it.
++ *
++ * ## Why the third field, when the first two look sufficient
++ *
++ * Because the first two are answerable for a metric nobody needs. "The report
++ * reads it" and "it informs the roadmap" are both true of a number whose
++ * deletion would change nothing, and that is the number this gate exists to
++ * catch. `absent` is the falsifiable one: if the honest answer is *nothing
++ * fails*, the entry cannot be written and the metric should not land.
++ *
++ * The tree's own worked example is the 0.27 % dispatch capture rate — a figure
++ * that existed for months before anyone could say what decision it fed.
++ *
++ * ## What this gate does NOT claim
++ *
++ * It checks SHAPE, not truth. It refuses a missing, empty, or boilerplate
++ * field; it cannot tell a real consumer from a plausible sentence, because that
++ * is a review judgement and no parser has it. The honest statement is that this
++ * makes the OMISSION impossible, not the answer true — and it is written here
++ * rather than left for someone to discover by trusting the gate further than it
++ * goes.
++ *
++ * Exit codes: 0 clean · 1 finding · 2 usage or config error.
++ */
++
++import { execFileSync } from 'node:child_process';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++import { parse as parseYaml } from 'yaml';
++
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++import { reportScanned } from './_lib/scan_scope.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(HERE, '..', '..');
++const REGISTRY_REL = path.join('src', 'config', 'metric-registry.yml');
++const SELF_REL = path.join('src', 'scripts', 'lint_metric_consumers.ts');
++
++/** The three fields that make a metric landable, and the reason each exists. */
++export const REQUIRED_FIELDS = ['consumer', 'decision', 'absent'] as const;
++export type RequiredField = (typeof REQUIRED_FIELDS)[number];
++
++/** Below this a field is a placeholder rather than an answer. */
++export const MIN_FIELD_CHARS = 20;
++
++/**
++ * Phrases that pass a length check and answer nothing.
++ *
++ * Deliberately short and deliberately literal. A long list would turn this into
++ * a vocabulary filter, which is not what the gate is for — these are the four
++ * shapes that showed up when the registry was seeded, each of which is a way of
++ * writing "I do not know" at sufficient length.
++ */
++export const BOILERPLATE = [
++    'tbd',
++    'todo',
++    'n/a',
++    'not applicable',
++    'to be determined',
++    'unknown',
++    'nothing',
++    'see above',
++] as const;
++
++export interface MetricEntry {
++    readonly id?: unknown;
++    readonly producer?: unknown;
++    readonly consumer?: unknown;
++    readonly decision?: unknown;
++    readonly absent?: unknown;
++}
++
++export interface Finding {
++    readonly id: string;
++    readonly field: string;
++    readonly reason: string;
++}
++
++function normalise(value: unknown): string {
++    return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
++}
++
++/** Judge one entry. Pure, so the self-test can drive it with literals. */
++export function findingsFor(entry: MetricEntry, index: number): Finding[] {
++    const out: Finding[] = [];
++    const id = normalise(entry.id) === '' ? `#${String(index + 1)} (no id)` : normalise(entry.id);
++
++    if (normalise(entry.id) === '') {
++        out.push({ id, field: 'id', reason: 'missing — an unnamed metric cannot be cited' });
++    }
++    if (normalise(entry.producer) === '') {
++        out.push({
++            id,
++            field: 'producer',
++            reason: 'missing — without it a reader cannot check the other three against anything',
++        });
++    }
++    for (const field of REQUIRED_FIELDS) {
++        const value = normalise(entry[field]);
++        if (value === '') {
++            out.push({ id, field, reason: 'missing or empty' });
++            continue;
++        }
++        if (BOILERPLATE.some((b) => value.toLowerCase() === b || value.toLowerCase().startsWith(`${b} `))) {
++            out.push({ id, field, reason: `boilerplate ("${value.slice(0, 40)}") — a placeholder, not an answer` });
++            continue;
++        }
++        if (value.length < MIN_FIELD_CHARS) {
++            out.push({
++                id,
++                field,
++                reason:
++                    `${String(value.length)} chars, below the ${String(MIN_FIELD_CHARS)}-char floor — `
++                    + 'too short to name a consumer, a decision or a consequence',
++            });
++        }
++    }
++    return out;
++}
++
++export interface RegistryRead {
++    readonly entries: readonly MetricEntry[];
++    readonly error: string | null;
++}
++
++export function readRegistry(root: string): RegistryRead {
++    const target = path.join(root, REGISTRY_REL);
++    let raw: string;
++    try {
++        raw = fs.readFileSync(target, 'utf8');
++    } catch {
++        return { entries: [], error: `${REGISTRY_REL} is missing` };
++    }
++    let parsed: unknown;
++    try {
++        parsed = parseYaml(raw);
++    } catch (err) {
++        return { entries: [], error: `${REGISTRY_REL} does not parse: ${(err as Error).message}` };
++    }
++    if (parsed === null || typeof parsed !== 'object') {
++        return { entries: [], error: `${REGISTRY_REL} is not a mapping` };
++    }
++    const metrics = (parsed as { metrics?: unknown }).metrics;
++    if (!Array.isArray(metrics)) {
++        return { entries: [], error: `${REGISTRY_REL} has no \`metrics:\` list` };
++    }
++    return { entries: metrics as MetricEntry[], error: null };
++}
++
++/* -------------------------------------------------------------------------- */
++/* Self-test                                                                   */
++/* -------------------------------------------------------------------------- */
++
++function selfTest(): number {
++    const fixture = (yaml: string): number => {
++        const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'metric-reg-'));
++        try {
++            const abs = path.join(dir, REGISTRY_REL);
++            fs.mkdirSync(path.dirname(abs), { recursive: true });
++            fs.writeFileSync(abs, yaml);
++            // Init a git repo so the fixture root looks like a checkout to any
++            // helper that asks; cheap, and it removes a class of surprise.
++            try {
++                execFileSync('git', ['-C', dir, 'init', '-q'], { stdio: 'ignore' });
++            } catch {
++                /* git absent is not this gate's problem */
++            }
++            return runGateCli(REPO_ROOT, SELF_REL, ['--root', dir], dir);
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    };
++
++    const complete = `
++metrics:
++  - id: a-real-metric
++    producer: src/scripts/some_gate.ts
++    consumer: the ratchet in check_some_gate, and the maintainer reading its expiry
++    decision: whether a change that raises the count may merge at all
++    absent: the count rises unnoticed and the debt grows with nothing reporting it
++`;
++
++    const cases: SelfTestCase[] = [
++        {
++            name: 'a complete entry is accepted',
++            expect: 'accept',
++            run: () => fixture(complete),
++        },
++        {
++            name: 'a metric with NO consumer is refused — the rule the gate exists for',
++            expect: 'reject',
++            run: () =>
++                fixture(complete.replace(/    consumer: .*\n/, '')),
++        },
++        {
++            name: 'a metric with no `decision` is refused',
++            expect: 'reject',
++            run: () => fixture(complete.replace(/    decision: .*\n/, '')),
++        },
++        {
++            name: 'a metric with no `absent` is refused — the falsifiable field',
++            expect: 'reject',
++            run: () => fixture(complete.replace(/    absent: .*\n/, '')),
++        },
++        {
++            name: 'a BOILERPLATE consumer is refused, not merely a missing one',
++            expect: 'reject',
++            run: () => fixture(complete.replace(/    consumer: .*\n/, '    consumer: TBD\n')),
++        },
++        {
++            name: 'a too-short field is refused',
++            expect: 'reject',
++            run: () => fixture(complete.replace(/    absent: .*\n/, '    absent: nothing much\n')),
++        },
++        {
++            name: 'an EMPTY registry is refused — a gate that scans nothing exits green',
++            expect: 'reject',
++            run: () => fixture('metrics: []\n'),
++        },
++    ];
++
++    return runSelfTest({
++        gate: 'lint_metric_consumers',
++        cases,
++        minCases: 7,
++        minRejectCases: 5,
++    });
++}
++
++/* -------------------------------------------------------------------------- */
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    if (argv.includes('--self-test')) return selfTest();
++
++    const rootFlag = argv.indexOf('--root');
++    if (rootFlag >= 0 && (argv[rootFlag + 1] === undefined || argv[rootFlag + 1]?.startsWith('--'))) {
++        process.stderr.write('lint_metric_consumers: --root needs a directory\n');
++        return 2;
++    }
++    const root = rootFlag >= 0 ? (argv[rootFlag + 1] as string) : REPO_ROOT;
++    const quiet = argv.includes('--quiet');
++
++    const read = readRegistry(root);
++    if (read.error !== null) {
++        process.stderr.write(`❌  lint_metric_consumers: ${read.error}\n`);
++        return 1;
++    }
++
++    // Publishes AND asserts in one call. No `allowEmpty` reason: an empty
++    // registry is not a clean bill of health here, it is a gate reading nothing
++    // — and this gate's whole subject is numbers that exist without a purpose.
++    try {
++        reportScanned({
++            gate: 'lint_metric_consumers',
++            scanned: read.entries.length,
++            units: 'metric(s)',
++            roots: [REGISTRY_REL],
++        });
++    } catch (err) {
++        process.stderr.write(`❌  ${(err as Error).message}\n`);
++        return 1;
++    }
++
++    const findings: Finding[] = [];
++    const seen = new Set<string>();
++    read.entries.forEach((entry, i) => {
++        findings.push(...findingsFor(entry, i));
++        const id = normalise(entry.id);
++        if (id !== '' && seen.has(id)) {
++            findings.push({ id, field: 'id', reason: 'duplicate — two entries claim the same metric' });
++        }
++        if (id !== '') seen.add(id);
++    });
++
++    if (findings.length > 0) {
++        process.stderr.write(
++            `❌  lint_metric_consumers: ${String(findings.length)} finding(s) in ${REGISTRY_REL}\n`,
++        );
++        for (const f of findings) {
++            process.stderr.write(`  · ${f.id} → ${f.field}: ${f.reason}\n`);
++        }
++        process.stderr.write(
++            '\n  A metric with no consumer is telemetry decoration and should not land.\n'
++                + '  `absent` is the falsifiable field: if nothing fails without the metric,\n'
++                + '  the entry cannot honestly be written and the metric should not exist.\n',
++        );
++        return 1;
++    }
++
++    if (!quiet) {
++        process.stdout.write(
++            `✅  lint_metric_consumers: ${String(read.entries.length)} metric(s), each naming a `
++                + 'consumer, a decision and what fails without it.\n',
++        );
++    }
++    return 0;
++}
++
++if (process.argv[1] !== undefined) {
++    const invoked = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (invoked === import.meta.url) {
++        process.exitCode = main();
++    }
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index cd29dcf5a71ac3fa2ac37c4d5208c8f7281dec17..7a5fb0a0b66d70537083d379d3bf45e37ea3444a 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -1485,6 +1485,16 @@ tasks:
+       from the ledger.
+     cmd: ./scripts-run src/scripts/lint_provenance {{.QUIET_FLAG}}
+ 
++  lint-metric-consumers:
++    silent: true
++    desc: >-
++      Metric-registry gate (road-to-experience-loop-broadening 0.3) — every
++      entry in src/config/metric-registry.yml names a consumer, the decision it
++      feeds, and what fails without it. A metric with no consumer is telemetry
++      decoration and should not land. Checks SHAPE, not truth: it makes the
++      omission impossible, not the answer correct.
++    cmd: ./scripts-run src/scripts/lint_metric_consumers {{.QUIET_FLAG}}
++
+   lint-harvest-provenance:
+     silent: true
+     desc: >-
