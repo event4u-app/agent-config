@@ -852,7 +852,7 @@ one for a design note under review: § 2's rule is that unanswered is
 
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -863,6 +863,7 @@ one for a design note under review: § 2's rule is that unanswered is
 | 5 | The measurement is treated as a code checkpoint | product | Capture rate needs a representative window. A phase that closes when the code lands has measured nothing, and the observation cannot be compressed. | 6.1 is its own step gated on the window and minimum sample from 1.2, and this roadmap is deliberately separate from governance so its slower clock does not hold that one. | Phase 6 — Measure, then decide |
 | 6 | The wedge is spent on a telemetry collector | product | "Nothing else installed" is a product commitment. An OS service manager costs it, and the cost would be paid by the least important feature that could pay it. | The supervisor blocker names the trade-off explicitly and recommends against the service-manager option for exactly this reason. | Phase 1 — Decide the architecture before writing the schema |
 | 7 | Enablement is decided on the capture target alone | product | 6.2's target is the product signal. Green on it while a resource budget is breached or a platform's lifecycle suite fails would ship an unsafe default. | 6.2 requires all six readings recorded, and a missing reading blocks the flip rather than defaulting to pass. | Phase 6 — Measure, then decide |
+| 8 | The rollback matrix reads as coverage while five of its seven rows are unenforced | implementation | Surfaced by the 2026-08-30 re-review: 3.1 landed the seven-row trigger matrix and Phase 4 implements the collector next, but only rows 1 and 5 are enforced today — the other five carry `OWED BY <step>` against steps in Phases 4 and 5. A matrix that exists is easy to read as a control that exists, which is risk 1 one level up: not a check that proved nothing, but a control that is named and not yet wired. Row 7 added in the same change is one of the owed five. | 3.1 already annotates every test cell with its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage, and AC-6 is deliberately left `[ ]` with its first clause recorded as met and its second and third as open rather than flipped whole. The remaining exposure is that Phase 4 ships the collector with five rollback triggers still unwired; it is bounded by the default-off posture of Phase 4 and closes when 5.2 lands the evidence protocol the owed rows name. | Phase 3 — The operational contract, Phase 4 — Implement, default-off |
 
 ## Acceptance Criteria
 
