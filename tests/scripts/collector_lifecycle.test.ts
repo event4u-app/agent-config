@@ -98,6 +98,8 @@ interface Daemon {
     readonly pid: number;
     /** Everything the daemon has written to stdout so far. */
     stdout(): string;
+    /** Everything on stderr — where a refusal to start is reported. */
+    stderr(): string;
     exited(): Promise<void>;
     /** Signal the DAEMON (not the launcher) and wait for it to be gone. */
     signal(sig: NodeJS.Signals): Promise<void>;
@@ -113,6 +115,10 @@ async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
     child.stdout?.on('data', (chunk: Buffer) => {
         out += chunk.toString();
     });
+    let err = '';
+    child.stderr?.on('data', (chunk: Buffer) => {
+        err += chunk.toString();
+    });
     const exited = new Promise<void>((resolve) => {
         if (child.exitCode !== null || child.signalCode !== null) return resolve();
         child.once('exit', () => resolve());
@@ -120,7 +126,7 @@ async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
 
     const deadline = Date.now() + 30_000;
     while (Date.now() < deadline) {
-        if (out.includes('collector: running') || out.includes('not started')) break;
+        if (out.includes('collector: running') || err.includes('not started')) break;
         if (child.exitCode !== null || child.signalCode !== null) break;
         await new Promise<void>((r) => setTimeout(r, 25));
     }
@@ -132,6 +138,7 @@ async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
         child,
         pid,
         stdout: () => out,
+        stderr: () => err,
         exited: () => exited,
         signal: async (sig: NodeJS.Signals) => {
             if (Number.isFinite(pid)) {
@@ -175,6 +182,24 @@ async function waitFor(predicate: () => boolean, ms = 15_000): Promise<boolean> 
 // that as a failure, per AC-8's "a skip counts as a failure".
 const STORE = isStoreAvailable();
 
+/**
+ * Per-test timeout for every case in this file.
+ *
+ * `vitest.config.ts` sets `testTimeout: 10_000` globally, and every internal
+ * deadline here is longer than that — 30 s for daemon readiness, 20 s for a
+ * signal to land, 15 s for a filesystem predicate. Under the global timeout
+ * those waits are unreachable: the test is killed before its own deadline can
+ * report anything, so a slow runner produces a bare timeout instead of the
+ * specific assertion (R2 finding 8). Each property spawns one or two `tsx`
+ * daemons, cold-start seconds apiece, on `macos-latest` — the slowest runner in
+ * the matrix and the only platform the `collector-lifecycle` job certifies.
+ *
+ * 90 s is the internal deadlines plus headroom, not a round number: readiness
+ * (30) + signal (20) + a fence-and-restart pair (30) is 80 in the worst case
+ * PROPERTY 3 can reach.
+ */
+const CASE_TIMEOUT_MS = 90_000;
+
 describe.runIf(STORE)('the five lifecycle properties, on real processes', () => {
     it('PROPERTY 1 — exactly one live collector per OS user', async () => {
         const first = await spawnDaemon();
@@ -191,7 +216,7 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
         const beat = readHeartbeat(userRoot);
         expect(beat?.pid).toBe(first.pid);
         expect(pidAlive(first.pid)).toBe(true);
-    });
+    }, CASE_TIMEOUT_MS);
 
     it('PROPERTY 2 — SIGTERM ends it cleanly: lock released, heartbeat removed', async () => {
         const daemon = await spawnDaemon();
@@ -206,7 +231,7 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
         // The successor starts without any fencing being needed.
         const successor = await spawnDaemon();
         expect(successor.stdout()).toContain('collector: running');
-    });
+    }, CASE_TIMEOUT_MS);
 
     it('PROPERTY 3 — SIGKILL leaves residue, and the successor FENCES it', async () => {
         const daemon = await spawnDaemon();
@@ -227,7 +252,7 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
             fs.readFileSync(runtimeLockPath(userRoot), 'utf8').trim(),
             'the lock names the successor',
         ).toBe(String(successor.pid));
-    });
+    }, CASE_TIMEOUT_MS);
 
     it('PROPERTY 4 — a dead collector is READABLE as dead, never as healthy', async () => {
         const daemon = await spawnDaemon();
@@ -246,7 +271,33 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
             livenessFromBeat(beat, (beat?.last_heartbeat ?? 0) + HEARTBEAT_STALE_AFTER_MS + 1),
         ).toBe('stale');
         expect(pidAlive(beat?.pid as number)).toBe(false);
-    });
+    }, CASE_TIMEOUT_MS);
+
+    it('the operator STOP verb ends a real daemon through the documented path', async () => {
+        // R2 finding 3: `terminateCollector` had no production caller and
+        // `collector_daemon` exposed only `status|run`, so the SIGTERM->SIGKILL
+        // half of the kill switch documented in
+        // `docs/contracts/collector-operations.md` was unreachable. This drives
+        // the verb an operator is told to run, against a daemon that is running.
+        const daemon = await spawnDaemon();
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
+
+        const stopRun = spawnSync(TSX, [DAEMON, 'stop', '--root', userRoot], {
+            encoding: 'utf8',
+        });
+        expect(stopRun.stdout, stopRun.stderr).toContain('collector: stopped');
+        expect(stopRun.status).toBe(0);
+        await daemon.exited();
+
+        expect(pidAlive(daemon.pid)).toBe(false);
+        // The switch LATCHES by default: a supervisor restart loop must not
+        // bring back a collector the operator just stopped.
+        expect(fs.existsSync(path.join(userRoot, 'agent-collector', 'STOP'))).toBe(true);
+        const restart = await spawnDaemon();
+        await restart.exited();
+        expect(restart.stderr()).toContain('not started');
+        expect(restart.stdout()).not.toContain('collector: running');
+    }, CASE_TIMEOUT_MS);
 
     it('PROPERTY 5 — an orphaned collector survives its parent and keeps beating', async () => {
         // Launch through a shell that exits immediately, so the daemon is
@@ -295,5 +346,5 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
         } catch {
             /* already gone */
         }
-    });
+    }, CASE_TIMEOUT_MS);
 });

@@ -136,10 +136,14 @@ export function utcDate(at: number = Date.now()): string {
  * self-reporting and 0/0-blind, which is the failure this module exists for.
  *
  * Gating on the marker at all is a cost decision, and it is the reason a
- * default-off install writes nothing on any hook invocation: one `stat` and a
- * return. An earlier draft wrote unconditionally so that the ratio would exist
- * for users who never opted in — which is a measurement nobody consented to,
- * paid for by every dispatch on every machine.
+ * default-off install writes nothing on any hook invocation: **two `existsSync`
+ * calls and a return** — the opt-out probe first, then the ENABLED marker, in
+ * that order because the privacy answer outranks. (The first draft of this
+ * paragraph said "one `stat`", counting only the marker and forgetting the
+ * opt-out check immediately above it — R2 finding 14.) An earlier draft wrote
+ * unconditionally so that the ratio would exist for users who never opted in —
+ * which is a measurement nobody consented to, paid for by every dispatch on
+ * every machine.
  */
 export function recordOpportunity(
     event: CollectorEvent | string,

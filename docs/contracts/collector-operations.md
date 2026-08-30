@@ -24,19 +24,37 @@ contents. Two things follow immediately:
 - Every dispatch resolves in **static mode** — the no-collector path. Nothing is
   captured and nothing blocks.
 
-To also end a process that is already running, the mechanism is
-`terminateCollector` in `collector_supervision.ts`: `SIGTERM`, then `SIGKILL`
-after a grace period. The escalation is not optional — a collector that has
-installed a `SIGTERM` handler and does not honour it is stopped by `SIGKILL`,
-which is why the two supported platform rows are both Unix.
+To also end a process that is already running:
 
-**The operator-facing verb for that second half does not exist yet, and this
-page will not pretend it does.** The collector is Phase 4 of
-`road-to-supervised-telemetry-collector`; until it lands there is no process to
-end, and the marker above is the entire switch. The verb ships with the
-collector, in the same change, and this paragraph is replaced by it. Stopping a
-process by hand in the meantime is `kill` against the pid in the heartbeat file
-below.
+```bash
+./scripts-run src/scripts/collector_daemon stop
+```
+
+It latches the switch first (so a supervisor cannot restart what you just
+stopped), then sends `SIGTERM` and escalates to `SIGKILL` after a grace period.
+The escalation is not optional — a collector that has installed a `SIGTERM`
+handler and does not honour it is stopped by `SIGKILL`, which is why the two
+supported platform rows are both Unix.
+
+Two flags exist and neither is a default:
+
+| Flag | What it does | When you want it |
+|---|---|---|
+| `--no-latch` | stop the process WITHOUT creating the `STOP` marker | you want it to come back on the next start |
+| `--signal-stale` | signal a heartbeat older than 90 s anyway | you know that pid is still the collector |
+
+**`stop` refuses a stale heartbeat by default, and that refusal is deliberate.**
+A beat older than the staleness threshold names a pid this package can no longer
+vouch for — the process it belonged to may be long gone and the number recycled
+onto something else — so aiming a `SIGKILL` at it is the worst thing the kill
+switch could do. You get `stale-refused` and an explanation instead of a dead
+stranger.
+
+> This page previously said the verb did not exist and that "until it lands
+> there is no process to end". The collector landed and the paragraph was not
+> replaced; a completion review caught it. The sentence is kept as a note rather
+> than deleted because an operator page that was wrong once is worth being able
+> to date.
 
 **Undo:** delete the marker.
 
@@ -127,6 +145,8 @@ unevaluated, not refused.
 | A record with a field the schema forbids | the write was **refused**, not dropped — `collector_store.writeRecord` returns `refusal: 'invalid-record'` with every error |
 | A store this revision cannot read | it was moved to `agent-collector/quarantine/`, unread and byte-for-byte. It is never deleted, including by `uninstall` — it is evidence |
 | Two collectors | cannot happen inside one OS user; if you believe it did, the lock file and both heartbeats are the evidence to keep |
+| `stop` says `stale-refused` | the heartbeat is older than 90 s, so its pid may have been recycled. Confirm the pid is really the collector (`ps -p <pid> -o args=`), then re-run with `--signal-stale` |
+| `stop` says `unreachable` | the process exists and did not die after `SIGKILL` — almost always a permissions mismatch (a collector started by another OS user). The `STOP` marker still latched, so nothing will restart it |
 
 ## See also
 

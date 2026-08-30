@@ -529,8 +529,41 @@ jobs:
         # property passed.
         run: ./scripts-run src/scripts/run_lifecycle_suite
 
+      - name: Consume the evidence in the SAME job
+        # R2 finding 1. The artifact used to be written here and read only by
+        # `check_supervision_claim_atomicity` in `rule-backstops.yml` — a
+        # different workflow, so a different filesystem, with no
+        # upload/download-artifact wiring and a gitignored file. The gate
+        # therefore always took its "no lifecycle evidence" branch and the
+        # AC-8/AC-9 chain was broken at the workflow boundary.
+        #
+        # Running the reader in the producing job is what closes it: this is the
+        # only place in CI where the artifact and the revision that produced it
+        # exist together. The gate in `rule-backstops.yml` stays — there it is
+        # correctly vacuous, because a checkout with no artifact and no
+        # present-tense supervision claim has nothing to refuse.
+        run: ./scripts-run src/scripts/check_supervision_claim_atomicity
+
       - name: Show the evidence artifact
-        run: cat internal/reports/supervision-lifecycle.json
+        # `always()` so a RED run still prints the artifact — which is exactly
+        # the run where its contents matter, and the step had no condition at
+        # all before.
+        if: always()
+        run: cat internal/reports/supervision-lifecycle.json || true
+
+      - name: Static-operation parity (AC-7)
+        # R2 finding 5: this gate was invoked by nothing — no workflow, no task,
+        # no package script. Its AC-7 evidence was a single hand-run that CI
+        # could not reproduce or regression-detect, which is the shape step 5.2
+        # argues against for the sibling suite.
+        #
+        # It runs the dispatcher-reaching suite twice (once with the collector
+        # present-but-off, once with it aliased away) and compares per-test
+        # verdicts. Placed here rather than in `task ci` because a double
+        # 556-test run is roughly a minute, which is not a per-change local
+        # gate; declared `ci_only` in `src/config/ci-local-parity.yml` with that
+        # reason and reachable on demand.
+        run: ./scripts-run src/scripts/check_static_parity --quiet
 
   workspace-tests:
     # The workspace cluster: tests/server/workspace.test.ts + the cli/python

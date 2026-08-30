@@ -216,6 +216,36 @@ describe('the target decision rule', () => {
 
     // removing_this_constraint_reds_it: drop the numerator>denominator check —
     // the reading becomes an eligible 105 % capture rate.
+
+    it('REPORTS a malformed count as ineligible instead of crashing on it', () => {
+        // `wilsonInterval` throws on these by design, and the judge used to let
+        // the throw escape — so a corrupt field reading aborted the judge rather
+        // than being reported, which is exactly what the three-valued verdict
+        // exists to avoid (R2 finding 15).
+        for (const bad of [
+            { numerator: -1, denominator: 2000 },
+            { numerator: 1.5, denominator: 2000 },
+            { numerator: 100, denominator: -2000 },
+            { numerator: Number.NaN, denominator: 2000 },
+        ]) {
+            const verdict = judgeCapture({ ...bad, ...eligible });
+            expect(verdict.ineligibleBecause, JSON.stringify(bad)).toContain('malformed-counts');
+            expect(verdict.meetsTarget).toBeNull();
+            expect(verdict.rate).toBeNull();
+        }
+    });
+
+    // removing_this_constraint_reds_it: delete the `countsAreSane` guard — every
+    // case above throws out of `judgeCapture` instead of returning a verdict.
+
+    it('keeps malformed-counts distinct from numerator-exceeds-denominator', () => {
+        // Different remedies: one is a counting bug in the two writers, the
+        // other is a corrupt reading. A shared "impossible" bucket would hide
+        // which.
+        const over = judgeCapture({ numerator: 2100, denominator: 2000, ...eligible });
+        expect(over.ineligibleBecause).toContain('numerator-exceeds-denominator');
+        expect(over.ineligibleBecause).not.toContain('malformed-counts');
+    });
 });
 
 describe('the six-part enablement gate', () => {

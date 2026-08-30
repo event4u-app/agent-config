@@ -82,49 +82,92 @@ function record(over: Partial<CollectorRecord> = {}): CollectorRecord {
     } as CollectorRecord;
 }
 
-/** Every live process whose argv mentions the daemon module. */
-function enumerateDaemonProcesses(): string[] {
+/**
+ * Every live collector daemon, from the module path in its argv.
+ *
+ * The DISCRIMINATOR that matters is `--root` (R2 findings 6 and 7). The first
+ * draft greped the bare substring `collector_daemon`, which matches any spawn of
+ * the module — including the real daemons `collector_lifecycle.test.ts`
+ * deliberately starts, in a file vitest may run concurrently with this one. A
+ * green implementation could therefore red this test for a reason unrelated to
+ * the property under test.
+ *
+ * `--root` exists so a test cannot touch the developer's own
+ * `~/.event4u/agent-config`, which makes it an exact marker of test ownership.
+ * Excluding it narrows the default-off assertion to what it actually claims: no
+ * collector is running against the DEVELOPER's root. A daemon pinned to a temp
+ * root is, by construction, not that.
+ *
+ * (An earlier attempt at this fix added a `DAEMON_PROCESS_MARKER` token instead.
+ * It cannot work: `ps` reads the kernel's copy of argv, fixed at `exec`, and
+ * nothing a process writes afterwards changes it. The constant was removed
+ * rather than left asserting something untrue.)
+ */
+function enumerateDaemonProcesses(opts: { includeTestOwned?: boolean } = {}): string[] {
     const ps = spawnSync('ps', ['-eo', 'pid,args'], { encoding: 'utf8' });
     if (ps.status !== 0) return [];
     return ps.stdout
         .split('\n')
         .filter((line) => line.includes('collector_daemon'))
-        // The vitest worker running THIS file has the test path in its argv on
-        // some runners; the daemon's own argv names the source module.
-        .filter((line) => !line.includes('collector_daemon.test'));
+        // The vitest worker running THIS file can carry the test path in argv.
+        .filter((line) => !line.includes('collector_daemon.test'))
+        .filter((line) => opts.includeTestOwned === true || !line.includes('--root'));
 }
 
 describe('4.1 — default-off, asserted by process enumeration', () => {
-    it('POSITIVE CONTROL: the enumeration finds a daemon when one is running', async () => {
+    it('POSITIVE CONTROL: the enumeration finds a RUNNING daemon', async () => {
         // Without this, the negative assertion below is unfalsifiable — a grep
         // that can never match reports "no collector" on a machine running ten.
+        //
+        // A real `run`, not a `status`: a status invocation exits immediately
+        // and there is no window in which to see it. It is `--root`-scoped so it
+        // touches no real user root, and is therefore found only with
+        // `includeTestOwned` — which is the same discrimination the negative
+        // assertion below relies on, exercised from the other side.
+        enableCollector(userRoot);
         const child = spawn(
             path.join(REPO, 'node_modules', '.bin', 'tsx'),
-            [DAEMON, 'status'],
-            { stdio: 'ignore', env: { ...process.env, HOME: userRoot } },
+            [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50'],
+            { stdio: 'ignore' },
         );
         try {
-            const deadline = Date.now() + 15_000;
+            const deadline = Date.now() + 40_000;
             let seen: string[] = [];
             while (Date.now() < deadline) {
-                seen = enumerateDaemonProcesses();
+                seen = enumerateDaemonProcesses({ includeTestOwned: true });
                 if (seen.length > 0) break;
                 await new Promise<void>((r) => setTimeout(r, 50));
             }
-            expect(seen.length, 'the enumeration can see a daemon process').toBeGreaterThan(0);
+            expect(seen.length, 'the enumeration can see a running daemon').toBeGreaterThan(0);
+            // And the same enumeration, in the shape the negative assertion
+            // uses, does NOT see it — because it is test-owned.
+            expect(enumerateDaemonProcesses()).toEqual([]);
         } finally {
+            const beat = readHeartbeat(userRoot);
+            if (beat !== null) {
+                try {
+                    process.kill(beat.pid, 'SIGKILL');
+                } catch {
+                    /* already gone */
+                }
+            }
             child.kill('SIGKILL');
             await new Promise<void>((r) => {
                 if (child.exitCode !== null || child.signalCode !== null) return r();
                 child.once('exit', () => r());
             });
         }
-    });
+    }, 60_000);
 
     it('starts NO process on a fresh install — nothing in the process table', async () => {
         // The suite has been running for a while by the time this executes, and
         // no test has enabled the collector on the real user root. If any code
-        // path started a daemon, it is visible here.
+        // path started a daemon against it, it is visible here.
+        //
+        // Test-owned daemons (`--root <tmp>`) are excluded, so a concurrently
+        // running `collector_lifecycle.test.ts` cannot red this. That exclusion
+        // is not a loophole: this assertion is about the DEVELOPER's collector,
+        // and a daemon pinned to a temp root is by construction not it.
         const deadline = Date.now() + 1_000;
         while (Date.now() < deadline) {
             await new Promise<void>((r) => setTimeout(r, 100));

@@ -130,25 +130,39 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     fs.rmSync(report, { force: true });
 
     const revision = headRevision();
-    const exercised = processesExercised(counts);
+    const suiteGreen = result.status === 0;
+    // A red suite is a THIRD state, and the artifact used to record neither it
+    // nor anything that implied it: `processes_exercised` depends only on the
+    // five named properties, so a run where all five passed and a sixth case
+    // failed wrote `processes_exercised: true, cases_skipped: 0` and then exited
+    // 1 — a pass-shaped artifact left on disk by a failing run (R2 finding 18).
+    //
+    // Two changes close it. The flag itself is conjoined with the suite's exit
+    // status, so a red run can never claim the processes were exercised; and
+    // `suite_exit_status` is recorded outright, so the state is readable rather
+    // than inferred. The gate's own contract is unchanged — it reads
+    // `processes_exercised`, which is now false on a red run.
+    const exercised = processesExercised(counts) && suiteGreen;
     const evidence = {
         suite: SUITE_NAME,
         revision,
         processes_exercised: exercised,
         cases_run: counts.run,
         cases_skipped: counts.skipped,
+        suite_exit_status: result.status ?? null,
         platform: `${process.platform}-${process.arch}`,
         recorded_at: new Date().toISOString(),
     };
 
     process.stdout.write(
         `run_lifecycle_suite: ${counts.run} run, ${counts.skipped} skipped, `
+            + `suite_exit=${String(result.status ?? 'null')}, `
             + `processes_exercised=${String(exercised)}, revision=${revision || '(unknown)'}\n`,
     );
 
     if (dryRun) {
         process.stdout.write(`${JSON.stringify(evidence, null, 2)}\n`);
-        return result.status === 0 && exercised && counts.skipped === 0 ? 0 : 1;
+        return suiteGreen && exercised && counts.skipped === 0 ? 0 : 1;
     }
 
     const target = path.join(REPO, EVIDENCE_REL);

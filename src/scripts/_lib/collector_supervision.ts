@@ -309,14 +309,29 @@ function pidIsAlive(pid: number): boolean {
     }
 }
 
+/** How many times {@link acquireRuntimeLock} retries after unlinking a stale lock. */
+const FENCE_ATTEMPTS = 4;
+
 /**
  * Take the per-user lock, or report who holds it.
  *
- * `wx` is the atomicity: two processes racing produce exactly one winner
- * without a compare-then-write window. A lock whose recorded pid is not alive
- * is FENCED — taken over rather than respected — because a crashed collector
- * must not lock its successor out forever, which is row 2's recovery procedure
- * in the 3.1 matrix.
+ * `wx` is the atomicity, and it is the ONLY way this function ever ends up
+ * holding the lock — including on the fencing path.
+ *
+ * **The fencing path used to be a compare-then-write race, and the docstring
+ * claimed the opposite** (R2 finding 2). It read the pid, probed liveness, then
+ * did a plain `writeFileSync`: two starters that both observed the same dead
+ * incumbent both wrote and both returned `acquired: true`, which is exactly the
+ * one-collector-per-OS-user invariant this file exists to hold. The same branch
+ * was taken when `readLockPid` returned `null` because a releasing process
+ * removed the file in between, so a normal release could also hand the lock to
+ * two starters.
+ *
+ * The fix keeps `wx` as the only winner-picker: a stale lock is UNLINKED and the
+ * exclusive create is retried. Two processes racing to fence both unlink — one
+ * succeeds, one gets `ENOENT` — and then both attempt `wx`, where exactly one
+ * wins. The loop is bounded because an unbounded retry against a live incumbent
+ * that keeps dying and restarting is a spin, not a lock.
  */
 export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid): LockOutcome {
     if (killSwitchEngaged(userRoot)) {
@@ -324,22 +339,44 @@ export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid)
     }
     const target = runtimeLockPath(userRoot);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    try {
-        fs.writeFileSync(target, `${pid}\n`, { flag: 'wx' });
-        return Object.freeze({ acquired: true, holder: pid, reason: null });
-    } catch {
-        const incumbent = Number.parseInt(readLockPid(target) ?? '', 10);
-        if (Number.isFinite(incumbent) && pidIsAlive(incumbent)) {
-            return Object.freeze({
-                acquired: false,
-                holder: incumbent,
-                reason: 'held-by-live-process' as const,
-            });
+
+    for (let attempt = 0; attempt < FENCE_ATTEMPTS; attempt += 1) {
+        try {
+            fs.writeFileSync(target, `${pid}\n`, { flag: 'wx' });
+            return Object.freeze({ acquired: true, holder: pid, reason: null });
+        } catch {
+            const raw = readLockPid(target);
+            if (raw === null) {
+                // The file vanished between our failed `wx` and this read — a
+                // concurrent release. Retry the exclusive create; do NOT treat
+                // an unreadable lock as a stale one to be overwritten.
+                continue;
+            }
+            const incumbent = Number.parseInt(raw, 10);
+            if (Number.isFinite(incumbent) && pidIsAlive(incumbent)) {
+                return Object.freeze({
+                    acquired: false,
+                    holder: incumbent,
+                    reason: 'held-by-live-process' as const,
+                });
+            }
+            // Stale owner: unlink and let the next `wx` pick the winner.
+            try {
+                fs.rmSync(target, { force: true });
+            } catch {
+                /* another fencer removed it first — fine, retry */
+            }
         }
-        // Stale owner: fence it.
-        fs.writeFileSync(target, `${pid}\n`);
-        return Object.freeze({ acquired: true, holder: pid, reason: null });
     }
+    // Bounded out: somebody is winning the race repeatedly. Report the current
+    // holder rather than claiming a lock this function never took.
+    const raw = readLockPid(target);
+    const incumbent = Number.parseInt(raw ?? '', 10);
+    return Object.freeze({
+        acquired: false,
+        holder: Number.isFinite(incumbent) ? incumbent : null,
+        reason: 'held-by-live-process' as const,
+    });
 }
 
 function readLockPid(target: string): string | null {
@@ -350,9 +387,41 @@ function readLockPid(target: string): string | null {
     }
 }
 
-/** Release the lock. Idempotent, and safe to call when someone else fenced us. */
-export function releaseRuntimeLock(userRoot?: string): void {
-    fs.rmSync(runtimeLockPath(userRoot), { force: true });
+/**
+ * Release the lock, but ONLY when it is still ours.
+ *
+ * The unconditional `rmSync` this replaces was not "safe to call when someone
+ * else fenced us", which is what its docstring claimed (R2 finding 10) — a
+ * fenced predecessor tearing down through `runLoop`'s `finally` deleted the
+ * SUCCESSOR's lock on the way out, leaving a live collector with no lock so the
+ * next starter also acquired.
+ *
+ * Returns whether anything was removed, so a caller can tell "released" from
+ * "somebody else owns this now" instead of inferring it.
+ */
+export function releaseRuntimeLock(userRoot?: string, pid: number = process.pid): boolean {
+    const target = runtimeLockPath(userRoot);
+    const raw = readLockPid(target);
+    if (raw === null) return false;
+    if (Number.parseInt(raw, 10) !== pid) return false;
+    fs.rmSync(target, { force: true });
+    return true;
+}
+
+/**
+ * Remove the heartbeat, but ONLY when it is ours.
+ *
+ * Same ownership argument as {@link releaseRuntimeLock}, and the consequence of
+ * getting it wrong is worse: a fenced predecessor deleting the successor's beat
+ * makes `livenessFromBeat` report `absent` for a RUNNING collector — the
+ * silently-dead-collector reading the whole three-valued design exists to
+ * prevent, inverted.
+ */
+export function releaseHeartbeat(userRoot?: string, pid: number = process.pid): boolean {
+    const beat = readHeartbeat(userRoot);
+    if (beat === null || beat.pid !== pid) return false;
+    fs.rmSync(heartbeatPath(userRoot), { force: true });
+    return true;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -399,8 +468,16 @@ export function clearKillSwitch(userRoot?: string): void {
 export interface TerminationOutcome {
     /** True when nothing was running, or when the process is gone at return. */
     readonly stopped: boolean;
-    /** How it ended. `already-absent` is a success, not a failure. */
-    readonly via: 'already-absent' | 'graceful' | 'forced' | 'unreachable';
+    /**
+     * How it ended. `already-absent` is a success, not a failure.
+     *
+     * `stale-refused` is NOT a success: a beat older than the staleness
+     * threshold names a pid this module can no longer vouch for, and signalling
+     * it would aim a `SIGKILL` at whatever the OS has since recycled that
+     * number onto (R2 finding 9). The caller is told rather than the risk being
+     * taken silently.
+     */
+    readonly via: 'already-absent' | 'graceful' | 'forced' | 'unreachable' | 'stale-refused';
     readonly pid: number | null;
 }
 
@@ -415,6 +492,16 @@ export interface TerminateOptions {
     readonly alive?: (pid: number) => boolean;
     /** Injected for tests; defaults to a real sleep. */
     readonly sleep?: (ms: number) => void;
+    /** Injected for tests; defaults to `Date.now`. Used for the staleness check. */
+    readonly now?: () => number;
+    /**
+     * Signal a stale heartbeat's pid anyway.
+     *
+     * Off by default and deliberately explicit: it is the operator saying "I
+     * know this beat is old and I still want that pid killed". Nothing in this
+     * package sets it.
+     */
+    readonly signalStale?: boolean;
 }
 
 /**
@@ -436,6 +523,14 @@ export function terminateCollector(
     const beat = readHeartbeat(userRoot);
     if (beat === null) {
         return Object.freeze({ stopped: true, via: 'already-absent' as const, pid: null });
+    }
+    const now = options.now ?? Date.now;
+    if (options.signalStale !== true && livenessFromBeat(beat, now()) === 'stale') {
+        // A SIGKILL aimed at a recycled pid is the worst thing this module can
+        // do, and `pidIsAlive` cannot tell the original owner from its
+        // successor. The module already owns the vocabulary for this decision;
+        // the first version simply did not use it here.
+        return Object.freeze({ stopped: false, via: 'stale-refused' as const, pid: beat.pid });
     }
     const graceMs = options.graceMs ?? 5_000;
     const pollMs = options.pollMs ?? 100;
@@ -596,11 +691,28 @@ export function detectSupervisor(environment: ProbeEnvironment = {}): Supervisor
     const exists = environment.exists ?? ((p: string) => fs.existsSync(p));
 
     if (platform === 'darwin') {
-        const agents = path.join(os.homedir(), 'Library', 'LaunchAgents');
+        // PROBED, not assumed (R2 finding 17). The first version returned
+        // `supported` unconditionally and computed this path only to interpolate
+        // it into the reason string — under a section heading that says
+        // "probed, never assumed", with the linux branch beside it doing the
+        // real thing. `launchctl` is the manager and `~/Library/LaunchAgents`
+        // is where a per-user agent is registered; a home directory without it,
+        // or without a writable parent, is not a row this package can claim.
+        const home = env.HOME ?? os.homedir();
+        const agents = path.join(home, 'Library', 'LaunchAgents');
+        if (exists(agents) || exists(path.join(home, 'Library'))) {
+            return Object.freeze({
+                kind: 'launchd-user' as const,
+                tier: 'supported' as const,
+                reason: `per-user launchd agent under ${agents}; no administrator privilege required`,
+            });
+        }
         return Object.freeze({
-            kind: 'launchd-user' as const,
-            tier: 'supported' as const,
-            reason: `per-user launchd agent under ${agents}; no administrator privilege required`,
+            kind: 'none' as const,
+            tier: 'static-fallback' as const,
+            reason:
+                `darwin without a per-user agent directory (${agents} absent, and no ~/Library `
+                + 'to create it under) — a sandboxed or minimal home, not a supervisable row',
         });
     }
     if (platform === 'linux') {

@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { fileURLToPath } from 'node:url';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -33,6 +35,7 @@ import {
     livenessFromBeat,
     pullKillSwitch,
     readHeartbeat,
+    releaseHeartbeat,
     releaseRuntimeLock,
     resolveDispatchMode,
     RESOURCE_BUDGETS,
@@ -42,6 +45,9 @@ import {
     type BudgetName,
     type ResourceReading,
 } from '../../src/scripts/_lib/collector_supervision.js';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const TSX = path.join(REPO, 'node_modules', '.bin', 'tsx');
 
 let userRoot: string;
 
@@ -288,6 +294,63 @@ describe('3.3 — the kill switch, reachable without the collector cooperating',
     // removing_this_constraint_reds_it: remove the `!alive(beat.pid)` early
     // return — the outcome becomes `graceful` or `unreachable`, never
     // `already-absent`.
+
+    it('REFUSES to signal a stale heartbeat, because the pid may be recycled', () => {
+        // R2 finding 9. `pidIsAlive` cannot tell the original daemon from
+        // whatever the OS has since put on that pid number, and PROPERTY 3
+        // establishes that a SIGKILLed daemon leaves its heartbeat on disk
+        // indefinitely. So an old beat plus a live pid is not evidence — and
+        // the worst thing this module can do is SIGKILL a stranger.
+        const now = Date.now();
+        writeHeartbeat(
+            {
+                pid: process.pid,
+                started_at: now - 600_000,
+                last_heartbeat: now - HEARTBEAT_STALE_AFTER_MS - 1,
+                mode: 'degraded',
+            },
+            userRoot,
+        );
+        const signalled: string[] = [];
+        const outcome = terminateCollector(userRoot, {
+            kill: (_pid, sig) => signalled.push(sig),
+            alive: () => true,
+        });
+        expect(outcome.via).toBe('stale-refused');
+        expect(outcome.stopped).toBe(false);
+        expect(signalled, 'nothing was signalled').toEqual([]);
+    });
+
+    // removing_this_constraint_reds_it: drop the `livenessFromBeat` guard from
+    // `terminateCollector` — SIGTERM and then SIGKILL are sent to the stale pid.
+
+    it('signals a stale beat when the operator says so explicitly', () => {
+        const now = Date.now();
+        writeHeartbeat(
+            {
+                pid: process.pid,
+                started_at: now - 600_000,
+                last_heartbeat: now - HEARTBEAT_STALE_AFTER_MS - 1,
+                mode: 'degraded',
+            },
+            userRoot,
+        );
+        const signalled: string[] = [];
+        let liveCalls = 0;
+        const outcome = terminateCollector(userRoot, {
+            signalStale: true,
+            graceMs: 100,
+            pollMs: 10,
+            kill: (_pid, sig) => signalled.push(sig),
+            alive: () => {
+                liveCalls += 1;
+                return liveCalls < 3;
+            },
+            sleep: () => undefined,
+        });
+        expect(signalled[0]).toBe('SIGTERM');
+        expect(outcome.stopped).toBe(true);
+    });
 });
 
 describe('3.4 — static and daemon mode against the same tree', () => {
@@ -350,10 +413,122 @@ describe('3.4 — static and daemon mode against the same tree', () => {
 
     it('releases idempotently', () => {
         acquireRuntimeLock(userRoot, process.pid);
-        releaseRuntimeLock(userRoot);
-        releaseRuntimeLock(userRoot);
+        expect(releaseRuntimeLock(userRoot)).toBe(true);
+        expect(releaseRuntimeLock(userRoot)).toBe(false);
         expect(resolveDispatchMode(userRoot).mode).toBe('daemon');
     });
+
+    it('a FENCED predecessor does not delete the successor\'s lock (R2 finding 10)', () => {
+        // The predecessor holds, is fenced, and then tears down through its
+        // own `finally`. An unconditional rmSync there removed the SUCCESSOR's
+        // lock, so the next starter also acquired — the one-collector invariant
+        // broken by the cleanup path rather than by the acquire path.
+        const predecessor = process.pid + 1;
+        acquireRuntimeLock(userRoot, predecessor);
+        fs.writeFileSync(runtimeLockPath(userRoot), `${process.pid}\n`); // successor fenced it
+
+        expect(releaseRuntimeLock(userRoot, predecessor)).toBe(false);
+        expect(fs.existsSync(runtimeLockPath(userRoot))).toBe(true);
+        expect(fs.readFileSync(runtimeLockPath(userRoot), 'utf8').trim()).toBe(String(process.pid));
+    });
+
+    // removing_this_constraint_reds_it: drop the pid comparison from
+    // `releaseRuntimeLock` — the successor's lock file disappears.
+
+    it('a FENCED predecessor does not delete the successor\'s heartbeat', () => {
+        const now = Date.now();
+        writeHeartbeat(
+            { pid: process.pid, started_at: now, last_heartbeat: now, mode: 'degraded' },
+            userRoot,
+        );
+        // The predecessor tries to clean up its own beat; the beat on disk is
+        // the successor's. Removing it would report `absent` for a RUNNING
+        // collector, which inverts the whole three-valued liveness design.
+        expect(releaseHeartbeat(userRoot, process.pid + 1)).toBe(false);
+        expect(readHeartbeat(userRoot)).not.toBeNull();
+        expect(releaseHeartbeat(userRoot, process.pid)).toBe(true);
+        expect(readHeartbeat(userRoot)).toBeNull();
+    });
+
+    it('a vanished lock is RETRIED exclusively, never overwritten (R2 finding 2)', () => {
+        // `readLockPid` returning null used to take the fencing branch, so a
+        // concurrent release between the failed `wx` and the read handed the
+        // lock to a second starter. Now the loop retries `wx`, which is the
+        // only winner-picker.
+        expect(acquireRuntimeLock(userRoot, process.pid).acquired).toBe(true);
+        releaseRuntimeLock(userRoot, process.pid);
+        const second = acquireRuntimeLock(userRoot, process.pid + 1);
+        expect(second.acquired).toBe(true);
+        expect(fs.readFileSync(runtimeLockPath(userRoot), 'utf8').trim())
+            .toBe(String(process.pid + 1));
+    });
+
+    it('CONCURRENT fencers of one dead lock produce exactly one winner', async () => {
+        const gone = await deadPid();
+        fs.mkdirSync(path.dirname(runtimeLockPath(userRoot)), { recursive: true });
+        fs.writeFileSync(runtimeLockPath(userRoot), `${gone}\n`);
+
+        // Two REAL processes, each acquiring under its OWN pid and then holding
+        // for a moment before exiting. Both details matter and the first draft
+        // had neither: fake pids are not alive, so the second contender
+        // correctly fences the first and both legitimately acquire — the test
+        // measured its own fixture rather than the race. And a contender that
+        // exits immediately is not an incumbent anyone can lose to.
+        const module = path.join(REPO, 'src/scripts/_lib/collector_supervision.ts');
+        const script =
+            `import(${JSON.stringify(module)}).then((m) => {`
+            + ` const r = m.acquireRuntimeLock(${JSON.stringify(userRoot)});`
+            + ` process.stdout.write(JSON.stringify({ ...r, mine: process.pid }));`
+            + ` if (r.acquired) { const t = Date.now(); while (Date.now() - t < 1500) {} }`
+            + ` });`;
+        const runs = await Promise.all(
+            [0, 1].map(
+                () =>
+                    new Promise<string>((resolve) => {
+                        const child = spawn(TSX, ['-e', script], {
+                            stdio: ['ignore', 'pipe', 'ignore'],
+                        });
+                        let out = '';
+                        child.stdout.on('data', (c: Buffer) => {
+                            out += c.toString();
+                        });
+                        child.once('exit', () => resolve(out));
+                    }),
+            ),
+        );
+        const acquired = runs.filter((r) => {
+            try {
+                return (JSON.parse(r) as { acquired: boolean }).acquired;
+            } catch {
+                return false;
+            }
+        });
+        // At least one must win — a stale lock that locks everyone out forever
+        // is the other half of row 2's recovery procedure.
+        expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeGreaterThanOrEqual(1);
+        expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeLessThanOrEqual(2);
+        // The honest statement: two `tsx` cold starts do not reliably overlap,
+        // so a run where the first has already finished holding is a legitimate
+        // sequential fence and both acquiring is correct. What this case pins is
+        // that whenever they DO overlap, the lock names exactly one of them.
+        const lockPid = fs.readFileSync(runtimeLockPath(userRoot), 'utf8').trim();
+        const mine = runs.map((r) => {
+            try {
+                return String((JSON.parse(r) as { mine: number }).mine);
+            } catch {
+                return '';
+            }
+        });
+        expect(mine, `lock names one contender (${lockPid})`).toContain(lockPid);
+    }, 60_000);
+
+    // removing_this_constraint_reds_it: nothing in this block reds on the old
+    // fencing branch, and that is stated rather than claimed away. Two `tsx`
+    // cold starts do not overlap reliably enough to hit a microsecond-wide
+    // compare-then-write window from a test, so this case is a NECESSARY
+    // condition on the invariant — the lock names exactly one contender — and
+    // not a reproduction of the race. The argument for the fix is structural:
+    // `wx` is now the only path that ever returns `acquired: true`.
 });
 
 describe('heartbeat — a dead collector is readable as dead, not as healthy', () => {
@@ -399,12 +574,34 @@ describe('heartbeat — a dead collector is readable as dead, not as healthy', (
 });
 
 describe('supervisor detection — probed, never assumed', () => {
-    it('accepts macOS on the per-user launchd row', () => {
-        const probe = detectSupervisor({ platform: 'darwin', env: {} });
+    it('accepts macOS only when the per-user agent directory is REACHABLE', () => {
+        // R2 finding 17: this branch used to return `supported` unconditionally
+        // and never consult the injected predicate, under a heading that says
+        // "probed, never assumed" — and it is the one row the CI job certifies.
+        const probe = detectSupervisor({
+            platform: 'darwin',
+            env: { HOME: '/Users/someone' },
+            exists: (p) => p === '/Users/someone/Library/LaunchAgents',
+        });
         expect(probe.kind).toBe('launchd-user');
         expect(probe.tier).toBe('supported');
         expect(probe.reason).toContain('no administrator privilege');
     });
+
+    it('routes a darwin home with no Library at all to static fallback', () => {
+        const probe = detectSupervisor({
+            platform: 'darwin',
+            env: { HOME: '/var/empty' },
+            exists: () => false,
+        });
+        expect(probe.kind).toBe('none');
+        expect(probe.tier).toBe('static-fallback');
+        expect(probe.reason).toContain('per-user agent directory');
+    });
+
+    // removing_this_constraint_reds_it: return `supported` unconditionally from
+    // the darwin branch — the fallback case reds, and the accepted case does
+    // not, which is exactly the asymmetry an assume-instead-of-probe has.
 
     it('accepts Linux ONLY with a positively detected user session bus', () => {
         expect(

@@ -1153,11 +1153,14 @@ export function main(argv?: string[]): number {
   // collector yields a climbing denominator against a flat numerator and the
   // capture rate falls instead of reading 0/0.
   //
-  // Costs ONE `stat` on a default-off install: `recordOpportunity` returns
-  // immediately when the opt-in marker is absent, which it is on every fresh
-  // install. It NEVER throws — the observation-only contract's falsifiable form
-  // is that killing the module leaves every dispatch resolving identically, and
-  // a raising counter would break exactly that.
+  // Costs TWO `existsSync` calls on a default-off install, and the number is
+  // stated correctly here because it was stated wrongly first (R2 finding 14):
+  // `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
+  // the opt-out check — not the marker — is what usually returns first. Two
+  // stats and a return; no read, no write, no allocation. It NEVER throws — the
+  // observation-only contract's falsifiable form is that killing the module
+  // leaves every dispatch resolving identically, and a raising counter would
+  // break exactly that.
   //
   // Placed after the vocabulary check so an unknown event is not counted as an
   // opportunity, and before the manifest load so a missing manifest — which

@@ -59,22 +59,28 @@ import {
     acquireRuntimeLock,
     budgetVerdict,
     detectSupervisor,
-    heartbeatPath,
     killSwitchEngaged,
     livenessFromBeat,
+    pullKillSwitch,
     readHeartbeat,
+    releaseHeartbeat,
     releaseRuntimeLock,
+    terminateCollector,
     writeHeartbeat,
     type BudgetName,
     type ResourceReading,
 } from './_lib/collector_supervision.js';
 
-/**
- * A literal that appears in the daemon's own argv and nowhere else in this
- * package. Process enumeration in step 4.1's test greps for it, so it must be
- * distinctive enough that a false positive is not plausible.
- */
-export const DAEMON_PROCESS_MARKER = 'agent-config-collector-daemon';
+// An earlier draft exported a `DAEMON_PROCESS_MARKER` constant here, claiming
+// the daemon put it into its own argv and that the 4.1 test greped for it. Both
+// were false — its only use was a usage string — and R2 findings 6 and 7 caught
+// it. It is REMOVED rather than made true: nothing can add a token to argv after
+// `exec` (a JavaScript `process.argv` is not the kernel's copy, which is what
+// `ps` reads), so honouring the claim would have meant re-exec'ing the daemon
+// and changing the pid every launcher and test then re-derives — to solve a
+// problem `--root` already solves exactly. Process enumeration greps the module
+// path, which a real daemon's argv genuinely contains, and tells a test-owned
+// daemon from a developer's by `--root`. See `tests/scripts/collector_daemon.test.ts`.
 
 export const DEFAULT_BEAT_MS = 30_000;
 
@@ -313,10 +319,23 @@ export function start(userRoot?: string): StartOutcome {
     return Object.freeze({ started: true, refusal: null, mode });
 }
 
-/** Release the lock and remove the heartbeat. Idempotent; safe after a fence. */
-export function stop(userRoot?: string): void {
-    releaseRuntimeLock(userRoot);
-    fs.rmSync(heartbeatPath(userRoot), { force: true });
+/**
+ * Release the lock and remove the heartbeat — ONLY the ones this process owns.
+ *
+ * Both helpers are ownership-checked (R2 finding 10). The unconditional
+ * `rmSync` pair this replaces meant a FENCED predecessor tearing down through
+ * `runLoop`'s `finally` deleted the successor's lock and heartbeat: the next
+ * starter then also acquired, and `livenessFromBeat` reported `absent` for a
+ * process that was running.
+ *
+ * Returns what it actually removed, so a caller can tell a clean release from a
+ * no-op after a fence.
+ */
+export function stop(userRoot?: string): { lock: boolean; heartbeat: boolean } {
+    return {
+        lock: releaseRuntimeLock(userRoot),
+        heartbeat: releaseHeartbeat(userRoot),
+    };
 }
 
 /**
@@ -422,10 +441,28 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // own `~/.event4u/agent-config`. It is not a production knob: the supervisor
     // units never pass it, and omitting it resolves the real user root exactly
     // as before.
+    //
+    // A TRAILING `--root` with no value is an ERROR, not a default (R2 finding
+    // 16). `argv[i + 1]` is `undefined` there, and `undefined` is precisely the
+    // value that falls back to the real user root — so a malformed invocation
+    // would do the one thing this flag was added to prevent.
     const rootFlag = argv.indexOf('--root');
+    if (rootFlag >= 0 && argv[rootFlag + 1] === undefined) {
+        process.stderr.write('collector: --root needs a directory argument\n');
+        return 2;
+    }
     const userRoot = rootFlag >= 0 ? argv[rootFlag + 1] : undefined;
+
     const beatFlag = argv.indexOf('--beat-ms');
+    if (beatFlag >= 0 && argv[beatFlag + 1] === undefined) {
+        process.stderr.write('collector: --beat-ms needs a number\n');
+        return 2;
+    }
     const beatMs = beatFlag >= 0 ? Number.parseInt(argv[beatFlag + 1] ?? '', 10) : undefined;
+    if (beatMs !== undefined && !Number.isFinite(beatMs)) {
+        process.stderr.write('collector: --beat-ms must be a number\n');
+        return 2;
+    }
 
     if (command === 'status') {
         const beat = readHeartbeat(userRoot);
@@ -437,6 +474,32 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 + `\n`,
         );
         return 0;
+    }
+
+    // The operator-facing half of the kill switch (R2 finding 3). Before this
+    // existed, `terminateCollector` had no production caller at all and
+    // `docs/contracts/collector-operations.md` told an operator under pressure
+    // that there was nothing running to stop — while this very file had just
+    // shipped a daemon that runs.
+    if (command === 'stop') {
+        const engaged = argv.includes('--no-latch') ? false : true;
+        if (engaged) pullKillSwitch(userRoot);
+        const outcome = terminateCollector(userRoot, {
+            signalStale: argv.includes('--signal-stale'),
+        });
+        process.stdout.write(
+            `collector: ${outcome.stopped ? 'stopped' : 'NOT stopped'} (${outcome.via}`
+                + (outcome.pid === null ? '' : `, pid ${outcome.pid}`)
+                + `)${engaged ? ' · kill switch engaged — delete STOP to allow a restart' : ''}\n`,
+        );
+        if (outcome.via === 'stale-refused') {
+            process.stderr.write(
+                'collector: the heartbeat is stale, so its pid may have been recycled — '
+                    + 'refused rather than signalling a stranger. Re-run with --signal-stale '
+                    + 'if you know that pid is still the collector.\n',
+            );
+        }
+        return outcome.stopped ? 0 : 1;
     }
 
     if (command === 'run') {
@@ -453,11 +516,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         // Announce readiness AFTER the lock and heartbeat exist. A test that
         // signals before this line is racing the startup it is trying to test —
         // the same race the 3.3 wedged-process test learned the hard way.
-        process.stdout.write(`collector: running pid=${process.pid} mode=${outcome.mode}\n`);
+        process.stdout.write(
+            `collector: running pid=${process.pid} mode=${outcome.mode}\n`,
+        );
         const summary = runLoop(
-            beatMs !== undefined && Number.isFinite(beatMs)
-                ? { userRoot, beatMs }
-                : { userRoot },
+            beatMs !== undefined ? { userRoot, beatMs } : { userRoot },
         );
         process.stderr.write(
             `collector: stopped by ${summary.stoppedBy}`
@@ -468,7 +531,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     process.stderr.write(
-        `usage: collector_daemon [status|run] [--root <dir>] [--beat-ms <n>]  (${DAEMON_PROCESS_MARKER})\n`,
+        'usage: collector_daemon [status|run|stop] [--root <dir>] [--beat-ms <n>]'
+            + ' [--no-latch] [--signal-stale]\n',
     );
     return 2;
 }

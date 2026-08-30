@@ -98,7 +98,18 @@ export type EligibilityFailure =
     | 'window-too-short'
     | 'sample-too-small'
     | 'too-few-machines'
-    | 'numerator-exceeds-denominator';
+    | 'numerator-exceeds-denominator'
+    /**
+     * A count that is negative, fractional, or not a number at all.
+     *
+     * Its own member rather than a shared "impossible" bucket, because the
+     * remedy differs: `numerator-exceeds-denominator` is a counting bug in the
+     * two writers, `malformed-counts` is a corrupt reading. Before this existed
+     * such a reading fell straight through to `wilsonInterval` and CRASHED —
+     * the one class of bad input this module's three-valued design was built to
+     * report rather than throw on (R2 finding 15).
+     */
+    | 'malformed-counts';
 
 export interface CaptureVerdict {
     /** Point estimate. `null` when the denominator is 0 — a ratio, not a zero. */
@@ -130,16 +141,38 @@ export function judgeCapture(
     target: number = CAPTURE_TARGET,
 ): CaptureVerdict {
     const failures: EligibilityFailure[] = [];
-    if (reading.numerator > reading.denominator) failures.push('numerator-exceeds-denominator');
-    if (reading.windowDays < WINDOW_DAYS) failures.push('window-too-short');
-    if (reading.denominator < MINIMUM_SAMPLE) failures.push('sample-too-small');
-    if (reading.machines < MINIMUM_MACHINES) failures.push('too-few-machines');
 
-    const impossible = failures.includes('numerator-exceeds-denominator');
-    const interval = impossible
+    // Checked FIRST, and it is the guard that keeps `wilsonInterval` from
+    // raising: that function throws on a negative or fractional count, by
+    // design, and a judge that propagates the throw cannot report anything.
+    const countsAreSane =
+        Number.isInteger(reading.numerator)
+        && Number.isInteger(reading.denominator)
+        && reading.numerator >= 0
+        && reading.denominator >= 0;
+    if (!countsAreSane) failures.push('malformed-counts');
+    else if (reading.numerator > reading.denominator) {
+        failures.push('numerator-exceeds-denominator');
+    }
+    if (!Number.isFinite(reading.windowDays) || reading.windowDays < WINDOW_DAYS) {
+        failures.push('window-too-short');
+    }
+    if (!Number.isFinite(reading.denominator) || reading.denominator < MINIMUM_SAMPLE) {
+        failures.push('sample-too-small');
+    }
+    if (!Number.isFinite(reading.machines) || reading.machines < MINIMUM_MACHINES) {
+        failures.push('too-few-machines');
+    }
+
+    const uncomputable =
+        failures.includes('numerator-exceeds-denominator') || failures.includes('malformed-counts');
+    const interval = uncomputable
         ? Object.freeze({ lower: 0, upper: 1 })
         : wilsonInterval(reading.numerator, reading.denominator);
-    const rate = reading.denominator === 0 ? null : reading.numerator / reading.denominator;
+    const rate =
+        uncomputable || reading.denominator === 0
+            ? null
+            : reading.numerator / reading.denominator;
     const eligible = failures.length === 0;
 
     return Object.freeze({

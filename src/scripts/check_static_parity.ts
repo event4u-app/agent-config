@@ -134,12 +134,22 @@ function readVitestJson(file: string): TestVerdict[] {
     return verdicts.sort((x, y) => (x.name < y.name ? -1 : x.name > y.name ? 1 : 0));
 }
 
-function runSuite(tag: string, files: string[], aliasStub: boolean): RunResult {
+function runSuite(tag: string, files: string[], aliasStub: boolean, home: string): RunResult {
     const report = reportPath(tag);
     fs.rmSync(report, { force: true });
 
     const env = { ...process.env };
+    // EXPLICITLY unset for run A rather than merely not set (R2 finding 4). An
+    // ambient `AGENT_CONFIG_COLLECTOR_ABSENT=1` in the invoking shell made both
+    // runs resolve the stub, and the comparison then passed by construction
+    // while proving nothing — the exact "gate that scans nothing exits green"
+    // shape this file argues against elsewhere.
+    delete env.AGENT_CONFIG_COLLECTOR_ABSENT;
     if (aliasStub) env.AGENT_CONFIG_COLLECTOR_ABSENT = '1';
+    // And pin HOME, so "present-but-OFF" is a property of the run rather than of
+    // whether the invoking user happens to have an ENABLED marker in their own
+    // `~/.event4u/agent-config`.
+    env.HOME = home;
 
     const result = spawnSync(
         path.join(REPO, 'node_modules', '.bin', 'vitest'),
@@ -189,8 +199,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         for (const file of files) process.stdout.write(`  · ${file}\n`);
     }
 
-    const present = runSuite('present-off', files, false);
-    const absent = runSuite('absent', files, true);
+    // One empty home for both runs: no ENABLED marker, no OPT-OUT marker, no
+    // pre-existing store. Whatever the invoking user has is out of the picture.
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'static-parity-home-'));
+    let present: RunResult;
+    let absent: RunResult;
+    try {
+        present = runSuite('present-off', files, false, home);
+        absent = runSuite('absent', files, true, home);
+    } finally {
+        fs.rmSync(home, { recursive: true, force: true });
+    }
 
     const differences = compare(present.verdicts, absent.verdicts);
 
