@@ -1,0 +1,316 @@
+/**
+ * lint_metric_consumers — a metric with no consumer does not land.
+ *
+ * `road-to-experience-loop-broadening` step 0.3, whose rule is quoted from the
+ * roadmap verbatim: *"A metric with no consumer is telemetry decoration and
+ * should not land."* Every entry in `src/config/metric-registry.yml` declares
+ * three things, and this gate refuses one that does not:
+ *
+ * - `consumer` — who reads it;
+ * - `decision` — what it changes;
+ * - `absent` — what fails without it.
+ *
+ * ## Why the third field, when the first two look sufficient
+ *
+ * Because the first two are answerable for a metric nobody needs. "The report
+ * reads it" and "it informs the roadmap" are both true of a number whose
+ * deletion would change nothing, and that is the number this gate exists to
+ * catch. `absent` is the falsifiable one: if the honest answer is *nothing
+ * fails*, the entry cannot be written and the metric should not land.
+ *
+ * The tree's own worked example is the 0.27 % dispatch capture rate — a figure
+ * that existed for months before anyone could say what decision it fed.
+ *
+ * ## What this gate does NOT claim
+ *
+ * It checks SHAPE, not truth. It refuses a missing, empty, or boilerplate
+ * field; it cannot tell a real consumer from a plausible sentence, because that
+ * is a review judgement and no parser has it. The honest statement is that this
+ * makes the OMISSION impossible, not the answer true — and it is written here
+ * rather than left for someone to discover by trusting the gate further than it
+ * goes.
+ *
+ * Exit codes: 0 clean · 1 finding · 2 usage or config error.
+ */
+
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+
+import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { reportScanned } from './_lib/scan_scope.js';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(HERE, '..', '..');
+const REGISTRY_REL = path.join('src', 'config', 'metric-registry.yml');
+const SELF_REL = path.join('src', 'scripts', 'lint_metric_consumers.ts');
+
+/** The three fields that make a metric landable, and the reason each exists. */
+export const REQUIRED_FIELDS = ['consumer', 'decision', 'absent'] as const;
+export type RequiredField = (typeof REQUIRED_FIELDS)[number];
+
+/** Below this a field is a placeholder rather than an answer. */
+export const MIN_FIELD_CHARS = 20;
+
+/**
+ * Phrases that pass a length check and answer nothing.
+ *
+ * Deliberately short and deliberately literal. A long list would turn this into
+ * a vocabulary filter, which is not what the gate is for — these are the four
+ * shapes that showed up when the registry was seeded, each of which is a way of
+ * writing "I do not know" at sufficient length.
+ */
+export const BOILERPLATE = [
+    'tbd',
+    'todo',
+    'n/a',
+    'not applicable',
+    'to be determined',
+    'unknown',
+    'nothing',
+    'see above',
+] as const;
+
+export interface MetricEntry {
+    readonly id?: unknown;
+    readonly producer?: unknown;
+    readonly consumer?: unknown;
+    readonly decision?: unknown;
+    readonly absent?: unknown;
+}
+
+export interface Finding {
+    readonly id: string;
+    readonly field: string;
+    readonly reason: string;
+}
+
+function normalise(value: unknown): string {
+    return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
+}
+
+/** Judge one entry. Pure, so the self-test can drive it with literals. */
+export function findingsFor(entry: MetricEntry, index: number): Finding[] {
+    const out: Finding[] = [];
+    const id = normalise(entry.id) === '' ? `#${String(index + 1)} (no id)` : normalise(entry.id);
+
+    if (normalise(entry.id) === '') {
+        out.push({ id, field: 'id', reason: 'missing — an unnamed metric cannot be cited' });
+    }
+    if (normalise(entry.producer) === '') {
+        out.push({
+            id,
+            field: 'producer',
+            reason: 'missing — without it a reader cannot check the other three against anything',
+        });
+    }
+    for (const field of REQUIRED_FIELDS) {
+        const value = normalise(entry[field]);
+        if (value === '') {
+            out.push({ id, field, reason: 'missing or empty' });
+            continue;
+        }
+        if (BOILERPLATE.some((b) => value.toLowerCase() === b || value.toLowerCase().startsWith(`${b} `))) {
+            out.push({ id, field, reason: `boilerplate ("${value.slice(0, 40)}") — a placeholder, not an answer` });
+            continue;
+        }
+        if (value.length < MIN_FIELD_CHARS) {
+            out.push({
+                id,
+                field,
+                reason:
+                    `${String(value.length)} chars, below the ${String(MIN_FIELD_CHARS)}-char floor — `
+                    + 'too short to name a consumer, a decision or a consequence',
+            });
+        }
+    }
+    return out;
+}
+
+export interface RegistryRead {
+    readonly entries: readonly MetricEntry[];
+    readonly error: string | null;
+}
+
+export function readRegistry(root: string): RegistryRead {
+    const target = path.join(root, REGISTRY_REL);
+    let raw: string;
+    try {
+        raw = fs.readFileSync(target, 'utf8');
+    } catch {
+        return { entries: [], error: `${REGISTRY_REL} is missing` };
+    }
+    let parsed: unknown;
+    try {
+        parsed = parseYaml(raw);
+    } catch (err) {
+        return { entries: [], error: `${REGISTRY_REL} does not parse: ${(err as Error).message}` };
+    }
+    if (parsed === null || typeof parsed !== 'object') {
+        return { entries: [], error: `${REGISTRY_REL} is not a mapping` };
+    }
+    const metrics = (parsed as { metrics?: unknown }).metrics;
+    if (!Array.isArray(metrics)) {
+        return { entries: [], error: `${REGISTRY_REL} has no \`metrics:\` list` };
+    }
+    return { entries: metrics as MetricEntry[], error: null };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Self-test                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function selfTest(): number {
+    const fixture = (yaml: string): number => {
+        const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'metric-reg-'));
+        try {
+            const abs = path.join(dir, REGISTRY_REL);
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, yaml);
+            // Init a git repo so the fixture root looks like a checkout to any
+            // helper that asks; cheap, and it removes a class of surprise.
+            try {
+                execFileSync('git', ['-C', dir, 'init', '-q'], { stdio: 'ignore' });
+            } catch {
+                /* git absent is not this gate's problem */
+            }
+            return runGateCli(REPO_ROOT, SELF_REL, ['--root', dir], dir);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+
+    const complete = `
+metrics:
+  - id: a-real-metric
+    producer: src/scripts/some_gate.ts
+    consumer: the ratchet in check_some_gate, and the maintainer reading its expiry
+    decision: whether a change that raises the count may merge at all
+    absent: the count rises unnoticed and the debt grows with nothing reporting it
+`;
+
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a complete entry is accepted',
+            expect: 'accept',
+            run: () => fixture(complete),
+        },
+        {
+            name: 'a metric with NO consumer is refused — the rule the gate exists for',
+            expect: 'reject',
+            run: () =>
+                fixture(complete.replace(/    consumer: .*\n/, '')),
+        },
+        {
+            name: 'a metric with no `decision` is refused',
+            expect: 'reject',
+            run: () => fixture(complete.replace(/    decision: .*\n/, '')),
+        },
+        {
+            name: 'a metric with no `absent` is refused — the falsifiable field',
+            expect: 'reject',
+            run: () => fixture(complete.replace(/    absent: .*\n/, '')),
+        },
+        {
+            name: 'a BOILERPLATE consumer is refused, not merely a missing one',
+            expect: 'reject',
+            run: () => fixture(complete.replace(/    consumer: .*\n/, '    consumer: TBD\n')),
+        },
+        {
+            name: 'a too-short field is refused',
+            expect: 'reject',
+            run: () => fixture(complete.replace(/    absent: .*\n/, '    absent: nothing much\n')),
+        },
+        {
+            name: 'an EMPTY registry is refused — a gate that scans nothing exits green',
+            expect: 'reject',
+            run: () => fixture('metrics: []\n'),
+        },
+    ];
+
+    return runSelfTest({
+        gate: 'lint_metric_consumers',
+        cases,
+        minCases: 7,
+        minRejectCases: 5,
+    });
+}
+
+/* -------------------------------------------------------------------------- */
+
+export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
+
+    const rootFlag = argv.indexOf('--root');
+    if (rootFlag >= 0 && (argv[rootFlag + 1] === undefined || argv[rootFlag + 1]?.startsWith('--'))) {
+        process.stderr.write('lint_metric_consumers: --root needs a directory\n');
+        return 2;
+    }
+    const root = rootFlag >= 0 ? (argv[rootFlag + 1] as string) : REPO_ROOT;
+    const quiet = argv.includes('--quiet');
+
+    const read = readRegistry(root);
+    if (read.error !== null) {
+        process.stderr.write(`❌  lint_metric_consumers: ${read.error}\n`);
+        return 1;
+    }
+
+    // Publishes AND asserts in one call. No `allowEmpty` reason: an empty
+    // registry is not a clean bill of health here, it is a gate reading nothing
+    // — and this gate's whole subject is numbers that exist without a purpose.
+    try {
+        reportScanned({
+            gate: 'lint_metric_consumers',
+            scanned: read.entries.length,
+            units: 'metric(s)',
+            roots: [REGISTRY_REL],
+        });
+    } catch (err) {
+        process.stderr.write(`❌  ${(err as Error).message}\n`);
+        return 1;
+    }
+
+    const findings: Finding[] = [];
+    const seen = new Set<string>();
+    read.entries.forEach((entry, i) => {
+        findings.push(...findingsFor(entry, i));
+        const id = normalise(entry.id);
+        if (id !== '' && seen.has(id)) {
+            findings.push({ id, field: 'id', reason: 'duplicate — two entries claim the same metric' });
+        }
+        if (id !== '') seen.add(id);
+    });
+
+    if (findings.length > 0) {
+        process.stderr.write(
+            `❌  lint_metric_consumers: ${String(findings.length)} finding(s) in ${REGISTRY_REL}\n`,
+        );
+        for (const f of findings) {
+            process.stderr.write(`  · ${f.id} → ${f.field}: ${f.reason}\n`);
+        }
+        process.stderr.write(
+            '\n  A metric with no consumer is telemetry decoration and should not land.\n'
+                + '  `absent` is the falsifiable field: if nothing fails without the metric,\n'
+                + '  the entry cannot honestly be written and the metric should not exist.\n',
+        );
+        return 1;
+    }
+
+    if (!quiet) {
+        process.stdout.write(
+            `✅  lint_metric_consumers: ${String(read.entries.length)} metric(s), each naming a `
+                + 'consumer, a decision and what fails without it.\n',
+        );
+    }
+    return 0;
+}
+
+if (process.argv[1] !== undefined) {
+    const invoked = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (invoked === import.meta.url) {
+        process.exitCode = main();
+    }
+}

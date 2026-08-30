@@ -1,0 +1,106 @@
+# Metric registry — consumer before producer
+#
+# `road-to-experience-loop-broadening` step 0.3. Every metric this package
+# produces declares three things before it lands:
+#
+#   consumer  — WHO reads it. A person, a gate, a report, a decision record.
+#   decision  — WHAT it changes. The decision it feeds, in one falsifiable line.
+#   absent    — WHAT FAILS without it. If nothing does, the metric is decoration.
+#
+# The rule the roadmap states, verbatim: *"A metric with no consumer is telemetry
+# decoration and should not land."* The tree's own worked example is the 0.27 %
+# dispatch capture figure — a collector whose consumer arrived after the data
+# did, so the number existed for months before anyone could say what it changed.
+#
+# ## What is a metric, for this file
+#
+# A number this package PRODUCES and keeps: a count in a report, a rate in a
+# ledger, a gauge in a gate's output. Not a threshold (that is a decision), not
+# a test count (that is a run), and not a number quoted from somewhere else
+# (that is a citation, and `docs/CLAIMS.md` governs those).
+#
+# ## The three fields are prose, and the lint checks shape rather than truth
+#
+# `lint_metric_consumers` refuses an entry with a missing, empty, or
+# boilerplate field. It cannot tell a real consumer from a plausible sentence —
+# that is a review judgement — so the honest claim is that the lint makes the
+# OMISSION impossible, not that it makes the answer true. Stated here rather
+# than discovered by someone who trusted it further than it goes.
+
+metrics:
+  - id: attribution-shape-block-count
+    producer: src/scripts/check_no_external_sources.ts
+    consumer: >-
+      the `check_no_external_sources:shape-block` ratchet, and the maintainer
+      reading its 56-day expiry.
+    decision: >-
+      whether a change that adds attribution-shaped text may merge. The ratchet
+      fails the build when the count rises above its baseline.
+    absent: >-
+      new attribution-shaped text lands unnoticed and the debt grows silently;
+      the deny-list half would still pass, because it only catches names
+      somebody already wrote down.
+
+  - id: skip-paths-estate
+    producer: src/scripts/check_suppression_hygiene.ts
+    consumer: the shrink-only suppression ratchet, and a reviewer reading its per-entry ledger.
+    decision: >-
+      whether a new scan exemption may be added. The count may only fall, so an
+      addition must be paired with a removal or an argued exception.
+    absent: >-
+      exemptions accumulate one defensible entry at a time until the gate covers
+      nothing, which is the failure mode the per-entry ledger exists to make
+      visible.
+
+  - id: gate-scanned-count
+    producer: src/scripts/_lib/scan_scope.ts (`reportScanned`, emitted by each gate)
+    consumer: src/scripts/check_gate_coverage.ts, against the per-gate `min_scanned` floor.
+    decision: >-
+      whether a gate's scan scope is still alive. A count below its floor fails
+      the build.
+    absent: >-
+      a gate whose root moved reports success over an empty corpus — "a gate
+      that scans nothing exits green", which is the specific way these gates
+      fail rather than a general worry.
+
+  - id: unhardened-gate-population
+    producer: src/scripts/check_gate_coverage.ts (`list_unhardened_gates`)
+    consumer: the `gate-hardening:unhardened-scan-scope` ratchet.
+    decision: whether a newly added gate may merge without publishing a scan count.
+    absent: >-
+      new gates arrive without scope assertions and the hardening effort silently
+      stops spreading; the existing gates keep their floors, so nothing else
+      would report the regression.
+
+  - id: registered-non-adopters
+    producer: src/scripts/check_gate_coverage.ts
+    consumer: the `gate-self-test:registered-non-adopters` shrink-only ratchet.
+    decision: >-
+      whether a newly registered gate may merge without a `--self-test` or an
+      explicit exemption marker.
+    absent: >-
+      a registered gate can prove it READ something (its `scanned:` floor) and
+      never that the reading changes its verdict, which is the difference
+      between a gate and a log line.
+
+  - id: always-rule-budget-chars
+    producer: src/scripts/check_always_budget.ts
+    consumer: the always-loaded budget ratchet, and any author adding a kernel rule.
+    decision: >-
+      whether a rule may be added to, or grown inside, the always-loaded
+      prefix. The cap is a ratchet that may only move down.
+    absent: >-
+      the standing context grows one justified rule at a time and every session
+      on every host pays for it, with no single change large enough to argue
+      about.
+
+  - id: council-quorum-present
+    producer: src/scripts/council_cli.ts
+    consumer: the human or agent reading a council verdict, and the release gate that holds on INCONCLUSIVE.
+    decision: >-
+      whether a council answer counts as convergence or as a degraded single
+      seat. A verdict with one of two seats present is recorded as DEGRADED and
+      is not convergence.
+    absent: >-
+      a one-seat answer reads as a council decision, which is exactly the
+      over-claim the quorum line exists to prevent.

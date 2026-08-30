@@ -156,14 +156,47 @@ parents must restate the letter's meaning rather than carry it.
       changes what the system does, which is ADR-124's state-store test for
       Class C. So an accidental yes would reclassify the component, not merely
       widen a feature.
-- [ ] **0.3 Adopt consumer-before-producer for every metric.**
+- [x] **0.3 Adopt consumer-before-producer for every metric.**
       `from-skipped-parent`, and it is the rule this repository has already paid
       for not having: each metric declares its `consumer`, the `decision` it
       feeds, and what fails if it is missing. "A metric with no consumer is
       telemetry decoration and should not land." The tree's own worked example
       is the 0.27 % dispatch capture this roadmap cites in 1.1 — a collector
       whose consumer arrived after the data did.
-      verify: a metric added without those three fields fails the lint.
+      verify: DONE — `./scripts-run src/scripts/lint_metric_consumers --self-test` reports `7/7 case(s) behaved (6 rejecting, floor 7)`, and three of those six rejections are exactly one missing field apiece.
+
+      **The registry is `src/config/metric-registry.yml`, seeded with the seven
+      metrics this package actually produces** — the attribution-shape block
+      count, the `skip_paths` estate, the per-gate `scanned:` count, the
+      unhardened-gate population, the registered non-adopter count, the
+      always-rule budget, and council quorum. Each names its producer, so the
+      other three fields are checkable against something.
+
+      **The third field is the one that does the work, and the reason is worth
+      keeping.** `consumer` and `decision` are both answerable for a metric
+      nobody needs — "the report reads it", "it informs the roadmap" — and that
+      is precisely the number this step exists to catch. `absent` is
+      falsifiable: if the honest answer is *nothing fails*, the entry cannot be
+      written. The roadmap's own worked example is the 0.27 % dispatch capture
+      figure, a number that existed for months before anyone could say what
+      decision it fed.
+
+      **The lint refuses three shapes, not one.** Missing or empty; BOILERPLATE
+      (`TBD`, `unknown`, `see above` — placeholders that pass a length check and
+      answer nothing); and shorter than 20 characters. An empty registry is also
+      refused, because a gate that scans nothing exits green and this gate's
+      subject is numbers that exist without a purpose.
+
+      **Honest limit, in the gate's own docstring rather than only here: it
+      checks SHAPE, not truth.** It makes the OMISSION impossible; it cannot
+      tell a real consumer from a plausible sentence, because that is a review
+      judgement and no parser has it. Claiming otherwise would make the gate
+      look stronger than the thing it replaced.
+
+      Wired rather than orphaned: `task lint-metric-consumers`, in the `ci`
+      aggregate, with a `gate-coverage.yml` row carrying `min_scanned: 5` — a
+      floor rather than `> 0`, because the failure shape here is a truncated or
+      renamed registry where one surviving entry would still pass.
 - [x] **0.4 Settle estate placement.** See E1.
 
       **Closed 2026-08-29.** E1 resolved by AI council 2/2 to **(b) stay

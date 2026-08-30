@@ -48,8 +48,8 @@
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,
 # check_loss_class_declared, check_benchmark_report_fields, and
 # check_no_currency_in_cost_surfaces).
-# **77 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
+# **78 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~24 % of the population.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
@@ -356,6 +356,28 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_metric_consumers
+    argv: ["--quiet"]
+    min_scanned: 5
+    corpus: "entries in src/config/metric-registry.yml (7 at the time of writing). The floor is 5, not 1: the registry's failure shape is a scan that reads a truncated or renamed file, and a single surviving entry would still pass a `> 0` check while the other six went unchecked."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is
+      the `metrics:` list inside ONE tracked file, so a planted file lands in no
+      row; every violation it can have is a MODIFICATION — a field emptied, a
+      field replaced with boilerplate, an id duplicated. Same class as
+      `check_no_automerge_key` and `lint_memory_twin_parity`. Discrimination is
+      proven instead by the gate's own `--self-test`: 7 cases, 6 rejecting,
+      each driving the real CLI against a throwaway registry.
+    note: >
+      road-to-experience-loop-broadening step 0.3. Refuses a metric that does
+      not name its consumer, the decision it feeds, and what fails without it.
+      The third field is the falsifiable one: the first two are answerable for a
+      metric nobody needs, and if the honest answer to "what fails without it"
+      is nothing, the entry cannot be written. HONEST LIMIT, stated in the
+      gate's own docstring: it checks SHAPE, not truth — it makes the omission
+      impossible, not the answer correct, because telling a real consumer from a
+      plausible sentence is a review judgement no parser has.
   - id: lint_consolidation_lineage
     argv: []
     min_scanned: 5
