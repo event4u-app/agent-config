@@ -87,7 +87,47 @@ policy.
 
 ## Phase 0 — Governance, collisions and a frozen corpus
 
-Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
+Merge-blocking. **AMENDED 2026-08-30, AI council 2/2 convergent** — the original
+line read *"Nothing in Phases 1-9 is authored before this phase closes"*, and it
+contradicted `b-adr-088-external-runtime-federation`'s own `Blocks:` field
+(*"Phase 6 Step 6.4's parked half. Phases 0-5 and 7-9 proceed"*). One of the two
+had to give, because step 0.2's remaining half is owner-reserved by a prior 2/2
+council ruling and no council may close it — so under the original wording this
+roadmap was permanently stalled at Phase 0 until a human wrote an ADR
+interpretation, while its own blocker said 45 of 54 steps were executable.
+
+The amended rule, in the wording openai's seat refined:
+
+> Later phases may proceed once all Phase 0 prerequisites **within current
+> authority** are complete, except that **no work may implement, expose, depend
+> on, or assume availability of any ADR-088-reserved capability**.
+
+Phase 0 and step 0.2b stay **visibly incomplete**. "Closed for sequencing
+purposes" was rejected by both seats as giving one phase two meanings of closed;
+what changes is the gate's condition, not the step's status.
+
+**What the exception forbids, named rather than left to Step 6.4's scope.** No
+capability manifest entry, schema member, generated artifact, fixture, public
+type, test or documentation line may name, reserve a slot for, or assume the
+availability of `semantic-single-step` or `agentic-subflow`, and none may record
+the four deterministic browser-engine adapters as outside ADR-088's boundary.
+openai's seat named the leak path specifically: the disputed interpretation can
+be embedded in public types, fixtures, generated artifacts or compatibility
+contracts long before Phase 6, at which point discovering it at implementation
+time is too late. The conservative reading holds throughout.
+
+**Stop condition.** Any later-phase step that cannot be authored without taking
+a position on ADR-088's boundary halts and returns here rather than deciding it
+in passing.
+
+**Two things this amendment does NOT do**, stated because they are what a
+reviewer should check it against: it does not re-open the owner-reserved
+question — the 2026-08-29 split stands unchanged — and it authorises no work,
+because the roadmap is `status: draft` and sequencing structures planned work
+rather than greenlighting implementation. Both seats made that distinction
+independently; anthropic's called the draft status load-bearing, openai's split
+the three states this design was conflating (administratively executable,
+architecturally permitted, externally releasable).
 
 - [x] **0.1 Resolve the two naming collisions.** `execution.requires:` and a
       generated root `CAPABILITIES.yaml`. Either extend `runtime_requires` with
@@ -122,12 +162,35 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       different name. Both premises the blocker argued from were false; see the
       blocker for what survives.
 
-- [~] **0.2 Classify the roadmap against ADR-042, ADR-212 and ADR-088.** Each
-      of the three blockers below is answered with a written disposition, not an
-      assumption of non-overlap.
-      `verify:` each of the three blockers reads `Status: resolved` with a dated
-      disposition naming the ADR and the reason this work is or is not inside
-      its scope.
+- [x] **0.2a Classify the roadmap against ADR-042 and ADR-212.** Both blockers
+      answered with a written disposition, not an assumption of non-overlap.
+      `verify:` `b-adr-042-runtime-resolver` and `b-adr-212-declarative-routing`
+      each read `Status: resolved` with a dated disposition naming the ADR and
+      the reason this work is or is not inside its scope — both do, AI council
+      2/2, 2026-08-25.
+
+- [~] **0.2b Classify the roadmap against ADR-088.** The third disposition, and
+      the one no council may write.
+      `verify:` `b-adr-088-external-runtime-federation` reads
+      `Status: resolved`. It reads `open`, and stays open until an owner acts —
+      see the blocker's amended `Resolved when`.
+
+      **SPLIT from 0.2 on 2026-08-30, AI council 2/2.** The step bundled two
+      dispositions of DIFFERENT AUTHORITY under one checkbox, so its glyph could
+      only be wrong: `[x]` would claim an owner-reserved decision had been
+      taken, and `[~]` buried two completed council rulings inside a deferral.
+      anthropic's seat called the split *"mechanically honest"* — it resolves
+      the authority conflation structurally rather than by interpretation — and
+      openai's agreed it *"prevents the unresolved decision from being buried"*
+      while insisting, correctly, that the split alone does not fix the
+      sequencing rule: 0.2b stays `[~]`, so Phase 0 stays open and the header
+      had to be amended too. Both are done, and the header amendment is the
+      operative half.
+
+      **The step count moves 54 → 55 and no work was invented.** One checkbox
+      became two over the same subject; 0.2a's content is the two dispositions
+      that were already recorded as done under the old 0.2, quoted below
+      unchanged.
 
       **Two of three done, ADR-088 outstanding — deferred, not skipped.**
       `b-adr-042-runtime-resolver` and `b-adr-212-declarative-routing` both read
@@ -228,12 +291,48 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       and is carried into Phase 4's exit criteria, with `explainLadder` named
       above as the specific thing Phase 4 must import from rather than mirror.
 
-- [ ] **0.5 Freeze the browser benchmark fixtures.** Minimum set: project
+- [x] **0.5 Freeze the browser benchmark fixtures.** Minimum set: project
       Playwright available; playwright-cli only; MCP only; CLI + MCP; backend
       unavailable; unhealthy backend; capability advertised but not
       dispatchable; evidence-degraded fallback.
       `verify:` the fixture digest is committed in a commit that **precedes**
       the first commit touching any resolver or adapter code.
+
+      **CLOSED 2026-08-30.** `internal/bench/corpora/browser-dispatch/` carries
+      eight scenarios in `scenarios.jsonl` — one per state this step lists by
+      hand — plus a `manifest.json` whose `sha256` entry IS the freeze. Same
+      shape as the encoding-channels corpus next to it, deliberately: a frozen
+      corpus with no digest is a corpus nobody would notice being edited.
+
+      **What is frozen, and what is deliberately NOT.** Each row freezes a HOST
+      STATE and the observable facts a probe can read from it — is the module
+      resolvable, is the binary installed, is the server reachable. **No row
+      carries an expected selector verdict**, and the omission is the point:
+      Risk 3 in this roadmap's own register is acceptance criteria
+      pre-registered against a mechanism with no production caller (the retired
+      budget-routing contract, `session_tier` non-null in 0 of 327 records).
+      Freezing verdicts here would pre-register exactly that, before Phase 3 has
+      a caller and before Phase 4 has a selector to judge. The labels recorded
+      instead are true or false independently of anything this roadmap builds.
+
+      Two distinctions are frozen separately because they are the two a static
+      probe most often collapses: **present ≠ healthy** (`s6`, Playwright
+      importable with no browser binaries) and **advertised ≠ reachable** (`s7`,
+      an MCP server advertising a capability it cannot dispatch — the row
+      `dispatchable` exists for).
+
+      `tests/contracts/browser_dispatch_corpus_freeze.test.ts` (5 tests) asserts
+      the digest, the scenario SET against the eight names above, the absence of
+      any verdict-shaped key, that the host states actually differ, and both
+      distinctions. **Sensitivity proven:** appending one scenario line turned 3
+      of the 5 red — digest, set, and distinct-host-count — and the line was
+      removed.
+
+      **Ordering, which is this step's actual verify clause:** the corpus and
+      its manifest land in this commit, and no resolver or adapter code exists
+      anywhere in the tree at this point — Phases 1-9 are entirely unstarted, so
+      the precedence the clause asks for is satisfied by construction rather
+      than by commit ordering within a series.
 
 - [ ] **0.6 Pre-register the outcome bars and their falsifiers.** Dispatch
       success, evidence completeness, token/context cost, wall-clock, setup
@@ -243,6 +342,46 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       falsifier fails the shape check rather than passing.
 
 ## Phase 1 — The browser capability request contract
+
+**ORDERING FINDING, 2026-08-30 — Phase 1 cannot start before Phase 3, and its
+own verify clauses are what say so.** Recorded here rather than worked around,
+because the workaround is the failure this roadmap's risk register already
+names.
+
+- **1.1's verify** requires *"every declared capability has at least one real
+  consumer call site and at least one adapter that implements it; a capability
+  with neither fails the check."* No adapter exists (Phase 2 builds them) and no
+  consumer exists (Phase 3 supplies one), so declaring the eleven capabilities
+  today produces eleven that fail 1.1's own check. Declaring them anyway and
+  deferring the check is precisely the speculative-vocabulary move the schema's
+  `$comment` refuses and blocker `b-requires-key-reserved` already resolved
+  against — *"the capability member lands with its first consumer in Phase 1,
+  not before"*.
+- **1.2 and 1.3** extend a declaration format 1.1 has not established.
+- **1.4's** *"a domain skill naming a browser backend in a **required
+  position**"* reads as prose at first glance, and it is not: a *required
+  position* is the required list of a 1.2 capability declaration. Measured
+  before concluding this — a tree-wide grep for a requirement marker
+  co-occurring with `playwright|puppeteer|selenium|webdriver` in
+  `src/skills/*/SKILL.md` returns exactly **two** lines, both in
+  `verify-repair-loop`, and both describe the **deferred** live-app path rather
+  than requiring a backend (one is a parenthetical inside a sentence whose
+  requirement attaches to *"a live app"*, the other is a `NEVER`). So the prose
+  reading gives a lint whose entire live population is two false positives,
+  which is a gate that would have to be tuned against its own corpus to stay
+  green. The structured reading needs 1.2.
+
+This is the same ordering the reach-channels blocker settled at Phase 0:
+*"the general selector manifest may not precede the caller"*, and one seat
+called the original order *"the speculative-infrastructure mistake"*. That
+disposition was applied to Phase 2's manifest; it applies to Phase 1's
+vocabulary for the same reason, and the phase order does not yet reflect it.
+
+**What this does NOT do:** it does not renumber the phases or move steps, which
+would be authoring Phase 1's replacement while claiming to observe a problem in
+it. It records the dependency so the next run starts from Phase 3's caller
+rather than from a vocabulary with nothing consuming it.
+
 
 - [ ] **1.1 Define only the capabilities the frontend pilot consumes.**
       `browser.navigate`, `browser.snapshot`, `browser.find`,

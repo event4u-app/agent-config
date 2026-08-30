@@ -1,0 +1,21 @@
+{
+  "corpus_version": 1,
+  "note": "FROZEN INPUT corpus for the browser-dispatch benchmark (road-to-capability-native-execution step 0.5). Regenerate only via a deliberate source change; the sha256 entry below is the freeze, and this file is committed BEFORE the first commit touching any resolver or adapter code, which is what step 0.5's verify asserts. WHAT IS FROZEN AND WHAT IS DELIBERATELY NOT: each row freezes a HOST STATE and the observable facts a probe can read from it. No row carries an expected selector verdict, and that omission is the point. Risk 3 in this roadmap's own register names the measured failure it avoids -- acceptance criteria pre-registered against a mechanism with no production caller, session_tier non-null in 0 of 327 records, dead code still in the tree. Freezing verdicts here would pre-register exactly that, before Phase 3 has produced a caller and before Phase 4 has a selector to be judged. The labels are environment facts (is the module resolvable, is the binary installed, is the server reachable), which are true or false independently of anything this roadmap builds.",
+  "counts": {
+    "scenarios": 8,
+    "distinct_hosts": 5
+  },
+  "scenario_ids": [
+    "s1-project-playwright",
+    "s2-playwright-cli-only",
+    "s3-mcp-only",
+    "s4-cli-and-mcp",
+    "s5-backend-unavailable",
+    "s6-unhealthy-backend",
+    "s7-advertised-not-dispatchable",
+    "s8-evidence-degraded"
+  ],
+  "sha256": {
+    "scenarios.jsonl": "0aef00444a92a9a7eea43833bf943da2c1f1965c858ca6c25e5c785e2dc44087"
+  }
+}
