@@ -1152,12 +1152,65 @@ allowed to stop.**
 
 Only now, and **not** as a new task router.
 
-- [ ] 7.1 Close the internal topology vocabulary at `single_external`,
+- [x] 7.1 Close the internal topology vocabulary at `single_external`,
   `dual_independent`, `advisor_diversity`, `peer_review`, `judge_synthesis`,
   `targeted_cross_exam`, `full_debate`. `team` and `user_required` are excluded
   by construction — the ladder and the Hard Floor own them.
       verify: the type admits no eighth member without a schema change, and
       `team` / `user_required` are not representable
+      **DONE 2026-08-31 — closed in two independent layers, both sabotage-proven.**
+      The vocabulary is `src/scripts/ai_council/topology_vocabulary.ts:74-82`, a
+      frozen `as const` tuple of exactly the seven diagram names (`:62-68` of
+      this file, copied verbatim), with the closed union `CouncilTopology` at
+      `:85` and the declared arity at `:88`.
+      **Claim 1 — no eighth member.** `VocabularyIsClosed` (`:119-125`) asserts
+      the tuple's literal `length` against `COUNCIL_TOPOLOGY_ARITY`, so an
+      append reds `npm run typecheck`, which is a CI gate. The runtime twin is
+      `auditCouncilTopologyVocabulary` (`:140-167`) plus the module-load throw
+      at `:172-175`, which carries the same claim into `dist/`, where the types
+      are erased. Sabotage-verified: appending `'eighth_topology'` produced
+      `topology_vocabulary.ts(121,12): error TS2344: Type 'false' does not
+      satisfy the constraint 'true'.` (typecheck exit 2) and
+      `Error: council topology vocabulary is not closed: arity: expected
+      exactly 7 topologies, found 8.` (vitest exit 1). Removing it returned
+      both to exit 0.
+      **Claim 2 — `team` / `user_required` are not REPRESENTABLE, not merely
+      absent.** Omitting two strings is the weak form. The type layer instead
+      imports `LadderVerdict` (`src/scripts/_lib/judgment_ladder.ts:42-52`,
+      where `team` is rung 3) and `ImpactClass`
+      (`src/scripts/ai_council/necessity.ts:545-550`, where `user_required` is
+      locked to `user` routing at `:557-560`) as **types only**, and asserts
+      that no member of either vocabulary is a `CouncilTopology`. That also
+      excludes `script`, `subagent`, `council`, `ask`, `in-session` and the
+      other impact classes. A fourth assertion pins the two reserved literals
+      to those foreign unions, so an upstream rename reds this file instead of
+      orphaning the exclusion into a dead string. Sabotage-verified:
+      substituting `'team'` for `'full_debate'` (arity still 7, so assertion 1
+      stayed green) reddened assertions 2 and 5 —
+      `topology_vocabulary.ts(121,12)` and `(124,12): error TS2344: Type
+      'false' does not satisfy the constraint 'true'.` — and the runtime guard
+      threw ``reserved: `team` is owned by another layer``.
+      **The one-resolver invariant is intact, measured either side.**
+      `tests/scripts/one_resolver_invariant.test.ts` is 80/80 before and after.
+      The module cannot read as a second resolver on two grounds: it lives
+      under `ai_council/`, which `one_resolver_invariant.ts` skips as
+      `COUNCIL_INTERNAL_DIR`, and none of its exported names matches
+      `ROUTER_NAMES` (`one_resolver_invariant.ts:122-126`). It classifies
+      nothing — it is a name set and two predicates; the selector that consumes
+      it is 7.2 and is deliberately not built here.
+      **Not a JSON schema, and not the config contract — one line each, per the
+      step's own question.** `src/scripts/schemas/` carries no council schema
+      at all (`.ai-council.yml` is validated by the hand-rolled loader in
+      `ai_council/config.ts`), so there is no enum surface to extend; and
+      `docs/contracts/ai-council-config.md` documents what a USER may
+      configure, while step 12.4 requires consumer surfaces to name
+      capabilities and never topology names, so documenting it there would
+      invite the coupling 12.4 forbids.
+      **What is NOT claimed.** The compile-time layer is enforced by the
+      typecheck gate, not by a test that runs `tsc`;
+      `tests/scripts/ai_council/topology_vocabulary.test.ts` (20 tests) pins
+      the runtime layer and asserts the five type assertions are still present,
+      so deleting them is caught, but a vitest run never type-checks.
 - [ ] 7.2 The selector returns an explainable record: topology, council task
   class, impact class, reason codes, estimated calls, estimated cost, latency
   band, evidence/policy source, fallback.
