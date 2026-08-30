@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head bace3f6dad3e2fda0b558073c7161fac0a7bf3ad, review
-  artefacts excluded), scope hash `13e2ce514c46c81be8131a797725af40db9120a4b0da85c324750bb3b069f96c`
+- diff: `diff.patch` — the review scope (branch head 3a4815f6a926ae80d0c1611011f82039be87ab85, review
+  artefacts excluded), scope hash `db7d66ecded2127418a54101764ddf3f675179539b61427c01cf9f8b42cc4ca2`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -32,6 +32,7 @@ Changed files:
 - agents/roadmaps/archive/road-to-source-silence.md
 - agents/roadmaps/later/road-to-supervised-telemetry-collector.md
 - agents/roadmaps/road-to-supervised-telemetry-collector.md
+- docs/contracts/ci-cost-budget.md
 - docs/contracts/collector-operations.md
 - src/config/ci-local-parity.yml
 - src/scripts/_lib/capture_rate.ts
@@ -48,6 +49,7 @@ Changed files:
 - tests/scripts/collector_lifecycle.test.ts
 - tests/scripts/collector_store.test.ts
 - tests/scripts/collector_supervision.test.ts
+- tests/scripts/collector_vocabulary_parity.test.ts
 - vitest.config.ts
 
 ## Output format (contract §2.2)
@@ -70,7 +72,7 @@ Fill the findings table in `drain-supervised-telemetry.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 13e2ce514c46c81be8131a797725af40db9120a4b0da85c324750bb3b069f96c, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope db7d66ecded2127418a54101764ddf3f675179539b61427c01cf9f8b42cc4ca2, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
