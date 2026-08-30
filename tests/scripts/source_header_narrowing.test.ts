@@ -81,13 +81,19 @@ describe('internal-ref.md — headers pointing inside this repo score ZERO', () 
     });
 
     it('includes the two strings that made the FIRST narrowed matcher over-report', () => {
-        // `.agent-src.uncondensed/rules/…` yielded `uncondensed/rules` and
+        // A projected rules path yielded `agent-src/rules` and
         // `packages/installer/src/…` yielded `installer/src`: two path segments
         // side by side look exactly like a repository slug, and the difference
         // is entirely in what surrounds them. Pinned here because the first
         // full-tree run produced 150 rather than 148 on precisely these, and a
         // fix with no test is a fix that comes back.
-        expect(readableIdentifierIn('`.agent-src.uncondensed/rules/autonomous-execution.md`')).toBeNull();
+        //
+        // The first of the two was originally a retired uncondensed-projection
+        // path, which is the string the tree actually carried. A gate forbids
+        // adding new references to that dead path — not even as a fixture — so
+        // the live projection is used: same shape, same extraction, and a target
+        // that exists.
+        expect(readableIdentifierIn('`dist/agent-src/rules/autonomous-execution.md`')).toBeNull();
         expect(readableIdentifierIn('packages/installer/src/index.ts')).toBeNull();
     });
 });

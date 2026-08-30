@@ -1,9 +1,12 @@
 <!--
 `**Source:**` headers pointing INSIDE this repository. Every line MUST score
 zero: a repo path, a roadmap slug, an ADR id and a PR reference are all
-`owner/repo`-shaped and name nothing external. Two of these are the exact
-strings that made the first narrowed matcher over-report — a middle segment of
-a longer path reads like a slug unless you look at what surrounds it.
+`owner/repo`-shaped and name nothing external. Two of these are the shapes that made the first narrowed matcher over-report — a
+middle segment of a longer path reads like a slug unless you look at what
+surrounds it. (One of the two originally used a
+retired uncondensed-projection path; a gate forbids adding new references to it,
+so the live projection path is used instead — same shape, same extraction, and a
+target that exists.)
 -->
 
 > **Source:** agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md
@@ -12,7 +15,7 @@ a longer path reads like a slug unless you look at what surrounds it.
 
 > **Source:** road-to-product-adoption.md Phase 5 Step 1
 
-> **Source:** under inventory:** `.agent-src.uncondensed/rules/autonomous-execution.md` (192 lines)
+> **Source:** under inventory:** `dist/agent-src/rules/autonomous-execution.md` (192 lines)
 
 > **Source:** packages/installer/src/index.ts
 
