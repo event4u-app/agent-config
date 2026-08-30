@@ -90,6 +90,15 @@ export type StartRefusal =
     | 'not-enabled'
     | 'kill-switch-engaged'
     | 'lock-held'
+    // Carried through from `LockOutcome` rather than collapsed into
+    // `lock-held` (R2 round-5 finding 4). `acquireRuntimeLock` distinguishes
+    // these precisely so an `EACCES` or a full disk is not reported as
+    // contention — and `start()` was throwing that distinction away one layer
+    // up, routing an operator to the "Two collectors" row of the ops page for a
+    // permissions problem. That is the misclassification round-2 finding 11
+    // fixed, re-introduced by the caller.
+    | 'lock-unwritable'
+    | 'lock-contested-out'
     | 'store-unavailable';
 
 export interface StartOutcome {
@@ -325,15 +334,20 @@ export function requestStop(): void {
  * runtime without `node:sqlite` from holding a lock it can never use.
  */
 export function start(userRoot?: string): StartOutcome {
-    if (!isCollectorEnabled(userRoot)) {
-        return Object.freeze({ started: false, refusal: 'not-enabled' as const, mode: null });
-    }
+    // The KILL SWITCH is checked first, and the order is not cosmetic: since
+    // R2 round-5 finding 1 the switch also closes `isCollectorEnabled`, so
+    // checking enablement first would report every stopped collector as
+    // `not-enabled` and send an operator looking for a missing marker instead
+    // of the STOP file they created.
     if (killSwitchEngaged(userRoot)) {
         return Object.freeze({
             started: false,
             refusal: 'kill-switch-engaged' as const,
             mode: null,
         });
+    }
+    if (!isCollectorEnabled(userRoot)) {
+        return Object.freeze({ started: false, refusal: 'not-enabled' as const, mode: null });
     }
     if (!isStoreAvailable()) {
         return Object.freeze({
@@ -344,7 +358,18 @@ export function start(userRoot?: string): StartOutcome {
     }
     const lock = acquireRuntimeLock(userRoot);
     if (!lock.acquired) {
-        return Object.freeze({ started: false, refusal: 'lock-held' as const, mode: null });
+        const refusal: StartRefusal =
+            lock.reason === 'unwritable'
+                ? 'lock-unwritable'
+                : lock.reason === 'contested-out'
+                  ? 'lock-contested-out'
+                  : lock.reason === 'kill-switch-engaged'
+                    ? 'kill-switch-engaged'
+                    : 'lock-held';
+        if (lock.errno !== null) {
+            process.stderr.write(`collector: lock unwritable (${lock.errno})\n`);
+        }
+        return Object.freeze({ started: false, refusal, mode: null });
     }
     const probe = detectSupervisor();
     const mode = probe.tier === 'supported' ? ('supervised' as const) : ('degraded' as const);

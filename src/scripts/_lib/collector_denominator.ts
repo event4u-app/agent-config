@@ -87,6 +87,11 @@ import { isOptedOut, resolveCollectorStore, RETENTION_DAYS } from './collector_s
  */
 export const COLLECTOR_VERSION = '1.0.0';
 
+/** Monotonic per-process counters, declared above their first use — the same
+ * rule `UUID_RE` was moved for, applied to the other binding added in the same
+ * change (R2 round-5 finding 11). */
+let pruneSequence = 0;
+
 /** Append-only opportunity log. One short line per dispatch. */
 export const DENOMINATOR_FILE_NAME = 'opportunities.log';
 /** Where hook processes hand records to the daemon. */
@@ -127,7 +132,35 @@ export function enabledMarkerPath(userRoot?: string): string {
  */
 export function isCollectorEnabled(userRoot?: string): boolean {
     if (isOptedOut(userRoot)) return false;
+    // The KILL SWITCH stops collection, not merely the daemon (R2 round-5
+    // finding 1). Nothing on the dispatch path read it: with `STOP` in place the
+    // hook kept appending opportunities and kept spooling captures, and
+    // `drainOnce` replays that spool with each record's original `occurred_on`
+    // — so the window an operator believed was stopped was captured
+    // retroactively the moment the switch came off. That contradicted two
+    // shipped statements outright: the operator page's "Nothing is captured"
+    // and `DISPATCH_MODE_CONTRACT`'s "not a second, quieter writer".
+    //
+    // It belongs HERE rather than at the call site for the reason the
+    // self-observation exclusion moved here: a guard in the caller's control
+    // flow is one an alias or a refactor can remove without the module noticing.
+    if (fs.existsSync(killSwitchPathLocal(userRoot))) return false;
     return fs.existsSync(enabledMarkerPath(userRoot));
+}
+
+/**
+ * The kill-switch marker path.
+ *
+ * Duplicated from `collector_supervision.killSwitchPath` rather than imported,
+ * and the reason is the one thing this module may not do: importing that module
+ * would make `collector_denominator` — which the dispatch path loads on EVERY
+ * hook invocation — pull in the supervision surface, its heartbeat handling and
+ * its process signalling. The literal is one filename, the two are pinned equal
+ * by `tests/scripts/collector_self_observation.test.ts`, and a shared constants
+ * module for a single string is a third file to keep in sync.
+ */
+function killSwitchPathLocal(userRoot?: string): string {
+    return path.join(resolveCollectorStore(userRoot).root, 'STOP');
 }
 
 /** Create the opt-in marker. Idempotent. */
@@ -316,8 +349,17 @@ export function pruneOpportunitiesOlderThan(
     days: number = RETENTION_DAYS,
 ): number {
     const target = denominatorPath(userRoot);
+    // The on-disk size BEFORE the read, not after the filter (R2 round-5
+    // finding 2). Taking it afterwards made the lost-append window the WHOLE
+    // filter — a line appended between the read and the `statSync` was inside
+    // `consumed` (so excluded from the carried tail) and absent from `raw` (so
+    // excluded from the kept set), i.e. silently dropped — while the comment
+    // beneath claimed the window was microseconds. The direction is the
+    // dangerous one: an understated denominator biases the rate UPWARD.
+    let consumed = 0;
     let raw = '';
     try {
+        consumed = fs.statSync(target).size;
         raw = fs.readFileSync(target, 'utf8');
     } catch {
         return 0;
@@ -348,16 +390,10 @@ export function pruneOpportunitiesOlderThan(
     // read and the rename is still lost — the window is now microseconds rather
     // than the whole filter, and closing it completely needs a lock the
     // append path deliberately does not take.
-    // The ON-DISK length, not a re-encode of the decoded string (R2 round-4
-    // finding 7). `Buffer.byteLength(raw)` round-trips through U+FFFD for any
-    // invalid byte, so a log with one bad byte yielded a wrong offset and the
-    // carried tail was misaligned into the rewritten file.
-    let consumed = 0;
-    try {
-        consumed = fs.statSync(target).size;
-    } catch {
-        consumed = Buffer.byteLength(raw, 'utf8');
-    }
+    // `consumed` is the on-disk size taken BEFORE the read (see above): the
+    // stat, not `Buffer.byteLength(raw)`, because that re-encode round-trips
+    // through U+FFFD for any invalid byte and misaligns the carried tail
+    // (R2 round-4 finding 7).
     let tail = '';
     try {
         const fd = fs.openSync(target, 'r');
@@ -657,7 +693,6 @@ export function spoolRecord(record: unknown, userRoot?: string): boolean {
  * the rename creates a fresh `pending.jsonl`. No lock, no lost line.
  */
 let claimSequence = 0;
-let pruneSequence = 0;
 
 export function claimSpool(userRoot?: string, at: number = Date.now()): string | null {
     const pending = spoolPendingPath(userRoot);

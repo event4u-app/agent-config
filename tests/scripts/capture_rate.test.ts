@@ -23,6 +23,7 @@ import {
     ENABLEMENT_READING_NAMES,
     judgeCapture,
     judgeEnablement,
+    MAX_MACHINE_SHARE,
     MINIMUM_MACHINES,
     MINIMUM_SAMPLE,
     WILSON_Z,
@@ -145,7 +146,13 @@ describe('the Wilson interval', () => {
 });
 
 describe('the target decision rule', () => {
-    const eligible = { machines: MINIMUM_MACHINES, windowDays: WINDOW_DAYS };
+    // A reading that clears every sample constraint, including the
+    // concentration cap the first implementation dropped.
+    const eligible = {
+        machines: MINIMUM_MACHINES,
+        windowDays: WINDOW_DAYS,
+        maxMachineShare: 0.25,
+    };
 
     it('judges on the LOWER bound, not the point estimate', () => {
         // 1800/2000 is exactly 90 % as a point estimate, and its lower bound is
@@ -199,17 +206,59 @@ describe('the target decision rule', () => {
 
     it('enforces the machine floor and the window length independently', () => {
         expect(
-            judgeCapture({ numerator: 2000, denominator: 2000, machines: 4, windowDays: 21 })
+            judgeCapture({ ...eligible, numerator: 2000, denominator: 2000, machines: 4 })
                 .ineligibleBecause,
         ).toEqual(['too-few-machines']);
         expect(
-            judgeCapture({ numerator: 2000, denominator: 2000, machines: 5, windowDays: 20 })
+            judgeCapture({ ...eligible, numerator: 2000, denominator: 2000, windowDays: 20 })
                 .ineligibleBecause,
         ).toEqual(['window-too-short']);
     });
 
+    it('enforces the CONCENTRATION cap, and an unmeasured share is not a satisfied one', () => {
+        // R2 round-5 finding 7. `MINIMUM_SAMPLE` and `MINIMUM_MACHINES` are both
+        // satisfied by 1,996 dispatches from one machine and one apiece from
+        // four others — which is what 1.2 item 7's third constraint exists to
+        // refuse: "a rate measured on one machine measures that machine's
+        // supervisor, not the population's".
+        const over = judgeCapture({
+            ...eligible,
+            numerator: 1880,
+            denominator: 2000,
+            maxMachineShare: MAX_MACHINE_SHARE + 0.01,
+        });
+        expect(over.ineligibleBecause).toContain('machine-concentration');
+        expect(over.meetsTarget).toBeNull();
+
+        // Exactly AT the cap is inside it, like every other ceiling here.
+        expect(
+            judgeCapture({
+                ...eligible,
+                numerator: 1880,
+                denominator: 2000,
+                maxMachineShare: MAX_MACHINE_SHARE,
+            }).ineligibleBecause,
+        ).toEqual([]);
+
+        // Absent is INELIGIBLE, not a pass: the denominator artifact cannot
+        // supply this figure today, and treating "not measured" as "fine" is
+        // the same failure `judgeEnablement` was corrected for.
+        for (const share of [undefined, null, Number.NaN]) {
+            const verdict = judgeCapture({
+                ...eligible,
+                numerator: 1880,
+                denominator: 2000,
+                maxMachineShare: share as number | null | undefined,
+            });
+            expect(verdict.ineligibleBecause, String(share)).toContain('machine-concentration');
+        }
+    });
+
+    // removing_this_constraint_reds_it: delete the `machine-concentration`
+    // branch from `judgeCapture` — every case above becomes eligible.
+
     it('reports a null rate on an empty denominator rather than dividing', () => {
-        const verdict = judgeCapture({ numerator: 0, denominator: 0, machines: 0, windowDays: 0 });
+        const verdict = judgeCapture({ numerator: 0, denominator: 0, machines: 0, windowDays: 0, maxMachineShare: 0 });
         expect(verdict.rate).toBeNull();
         expect(verdict.meetsTarget).toBeNull();
     });

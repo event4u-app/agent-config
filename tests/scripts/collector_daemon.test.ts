@@ -46,6 +46,7 @@ import {
 } from '../../src/scripts/_lib/collector_store.js';
 import {
     acquireRuntimeLock,
+    clearKillSwitch,
     pullKillSwitch,
     readHeartbeat,
     RESOURCE_BUDGETS,
@@ -356,6 +357,27 @@ describe('4.1 — the denominator is independent of the daemon', () => {
     // return 0 without rewriting — the log keeps growing inside the directory
     // the disk budget ceilings, and a breach STOPS the collector.
 
+    it('takes the prune offset BEFORE the read, so the lost window is not the whole filter', () => {
+        // R2 round-5 finding 2. `consumed` used to be `statSync`'d AFTER the
+        // filter ran, so a line appended between the read and the stat was
+        // inside `consumed` (excluded from the carried tail) and absent from
+        // `raw` (excluded from the kept set) — dropped, silently, over a window
+        // that was the whole filter rather than the microseconds the comment
+        // claimed. The direction is the dangerous one: an understated
+        // denominator biases the rate upward.
+        enableCollector(userRoot);
+        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
+        const sizeBefore = fs.statSync(denominatorPath(userRoot)).size;
+        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'), SELF_OK);
+        expect(fs.statSync(denominatorPath(userRoot)).size).toBeGreaterThan(sizeBefore);
+
+        pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
+        const after = readOpportunities(userRoot);
+        expect(after.total).toBe(1);
+        expect(after.byEvent.stop).toBe(1);
+    });
+
     it('CARRIES concurrently appended lines across a prune', () => {
         // R2 round-3 finding 5. The prune was read-filter-write-tmp-rename over
         // a file other processes append to, so anything written into the old
@@ -472,6 +494,29 @@ describe('4.1 — the denominator is independent of the daemon', () => {
     // removing_this_constraint_reds_it: make `pruneEpisodeCounters` return 0
     // without unlinking — the stale counter survives and the directory grows
     // with every session forever.
+
+    it('THE KILL SWITCH STOPS COLLECTION, not merely the daemon', () => {
+        // R2 round-5 finding 1, and it is the one all four whole-branch rounds
+        // walked past. Nothing on the dispatch path read the switch, so with
+        // STOP in place the hook kept appending opportunities and kept spooling
+        // captures — and `drainOnce` replays that spool with each record's
+        // ORIGINAL `occurred_on`, so the window an operator believed was stopped
+        // was captured retroactively the moment the switch came off.
+        enableCollector(userRoot);
+        expect(recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
+
+        pullKillSwitch(userRoot);
+        expect(recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
+        expect(recordCapture('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
+        expect(readOpportunities(userRoot).total, 'nothing was added').toBe(1);
+
+        clearKillSwitch(userRoot);
+        expect(recordOpportunity('stop', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
+    });
+
+    // removing_this_constraint_reds_it: drop the `killSwitchPathLocal` check
+    // from `isCollectorEnabled` — both writers accept while the switch is
+    // engaged, and the operator page's "Nothing is captured" becomes false.
 
     it('BOUNDS the spool, because the only thing that drains it may not be running', () => {
         // R2 round-4 finding 5. "Collector enabled, daemon not running" is a

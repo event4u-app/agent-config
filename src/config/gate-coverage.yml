@@ -1154,7 +1154,7 @@ gates:
   - id: check_static_parity
     argv: ["--quiet"]
     min_scanned: 20
-    corpus: "test files that spell `dispatch_hook`, discovered by grep over tests/ and src/ (31 at the time of writing). The floor is 20, not 1: this gate's silent-failure shape is a discovery COLLAPSE — a grep that stops matching would run two suites of one file each and report them identical, which is the 'gate that scans nothing exits green' case in its most convincing disguise."
+    corpus: "test files that spell the dispatcher module name, discovered by grep over tests/ and src/. The count is deliberately not written here — it moves with the suite, and four different figures for it appeared across the rounds of this change (R2 round-5 finding 12). The floor is 20, not 1: this gate's silent-failure shape is a discovery COLLAPSE — a grep that stops matching would run two suites of one file each and report them identical, which is the 'gate that scans nothing exits green' case in its most convincing disguise."
     status: enforced
     no_canary_reason: >-
       No plantable violation: the gate's finding is a DIVERGENCE between two

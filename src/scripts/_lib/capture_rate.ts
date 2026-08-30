@@ -59,6 +59,17 @@ export const CAPTURE_TARGET = 0.9;
 /** Minimum sample from 1.2 items 7–8. Below this the reading is not eligible at all. */
 export const MINIMUM_SAMPLE = 2_000;
 export const MINIMUM_MACHINES = 5;
+
+/**
+ * No single machine may contribute more than this share of the denominator.
+ *
+ * The third sample constraint from 1.2 item 7, dropped by the first
+ * implementation (R2 round-5 finding 7) with its reason attached: *"a rate
+ * measured on one machine measures that machine's supervisor, not the
+ * population's"*. `MINIMUM_SAMPLE` and `MINIMUM_MACHINES` are both satisfiable
+ * by 1,996 dispatches from one machine and one apiece from four others.
+ */
+export const MAX_MACHINE_SHARE = 0.4;
 export const WINDOW_DAYS = 21;
 
 export interface Interval {
@@ -103,8 +114,33 @@ export interface CaptureReading {
     readonly numerator: number;
     /** Dispatch opportunities recorded by the independent writer. */
     readonly denominator: number;
-    /** Distinct machines contributing to the denominator. */
+    /**
+     * Distinct machines contributing to the denominator.
+     *
+     * **NOT derivable from the denominator artifact as it ships**, and saying so
+     * is the honest form (R2 round-5 finding 8). `recordOpportunity` writes
+     * `date\tevent\tplatform` with no machine identifier, so the only place a
+     * machine id exists is the STORE — the numerator. Counting the floor there
+     * biases it in the same direction as everything else this module warns
+     * about: a machine that captured nothing contributes zero and the
+     * population looks smaller than it is.
+     *
+     * The field is therefore an INPUT the caller must supply from somewhere
+     * that knows, and Phase 6 is where that caller is built. Closing it means
+     * either a machine column on the opportunity line — which is a schema
+     * change and a privacy question, since a machine id beside a date is the
+     * fingerprint `FIELD_PURPOSE` argues against — or an out-of-band count.
+     * Neither is decided here.
+     */
     readonly machines: number;
+    /**
+     * The largest single machine's share of the denominator, 0..1.
+     *
+     * Same provenance problem as `machines`, same honest treatment: supplied by
+     * the caller, `null` when unknown. `null` is INELIGIBLE rather than
+     * passing — an unmeasured concentration is not a satisfied one.
+     */
+    readonly maxMachineShare?: number | null;
     /** Whole days elapsed in the observation window. */
     readonly windowDays: number;
 }
@@ -114,6 +150,8 @@ export type EligibilityFailure =
     | 'sample-too-small'
     | 'too-few-machines'
     | 'numerator-exceeds-denominator'
+    /** One machine contributes more than {@link MAX_MACHINE_SHARE} of the denominator. */
+    | 'machine-concentration'
     /**
      * A count that is negative, fractional, or not a number at all.
      *
@@ -177,6 +215,10 @@ export function judgeCapture(
     }
     if (!Number.isFinite(reading.machines) || reading.machines < MINIMUM_MACHINES) {
         failures.push('too-few-machines');
+    }
+    const share = reading.maxMachineShare;
+    if (share === undefined || share === null || !Number.isFinite(share) || share > MAX_MACHINE_SHARE) {
+        failures.push('machine-concentration');
     }
 
     const uncomputable =

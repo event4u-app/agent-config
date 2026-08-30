@@ -273,8 +273,20 @@ export type LivenessState = 'absent' | 'stale' | 'running';
  * wrong. A silently dead collector making incomplete telemetry look healthy is
  * the failure the supervisor blocker named as decisive.
  */
-export function livenessFromBeat(beat: Heartbeat | null, now: number = Date.now()): LivenessState {
+export function livenessFromBeat(
+    beat: Heartbeat | null,
+    now: number = Date.now(),
+    alive: (pid: number) => boolean = pidIsAlive,
+): LivenessState {
     if (beat === null) return 'absent';
+    // The PID first, then the clock (R2 round-5 finding 5). A purely time-based
+    // reading reported `running` for up to 90 s after any unclean death —
+    // including the `SIGKILL` escalation, which by construction cannot run the
+    // `finally` that removes the beat — so `collector status` told an operator a
+    // dead collector was alive during exactly the window they would be looking.
+    // A pid that is gone is decisive; a pid that exists is not (it may be
+    // recycled), so the staleness test still runs after it.
+    if (!alive(beat.pid)) return 'stale';
     return now - beat.last_heartbeat > HEARTBEAT_STALE_AFTER_MS ? 'stale' : 'running';
 }
 
@@ -567,7 +579,16 @@ export function terminateCollector(
         return Object.freeze({ stopped: true, via: 'already-absent' as const, pid: null });
     }
     const now = options.now ?? Date.now;
-    if (options.signalStale !== true && livenessFromBeat(beat, now()) === 'stale') {
+    const aliveProbe = options.alive ?? pidIsAlive;
+    // GONE beats STALE. A pid that is not alive needs no signal and carries no
+    // recycle risk, so it is `already-absent` — the staleness refusal is for a
+    // pid that EXISTS and may no longer be ours. Ordering matters now that
+    // `livenessFromBeat` consults the pid: without this, a dead collector's
+    // surviving heartbeat reported `stale-refused` instead of success.
+    if (!aliveProbe(beat.pid)) {
+        return Object.freeze({ stopped: true, via: 'already-absent' as const, pid: beat.pid });
+    }
+    if (options.signalStale !== true && livenessFromBeat(beat, now(), aliveProbe) === 'stale') {
         // A SIGKILL aimed at a recycled pid is the worst thing this module can
         // do, and `pidIsAlive` cannot tell the original owner from its
         // successor. The module already owns the vocabulary for this decision;
@@ -577,16 +598,13 @@ export function terminateCollector(
     const graceMs = options.graceMs ?? 5_000;
     const pollMs = options.pollMs ?? 100;
     const kill = options.kill ?? ((pid, signal) => process.kill(pid, signal));
-    const alive = options.alive ?? pidIsAlive;
+    const alive = aliveProbe;
     const sleep =
         options.sleep ??
         ((ms: number) => {
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
         });
 
-    if (!alive(beat.pid)) {
-        return Object.freeze({ stopped: true, via: 'already-absent' as const, pid: beat.pid });
-    }
     try {
         kill(beat.pid, 'SIGTERM');
     } catch {
@@ -632,6 +650,14 @@ export type DispatchMode = 'static' | 'daemon';
  * one dispatch twice — and version skew, where two checkouts at different
  * revisions disagree about the schema. Neither is worth solving for an
  * instrument whose entire purpose is an accurate ratio.
+ *
+ * NO PRODUCTION CALLER, named rather than left for a reviewer to find (R2
+ * round-5 finding 9): this constant and {@link resolveDispatchMode} are read by
+ * tests and by nothing else. `collector_daemon status` prints enablement,
+ * liveness and the supervisor mode, never the dispatch mode. The exclusion
+ * itself is enforced — `acquireRuntimeLock` is what makes it true — so what is
+ * missing is the REPORTING view, not the mechanism. Same class as
+ * `capture_rate`'s note, and it is stated here for the same reason.
  *
  * What "static mode" means concretely: **there is no collector process and
  * nothing is captured.** It is not a second, quieter writer. That is what makes
@@ -742,7 +768,13 @@ export function detectSupervisor(environment: ProbeEnvironment = {}): Supervisor
         // or without a writable parent, is not a row this package can claim.
         const home = env.HOME ?? os.homedir();
         const agents = path.join(home, 'Library', 'LaunchAgents');
-        if (exists(agents) || exists(path.join(home, 'Library'))) {
+        // The AGENT DIRECTORY, not `~/Library` (R2 round-5 finding 3).
+        // `~/Library` exists on every macOS account, so accepting it made the
+        // "probed, never assumed" fix an assumption again on the one row it was
+        // written for — and `start()` maps `supported` to `mode: 'supervised'`,
+        // so a hand-started daemon wrote `supervised` into the operator-facing
+        // heartbeat while nothing supervised it.
+        if (exists(agents)) {
             return Object.freeze({
                 kind: 'launchd-user' as const,
                 tier: 'supported' as const,
@@ -753,8 +785,8 @@ export function detectSupervisor(environment: ProbeEnvironment = {}): Supervisor
             kind: 'none' as const,
             tier: 'static-fallback' as const,
             reason:
-                `darwin without a per-user agent directory (${agents} absent, and no ~/Library `
-                + 'to create it under) — a sandboxed or minimal home, not a supervisable row',
+                `darwin without a per-user agent directory (${agents} absent) — nothing has `
+                + 'registered a launchd agent here, so this is the static-fallback row',
         });
     }
     if (platform === 'linux') {

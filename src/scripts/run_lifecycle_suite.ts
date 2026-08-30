@@ -114,10 +114,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const report = path.join(os.tmpdir(), `lifecycle-report-${process.pid}.json`);
     fs.rmSync(report, { force: true });
 
+    // Clear the parity gate's alias switch, the same guard its sibling spawner
+    // takes (R2 round-5 finding 10). An ambient `AGENT_CONFIG_COLLECTOR_ABSENT`
+    // stubs the collector away for this run too, so `enableCollector` becomes a
+    // no-op and every daemon refuses with `not-enabled`. It fails loudly rather
+    // than silently — but the asymmetry between two spawners in one change is
+    // the shape the earlier finding was about.
+    const env = { ...process.env };
+    delete env.AGENT_CONFIG_COLLECTOR_ABSENT;
+
     const result = spawnSync(
         path.join(REPO, 'node_modules', '.bin', 'vitest'),
         ['run', SUITE_REL, '--reporter=json', `--outputFile=${report}`],
-        { cwd: REPO, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+        { cwd: REPO, encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] },
     );
 
     if (!fs.existsSync(report)) {
