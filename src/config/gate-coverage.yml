@@ -42,7 +42,7 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
 # ----------------------------------------------------------
-# 304 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 306 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, which now include the four gates the
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,
@@ -51,6 +51,13 @@
 # **78 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.
+#
+# RECOUNTED ON A MERGE, 2026-08-30 — the fifth time, and the same shape as the
+# 2026-08-26 blocks below: two sides each correct for their own tree (~24 % from
+# the branch, ~25 % from main) meeting in one number. Recomputed rather than
+# picked: `count_gate_scripts()` returns **306** and `grep -c '^  - id:'`
+# returns **76** on the merged tree, so 76/306 = 24.8 % and main's side is the
+# right one — arrived at by arithmetic, not by taking theirs.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -356,6 +363,28 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_metric_consumers
+    argv: ["--quiet"]
+    min_scanned: 5
+    corpus: "entries in src/config/metric-registry.yml (7 at the time of writing). The floor is 5, not 1: the registry's failure shape is a scan that reads a truncated or renamed file, and a single surviving entry would still pass a `> 0` check while the other six went unchecked."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is
+      the `metrics:` list inside ONE tracked file, so a planted file lands in no
+      row; every violation it can have is a MODIFICATION — a field emptied, a
+      field replaced with boilerplate, an id duplicated. Same class as
+      `check_no_automerge_key` and `lint_memory_twin_parity`. Discrimination is
+      proven instead by the gate's own `--self-test`: 7 cases, 6 rejecting,
+      each driving the real CLI against a throwaway registry.
+    note: >
+      road-to-experience-loop-broadening step 0.3. Refuses a metric that does
+      not name its consumer, the decision it feeds, and what fails without it.
+      The third field is the falsifiable one: the first two are answerable for a
+      metric nobody needs, and if the honest answer to "what fails without it"
+      is nothing, the entry cannot be written. HONEST LIMIT, stated in the
+      gate's own docstring: it checks SHAPE, not truth — it makes the omission
+      impossible, not the answer correct, because telling a real consumer from a
+      plausible sentence is a review judgement no parser has.
   - id: lint_consolidation_lineage
     argv: []
     min_scanned: 0
