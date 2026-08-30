@@ -405,7 +405,22 @@ once.
 
 ## Phase 2 — Trigger corpus: census first, coverage second
 
-- [ ] **2.1 Run a census before naming a target.**
+> **PHASE TARGET, set 2026-08-30 by the 2.1 census and stated here so no later
+> step has to infer it: the denominator is 287, not 299.** Twelve skills are
+> non-self-activating — their own `description` names a dispatcher that exists
+> in this tree — so no prompt reaches them and a corpus for one raises a ratio
+> without testing a routing decision. Coverage against the partitioned
+> denominator was **91 / 287 = 31.7 %** when this phase opened and is
+> **97 / 287 = 33.8 %** after 2.4. The census, its per-skill exclusion criterion
+> and the wave order are in
+> `agents/evidence/analysis/trigger-corpus-census-2026-08-30.md`.
+>
+> **No percentage target is set, deliberately.** K12 killed `100 % trigger
+> coverage as a target` because a ratio is reachable by authoring
+> low-discriminative fixtures. What replaces it is a queue with a criterion:
+> wave 1 first, ordered by recorded confusion edges.
+
+- [x] **2.1 Run a census before naming a target.**
       `corrected-from-reproduction` **and** `from-skipped-parent`, and this
       reverses the master's phase title. The master titled its phase
       "Trigger corpus 94 → 299". The skipped parent explicitly **killed** that
@@ -423,24 +438,214 @@ once.
       routable and non-self-activating before choosing any denominator.
       verify: the census file names the exclusion criterion per non-routable
       skill, and the phase target cites a partitioned number, not 299.
-- [ ] **2.2 Prioritise waves, do not sweep.** Order corpus work by defect
+
+      **CLOSED 2026-08-30.**
+      `agents/evidence/analysis/trigger-corpus-census-2026-08-30.md` § 2 carries
+      the partition. Both conjuncts, separately:
+
+      1. *"names the exclusion criterion per non-routable skill"* — **met.** The
+         criterion is stated once, mechanically (`\b(?:[Dd]ispatched by|Called
+         by)\b` over the `description:` line — the only field a host activation
+         surface reads), and then applied to a table of **12** skills, each row
+         carrying that skill's own declaring clause verbatim **and** the
+         dispatcher's `file:line` in this tree. A criterion whose dispatcher
+         could not be found would have been a claim, not an exclusion; all 12
+         resolve.
+      2. *"the phase target cites a partitioned number, not 299"* — **met.** The
+         phase target above reads **287**.
+
+      **All three of the roadmap's own figures reproduce exactly** — 94 corpus
+      files, 299 skill directories, 205 allowlist entries — which is why the
+      partition is stated as a correction to the denominator rather than to the
+      counts.
+
+      **The criterion errs in the direction that HURTS the number, and that is
+      the load-bearing design choice.** Excluding a skill raises the coverage
+      ratio, so a loose criterion is self-serving. This one excludes only skills
+      that declare a dispatcher themselves, which leaves four plausibly
+      non-routable skills — `judge-injection-defense`, `judge-synthesis`,
+      `overbuild-review-lens`, `ui-apply-generic` — INSIDE the denominator
+      because their descriptions read as task surfaces. Recorded in the census
+      rather than quietly fixed.
+
+      **The partition barely moves the ratio (31.4 % → 31.7 %), and that is
+      reported rather than buried.** What it buys is not a better number, it is
+      a denominator that cannot be gamed by authoring fixtures for skills no
+      prompt reaches — the K12 / Risk-4 failure this phase exists to avoid.
+- [x] **2.2 Prioritise waves, do not sweep.** Order corpus work by defect
       evidence, not alphabetically.
       verify: the wave order is committed with a stated criterion per wave.
-- [ ] **2.3 Author a four-class corpus, not two.** `from-skipped-parent`: the
+
+      **CLOSED 2026-08-30**, same census file, § 3.
+
+      **The defect evidence is deterministic and was already in the tree,
+      unread.** When skill A's corpus holds a `trigger: false` case whose note
+      names skill B as the correct destination, the corpus has RECORDED that A
+      and B are confusable. If B carries no corpus, nothing tests that B does
+      not over-trigger on A's vocabulary: the confusion is documented on one
+      side and untested on the other. Measured at the start of this run:
+      **170 edges naming 90 distinct skills, 42 of them with no corpus** — 63
+      edges pointing at an untested destination.
+
+      Three waves, one criterion each, and the partition is exhaustive
+      (`100 + 34 + 156 + 9 = 299`) so "wave 2 is next" means something:
+      wave 1 = routable · no corpus · named by ≥1 recorded edge, ordered by
+      inbound count; wave 2 = routable · no corpus · **no** recorded edge;
+      wave 3 = the 9 non-self-activating skills with no corpus, which are not
+      corpus work at all and are named so they cannot be mistaken for a wave-2
+      backlog.
+
+      **Why this order.** Wave 2 is 4.6× wave 1 and carries no evidence that any
+      of it is wrong; sweeping it first is exactly the vanity shape K12 killed.
+
+      **Honest limit, recorded in the census: the signal is a floor, not a
+      census of defects.** It sees only confusions somebody already wrote into a
+      corpus, so a skill nobody authored a near-miss for scores zero — absence
+      of evidence, not evidence of absence. The one signal that would measure
+      real routing accuracy, `skill_trigger_eval`, routes through a model
+      backend and is spend-bearing, so it stays out until 0.5's budget invariant
+      is call-site proven.
+- [x] **2.3 Author a four-class corpus, not two.** `from-skipped-parent`: the
       master's recipe is positives plus near-misses. Both parents required
       success exemplars, failures, near-misses **and** counterexamples, with
       selection seeing the full frozen corpus — the mechanism against
       survivorship bias in the corpus itself.
-      verify: every corpus file carries all four classes, and a fixture proves
-      selection reads the whole frozen set.
-- [ ] **2.4 The grandfather list may only shrink.**
+      ~~verify: every corpus file carries all four classes, and a fixture proves
+      selection reads the whole frozen set.~~ **RE-SCOPED 2026-08-30 — the
+      original verify is struck through rather than deleted, because the
+      re-scope is the decision and a silently edited clause would hide it.**
+
+      **RE-SCOPED by AI council 2026-08-30, anthropic + openai, 2/2 convergent
+      on option (d): re-scope explicitly and record the rewrite; do NOT declare
+      the original conjunction met.** Both seats stated independently that
+      closing the original step "on its first conjunct" without a recorded
+      rewrite would be illegitimate. This entry is that record.
+
+      **What carried the verdict: `failure` is an ORTHOGONAL axis.** `exemplar`
+      / `near-miss` / `counterexample` describe INTENDED routing; `failure`
+      describes OBSERVED behaviour, and one case can be both — so a single
+      mutually-exclusive class field cannot represent them and loses
+      information by trying. Worse, a corpus file is a regression LOCK: a
+      known-wrong case placed in one is red by construction, and a rule
+      requiring one per file would reward deliberately broken routing. Both
+      seats reached this independently; openai's seat added the falsifier —
+      *"failure coverage should apply across the frozen evaluation set wherever
+      genuine defects exist; otherwise the rule rewards deliberately broken
+      routing and distorts quality metrics."*
+
+      **Option (a), literal and retroactive, was rejected for a stated reason,
+      not a preference:** it contradicts the gate's own
+      `lint_skill_trigger_corpus.ts:20-26`, which says verbatim that the
+      near-miss / unrelated-negative split *"is NOT machine-decidable and this
+      gate does not pretend otherwise"* — and 152 of the 431 existing negatives
+      carry no note to classify from, so retroactive classification would be
+      invention. Option (c), a roadmap-local convention with no gate, was
+      rejected as an invisible, unenforceable rule. Anthropic's seat proposed a
+      `known-failures.json` with a "schema TBD Phase 4"; openai's seat rejected
+      it in the same round as *"another vacuous mechanism"*, and that rejection
+      is adopted — nothing is created for the failure axis here.
+
+      **The re-scoped verify, in three parts:**
+
+      1. **THREE semantic classes, declared, enforced.** Closed vocabulary
+         `exemplar | near-miss | counterexample` on every case, with polarity
+         part of the vocabulary (`exemplar` ⇒ `trigger: true`; the other two ⇒
+         `trigger: false`), and all three present in the file.
+         **MET** — `src/scripts/lint_skill_trigger_corpus.ts` now enforces it
+         with five findings (`class-missing`, `class-vocab`, `class-polarity`,
+         `class-coverage`, `class-shape`). This does not contradict `:20-26`:
+         nothing DETECTS the class, the author declares it and the gate checks
+         the declaration — the mechanism the same file already uses for German
+         at `:28-37`, for the same stated reason.
+      2. **Forward-only, migrate-by-touch.** The rule binds on a file the diff
+         adds or changes, the existing 94 are grandfathered by not being
+         touched. **MET** — the `:39-46` language precedent, reused verbatim
+         rather than reinvented, so no 94-entry suppression list is created.
+         Both seats asked for named grandfathering; the touch rule is that,
+         keyed on the pathname git reports.
+      3. **The selection fixture is VACUOUS today, and is recorded as vacuous
+         rather than as met.** *"a fixture proves selection reads the whole
+         frozen set"* quantifies over a selection stage that does not exist —
+         Phase 4 builds the cascade; there is no selection stage, no frozen-set
+         reader and no candidate in this tree. A fixture written today would
+         scan nothing and exit green, which is worse than no fixture because it
+         would look like coverage. **The obligation is carried into Phase 4's
+         exit criteria**, where the set is non-empty. This is the accounting
+         step 1.4 already used on this roadmap for its own third conjunct, and
+         both seats named it independently.
+
+      **Proof the enforcement is reachable and both-directional:**
+      `./scripts-run src/scripts/lint_skill_trigger_corpus --self-test` →
+      15/15 cases, 10 rejecting. It includes BOTH polarity directions
+      (`near-miss` on a positive, `exemplar` on a negative) and a pair proving
+      the forward flag is what turns the rule on — an unclassified corpus is
+      accepted untouched and rejected touched — so a rule that fired
+      unconditionally would fail here rather than reach a reviewer.
+      `tests/scripts/lint_skill_trigger_corpus.test.ts` pins the vocabulary at
+      exactly three members with their polarities, so re-adding `failure` to
+      this surface reds a test that names the decision.
+- [x] **2.4 The grandfather list may only shrink.**
       verify: `./scripts-run src/scripts/check_trigger_eval_presence` green and
       the grandfather entry count strictly below 205.
-- [ ] **2.5 Freeze the holdout partition here, before any proposer exists.** If
+
+      **CLOSED 2026-08-30. Both conjuncts measured:**
+      `check_trigger_eval_presence` → `✅ 100/299 skills carry
+      evals/triggers.json (199 grandfathered, shrink-only)`, exit 0; and
+      `jq '.skills | length' src/scripts/trigger_eval_grandfather.json` → **199**,
+      strictly below 205. `check_trigger_evals --today 2026-08-30` → `✅ 100
+      trigger set(s) fresh + valid`, and `lint_skill_trigger_corpus` → 100 files
+      hold the discipline.
+
+      **The six were chosen by 2.2's wave order, not picked.** In inbound-edge
+      order: `security-audit` (5 — the highest in the whole corpus),
+      `threat-modeling` (3), `markitdown` (3), `prompt-engineering-patterns`
+      (3), `logging-monitoring` (2), `incident-commander` (2). Each new corpus
+      uses its own recorded inbound edges as its near-miss cases, so the
+      neighbour that reported the confusion is the neighbour the new corpus is
+      tested against — which is what makes this a defect fix rather than a
+      coverage bump.
+
+      All six carry the 2.3 classes (they are diff-added, so the forward-only
+      rule binds on them and they could not have been merged without it), a
+      German exemplar declaring `"language": "de"`, and at least one
+      counterexample guarding over-triggering on unrelated input.
+
+      **What this does NOT establish:** that the six route correctly. The
+      corpora are expectations; measuring the router against them is
+      `skill_trigger_eval`, which is spend-bearing and gated behind 0.5.
+- [x] **2.5 Freeze the holdout partition here, before any proposer exists.** If
       the pipeline that later optimises against the corpus also grew it, the
       holdout is compromised before it is used.
       verify: the partition is content-hash pinned in a committed file whose
       hash predates the first Phase 5 commit.
+
+      **CLOSED 2026-08-30.**
+      `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` pins all
+      **100** corpus files by `sha256`, 18 holdout / 82 train, under one
+      set hash `7e091dfc0b1e44aa81268dd69a4d0ab07d1ee1316d6b3120d7ccec62f9aa5da8`.
+
+      **The ordering half of the verify is a property of the history, not a
+      claim in the file:** it is committed in Phase 2 and Phase 5 has no commits,
+      so "predates the first Phase 5 commit" is checkable with `git log` rather
+      than asserted.
+
+      **The partition rule is deterministic and name-derived** —
+      `holdout iff sha256(<skill-dir-name>).digest()[0] < 51` — so the file is a
+      WITNESS, not the authority: anyone can recompute the split from the skill
+      names alone, and if the two ever disagree the rule wins and the
+      disagreement is the finding. A partition somebody could have *chosen* is
+      one somebody could have chosen to flatter a candidate, which is Risk 3
+      exactly. The set hash covers content as well as membership, so editing any
+      frozen file changes it. The file carries a shell reproduce command that
+      was run and reproduces the pinned hash byte-for-byte.
+
+      **Three honest limits, in the artefact:** nothing seals the holdout
+      MECHANICALLY today — no code reads the file, and the enforcing check
+      belongs with the proposer in Phase 5; 100 of 287 routable skills carry a
+      corpus at all, so a paired verdict over an 18-file holdout will be
+      underpowered for most questions, which `paired_verdict` refuses to call a
+      pass; and the freeze covers the files that exist, not the ones wave 2 will
+      add — the set hash makes that visible rather than silent.
 
 ## Phase 3 — Candidate isolation and lifecycle
 
@@ -487,6 +692,28 @@ once.
       and no verb starts a resident process.
 
 ## Phase 4 — Evaluation
+
+> **CARRIED EXIT CRITERION, placed here 2026-08-30 by the 2.3 re-scope so it
+> cannot be dropped in transit.** Step 2.3's second conjunct — *"a fixture
+> proves selection reads the whole frozen set"* — was recorded as **vacuous**
+> rather than met, because no selection stage exists to run a fixture against
+> and a fixture that scans nothing exits green while looking like coverage.
+> **This phase does not close until that fixture exists and passes** against the
+> selection stage 4.1 builds, over the 100-file set frozen in
+> `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`. The failing
+> shape it must catch: a selection stage that reads only the train partition, or
+> only the cases carrying `class: exemplar`, and reports a verdict as if it had
+> seen the corpus. AI council 2026-08-30, anthropic + openai, 2/2 — both seats
+> required the deferral be recorded at a phase with an owner rather than left as
+> an unassigned acceptance criterion, which is Risk 11 on this roadmap.
+>
+> **The `failure` axis lands here too, and deliberately as nothing yet.** The
+> same council moved observed-failure tracking off the corpus surface (it is
+> orthogonal to intent, and a known-wrong case in a regression lock is red by
+> construction) and rejected creating a `known-failures.json` with a "schema TBD"
+> as a vacuous mechanism. So: when this phase's cascade can produce an OBSERVED
+> outcome per case, expected-vs-observed is recorded against stable case ids at
+> that point — not before, and not as an empty file that looks like a carrier.
 
 - [ ] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
       stage set is E9; if the 12-stage form is chosen, activation/delivery and
