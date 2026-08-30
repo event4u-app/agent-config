@@ -966,12 +966,34 @@ So the state is deliberate and bounded rather than an oversight:
       superseded` and its line 40 carries different text; the state-store test
       lives at `docs/contracts/resident-process-governance.md:78-82`.
       verify: the roadmap text cites only artefacts a `grep` in this tree finds.
-- [ ] **9.3 Show that the loop can make the estate smaller.**
+- [x] **9.3 Show that the loop can make the estate smaller.**
       `from-skipped-parent`, an acceptance criterion in both parents and absent
       from the master: self-evolution must be able to *remove*. Prefer modify,
       merge, delete and crystallize over add. In a repository governed by an
       estate ratchet and a one-in-one-out gate, a learning loop that can only
       add is a growth engine.
+      **DONE 2026-08-30, and the loop found the defect rather than a reviewer.**
+      Mining the real audit stream — `extract_audit_patterns --min-count 2` over
+      935 lines — mints exactly ONE pattern:
+      `implement:success:delegation-policy`, **count 914**. A regularity that
+      strong in a field that varied would be remarkable; in a field that does
+      not vary it is arithmetic. Both shipped producers write the literal
+      `['delegation-policy']`.
+      **The prose that was deleted:** `audit-log-v1`'s `rules_applied` row read
+      "Stable rule ids whose Iron Law fired this phase" — an OBSERVATION — which
+      is false for every line either producer has ever written. A consumer
+      following it computes a 100 % win rate for one rule and `undefined` for
+      the other 118, and that reads as a finding.
+      **Deleted, not softened**, and replaced by
+      `src/scripts/_lib/audit_field_provenance.ts`: a sentence cannot stop a
+      consumer aggregating over a constant, and a function they must call can. A
+      test asserts the producers still write that literal, so the helper goes
+      stale LOUDLY — a stale "this is a constant" would be exactly as misleading
+      as the prose it replaced, in the other direction.
+      The card is in the store with its `pattern_ref`, and the test proves it
+      **admissible under the Phase 7 contract** via `checkCard` rather than by
+      grepping for the word "falsifier" — a string match would pass on a card
+      that merely mentions the field.
       verify: at least one repeated card has resulted in a removal — a
       deterministic query or helper replacing a prose instruction, with the
       prose deleted in the same change.
@@ -1170,17 +1192,17 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every phase names an existing carrier it widens, and no phase
+- [x] AC-1 — Every phase names an existing carrier it widens, and no phase
       introduces a second store, second loop, or second promotion path.
-- [ ] AC-2 — No recorded `success` in the audit stream is backed by an empty
+- [x] AC-2 — No recorded `success` in the audit stream is backed by an empty
       change *against that task's declared output contract*, and a read-only
       analysis dispatch that satisfies its contract is not marked a failure.
-- [ ] AC-3 — The captured event type has no field capable of holding a prompt, a
+- [x] AC-3 — The captured event type has no field capable of holding a prompt, a
       file body, or a path, and every event carries a privacy class.
-- [ ] AC-4 — The per-asset report distinguishes helpful, neutral, harmful and
+- [x] AC-4 — The per-asset report distinguishes helpful, neutral, harmful and
       unknown, reports unknown as its own share, and states a basis on every
       derived figure.
-- [ ] AC-5 — A failing case is classifiable into one of the five
+- [x] AC-5 — A failing case is classifiable into one of the five
       activation/adherence states, and `unknown` is used wherever no evidence
       exists rather than a model's inference.
 - [x] AC-6 — One outcome vocabulary is authoritative, or the mapping between the
@@ -1205,16 +1227,16 @@ So the state is deliberate and bounded rather than an oversight:
       logic away from its only caller for no gain. So: both readers import the
       committed module — the AC as written — and the one real translation is
       registered and checked rather than relocated.
-- [ ] AC-7 — Nothing in any selection or routing path imports the experience
+- [x] AC-7 — Nothing in any selection or routing path imports the experience
       report, until and unless the Phase 9 blocker is resolved with a yes.
-- [ ] AC-8 — The retention rule is written into the contract, and every claim
+- [x] AC-8 — The retention rule is written into the contract, and every claim
       resting on the ledger states whether its floor is reachable at that
       retention.
 - [ ] AC-9 — At least one repeated-failure pattern has produced a reviewed card,
       and at least one card has been either promoted through
       `learning-to-rule-or-skill` or expired — so the lifecycle closes in both
       directions rather than only accumulating.
-- [ ] AC-10 — At least one removal has landed that the loop itself motivated:
+- [x] AC-10 — At least one removal has landed that the loop itself motivated:
       prose replaced by a deterministic query or helper, with the prose deleted
       in the same change.
 

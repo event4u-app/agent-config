@@ -82,7 +82,7 @@ Single-line. The pretty-printed reference shape:
 | `risk_class` | enum | One of `low` · `medium` · `high`. Inherits max risk from touched files. |
 | `memory.asks` / `memory.hits` | int | Counts only — never ids, never bodies. |
 | `verify.claims` / `verify.first_try_passes` | int | Verify-gate counts. |
-| `rules_applied` | string[] | Stable rule ids whose Iron Law fired this phase. Bounded to ≤ 32; remainder dropped silently. |
+| `rules_applied` | string[] | Stable rule ids the producer attributes to this phase. Bounded to ≤ 32; remainder dropped silently. **Not necessarily observed.** Both shipped producers write a fixed literal, so a consumer MUST call `isProducerConstantField` (`src/scripts/_lib/audit_field_provenance.ts`) before computing any per-rule rate over it. The prose here used to read "rule ids whose Iron Law fired this phase", which is false for every line either producer has ever written — the claim was deleted rather than softened, and replaced by a check, because a contract that describes a constant as an observation makes every downstream rate an artefact that looks like a finding. Found by mining the audit stream: `extract_audit_patterns --min-count 2` mints exactly one pattern, `implement:success:delegation-policy`, count 914. |
 | `outcome_semantics` | int (optional) | Which version of the `DispatchOutcome` → `outcome` mapping produced this line. `1` = unconditional (`DONE`/`DONE_WITH_CONCERNS` always `success`); `2` = contract-gated (a `code-change` dispatch claiming success with a **measured** empty diff does not resolve to `success`). **An ABSENT field means `1`** — every line written before 2026-08-30 predates the versioning and carries no marker. A reader aggregating across the cutover MUST segment on this field or normalize deliberately; inferring the semantics from a timestamp is not sufficient, because producers upgrade independently. Rationale: an enforcement gate rolls back, but a labelling change poisons historical analysis permanently, since lines here are append-only and cannot be rewritten. |
 | `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. Both shipped producers emit `ids-only`, because both carry `rules_applied`. |
 | `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
@@ -153,6 +153,46 @@ compile time, unscanned elsewhere".
 - Deletion is forbidden at the producer layer. Operators rotate
   monthly files; archived months MAY be purged out-of-band by the
   consumer project's retention policy.
+
+## Retention — the rule's SHAPE, with its parameters deliberately unset
+
+```
+RETENTION IS EXPRESSED IN ELIGIBLE OBSERVATIONS AS WELL AS IN TIME.
+A WINDOW STATED IN DAYS ALONE CANNOT SUPPORT A CLAIM WITH AN N-FLOOR,
+AND STATING ONE IS WORSE THAN STATING NOTHING BECAUSE IT LOOKS SUFFICIENT.
+```
+
+Written 2026-08-30 under `road-to-experience-loop-broadening`. The AI council
+(2026-08-29, anthropic + openai, 2/2 convergent) split this deliberately: the
+retention **structure** is council-decidable and is recorded here; the
+privacy-sensitive **parameters** are owner-reserved and are NOT set below.
+
+**The structure.** A retention policy over this stream states three things:
+
+1. **A time bound** — how long a line is kept. The journal's own per-record
+   provisional expiry is `RETENTION_TTL_DAYS = 30`
+   (`src/scripts/_lib/runtime_journal.ts`), which is a default, not a decision.
+2. **An eligible-observation bound** — how many privacy-safe, *qualifying* runs
+   the window is expected to contain. This is the half a days-only policy
+   omits, and omitting it is the failure in a new costume: a 30-day policy
+   cannot support a claim with an n ≥ 20 floor if fewer than 20 qualifying runs
+   occur in 30 days, and the policy will still read as adequate.
+3. **A privacy class floor** — which `privacy_class` values are retained for
+   how long. This is why the structure could not be written before the class
+   existed: committing to a duration first risks a commitment that must be
+   walked back the moment an event class is identified as unsafe to retain.
+
+**Why the parameters are unset.** Setting them now would be an arbitrary
+duration presented as an evidence threshold. Sampling continues until growth
+variability and the minimum viable window can be estimated — which may be
+shorter or longer than the current default. The condition for setting them is
+recorded on the roadmap's `experience-retention-policy` blocker.
+
+**The obligation this places on every claim.** A claim resting on this ledger
+states whether its own n-floor is **reachable at the retention actually in
+force**. "Not reachable" is a real and useful answer: it says the claim cannot
+be settled from this stream at all, which is information a reader can act on,
+where silence is not.
 
 ## Cadence
 

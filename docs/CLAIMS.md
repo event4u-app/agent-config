@@ -1018,7 +1018,12 @@ is the named exception in the claim itself.
   the skill side; this spike asks whether that gap has closed since the
   `orchestration-record` concern landed, so the PRIOR is failure and a pass is
   the surprising result.
-  (5) PROVENANCE — the corpus is one machine's local runtime state, which is
+  (5) RETENTION-FLOOR REACHABILITY, per `audit-log-v1` § Retention: the n >= 50
+  floor IS reachable at the retention in force — the corpus held 1,056 dispatches
+  inside the 30-day provisional window, twenty-one times the floor. Recorded
+  rather than assumed, because a floor that is not reachable at the live
+  retention means the claim cannot be settled from this stream at all.
+  (6) PROVENANCE — the corpus is one machine's local runtime state, which is
   gitignored and therefore not reproducible from a clone. That is a scope bound
   on the finding, stated before the reading: it measures THIS install's capture
   rate and is never reported as the package's.
@@ -1077,7 +1082,14 @@ is the named exception in the claim itself.
   precisely the move this pre-registration makes unavailable.
   (5) UNDERPOWERED is neither a pass nor a null: below the power floor the run
   settles nothing and may be cited for neither direction.
-  (6) SCOPE BOUNDS, before the reading: the corpus is one machine's gitignored
+  (6) RETENTION-FLOOR REACHABILITY, per `audit-log-v1` § Retention: **NOT YET
+  ESTABLISHED.** The power floor for this question is not set, and the
+  eligible-observation bound the retention rule requires is unset by design
+  (the parameters are owner-reserved pending growth data). Stating this is the
+  point rather than a caveat: a claim whose floor may be unreachable at the live
+  retention cannot be settled from this stream, and saying so before the run is
+  what stops an underpowered result being read as a null.
+  (7) SCOPE BOUNDS, before the reading: the corpus is one machine's gitignored
   runtime state and measures THIS install, never the package's; and efficacy
   must be measured EXTERNALLY — a loop scored on whether it agrees with its own
   experience report validates itself, so no component of the verdict may be
