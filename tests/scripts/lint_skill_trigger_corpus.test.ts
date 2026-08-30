@@ -5,6 +5,8 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    CASE_CLASSES,
+    CASE_CLASS_POLARITY,
     GRANDFATHERED,
     MIN_NEAR_MISSES,
     MIN_POSITIVES,
@@ -111,6 +113,122 @@ describe('the language discipline is forward-only and DECLARED', () => {
         };
         const v = judge(statsFor('probe', corpusOf(looksGerman)), true);
         expect(v.map((x) => x.rule)).toContain('german');
+    });
+});
+
+describe('the case-class discipline is forward-only and DECLARED', () => {
+    const CLASSIFIED = {
+        queries: [
+            { q: 'a', trigger: true, class: 'exemplar' },
+            { q: 'b', trigger: true, class: 'exemplar' },
+            { q: 'c', trigger: true, class: 'exemplar', language: 'de' },
+            { q: 'd', trigger: false, class: 'near-miss' },
+            { q: 'e', trigger: false, class: 'counterexample' },
+        ],
+    };
+    const mutated = (fn: (qs: Record<string, unknown>[]) => void) => {
+        const qs = JSON.parse(JSON.stringify(CLASSIFIED.queries)) as Record<string, unknown>[];
+        fn(qs);
+        return { queries: qs };
+    };
+    const rules = (body: unknown, forward: boolean) =>
+        judge(statsFor('probe', corpusOf(body)), forward).map((v) => v.rule);
+
+    it('holds the closed vocabulary at three members with their polarities', () => {
+        // The step asked for FOUR classes. The fourth — `failure`, a case the
+        // routing gets wrong today — is an orthogonal axis and deliberately
+        // NOT here (AI council 2026-08-30, 2/2). If it ever appears in this
+        // list, that decision was reversed and this assertion is where it shows.
+        expect([...CASE_CLASSES].sort()).toEqual(['counterexample', 'exemplar', 'near-miss']);
+        expect(CASE_CLASS_POLARITY).toEqual({
+            exemplar: true,
+            'near-miss': false,
+            counterexample: false,
+        });
+    });
+
+    it('accepts a fully classified corpus on a touched file', () => {
+        expect(rules(CLASSIFIED, true)).toEqual([]);
+    });
+
+    it('does NOT require a class on an untouched file', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    for (const q of qs) delete q['class'];
+                }),
+                false,
+            ),
+        ).toEqual([]);
+    });
+
+    it('rejects an unclassified case on a touched file', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    delete qs[0]?.['class'];
+                }),
+                true,
+            ),
+        ).toContain('class-missing');
+    });
+
+    it('rejects a value outside the closed vocabulary', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[0]) qs[0]['class'] = 'failure';
+                }),
+                true,
+            ),
+        ).toContain('class-vocab');
+    });
+
+    it('rejects a negative class on a positive case', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[0]) qs[0]['class'] = 'near-miss';
+                }),
+                true,
+            ),
+        ).toContain('class-polarity');
+    });
+
+    it('rejects a positive class on a negative case — the other direction', () => {
+        // Both directions, because a polarity check written one-way passes
+        // every fixture that only ever mislabels in the direction it tests.
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[4]) qs[4]['class'] = 'exemplar';
+                }),
+                true,
+            ),
+        ).toContain('class-polarity');
+    });
+
+    it('rejects a corpus missing the counterexample class entirely', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[4]) qs[4]['class'] = 'near-miss';
+                }),
+                true,
+            ),
+        ).toContain('class-coverage');
+    });
+
+    it('rejects the legacy string-array shape, which cannot carry a class', () => {
+        expect(
+            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, true),
+        ).toContain('class-shape');
+    });
+
+    it('leaves the legacy shape alone while it stays untouched', () => {
+        expect(
+            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, false),
+        ).toEqual([]);
     });
 });
 

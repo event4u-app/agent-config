@@ -36,13 +36,40 @@
  * 76 existing files carry the field: requiring it everywhere today would red
  * 76 files for a field that did not exist when they were written.
  *
- * ## Forward-only, in two different senses
+ * ## Forward-only, in three senses now
  *
  * The COUNT discipline (>=3 positives, >=2 near-misses) applies to every file
  * today: exactly two files fail it, and both are listed as grandfathered by
  * name rather than by a numeric baseline, so a third failure cannot hide inside
  * a count. The LANGUAGE discipline applies only to files the diff adds or
- * changes.
+ * changes. So, since 2026-08-30, does the CASE-CLASS discipline.
+ *
+ * ## The case class — three semantic classes, declared, never inferred
+ *
+ * `road-to-governed-harness-evolution` step 2.3 asked for a four-class corpus
+ * where this gate had two: the boolean. AI council 2026-08-30, anthropic +
+ * openai, 2/2 convergent, re-scoped it to THREE semantic classes on this
+ * surface and moved the fourth elsewhere:
+ *
+ *   - `exemplar`       — a success case; requires `trigger: true`.
+ *   - `near-miss`      — vocabulary genuinely overlaps a neighbour, and the
+ *                        answer is still no; requires `trigger: false`.
+ *   - `counterexample` — unrelated, guarding over-triggering rather than a
+ *                        neighbour; requires `trigger: false`.
+ *
+ * The fourth class the step named — `failure`, a case the routing gets wrong
+ * TODAY — is deliberately NOT here. Both seats reached the same reason
+ * independently: it is an ORTHOGONAL axis. `exemplar` / `near-miss` /
+ * `counterexample` describe intended routing; `failure` describes observed
+ * behaviour, and one case can be both. A corpus file is a regression LOCK, so
+ * a known-wrong case placed in it is red by construction, and a rule requiring
+ * one per file would reward deliberately broken routing.
+ *
+ * This does not contradict `:20-26` above. That paragraph says the near-miss /
+ * unrelated-negative distinction is not machine-DECIDABLE, and it still is not:
+ * nothing here detects it. The class is DECLARED by the author and the
+ * declaration is validated — precisely the mechanism the German requirement
+ * already uses two paragraphs up, for the same reason.
  *
  * Exit codes: 0 = clean · 1 = a discipline violation · 2 = dead scope.
  */
@@ -60,6 +87,20 @@ const HERE = fileURLToPath(import.meta.url);
 const REAL_REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
 const REPO_ROOT = process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'] ?? REAL_REPO_ROOT;
 
+/**
+ * Treat every scanned unit as diff-touched, so the forward-only disciplines
+ * apply to all of them.
+ *
+ * This can only ever WIDEN the checked set — there is no direction in which it
+ * suppresses a finding — which is what makes it safe to honour from the
+ * environment. `--self-test` needs it because its fixtures live in a temporary
+ * directory that is not a git repository, so `changedUnits` finds nothing
+ * there and the class rules would be silently unreachable: a self-test that
+ * cannot reach the rule it claims to prove is the exact no-op this harness
+ * exists to catch.
+ */
+const FORWARD_ALL = process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] === '1';
+
 export const MIN_POSITIVES = 3;
 export const MIN_NEAR_MISSES = 2;
 
@@ -71,6 +112,22 @@ export const MIN_NEAR_MISSES = 2;
  */
 export const GRANDFATHERED = new Set(['brand-asset-generation', 'estimate-ticket']);
 
+/**
+ * The closed case-class vocabulary, and the polarity each class requires.
+ *
+ * Polarity is part of the vocabulary rather than a separate convention: a
+ * `near-miss` carrying `trigger: true` is not a near miss, it is a positive
+ * that was mislabelled, and a class system that cannot say so buys nothing
+ * over a free-text tag.
+ */
+export const CASE_CLASS_POLARITY: Readonly<Record<string, boolean>> = {
+    exemplar: true,
+    'near-miss': false,
+    counterexample: false,
+};
+
+export const CASE_CLASSES: readonly string[] = Object.keys(CASE_CLASS_POLARITY);
+
 export interface CorpusStats {
     unit: string;
     positives: number;
@@ -78,11 +135,33 @@ export interface CorpusStats {
     germanPositives: number;
     /** True when at least one case declares a language at all. */
     declaresLanguage: boolean;
+    /** Cases in the `queries` shape that declare no `class` at all. */
+    unclassified: number;
+    /** Declared class values outside the closed vocabulary, as written. */
+    badClassValues: string[];
+    /** Cases whose declared class contradicts their `trigger` boolean. */
+    classPolarityErrors: string[];
+    /** Which vocabulary members appear at least once. */
+    classesPresent: string[];
+    /**
+     * True when the file uses the legacy `should_trigger` / `should_not_trigger`
+     * arrays, whose entries are bare strings and cannot carry a class.
+     */
+    legacyShape: boolean;
 }
 
 export interface Violation {
     unit: string;
-    rule: 'positives' | 'near-misses' | 'german' | 'malformed';
+    rule:
+        | 'positives'
+        | 'near-misses'
+        | 'german'
+        | 'malformed'
+        | 'class-missing'
+        | 'class-vocab'
+        | 'class-polarity'
+        | 'class-coverage'
+        | 'class-shape';
     message: string;
 }
 
@@ -90,6 +169,7 @@ interface RawCase {
     q?: string;
     trigger?: boolean;
     language?: string;
+    class?: unknown;
 }
 
 /** Read one corpus file into counts, across both shapes that exist. */
@@ -104,16 +184,50 @@ export function statsFor(unit: string, file: string): CorpusStats {
     let nearMisses = queries.filter((q) => q.trigger === false).length;
     positives += (doc.should_trigger ?? []).length;
     nearMisses += (doc.should_not_trigger ?? []).length;
+
+    const badClassValues: string[] = [];
+    const classPolarityErrors: string[] = [];
+    const present = new Set<string>();
+    let unclassified = 0;
+    for (const q of queries) {
+        const raw = q.class;
+        if (raw === undefined || raw === null || raw === '') {
+            unclassified += 1;
+            continue;
+        }
+        if (typeof raw !== 'string' || !(raw in CASE_CLASS_POLARITY)) {
+            badClassValues.push(String(raw));
+            continue;
+        }
+        present.add(raw);
+        if (q.trigger !== CASE_CLASS_POLARITY[raw]) {
+            classPolarityErrors.push(`${raw} on \`trigger: ${String(q.trigger)}\``);
+        }
+    }
+
     return {
         unit,
         positives,
         nearMisses,
         germanPositives: queries.filter((q) => q.trigger === true && q.language === 'de').length,
         declaresLanguage: queries.some((q) => typeof q.language === 'string'),
+        unclassified,
+        badClassValues,
+        classPolarityErrors,
+        classesPresent: [...present].sort(),
+        legacyShape:
+            (doc.should_trigger ?? []).length > 0 || (doc.should_not_trigger ?? []).length > 0,
     };
 }
 
-export function judge(s: CorpusStats, requireLanguage: boolean): Violation[] {
+/**
+ * `forward` is the diff-touched flag: true when this corpus file was added or
+ * changed against the base ref. The COUNT discipline ignores it; the LANGUAGE
+ * and CASE-CLASS disciplines are gated on it, so an untouched file authored
+ * before either existed is not red for a field that did not exist when it was
+ * written. Migration is by touch: the file that changes migrates.
+ */
+export function judge(s: CorpusStats, forward: boolean): Violation[] {
     const out: Violation[] = [];
     if (GRANDFATHERED.has(s.unit)) return out;
     if (s.positives < MIN_POSITIVES) {
@@ -130,13 +244,72 @@ export function judge(s: CorpusStats, requireLanguage: boolean): Violation[] {
             message: `${String(s.nearMisses)} near-miss(es), the discipline asks for ${String(MIN_NEAR_MISSES)}`,
         });
     }
-    if (requireLanguage && s.germanPositives < 1) {
+    if (forward && s.germanPositives < 1) {
         out.push({
             unit: s.unit,
             rule: 'german',
             message:
                 'no positive declares `"language": "de"`. Declared, never detected — ' +
                 'a detector would pass German-looking English and fail short German',
+        });
+    }
+    if (forward) out.push(...judgeClasses(s));
+    return out;
+}
+
+/**
+ * The case-class rules, all forward-only. Split out so the four findings read
+ * as one discipline rather than as four unrelated additions to `judge`.
+ */
+function judgeClasses(s: CorpusStats): Violation[] {
+    const out: Violation[] = [];
+    const vocab = CASE_CLASSES.join(' | ');
+    if (s.legacyShape) {
+        out.push({
+            unit: s.unit,
+            rule: 'class-shape',
+            message:
+                'the `should_trigger` / `should_not_trigger` arrays hold bare strings and ' +
+                'cannot carry a case class — migrate this file to the `queries` shape',
+        });
+        return out;
+    }
+    if (s.unclassified > 0) {
+        out.push({
+            unit: s.unit,
+            rule: 'class-missing',
+            message:
+                `${String(s.unclassified)} case(s) declare no \`class\` (${vocab}). ` +
+                'Declared, never inferred — the near-miss / counterexample split is not ' +
+                'machine-decidable, so the author states it and the gate checks the statement',
+        });
+    }
+    if (s.badClassValues.length > 0) {
+        out.push({
+            unit: s.unit,
+            rule: 'class-vocab',
+            message: `class outside the closed vocabulary (${vocab}): ${s.badClassValues.sort().join(', ')}`,
+        });
+    }
+    if (s.classPolarityErrors.length > 0) {
+        out.push({
+            unit: s.unit,
+            rule: 'class-polarity',
+            message:
+                'class contradicts its own `trigger` boolean: ' +
+                `${s.classPolarityErrors.sort().join(', ')}. \`exemplar\` is a positive; ` +
+                '`near-miss` and `counterexample` are negatives',
+        });
+    }
+    const missing = CASE_CLASSES.filter((c) => !s.classesPresent.includes(c));
+    if (missing.length > 0) {
+        out.push({
+            unit: s.unit,
+            rule: 'class-coverage',
+            message:
+                `no case carries ${missing.join(' or ')}. A corpus of positives and ` +
+                'near-misses alone cannot show whether the skill over-triggers on ' +
+                'unrelated input, which is what a counterexample is for',
         });
     }
     return out;
@@ -195,7 +368,7 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
         ledger.plan(e.name);
         let own: Violation[];
         try {
-            own = judge(statsFor(e.name, file), changed.has(e.name));
+            own = judge(statsFor(e.name, file), FORWARD_ALL || changed.has(e.name));
         } catch {
             own = [{ unit: e.name, rule: 'malformed', message: 'is not parseable JSON' }];
         }
@@ -223,12 +396,14 @@ export function selfTest(): number {
         fs.writeFileSync(path.join(d, 'triggers.json'), JSON.stringify(body));
         return root;
     };
-    const run = (root: string): number => {
+    const run = (root: string, forwardAll = false): number => {
         process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'] = root;
+        if (forwardAll) process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] = '1';
         try {
             return runGateCli(REAL_REPO_ROOT, 'src/scripts/lint_skill_trigger_corpus.ts', [], root);
         } finally {
             delete process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'];
+            delete process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'];
         }
     };
     const good = {
@@ -240,6 +415,19 @@ export function selfTest(): number {
             { q: 'e', trigger: false },
         ],
     };
+    /** The same corpus, fully classified and German-declared — forward-clean. */
+    const classified = {
+        queries: [
+            { q: 'a', trigger: true, class: 'exemplar' },
+            { q: 'b', trigger: true, class: 'exemplar' },
+            { q: 'c', trigger: true, class: 'exemplar', language: 'de' },
+            { q: 'd', trigger: false, class: 'near-miss' },
+            { q: 'e', trigger: false, class: 'counterexample' },
+        ],
+    };
+    const mutate = (fn: (qs: Record<string, unknown>[]) => Record<string, unknown>[]) => ({
+        queries: fn(JSON.parse(JSON.stringify(classified.queries)) as Record<string, unknown>[]),
+    });
     const cases: SelfTestCase[] = [
         {
             name: 'a compliant corpus is accepted',
@@ -293,13 +481,114 @@ export function selfTest(): number {
                 return run(root);
             },
         },
+        // --- case-class discipline, forward-only. Every case below runs with
+        // the forward flag forced on; the pair at the end proves the flag is
+        // what turns the rule on, so a rule that fired unconditionally would
+        // be caught here rather than by a reviewer.
+        {
+            name: 'a fully classified corpus is accepted under the class discipline',
+            expect: 'accept',
+            run: () => run(mkRoot('probe', classified), true),
+        },
+        {
+            name: 'an unclassified case is rejected',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot(
+                        'probe',
+                        mutate((qs) => {
+                            delete qs[0]?.['class'];
+                            return qs;
+                        }),
+                    ),
+                    true,
+                ),
+        },
+        {
+            name: 'a class outside the closed vocabulary is rejected',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot(
+                        'probe',
+                        mutate((qs) => {
+                            if (qs[0]) qs[0]['class'] = 'positive';
+                            return qs;
+                        }),
+                    ),
+                    true,
+                ),
+        },
+        {
+            name: 'a near-miss on trigger:true is rejected — polarity is part of the vocabulary',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot(
+                        'probe',
+                        mutate((qs) => {
+                            if (qs[0]) qs[0]['class'] = 'near-miss';
+                            return qs;
+                        }),
+                    ),
+                    true,
+                ),
+        },
+        {
+            name: 'an exemplar on trigger:false is rejected — the other polarity direction',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot(
+                        'probe',
+                        mutate((qs) => {
+                            if (qs[4]) qs[4]['class'] = 'exemplar';
+                            return qs;
+                        }),
+                    ),
+                    true,
+                ),
+        },
+        {
+            name: 'a corpus with no counterexample at all is rejected',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot(
+                        'probe',
+                        mutate((qs) => {
+                            if (qs[4]) qs[4]['class'] = 'near-miss';
+                            return qs;
+                        }),
+                    ),
+                    true,
+                ),
+        },
+        {
+            name: 'the legacy string-array shape is rejected under the class discipline',
+            expect: 'reject',
+            run: () =>
+                run(
+                    mkRoot('probe', {
+                        should_trigger: ['a', 'b', 'c'],
+                        should_not_trigger: ['d', 'e'],
+                    }),
+                    true,
+                ),
+        },
+        {
+            name: 'the SAME unclassified corpus is accepted when NOT diff-touched',
+            expect: 'accept',
+            run: () => run(mkRoot('probe', good), false),
+        },
     ];
     try {
         return runSelfTest({
             gate: 'lint_skill_trigger_corpus',
             cases,
-            minCases: 7,
-            minRejectCases: 4,
+            minCases: 15,
+            minRejectCases: 10,
         });
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
@@ -330,7 +619,8 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         process.stdout.write(
             `lint_skill_trigger_corpus: ${String(r.scanned)} corpus file(s) hold the discipline ` +
                 `(>=${String(MIN_POSITIVES)} positives, >=${String(MIN_NEAR_MISSES)} near-misses; ` +
-                `${String(GRANDFATHERED.size)} grandfathered by name).\n`,
+                `${String(GRANDFATHERED.size)} grandfathered by name). Diff-touched files also ` +
+                `carry a declared case class per query (${CASE_CLASSES.join(' | ')}).\n`,
         );
         return 0;
     }
