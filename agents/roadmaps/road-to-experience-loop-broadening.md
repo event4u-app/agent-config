@@ -663,38 +663,95 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 6 — Evaluation: a per-asset report, read-only
 
-- [ ] **6.1 Aggregate over the audit JSONL.** Per rule and per skill: win rate,
+- [x] **6.1 Aggregate over the audit JSONL.** Per rule and per skill: win rate,
       streak, and the harmful / neutral / **unknown** shares. A missing signal
       counts as unknown, never as success.
+      **DONE 2026-08-30** — `src/scripts/_lib/experience_report.ts`.
+      **`win_rate` is `null`, never `0`, when nothing classifiable was seen**,
+      and the distinction is the one a reader acts on: zero is a measurement
+      meaning *it never worked*; null means *we do not know*. A reader seeing
+      `0.0` acts, a reader seeing `—` asks.
+      **`unknown` never enters the denominator either.** A rate over "everything
+      we saw" answers a different question from a rate over "everything we could
+      classify", and only the second is about the asset.
+      **Absent `skills_applied` invents nothing.** A line omitting the field
+      recorded nothing about skills, so it produces no skill row — it is not
+      evidence that no skill was applied, and may not become an `unknown`
+      against a skill nobody named. This is where 1.2's absent-vs-empty split
+      stops being philosophical.
       verify: an asset with no signal appears with unknown ≠ 0 and win rate
       undefined, not with a fabricated score.
-- [ ] **6.2 Every derived figure states its basis.** `from-skipped-parent`, and
+- [x] **6.2 Every derived figure states its basis.** `from-skipped-parent`, and
       both a parent and the master's own rationale depend on it: each number
       carries `basis: measured | estimated:<method> | inferred | unknown`. The
       master lists win-rate, streak and the share fields and has no basis field,
       so a measured cost and an estimated one render identically — the exact
       self-report failure Phase 2 exists to prevent, reintroduced one layer up.
+      **DONE 2026-08-30** — `BasisTag` in `src/scripts/_lib/evidence_basis.ts`.
+      `estimated` on its own is a CATEGORY, not a basis: two figures both marked
+      `estimated` can differ by an order of magnitude in how much they should be
+      trusted — one derived by arithmetic from measured inputs, one from a
+      response-length heuristic — and a report rendering them identically has
+      told the reader nothing actionable. So the type REJECTS a bare
+      `estimated`, and rejects `estimated:` with an empty method too, since that
+      is the same omission wearing a colon. Every other basis is
+      self-describing and takes no suffix.
+      **Enforced by the type rather than by a lint**, which is stronger than the
+      step asked for: a lint scans what it is pointed at, while a figure typed
+      `BasisTag` cannot carry a method-less `estimated` at all.
       verify: a report line with an estimated component that does not name its
       method fails the lint.
-- [ ] **6.3 Report only. No runtime consumption.** A human or CI reads it;
+- [x] **6.3 Report only. No runtime consumption.** A human or CI reads it;
       nothing in selection or routing does. Crossing that line is the Phase 9
       gate, not an implementation detail.
+      **DONE 2026-08-30.** The twelve routing and selection paths are enumerated
+      EXPLICITLY rather than globbed, and a companion assertion proves each one
+      exists — a glob that silently matched nothing would pass forever, and a
+      rename must turn this red rather than quietly emptying the sweep.
       verify: no import of the report module from any routing or selection path.
-- [ ] **6.4 Wire the report to retirement, with a safety carve-out.**
+- [x] **6.4 Wire the report to retirement, with a safety carve-out.**
       `from-skipped-parent` on both halves. The report's most obvious near-term
       consumer is the existing utilization-window retirement path — the ledger
       supplies the data, the rules stay the authority. And precisely there:
       pruning on low usage can delete a rare but important safety behaviour, so
       authority and safety assets are **excluded** from usage-based pruning. The
       master dropped both the wiring and the carve-out.
+      **DONE 2026-08-30, and executing it found a live hole in the carve-out.**
+      `read_exempt`'s predicate was `id.endsWith('-safety-floor')`, which
+      exempted **4 of this tree's 9 safety rules**. The five it missed —
+      `domain-safety-disclaimer`, `domain-safety-pii`,
+      `domain-safety-retention`, `runtime-safety`, `tool-safety` — are none of
+      them kernel, so every one was REAP-eligible on low usage. A usage-based
+      retirement proposal for `domain-safety-pii` or `tool-safety` is precisely
+      the outcome this carve-out exists to prevent, and **low usage is exactly
+      what a working safety floor looks like**: it fires rarely, and rarely is
+      not the same as never needed.
+      Widened to match `safety` as a hyphen-delimited token, which covers all
+      nine and — verified against the 119 projected rules — matches nothing
+      else. The direction is the conservative one: it can only REMOVE
+      retirement proposals, never add one. A third assertion pins the exemption
+      set at exactly those nine, so the predicate cannot silently become a
+      blanket that disables retirement entirely.
       verify: a low-usage safety-classified asset is not proposed for
       retirement, and a low-usage ordinary asset is.
-- [ ] **6.5 Defer the SQLite index until latency is measured.** Allowed **only**
+- [x] **6.5 Defer the SQLite index until latency is measured.** Allowed **only**
       as a rebuildable Class-A artefact under `agents/runtime/state/`; as the
       *source* of experience it is a contract violation.
-      `docs/contracts/no-runtime-boundary.md:40` states the test verbatim: "if
+      **DONE 2026-08-30 — the deferral holds and is now CHECKABLE rather than
+      asserted.** No index exists and none was built; 6.1's report reads the
+      JSONL directly. Ticking this on the deferral alone would have been a green
+      with nothing behind it, since the verify below is a conditional guard on a
+      build that has not happened — so a test asserts the absence instead: the
+      report module opens no database, and no index artefact is committed. If
+      someone builds one, that test goes red and the verify below becomes the
+      thing they must satisfy, which is exactly when it should start applying.
+      **Citation corrected while executing, and it mattered.**
+      `docs/contracts/no-runtime-boundary.md` is `stability: superseded` and its
+      line 40 carries different text entirely. The state-store test lives at
+      **`docs/contracts/resident-process-governance.md:78-82`**, verbatim: "if
       deleting the artifact changes *what* the tool can answer rather than only
-      *how fast* it answers, it is a state store and prohibited".
+      *how fast* it answers, it is a state store and prohibited. A code-graph
+      cache passes; a vector index fails."
       verify: deleting the index changes only runtime, and a rebuild reproduces
       it byte-for-byte from the JSONL.
 

@@ -61,14 +61,34 @@ export interface KernelInfo {
     safety_floors: Set<string>;
 }
 
-/** Kernel rule ids (type: always / alwaysApply) + *-safety-floor ids — exempt from REAP. */
+/**
+ * A rule id that names a safety surface.
+ *
+ * WIDENED 2026-08-30 (road-to-experience-loop-broadening 6.4). The predicate
+ * was `id.endsWith('-safety-floor')`, which exempted 4 of this tree's 9 safety
+ * rules. The five it missed were `domain-safety-disclaimer`,
+ * `domain-safety-pii`, `domain-safety-retention`, `runtime-safety` and
+ * `tool-safety` — none of them kernel, so every one was REAP-eligible on low
+ * usage. A usage-based retirement proposal for `domain-safety-pii` or
+ * `tool-safety` is precisely the outcome this carve-out exists to prevent, and
+ * low usage is exactly what a safety floor that is working looks like: it fires
+ * rarely, and rarely is not the same as never needed.
+ *
+ * Matching `safety` as a hyphen-delimited token covers all nine and, verified
+ * against the 119 projected rules on the day it was written, matches nothing
+ * else. The direction is deliberately the conservative one — it can only
+ * REMOVE retirement proposals, never add one.
+ */
+const SAFETY_ID_RE = /(^|-)safety(-|$)/;
+
+/** Kernel rule ids (type: always / alwaysApply) + safety-surface ids — exempt from REAP. */
 export function read_exempt(rulesDir: string): KernelInfo {
     const kernel = new Set<string>();
     const safety = new Set<string>();
     for (const name of fs.readdirSync(rulesDir)) {
         if (!name.endsWith('.md')) continue;
         const id = name.replace(/\.md$/, '');
-        if (id.endsWith('-safety-floor')) safety.add(id);
+        if (SAFETY_ID_RE.test(id)) safety.add(id);
         const head = fs.readFileSync(path.join(rulesDir, name), 'utf-8').slice(0, 400);
         if (/^type:\s*["']?always["']?/m.test(head) || /^alwaysApply:\s*true/m.test(head)) {
             kernel.add(id);
