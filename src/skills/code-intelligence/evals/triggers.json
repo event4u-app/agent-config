@@ -17,7 +17,8 @@
         },
         {
             "q": "wer ruft diese Funktion auf und was importiert sie?",
-            "trigger": true
+            "trigger": true,
+            "language": "de"
         },
         {
             "q": "how do these two classes connect — is there a path from the controller to the mailer?",
