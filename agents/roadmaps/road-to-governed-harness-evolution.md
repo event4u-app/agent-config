@@ -838,11 +838,41 @@ once.
       failures dropped from the exit code, the candidate prefix drifting between
       the two scripts, and the resolved-path escape check. All went red; all
       restored byte-clean. A guard never seen red has unknown sensitivity.
-- [ ] **3.5 Ship a deterministic proposer first.** Fixed recipes for known
+- [x] **3.5 Ship a deterministic proposer first.** Fixed recipes for known
       defect classes, so the loop is validated without model quality as a
       confound.
       verify: the same input produces byte-identical candidates across two runs.
-- [ ] **3.6 Give the operator a command surface.** `from-skipped-parent`: a
+      **DONE 2026-08-30.** `src/scripts/_lib/candidate_proposer.ts`.
+      `DEFECT_CLASSES` (`:69`) is three fixed classes, one per mutation
+      dimension — `over-broad-activation` → activation,
+      `unrouted-obligation` → routing, `unbacked-enforcement-claim` → content —
+      so the alphabet 3.3 fixed is what bounds the proposer rather than a second
+      list that could drift from it. `RECIPES` (`:166`) are **total** (defined on
+      every string, `''` included) and **idempotent**, both asserted over eight
+      inputs. `proposeCandidates` (`:361`) emits every record at
+      `lifecycle: 'proposed'` with no way to ask for another state — the
+      lifecycle enum is not bypassable from the producing side. `candidateId`
+      (`:322`) is a sha256 over class + subject + mutation bytes: no clock, no
+      counter, no randomness.
+      **The determinism claim is proved three independent ways, not asserted.**
+      (1) the same list twice yields identical joined bytes; (2) the same list
+      **permuted** — reversed and rotated — yields identical bytes, which is the
+      reading that matters, since a proposer that merely preserved input order
+      would pass (1) and fail (2); (3) through the CLI into two directories,
+      `diff -r` exit 0 and both files at sha256
+      `4d5bffadd0ea782051911478d7137b4379835c329943b90146b66e7b60fb16de`. Read
+      order is deterministic too, because read order decides whose error message
+      surfaces first.
+      **A guard was DELETED because it could not be seen red**, and that is the
+      right disposal rather than a gap: `proposeCandidates` also sorted its
+      OUTPUT by id, and neutralising that sort changed nothing observable — the
+      input sort already fixed the order. A guard whose red cannot be produced is
+      indistinguishable from one that does not work, so ordering now happens
+      exactly once, on the input.
+      **Seven proposer guards seen red** (P1a, P1b, P2–P7 in the sensitivity
+      sweep), including a `Date.now()` planted in the proposer, which the
+      determinism scanner caught.
+- [x] **3.6 Give the operator a command surface.** `from-skipped-parent`: a
       verb set (`inspect`, `propose`, `run`, `compare`, `explain`, `promote`,
       `clean`) with no background loop. This is what makes "command-scoped, no
       daemon" enforced rather than asserted, and the master's Phase 3 exit
@@ -850,6 +880,57 @@ once.
       that would do it.
       verify: every phase's exit criterion is reachable through a named verb,
       and no verb starts a resident process.
+      **DONE 2026-08-30 — with the first half of the verify clause SCOPED, and
+      the scope is recorded rather than quietly satisfied.** `VERBS`
+      (`src/scripts/evolution_lab.ts:92`) is exactly the seven the step names.
+      `main` (`:591`) is a pure `argv → number`; the only `process.exit` is the
+      CLI entry, and `run` / `compare` reach `bench_ab_clone` and
+      `bench_ab_integrity` by **direct function call**, so nothing can outlive
+      the process. One-line change to `bench_ab_clone.ts:66` — `const CLONES`
+      became `export const CLONES` — so the `clean` verb discovers candidate
+      clones without a fourth copy of that path join.
+      **Second conjunct — "no verb starts a resident process" — is ENFORCED, in
+      two independent ways.** Static: a scanner over the module's own bytes for
+      `setInterval` / `setTimeout` / `setImmediate` / `child_process` /
+      `spawn(` / `fork(` / `watch(` / `while (true)` / `for (;;)` / `.unref(` /
+      `detached:`. Dynamic: every verb is spawned under a hard timeout asserting
+      `signal === null` — a verb leaving a resident child holding stdio would
+      keep the pipe open and come back killed, so a timeout is a **positive
+      detection** rather than a flake. Both strippers carry an anti-vacuity
+      assertion, because a stripper returning `''` would make the scan pass over
+      nothing.
+      **First conjunct — "every phase's exit criterion is reachable through a
+      named verb" — is half met and half unmeetable TODAY, and is recorded as
+      such.** Phases 4–7 do not exist in this tree, so no verb can reach an exit
+      criterion they do not have, and Phase 7 is separately blocked on
+      `merge-authority`. Phases 1–2's criteria (the frozen corpus, the holdout)
+      belong to other carriers and are not verb-shaped. `EXIT_CRITERION_COVERAGE`
+      (`:132`) therefore covers **Phase 3 only** and says so in its own output.
+      **What makes this a scope rather than a hole is the forcing function:** a
+      test asserts every key in that map starts with `3.`, so a later phase
+      landing without a verb fails a test instead of silently inheriting the
+      claim. Without that test this step would be claiming something about
+      phases nobody has written, which is the shape 0.1 declined for the command
+      surface.
+      **`promote` REFUSES, and the refusal is not the only thing stopping it.**
+      `EXIT_REFUSED = 3` (`:120`): the verb routes the intended transition
+      through `assertTransition(record.lifecycle, 'promoted')` **with no approval
+      argument**, prints that gate's message plus the `merge-authority` blocker
+      text, and returns 3. There is no `--approver` flag (it exits 2 as an
+      unrecognised argument), and a scanner asserts the module contains no
+      `approver:` / `approvedAt:` / `HumanApproval` expression — so **deleting
+      the refusal would still not produce a promotion**. The negative test drives
+      it from **every** spine state, which catches the specific failure of a
+      promote that refuses on the spine guard from `proposed` and would succeed
+      from `promotion-proposed`.
+      **Ten lab guards seen red** (L1–L9 plus the coverage-map row), each
+      neutralised in source and restored from a scratchpad copy.
+      **Scope note carried forward:** `evolution_lab` is a standalone script in
+      the `bench_ab_*` family, invoked as
+      `./scripts-run src/scripts/evolution_lab <verb>`, **not** an
+      `agent-config` verb. Registering it in the CLI registry touches the
+      budget-sync surface and several others and is a separate decision, not
+      smuggled in here.
 
 ## Phase 4 — Evaluation
 
