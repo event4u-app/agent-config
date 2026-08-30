@@ -11,7 +11,7 @@ estate_offset_exempt: "Added as a draft proposal. UPDATED 2026-08-30: Phase 0 ha
 > deferred.** The qualifier is the council's wording and is deliberate: 44 of 47
 > boxes are done, and the three that are not are `[~]` with recorded
 > dispositions rather than quietly green. AC-9 was **carried verbatim** into
-> `stubs/road-to-experience-lifecycle-operational-proof.md` because it needs
+> `later/road-to-experience-lifecycle-operational-proof.md` because it needs
 > elapsed operational time, not effort; 7.6 and 9.6 rest on owner-reserved
 > decisions no council may take. Claiming plain "complete" over that would be
 > the silent-green this roadmap spent nine phases building instruments against.
@@ -1262,7 +1262,7 @@ So the state is deliberate and bounded rather than an oversight:
       directions rather than only accumulating.
       **CARRIED VERBATIM, not cancelled and not weakened.** AI council
       2026-08-30, anthropic + openai, **2/2 convergent on (b)**: descope into
-      `agents/roadmaps/stubs/road-to-experience-lifecycle-operational-proof.md`,
+      `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md`,
       created in this same change.
       **Why not re-scoped.** The tempting repair was to rewrite AC-9 as a claim
       about the mechanism — a card *can* be promoted, a card *can* expire, both

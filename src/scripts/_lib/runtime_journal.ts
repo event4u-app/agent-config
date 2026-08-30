@@ -415,18 +415,14 @@ export interface JournalEvent {
     /**
      * The `seq` this event AMENDS, or `null` for an original observation.
      *
-     * Outcomes arrive late. Rework, a regression, a review that lands after the
-     * episode already closed — all of these are information about an episode
-     * whose terminal event is already written, and this store is append-only by
-     * construction (`seq` is assigned by SQLite and never by a caller), so the
-     * original cannot be edited and must not be.
-     *
-     * An amendment is therefore a NEW ROW pointing at the one it revises. The
-     * original stays byte-identical forever; {@link reconstructEpisode} folds
-     * the chain when it projects the episode. That ordering matters for the
-     * repeated-failure rate in particular: a repeat is exactly the signal that
-     * surfaces after the record is written, so a rate computed over unamended
-     * rows systematically undercounts the thing it is trying to measure.
+     * Outcomes arrive late — rework, a regression, a review landing after the
+     * episode closed — and this store is append-only by construction (`seq` is
+     * assigned by SQLite, never by a caller), so the original cannot be edited
+     * and must not be. An amendment is a NEW ROW pointing at the one it
+     * revises; the original stays byte-identical and {@link reconstructEpisode}
+     * folds the chain. That matters for the repeated-failure rate in
+     * particular: a repeat is exactly the signal that surfaces after the record
+     * is written, so a rate over unamended rows undercounts what it measures.
      */
     amends_seq: number | null;
 }

@@ -77,7 +77,7 @@ point it goes to the owner, not to a council.
 
 ## See also
 
-- `agents/roadmaps/stubs/road-to-experience-lifecycle-operational-proof.md` —
+- `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md` —
   the sibling stub carrying AC-9, which needs elapsed time rather than a
   decision.
 - `src/scripts/_lib/experience_card.ts` — 7.1–7.5's shipped contract.
