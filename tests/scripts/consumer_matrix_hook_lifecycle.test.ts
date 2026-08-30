@@ -9,7 +9,7 @@
  * `tests/scripts/_cli/cmd_conformance.test.ts` uses for its dispatcher smoke
  * (a fake runner script instead of the real dispatcher).
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -235,6 +235,32 @@ describe('parseRelativeSpecifiers — a comment is not an import', () => {
                 "import a from './a.js';\nexport { B } from './b.js';\nawait import('./c.js');\nimport './d.js';",
             ).sort(),
         ).toEqual(['./a.js', './b.js', './c.js', './d.js']);
+    });
+
+    it('survives an apostrophe in comment prose — the desync that made the first fix inert', () => {
+        // THE regression. The first `stripComments` carried quote state across
+        // the whole file, so `module's` inside a doc comment opened a string
+        // that swallowed every later `/*`: the doc comment two paragraphs down
+        // was then scanned as code and the false red survived the fix. CI
+        // stayed red on the identical message, which is why this asserts the
+        // shape rather than the outcome of one file.
+        const source = [
+            "/** a module's body, described in prose */",
+            "/** an example: `export { X } from './X'` */",
+            "import real from './real.js';",
+        ].join('\n');
+        expect(parseRelativeSpecifiers(source)).toEqual(['./real.js']);
+    });
+
+    it('reads the real file the gate went red on, and finds only its true imports', () => {
+        // A literal-shape test can pass while the file that failed still fails.
+        // This one opens `src/cli/commands/uiAudit.ts` — the module whose doc
+        // comment produced `commands/uiAudit.js → missing ./X` on four jobs.
+        const real = readFileSync(
+            join(process.cwd(), 'src', 'cli', 'commands', 'uiAudit.ts'),
+            'utf8',
+        );
+        expect(parseRelativeSpecifiers(real)).not.toContain('./X');
     });
 
     // removing_this_constraint_reds_it: drop the `stripComments` call — the

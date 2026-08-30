@@ -354,50 +354,66 @@ interface MissingModule {
  * module nobody imports. That is a false red on a completeness gate, which is
  * the worst kind: it says the shipped tarball is broken when it is not.
  *
- * Deliberately a lexer rather than a regex sweep: a `//` inside a string
- * literal (`'https://…'`) is not a comment, and stripping it would join two
- * lines and hide a real specifier. Handles line comments, block comments, and
- * all three quote forms including escapes.
+ * ## Why the string state resets at every newline
+ *
+ * The first version carried quote state across the whole file, and it did not
+ * survive contact with that very comment: prose says `module's body`, and an
+ * apostrophe inside a comment is only inert while the lexer KNOWS it is inside
+ * one. One desync — a regex literal, an unpaired apostrophe reached in the
+ * wrong mode — and every subsequent `/*` reads as string content, so the doc
+ * comment is scanned as code and the false red survives the fix. Measured: the
+ * fix shipped, CI stayed red on the identical message.
+ *
+ * So block-comment state is tracked ACROSS lines (a block comment is the thing
+ * being removed) while quote state is tracked WITHIN one line and discarded at
+ * the newline. A desync then costs the remainder of one line instead of the
+ * remainder of the file. A multi-line template literal containing a relative
+ * specifier would be read as code — a false red, the same direction the gate
+ * already errs, and no such literal exists in the compiled output this walks.
  */
 export function stripComments(source: string): string {
-    let out = '';
-    let i = 0;
-    type Mode = 'code' | 'line' | 'block' | 'single' | 'double' | 'template';
-    let mode: Mode = 'code';
-    while (i < source.length) {
-        const c = source[i] as string;
-        const next = source[i + 1];
-        if (mode === 'code') {
-            if (c === '/' && next === '/') { mode = 'line'; i += 2; continue; }
-            if (c === '/' && next === '*') { mode = 'block'; i += 2; continue; }
-            if (c === "'") mode = 'single';
-            else if (c === '"') mode = 'double';
-            else if (c === '`') mode = 'template';
-            out += c;
+    const out: string[] = [];
+    let inBlock = false;
+    for (const rawLine of source.split('\n')) {
+        let line = '';
+        let i = 0;
+        let quote: string | null = null;
+        while (i < rawLine.length) {
+            const c = rawLine[i] as string;
+            const next = rawLine[i + 1];
+            if (inBlock) {
+                if (c === '*' && next === '/') {
+                    inBlock = false;
+                    i += 2;
+                    continue;
+                }
+                i += 1;
+                continue;
+            }
+            if (quote !== null) {
+                line += c;
+                if (c === '\\' && next !== undefined) {
+                    line += next;
+                    i += 2;
+                    continue;
+                }
+                if (c === quote) quote = null;
+                i += 1;
+                continue;
+            }
+            if (c === '/' && next === '/') break;
+            if (c === '/' && next === '*') {
+                inBlock = true;
+                i += 2;
+                continue;
+            }
+            if (c === "'" || c === '"' || c === '`') quote = c;
+            line += c;
             i += 1;
-            continue;
         }
-        if (mode === 'line') {
-            if (c === '\n') { mode = 'code'; out += c; }
-            i += 1;
-            continue;
-        }
-        if (mode === 'block') {
-            if (c === '*' && next === '/') { mode = 'code'; i += 2; continue; }
-            // Keep newlines so line-anchored patterns still see line starts.
-            if (c === '\n') out += c;
-            i += 1;
-            continue;
-        }
-        // Inside a string: copy verbatim, honour escapes, and close on the
-        // matching quote.
-        out += c;
-        if (c === '\\' && next !== undefined) { out += next; i += 2; continue; }
-        const closer = mode === 'single' ? "'" : mode === 'double' ? '"' : '`';
-        if (c === closer) mode = 'code';
-        i += 1;
+        out.push(line);
     }
-    return out;
+    return out.join('\n');
 }
 
 export function parseRelativeSpecifiers(rawSource: string): string[] {
