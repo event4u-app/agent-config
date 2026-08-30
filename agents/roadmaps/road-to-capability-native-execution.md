@@ -228,12 +228,48 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       and is carried into Phase 4's exit criteria, with `explainLadder` named
       above as the specific thing Phase 4 must import from rather than mirror.
 
-- [ ] **0.5 Freeze the browser benchmark fixtures.** Minimum set: project
+- [x] **0.5 Freeze the browser benchmark fixtures.** Minimum set: project
       Playwright available; playwright-cli only; MCP only; CLI + MCP; backend
       unavailable; unhealthy backend; capability advertised but not
       dispatchable; evidence-degraded fallback.
       `verify:` the fixture digest is committed in a commit that **precedes**
       the first commit touching any resolver or adapter code.
+
+      **CLOSED 2026-08-30.** `internal/bench/corpora/browser-dispatch/` carries
+      eight scenarios in `scenarios.jsonl` — one per state this step lists by
+      hand — plus a `manifest.json` whose `sha256` entry IS the freeze. Same
+      shape as the encoding-channels corpus next to it, deliberately: a frozen
+      corpus with no digest is a corpus nobody would notice being edited.
+
+      **What is frozen, and what is deliberately NOT.** Each row freezes a HOST
+      STATE and the observable facts a probe can read from it — is the module
+      resolvable, is the binary installed, is the server reachable. **No row
+      carries an expected selector verdict**, and the omission is the point:
+      Risk 3 in this roadmap's own register is acceptance criteria
+      pre-registered against a mechanism with no production caller (the retired
+      budget-routing contract, `session_tier` non-null in 0 of 327 records).
+      Freezing verdicts here would pre-register exactly that, before Phase 3 has
+      a caller and before Phase 4 has a selector to judge. The labels recorded
+      instead are true or false independently of anything this roadmap builds.
+
+      Two distinctions are frozen separately because they are the two a static
+      probe most often collapses: **present ≠ healthy** (`s6`, Playwright
+      importable with no browser binaries) and **advertised ≠ reachable** (`s7`,
+      an MCP server advertising a capability it cannot dispatch — the row
+      `dispatchable` exists for).
+
+      `tests/contracts/browser_dispatch_corpus_freeze.test.ts` (5 tests) asserts
+      the digest, the scenario SET against the eight names above, the absence of
+      any verdict-shaped key, that the host states actually differ, and both
+      distinctions. **Sensitivity proven:** appending one scenario line turned 3
+      of the 5 red — digest, set, and distinct-host-count — and the line was
+      removed.
+
+      **Ordering, which is this step's actual verify clause:** the corpus and
+      its manifest land in this commit, and no resolver or adapter code exists
+      anywhere in the tree at this point — Phases 1-9 are entirely unstarted, so
+      the precedence the clause asks for is satisfied by construction rather
+      than by commit ordering within a series.
 
 - [ ] **0.6 Pre-register the outcome bars and their falsifiers.** Dispatch
       success, evidence completeness, token/context cost, wall-clock, setup
