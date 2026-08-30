@@ -553,7 +553,7 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 3 — Episode lifecycle and delayed amendment
 
-- [ ] **3.1 Give an episode a lifecycle, because outcomes arrive late.**
+- [x] **3.1 Give an episode a lifecycle, because outcomes arrive late.**
       `from-skipped-parent`: rework and regressions arrive after a task is
       already terminal, so an episode needs `open → terminal → observed →
       amended`, with historical events never rewritten — an amendment is a new
@@ -562,6 +562,32 @@ So the state is deliberate and bounded rather than an oversight:
       repeat is precisely the signal that surfaces after the audit line is
       written, so without amendment the master's one metric cannot be computed
       correctly.
+      **DONE 2026-08-30, on the carrier this step does not name.**
+      `src/scripts/_lib/runtime_journal.ts` already had three of the four rungs
+      — `open` (`opened_at`/`opened_by`), `terminal` (`terminal_state`), and
+      `observed` (the `consumption` column, stored and unfilled). Only
+      `amended` was missing, so nothing new was built: an `amends_seq` column
+      was added, `JOURNAL_SCHEMA_VERSION` bumped to 3 (a mismatch discards and
+      rebuilds — the store is gitignored and rebuildable by design), and
+      `reconstructEpisode` taught to fold.
+      **Byte-identical is asserted on the STORED ROW**, compared before and
+      after as raw SQLite output rather than as a reconstructed object — the
+      append-only guarantee is about the row, not about a projection of it. The
+      reconstruction still returns every original row unfiltered; what folding
+      changes is which rows are *effective*.
+      **The one-line defect the fold fixes:** `closing` was
+      `events.find(e => e.terminal_state !== null)` — the FIRST terminal state.
+      With amendments that returns the superseded verdict forever while the
+      amendment sits in the table unread. It is now the LAST effective one.
+      **The second conjunct needed a metric that did not exist**, so
+      `src/scripts/_lib/repeated_failure.ts` computes it — and reads the amended
+      view **by construction, not by documentation**: its input type is
+      `EpisodeReconstruction` and it has no overload taking raw
+      `JournalEvent[]`, so a caller cannot compute the rate over unamended rows
+      because there is nothing to pass. The test pins the gap the amendment path
+      exists for: the same two episodes read 0/2 unamended and 1/2 amended.
+      **Sensitivity checked by sabotage:** restoring `find` turns both amendment
+      tests red; restoring the fold turns them green.
       verify: an amendment arriving after a terminal state produces a new record
       and leaves the original byte-identical; the repeated-failure rate reads the
       amended view.

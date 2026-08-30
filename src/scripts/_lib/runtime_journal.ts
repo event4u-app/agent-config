@@ -197,7 +197,7 @@ type Assert<T extends true> = T;
  * a gitignored, rebuildable record under `.git/`, and a migration path for a
  * schema nothing has consumed yet would be code with no reader.
  */
-export const JOURNAL_SCHEMA_VERSION = 2;
+export const JOURNAL_SCHEMA_VERSION = 3;
 
 /**
  * The version of the boundary-derivation rule recorded on every event.
@@ -412,6 +412,23 @@ export interface JournalEvent {
     consumption: Consumption | null;
     /** Provisional per-record expiry; see {@link effectiveExpiry}. ISO-8601. */
     retain_until: string;
+    /**
+     * The `seq` this event AMENDS, or `null` for an original observation.
+     *
+     * Outcomes arrive late. Rework, a regression, a review that lands after the
+     * episode already closed — all of these are information about an episode
+     * whose terminal event is already written, and this store is append-only by
+     * construction (`seq` is assigned by SQLite and never by a caller), so the
+     * original cannot be edited and must not be.
+     *
+     * An amendment is therefore a NEW ROW pointing at the one it revises. The
+     * original stays byte-identical forever; {@link reconstructEpisode} folds
+     * the chain when it projects the episode. That ordering matters for the
+     * repeated-failure rate in particular: a repeat is exactly the signal that
+     * surfaces after the record is written, so a rate computed over unamended
+     * rows systematically undercounts the thing it is trying to measure.
+     */
+    amends_seq: number | null;
 }
 
 /** The committed key set. AC-2 asserts a record's keys against exactly this. */
@@ -433,6 +450,7 @@ export const JOURNAL_RECORD_KEYS = Object.freeze([
     'verification_ref',
     'consumption',
     'retain_until',
+    'amends_seq',
 ] as const);
 
 type _KeysCoverTheRecord = Assert<
@@ -743,7 +761,8 @@ function createSchema(db: DatabaseSync): void {
             return_ref TEXT,
             verification_ref TEXT,
             consumption TEXT,
-            retain_until TEXT NOT NULL
+            retain_until TEXT NOT NULL,
+            amends_seq INTEGER
         )`,
     );
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_episode ON journal_event(repository_id, episode_id, seq)');
@@ -966,6 +985,11 @@ export interface RecordEventInput {
     return_ref?: string | null;
     verification_ref?: string | null;
     consumption?: Consumption | null;
+    /**
+     * The `seq` this event amends. Omit for an original observation.
+     * See {@link JournalEvent.amends_seq} for why an amendment is a new row.
+     */
+    amends_seq?: number | null;
     /** ISO instant; defaults to now. Injectable so tests are deterministic. */
     at?: string;
 }
@@ -1036,6 +1060,7 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
         verification_ref: requireRef('verification_ref', input.verification_ref),
         consumption: input.consumption ?? null,
         retain_until,
+        amends_seq: input.amends_seq ?? null,
     };
 
     h.db
@@ -1043,8 +1068,9 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
             `INSERT INTO journal_event
              (event, episode_id, session_id, task_id, prompt_id, boundary_status,
               boundary_rule_version, repository_id, worktree_id, at, capability,
-              terminal_state, return_ref, verification_ref, consumption, retain_until)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              terminal_state, return_ref, verification_ref, consumption, retain_until,
+              amends_seq)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
             row.event,
@@ -1063,6 +1089,7 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
             row.verification_ref,
             row.consumption,
             row.retain_until,
+            row.amends_seq,
         );
     const seqRow = h.db.prepare('SELECT last_insert_rowid() AS seq').get() as { seq: number | bigint };
     return { seq: Number(seqRow.seq), ...row };
@@ -1087,6 +1114,7 @@ function toEvent(r: Record<string, unknown>): JournalEvent {
         verification_ref: (r['verification_ref'] as string | null) ?? null,
         consumption: (r['consumption'] as Consumption | null) ?? null,
         retain_until: String(r['retain_until']),
+        amends_seq: r['amends_seq'] === null || r['amends_seq'] === undefined ? null : Number(r['amends_seq']),
     };
 }
 
@@ -1142,6 +1170,14 @@ export interface EpisodeReconstruction {
     verification_ref: string | null;
     consumption: Consumption | null;
     capabilities: string[];
+    /**
+     * How many rows in this episode were superseded by a later amendment.
+     *
+     * Reported rather than hidden: a projection that silently differs from the
+     * raw rows is the shape a reader cannot audit, and this number is how they
+     * tell "the store says X" from "the store's latest word is X".
+     */
+    amendment_count: number;
     events: JournalEvent[];
     retain_until: string;
     /** Names of the nullable fields that are genuinely absent. */
@@ -1173,11 +1209,32 @@ export function reconstructEpisode(
     const events = readEpisodeEvents(h, episode_id, repository_id);
     if (events.length === 0) return null;
     const first = events[0]!;
-    const closing = events.find((e) => e.terminal_state !== null) ?? null;
+
+    // Amendment folding. `events` is returned WHOLE and untouched -- every
+    // original row is still there, byte-identical, which is the property the
+    // append-only store exists to guarantee. What the projection does is
+    // decide which rows are still EFFECTIVE.
+    const amended = new Set<number>();
+    for (const e of events) {
+        if (e.amends_seq !== null) amended.add(e.amends_seq);
+    }
+    const effective = events.filter((e) => !amended.has(e.seq));
+
+    // LAST terminal state, not the first. This is the line the amendment path
+    // exists for: an outcome that arrives after the episode closed is the whole
+    // point, and `find` would have kept returning the superseded verdict
+    // forever while the amendment sat in the table unread.
+    let closing: JournalEvent | null = null;
+    for (let i = effective.length - 1; i >= 0; i -= 1) {
+        if (effective[i]!.terminal_state !== null) {
+            closing = effective[i]!;
+            break;
+        }
+    }
 
     const latest = <K extends keyof JournalEvent>(k: K): JournalEvent[K] | null => {
-        for (let i = events.length - 1; i >= 0; i -= 1) {
-            const v = events[i]![k];
+        for (let i = effective.length - 1; i >= 0; i -= 1) {
+            const v = effective[i]![k];
             if (v !== null && v !== undefined) return v;
         }
         return null;
@@ -1200,6 +1257,8 @@ export function reconstructEpisode(
         verification_ref: (latest('verification_ref') as string | null) ?? null,
         consumption: (latest('consumption') as Consumption | null) ?? null,
         capabilities: [...new Set(events.map((e) => e.capability))],
+        /** How many rows in this episode were superseded by an amendment. */
+        amendment_count: amended.size,
         events,
         retain_until: events[events.length - 1]!.retain_until,
         absent: [],
