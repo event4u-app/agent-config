@@ -290,7 +290,7 @@ once.
 > its verify asks for a committed, falsifiable document and nothing more, which
 > is satisfiable today and is worth less every day it waits.
 
-- [~] **0.4 Make the evaluator trust boundary detectable, not just declared.** <!-- blocked-by: guard-call-site-integration -->
+- [x] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
       and stops there. Add a per-field `visibility_class` on every observation, a
@@ -298,11 +298,85 @@ once.
       truth appears in proposer context.
       verify: a run in which a holdout value reaches proposer context exits
       non-zero, and the disclosure log names the field.
-- [~] **0.5 Pre-register the budget invariant.** <!-- blocked-by: guard-call-site-integration --> Candidate count, trial
+      **RE-CLOSED 2026-08-30 on `blocker: guard-call-site-integration`'s own
+      `Resolved when`.** The guard existed and had no production call site; it
+      now has one — `discloseToProposer` at `evolution_lab.ts:337`, inside
+      `discloseObservations` on the `propose` verb — and the acceptance test
+      drives the **real CLI** and asserts a non-zero **process** exit, which is
+      the distinction the (d) seat held a unit test cannot establish.
+      `./scripts-run src/scripts/evolution_lab propose --observations leak.json`
+      → **exit 4**, stderr `disclosure: REFUSED obs[0] field=holdoutScore
+      class=holdout` then `evolution_lab: ABORTED on evaluator trust boundary
+      (field: holdoutScore)`. The verify clause's second conjunct — *"the
+      disclosure log names the field"* — is that `REFUSED … field=` line;
+      `discloseToProposer` logs only what it RELEASED by design, so the refusal
+      is recorded at the call site.
+      **The gap this closed was live, not ceremonial:** `parseObservations`
+      ignores unknown keys, so an observations file carrying `holdoutScore: 0.83`
+      beside a subject flowed straight into proposer input with nothing looking
+      at it. That is a holdout value reaching proposer context.
+      **0.4's per-field `visibility_class` landed in its literal form** —
+      `parseObservationDocument` (`:262`) accepts
+      `{field_visibility:[{field, visibility_class}], observations:[…]}` — and an
+      observations file may **not** re-classify a reserved field.
+      `OBSERVATION_FIELD_VISIBILITY` (`:225`) declares the three
+      proposer-visible fields and everything else **falls closed to `holdout`**
+      via the guard's own default, so an undeclared field aborts identically to
+      a declared one. All three classes are exercised rather than two: an
+      `evaluator-private` field is **dropped, not aborted**, and does not appear
+      in the log.
+      **"Before any external call" is proven by ordering, not asserted.** The
+      leaking observation's `subject` is a path that does not exist. If
+      disclosure runs first the process exits 4 naming the field; if the
+      proposer ran first it would exit 1 with an ENOENT-shaped message. The test
+      asserts exit 4 **and** that stderr does not contain `ENOENT`, so the two
+      orderings are distinguishable and the correct one is pinned. The `--out`
+      directory is never created and stdout is empty.
+      **`run` was deliberately NOT given a disclosure gate**, for the same
+      reason this blocker exists: `run` consumes candidate *records*, whose
+      fields are fully schema-constrained with no free-form field, so there is
+      no proposer context for a holdout value to reach. A call site nothing
+      could exercise is the coverage inflation the blocker was raised against.
+      Decided from the code, and stated rather than quietly skipped.
+- [x] **0.5 Pre-register the budget invariant.** Candidate count, trial
       repetitions and a spend ceiling per run, fixed before the run. Exceeding it
       aborts rather than truncates — a truncated run yields `underpowered`, which
       `paired_verdict` refuses to call a pass and which a reader mistakes for one.
       verify: a run configured past the ceiling exits non-zero before spending.
+      **RE-CLOSED 2026-08-30, same blocker, same evidence standard.**
+      `assertWithinBudget(plan, loadRunBudget())` now has two production call
+      sites — `evolution_lab.ts:646` (`propose`) and `:729` (`run`) — reading
+      the committed `src/config/harness-evolution-budget.json`.
+      `./scripts-run src/scripts/evolution_lab run --records <dir with 6>` →
+      **exit 4**: `ABORTED on the pre-registered budget (dimension: candidates)`
+      · `planned candidates 6 exceeds the pre-registered ceiling 5` ·
+      `ABORTING BEFORE THE RUN, not truncating it`. All three dimensions are
+      exercised — candidates 6 > 5, trials 21 > 20, spend 501 > 500 — and
+      `propose` with six observations aborts identically, which closes the
+      evade-by-batching route.
+      **The ordering observable is stronger than a clone probe and is the one
+      that matters:** one of the six records is **not valid JSON**. If the
+      budget check runs first the process exits 4 on `dimension: candidates`; if
+      record loading ran first it would exit 1 on `not valid JSON`. The test
+      asserts exit 4 **and** that stderr does not contain `not valid JSON` — so
+      the abort provably precedes the first record even being *parsed*, two
+      stages upstream of `clone_candidate`. `candidates` is derived from the
+      record set rather than declared, precisely so a declared count cannot be
+      used to truncate to fit.
+      **A positive pole keeps the negatives honest:** exactly AT every ceiling
+      (5 / 20 / 500) does **not** abort — it proceeds and dies at the next stage
+      with exit 1 — so none of the above passes because the verb refuses
+      everything.
+      `loadRunBudget` (`:181`) is **fail-closed in every direction**: missing
+      file, bad JSON, missing key, non-integer and negative all throw, with no
+      fallback budget. A default would be a ceiling nobody pre-registered.
+      **One caveat carried forward rather than buried:** `run` derives
+      `candidates` from the record set — the truth — but takes trials and spend
+      from flags defaulting to 1 and 0, because this verb runs no trials and
+      makes no billable call. So those two dimensions are today enforced against
+      *what a caller says it will spend*, not a metered figure. The guard call
+      is in the right place; the number reaching it improves when Phase 4 adds a
+      cascade that actually spends.
 - [x] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
       spend.** `from-skipped-parent`: both parents carried eight or nine stop
       conditions; the master compressed them into the budget cap. A spend cap
@@ -702,13 +776,38 @@ once.
 
 ## Phase 3 — Candidate isolation and lifecycle
 
-- [ ] **3.1 Add a candidate variant to the existing variant enum.** A new member
+- [x] **3.1 Add a candidate variant to the existing variant enum.** A new member
       plus its surface definition; `bench_ab_integrity` keeps asserting
       byte-wise against it.
       verify: five candidates materialised and destroyed with no diff in the
       original tree; sabotaging a path ownership makes `bench_ab_integrity` exit
       non-zero.
-- [ ] **3.2 One primary dimension per candidate.** `from-skipped-parent`, raised
+      **DONE 2026-08-30, and the § What already exists note was right — this was
+      an enum member on existing machinery, not new isolation.** `Variant`
+      (`bench_ab_clone.ts:402`), accepted at `_checkVariant:470`, plus a
+      `--candidate-record` flag. `clone_candidate` (`:325`) materialises at
+      `clones/candidate-<id>`; `apply_candidate_mutations` (`:296`);
+      `load_candidate_record` (`:360`) validates **before** any bytes are copied.
+      The `all` aggregate is deliberately NOT extended (`:517`) — a candidate
+      needs a record to know its dimension, so there is no blind aggregate that
+      could produce one.
+      `bench_ab_integrity` keeps asserting byte-wise: `discover_candidate_clones`
+      (`:179`) finds candidate roots **by directory prefix** rather than from a
+      passed list, so a candidate cannot escape the sweep by not being named, and
+      `compare_indexes` (`:151`) compares each against the **`without`**
+      baseline — not `with`, which would let a candidate inherit an unnoticed
+      `with` violation.
+      **Both polarities, and the sabotage was seen red.**
+      `tests/scripts/bench_ab_candidate.test.ts` VERIFY 1 builds five clones,
+      lands mutations, destroys them, then asserts `git status --porcelain` over
+      the four surface paths and a byte snapshot are identical to the pre-run
+      values. VERIFY 2 runs three phases in one test: five clean candidates →
+      exit 0 (each named in `--verbose`, so a check that scanned nothing could
+      not pass it); one file written outside the surface → **exit 1**, naming
+      only the guilty candidate; that file removed → exit 0 again. **The third
+      phase is the load-bearing one** — without it the red could have been the
+      setup rather than the guard.
+- [x] **3.2 One primary dimension per candidate.** `from-skipped-parent`, raised
       to doctrine level there and absent from the master. Reducing the mutation
       *alphabet* to three dimensions — which the master did — is not the same
       invariant as limiting a candidate's *arity*. If routing and body both
@@ -717,12 +816,52 @@ once.
       separate, later re-run, not a candidate.
       verify: the schema rejects a candidate touching two primary dimensions,
       and a consolidation run is a distinct record type.
-- [ ] **3.3 Restrict the mutation alphabet to three dimensions.** `activation`,
+      **DONE 2026-08-30 — the arity lives in the TYPE, not only in a
+      validator.** `CandidateRecord.dimension` is a scalar
+      (`src/scripts/_lib/candidate_record.ts`), so a two-dimension candidate is
+      not expressible rather than merely refused. `parseCandidateRecord` (`:455`)
+      then closes the three ways round it: a `dimensions` key rejected **by
+      name**, `dimension` supplied as an array rejected **even with one member**
+      (the invariant is about what the field CAN hold), and no cross-parsing
+      between the two record types. `ConsolidationRecord` +
+      `parseConsolidationRecord` (`:500`) is the distinct type and requires ≥ 2
+      **distinct** dimensions and ≥ 2 source candidates, so it cannot be used as
+      an escape hatch for a one-dimension candidate — `['routing','routing']` is
+      refused, and that case is tested.
+- [x] **3.3 Restrict the mutation alphabet to three dimensions.** `activation`,
       `routing`, `content`. Precedence, composition, verification, tool
       strategy, budget and scope are named and unimplemented until the three
       carry.
       verify: the schema rejects a mutation naming a fourth dimension.
-- [ ] **3.4 A candidate lifecycle state enum, so "mutated" and "accepted" cannot
+      **DONE 2026-08-30, and E10 SPLIT rather than converging — recorded as a
+      split, not dressed as a verdict.** AI council 2026-08-30, anthropic
+      (claude-sonnet-4-5) + openai (gpt-4o), **1/1**: anthropic for FOUR
+      dimensions, adding `verification` now on an irreversibility argument —
+      *"mutation dimensions are metadata on candidate records; adding
+      verification later means all prior candidates are permanently
+      unclassifiable under the new dimension"* — openai for THREE, adding it only
+      on demonstrated need. Per this repository's escalation handling a split is
+      not a licence to pick the convenient half, so the **conservative side was
+      taken: three**, which is what this step already specified. The verify
+      clause therefore stands unchanged rather than being re-scoped to fit an
+      answer.
+      `MUTATION_DIMENSIONS` (`candidate_record.ts:71`) is exactly `activation |
+      routing | content`. The six named-and-unimplemented dimensions are
+      **absent**, not present-and-disabled. The negative test probes
+      `verification` specifically — the fourth the losing seat argued for — plus
+      `precedence`, `composition`, `tool-strategy`, `budget`, `scope` and `''`,
+      and the clone boundary rejects them with **no clone directory created**.
+      **The losing seat's concern is satisfied as a design constraint rather
+      than waved off**, which is what a split obliges: `CANDIDATE_RECORD_VERSION`
+      (`:58`) is stamped on every record, and the unknown-dimension refusal lives
+      in the **validator** (`parseCandidateRecord`) and never in the **reader**
+      (`readCandidateRecord:576`), which returns such a record with the dimension
+      **flagged, not thrown**. So adding a fourth dimension later is an additive
+      change and historical records never become unclassifiable — the exact
+      information loss the anthropic seat named. Both directions are tested:
+      *"the READER survives an unknown dimension"* and *"the VALIDATOR still
+      refuses that same record"*.
+- [x] **3.4 A candidate lifecycle state enum, so "mutated" and "accepted" cannot
       be confused.** `from-skipped-parent`: both parents made this the
       structural guard, one tracing the defect to the reference implementation
       passing `mutated` in where `accepted` was expected. The master has no
@@ -731,11 +870,83 @@ once.
       promotion-proposed → promoted | rejected | retired.
       verify: no code path reads a candidate as accepted from the mere fact that
       it exists; a state transition skipping a stage is refused.
-- [ ] **3.5 Ship a deterministic proposer first.** Fixed recipes for known
+      **DONE 2026-08-30.** `LIFECYCLE_SPINE` (`candidate_record.ts:87`) +
+      `LIFECYCLE_STATES` (`:97`); `ACCEPTED_STATE` (`:112`) and `isAccepted`
+      (`:122`) are the **single** acceptance site, so there is one place to read
+      rather than a predicate repeated per caller. `requireLifecycle` (`:386`)
+      **refuses an absent state rather than defaulting it** — a default would
+      reintroduce exactly the reference-implementation defect this step cites,
+      where `mutated` arrived where `accepted` was expected.
+      `assertTransition` (`:196`) allows one forward spine step, any → `rejected`
+      and `promoted` → `retired`; it refuses skips, backwards moves,
+      self-transitions and any move out of a terminal state.
+      **The negative tests are exhaustive rather than exemplary**, which matters
+      for a spine: *"a transition skipping a stage is refused"* iterates **every**
+      skip of size ≥ 2 across the spine, not one example, and *"existence is not
+      acceptance"* asserts `isAccepted` is false for all eight non-promoted
+      states including `sealed-evaluated` and `promotion-proposed`.
+      **Phase 0's carried non-promotion condition — the transition half only, and
+      the other half is NOT claimed.** `→ promoted` additionally requires a
+      **named** human approver (`assertHumanApproval:237`); blank or
+      whitespace-only is refused, and an approver does not buy a stage skip (the
+      two guards are independent and tested as such). What holds is narrower than
+      the condition: no code path can move a candidate into `promoted` without a
+      name **on any surface that calls this function**. The verb half is 3.6.
+      A gate asserting *"no Phase 1–6 code promotes"* was deliberately **not**
+      written: there is still no promotion verb, so it would scan a population of
+      zero and exit green — which this roadmap itself calls worse than no gate.
+      **One implementation change was made because of the sensitivity
+      discipline, and it is worth recording:** `apply_candidate_mutations`'
+      resolved-path check originally called `die()` (`process.exit`), which no
+      unit test can exercise without killing the runner. It now throws
+      `PathOwnershipError` and `main` converts it back to exit 1 — an untestable
+      branch is worse than a testable one.
+      **Every guard in Phase 3 was seen RED.** Twelve guards were neutralised in
+      source one at a time, the suite re-run, and the source restored from a
+      scratchpad copy (never `git checkout`, per this repository's recorded
+      probe discipline): the `dimensions`-key rejection, the array-dimension
+      rejection, the alphabet check, the stage-skip check, the promotion approver
+      gate, lifecycle-defaulted-not-refused, `isAccepted` widened past
+      `promoted`, the path-traversal check, the reader made to throw on an
+      unknown dimension, integrity ceasing to enumerate candidates, candidate
+      failures dropped from the exit code, the candidate prefix drifting between
+      the two scripts, and the resolved-path escape check. All went red; all
+      restored byte-clean. A guard never seen red has unknown sensitivity.
+- [x] **3.5 Ship a deterministic proposer first.** Fixed recipes for known
       defect classes, so the loop is validated without model quality as a
       confound.
       verify: the same input produces byte-identical candidates across two runs.
-- [ ] **3.6 Give the operator a command surface.** `from-skipped-parent`: a
+      **DONE 2026-08-30.** `src/scripts/_lib/candidate_proposer.ts`.
+      `DEFECT_CLASSES` (`:69`) is three fixed classes, one per mutation
+      dimension — `over-broad-activation` → activation,
+      `unrouted-obligation` → routing, `unbacked-enforcement-claim` → content —
+      so the alphabet 3.3 fixed is what bounds the proposer rather than a second
+      list that could drift from it. `RECIPES` (`:166`) are **total** (defined on
+      every string, `''` included) and **idempotent**, both asserted over eight
+      inputs. `proposeCandidates` (`:361`) emits every record at
+      `lifecycle: 'proposed'` with no way to ask for another state — the
+      lifecycle enum is not bypassable from the producing side. `candidateId`
+      (`:322`) is a sha256 over class + subject + mutation bytes: no clock, no
+      counter, no randomness.
+      **The determinism claim is proved three independent ways, not asserted.**
+      (1) the same list twice yields identical joined bytes; (2) the same list
+      **permuted** — reversed and rotated — yields identical bytes, which is the
+      reading that matters, since a proposer that merely preserved input order
+      would pass (1) and fail (2); (3) through the CLI into two directories,
+      `diff -r` exit 0 and both files at sha256
+      `4d5bffadd0ea782051911478d7137b4379835c329943b90146b66e7b60fb16de`. Read
+      order is deterministic too, because read order decides whose error message
+      surfaces first.
+      **A guard was DELETED because it could not be seen red**, and that is the
+      right disposal rather than a gap: `proposeCandidates` also sorted its
+      OUTPUT by id, and neutralising that sort changed nothing observable — the
+      input sort already fixed the order. A guard whose red cannot be produced is
+      indistinguishable from one that does not work, so ordering now happens
+      exactly once, on the input.
+      **Seven proposer guards seen red** (P1a, P1b, P2–P7 in the sensitivity
+      sweep), including a `Date.now()` planted in the proposer, which the
+      determinism scanner caught.
+- [x] **3.6 Give the operator a command surface.** `from-skipped-parent`: a
       verb set (`inspect`, `propose`, `run`, `compare`, `explain`, `promote`,
       `clean`) with no background loop. This is what makes "command-scoped, no
       daemon" enforced rather than asserted, and the master's Phase 3 exit
@@ -743,6 +954,57 @@ once.
       that would do it.
       verify: every phase's exit criterion is reachable through a named verb,
       and no verb starts a resident process.
+      **DONE 2026-08-30 — with the first half of the verify clause SCOPED, and
+      the scope is recorded rather than quietly satisfied.** `VERBS`
+      (`src/scripts/evolution_lab.ts:92`) is exactly the seven the step names.
+      `main` (`:591`) is a pure `argv → number`; the only `process.exit` is the
+      CLI entry, and `run` / `compare` reach `bench_ab_clone` and
+      `bench_ab_integrity` by **direct function call**, so nothing can outlive
+      the process. One-line change to `bench_ab_clone.ts:66` — `const CLONES`
+      became `export const CLONES` — so the `clean` verb discovers candidate
+      clones without a fourth copy of that path join.
+      **Second conjunct — "no verb starts a resident process" — is ENFORCED, in
+      two independent ways.** Static: a scanner over the module's own bytes for
+      `setInterval` / `setTimeout` / `setImmediate` / `child_process` /
+      `spawn(` / `fork(` / `watch(` / `while (true)` / `for (;;)` / `.unref(` /
+      `detached:`. Dynamic: every verb is spawned under a hard timeout asserting
+      `signal === null` — a verb leaving a resident child holding stdio would
+      keep the pipe open and come back killed, so a timeout is a **positive
+      detection** rather than a flake. Both strippers carry an anti-vacuity
+      assertion, because a stripper returning `''` would make the scan pass over
+      nothing.
+      **First conjunct — "every phase's exit criterion is reachable through a
+      named verb" — is half met and half unmeetable TODAY, and is recorded as
+      such.** Phases 4–7 do not exist in this tree, so no verb can reach an exit
+      criterion they do not have, and Phase 7 is separately blocked on
+      `merge-authority`. Phases 1–2's criteria (the frozen corpus, the holdout)
+      belong to other carriers and are not verb-shaped. `EXIT_CRITERION_COVERAGE`
+      (`:132`) therefore covers **Phase 3 only** and says so in its own output.
+      **What makes this a scope rather than a hole is the forcing function:** a
+      test asserts every key in that map starts with `3.`, so a later phase
+      landing without a verb fails a test instead of silently inheriting the
+      claim. Without that test this step would be claiming something about
+      phases nobody has written, which is the shape 0.1 declined for the command
+      surface.
+      **`promote` REFUSES, and the refusal is not the only thing stopping it.**
+      `EXIT_REFUSED = 3` (`:120`): the verb routes the intended transition
+      through `assertTransition(record.lifecycle, 'promoted')` **with no approval
+      argument**, prints that gate's message plus the `merge-authority` blocker
+      text, and returns 3. There is no `--approver` flag (it exits 2 as an
+      unrecognised argument), and a scanner asserts the module contains no
+      `approver:` / `approvedAt:` / `HumanApproval` expression — so **deleting
+      the refusal would still not produce a promotion**. The negative test drives
+      it from **every** spine state, which catches the specific failure of a
+      promote that refuses on the spine guard from `proposed` and would succeed
+      from `promotion-proposed`.
+      **Ten lab guards seen red** (L1–L9 plus the coverage-map row), each
+      neutralised in source and restored from a scratchpad copy.
+      **Scope note carried forward:** `evolution_lab` is a standalone script in
+      the `bench_ab_*` family, invoked as
+      `./scripts-run src/scripts/evolution_lab <verb>`, **not** an
+      `agent-config` verb. Registering it in the CLI registry touches the
+      budget-sync surface and several others and is a separate decision, not
+      smuggled in here.
 
 ## Phase 4 — Evaluation
 
@@ -963,7 +1225,33 @@ once.
 
 ### blocker: guard-call-site-integration
 
-- **Status:** open — **the council SPLIT on this, and the conservative side was
+- **Status:** resolved 2026-08-30 — **satisfied on its own `Resolved when`,
+  both halves, and the conservative side turned out to be reachable in the same
+  run that took it.** The split is left recorded below rather than rewritten:
+  it was a real disagreement and the record of it is what made the acceptance
+  test the (d) seat's shape rather than the (b) seat's.
+  The `Resolved when` asked for an end-to-end test driving the real runner to a
+  non-zero **process** exit on (a) a holdout value reaching proposer context
+  and (b) a plan past the pre-registered ceiling, both before any external call,
+  with 0.4 and 0.5 re-closed citing it. All of that is now true:
+  `tests/scripts/harness_evolution_guard_call_sites.test.ts` spawns
+  `./scripts-run src/scripts/evolution_lab` and asserts `status === 4` on each,
+  and both steps are `[x]` above with the evidence at the step.
+  **The blocker's own measurement, re-run.**
+  `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returned three
+  paths and **zero production call sites** when this blocker was written. It now
+  returns four, the fourth being `src/scripts/evolution_lab.ts` — a runner.
+  The acceptance test does **not** appear in that grep, deliberately: it never
+  calls a guard directly, only the CLI, which is exactly what the (d) seat
+  asked for.
+  **The two neutralisations that settle the split.** G4 and G5 in the
+  sensitivity sweep remove *only* the throw→process-exit conversion, leaving the
+  guard call in place. The test still goes red — which is the property the (d)
+  seat said a unit test observing a thrown exception cannot establish, and the
+  reason "pending integration" was the right disposition rather than
+  over-caution. Ten new call-site guards, 10/10 seen red.
+  **Superseded status line, kept for the record:** open — **the council SPLIT on
+  this, and the conservative side was
   taken.** AI council 2026-08-30, anthropic + openai, **1/1 for (b) and 1/1 for
   (d)** — not convergent, which `roadmap-progress-sync` classes as an escalation
   condition rather than a verdict.
@@ -977,6 +1265,10 @@ once.
   clauses name, and **the gap is real** — nothing in Phase 0 forces a future
   runner to call `assertWithinBudget` or `discloseToProposer`. Both seats asked
   for a call-site acceptance criterion; **AC-8 below is it.**
+  (**Renumbered to AC-11 on 2026-08-30** — it collided with a pre-existing AC-8
+  about programme success criteria, so this sentence pointed at two different
+  criteria. The original wording is kept above rather than rewritten, and this
+  parenthesis is the repointing; see AC-11 for the record.)
 - **Where they split.** (b): the clauses are BEHAVIOURAL, a test that invokes
   the guard and observes the throw is a run of it, and reopening holds Phase 0
   hostage to a later artefact. (d): the clauses say *"a run"* that *"exits
@@ -1137,7 +1429,15 @@ once.
   verified 2026-08-26, it is not one.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
+
+> **Re-reviewed 2026-08-31 after Phase 0 closed 8/8 and Phase 3 closed 6/6.** (The marker keeps `v1` — that field is the marker SCHEMA version, which the linter pins, not a review counter; the review generation is the `reviewed:` date.)
+> Four rows changed state and one row is new. The register is not merely
+> re-dated: rows 5, 6 and 10 name mitigations that were *planned* when v1 was
+> written and are now *implemented and exercised*, row 11's risk has resolved
+> outright, and row 12 records a residual the guard wiring surfaced. Rows 1–4,
+> 7–9 are unchanged and still live — every one of them fires in a phase that
+> has not started.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -1145,17 +1445,18 @@ once.
 | 2 | A consolidation that skips its deepest parent | implementation | Verified twice in this inbox: each folder's master named two parents and omitted the third, which itself claimed to supersede both named ones. The result reads as a decided plan while most of its content was never discussed | This roadmap folds the skipped parent back in and marks every such item `from-skipped-parent`; the sibling roadmap `road-to-consolidation-lineage-integrity.md` makes the check mechanical | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 3 | The corpus becomes the overfitting vehicle | implementation | If the pipeline that optimises against the trigger corpus also grew it, the holdout is compromised before the first candidate runs | Corpus work completes and the holdout is hash-frozen in 2.5, before any proposer exists in Phase 5; 2.3 adds counterexamples so selection cannot see only successes | Phase 2 — Trigger corpus: census first, coverage second |
 | 4 | Coverage as a vanity target | product | "94 → 299" is a number that can be reached by authoring low-discriminative fixtures, which raises the metric and measures nothing. One parent killed this shape by name; the master adopted it as a phase title | 2.1 requires a partitioned census with a stated exclusion criterion before any denominator is chosen, and 2.3 requires discriminative classes | Phase 2 — Trigger corpus: census first, coverage second |
-| 5 | Ambiguous credit from multi-dimension candidates | implementation | If a candidate changes routing and content together and the vector moves, no metric row can be attributed. The metric vector then looks informative and is not | 3.2 limits candidate arity to one primary dimension; consolidation is a separate record type | Phase 3 — Candidate isolation and lifecycle |
-| 6 | Cost blindness turns a truncated run into a false pass | implementation | Cascade evaluation over candidates × task families × repeated trials is the dominant cost. Truncating to fit budget yields `underpowered`, which a reader treats as a pass | 0.5 aborts rather than truncates; 4.3 makes `underpowered` a non-pass in code; 5.6 reduces the cost instead of only capping it | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 5 | Ambiguous credit from multi-dimension candidates | implementation | If a candidate changes routing and content together and the vector moves, no metric row can be attributed. The metric vector then looks informative and is not | **MITIGATED 2026-08-30 — the arity is in the TYPE, not in a check.** `CandidateRecord.dimension` is a scalar, so a two-dimension candidate is not expressible; the validator additionally refuses a `dimensions` key by name and an array even with one member, and `ConsolidationRecord` needs two *distinct* dimensions so it is not an escape hatch. What remains is that no metric vector exists yet to be attributed — that arrives with Phase 4 | Phase 3 — Candidate isolation and lifecycle |
+| 6 | Cost blindness turns a truncated run into a false pass | implementation | Cascade evaluation over candidates × task families × repeated trials is the dominant cost. Truncating to fit budget yields `underpowered`, which a reader treats as a pass | **PARTLY MITIGATED 2026-08-30.** 0.5 now aborts rather than truncates *at a real call site*, proven by a non-zero process exit from the CLI and by an ordering observable showing the abort precedes record parsing. 4.3 (`underpowered` a non-pass in code) and 5.6 (reduce the cost rather than cap it) are unbuilt, so the risk is reduced, not closed | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 7 | Stopping only on spend | implementation | Six of the parents' nine stop conditions detect epistemic invalidity, which a spend cap never sees. A run can complete inside budget and be worthless | 0.6 pre-registers the validity conditions with detectors, and names the ones that stay model-carried | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 8 | Monotonic estate growth after the gate | product | Every promotion adds; nothing reopens a promoted artefact. The gate-side `artifact-count delta` does not constrain the estate over time | 7.6 adds post-promotion re-evaluation with an exercised RETIRE path; 7.3 keeps most promotions below global scope | Phase 7 — Promotion bridge and the lifecycle after it |
 | 9 | Search becomes the product | product | One parent warned against this and then listed a meta-evolver, a curriculum generator and a routing tree as phases. The surface doubles before a single trustworthy run exists | Those three are killed or parked below; this roadmap stops at Phase 7 and 6.1 takes the measurable core | Phase 6 — Delivery: measure the existing substrate first |
-| 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | 0.4 adds a per-field visibility class, a disclosure log, and a run abort | Phase 0 — Constitution, reconciliation, budget, stop conditions |
-| 11 | AC-8 lands on a phase that does not exist yet, and is quietly dropped when it does | product | The call-site criterion both council seats asked for is an acceptance criterion with no phase, no step and no owner. The runner arrives in Phase 3 or later, written by whoever picks that phase up, and an AC nobody is assigned to is an AC that gets read as already-satisfied by the unit tests that closed 0.6 | The `guard-call-site-integration` blocker holds 0.4 and 0.5 at `[~]` until AC-8 is met, so the phase cannot report closed while the criterion is outstanding — the deferral is the enforcement, not the AC's wording. Both council rationales are recorded verbatim at the blocker so a later reader meets the argument rather than the conclusion | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | **MITIGATED 2026-08-30, and the gap it named was live rather than theoretical:** `parseObservations` ignored unknown keys, so a `holdoutScore` beside a subject flowed into proposer input with nothing looking at it. 0.4's per-field visibility class, disclosure log and run abort now exist AND are called — undeclared fields fall closed to `holdout`, and the abort is observed as a non-zero process exit before the proposer reads the subject | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 11 | **RESOLVED 2026-08-30** — the call-site criterion (renumbered AC-8 → AC-11, since it collided with a pre-existing AC-8) landed on Phase 3 and was met there rather than quietly dropped. The deferral did the work the row credited it with: 0.4 and 0.5 stayed `[~]` until an end-to-end test drove the real CLI to a non-zero process exit on both halves. Kept in the register rather than deleted, because the mechanism it describes — a deferral as the enforcement, not the AC's wording — is the reusable part. *Original row:* AC-8 lands on a phase that does not exist yet, and is quietly dropped when it does | product | The call-site criterion both council seats asked for is an acceptance criterion with no phase, no step and no owner. The runner arrives in Phase 3 or later, written by whoever picks that phase up, and an AC nobody is assigned to is an AC that gets read as already-satisfied by the unit tests that closed 0.6 | The `guard-call-site-integration` blocker holds 0.4 and 0.5 at `[~]` until AC-8 is met, so the phase cannot report closed while the criterion is outstanding — the deferral is the enforcement, not the AC's wording. Both council rationales are recorded verbatim at the blocker so a later reader meets the argument rather than the conclusion | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 12 | The spend ceiling is enforced against a declaration, not a measurement | implementation | **NEW 2026-08-31, surfaced by the guard wiring itself.** `run` derives `candidates` from the record set — the truth — but takes `trials` and `spend` from flags defaulting to 1 and 0, because this verb runs no trials and makes no billable call. That is honest today and becomes a hole the moment something spends: a caller that under-declares passes a ceiling it is about to exceed, and `assertWithinBudget` will have approved it. The failure mode is precisely risk 6's — a run that looks budgeted and is not | The call site is in the right place, which is what makes this cheap to fix: when Phase 4 adds a cascade that spends, it must pass a derived estimate rather than a flag default. Recorded here rather than left in a commit message, because the person wiring Phase 4 is not the person who wrote this note | Phase 4 — Evaluation |
 
 ## Acceptance Criteria
 
-- [ ] AC-8 — The runner routes every governed action through the Phase-0 guards,
+- [x] AC-11 — The runner routes every governed action through the Phase-0 guards,
       proven end-to-end rather than by inspection: a holdout value reaching
       proposer context and a plan configured past the pre-registered ceiling each
       terminate the process non-zero **before any external call**. Added
@@ -1163,6 +1464,26 @@ once.
       where they split on whether 0.4/0.5 may close without it — a guard nothing
       calls has no coverage, and Phase 0 alone cannot force a later phase to
       call it.
+      **RENUMBERED 2026-08-30, from AC-8 to AC-11 — it collided with the
+      pre-existing AC-8 below.** Both criteria carried the number 8 and neither
+      referenced the other, so `blocker: guard-call-site-integration`'s
+      *"AC-8 below is it"* pointed ambiguously at two different criteria — one
+      about guard call sites, one about programme success criteria and the
+      evolution-ROI figure. The blocker text is left as written rather than
+      silently repointed; **it means this criterion**, which is the one added on
+      its own request and in the same change. Renumbering rather than merging
+      because the two test unrelated things.
+      **Met 2026-08-30, and met in the shape both seats asked for.**
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` spawns the real
+      CLI and asserts a non-zero **process** exit on each half: exit 4 on a
+      holdout field reaching proposer context, exit 4 on a plan past the
+      pre-registered ceiling. *"Before any external call"* is proven by an
+      **ordering observable** rather than asserted — a nonexistent subject path
+      and a deliberately malformed record make the two possible orderings
+      produce distinguishable exits, and the test pins the correct one by
+      asserting on the ABSENCE of `ENOENT` / `not valid JSON` in stderr. A
+      positive pole (exactly at every ceiling does NOT abort) keeps the
+      negatives from passing because the verb refuses everything.
 
 - [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
@@ -1172,9 +1493,33 @@ once.
 - [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
-- [ ] AC-4 — A candidate changing two primary dimensions is refused by the
+      **Two of its three verbs are met, and it stays OPEN on the third rather
+      than being read generously.** *Materialised* and *destroyed* with no diff
+      in the original tree: 3.1, five candidates, asserted by `git status
+      --porcelain` over the four surface paths plus a byte snapshot. *Sabotage
+      exits non-zero*: 3.1's three-phase test — clean passes, sabotage reds
+      naming only the guilty candidate, un-sabotage passes again. **`evaluated`
+      is not met**: no evaluation stage exists until Phase 4, so nothing has
+      evaluated a candidate. Closing this now would be the generous reading the
+      roadmap's own § blocker text warns about — *"a detector that never got
+      built reads as one that passed"*.
+- [x] AC-4 — A candidate changing two primary dimensions is refused by the
       schema, and "mutated" is not readable as "accepted" anywhere in the data
       model.
+      **Met 2026-08-30 by 3.2 and 3.4, both halves.** First half: the arity is
+      in the TYPE — `CandidateRecord.dimension` is a scalar, so a two-dimension
+      candidate is not expressible, and `parseCandidateRecord` additionally
+      refuses a `dimensions` key by name, an array `dimension` even with one
+      member, and cross-parsing with `ConsolidationRecord` (which itself needs
+      ≥ 2 **distinct** dimensions, so it is not an escape hatch). Second half:
+      `isAccepted` (`candidate_record.ts:122`) is the single acceptance site and
+      reads only `ACCEPTED_STATE`; `requireLifecycle` refuses an absent state
+      rather than defaulting it; and `mutated` is an unrecognised lifecycle
+      value that is refused outright — the test *"an unrecognised lifecycle
+      value is refused"* names it explicitly, because `mutated` arriving where
+      `accepted` was expected is the reference-implementation defect 3.4 cites.
+      *"Existence is not acceptance"* asserts `isAccepted` false for all eight
+      non-promoted states.
 - [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
@@ -1319,19 +1664,89 @@ If this cut fails, the architecture is refuted before anything is built.
   stays `unknown` across representative Phase 1 evaluations — in which case
   keep the six rungs and reconsider the nine-stage cascade independently.
   Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
-- **E5 — Minimality tie-break order,** and whether the fifth criterion (simpler
-  mechanism) is in. The two parents' orders invert, so this changes outcomes.
-- **E6 — Curator operation set:** 4 ops or 7? Recommendation: 7 — split and
+- **E5 — Minimality tie-break order: DECIDED 2026-08-30, option A — the FOUR
+  criteria `tokens → artifacts → scope → precedence`, and the fifth criterion is
+  OUT.** AI council, anthropic (claude-sonnet-4-5) + openai (gpt-4o), **2/2**.
+  The argument that carried it is about *when* the tie-break runs, not about
+  which values matter: by the time two candidates are tied they have both
+  already survived selection evaluation and every hygiene check, so the
+  blast-radius constraint option B leads with is **already satisfied** and cost
+  is what is left to decide. "Simpler mechanism" was rejected as unquantifiable
+  at that point — one seat put it directly: the candidates have passed all
+  functional checks, so there is no outcome signal left to measure simplicity
+  against, and admitting it converts a mechanical decision into a reviewer's
+  taste vote. The four surviving criteria are all countable from candidate
+  metadata (token count, artifact count, scope enum, precedence rank), which is
+  what makes the order reproducible.
+  **`revisit-if`:** a promoted candidate chosen by cost-first ordering causes an
+  incident that scope-first ordering would have prevented, **and** that incident
+  was not detectable by the outcome metrics which declared the two equivalent —
+  the conjunction matters, because the second half means the metrics were
+  incomplete rather than the ordering wrong.
+  Original framing, kept: the two parents' orders invert, so this changes
+  outcomes. Spent in Phase 4.5.
+- **E6 — Curator operation set: DECIDED 2026-08-30, option B — SEVEN ops**,
+  `KEEP / ADD / MERGE / REPLACE / SPLIT / RETIRE / SKIP`. AI council, anthropic +
+  openai, **2/2**. The contradiction argument carried it and is not a preference:
+  step 7.6 is already adopted in this same roadmap and specifies the verdict set
+  `KEEP / REVISE / MERGE / SPLIT / RETIRE`, so a 4-op curator would produce
+  verdicts it cannot execute.
+  **The 6-op middle — deferring `SPLIT` — is explicitly REJECTED**, and the
+  brief's own recommendation is overruled on this point. One seat called it *"an
+  unstable equilibrium"*: it still contradicts 7.6's verdict set, so it buys
+  nothing the 4-op answer does not also cost. The same seat added the algebra
+  argument the brief did not have — `MERGE` is n→1 and `SPLIT` is 1→n, and
+  without it an overgrown rule becoming two must be expressed as
+  `RETIRE + 2×ADD`, which loses the semantic link and makes the operation's
+  intent unreadable in the audit log.
+  `SPLIT` remains the one genuinely new mechanism and its cost stays visible;
+  `RETIRE` lands on the existing surface the brief identified.
+  **`revisit-if`:** 7.6 is revised to drop `SPLIT` from its verdict set, or
+  `SPLIT` is never invoked in twelve months and no curator reports its absence
+  blocking a refactoring.
+  Original framing, kept: 4 ops or 7? Recommendation was: 7 — split and
   retire are the anti-sprawl actions, and 7.6 depends on them existing. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — it adds that `RETIRE` already has a carrier
   (`artifact-engagement-flow.md:32-33`) while `SPLIT` is the one genuinely new
   mechanism, so a 6-op middle exists.
-- **E7 — Sealed-holdout cadence:** every cascade, or promotion candidates only?
+- **E7 — Sealed-holdout cadence: DECIDED 2026-08-30, option B — promotion
+  candidates ONLY.** AI council, anthropic + openai, **2/2**. The gating
+  condition is free: 3.4's lifecycle enum already carries `promotion-eligible`,
+  so option B costs a state read rather than new machinery. The decisive
+  argument is that option A cannot buy anything with what it spends —
+  `_lib/paired_verdict.ts:54-65`'s discordant-trial floor means only a powered
+  verdict can conclude, so a cascade that reads the holdout before promotion
+  eligibility spends unbiased signal on runs that could not have concluded
+  anyway. Consulting it every iteration converts a held-back validator into part
+  of the optimisation loop, which is the adaptive-overfitting risk one parent
+  killed the option by name for. One seat put the trade plainly: option A's
+  "simpler control flow" trades code simplicity for statistical validity.
+  **`revisit-if`** — refined by the council over the brief's looser version,
+  because "fewer than 5 % reach sealed evaluation" measures the wrong thing:
+  reopen when **holdout verdicts would have CHANGED the promotion decision in
+  fewer than 5 % of promotion-eligible cases**, which is the condition under
+  which the sealed partition adds no marginal signal over selection evaluation.
+  Original framing, kept: every cascade, or promotion candidates only?
   One parent killed every-iteration as an adaptive-overfitting risk; the other
   runs it every cascade. Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — and it
   reframes the question: there is **no** holdout machinery in this repository
   yet, so nothing is being preserved and the decision is greenfield.
-- **E8 — State-taxonomy arity:** 4 classes or 5, splitting experiment-adaptive
+- **E8 — State-taxonomy arity: DECIDED 2026-08-30, FOUR classes plus an explicit
+  pointer to the existing Class A / Class C boundary.** AI council, anthropic +
+  openai, **2/2**. The brief's redundancy finding held — the proposed fifth class
+  restates a boundary an ADR already records, and the prohibition it would add
+  already exists — and one seat named the principle underneath it, which is the
+  part worth carrying forward: **taxonomies classify; validations enforce.** The
+  fifth class attempts enforcement work (prohibiting production-adaptive
+  behaviour) inside a classification system. The correct shape keeps the taxonomy
+  describing *what an artefact does* and leaves a validation layer to reference
+  the ADR for *where it may do it* — which also makes the prohibition's reason
+  explicit rather than hiding it inside an enum variant's name.
+  **`revisit-if`:** a Class C artefact is allowed production-adaptive behaviour
+  and the existing ADR-level boundary check fails to prevent it — i.e. the
+  boundary turns out to need taxonomy-level encoding because it is not enforced
+  where it lives now.
+  Original framing, kept: 4 classes or 5, splitting experiment-adaptive
   from production-adaptive with the latter prohibited by default? Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — which finds the proposed 5th class
   restates ADR-124's Class A/C boundary, and the prohibition it would add
@@ -1344,7 +1759,28 @@ If this cut fails, the architecture is refuted before anything is built.
   reconsidered on its own. Original framing, kept: 9 stages or 12? If 9,
   Phase 1's exit criterion cannot be produced and must be rewritten. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
-- **E10 — Mutation dimensions:** do `activation/routing/content` stand alone, or
+- **E10 — Mutation dimensions: SPLIT 2026-08-30, conservative side taken —
+  THREE.** AI council, anthropic + openai, **1/1, not convergent**, which
+  `roadmap-progress-sync` classes as an escalation condition rather than a
+  verdict. anthropic: four, adding `verification` now, on an irreversibility
+  argument — dimensions are metadata on candidate records, so adding one later
+  makes every prior candidate unclassifiable under it, and the seat reframed the
+  question as *"not premature optimization — avoid irreversible information
+  loss"*. openai: three, adding `verification` only on demonstrated need.
+  **Three was taken because a split is not a licence to pick the more convenient
+  half**, and here three is also what 3.3 already specified, so its verify clause
+  stands unchanged rather than being re-scoped to fit an answer.
+  **The losing seat's concern is discharged as a design constraint, not
+  dismissed** — see 3.3 for the mechanism: the record is versioned, and the
+  unknown-dimension refusal lives in the validator while the reader flags rather
+  than throws, so adding a fourth dimension later is additive and historical
+  records stay readable. That was the whole substance of the irreversibility
+  argument, and it is satisfied without widening the alphabet.
+  **`revisit-if`:** after 100 candidates, fewer than 3 carry `verification` as a
+  primary dimension **and** no curator reports verification changes being
+  mislabelled as `content` to fit the available vocabulary — the conjunction is
+  the point, since mislabelling is how a missing dimension hides.
+  Original framing, kept: do `activation/routing/content` stand alone, or
   does `verification` join immediately? Separate from 3.2, which is about arity.
 - **E11 — Second opinion:** is the fixture holdout enough, or does a council
   blind round attach as an independent evaluator when Phase 4 blocks?

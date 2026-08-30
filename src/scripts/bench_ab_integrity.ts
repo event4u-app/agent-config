@@ -21,6 +21,20 @@
  *     0  — clones are identical except at the allowed surface
  *     1  — clone is missing, or a task-target file diverges between variants
  *     2  — usage error
+ *
+ * ## Candidate clones
+ *
+ * `road-to-governed-harness-evolution` Phase 3 step 3.1 requires this check to
+ * keep asserting byte-wise once candidates exist. Every `clones/candidate-*`
+ * directory is compared against the SAME `without` baseline, by DISCOVERY
+ * rather than from a passed list — a candidate this script was never told about
+ * is precisely what a path-ownership check has to catch.
+ *
+ * This is the third and only independent check on candidate path ownership.
+ * `_lib/candidate_record.ts` refuses an unowned path in the record, and
+ * `bench_ab_clone` refuses one again against the resolved path at write time;
+ * both reason about what the candidate DECLARED. This one reads what is on
+ * disk, so it still fires when a mutation arrived by some other route.
  */
 
 import { createHash } from 'node:crypto';
@@ -36,10 +50,19 @@ const AB_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const CLONES = path.join(AB_ROOT, 'clones');
 
 // Surfaces where divergence is expected (variant-bearing).
-const ALLOWED_DELTA_PATHS: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
-// Variant-distinguishing files written by bench_ab_clone (the manifest and the
-// RDP-toggle settings file — both legitimately differ between variants).
-const ALLOWED_DELTA_FILES: readonly string[] = ['.bench-ab-manifest.json', '.agent-settings.yml'];
+export const ALLOWED_DELTA_PATHS: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
+// Variant-distinguishing files written by bench_ab_clone (the manifest, the
+// RDP-toggle settings file and the candidate record — all three legitimately
+// differ between variants). Kept in sync with bench_ab_clone's
+// CANDIDATE_RECORD_FILE by tests/scripts/candidate_surface_parity.test.ts.
+export const ALLOWED_DELTA_FILES: readonly string[] = [
+    '.bench-ab-manifest.json',
+    '.agent-settings.yml',
+    '.bench-ab-candidate.json',
+];
+
+/** Directory-name prefix identifying a candidate clone (see bench_ab_clone). */
+export const CANDIDATE_PREFIX = 'candidate-';
 
 export function is_under_allowed_path(rel: string): boolean {
     // Python: Path(rel).parts; head = parts[0].
@@ -111,6 +134,61 @@ function _argparseError(msg: string): never {
     process.exit(2);
 }
 
+/** The three divergence classes between one variant and the baseline. */
+export interface Divergence {
+    readonly onlyInVariant: string[];
+    readonly onlyInBaseline: string[];
+    readonly byteDivergent: string[];
+}
+
+/**
+ * Compare one variant's file index against the baseline's.
+ *
+ * Every returned path is already filtered through {@link is_under_allowed_path},
+ * so a non-empty list is a violation and not a delta to be judged again by the
+ * caller.
+ */
+export function compare_indexes(
+    variant: Record<string, string>,
+    baseline: Record<string, string>,
+): Divergence {
+    const vKeys = Object.keys(variant);
+    const bKeys = Object.keys(baseline);
+    return {
+        onlyInVariant: _sortedDifference(vKeys, bKeys).filter((rel) => !is_under_allowed_path(rel)),
+        onlyInBaseline: _sortedDifference(bKeys, vKeys).filter((rel) => !is_under_allowed_path(rel)),
+        byteDivergent: _sortedIntersection(vKeys, bKeys).filter(
+            (rel) => variant[rel] !== baseline[rel] && !is_under_allowed_path(rel),
+        ),
+    };
+}
+
+export function divergence_is_clean(d: Divergence): boolean {
+    return d.onlyInVariant.length === 0 && d.onlyInBaseline.length === 0 && d.byteDivergent.length === 0;
+}
+
+/**
+ * Candidate clone directory names under `clones/`, sorted.
+ *
+ * Discovery by prefix rather than by a passed list is deliberate: the check
+ * must see a candidate clone that no caller told it about. A candidate written
+ * into the clones tree by a path this script does not know is exactly the
+ * failure a path-ownership check exists to catch, and an allowlist-driven
+ * discovery would look right while never enumerating it.
+ */
+export function discover_candidate_clones(clonesRoot: string): string[] {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(clonesRoot, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .filter((e) => e.isDirectory() && e.name.startsWith(CANDIDATE_PREFIX))
+        .map((e) => e.name)
+        .sort(_strCmp);
+}
+
 export function main(argv?: string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
@@ -152,7 +230,31 @@ export function main(argv?: string[]): number {
         );
     }
 
-    if (bad_only_with.length === 0 && bad_only_without.length === 0 && bad_diff.length === 0) {
+    // Candidate clones (Phase 3 step 3.1). Each is compared against the SAME
+    // `without` baseline the `with` clone is compared against — not against
+    // `with`, which would let a candidate inherit an unnoticed `with` violation
+    // and read as clean.
+    const candidateFailures: { name: string; divergence: Divergence }[] = [];
+    for (const name of discover_candidate_clones(CLONES)) {
+        const root = path.join(CLONES, name);
+        const index = index_clone(root);
+        if (args.verbose) {
+            process.stdout.write(
+                `bench_ab_integrity: ${name}=${Object.keys(index).length} files (vs without)\n`,
+            );
+        }
+        const divergence = compare_indexes(index, without_index);
+        if (!divergence_is_clean(divergence)) {
+            candidateFailures.push({ name, divergence });
+        }
+    }
+
+    if (
+        bad_only_with.length === 0 &&
+        bad_only_without.length === 0 &&
+        bad_diff.length === 0 &&
+        candidateFailures.length === 0
+    ) {
         process.stdout.write(
             'bench_ab_integrity: clones differ only at the allowed surface (.claude, .augment, AGENTS.md, CLAUDE.md, manifest).\n',
         );
@@ -175,6 +277,18 @@ export function main(argv?: string[]): number {
     if (bad_diff.length > 0) {
         process.stderr.write('  files present in both but byte-divergent:\n');
         for (const rel of bad_diff) {
+            process.stderr.write(`    ~ ${rel}\n`);
+        }
+    }
+    for (const { name, divergence } of candidateFailures) {
+        process.stderr.write(`  candidate '${name}' escaped the candidate surface (vs without):\n`);
+        for (const rel of divergence.onlyInVariant) {
+            process.stderr.write(`    + ${rel}\n`);
+        }
+        for (const rel of divergence.onlyInBaseline) {
+            process.stderr.write(`    - ${rel}\n`);
+        }
+        for (const rel of divergence.byteDivergent) {
             process.stderr.write(`    ~ ${rel}\n`);
         }
     }
