@@ -76,6 +76,8 @@ process.stderr.write(`prepack-check: ${BIN} OK\n`);
 // the shipped set is derived from the package.json `files` whitelist.
 // ---------------------------------------------------------------------------
 import { readdirSync } from 'node:fs';
+
+import { stripCommentsMjs } from './_lib/strip_comments.mjs';
 import { dirname, join, relative, sep } from 'node:path';
 
 const pkg = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
@@ -109,6 +111,7 @@ function* walk(dir) {
 
 const IMPORT_RE = /(?:from\s+|import\s*\(\s*|require\s*\(\s*)['"](\.\.?\/[^'"]+)['"]/g;
 
+
 function resolveCandidates(fromDir, spec) {
     const base = join(fromDir, spec);
     return [
@@ -126,7 +129,7 @@ const importErrors = [];
 const scanRoots = shippedPrefixes.filter((p) => p.startsWith('src/'));
 for (const root of scanRoots) {
     for (const file of walk(resolve(root))) {
-        const text = readFileSync(file, 'utf8');
+        const text = stripCommentsMjs(readFileSync(file, 'utf8'));
         for (const m of text.matchAll(IMPORT_RE)) {
             const spec = m[1];
             const candidates = resolveCandidates(dirname(file), spec);

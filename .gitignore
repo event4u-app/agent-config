@@ -354,3 +354,11 @@ internal/bench/corpora/*.local.yaml
 # Local re-run speedup only — a CI runner starts cold and has nothing to reuse.
 /.tscache/
 /.eslintcache
+
+# The supervision lifecycle evidence artifact — produced by
+# `run_lifecycle_suite` at the revision under test, read by
+# `check_supervision_claim_atomicity`. Deliberately NOT committed: the gate
+# refuses a result whose recorded revision is not HEAD, so a committed artifact
+# would name the commit before the one it ships in and could never match. It is
+# a CI-time fact, not a tracked one.
+internal/reports/supervision-lifecycle.json

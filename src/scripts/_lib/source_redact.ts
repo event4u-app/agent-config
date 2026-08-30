@@ -81,7 +81,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { isNonHarvestTmpDir, isOpaqueRoundId, sourceHeaderHits } from './source_shape.js';
+import { isNonHarvestTmpDir, isOpaqueRoundId, legacySourceHeaderHits } from './source_shape.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
@@ -214,17 +214,26 @@ export function redactSourceShape(text: string): RedactionResult {
         });
 
         // source-header: rewrite the VALUE, keep the header. The decision is
-        // DELEGATED to `sourceHeaderHits` — the gate's own predicate — rather
-        // than re-implemented here. Two reasons, and the second was a real bug
-        // this test suite caught: agreement with the gate is then structural
-        // rather than maintained by hand, and re-deriving the "is this value
-        // acceptable" list independently made the redactor NON-IDEMPOTENT. It
-        // re-redacted its own marker, because the gate's value normaliser
-        // strips `[` and `]` and a hand-written `value.includes(MARKER)` check
-        // therefore never matched. A redactor that does not converge rewrites
-        // the artefact on every dispatch.
+        // DELEGATED to a predicate in `source_shape` — never re-implemented
+        // here. Two reasons, and the second was a real bug this test suite
+        // caught: agreement is then structural rather than maintained by hand,
+        // and re-deriving the "is this value acceptable" list independently
+        // made the redactor NON-IDEMPOTENT. It re-redacted its own marker,
+        // because the value normaliser strips `[` and `]` and a hand-written
+        // `value.includes(MARKER)` check therefore never matched. A redactor
+        // that does not converge rewrites the artefact on every dispatch.
+        //
+        // It delegates to `legacySourceHeaderHits`, the BROAD predicate, and
+        // that is the correction rather than a compromise. The two predicates
+        // answer different questions: the live one asks *does this value carry
+        // a readable identifier* (the gate's question, narrowed 2026-08-30),
+        // and the redactor asks *is this value SPEAKING* — which is the older,
+        // wider question and the one redaction is for. Narrowing the shared
+        // predicate silently narrowed the redactor with it, and this suite
+        // caught it: a speaking header naming no slug or domain stopped being
+        // redacted at all.
         const hdr = /^(\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*)(\S.*)$/.exec(line);
-        if (hdr && sourceHeaderHits(line).length > 0) {
+        if (hdr && legacySourceHeaderHits(line).length > 0) {
             count += 1;
             line = (hdr[1] as string) + REDACTION_MARKER;
         }
