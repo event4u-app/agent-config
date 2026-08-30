@@ -331,6 +331,20 @@ function readIfPresent(file: string): string | null {
     }
 }
 
+/**
+ * Concern count at a git ref, or `null` when the manifest is unreadable there.
+ *
+ * `null` is NOT zero, and the distinction is the whole reason this returns an
+ * option. A missing manifest read as 0 makes the floor 0, which makes the
+ * ratchet inert on that path while still printing a green line — "a gate that
+ * read nothing has not passed", in this repository's own words. The caller
+ * turns `null` into a floor-skip, which this gate already treats as a failure.
+ */
+function concernCountAt(repoRoot: string, ref: string): number | null {
+    const res = git(['show', `${ref}:${CONCERN_MANIFEST_POSIX}`], repoRoot);
+    return res.ok ? countConcerns(res.stdout) : null;
+}
+
 function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
     const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 32 * 1024 * 1024 });
     return { ok: res.status === 0, stdout: res.stdout ?? '' };
@@ -583,6 +597,15 @@ export function evaluate(
     // property, and unlike a number nobody has to remember to update it.
     let floor: EstateCounts | null = null;
     let floorSkipReason: string | null = null;
+    /**
+     * Does the WORKING TREE carry a manifest at all?
+     *
+     * The base-ref read only matters when it does. A repository with no manifest
+     * on either side has no concern axis to ratchet, and failing there would
+     * turn every unrelated fixture red — which is how the first version of this
+     * clause was caught.
+     */
+    const headHasManifest = fs.existsSync(path.join(repoRoot, CONCERN_MANIFEST_POSIX));
     /** Set when the base ref carries no `src/skills` — the skill metrics drop. */
     let skillFloorSkipReason: string | null = null;
     /** Set when either side's tokeniser did not resolve — that ONE metric drops. */
@@ -613,12 +636,14 @@ export function evaluate(
                 if (baseSkills.error !== null || baseSkills.files === 0) {
                     // Roadmap floor stands; the skill floor is stated as
                     // unavailable and its metrics are dropped from the compare.
-                    floor = {
-                        ...roadmapFloor,
-                        concern_count: countConcerns(
-                            git(['show', `${baseRef}:${CONCERN_MANIFEST_POSIX}`], repoRoot).stdout,
-                        ),
-                    };
+                    const cf = concernCountAt(repoRoot, baseRef);
+                    floor = { ...roadmapFloor, concern_count: cf ?? 0 };
+                    if (cf === null && headHasManifest) {
+                        floorSkipReason =
+                            `could not read ${CONCERN_MANIFEST_POSIX} at ${baseRef} while HEAD ` +
+                            'carries one. A floor of 0 would make the concern ratchet inert while ' +
+                            'still printing green, so this fails rather than skips.';
+                    }
                     skillFloorSkipReason =
                         `could not read ${SKILLS_POSIX} at ${baseRef} — ` +
                         `${baseSkills.error ?? 'no files'}`;
@@ -634,13 +659,17 @@ export function evaluate(
                         // reach one known path would spend a temp tree and a
                         // recursive ls-tree on a `git cat-file` in disguise.
                         //
-                        // An unreadable manifest at the base ref reads as 0,
-                        // which makes the floor 0 and can only ever ALLOW growth
-                        // — the safe direction for a ref that predates the file.
-                        concern_count: countConcerns(
-                            git(['show', `${baseRef}:${CONCERN_MANIFEST_POSIX}`], repoRoot).stdout,
-                        ),
+                        // `?? 0` never stands for "unreadable": the branch below
+                        // turns that into a floor-skip, which fails. This
+                        // coalesce only satisfies the type.
+                        concern_count: concernCountAt(repoRoot, baseRef) ?? 0,
                     };
+                    if (concernCountAt(repoRoot, baseRef) === null && headHasManifest) {
+                        floorSkipReason =
+                            `could not read ${CONCERN_MANIFEST_POSIX} at ${baseRef} while HEAD ` +
+                            'carries one. A floor of 0 would make the concern ratchet inert while ' +
+                            'still printing green, so this fails rather than skips.';
+                    }
                     if (s.skill_description_tokens === null) {
                         skillTokenSkipReason =
                             `the tokeniser did not resolve at ${baseRef}; an exact reading may ` +
@@ -881,6 +910,22 @@ function selfTest(): number {
                             CONCERN_MANIFEST_POSIX,
                             'concerns:\n  one:\n    severity: advisory\n  two:\n    severity: advisory\n',
                         ),
+                }),
+        },
+        {
+            // AC-3's explicit clause, and it corrects the first implementation
+            // of this metric: an unreadable manifest at the base ref must FAIL,
+            // never read as 0. A floor of 0 makes the ratchet inert on that
+            // path while still printing a green line, which is the shape this
+            // repository calls "a gate that read nothing has not passed".
+            name: 'base ref carries no manifest → reject (a 0 floor is not a floor)',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\n'),
                 }),
         },
         {

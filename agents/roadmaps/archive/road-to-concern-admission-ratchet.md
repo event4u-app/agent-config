@@ -155,7 +155,7 @@ skills only.
 
 ## Phase 2 — Record the answers, and the refusals
 
-- [ ] **2.1 Mirror `check_skill_admissions.ts` for hook concerns.** Same
+- [x] **2.1 Mirror `check_skill_admissions.ts` for hook concerns.** Same
       shape, same reasons: forward-only against the base ref so the 71 already
       in the tree are grandfathered by construction, `decision: rejected` a
       first-class state, and a rejected row forbidden from naming a concern
@@ -164,32 +164,78 @@ skills only.
       derive them from `docs/contracts/hook-architecture-v1.md`: which slot,
       which hosts actually bind it, what it does where the host ignores a deny,
       why an existing concern cannot carry it, and its per-event budget impact.
+      **DONE 2026-08-30 — same policy, DIFFERENT mechanism, and the difference
+      is structural rather than stylistic.** A skill is a FILE, so its gate uses
+      `git diff --diff-filter=A`. A concern is a KEY INSIDE ONE FILE, so a
+      file-level diff says only "the manifest changed" — true of every concern
+      edit, and it discriminates nothing. The scope here is a **set difference**
+      over parsed concern ids between the base ref and HEAD, both sides through
+      the same scoped parser. Grandfathering is identical in effect: the 55
+      already present can neither demand a row nor be forgotten off one.
+      **The five questions are derived from `hook-architecture-v1.md`, not
+      borrowed from the skill ledger** — a concern binds a slot, on hosts that
+      may or may not honour a deny, inside a per-event budget, and none of that
+      has a skill analogue.
+      **Self-test: 6/6, 3 rejecting.** Missing row, blank answer, and a
+      `rejected` row naming a live concern all reject; two ACCEPT cases pin the
+      grandfathering, so a gate that started failing everything would not pass
+      either. A base ref where the manifest is unreadable treats NOTHING as
+      added, so a ref predating the file cannot retroactively demand 55 rows.
       verify: a fixture adding a concern with no ledger row fails; with a row,
       passes; a `rejected` row naming a live concern fails.
-- [ ] **2.2 Write the questions where the author will meet them.**
+- [x] **2.2 Write the questions where the author will meet them.**
       `hook_manifest.yaml`'s header already lists what to update when adding a
       concern; the questions belong in that list and in the hook-architecture
       contract, not only in the gate.
+      **DONE 2026-08-30.** The manifest header's own "when you add or remove a
+      concern, also update" list now names the ledger first, followed by the
+      five questions with the reason each exists — including the one most often
+      got wrong, that `binding_hosts` means hosts that actually BIND the slot
+      rather than hosts that declare it. The same table is in
+      `docs/contracts/hook-architecture-v1.md` § Admitting a concern, which is
+      where a reader arrives from the schema pointer.
       verify: the header names the ledger, and `check_references` stays green.
-- [ ] **2.3 Register both gates in the gate-coverage ledger** with `scanned`
+- [x] **2.3 Register both gates in the gate-coverage ledger** with `scanned`
       and a self-test, per this repository's gate-authoring contract.
+      **DONE 2026-08-30.** `check_concern_admissions` registered `enforced`
+      with its corpus stated as rows PLUS added concerns, and an explicit
+      `no_canary_reason`: the negative control is the gate's own `--self-test`,
+      which is stronger than one planted canary — a canary in a real decision
+      ledger would have to be removed again, and a forgotten one is a false
+      rejection row in a record. `check_estate_count`'s existing row gained the
+      manifest in its corpus.
       verify: the coverage gate is green and the two new rows carry a
       non-empty `scanned` field.
 
 ## Phase 3 — Close the recurrence, not just the finding
 
-- [ ] **3.1 Record the disposition so a third occurrence is impossible.**
+- [x] **3.1 Record the disposition so a third occurrence is impossible.**
       One `agents/decisions/` entry or an ADR stating that the concern axis is
       ratcheted as of this roadmap, with the six-pin series as its basis and a
       `revisit-if` naming the condition that would reopen it — a measured case
       where the ratchet blocks a concern the repository needed.
+      **DONE 2026-08-30** — `agents/decisions/concern-axis-ratcheted.md`. It
+      carries the six-pin series with the CORRECTED figures, states plainly that
+      this roadmap's own numbers were wrong and why the finding survives anyway,
+      and gives the reproduce command against the scoped parser.
+      **The `revisit-if` is falsifiable rather than a mood:** a MEASURED case
+      where the ratchet blocks a concern the repository needed — correct on its
+      merits, carrying a complete row, and still unable to land without a claim
+      a reviewer judged dishonest to write. "The gate is inconvenient" is
+      explicitly not that condition.
       verify: the record exists, is citable by path, and names the series.
-- [ ] **3.2 State the intake learning.** An inbox status-update prediction
+- [x] **3.2 State the intake learning.** An inbox status-update prediction
       naming a concrete mechanism becomes a stub or a roadmap in the same run,
       never a line in a file about to be consumed. Add it to the
       `/analyze:inbox` command's Phase 4c or to `recurring-criticism`'s failure
       list — whichever the overlap scan says already owns the surface — as one
       sentence, not a new artefact.
+      **DONE 2026-08-30, and the overlap scan chose the file rather than
+      taste.** `recurring-criticism.md:112` already links to `/analyze:inbox`
+      § Phase 4c as "the artifact-side detection that routes here", so Phase 4c
+      owns the surface and the link already exists in the required direction.
+      The sentence went there; a grep for it in `recurring-criticism.md` returns
+      0, so it lives in exactly one file.
       verify: the sentence exists in exactly one of the two files, and the
       other links to it rather than repeating it.
 
@@ -212,18 +258,52 @@ implementation shape, not authority, and 1.1 decides it by placing it where
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Adding a 72nd concern with no recorded reason fails a gate that
+- [x] AC-1 — Adding a 72nd concern with no recorded reason fails a gate that
       runs in `task ci`. Demonstrated on a fixture, seen red before it is seen
       green.
-- [ ] AC-2 — `agents/decisions/concern-admissions.jsonl` exists and can hold a
+      **MET — and it is a 56th, not a 72nd.** The number in this criterion
+      inherits the over-count corrected in 1.1: the axis stands at 55. Two gates
+      fire on it independently, both wired into `task ci` and the Rule Backstops
+      workflow: `check_concern_admissions` (no `admitted` row) and
+      `check_estate_count` (no `estate_growth_exempt` claim). Both were seen RED
+      before green on their own fixtures — 6/6 and 16/16 self-test cases, 3 and
+      10 of them rejecting.
+- [x] AC-2 — `agents/decisions/concern-admissions.jsonl` exists and can hold a
       `rejected` row; a rejected row naming a concern present in the manifest
       is refused.
-- [ ] AC-3 — `check_estate_count` reports the concern axis alongside
+      **MET.** The ledger ships with its contract in `_comment` rows. The
+      rejected-but-present case is a self-test case, and the reason it is a hard
+      failure rather than a warning is written at the check: a refusal that was
+      later overridden without updating its row is worse than no record at
+      all.
+- [x] AC-3 — `check_estate_count` reports the concern axis alongside
       `skill_count`, measured at the base ref with the same function it
       measures HEAD with, and fails rather than skips when the base ref carries
       no manifest.
-- [ ] AC-4 — A citable record states the concern axis is ratcheted, names the
+      **MET — and this criterion caught a real defect in my first
+      implementation.** I had an unreadable base manifest read as 0, documented
+      as "the safe direction for a ref that predates the file". That is
+      backwards: a floor of 0 makes the ratchet INERT on that path while still
+      printing a green line, which is the shape this repository calls "a gate
+      that read nothing has not passed". Now a floor-skip, which this gate
+      already treats as a failure.
+      **Narrowed after the first fix over-fired**, which is worth recording: the
+      condition is *HEAD carries a manifest AND the base does not*. Failing
+      whenever the base read fails turned four unrelated fixtures red, because a
+      repository with no manifest on either side has no concern axis to ratchet.
+      Both directions are self-test cases.
+- [x] AC-4 — A citable record states the concern axis is ratcheted, names the
       six-pin series as its basis, and carries a `revisit-if`.
-- [ ] AC-5 — The intake learning from § Why this is here twice is written in
+      **MET** — `agents/decisions/concern-axis-ratcheted.md`, carrying the
+      CORRECTED series, the reason the finding survives the correction, and a
+      falsifiable `revisit-if`: a measured case where the ratchet blocks a
+      concern the repository needed, not a general sense that it is
+      inconvenient.
+- [x] AC-5 — The intake learning from § Why this is here twice is written in
       exactly one file, so a third occurrence of this prediction lands as a
       tracked artefact rather than as prose in a consumed bundle.
+      **MET** — `/analyze:inbox` § Phase 4c, chosen by the overlap scan rather
+      than by taste: `recurring-criticism.md:112` already links there as "the
+      artifact-side detection that routes here", so that file owns the surface
+      and the link already runs in the required direction. A grep for the
+      sentence in `recurring-criticism.md` returns 0.
