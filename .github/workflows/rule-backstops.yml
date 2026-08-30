@@ -502,6 +502,27 @@ jobs:
       # outside those roots.
       - name: Skill admissions and refusals are recorded
         run: ./scripts-run src/scripts/check_skill_admissions
+      # road-to-gates-that-do-not-run Phase 2: these nine were wired into
+      # `task ci` and that is only HALF of reachable. `check_ci_local_parity`
+      # caught the other half -- a gate in `task ci` with no workflow step is
+      # local-only, so it still does not run on a PR. The parity ratchet is the
+      # reason this block exists rather than a second pass being needed later.
+      - name: Positioning strings share the canonical README anchor
+        run: ./scripts-run src/scripts/lint_positioning
+      - name: Every unreachable gate target carries a recorded reason
+        run: ./scripts-run src/scripts/check_gate_reachability --gate
+      - name: Augmentignore surface has not drifted
+        run: ./scripts-run src/scripts/check_augmentignore
+      - name: Publish surface matches package.json files[]
+        run: ./scripts-run src/scripts/check_publish_surface
+      - name: A release includes the discovery manifest
+        run: ./scripts-run src/scripts/check_release_includes_discovery
+      - name: Requirements trace
+        run: ./scripts-run src/scripts/check_requirements_trace
+      - name: ADR sweep routing
+        run: ./scripts-run src/scripts/lint_adr_sweep_routing
+      - name: MCP registry manifest
+        run: ./scripts-run src/scripts/lint_mcp_registry_manifest
       # Wired here on the same ci-parity:local-only grounds as the step above.
       # Corpus check rather than assumption: this workflow's `paths:` already
       # carried `src/skills/**`, `tests/**` and `dist/router.json` — both

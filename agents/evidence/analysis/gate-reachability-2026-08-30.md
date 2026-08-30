@@ -76,13 +76,14 @@ already runs.
 
 ## Reclassified during Phase 2 — because 2.2 said run it locally first
 
-Two of the ten `should-run` rows were wrong, and running each gate before wiring
+Three of the ten `should-run` rows were wrong, and running each gate before wiring
 it is what caught them. This is the rule earning its keep rather than a
 formality.
 
 | Target | Was | Is | Why the first reading was wrong |
 |---|---|---|---|
 | `lint-explain-trace` | `should-run` | `manual` | **Not a gate.** It is a validator taking a JSON document; a bare invocation exits non-zero with `pass a JSON file path or --stdin`. Wiring it would have made CI permanently red. |
+| `check-knowledge-sharing` | `should-run` | declared local-only | **Staging-scoped.** It inspects the STAGED set, and CI has no staged set — the commit already happened by the time a workflow runs. `src/config/ci-local-parity.yml` already recorded this as a declared local-only exemption; wiring it to a workflow made that exemption STALE, and the honest fix was to respect the recorded reason rather than override it. Found by `check_ci_local_parity`, not by review. |
 | `check-trunk-drift` | `should-run` | `manual` | **Advisory by its own docstring** — *"run it in the /create-pr pre-flight or wire into CI per your branch-protection policy"*. Its red state is "this branch is behind trunk", which is the normal state of an open PR, so wiring it would fail correct work. |
 
 ## Class 3 — `manual`: deliberately human-invoked (14, including the two above)
@@ -108,7 +109,18 @@ Each names what would make it run.
 
 **22 unreachable → 14.** The eight that left were wired one target per commit,
 each run locally first; all eight were green on arrival, which the commits state
-rather than imply — a gate wired while already green is wired on an unverified
+rather than imply.
+
+**Wiring into `task ci` turned out to be only HALF of reachable**, and the tree
+said so: `check_ci_local_parity` went 165 → 169 (+4). A gate in `task ci` with no
+workflow step is local-only, so it still does not run on a PR — which is this
+roadmap's own defect, reproduced by its own fix. Eight matching workflow steps in
+`rule-backstops.yml` took it to **161**, four below the baseline.
+
+The baseline is deliberately NOT lowered here. Its own note records the rule: it
+is walked down on a reading from the ENFORCING environment, never a local one —
+a prior 165 → 164 lowering was reverted when CI measured 165 and the local
+reading turned out to be worktree-dependent — a gate wired while already green is wired on an unverified
 sensitivity claim. Every one of the remaining 14 now carries a row in
 `src/config/gate-reachability-exemptions.json` with a reason **and** what would
 make it run, and `check_gate_reachability --gate` fails on any unreachable
