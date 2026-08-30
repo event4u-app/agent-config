@@ -290,7 +290,7 @@ once.
 > its verify asks for a committed, falsifiable document and nothing more, which
 > is satisfiable today and is worth less every day it waits.
 
-- [~] **0.4 Make the evaluator trust boundary detectable, not just declared.** <!-- blocked-by: guard-call-site-integration -->
+- [x] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
       and stops there. Add a per-field `visibility_class` on every observation, a
@@ -298,11 +298,85 @@ once.
       truth appears in proposer context.
       verify: a run in which a holdout value reaches proposer context exits
       non-zero, and the disclosure log names the field.
-- [~] **0.5 Pre-register the budget invariant.** <!-- blocked-by: guard-call-site-integration --> Candidate count, trial
+      **RE-CLOSED 2026-08-30 on `blocker: guard-call-site-integration`'s own
+      `Resolved when`.** The guard existed and had no production call site; it
+      now has one — `discloseToProposer` at `evolution_lab.ts:337`, inside
+      `discloseObservations` on the `propose` verb — and the acceptance test
+      drives the **real CLI** and asserts a non-zero **process** exit, which is
+      the distinction the (d) seat held a unit test cannot establish.
+      `./scripts-run src/scripts/evolution_lab propose --observations leak.json`
+      → **exit 4**, stderr `disclosure: REFUSED obs[0] field=holdoutScore
+      class=holdout` then `evolution_lab: ABORTED on evaluator trust boundary
+      (field: holdoutScore)`. The verify clause's second conjunct — *"the
+      disclosure log names the field"* — is that `REFUSED … field=` line;
+      `discloseToProposer` logs only what it RELEASED by design, so the refusal
+      is recorded at the call site.
+      **The gap this closed was live, not ceremonial:** `parseObservations`
+      ignores unknown keys, so an observations file carrying `holdoutScore: 0.83`
+      beside a subject flowed straight into proposer input with nothing looking
+      at it. That is a holdout value reaching proposer context.
+      **0.4's per-field `visibility_class` landed in its literal form** —
+      `parseObservationDocument` (`:262`) accepts
+      `{field_visibility:[{field, visibility_class}], observations:[…]}` — and an
+      observations file may **not** re-classify a reserved field.
+      `OBSERVATION_FIELD_VISIBILITY` (`:225`) declares the three
+      proposer-visible fields and everything else **falls closed to `holdout`**
+      via the guard's own default, so an undeclared field aborts identically to
+      a declared one. All three classes are exercised rather than two: an
+      `evaluator-private` field is **dropped, not aborted**, and does not appear
+      in the log.
+      **"Before any external call" is proven by ordering, not asserted.** The
+      leaking observation's `subject` is a path that does not exist. If
+      disclosure runs first the process exits 4 naming the field; if the
+      proposer ran first it would exit 1 with an ENOENT-shaped message. The test
+      asserts exit 4 **and** that stderr does not contain `ENOENT`, so the two
+      orderings are distinguishable and the correct one is pinned. The `--out`
+      directory is never created and stdout is empty.
+      **`run` was deliberately NOT given a disclosure gate**, for the same
+      reason this blocker exists: `run` consumes candidate *records*, whose
+      fields are fully schema-constrained with no free-form field, so there is
+      no proposer context for a holdout value to reach. A call site nothing
+      could exercise is the coverage inflation the blocker was raised against.
+      Decided from the code, and stated rather than quietly skipped.
+- [x] **0.5 Pre-register the budget invariant.** Candidate count, trial
       repetitions and a spend ceiling per run, fixed before the run. Exceeding it
       aborts rather than truncates — a truncated run yields `underpowered`, which
       `paired_verdict` refuses to call a pass and which a reader mistakes for one.
       verify: a run configured past the ceiling exits non-zero before spending.
+      **RE-CLOSED 2026-08-30, same blocker, same evidence standard.**
+      `assertWithinBudget(plan, loadRunBudget())` now has two production call
+      sites — `evolution_lab.ts:646` (`propose`) and `:729` (`run`) — reading
+      the committed `src/config/harness-evolution-budget.json`.
+      `./scripts-run src/scripts/evolution_lab run --records <dir with 6>` →
+      **exit 4**: `ABORTED on the pre-registered budget (dimension: candidates)`
+      · `planned candidates 6 exceeds the pre-registered ceiling 5` ·
+      `ABORTING BEFORE THE RUN, not truncating it`. All three dimensions are
+      exercised — candidates 6 > 5, trials 21 > 20, spend 501 > 500 — and
+      `propose` with six observations aborts identically, which closes the
+      evade-by-batching route.
+      **The ordering observable is stronger than a clone probe and is the one
+      that matters:** one of the six records is **not valid JSON**. If the
+      budget check runs first the process exits 4 on `dimension: candidates`; if
+      record loading ran first it would exit 1 on `not valid JSON`. The test
+      asserts exit 4 **and** that stderr does not contain `not valid JSON` — so
+      the abort provably precedes the first record even being *parsed*, two
+      stages upstream of `clone_candidate`. `candidates` is derived from the
+      record set rather than declared, precisely so a declared count cannot be
+      used to truncate to fit.
+      **A positive pole keeps the negatives honest:** exactly AT every ceiling
+      (5 / 20 / 500) does **not** abort — it proceeds and dies at the next stage
+      with exit 1 — so none of the above passes because the verb refuses
+      everything.
+      `loadRunBudget` (`:181`) is **fail-closed in every direction**: missing
+      file, bad JSON, missing key, non-integer and negative all throw, with no
+      fallback budget. A default would be a ceiling nobody pre-registered.
+      **One caveat carried forward rather than buried:** `run` derives
+      `candidates` from the record set — the truth — but takes trials and spend
+      from flags defaulting to 1 and 0, because this verb runs no trials and
+      makes no billable call. So those two dimensions are today enforced against
+      *what a caller says it will spend*, not a metered figure. The guard call
+      is in the right place; the number reaching it improves when Phase 4 adds a
+      cascade that actually spends.
 - [x] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
       spend.** `from-skipped-parent`: both parents carried eight or nine stop
       conditions; the master compressed them into the budget cap. A spend cap
@@ -1151,7 +1225,33 @@ once.
 
 ### blocker: guard-call-site-integration
 
-- **Status:** open — **the council SPLIT on this, and the conservative side was
+- **Status:** resolved 2026-08-30 — **satisfied on its own `Resolved when`,
+  both halves, and the conservative side turned out to be reachable in the same
+  run that took it.** The split is left recorded below rather than rewritten:
+  it was a real disagreement and the record of it is what made the acceptance
+  test the (d) seat's shape rather than the (b) seat's.
+  The `Resolved when` asked for an end-to-end test driving the real runner to a
+  non-zero **process** exit on (a) a holdout value reaching proposer context
+  and (b) a plan past the pre-registered ceiling, both before any external call,
+  with 0.4 and 0.5 re-closed citing it. All of that is now true:
+  `tests/scripts/harness_evolution_guard_call_sites.test.ts` spawns
+  `./scripts-run src/scripts/evolution_lab` and asserts `status === 4` on each,
+  and both steps are `[x]` above with the evidence at the step.
+  **The blocker's own measurement, re-run.**
+  `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returned three
+  paths and **zero production call sites** when this blocker was written. It now
+  returns four, the fourth being `src/scripts/evolution_lab.ts` — a runner.
+  The acceptance test does **not** appear in that grep, deliberately: it never
+  calls a guard directly, only the CLI, which is exactly what the (d) seat
+  asked for.
+  **The two neutralisations that settle the split.** G4 and G5 in the
+  sensitivity sweep remove *only* the throw→process-exit conversion, leaving the
+  guard call in place. The test still goes red — which is the property the (d)
+  seat said a unit test observing a thrown exception cannot establish, and the
+  reason "pending integration" was the right disposition rather than
+  over-caution. Ten new call-site guards, 10/10 seen red.
+  **Superseded status line, kept for the record:** open — **the council SPLIT on
+  this, and the conservative side was
   taken.** AI council 2026-08-30, anthropic + openai, **1/1 for (b) and 1/1 for
   (d)** — not convergent, which `roadmap-progress-sync` classes as an escalation
   condition rather than a verdict.
@@ -1347,7 +1447,7 @@ once.
 
 ## Acceptance Criteria
 
-- [ ] AC-11 — The runner routes every governed action through the Phase-0 guards,
+- [x] AC-11 — The runner routes every governed action through the Phase-0 guards,
       proven end-to-end rather than by inspection: a holdout value reaching
       proposer context and a plan configured past the pre-registered ceiling each
       terminate the process non-zero **before any external call**. Added
@@ -1364,6 +1464,17 @@ once.
       silently repointed; **it means this criterion**, which is the one added on
       its own request and in the same change. Renumbering rather than merging
       because the two test unrelated things.
+      **Met 2026-08-30, and met in the shape both seats asked for.**
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` spawns the real
+      CLI and asserts a non-zero **process** exit on each half: exit 4 on a
+      holdout field reaching proposer context, exit 4 on a plan past the
+      pre-registered ceiling. *"Before any external call"* is proven by an
+      **ordering observable** rather than asserted — a nonexistent subject path
+      and a deliberately malformed record make the two possible orderings
+      produce distinguishable exits, and the test pins the correct one by
+      asserting on the ABSENCE of `ENOENT` / `not valid JSON` in stderr. A
+      positive pole (exactly at every ceiling does NOT abort) keeps the
+      negatives from passing because the verb refuses everything.
 
 - [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
