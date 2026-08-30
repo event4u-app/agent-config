@@ -1,5 +1,5 @@
 diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
-index 1ac240d4158de213272f583bb39ae9522dc2c48d..fa47ee6f6a3273eac0679f968f81c03f53902854 100644
+index 1ac240d4158de213272f583bb39ae9522dc2c48d..5e293a40a67209752110fbdddfaef6745fbf44fa 100644
 --- a/.github/workflows/tests.yml
 +++ b/.github/workflows/tests.yml
 @@ -254,6 +254,7 @@ jobs:
@@ -44,9 +44,9 @@ index 1ac240d4158de213272f583bb39ae9522dc2c48d..fa47ee6f6a3273eac0679f968f81c03f
 +    # remains the target.
 +    name: Collector Lifecycle (macos-latest — the macOS row only)
 +    runs-on: macos-latest
-+    # Spawns real daemons with 90 s per-case timeouts and runs ~551 tests twice
-+    # for the parity comparison; a hang here would otherwise sit at the runner
-+    # default (R2 round-2 finding 2).
++    # Spawns real daemons with 90 s per-case timeouts, and runs the
++    # dispatcher-reaching suite twice for the parity comparison; a hang here
++    # would otherwise sit at the runner default (R2 round-2 finding 2).
 +    timeout-minutes: 20
 +    if: ${{ !startsWith(github.head_ref, 'release/') }}
 +    steps:
@@ -151,10 +151,10 @@ index ef7bd03e2c3703173eddc8da3b139d80275e2bdc..4cce73767520fc06de088bccb5536cea
  | The gate's own test evades the gate readably | `tests/scripts/check_no_external_sources.test.ts:61-62` and `:150-152` | **five** denied slugs are concatenated from string literals — invisible to the regex, plaintext to any reader — and the comment at `:56-60` documents the bypass technique. **Correction:** the authoring session named one site; there are five |
 diff --git a/agents/roadmaps/later/road-to-supervised-telemetry-collector.md b/agents/roadmaps/later/road-to-supervised-telemetry-collector.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68be8ecb9d
+index 0000000000000000000000000000000000000000..78c32a6c273fb2ae72c7db34282e67699606c5ff
 --- /dev/null
 +++ b/agents/roadmaps/later/road-to-supervised-telemetry-collector.md
-@@ -0,0 +1,1311 @@
+@@ -0,0 +1,1316 @@
 +---
 +complexity: structural
 +status: later
@@ -890,7 +890,13 @@ index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68
 +      daemon would make the instrument self-reporting, which is exactly the
 +      failure `road-to-journal-host-capture-measurement` exists for.
 +
-+      One `stat` is the whole cost on a default-off install. The wiring is a
++      **TWO `existsSync` calls are the whole cost on a default-off install**, and
++      the number is stated correctly here because it was stated wrongly first
++      (R2 finding 14, then round-3 finding 11 for this copy of it):
++      `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
++      the opt-out check — not the marker — is what usually returns first. The
++      correction landed in the code and its docstring and not here, leaving the
++      two halves of one change disagreeing on the fact each cites the other for. The wiring is a
 +      single call in `dispatch_hook.main`, placed after the vocabulary check (an
 +      unknown event is not an opportunity) and before the manifest load (a
 +      missing manifest fails open, and the dispatch still WAS an opportunity) —
@@ -934,8 +940,7 @@ index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68
 +      real module with no opt-in marker: present, and off.
 +
 +      **The parity set is DISCOVERED, not listed.** `parityFiles()` greps for
-+      every test file that reaches `dispatch_hook` — 31 files, 551 tests — and
-+      prints them, so a reader can check the denominator of the claim. A
++      every test file that reaches `dispatch_hook` and prints them, so a reader can check the denominator of the claim. A
 +      hand-written list goes stale the first time a test file is added, and a
 +      stale parity set reports parity over the wrong population. An empty set
 +      exits 1 with *"a gate that scans nothing exits green"*, because that is
@@ -957,7 +962,7 @@ index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68
 +      passes the `passed → skipped` case and reds that block.
 +
 +      **Not wired into CI, and that is a decision with a cost.** The gate takes
-+      about a minute (two 551-test runs) and registering a new gate touches six
++      about a minute (two runs of the whole set) and registering a new gate touches six
 +      further surfaces plus the gate-coverage ledger. It is run on demand, which
 +      means it can rot between runs. *Revisit-if:* a second collector call site
 +      lands anywhere outside `dispatch_hook.main`, or a static-mode regression
@@ -1145,7 +1150,7 @@ index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68
 +      not re-derive them. **Resource budgets: met** — measured 2026-08-30, and
 +      two of the four ceilings were re-derived from that measurement rather than
 +      the reading being fitted to them (3.2). **Static-mode compatibility:
-+      green** — 551 tests run twice with identical per-test verdicts (4.2). The
++      green** — the dispatcher-reaching suite run twice with identical per-test verdicts (4.2). The
 +      other four need the window, the cohort, or the Linux row.
 +- [ ] **6.3 Act on a miss.** Below target, the collector stays default-off and
 +      the shortfall becomes a decision record naming what was measured and what
@@ -2358,7 +2363,7 @@ index c5c22c8d75d1d9af62810bf7aa7f461f0f8cef46..00000000000000000000000000000000
 -- [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
 -- [ ] AC-10 — The capture rate is measured over the declared window at or above the minimum sample, and the outcome is acted on: all six enablement readings recorded and the default flipped, or default-off plus a decision record naming the reading and the chosen disposition.
 diff --git a/docs/contracts/ci-cost-budget.md b/docs/contracts/ci-cost-budget.md
-index 43d5caff4b21ef054a6be0cc91db0901bd26c125..3b4e7b7e134c8860e4c32f9b5615c84715bc143a 100644
+index 43d5caff4b21ef054a6be0cc91db0901bd26c125..509f2ccf65cdaa0ecd258be18a6d7ec9b9cd34b1 100644
 --- a/docs/contracts/ci-cost-budget.md
 +++ b/docs/contracts/ci-cost-budget.md
 @@ -40,8 +40,11 @@ it: `smoke.yml` reads 82 s at run level and 20–23 s per job. Comparing one
@@ -2375,7 +2380,7 @@ index 43d5caff4b21ef054a6be0cc91db0901bd26c125..3b4e7b7e134c8860e4c32f9b5615c847
  
  | Workflow | Job | OS × variant | Avg duration | Trigger surface |
  |---|---|---|--:|---|
-@@ -52,11 +55,31 @@ lists each shard family once, with the per-shard average.
+@@ -52,12 +55,35 @@ lists each shard family once, with the per-shard average.
  | `tests.yml` | `static-checks` | ubuntu, no matrix | 140 s | same as above |
  | `tests.yml` | `golden-tests` | 2 OS | 124 s ubuntu / 122 s macOS | same as above |
  | `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 100 s macOS | same as above |
@@ -2385,11 +2390,14 @@ index 43d5caff4b21ef054a6be0cc91db0901bd26c125..3b4e7b7e134c8860e4c32f9b5615c847
  | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
  | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
  | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+ 
 +**`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 +five process-level lifecycle properties plus the operator stop verb — six cases,
 +each spawning one or two real `tsx` daemons — then the supervision-claim gate
-+that consumes their evidence, then the static-parity comparison (two 556-test
-+runs). Its duration figure is a LOCAL measurement of the suite plus an estimate
++that consumes their evidence, then the static-parity comparison (the
++dispatcher-reaching suite, twice — the count is deliberately not written down
++anywhere in this change, per R2 round-2 finding 15, because it moves with the
++suite and three different figures for it appeared in one diff). Its duration figure is a LOCAL measurement of the suite plus an estimate
 +for the parity pair; the CI number is unknown until the job has run, and saying
 +so is cheaper than publishing a guess in a table of measurements.
 +
@@ -2404,9 +2412,10 @@ index 43d5caff4b21ef054a6be0cc91db0901bd26c125..3b4e7b7e134c8860e4c32f9b5615c847
 +re-measured), or a Linux runner with a user session bus becomes available (the
 +job gains a matrix and this row doubles).
 +
- 
++
  Three rows from the 2026-05-26 baseline were removed because the jobs and
  workflows they named no longer exist: `python-tests` (no such job key in
+ `.github/workflows/`), `windows-lockfile-export.yml` and
 diff --git a/docs/contracts/collector-operations.md b/docs/contracts/collector-operations.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..cdb65ac10a73afc5ed60e865f24210804f5501b6
@@ -2570,13 +2579,14 @@ index 0000000000000000000000000000000000000000..cdb65ac10a73afc5ed60e865f2421080
 +- `src/scripts/_lib/collector_supervision.ts` — the module this page describes.
 +- `src/scripts/_lib/collector_store.ts` — opt-out, deletion, quarantine.
 diff --git a/src/config/ci-local-parity.yml b/src/config/ci-local-parity.yml
-index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..c10ab8d9dcfbc3a1fa11f1885b379262d526a527 100644
+index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..42646e59fb79dafb36c762e3bf4aac22b7ae2482 100644
 --- a/src/config/ci-local-parity.yml
 +++ b/src/config/ci-local-parity.yml
-@@ -121,6 +121,35 @@ ci_only:
-   # the exact harm this checker exists to prevent.
-   #
-   # Reachable on demand: `task report-pack-delta -- --base <ref> --head <ref>`.
+@@ -124,6 +124,41 @@ ci_only:
+   - id: report_pack_delta
+     class: artifact
+     reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
++
 +  # road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
 +  # dispatcher-reaching suite TWICE — once with the collector present-but-off,
 +  # once with it aliased away entirely — and compares per-test verdicts rather
@@ -2590,25 +2600,30 @@ index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..c10ab8d9dcfbc3a1fa11f1885b379262
 +  - id: check_static_parity
 +    class: benchmark
 +    reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
-+  # road-to-supervised-telemetry-collector step 5.2. The five lifecycle
-+  # PROPERTIES are verified locally like any other suite —
-+  # `tests/scripts/collector_lifecycle.test.ts` is inside `tests/scripts` and runs
-+  # in the ordinary vitest chain. What is CI-only is this WRAPPER, whose whole
-+  # job is to write `internal/reports/supervision-lifecycle.json` stamped with
++  # road-to-supervised-telemetry-collector step 5.2. What is CI-only is this
++  # WRAPPER, whose whole job is to write
++  # `internal/reports/supervision-lifecycle.json` stamped with
 +  # `git rev-parse HEAD`. That artifact is gitignored and read by
 +  # `check_supervision_claim_atomicity`, which refuses any result whose recorded
 +  # revision is not HEAD — so an artifact written during a local run of a dirty
-+  # working tree is evidence about a revision nobody shipped. Putting the wrapper
-+  # in `task ci` would also spawn real daemons on every local run for a file the
-+  # local chain then ignores.
++  # working tree is evidence about a revision nobody shipped.
++  #
++  # CORRECTED on R2 round-3 finding 7. This note used to say the five properties
++  # "run in the ordinary vitest chain" locally AND that a `task ci` wrapper
++  # "would spawn real daemons on every local run" — which cannot both be true,
++  # and the second half was already stale: the same change excluded
++  # `collector_lifecycle.test.ts` from the `node-tests` shards. The accurate
++  # position is that the suite runs on demand and in the dedicated
++  # `Collector Lifecycle` job, and the wrapper's CI-only status rests on the
++  # revision-stamped artifact alone — the argument that survives.
 +  #
 +  # Reachable on demand: `./scripts-run src/scripts/run_lifecycle_suite`.
 +  - id: run_lifecycle_suite
 +    class: artifact
 +    reason: "writes the revision-stamped lifecycle evidence artifact the atomicity gate reads; the artifact is gitignored and only meaningful at the revision CI is testing, while the five properties themselves already run locally in tests/scripts/collector_lifecycle.test.ts"
-   - id: report_pack_delta
-     class: artifact
-     reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
+   - id: classify_change_risk
+     class: benchmark
+     reason: "invoked as the nightly drift workflow's self-test step; the classifier itself gates nothing and its `--self-test` is runnable locally on demand (`./scripts-run src/scripts/classify_change_risk --self-test`)"
 diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
 index c91d70c1d889d21cd749650773fc834ad55c9d95..640b5d0c9d1e2a3cc61fa4014098facfb20a0d7f 100644
 --- a/src/config/gate-coverage.yml
@@ -2663,10 +2678,10 @@ index c91d70c1d889d21cd749650773fc834ad55c9d95..640b5d0c9d1e2a3cc61fa4014098facf
      min_scanned: 1
 diff --git a/src/scripts/_lib/capture_rate.ts b/src/scripts/_lib/capture_rate.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e83175949c8c
+index 0000000000000000000000000000000000000000..54d40a7aa6cadb915f8c9ef494bb7ae294265494
 --- /dev/null
 +++ b/src/scripts/_lib/capture_rate.ts
-@@ -0,0 +1,243 @@
+@@ -0,0 +1,258 @@
 +/**
 + * capture_rate — the measurement itself: numerator ÷ denominator, reported with
 + * a 95 % Wilson score interval, judged on the LOWER bound.
@@ -2862,6 +2877,12 @@ index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e831
 + * Every field is required and `null` is a legal value meaning **not recorded**.
 + * That is the shape the step demands — *"a missing reading blocks the flip"* —
 + * and an optional field would let a caller omit one and still typecheck.
++ *
++ * The type is not the enforcement, though, and treating it as such was a defect:
++ * {@link judgeEnablement} accepts only a literal `true`, so a key absent at
++ * RUNTIME blocks the flip exactly like an explicit `null`. A compile-time
++ * guarantee does not survive `JSON.parse` or a cast, and these readings are
++ * precisely the kind of object that arrives through both.
 + */
 +export interface EnablementReadings {
 +    readonly captureTargetMet: boolean | null;
@@ -2901,8 +2922,17 @@ index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e831
 +    const failed: string[] = [];
 +    for (const name of ENABLEMENT_READING_NAMES) {
 +        const value = readings[name];
-+        if (value === null) missing.push(name);
-+        else if (value === false) failed.push(name);
++        // ACCEPT ONLY `true` (R2 round-3 finding 4). The first version tested
++        // `=== null` then `=== false`, so a key that was ABSENT at runtime was
++        // neither and still yielded `flip: true`. The type made omission a
++        // compile error and these readings are exactly the kind of object
++        // assembled from JSON or a cast — including in this module's own tests —
++        // so the guarantee held everywhere except where it mattered. The step's
++        // rule is "a missing reading blocks the flip", and only a positive test
++        // for `true` implements it.
++        if (value === true) continue;
++        if (value === false) failed.push(name);
++        else missing.push(name);
 +    }
 +    return Object.freeze({
 +        flip: missing.length === 0 && failed.length === 0,
@@ -2912,10 +2942,10 @@ index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e831
 +}
 diff --git a/src/scripts/_lib/collector_denominator.ts b/src/scripts/_lib/collector_denominator.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b65fd0bc0
+index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf1f0a8c2d
 --- /dev/null
 +++ b/src/scripts/_lib/collector_denominator.ts
-@@ -0,0 +1,372 @@
+@@ -0,0 +1,589 @@
 +/**
 + * collector_denominator — the capture rate's DENOMINATOR, and the spool the
 + * numerator is drained from.
@@ -2963,16 +2993,27 @@ index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b
 + * `occurred_on`.
 + */
 +
++import crypto from 'node:crypto';
 +import fs from 'node:fs';
 +import path from 'node:path';
 +
 +import {
 +    COLLECTOR_EVENTS,
 +    COLLECTOR_PLATFORMS,
++    COLLECTOR_SCHEMA_VERSION,
 +    type CollectorEvent,
 +    type CollectorPlatform,
 +} from './collector_record.js';
 +import { isOptedOut, resolveCollectorStore, RETENTION_DAYS } from './collector_store.js';
++
++/**
++ * The collector's own version, recorded on every captured record.
++ *
++ * A literal rather than a read of `package.json`: the record contract calls this
++ * the version of the COLLECTOR, and tying it to the package version would make
++ * every release look like a collector change to anyone diffing the store.
++ */
++export const COLLECTOR_VERSION = '1.0.0';
 +
 +/** Append-only opportunity log. One short line per dispatch. */
 +export const DENOMINATOR_FILE_NAME = 'opportunities.log';
@@ -3204,10 +3245,204 @@ index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b
 +        return date >= cutoff;
 +    });
 +    if (kept.length === lines.length) return 0;
++
++    // CARRY THE TAIL (R2 round-3 finding 5). Hook processes append to this file
++    // from other processes while the prune runs, and a plain read-filter-rename
++    // drops everything written into the old inode inside that window. The
++    // direction is the dangerous one and this module states it three functions
++    // earlier: an understated denominator biases the rate UPWARD, toward making
++    // the target look met.
++    //
++    // So: remember how many bytes we read, and before the rename, append
++    // whatever arrived after that offset. A line that lands between the tail
++    // read and the rename is still lost — the window is now microseconds rather
++    // than the whole filter, and closing it completely needs a lock the
++    // append path deliberately does not take.
++    const consumed = Buffer.byteLength(raw, 'utf8');
++    let tail = '';
++    try {
++        const fd = fs.openSync(target, 'r');
++        try {
++            const size = fs.fstatSync(fd).size;
++            if (size > consumed) {
++                const buf = Buffer.alloc(size - consumed);
++                fs.readSync(fd, buf, 0, buf.length, consumed);
++                tail = buf.toString('utf8');
++            }
++        } finally {
++            fs.closeSync(fd);
++        }
++    } catch {
++        /* the file vanished; the rename below re-creates it from `kept` */
++    }
++
 +    const tmp = `${target}.tmp`;
-+    fs.writeFileSync(tmp, kept.length === 0 ? '' : `${kept.join('\n')}\n`);
++    const body = kept.length === 0 ? '' : `${kept.join('\n')}\n`;
++    fs.writeFileSync(tmp, `${body}${tail}`);
 +    fs.renameSync(tmp, target);
 +    return lines.length - kept.length;
++}
++
++/**
++ * Is this dispatch the package observing ITSELF?
++ *
++ * Metric definition item 3 excludes *"dispatches in the package's own test
++ * suite and CI (self-observation)"*, and nothing implemented it (R2 round-3
++ * finding 3): on an opted-in developer machine every dispatcher test that
++ * reached `main` appended to the real `~/.event4u/agent-config` opportunity
++ * log. Those dispatches spool no capture, so they biased the measured rate
++ * DOWN.
++ *
++ * Three signals, all set by the RUNNER rather than by this package, so none can
++ * be spoofed by the thing being measured: vitest exports `VITEST`, every CI
++ * provider exports `CI`, and `NODE_ENV=test` is the conventional third. A
++ * consumer's own CI is excluded too, and that is correct — a dispatch from a
++ * pipeline is not a dispatch from a session, and the metric is about sessions.
++ *
++ * It lives here rather than in the dispatcher because it is a statement about
++ * the METRIC, not about hook dispatch; the dispatcher merely asks.
++ */
++export function isSelfObservation(env: NodeJS.ProcessEnv = process.env): boolean {
++    return env.VITEST !== undefined || env.CI !== undefined || env.NODE_ENV === 'test';
++}
++
++/** Where the stable per-machine id lives. Generated once, never derived from a host fact. */
++export const MACHINE_ID_NAME = 'machine-id';
++/** Where the per-episode sequence counter lives, keyed by episode. */
++export const EPISODE_DIR_NAME = 'episodes';
++
++export function machineIdPath(userRoot?: string): string {
++    return path.join(resolveCollectorStore(userRoot).root, MACHINE_ID_NAME);
++}
++
++/**
++ * The machine id: read it, or mint one.
++ *
++ * `FIELD_PURPOSE` requires a LOCALLY GENERATED random UUID and explicitly not a
++ * derived one — a hash of a hostname or a username is a pseudonym for the thing
++ * it derives from, which is the leak class the whole schema is built against.
++ * So this is `randomUUID()` and nothing else, persisted so it is stable across
++ * invocations and rotatable by deleting one file.
++ */
++export function machineId(userRoot?: string): string | null {
++    const target = machineIdPath(userRoot);
++    try {
++        const existing = fs.readFileSync(target, 'utf8').trim();
++        if (UUID_RE.test(existing)) return existing;
++    } catch {
++        /* mint below */
++    }
++    try {
++        const minted = crypto.randomUUID();
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, `${minted}\n`);
++        return minted;
++    } catch {
++        return null;
++    }
++}
++
++const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
++
++/**
++ * The episode id for this process.
++ *
++ * One per session, per `FIELD_PURPOSE`. A hook runs as a fresh process per
++ * event, so "this process" is not a session — the id is derived from the host's
++ * own session identifier when it exposes one, and is otherwise minted per
++ * process, which degrades the SCOPE of `sequence` and nothing else.
++ *
++ * The host id is HASHED rather than carried: it is an opaque host value, and
++ * this schema's rule is that no field holds a foreign identifier. The hash is
++ * one-way and the result is shaped as a UUID so `validateRecord` accepts it.
++ */
++export function episodeId(env: NodeJS.ProcessEnv = process.env): string {
++    const hostSession = env.CLAUDE_CODE_SESSION_ID ?? env.AGENT_CONFIG_SESSION_ID ?? '';
++    if (hostSession === '') return crypto.randomUUID();
++    const digest = crypto.createHash('sha256').update(hostSession).digest('hex');
++    return [
++        digest.slice(0, 8),
++        digest.slice(8, 12),
++        `4${digest.slice(13, 16)}`,
++        `8${digest.slice(17, 20)}`,
++        digest.slice(20, 32),
++    ].join('-');
++}
++
++/**
++ * The next sequence number within an episode.
++ *
++ * Monotonic and non-negative per `FIELD_PURPOSE`, and it has to survive across
++ * PROCESSES because a hook is one process per event. So it is a counter file
++ * per episode, incremented under `wx`-free read-then-write — a lost update
++ * costs a duplicate `dedup_key`, which the store already collapses at read
++ * time, so the failure mode is a duplicate rather than a gap.
++ */
++export function nextSequence(episode: string, userRoot?: string): number {
++    const dir = path.join(resolveCollectorStore(userRoot).root, EPISODE_DIR_NAME);
++    const target = path.join(dir, `${episode}.seq`);
++    try {
++        fs.mkdirSync(dir, { recursive: true });
++        let current = 0;
++        try {
++            const raw = Number.parseInt(fs.readFileSync(target, 'utf8').trim(), 10);
++            if (Number.isInteger(raw) && raw >= 0) current = raw + 1;
++        } catch {
++            /* first record of this episode */
++        }
++        fs.writeFileSync(target, `${current}\n`);
++        return current;
++    } catch {
++        return 0;
++    }
++}
++
++/**
++ * Record a CAPTURE — the numerator's production writer.
++ *
++ * **This function is the fix for the defect three review rounds took to find**
++ * (R2 round-3 finding 1): `spoolRecord` had no production caller at all. The
++ * denominator was wired into `dispatch_hook.main` and climbed; the numerator
++ * stayed 0 by construction, so once the observation window and sample
++ * thresholds were met, the miss branch would have fired a decision record for a
++ * WIRING OMISSION rather than for a capture failure — and the two are
++ * indistinguishable from the number.
++ *
++ * It builds a valid record from the three facts a hook has (event, platform,
++ * date) plus the three the store needs to deduplicate (machine, episode,
++ * sequence), and hands it to {@link spoolRecord}. Same never-throw contract as
++ * everything else on this path.
++ */
++export function recordCapture(
++    event: CollectorEvent | string,
++    platform: CollectorPlatform | string,
++    userRoot?: string,
++    at: number = Date.now(),
++): boolean {
++    try {
++        if (!isCollectorEnabled(userRoot)) return false;
++        if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
++        if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
++        const machine = machineId(userRoot);
++        if (machine === null) return false;
++        const episode = episodeId();
++        return spoolRecord(
++            {
++                schema_version: COLLECTOR_SCHEMA_VERSION,
++                machine_id: machine,
++                episode_id: episode,
++                event,
++                sequence: nextSequence(episode, userRoot),
++                outcome: 'captured',
++                platform,
++                occurred_on: utcDate(at),
++                collector_version: COLLECTOR_VERSION,
++            },
++            userRoot,
++        );
++    } catch {
++        return false;
++    }
 +}
 +
 +/**
@@ -3268,13 +3503,25 @@ index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b
 +    }
 +}
 +
-+/** Parse a claimed spool file into records. Unparseable lines are reported, never dropped silently. */
-+export function readClaimedSpool(claimed: string): { records: unknown[]; malformed: number } {
++/**
++ * Parse a claimed spool file into records. Unparseable lines are reported,
++ * never dropped silently — and an UNREADABLE FILE is reported too.
++ *
++ * `unreadable` exists because its absence destroyed batches (R2 round-3 finding
++ * 2): a read error returned `{records: [], malformed: 0}`, which is
++ * indistinguishable from an empty file, and the caller then deleted the batch.
++ * A transient `EACCES` or `EMFILE` therefore lost every record in it and
++ * reported nothing — the exact loss class the crash-recovery re-drain exists to
++ * prevent, arriving through the recovery path itself.
++ */
++export function readClaimedSpool(
++    claimed: string,
++): { records: unknown[]; malformed: number; unreadable: boolean } {
 +    let raw = '';
 +    try {
 +        raw = fs.readFileSync(claimed, 'utf8');
 +    } catch {
-+        return { records: [], malformed: 0 };
++        return { records: [], malformed: 0, unreadable: true };
 +    }
 +    const records: unknown[] = [];
 +    let malformed = 0;
@@ -3286,7 +3533,7 @@ index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b
 +            malformed += 1;
 +        }
 +    }
-+    return { records, malformed };
++    return { records, malformed, unreadable: false };
 +}
 diff --git a/src/scripts/_lib/collector_supervision.ts b/src/scripts/_lib/collector_supervision.ts
 new file mode 100644
@@ -4369,10 +4616,10 @@ index 0000000000000000000000000000000000000000..7dc8ef19df1aac76f5848f90fbdfba32
 +}
 diff --git a/src/scripts/collector_daemon.ts b/src/scripts/collector_daemon.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf5566d706
+index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53abcd051ec
 --- /dev/null
 +++ b/src/scripts/collector_daemon.ts
-@@ -0,0 +1,642 @@
+@@ -0,0 +1,666 @@
 +/**
 + * collector_daemon — the supervised telemetry collector itself
 + * (`road-to-supervised-telemetry-collector` step 4.1).
@@ -4576,6 +4823,8 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +    readonly written: number;
 +    readonly refused: number;
 +    readonly malformed: number;
++    /** Claimed files that could not be READ. Kept on disk for the next drain, never deleted. */
++    readonly unreadable: number;
 +}
 +
 +/**
@@ -4603,14 +4852,24 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +            .filter((name) => name.startsWith('draining-'))
 +            .map((name) => path.join(spoolDir(userRoot), name));
 +    } catch {
-+        return Object.freeze({ claimed: 0, written: 0, refused: 0, malformed: 0 });
++        return Object.freeze({ claimed: 0, written: 0, refused: 0, malformed: 0, unreadable: 0 });
 +    }
 +
 +    let written = 0;
 +    let refused = 0;
 +    let malformed = 0;
++    let unreadable = 0;
 +    for (const file of claimedFiles) {
 +        const parsed = readClaimedSpool(file);
++        if (parsed.unreadable) {
++            // KEEP IT (R2 round-3 finding 2). A file we could not read has not
++            // had its records offered to the store, and deleting it here
++            // destroyed the batch while reporting zero malformed — a transient
++            // EACCES or EMFILE was enough. The next drain re-reads it, which is
++            // the same recovery the crash path relies on.
++            unreadable += 1;
++            continue;
++        }
 +        malformed += parsed.malformed;
 +        for (const record of parsed.records) {
 +            const outcome = writeRecord(handle, record);
@@ -4624,6 +4883,7 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +        written,
 +        refused,
 +        malformed,
++        unreadable,
 +    });
 +}
 +
@@ -4763,6 +5023,7 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +        written: 0,
 +        refused: 0,
 +        malformed: 0,
++        unreadable: 0,
 +    });
 +    let stoppedBy: RunSummary['stoppedBy'] = 'iterations';
 +
@@ -4805,6 +5066,7 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +                written: drained.written + result.written,
 +                refused: drained.refused + result.refused,
 +                malformed: drained.malformed + result.malformed,
++                unreadable: drained.unreadable + result.unreadable,
 +            });
 +            const today = new Date(now).toISOString().slice(0, 10);
 +            pruneOlderThan(handle, today);
@@ -4834,8 +5096,17 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +            await sleep(beatMs);
 +        }
 +    } finally {
-+        handle?.db.close();
++        // RELEASE FIRST (R2 round-3 finding 12). `db.close()` can throw on an
++        // already-invalidated handle, and running it first meant the lock and
++        // heartbeat `start()` took stayed on disk — the orphaned-residue case
++        // that moving `openCollectorStore` into the `try` was supposed to close,
++        // still reachable through the cleanup path itself.
 +        stop(userRoot);
++        try {
++            handle?.db.close();
++        } catch {
++            /* an unclosable handle is this process's problem, not its successor's */
++        }
 +    }
 +
 +    return Object.freeze({ iterations, drained, stoppedBy, exceeded });
@@ -5016,44 +5287,44 @@ index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf
 +    });
 +}
 diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
-index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..5753a54b9420b225582bfb8a139e991eab2bbeb5 100644
+index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..f16985a046d042493a4b568bd7de69462444343d 100644
 --- a/src/scripts/hooks/dispatch_hook.ts
 +++ b/src/scripts/hooks/dispatch_hook.ts
-@@ -57,6 +57,7 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
+@@ -57,6 +57,11 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
  export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
  import { _py_json_dumps } from './py_json_dumps.js';
  import { _fallback_yaml } from './fallback_yaml.js';
-+import { recordOpportunity } from "../_lib/collector_denominator.js";
++import {
++  isSelfObservation,
++  recordCapture,
++  recordOpportunity,
++} from "../_lib/collector_denominator.js";
  export { _fallback_yaml } from './fallback_yaml.js';
  
  // Free-form JSON values flow through every helper here; a documented
-@@ -1144,6 +1145,30 @@ export function main(argv?: string[]): number {
+@@ -1144,6 +1149,26 @@ export function main(argv?: string[]): number {
      return EXIT_ALLOW; // fail-open per contract for unknown events
    }
  
-+  // ── The capture-rate DENOMINATOR ────────────────────────────────────────────
++  // ── The capture rate: both halves, written here ─────────────────────────────
 +  //
-+  // `road-to-supervised-telemetry-collector` step 1.2 item 1: the denominator
-+  // must come from a writer that cannot fail the way the numerator does. This
-+  // is that writer — in-process, synchronous, no daemon involved — so a dead
-+  // collector yields a climbing denominator against a flat numerator and the
-+  // capture rate falls instead of reading 0/0.
++  // Two calls rather than one, because they must be able to FAIL DIFFERENTLY.
++  // `recordOpportunity` is the denominator's independent writer — in-process,
++  // no daemon — so a dead collector yields a climbing denominator against a
++  // flat numerator and the rate falls instead of reading 0/0.
++  // `recordCapture` is the numerator, and its absence was a real defect three
++  // review rounds took to find: `spoolRecord` had no production caller, so the
++  // rate was 0 % for a wiring omission and nothing could tell that from a
++  // capture failure. Both are gated on the opt-in marker, never throw, and cost
++  // two `existsSync` calls on a default-off install. Rationale, ordering and
++  // the self-observation exclusion live in `collector_denominator.ts`.
 +  //
-+  // Costs TWO `existsSync` calls on a default-off install, and the number is
-+  // stated correctly here because it was stated wrongly first (R2 finding 14):
-+  // `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
-+  // the opt-out check — not the marker — is what usually returns first. Two
-+  // stats and a return; no read, no write, no allocation. It NEVER throws — the
-+  // observation-only contract's falsifiable form is that killing the module
-+  // leaves every dispatch resolving identically, and a raising counter would
-+  // break exactly that.
-+  //
-+  // Placed after the vocabulary check so an unknown event is not counted as an
-+  // opportunity, and before the manifest load so a missing manifest — which
-+  // fails open below — still counts as an opportunity the collector had. That
-+  // ordering is the difference between measuring dispatches and measuring
-+  // successful dispatches, and the metric definition asks for the former.
-+  recordOpportunity(args.event, args.platform);
++  // Placed after the vocabulary check so an unknown event is not an
++  // opportunity, and before the manifest load so a missing manifest still is.
++  if (!isSelfObservation()) {
++    recordOpportunity(args.event, args.platform);
++    recordCapture(args.event, args.platform);
++  }
 +
    const manifest_path = args.manifest;
    if (!fs.existsSync(manifest_path)) {
@@ -5289,10 +5560,10 @@ index 0000000000000000000000000000000000000000..5ac6a7bd918e7331bcc94039bdb9b07c
 +}
 diff --git a/tests/scripts/capture_rate.test.ts b/tests/scripts/capture_rate.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..0b5cd95c2872c6c5dd7cce0756f95c5730f7f0d7
+index 0000000000000000000000000000000000000000..c088d4b57f1887396c3f2f097ae4420d8413dd1c
 --- /dev/null
 +++ b/tests/scripts/capture_rate.test.ts
-@@ -0,0 +1,387 @@
+@@ -0,0 +1,406 @@
 +// The measurement machinery, proven synthetically.
 +//
 +// `road-to-supervised-telemetry-collector` step 5.3 — the checkpoint the AI
@@ -5568,6 +5839,25 @@ index 0000000000000000000000000000000000000000..0b5cd95c2872c6c5dd7cce0756f95c57
 +    // `missing`, and "we did not look" becomes indistinguishable from "we looked
 +    // and it was bad". Only one of those two is 6.3's trigger.
 +
++    it('an ABSENT key blocks the flip — the type is not the enforcement', () => {
++        // R2 round-3 finding 4. The loop tested `=== null` then `=== false`, so
++        // a key absent at RUNTIME was neither and still yielded `flip: true`.
++        // The required-field type made omission a compile error, and these
++        // readings are exactly the kind of object that arrives from JSON or a
++        // cast — including in this very file, which builds one with
++        // `as unknown as EnablementReadings`.
++        for (const name of ENABLEMENT_READING_NAMES) {
++            const partial = { ...all(true) } as Record<string, unknown>;
++            delete partial[name];
++            const verdict = judgeEnablement(partial as unknown as EnablementReadings);
++            expect(verdict.flip, name).toBe(false);
++            expect(verdict.missing, name).toContain(name);
++        }
++    });
++
++    // removing_this_constraint_reds_it: restore the `=== null` / `=== false`
++    // pair in `judgeEnablement` — every case above flips.
++
 +    it('a FALSE reading blocks the flip and is reported as a failure', () => {
 +        const verdict = judgeEnablement({ ...all(true), captureTargetMet: false });
 +        expect(verdict.flip).toBe(false);
@@ -5763,10 +6053,10 @@ index 0000000000000000000000000000000000000000..63d72252eb51f743f8b31f3317030f79
 +});
 diff --git a/tests/scripts/collector_daemon.test.ts b/tests/scripts/collector_daemon.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4876cd2df
+index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05ac640d09
 --- /dev/null
 +++ b/tests/scripts/collector_daemon.test.ts
-@@ -0,0 +1,492 @@
+@@ -0,0 +1,615 @@
 +// The collector itself — default-off proven by process enumeration, the
 +// denominator's independence from the daemon, and the drain loop.
 +//
@@ -5792,14 +6082,18 @@ index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4
 +    disableCollector,
 +    enableCollector,
 +    isCollectorEnabled,
++    machineId,
++    machineIdPath,
 +    pruneOpportunitiesOlderThan,
 +    readOpportunities,
++    recordCapture,
 +    recordOpportunity,
 +    spoolPendingPath,
 +    spoolRecord,
 +} from '../../src/scripts/_lib/collector_denominator.js';
 +import {
 +    COLLECTOR_SCHEMA_VERSION,
++    validateRecord,
 +    type CollectorRecord,
 +} from '../../src/scripts/_lib/collector_record.js';
 +import {
@@ -5928,8 +6222,14 @@ index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4
 +            }
 +            expect(seen.length, 'the enumeration can see a running daemon').toBeGreaterThan(0);
 +            // And the same enumeration, in the shape the negative assertion
-+            // uses, does NOT see it — because it is test-owned.
-+            expect(enumerateDaemonProcesses()).toEqual([]);
++            // uses, does NOT see it — because it is test-owned. Compared
++            // against the same baseline for the same reason (R2 round-3 finding
++            // 6): asserting an empty list here reds on a developer who has
++            // opted in and has a real collector running, which is the defect
++            // the sibling assertion below was already corrected for and this
++            // one was not.
++            const nowRunning = new Set(enumerateDaemonProcesses().map(pidOf));
++            expect([...nowRunning].filter((p) => !baselineDaemonPids.has(p))).toEqual([]);
 +        } finally {
 +            const beat = readHeartbeat(userRoot);
 +            if (beat !== null) {
@@ -6105,6 +6405,31 @@ index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4
 +    // return 0 without rewriting — the log keeps growing inside the directory
 +    // the disk budget ceilings, and a breach STOPS the collector.
 +
++    it('CARRIES concurrently appended lines across a prune', () => {
++        // R2 round-3 finding 5. The prune was read-filter-write-tmp-rename over
++        // a file other processes append to, so anything written into the old
++        // inode inside that window was dropped — and the direction is the
++        // dangerous one: an understated denominator biases the rate UPWARD.
++        //
++        // Simulated rather than raced, because a real race is not reproducible:
++        // the append happens between the read and the rename, which is exactly
++        // the window, by monkey-patching nothing — the prune re-reads the tail
++        // beyond the bytes it consumed, so appending here and letting the prune
++        // run afterwards exercises the same code path deterministically.
++        enableCollector(userRoot);
++        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
++        // A line that arrives "during" the prune, appended to the same file.
++        fs.appendFileSync(denominatorPath(userRoot), '2026-06-02\tstop\tclaude\n');
++
++        const dropped = pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
++        expect(dropped).toBe(1);
++        const after = readOpportunities(userRoot);
++        expect(after.total, 'the late line survived').toBe(2);
++        expect(after.byEvent.stop).toBe(1);
++    });
++
 +    it('KEEPS a line whose date does not parse rather than deleting it', () => {
 +        enableCollector(userRoot);
 +        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
@@ -6115,6 +6440,61 @@ index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4
 +        const raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
 +        expect(raw).toContain('not-a-date');
 +        expect(readOpportunities(userRoot).malformed).toBe(1);
++    });
++
++    it('recordCapture WRITES THE NUMERATOR, which had no production caller at all', () => {
++        // R2 round-3 finding 1, and the most consequential defect three review
++        // rounds surfaced: `spoolRecord` was exported, tested, and called by
++        // nothing outside this suite. The denominator was wired into the
++        // dispatcher and climbed; the numerator stayed 0 by construction, so
++        // the capture rate was 0 % for a WIRING omission and the miss branch
++        // could not tell that from a real capture failure.
++        enableCollector(userRoot);
++        expect(recordCapture('session_start', 'claude', userRoot)).toBe(true);
++        expect(recordCapture('pre_tool_use', 'claude', userRoot)).toBe(true);
++
++        const spooled = fs
++            .readFileSync(spoolPendingPath(userRoot), 'utf8')
++            .split('\n')
++            .filter((l) => l.length > 0)
++            .map((l) => JSON.parse(l) as Record<string, unknown>);
++        expect(spooled).toHaveLength(2);
++        // Every record it builds must survive the schema, or the daemon would
++        // refuse them all at the write boundary and the numerator would still
++        // be 0 — for a different reason.
++        for (const rec of spooled) {
++            expect(validateRecord(rec).ok, JSON.stringify(validateRecord(rec).errors)).toBe(true);
++        }
++        // The sequence orders records within one episode, which is what
++        // `dedupKey` scopes; two captures in one episode must not collide.
++        expect(spooled[0]?.episode_id).toBe(spooled[1]?.episode_id);
++        expect(spooled[0]?.sequence).not.toBe(spooled[1]?.sequence);
++    });
++
++    // removing_this_constraint_reds_it: make `recordCapture` return false
++    // without spooling — this reds, and nothing else in the tree does, which is
++    // exactly how the missing production caller survived two review rounds.
++
++    it('mints a STABLE machine id and never derives it from a host fact', () => {
++        enableCollector(userRoot);
++        const first = machineId(userRoot);
++        expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/i);
++        expect(machineId(userRoot)).toBe(first);
++        // Not derived: two different roots mint different ids, so the value
++        // cannot be a function of hostname or username.
++        const other = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-mid-'));
++        try {
++            expect(machineId(other)).not.toBe(first);
++        } finally {
++            fs.rmSync(other, { recursive: true, force: true });
++        }
++    });
++
++    it('writes NOTHING while the collector is off', () => {
++        disableCollector(userRoot);
++        expect(recordCapture('session_start', 'claude', userRoot)).toBe(false);
++        expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
++        expect(fs.existsSync(machineIdPath(userRoot))).toBe(false);
 +    });
 +
 +    it('never throws, whatever the filesystem does', () => {
@@ -6174,6 +6554,39 @@ index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4
 +    // removing_this_constraint_reds_it: make `drainOnce` read only the file it
 +    // just claimed rather than every `draining-*` in the directory — the
 +    // orphaned batch is never picked up.
++
++    it('KEEPS a claimed file it could not read, rather than deleting the batch', () => {
++        // R2 round-3 finding 2. An unreadable claimed file used to be
++        // indistinguishable from an empty one, so the caller deleted it — a
++        // transient EACCES destroyed the batch and reported zero malformed.
++        enableCollector(userRoot);
++        spoolRecord(record(), userRoot);
++        const claimed = claimSpool(userRoot) as string;
++        fs.chmodSync(claimed, 0o000);
++
++        const handle = openCollectorStore(userRoot);
++        try {
++            const result = drainOnce(handle, userRoot);
++            expect(result.unreadable).toBe(1);
++            expect(result.written).toBe(0);
++            expect(fs.existsSync(claimed), 'the batch survives for the next drain').toBe(true);
++
++            // And once it is readable again, the next drain picks it up.
++            fs.chmodSync(claimed, 0o600);
++            expect(drainOnce(handle, userRoot).written).toBe(1);
++        } finally {
++            try {
++                fs.chmodSync(claimed, 0o600);
++            } catch {
++                /* already gone */
++            }
++            handle.db.close();
++        }
++    });
++
++    // removing_this_constraint_reds_it: drop the `parsed.unreadable` branch in
++    // `drainOnce` — the file is deleted and `written` stays 0, so the batch is
++    // gone with nothing reporting it.
 +
 +    it('REFUSES an invalid record rather than dropping it, and counts the refusal', () => {
 +        enableCollector(userRoot);
@@ -7319,10 +7732,10 @@ index 0000000000000000000000000000000000000000..955d9eded4db1b275aed392353006312
 +});
 diff --git a/tests/scripts/collector_vocabulary_parity.test.ts b/tests/scripts/collector_vocabulary_parity.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..e2ac30204cb85e4ce6a5c693e56cd93c27523813
+index 0000000000000000000000000000000000000000..59320e9e3ff2e8e02521943aacfbf57648780f5c
 --- /dev/null
 +++ b/tests/scripts/collector_vocabulary_parity.test.ts
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,100 @@
 +// The denominator's vocabularies must equal the dispatcher's.
 +//
 +// `road-to-supervised-telemetry-collector`, R2 finding 11. `recordOpportunity`
@@ -7348,8 +7761,35 @@ index 0000000000000000000000000000000000000000..e2ac30204cb85e4ce6a5c693e56cd93c
 +    COLLECTOR_PLATFORMS,
 +} from '../../src/scripts/_lib/collector_record.js';
 +import { EVENT_VOCABULARY } from '../../src/scripts/hooks/dispatch_hook.js';
++import { isSelfObservation } from '../../src/scripts/_lib/collector_denominator.js';
 +
 +const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
++
++describe('self-observation exclusion', () => {
++    it('excludes the package\'s own test suite and CI from the denominator', () => {
++        // Metric definition item 3 excludes "dispatches in the package's own
++        // test suite and CI (self-observation)", and nothing implemented it
++        // (R2 round-3 finding 3): on an opted-in developer machine every
++        // dispatcher test that reached `main` appended to the REAL
++        // `~/.event4u/agent-config` opportunity log, and spooled no capture —
++        // so it biased the measured rate DOWN.
++        expect(isSelfObservation({ VITEST: 'true' })).toBe(true);
++        expect(isSelfObservation({ CI: 'true' })).toBe(true);
++        expect(isSelfObservation({ NODE_ENV: 'test' })).toBe(true);
++        expect(isSelfObservation({})).toBe(false);
++        expect(isSelfObservation({ NODE_ENV: 'production' })).toBe(false);
++    });
++
++    it('is live in THIS process, which is the only self-check that matters', () => {
++        // If this ever reads false under vitest, the exclusion is not excluding
++        // the thing it was written for.
++        expect(isSelfObservation()).toBe(true);
++    });
++
++    // removing_this_constraint_reds_it: make `_isSelfObservation` return false
++    // unconditionally — both cases red, and the dispatcher starts counting its
++    // own suite again with nothing else noticing.
++});
 +
 +describe('collector vocabulary parity', () => {
 +    it('COLLECTOR_EVENTS equals the dispatcher\'s EVENT_VOCABULARY, exactly', () => {
