@@ -26,6 +26,7 @@ import {
     bundle_roadmap,
 } from './ai_council/bundler.js';
 import { select_chairman } from './ai_council/chairman.js';
+import { warnIfRecounciled } from './ai_council/recouncil_guard.js';
 import { jaccardSimilarity } from './_lib/text_similarity.js';
 import type { ChairmanCandidate } from './ai_council/chairman.js';
 import { synthesis_template } from './ai_council/prompts.js';
@@ -471,8 +472,6 @@ function load_settings(
     }
     return settings;
 }
-
-
 
 // ── member construction ─────────────────────────────────────────────
 
@@ -2504,6 +2503,7 @@ function cmd_run(
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
     const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
+    warnIfRecounciled(REPO_ROOT, artefact, question.user_prompt, members, _resolve_rounds(args, ai_cfg), _stdout);
     if (!args.confirm) _stdout('council:run · DRY PASS — estimate only, no seat is contacted. Add --confirm to run.\n');
     _stdout(
         `council:run · mode=${question.mode} · members=${members.length} ` +

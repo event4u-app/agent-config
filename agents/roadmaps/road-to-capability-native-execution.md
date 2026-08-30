@@ -335,12 +335,31 @@ architecturally permitted, externally releasable).
       the precedence the clause asks for is satisfied by construction rather
       than by commit ordering within a series.
 
-- [ ] **0.6 Pre-register the outcome bars and their falsifiers.** Dispatch
+- [x] **0.6 Pre-register the outcome bars and their falsifiers.** Dispatch
       success, evidence completeness, token/context cost, wall-clock, setup
       friction, deterministic replay, degraded-run honesty.
       `verify:` every bar has a numeric threshold and a named falsifier, and the
       prereg commit precedes any default-preference change; a bar with no
       falsifier fails the shape check rather than passing.
+      <!-- Executed 2026-08-30. `src/config/capability-native-outcome-bars.json`
+      carries the seven bars in the order this step names them, each with a
+      numeric threshold, a direction, a named falsifier and the phase that
+      measures it. The shape check is
+      `tests/scripts/capability_native_outcome_bars.test.ts` — a TEST rather
+      than a new gate script, because the corpus is one committed constant and
+      a gate would have cost four registrations (gate-coverage row, self-test,
+      reachability, ci-parity) to watch one file.
+      HONESTY ABOUT THE NUMBERS, which the step does not ask for and which a
+      pre-registration is worthless without: three bars are DERIVED from a
+      contract or a frozen-fixture property, three are STATED DEFAULTS carrying
+      a `revisit-if`, and each says which it is. The shape check ENFORCES that
+      declaration and enforces that a stated default carries its revisit-if —
+      a threshold nobody can source is worse than none, because it looks
+      measured. Four rejecting cases exercise the refusal the verify clause
+      asks for, including a falsifier that is a wish rather than a condition.
+      The prereg lands before any default-preference change, as required: no
+      Phase 1-9 code is authored here, because AC-14 forbids it while
+      `b-adr-088` is open. -->
 
 ## Phase 1 — The browser capability request contract
 
