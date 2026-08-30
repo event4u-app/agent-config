@@ -399,6 +399,7 @@ tasks:
       - task: roadmap-progress-check
       - task: lint-readme
       - task: lint-positioning
+      - task: check-publish-surface
       - task: check-knowledge-sharing
       - task: check-augmentignore
       - task: lint-readme-size
