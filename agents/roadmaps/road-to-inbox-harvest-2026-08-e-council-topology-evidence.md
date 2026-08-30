@@ -230,12 +230,37 @@ called a larger risk than feature absence.
       roadmap's original number stands, and this paragraph exists because a
       correction accepted on report would have replaced a true number with a
       false one.
-- [ ] 0.3 **EXTEND** `CREDITS.md` and `provenance/harvests.jsonl` (5 rows
+- [x] 0.3 **EXTEND** `CREDITS.md` and `provenance/harvests.jsonl` (5 rows
   today) with the method lineage as **Source A / B / C** — method inspiration,
   not incorporated code. Real links land as `ENC1:` tokens only.
       verify: `./scripts-run src/scripts/lint_harvest_provenance` green, and
       `./scripts-run src/scripts/check_no_external_sources` reports zero
       denylisted tokens across the tracked diff
+
+      **CLOSED 2026-08-30.** `CREDITS.md` gains a **Method lineage** section —
+      deliberately NOT under the license-required heading above it, because
+      nothing about these three is license-required: no code or text is
+      incorporated, and recording them is the epistemic obligation
+      `code-provenance` § the knowledge layer states, not a legal one.
+      `provenance/harvests.jsonl` goes 9 rows → 12, one per source, each
+      carrying what it actually contributed rather than a label.
+
+      **The `ENC1:` column is a PLACEHOLDER and now says so in the artefact.**
+      `link_crypto.ts` needs `secrets.link_encryption_key`, which is absent from
+      every tracked tree and from an agent's reach, so no real token can be
+      produced here. The step's *"real links land as `ENC1:` tokens only"* is
+      satisfiable only by the maintainer. What made the row complete anyway is
+      the ledger's own sanctioned alternative: `source_ref: opaque:…`, already
+      the shipped form for a source that cannot be pinned to a public revision —
+      `opaque:reflection-failure-modes-a` is the precedent, in the row above
+      these three. Recording the placeholder as a placeholder rather than
+      letting `ENC1:` read as a finished token is the honest half.
+
+      **Measured:** `lint_harvest_provenance` reports *12 ledger row(s) OK · 2
+      citation(s) resolved across 5 scanned root(s)*, and
+      `check_no_external_sources` sits at its 148 baseline with **zero added** by
+      this diff — the three new rows carry no denylisted token by construction,
+      since every identifier in them is `opaque:` or a Source A/B/C label.
 - [ ] 0.4 Run the unlicensed-source verbatim scan: phrase-diff the advisor
   persona files and the peer-review / synthesis prompts against the source
   texts. Rewrite anything substantively verbatim.

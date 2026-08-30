@@ -1,10 +1,10 @@
 <!-- evidence-type: analysis -->
-# Autonomous roadmap-drain runs — 2026-08-29
+# Autonomous roadmap-drain runs — 2026-08-29 and 2026-08-30
 
-> **Three runs landed on this date and all three are recorded here.** Run 1 is
-> immediately below and is unchanged; Run 2 and Run 3 are appended in order. The
-> file is appended to rather than rewritten: overwriting an earlier run's record
-> to report a later one would be the failure this document exists to prevent.
+> **Four runs are recorded here.** Runs 1-3 landed on 2026-08-29 and are
+> unchanged; Run 4 landed on 2026-08-30 and is appended at the end. The file is
+> appended to rather than rewritten: overwriting an earlier run's record to
+> report a later one would be the failure this document exists to prevent.
 
 ---
 
@@ -477,3 +477,90 @@ un-archival of `road-to-published-number-truth`, a promotion of
 `docs/CLAIMS.md`. All work this run happened in worktrees; that state was left
 exactly as found. It is not lost, and it is in no PR.
 
+
+---
+
+# Run 4 — fourth drain run, 2026-08-30
+
+One PR per roadmap, every decision that would have reached the user routed to
+the AI council instead, no user in the loop. This section is the run's only
+report.
+
+## The queue, recomputed
+
+The live inventory at `origin/main` was **six** active roadmaps, not the seed
+list. Two were already in flight from the previous run's tail and are counted
+here because this run finished them. Ordering followed the mandate: all six sat
+under 10 % progress, all were `complexity: structural`, so the tie-break was
+ascending checkbox count.
+
+## Pull requests
+
+| PR | Roadmap | State | What landed |
+|---|---|---|---|
+| **#1733** | `road-to-source-silence-cutover` | **merged** | The `skip_paths` target settled at 21, third-party notices shipped, and a gate that scored compliance as debt narrowed 243 → 148. Roadmap parked in `later/` with its resume condition. |
+| **#1734** | `road-to-supervised-telemetry-collector` | **merged** | Phases 3–5 across five review rounds, including the round that found the kill switch did not stop collection. |
+| **#1735** | `road-to-experience-loop-broadening` | **merged** | Phase 0: every runtime component labelled against ADR-124, two boundaries fixed in writing, and a gate that refuses a metric with no consumer. |
+| **#1736** | `road-to-capability-native-execution` | **merged** | Phase 0: the dispatch corpus frozen inputs-only, and the sequencing contradiction resolved without deciding what only an owner may decide. |
+| **#1737** | `road-to-governed-harness-evolution` | open | Phase 0 steps 0.1, 0.2, 0.3 and 0.7 — the phase's exit criterion — plus the stale-blocker defect that recurred in a second roadmap. |
+| **#1739** | `road-to-inbox-harvest-…-council-topology-evidence` | open | Step 0.3: the method lineage recorded anonymously, and the half only the maintainer can finish named as such. |
+
+## Council decisions
+
+Every one at $0.00 — both seats subscription-authed, 2/2 present on each run.
+
+| # | Question | Verdict |
+|---|---|---|
+| 1 | Phase-6 disposition on the telemetry collector | Degraded 1/2, recorded as degraded rather than as convergence |
+| 2 | `skip_paths` target | 2/2 — 21, after an earlier 1–1 split |
+| 3 | Shape-debt narrowing 243 → 148 | 2/2 — narrow the class, do not delete it; both seats **refused** deletion |
+| 4 | Review-convergence stopping rule | 2/2 — one minimal remediation pass, targeted regression plus required CI, then ship |
+| 5 | May Phases 1–9 proceed while Phase 0's step 0.2 stays `[~]` on an owner-reserved half? | 2/2 — split the step by authority **and** amend the header; both seats rejected "closed for sequencing purposes" as giving one phase two meanings of closed |
+| 6 | A scan floor over a population being drained to zero | 2/2 — retire the count, assert enumeration of the declared root **inside the production linter**, because an independent `existsSync` in the coverage gate proves nothing about what the linter read |
+| 7 | E8 — does the adaptive state class split in two? | 2/2 — five classes, `production-adaptive` **empty and prohibited**, where "empty" forbids creating runtime dependencies rather than merely an empty directory |
+
+Three of the seven changed the plan rather than ratifying it. Decision 5 unstalled
+a roadmap that was, as written, permanently blocked on a human. Decision 6
+replaced a metric that this drain itself kept falsifying. Decision 7 was refused
+in its proposed form by both seats until the promotion transitions were named.
+
+## Decisions the council REFUSED to take, and they matter more than the seven above
+
+- **ADR-088's browser-engine boundary.** Recording four deterministic adapters as
+  outside an `accepted` ADR narrows a floor, which no council may do. One seat
+  caught the substitution that made the exception look safe: the argument reads
+  the ADR as barring external **agent** runtimes, while it says external **tool**
+  runtimes. The conservative reading holds and the blocker stays open.
+- **ADR-239 § Decision 3, merge authority.** Granting preauthorized merge
+  authority weakens a human-in-the-loop guarantee; refusing it settles an ADR
+  recorded as open. Either is owner-reserved. Phases 1–6 were declared legal
+  instead and Phase 7 stays gated.
+
+Both are recorded as **owner-required** rather than worked around. That is two
+places where this run stopped, and both are named in their roadmaps with an
+amended closure condition rather than a quietly narrowed one.
+
+## Defects found that no step predicted
+
+1. **A doc comment read as an import, in two independent scanners.** A parenthetical `export { X } from './X'` inside a doc comment failed four jobs through `consumer_matrix.ts` and four more through `prepack-check.mjs`. The first fix shipped and CI stayed red on the identical message: the lexer carried quote state across the whole file, and the very comment it was written to neutralise says `module's`. Quote state now resets per line; block-comment state does not. The construct was searched tree-wide — three sites, two carrying the defect, both fixed, the third line-anchored and left alone.
+2. **A budget compared against the wrong surface.** `check_pack_size` measured a built tree against a cap the budget file itself records as measured on an **unbuilt** one. Main packed 8.985 MB over 2,715 entries and passed; a branch adding six source files packed 9.922 over 2,827 and failed. The 112-entry difference was `dist/cli` plus `dist/cli-delegate` — the build, not the diff.
+3. **`episodeId` minted a fresh UUID per call** when no host session id is set. Two captures in one process landed in two episodes — invisible on a developer machine, whose host exports the variable, and true of every unattended run.
+4. **A scan floor over a shrinking population**, which reds the build every time the drain succeeds.
+5. **The stale `Resolved when` twin, in a second roadmap.** An amendment written as prose above the field, the original unsatisfiable condition still standing below it, and the gate green throughout because its check is a literal label. The first instance's note predicted the recurrence by naming the mechanism; the tree-wide grep found these two and no third.
+
+## What this run did NOT do
+
+- **It closed no roadmap.** Four PRs merged and two are open; the active estate
+  is still four roadmaps. Every one of them now has a Phase 0 that is closed as
+  far as this run's authority reaches, and two of the four are stopped at an
+  owner decision that no council may take.
+- **`road-to-capability-native-execution` has an ordering problem beyond Phase 0**,
+  recorded rather than worked around: Phase 1's own verify clauses require a
+  consumer and an adapter that Phases 2 and 3 build, so declaring its eleven
+  capabilities today produces eleven that fail 1.1's own check. Nothing was
+  renumbered — authoring Phase 1's replacement while claiming to observe a
+  problem in it would be the same mistake in the other direction.
+- **`road-to-governed-harness-evolution` steps 0.4–0.6 are left open on purpose.**
+  Each verify names a RUN, and no run harness exists. Closing a step on the
+  written half of its verify is how a detector that never got built reads as one
+  that passed.
