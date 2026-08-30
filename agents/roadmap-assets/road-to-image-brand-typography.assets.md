@@ -252,7 +252,7 @@ let evalPath: string;
 
 const MANIFEST = {
     upstream: {
-        repo: 'https://github.com/nextlevelbuilder/ui-ux-pro-max-skill',
+        repo: 'S3',
         sha: 'b7e3af80f6e331f6fb456667b82b12cade7c9d35',
         last_checked: '2026-06-07',
     },
@@ -367,7 +367,7 @@ describe('runRecordTriggerEval', () => {
 - Style Dictionary (v4 DTCG support; v5 in progress) — `https://styledictionary.com/`, DTCG notes `https://styledictionary.com/info/dtcg/`
 - Tokens Studio (Figma; DTCG vs legacy format) — `https://docs.tokens.studio/manage-settings/token-format`
 - Terrazzo (DTCG toolchain) — `https://terrazzo.app/`
-- `nextlevelbuilder/ui-ux-pro-max-skill` — its `brand` + `design-system` sub-skills (Apache-2.0/MIT) — `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill` (already SHA-pinned in our ATTRIBUTION)
+- `S3` — its `brand` + `design-system` sub-skills (Apache-2.0/MIT) — `S3` (already SHA-pinned in our ATTRIBUTION)
 - `@clawfu/mcp-skills` — 169 marketing/brand skills with brand memory (Ogilvy/Dunford/Cialdini) — via `https://github.com/BehiSecc/awesome-claude-skills`
 - `wondelai/skills` — 25 UX/marketing/strategy skills (Norman, Cialdini, Ries) — via the same awesome list
 - `Owl-Listener/designer-skills` — Designer Skills Collection — via `https://github.com/rohitg00/awesome-claude-design`
@@ -392,3 +392,5 @@ describe('runRecordTriggerEval', () => {
 > passed — license + ATTRIBUTION, four-operation classification, SHA-pin +
 > refresh DoD, schema-conformant frontmatter, and trigger-evals. The awesome
 > lists are leads, not dependencies.
+
+<!-- redacted 2026-08-29: source identifiers replaced by codenames per ADR-250. No decision, measurement or count altered. -->

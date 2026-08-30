@@ -164,6 +164,31 @@ describe('check_no_external_sources — synthetic hits', () => {
         expect(parsed.hits[0]!.token).toBe(`\\b${TOK1}\\b`);
     });
 
+    // road-to-source-silence AC-2, the fixture half. Phase 3.1's own verify was
+    // a LIVE sensitivity probe on the real tree — a real reading, but not a
+    // fixture, so nothing in the suite pinned the path scan and a regression
+    // there would have been silent. This is that pin: a file whose BODY is
+    // clean and whose FILENAME carries a denied token must fail exactly as a
+    // content line does, reported at line 0 with a `(path)` excerpt.
+    it('a denied token in a FILENAME fails, with a clean body — the path scan (3.1)', () => {
+        const named = path.join(work, `notes-about-${TOK1}.md`);
+        fs.writeFileSync(named, 'this body is entirely clean\n', 'utf-8');
+        spawnSync('git', ['add', '-A'], big(work));
+        const r = TS('--json');
+        expect(r.status).toBe(1);
+        const out = JSON.parse(r.stdout as string) as { hits: Array<{ file: string; line: number; text: string }> };
+        const pathHit = out.hits.find((h) => h.file.endsWith(`notes-about-${TOK1}.md`) && h.line === 0);
+        expect(pathHit, 'a filename-only hit must be reported at line 0').toBeDefined();
+        expect(pathHit?.text).toContain('(path)');
+    });
+
+    it('a clean filename with a clean body produces no path hit — polarity', () => {
+        fs.writeFileSync(path.join(work, 'notes-about-nothing.md'), 'clean body\n', 'utf-8');
+        spawnSync('git', ['add', '-A'], big(work));
+        const out = JSON.parse(TS('--json').stdout as string) as { hits: Array<{ file: string }> };
+        expect(out.hits.some((h) => h.file.endsWith('notes-about-nothing.md'))).toBe(false);
+    });
+
     it('covers the slug-with-separator case the old literal fixture covered', () => {
         const parsed = JSON.parse(TS('--json')!.stdout as string) as {
             hits: Array<{ token: string }>;

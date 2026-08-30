@@ -81,6 +81,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isNonHarvestTmpDir, isOpaqueRoundId, sourceHeaderHits } from './source_shape.js';
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
 const CONFIG = path.join(ROOT, 'src', 'scripts', 'external_sources_denylist.json');
@@ -167,12 +169,83 @@ export function redactSourceTokens(text: string, patterns: RegExp[]): RedactionR
 }
 
 /**
+ * Neutralise attribution SHAPE in a derived snapshot — the half a deny set
+ * cannot reach.
+ *
+ * MEASURED, not anticipated. Committing the first review snapshot taken AFTER
+ * road-to-source-silence Phase 2.1 raised the shrink-only shape ratchet by 19,
+ * and the cause is structural rather than a bug in either mechanism: a change
+ * that REMOVES speaking references produces a diff whose PREIMAGE lines still
+ * carry them. Those lines have no counterpart in the current tree, so the
+ * provenance-aware dedup in `source_snapshot_dedup.ts` correctly refuses to
+ * exclude them — "deleted-only findings stay at block" is exactly what the AI
+ * council required of that rule, and it did its job.
+ *
+ * The fix therefore belongs HERE, at write time, not there. A snapshot is a
+ * DERIVED artefact: the evidence it must preserve is the shape of the change,
+ * never the identifier. Replacing a speaking round name inside it with the
+ * marker keeps the diff readable as a diff and removes the republication —
+ * which is the same trade Phase 2.1 makes for tracked content.
+ *
+ * Two classes, both narrowed to the value rather than the line:
+ *
+ * - a non-opaque `agents/tmp(.old)/<name>/` quote — the directory name only, so
+ *   the path stays recognisable as an inbox path;
+ * - a speaking `> **Source:**` header value that is neither `ENC1:` nor an
+ *   opaque round id.
+ *
+ * A name that is already opaque, an `ENC1:` token, and a named working set are
+ * all left alone — the predicates come from `_lib/source_shape.ts`, so this
+ * redactor and the gate cannot disagree about what counts as speaking.
+ */
+export function redactSourceShape(text: string): RedactionResult {
+    let count = 0;
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        let line = lines[i] as string;
+
+        // tmp-quote: rewrite the DIRECTORY NAME, keep the path shape.
+        line = line.replace(/(agents\/tmp(?:\.old)?\/)([A-Za-z0-9._-]+)(\/)/g, (whole, pre: string, name: string, post: string) => {
+            if (isOpaqueRoundId(name) || isNonHarvestTmpDir(name)) {
+                return whole as string;
+            }
+            count += 1;
+            return pre + REDACTION_MARKER + post;
+        });
+
+        // source-header: rewrite the VALUE, keep the header. The decision is
+        // DELEGATED to `sourceHeaderHits` — the gate's own predicate — rather
+        // than re-implemented here. Two reasons, and the second was a real bug
+        // this test suite caught: agreement with the gate is then structural
+        // rather than maintained by hand, and re-deriving the "is this value
+        // acceptable" list independently made the redactor NON-IDEMPOTENT. It
+        // re-redacted its own marker, because the gate's value normaliser
+        // strips `[` and `]` and a hand-written `value.includes(MARKER)` check
+        // therefore never matched. A redactor that does not converge rewrites
+        // the artefact on every dispatch.
+        const hdr = /^(\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*)(\S.*)$/.exec(line);
+        if (hdr && sourceHeaderHits(line).length > 0) {
+            count += 1;
+            line = (hdr[1] as string) + REDACTION_MARKER;
+        }
+
+        lines[i] = line;
+    }
+    return { text: lines.join('\n'), count };
+}
+
+/**
  * Write `text` to `dest`, redacted. Returns the number of substitutions so the
  * caller can surface it; a silent redaction is a changed artefact nobody was
  * told about.
+ *
+ * Both passes run: the deny set (names somebody listed) and the shape classes
+ * (form, independent of any list). Neither subsumes the other, which is the
+ * whole reason the gate carries both.
  */
 export function writeRedacted(dest: string, text: string, patterns: RegExp[]): number {
-    const { text: redacted, count } = redactSourceTokens(text, patterns);
-    fs.writeFileSync(dest, redacted, 'utf-8');
-    return count;
+    const tokens = redactSourceTokens(text, patterns);
+    const shaped = redactSourceShape(tokens.text);
+    fs.writeFileSync(dest, shaped.text, 'utf-8');
+    return tokens.count + shaped.count;
 }

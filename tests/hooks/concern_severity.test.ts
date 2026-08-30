@@ -30,6 +30,32 @@ const BLOCKING_ALLOWLIST = new Set([
     'block-no-verify',
     'block-kernel-rule-writes',
     'block-config-weakening',
+    // road-to-source-silence Phase 4.2. It refuses ONE thing: the creation of a
+    // NEW first-level directory under agents/tmp(.old)/ whose name is not an
+    // opaque round identifier or a named working set. The three questions this
+    // allowlist exists to have answered, on this concern's own terms:
+    //
+    //   · SCOPE. Not a settings flag and not a whole path prefix. A scratch file
+    //     directly under agents/tmp/ passes, an already-existing directory
+    //     passes (refusing every later write would wedge a round mid-flight
+    //     WITHOUT removing the name — the fix there is a rename, which the
+    //     creating call's deny message already asked for), and both acceptance
+    //     predicates are read from _lib/source_shape.ts so the guard and
+    //     check_no_external_sources cannot drift on what "opaque" means.
+    //   · fail_closed: FALSE, unlike its three neighbours here. A detected
+    //     violation refuses; a malformed envelope, an unreadable path or any
+    //     crash ALLOWS. A scratch-directory guard must never be the reason an
+    //     unrelated edit fails, and the guarantee is only ever about the case
+    //     the guard actually decided.
+    //   · WHY REFUSAL RATHER THAN A NUDGE. The directory name is the root of a
+    //     measured leak chain — Phase 0 counted 190 block-tier occurrences of
+    //     quoted non-opaque agents/tmp(.old)/<name>/ paths in the TRACKED tree,
+    //     plus one tracked findings file named after a round. Every other gate
+    //     in that programme catches the quote, after the name is already
+    //     citable. This is the only point at which removing it is free.
+    //
+    // Kill switch: AGENT_CONFIG_ALLOW_SPEAKING_INBOX=1.
+    'block-speaking-inbox-dir',
     // road-to-agent-behavior-conformance. Both refuse, and both refuse only
     // what a rule already declares never-autonomous — the deliberate decision
     // this allowlist exists to record:

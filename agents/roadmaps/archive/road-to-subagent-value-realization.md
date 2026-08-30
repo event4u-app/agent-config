@@ -59,7 +59,7 @@ Every candidate audited against the existing surface. Source A contributes **zer
 
 The one genuinely contested fork. The 2026-06-26 council already converged that **telemetry (not a synthetic bench) is the instrument** to re-gate the flip — so the instrument is decided. What remains is the *mechanism*: how to capture `token_delta` / `wall_clock_ms` without crossing into a daemon / runtime (the package's identity floor). The proposed no-runtime-compatible shape: the orchestrator agent **emits** a structured telemetry line at end-of-dispatch; an existing PostToolUse-style hook **appends** it to the `audit-log-v1` JSONL the spec already names. No daemon, no SQLite, no auto-write memory.
 
-- [x] **Step 1:** Confirm the reframe with the maintainer: ruflo/Source-A parity is a downgrade; scope is "make our own design fire + measure," not "build a swarm."
+- [x] **Step 1:** Confirm the reframe with the maintainer: S1/Source-A parity is a downgrade; scope is "make our own design fire + measure," not "build a swarm."
 - [x] **Step 2:** Decide the capture mechanism. Recommended default: agent-emitted telemetry line + existing-hook append to `audit-log-v1` JSONL. Surface the `token_delta` sourcing sub-question — real host usage vs. agent self-estimate (self-estimate is unreliable; prefer host-reported usage where the host exposes it, else mark the field `estimated`).
 - [x] **Step 3:** Per `roadmap-writing` § 8.B, route the mechanism sub-question (does hook-append telemetry cross the no-runtime line?) through `/council:design` if the maintainer wants the convergence on record. Inline the verdict under `## Council notes` below.
 
@@ -148,3 +148,5 @@ The capture mechanism question (does hook-append telemetry cross the no-runtime 
 
 - **Source A:** an external TypeScript multi-agent "swarm" orchestration reference (a repackaged actor-map coordinator; marketing claims unverified, only-real cost mechanism = cheapest-model + prompt-cache + retry-downshift). Anonymized per `source-confidentiality`. Link via `src/scripts/_lib/link_crypto.ts decrypt`: `ENC1:IlxheJKbFP1wWeKaZsaiu1kCCwia4yVbVfcKn6NRSRNtXK4qYawGrHPh4UXTKLBASixoCME5nWssoZEQmR1llGnzB6UbltFrnMnVn4rdNZj7j/gwn5mGv7JOio5yEQs=`
 - **Deep-dive method:** repo tree + key source files inspected (coordinator, agent-lifecycle, MCP agent-tools, the real provider-call path), not README summary, per `external-reference-deep-dive`.
+
+<!-- redacted 2026-08-29: source identifiers replaced by codenames per ADR-250. No decision, measurement or count altered. -->

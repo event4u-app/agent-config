@@ -5,7 +5,7 @@ review_by: 2026-12-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Source:** `agents/tmp.old/uncle-bob-swarm/` — landed by `/analyze:inbox` on
+> **Source:** `agents/tmp.old/inbox-2026-08-h/` — landed by `/analyze:inbox` on
 > 2026-08-27. Drafted against `f2ed85e`, which **is** `origin/main` at
 > authoring time, so nothing here is stale-by-window.
 

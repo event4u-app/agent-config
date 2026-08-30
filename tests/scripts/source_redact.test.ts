@@ -17,7 +17,9 @@ import {
     loadDenyPatterns,
     redactSourceTokens,
     writeRedacted,
+    redactSourceShape,
 } from '../../src/scripts/_lib/source_redact.js';
+import { sourceHeaderHits } from '../../src/scripts/_lib/source_shape.js';
 
 /** A throwaway denylist config carrying only invented tokens. */
 function fixtureConfig(deny: string[]): string {
@@ -159,5 +161,60 @@ describe('source_redact — writeRedacted', () => {
         const written = fs.readFileSync(dest, 'utf-8');
         expect(written).toBe(`from ${REDACTION_MARKER}`);
         expect(written).not.toContain('example-denied-slug');
+    });
+});
+
+describe('redactSourceShape — the half a deny set cannot reach', () => {
+    it('rewrites a speaking inbox directory name and keeps the path shape', () => {
+        const r = redactSourceShape('see `agents/tmp.old/some-project-round/chat.txt` for the transcript');
+        expect(r.count).toBe(1);
+        expect(r.text).toContain('agents/tmp.old/' + REDACTION_MARKER + '/chat.txt');
+        expect(r.text).not.toContain('some-project-round');
+    });
+
+    it('leaves an OPAQUE round id alone', () => {
+        for (const name of ['inbox-2026-08-h', 'round-a91f3c', 'S17']) {
+            const r = redactSourceShape('quoting `agents/tmp.old/' + name + '/`');
+            expect(r.count, name).toBe(0);
+            expect(r.text, name).toContain(name);
+        }
+    });
+
+    it('leaves a named working set alone', () => {
+        const r = redactSourceShape('inputs live in `agents/tmp/bench-local/`');
+        expect(r.count).toBe(0);
+        expect(r.text).toContain('bench-local');
+    });
+
+    it('rewrites a speaking Source header VALUE and keeps the header', () => {
+        const r = redactSourceShape('> **Source:** `a-speaking-external-reference` (2026-08-01)');
+        expect(r.count).toBe(1);
+        expect(r.text).toBe('> **Source:** ' + REDACTION_MARKER);
+        expect(r.text).not.toContain('a-speaking-external-reference');
+    });
+
+    it('leaves an ENC1 Source value and an opaque one alone', () => {
+        expect(redactSourceShape('> **Source:** ENC1:AAAABBBBCCCC').count).toBe(0);
+        expect(redactSourceShape('> **Source:** inbox-2026-08-h').count).toBe(0);
+    });
+
+    it('is IDEMPOTENT — a second pass over redacted text changes nothing', () => {
+        const once = redactSourceShape('> **Source:** `speaking-name`\nand `agents/tmp/speaking-dir/x`');
+        expect(once.count).toBe(2);
+        const twice = redactSourceShape(once.text);
+        expect(twice.count, 'a redactor that re-redacts its own marker never converges').toBe(0);
+        expect(twice.text).toBe(once.text);
+    });
+
+    it('the GATE accepts what this redactor writes — the two must agree', () => {
+        const redacted = redactSourceShape('> **Source:** `speaking-name`').text;
+        expect(sourceHeaderHits(redacted), 'a redacted header must not be a finding').toEqual([]);
+    });
+
+    it('leaves text with neither class untouched', () => {
+        const clean = 'an ordinary paragraph naming src/scripts/thing.ts and nothing else';
+        const r = redactSourceShape(clean);
+        expect(r.count).toBe(0);
+        expect(r.text).toBe(clean);
     });
 });
