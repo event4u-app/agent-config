@@ -22,6 +22,11 @@ collision_ok:
   "src/agent-src/commands/": "command authoring reviews the three trifecta legs"
 # obligation: line 60
 obligation_frequency: "per-edit"
+evidence:
+  source_type: external-standard
+  source_urls: ["https://owasp.org/www-project-top-10-for-large-language-model-applications/"]
+  verified_on: 2026-08-30
+  normative_level: recommended
 ---
 
 # Lethal-Trifecta Guard

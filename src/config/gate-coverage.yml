@@ -1159,6 +1159,27 @@ gates:
     status: enforced
     no_canary_reason: "The negative control is the gate's own --self-test, run in CI: 4 cases, 2 rejecting, covering BOTH directions — an unreachable target with no row, and a row naming a target that is reachable. It builds throwaway task trees rather than touching this one, which is strictly better than a planted canary here: a canary would mean adding a real unreachable gate target to taskfiles/ and removing it again, and a forgotten one is the exact defect this gate exists to catch."
 
+  # road-to-retired-claims-stay-retired 2.3. The gate was NOT in this manifest
+  # before that roadmap widened it: it asserted its scope with plain
+  # `assertScanned` and published no machine-readable count, so
+  # check_gate_coverage could not see it at all. Widening it to read the
+  # publish-surface set is exactly the moment that becomes indefensible — a
+  # gate that now decides what may ship on npm should not be the one gate
+  # nobody counts.
+  - id: check_claims
+    argv: []
+    min_scanned: 60
+    corpus: "ledger entries in docs/CLAIMS.md (97 at registration: 59 backed, 30 unbacked, 8 closed). The gate's SECOND root, the five files in `PUBLISH_SURFACES`, is not summed into this count — ledger entries and files are different units and a sum of the two is a number nobody can re-derive. That root is guarded by `assertWatchlistResolves` inside the gate, which fires when every publish surface has vanished while a retired phrasing is still registered."
+    status: enforced
+    no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting) — so this row is an adopter, not an exemption; the reason field states why a PLANTED canary is additionally unavailable. Beyond the self-test the negative controls are the 30 mechanism tests in tests/scripts/check_claims.test.ts (17) and tests/scripts/check_claims_retired_phrasings.test.ts (13), each building a throwaway tree and running the real script in it. Twenty-one assert a REJECTION, and one publishes the LITERAL historical string (`zero runtime daemon`) that shipped in package.json and .github/about.yml while claim:no-runtime-daemon was already withdrawn. A planted canary here would mean committing a retired phrasing to a real publish surface and removing it again, and a forgotten one is precisely the defect this gate exists to catch."
+
+  - id: check_rule_evidence_declaration
+    argv: []
+    min_scanned: 10
+    corpus: "the ten security / safety-floor rules named in the gate's own SCOPE constant. The floor equals the scope on purpose, unlike every other row here: the corpus is not discovered, it is DECLARED, so a count below it means a row was deleted rather than that the tree shrank. Widening the obligation means adding a row to SCOPE, which raises both numbers together."
+    status: enforced
+    no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting), each building a throwaway src/rules/ tree and running the real gate against it — a missing block, a missing required key, and a key present with no value, which are three different ways a declaration can be hollow and which a file-presence check catches none of. A planted canary cannot express any of them: the violation is a MODIFICATION of one of ten tracked rule files, and a newly created file lands outside the declared scope by construction. Same class as check_no_automerge_key and check_score_contract."
+
   - id: check_concern_admissions
     script: src/scripts/check_concern_admissions.ts
     min_scanned: 0

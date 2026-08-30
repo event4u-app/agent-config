@@ -29,7 +29,7 @@ const SCRIPT_SRC = path.join(REPO_ROOT, 'src', 'scripts', 'check_claims.ts');
 // baselines file is absent (a fixture) and still fails when the file exists
 // with no entry (a repository silencing a gate). This harness exercises the
 // first branch by construction.
-const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts'].map((n) =>
+const LIB_SRCS = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts'].map((n) =>
     path.join(REPO_ROOT, 'src', 'scripts', '_lib', n),
 );
 
