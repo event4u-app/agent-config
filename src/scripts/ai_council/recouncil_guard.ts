@@ -240,3 +240,54 @@ export function renderRecouncilWarning(v: RecouncilVerdict): string {
         '',
     ].join('\n');
 }
+
+/**
+ * The whole call site, in one function.
+ *
+ * Lives here rather than in `council_cli.ts` for a reason the source-size
+ * ratchet made concrete: that file is already 2,525 lines over the 1,500-line
+ * ceiling, so every line added to it is a line the ratchet counts, and a
+ * twenty-line comment explaining a guard belongs beside the guard anyway.
+ *
+ * IT CANNOT REFUSE, and the signature is where that is guaranteed: it returns
+ * `void`. Step 1A.2 requires that no code path turn the warning into an
+ * unconditional block, and a function with nothing to return gives a caller
+ * nothing to branch on.
+ *
+ * Every read is wrapped: an advisory that throws is worse than one that stays
+ * quiet, because the guard exists to save a duplicate run and never to prevent
+ * a legitimate one.
+ *
+ * `questionFile` is the RAW question file, not the built prompt. Measured on
+ * the first live run: the built prompt hashes differently from the file the
+ * prior artefact recorded, so the exact-repeat states were unreachable in
+ * production and every true repeat reported as a near-duplicate at similarity
+ * 1.00. `fallbackText` covers a question that arrived on stdin and has no file.
+ */
+export function warnIfRecounciled(
+    repoRoot: string,
+    questionFile: string,
+    fallbackText: string,
+    members: readonly { name: string; model: string }[],
+    rounds: number,
+    write: (s: string) => void,
+): void {
+    try {
+        let text = fallbackText;
+        try {
+            text = fs.readFileSync(path.resolve(repoRoot, questionFile), 'utf8');
+        } catch {
+            // No file behind this question; the built prompt is the best text
+            // available, and a near-duplicate finding is still useful.
+        }
+        const v = checkRecouncil(
+            text,
+            // `name/model` — the SAME shape the artefact writer records.
+            configFingerprint(members.map((m) => `${m.name}/${m.model}`), rounds),
+            readPriorRuns(path.join(repoRoot, 'agents/runtime/council/responses'), repoRoot),
+        );
+        if (v !== null) write(renderRecouncilWarning(v));
+    } catch {
+        // See the docstring: quiet beats loud-and-broken for an advisory.
+    }
+}

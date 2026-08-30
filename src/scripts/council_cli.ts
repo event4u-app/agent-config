@@ -26,12 +26,7 @@ import {
     bundle_roadmap,
 } from './ai_council/bundler.js';
 import { select_chairman } from './ai_council/chairman.js';
-import {
-    checkRecouncil,
-    configFingerprint,
-    readPriorRuns,
-    renderRecouncilWarning,
-} from './ai_council/recouncil_guard.js';
+import { warnIfRecounciled } from './ai_council/recouncil_guard.js';
 import { jaccardSimilarity } from './_lib/text_similarity.js';
 import type { ChairmanCandidate } from './ai_council/chairman.js';
 import { synthesis_template } from './ai_council/prompts.js';
@@ -2510,50 +2505,7 @@ function cmd_run(
     const [extra_calls, extra_usd] = _consensus_cost_delta(ai_cfg, question.mode, estimates, billable.length);
     const [ch_calls, ch_usd] = _chairman_cost_delta(ai_cfg, estimates);
     const [pr_extra_calls, pr_extra_usd] = _peer_review_cost_delta(ai_cfg, args, estimates, billable.length);
-    // Re-council guard (road-to-inbox-harvest-2026-08-e-council-topology-evidence
-    // 1A). Printed BEFORE the `--confirm` gate on purpose: an operator running
-    // the estimate is exactly the person who should learn the question has
-    // already been deliberated, while there is still nothing to un-spend.
-    //
-    // It cannot refuse. `checkRecouncil` returns a verdict carrying no block
-    // field, and this call site reads only the rendered string — step 1A.2
-    // requires that no code path turn the warning into an unconditional block,
-    // and the shortest guarantee of that is having nothing to branch on.
-    try {
-        // The RAW question file, not `question.user_prompt`. Measured on the
-        // first live run: the built prompt hashes differently from the file the
-        // prior artefact recorded, so the exact-repeat state was unreachable in
-        // production and every true repeat reported as a near-duplicate at
-        // similarity 1.00. Comparing file to file makes the three states
-        // separable, which is what 1A.4 asks for. The built prompt is the
-        // fallback for a question that came from stdin and has no file.
-        let currentText = question.user_prompt;
-        try {
-            currentText = fs.readFileSync(path.resolve(REPO_ROOT, artefact), 'utf8');
-        } catch {
-            // No file behind this question — the built prompt is the best
-            // available text, and a near-duplicate finding is still useful.
-        }
-        const recouncil = checkRecouncil(
-            currentText,
-            configFingerprint(
-                // `name/model`, the SAME shape the artefact writer records
-                // (`members: opts.members.map((m) => `${m.name}/${m.model}`)`).
-                // Measured on the second live probe: comparing bare names
-                // against recorded `name/model` never matched, so every exact
-                // repeat reported `exact-stale-config` and the same-config
-                // state was unreachable. Two states that can never both occur
-                // are one state with extra words.
-                members.map((m) => `${m.name}/${m.model}`),
-                _resolve_rounds(args, ai_cfg),
-            ),
-            readPriorRuns(path.join(REPO_ROOT, 'agents/runtime/council/responses'), REPO_ROOT),
-        );
-        if (recouncil !== null) _stdout(renderRecouncilWarning(recouncil));
-    } catch {
-        // An advisory that throws is worse than one that stays quiet: the guard
-        // exists to save a duplicate run, never to prevent a legitimate one.
-    }
+    warnIfRecounciled(REPO_ROOT, artefact, question.user_prompt, members, _resolve_rounds(args, ai_cfg), _stdout);
     if (!args.confirm) _stdout('council:run · DRY PASS — estimate only, no seat is contacted. Add --confirm to run.\n');
     _stdout(
         `council:run · mode=${question.mode} · members=${members.length} ` +
