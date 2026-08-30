@@ -343,6 +343,46 @@ architecturally permitted, externally releasable).
 
 ## Phase 1 — The browser capability request contract
 
+**ORDERING FINDING, 2026-08-30 — Phase 1 cannot start before Phase 3, and its
+own verify clauses are what say so.** Recorded here rather than worked around,
+because the workaround is the failure this roadmap's risk register already
+names.
+
+- **1.1's verify** requires *"every declared capability has at least one real
+  consumer call site and at least one adapter that implements it; a capability
+  with neither fails the check."* No adapter exists (Phase 2 builds them) and no
+  consumer exists (Phase 3 supplies one), so declaring the eleven capabilities
+  today produces eleven that fail 1.1's own check. Declaring them anyway and
+  deferring the check is precisely the speculative-vocabulary move the schema's
+  `$comment` refuses and blocker `b-requires-key-reserved` already resolved
+  against — *"the capability member lands with its first consumer in Phase 1,
+  not before"*.
+- **1.2 and 1.3** extend a declaration format 1.1 has not established.
+- **1.4's** *"a domain skill naming a browser backend in a **required
+  position**"* reads as prose at first glance, and it is not: a *required
+  position* is the required list of a 1.2 capability declaration. Measured
+  before concluding this — a tree-wide grep for a requirement marker
+  co-occurring with `playwright|puppeteer|selenium|webdriver` in
+  `src/skills/*/SKILL.md` returns exactly **two** lines, both in
+  `verify-repair-loop`, and both describe the **deferred** live-app path rather
+  than requiring a backend (one is a parenthetical inside a sentence whose
+  requirement attaches to *"a live app"*, the other is a `NEVER`). So the prose
+  reading gives a lint whose entire live population is two false positives,
+  which is a gate that would have to be tuned against its own corpus to stay
+  green. The structured reading needs 1.2.
+
+This is the same ordering the reach-channels blocker settled at Phase 0:
+*"the general selector manifest may not precede the caller"*, and one seat
+called the original order *"the speculative-infrastructure mistake"*. That
+disposition was applied to Phase 2's manifest; it applies to Phase 1's
+vocabulary for the same reason, and the phase order does not yet reflect it.
+
+**What this does NOT do:** it does not renumber the phases or move steps, which
+would be authoring Phase 1's replacement while claiming to observe a problem in
+it. It records the dependency so the next run starts from Phase 3's caller
+rather than from a vocabulary with nothing consuming it.
+
+
 - [ ] **1.1 Define only the capabilities the frontend pilot consumes.**
       `browser.navigate`, `browser.snapshot`, `browser.find`,
       `browser.interact`, `browser.viewport`, `browser.screenshot`,
