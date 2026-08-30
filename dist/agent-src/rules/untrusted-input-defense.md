@@ -21,6 +21,11 @@ enforced_by:
   - "instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF"
 # obligation: line 38
 obligation_frequency: "per-event"
+evidence:
+  source_type: external-standard
+  source_urls: ["https://owasp.org/www-project-top-10-for-large-language-model-applications/"]
+  verified_on: 2026-08-30
+  normative_level: recommended
 ---
 
 <!-- security-lint: allow instruction-smuggling "defense rule: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" -->

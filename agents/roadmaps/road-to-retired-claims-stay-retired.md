@@ -113,7 +113,7 @@ was published when the list was written.
 
 ## Phase 3 — Say where a rule's content came from, and what it was when it left
 
-- [ ] **3.1 Add an optional `evidence:` frontmatter block to the rule schema.**
+- [x] **3.1 Add an optional `evidence:` frontmatter block to the rule schema.**
       Fields: `source_type`, `source_urls` (ENC1 tokens where the source is
       confidential, per `source-confidentiality`), `verified_on`,
       `normative_level`. Optional on day one — **0 of 120** rules carry any
@@ -123,18 +123,36 @@ was published when the list was written.
       precedent.
       verify: `validate_frontmatter` accepts a rule with the block and one
       without; a malformed block fails.
-- [ ] **3.2 Populate ten rules and register the ratchet.** Pick the ten whose
+- [x] **3.2 Populate ten rules and register the ratchet.** Pick the ten whose
       normative content most plausibly came from outside — the security and
       safety floors — because an unsourced normative claim costs most there.
       verify: ten rules carry a populated block; the ratchet baseline is the
       measured ten, and an eleventh rule added without one fails.
-- [ ] **3.3 Create `docs/removed-rules.md` as a tombstone register.** One row
+      <!-- Executed 2026-08-30. Shape decision, taken because the step does
+      not fix one: the ratchet is expressed as a DECLARED SCOPE with a hard zero
+      rather than a count of adopters with a floor. Reason it is not derivable
+      from frontmatter — measured, not assumed: the ten span three `tier` values
+      (2a, 2b, safety-floor), two `type` values and three pack sets, and
+      `packs: [engineering-base]` also holds rules that are not safety floors.
+      A proxy would silently admit and drop rules as unrelated frontmatter
+      moved. `check_rule_evidence_declaration.SCOPE` is the list; adding a row
+      is how the obligation widens, and it fails until that rule declares —
+      proven by adding `scope-control` transiently (1 finding, exit 1). -->
+- [x] **3.3 Create `docs/removed-rules.md` as a tombstone register.** One row
       per removed rule: name, what it required, when it went, why. A rule that
       vanishes without a row is indistinguishable from one that never existed,
       which is how a removed obligation returns as a fresh proposal.
       verify: the file exists, accounts for every rule removed in the two
       releases preceding this roadmap's landing as read from `git log`, and
       `check_references` stays green.
+      <!-- Executed 2026-08-30. The measured answer over 14.10.0..HEAD is
+      ZERO removals, and over the WHOLE history of src/rules/ exactly one `D`
+      — a 2026-06-09 rename (augment-source-of-truth -> source-of-truth), not a
+      removal. Both are recorded in the register with the re-derivation command,
+      because "the table is empty" and "nothing has ever been deleted" are
+      different statements. `--no-renames` is load-bearing in that command: with
+      rename detection on, a real removal coinciding with an unrelated addition
+      can be paired away and reported as a rename. -->
 
 ## Blockers
 
@@ -155,16 +173,16 @@ are the ones the package already publishes to.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every closed ledger entry carries either a non-empty
+- [x] AC-1 — Every closed ledger entry carries either a non-empty
       `retires_phrasings` list or a stated note that the claim never appeared
       outside the ledger.
-- [ ] AC-2 — A fixture publishing a retired phrasing on any surface in the
+- [x] AC-2 — A fixture publishing a retired phrasing on any surface in the
       declared set fails `check_claims`, and the red was observed on the literal
       historical wording before the green.
-- [ ] AC-3 — The publish-surface set carries, where it is defined, a stated rule
+- [x] AC-3 — The publish-surface set carries, where it is defined, a stated rule
       for deciding whether a channel belongs — applicable by a reader to a
       channel not yet listed.
-- [ ] AC-4 — The rule schema accepts an `evidence:` block, at least ten rules
+- [x] AC-4 — The rule schema accepts an `evidence:` block, at least ten rules
       carry a populated one, and an eleventh added without it fails a ratchet.
-- [ ] AC-5 — `docs/removed-rules.md` exists and accounts for every rule removed
+- [x] AC-5 — `docs/removed-rules.md` exists and accounts for every rule removed
       in the two releases preceding this roadmap's landing.

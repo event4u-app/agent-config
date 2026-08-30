@@ -160,6 +160,35 @@
       },
       "description": "Subagent role-mode scoping axis (road-to-lean-agent-init Phase 4), parallel to `workspaces`/`packs`. Closed vocabulary — the six RoleMode ids from src/scripts/_lib/subagent_spawn.ts. Absent/empty = untagged, fails safe (ships to every role). Kernel rules (type: always) always ship regardless of this field. Enforced via this schema's `enum` (not a src/config/discovery/*.yml + lint_artefact_frontmatter.ts cross-check like workspaces/packs) because lint_artefact_frontmatter.ts still scans the retired legacy rules tree (0 artifacts post-ADR-051 src/ migration) and is a no-op for src/rules/*.md today; validate_frontmatter.ts (the active src/rules linter) enforces this enum instead."
     },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "verified_on", "normative_level"],
+      "description": "Where this rule's NORMATIVE CONTENT came from, and what it was when it left. Optional; road-to-retired-claims-stay-retired Phase 3. Distinct from `decision_impact_evidence`, which points at an observation that the model already complies WITHOUT the rule \u2014 the opposite direction. A rule stating a threshold, a number, or a mechanism taken from outside this repository either cites it here or is recorded as own analysis; `src/rules/code-provenance.md` \u00a7 The knowledge layer states that obligation for prose, and this block is where a rule discharges it structurally. Optional on day one by design: 0 of 120 rules carried any provenance field before this, and a required field would fail the build on all of them at once \u2014 the gate-that-can-only-block shape this repository's own records name as the reason a gate gets suppressed.",
+      "properties": {
+        "source_type": {
+          "type": "string",
+          "enum": ["own-analysis", "internal-incident", "external-standard", "external-research", "vendor-doc"],
+          "description": "`own-analysis`: derived in this repository, no external source \u2014 a COMPLETE discharge, never a fallback for not having looked. `internal-incident`: a failure observed here. `external-standard`: OWASP, WCAG, an RFC, a regulation. `external-research`: a paper or study. `vendor-doc`: a host or provider's own documentation."
+        },
+        "source_urls": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Optional. Where the source lives. An `ENC1:` token per `src/rules/source-confidentiality.md` where naming the source in the tracked tree is not permitted. Absent is CORRECT for `own-analysis`, and for an `internal-incident` whose record is a commit or an ADR rather than a URL."
+        },
+        "verified_on": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Dated stamp on the citation, in the same sense as the claims ledger's `https://\u2026 (YYYY-MM-DD)` evidence form: the date this block was last checked against the rule's normative content and the source it names. It is NOT a fetch receipt \u2014 nothing here retrieves a URL, and a block claiming otherwise would be the manufactured verification `src/rules/direct-answers.md` Iron Law 2 forbids. A stamp that never moves while the rule's body changes is the signal a reader should act on."
+        },
+        "normative_level": {
+          "type": "string",
+          "enum": ["mandatory", "recommended", "informative"],
+          "description": "How binding the SOURCE is \u2014 never how binding this rule is. A rule may impose an Iron Law on top of an `informative` source; stating the source's own level is what stops a house choice being read as an external requirement."
+        }
+      }
+    },
     "lifecycle": {
       "type": "string",
       "enum": ["active", "deprecated", "experimental", "archived"],

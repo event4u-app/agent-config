@@ -25,6 +25,11 @@ collision_ok:
   "tenant": "cross-tenant isolation is this rule's core subject"
 # obligation: line 55
 obligation_frequency: "per-edit"
+evidence:
+  source_type: external-standard
+  source_urls: ["https://owasp.org/Top10/A01_2021-Broken_Access_Control/", "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"]
+  verified_on: 2026-08-30
+  normative_level: recommended
 ---
 
 # Broken Access Control

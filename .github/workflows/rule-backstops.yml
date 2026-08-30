@@ -511,6 +511,8 @@ jobs:
         run: ./scripts-run src/scripts/lint_positioning
       - name: Every unreachable gate target carries a recorded reason
         run: ./scripts-run src/scripts/check_gate_reachability --gate
+      - name: Security and safety floors declare their provenance
+        run: ./scripts-run src/scripts/check_rule_evidence_declaration
       - name: Augmentignore surface has not drifted
         run: ./scripts-run src/scripts/check_augmentignore
       - name: Publish surface matches package.json files[]

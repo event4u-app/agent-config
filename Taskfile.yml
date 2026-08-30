@@ -400,6 +400,7 @@ tasks:
       - task: lint-readme
       - task: lint-positioning
       - task: check-gate-reachability
+      - task: check-rule-evidence-declaration
       - task: lint-mcp-registry-manifest
       - task: lint-adr-sweep-routing
       - task: check-requirements-trace

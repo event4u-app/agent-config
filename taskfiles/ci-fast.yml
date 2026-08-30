@@ -1028,6 +1028,17 @@ tasks:
       (emergency.orchestration_halt) survives.
     cmd: ./scripts-run src/scripts/lint_no_activation_gates {{.QUIET_FLAG}}
 
+  check-rule-evidence-declaration:
+    silent: true
+    desc: |
+      Provenance-declaration gate for the ten security and safety floors
+      (road-to-retired-claims-stay-retired Phase 3.2): each carries an
+      `evidence:` block naming where its normative content came from, or
+      records `source_type: own-analysis`. Scope is an explicit list in the
+      gate — there is no frontmatter marker that delimits "safety floor", and
+      a proxy would admit and drop rules as unrelated frontmatter moved.
+    cmd: ./scripts-run src/scripts/check_rule_evidence_declaration {{.QUIET_FLAG}}
+
   lint-rule-enforcement-declaration:
     silent: true
     desc: |
