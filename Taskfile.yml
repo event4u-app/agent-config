@@ -399,6 +399,7 @@ tasks:
       - task: roadmap-progress-check
       - task: lint-readme
       - task: lint-positioning
+      - task: lint-mcp-registry-manifest
       - task: lint-adr-sweep-routing
       - task: check-requirements-trace
       - task: check-release-includes-discovery
