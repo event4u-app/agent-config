@@ -2,9 +2,13 @@
 // cost-budget — set / get / check the project's cost budget against
 // accumulated session spend in agents/cost-tracking/sessions.jsonl.
 //
-// Forked from ruvnet/ruflo plugins/ruflo-cost-tracker/scripts/budget.mjs.
-// Local-JSONL swap replaces the upstream `mcp__claude-flow__memory_store`
-// dependency. Budget config lives next to the sessions store as budget.json.
+// Derived work. Upstream, its license and the full transformation record are in
+// NOTICE, docs/THIRD-PARTY-NOTICES.md and provenance/borrows.jsonl — the three
+// surfaces that ship with the package. The source is not named here because a
+// source name in a tracked source file is what `source-confidentiality` forbids,
+// and MIT discharges through a distributed notice rather than an in-file one.
+// Local-JSONL swap replaces the upstream MCP memory-store dependency. Budget
+// config lives next to the sessions store as budget.json.
 //
 // Usage: node scripts/cost/budget.mjs {set <usd>|get|check}
 // Env: BUDGET_STORE, BUDGET_CONFIG, BUDGET_PERIOD={today|week|month|all}, BUDGET_QUIET=1

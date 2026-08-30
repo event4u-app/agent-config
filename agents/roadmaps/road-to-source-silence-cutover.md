@@ -94,7 +94,7 @@ missing keys in CI must fail, never warn."* The recipe is
 
 ## Phase 2 — The two decisions the council could not settle
 
-- [ ] **2.1 Settle the `skip_paths` target: 22, 21, or 18.** The predecessor's
+- [x] **2.1 Settle the `skip_paths` target: 22, 21, or 18.** The predecessor's
       criterion said at most 20 and the measured floor with every principled
       carve-out intact is 22. The council was asked twice and **split** on the
       second round: one seat chose "correct the criterion to the measured floor",
@@ -102,8 +102,69 @@ missing keys in CI must fail, never warn."* The recipe is
       is an owner decision. Both seats agreed on everything else — the ledger
       discharges the evidentiary question, and the `dist/agent-src/` glob
       consolidation must not be done *to hit a number*.
-      verify: the chosen number is recorded here with its rationale, the predecessor's AC-6 is restated against it, and `check_suppression_hygiene` holds at or below it. <!-- blocked-by: skip-paths-target-is-owner-reserved -->
-- [ ] **2.2 Establish the upstream license for `src/scripts/cost/` and place its
+      verify: DONE — the number is **21**, recorded below with the council's rationale; the predecessor's AC-6 is restated as this roadmap's AC-3; `check_suppression_hygiene` reports `src/scripts/external_sources_denylist.json: 21 entry(ies) (22 at base, 1 removed)`.
+
+      **Decision: 21.** AI council, 2026-08-30 — **2/2 seats present**
+      (anthropic `claude-sonnet-4-5`, openai `codex-default`), $0.00,
+      subscription-authed. The maintainer delegated this decision to the council
+      for the autonomous drain run of 2026-08-30; the earlier round SPLIT 1–1,
+      and this round converged because two facts changed rather than because the
+      question was asked louder.
+
+      **What changed.** The per-entry ledger now exists, so every survivor's
+      suppressed-hit count is measured rather than estimated. And the
+      `src/scripts/cost/` entry, which was blocked on an unknown upstream
+      license, is unblocked — the license is MIT (step 2.2), MIT discharges
+      through a distributed notice rather than an in-file one, so that entry is
+      retirable and the measured floor is 21 rather than 22.
+
+      **Both seats rejected (c), the 18-entry consolidation, and for the same
+      reason** — it must not be done to reach a number. openai put the principle
+      sharpest: ADR-201's byte-exact projection proves *content* equivalence,
+      not *policy* equivalence, and replacing five narrow `dist/agent-src/`
+      patterns with one broad glob changes which future paths are automatically
+      authorised. The five entries are a review boundary; a comment saying the
+      projection "mechanically inherits" exceptions records the coupling without
+      making it safe. anthropic agreed on the framing and pushed back on gating
+      consolidation behind a new CI invariant, calling that gold-plating — but
+      not on the refusal to use it as target arithmetic. **Consolidation is
+      therefore available only as an independently argued gate-design change,
+      never as a way to hit a number.**
+
+      **Both rejected (d), holding at 20**, on the argument this blocker already
+      carried: a criterion left unmet at 21 implies the last defensible entries
+      should go *despite* being defensible, which is satisfying a number rather
+      than a principle.
+
+      **The binding condition, from openai, and it is a SEQUENCE rather than a
+      preference:** the MIT notice must be on a surface included in every
+      relevant distributed artifact, and the packaged outputs — not just the
+      repository tree — must be verified, BEFORE the `src/scripts/cost/` entry is
+      removed. Establishing the license only removes the legal uncertainty; it
+      does not discharge the notice obligation. Step 2.2 executes that order and
+      records what it found: `CREDITS.md`, `NOTICE`, `docs/THIRD-PARTY-NOTICES.md`
+      and `provenance/borrows.jsonl` were **all absent from `package.json`'s
+      `files` list**, while `src/scripts/` was present — so the affected code
+      shipped and every notice surface did not. Three of the four are now added.
+
+      **Rollback, as the seat specified:** if any packaged artifact lacks the
+      notice or the deny scan develops an unskipped hit, restore the narrow
+      `src/scripts/cost/` exemption until the distribution defect is fixed. That
+      is containment, not permanent acceptance.
+
+      **One recorded observation neither acted on nor buried.** openai flagged
+      that the gate exempting its own source and denylist (entries 1 and 2) is a
+      trust boundary this roadmap does not examine: whole-file exemption means
+      edits to those files can evade the policy they enforce. "Self-reference"
+      explains the exception; it does not eliminate the risk. Out of scope here,
+      and recorded so the next reader does not have to rediscover it.
+
+      *Revisit-if:* another exemption becomes unnecessary; the MIT notice
+      distribution cannot be verified in a packed artifact; the deny scan gains
+      an unskipped hit; or CI begins rejecting a source-exemption change that
+      implicitly broadens `dist/agent-src/` coverage without explicit review.
+
+- [x] **2.2 Establish the upstream license for `src/scripts/cost/` and place its
       attribution.** Two files there carry a fork-attribution header comment
       (4 suppressed hits, the last entry that could leave the estate without
       touching a principled carve-out). It is harvest-shaped attribution outside
@@ -112,7 +173,48 @@ missing keys in CI must fail, never warn."* The recipe is
       not, and the reason is a rule: the upstream license is established nowhere
       in this tree, and `code-provenance` says an unknown source license is
       never permissive-by-default — stop and escalate, never guess.
-      verify: `provenance/borrows.jsonl` carries an entry naming the upstream, its license and these two files; `lint_provenance` passes; and either the in-file comment is de-named and the `src/scripts/cost/` entry removed from `skip_paths`, or the entry stays with a one-line reason recording that the license requires in-file retention. <!-- blocked-by: upstream-license-unknown -->
+      verify: DONE — `provenance/borrows.jsonl` carries the entry (upstream, `MIT`, `source_sha`, both files); `lint_provenance` reports `2 ledger record(s) OK · docs/THIRD-PARTY-NOTICES.md in sync`; the in-file comments are de-named and `src/scripts/cost/*` is removed from `skip_paths`, which is branch (a).
+
+      **The license is MIT**, established from the upstream repository's own
+      `LICENSE` via the GitHub API rather than inferred — `spdx_id: MIT`, with
+      the copyright line reproduced on the license surface where it belongs
+      (`CREDITS.md`) rather than quoted here, since a roadmap is not one of the
+      three exempt surfaces. The upstream is not archived and the two forked
+      files still exist there, so the `source_sha` pins a revision a reader can
+      fetch.
+
+      **Branch (a), and the license text is why.** MIT requires the copyright
+      notice and the permission notice to be *included in all copies or
+      substantial portions of the Software* — it says nothing about placement,
+      and a notices file distributed with the software is the conventional
+      discharge. So the in-file source name is not required by the license, and
+      `source-confidentiality` forbids it: both comments now point at the
+      notice surfaces without naming the upstream.
+
+      **What the in-file comment actually was, which matters:** a "Forked from
+      <repo>" attribution line and NOT an MIT copyright or permission notice. So
+      the previous state discharged the license obligation nowhere — it merely
+      named a source in a place a rule forbids. Recording it properly is a
+      compliance improvement, not a relocation.
+
+      **A live compliance gap was found and closed on the way, and it is worth
+      stating plainly.** The council's sequencing condition ("verify packaged
+      outputs, not just the repository tree") turned up that `package.json`'s
+      `files` list carried **neither `NOTICE` nor `CREDITS.md` nor
+      `docs/THIRD-PARTY-NOTICES.md` nor `provenance/borrows.jsonl`** — while it
+      does carry `src/scripts/`. npm auto-includes `LICENSE` and `README` and
+      nothing else from that set, so every third-party notice surface was absent
+      from the published package while the code it covers shipped. That is not
+      only the new MIT entry: the pre-existing Apache-2.0 entry in `NOTICE` has
+      the same problem, and Apache-2.0 § 4(d) is explicit about distributing
+      NOTICE. All four paths are now in `files`.
+
+      The MIT notice itself is reproduced IN FULL in `CREDITS.md` — copyright
+      line, permission notice, warranty disclaimer — rather than by reference to
+      `LICENSES/MIT.txt`, which is an unfilled template carrying
+      `<year> <copyright holders>` and is therefore a notice for no particular
+      work.
+
 
 ## Phase 3 — The ratchet expiry, which has a date
 
@@ -154,7 +256,16 @@ missing keys in CI must fail, never warn."* The recipe is
 
 ### blocker: skip-paths-target-is-owner-reserved
 
-- **Status:** open
+- **Status:** resolved 2026-08-30 — **(b), 21**. AI council, 2/2 seats present
+  (anthropic + openai), $0.00. The maintainer delegated the decision to the
+  council for the autonomous drain run of 2026-08-30; the earlier round split
+  1–1 and this one converged, because the per-entry ledger landed and the
+  `src/scripts/cost/` entry became retirable once its license was established.
+  Both seats rejected (c) as target arithmetic and (d) as a criterion that
+  implies removing defensible entries. The number and the full rationale are
+  recorded at step 2.1; the binding sequencing condition — notice on a
+  distributed surface, packaged outputs verified, THEN the entry removed — is
+  recorded and was executed in that order at step 2.2.
 - **Class:** 3
 - **Owner:** maintainer
 - **Blocks:** Phase 2 step 2.1, and the predecessor's AC-6.
@@ -182,7 +293,14 @@ missing keys in CI must fail, never warn."* The recipe is
 
 ### blocker: upstream-license-unknown
 
-- **Status:** open
+- **Status:** resolved 2026-08-30 — the license is **MIT**, read from the
+  upstream repository's own `LICENSE` via the GitHub API rather than guessed,
+  and branch **(a)** was executed: the entry is in `provenance/borrows.jsonl`,
+  `lint_provenance` passes, both in-file comments are de-named, and
+  `src/scripts/cost/*` is out of `skip_paths`. `code-provenance`'s rule that an
+  unknown license is never permissive-by-default is what kept this open; the
+  answer was one API call away and the previous session was right not to guess
+  it. Detail, including the live packaging gap this uncovered, is at step 2.2.
 - **Class:** 3
 - **Owner:** maintainer
 - **Blocks:** Phase 2 step 2.2 only. Nothing else depends on it, and the
@@ -223,8 +341,18 @@ missing keys in CI must fail, never warn."* The recipe is
 - [ ] AC-2 — A keyless run is loud, never green: with the key unset the gate
       exits **3** under the strict flag, and a CI step asserts key presence
       before the gate step runs.
-- [ ] AC-3 — `skip_paths` has a recorded target it meets, and the entry is
+- [x] AC-3 — `skip_paths` has a recorded target it meets, and the entry is
       shrink-only, so the next drift fails rather than accumulating.
+      MET by 2.1 and 2.2, and this line IS the predecessor's AC-6 restated
+      against the settled number, which is what 2.1's `verify:` asks for.
+      **The target is 21**, decided by the AI council on 2026-08-30 with 2/2
+      seats present after an earlier 1–1 split; `check_suppression_hygiene`
+      reports `21 entry(ies) (22 at base, 1 removed)`. The entry is shrink-only
+      by that gate's own construction — a base of 22 with one removed is a
+      ratchet reading, and a 22nd entry would fail it rather than accumulate.
+      Each of the 21 survivors is individually justified in
+      `agents/evidence/reports/source-skip-paths-ledger.md` with a MEASURED
+      suppressed-hit count, and unskipped deny hits are 0.
 - [ ] AC-4 — `check_no_external_sources:shape-block` carries a `landed` date
       within its 56-day window, reached by a reduction or by a `reaffirmed`
       block that states a real reason.

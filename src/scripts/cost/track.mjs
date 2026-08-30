@@ -2,9 +2,13 @@
 // cost-track — auto-capture token usage from a Claude Code session jsonl
 // and append a structured record to agents/cost-tracking/sessions.jsonl.
 //
-// Forked from ruvnet/ruflo plugins/ruflo-cost-tracker/scripts/track.mjs.
-// Local-JSONL swap replaces the upstream `mcp__claude-flow__memory_store`
-// dependency. Pricing constants are kept in sync with REFERENCE.md.
+// Derived work. Upstream, its license and the full transformation record are in
+// NOTICE, docs/THIRD-PARTY-NOTICES.md and provenance/borrows.jsonl — the three
+// surfaces that ship with the package. The source is not named here because a
+// source name in a tracked source file is what `source-confidentiality` forbids,
+// and MIT discharges through a distributed notice rather than an in-file one.
+// Local-JSONL swap replaces the upstream MCP memory-store dependency. Pricing
+// constants are kept in sync with REFERENCE.md.
 //
 // Dedup + main/subagent split, and the logic driving them, are mirrored
 // (not imported) from `src/scripts/_lib/cc_transcript.ts`: this file ships
