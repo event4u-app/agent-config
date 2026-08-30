@@ -318,7 +318,18 @@ describe('the diff scope is a THIRD dead-scope, not an empty set', () => {
     it('REFUSES rather than passing green when the diff scope is unreadable', () => {
         // The polarity that matters. Before the fix this returned a clean
         // result with zero violations — the silent no-op.
-        expect(() => evaluate(corpusRoot('refuse-'))).toThrow(DeadScopeError);
+        //
+        // The base is passed EXPLICITLY. Without it `evaluate` runs
+        // `resolveBaseRef`, whose Actions branch reads the ambient environment —
+        // so a test relying on the default would assert something different on
+        // a runner than on a laptop, which is the one thing a regression test
+        // for a scope bug must not do.
+        expect(() => evaluate(corpusRoot('refuse-'), 'origin/main')).toThrow(DeadScopeError);
+    });
+
+    it('refuses when the resolver finds NO base at all, not only a named one', () => {
+        // The default path: no explicit base, nothing resolvable anywhere.
+        expect(() => evaluate(corpusRoot('noresolve-'))).toThrow(DeadScopeError);
     });
 
     it('still runs under FORWARD_ALL, which widens and never suppresses', () => {
@@ -327,7 +338,7 @@ describe('the diff scope is a THIRD dead-scope, not an empty set', () => {
         try {
             // Reachable with no repo at all — that is what keeps --self-test,
             // which runs in a temporary directory, from being unreachable.
-            const r = evaluate(root);
+            const r = evaluate(root, 'origin/main');
             expect(r.scanned).toBe(1);
             // And it WIDENS: the fixture declares no case class, so the
             // forward-only rule must fire on it rather than stay quiet.

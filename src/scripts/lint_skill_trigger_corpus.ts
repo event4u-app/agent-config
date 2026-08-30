@@ -84,6 +84,7 @@ import { fileURLToPath } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { type SelfTestCase, runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const HERE = fileURLToPath(import.meta.url);
@@ -400,7 +401,7 @@ export interface Result {
     ledger: GateLedger;
 }
 
-export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
+export function evaluate(root = REPO_ROOT, base?: string): Result {
     const dir = path.join(root, 'src', 'skills');
     let entries: fs.Dirent[];
     try {
@@ -411,7 +412,18 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
             'src/skills is unreadable — a corpus gate with no corpus passes every tree.',
         );
     }
-    const scope = changedUnits(root, base);
+    // `origin/main` is exactly the ref that is NOT available where this matters:
+    // actions/checkout does a shallow PR-merge fetch, so a PR build has no
+    // remote-tracking main at all. Hardcoding it made the first version of this
+    // guard a hard CI failure on every run — the opposite of the silent no-op it
+    // replaced, and no better. `resolveBaseRef` is this repository's existing
+    // answer to the same problem (RATCHET_BASE_REF, then GITHUB_BASE_REF, then
+    // the merge commit's first parent on Actions, then origin/main), so the gate
+    // uses it rather than inventing a second ladder. An explicit `base` still
+    // wins, which is what the tests pass.
+    const resolved = base ?? resolveBaseRef(root);
+    const scope: ChangedScope =
+        resolved === null ? { kind: 'base-unresolvable', base: '(none resolved)' } : changedUnits(root, resolved);
     // FORWARD_ALL widens to every unit, so it needs no diff and is checked
     // first — that is what keeps `--self-test`, which runs in a temporary
     // non-repo directory, reachable.
