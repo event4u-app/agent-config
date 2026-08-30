@@ -28,6 +28,20 @@ NEVER CALL THE SAME TOOL >2 TIMES IN A ROW WITH SIMILAR PARAMETERS.
 IF YOU CATCH YOURSELF REPEATING → STOP, RETHINK, ASK.
 ```
 
+## Independent calls go in ONE block
+
+```
+CALLS WITH NO DEPENDENCY BETWEEN THEM GO IN THE SAME BLOCK.
+A CALL THAT DOES NOT READ THE PREVIOUS RESULT IS NOT A SECOND TURN.
+```
+
+The ceiling above forbids repetition; this forbids splitting work that had no
+reason to be split — measured mean batch size **1.01**, i.e. fully serial. The
+discriminator is the dependency, never the count. NOT "write shorter commands":
+the long commands are already the batching. `instruction-only` — nothing can
+observe a call that was not batched. Evidence + the absent-cause finding:
+[`token-efficiency-mechanics`](../contexts/communication/rules-auto/token-efficiency-mechanics.md).
+
 ## Enumerated file sets are ONE operation, not N repetitions
 
 The same-tool ceiling counts *repetition without new information* — the loop where the agent re-runs a tool because it did not learn from the last result. Reading N **declared, enumerated** files is the opposite: each read returns different content and the set was known before the first call. Counting it as N repetitions puts this rule in direct conflict with [`downstream-changes`](downstream-changes.md) ("find **ALL** callers, tests, imports") and with [`source-discovery-gate`](source-discovery-gate.md), which cannot be satisfied in two calls.

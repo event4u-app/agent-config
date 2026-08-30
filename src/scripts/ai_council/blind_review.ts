@@ -31,7 +31,17 @@ type Dict = Record<string, unknown>;
 
 // ── deterministic seeding (sha256 of the question text — no Math.random, no Date) ──
 
-function _sha256_hex(s: string): string {
+/**
+ * `sha256(s)` as lowercase hex.
+ *
+ * EXPORTED since 2026-08-30 rather than copied: the re-council guard
+ * (`recouncil_guard.ts`) needs the question hash, and
+ * road-to-inbox-harvest-2026-08-e-council-topology-evidence 1A.1 requires it to
+ * reuse THE EXISTING one — "no second hash implementation". Two hashes of one
+ * question are two answers to "is this the same question", and the second one
+ * is the one nobody updates.
+ */
+export function _sha256_hex(s: string): string {
     return createHash('sha256').update(s, 'utf-8').digest('hex');
 }
 
