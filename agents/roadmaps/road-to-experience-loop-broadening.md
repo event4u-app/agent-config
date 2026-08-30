@@ -568,16 +568,45 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 4 — Loop guards for drain and continuation
 
-- [ ] **4.1 Detect more than two shapes.** The master carries two counters —
+- [x] **4.1 Detect more than two shapes.** The master carries two counters —
       consecutive empty cycles, and the same signal or roadmap in ≥ 3 of the
       last 8 runs. `from-skipped-parent` adds three the master dropped: the same
       failure *signature* recurring, the same tactic repeated after it was
       rejected, and the same asset activating repeatedly with no progress. The
       last two are the ones a counter over signals cannot see.
+      **DONE 2026-08-30** — `rejectedTacticRepeat` in
+      `src/scripts/_lib/loop_guards.ts`, beside `stallSignal` rather than in the
+      1,500-line hook, because that file is over the source-size budget and this
+      one exists for exactly this.
+      **Correction to this step's premise, found while executing:** it says "the
+      master carries two counters". This TREE carries **one** — `stallSignal`,
+      a numeric detector over open-step counts. None of the five shapes the step
+      discusses was implemented. The premise described the source proposal, not
+      the tree.
+      **Why a second detector rather than a tuning of the first:** `stallSignal`
+      keys on a NUMBER and cannot see the failure this catches — an agent
+      retrying the same rejected approach while the count moves and the wording
+      changes every time. So the new detector keys on an IDENTITY, and is given
+      no text field at all rather than being trusted to ignore one, which is the
+      only way "even when the signal string differs" is actually achievable.
+      **Only REJECTED attempts count.** A tactic tried three times and accepted
+      twice is not a loop, it is a tactic that works; counting every attempt
+      would fire on productive repetition, which is the false positive that gets
+      a guard switched off.
       verify: a synthetic run repeating a rejected tactic trips suppression even
       when the signal string differs.
-- [ ] **4.2 No strategy presets.** Suppression escalates through the existing
+- [x] **4.2 No strategy presets.** Suppression escalates through the existing
       triage ladder.
+      **DONE 2026-08-30.** `SUPPRESSION_WINDOW = 8` and `SUPPRESSION_REPEATS = 3`
+      are named constants beside the detector — **not** a settings block. A
+      configurable strategy preset is the shape K5 kills by name: presets
+      multiply the states a reader must reason about while the underlying
+      question ("is this run going in circles?") has one answer. Two numbers
+      with a stated meaning are auditable; a tuning surface is not.
+      **No parallel escalation was built**, which is the other half of "no
+      presets": the detector returns a signal and nothing else, so escalation
+      remains the existing triage ladder's job rather than a second ladder
+      living next to it.
       verify: a run of 8 with 3 repeats trips suppression exactly once, and a run
       of 8 with 2 repeats does not.
 
