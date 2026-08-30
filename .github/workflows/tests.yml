@@ -528,7 +528,12 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: '20'
+          # Node 24, not the repo-wide 20: the suite opens `node:sqlite`, which does
+          # not exist before 22.5 and carries an ExperimentalWarning on 22. On 20
+          # `isStoreAvailable()` is false, `describe.runIf(STORE)` skips all seven
+          # cases, and `run_lifecycle_suite` reds on the skip — so as first authored
+          # this job could never execute the properties it exists to certify.
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -579,7 +584,7 @@ jobs:
             const ev = JSON.parse(fs.readFileSync("internal/reports/supervision-lifecycle.json", "utf8"));
             const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
             const fail = (m) => { console.error("evidence chain: " + m); process.exit(1); };
-            if (ev.revision !== head) fail(`revision ${ev.revision} != HEAD ${head}`);
+            if (ev.revision !== head) fail("revision " + ev.revision + " != HEAD " + head);
             if (ev.processes_exercised !== true) fail("processes_exercised is not true");
             if (!(ev.cases_run > 0) || ev.cases_skipped !== 0) fail("cases_run/skipped are not a clean run");
             console.log("evidence chain: artifact matches HEAD and records " + ev.cases_run + " real-process cases");
