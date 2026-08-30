@@ -5,7 +5,7 @@
 Recorded 2026-08-27. This artefact exists because both council seats (2/2,
 deep pass on `road-to-runtime-governance-flip.md`) independently found the same
 provenance defect: a doctrine-level reversal whose authority was quoted from
-`agents/tmp.old/uncle-bob-swarm/chat.txt:130` — a **gitignored, disposable**
+`agents/tmp.old/inbox-2026-08-h/chat.txt:130` — a **gitignored, disposable**
 inbox archive that is in no clone and may be deleted at any time. A roadmap
 citing it, and an estate exemption justified by it, both rested on evidence a
 reviewer could not reach.
@@ -106,7 +106,7 @@ stub", with the accounting visible nowhere. The inbox held **18** files:
 |---:|---|---|
 | 1 | `chat.txt` — the transcript | consumed; the decision above is its durable extract |
 | 2 | index files | consumed as structure maps |
-| 13 | superseded roadmap generations | reported, not deleted; all in `agents/tmp.old/uncle-bob-swarm/` |
+| 13 | superseded roadmap generations | reported, not deleted; all in `agents/tmp.old/inbox-2026-08-h/` |
 | 1 | `road-to-runtime-native-evidence-operating-system-final.md` (1,952 lines, 21 phases) | split — governance and specification increments extracted, remainder stubbed |
 | 1 | `road-to-runtime-native-quality-master.md` | folded into the stub's track table |
 

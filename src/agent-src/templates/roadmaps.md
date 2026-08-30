@@ -674,8 +674,15 @@ complexity: lightweight
 <!-- ## Provenance — INCLUDE ONLY for source-derived / harvest / capability-adoption
      roadmaps (rule 19). OMIT entirely for internally-originated roadmaps —
      do NOT ship an empty Provenance section.
-- Source: <neutral descriptor> (anonymized per source-confidentiality);
-  link via `src/scripts/_lib/link_crypto.ts decrypt`: ENC1:<token>
+- Source: `agents/tmp.old/<opaque-round-id>/` — an OPAQUE round identifier
+  (`inbox-2026-08-h`, `round-a91f3c`, `S17`), never a speaking directory name.
+  The `source-header` and `tmp-quote` shape classes BLOCK inside `agents/**`, so
+  a speaking value fails CI. Naming rule: `/analyze:inbox` Phase 1.
+- Source class, if it needs saying: <neutral descriptor> (anonymized per
+  source-confidentiality) — describe the KIND, never the identity.
+- Identity: recorded once, encrypted, in the round's intake note; the codename
+  map is `agents/evidence/reports/source-codename-map.md`. Decrypt via
+  `src/scripts/_lib/link_crypto.ts decrypt`: ENC1:<token>
 - Council: <members>, <date>, <depth>; convergence inlined above. -->
 ```
 

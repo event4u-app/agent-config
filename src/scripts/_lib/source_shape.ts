@@ -78,6 +78,18 @@ export function isOpaqueRoundId(name: string): boolean {
 const ENC_TOKEN_RE = /^ENC1:[A-Za-z0-9+/=]+$/;
 
 /**
+ * The write-time redaction marker from `_lib/source_redact.ts`, matched WITHOUT
+ * its brackets because the value normaliser below strips `[` and `]`.
+ *
+ * A redacted header is the compliant END STATE, not a violation: the marker
+ * carries no information about any source, which is its entire purpose. Without
+ * this the gate flagged its own marker — measured on the first review snapshot
+ * taken after shape redaction shipped, where `> **Source:** [REDACTED:src-conf]`
+ * counted as a speaking value.
+ */
+const REDACTION_VALUE_RE = /^REDACTED:src-conf$/;
+
+/**
  * A `> **Source:**` header line. The `>` and the bold markers are both optional
  * because the convention drifted across the roadmap corpus; matching only the
  * blockquoted form would miss the plain one for no reason.
@@ -127,6 +139,17 @@ const ALLOWED_OWNERS: readonly string[] = [
     // Documentation placeholders.
     'example', 'acme', 'org', 'owner', 'user', 'username', 'myorg', 'your-org',
     'yourorg', 'my-org', 'youruser', 'your-username', 'some-org',
+    // Two further placeholders, added on a MEASURED false positive rather than
+    // on taste (road-to-source-silence Phase 3.4). `someone/other` in
+    // tests/scripts/envelope_grounding.test.ts and `o/r.git` in
+    // tests/scripts/unattended_guard.test.ts are literal fixture URLs naming
+    // nothing external. They were the only two of 26 review-snapshot findings
+    // that survived provenance-aware deduplication — and surviving is what
+    // identified them: the AI council's requirement was that unique and
+    // unverifiable findings stay at block so a human looks at them. A human
+    // looked; this is the answer. Fixing them here rather than by widening the
+    // dedup rule is what keeps that rule strict.
+    'someone', 'o',
     // Vendors whose tools this suite integrates or recommends (rule carve-out).
     'anthropics', 'anthropic', 'microsoft', 'github', 'modelcontextprotocol',
     'cloudflare', 'openai', 'nodejs', 'vitest-dev', 'vercel', 'tailwindlabs',
@@ -159,6 +182,18 @@ const NON_HARVEST_TMP_DIRS: ReadonlySet<string> = new Set([
     'bench-local',
 ]);
 
+/**
+ * Is `name` a named WORKING SET rather than a harvest round?
+ *
+ * Exported so the Phase 4.2 write-time guard
+ * (`hooks/block_speaking_inbox_dir.ts`) decides from the same set this module
+ * uses. Two copies of "which names are acceptable" is how a guard and its gate
+ * drift into disagreeing about the thing they both exist to enforce.
+ */
+export function isNonHarvestTmpDir(name: string): boolean {
+    return NON_HARVEST_TMP_DIRS.has(name.trim().toLowerCase());
+}
+
 const DEFAULT_ALLOWLIST: SlugAllowlist = { owners: ALLOWED_OWNERS };
 
 /** Normalise for allowlist comparison. */
@@ -175,6 +210,7 @@ export function sourceHeaderHits(line: string): ShapeHit[] {
     const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
     if (value === '') return [];
     if (ENC_TOKEN_RE.test(value)) return [];
+    if (REDACTION_VALUE_RE.test(value)) return [];
     if (isOpaqueRoundId(value)) return [];
     // A header pointing at an inbox directory is judged on the directory NAME,
     // so the tmp-quote class owns it and this class stays silent — otherwise one

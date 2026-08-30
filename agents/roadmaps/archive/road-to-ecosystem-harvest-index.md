@@ -155,7 +155,7 @@ the parts that carry the system dependency.
 - [x] Ratified 2026-07-19 (maintainer go/no-go, this session): 12 of 13 plates already shipped, domain-watch executed (#970); the sole unshipped sibling (prose-authenticity) is "cleared to start" per Phase 0, still blocked at U6. Accepting a plate ≠ executing it.
 - [x] Every sibling cites only its own sources by letter and points here for full provenance.
 - [x] Dashboard regenerated (`./agent-config roadmap:progress`).
-- [x] No harvest-family artifact names a real external source — the index (anonymized Sources A–N + `ENC1:` provenance) and every sibling cite by-letter only; `langchain` in the LLM-vertical prose is a descriptive category mention, not on the denylist. <!-- note: the tree-wide check-no-external-sources gate is red on PRE-EXISTING, unrelated debt (agents/memory/product-rules.yml ruflo/affaan-m/ruvnet; agents/roadmaps/archive/road-to-opt-retrieval-and-memory.md graphify) that predates this work and is out of scope per minimal-safe-diff. The harvest family itself is clean. -->
+- [x] No harvest-family artifact names a real external source — the index (anonymized Sources A–N + `ENC1:` provenance) and every sibling cite by-letter only; `langchain` in the LLM-vertical prose is a descriptive category mention, not on the denylist. <!-- note: the tree-wide check-no-external-sources gate is red on PRE-EXISTING, unrelated debt (three denylisted tokens in `agents/memory/product-rules.yml`, one in `agents/roadmaps/archive/road-to-opt-retrieval-and-memory.md`) that predates this work and is out of scope per minimal-safe-diff. The harvest family itself is clean. -->
 
 
 ---
@@ -195,3 +195,5 @@ Second-sweep sources (added 2026-07-11):
 - Source Y — a container-tooling repo (otel-instrument) — `ENC1:WMs4sUBQ0ehy3zj5MNIKGNzY8UHumWV5X8dJ9262UVeV8xlX1Yz+aw2AAG2qp9EGZE4MxsFWH12gSgt4E/hBmw==`
 - Source Z — a critical-planning-file safety skill — `ENC1:ZNVbKKTOfOG6DhBw3kbN1MH8ZFeFkPTn9pTp0v/jml9T6Hqk1HhMIhTf+qiR+pnUf9GJaRChvZZH4UUvR2yhrA==`
 - Source AA — a canonical-skill→multi-adapter generator with a verify script — `ENC1:Z4wWTMphm8Tl654v16MSa7OAFJfrgUgTULDU8WBBog9dpotDD+VMolEZ8cetGuV0oVXGU0emw/wLMRAcYdKEPQ==`
+
+<!-- redacted 2026-08-29: source identifiers replaced by codenames per ADR-250. No decision, measurement or count altered. -->

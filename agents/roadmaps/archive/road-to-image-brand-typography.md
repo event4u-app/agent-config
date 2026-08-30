@@ -315,7 +315,7 @@ identity → system → application → governance.
   voice-tone, naming-patterns, color-psychology, logo-style-fit, messaging-frameworks,
   typography-principles) on the shared corpus-grounding engine (validated, BM25
   routing confirmed: streetwear→Outlaw, law-firm→serif). DEVIATION from the
-  claudekit-adoption framing: the corpus is ORIGINAL-AUTHORED from public brand
+  S2-adoption framing: the corpus is ORIGINAL-AUTHORED from public brand
   frameworks (Jung/Mark-Pearson archetypes, public messaging frameworks), upstream:
   null — honest provenance + source-confidentiality-clean, so no third-party SHA to
   pin and no §4b marking needed. Pack `brand` registered (packs.yml + workspaces +
@@ -407,12 +407,12 @@ identity → system → application → governance.
 
 ### B.5 Quality gates
 
-- [x] ATTRIBUTION for the claudekit-derived material (Apache-2.0 §4b marking);
+- [x] ATTRIBUTION for the S2-derived material (Apache-2.0 §4b marking);
   brand corpus carries confidence + evidence-gap (ADR-061 §3); SHA-pin +
   refresh DoD; `pack-brand` opt-in, `requires: [frontend-design]`.
   Trigger-evals authored (spec); recorded in Phase D.
   <!-- done 2026-06-16: ATTRIBUTION.md present (original-authored deviation, no
-  claudekit file content vendored → no §4b marking / no SHA-pin; engine attributed
+  S2 file content vendored → no §4b marking / no SHA-pin; engine attributed
   via design-intelligence). typography-principles carries confidence + evidence-gap.
   Refresh DoD = quarterly cadence in the manifest. `brand` requires:[frontend-design]
   (packs.yml). triggers.json (5/5) authored for brand/brand-strategy/brand-identity/
@@ -544,3 +544,5 @@ this merits pass; record the amendment when implementing.
 > [`agents/roadmap-assets/road-to-image-brand-typography.assets.md`](../roadmap-assets/road-to-image-brand-typography.assets.md)
 > (tracked, consume-then-delete). Phase D ports the recorder (applying the
 > domain-specific-floors decision).
+
+<!-- redacted 2026-08-29: source identifiers replaced by codenames per ADR-250. No decision, measurement or count altered. -->

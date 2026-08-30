@@ -102,6 +102,44 @@ task lint-skills      # ./scripts-run src/scripts/skill_linter --all
 - Open the PR against `main` with a short description of the change,
   motivation, and any notes for reviewers.
 
+### Branch names, PR text and commit messages are a gated surface
+
+A branch name, a PR title, a PR body and a commit message are **public on push
+and effectively permanent once merged** — this repository does not rewrite trunk
+history, by a recorded decision, so a source name that lands there stays
+recoverable. None of them is a tracked file, so the tree-scanning gate
+(`check_no_external_sources`) cannot see any of them.
+
+Two checks cover that surface, and they run at different moments on purpose:
+
+- **`.github/workflows/pr-metadata-sources.yml`** — on `pull_request`
+  (including `edited`, because a title changed after opening is a new
+  disclosure). This is the backstop; by the time it runs the branch and commits
+  are already on the remote.
+- **`src/scripts/hooks/prepush_metadata_sources.sh`** — a **pre-push** hook, and
+  the only one of the two that runs while the metadata is still private. Opt-in,
+  because this repository does not write to your `.git/hooks`:
+
+  ```bash
+  ln -s ../../src/scripts/hooks/prepush_metadata_sources.sh .git/hooks/pre-push
+  ```
+
+  If you already have a pre-push hook, call it from there instead. It checks the
+  branch name and the commit messages the push would add; the PR title and body
+  do not exist locally, so those two stay CI-only — a local pass is not a full
+  pass. Bypass with `AGENT_CONFIG_SKIP_METADATA_GATE=1`.
+
+Run it by hand at any time:
+
+```bash
+./scripts-run src/scripts/sweep_source_surfaces --gate-metadata \
+  --branch "$(git rev-parse --abbrev-ref HEAD)" \
+  --commit-range origin/main..HEAD
+```
+
+Use an opaque round identifier (`inbox-2026-08-h`, `round-a91f3c`, `S17`) where
+a name is needed. See [`source-confidentiality`](src/rules/source-confidentiality.md).
+
 ## Reviewability and the self-imposed gate
 
 This is a governance standard, so the maintainer holds themselves to the same

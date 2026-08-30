@@ -155,6 +155,27 @@ ci_only:
   - id: check_finding_dispositions
     class: release
     reason: "adjudicates the release-PR self-review findings ledger, whose input JSON is produced by the self-review workflow job"
+  # road-to-source-silence Phase 5.3. Two modes, and the distinction is the whole
+  # reason this is a declaration rather than a `task ci` entry.
+  #
+  # The mode a CI workflow invokes on a schedule is the FIVE-SURFACE CENSUS
+  # (source-surface-sweep.yml, weekly). It needs `gh` for the pull-request
+  # surface and a full-depth clone for the 9,000-commit trunk surface, it takes
+  # minutes, it writes no verdict, and it deliberately CANNOT red the build — a
+  # scheduled job that fails `main` for a residual count nobody can lower this
+  # week is a job that gets disabled. Putting it in `task ci` would add minutes
+  # to every local run for a number that is a standing observation, not a gate.
+  #
+  # The mode that IS a gate — `--gate-metadata`, which refuses source
+  # attribution in a branch name, PR title, PR body or commit message — has a
+  # stronger local story than `task ci` membership gives anything else here: it
+  # runs on PRE-PUSH via src/scripts/hooks/prepush_metadata_sources.sh, i.e.
+  # BEFORE the metadata is public, which is the only moment fixing it is free.
+  # A contributor therefore discovers that failure locally by construction,
+  # which is exactly the harm this checker exists to prevent.
+  - id: sweep_source_surfaces
+    class: network
+    reason: "the CI invocation is the weekly five-surface census — needs `gh` for the PR surface and a full-depth clone for the ~9,000-commit trunk surface, writes counts not a verdict, and is deliberately non-failing; its GATE mode (`--gate-metadata`) is reachable locally on pre-push via src/scripts/hooks/prepush_metadata_sources.sh and by hand, so no failure is discoverable only after a push"
   - id: rule_trigger_eval
     class: network
     reason: "live cross-model LLM trigger evaluation in the secret-gated canary workflow; advisory, paid, and never gating"

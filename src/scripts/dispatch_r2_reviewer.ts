@@ -54,7 +54,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // time, and each CLI entry guard only fires for its own argv[1].
 import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
 import { gitEnv } from './_lib/git_env.js';
-import { loadDenyPatterns, redactSourceTokens, writeRedacted } from './_lib/source_redact.js';
+import { loadDenyPatterns, redactSourceShape, redactSourceTokens, writeRedacted } from './_lib/source_redact.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { artifactRelevance } from './check_completion_review.js';
 
@@ -1267,8 +1267,13 @@ function runDispatch(args: Args): number {
     // own binding gate.
     const denyPatterns = loadDenyPatterns();
     let redactions = 0;
-    const promptRedacted = redactSourceTokens(promptText, denyPatterns);
-    redactions += promptRedacted.count;
+    const promptTokens = redactSourceTokens(promptText, denyPatterns);
+    // Shape redaction runs on the prompt too, and BEFORE the hash below, for the
+    // same reason the deny pass does: `check_review_prompt_binding` re-derives
+    // prompt_hash from prompt.md on disk, so hashing anything other than the
+    // exact bytes written would make every new artefact fail its own binding.
+    const promptRedacted = redactSourceShape(promptTokens.text);
+    redactions += promptTokens.count + promptRedacted.count;
 
     const skeleton = findingsSkeleton({
         slug,

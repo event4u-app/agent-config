@@ -20,14 +20,14 @@ estate_offset_exempt: "NO OFFSET IS CLAIMED FOR THIS FILE. The first draft cited
 ---
 # Road to an executable specification layer — the suite grades a capability it does not teach, on both axes
 
-> **Source:** `agents/tmp.old/uncle-bob-swarm/` (2026-08-27) — a two-session
+> **Source:** `agents/tmp.old/inbox-2026-08-h/` (2026-08-27) — a two-session
 > agent swarm analysing this tree against an external acceptance-pipeline
 > reference, plus the transcript. Drafted against `f2ed85e`, which **was**
 > `origin/main` at authoring time; `d55d1f10` merged mid-authoring and every
 > anchor cited below was re-verified against it. Sibling roadmap:
 > `road-to-runtime-governance-flip.md` from the same source. **Second arrival:**
 > the same external source was analysed on 2026-08-22
-> (`agents/tmp.old/robert-c-martin/`) and that round is what produced
+> (`agents/tmp.old/inbox-2026-08-f/`) and that round is what produced
 > `src/config/assurance-capability-registry.json`. See § Why this is the second
 > time.
 
@@ -81,7 +81,7 @@ it back."
 
 ## Why this is the second time
 
-`agents/tmp.old/robert-c-martin/` (2026-08-22) analysed the same external source
+`agents/tmp.old/inbox-2026-08-f/` (2026-08-22) analysed the same external source
 and produced five roadmaps. Two are archived as complete
 (`road-to-agentic-engineering-assurance`,
 `road-to-target-project-assurance-readiness`) and three sit in

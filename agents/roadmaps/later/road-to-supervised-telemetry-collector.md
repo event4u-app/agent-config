@@ -103,7 +103,7 @@ estate_offset_exempt: "The offset is the governance roadmap flipping ready to dr
 
 > **Source:** split out of `road-to-runtime-governance-flip.md` on 2026-08-27
 > after a deep council pass (2/2, both seats "not ready"). The originating
-> analysis is `agents/tmp.old/uncle-bob-swarm/`; the durable record of the owner
+> analysis is `agents/tmp.old/inbox-2026-08-h/`; the durable record of the owner
 > decision and the surface census is
 > `agents/evidence/analysis/runtime-reversal-owner-decision.md`.
 
@@ -1273,7 +1273,7 @@ one for a design note under review: § 2's rule is that unanswered is
 
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -1281,9 +1281,10 @@ one for a design note under review: § 2's rule is that unanswered is
 | 2 | The collector is built before its contracts exist | implementation | The governance roadmap's first draft ordered build-then-contract, and 5.2 there said the data contract must exist "before the first write" — which is weaker than before implementation, since a schema fixed by an implementation is fixed. | Phases 1 to 3 are entirely contracts and decisions; the first implementation step is 4.1, and 1.3 requires the target to be committed before the first collector commit by commit order. | Phase 1 — Decide the architecture before writing the schema |
 | 3 | "No free-form field" is mistaken for PII exclusion | product | Structured fields leak through repo identifiers, command arguments, interpolated error enums, stable hashes, and timestamps joined to a machine id. The first draft's AC required only the absence of a free-form field. | 2.1 makes every field justify itself and 2.2 requires a failing fixture per named leak class, each proven to fail when its constraint is removed. | Phase 2 — The data contract, field by field |
 | 4 | Supervision is tested with mocks and passes | implementation | Orphan behaviour, signal handling and file locking are process properties. A mocked suite can demonstrate all five properties and prove none of them. | 5.1 requires real processes on every declared platform, and 5.2 requires the evidence protocol to red against an emptied suite and against a foreign-revision result. | Phase 5 — Prove the five lifecycle properties on real processes |
-| 5 | The measurement is treated as a code checkpoint | product | Capture rate needs a representative window. A phase that closes when the code lands has measured nothing, and the observation cannot be compressed. | 6.1 is its own step gated on the window and minimum sample from 1.2, and this roadmap is deliberately separate from governance so its slower clock does not hold that one. | Phase 6 — Measure, then decide |
-| 6 | The wedge is spent on a telemetry collector | product | "Nothing else installed" is a product commitment. An OS service manager costs it, and the cost would be paid by the least important feature that could pay it. | The supervisor blocker names the trade-off explicitly and recommends against the service-manager option for exactly this reason. | Phase 1 — Decide the architecture before writing the schema |
-| 7 | Enablement is decided on the capture target alone | product | 6.2's target is the product signal. Green on it while a resource budget is breached or a platform's lifecycle suite fails would ship an unsafe default. | 6.2 requires all six readings recorded, and a missing reading blocks the flip rather than defaulting to pass. | Phase 6 — Measure, then decide |
+| 5 | The rollback matrix reads as coverage while five of its seven rows are unenforced | implementation | 3.1 landed the seven-row trigger matrix and two rows are enforced today (1 and 5); the other five carry `OWED BY` against steps 5.1, 5.1, 3.2, 4.2 and 5.2 — Phases 3, 4 AND 5, not Phases 4 and 5. Step 3.1 already writes the caveat into its own prose, so this row PROMOTES an existing observation into the register where its closure can be tracked; it does not discover it. What distinguishes it from risk 1 is the failure shape: not a check that ran and proved nothing, but a control that is named and not yet wired. | 3.1 annotates every test cell with `EXISTS` or `OWED BY <step>` so a name is not mistaken for coverage, and AC-6 is left `[ ]` with its met clause separated from its two open ones. Two bounds on the exposure and one open question, stated rather than smoothed: it closes at FOUR different steps (3.2, 4.2, 5.1, 5.2), so "the matrix is wired" is not a single event; and under `mode: phase-checkpoints` 3.2 lands before Phase 4, leaving four unwired rows at ship time rather than five. If instead 3.2's `verify:` cannot run before the collector exists, then Phase 3 is blocked on Phase 4 and THAT ordering conflict is the thing to resolve — this row names it rather than absorbing it. | Phase 3 — The operational contract, Phase 4 — Implement |
+| 6 | The measurement is treated as a code checkpoint | product | Capture rate needs a representative window. A phase that closes when the code lands has measured nothing, and the observation cannot be compressed. | 6.1 is its own step gated on the window and minimum sample from 1.2, and this roadmap is deliberately separate from governance so its slower clock does not hold that one. | Phase 6 — Measure, then decide |
+| 7 | The wedge is spent on a telemetry collector | product | "Nothing else installed" is a product commitment. An OS service manager costs it, and the cost would be paid by the least important feature that could pay it. | The supervisor blocker names the trade-off explicitly and recommends against the service-manager option for exactly this reason. | Phase 1 — Decide the architecture before writing the schema |
+| 8 | Enablement is decided on the capture target alone | product | 6.2's target is the product signal. Green on it while a resource budget is breached or a platform's lifecycle suite fails would ship an unsafe default. | 6.2 requires all six readings recorded, and a missing reading blocks the flip rather than defaulting to pass. | Phase 6 — Measure, then decide |
 
 ## Acceptance Criteria
 

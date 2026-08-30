@@ -121,6 +121,50 @@ Resolve the argument. Directory mode: list files with size and line count, and
 say up front how many there are. **A large inbox is a triage problem, not a
 throughput problem** — never open ten files at full depth in one pass.
 
+#### The inbox directory name is opaque, or the whole chain leaks
+
+```
+AN INBOX DIRECTORY UNDER agents/tmp/ CARRIES AN OPAQUE ROUND IDENTIFIER.
+NEVER NAME IT AFTER THE SOURCE. THE TRUE SOURCE IS RECORDED ONCE, `ENC1:`
+ENCRYPTED, IN THE ROUND'S OWN INTAKE NOTE. ROADMAP `Source:` LINES CITE THE
+CODENAME ONLY.
+```
+
+`agents/tmp/` is gitignored, so a speaking directory name looks free. It is not:
+the name gets **quoted** into a tracked roadmap `Source:` header, into an
+evidence artefact, into a review-snapshot filename and into a PR body, and each
+quote republishes it in a public repository. Measured at
+`road-to-source-silence` Phase 0: 190 block-tier occurrences of quoted
+non-opaque `agents/tmp(.old)/<name>/` paths across the tracked tree, plus one
+tracked findings file named after a round. **The directory name is the root of
+the leak chain — if it is opaque, nothing readable exists to be quoted.**
+
+Accepted forms — `isOpaqueRoundId` in `src/scripts/_lib/source_shape.ts` is the
+authority, and the gate enforces the same predicate:
+
+| Form | Example |
+|---|---|
+| round-dated, optional 1-3 char disambiguator | `inbox-2026-08-h` |
+| content-free hex | `round-a91f3c`, `set-a91f3c` |
+| set number | `S17` |
+
+Anything that reads is speaking by construction. If a round arrives under a
+speaking name, **rename the directory before Phase 2** and record the mapping as
+below; renaming after the first quote lands means chasing the quotes.
+
+**Record the true source exactly once, encrypted.** In the round's intake note
+(`agents/tmp/<round-id>/intake.md`):
+
+```bash
+printf '%s' '<the real source, url or description>' \
+  | ./scripts-run src/scripts/_lib/link_crypto encrypt
+```
+
+Paste the `ENC1:` token into the intake note. That token, and the codename map at
+`agents/evidence/reports/source-codename-map.md`, are the only places the
+correspondence may exist. Never a second plaintext copy — not in the roadmap, not
+in the PR body, not in a commit message.
+
 ### Phase 2 — Triage (cheap, all files)
 
 One pass per file, shallow, producing a table before any deep read:
@@ -492,10 +536,20 @@ transcription. Phase 4b states this obligation for Phases 5 and 6 both; it is
 repeated here because this is the phase that writes the artefact, and an
 obligation named only upstream is one a Phase-6 executor never sees.
 
+**The `Source:` line carries the codename, never the source.** Per Phase 1's
+naming rule the round directory is already opaque, so
+`> **Source:** \`agents/tmp.old/inbox-2026-08-h/\`` is a compliant header and a
+speaking one is not. The gate's `source-header` and `tmp-quote` classes both
+block inside `agents/**`, so a speaking value fails CI rather than merely
+reading badly. If the roadmap needs to say *what kind* of source it was, describe
+the class ("an external acceptance-pipeline reference") and put the identity in
+the encrypted intake note.
+
 Then the inbox contract from
 [`agents-layout`](../../../../docs/contracts/agents-layout.md), in the **same
 reply**: `mv` the consumed file to `agents/tmp.old/`, point the roadmap's
-`Source:` line at its new path, and regenerate the dashboard. A consumed file
+`Source:` line at its new path — still the codename — and regenerate the
+dashboard. A consumed file
 left in `agents/tmp/` is a rule violation, not untidiness. Move only the files
 actually processed — never sweep the rest of the inbox.
 
