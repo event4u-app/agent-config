@@ -23,14 +23,18 @@ import {
     disableCollector,
     enableCollector,
     isCollectorEnabled,
+    machineId,
+    machineIdPath,
     pruneOpportunitiesOlderThan,
     readOpportunities,
+    recordCapture,
     recordOpportunity,
     spoolPendingPath,
     spoolRecord,
 } from '../../src/scripts/_lib/collector_denominator.js';
 import {
     COLLECTOR_SCHEMA_VERSION,
+    validateRecord,
     type CollectorRecord,
 } from '../../src/scripts/_lib/collector_record.js';
 import {
@@ -159,8 +163,14 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
             }
             expect(seen.length, 'the enumeration can see a running daemon').toBeGreaterThan(0);
             // And the same enumeration, in the shape the negative assertion
-            // uses, does NOT see it — because it is test-owned.
-            expect(enumerateDaemonProcesses()).toEqual([]);
+            // uses, does NOT see it — because it is test-owned. Compared
+            // against the same baseline for the same reason (R2 round-3 finding
+            // 6): asserting an empty list here reds on a developer who has
+            // opted in and has a real collector running, which is the defect
+            // the sibling assertion below was already corrected for and this
+            // one was not.
+            const nowRunning = new Set(enumerateDaemonProcesses().map(pidOf));
+            expect([...nowRunning].filter((p) => !baselineDaemonPids.has(p))).toEqual([]);
         } finally {
             const beat = readHeartbeat(userRoot);
             if (beat !== null) {
@@ -336,6 +346,31 @@ describe('4.1 — the denominator is independent of the daemon', () => {
     // return 0 without rewriting — the log keeps growing inside the directory
     // the disk budget ceilings, and a breach STOPS the collector.
 
+    it('CARRIES concurrently appended lines across a prune', () => {
+        // R2 round-3 finding 5. The prune was read-filter-write-tmp-rename over
+        // a file other processes append to, so anything written into the old
+        // inode inside that window was dropped — and the direction is the
+        // dangerous one: an understated denominator biases the rate UPWARD.
+        //
+        // Simulated rather than raced, because a real race is not reproducible:
+        // the append happens between the read and the rename, which is exactly
+        // the window, by monkey-patching nothing — the prune re-reads the tail
+        // beyond the bytes it consumed, so appending here and letting the prune
+        // run afterwards exercises the same code path deterministically.
+        enableCollector(userRoot);
+        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
+        // A line that arrives "during" the prune, appended to the same file.
+        fs.appendFileSync(denominatorPath(userRoot), '2026-06-02\tstop\tclaude\n');
+
+        const dropped = pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
+        expect(dropped).toBe(1);
+        const after = readOpportunities(userRoot);
+        expect(after.total, 'the late line survived').toBe(2);
+        expect(after.byEvent.stop).toBe(1);
+    });
+
     it('KEEPS a line whose date does not parse rather than deleting it', () => {
         enableCollector(userRoot);
         recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
@@ -346,6 +381,61 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         const raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
         expect(raw).toContain('not-a-date');
         expect(readOpportunities(userRoot).malformed).toBe(1);
+    });
+
+    it('recordCapture WRITES THE NUMERATOR, which had no production caller at all', () => {
+        // R2 round-3 finding 1, and the most consequential defect three review
+        // rounds surfaced: `spoolRecord` was exported, tested, and called by
+        // nothing outside this suite. The denominator was wired into the
+        // dispatcher and climbed; the numerator stayed 0 by construction, so
+        // the capture rate was 0 % for a WIRING omission and the miss branch
+        // could not tell that from a real capture failure.
+        enableCollector(userRoot);
+        expect(recordCapture('session_start', 'claude', userRoot)).toBe(true);
+        expect(recordCapture('pre_tool_use', 'claude', userRoot)).toBe(true);
+
+        const spooled = fs
+            .readFileSync(spoolPendingPath(userRoot), 'utf8')
+            .split('\n')
+            .filter((l) => l.length > 0)
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(spooled).toHaveLength(2);
+        // Every record it builds must survive the schema, or the daemon would
+        // refuse them all at the write boundary and the numerator would still
+        // be 0 — for a different reason.
+        for (const rec of spooled) {
+            expect(validateRecord(rec).ok, JSON.stringify(validateRecord(rec).errors)).toBe(true);
+        }
+        // The sequence orders records within one episode, which is what
+        // `dedupKey` scopes; two captures in one episode must not collide.
+        expect(spooled[0]?.episode_id).toBe(spooled[1]?.episode_id);
+        expect(spooled[0]?.sequence).not.toBe(spooled[1]?.sequence);
+    });
+
+    // removing_this_constraint_reds_it: make `recordCapture` return false
+    // without spooling — this reds, and nothing else in the tree does, which is
+    // exactly how the missing production caller survived two review rounds.
+
+    it('mints a STABLE machine id and never derives it from a host fact', () => {
+        enableCollector(userRoot);
+        const first = machineId(userRoot);
+        expect(first).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/i);
+        expect(machineId(userRoot)).toBe(first);
+        // Not derived: two different roots mint different ids, so the value
+        // cannot be a function of hostname or username.
+        const other = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-mid-'));
+        try {
+            expect(machineId(other)).not.toBe(first);
+        } finally {
+            fs.rmSync(other, { recursive: true, force: true });
+        }
+    });
+
+    it('writes NOTHING while the collector is off', () => {
+        disableCollector(userRoot);
+        expect(recordCapture('session_start', 'claude', userRoot)).toBe(false);
+        expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
+        expect(fs.existsSync(machineIdPath(userRoot))).toBe(false);
     });
 
     it('never throws, whatever the filesystem does', () => {
@@ -405,6 +495,39 @@ describe.runIf(isStoreAvailable())('4.1 — the drain loop', () => {
     // removing_this_constraint_reds_it: make `drainOnce` read only the file it
     // just claimed rather than every `draining-*` in the directory — the
     // orphaned batch is never picked up.
+
+    it('KEEPS a claimed file it could not read, rather than deleting the batch', () => {
+        // R2 round-3 finding 2. An unreadable claimed file used to be
+        // indistinguishable from an empty one, so the caller deleted it — a
+        // transient EACCES destroyed the batch and reported zero malformed.
+        enableCollector(userRoot);
+        spoolRecord(record(), userRoot);
+        const claimed = claimSpool(userRoot) as string;
+        fs.chmodSync(claimed, 0o000);
+
+        const handle = openCollectorStore(userRoot);
+        try {
+            const result = drainOnce(handle, userRoot);
+            expect(result.unreadable).toBe(1);
+            expect(result.written).toBe(0);
+            expect(fs.existsSync(claimed), 'the batch survives for the next drain').toBe(true);
+
+            // And once it is readable again, the next drain picks it up.
+            fs.chmodSync(claimed, 0o600);
+            expect(drainOnce(handle, userRoot).written).toBe(1);
+        } finally {
+            try {
+                fs.chmodSync(claimed, 0o600);
+            } catch {
+                /* already gone */
+            }
+            handle.db.close();
+        }
+    });
+
+    // removing_this_constraint_reds_it: drop the `parsed.unreadable` branch in
+    // `drainOnce` — the file is deleted and `written` stays 0, so the batch is
+    // gone with nothing reporting it.
 
     it('REFUSES an invalid record rather than dropping it, and counts the refusal', () => {
         enableCollector(userRoot);

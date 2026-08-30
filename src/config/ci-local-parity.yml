@@ -121,6 +121,10 @@ ci_only:
   # the exact harm this checker exists to prevent.
   #
   # Reachable on demand: `task report-pack-delta -- --base <ref> --head <ref>`.
+  - id: report_pack_delta
+    class: artifact
+    reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
+
   # road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
   # dispatcher-reaching suite TWICE — once with the collector present-but-off,
   # once with it aliased away entirely — and compares per-test verdicts rather
@@ -134,25 +138,27 @@ ci_only:
   - id: check_static_parity
     class: benchmark
     reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
-  # road-to-supervised-telemetry-collector step 5.2. The five lifecycle
-  # PROPERTIES are verified locally like any other suite —
-  # `tests/scripts/collector_lifecycle.test.ts` is inside `tests/scripts` and runs
-  # in the ordinary vitest chain. What is CI-only is this WRAPPER, whose whole
-  # job is to write `internal/reports/supervision-lifecycle.json` stamped with
+  # road-to-supervised-telemetry-collector step 5.2. What is CI-only is this
+  # WRAPPER, whose whole job is to write
+  # `internal/reports/supervision-lifecycle.json` stamped with
   # `git rev-parse HEAD`. That artifact is gitignored and read by
   # `check_supervision_claim_atomicity`, which refuses any result whose recorded
   # revision is not HEAD — so an artifact written during a local run of a dirty
-  # working tree is evidence about a revision nobody shipped. Putting the wrapper
-  # in `task ci` would also spawn real daemons on every local run for a file the
-  # local chain then ignores.
+  # working tree is evidence about a revision nobody shipped.
+  #
+  # CORRECTED on R2 round-3 finding 7. This note used to say the five properties
+  # "run in the ordinary vitest chain" locally AND that a `task ci` wrapper
+  # "would spawn real daemons on every local run" — which cannot both be true,
+  # and the second half was already stale: the same change excluded
+  # `collector_lifecycle.test.ts` from the `node-tests` shards. The accurate
+  # position is that the suite runs on demand and in the dedicated
+  # `Collector Lifecycle` job, and the wrapper's CI-only status rests on the
+  # revision-stamped artifact alone — the argument that survives.
   #
   # Reachable on demand: `./scripts-run src/scripts/run_lifecycle_suite`.
   - id: run_lifecycle_suite
     class: artifact
     reason: "writes the revision-stamped lifecycle evidence artifact the atomicity gate reads; the artifact is gitignored and only meaningful at the revision CI is testing, while the five properties themselves already run locally in tests/scripts/collector_lifecycle.test.ts"
-  - id: report_pack_delta
-    class: artifact
-    reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
   - id: classify_change_risk
     class: benchmark
     reason: "invoked as the nightly drift workflow's self-test step; the classifier itself gates nothing and its `--self-test` is runnable locally on demand (`./scripts-run src/scripts/classify_change_risk --self-test`)"

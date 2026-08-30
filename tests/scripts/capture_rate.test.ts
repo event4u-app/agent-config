@@ -273,6 +273,25 @@ describe('the six-part enablement gate', () => {
     // `missing`, and "we did not look" becomes indistinguishable from "we looked
     // and it was bad". Only one of those two is 6.3's trigger.
 
+    it('an ABSENT key blocks the flip — the type is not the enforcement', () => {
+        // R2 round-3 finding 4. The loop tested `=== null` then `=== false`, so
+        // a key absent at RUNTIME was neither and still yielded `flip: true`.
+        // The required-field type made omission a compile error, and these
+        // readings are exactly the kind of object that arrives from JSON or a
+        // cast — including in this very file, which builds one with
+        // `as unknown as EnablementReadings`.
+        for (const name of ENABLEMENT_READING_NAMES) {
+            const partial = { ...all(true) } as Record<string, unknown>;
+            delete partial[name];
+            const verdict = judgeEnablement(partial as unknown as EnablementReadings);
+            expect(verdict.flip, name).toBe(false);
+            expect(verdict.missing, name).toContain(name);
+        }
+    });
+
+    // removing_this_constraint_reds_it: restore the `=== null` / `=== false`
+    // pair in `judgeEnablement` — every case above flips.
+
     it('a FALSE reading blocks the flip and is reported as a failure', () => {
         const verdict = judgeEnablement({ ...all(true), captureTargetMet: false });
         expect(verdict.flip).toBe(false);

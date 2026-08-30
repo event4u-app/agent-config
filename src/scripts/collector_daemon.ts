@@ -201,6 +201,8 @@ export interface DrainResult {
     readonly written: number;
     readonly refused: number;
     readonly malformed: number;
+    /** Claimed files that could not be READ. Kept on disk for the next drain, never deleted. */
+    readonly unreadable: number;
 }
 
 /**
@@ -228,14 +230,24 @@ export function drainOnce(handle: StoreHandle, userRoot?: string): DrainResult {
             .filter((name) => name.startsWith('draining-'))
             .map((name) => path.join(spoolDir(userRoot), name));
     } catch {
-        return Object.freeze({ claimed: 0, written: 0, refused: 0, malformed: 0 });
+        return Object.freeze({ claimed: 0, written: 0, refused: 0, malformed: 0, unreadable: 0 });
     }
 
     let written = 0;
     let refused = 0;
     let malformed = 0;
+    let unreadable = 0;
     for (const file of claimedFiles) {
         const parsed = readClaimedSpool(file);
+        if (parsed.unreadable) {
+            // KEEP IT (R2 round-3 finding 2). A file we could not read has not
+            // had its records offered to the store, and deleting it here
+            // destroyed the batch while reporting zero malformed — a transient
+            // EACCES or EMFILE was enough. The next drain re-reads it, which is
+            // the same recovery the crash path relies on.
+            unreadable += 1;
+            continue;
+        }
         malformed += parsed.malformed;
         for (const record of parsed.records) {
             const outcome = writeRecord(handle, record);
@@ -249,6 +261,7 @@ export function drainOnce(handle: StoreHandle, userRoot?: string): DrainResult {
         written,
         refused,
         malformed,
+        unreadable,
     });
 }
 
@@ -388,6 +401,7 @@ export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
         written: 0,
         refused: 0,
         malformed: 0,
+        unreadable: 0,
     });
     let stoppedBy: RunSummary['stoppedBy'] = 'iterations';
 
@@ -430,6 +444,7 @@ export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
                 written: drained.written + result.written,
                 refused: drained.refused + result.refused,
                 malformed: drained.malformed + result.malformed,
+                unreadable: drained.unreadable + result.unreadable,
             });
             const today = new Date(now).toISOString().slice(0, 10);
             pruneOlderThan(handle, today);
@@ -459,8 +474,17 @@ export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
             await sleep(beatMs);
         }
     } finally {
-        handle?.db.close();
+        // RELEASE FIRST (R2 round-3 finding 12). `db.close()` can throw on an
+        // already-invalidated handle, and running it first meant the lock and
+        // heartbeat `start()` took stayed on disk — the orphaned-residue case
+        // that moving `openCollectorStore` into the `try` was supposed to close,
+        // still reachable through the cleanup path itself.
         stop(userRoot);
+        try {
+            handle?.db.close();
+        } catch {
+            /* an unclosable handle is this process's problem, not its successor's */
+        }
     }
 
     return Object.freeze({ iterations, drained, stoppedBy, exceeded });

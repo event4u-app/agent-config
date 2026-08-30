@@ -61,11 +61,14 @@ about.)
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
 | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+
 **`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 five process-level lifecycle properties plus the operator stop verb — six cases,
 each spawning one or two real `tsx` daemons — then the supervision-claim gate
-that consumes their evidence, then the static-parity comparison (two 556-test
-runs). Its duration figure is a LOCAL measurement of the suite plus an estimate
+that consumes their evidence, then the static-parity comparison (the
+dispatcher-reaching suite, twice — the count is deliberately not written down
+anywhere in this change, per R2 round-2 finding 15, because it moves with the
+suite and three different figures for it appeared in one diff). Its duration figure is a LOCAL measurement of the suite plus an estimate
 for the parity pair; the CI number is unknown until the job has run, and saying
 so is cheaper than publishing a guess in a table of measurements.
 

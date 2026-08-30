@@ -733,7 +733,13 @@ one for a design note under review: § 2's rule is that unanswered is
       daemon would make the instrument self-reporting, which is exactly the
       failure `road-to-journal-host-capture-measurement` exists for.
 
-      One `stat` is the whole cost on a default-off install. The wiring is a
+      **TWO `existsSync` calls are the whole cost on a default-off install**, and
+      the number is stated correctly here because it was stated wrongly first
+      (R2 finding 14, then round-3 finding 11 for this copy of it):
+      `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
+      the opt-out check — not the marker — is what usually returns first. The
+      correction landed in the code and its docstring and not here, leaving the
+      two halves of one change disagreeing on the fact each cites the other for. The wiring is a
       single call in `dispatch_hook.main`, placed after the vocabulary check (an
       unknown event is not an opportunity) and before the manifest load (a
       missing manifest fails open, and the dispatch still WAS an opportunity) —
@@ -777,8 +783,7 @@ one for a design note under review: § 2's rule is that unanswered is
       real module with no opt-in marker: present, and off.
 
       **The parity set is DISCOVERED, not listed.** `parityFiles()` greps for
-      every test file that reaches `dispatch_hook` — 31 files, 551 tests — and
-      prints them, so a reader can check the denominator of the claim. A
+      every test file that reaches `dispatch_hook` and prints them, so a reader can check the denominator of the claim. A
       hand-written list goes stale the first time a test file is added, and a
       stale parity set reports parity over the wrong population. An empty set
       exits 1 with *"a gate that scans nothing exits green"*, because that is
@@ -800,7 +805,7 @@ one for a design note under review: § 2's rule is that unanswered is
       passes the `passed → skipped` case and reds that block.
 
       **Not wired into CI, and that is a decision with a cost.** The gate takes
-      about a minute (two 551-test runs) and registering a new gate touches six
+      about a minute (two runs of the whole set) and registering a new gate touches six
       further surfaces plus the gate-coverage ledger. It is run on demand, which
       means it can rot between runs. *Revisit-if:* a second collector call site
       lands anywhere outside `dispatch_hook.main`, or a static-mode regression
@@ -988,7 +993,7 @@ one for a design note under review: § 2's rule is that unanswered is
       not re-derive them. **Resource budgets: met** — measured 2026-08-30, and
       two of the four ceilings were re-derived from that measurement rather than
       the reading being fitted to them (3.2). **Static-mode compatibility:
-      green** — 551 tests run twice with identical per-test verdicts (4.2). The
+      green** — the dispatcher-reaching suite run twice with identical per-test verdicts (4.2). The
       other four need the window, the cohort, or the Linux row.
 - [ ] **6.3 Act on a miss.** Below target, the collector stays default-off and
       the shortfall becomes a decision record naming what was measured and what

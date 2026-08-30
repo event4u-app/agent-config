@@ -516,9 +516,9 @@ jobs:
     # remains the target.
     name: Collector Lifecycle (macos-latest — the macOS row only)
     runs-on: macos-latest
-    # Spawns real daemons with 90 s per-case timeouts and runs ~551 tests twice
-    # for the parity comparison; a hang here would otherwise sit at the runner
-    # default (R2 round-2 finding 2).
+    # Spawns real daemons with 90 s per-case timeouts, and runs the
+    # dispatcher-reaching suite twice for the parity comparison; a hang here
+    # would otherwise sit at the runner default (R2 round-2 finding 2).
     timeout-minutes: 20
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     steps:

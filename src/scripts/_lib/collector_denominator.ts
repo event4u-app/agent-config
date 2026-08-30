@@ -45,16 +45,27 @@
  * `occurred_on`.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 import {
     COLLECTOR_EVENTS,
     COLLECTOR_PLATFORMS,
+    COLLECTOR_SCHEMA_VERSION,
     type CollectorEvent,
     type CollectorPlatform,
 } from './collector_record.js';
 import { isOptedOut, resolveCollectorStore, RETENTION_DAYS } from './collector_store.js';
+
+/**
+ * The collector's own version, recorded on every captured record.
+ *
+ * A literal rather than a read of `package.json`: the record contract calls this
+ * the version of the COLLECTOR, and tying it to the package version would make
+ * every release look like a collector change to anyone diffing the store.
+ */
+export const COLLECTOR_VERSION = '1.0.0';
 
 /** Append-only opportunity log. One short line per dispatch. */
 export const DENOMINATOR_FILE_NAME = 'opportunities.log';
@@ -286,10 +297,204 @@ export function pruneOpportunitiesOlderThan(
         return date >= cutoff;
     });
     if (kept.length === lines.length) return 0;
+
+    // CARRY THE TAIL (R2 round-3 finding 5). Hook processes append to this file
+    // from other processes while the prune runs, and a plain read-filter-rename
+    // drops everything written into the old inode inside that window. The
+    // direction is the dangerous one and this module states it three functions
+    // earlier: an understated denominator biases the rate UPWARD, toward making
+    // the target look met.
+    //
+    // So: remember how many bytes we read, and before the rename, append
+    // whatever arrived after that offset. A line that lands between the tail
+    // read and the rename is still lost — the window is now microseconds rather
+    // than the whole filter, and closing it completely needs a lock the
+    // append path deliberately does not take.
+    const consumed = Buffer.byteLength(raw, 'utf8');
+    let tail = '';
+    try {
+        const fd = fs.openSync(target, 'r');
+        try {
+            const size = fs.fstatSync(fd).size;
+            if (size > consumed) {
+                const buf = Buffer.alloc(size - consumed);
+                fs.readSync(fd, buf, 0, buf.length, consumed);
+                tail = buf.toString('utf8');
+            }
+        } finally {
+            fs.closeSync(fd);
+        }
+    } catch {
+        /* the file vanished; the rename below re-creates it from `kept` */
+    }
+
     const tmp = `${target}.tmp`;
-    fs.writeFileSync(tmp, kept.length === 0 ? '' : `${kept.join('\n')}\n`);
+    const body = kept.length === 0 ? '' : `${kept.join('\n')}\n`;
+    fs.writeFileSync(tmp, `${body}${tail}`);
     fs.renameSync(tmp, target);
     return lines.length - kept.length;
+}
+
+/**
+ * Is this dispatch the package observing ITSELF?
+ *
+ * Metric definition item 3 excludes *"dispatches in the package's own test
+ * suite and CI (self-observation)"*, and nothing implemented it (R2 round-3
+ * finding 3): on an opted-in developer machine every dispatcher test that
+ * reached `main` appended to the real `~/.event4u/agent-config` opportunity
+ * log. Those dispatches spool no capture, so they biased the measured rate
+ * DOWN.
+ *
+ * Three signals, all set by the RUNNER rather than by this package, so none can
+ * be spoofed by the thing being measured: vitest exports `VITEST`, every CI
+ * provider exports `CI`, and `NODE_ENV=test` is the conventional third. A
+ * consumer's own CI is excluded too, and that is correct — a dispatch from a
+ * pipeline is not a dispatch from a session, and the metric is about sessions.
+ *
+ * It lives here rather than in the dispatcher because it is a statement about
+ * the METRIC, not about hook dispatch; the dispatcher merely asks.
+ */
+export function isSelfObservation(env: NodeJS.ProcessEnv = process.env): boolean {
+    return env.VITEST !== undefined || env.CI !== undefined || env.NODE_ENV === 'test';
+}
+
+/** Where the stable per-machine id lives. Generated once, never derived from a host fact. */
+export const MACHINE_ID_NAME = 'machine-id';
+/** Where the per-episode sequence counter lives, keyed by episode. */
+export const EPISODE_DIR_NAME = 'episodes';
+
+export function machineIdPath(userRoot?: string): string {
+    return path.join(resolveCollectorStore(userRoot).root, MACHINE_ID_NAME);
+}
+
+/**
+ * The machine id: read it, or mint one.
+ *
+ * `FIELD_PURPOSE` requires a LOCALLY GENERATED random UUID and explicitly not a
+ * derived one — a hash of a hostname or a username is a pseudonym for the thing
+ * it derives from, which is the leak class the whole schema is built against.
+ * So this is `randomUUID()` and nothing else, persisted so it is stable across
+ * invocations and rotatable by deleting one file.
+ */
+export function machineId(userRoot?: string): string | null {
+    const target = machineIdPath(userRoot);
+    try {
+        const existing = fs.readFileSync(target, 'utf8').trim();
+        if (UUID_RE.test(existing)) return existing;
+    } catch {
+        /* mint below */
+    }
+    try {
+        const minted = crypto.randomUUID();
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, `${minted}\n`);
+        return minted;
+    } catch {
+        return null;
+    }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The episode id for this process.
+ *
+ * One per session, per `FIELD_PURPOSE`. A hook runs as a fresh process per
+ * event, so "this process" is not a session — the id is derived from the host's
+ * own session identifier when it exposes one, and is otherwise minted per
+ * process, which degrades the SCOPE of `sequence` and nothing else.
+ *
+ * The host id is HASHED rather than carried: it is an opaque host value, and
+ * this schema's rule is that no field holds a foreign identifier. The hash is
+ * one-way and the result is shaped as a UUID so `validateRecord` accepts it.
+ */
+export function episodeId(env: NodeJS.ProcessEnv = process.env): string {
+    const hostSession = env.CLAUDE_CODE_SESSION_ID ?? env.AGENT_CONFIG_SESSION_ID ?? '';
+    if (hostSession === '') return crypto.randomUUID();
+    const digest = crypto.createHash('sha256').update(hostSession).digest('hex');
+    return [
+        digest.slice(0, 8),
+        digest.slice(8, 12),
+        `4${digest.slice(13, 16)}`,
+        `8${digest.slice(17, 20)}`,
+        digest.slice(20, 32),
+    ].join('-');
+}
+
+/**
+ * The next sequence number within an episode.
+ *
+ * Monotonic and non-negative per `FIELD_PURPOSE`, and it has to survive across
+ * PROCESSES because a hook is one process per event. So it is a counter file
+ * per episode, incremented under `wx`-free read-then-write — a lost update
+ * costs a duplicate `dedup_key`, which the store already collapses at read
+ * time, so the failure mode is a duplicate rather than a gap.
+ */
+export function nextSequence(episode: string, userRoot?: string): number {
+    const dir = path.join(resolveCollectorStore(userRoot).root, EPISODE_DIR_NAME);
+    const target = path.join(dir, `${episode}.seq`);
+    try {
+        fs.mkdirSync(dir, { recursive: true });
+        let current = 0;
+        try {
+            const raw = Number.parseInt(fs.readFileSync(target, 'utf8').trim(), 10);
+            if (Number.isInteger(raw) && raw >= 0) current = raw + 1;
+        } catch {
+            /* first record of this episode */
+        }
+        fs.writeFileSync(target, `${current}\n`);
+        return current;
+    } catch {
+        return 0;
+    }
+}
+
+/**
+ * Record a CAPTURE — the numerator's production writer.
+ *
+ * **This function is the fix for the defect three review rounds took to find**
+ * (R2 round-3 finding 1): `spoolRecord` had no production caller at all. The
+ * denominator was wired into `dispatch_hook.main` and climbed; the numerator
+ * stayed 0 by construction, so once the observation window and sample
+ * thresholds were met, the miss branch would have fired a decision record for a
+ * WIRING OMISSION rather than for a capture failure — and the two are
+ * indistinguishable from the number.
+ *
+ * It builds a valid record from the three facts a hook has (event, platform,
+ * date) plus the three the store needs to deduplicate (machine, episode,
+ * sequence), and hands it to {@link spoolRecord}. Same never-throw contract as
+ * everything else on this path.
+ */
+export function recordCapture(
+    event: CollectorEvent | string,
+    platform: CollectorPlatform | string,
+    userRoot?: string,
+    at: number = Date.now(),
+): boolean {
+    try {
+        if (!isCollectorEnabled(userRoot)) return false;
+        if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
+        if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
+        const machine = machineId(userRoot);
+        if (machine === null) return false;
+        const episode = episodeId();
+        return spoolRecord(
+            {
+                schema_version: COLLECTOR_SCHEMA_VERSION,
+                machine_id: machine,
+                episode_id: episode,
+                event,
+                sequence: nextSequence(episode, userRoot),
+                outcome: 'captured',
+                platform,
+                occurred_on: utcDate(at),
+                collector_version: COLLECTOR_VERSION,
+            },
+            userRoot,
+        );
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -350,13 +555,25 @@ export function claimSpool(userRoot?: string, at: number = Date.now()): string |
     }
 }
 
-/** Parse a claimed spool file into records. Unparseable lines are reported, never dropped silently. */
-export function readClaimedSpool(claimed: string): { records: unknown[]; malformed: number } {
+/**
+ * Parse a claimed spool file into records. Unparseable lines are reported,
+ * never dropped silently — and an UNREADABLE FILE is reported too.
+ *
+ * `unreadable` exists because its absence destroyed batches (R2 round-3 finding
+ * 2): a read error returned `{records: [], malformed: 0}`, which is
+ * indistinguishable from an empty file, and the caller then deleted the batch.
+ * A transient `EACCES` or `EMFILE` therefore lost every record in it and
+ * reported nothing — the exact loss class the crash-recovery re-drain exists to
+ * prevent, arriving through the recovery path itself.
+ */
+export function readClaimedSpool(
+    claimed: string,
+): { records: unknown[]; malformed: number; unreadable: boolean } {
     let raw = '';
     try {
         raw = fs.readFileSync(claimed, 'utf8');
     } catch {
-        return { records: [], malformed: 0 };
+        return { records: [], malformed: 0, unreadable: true };
     }
     const records: unknown[] = [];
     let malformed = 0;
@@ -368,5 +585,5 @@ export function readClaimedSpool(claimed: string): { records: unknown[]; malform
             malformed += 1;
         }
     }
-    return { records, malformed };
+    return { records, malformed, unreadable: false };
 }

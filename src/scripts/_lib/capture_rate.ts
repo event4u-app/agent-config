@@ -193,6 +193,12 @@ export function judgeCapture(
  * Every field is required and `null` is a legal value meaning **not recorded**.
  * That is the shape the step demands — *"a missing reading blocks the flip"* —
  * and an optional field would let a caller omit one and still typecheck.
+ *
+ * The type is not the enforcement, though, and treating it as such was a defect:
+ * {@link judgeEnablement} accepts only a literal `true`, so a key absent at
+ * RUNTIME blocks the flip exactly like an explicit `null`. A compile-time
+ * guarantee does not survive `JSON.parse` or a cast, and these readings are
+ * precisely the kind of object that arrives through both.
  */
 export interface EnablementReadings {
     readonly captureTargetMet: boolean | null;
@@ -232,8 +238,17 @@ export function judgeEnablement(readings: EnablementReadings): EnablementVerdict
     const failed: string[] = [];
     for (const name of ENABLEMENT_READING_NAMES) {
         const value = readings[name];
-        if (value === null) missing.push(name);
-        else if (value === false) failed.push(name);
+        // ACCEPT ONLY `true` (R2 round-3 finding 4). The first version tested
+        // `=== null` then `=== false`, so a key that was ABSENT at runtime was
+        // neither and still yielded `flip: true`. The type made omission a
+        // compile error and these readings are exactly the kind of object
+        // assembled from JSON or a cast — including in this module's own tests —
+        // so the guarantee held everywhere except where it mattered. The step's
+        // rule is "a missing reading blocks the flip", and only a positive test
+        // for `true` implements it.
+        if (value === true) continue;
+        if (value === false) failed.push(name);
+        else missing.push(name);
     }
     return Object.freeze({
         flip: missing.length === 0 && failed.length === 0,

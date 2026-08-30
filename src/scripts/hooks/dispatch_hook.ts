@@ -57,7 +57,11 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
-import { recordOpportunity } from "../_lib/collector_denominator.js";
+import {
+  isSelfObservation,
+  recordCapture,
+  recordOpportunity,
+} from "../_lib/collector_denominator.js";
 export { _fallback_yaml } from './fallback_yaml.js';
 
 // Free-form JSON values flow through every helper here; a documented
@@ -1145,29 +1149,25 @@ export function main(argv?: string[]): number {
     return EXIT_ALLOW; // fail-open per contract for unknown events
   }
 
-  // ── The capture-rate DENOMINATOR ────────────────────────────────────────────
+  // ── The capture rate: both halves, written here ─────────────────────────────
   //
-  // `road-to-supervised-telemetry-collector` step 1.2 item 1: the denominator
-  // must come from a writer that cannot fail the way the numerator does. This
-  // is that writer — in-process, synchronous, no daemon involved — so a dead
-  // collector yields a climbing denominator against a flat numerator and the
-  // capture rate falls instead of reading 0/0.
+  // Two calls rather than one, because they must be able to FAIL DIFFERENTLY.
+  // `recordOpportunity` is the denominator's independent writer — in-process,
+  // no daemon — so a dead collector yields a climbing denominator against a
+  // flat numerator and the rate falls instead of reading 0/0.
+  // `recordCapture` is the numerator, and its absence was a real defect three
+  // review rounds took to find: `spoolRecord` had no production caller, so the
+  // rate was 0 % for a wiring omission and nothing could tell that from a
+  // capture failure. Both are gated on the opt-in marker, never throw, and cost
+  // two `existsSync` calls on a default-off install. Rationale, ordering and
+  // the self-observation exclusion live in `collector_denominator.ts`.
   //
-  // Costs TWO `existsSync` calls on a default-off install, and the number is
-  // stated correctly here because it was stated wrongly first (R2 finding 14):
-  // `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
-  // the opt-out check — not the marker — is what usually returns first. Two
-  // stats and a return; no read, no write, no allocation. It NEVER throws — the
-  // observation-only contract's falsifiable form is that killing the module
-  // leaves every dispatch resolving identically, and a raising counter would
-  // break exactly that.
-  //
-  // Placed after the vocabulary check so an unknown event is not counted as an
-  // opportunity, and before the manifest load so a missing manifest — which
-  // fails open below — still counts as an opportunity the collector had. That
-  // ordering is the difference between measuring dispatches and measuring
-  // successful dispatches, and the metric definition asks for the former.
-  recordOpportunity(args.event, args.platform);
+  // Placed after the vocabulary check so an unknown event is not an
+  // opportunity, and before the manifest load so a missing manifest still is.
+  if (!isSelfObservation()) {
+    recordOpportunity(args.event, args.platform);
+    recordCapture(args.event, args.platform);
+  }
 
   const manifest_path = args.manifest;
   if (!fs.existsSync(manifest_path)) {
