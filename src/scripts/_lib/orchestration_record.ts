@@ -18,6 +18,14 @@
 
 import type { LookupClass } from './auto_dispatch.js';
 import type { EvidenceBasis } from './evidence_basis.js';
+// TYPE-ONLY on purpose. `runtime_journal.ts` imports `node:sqlite` at runtime,
+// and this module is loaded by a PreToolUse-adjacent CLI path where opening a
+// database would be both wrong and slow. A `import type` is erased at compile
+// time, so the guard costs nothing at runtime while still being one definition
+// rather than a second copy of the key list -- the duplicate-enum failure step
+// 9.1 exists to prevent.
+import type { NoFreeForm } from './runtime_journal.js';
+import { type PrivacyClass } from './privacy_class.js';
 import type { PhaseOutcome } from './outcome_vocabularies.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
@@ -78,6 +86,45 @@ export interface RecordInput {
     task_class?: string | null | undefined;
     /** Form-gate outcome: which of the seven modes (or 'none') the gate selected. */
     dispatch_mode?: DispatchModeId | null | undefined;
+    /**
+     * Stable skill ids that were APPLIED during this phase — the skills
+     * counterpart of `rules_applied`, which `audit-log-v1` has carried since v1
+     * while carrying no skills field at all.
+     *
+     * ABSENT and EMPTY mean different things, and the distinction is
+     * load-bearing rather than stylistic: the field OMITTED means *not
+     * recorded* (the producer had no skill observation to offer), while `[]`
+     * means *recorded, and none applied*. Folding the two together is what
+     * makes a per-asset report unable to tell "no signal" from "a negative
+     * signal", which is the failure `unknown != 0` exists to prevent
+     * downstream.
+     *
+     * Ids only, never bodies — privacy by construction, same as
+     * `rules_applied`. Bounded to <= 32; the remainder is dropped, mirroring
+     * the rules bound in the contract.
+     */
+    skills_applied?: string[] | null | undefined;
+    /**
+     * What this dispatch was supposed to produce. Drives the anti-forgery gate
+     * in `envelopeOutcome`. Absent or `unknown` disables the gate for this
+     * line, which is the safe default: a producer that cannot say what it
+     * expected must not have its outcome downgraded on a guess.
+     */
+    expected_output?: ExpectedOutput | null | undefined;
+    /**
+     * Measured lines changed by this dispatch. `null` means NOT MEASURED and is
+     * never read as zero — an unmeasured diff must not become a failure.
+     */
+    diff_lines?: number | null | undefined;
+    /**
+     * Trigger fires suppressed as duplicates since the last outcome record.
+     *
+     * Reported as its own quantity, never folded into a success rate's
+     * numerator or denominator: a duplicate is not an outcome, and it is also
+     * not nothing — a rising count is what an idle loop looks like from
+     * outside. See `src/scripts/_lib/empty_cycles.ts`.
+     */
+    empty_cycles?: number | null | undefined;
     task_size_estimate?: number | undefined;
     wall_clock_ms?: number | undefined;
     /** Absolute measured tokens the dispatched slice consumed (feeds the modeled cost-%). */
@@ -198,12 +245,148 @@ const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
 /** Id-shaped origin tag — enum-ish, never free-form prose. */
 const ORIGIN_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+/**
+ * Upper bound on an applied-id array, mirroring the `rules_applied` bound the
+ * contract has carried since v1 ("Bounded to <= 32; remainder dropped
+ * silently"). Stated as a named constant so the contract row and the code can
+ * be checked against one another instead of against a literal.
+ */
+const MAX_APPLIED_IDS = 32;
+
+/**
+ * What THIS producer's lines carry. `ids-only` and not `counts-only` because
+ * every line carries `rules_applied`, and some carry `skills_applied`.
+ */
+const PRODUCER_PRIVACY_CLASS: PrivacyClass = 'ids-only';
+
+type Assert<T extends true> = T;
+
+/**
+ * PRIVACY BY CONSTRUCTION, enforced rather than asserted.
+ *
+ * Until 2026-08-30 the privacy floor on this module was a docstring, and
+ * `docs/contracts/audit-log-v1.md` said so in its own words: "No test enforces
+ * this floor". A docstring cannot stop the next author adding a `payload` or a
+ * `detail` field, and `audit-log-v1`'s forward-compat rule means readers would
+ * silently carry it.
+ *
+ * This assertion makes that a COMPILE error. If {@link RecordInput} ever grows
+ * a key from `FREE_FORM_KEYS` -- `prompt`, `body`, `file_path`, `stdout`,
+ * `reason`, `payload` and the rest of the set an author reaches for when they
+ * want to stash content -- `NoFreeForm` resolves to `never`, this becomes
+ * `Assert<false>`, and the build stops. The type cannot be widened back without
+ * deleting this line, which is a visible act in a diff.
+ */
+type _RecordInputCarriesNoFreeFormField = Assert<
+    [NoFreeForm<RecordInput>] extends [never] ? false : true
+>;
+
+/**
+ * The NEGATIVE fixture, and it is the half that is easy to leave out.
+ *
+ * The assertion above proves the guard ACCEPTS the current type. On its own
+ * that is satisfied just as well by a guard that accepts everything -- a
+ * `NoFreeForm` that had been broken into `type NoFreeForm<T> = T` would keep it
+ * green forever. This fixture proves the guard REJECTS, which is the direction
+ * that actually protects anything.
+ *
+ * The `@ts-expect-error` is itself the assertion: the line below is required to
+ * be a type error. If the guard ever stops rejecting a free-form key, the error
+ * disappears, the directive becomes unused, and `tsc` fails on the unused
+ * directive. Either way the build stops -- so `npm run typecheck` checks both
+ * directions, not only the flattering one.
+ *
+ * NOTE for whoever runs this by hand: `tsc -p tsconfig.json` does NOT cover
+ * this file. That config includes only `src/cli`, `src/server`, `src/shared`
+ * and `src/install`; `src/scripts/**` is reached solely by
+ * `tsconfig.scripts.json`. Use `npm run typecheck`, which runs both. A bare
+ * `tsc -p tsconfig.json` over this module is a gate that scans nothing and
+ * exits green.
+ */
+interface _RecordInputWithForbiddenField extends RecordInput {
+    prompt?: string | undefined;
+}
+type _Rejected = [NoFreeForm<_RecordInputWithForbiddenField>] extends [never] ? false : true;
+// @ts-expect-error — a type carrying a free-form key must make this Assert<false>
+type _ForbiddenFieldIsRejected = Assert<_Rejected>;
+
 /** Map a dispatch outcome to the audit-log envelope outcome enum. */
-function envelopeOutcome(d: DispatchOutcome): LineOutcome {
+/**
+ * What a dispatch was supposed to produce. The gate below reads THIS, never the
+ * diff alone.
+ *
+ * The unconditional rule -- claimed success x empty diff => never `success` --
+ * is the form this step deliberately does NOT ship. Analysis, review and
+ * read-only research dispatches are a large share of this repository's subagent
+ * traffic and legitimately produce no diff; marking them all as failures would
+ * poison the very aggregation the gate exists to protect, in the opposite
+ * direction. Zero diff may be valid, so "zero diff = failure" must not be
+ * global.
+ */
+export const EXPECTED_OUTPUTS = ['code-change', 'analysis', 'review', 'unknown'] as const;
+export type ExpectedOutput = (typeof EXPECTED_OUTPUTS)[number];
+
+/**
+ * Version of the DispatchOutcome -> phase-outcome mapping that produced a line.
+ *
+ * Required by the AI council (2026-08-30, anthropic + openai, 2/2) as the
+ * condition on proceeding at all, and it addresses an asymmetry worth stating:
+ * a bad enforcement gate rolls back, a bad LABELLING change poisons historical
+ * analysis permanently, because audit-log-v1 lines are append-only and cannot
+ * be rewritten. A reader aggregating across the cutover must be able to see
+ * which semantics produced each line rather than infer it from a date.
+ *
+ * `1` -- unconditional: DONE / DONE_WITH_CONCERNS always mapped to `success`.
+ *        Every line written before 2026-08-30 carries these semantics and
+ *        carries NO `outcome_semantics` field, so an absent field reads as 1.
+ * `2` -- contract-gated: a `code-change` dispatch claiming success with a
+ *        measured empty diff no longer maps to `success`.
+ */
+export const OUTCOME_SEMANTICS_VERSION = 2;
+
+/**
+ * Translate a dispatch outcome into an audit-log phase outcome.
+ *
+ * This is the tree's ONLY cross-domain outcome mapping
+ * (`src/scripts/_lib/outcome_vocabularies.ts` CROSS_DOMAIN_MAPPINGS), so a
+ * change here reaches every downstream aggregation. It was audited before
+ * changing: `envelopeOutcome` has no caller outside this module, the only
+ * reader of `outcome` is `src/scripts/extract_audit_patterns.ts` -- read-only,
+ * stdout, whose sole non-zero exit is argument validation -- and that script is
+ * wired into no Taskfile, no gate-coverage entry and no workflow. The label
+ * therefore enters no automated control path, which is the condition the
+ * council set for this being a labelling change rather than an enforcement one.
+ *
+ * The anti-forgery clause fires only when ALL THREE hold: the dispatch declared
+ * itself a `code-change`, it claimed success, and the diff was MEASURED at
+ * zero. `diff_lines == null` means not measured, and an unmeasured diff must
+ * never become a failure -- that would manufacture the forgery in the other
+ * direction, which is the same defect wearing the opposite sign.
+ */
+function envelopeOutcome(d: DispatchOutcome, ctx?: OutcomeContext): LineOutcome {
     if (d === 'BLOCKED') return 'blocked';
     if (d === 'NEEDS_CONTEXT') return 'skipped';
     if (d === 'killed') return 'error';
-    return 'success'; // DONE / DONE_WITH_CONCERNS
+
+    const claimsSuccess = d === 'DONE' || d === 'DONE_WITH_CONCERNS';
+    if (
+        claimsSuccess &&
+        ctx?.expected_output === 'code-change' &&
+        typeof ctx.diff_lines === 'number' &&
+        ctx.diff_lines === 0
+    ) {
+        // A code dispatch that claims success and demonstrably changed nothing
+        // is an unverified self-report, not a result. `error` rather than
+        // `blocked`: nothing prevented it from running, and `blocked` is
+        // already the value for a dispatch that never got to try.
+        return 'error';
+    }
+    return 'success';
+}
+
+interface OutcomeContext {
+    expected_output?: ExpectedOutput | null | undefined;
+    diff_lines?: number | null | undefined;
 }
 
 function isInt(n: unknown): n is number {
@@ -308,7 +491,23 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.origin != null && !ORIGIN_RE.test(input.origin)) {
         errors.push("origin must be an id-shaped tag like 'lean-init-2026' (lowercase alnum + hyphens)");
     }
+    if (input.expected_output != null && !EXPECTED_OUTPUTS.includes(input.expected_output)) {
+        errors.push(`expected_output must be one of ${EXPECTED_OUTPUTS.join(' | ')} (or omitted)`);
+    }
+    if (input.diff_lines != null && (!isInt(input.diff_lines) || input.diff_lines < 0)) {
+        errors.push('diff_lines must be a non-negative integer count, null for not-measured, or omitted');
+    }
+    if (input.skills_applied != null) {
+        if (!Array.isArray(input.skills_applied)) {
+            errors.push('skills_applied must be an array of skill ids, [] , or omitted');
+        } else if (!input.skills_applied.every((v) => typeof v === 'string' && ORIGIN_RE.test(v))) {
+            errors.push(
+                "skills_applied entries must be id-shaped skill names like 'code-review' (lowercase alnum + hyphens) — ids only, never bodies",
+            );
+        }
+    }
     for (const [key, v] of [
+        ['empty_cycles', input.empty_cycles],
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
         ['work_tokens', input.work_tokens],
@@ -356,6 +555,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const orchestration: Record<string, unknown> = {
         task_size_estimate: input.task_size_estimate ?? 0,
         spawn_count: input.spawn_count,
+        // Its OWN quantity, never folded into a rate. `null` = not tracked by
+        // this producer, which is not the same as zero duplicates observed.
+        empty_cycles: input.empty_cycles ?? null,
         tiers: input.tiers ?? [],
         token_delta: input.token_delta,
         token_delta_provenance: prov,
@@ -408,12 +610,38 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         ts: input.ts,
         work_id: input.work_id ?? `orchestration-${input.ts}`,
         phase,
-        outcome: input.outcome ?? envelopeOutcome(dOutcome),
+        outcome:
+            input.outcome ??
+            envelopeOutcome(dOutcome, {
+                expected_output: input.expected_output,
+                diff_lines: input.diff_lines,
+            }),
+        // The cutover marker. An ABSENT field means semantics 1 (unconditional),
+        // which is every line written before 2026-08-30 -- so a reader
+        // aggregating across the boundary can segment rather than infer from a
+        // date. Emitted unconditionally because this producer always applies
+        // the current mapping.
+        outcome_semantics: OUTCOME_SEMANTICS_VERSION,
         confidence_band: band,
         risk_class: risk,
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
         rules_applied: ['delegation-policy'],
+        // MANDATORY, never optional and never derived by the reader. This line
+        // carries `rules_applied` and may carry `skills_applied`, both of which
+        // are stable artefact ids, so the class it declares is `ids-only`
+        // rather than `counts-only`. A consumer deciding whether this stream is
+        // safe to aggregate or export reads this field instead of re-deriving
+        // the answer from the producer's source.
+        privacy_class: PRODUCER_PRIVACY_CLASS,
+        // Emitted ONLY when the producer offered one. An omitted key means "not
+        // recorded"; `[]` means "recorded, none applied". Writing `null` or `[]`
+        // unconditionally would erase that distinction for every existing
+        // producer that has no skill observation to give, which is the whole
+        // reason the field is optional rather than defaulted.
+        ...(input.skills_applied != null
+            ? { skills_applied: input.skills_applied.slice(0, MAX_APPLIED_IDS) }
+            : {}),
         persona: input.persona ?? null,
         input_kind: 'orchestration',
         type: 'phase',

@@ -266,3 +266,211 @@ describe('buildOrchestrationLine — served-model divergence', () => {
         expect(line).toBeNull();
     });
 });
+
+describe('skills_applied — absent, empty and populated are three observations', () => {
+    // audit-log-v1 gained `skills_applied` on 2026-08-30
+    // (road-to-experience-loop-broadening step 1.2). The contract states that an
+    // OMITTED key means "not recorded" while `[]` means "recorded, none
+    // applied". These are asserted separately because folding them together is
+    // silent: every existing producer omits the field, so a builder that
+    // defaulted it to `[]` would report a negative signal for every caller that
+    // simply has nothing to say — and a per-asset report could then never
+    // distinguish no-signal from no-skills.
+
+    it('omits the key entirely when the producer offered nothing', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE });
+        expect(errors).toEqual([]);
+        expect(line).not.toBeNull();
+        expect(Object.prototype.hasOwnProperty.call(line!, 'skills_applied')).toBe(false);
+    });
+
+    it('emits an empty array when the producer recorded "none applied"', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, skills_applied: [] });
+        expect(errors).toEqual([]);
+        expect(Object.prototype.hasOwnProperty.call(line!, 'skills_applied')).toBe(true);
+        expect(line!.skills_applied).toEqual([]);
+    });
+
+    it('emits the ids when the producer recorded some', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            skills_applied: ['code-review', 'git-workflow'],
+        });
+        expect(errors).toEqual([]);
+        expect(line!.skills_applied).toEqual(['code-review', 'git-workflow']);
+    });
+
+    it('bounds the array at 32, mirroring the rules_applied bound in the contract', () => {
+        const many = Array.from({ length: 40 }, (_, i) => `skill-${i}`);
+        const { line, errors } = buildOrchestrationLine({ ...BASE, skills_applied: many });
+        expect(errors).toEqual([]);
+        expect((line!.skills_applied as string[]).length).toBe(32);
+    });
+
+    it('rejects a non-id-shaped entry, so a body can never reach the line', () => {
+        const { errors } = buildOrchestrationLine({
+            ...BASE,
+            skills_applied: ['this is a sentence, not an id'],
+        });
+        expect(errors.length).toBeGreaterThan(0);
+        expect(errors.join(' ')).toMatch(/skills_applied/);
+    });
+});
+
+describe('skills_applied — the committed fixture is a REAL emission', () => {
+    // The step's verify line rejects a "collector exists" proxy explicitly: the
+    // tree's own 0-of-89 finding is what that mistake cost. This fixture is the
+    // literal stdout of `src/scripts/orchestration_record` writing to a temp
+    // audit dir -- not a hand-written object -- so the assertion below proves
+    // the field survives the real CLI path, not just the builder.
+    it('carries skills_applied through the real CLI write path', async () => {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const url = await import('node:url');
+        const here = path.dirname(url.fileURLToPath(import.meta.url));
+        const fixture = path.join(here, '..', 'fixtures', 'audit-log', 'skills-applied-real-emission.jsonl');
+        const lines = fs.readFileSync(fixture, 'utf-8').trim().split('\n');
+        expect(lines.length).toBeGreaterThan(0);
+        const rec = JSON.parse(lines[0]!) as Record<string, unknown>;
+        expect(rec.schema_version).toBe(1);
+        expect(rec.skills_applied).toEqual(['code-review', 'git-workflow']);
+    });
+});
+
+describe('privacy_class — mandatory, and it says what the line carries', () => {
+    // Step 1.4. The compile-time NoFreeForm guard is what STOPS a body reaching
+    // the line; this field is what lets a consumer decide whether the stream is
+    // safe to aggregate or export without re-deriving the answer from each
+    // producer's source. Two mechanisms, not one restated twice -- the guard
+    // without the declaration leaves every reader inferring the class, and the
+    // declaration without the guard is a label with nothing behind it.
+
+    it('is present on every built line, never optional', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE });
+        expect(errors).toEqual([]);
+        expect(line!.privacy_class).toBe('ids-only');
+    });
+
+    it('declares ids-only rather than counts-only, because the line carries id arrays', () => {
+        // Not a style preference: `rules_applied` is always emitted and
+        // `skills_applied` may be, so a `counts-only` declaration would be
+        // false about this producer's own output.
+        const { line } = buildOrchestrationLine({ ...BASE, skills_applied: ['code-review'] });
+        expect(line!.rules_applied).toBeDefined();
+        expect(line!.privacy_class).toBe('ids-only');
+    });
+
+    it('the committed real-emission fixture carries it too', async () => {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const url = await import('node:url');
+        const here = path.dirname(url.fileURLToPath(import.meta.url));
+        const fixture = path.join(here, '..', 'fixtures', 'audit-log', 'skills-applied-real-emission.jsonl');
+        const rec = JSON.parse(fs.readFileSync(fixture, 'utf-8').trim().split('\n')[0]!) as Record<string, unknown>;
+        expect(rec.privacy_class).toBe('ids-only');
+    });
+});
+
+describe('anti-forgery gate — the output contract decides, never the diff alone', () => {
+    // Step 2.2. The unconditional form (claimed success x empty diff => never
+    // success) is deliberately NOT shipped: analysis, review and read-only
+    // research dispatches are a large share of this repo's subagent traffic and
+    // legitimately produce no diff. Marking them failures would poison the
+    // aggregation the gate protects, in the opposite direction.
+
+    it('a read-only analysis dispatch with no diff still resolves to success', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'analysis',
+            diff_lines: 0,
+        });
+        expect(errors).toEqual([]);
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('a code dispatch claiming success with a measured empty diff does not', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: 0,
+        });
+        expect(errors).toEqual([]);
+        expect(line!.outcome).not.toBe('success');
+    });
+
+    it('a code dispatch that actually changed something is untouched', () => {
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: 42,
+        });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('an UNMEASURED diff never becomes a failure', () => {
+        // The symmetric defect: manufacturing a forgery in the other direction.
+        // `null` means the producer did not measure, which is not evidence of
+        // an empty change.
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: null,
+        });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('a producer that cannot declare its expected output is not downgraded', () => {
+        const { line } = buildOrchestrationLine({ ...BASE, dispatch_outcome: 'DONE', diff_lines: 0 });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('does not disturb the outcomes that were never about the diff', () => {
+        for (const [d, expected] of [
+            ['BLOCKED', 'blocked'],
+            ['NEEDS_CONTEXT', 'skipped'],
+            ['killed', 'error'],
+        ] as const) {
+            const { line } = buildOrchestrationLine({
+                ...BASE,
+                dispatch_outcome: d,
+                expected_output: 'code-change',
+                diff_lines: 0,
+            });
+            expect(line!.outcome).toBe(expected);
+        }
+    });
+
+    it('rejects an expected_output outside the closed set', () => {
+        const { errors } = buildOrchestrationLine({
+            ...BASE,
+            expected_output: 'whatever-i-felt-like' as never,
+        });
+        expect(errors.join(' ')).toMatch(/expected_output/);
+    });
+});
+
+describe('outcome_semantics — the cutover marker the council required', () => {
+    // A bad enforcement gate rolls back; a bad LABELLING change poisons
+    // historical analysis permanently, because audit-log-v1 is append-only. A
+    // reader aggregating across the boundary must be able to segment rather
+    // than infer from a date.
+    it('every line declares which mapping produced it', () => {
+        const { line } = buildOrchestrationLine({ ...BASE });
+        expect(line!.outcome_semantics).toBe(2);
+    });
+
+    it('the marker is present even when the gate did not fire', () => {
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'analysis',
+            diff_lines: 0,
+        });
+        expect(line!.outcome).toBe('success');
+        expect(line!.outcome_semantics).toBe(2);
+    });
+});

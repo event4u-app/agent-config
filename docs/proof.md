@@ -172,12 +172,12 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 29 claim(s) are logged as
+We also publish our **debt**: 30 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
 
-And our **nulls**: 6 claim(s) are `resolved-null` —
+And our **nulls**: 7 claim(s) are `resolved-null` —
 measured, the threshold was missed, and the entry is closed rather than
 left open forever. A null that stays filed as pending debt is a claim
 quietly waiting to be re-argued.
@@ -349,7 +349,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (82) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 95 ledger entries · 59 backed · 30 unbacked inventory · 6 resolved-null.
+**Axis 2 — evidence form per public claim.** 97 ledger entries · 59 backed · 31 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -383,6 +383,7 @@ Undeclared rules (82) carry no row — an honest gap beats a false claim.
 | `description-gate-catches-regressions` | quant | unbacked | — | `PRE-REGISTERED 2026-08-25 (road-to-routing-assurance Phase 0.5), BEFORE `description_route_check` exists. BASELINE: zero by construction -- no gate reads the description surface today. The deterministic suites test `dist/router.json` trigger substrings (`trigger_coverage.ts:10`) and the 94 routing-matrix fixtures; production skill selection runs on SKILL.md `description` (`lint_skill_descriptions.ts:6-7`, "the agent picks a skill from its description"); and the only harness on that surface is `rule_trigger_eval.ts`, which is "advisory only, never gating" (`:4`) and whose "live floor breach fails the SCHEDULED canary job only -- PRs are never blocked by live results" (`:32-33`). METRIC: on a corpus of description edits with known direction, the fraction of regressions the gate blocks (recall) and the fraction of neutral edits it does not block (precision). THRESHOLD: pre-registered per unit in `docs/contracts/routing-assurance-metrics.md` as the Phase 0.2 baseline minus a fixed 0.10 absolute tolerance, with the tolerance FIXED BEFORE the baseline run so it cannot be tuned to a result. RECALL-FIRST: per Phase 1.3 a positive that stops loading is the failure that matters, so the fail condition is recall-shaped and a precision miss is reported rather than blocking. FALSIFICATION: the gate blocks no seeded regression, or it blocks neutral edits at a rate that makes it unusable at PR time. STATED LIMITATION, not discovered later: the checker is a PROXY -- it asks whether a description is distinguishable from its neighbours, not whether a production model selects it. A green gate is evidence that a description did not get LESS distinguishable, never that production routing works.` |
 | `design-slop-false-positive-baseline` | quant | backed | — | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` |
 | `discipline-lift-weak-host` | quant | backed | — | `docs/benchmark.md#weak-host-specific` |
+| `dispatch-event-capture-reliability` | quant | resolved-null | — | `PRE-REGISTERED 2026-08-30 (`road-to-experience-loop-broadening`` |
 | `domain-soundness-scoped` | qual | backed | — | `exec:domain_soundness_status --check -> 0` |
 | `domain-soundness-validated-count` | quant | backed | — | `exec:domain_soundness_status -> 0` |
 | `downshift-cost-reduction` | quant | backed | — | `internal/bench/routing-downshift/results-2026-07-08.md#FAMILY-SCOPED PROVE` |
@@ -392,6 +393,7 @@ Undeclared rules (82) carry no row — an honest gap beats a false claim.
 | `enforcement-undeclared-denominator` | quant | backed | — | `exec:check_enforcement_denominator -> 0` |
 | `essential-tier-cost-factor` | quant | backed | — | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | — | `exec:skill_eval_coverage --check -> 0` |
+| `experience-loop-repeated-failure-effect` | quant | unbacked | — | `PRE-REGISTERED 2026-08-30` |
 | `experiment-loop-iteration-floor` | quant | unbacked | — | `PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 0/5 — the floor was fixed before the spike ran, and the spike's kill criterion was its complement: "fewer than five clean iterations" would have left Phase 3 unbuilt). Measured on a toy metric in a scratch repository, `agents/evidence/eval-findings/metric-loop-s01.md`: 6 clean iterations, metric 24 → 3, with iteration 5 reverting a change that improved the metric 67 % and broke behavior. That result answers the PHASE GATE and is why the skill shipped. It does NOT back this claim, and the distinction is the whole reason the entry stays unbacked: the run was one agent, one session, one toy metric whose evaluator was written alongside the loop, so it measured whether the PROTOCOL holds, not whether the shipped skill drives a real metric. BACKING REQUIRES: ≥ 3 runs of the shipped `experiment-loop` skill against metrics that existed before the run, each with its register committed, each reaching ≥ 5 clean iterations. DROP: any run below the floor publishes the null and the skill is withdrawn rather than the floor lowered — lowering a pre-registered floor after seeing the data is the tuning this roadmap's own s04 finding forbids.` |
 | `forensics-pack-value` | quant | unbacked | — | `agents/evidence/release-findings/` |
 | `gated-platform-reads` | quant | backed | — | `docs/benchmark.md#ship-gated-reach` |

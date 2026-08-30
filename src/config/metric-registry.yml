@@ -104,3 +104,21 @@ metrics:
     absent: >-
       a one-seat answer reads as a council decision, which is exactly the
       over-claim the quorum line exists to prevent.
+
+  - id: repeated-failure-rate
+    producer: src/scripts/_lib/repeated_failure.ts
+    consumer: >-
+      the human or CI reading the per-asset experience report, and the
+      pre-registered paired question in
+      `agents/evidence/experience-loop-prereg.md` that decides whether the
+      broadened loop is kept, narrowed, or dropped.
+    decision: >-
+      whether widening the learning loop changed anything measurable. A
+      reproducible fall in the rate at held quality and non-increased cost keeps
+      the loop; a rise, or no movement, is recorded as the pre-registered
+      negative and the phases resting on it are not built further.
+    absent: >-
+      the loop's own effect is unmeasured, so every later phase rests on the
+      assumption that widening helped -- which is the assumption the whole
+      roadmap exists to test rather than to make. Without it the estate grows
+      and nothing can say whether it should have.

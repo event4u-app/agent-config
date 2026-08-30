@@ -47,6 +47,46 @@ Direction chosen: **narrow the contract to what the validator already accepts**,
 not widen the validator. Widening makes every future divergence legal by
 construction, which is how one contract came to have three states.
 
+## Why success is gated, and not accepted
+
+```
+AN UNVERIFIED SELF-REPORT IS INDISTINGUISHABLE FROM A RESULT.
+A RETURN THAT CLAIMS SUCCESS AND SHOWS NO CHANGE AGAINST ITS OWN DECLARED
+OUTPUT CONTRACT IS NOT EVIDENCE OF SUCCESS. IT IS EVIDENCE OF A CLAIM.
+```
+
+**The failure this prevents.** Every downstream aggregation reads the recorded
+outcome, not the return. `src/scripts/extract_audit_patterns.ts` mines repeated
+patterns from it, and the per-asset effectiveness report is built on the same
+stream. A forged `success` does not stay one line: it becomes signal, and the
+report then recommends keeping an asset that never worked and retiring one that
+did. Nothing downstream can detect it, because at that point the forgery is
+indistinguishable from the thing it imitates — which is the whole reason the
+check has to happen where the record is written rather than where it is read.
+
+**Why the gate reads the declared output contract and not the diff.** The
+obvious rule — claimed success plus an empty diff is never a success — is wrong
+here, and wrong in a way that is worse than doing nothing. Analysis, review and
+read-only research dispatches are a large share of this repository's subagent
+traffic, and every one of them legitimately produces no diff. The unconditional
+rule would mark them all as failures and poison the same aggregation in the
+opposite direction. **Zero diff may be valid, so "zero diff = failure" must not
+be global.** The gate therefore fires only where the dispatch itself declared
+that a code change was the expected output.
+
+**An unmeasured diff is not an empty diff.** Where the producer did not measure,
+the gate does not fire. Treating "not measured" as zero manufactures the same
+forgery with the opposite sign, and an aggregation cannot tell the two apart any
+better than it can tell a forged success from a real one.
+
+Implemented by `envelopeOutcome` in `src/scripts/_lib/orchestration_record.ts`,
+the tree's only cross-domain outcome mapping. Because it is the only one, the
+mapping is **versioned**: lines carry `outcome_semantics`, and an absent field
+means the pre-2026-08-30 unconditional semantics. `audit-log-v1` is append-only,
+so a labelling change cannot be rolled back the way a gate can — a reader
+aggregating across the cutover segments on that field rather than inferring from
+a date.
+
 ### Per-field divergence, one row per field
 
 | Field | spawn-contract (f) | `team_dispatch` model JSON (`:297`) | `subagent_response.ts` validator | `dispatch_r2_reviewer` |

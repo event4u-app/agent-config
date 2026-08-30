@@ -39,6 +39,7 @@ v1 forward-compat rule on unknown fields).
 |---|---|---|
 | `task_size_estimate` | int | Pre-dispatch estimate of the task's size (the orchestrator's sizing heuristic). Counts only, no body. |
 | `spawn_count` | int | Number of subagents dispatched for this task. `0` → handled in-session. |
+| `empty_cycles` | int \| null | Trigger fires suppressed as duplicates since the last outcome record. Reported as its OWN quantity and never folded into a success rate's numerator or denominator: a duplicate is not an outcome, and it is also not nothing — a rising count is what an idle loop looks like from outside. `null` = not tracked by this producer, which is **not** the same as zero duplicates observed. Deduplication rule in `src/scripts/_lib/empty_cycles.ts`: same key AND inside the window, both conjuncts required. |
 | `tiers` | string[] | Model tiers dispatched to, one entry per spawn class (e.g. `["sonnet","opus"]`). Tier names only, no prompts. |
 | `token_delta` | int | Net token cost of the dispatch versus the in-session baseline. Positive = orchestration cost more; negative = saved tokens. Counts only. |
 | `token_delta_provenance` | enum | `"measured"` when sourced from host-reported `usage` metadata (preferred); `"estimated"` when self-estimated from response length (mark always when host usage is unavailable). |

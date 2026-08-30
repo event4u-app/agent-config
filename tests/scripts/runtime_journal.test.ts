@@ -14,6 +14,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { EVENT_VOCABULARY } from '../../src/scripts/hooks/dispatch_hook.js';
 import { NON_SUCCESS_STATES } from '../../src/scripts/_lib/outcome_envelope.js';
+import type { TerminalState } from '../../src/scripts/_lib/outcome_envelope.js';
+import { repeatedFailureRate } from '../../src/scripts/_lib/repeated_failure.js';
 import {
     BOUNDARY_RULE_VERSION,
     CONSUMPTION_STATES,
@@ -635,5 +637,111 @@ describe('journal location', () => {
         expect(loc.worktree_id).toMatch(/^[0-9a-f]{12}$/);
         expect(loc.repository_id).not.toBe(loc.worktree_id);
         expect(`${loc.repository_id}${loc.worktree_id}`).not.toContain(path.sep);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-experience-loop-broadening step 3.1 — episode amendment
+//
+// verify: an amendment arriving after a terminal state produces a new record
+// and leaves the original byte-identical; the repeated-failure rate reads the
+// amended view.
+// ---------------------------------------------------------------------------
+
+describe.runIf(sqliteOk)('amendment (3.1)', () => {
+    const open = (session_id: string) =>
+        recordEvent(h, { event: 'session_start', session_id, capability: 'dispatch_hook' });
+
+    const close = (session_id: string, terminal_state: TerminalState) =>
+        recordEvent(h, { event: 'stop', session_id, capability: 'dispatch_hook', terminal_state });
+
+    it('an amendment is a NEW row and leaves the original byte-identical', () => {
+        const started = open('amend-1');
+        const closed = close('amend-1', 'success');
+
+        const before = h.db
+            .prepare('SELECT * FROM journal_event WHERE seq = ?')
+            .get(closed.seq) as Record<string, unknown>;
+        const beforeBytes = JSON.stringify(before);
+
+        const amendment = recordEvent(h, {
+            event: 'stop',
+            session_id: 'amend-1',
+            capability: 'dispatch_hook',
+            terminal_state: 'stagnated',
+            amends_seq: closed.seq,
+        });
+
+        // A new row, with its own seq.
+        expect(amendment.seq).toBeGreaterThan(closed.seq);
+        expect(amendment.amends_seq).toBe(closed.seq);
+
+        // And the original is untouched, compared as stored bytes rather than
+        // as a reconstructed object -- the append-only guarantee is about the
+        // row, not about a projection of it.
+        const after = h.db
+            .prepare('SELECT * FROM journal_event WHERE seq = ?')
+            .get(closed.seq) as Record<string, unknown>;
+        expect(JSON.stringify(after)).toBe(beforeBytes);
+        expect(started.seq).toBeLessThan(closed.seq);
+    });
+
+    it('the reconstruction reports the AMENDED terminal state, not the first', () => {
+        const started = open('amend-2');
+        const closed = close('amend-2', 'success');
+        recordEvent(h, {
+            event: 'stop',
+            session_id: 'amend-2',
+            capability: 'dispatch_hook',
+            terminal_state: 'stagnated',
+            amends_seq: closed.seq,
+        });
+
+        const ep = reconstructEpisode(h, started.episode_id);
+        expect(ep).not.toBeNull();
+        // The line the amendment path exists for: `find` would have kept
+        // returning `success` forever while the amendment sat unread.
+        expect(ep!.terminal_state).toBe('stagnated');
+        expect(ep!.amendment_count).toBe(1);
+        // Every original row is still returned, unfiltered.
+        expect(ep!.events.some((e) => e.seq === closed.seq)).toBe(true);
+    });
+
+    it('an unamended episode is unchanged by the folding', () => {
+        const started = open('amend-3');
+        close('amend-3', 'success');
+        const ep = reconstructEpisode(h, started.episode_id);
+        expect(ep!.terminal_state).toBe('success');
+        expect(ep!.amendment_count).toBe(0);
+    });
+
+    it('the repeated-failure rate reads the amended view', () => {
+        // Same two episodes: one that stays a success, one amended from success
+        // to a failure. A rate over unamended rows would read 0/2; over the
+        // amended view it reads 1/2. That gap IS the metric's error term.
+        const okStart = open('rate-ok');
+        close('rate-ok', 'success');
+
+        const amStart = open('rate-amended');
+        const c = close('rate-amended', 'success');
+        recordEvent(h, {
+            event: 'stop',
+            session_id: 'rate-amended',
+            capability: 'dispatch_hook',
+            terminal_state: 'exhausted',
+            amends_seq: c.seq,
+        });
+
+        const episodes = [okStart.episode_id, amStart.episode_id].map((id) => reconstructEpisode(h, id)!);
+        const r = repeatedFailureRate(episodes);
+
+        expect(r.classified).toBe(2);
+        expect(r.failed).toBe(1);
+        expect(r.rate).toBe(0.5);
+        expect(r.amended_episodes).toBe(1);
+    });
+
+    it('the rate is null, never zero, when nothing was classifiable', () => {
+        expect(repeatedFailureRate([]).rate).toBeNull();
     });
 });

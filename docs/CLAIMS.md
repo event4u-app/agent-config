@@ -988,3 +988,111 @@ is the named exception in the claim itself.
   a push makes them public. `.github/workflows/source-surface-sweep.yml` runs
   the full five-surface census weekly so drift on the surfaces no per-PR gate
   reaches is observed rather than assumed.
+
+### claim: dispatch-event-capture-reliability
+
+- claim: PRE-REGISTERED, unmeasured at the time of writing. The question is
+  whether the **dispatch** event is as reliable a capture surface as the
+  **skill** event, and therefore whether the experience loop may be built on
+  dispatch events at all.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-30 (`road-to-experience-loop-broadening`
+  step 1.1 — written BEFORE any line of `agents/runtime/state/audit/*.jsonl`
+  was counted for this question; the numbers below are thresholds, not
+  readings). Bars fixed before data, per the step's own `verify:` line ("the
+  pre-registration commit precedes the measurement commit, and the measured
+  rate is reported whichever way it lands"):
+  (1) POPULATION — dispatch events observed in `agents/runtime/state/audit/*.jsonl`,
+  counted as audit lines carrying an `orchestration` sub-object, against the
+  total number of dispatches those same lines evidence. A run with **fewer than
+  50 dispatches** in the corpus is reported UNDERPOWERED and settles nothing in
+  either direction; it may not be cited as a null and may not be cited as a pass.
+  (2) PASS — capture rate **≥ 95 %**. At or above that bar the dispatch event is
+  declared as reliable as the skill event and Phases 2-9 may be built on it.
+  (3) FAIL — capture rate **< 95 %** is an HONEST NULL, pre-registered with the
+  same force as the pass: the recorded consequence is that the work **rescales
+  to skill events**, which the step already names as the fallback, and no
+  dispatch-event-based mechanism is authored on this evidence.
+  (4) The comparator is not re-measured here. `docs/CLAIMS.md` already records
+  0.27 % (370 dispatches, 1 recorded line) for the dispatch side and 164/164 for
+  the skill side; this spike asks whether that gap has closed since the
+  `orchestration-record` concern landed, so the PRIOR is failure and a pass is
+  the surprising result.
+  (5) RETENTION-FLOOR REACHABILITY, per `audit-log-v1` § Retention: the n >= 50
+  floor IS reachable at the retention in force — the corpus held 1,056 dispatches
+  inside the 30-day provisional window, twenty-one times the floor. Recorded
+  rather than assumed, because a floor that is not reachable at the live
+  retention means the claim cannot be settled from this stream at all.
+  (6) PROVENANCE — the corpus is one machine's local runtime state, which is
+  gitignored and therefore not reproducible from a clone. That is a scope bound
+  on the finding, stated before the reading: it measures THIS install's capture
+  rate and is never reported as the package's.
+- resolution: MEASURED 2026-08-30 → **NULL, and the bar is not moved.** 905 of
+  1,056 dispatches recorded = **85.7 %**, against a pre-registered pass bar of
+  ≥ 95 %. n is twenty-one times the underpowered floor, so this is a real
+  reading and not an absence of one. The pre-registered consequence applies as
+  written: the work rescales to skill events and no dispatch-event-based
+  mechanism is authored on this evidence.
+
+  The improvement is large and does not change the verdict. The prior reading in
+  this ledger is 0.27 % (370 dispatches, 1 recorded line, `claim:
+  orchestration-observed-dispatch-cost`), from the era when the record step was
+  model-carried; the `orchestration-record` concern now emits deterministically
+  and the rate rose by a factor of ~317. The bar was fixed at 95 % before the
+  number was known so that exactly this shape of result — impressive, and short
+  — could not be re-scoped into a pass afterwards. At 85.7 % roughly one
+  dispatch in seven goes unrecorded, so a per-asset rate over this stream
+  carries a ~14 % silent denominator hole.
+
+  Denominator note, because it is the part that can be got wrong:
+  `CLAUDE_PROJECT_DIR` resolves to the parent checkout inside a worktree, so
+  `.claude/worktrees/*` sessions write audit lines into the main checkout while
+  their transcripts live elsewhere. Counting the main checkout alone returns
+  187 % — that over-100 % reading is how the effect was found. Full working:
+  `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`.
+- status: resolved-null
+- last_verified: 2026-08-30
+
+### claim: experience-loop-repeated-failure-effect
+
+- claim: PRE-REGISTERED, unmeasured. Whether broadening the learning loop
+  produces a reproducible fall in the repeated-failure rate at held quality and
+  non-increased cost.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-30
+  (`road-to-experience-loop-broadening` step 9.4 — committed BEFORE any
+  measurement run; the step's verify line is a commit-ordering assertion, so the
+  git history is the evidence). Full statement:
+  `agents/evidence/experience-loop-prereg.md`.
+  (1) ONE core metric, not a catalogue: the repeated-failure rate out of
+  `extract_audit_patterns` — patterns whose outcome differs from success across
+  INDEPENDENT `work_id`s — read from the AMENDED episode view. The amendment
+  path is load-bearing: a repeat is the signal that surfaces after the terminal
+  record is written, so an unamended rate undercounts in the flattering
+  direction.
+  (2) The verdict is a VECTOR — repeated failures x quality held x cost —
+  reported side by side and never combined. There is no weighting, because a
+  weighting is what lets a strong arm carry a missing one.
+  (3) PROVE: a reproducible fall at held quality and non-increased cost, above
+  the power floor.
+  (4) THE NEGATIVE, carrying the same force and fixed now: no movement, a rise,
+  or an unmeasurable arm means the loop is NOT built out further on this
+  evidence, the result is filed `resolved-null`, and no re-scoped claim is
+  invented afterwards — "it helped in a different way than we measured" is
+  precisely the move this pre-registration makes unavailable.
+  (5) UNDERPOWERED is neither a pass nor a null: below the power floor the run
+  settles nothing and may be cited for neither direction.
+  (6) RETENTION-FLOOR REACHABILITY, per `audit-log-v1` § Retention: **NOT YET
+  ESTABLISHED.** The power floor for this question is not set, and the
+  eligible-observation bound the retention rule requires is unset by design
+  (the parameters are owner-reserved pending growth data). Stating this is the
+  point rather than a caveat: a claim whose floor may be unreachable at the live
+  retention cannot be settled from this stream, and saying so before the run is
+  what stops an underpowered result being read as a null.
+  (7) SCOPE BOUNDS, before the reading: the corpus is one machine's gitignored
+  runtime state and measures THIS install, never the package's; and efficacy
+  must be measured EXTERNALLY — a loop scored on whether it agrees with its own
+  experience report validates itself, so no component of the verdict may be
+  sourced from the report's output.
+- status: unbacked
+- last_verified: 2026-08-30

@@ -73,3 +73,46 @@ export function weakestBasis(bases: readonly EvidenceBasis[]): EvidenceBasis {
     if (bases.length === 0) return 'unknown';
     return bases.reduce((a, b) => (EVIDENCE_BASIS_STRENGTH[b] < EVIDENCE_BASIS_STRENGTH[a] ? b : a));
 }
+
+// ---------------------------------------------------------------------------
+// Basis TAGS — a basis plus, where the basis is `estimated`, its method
+// ---------------------------------------------------------------------------
+
+/**
+ * `estimated` on its own is not a basis, it is a category.
+ *
+ * Two figures both marked `estimated` can differ by an order of magnitude in
+ * how much they should be trusted — one derived by arithmetic from measured
+ * inputs, one from a response-length heuristic — and a report that renders them
+ * identically has told the reader nothing they can act on. So wherever a figure
+ * is estimated, the METHOD travels with it.
+ *
+ * Every other basis is self-describing and takes no suffix: `measured` names
+ * the instrument by existing, `unknown` has no method by definition, and
+ * `model-judged` and `provider-reported` name their source in the value itself.
+ *
+ * road-to-experience-loop-broadening step 6.2.
+ */
+export type BasisTag = Exclude<EvidenceBasis, 'estimated'> | `estimated:${string}`;
+
+/**
+ * A bare `estimated` is REJECTED, and that is the whole point of the type.
+ * `estimated:` with nothing after it is rejected too — an empty method is the
+ * same omission wearing a colon.
+ */
+export function isBasisTag(v: unknown): v is BasisTag {
+    if (typeof v !== 'string') return false;
+    if (v === 'estimated') return false;
+    if (v.startsWith('estimated:')) return v.slice('estimated:'.length).trim().length > 0;
+    return isEvidenceBasis(v);
+}
+
+/** The basis half of a tag, for grouping and for rendering the meaning table. */
+export function basisOf(tag: BasisTag): EvidenceBasis {
+    return tag.startsWith('estimated:') ? 'estimated' : (tag as EvidenceBasis);
+}
+
+/** The method half, or `null` for every non-estimated basis. */
+export function methodOf(tag: BasisTag): string | null {
+    return tag.startsWith('estimated:') ? tag.slice('estimated:'.length) : null;
+}

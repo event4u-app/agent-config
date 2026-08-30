@@ -97,6 +97,20 @@ export const CROSS_DOMAIN_MAPPINGS = [
         target: 'phase',
         at: 'src/scripts/_lib/orchestration_record.ts',
         fn: 'envelopeOutcome',
+        /**
+         * The mapping is VERSIONED as of 2026-08-30
+         * (road-to-experience-loop-broadening 2.2). Version 1 was
+         * unconditional: DONE / DONE_WITH_CONCERNS always became `success`.
+         * Version 2 is contract-gated -- a `code-change` dispatch claiming
+         * success with a MEASURED empty diff no longer does.
+         *
+         * Recorded here rather than only at the call site because this registry
+         * is the one place a reader looks to learn that a crossing exists, and a
+         * crossing whose semantics changed silently is worse than one nobody
+         * documented. Lines carry `outcome_semantics`; an absent field is
+         * version 1.
+         */
+        semantics_version: 2,
     },
 ] as const;
 

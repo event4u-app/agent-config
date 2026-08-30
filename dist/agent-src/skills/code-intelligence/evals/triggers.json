@@ -17,7 +17,8 @@
         },
         {
             "q": "wer ruft diese Funktion auf und was importiert sie?",
-            "trigger": true
+            "trigger": true,
+            "language": "de"
         },
         {
             "q": "how do these two classes connect — is there a path from the controller to the mailer?",
@@ -47,6 +48,22 @@
             "q": "find every place we log the string 'password' in the repo",
             "trigger": false,
             "note": "content/text search, not a symbol relationship — plain grep is correct; the skill explicitly excludes content questions"
+        },
+        {
+            "q": "before we ship, could you tell me who calls PaymentService::refund and draw the call graph out for me",
+            "trigger": true,
+            "shift_of": {
+                "of": "who calls PaymentService::refund? build me the call graph",
+                "axis": "wrapper"
+            }
+        },
+        {
+            "q": "who was calling PaymentService::refund back then, and what did the call graph look like?",
+            "trigger": true,
+            "shift_of": {
+                "of": "who calls PaymentService::refund? build me the call graph",
+                "axis": "temporal"
+            }
         }
     ]
 }
