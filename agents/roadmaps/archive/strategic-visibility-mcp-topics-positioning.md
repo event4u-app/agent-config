@@ -97,6 +97,24 @@ The feedback condenses four very different actions into one
 - [x] `dist/mcp/registry-manifest.json` exists, validates against `docs/contracts/mcp-registry-manifest.schema.json`, and is the input to two submission-PR templates: one for an external MCP-server registry (Markdown row), one for the Cloudflare MCP catalogue (JSON entry)
 - [x] `scripts/lint_positioning.py` exits 0 when the README tagline, the `package.json` `description`, and the rendered GitHub About text in `.github/about.yml` are mutually consistent; exits non-zero with a clear diff message otherwise
 - [x] `task visibility-check` runs the three linters above as one command, used in CI
+      <!-- CORRECTION 2026-08-30 — annotated in place, original left readable above. -->
+      > **The "used in CI" half was never true, found 2026-08-30 by
+      > `road-to-gates-that-do-not-run` Phase 1.** The `visibility-check` target
+      > exists (`taskfiles/ci-fast.yml:1636`) and is invoked by **nothing** — not
+      > by `task ci`'s transitive closure and not by any workflow. So
+      > `lint_positioning`, one of the three linters it aggregates, had never run
+      > in CI since this roadmap closed, and it was **exiting 1 on the tree**:
+      > `package.json` and `.github/about.yml` both carried the withdrawn
+      > `"zero runtime daemon"` claim against a canonical README anchor that does
+      > not.
+      >
+      > The criterion's first half is accurate — the target does run the three
+      > linters as one command. Only the "used in CI" clause is false, and it is
+      > the clause that mattered, because it is what stopped anyone looking.
+      >
+      > Fixed under that roadmap's Phase 2.1: both publish strings now carry the
+      > canonical anchor, and `lint-positioning` is wired into the `ci`
+      > aggregate directly rather than through the unreached alias.
 - [x] `npm pack --dry-run --json | jq '.[0].files[] | .path' | grep '^dist/mcp/'` returns ≥ 1 line — the MCP manifest ships in the tarball
 - [x] `python3 scripts/lint_roadmap_ci_steps.py` exits 0 against this roadmap
 - [x] `python3 scripts/lint_roadmap_complexity.py` exits 0; this roadmap is correctly tagged `complexity: lightweight`
