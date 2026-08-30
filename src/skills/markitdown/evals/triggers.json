@@ -1,0 +1,58 @@
+{
+  "skill": "markitdown",
+  "last_eval": "2026-08-30",
+  "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover INGESTION — a binary document, image, or audio file read INTO Markdown so it can be worked with here. Near-misses are three adjacent skills, each of which WRITES or transforms a document rather than reading one in. CORRECTED 2026-08-30 after a completion review: this line said \"the three neighbours that named it\", and only two distinct skills named it — pdf-tools and docx-authoring. The third near-miss, image-analyser, is adjacency rather than a recorded edge.",
+  "queries": [
+    {
+      "q": "extract this PDF into Markdown so I can read it in the repo",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "OCR this screenshot into text for me",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "transcribe this audio file so I can quote from it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "wandle dieses Word-Dokument in Markdown um, damit ich es hier lesen kann",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "merge these three PDFs into one and split page 4 out",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "writing and transforming PDFs, not reading one into Markdown → pdf-tools"
+    },
+    {
+      "q": "generate a docx from this template and fill in the fields",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "authoring a Word document rather than extracting one → docx-authoring"
+    },
+    {
+      "q": "analyse this character image down to the smallest mole and diff it against the canon",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a semantic read of an image's content, not a format conversion → image-analyser"
+    },
+    {
+      "q": "convert this TypeScript file to JavaScript",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "a 'convert' query whose input is source code, not a document format the converter handles"
+    },
+    {
+      "q": "write me a Markdown README for this package",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "authoring Markdown from scratch; the word Markdown is present and nothing is being extracted → readme-writing"
+    }
+  ]
+}

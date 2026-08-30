@@ -1,0 +1,2174 @@
+diff --git a/agents/evidence/analysis/trigger-corpus-census-2026-08-30.md b/agents/evidence/analysis/trigger-corpus-census-2026-08-30.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a4a2a215726c3110f61e0ddecc7d821e51309370
+--- /dev/null
++++ b/agents/evidence/analysis/trigger-corpus-census-2026-08-30.md
+@@ -0,0 +1,197 @@
++<!-- evidence-type: analysis -->
++
++# Trigger-corpus census and wave order — 2026-08-30
++
++`road-to-governed-harness-evolution` steps **2.1** (census before a target) and
++**2.2** (waves ordered by defect evidence, not alphabetically). Both are in this
++one file because they are one measurement read two ways: 2.1 partitions the
++population, 2.2 orders the part of it that is still uncovered.
++
++**Measured on this tree on 2026-08-30**, branch base `origin/main` at
++`9acdc14d8`. Every number below is reproduced by a command printed beside it.
++Nothing here is recalled.
++
++## Why a census at all — the shape this replaces
++
++The parent roadmap this one folds back in **killed** `100 % trigger coverage as
++a target` by name (K12 in the killed register): a coverage ratio is reachable by
++authoring low-discriminative fixtures, which raises the metric and measures
++nothing. Risk 4 in the register is the same failure stated as a risk — *"94 →
++299 is a number that can be reached by authoring low-discriminative fixtures"*.
++
++So the denominator has to be argued for before it is used, and this file is that
++argument.
++
++## 1 — The three reproduced counts
++
++| Count | Command | Result |
++|---|---|---|
++| skills in the tree | `ls -1d src/skills/*/ \| wc -l` | **299** |
++| skills carrying a corpus, at the start of this run | `ls src/skills/*/evals/triggers.json \| wc -l` | **94** |
++| grandfather-allowlist entries, at the start of this run | `jq '.skills \| length' src/scripts/trigger_eval_grandfather.json` | **205** |
++
++All three reproduce the roadmap's own figures exactly. The allowlist's own
++`_note` says it was *"Frozen 2026-07-08 at 221 of 264 skills"*, so the shrink-only
++ratchet had already walked down 16 before this run.
++
++## 2 — The partition, and the criterion it rests on
++
++**The criterion, stated before it is applied:**
++
++> A skill is **non-self-activating** iff its own `description` — the only field
++> any host activation surface reads — names a **dispatcher** rather than a user
++> task surface, with the literal `dispatched by` / `Dispatched by` / `Called by`,
++> **and** that dispatcher exists in this tree.
++
++Three properties make it usable rather than merely plausible:
++
++1. **It is mechanical.** One regex over one field. Anyone can re-derive the
++   list; nobody has to agree with a judgement call.
++2. **It reads the artefact's own declaration, not an outside opinion about it.**
++   Same mechanism `lint_skill_trigger_corpus.ts:28-37` already uses for the
++   German requirement, and for the same stated reason: a detector would be a
++   heuristic wearing a schema check's clothes.
++3. **It errs in the direction that HURTS the number.** Excluding a skill raises
++   the coverage ratio, so a loose criterion is self-serving. This one excludes
++   only skills that say so themselves, which leaves several plausibly
++   non-routable skills — `judge-injection-defense`, `judge-synthesis`,
++   `overbuild-review-lens`, `ui-apply-generic` — **inside** the denominator
++   because their descriptions read as task surfaces. That is the intended
++   direction of the error and it is recorded rather than quietly fixed.
++
++### The 12 excluded skills, one exclusion criterion each
++
++| Skill | Its own declaring clause | Dispatcher, verified present |
++|---|---|---|
++| `architecture-review-lens` | *"…dispatched by /review-changes alongside the four standard judges.…"* | `src/domains/engineering-base/review/changes/command.md:6` — `routes_to:` names it |
++| `blade-ui` | *"…dispatched by `directives/ui/{apply,review,polish}.ts`. Covers views, co…"* | `src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.ts:81` — `build: ['flux', 'livewire', 'blade-ui']` |
++| `flux` | *"…dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux comp…"* | `src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.ts:81` — `build: ['flux', 'livewire', 'blade-ui']` |
++| `judge-artifact-completeness` | *"…Dispatched by /refine-ticket, /adr-create, /review-changes; never auto-g…"* | `src/skills/adr-create/SKILL.md:322` and `src/skills/refine-ticket/SKILL.md:332` |
++| `judge-bug-hunter` | *"…dispatched by /review-changes, /do-and-judge, /judge, even without 'judg…"* | `src/domains/engineering-base/review/changes/command.md:6` — `routes_to:` names it |
++| `judge-code-quality` | *"…dispatched by /review-changes, /do-and-judge, /judge.…"* | `src/domains/engineering-base/review/changes/command.md:6` — `routes_to:` names it |
++| `judge-security-auditor` | *"…dispatched by /review-changes, /do-and-judge, /judge.…"* | `src/domains/engineering-base/review/changes/command.md:6` — `routes_to:` names it |
++| `judge-spec-compliance` | *"…dispatched by /review-changes, /do-and-judge, /judge. Never infers crite…"* | `src/domains/engineering-base/review/changes/command.md:124` — the judge table row |
++| `judge-test-coverage` | *"…dispatched by /review-changes, /do-and-judge, /judge, even without 'test…"* | `src/domains/engineering-base/review/changes/command.md:6` — `routes_to:` names it |
++| `livewire` | *"…dispatched by `directives/ui/{apply,review,polish}.ts`. Covers reactive…"* | `src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.ts:81` — `build: ['flux', 'livewire', 'blade-ui']` |
++| `project-analysis-core` | *"…Called by `universal-project-analysis`. Single-pass scan → `project-anal…"* | `src/skills/universal-project-analysis/SKILL.md:98` — the unknown/mixed branch routes to it |
++| `react-shadcn-ui` | *"…dispatched by `directives/ui/*` for the `react-shadcn` stack.…"* | `src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.ts:101` — `build: ['react-shadcn-ui']` |
++
++**Reproduce:** the regex is `\b(?:[Dd]ispatched by|Called by)\b` applied to the
++`description:` line of each `src/skills/*/SKILL.md`.
++
++### The partitioned denominator
++
++```
++299 skills
++ -12 non-self-activating (declared dispatcher, verified)
++= 287 routable — THE DENOMINATOR
++```
++
++**Coverage against it, at the start of this run: 91 / 287 = 31.7 %.** Not
++94/299 = 31.4 %, and the closeness of those two numbers is itself a finding: the
++exclusion set is small enough that the partition barely moves the ratio. What
++the partition buys is not a better-looking number, it is a denominator that
++cannot be gamed by authoring fixtures for skills no prompt reaches.
++
++Three of the 12 excluded skills — `architecture-review-lens`,
++`judge-artifact-completeness`, `judge-spec-compliance` — already carry a corpus.
++Exclusion governs the **denominator**, never permission: a dispatched skill may
++hold a corpus, and those three are not deleted.
++
++## 3 — Wave order, and the criterion per wave
++
++2.2 asks for waves ordered by **defect evidence**. The tree carries one
++deterministic source of it, and it was not being read.
++
++**The signal: a recorded confusion edge whose receiving end has no test.** When
++skill A's corpus holds a `trigger: false` case whose note names skill B as the
++correct destination, the corpus has *recorded that A and B are confusable*. If B
++then carries no corpus, nothing tests that B does not over-trigger on A's
++vocabulary. The confusion is documented on one side and untested on the other.
++
++**Reproduce:** over every `src/skills/*/evals/triggers.json`, for each case with
++`trigger: false`, match its `note` against `[→>]\s*`?([a-z0-9][a-z0-9-]{2,})`?`
++and count hits that name an existing skill other than the file's own. At the
++start of this run: **170 edges naming 90 distinct skills**, of which **42 had no
++corpus of their own** — 63 edges pointing at an untested destination.
++
++| Wave | Criterion | Size |
++|---|---|---|
++| **1** | routable · no corpus · **named by ≥1 recorded confusion edge**, ordered by inbound edge count | 34 skills / 38 edges (was 42 / 63 before this run's six) |
++| **2** | routable · no corpus · **no recorded edge** — a coverage gap with no recorded defect behind it | 156 skills |
++| **3** | non-self-activating · no corpus — **excluded from the denominator, so not corpus work at all** | 9 skills |
++
++`100 + 34 + 156 + 9 = 299`. The partition is exhaustive and the waves do not
++overlap, which is the property that makes "wave 2 is next" mean something.
++
++**Why this order and not the reverse.** Wave 2 is 4.6× the size of wave 1 and
++carries no evidence that any of it is wrong. Sweeping it first is the vanity
++shape K12 killed. Wave 1 is where the tree has already written down, in its own
++corpora, that a confusion exists.
++
++**Wave 3 is deliberately not work.** Those nine stay on the grandfather
++allowlist. The allowlist may only shrink, and it shrinks when a skill *gains* a
++corpus — so a non-routable skill leaves it only if someone decides to write one
++anyway. Naming them here stops them being mistaken for a wave-2 backlog.
++
++### Wave 1, in order — the executable queue
++
++| Inbound edges | Skill | Named by |
++|---|---|---|
++| 2 | `design-review` | `design-variations`, `wireframe` |
++| 2 | `character-consistency` | `image-analyser`, `image-creator` |
++| 2 | `dependency-upgrade` | `supply-chain-intake`, `workspace-link` |
++| 2 | `git-workflow` | `worktree-lifecycle` |
++| 1 | `privacy-review` | `agent-security-review` |
++| 1 | `dashboard-design` | `alerting-doctrine` |
++| 1 | `source-discovery` | `code-intelligence` |
++| 1 | `universal-project-analysis` | `code-intelligence` |
++| 1 | `accessibility-auditor` | `frontend-render-security` |
++| 1 | `video-director` | `image-analyser` |
++| 1 | `motion-choreographer` | `image-creator` |
++| 1 | `scene-expander` | `image-creator` |
++| 1 | `rule-writing` | `judge-injection-defense` |
++| 1 | `learning-to-rule-or-skill` | `learning-tutor` |
++| 1 | `deep-reading-analyst` | `learning-tutor` |
++| 1 | `onboarding-program` | `learning-tutor` |
++| 1 | `readme-writing` | `markitdown` |
++| 1 | `standards-from-config` | `monorepo-workspace` |
++| 1 | `launch-readiness` | `operational-readiness` |
++| 1 | `persona-writing` | `persona-improvement` |
++| 1 | `skill-improvement-pipeline` | `persona-improvement` |
++| 1 | `description-assist` | `persona-improvement` |
++| 1 | `dcf-modeling` | `prediction-pool-optimizer` |
++| 1 | `prompt-optimizer` | `prompt-engineering-patterns` |
++| 1 | `security` | `security-maturity-assessment` |
++| 1 | `terraform` | `server-hardening` |
++| 1 | `docker` | `server-hardening` |
++| 1 | `secrets-management` | `supply-chain-intake` |
++| 1 | `testing-anti-patterns` | `test-case-discovery` |
++| 1 | `systematic-debugging` | `test-case-discovery` |
++| 1 | `pest-testing` | `test-case-discovery` |
++| 1 | `playwright-testing` | `test-case-discovery` |
++| 1 | `subagent-orchestration` | `worktree-lifecycle` |
++| 1 | `using-git-worktrees` | `worktree-lifecycle` |
++
++**Six wave-1 entries were closed in this run**, in inbound-count order:
++`security-audit` (5), `threat-modeling` (3), `markitdown` (3),
++`prompt-engineering-patterns` (3), `logging-monitoring` (2),
++`incident-commander` (2). Each new corpus uses its recorded inbound edges as its
++near-miss cases, so the neighbour that reported the confusion is the neighbour
++the new corpus tests against. The allowlist went **205 → 199**.
++
++## 4 — What this census does NOT establish
++
++- **It does not claim the 287 are all worth a corpus.** It claims they are all
++  *reachable by a prompt*, which is a different and weaker statement. A
++  discriminative-value judgement per skill is wave-2 work and is not made here.
++- **It does not measure routing accuracy.** Every count above is over files and
++  declarations. Whether the router actually fires correctly is
++  `skill_trigger_eval`, which routes through a model backend and is spend-bearing
++  — out of scope until the budget invariant of step 0.5 is call-site proven.
++- **The confusion-edge signal is a floor, not a census of defects.** It sees only
++  confusions somebody already wrote into a corpus. A skill nobody has written a
++  near-miss for scores zero, and that is absence of evidence.
++- **The exclusion criterion can go stale.** It reads descriptions, and a
++  description can be rewritten without touching the dispatcher. Re-derive it
++  rather than citing this table if the gap matters.
+diff --git a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3cf9c7a6c44451e2995fecac4dde02b7177265c8
+--- /dev/null
++++ b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+@@ -0,0 +1,199 @@
++<!-- evidence-type: analysis -->
++
++# Trigger-corpus holdout partition — frozen 2026-08-30
++
++`road-to-governed-harness-evolution` step **2.5**: *"Freeze the holdout
++partition here, before any proposer exists. If the pipeline that later optimises
++against the corpus also grew it, the holdout is compromised before it is used."*
++Its verify asks for a partition **content-hash pinned in a committed file whose
++hash predates the first Phase 5 commit**.
++
++This is that file. It is committed now, in Phase 2, and Phase 5 has no commits —
++so the ordering the verify asks for is a property of the git history rather than
++a claim made here.
++
++## The frozen set
++
++Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
++freezing: **100 files**, 18 holdout and 82 train.
++
++## The partition rule — deterministic, name-derived, no discretion
++
++```
++holdout  iff  sha256(<skill-directory-name>).digest()[0] < 51
++train    otherwise
++```
++
++51/256 targets 19.9 %; the realised split is 18/100 = 18.0 %.
++
++**Why a name hash and not a sample.** Risk 3 in the roadmap's register is *"the
++corpus becomes the overfitting vehicle — if the pipeline that optimises against
++the trigger corpus also grew it, the holdout is compromised before the first
++candidate runs."* A partition anybody could have *chosen* is one somebody could
++have chosen to flatter a candidate. This rule is recomputable from the skill
++name alone by anyone, at any later date, with no reference to this file — so the
++file is a **witness**, not the authority. If the two ever disagree, the rule
++wins and the disagreement is the finding.
++
++**The rule is fixed as of this freeze.** Changing the constant, the hash, or the
++input re-partitions the corpus and voids every holdout result that came before
++it. A change is legal; a *silent* change is the compromise this step exists to
++prevent.
++
++## The set hash
++
++```
++SET-SHA256  7e091dfc0b1e44aa81268dd69a4d0ab07d1ee1316d6b3120d7ccec62f9aa5da8
++```
++
++Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
++100 files, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The two
++tables below split that same list in two for reading; the hash is over the
++undivided, byte-sorted whole, and the reproduce command below is the
++authority on the order. It pins the partition **and** the corpus content: editing any one
++of the 100 files changes it. A later run recomputing a different value
++has either grown the corpus or edited a frozen file, and either is a finding
++before it is a bug.
++
++**Reproduce:**
++
++```bash
++for f in $(ls -1 src/skills/*/evals/triggers.json | sort); do
++  s=$(basename $(dirname $(dirname "$f")))
++  b=$(printf '%s' "$s" | shasum -a 256 | cut -c1-2)
++  p=$([ $((16#$b)) -lt 51 ] && echo holdout || echo train)
++  printf '%s %s %s\n' "$s" "$(shasum -a 256 "$f" | cut -d' ' -f1)" "$p"
++done | LC_ALL=C sort | shasum -a 256
++```
++
++## Holdout — 18 files, sealed
++
++Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
++these files, and no candidate may be selected against them.** Phase 4's cascade
++opens the sealed set for promotion candidates only — decision E7, which is still
++open and which this file does not settle.
++
++| Skill | sha256 of `evals/triggers.json` |
++|---|---|
++| `analysis-autonomous-mode` | `b2498906765699c666097683f819e0bff816ff3e94b5bb684564e5b19e5e75c7` |
++| `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
++| `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
++| `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
++| `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
++| `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
++| `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
++| `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
++| `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
++| `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
++| `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
++| `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
++| `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
++| `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
++| `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
++| `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
++| `threat-modeling` | `0cc498c5eeafe32b297f73f3bc791883b8efabc01e320e4fd83009ca45002036` |
++| `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
++
++## Train — 82 files
++
++| Skill | sha256 of `evals/triggers.json` |
++|---|---|
++| `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
++| `adversarial-review` | `4656cdc7fd9bc9517d7a2a27cb48c1dfa863c93bf87531292e46bdc85b6dc7d4` |
++| `agent-security-review` | `8c87aad7d61400da983130cef3415fb9e146d088ff30f47215481c5f692a4d1f` |
++| `ai-code-blindspots` | `27a9e87dabf2d158b5f646739c69222b534b3ea2420a099a67bf85c00ea3ba23` |
++| `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
++| `analysis-skill-router` | `df90b10374f26c8c267ff0bdecc5039d9cfb58e501ed000f02a70d4b3b8269fd` |
++| `architecture-review-lens` | `0aea3490d1337d4d72688e35164191f510fbf0dbda3db2408585d18d0746aada` |
++| `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
++| `blast-radius-analyzer` | `353806c436295cd6e83c4e9e7ac0e4de61501e01cec65a9b0d57e2c183f9a391` |
++| `brand-asset-generation` | `ebbc94b7467f4240ec56d8b95ee2aae225540e8e51f665edfd7a9704be5dd731` |
++| `brand-audit` | `77bbac810a28d2c0fba32c6ce75e38e50aff783ce8775e4bc215893e04a42a8c` |
++| `brand-identity` | `50be404a9317ca4321de6966c84815d23721bfb092bf90c4f24ae781b26c1caf` |
++| `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
++| `brand-to-tokens` | `b58dc2a919d0f8a242120e4b04853546c226c4e22645919f0bee39e799bcc094` |
++| `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
++| `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
++| `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
++| `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
++| `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
++| `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
++| `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
++| `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
++| `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
++| `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
++| `design-tokens` | `a39661a7b95f92c7f649d4a82b33c07be346053d4529ae7a6a9626609b30be40` |
++| `design-variations` | `ab58c78688a1f4f41cbbdd9c6302c3eea975bc2c25a565b67fcfb961cea9d590` |
++| `doc-coauthoring` | `025530a4b9bb40834cd9054c40e8c9518c55e55d2adcead638b1a8919d856f1b` |
++| `docx-authoring` | `75b784449debd2009b332b91edd75116ceccd8ae18866405dd689c48b2e8fb67` |
++| `dpa-review` | `e0ded718f20941ad84a7ce87cb69aa3e1059d68234ca312c4846f5fb601d1279` |
++| `eloquent` | `d61c6ada4b28e29f5e7a97aca87917cf6942e5da7f39741d9f4ef0b7ade27185` |
++| `estimate-ticket` | `4f882334316f1d694cb605854527736d237f5c21288e18e427601e184d2dfe69` |
++| `evaluate-llm-feature` | `0208ae44de28e4a96ebc116d329250e4a6006b00cbb0b2d638aaf4a005423f13` |
++| `existing-ui-audit` | `1cec11b0fc1696d5186a30c8a73fe3b10efa7ccb9a956d17a995e7415180a35e` |
++| `experiment-loop` | `7b64978277e8b29b2e58080914329d14274375f0195b59119cad7cede6ec55c0` |
++| `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
++| `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
++| `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
++| `history-design` | `50825f6db0683e20a9c16c6a190b52e197caa9a8f20ea85dfa1f6294e70f5145` |
++| `html-deck` | `6bad648f124ea1af4c39f9af19f3fedfb077edc595d63816a8abcf450d2be35d` |
++| `humanizer` | `76c89f2ed3146d11d0f08c97d2595b60b35c1c912ad5c8c9707c0799c52dd221` |
++| `iconography` | `6a94e7c7811e8e893654620ccb6ee2f04ed747671174eaf218846c7f75be3720` |
++| `image-analyser` | `47735add726cdb3b86e8a08c66fca17a824acc63ac4a788fe29083b61f5a8ebb` |
++| `image-creator` | `0c4b5598b10ae0f53ccbef2a6e0c863f353b849e152dcf51a197652266954292` |
++| `image-editing` | `2b3fe1109fb8be12a9e42bcfb9ff587f07a37ad3fb926dc538b335f5c8fbf3b8` |
++| `image-provider-routing` | `b55853630843300a0e6c8911b5a70069158c28c701af8060646012411945083c` |
++| `incident-commander` | `7e9371f328c7b1751c083688f77a34af2db2b901befc78eed7c8400ae5b2019e` |
++| `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
++| `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
++| `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
++| `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
++| `legal-intake-triage` | `4b6afb88a3a7912ab8666d5e000172224e3e26f5940bbf09988e750a0d89b6fc` |
++| `legal-practice-profile` | `be472d98368803e6b0f31652069f2ce01b802b97a3ec7976635a602667a6ba14` |
++| `license-compliance-audit` | `6ea08eade2a25c2f95c44a727084adbd4f4f2b073d9eae6e95bc169ab4cfdf93` |
++| `license-compliance-credits` | `d2838c7b4b722351d54ae91fd226a3314752a038769093f59b505a6e29d63bdf` |
++| `llm-provider-knowledge` | `9cfb3639dd7dee51520aebf2f180ce41ae752229b76716774468f6a9598461a1` |
++| `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
++| `markitdown` | `ccaac56a2bf19ba6b404d9fc56a603502fb13bf160be3e5a2b779fc906720940` |
++| `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
++| `nda-triage` | `01e4becd20b129780d82d2889099f07a8fe4ee241b31f909d1084af427f4323d` |
++| `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
++| `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
++| `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
++| `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
++| `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
++| `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
++| `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
++| `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
++| `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
++| `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
++| `security-audit` | `8005676c28b6199c397a524caa72d25384bfac15a9f89293203563b8e41e6ee7` |
++| `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
++| `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
++| `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
++| `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
++| `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
++| `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
++| `test-case-discovery` | `ab3208cc89e8c4c18c4ad4886e6a8893a184d801c57699f6037dbf2bc9d46ef3` |
++| `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
++| `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
++| `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
++| `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
++| `workspace-link` | `b4733d41b6460c62cfb91bbbdaf6e764124d115035ee6d780f782ca4e3aae675` |
++
++## What this freeze does NOT establish
++
++- **It does not seal anything mechanically.** No code reads this file today.
++  Nothing prevents a future proposer from opening a holdout corpus; what exists
++  is a recomputable partition and a hash that makes a violation *detectable
++  afterwards*. The enforcing check belongs with the proposer, in Phase 5, and
++  saying so is cheaper than implying a gate that is not here.
++- **It does not make the corpus adequate.** 100 of 287 routable skills
++  carry a corpus at all; the holdout is 18 % of a third of the population. A
++  paired verdict over it will be underpowered for most questions, and
++  `paired_verdict` refuses to call `underpowered` a pass.
++- **It freezes the files that exist, not the ones that will.** A corpus authored
++  in wave 2 is outside this frozen set. Whether it joins the holdout, joins the
++  train set, or forms a second frozen generation is a Phase 5 decision; the
++  honest default is that this generation's hash stops describing the corpus the
++  moment a file is added, which the set hash makes visible rather than silent.
+diff --git a/agents/roadmaps/road-to-governed-harness-evolution.md b/agents/roadmaps/road-to-governed-harness-evolution.md
+index 6bcfc94cfc00ae64f0452768773097f4f38aec04..d93dc77a27c90f24d0a92d82e8de6ded1d7ea647 100644
+--- a/agents/roadmaps/road-to-governed-harness-evolution.md
++++ b/agents/roadmaps/road-to-governed-harness-evolution.md
+@@ -110,6 +110,39 @@ once.
+ 
+ ## Phase 0 — Constitution, reconciliation, budget, stop conditions
+ 
++> **CARRIED CONDITION, placed here 2026-08-30 — the `merge-authority` council's
++> own instruction, executed late.** When the AI council scoped `merge-authority`
++> on 2026-08-29 (anthropic + openai, 2/2) it declared Phases 1–6 legal while
++> ADR-239 § Decision 3 stays open, and attached one condition it called *"an
++> addition to what the blocker proposed"*: **the non-promotion property of
++> Phases 1–6 must be MECHANICALLY ENFORCED, not merely stated** — *"a phase that
++> promises to promote nothing while nothing prevents it from promoting is the
++> same class of guarantee ADR-239 § Decision 3 is open about."* It said the
++> condition belonged in this phase's exit criteria. It was never written here;
++> found on 2026-08-30 and carried now.
++>
++> **It is carried UNMET, and that is the honest state.** Nothing in this tree
++> promotes anything: there is no promotion path, no candidate, and no merge
++> verb — `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returns
++> the guards, their tests and their config, and no caller. A gate written today
++> to assert "no Phase 1–6 code promotes" would scan a population of zero and
++> exit green, which is worse than no gate because it would look like the
++> mechanical enforcement the council asked for. That is the vacuous-check
++> refusal 1.4 and 2.3 both already made on this roadmap.
++>
++> **What discharges it, falsifiably.** The first commit that creates a promotion
++> path — a verb, a state transition into `promoted`, or any write into `src/`
++> derived from a candidate — owes the enforcement in the same change. Concretely:
++> the 3.4 lifecycle enum's `promoted` transition and the 3.6 verb set are where
++> the population stops being empty, so the check lands there and this note is
++> what stops it being read as already-satisfied when it does.
++>
++> **This does not resolve `merge-authority` and does not touch it.** ADR-239 §
++> Decision 3 — *"Preauthorized merge authority is granted or refused | owner |
++> open"*, re-verified at `ADR-239:188` on 2026-08-30 — is owner-reserved in both
++> directions, and no council verdict may perform it. Option (c) stands, Phase 7
++> stays gated, 0.8 stays `[~]`.
++
+ - [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
+       of `planned capability → existing carrier in the tree → redirect / extend /
+       build new (with the reason)`. Starting content is the table above. The
+@@ -405,7 +438,22 @@ once.
+ 
+ ## Phase 2 — Trigger corpus: census first, coverage second
+ 
+-- [ ] **2.1 Run a census before naming a target.**
++> **PHASE TARGET, set 2026-08-30 by the 2.1 census and stated here so no later
++> step has to infer it: the denominator is 287, not 299.** Twelve skills are
++> non-self-activating — their own `description` names a dispatcher that exists
++> in this tree — so no prompt reaches them and a corpus for one raises a ratio
++> without testing a routing decision. Coverage against the partitioned
++> denominator was **91 / 287 = 31.7 %** when this phase opened and is
++> **97 / 287 = 33.8 %** after 2.4. The census, its per-skill exclusion criterion
++> and the wave order are in
++> `agents/evidence/analysis/trigger-corpus-census-2026-08-30.md`.
++>
++> **No percentage target is set, deliberately.** K12 killed `100 % trigger
++> coverage as a target` because a ratio is reachable by authoring
++> low-discriminative fixtures. What replaces it is a queue with a criterion:
++> wave 1 first, ordered by recorded confusion edges.
++
++- [x] **2.1 Run a census before naming a target.**
+       `corrected-from-reproduction` **and** `from-skipped-parent`, and this
+       reverses the master's phase title. The master titled its phase
+       "Trigger corpus 94 → 299". The skipped parent explicitly **killed** that
+@@ -423,25 +471,215 @@ once.
+       routable and non-self-activating before choosing any denominator.
+       verify: the census file names the exclusion criterion per non-routable
+       skill, and the phase target cites a partitioned number, not 299.
+-- [ ] **2.2 Prioritise waves, do not sweep.** Order corpus work by defect
++
++      **CLOSED 2026-08-30.**
++      `agents/evidence/analysis/trigger-corpus-census-2026-08-30.md` § 2 carries
++      the partition. Both conjuncts, separately:
++
++      1. *"names the exclusion criterion per non-routable skill"* — **met.** The
++         criterion is stated once, mechanically (`\b(?:[Dd]ispatched by|Called
++         by)\b` over the `description:` line — the only field a host activation
++         surface reads), and then applied to a table of **12** skills, each row
++         carrying that skill's own declaring clause verbatim **and** the
++         dispatcher's `file:line` in this tree. A criterion whose dispatcher
++         could not be found would have been a claim, not an exclusion; all 12
++         resolve.
++      2. *"the phase target cites a partitioned number, not 299"* — **met.** The
++         phase target above reads **287**.
++
++      **All three of the roadmap's own figures reproduce exactly** — 94 corpus
++      files, 299 skill directories, 205 allowlist entries — which is why the
++      partition is stated as a correction to the denominator rather than to the
++      counts.
++
++      **The criterion errs in the direction that HURTS the number, and that is
++      the load-bearing design choice.** Excluding a skill raises the coverage
++      ratio, so a loose criterion is self-serving. This one excludes only skills
++      that declare a dispatcher themselves, which leaves four plausibly
++      non-routable skills — `judge-injection-defense`, `judge-synthesis`,
++      `overbuild-review-lens`, `ui-apply-generic` — INSIDE the denominator
++      because their descriptions read as task surfaces. Recorded in the census
++      rather than quietly fixed.
++
++      **The partition barely moves the ratio (31.4 % → 31.7 %), and that is
++      reported rather than buried.** What it buys is not a better number, it is
++      a denominator that cannot be gamed by authoring fixtures for skills no
++      prompt reaches — the K12 / Risk-4 failure this phase exists to avoid.
++- [x] **2.2 Prioritise waves, do not sweep.** Order corpus work by defect
+       evidence, not alphabetically.
+       verify: the wave order is committed with a stated criterion per wave.
+-- [ ] **2.3 Author a four-class corpus, not two.** `from-skipped-parent`: the
++
++      **CLOSED 2026-08-30**, same census file, § 3.
++
++      **The defect evidence is deterministic and was already in the tree,
++      unread.** When skill A's corpus holds a `trigger: false` case whose note
++      names skill B as the correct destination, the corpus has RECORDED that A
++      and B are confusable. If B carries no corpus, nothing tests that B does
++      not over-trigger on A's vocabulary: the confusion is documented on one
++      side and untested on the other. Measured at the start of this run:
++      **170 edges naming 90 distinct skills, 42 of them with no corpus** — 63
++      edges pointing at an untested destination.
++
++      Three waves, one criterion each, and the partition is exhaustive
++      (`100 + 34 + 156 + 9 = 299`) so "wave 2 is next" means something:
++      wave 1 = routable · no corpus · named by ≥1 recorded edge, ordered by
++      inbound count; wave 2 = routable · no corpus · **no** recorded edge;
++      wave 3 = the 9 non-self-activating skills with no corpus, which are not
++      corpus work at all and are named so they cannot be mistaken for a wave-2
++      backlog.
++
++      **Why this order.** Wave 2 is 4.6× wave 1 and carries no evidence that any
++      of it is wrong; sweeping it first is exactly the vanity shape K12 killed.
++
++      **Honest limit, recorded in the census: the signal is a floor, not a
++      census of defects.** It sees only confusions somebody already wrote into a
++      corpus, so a skill nobody authored a near-miss for scores zero — absence
++      of evidence, not evidence of absence. The one signal that would measure
++      real routing accuracy, `skill_trigger_eval`, routes through a model
++      backend and is spend-bearing, so it stays out until 0.5's budget invariant
++      is call-site proven.
++- [x] **2.3 Author a four-class corpus, not two.** `from-skipped-parent`: the
+       master's recipe is positives plus near-misses. Both parents required
+       success exemplars, failures, near-misses **and** counterexamples, with
+       selection seeing the full frozen corpus — the mechanism against
+       survivorship bias in the corpus itself.
+-      verify: every corpus file carries all four classes, and a fixture proves
+-      selection reads the whole frozen set.
+-- [ ] **2.4 The grandfather list may only shrink.**
++      ~~verify: every corpus file carries all four classes, and a fixture proves
++      selection reads the whole frozen set.~~ **RE-SCOPED 2026-08-30 — the
++      original verify is struck through rather than deleted, because the
++      re-scope is the decision and a silently edited clause would hide it.**
++
++      **RE-SCOPED by AI council 2026-08-30, anthropic + openai, 2/2 convergent
++      on option (d): re-scope explicitly and record the rewrite; do NOT declare
++      the original conjunction met.** Both seats stated independently that
++      closing the original step "on its first conjunct" without a recorded
++      rewrite would be illegitimate. This entry is that record.
++
++      **What carried the verdict: `failure` is an ORTHOGONAL axis.** `exemplar`
++      / `near-miss` / `counterexample` describe INTENDED routing; `failure`
++      describes OBSERVED behaviour, and one case can be both — so a single
++      mutually-exclusive class field cannot represent them and loses
++      information by trying. Worse, a corpus file is a regression LOCK: a
++      known-wrong case placed in one is red by construction, and a rule
++      requiring one per file would reward deliberately broken routing. Both
++      seats reached this independently; openai's seat added the falsifier —
++      *"failure coverage should apply across the frozen evaluation set wherever
++      genuine defects exist; otherwise the rule rewards deliberately broken
++      routing and distorts quality metrics."*
++
++      **Option (a), literal and retroactive, was rejected for a stated reason,
++      not a preference:** it contradicts the gate's own
++      `lint_skill_trigger_corpus.ts:20-26`, which says verbatim that the
++      near-miss / unrelated-negative split *"is NOT machine-decidable and this
++      gate does not pretend otherwise"* — and 152 of the 431 existing negatives
++      carry no note to classify from, so retroactive classification would be
++      invention. Option (c), a roadmap-local convention with no gate, was
++      rejected as an invisible, unenforceable rule. Anthropic's seat proposed a
++      `known-failures.json` with a "schema TBD Phase 4"; openai's seat rejected
++      it in the same round as *"another vacuous mechanism"*, and that rejection
++      is adopted — nothing is created for the failure axis here.
++
++      **The re-scoped verify, in three parts:**
++
++      1. **THREE semantic classes, declared, enforced.** Closed vocabulary
++         `exemplar | near-miss | counterexample` on every case, with polarity
++         part of the vocabulary (`exemplar` ⇒ `trigger: true`; the other two ⇒
++         `trigger: false`), and all three present in the file.
++         **MET** — `src/scripts/lint_skill_trigger_corpus.ts` now enforces it
++         with five findings (`class-missing`, `class-vocab`, `class-polarity`,
++         `class-coverage`, `class-shape`). This does not contradict `:20-26`:
++         nothing DETECTS the class, the author declares it and the gate checks
++         the declaration — the mechanism the same file already uses for German
++         at `:28-37`, for the same stated reason.
++      2. **Forward-only, migrate-by-touch.** The rule binds on a file the diff
++         adds or changes, the existing 94 are grandfathered by not being
++         touched. **MET** — the `:39-46` language precedent, reused verbatim
++         rather than reinvented, so no 94-entry suppression list is created.
++         Both seats asked for named grandfathering; the touch rule is that,
++         keyed on the pathname git reports.
++      3. **The selection fixture is VACUOUS today, and is recorded as vacuous
++         rather than as met.** *"a fixture proves selection reads the whole
++         frozen set"* quantifies over a selection stage that does not exist —
++         Phase 4 builds the cascade; there is no selection stage, no frozen-set
++         reader and no candidate in this tree. A fixture written today would
++         scan nothing and exit green, which is worse than no fixture because it
++         would look like coverage. **The obligation is carried into Phase 4's
++         exit criteria**, where the set is non-empty. This is the accounting
++         step 1.4 already used on this roadmap for its own third conjunct, and
++         both seats named it independently.
++
++      **Proof the enforcement is reachable and both-directional:**
++      `./scripts-run src/scripts/lint_skill_trigger_corpus --self-test` →
++      15/15 cases, 10 rejecting. It includes BOTH polarity directions
++      (`near-miss` on a positive, `exemplar` on a negative) and a pair proving
++      the forward flag is what turns the rule on — an unclassified corpus is
++      accepted untouched and rejected touched — so a rule that fired
++      unconditionally would fail here rather than reach a reviewer.
++      `tests/scripts/lint_skill_trigger_corpus.test.ts` pins the vocabulary at
++      exactly three members with their polarities, so re-adding `failure` to
++      this surface reds a test that names the decision.
++- [x] **2.4 The grandfather list may only shrink.**
+       verify: `./scripts-run src/scripts/check_trigger_eval_presence` green and
+       the grandfather entry count strictly below 205.
+-- [ ] **2.5 Freeze the holdout partition here, before any proposer exists.** If
++
++      **CLOSED 2026-08-30. Both conjuncts measured:**
++      `check_trigger_eval_presence` → `✅ 100/299 skills carry
++      evals/triggers.json (199 grandfathered, shrink-only)`, exit 0; and
++      `jq '.skills | length' src/scripts/trigger_eval_grandfather.json` → **199**,
++      strictly below 205. `check_trigger_evals --today 2026-08-30` → `✅ 100
++      trigger set(s) fresh + valid`, and `lint_skill_trigger_corpus` → 100 files
++      hold the discipline.
++
++      **The six were chosen by 2.2's wave order, not picked.** In inbound-edge
++      order: `security-audit` (5 — the highest in the whole corpus),
++      `threat-modeling` (3), `markitdown` (3), `prompt-engineering-patterns`
++      (3), `logging-monitoring` (2), `incident-commander` (2). Each new corpus
++      uses its own recorded inbound edges as its near-miss cases, so the
++      neighbour that reported the confusion is the neighbour the new corpus is
++      tested against — which is what makes this a defect fix rather than a
++      coverage bump.
++
++      All six carry the 2.3 classes (they are diff-added, so the forward-only
++      rule binds on them and they could not have been merged without it), a
++      German exemplar declaring `"language": "de"`, and at least one
++      counterexample guarding over-triggering on unrelated input.
++
++      **What this does NOT establish:** that the six route correctly. The
++      corpora are expectations; measuring the router against them is
++      `skill_trigger_eval`, which is spend-bearing and gated behind 0.5.
++- [x] **2.5 Freeze the holdout partition here, before any proposer exists.** If
+       the pipeline that later optimises against the corpus also grew it, the
+       holdout is compromised before it is used.
+       verify: the partition is content-hash pinned in a committed file whose
+       hash predates the first Phase 5 commit.
+ 
++      **CLOSED 2026-08-30.**
++      `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` pins all
++      **100** corpus files by `sha256`, 18 holdout / 82 train, under one
++      set hash `7e091dfc0b1e44aa81268dd69a4d0ab07d1ee1316d6b3120d7ccec62f9aa5da8`.
++
++      **The ordering half of the verify is a property of the history, not a
++      claim in the file:** it is committed in Phase 2 and Phase 5 has no commits,
++      so "predates the first Phase 5 commit" is checkable with `git log` rather
++      than asserted.
++
++      **The partition rule is deterministic and name-derived** —
++      `holdout iff sha256(<skill-dir-name>).digest()[0] < 51` — so the file is a
++      WITNESS, not the authority: anyone can recompute the split from the skill
++      names alone, and if the two ever disagree the rule wins and the
++      disagreement is the finding. A partition somebody could have *chosen* is
++      one somebody could have chosen to flatter a candidate, which is Risk 3
++      exactly. The set hash covers content as well as membership, so editing any
++      frozen file changes it. The file carries a shell reproduce command that
++      was run and reproduces the pinned hash byte-for-byte.
++
++      **Three honest limits, in the artefact:** nothing seals the holdout
++      MECHANICALLY today — no code reads the file, and the enforcing check
++      belongs with the proposer in Phase 5; 100 of 287 routable skills carry a
++      corpus at all, so a paired verdict over an 18-file holdout will be
++      underpowered for most questions, which `paired_verdict` refuses to call a
++      pass; and the freeze covers the files that exist, not the ones wave 2 will
++      add — the set hash makes that visible rather than silent.
++
+ ## Phase 3 — Candidate isolation and lifecycle
+ 
+ - [ ] **3.1 Add a candidate variant to the existing variant enum.** A new member
+@@ -488,6 +726,28 @@ once.
+ 
+ ## Phase 4 — Evaluation
+ 
++> **CARRIED EXIT CRITERION, placed here 2026-08-30 by the 2.3 re-scope so it
++> cannot be dropped in transit.** Step 2.3's second conjunct — *"a fixture
++> proves selection reads the whole frozen set"* — was recorded as **vacuous**
++> rather than met, because no selection stage exists to run a fixture against
++> and a fixture that scans nothing exits green while looking like coverage.
++> **This phase does not close until that fixture exists and passes** against the
++> selection stage 4.1 builds, over the 100-file set frozen in
++> `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`. The failing
++> shape it must catch: a selection stage that reads only the train partition, or
++> only the cases carrying `class: exemplar`, and reports a verdict as if it had
++> seen the corpus. AI council 2026-08-30, anthropic + openai, 2/2 — both seats
++> required the deferral be recorded at a phase with an owner rather than left as
++> an unassigned acceptance criterion, which is Risk 11 on this roadmap.
++>
++> **The `failure` axis lands here too, and deliberately as nothing yet.** The
++> same council moved observed-failure tracking off the corpus surface (it is
++> orthogonal to intent, and a known-wrong case in a regression lock is red by
++> construction) and rejected creating a `known-failures.json` with a "schema TBD"
++> as a vacuous mechanism. So: when this phase's cascade can produce an OBSERVED
++> outcome per case, expected-vs-observed is recorded against stable case ids at
++> that point — not before, and not as an empty file that looks like a carrier.
++
+ - [ ] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+       stage set is E9; if the 12-stage form is chosen, activation/delivery and
+       adherence are their own stages, which is what Phase 1's exit criterion
+@@ -726,6 +986,27 @@ once.
+   non-zero process exit on (a) a holdout value reaching proposer context and
+   (b) a plan configured past the pre-registered ceiling, both before any
+   external call — and the two steps are re-closed citing it.
++- **MEASURED 2026-08-30, and it makes the ordering a fact rather than an
++  expectation.** `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/`
++  returns exactly three paths: `src/scripts/_lib/harness_evolution_guards.ts`
++  (the guards themselves), `tests/scripts/harness_evolution_guards.test.ts`
++  (their unit tests) and `src/config/harness-evolution-budget.json` (the
++  pre-registered budget they read). **Zero production call sites.** There is no
++  runner in this tree to route through them.
++
++  Recorded, not re-argued: this is the (d) seat's position turning out to be
++  measurable rather than merely arguable, and it does NOT reopen the split. The
++  disposition is unchanged and the conservative side stands. What changes is
++  that "pending integration" now has a number behind it, so a later reader does
++  not have to re-derive whether the gap is real.
++
++  **The consequence for sequencing, stated so nobody waits on the wrong thing:**
++  this blocker is not resolvable by any amount of Phase 0 or Phase 2 work. The
++  first artefact that could satisfy it is the deterministic proposer of **3.5**
++  and the operator verb set of **3.6** — the first things in this roadmap that
++  are a runner. Attempting to satisfy it earlier would mean building a runner
++  outside the phase that owns one, which is the speculative-infrastructure shape
++  0.1 already declined for the command surface.
+ 
+ 
+ > **REPAIRED 2026-08-29 — the entry below was invisible to every gate.** It was
+@@ -764,6 +1045,23 @@ once.
+   same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
+   0's exit criteria rather than left here.
+ 
++  **FOUND UNCARRIED 2026-08-30, and carried now.** The sentence above said the
++  condition was carried into Phase 0's exit criteria. It was not: a tree-wide
++  grep for `mechanically enforced` / `non-promotion` over this roadmap returned
++  only these lines, inside this blocker. The condition existed exactly where the
++  paragraph said it should not be left.
++
++  This is the **third instance in this cohort of the same defect shape** — a
++  criterion with no phase, no step and no owner, which Risk 11 names for AC-8
++  and which the `Resolved when` twin above records for `b-adr-088`. It is
++  recorded as a pattern rather than a slip because that is now three.
++
++  The condition is carried as a Phase 0 exit-criterion note (see the
++  **CARRIED CONDITION** block at the head of Phase 0), which is where the
++  council put it. It is carried **unmet**, with the reason it cannot be
++  discharged today stated there rather than being quietly satisfied by a check
++  that would scan nothing.
++
+   **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
+   now lives inside the field's value rather than in a heading above it.** The
+   original — *"ADR-239 § Decision 3 no longer reads as an open question and its
+diff --git a/dist/agent-src/skills/incident-commander/evals/triggers.json b/dist/agent-src/skills/incident-commander/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd45781b5f9ef427a55145ca504debd34646b05c
+--- /dev/null
++++ b/dist/agent-src/skills/incident-commander/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "incident-commander",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover the LIVE or just-closed incident — severity, comms cadence, who does what. Near-misses are the two neighbours that named it plus the post-mortem skill that consumes this one's skeleton, which is the sharpest edge because it is the same incident one step later.",
++    "queries": [
++        {
++            "q": "production is down — what do I do now?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "we're ten minutes into an outage; set the severity and the comms cadence",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "customers are reporting 500s — who does what right now?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wir haben gerade einen Vorfall in Produktion, wie gehen wir vor?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "the incident is resolved — run the post-mortem and find the root cause",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the same incident one step later; facilitation of the blame-free retro consumes this skill's skeleton → blameless-post-mortem"
++        },
++        {
++            "q": "which of these alerts deserves to page someone?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "designing the paging policy in calm time, not running an incident → alerting-doctrine"
++        },
++        {
++            "q": "are we ready to go live with this service?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a go/no-go before anything has broken → operational-readiness"
++        },
++        {
++            "q": "our CI pipeline is red on main",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a broken build is not a production incident; guards against triggering on any 'X is down/broken' phrasing"
++        },
++        {
++            "q": "write the release notes for v3",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "routine release work that mentions shipping and no incident"
++        }
++    ]
++}
+diff --git a/dist/agent-src/skills/logging-monitoring/evals/triggers.json b/dist/agent-src/skills/logging-monitoring/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..90693033fcf6225c90da786f5a83f7caeaa64b7a
+--- /dev/null
++++ b/dist/agent-src/skills/logging-monitoring/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "logging-monitoring",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover ESTABLISHING what observability a project actually has — the four Golden Signals, signal-to-implementation-to-evidence, SLI/SLO provenance. Near-misses are the two neighbours that named it plus the live-incident case, all of which CONSUME observability rather than establish it.",
++    "queries": [
++        {
++            "q": "what observability does this project actually have — do we cover all four Golden Signals?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "does this service even emit an error-rate metric, and where is it implemented?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "trace our SLIs back to the code that produces them — I want provenance, not a dashboard screenshot",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "welche der vier Golden Signals fehlen diesem Projekt eigentlich?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "which of these alerts should actually page someone at 3am?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "deciding what earns a page, given signals that already exist → alerting-doctrine"
++        },
++        {
++            "q": "are we ready to go live — give me a go/no-go from the evidence",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "adjudicating readiness from typed evidence this skill produces → operational-readiness"
++        },
++        {
++            "q": "production is down, what do I do right now?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "running an open incident, not establishing what is measured → incident-commander"
++        },
++        {
++            "q": "add a log line here so I can debug this function",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a one-line code edit that happens to mention logging; no observability question is being asked"
++        },
++        {
++            "q": "set the log level to debug in the staging env file",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a config flip, not an inventory of what the project can detect"
++        }
++    ]
++}
+diff --git a/dist/agent-src/skills/markitdown/evals/triggers.json b/dist/agent-src/skills/markitdown/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..04c94d31a64cb5f3ccfb82d32c5aa3b1e973f588
+--- /dev/null
++++ b/dist/agent-src/skills/markitdown/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "markitdown",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover INGESTION — a binary document, image, or audio file read INTO Markdown so it can be worked with here. Near-misses are the three neighbours that named it, each of which WRITES or transforms a document rather than reading one in.",
++    "queries": [
++        {
++            "q": "extract this PDF into Markdown so I can read it in the repo",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "OCR this screenshot into text for me",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "transcribe this audio file so I can quote from it",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wandle dieses Word-Dokument in Markdown um, damit ich es hier lesen kann",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "merge these three PDFs into one and split page 4 out",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "writing and transforming PDFs, not reading one into Markdown → pdf-tools"
++        },
++        {
++            "q": "generate a docx from this template and fill in the fields",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "authoring a Word document rather than extracting one → docx-authoring"
++        },
++        {
++            "q": "analyse this character image down to the smallest mole and diff it against the canon",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a semantic read of an image's content, not a format conversion → image-analyser"
++        },
++        {
++            "q": "convert this TypeScript file to JavaScript",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a 'convert' query whose input is source code, not a document format the converter handles"
++        },
++        {
++            "q": "write me a Markdown README for this package",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "authoring Markdown from scratch; the word Markdown is present and nothing is being extracted → readme-writing"
++        }
++    ]
++}
+diff --git a/dist/agent-src/skills/prompt-engineering-patterns/evals/triggers.json b/dist/agent-src/skills/prompt-engineering-patterns/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ae1abbc3bb36da9153b0030dc41f796174fc0211
+--- /dev/null
++++ b/dist/agent-src/skills/prompt-engineering-patterns/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "prompt-engineering-patterns",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover DESIGNING a production-LLM prompt — few-shot, chain-of-thought, system prompts, templates, self-verification. Near-misses are the neighbours the skill's own description already distinguishes itself from plus the two that named it.",
++    "queries": [
++        {
++            "q": "design the system prompt for our production summarizer — few-shot plus a self-verification step",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "what prompting pattern fits this classifier — chain-of-thought, or few-shot with a fixed schema?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "build a reusable prompt template with few-shot examples for our extraction service",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wie strukturiere ich den System-Prompt für unser LLM-Feature mit Few-Shot-Beispielen?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "make this prompt better for ChatGPT — rewrite it",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "optimising one prompt for a chat surface rather than designing a production prompt architecture → prompt-optimizer"
++        },
++        {
++            "q": "what is Gemini's context window and per-token price?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a provider product fact that must be verified against official docs → llm-provider-knowledge"
++        },
++        {
++            "q": "review my shipped chatbot for hallucination and prompt-injection",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "black-box evaluation of a running feature, not prompt authoring → evaluate-llm-feature"
++        },
++        {
++            "q": "what chunk size and embedding model should I use for my RAG pipeline?",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "retrieval architecture; the skill's own description puts building an LLM app out of mission"
++        },
++        {
++            "q": "write a commit message for this diff",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a text-authoring request with no LLM prompt in it"
++        }
++    ]
++}
+diff --git a/dist/agent-src/skills/security-audit/evals/triggers.json b/dist/agent-src/skills/security-audit/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..cbb8f214376f7095a671b2bc4d02f59f1d85a966
+--- /dev/null
++++ b/dist/agent-src/skills/security-audit/evals/triggers.json
+@@ -0,0 +1,64 @@
++{
++    "skill": "security-audit",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are the four neighbours that named it: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening.",
++    "queries": [
++        {
++            "q": "audit this codebase for injection vulnerabilities — SQLi, XSS, unsafe deserialization",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "do a pentest-style review of our application code and list what an attacker could actually reach",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "scan our dependencies for known CVEs and tell me which of them are reachable from our code",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "mach einen Security-Audit dieses Moduls und finde die Schwachstellen im Code",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "threat-model this new payments endpoint before I build it",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "pre-implementation abuse-case pass over a change that does not exist yet, not a hunt through shipped code → threat-modeling"
++        },
++        {
++            "q": "give me an A-F security-maturity scorecard for this module with category ratings",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "posture rating with evidence per category, explicitly not a vulnerability hunt → security-maturity-assessment"
++        },
++        {
++            "q": "red-team my agent config — could someone weaponise my CLAUDE.md or MCP servers?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the attack surface is the agent's own configuration, not application code → agent-security-review"
++        },
++        {
++            "q": "harden this Ubuntu box — SSH posture and a default-deny firewall baseline",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "operating-system posture on a host you run, verified on the box → server-hardening"
++        },
++        {
++            "q": "add a password strength meter to the signup form",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "implementing a security-flavoured FEATURE; the word security appears and no audit is asked for"
++        },
++        {
++            "q": "why is this query slow — profile the hot path",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "performance work with no security surface at all; guards against triggering on any 'audit this' phrasing"
++        }
++    ]
++}
+diff --git a/dist/agent-src/skills/threat-modeling/evals/triggers.json b/dist/agent-src/skills/threat-modeling/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..95d8003d5e52ed6aa47dc272e3f46e3a7c5bb175
+--- /dev/null
++++ b/dist/agent-src/skills/threat-modeling/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "threat-modeling",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover the BEFORE-implementation pass on a named sensitive surface — auth, uploads, webhooks, tenancy. Near-misses are the three neighbours that named it, all of which look at code that already exists.",
++    "queries": [
++        {
++            "q": "threat-model this new file-upload endpoint before we build it",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "we're adding webhooks from a third party — what are the trust boundaries and abuse cases?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "before I implement tenant switching, map the abuse cases onto the files that would carry them",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "bevor wir den neuen Login bauen — erstell bitte ein Threat Model mit Missbrauchsfällen",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "audit this module for SQL injection and XSS vulnerabilities",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "hunting defects in code that already exists, not enumerating abuse cases for a change → security-audit"
++        },
++        {
++            "q": "give me a posture score for this service across the security categories",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a rating of the current state rather than an abuse-case enumeration for a planned change → security-maturity-assessment"
++        },
++        {
++            "q": "review this diff for authorization holes — can user A reach user B's data?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the per-entrypoint authorization chain over a concrete diff → authz-review"
++        },
++        {
++            "q": "write the incident comms for the outage we're in right now",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "an open production incident; shares the word 'boundaries' with nothing and must not pull a modelling skill into a live outage"
++        },
++        {
++            "q": "rename this class everywhere and update all the callers",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a mechanical refactor with no trust boundary in it"
++        }
++    ]
++}
+diff --git a/src/scripts/lint_skill_trigger_corpus.ts b/src/scripts/lint_skill_trigger_corpus.ts
+index 94c146386a9905eb98699687b9e55a0e1e70ec4e..5f98a53b4a91b59d956a08c9e454a264125ab6fb 100644
+--- a/src/scripts/lint_skill_trigger_corpus.ts
++++ b/src/scripts/lint_skill_trigger_corpus.ts
+@@ -36,13 +36,40 @@
+  * 76 existing files carry the field: requiring it everywhere today would red
+  * 76 files for a field that did not exist when they were written.
+  *
+- * ## Forward-only, in two different senses
++ * ## Forward-only, in three senses now
+  *
+  * The COUNT discipline (>=3 positives, >=2 near-misses) applies to every file
+  * today: exactly two files fail it, and both are listed as grandfathered by
+  * name rather than by a numeric baseline, so a third failure cannot hide inside
+  * a count. The LANGUAGE discipline applies only to files the diff adds or
+- * changes.
++ * changes. So, since 2026-08-30, does the CASE-CLASS discipline.
++ *
++ * ## The case class — three semantic classes, declared, never inferred
++ *
++ * `road-to-governed-harness-evolution` step 2.3 asked for a four-class corpus
++ * where this gate had two: the boolean. AI council 2026-08-30, anthropic +
++ * openai, 2/2 convergent, re-scoped it to THREE semantic classes on this
++ * surface and moved the fourth elsewhere:
++ *
++ *   - `exemplar`       — a success case; requires `trigger: true`.
++ *   - `near-miss`      — vocabulary genuinely overlaps a neighbour, and the
++ *                        answer is still no; requires `trigger: false`.
++ *   - `counterexample` — unrelated, guarding over-triggering rather than a
++ *                        neighbour; requires `trigger: false`.
++ *
++ * The fourth class the step named — `failure`, a case the routing gets wrong
++ * TODAY — is deliberately NOT here. Both seats reached the same reason
++ * independently: it is an ORTHOGONAL axis. `exemplar` / `near-miss` /
++ * `counterexample` describe intended routing; `failure` describes observed
++ * behaviour, and one case can be both. A corpus file is a regression LOCK, so
++ * a known-wrong case placed in it is red by construction, and a rule requiring
++ * one per file would reward deliberately broken routing.
++ *
++ * This does not contradict `:20-26` above. That paragraph says the near-miss /
++ * unrelated-negative distinction is not machine-DECIDABLE, and it still is not:
++ * nothing here detects it. The class is DECLARED by the author and the
++ * declaration is validated — precisely the mechanism the German requirement
++ * already uses two paragraphs up, for the same reason.
+  *
+  * Exit codes: 0 = clean · 1 = a discipline violation · 2 = dead scope.
+  */
+@@ -60,6 +87,20 @@ const HERE = fileURLToPath(import.meta.url);
+ const REAL_REPO_ROOT = path.resolve(path.dirname(HERE), '..', '..');
+ const REPO_ROOT = process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'] ?? REAL_REPO_ROOT;
+ 
++/**
++ * Treat every scanned unit as diff-touched, so the forward-only disciplines
++ * apply to all of them.
++ *
++ * This can only ever WIDEN the checked set — there is no direction in which it
++ * suppresses a finding — which is what makes it safe to honour from the
++ * environment. `--self-test` needs it because its fixtures live in a temporary
++ * directory that is not a git repository, so `changedUnits` finds nothing
++ * there and the class rules would be silently unreachable: a self-test that
++ * cannot reach the rule it claims to prove is the exact no-op this harness
++ * exists to catch.
++ */
++const FORWARD_ALL = process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] === '1';
++
+ export const MIN_POSITIVES = 3;
+ export const MIN_NEAR_MISSES = 2;
+ 
+@@ -71,6 +112,22 @@ export const MIN_NEAR_MISSES = 2;
+  */
+ export const GRANDFATHERED = new Set(['brand-asset-generation', 'estimate-ticket']);
+ 
++/**
++ * The closed case-class vocabulary, and the polarity each class requires.
++ *
++ * Polarity is part of the vocabulary rather than a separate convention: a
++ * `near-miss` carrying `trigger: true` is not a near miss, it is a positive
++ * that was mislabelled, and a class system that cannot say so buys nothing
++ * over a free-text tag.
++ */
++export const CASE_CLASS_POLARITY: Readonly<Record<string, boolean>> = {
++    exemplar: true,
++    'near-miss': false,
++    counterexample: false,
++};
++
++export const CASE_CLASSES: readonly string[] = Object.keys(CASE_CLASS_POLARITY);
++
+ export interface CorpusStats {
+     unit: string;
+     positives: number;
+@@ -78,11 +135,33 @@ export interface CorpusStats {
+     germanPositives: number;
+     /** True when at least one case declares a language at all. */
+     declaresLanguage: boolean;
++    /** Cases in the `queries` shape that declare no `class` at all. */
++    unclassified: number;
++    /** Declared class values outside the closed vocabulary, as written. */
++    badClassValues: string[];
++    /** Cases whose declared class contradicts their `trigger` boolean. */
++    classPolarityErrors: string[];
++    /** Which vocabulary members appear at least once. */
++    classesPresent: string[];
++    /**
++     * True when the file uses the legacy `should_trigger` / `should_not_trigger`
++     * arrays, whose entries are bare strings and cannot carry a class.
++     */
++    legacyShape: boolean;
+ }
+ 
+ export interface Violation {
+     unit: string;
+-    rule: 'positives' | 'near-misses' | 'german' | 'malformed';
++    rule:
++        | 'positives'
++        | 'near-misses'
++        | 'german'
++        | 'malformed'
++        | 'class-missing'
++        | 'class-vocab'
++        | 'class-polarity'
++        | 'class-coverage'
++        | 'class-shape';
+     message: string;
+ }
+ 
+@@ -90,6 +169,7 @@ interface RawCase {
+     q?: string;
+     trigger?: boolean;
+     language?: string;
++    class?: unknown;
+ }
+ 
+ /** Read one corpus file into counts, across both shapes that exist. */
+@@ -104,16 +184,50 @@ export function statsFor(unit: string, file: string): CorpusStats {
+     let nearMisses = queries.filter((q) => q.trigger === false).length;
+     positives += (doc.should_trigger ?? []).length;
+     nearMisses += (doc.should_not_trigger ?? []).length;
++
++    const badClassValues: string[] = [];
++    const classPolarityErrors: string[] = [];
++    const present = new Set<string>();
++    let unclassified = 0;
++    for (const q of queries) {
++        const raw = q.class;
++        if (raw === undefined || raw === null || raw === '') {
++            unclassified += 1;
++            continue;
++        }
++        if (typeof raw !== 'string' || !(raw in CASE_CLASS_POLARITY)) {
++            badClassValues.push(String(raw));
++            continue;
++        }
++        present.add(raw);
++        if (q.trigger !== CASE_CLASS_POLARITY[raw]) {
++            classPolarityErrors.push(`${raw} on \`trigger: ${String(q.trigger)}\``);
++        }
++    }
++
+     return {
+         unit,
+         positives,
+         nearMisses,
+         germanPositives: queries.filter((q) => q.trigger === true && q.language === 'de').length,
+         declaresLanguage: queries.some((q) => typeof q.language === 'string'),
++        unclassified,
++        badClassValues,
++        classPolarityErrors,
++        classesPresent: [...present].sort(),
++        legacyShape:
++            (doc.should_trigger ?? []).length > 0 || (doc.should_not_trigger ?? []).length > 0,
+     };
+ }
+ 
+-export function judge(s: CorpusStats, requireLanguage: boolean): Violation[] {
++/**
++ * `forward` is the diff-touched flag: true when this corpus file was added or
++ * changed against the base ref. The COUNT discipline ignores it; the LANGUAGE
++ * and CASE-CLASS disciplines are gated on it, so an untouched file authored
++ * before either existed is not red for a field that did not exist when it was
++ * written. Migration is by touch: the file that changes migrates.
++ */
++export function judge(s: CorpusStats, forward: boolean): Violation[] {
+     const out: Violation[] = [];
+     if (GRANDFATHERED.has(s.unit)) return out;
+     if (s.positives < MIN_POSITIVES) {
+@@ -130,7 +244,7 @@ export function judge(s: CorpusStats, requireLanguage: boolean): Violation[] {
+             message: `${String(s.nearMisses)} near-miss(es), the discipline asks for ${String(MIN_NEAR_MISSES)}`,
+         });
+     }
+-    if (requireLanguage && s.germanPositives < 1) {
++    if (forward && s.germanPositives < 1) {
+         out.push({
+             unit: s.unit,
+             rule: 'german',
+@@ -139,6 +253,65 @@ export function judge(s: CorpusStats, requireLanguage: boolean): Violation[] {
+                 'a detector would pass German-looking English and fail short German',
+         });
+     }
++    if (forward) out.push(...judgeClasses(s));
++    return out;
++}
++
++/**
++ * The case-class rules, all forward-only. Split out so the four findings read
++ * as one discipline rather than as four unrelated additions to `judge`.
++ */
++function judgeClasses(s: CorpusStats): Violation[] {
++    const out: Violation[] = [];
++    const vocab = CASE_CLASSES.join(' | ');
++    if (s.legacyShape) {
++        out.push({
++            unit: s.unit,
++            rule: 'class-shape',
++            message:
++                'the `should_trigger` / `should_not_trigger` arrays hold bare strings and ' +
++                'cannot carry a case class — migrate this file to the `queries` shape',
++        });
++        return out;
++    }
++    if (s.unclassified > 0) {
++        out.push({
++            unit: s.unit,
++            rule: 'class-missing',
++            message:
++                `${String(s.unclassified)} case(s) declare no \`class\` (${vocab}). ` +
++                'Declared, never inferred — the near-miss / counterexample split is not ' +
++                'machine-decidable, so the author states it and the gate checks the statement',
++        });
++    }
++    if (s.badClassValues.length > 0) {
++        out.push({
++            unit: s.unit,
++            rule: 'class-vocab',
++            message: `class outside the closed vocabulary (${vocab}): ${s.badClassValues.sort().join(', ')}`,
++        });
++    }
++    if (s.classPolarityErrors.length > 0) {
++        out.push({
++            unit: s.unit,
++            rule: 'class-polarity',
++            message:
++                'class contradicts its own `trigger` boolean: ' +
++                `${s.classPolarityErrors.sort().join(', ')}. \`exemplar\` is a positive; ` +
++                '`near-miss` and `counterexample` are negatives',
++        });
++    }
++    const missing = CASE_CLASSES.filter((c) => !s.classesPresent.includes(c));
++    if (missing.length > 0) {
++        out.push({
++            unit: s.unit,
++            rule: 'class-coverage',
++            message:
++                `no case carries ${missing.join(' or ')}. A corpus of positives and ` +
++                'near-misses alone cannot show whether the skill over-triggers on ' +
++                'unrelated input, which is what a counterexample is for',
++        });
++    }
+     return out;
+ }
+ 
+@@ -195,7 +368,7 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
+         ledger.plan(e.name);
+         let own: Violation[];
+         try {
+-            own = judge(statsFor(e.name, file), changed.has(e.name));
++            own = judge(statsFor(e.name, file), FORWARD_ALL || changed.has(e.name));
+         } catch {
+             own = [{ unit: e.name, rule: 'malformed', message: 'is not parseable JSON' }];
+         }
+@@ -223,12 +396,14 @@ export function selfTest(): number {
+         fs.writeFileSync(path.join(d, 'triggers.json'), JSON.stringify(body));
+         return root;
+     };
+-    const run = (root: string): number => {
++    const run = (root: string, forwardAll = false): number => {
+         process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'] = root;
++        if (forwardAll) process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] = '1';
+         try {
+             return runGateCli(REAL_REPO_ROOT, 'src/scripts/lint_skill_trigger_corpus.ts', [], root);
+         } finally {
+             delete process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'];
++            delete process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'];
+         }
+     };
+     const good = {
+@@ -240,6 +415,19 @@ export function selfTest(): number {
+             { q: 'e', trigger: false },
+         ],
+     };
++    /** The same corpus, fully classified and German-declared — forward-clean. */
++    const classified = {
++        queries: [
++            { q: 'a', trigger: true, class: 'exemplar' },
++            { q: 'b', trigger: true, class: 'exemplar' },
++            { q: 'c', trigger: true, class: 'exemplar', language: 'de' },
++            { q: 'd', trigger: false, class: 'near-miss' },
++            { q: 'e', trigger: false, class: 'counterexample' },
++        ],
++    };
++    const mutate = (fn: (qs: Record<string, unknown>[]) => Record<string, unknown>[]) => ({
++        queries: fn(JSON.parse(JSON.stringify(classified.queries)) as Record<string, unknown>[]),
++    });
+     const cases: SelfTestCase[] = [
+         {
+             name: 'a compliant corpus is accepted',
+@@ -293,13 +481,114 @@ export function selfTest(): number {
+                 return run(root);
+             },
+         },
++        // --- case-class discipline, forward-only. Every case below runs with
++        // the forward flag forced on; the pair at the end proves the flag is
++        // what turns the rule on, so a rule that fired unconditionally would
++        // be caught here rather than by a reviewer.
++        {
++            name: 'a fully classified corpus is accepted under the class discipline',
++            expect: 'accept',
++            run: () => run(mkRoot('probe', classified), true),
++        },
++        {
++            name: 'an unclassified case is rejected',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot(
++                        'probe',
++                        mutate((qs) => {
++                            delete qs[0]?.['class'];
++                            return qs;
++                        }),
++                    ),
++                    true,
++                ),
++        },
++        {
++            name: 'a class outside the closed vocabulary is rejected',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot(
++                        'probe',
++                        mutate((qs) => {
++                            if (qs[0]) qs[0]['class'] = 'positive';
++                            return qs;
++                        }),
++                    ),
++                    true,
++                ),
++        },
++        {
++            name: 'a near-miss on trigger:true is rejected — polarity is part of the vocabulary',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot(
++                        'probe',
++                        mutate((qs) => {
++                            if (qs[0]) qs[0]['class'] = 'near-miss';
++                            return qs;
++                        }),
++                    ),
++                    true,
++                ),
++        },
++        {
++            name: 'an exemplar on trigger:false is rejected — the other polarity direction',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot(
++                        'probe',
++                        mutate((qs) => {
++                            if (qs[4]) qs[4]['class'] = 'exemplar';
++                            return qs;
++                        }),
++                    ),
++                    true,
++                ),
++        },
++        {
++            name: 'a corpus with no counterexample at all is rejected',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot(
++                        'probe',
++                        mutate((qs) => {
++                            if (qs[4]) qs[4]['class'] = 'near-miss';
++                            return qs;
++                        }),
++                    ),
++                    true,
++                ),
++        },
++        {
++            name: 'the legacy string-array shape is rejected under the class discipline',
++            expect: 'reject',
++            run: () =>
++                run(
++                    mkRoot('probe', {
++                        should_trigger: ['a', 'b', 'c'],
++                        should_not_trigger: ['d', 'e'],
++                    }),
++                    true,
++                ),
++        },
++        {
++            name: 'the SAME unclassified corpus is accepted when NOT diff-touched',
++            expect: 'accept',
++            run: () => run(mkRoot('probe', good), false),
++        },
+     ];
+     try {
+         return runSelfTest({
+             gate: 'lint_skill_trigger_corpus',
+             cases,
+-            minCases: 7,
+-            minRejectCases: 4,
++            minCases: 15,
++            minRejectCases: 10,
+         });
+     } finally {
+         fs.rmSync(tmp, { recursive: true, force: true });
+@@ -330,7 +619,8 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT):
+         process.stdout.write(
+             `lint_skill_trigger_corpus: ${String(r.scanned)} corpus file(s) hold the discipline ` +
+                 `(>=${String(MIN_POSITIVES)} positives, >=${String(MIN_NEAR_MISSES)} near-misses; ` +
+-                `${String(GRANDFATHERED.size)} grandfathered by name).\n`,
++                `${String(GRANDFATHERED.size)} grandfathered by name). Diff-touched files also ` +
++                `carry a declared case class per query (${CASE_CLASSES.join(' | ')}).\n`,
+         );
+         return 0;
+     }
+diff --git a/src/scripts/trigger_eval_grandfather.json b/src/scripts/trigger_eval_grandfather.json
+index d3360b1aef4547ea744713f44405ab8001a68057..051c5ff6a9b2d6895f4e7dc68827f61cff93030f 100644
+--- a/src/scripts/trigger_eval_grandfather.json
++++ b/src/scripts/trigger_eval_grandfather.json
+@@ -65,7 +65,6 @@
+     "gtm-launch",
+     "guideline-writing",
+     "hiring-loop-design",
+-    "incident-commander",
+     "jira-integration",
+     "jobs-events",
+     "judge-bug-hunter",
+@@ -91,9 +90,7 @@
+     "lint-skills",
+     "livewire",
+     "livewire-architect",
+-    "logging-monitoring",
+     "market-entry-analysis",
+-    "markitdown",
+     "mcp",
+     "mcp-builder",
+     "md-language-check",
+@@ -139,7 +136,6 @@
+     "project-analysis-zend-laminas",
+     "project-analyzer",
+     "project-docs",
+-    "prompt-engineering-patterns",
+     "prompt-optimizer",
+     "quality-tools",
+     "react-native-setup",
+@@ -169,7 +165,6 @@
+     "script-writing",
+     "secrets-management",
+     "security",
+-    "security-audit",
+     "sentry-integration",
+     "sequential-thinking",
+     "skill-improvement-pipeline",
+@@ -191,7 +186,6 @@
+     "test-driven-development",
+     "test-performance",
+     "testing-anti-patterns",
+-    "threat-modeling",
+     "throughput-vs-morale-tradeoff",
+     "token-optimizer",
+     "traefik",
+diff --git a/src/skills/incident-commander/evals/triggers.json b/src/skills/incident-commander/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd45781b5f9ef427a55145ca504debd34646b05c
+--- /dev/null
++++ b/src/skills/incident-commander/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "incident-commander",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover the LIVE or just-closed incident — severity, comms cadence, who does what. Near-misses are the two neighbours that named it plus the post-mortem skill that consumes this one's skeleton, which is the sharpest edge because it is the same incident one step later.",
++    "queries": [
++        {
++            "q": "production is down — what do I do now?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "we're ten minutes into an outage; set the severity and the comms cadence",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "customers are reporting 500s — who does what right now?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wir haben gerade einen Vorfall in Produktion, wie gehen wir vor?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "the incident is resolved — run the post-mortem and find the root cause",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the same incident one step later; facilitation of the blame-free retro consumes this skill's skeleton → blameless-post-mortem"
++        },
++        {
++            "q": "which of these alerts deserves to page someone?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "designing the paging policy in calm time, not running an incident → alerting-doctrine"
++        },
++        {
++            "q": "are we ready to go live with this service?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a go/no-go before anything has broken → operational-readiness"
++        },
++        {
++            "q": "our CI pipeline is red on main",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a broken build is not a production incident; guards against triggering on any 'X is down/broken' phrasing"
++        },
++        {
++            "q": "write the release notes for v3",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "routine release work that mentions shipping and no incident"
++        }
++    ]
++}
+diff --git a/src/skills/logging-monitoring/evals/triggers.json b/src/skills/logging-monitoring/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..90693033fcf6225c90da786f5a83f7caeaa64b7a
+--- /dev/null
++++ b/src/skills/logging-monitoring/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "logging-monitoring",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover ESTABLISHING what observability a project actually has — the four Golden Signals, signal-to-implementation-to-evidence, SLI/SLO provenance. Near-misses are the two neighbours that named it plus the live-incident case, all of which CONSUME observability rather than establish it.",
++    "queries": [
++        {
++            "q": "what observability does this project actually have — do we cover all four Golden Signals?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "does this service even emit an error-rate metric, and where is it implemented?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "trace our SLIs back to the code that produces them — I want provenance, not a dashboard screenshot",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "welche der vier Golden Signals fehlen diesem Projekt eigentlich?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "which of these alerts should actually page someone at 3am?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "deciding what earns a page, given signals that already exist → alerting-doctrine"
++        },
++        {
++            "q": "are we ready to go live — give me a go/no-go from the evidence",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "adjudicating readiness from typed evidence this skill produces → operational-readiness"
++        },
++        {
++            "q": "production is down, what do I do right now?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "running an open incident, not establishing what is measured → incident-commander"
++        },
++        {
++            "q": "add a log line here so I can debug this function",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a one-line code edit that happens to mention logging; no observability question is being asked"
++        },
++        {
++            "q": "set the log level to debug in the staging env file",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a config flip, not an inventory of what the project can detect"
++        }
++    ]
++}
+diff --git a/src/skills/markitdown/evals/triggers.json b/src/skills/markitdown/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..04c94d31a64cb5f3ccfb82d32c5aa3b1e973f588
+--- /dev/null
++++ b/src/skills/markitdown/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "markitdown",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover INGESTION — a binary document, image, or audio file read INTO Markdown so it can be worked with here. Near-misses are the three neighbours that named it, each of which WRITES or transforms a document rather than reading one in.",
++    "queries": [
++        {
++            "q": "extract this PDF into Markdown so I can read it in the repo",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "OCR this screenshot into text for me",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "transcribe this audio file so I can quote from it",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wandle dieses Word-Dokument in Markdown um, damit ich es hier lesen kann",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "merge these three PDFs into one and split page 4 out",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "writing and transforming PDFs, not reading one into Markdown → pdf-tools"
++        },
++        {
++            "q": "generate a docx from this template and fill in the fields",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "authoring a Word document rather than extracting one → docx-authoring"
++        },
++        {
++            "q": "analyse this character image down to the smallest mole and diff it against the canon",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a semantic read of an image's content, not a format conversion → image-analyser"
++        },
++        {
++            "q": "convert this TypeScript file to JavaScript",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a 'convert' query whose input is source code, not a document format the converter handles"
++        },
++        {
++            "q": "write me a Markdown README for this package",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "authoring Markdown from scratch; the word Markdown is present and nothing is being extracted → readme-writing"
++        }
++    ]
++}
+diff --git a/src/skills/prompt-engineering-patterns/evals/triggers.json b/src/skills/prompt-engineering-patterns/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ae1abbc3bb36da9153b0030dc41f796174fc0211
+--- /dev/null
++++ b/src/skills/prompt-engineering-patterns/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "prompt-engineering-patterns",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover DESIGNING a production-LLM prompt — few-shot, chain-of-thought, system prompts, templates, self-verification. Near-misses are the neighbours the skill's own description already distinguishes itself from plus the two that named it.",
++    "queries": [
++        {
++            "q": "design the system prompt for our production summarizer — few-shot plus a self-verification step",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "what prompting pattern fits this classifier — chain-of-thought, or few-shot with a fixed schema?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "build a reusable prompt template with few-shot examples for our extraction service",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "wie strukturiere ich den System-Prompt für unser LLM-Feature mit Few-Shot-Beispielen?",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "make this prompt better for ChatGPT — rewrite it",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "optimising one prompt for a chat surface rather than designing a production prompt architecture → prompt-optimizer"
++        },
++        {
++            "q": "what is Gemini's context window and per-token price?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a provider product fact that must be verified against official docs → llm-provider-knowledge"
++        },
++        {
++            "q": "review my shipped chatbot for hallucination and prompt-injection",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "black-box evaluation of a running feature, not prompt authoring → evaluate-llm-feature"
++        },
++        {
++            "q": "what chunk size and embedding model should I use for my RAG pipeline?",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "retrieval architecture; the skill's own description puts building an LLM app out of mission"
++        },
++        {
++            "q": "write a commit message for this diff",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a text-authoring request with no LLM prompt in it"
++        }
++    ]
++}
+diff --git a/src/skills/security-audit/evals/triggers.json b/src/skills/security-audit/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..cbb8f214376f7095a671b2bc4d02f59f1d85a966
+--- /dev/null
++++ b/src/skills/security-audit/evals/triggers.json
+@@ -0,0 +1,64 @@
++{
++    "skill": "security-audit",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are the four neighbours that named it: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening.",
++    "queries": [
++        {
++            "q": "audit this codebase for injection vulnerabilities — SQLi, XSS, unsafe deserialization",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "do a pentest-style review of our application code and list what an attacker could actually reach",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "scan our dependencies for known CVEs and tell me which of them are reachable from our code",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "mach einen Security-Audit dieses Moduls und finde die Schwachstellen im Code",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "threat-model this new payments endpoint before I build it",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "pre-implementation abuse-case pass over a change that does not exist yet, not a hunt through shipped code → threat-modeling"
++        },
++        {
++            "q": "give me an A-F security-maturity scorecard for this module with category ratings",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "posture rating with evidence per category, explicitly not a vulnerability hunt → security-maturity-assessment"
++        },
++        {
++            "q": "red-team my agent config — could someone weaponise my CLAUDE.md or MCP servers?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the attack surface is the agent's own configuration, not application code → agent-security-review"
++        },
++        {
++            "q": "harden this Ubuntu box — SSH posture and a default-deny firewall baseline",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "operating-system posture on a host you run, verified on the box → server-hardening"
++        },
++        {
++            "q": "add a password strength meter to the signup form",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "implementing a security-flavoured FEATURE; the word security appears and no audit is asked for"
++        },
++        {
++            "q": "why is this query slow — profile the hot path",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "performance work with no security surface at all; guards against triggering on any 'audit this' phrasing"
++        }
++    ]
++}
+diff --git a/src/skills/threat-modeling/evals/triggers.json b/src/skills/threat-modeling/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..95d8003d5e52ed6aa47dc272e3f46e3a7c5bb175
+--- /dev/null
++++ b/src/skills/threat-modeling/evals/triggers.json
+@@ -0,0 +1,58 @@
++{
++    "skill": "threat-modeling",
++    "last_eval": "2026-08-30",
++    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover the BEFORE-implementation pass on a named sensitive surface — auth, uploads, webhooks, tenancy. Near-misses are the three neighbours that named it, all of which look at code that already exists.",
++    "queries": [
++        {
++            "q": "threat-model this new file-upload endpoint before we build it",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "we're adding webhooks from a third party — what are the trust boundaries and abuse cases?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "before I implement tenant switching, map the abuse cases onto the files that would carry them",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "bevor wir den neuen Login bauen — erstell bitte ein Threat Model mit Missbrauchsfällen",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "audit this module for SQL injection and XSS vulnerabilities",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "hunting defects in code that already exists, not enumerating abuse cases for a change → security-audit"
++        },
++        {
++            "q": "give me a posture score for this service across the security categories",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "a rating of the current state rather than an abuse-case enumeration for a planned change → security-maturity-assessment"
++        },
++        {
++            "q": "review this diff for authorization holes — can user A reach user B's data?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "the per-entrypoint authorization chain over a concrete diff → authz-review"
++        },
++        {
++            "q": "write the incident comms for the outage we're in right now",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "an open production incident; shares the word 'boundaries' with nothing and must not pull a modelling skill into a live outage"
++        },
++        {
++            "q": "rename this class everywhere and update all the callers",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a mechanical refactor with no trust boundary in it"
++        }
++    ]
++}
+diff --git a/tests/scripts/lint_skill_trigger_corpus.test.ts b/tests/scripts/lint_skill_trigger_corpus.test.ts
+index 5c8f287a4673842c1611eae3606b07d4a5b97d4b..9e59a3a9fa9bd0d81709394eec0fd9d2693c1e82 100644
+--- a/tests/scripts/lint_skill_trigger_corpus.test.ts
++++ b/tests/scripts/lint_skill_trigger_corpus.test.ts
+@@ -5,6 +5,8 @@ import * as path from 'node:path';
+ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+ 
+ import {
++    CASE_CLASSES,
++    CASE_CLASS_POLARITY,
+     GRANDFATHERED,
+     MIN_NEAR_MISSES,
+     MIN_POSITIVES,
+@@ -114,6 +116,122 @@ describe('the language discipline is forward-only and DECLARED', () => {
+     });
+ });
+ 
++describe('the case-class discipline is forward-only and DECLARED', () => {
++    const CLASSIFIED = {
++        queries: [
++            { q: 'a', trigger: true, class: 'exemplar' },
++            { q: 'b', trigger: true, class: 'exemplar' },
++            { q: 'c', trigger: true, class: 'exemplar', language: 'de' },
++            { q: 'd', trigger: false, class: 'near-miss' },
++            { q: 'e', trigger: false, class: 'counterexample' },
++        ],
++    };
++    const mutated = (fn: (qs: Record<string, unknown>[]) => void) => {
++        const qs = JSON.parse(JSON.stringify(CLASSIFIED.queries)) as Record<string, unknown>[];
++        fn(qs);
++        return { queries: qs };
++    };
++    const rules = (body: unknown, forward: boolean) =>
++        judge(statsFor('probe', corpusOf(body)), forward).map((v) => v.rule);
++
++    it('holds the closed vocabulary at three members with their polarities', () => {
++        // The step asked for FOUR classes. The fourth — `failure`, a case the
++        // routing gets wrong today — is an orthogonal axis and deliberately
++        // NOT here (AI council 2026-08-30, 2/2). If it ever appears in this
++        // list, that decision was reversed and this assertion is where it shows.
++        expect([...CASE_CLASSES].sort()).toEqual(['counterexample', 'exemplar', 'near-miss']);
++        expect(CASE_CLASS_POLARITY).toEqual({
++            exemplar: true,
++            'near-miss': false,
++            counterexample: false,
++        });
++    });
++
++    it('accepts a fully classified corpus on a touched file', () => {
++        expect(rules(CLASSIFIED, true)).toEqual([]);
++    });
++
++    it('does NOT require a class on an untouched file', () => {
++        expect(
++            rules(
++                mutated((qs) => {
++                    for (const q of qs) delete q['class'];
++                }),
++                false,
++            ),
++        ).toEqual([]);
++    });
++
++    it('rejects an unclassified case on a touched file', () => {
++        expect(
++            rules(
++                mutated((qs) => {
++                    delete qs[0]?.['class'];
++                }),
++                true,
++            ),
++        ).toContain('class-missing');
++    });
++
++    it('rejects a value outside the closed vocabulary', () => {
++        expect(
++            rules(
++                mutated((qs) => {
++                    if (qs[0]) qs[0]['class'] = 'failure';
++                }),
++                true,
++            ),
++        ).toContain('class-vocab');
++    });
++
++    it('rejects a negative class on a positive case', () => {
++        expect(
++            rules(
++                mutated((qs) => {
++                    if (qs[0]) qs[0]['class'] = 'near-miss';
++                }),
++                true,
++            ),
++        ).toContain('class-polarity');
++    });
++
++    it('rejects a positive class on a negative case — the other direction', () => {
++        // Both directions, because a polarity check written one-way passes
++        // every fixture that only ever mislabels in the direction it tests.
++        expect(
++            rules(
++                mutated((qs) => {
++                    if (qs[4]) qs[4]['class'] = 'exemplar';
++                }),
++                true,
++            ),
++        ).toContain('class-polarity');
++    });
++
++    it('rejects a corpus missing the counterexample class entirely', () => {
++        expect(
++            rules(
++                mutated((qs) => {
++                    if (qs[4]) qs[4]['class'] = 'near-miss';
++                }),
++                true,
++            ),
++        ).toContain('class-coverage');
++    });
++
++    it('rejects the legacy string-array shape, which cannot carry a class', () => {
++        expect(
++            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, true),
++        ).toContain('class-shape');
++    });
++
++    it('leaves the legacy shape alone while it stays untouched', () => {
++        expect(
++            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, false),
++        ).toEqual([]);
++    });
++});
++
+ describe('grandfathering is by NAME, not by count', () => {
+     it('exempts exactly the two units that predate the discipline', () => {
+         expect([...GRANDFATHERED].sort()).toEqual(['brand-asset-generation', 'estimate-ticket']);

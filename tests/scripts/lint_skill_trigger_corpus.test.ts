@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -5,9 +6,12 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    CASE_CLASSES,
+    CASE_CLASS_POLARITY,
     GRANDFATHERED,
     MIN_NEAR_MISSES,
     MIN_POSITIVES,
+    changedUnits,
     evaluate,
     judge,
     statsFor,
@@ -114,6 +118,122 @@ describe('the language discipline is forward-only and DECLARED', () => {
     });
 });
 
+describe('the case-class discipline is forward-only and DECLARED', () => {
+    const CLASSIFIED = {
+        queries: [
+            { q: 'a', trigger: true, class: 'exemplar' },
+            { q: 'b', trigger: true, class: 'exemplar' },
+            { q: 'c', trigger: true, class: 'exemplar', language: 'de' },
+            { q: 'd', trigger: false, class: 'near-miss' },
+            { q: 'e', trigger: false, class: 'counterexample' },
+        ],
+    };
+    const mutated = (fn: (qs: Record<string, unknown>[]) => void) => {
+        const qs = JSON.parse(JSON.stringify(CLASSIFIED.queries)) as Record<string, unknown>[];
+        fn(qs);
+        return { queries: qs };
+    };
+    const rules = (body: unknown, forward: boolean) =>
+        judge(statsFor('probe', corpusOf(body)), forward).map((v) => v.rule);
+
+    it('holds the closed vocabulary at three members with their polarities', () => {
+        // The step asked for FOUR classes. The fourth — `failure`, a case the
+        // routing gets wrong today — is an orthogonal axis and deliberately
+        // NOT here (AI council 2026-08-30, 2/2). If it ever appears in this
+        // list, that decision was reversed and this assertion is where it shows.
+        expect([...CASE_CLASSES].sort()).toEqual(['counterexample', 'exemplar', 'near-miss']);
+        expect(CASE_CLASS_POLARITY).toEqual({
+            exemplar: true,
+            'near-miss': false,
+            counterexample: false,
+        });
+    });
+
+    it('accepts a fully classified corpus on a touched file', () => {
+        expect(rules(CLASSIFIED, true)).toEqual([]);
+    });
+
+    it('does NOT require a class on an untouched file', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    for (const q of qs) delete q['class'];
+                }),
+                false,
+            ),
+        ).toEqual([]);
+    });
+
+    it('rejects an unclassified case on a touched file', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    delete qs[0]?.['class'];
+                }),
+                true,
+            ),
+        ).toContain('class-missing');
+    });
+
+    it('rejects a value outside the closed vocabulary', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[0]) qs[0]['class'] = 'failure';
+                }),
+                true,
+            ),
+        ).toContain('class-vocab');
+    });
+
+    it('rejects a negative class on a positive case', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[0]) qs[0]['class'] = 'near-miss';
+                }),
+                true,
+            ),
+        ).toContain('class-polarity');
+    });
+
+    it('rejects a positive class on a negative case — the other direction', () => {
+        // Both directions, because a polarity check written one-way passes
+        // every fixture that only ever mislabels in the direction it tests.
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[4]) qs[4]['class'] = 'exemplar';
+                }),
+                true,
+            ),
+        ).toContain('class-polarity');
+    });
+
+    it('rejects a corpus missing the counterexample class entirely', () => {
+        expect(
+            rules(
+                mutated((qs) => {
+                    if (qs[4]) qs[4]['class'] = 'near-miss';
+                }),
+                true,
+            ),
+        ).toContain('class-coverage');
+    });
+
+    it('rejects the legacy string-array shape, which cannot carry a class', () => {
+        expect(
+            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, true),
+        ).toContain('class-shape');
+    });
+
+    it('leaves the legacy shape alone while it stays untouched', () => {
+        expect(
+            rules({ should_trigger: ['a', 'b', 'c'], should_not_trigger: ['d', 'e'] }, false),
+        ).toEqual([]);
+    });
+});
+
 describe('grandfathering is by NAME, not by count', () => {
     it('exempts exactly the two units that predate the discipline', () => {
         expect([...GRANDFATHERED].sort()).toEqual(['brand-asset-generation', 'estimate-ticket']);
@@ -143,9 +263,106 @@ describe('scan-scope protection', () => {
     });
 });
 
+describe('the diff scope is a THIRD dead-scope, not an empty set', () => {
+    /**
+     * Regression for the completion-review finding of 2026-08-30.
+     *
+     * `changedUnits` used to return a bare `Set`, and an empty one meant BOTH
+     * "the diff touched no corpus file" and "git could not answer". Where the
+     * base ref does not resolve — a shallow clone, a fork remote, a tarball, an
+     * unfetched worktree — every forward-only rule became unreachable while
+     * `main()` printed its success line asserting the discipline had run.
+     */
+    function corpusRoot(prefix: string): string {
+        const root = fs.mkdtempSync(path.join(tmp, prefix));
+        const dir = path.join(root, 'src', 'skills', 'unit-a', 'evals');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'triggers.json'),
+            JSON.stringify({
+                queries: [
+                    { q: 'a', trigger: true },
+                    { q: 'b', trigger: true },
+                    { q: 'c', trigger: true },
+                    { q: 'd', trigger: false },
+                    { q: 'e', trigger: false },
+                ],
+            }),
+        );
+        return root;
+    }
+
+    it('reports no-repo distinctly from a clean diff', () => {
+        const root = corpusRoot('no-repo-');
+        const scope = changedUnits(root, 'origin/main');
+        expect(scope.kind).toBe('no-repo');
+    });
+
+    it('reports an unresolvable base distinctly from a clean diff', () => {
+        const root = corpusRoot('no-base-');
+        execFileSync('git', ['init', '-q'], { cwd: root });
+        execFileSync('git', ['commit', '-q', '--allow-empty', '-m', 'x'], {
+            cwd: root,
+            env: {
+                ...process.env,
+                GIT_AUTHOR_NAME: 't',
+                GIT_AUTHOR_EMAIL: 't@e',
+                GIT_COMMITTER_NAME: 't',
+                GIT_COMMITTER_EMAIL: 't@e',
+            },
+        });
+        const scope = changedUnits(root, 'origin/main');
+        expect(scope.kind).toBe('base-unresolvable');
+    });
+
+    it('REFUSES rather than passing green when the diff scope is unreadable', () => {
+        // The polarity that matters. Before the fix this returned a clean
+        // result with zero violations — the silent no-op.
+        //
+        // The base is passed EXPLICITLY. Without it `evaluate` runs
+        // `resolveBaseRef`, whose Actions branch reads the ambient environment —
+        // so a test relying on the default would assert something different on
+        // a runner than on a laptop, which is the one thing a regression test
+        // for a scope bug must not do.
+        expect(() => evaluate(corpusRoot('refuse-'), 'origin/main')).toThrow(DeadScopeError);
+    });
+
+    it('refuses when the resolver finds NO base at all, not only a named one', () => {
+        // The default path: no explicit base, nothing resolvable anywhere.
+        expect(() => evaluate(corpusRoot('noresolve-'))).toThrow(DeadScopeError);
+    });
+
+    it('still runs under FORWARD_ALL, which widens and never suppresses', () => {
+        const root = corpusRoot('forward-');
+        process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] = '1';
+        try {
+            // Reachable with no repo at all — that is what keeps --self-test,
+            // which runs in a temporary directory, from being unreachable.
+            const r = evaluate(root, 'origin/main');
+            expect(r.scanned).toBe(1);
+            // And it WIDENS: the fixture declares no case class, so the
+            // forward-only rule must fire on it rather than stay quiet.
+            expect(r.violations.map((v) => v.rule)).toContain('class-missing');
+        } finally {
+            delete process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'];
+        }
+    });
+});
+
 describe('the shipped tree', () => {
     it('holds the discipline on every non-grandfathered corpus', () => {
-        const r = evaluate(REPO);
+        // `HEAD`, explicitly, and it is not a workaround — it is what this
+        // assertion means. The subject here is the CORPUS, not the diff: every
+        // non-grandfathered file must satisfy the count discipline whatever
+        // changed. `HEAD...HEAD` is an empty diff that always resolves, so the
+        // forward-only rules stay quiet and the count rules run over all 100.
+        //
+        // Leaving it to the default resolver made this test environment-
+        // dependent and it failed on CI: the Node Tests job's checkout exposes
+        // neither a remote-tracking main nor GITHUB_BASE_REF, so resolveBaseRef
+        // returns null and `evaluate` correctly refuses — a refusal about the
+        // runner, in a test about the corpus.
+        const r = evaluate(REPO, 'HEAD');
         expect(r.violations).toEqual([]);
         expect(r.scanned).toBeGreaterThanOrEqual(90);
     });

@@ -1,0 +1,58 @@
+{
+    "skill": "prompt-engineering-patterns",
+    "last_eval": "2026-08-30",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover DESIGNING a production-LLM prompt — few-shot, chain-of-thought, system prompts, templates, self-verification. Near-misses are the neighbours the skill's own description already distinguishes itself from plus the two that named it.",
+    "queries": [
+        {
+            "q": "design the system prompt for our production summarizer — few-shot plus a self-verification step",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "what prompting pattern fits this classifier — chain-of-thought, or few-shot with a fixed schema?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "build a reusable prompt template with few-shot examples for our extraction service",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wie strukturiere ich den System-Prompt für unser LLM-Feature mit Few-Shot-Beispielen?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "make this prompt better for ChatGPT — rewrite it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "optimising one prompt for a chat surface rather than designing a production prompt architecture → prompt-optimizer"
+        },
+        {
+            "q": "what is Gemini's context window and per-token price?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a provider product fact that must be verified against official docs → llm-provider-knowledge"
+        },
+        {
+            "q": "review my shipped chatbot for hallucination and prompt-injection",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "black-box evaluation of a running feature, not prompt authoring → evaluate-llm-feature"
+        },
+        {
+            "q": "what chunk size and embedding model should I use for my RAG pipeline?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "retrieval architecture; the skill's own description puts building an LLM app out of mission"
+        },
+        {
+            "q": "write a commit message for this diff",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a text-authoring request with no LLM prompt in it"
+        }
+    ]
+}

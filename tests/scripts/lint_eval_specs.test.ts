@@ -175,6 +175,65 @@ describe('checkSpec', () => {
         expect(kinds(checkSpec('a/triggers.json', src, new Set()))).toEqual(['declared-count-mismatch']);
     });
 
+    it('counts a CLASSED file by its near-miss class, not by every negative', () => {
+        // The three-class vocabulary lint_skill_trigger_corpus introduced makes
+        // a near-miss a strict SUBSET of the negatives. Against a classed file
+        // the old negative-count reading demanded a description contradicting
+        // the file's own classes — CI caught six real corpora on it.
+        const src = JSON.stringify({
+            skill: 's',
+            description: '3 exemplars + 2 near-misses + 2 counterexamples.',
+            queries: [
+                { q: 'a', trigger: true, class: 'exemplar' },
+                { q: 'b', trigger: true, class: 'exemplar' },
+                { q: 'c', trigger: true, class: 'exemplar' },
+                { q: 'd', trigger: false, class: 'near-miss' },
+                { q: 'e', trigger: false, class: 'near-miss' },
+                { q: 'f', trigger: false, class: 'counterexample' },
+                { q: 'g', trigger: false, class: 'counterexample' },
+            ],
+        });
+        expect(checkSpec('a/triggers.json', src, new Set())).toHaveLength(0);
+    });
+
+    it('STILL flags a classed file whose near-miss count is wrong', () => {
+        // The tightening direction. A gate shown only to go quiet has not been
+        // shown to work — and this reading is STRICTER than the one it
+        // replaces, not looser: the file must state its true near-miss count
+        // instead of being forced to inflate it to the negative total.
+        const src = JSON.stringify({
+            skill: 's',
+            description: '3 exemplars + 4 near-misses + 2 counterexamples.',
+            queries: [
+                { q: 'a', trigger: true, class: 'exemplar' },
+                { q: 'b', trigger: true, class: 'exemplar' },
+                { q: 'c', trigger: true, class: 'exemplar' },
+                { q: 'd', trigger: false, class: 'near-miss' },
+                { q: 'e', trigger: false, class: 'near-miss' },
+                { q: 'f', trigger: false, class: 'counterexample' },
+                { q: 'g', trigger: false, class: 'counterexample' },
+            ],
+        });
+        expect(kinds(checkSpec('a/triggers.json', src, new Set()))).toEqual([
+            'declared-count-mismatch',
+        ]);
+    });
+
+    it('keeps the historical negative-count reading for an UNCLASSED file', () => {
+        // 175 of the 181 specifications declare no class at all; the change
+        // must not move under them.
+        const src = JSON.stringify({
+            skill: 's',
+            description: '1 positives + 2 near-misses.',
+            queries: [
+                { q: 'a', trigger: true },
+                { q: 'b', trigger: false },
+                { q: 'c', trigger: false },
+            ],
+        });
+        expect(checkSpec('a/triggers.json', src, new Set())).toHaveLength(0);
+    });
+
     it('accepts a description whose counts match', () => {
         const src = JSON.stringify({
             skill: 's',
