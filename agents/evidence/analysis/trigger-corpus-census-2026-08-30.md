@@ -117,7 +117,7 @@ corpus of their own** — 63 edges pointing at an untested destination.
 
 | Wave | Criterion | Size |
 |---|---|---|
-| **1** | routable · no corpus · **named by ≥1 recorded confusion edge**, ordered by inbound edge count | 34 skills / 38 edges (was 42 / 63 before this run's six) |
+| **1** | routable · no corpus · **named by ≥1 recorded confusion edge**, ordered by inbound edge count | 34 skills / 38 edges (was 38 / 54 before this run's six) |
 | **2** | routable · no corpus · **no recorded edge** — a coverage gap with no recorded defect behind it | 156 skills |
 | **3** | non-self-activating · no corpus — **excluded from the denominator, so not corpus work at all** | 9 skills |
 
@@ -176,9 +176,18 @@ anyway. Naming them here stops them being mistaken for a wave-2 backlog.
 **Six wave-1 entries were closed in this run**, in inbound-count order:
 `security-audit` (5), `threat-modeling` (3), `markitdown` (3),
 `prompt-engineering-patterns` (3), `logging-monitoring` (2),
-`incident-commander` (2). Each new corpus uses its recorded inbound edges as its
-near-miss cases, so the neighbour that reported the confusion is the neighbour
-the new corpus tests against. The allowlist went **205 → 199**.
+`incident-commander` (2). The allowlist went **205 → 199**.
+
+**CORRECTED 2026-08-30 after a completion review.** This paragraph claimed each
+new corpus uses its recorded inbound edges as its near-miss cases. True for
+three of the six; in `threat-modeling`, `security-audit` and `markitdown` the
+near-misses are semantically adjacent skills overlapping the inbound set only
+partly, and each of those files now records the discrepancy in its own
+`description`. The ORDERING claim is untouched and was re-verified: these are
+the top six by inbound edge count at the base commit. The wave-1 parenthetical
+above was also wrong — it quoted the un-partitioned § 3 totals (42 / 63) rather
+than the prior value of this row under its own criterion, which is 38 / 54.
+`42 − 6 = 36` never reconciled with the 34 in the same cell, which is the tell.
 
 ## 4 — What this census does NOT establish
 

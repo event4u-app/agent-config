@@ -586,7 +586,15 @@ once.
          `trigger: false`), and all three present in the file.
          **MET** — `src/scripts/lint_skill_trigger_corpus.ts` now enforces it
          with five findings (`class-missing`, `class-vocab`, `class-polarity`,
-         `class-coverage`, `class-shape`). This does not contradict `:20-26`:
+         `class-coverage`, `class-shape`). **Four of the five are reachable
+         from real data today; `class-shape` is a forward guard and cannot be**
+         (completion review, 2026-08-30). It fires on a legacy-shaped corpus,
+         and the only two legacy-shaped files in the tree are exactly the two
+         grandfathered units, for which `judge` returns before the class rules
+         run. It is exercised by synthetic fixtures in `--self-test`, so it is
+         tested rather than untested — what it is not is currently live, and
+         counting it as live coverage would be the inflated-coverage claim this
+         very gate exists to prevent one level down. This does not contradict `:20-26`:
          nothing DETECTS the class, the author declares it and the gate checks
          the declaration — the mechanism the same file already uses for German
          at `:28-37`, for the same stated reason.
@@ -632,14 +640,26 @@ once.
       **The six were chosen by 2.2's wave order, not picked.** In inbound-edge
       order: `security-audit` (5 — the highest in the whole corpus),
       `threat-modeling` (3), `markitdown` (3), `prompt-engineering-patterns`
-      (3), `logging-monitoring` (2), `incident-commander` (2). Each new corpus
-      uses its own recorded inbound edges as its near-miss cases, so the
-      neighbour that reported the confusion is the neighbour the new corpus is
-      tested against — which is what makes this a defect fix rather than a
-      coverage bump.
+      (3), `logging-monitoring` (2), `incident-commander` (2).
+      **CORRECTED 2026-08-30 after a completion review.** This step claimed
+      that every new corpus uses its own recorded inbound edges as its
+      near-miss cases, "which is what makes this a defect fix rather than a
+      coverage bump". That holds for three of the six and not for the other
+      three: in `threat-modeling`, `security-audit` and `markitdown` the
+      near-misses are semantically adjacent skills that overlap the inbound
+      set only partly — and in one case the inbound namer is absent from the
+      near-misses entirely. Each of those three files now says so in its own
+      `description`. The **selection** claim is unaffected and was verified
+      independently: the six ARE the top six by inbound edge count at the base
+      commit (5, 3, 3, 3, 2, 2). What is corrected is the justification, not
+      the choice — half the batch is a defect fix and half is a coverage bump
+      on a defect-ranked ordering, which is a weaker and true statement.
 
       All six carry the 2.3 classes (they are diff-added, so the forward-only
-      rule binds on them and they could not have been merged without it), a
+      rule binds on them — a claim that was itself only true where the base ref
+      resolves, which the same review found and this branch fixed: an
+      unresolvable base now REFUSES instead of silently skipping every
+      forward-only rule), a
       German exemplar declaring `"language": "de"`, and at least one
       counterexample guarding over-triggering on unrelated input.
 

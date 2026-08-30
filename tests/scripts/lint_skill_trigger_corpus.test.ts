@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -10,6 +11,7 @@ import {
     GRANDFATHERED,
     MIN_NEAR_MISSES,
     MIN_POSITIVES,
+    changedUnits,
     evaluate,
     judge,
     statsFor,
@@ -258,6 +260,81 @@ describe('scan-scope protection', () => {
         // 90 corpus files exist in the shipped tree, so zero means the root
         // moved. A gate that scans nothing exits green unless it says this.
         expect(() => evaluate(root)).toThrow(DeadScopeError);
+    });
+});
+
+describe('the diff scope is a THIRD dead-scope, not an empty set', () => {
+    /**
+     * Regression for the completion-review finding of 2026-08-30.
+     *
+     * `changedUnits` used to return a bare `Set`, and an empty one meant BOTH
+     * "the diff touched no corpus file" and "git could not answer". Where the
+     * base ref does not resolve — a shallow clone, a fork remote, a tarball, an
+     * unfetched worktree — every forward-only rule became unreachable while
+     * `main()` printed its success line asserting the discipline had run.
+     */
+    function corpusRoot(prefix: string): string {
+        const root = fs.mkdtempSync(path.join(tmp, prefix));
+        const dir = path.join(root, 'src', 'skills', 'unit-a', 'evals');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'triggers.json'),
+            JSON.stringify({
+                queries: [
+                    { q: 'a', trigger: true },
+                    { q: 'b', trigger: true },
+                    { q: 'c', trigger: true },
+                    { q: 'd', trigger: false },
+                    { q: 'e', trigger: false },
+                ],
+            }),
+        );
+        return root;
+    }
+
+    it('reports no-repo distinctly from a clean diff', () => {
+        const root = corpusRoot('no-repo-');
+        const scope = changedUnits(root, 'origin/main');
+        expect(scope.kind).toBe('no-repo');
+    });
+
+    it('reports an unresolvable base distinctly from a clean diff', () => {
+        const root = corpusRoot('no-base-');
+        execFileSync('git', ['init', '-q'], { cwd: root });
+        execFileSync('git', ['commit', '-q', '--allow-empty', '-m', 'x'], {
+            cwd: root,
+            env: {
+                ...process.env,
+                GIT_AUTHOR_NAME: 't',
+                GIT_AUTHOR_EMAIL: 't@e',
+                GIT_COMMITTER_NAME: 't',
+                GIT_COMMITTER_EMAIL: 't@e',
+            },
+        });
+        const scope = changedUnits(root, 'origin/main');
+        expect(scope.kind).toBe('base-unresolvable');
+    });
+
+    it('REFUSES rather than passing green when the diff scope is unreadable', () => {
+        // The polarity that matters. Before the fix this returned a clean
+        // result with zero violations — the silent no-op.
+        expect(() => evaluate(corpusRoot('refuse-'))).toThrow(DeadScopeError);
+    });
+
+    it('still runs under FORWARD_ALL, which widens and never suppresses', () => {
+        const root = corpusRoot('forward-');
+        process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] = '1';
+        try {
+            // Reachable with no repo at all — that is what keeps --self-test,
+            // which runs in a temporary directory, from being unreachable.
+            const r = evaluate(root);
+            expect(r.scanned).toBe(1);
+            // And it WIDENS: the fixture declares no case class, so the
+            // forward-only rule must fire on it rather than stay quiet.
+            expect(r.violations.map((v) => v.rule)).toContain('class-missing');
+        } finally {
+            delete process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'];
+        }
     });
 });
 

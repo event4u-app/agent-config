@@ -32,9 +32,12 @@
  * German would be a heuristic in a file called a schema check: it would pass a
  * German-looking English sentence and fail a short German one, and its
  * failures would be unactionable. So German is declared — `"language": "de"`
- * on the case — and declaration is checked. Forward-only, because zero of the
- * 76 existing files carry the field: requiring it everywhere today would red
- * 76 files for a field that did not exist when they were written.
+ * on the case — and declaration is checked. Forward-only, because the field
+ * postdates almost every corpus: 25 of the 100 files in the shipped tree carry
+ * it today, so requiring it everywhere would red 75 files for a field that did
+ * not exist when they were written. (Both numbers move as corpora land; they
+ * are stated as of 2026-08-30 and are illustration, not a threshold — nothing
+ * reads them.)
  *
  * ## Forward-only, in three senses now
  *
@@ -99,7 +102,13 @@ const REPO_ROOT = process.env['LINT_SKILL_TRIGGER_CORPUS_ROOT'] ?? REAL_REPO_ROO
  * cannot reach the rule it claims to prove is the exact no-op this harness
  * exists to catch.
  */
-const FORWARD_ALL = process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] === '1';
+function forwardAll(): boolean {
+    // Read per CALL, not at module load. `selfTest` spawns a subprocess so a
+    // module-level const worked there by accident; an in-process caller — a
+    // unit test, or any future embedder — could not reach the flag at all,
+    // which made the widening path itself untestable without a spawn.
+    return process.env['LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL'] === '1';
+}
 
 export const MIN_POSITIVES = 3;
 export const MIN_NEAR_MISSES = 2;
@@ -258,8 +267,19 @@ export function judge(s: CorpusStats, forward: boolean): Violation[] {
 }
 
 /**
- * The case-class rules, all forward-only. Split out so the four findings read
- * as one discipline rather than as four unrelated additions to `judge`.
+ * The case-class rules, all forward-only. Split out so the findings read as one
+ * discipline rather than as unrelated additions to `judge`.
+ *
+ * **`class-shape` cannot fire on the tree as it stands, and that is stated
+ * rather than left to be discovered** (completion review, 2026-08-30). It fires
+ * on a legacy-shaped corpus; the only two legacy-shaped files in the tree are
+ * exactly the two `GRANDFATHERED` units, and `judge` returns before reaching
+ * here for those. So it is a FORWARD guard — it catches a legacy-shaped file
+ * added from now on, or a grandfathered one promoted — not a rule with live
+ * coverage. It is exercised by synthetic fixtures in `--self-test`, so it is
+ * tested; what it is not is currently reachable from real data. Counting it
+ * among the rules this gate enforces TODAY would inflate the coverage claim,
+ * which is the failure this whole file exists to prevent one level down.
  */
 function judgeClasses(s: CorpusStats): Violation[] {
     const out: Violation[] = [];
@@ -315,28 +335,63 @@ function judgeClasses(s: CorpusStats): Violation[] {
     return out;
 }
 
+/**
+ * What the diff scope actually is — three states, deliberately not collapsed.
+ *
+ * The previous shape returned a bare `Set` and an empty one meant BOTH "the
+ * diff touched no corpus file" and "git could not answer". Those are opposite
+ * facts: the first is a clean tree, the second is a gate that cannot know what
+ * changed. Collapsing them made every forward-only rule a silent no-op wherever
+ * the base ref does not resolve — a shallow clone, a fork remote, a tarball, a
+ * worktree that never fetched — while `main()` still printed its success line
+ * asserting the discipline had run. A gate that reports green on a scope it
+ * could not read is the exact failure `DeadScopeError` exists for, applied one
+ * level up from the population to the DIFF.
+ */
+export type ChangedScope =
+    | { kind: 'diff'; units: Set<string> }
+    | { kind: 'no-repo' }
+    | { kind: 'base-unresolvable'; base: string };
+
+function gitOk(root: string, args: readonly string[]): boolean {
+    try {
+        execFileSync('git', [...args], {
+            cwd: root,
+            encoding: 'utf-8',
+            // Silenced deliberately: outside a repo git prints its whole usage
+            // text to stderr, and a gate that dumps a manual page on a path it
+            // already handles is noise a reader has to learn to ignore.
+            stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /** Corpus files the diff added or modified, relative to a base ref. */
-export function changedUnits(root: string, base: string): Set<string> {
+export function changedUnits(root: string, base: string): ChangedScope {
+    if (!gitOk(root, ['rev-parse', '--git-dir'])) return { kind: 'no-repo' };
+    if (!gitOk(root, ['rev-parse', '--verify', '--quiet', base])) {
+        return { kind: 'base-unresolvable', base };
+    }
     let out = '';
     try {
         out = execFileSync('git', ['diff', '--name-only', `${base}...HEAD`], {
             cwd: root,
             encoding: 'utf-8',
-            // Silenced deliberately: outside a repo (a self-test fixture, a
-            // tarball install) git prints its whole usage text to stderr, and
-            // a gate that dumps a manual page on a path it already handles is
-            // noise a reader has to learn to ignore.
             stdio: ['ignore', 'pipe', 'ignore'],
         });
     } catch {
-        return new Set();
+        // The ref resolved a line ago, so a failure here is not "no diff".
+        return { kind: 'base-unresolvable', base };
     }
     const units = new Set<string>();
     for (const line of out.split('\n')) {
         const m = /^src\/skills\/([^/]+)\/evals\/triggers\.json$/.exec(line.trim());
         if (m?.[1] !== undefined) units.add(m[1]);
     }
-    return units;
+    return { kind: 'diff', units };
 }
 
 export interface Result {
@@ -356,7 +411,26 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
             'src/skills is unreadable — a corpus gate with no corpus passes every tree.',
         );
     }
-    const changed = changedUnits(root, base);
+    const scope = changedUnits(root, base);
+    // FORWARD_ALL widens to every unit, so it needs no diff and is checked
+    // first — that is what keeps `--self-test`, which runs in a temporary
+    // non-repo directory, reachable.
+    const wideMode = forwardAll();
+    if (!wideMode && scope.kind !== 'diff') {
+        throw new DeadScopeError(
+            'lint_skill_trigger_corpus',
+            scope.kind === 'no-repo'
+                ? 'not a git repository, so the diff scope cannot be read and every ' +
+                  'forward-only rule would be unreachable while this gate printed green. ' +
+                  'Run it inside the repo, or set LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL=1 ' +
+                  'to check every unit instead.'
+                : `base ref ${scope.base} does not resolve, so the diff scope cannot be ` +
+                  'read and every forward-only rule would be unreachable while this gate ' +
+                  'printed green. Fetch it (`git fetch origin main`) or pass a base that ' +
+                  'exists; LINT_SKILL_TRIGGER_CORPUS_FORWARD_ALL=1 checks every unit instead.',
+        );
+    }
+    const changed = scope.kind === 'diff' ? scope.units : new Set<string>();
     const ledger = new GateLedger('lint_skill_trigger_corpus');
     const violations: Violation[] = [];
     let scanned = 0;
@@ -368,7 +442,7 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
         ledger.plan(e.name);
         let own: Violation[];
         try {
-            own = judge(statsFor(e.name, file), FORWARD_ALL || changed.has(e.name));
+            own = judge(statsFor(e.name, file), wideMode || changed.has(e.name));
         } catch {
             own = [{ unit: e.name, rule: 'malformed', message: 'is not parseable JSON' }];
         }
@@ -379,7 +453,7 @@ export function evaluate(root = REPO_ROOT, base = 'origin/main'): Result {
     if (scanned === 0) {
         throw new DeadScopeError(
             'lint_skill_trigger_corpus',
-            'zero corpus files found under src/skills/*/evals/triggers.json — 76 exist ' +
+            'zero corpus files found under src/skills/*/evals/triggers.json — 100 exist ' +
                 'in the shipped tree, so an empty scan is a moved root, not a clean one.',
         );
     }
@@ -394,6 +468,33 @@ export function selfTest(): number {
         const d = path.join(root, 'src', 'skills', unit, 'evals');
         fs.mkdirSync(d, { recursive: true });
         fs.writeFileSync(path.join(d, 'triggers.json'), JSON.stringify(body));
+        // A REAL repo with a resolvable `origin/main`, not a bare directory.
+        //
+        // The non-forward arms below assert that a corpus is accepted when it
+        // is NOT diff-touched, and they used to get that for free: outside a
+        // repo `changedUnits` returned an empty set, which the gate could not
+        // distinguish from a clean diff. That conflation was the finding this
+        // branch fixed — an unreadable diff now REFUSES — so the fixtures have
+        // to supply the condition they were only ever simulating. Committing
+        // the file and pointing `origin/main` at that same commit makes the
+        // diff genuinely empty, which is what those arms mean.
+        const git = (...args: string[]): void => {
+            execFileSync('git', args, {
+                cwd: root,
+                stdio: ['ignore', 'ignore', 'ignore'],
+                env: {
+                    ...process.env,
+                    GIT_AUTHOR_NAME: 'selftest',
+                    GIT_AUTHOR_EMAIL: 'selftest@invalid',
+                    GIT_COMMITTER_NAME: 'selftest',
+                    GIT_COMMITTER_EMAIL: 'selftest@invalid',
+                },
+            });
+        };
+        git('init', '-q');
+        git('add', '-A');
+        git('commit', '-q', '-m', 'fixture');
+        git('update-ref', 'refs/remotes/origin/main', 'HEAD');
         return root;
     };
     const run = (root: string, forwardAll = false): number => {

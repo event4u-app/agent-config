@@ -1,64 +1,64 @@
 {
-    "skill": "security-audit",
-    "last_eval": "2026-08-30",
-    "description": "4 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are the four neighbours that named it: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening.",
-    "queries": [
-        {
-            "q": "audit this codebase for injection vulnerabilities — SQLi, XSS, unsafe deserialization",
-            "trigger": true,
-            "class": "exemplar"
-        },
-        {
-            "q": "do a pentest-style review of our application code and list what an attacker could actually reach",
-            "trigger": true,
-            "class": "exemplar"
-        },
-        {
-            "q": "scan our dependencies for known CVEs and tell me which of them are reachable from our code",
-            "trigger": true,
-            "class": "exemplar"
-        },
-        {
-            "q": "mach einen Security-Audit dieses Moduls und finde die Schwachstellen im Code",
-            "trigger": true,
-            "class": "exemplar",
-            "language": "de"
-        },
-        {
-            "q": "threat-model this new payments endpoint before I build it",
-            "trigger": false,
-            "class": "near-miss",
-            "note": "pre-implementation abuse-case pass over a change that does not exist yet, not a hunt through shipped code → threat-modeling"
-        },
-        {
-            "q": "give me an A-F security-maturity scorecard for this module with category ratings",
-            "trigger": false,
-            "class": "near-miss",
-            "note": "posture rating with evidence per category, explicitly not a vulnerability hunt → security-maturity-assessment"
-        },
-        {
-            "q": "red-team my agent config — could someone weaponise my CLAUDE.md or MCP servers?",
-            "trigger": false,
-            "class": "near-miss",
-            "note": "the attack surface is the agent's own configuration, not application code → agent-security-review"
-        },
-        {
-            "q": "harden this Ubuntu box — SSH posture and a default-deny firewall baseline",
-            "trigger": false,
-            "class": "near-miss",
-            "note": "operating-system posture on a host you run, verified on the box → server-hardening"
-        },
-        {
-            "q": "add a password strength meter to the signup form",
-            "trigger": false,
-            "class": "counterexample",
-            "note": "implementing a security-flavoured FEATURE; the word security appears and no audit is asked for"
-        },
-        {
-            "q": "why is this query slow — profile the hot path",
-            "trigger": false,
-            "class": "counterexample",
-            "note": "performance work with no security surface at all; guards against triggering on any 'audit this' phrasing"
-        }
-    ]
+  "skill": "security-audit",
+  "last_eval": "2026-08-30",
+  "description": "4 exemplars + 4 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1: this skill carries the highest inbound confusion count in the corpus (5 negatives in other skills' corpora name it as the correct destination) while carrying no corpus of its own. Exemplars cover the vulnerability hunt over EXISTING application code. Near-misses are four adjacent skills: the pre-implementation threat pass, the posture scorecard, the agent-config red-team, and host hardening. CORRECTED 2026-08-30 after a completion review: this line said they were \"the four neighbours that named it\". They are not the inbound set — at the base commit threat-modeling did not name this skill (its corpus landed in the same change), and evaluate-llm-feature, which did, is absent from the near-misses. Adjacency and inbound-edge count are separate facts; the original sentence merged them.",
+  "queries": [
+    {
+      "q": "audit this codebase for injection vulnerabilities — SQLi, XSS, unsafe deserialization",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "do a pentest-style review of our application code and list what an attacker could actually reach",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "scan our dependencies for known CVEs and tell me which of them are reachable from our code",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "mach einen Security-Audit dieses Moduls und finde die Schwachstellen im Code",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "threat-model this new payments endpoint before I build it",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "pre-implementation abuse-case pass over a change that does not exist yet, not a hunt through shipped code → threat-modeling"
+    },
+    {
+      "q": "give me an A-F security-maturity scorecard for this module with category ratings",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "posture rating with evidence per category, explicitly not a vulnerability hunt → security-maturity-assessment"
+    },
+    {
+      "q": "red-team my agent config — could someone weaponise my CLAUDE.md or MCP servers?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the attack surface is the agent's own configuration, not application code → agent-security-review"
+    },
+    {
+      "q": "harden this Ubuntu box — SSH posture and a default-deny firewall baseline",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "operating-system posture on a host you run, verified on the box → server-hardening"
+    },
+    {
+      "q": "add a password strength meter to the signup form",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "implementing a security-flavoured FEATURE; the word security appears and no audit is asked for"
+    },
+    {
+      "q": "why is this query slow — profile the hot path",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "performance work with no security surface at all; guards against triggering on any 'audit this' phrasing"
+    }
+  ]
 }
