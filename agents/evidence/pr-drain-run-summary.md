@@ -323,8 +323,8 @@ Nothing modified.
 | 1493 · 1488 · 1480 · 1489 · 1482 · 1499 | pre-run | — | — | merged 2026-08-20/21, nine days before this run — the mandate's "already merged this run" set |
 | 1734 | 1 | none — branch already contained `origin/main` | 1 | **merged `190651687`** (squash) |
 | 1733 | 2 | not attempted — see § The concurrent session | 0 | **merged `970e930d0` by the concurrent session**, not by this run |
-| 1735 | 3 | one, on a measured number → re-derived, then **discarded** | 1, discarded | **superseded by the concurrent session**; nothing of mine pushed |
-| 1736 | — | — | — | opened by the concurrent session after this run stopped draining |
+| 1735 | 3 | one, on a measured number → re-derived, then **discarded** | 1, discarded | my work **superseded by the concurrent session**, nothing of mine pushed; **merged `6399819a0` by this run** once its peer-authored head settled green and its worktree was idle |
+| 1736 · 1737 | — | — | — | opened by the concurrent session while this run was writing this file |
 | this file | last | none | — | see the PR that carries it |
 
 ## `#1734` — a job that could not run the properties it certifies
@@ -429,17 +429,25 @@ statement in the tree. They are kept as patch files outside the repository.
 
 ## What this run did not do, and why
 
-**It stopped draining rather than finish the queue.** `#1735` and `#1736` are
-open at the time of writing, both owned by the concurrent session, and the
-queue grew during the run rather than shrinking. Continuing would have meant
-re-doing work that session was already doing — twice measured, minutes apart —
-with a live risk of overwriting its in-flight edits. Neither PR is
-twice-exhausted and neither is superseded-closed; the honest label is that they
-have an owner and it is not this run.
+**It stopped AUTHORING fixes rather than finish the queue, and that is not the
+same as leaving it.** Continuing to repair PRs the concurrent session was
+repairing meant re-doing its work — twice measured, minutes apart — with a live
+risk of overwriting its in-flight edits. So this run stopped competing on
+authorship. It did not stop merging: `#1735` was merged by this run at
+`6399819a0` once its peer-authored head settled green (38/38) and its worktree
+was verified idle, because `main` was frozen behind it and leaving a frozen
+trunk waiting on another session is the worse failure.
 
-**`main` is red at the time of writing**, at `970e930d0`, on the consolidation
-floor described above. The fix-forward is `#1735`, which the concurrent session
-holds. This run did not revert and did not merge past it.
+**`main` was red at `970e930d0`** on the consolidation floor described above,
+and is green again at `6399819a0`. The fix that cleared it is the concurrent
+session's floor retirement, merged by this run. No revert was taken and nothing
+was merged past a failing required check.
+
+**`#1736` and `#1737` are open and were opened by the concurrent session while
+this file was being written.** Neither is twice-exhausted and neither is
+superseded-closed; the honest label is that they have an owner and it is not
+this run. The queue this run was given is drained; the queue as it stands is
+being fed faster than one session merges it.
 
 ## Process notes
 
@@ -459,5 +467,6 @@ and a finding nobody wrote down is a finding nobody has.
 
 ## Terminal PRs
 
-None. Two PRs are open and owned by a concurrent session; nothing is
+None. Two PRs (`#1736`, `#1737`) are open and owned by a concurrent session
+that opened them after this run's queue was drained; nothing is
 twice-exhausted, superseded-closed, or blocked on credentials.
