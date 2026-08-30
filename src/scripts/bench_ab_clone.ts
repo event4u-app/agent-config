@@ -24,6 +24,24 @@
  *
  * The clones tree (`internal/bench/ab/clones/`) is gitignored — only this script's
  * output schema is committed.
+ *
+ * ## The `candidate` variant
+ *
+ * `road-to-governed-harness-evolution` Phase 3 step 3.1. The roadmap's own
+ * `corrected-from-reproduction` note is why this is small: the master design
+ * described this script as living on a single "package present / absent" axis
+ * needing an axis extension, when `--variant` already carried three real
+ * variants whose third (`with-rdp`) sits on a different axis entirely. Adding a
+ * candidate is a new enum member on existing multi-variant machinery, NOT a new
+ * isolation mechanism.
+ *
+ * A candidate clone is `with` plus a validated set of mutations confined to the
+ * agent-config surface. Unlike the three fixed variants it is many-per-run, so
+ * it lands at `clones/candidate-<id>` and takes its id, dimension and lifecycle
+ * from a record file validated by `_lib/candidate_record.ts` BEFORE any bytes
+ * are copied. A mutation reaching outside the surface is refused there and
+ * again here against the resolved path; `bench_ab_integrity` is the third,
+ * independent check, over what actually landed on disk.
  */
 
 import { createHash } from 'node:crypto';
@@ -31,6 +49,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import {
+    type CandidateRecord,
+    PathOwnershipError,
+    assertMutationPathsOwned,
+    candidateRecordToJson,
+    parseCandidateRecord,
+} from './_lib/candidate_record.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // Python: Path(__file__).resolve().parents[2] → repo root.
@@ -40,7 +66,32 @@ const FIXTURE = path.join(AB_ROOT, 'fixture');
 const CLONES = path.join(AB_ROOT, 'clones');
 
 // Surfaces the `with` clone inherits from the package root.
-const WITH_SURFACES: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
+export const WITH_SURFACES: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
+
+/**
+ * Directory-name prefix for a candidate clone: `clones/candidate-<id>`.
+ *
+ * A candidate is NOT a fourth fixed variant sharing one directory the way
+ * `with` / `without` / `with-rdp` do — there are many candidates at once (the
+ * roadmap's exit criterion materialises five), so the id is part of the path.
+ * `bench_ab_integrity` discovers candidate roots by this prefix.
+ */
+export const CANDIDATE_PREFIX = 'candidate-';
+
+/**
+ * Filename of the candidate record dropped inside a candidate clone.
+ *
+ * Kept in sync with `bench_ab_integrity`'s `ALLOWED_DELTA_FILES` by
+ * `tests/scripts/candidate_surface_parity.test.ts` — a candidate clone
+ * legitimately carries a file the baseline does not, and integrity must know
+ * that before it can call anything else a violation.
+ */
+export const CANDIDATE_RECORD_FILE = '.bench-ab-candidate.json';
+
+/** Does this variant layer the agent-config surface onto the fixture? */
+function _layersSurface(variant: string): boolean {
+    return variant === 'with' || variant === 'with-rdp' || variant === 'candidate';
+}
 
 function die(msg: string): never {
     process.stderr.write(`bench_ab_clone: ${msg}\n`);
@@ -161,8 +212,8 @@ export function materialise_clone(variant: string, target: string): void {
             _copyStat(entry, dest);
         }
     }
-    // Layer the agent-config surface onto the `with` + `with-rdp` variants
-    if (variant === 'with' || variant === 'with-rdp') {
+    // Layer the agent-config surface onto the `with` + `with-rdp` + `candidate` variants
+    if (_layersSurface(variant)) {
         for (const surface of WITH_SURFACES) {
             const src = path.join(REPO_ROOT, surface);
             if (!_exists(src)) {
@@ -217,10 +268,113 @@ export function write_manifest(variant: string, target: string): void {
         variant,
         reasoning_enabled: variant === 'with-rdp',
         target_shape_hash: target_shape_hash(),
-        with_surfaces: variant === 'with' || variant === 'with-rdp' ? [...WITH_SURFACES] : [],
+        with_surfaces: _layersSurface(variant) ? [...WITH_SURFACES] : [],
         fixture_relpath: path.relative(REPO_ROOT, FIXTURE).split(path.sep).join('/'),
     };
     fs.writeFileSync(path.join(target, '.bench-ab-manifest.json'), `${_pyJsonDumps(manifest, 2)}\n`, 'utf-8');
+}
+
+/**
+ * Apply a candidate's mutations inside an already-materialised clone.
+ *
+ * Two refusals, and the order matters. `assertMutationPathsOwned` runs over the
+ * WHOLE set before the first byte is written, so a set whose third mutation
+ * escapes the surface leaves no half-mutated clone behind. Then each write is
+ * re-checked against the resolved absolute path, which catches the case the
+ * relative check cannot see: a symlink already inside `.claude/` pointing out
+ * of the clone. The relative form is what the record declares; the resolved
+ * form is what the filesystem would actually write, and a candidate that
+ * mutates the real package tree would corrupt the source of truth this whole
+ * programme is trying to evaluate.
+ *
+ * Throws rather than exiting so the resolved-path branch is reachable from a
+ * unit test — `main` turns it back into the CLI's exit 1. A guard that can only
+ * be exercised by killing the test process is a guard nobody has seen red.
+ *
+ * @throws {PathOwnershipError} on a declared or a resolved escape.
+ */
+export function apply_candidate_mutations(record: CandidateRecord, target: string): void {
+    assertMutationPathsOwned(record.mutations);
+    const root = fs.realpathSync(target);
+    for (const m of record.mutations) {
+        const dest = path.join(target, m.path);
+        const parent = path.dirname(dest);
+        fs.mkdirSync(parent, { recursive: true });
+        const realParent = fs.realpathSync(parent);
+        if (realParent !== root && !realParent.startsWith(root + path.sep)) {
+            throw new PathOwnershipError(
+                `${m.path} (resolves to ${realParent}, outside candidate clone ${record.id})`,
+            );
+        }
+        fs.writeFileSync(dest, m.content, 'utf-8');
+    }
+}
+
+/**
+ * Materialise ONE candidate clone at `clones/candidate-<id>`.
+ *
+ * The record is validated by `parseCandidateRecord` BEFORE anything is copied,
+ * so a candidate that violates the one-primary-dimension rule (3.2), names a
+ * fourth mutation dimension (3.3) or carries no lifecycle state (3.4) never
+ * reaches the filesystem. Validating after materialisation would leave a clone
+ * on disk that no schema admits.
+ *
+ * The clone's lifecycle state is recorded, never inferred: a candidate clone
+ * existing on disk says the candidate was MATERIALISED and nothing more.
+ */
+export function clone_candidate(record: CandidateRecord, opts: { refresh: boolean; quiet?: boolean }): string {
+    const quiet = opts.quiet ?? false;
+    const target = path.join(CLONES, `${CANDIDATE_PREFIX}${record.id}`);
+    if (_exists(target) && !opts.refresh) {
+        if (!quiet) {
+            process.stdout.write(
+                `bench_ab_clone: candidate ${record.id} clone already present at ${target} (use --refresh to rebuild)\n`,
+            );
+        }
+        return target;
+    }
+    if (_exists(target)) {
+        fs.rmSync(target, { recursive: true, force: true });
+    }
+    materialise_clone('candidate', target);
+    apply_candidate_mutations(record, target);
+    write_manifest('candidate', target);
+    fs.writeFileSync(
+        path.join(target, CANDIDATE_RECORD_FILE),
+        `${_pyJsonDumps(candidateRecordToJson(record), 2)}\n`,
+        'utf-8',
+    );
+    if (!quiet) {
+        process.stdout.write(`bench_ab_clone: built candidate ${record.id} clone at ${target}\n`);
+    }
+    return target;
+}
+
+/**
+ * Load and validate a candidate record file.
+ *
+ * A malformed record exits 1 with the schema's own message rather than a
+ * generic parse error — the schema messages name which invariant was broken,
+ * and an operator holding a rejected record needs that, not a line number.
+ */
+export function load_candidate_record(file: string): CandidateRecord {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(file, 'utf-8');
+    } catch {
+        die(`candidate record not readable at ${file}`);
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch (e) {
+        die(`candidate record at ${file} is not valid JSON: ${(e as Error).message}`);
+    }
+    try {
+        return parseCandidateRecord(parsed);
+    } catch (e) {
+        die(`candidate record at ${file} rejected — ${(e as Error).message}`);
+    }
 }
 
 export function clone(variant: string, opts: { refresh: boolean; quiet?: boolean }): string {
@@ -245,18 +399,21 @@ export function clone(variant: string, opts: { refresh: boolean; quiet?: boolean
     return target;
 }
 
-type Variant = 'with' | 'without' | 'with-rdp' | 'both' | 'all';
+type Variant = 'with' | 'without' | 'with-rdp' | 'candidate' | 'both' | 'all';
 
 interface ParsedArgs {
     refresh: boolean;
     variant: Variant;
     print_shape_hash: boolean;
+    /** Paths to candidate record files; only meaningful with `--variant candidate`. */
+    candidate_records: string[];
 }
 
 export function parse_args(argv: string[]): ParsedArgs {
     let refresh = false;
     let variant: Variant = 'both';
     let print_shape_hash = false;
+    const candidate_records: string[] = [];
     let i = 0;
     while (i < argv.length) {
         const arg = argv[i] as string;
@@ -284,23 +441,38 @@ export function parse_args(argv: string[]): ParsedArgs {
             i += 1;
             continue;
         }
+        if (arg === '--candidate-record') {
+            const next = argv[i + 1];
+            if (next === undefined) {
+                _argparseError('argument --candidate-record: expected one argument');
+            }
+            candidate_records.push(next);
+            i += 2;
+            continue;
+        }
+        if (arg.startsWith('--candidate-record=')) {
+            candidate_records.push(arg.slice('--candidate-record='.length));
+            i += 1;
+            continue;
+        }
         if (arg === '-h' || arg === '--help') {
             process.stdout.write(
-                'usage: bench_ab_clone [-h] [--refresh] [--variant {with,without,with-rdp,both,all}] [--print-shape-hash]\n',
+                'usage: bench_ab_clone [-h] [--refresh] [--variant {with,without,with-rdp,candidate,both,all}] ' +
+                    '[--candidate-record PATH] [--print-shape-hash]\n',
             );
             process.exit(0);
         }
         _argparseError(`unrecognized arguments: ${arg}`);
     }
-    return { refresh, variant, print_shape_hash };
+    return { refresh, variant, print_shape_hash, candidate_records };
 }
 
 function _checkVariant(v: string): Variant {
-    if (v === 'with' || v === 'without' || v === 'with-rdp' || v === 'both' || v === 'all') {
+    if (v === 'with' || v === 'without' || v === 'with-rdp' || v === 'candidate' || v === 'both' || v === 'all') {
         return v;
     }
     _argparseError(
-        `argument --variant: invalid choice: ${_pyRepr(v)} (choose from 'with', 'without', 'with-rdp', 'both', 'all')`,
+        `argument --variant: invalid choice: ${_pyRepr(v)} (choose from 'with', 'without', 'with-rdp', 'candidate', 'both', 'all')`,
     );
 }
 
@@ -318,10 +490,38 @@ export function main(argv?: string[]): number {
         process.stdout.write(`${target_shape_hash()}\n`);
         return 0;
     }
+    if (args.candidate_records.length > 0 && args.variant !== 'candidate') {
+        _argparseError('--candidate-record requires --variant candidate');
+    }
+    if (args.variant === 'candidate') {
+        if (args.candidate_records.length === 0) {
+            _argparseError('--variant candidate requires at least one --candidate-record PATH');
+        }
+        const seen = new Set<string>();
+        for (const file of args.candidate_records) {
+            const record = load_candidate_record(file);
+            if (seen.has(record.id)) {
+                die(`candidate id '${record.id}' given twice — ids name clone directories and must be unique`);
+            }
+            seen.add(record.id);
+            try {
+                clone_candidate(record, { refresh: args.refresh });
+            } catch (e) {
+                if (e instanceof PathOwnershipError) {
+                    die(`candidate ${record.id} rejected — ${e.message}`);
+                }
+                throw e;
+            }
+        }
+        return 0;
+    }
     let variants: readonly string[];
     if (args.variant === 'both') {
         variants = ['with', 'without'];
     } else if (args.variant === 'all') {
+        // Deliberately NOT extended with candidates: a candidate needs a record
+        // to know its dimension and lifecycle, so there is no blind aggregate
+        // that could produce one. `all` keeps meaning the three fixed variants.
         variants = ['with', 'without', 'with-rdp'];
     } else {
         variants = [args.variant];
