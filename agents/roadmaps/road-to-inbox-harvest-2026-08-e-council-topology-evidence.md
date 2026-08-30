@@ -1025,8 +1025,13 @@ byte-pinned by tests. Any work here runs through
       **83 passed / 83**, including
       `orchestrator.test.ts:125-136` (`dispatches members in input order,
       accumulates tokens`), which is the byte-pinned dispatch-order assertion;
-      (2) `git diff origin/main --stat -- tests/` → **empty**, so the tests are
-      green **unmodified**, not green because they were edited into agreement;
+      (2) `git diff origin/main -- tests/scripts/ai_council/orchestrator.test.ts`
+      → **0 lines**, so the tests are green **unmodified**, not green because
+      they were edited into agreement. Scoped to that file deliberately: the
+      branch DOES add one test file under `tests/`
+      (`deterministic_fallback.test.ts`, step 11.4), so a tree-wide
+      `--stat -- tests/` is no longer empty and quoting it would be a stale
+      claim rather than a stronger one;
       (3) `grep -c 'Promise.all' src/scripts/ai_council/orchestrator.ts` → `0`,
       so no parallel dispatch primitive was introduced.
       The step's stop signal ("needing to edit them is the signal to stop") was
