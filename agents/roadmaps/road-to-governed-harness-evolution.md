@@ -139,7 +139,7 @@ once.
       live from here: the first later-phase step that cites no row is where it
       fails, and the matrix's own § What this matrix does NOT establish says so
       in the artefact rather than only here.
-- [ ] **0.2 Reconcile the estate with an explicit disposition per overlapping
+- [x] **0.2 Reconcile the estate with an explicit disposition per overlapping
       plan.** `from-skipped-parent`: the skipped parent made this a P0 exit
       criterion with a five-verb disposition — `own here / fold into existing /
       depend on existing / supersede proposal / drop` — and the closing
@@ -149,6 +149,31 @@ once.
       matrix in 0.1 does not.
       verify: every roadmap this one overlaps carries one of the five verbs, and
       no capability has two execution owners.
+
+      **CLOSED 2026-08-30.** The seven-row disposition table is in
+      `agents/evidence/analysis/governed-harness-capability-inventory.md`
+      § Estate reconciliation — three active roadmaps, one parked, three
+      superseded proposals, one verb each.
+
+      **The two `drop` rows are MEASURED, because "no overlap" is the easiest
+      claim to make without looking.** `grep -ciE 'trigger corpus|paired.?verdict|
+      outcome vocabular|activation ladder|promotion bridge'` returns **0** over
+      both `road-to-capability-native-execution` and
+      `road-to-inbox-harvest-2026-08-e-council-topology-evidence`.
+
+      **The one real overlap was already reconciled, and this step consumes that
+      rather than re-deciding it.** `road-to-experience-loop-broadening`'s E1
+      (AI council 2/2, 2026-08-29) assigns the three shared mechanisms: this
+      roadmap owns the trigger corpus and the paired-verdict mechanism, the
+      sibling owns outcome-vocabulary reconciliation — which is exactly why this
+      roadmap's 1.4 already reads `[x]` as a non-blocking consumption reference.
+      Re-deciding it here would create the second execution owner the invariant
+      forbids.
+
+      **`road-to-gated-harness-evolution-deep-v4` takes `supersede`, not
+      `drop`**, and the distinction is Risk 2: it is the skipped parent the
+      master never named, so dropping it is the consolidation defect rather than
+      a tidy-up. Its content is folded back in and marked `from-skipped-parent`.
 - [ ] **0.3 Name the state classes without touching any claim.** Label
       authoritative / derived / evidence / adaptive state, citing
       `docs/contracts/audit-log-v1.md` as the already-sanctioned evidence-state

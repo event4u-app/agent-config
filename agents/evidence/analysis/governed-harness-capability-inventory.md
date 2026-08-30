@@ -63,3 +63,32 @@ Three, and each names what was searched rather than asserting absence.
   at `origin/main` on 2026-08-30. None of these carriers was run against a
   candidate, because no candidate exists yet — the first time these verdicts are
   tested is Phase 3.
+
+## Estate reconciliation — step 0.2's five-verb disposition, per overlapping plan
+
+Step 0.2 asks a different question from the matrix above: that one is
+capability → carrier, this one is **roadmap → roadmap**, with one of five verbs
+per overlapping plan (`own here / fold into existing / depend on existing /
+supersede proposal / drop`) and the closing invariant **no capability has two
+execution owners**.
+
+| Overlapping plan | State | Verb | Basis |
+|---|---|---|---|
+| `road-to-experience-loop-broadening` | active | **depend on existing** (per mechanism, both directions) | Its E1 was resolved 2026-08-29 by AI council 2/2 — *stay separate, every overlap assigned to exactly one canonical owner* — and its canonical ownership matrix already assigns the three shared mechanisms. This roadmap owns the trigger corpus (Phase 2) and the paired-verdict mechanism (4.3); the sibling owns outcome-vocabulary reconciliation (its 1.3), which is why **this roadmap's 1.4 is re-scoped to a non-blocking consumption reference** and is already `[x]`. |
+| `road-to-capability-native-execution` | active | **drop** (no overlap to reconcile) | Measured, not assumed: `grep -ciE 'trigger corpus\|paired.?verdict\|outcome vocabular\|activation ladder\|promotion bridge'` over that file returns **0**. Its subject is browser capability dispatch; the only shared thing is the estate-wide *do not build a second router* discipline, which both roadmaps discharge against the same existing primitives rather than against each other. |
+| `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | active | **drop** (no overlap to reconcile) | Same measurement, same result: **0** matches. Its subject is council topology evidence. |
+| `road-to-routing-assurance-live-floors` | parked in `later/` | **depend on existing** — and keep it parked | Step 5.2 of this roadmap is *"keep the live-floors park intact. No live harness."* The park is a precondition of this roadmap's scope, not a plan to fold in. |
+| `road-to-gated-self-evolution` v3 | superseded proposal | **supersede proposal** | Named in this roadmap's own supersedes header. |
+| `road-to-evidence-driven-harness-evolution` | superseded proposal | **supersede proposal** | Named in the same header, and cited at `:1200-1201` for its declared trust boundary. |
+| `road-to-gated-harness-evolution-deep-v4` | superseded proposal, **not named by the master** | **supersede proposal** | The skipped parent. This roadmap folds its content back in and marks each such item `from-skipped-parent` — which is why the verb is `supersede`, not `drop`: dropping it is the consolidation defect Risk 2 names. |
+
+**No capability has two execution owners.** The only capabilities with a
+plausible second claimant are the three in the sibling's matrix, and that matrix
+assigns each exactly once. The three `drop` rows have no shared capability to
+own, measured rather than asserted. The `supersede` rows are not executing.
+
+**What this does NOT settle.** A verb is a disposition, not a schedule: `depend
+on existing` explicitly does **not** make the owner's completion an entry or exit
+criterion for the non-owner, per the sibling's *"a reference must not become a
+hidden gate"* clause. And the reciprocal half lives in the sibling — this table
+is consistent with it and does not restate its authority.
