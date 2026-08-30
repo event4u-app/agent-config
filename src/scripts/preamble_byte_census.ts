@@ -82,6 +82,72 @@ function readCharsIfExists(p: string): number {
 // scope, and this file uses both below.
 export { censusRuleDir, type RuleDirCensus };
 
+/**
+ * The user-scope rule payload, DERIVED from the projection instead of read off
+ * the developer's machine.
+ *
+ * `road-to-agent-turnaround` 4.1. `src/config/preamble-payload-budget.json`
+ * excludes the user-scope bucket as *"machine-dependent, not CI-checkable"*.
+ * That reason is falsifiable and this function falsifies it: the layer is
+ * written by this package's own installer out of `dist/agent-src/rules/`, and
+ * which rules go to the GLOBAL layer rather than the project one is decided by
+ * frontmatter — `workspaces:` naming the package's own maintainer workspace —
+ * not by anything on the machine.
+ *
+ * Verified exactly on 2026-08-30, which is why this is a partition and not an
+ * estimate: 119 projected rules, 15 carrying `workspaces: [agent-config-maintainer]`,
+ * and 119 − 15 = 104 = the file count of the installed `~/.claude/rules/`. The
+ * 15 split further into 13 written to the project `.claude/rules/` and 2 that
+ * are `type: manual` and written nowhere — which is why `packageOnly` is
+ * reported rather than folded away.
+ *
+ * The predicate is deliberately narrow: a rule is package-only when its
+ * `workspaces:` list exists and contains ONLY the maintainer workspace. A rule
+ * with no `workspaces:` key ships everywhere, which is the common case.
+ */
+export interface DeliveredRuleCensus {
+    /** Rules the global layer receives — the machine-independent user-scope figure. */
+    delivered: RuleDirCensus;
+    /** Rules restricted to this package's own workspace. */
+    packageOnly: RuleDirCensus;
+}
+
+const MAINTAINER_WORKSPACE = 'agent-config-maintainer';
+
+export function censusDeliveredRulePayload(projectionDir: string): DeliveredRuleCensus {
+    const empty = (): RuleDirCensus => ({ files: 0, chars: 0 });
+    const delivered = empty();
+    const packageOnly = empty();
+    let names: string[];
+    try {
+        names = fs.readdirSync(projectionDir).filter((f) => f.endsWith('.md'));
+    } catch {
+        return { delivered, packageOnly };
+    }
+    for (const name of names) {
+        const abs = path.join(projectionDir, name);
+        let text: string;
+        try {
+            text = fs.readFileSync(abs, 'utf8');
+        } catch {
+            continue;
+        }
+        const m = /^workspaces:\s*\[([^\]]*)\]/m.exec(text);
+        const listed =
+            m === null
+                ? []
+                : m[1]!
+                      .split(',')
+                      .map((x) => x.trim())
+                      .filter((x) => x !== '');
+        const isPackageOnly = listed.length > 0 && listed.every((w) => w === MAINTAINER_WORKSPACE);
+        const bucket = isPackageOnly ? packageOnly : delivered;
+        bucket.files += 1;
+        bucket.chars += Buffer.byteLength(text, 'utf8');
+    }
+    return { delivered, packageOnly };
+}
+
 export interface PerRuleCost {
     file: string;
     chars: number;
@@ -265,6 +331,25 @@ export interface ByteCensusSource {
 
 export interface ByteCensus {
     sources: ByteCensusSource[];
+    /**
+     * The projection-derived view of the user-scope bucket — road-to-agent-turnaround 4.1.
+     *
+     * DELIBERATELY NOT IN `sources`, and the reason is a defect this change made
+     * and caught: `sources` is SUMMED into `measurable_tokens_total`, and this is
+     * a second VIEW of the user-scope row already in it, not additional payload.
+     * Putting it there added ~123k phantom tokens to the total and reddened
+     * `check_preamble_payload_budget` on the first run. A non-additive figure
+     * belongs beside the sum, never inside it.
+     */
+    derived_user_scope: {
+        delivered_files: number;
+        delivered_chars: number;
+        delivered_tokens: number;
+        package_only_files: number;
+        package_only_chars: number;
+        package_only_tokens: number;
+        basis: string;
+    };
     measurable_tokens_total: number;
     /** Includes the residual bucket — always ≈ measured_cold_start_median by construction (see module doc comment). */
     grand_total_tokens: number;
@@ -353,6 +438,7 @@ export function buildByteCensus(opts: {
     skillsCatalog: SkillsCatalogCensus;
     topRules: PerRuleCost[];
     duplicateScope: ReturnType<typeof censusDuplicateScope>;
+    deliveredRules: DeliveredRuleCensus;
     measuredColdStartMedian: number | null;
     coldStartLegs: number;
 }): ByteCensus {
@@ -456,6 +542,21 @@ export function buildByteCensus(opts: {
 
     return {
         sources,
+        derived_user_scope: {
+            delivered_files: opts.deliveredRules.delivered.files,
+            delivered_chars: opts.deliveredRules.delivered.chars,
+            delivered_tokens: tokensFromChars(opts.deliveredRules.delivered.chars),
+            package_only_files: opts.deliveredRules.packageOnly.files,
+            package_only_chars: opts.deliveredRules.packageOnly.chars,
+            package_only_tokens: tokensFromChars(opts.deliveredRules.packageOnly.chars),
+            basis:
+                'Σ byte size of every dist/agent-src/rules/*.md whose `workspaces:` does not restrict it to ' +
+                `the ${MAINTAINER_WORKSPACE} workspace, chars/4 — computed without reading ~/.claude at all. ` +
+                'This is the bucket src/config/preamble-payload-budget.json excludes as "machine-dependent, ' +
+                'not CI-checkable", and computing it here is what falsifies that reason. A gap against the ' +
+                'measured user-scope row is INSTALL DRIFT (the machine carries an older release), never a ' +
+                'defect in either number.',
+        },
         measurable_tokens_total: measurableTokensTotal,
         grand_total_tokens: grandTotal,
         measured_cold_start_median: median,
@@ -486,6 +587,7 @@ export function buildReport(opts: Options): ByteCensus {
     const skillsCatalog = censusSkillsCatalog(opts.skillsDir);
     const topRules = topRulesByCost(opts.projectRulesDir, 10);
     const duplicateScope = censusDuplicateScope(opts.userRulesDir, opts.projectRulesDir);
+    const deliveredRules = censusDeliveredRulePayload(opts.projectRulesDir);
 
     const scan = scanTranscripts({ root: opts.root, maxAgeDays: opts.maxAgeDays });
     const coldStart = computeColdStarts(scan.records);
@@ -499,6 +601,7 @@ export function buildReport(opts: Options): ByteCensus {
         skillsCatalog,
         topRules,
         duplicateScope,
+        deliveredRules,
         measuredColdStartMedian,
         coldStartLegs: coldStart.legs,
     });
@@ -518,6 +621,17 @@ export function renderText(r: ByteCensus): string {
         out.push(`    files=${s.files} chars=${s.chars} tokens_estimate=${Math.round(s.tokens_estimate)} [${s.provenance}]`);
         out.push(`    basis: ${s.basis}`);
     }
+    out.push('');
+    const d = r.derived_user_scope;
+    out.push('');
+    out.push('User-scope bucket, DERIVED from the projection (NOT summed — a second view of a row above):');
+    out.push(
+        `  delivered to the global layer: files=${String(d.delivered_files)} chars=${String(d.delivered_chars)} tokens_estimate=${String(d.delivered_tokens)}`,
+    );
+    out.push(
+        `  package-only (never delivered): files=${String(d.package_only_files)} chars=${String(d.package_only_chars)} tokens_estimate=${String(d.package_only_tokens)}`,
+    );
+    out.push(`  basis: ${d.basis}`);
     out.push('');
     out.push(`measurable_tokens_total (excludes residual): ${Math.round(r.measurable_tokens_total)}`);
     out.push(`grand_total_tokens (includes residual): ${Math.round(r.grand_total_tokens)}`);
