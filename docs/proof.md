@@ -172,7 +172,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 29 claim(s) are logged as
+We also publish our **debt**: 30 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -349,7 +349,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (82) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 96 ledger entries · 59 backed · 30 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 97 ledger entries · 59 backed · 31 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -393,6 +393,7 @@ Undeclared rules (82) carry no row — an honest gap beats a false claim.
 | `enforcement-undeclared-denominator` | quant | backed | — | `exec:check_enforcement_denominator -> 0` |
 | `essential-tier-cost-factor` | quant | backed | — | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | — | `exec:skill_eval_coverage --check -> 0` |
+| `experience-loop-repeated-failure-effect` | quant | unbacked | — | `PRE-REGISTERED 2026-08-30` |
 | `experiment-loop-iteration-floor` | quant | unbacked | — | `PRE-REGISTERED 2026-08-17 (road-to-metric-loop-and-review-integrity Phase 0/5 — the floor was fixed before the spike ran, and the spike's kill criterion was its complement: "fewer than five clean iterations" would have left Phase 3 unbuilt). Measured on a toy metric in a scratch repository, `agents/evidence/eval-findings/metric-loop-s01.md`: 6 clean iterations, metric 24 → 3, with iteration 5 reverting a change that improved the metric 67 % and broke behavior. That result answers the PHASE GATE and is why the skill shipped. It does NOT back this claim, and the distinction is the whole reason the entry stays unbacked: the run was one agent, one session, one toy metric whose evaluator was written alongside the loop, so it measured whether the PROTOCOL holds, not whether the shipped skill drives a real metric. BACKING REQUIRES: ≥ 3 runs of the shipped `experiment-loop` skill against metrics that existed before the run, each with its register committed, each reaching ≥ 5 clean iterations. DROP: any run below the floor publishes the null and the skill is withdrawn rather than the floor lowered — lowering a pre-registered floor after seeing the data is the tuning this roadmap's own s04 finding forbids.` |
 | `forensics-pack-value` | quant | unbacked | — | `agents/evidence/release-findings/` |
 | `gated-platform-reads` | quant | backed | — | `docs/benchmark.md#ship-gated-reach` |

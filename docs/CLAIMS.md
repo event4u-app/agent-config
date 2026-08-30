@@ -1047,3 +1047,40 @@ is the named exception in the claim itself.
   `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`.
 - status: resolved-null
 - last_verified: 2026-08-30
+
+### claim: experience-loop-repeated-failure-effect
+
+- claim: PRE-REGISTERED, unmeasured. Whether broadening the learning loop
+  produces a reproducible fall in the repeated-failure rate at held quality and
+  non-increased cost.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-30
+  (`road-to-experience-loop-broadening` step 9.4 — committed BEFORE any
+  measurement run; the step's verify line is a commit-ordering assertion, so the
+  git history is the evidence). Full statement:
+  `agents/evidence/experience-loop-prereg.md`.
+  (1) ONE core metric, not a catalogue: the repeated-failure rate out of
+  `extract_audit_patterns` — patterns whose outcome differs from success across
+  INDEPENDENT `work_id`s — read from the AMENDED episode view. The amendment
+  path is load-bearing: a repeat is the signal that surfaces after the terminal
+  record is written, so an unamended rate undercounts in the flattering
+  direction.
+  (2) The verdict is a VECTOR — repeated failures x quality held x cost —
+  reported side by side and never combined. There is no weighting, because a
+  weighting is what lets a strong arm carry a missing one.
+  (3) PROVE: a reproducible fall at held quality and non-increased cost, above
+  the power floor.
+  (4) THE NEGATIVE, carrying the same force and fixed now: no movement, a rise,
+  or an unmeasurable arm means the loop is NOT built out further on this
+  evidence, the result is filed `resolved-null`, and no re-scoped claim is
+  invented afterwards — "it helped in a different way than we measured" is
+  precisely the move this pre-registration makes unavailable.
+  (5) UNDERPOWERED is neither a pass nor a null: below the power floor the run
+  settles nothing and may be cited for neither direction.
+  (6) SCOPE BOUNDS, before the reading: the corpus is one machine's gitignored
+  runtime state and measures THIS install, never the package's; and efficacy
+  must be measured EXTERNALLY — a loop scored on whether it agrees with its own
+  experience report validates itself, so no component of the verdict may be
+  sourced from the report's output.
+- status: unbacked
+- last_verified: 2026-08-30

@@ -929,17 +929,52 @@ So the state is deliberate and bounded rather than an oversight:
       verify: at least one repeated card has resulted in a removal — a
       deterministic query or helper replacing a prose instruction, with the
       prose deleted in the same change.
-- [ ] **9.4 One pre-registered paired question.** Not a metric catalogue.
+- [x] **9.4 One pre-registered paired question.** Not a metric catalogue.
       Exactly one core metric: the repeated-failure rate out of
       `extract_audit_patterns` (patterns whose outcome ≠ success across
       independent `work_id`s), read from the amended view per Phase 3. The
       verdict is a vector — quality held × cost × repeated failures — and a
       failed arm yields inconclusive, never a fabricated score. Both directions
       are written into the claims ledger before the data lands.
+      **DONE 2026-08-30, and the commit ORDER is the artefact.** The verify line
+      is a commit-ordering assertion, so `agents/evidence/experience-loop-prereg.md`,
+      the `repeated-failure-rate` registry entry and the `status: unbacked`
+      ledger claim all land in this commit — before any run exists. Nothing in
+      them was written with a number in hand.
+      **The negative carries the same force as the positive**, which is the
+      clause that actually costs something: no movement, a rise, or an
+      unmeasurable arm means the loop is not built out further on this evidence,
+      the result is filed `resolved-null`, and **no re-scoped claim is invented
+      afterwards** — "it helped in a different way than we measured" is
+      precisely the move this pre-registration makes unavailable.
+      **UNDERPOWERED is neither a pass nor a null**, mirroring `paired_verdict`:
+      below the power floor the run settles nothing and may be cited for neither
+      direction.
+      **Efficacy must be measured externally.** A loop scored on whether it
+      agrees with its own experience report validates itself, so no component of
+      the verdict may be sourced from the report's output — the constraint the
+      council attached to the runtime-consumption blocker, carried here rather
+      than left there.
       verify: the negative consequence is committed before the measurement run.
-- [ ] **9.5 Freeze the experiment set.** `from-skipped-parent`: evaluator,
+- [x] **9.5 Freeze the experiment set.** `from-skipped-parent`: evaluator,
       corpus, task definition, baseline and protected fixtures are frozen for
       the duration of a comparison.
+      **DONE 2026-08-30** — `src/scripts/_lib/experiment_freeze.ts`.
+      **`assertUnchanged` THROWS rather than returning a verdict**, and that is
+      the design decision rather than an implementation detail: a verdict is a
+      value a caller mid-run can log and step past, and a caller mid-run has
+      every incentive to — the run is already expensive and the drift usually
+      looks small. An abort is the only shape that cannot be quietly absorbed,
+      and "aborts rather than continuing" is what the step asks for in those
+      words.
+      **All five are covered by construction**: the test table asserts its own
+      mutation set equals the frozen-element list, so a sixth element cannot be
+      added to the type and silently go untested while the suite still reads as
+      exhaustive.
+      **A reordered fixture list is NOT drift.** Order is a property of how a
+      caller enumerated a directory, not of the experiment, and a freeze that
+      fired there would be switched off the first time it fired spuriously —
+      which is how guards die.
       verify: a mid-run change to any of the five aborts the comparison rather
       than continuing it.
 - [~] **9.6 The Class-C question, as an owner decision.** Deferred: may
