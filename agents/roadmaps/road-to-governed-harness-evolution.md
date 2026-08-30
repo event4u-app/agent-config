@@ -5,6 +5,17 @@ estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The merge-authority b
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-experience-loop-broadening is the open question E2 puts to the owner — pre-merging would decide it by authoring."
+estate_growth_exempt: >
+  Grows open_blockers 29 -> 30, and the growth is a CONSERVATIVE reading of a
+  split council rather than new work. Steps 0.4 and 0.5 were closed earlier in
+  the same run; put to the council as a reversal of a recorded disposition, the
+  two seats split 1/1 — (b) closure stands with a call-site acceptance
+  criterion, (d) reopen 0.4-0.5 until an end-to-end test proves the runner
+  routes through the guards. A split is an escalation condition, not a verdict,
+  so the side that risks UNDER-claiming was taken and `guard-call-site-integration`
+  records both rationales verbatim so the owner can reverse it cheaply. The
+  alternative to one blocker is two steps marked `[x]` on the more convenient
+  half of a split, which is the over-claim this roadmap exists to prevent.
 ---
 # Road to governed harness evolution
 
@@ -246,7 +257,7 @@ once.
 > its verify asks for a committed, falsifiable document and nothing more, which
 > is satisfiable today and is worth less every day it waits.
 
-- [ ] **0.4 Make the evaluator trust boundary detectable, not just declared.**
+- [~] **0.4 Make the evaluator trust boundary detectable, not just declared.** <!-- blocked-by: guard-call-site-integration -->
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
       and stops there. Add a per-field `visibility_class` on every observation, a
@@ -254,12 +265,12 @@ once.
       truth appears in proposer context.
       verify: a run in which a holdout value reaches proposer context exits
       non-zero, and the disclosure log names the field.
-- [ ] **0.5 Pre-register the budget invariant.** Candidate count, trial
+- [~] **0.5 Pre-register the budget invariant.** <!-- blocked-by: guard-call-site-integration --> Candidate count, trial
       repetitions and a spend ceiling per run, fixed before the run. Exceeding it
       aborts rather than truncates — a truncated run yields `underpowered`, which
       `paired_verdict` refuses to call a pass and which a reader mistakes for one.
       verify: a run configured past the ceiling exits non-zero before spending.
-- [ ] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
+- [x] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
       spend.** `from-skipped-parent`: both parents carried eight or nine stop
       conditions; the master compressed them into the budget cap. A spend cap
       stops on cost, and most of those conditions stop on validity — holdout
@@ -269,6 +280,10 @@ once.
       honest null is a success when it prevents unnecessary architecture.
       verify: each condition has a detector or is explicitly marked
       model-carried; a synthetic diversity collapse trips the stop.
+      <!-- CLOSED 2026-08-30. Both council seats agreed this clause names no
+      run at all — it asks that each condition carry a detector or a marker and
+      that a synthetic collapse trip the stop, and both are satisfied. It is the
+      one of the three the split did NOT touch. -->
 - [x] **0.7 Define programme success and failure before the first run.**
       `from-skipped-parent`: the master has no success-criteria section at all.
       It adopts the per-candidate metric vector and drops the per-programme
@@ -284,7 +299,7 @@ once.
 
 ## Phase 1 — Observation and the activation ladder
 
-- [ ] **1.1 Record the activation ladder, not a flat category.** Per E4, either
+- [x] **1.1 Record the activation ladder, not a flat category.** Per E4, either
       the 4-state or the 6-state form; the recommendation is the 6-state one
       because Phase 6 measures delivery and `delivered ≠ visible` is exactly
       that axis. Add the precedence receipt naming why a step did not advance
@@ -294,14 +309,14 @@ once.
       a category and not a place.
       verify: a deliberately failing trigger eval is classifiable as *content*
       vs *activation* vs *adherence* from the recorded receipt alone.
-- [ ] **1.2 A missing state stays unknown.** `from-skipped-parent`, one line
+- [x] **1.2 A missing state stays unknown.** `from-skipped-parent`, one line
       and load-bearing: a state that was not observed must remain
       missing/unknown and is never silently converted to success. This is the
       ladder's soundness invariant; without it every downstream rate is inflated
       by exactly the capture gap.
       verify: a record with an unobserved rung reports `unknown` for it, and no
       aggregation folds `unknown` into a success denominator.
-- [ ] **1.3 Extend an existing carrier, do not add a store.** The receipt is a
+- [x] **1.3 Extend an existing carrier, do not add a store.** The receipt is a
       field addition to `audit-log-v1` or `decision-trace-v1`, migrated by
       `type=supersede` lines as that contract already prescribes.
       verify: the contract's schema table carries the new field and the
@@ -666,6 +681,53 @@ once.
 
 ## Blockers
 
+### blocker: guard-call-site-integration
+
+- **Status:** open — **the council SPLIT on this, and the conservative side was
+  taken.** AI council 2026-08-30, anthropic + openai, **1/1 for (b) and 1/1 for
+  (d)** — not convergent, which `roadmap-progress-sync` classes as an escalation
+  condition rather than a verdict.
+- **Owner:** council — the disposition is a DEFERRAL that keeps both criteria
+  alive and unweakened, which the preservation test routes to the council. The
+  substance of the split is recorded below so the owner can reverse it cheaply.
+- **Class:** 3
+- **Blocks:** steps 0.4 and 0.5 only. 0.6 is closed and untouched by the split.
+- **What the two seats agreed on** — this half is not in dispute and is acted on
+  in full: the guards work, their unit tests prove the behaviour their verify
+  clauses name, and **the gap is real** — nothing in Phase 0 forces a future
+  runner to call `assertWithinBudget` or `discloseToProposer`. Both seats asked
+  for a call-site acceptance criterion; **AC-8 below is it.**
+- **Where they split.** (b): the clauses are BEHAVIOURAL, a test that invokes
+  the guard and observes the throw is a run of it, and reopening holds Phase 0
+  hostage to a later artefact. (d): the clauses say *"a run"* that *"exits
+  non-zero"*, and a unit test observing a thrown exception does not prove an
+  executable runner routes through the guard or converts that throw into a
+  non-zero PROCESS exit; *"the invariant must exist before the runner"*
+  establishes implementation order, not permission to mark integration
+  verification complete.
+- **What to do:** take the conservative side, which is what happened here —
+  0.4 and 0.5 are `[~]`, not `[x]`, and not `[ ]` either: the guards and their
+  16 tests are completed prerequisites, recorded as such, and what is pending is
+  integration. Re-close each after an end-to-end test proves the real runner
+  routes every relevant path through the guard and exits non-zero before any
+  spend or disclosure. Nothing is rebuilt.
+- **Recommendation:** the conservative side, taken, and the reason is
+  asymmetry rather than agreement with (d): under-claiming a closed step costs a
+  checkbox, while over-claiming one is exactly the failure the prior run named —
+  *"a detector that never got built reads as one that passed"* — with "never got
+  built" replaced by "never got called". A split council is not a licence to
+  pick the more convenient half.
+- **If you do nothing:** 0.4 and 0.5 stay deferred and Phase 0 stays at 5 of 8.
+  Nothing downstream is blocked by that: the roadmap's own § First cut needs the
+  budget invariant to EXIST before its step 3, and it does — the config is
+  committed and the guard is callable. What is pending is proof that it is
+  called.
+- **Resolved when:** an end-to-end test drives the real runner and observes a
+  non-zero process exit on (a) a holdout value reaching proposer context and
+  (b) a plan configured past the pre-registered ceiling, both before any
+  external call — and the two steps are re-closed citing it.
+
+
 > **REPAIRED 2026-08-29 — the entry below was invisible to every gate.** It was
 > written `### merge-authority` without the literal `blocker:` prefix that
 > `lint_roadmap_blockers.ts:40` requires
@@ -757,7 +819,7 @@ once.
   verified 2026-08-26, it is not one.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-26 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -771,8 +833,18 @@ once.
 | 8 | Monotonic estate growth after the gate | product | Every promotion adds; nothing reopens a promoted artefact. The gate-side `artifact-count delta` does not constrain the estate over time | 7.6 adds post-promotion re-evaluation with an exercised RETIRE path; 7.3 keeps most promotions below global scope | Phase 7 — Promotion bridge and the lifecycle after it |
 | 9 | Search becomes the product | product | One parent warned against this and then listed a meta-evolver, a curriculum generator and a routing tree as phases. The surface doubles before a single trustworthy run exists | Those three are killed or parked below; this roadmap stops at Phase 7 and 6.1 takes the measurable core | Phase 6 — Delivery: measure the existing substrate first |
 | 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | 0.4 adds a per-field visibility class, a disclosure log, and a run abort | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 11 | AC-8 lands on a phase that does not exist yet, and is quietly dropped when it does | product | The call-site criterion both council seats asked for is an acceptance criterion with no phase, no step and no owner. The runner arrives in Phase 3 or later, written by whoever picks that phase up, and an AC nobody is assigned to is an AC that gets read as already-satisfied by the unit tests that closed 0.6 | The `guard-call-site-integration` blocker holds 0.4 and 0.5 at `[~]` until AC-8 is met, so the phase cannot report closed while the criterion is outstanding — the deferral is the enforcement, not the AC's wording. Both council rationales are recorded verbatim at the blocker so a later reader meets the argument rather than the conclusion | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 
 ## Acceptance Criteria
+
+- [ ] AC-8 — The runner routes every governed action through the Phase-0 guards,
+      proven end-to-end rather than by inspection: a holdout value reaching
+      proposer context and a plan configured past the pre-registered ceiling each
+      terminate the process non-zero **before any external call**. Added
+      2026-08-30 at the request of BOTH council seats, which agreed on this even
+      where they split on whether 0.4/0.5 may close without it — a guard nothing
+      calls has no coverage, and Phase 0 alone cannot force a later phase to
+      call it.
 
 - [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
@@ -910,10 +982,25 @@ If this cut fails, the architecture is refuted before anything is built.
   either roadmap's scope changes such that acceptance authority moves.
 - **E3 — Budget ceiling** for 0.5 (candidates × trials × spend per run) and the
   sampling strategy for the 5.1 body variant.
-- **E4 — Activation-ladder arity:** 4 states or 6? Recommendation: 6, because
-  Phase 6 measures delivery and `delivered ≠ visible` is that axis. **Decide
-  together with E9 — they are one question**, and the evidence for both is in
-  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
+- **E4 — Activation-ladder arity: DECIDED 2026-08-30, option B — SIX rungs,
+  twelve stages.** AI council, anthropic + openai, **2/2**. The argument that
+  carried it was not "more is better": option A requires EDITING Phase 1's exit
+  criterion in order to fit, and the distinction it drops is the one Phase 6's
+  delivery experiment exists to measure. Two independent roadmaps needing the
+  same distinction (`road-to-experience-loop-broadening` Phase 5 needs five
+  activation/adherence states) was the strongest evidence available, and the
+  cost asymmetry points the same way — an under-populated rung can be collapsed
+  later, a distinction never recorded cannot be added to historical data.
+  One seat attached a CONDITION and `src/scripts/_lib/activation_ladder.ts`
+  § `LADDER` is it: every rung maps to a receipt field and an observable
+  predicate, with an explicit `unknown`, asserted by
+  `tests/scripts/activation_ladder.test.ts`. Both seats rejected option (c) —
+  the coupling is definitional, not contingent: a 9-stage cascade has no
+  adherence stage.
+  **`revisit-if`:** any rung or stage lacks a distinct observable predicate, or
+  stays `unknown` across representative Phase 1 evaluations — in which case
+  keep the six rungs and reconsider the nine-stage cascade independently.
+  Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E5 — Minimality tie-break order,** and whether the fifth criterion (simpler
   mechanism) is in. The two parents' orders invert, so this changes outcomes.
 - **E6 — Curator operation set:** 4 ops or 7? Recommendation: 7 — split and
@@ -931,8 +1018,13 @@ If this cut fails, the architecture is refuted before anything is built.
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — which finds the proposed 5th class
   restates ADR-124's Class A/C boundary, and the prohibition it would add
   already exists.
-- **E9 — Cascade stage set:** 9 stages or 12? If 9, Phase 1's exit criterion
-  cannot be produced and must be rewritten. **One question with E4**; brief:
+- **E9 — Cascade stage set: DECIDED with E4, option B — twelve stages.** Same
+  council round, 2/2. Phase 4 builds them; nothing in Phase 1 depends on the
+  stage count, so the verdict is recorded here and spent there. Its half of the
+  `revisit-if` is the live one: if a stage turns out to lack a distinct
+  observable predicate, the six-rung ladder stays and the cascade is
+  reconsidered on its own. Original framing, kept: 9 stages or 12? If 9,
+  Phase 1's exit criterion cannot be produced and must be rewritten. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E10 — Mutation dimensions:** do `activation/routing/content` stand alone, or
   does `verification` join immediately? Separate from 3.2, which is about arity.
