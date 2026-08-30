@@ -1,8 +1,16 @@
 diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
-index 1ac240d4158de213272f583bb39ae9522dc2c48d..73d093c05d182fa056eb70cfb71133c2da3eafab 100644
+index 1ac240d4158de213272f583bb39ae9522dc2c48d..fa47ee6f6a3273eac0679f968f81c03f53902854 100644
 --- a/.github/workflows/tests.yml
 +++ b/.github/workflows/tests.yml
-@@ -485,6 +485,86 @@ jobs:
+@@ -254,6 +254,7 @@ jobs:
+           --shard=${{ matrix.shard }}/4
+           --exclude 'tests/golden/**'
+           --exclude 'tests/server/workspace.test.ts'
++          --exclude 'tests/scripts/collector_lifecycle.test.ts'
+           --exclude 'tests/scripts/cli/python/**'
+ 
+   static-checks:
+@@ -485,6 +486,109 @@ jobs:
        - name: Vitest (tests/golden — fork-parallel)
          run: npm run test:ts --silent -- tests/golden
  
@@ -17,11 +25,17 @@ index 1ac240d4158de213272f583bb39ae9522dc2c48d..73d093c05d182fa056eb70cfb71133c2
 +    #
 +    #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
 +    #   Linux with a user session bus — the second declared supported row.
-+    #                   NOT RUN, and NOT verifiable on a GitHub-hosted runner:
-+    #                   ubuntu-latest has no user session bus, so it is the
-+    #                   static-fallback row of the platform table, not the
++    #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
++    #                   runner: ubuntu-latest has no user session bus, so it is
++    #                   the static-fallback row of the platform table, not the
 +    #                   supported one. Running the suite there would produce a
 +    #                   green tick that says nothing about `systemd --user`.
++    #
++    # "NOT CERTIFIED" rather than "NOT RUN", corrected on R2 round-2 finding 3:
++    # the suite is excluded from `node-tests` now, but the distinction is the
++    # honest one either way — whether the file executes somewhere and whether
++    # this project claims a platform from it are different questions, and only
++    # the second one is what AC-8 turns on.
 +    #
 +    # That split IS the AI council's decision of 2026-08-29 (UNANIMOUS, 2/2):
 +    # option (b) — run on the one platform CI provides, record the other as
@@ -30,6 +44,10 @@ index 1ac240d4158de213272f583bb39ae9522dc2c48d..73d093c05d182fa056eb70cfb71133c2
 +    # remains the target.
 +    name: Collector Lifecycle (macos-latest — the macOS row only)
 +    runs-on: macos-latest
++    # Spawns real daemons with 90 s per-case timeouts and runs ~551 tests twice
++    # for the parity comparison; a hang here would otherwise sit at the runner
++    # default (R2 round-2 finding 2).
++    timeout-minutes: 20
 +    if: ${{ !startsWith(github.head_ref, 'release/') }}
 +    steps:
 +      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -43,6 +61,18 @@ index 1ac240d4158de213272f583bb39ae9522dc2c48d..73d093c05d182fa056eb70cfb71133c2
 +
 +      - name: Install dependencies
 +        run: npm ci --no-audit --no-fund --prefer-offline
++
++      - name: Build discovery manifest (gitignored; the suites read it)
++        # R2 round-2 finding 2: this job runs vitest twice — once through
++        # `run_lifecycle_suite`, once through `check_static_parity`'s
++        # double run — and was the only vitest job in this workflow skipping the
++        # two preparation steps every other one performs. A test depending on
++        # the generated manifest or on `dist/` reds identically in both parity
++        # runs, and the gate then exits 1 on "one of the two runs is red".
++        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
++
++      - name: Build (dist/cli + UI bundle)
++        run: npm run build --silent
 +
 +      - name: Run the lifecycle suite and write its evidence artifact
 +        # Non-zero on a red suite, on ANY skipped case (AC-8: a skip is a
@@ -80,10 +110,11 @@ index 1ac240d4158de213272f583bb39ae9522dc2c48d..73d093c05d182fa056eb70cfb71133c2
 +        #
 +        # It runs the dispatcher-reaching suite twice (once with the collector
 +        # present-but-off, once with it aliased away) and compares per-test
-+        # verdicts. Placed here rather than in `task ci` because a double
-+        # 556-test run is roughly a minute, which is not a per-change local
-+        # gate; declared `ci_only` in `src/config/ci-local-parity.yml` with that
-+        # reason and reachable on demand.
++        # verdicts. Placed here rather than in `task ci` because the double run
++        # is roughly a minute, which is not a per-change local gate; declared
++        # `ci_only` in `src/config/ci-local-parity.yml` with that reason and
++        # reachable on demand. The test count is deliberately not written here —
++        # it moves with the suite and the gate prints the live figure.
 +        run: ./scripts-run src/scripts/check_static_parity --quiet
 +
    workspace-tests:
@@ -120,7 +151,7 @@ index ef7bd03e2c3703173eddc8da3b139d80275e2bdc..4cce73767520fc06de088bccb5536cea
  | The gate's own test evades the gate readably | `tests/scripts/check_no_external_sources.test.ts:61-62` and `:150-152` | **five** denied slugs are concatenated from string literals — invisible to the regex, plaintext to any reader — and the comment at `:56-60` documents the bypass technique. **Correction:** the authoring session named one site; there are five |
 diff --git a/agents/roadmaps/later/road-to-supervised-telemetry-collector.md b/agents/roadmaps/later/road-to-supervised-telemetry-collector.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..14e2d85b6d1e10a5437b030ddc06905ccfd55c57
+index 0000000000000000000000000000000000000000..898dff7e9b14d3321da52df0e838cb68be8ecb9d
 --- /dev/null
 +++ b/agents/roadmaps/later/road-to-supervised-telemetry-collector.md
 @@ -0,0 +1,1311 @@
@@ -885,7 +916,7 @@ index 0000000000000000000000000000000000000000..14e2d85b6d1e10a5437b030ddc06905c
 +      honest structure for an assertion no module edit can falsify.
 +- [x] **4.2 Prove static operation is unregressed.** The Goal of the governance
 +      roadmap says static operation still works. Nothing tested it.
-+      verify: DONE — `./scripts-run src/scripts/check_static_parity` ran both suites and COMPARED them: `present-but-off: 551 test(s), exit 0` · `absent: 551 test(s), exit 0` · `✅ static operation is unregressed — per-test verdicts are identical`.
++      verify: DONE — `./scripts-run src/scripts/check_static_parity` ran both suites and COMPARED them: equal test counts on both sides, both exit 0, `✅ static operation is unregressed — per-test verdicts are identical`. The count itself moves with the suite and is deliberately not pinned in prose (R2 round-2 finding 15 caught three different figures for it in one change); the gate prints the live number.
 +
 +      **Two green runs are not the assertion; two runs with identical per-test
 +      verdicts is.** The difference is the whole point of the step's wording: a
@@ -1429,7 +1460,7 @@ index 0000000000000000000000000000000000000000..14e2d85b6d1e10a5437b030ddc06905c
 +      Clause 1: seven rows, four columns each, no empty test cell, each test carrying its state (`EXISTS` with the file, or `OWED BY <step>`). Clause 2: `RESOURCE_BUDGETS` carries four ceilings with a derived headroom apiece, two of them re-measured after the first real daemon start falsified the derivation. Clause 3: `collector_supervision.test.ts` § 3.3 kills a REAL wedged process — a grandchild that installs a `SIGTERM` handler and ignores it — and asserts `via: 'forced'` plus ESRCH afterwards.
 +      Two of the 3.1 matrix's seven test cells were `OWED BY` a Phase-5 step when it was written and are now `EXISTS`: rows 2 and 3 are covered by `collector_lifecycle.test.ts` PROPERTIES 1 and 3. Rows 4, 6 and 7 are covered by 3.2's budget tests, 4.2's parity comparison and 5.2's seeded negatives respectively. The matrix text still reads `OWED BY`, which is now stale in the safe direction and is left for the resumer rather than rewritten from a step that is closed.
 +- [x] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
-+      MET by 4.2. `./scripts-run src/scripts/check_static_parity` ran the 31 dispatcher-reaching test files twice — present-but-off, then with `collector_denominator` aliased to a do-nothing stub so the real module is never loaded — and COMPARED them per test: identical verdicts, both exit 0. Two green runs would not have satisfied this; a test silently turning from `passed` to `skipped` keeps both suites green and only the per-test comparison sees it. The gate now runs in CI (`Collector Lifecycle` job), which it did not when this AC was first evidenced — R2 finding 5 caught that the evidence was a hand-run nothing could reproduce.
++      MET by 4.2. `./scripts-run src/scripts/check_static_parity` ran every dispatcher-reaching test file twice — present-but-off, then with `collector_denominator` aliased to a do-nothing stub so the real module is never loaded — and COMPARED them per test: identical verdicts, both exit 0. Two green runs would not have satisfied this; a test silently turning from `passed` to `skipped` keeps both suites green and only the per-test comparison sees it. The gate now runs in CI (`Collector Lifecycle` job), which it did not when this AC was first evidenced — R2 finding 5 caught that the evidence was a hand-run nothing could reproduce.
 +- [ ] AC-8 — The five lifecycle properties are demonstrated by process-level tests on every declared platform, executed in CI on each — a skip counts as a failure on that platform.
 +      PARTLY MET, and deliberately NOT flipped. The five properties are demonstrated on real spawned processes (5.1) and the `Collector Lifecycle` job executes them in CI on `macos-latest`, where a skip fails the job because `run_lifecycle_suite` exits non-zero on any skipped case. The criterion says **every declared platform**, and the second declared row — Linux with a user session bus — is not run and is not runnable on a GitHub-hosted runner. Per the `lifecycle-ci-runner-provisioning` (b) verdict that row is recorded **unverified** and stays out of release claims even if its static fallback appears to work. Flipping this on one of two rows is exactly the silent-green this roadmap exists to avoid; it closes when option (a) — a runner with a real user session bus — is provisioned.
 +- [x] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
@@ -2327,7 +2358,7 @@ index c5c22c8d75d1d9af62810bf7aa7f461f0f8cef46..00000000000000000000000000000000
 -- [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
 -- [ ] AC-10 — The capture rate is measured over the declared window at or above the minimum sample, and the outcome is acted on: all six enablement readings recorded and the default flipped, or default-off plus a decision record naming the reading and the chosen disposition.
 diff --git a/docs/contracts/ci-cost-budget.md b/docs/contracts/ci-cost-budget.md
-index 43d5caff4b21ef054a6be0cc91db0901bd26c125..b67ced262711da9ddfa096389f50bf071ca520cd 100644
+index 43d5caff4b21ef054a6be0cc91db0901bd26c125..3b4e7b7e134c8860e4c32f9b5615c84715bc143a 100644
 --- a/docs/contracts/ci-cost-budget.md
 +++ b/docs/contracts/ci-cost-budget.md
 @@ -40,8 +40,11 @@ it: `smoke.yml` reads 82 s at run level and 20–23 s per job. Comparing one
@@ -2344,12 +2375,16 @@ index 43d5caff4b21ef054a6be0cc91db0901bd26c125..b67ced262711da9ddfa096389f50bf07
  
  | Workflow | Job | OS × variant | Avg duration | Trigger surface |
  |---|---|---|--:|---|
-@@ -52,6 +55,26 @@ lists each shard family once, with the per-shard average.
+@@ -52,11 +55,31 @@ lists each shard family once, with the per-shard average.
  | `tests.yml` | `static-checks` | ubuntu, no matrix | 140 s | same as above |
  | `tests.yml` | `golden-tests` | 2 OS | 124 s ubuntu / 122 s macOS | same as above |
  | `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 100 s macOS | same as above |
 +| `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
-+
+ | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
+ | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
+ | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
+ | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
+ | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
 +**`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 +five process-level lifecycle properties plus the operator stop verb — six cases,
 +each spawning one or two real `tsx` daemons — then the supervision-claim gate
@@ -2368,9 +2403,10 @@ index 43d5caff4b21ef054a6be0cc91db0901bd26c125..b67ced262711da9ddfa096389f50bf07
 +*Revisit-if:* the job's first CI runs give a real duration (this row is then
 +re-measured), or a Linux runner with a user session bus becomes available (the
 +job gains a matrix and this row doubles).
- | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
- | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
- | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
++
+ 
+ Three rows from the 2026-05-26 baseline were removed because the jobs and
+ workflows they named no longer exist: `python-tests` (no such job key in
 diff --git a/docs/contracts/collector-operations.md b/docs/contracts/collector-operations.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..cdb65ac10a73afc5ed60e865f24210804f5501b6
@@ -2534,7 +2570,7 @@ index 0000000000000000000000000000000000000000..cdb65ac10a73afc5ed60e865f2421080
 +- `src/scripts/_lib/collector_supervision.ts` — the module this page describes.
 +- `src/scripts/_lib/collector_store.ts` — opt-out, deletion, quarantine.
 diff --git a/src/config/ci-local-parity.yml b/src/config/ci-local-parity.yml
-index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..2c5a412be1c0c582f8f36f4e743fe08a21498de8 100644
+index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..c10ab8d9dcfbc3a1fa11f1885b379262d526a527 100644
 --- a/src/config/ci-local-parity.yml
 +++ b/src/config/ci-local-parity.yml
 @@ -121,6 +121,35 @@ ci_only:
@@ -2544,7 +2580,7 @@ index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..2c5a412be1c0c582f8f36f4e743fe08a
 +  # road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
 +  # dispatcher-reaching suite TWICE — once with the collector present-but-off,
 +  # once with it aliased away entirely — and compares per-test verdicts rather
-+  # than declaring each run green. That is ~556 tests twice, roughly a minute,
++  # than declaring each run green. That is the whole set twice, roughly a minute,
 +  # which is not a per-change local gate; and its result is a property of a
 +  # clean checkout rather than of a developer's working tree, since it pins
 +  # HOME to an empty directory precisely so the invoking user's own collector
@@ -2553,7 +2589,7 @@ index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..2c5a412be1c0c582f8f36f4e743fe08a
 +  # Reachable on demand: `./scripts-run src/scripts/check_static_parity`.
 +  - id: check_static_parity
 +    class: benchmark
-+    reason: "two full 556-test runs compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
++    reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
 +  # road-to-supervised-telemetry-collector step 5.2. The five lifecycle
 +  # PROPERTIES are verified locally like any other suite —
 +  # `tests/scripts/collector_lifecycle.test.ts` is inside `tests/scripts` and runs
@@ -2573,6 +2609,58 @@ index bb1e7dd4fbe5844f3d7c7b8389be9e921e2aecca..2c5a412be1c0c582f8f36f4e743fe08a
    - id: report_pack_delta
      class: artifact
      reason: "a pull-request-only delta report with no local meaning (base==head reads +0.0 KB and the step writes nothing); it packs two refs in throwaway worktrees at ~1 min, cannot red the build, and is reachable on demand via `task report-pack-delta`"
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index c91d70c1d889d21cd749650773fc834ad55c9d95..640b5d0c9d1e2a3cc61fa4014098facfb20a0d7f 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -48,9 +48,9 @@
+ # two runtime-cost roadmaps add: check_prefix_stable_mutation,
+ # check_loss_class_declared, check_benchmark_report_fields, and
+ # check_no_currency_in_cost_surfaces).
+-# **77 of them emit the machine-readable `scanned: <N>` line under their
+-# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
+-# complete for every gate that can carry a floor, covering ~24 % of the population.
++# **78 of them emit the machine-readable `scanned: <N>` line under their
++# CI-identical argv, and 75 of those 78 are listed below.** The manifest is
++# complete for every gate that can carry a floor, covering ~25 % of the population.
+ #
+ # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
+ # the 2026-08-24 block below describes, and this one left TWO STACKED claim
+@@ -1151,6 +1151,34 @@ gates:
+       cannot survive a collapse: at that point the gate's own `reportScanned`
+       fires first. (Set to 50 in the first version, corrected on an R2 finding.)
+ 
++  - id: check_static_parity
++    argv: ["--quiet"]
++    min_scanned: 20
++    corpus: "test files that spell `dispatch_hook`, discovered by grep over tests/ and src/ (31 at the time of writing). The floor is 20, not 1: this gate's silent-failure shape is a discovery COLLAPSE — a grep that stops matching would run two suites of one file each and report them identical, which is the 'gate that scans nothing exits green' case in its most convincing disguise."
++    status: enforced
++    no_canary_reason: >-
++      No plantable violation: the gate's finding is a DIVERGENCE between two
++      whole-suite runs, not a pattern in a file. Planting one would mean making
++      the collector behave differently under the two runs, i.e. writing the bug
++      it exists to detect.
++    note: >
++      road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
++      dispatcher-reaching suite twice — collector present-but-off, then aliased
++      away entirely — and compares per-test verdicts rather than declaring each
++      run green. Two green runs are not the assertion; a test that silently
++      turns from `passed` to `skipped` keeps both suites green and only the
++      per-test comparison sees it.
++
++      SELF-TEST EXEMPT, with the reason rather than the omission: a
++      `--self-test` here would have to spawn two full vitest runs over a fixture
++      repository, minutes per invocation, to prove a comparator that is already
++      unit-tested with a REJECTING case —
++      `tests/scripts/check_static_parity.test.ts` drives `compare()` through the
++      `passed → skipped` divergence a length-only check would miss, plus both
++      only-in-one-run directions. The discrimination is proven; what is skipped
++      is proving it a second time through the slowest possible harness. The
++      marker the self-test ratchet reads lives in the gate's own source, beside
++      `main` — this note explains it; that line is what is counted.
+   - id: check_completion_review
+     argv: ["--advisory", "--base", "origin/main"]
+     min_scanned: 1
 diff --git a/src/scripts/_lib/capture_rate.ts b/src/scripts/_lib/capture_rate.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e83175949c8c
@@ -2824,10 +2912,10 @@ index 0000000000000000000000000000000000000000..050d0d090abfdaf211f46fb0e8d1e831
 +}
 diff --git a/src/scripts/_lib/collector_denominator.ts b/src/scripts/_lib/collector_denominator.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b0ff5dee8
+index 0000000000000000000000000000000000000000..7daac28365b8b3bff404e0d9ecdcb39b65fd0bc0
 --- /dev/null
 +++ b/src/scripts/_lib/collector_denominator.ts
-@@ -0,0 +1,264 @@
+@@ -0,0 +1,372 @@
 +/**
 + * collector_denominator — the capture rate's DENOMINATOR, and the spool the
 + * numerator is drained from.
@@ -2884,7 +2972,7 @@ index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b
 +    type CollectorEvent,
 +    type CollectorPlatform,
 +} from './collector_record.js';
-+import { isOptedOut, resolveCollectorStore } from './collector_store.js';
++import { isOptedOut, resolveCollectorStore, RETENTION_DAYS } from './collector_store.js';
 +
 +/** Append-only opportunity log. One short line per dispatch. */
 +export const DENOMINATOR_FILE_NAME = 'opportunities.log';
@@ -3000,19 +3088,53 @@ index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b
 +    readonly byEvent: Readonly<Record<string, number>>;
 +    /** Lines the parser refused. A silent skip would understate the denominator. */
 +    readonly malformed: number;
++    /** Earliest and latest UTC date seen, or null on an empty read. */
++    readonly firstDate: string | null;
++    readonly lastDate: string | null;
 +}
 +
-+/** Read the opportunity log. Absent file reads as zero, not as an error. */
-+export function readOpportunities(userRoot?: string): DenominatorReading {
++export interface ReadWindow {
++    /** Inclusive lower bound, `YYYY-MM-DD`. Lines before it are not counted. */
++    readonly since?: string;
++    /** Inclusive upper bound, `YYYY-MM-DD`. */
++    readonly until?: string;
++}
++
++const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
++
++/**
++ * Read the opportunity log. Absent file reads as zero, not as an error.
++ *
++ * **The window is a parameter now, and its absence was a real defect** (R2
++ * round-2 finding 5). Every line carries a UTC date and this function never
++ * parsed it, returning a LIFETIME total — while the numerator side is pruned to
++ * {@link RETENTION_DAYS} on every daemon iteration. The two halves of the ratio
++ * were therefore computed over different time bases, and once the store began
++ * pruning, the measured capture rate would have fallen monotonically toward
++ * zero regardless of real capture. That is precisely the failure the two-writer
++ * design exists to make impossible, arriving through the back door.
++ *
++ * A date that does not parse is `malformed`, not silently skipped: an
++ * understated denominator biases the rate UPWARD.
++ */
++export function readOpportunities(userRoot?: string, window: ReadWindow = {}): DenominatorReading {
 +    let raw = '';
 +    try {
 +        raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
 +    } catch {
-+        return Object.freeze({ total: 0, byEvent: Object.freeze({}), malformed: 0 });
++        return Object.freeze({
++            total: 0,
++            byEvent: Object.freeze({}),
++            malformed: 0,
++            firstDate: null,
++            lastDate: null,
++        });
 +    }
 +    const byEvent: Record<string, number> = {};
 +    let total = 0;
 +    let malformed = 0;
++    let firstDate: string | null = null;
++    let lastDate: string | null = null;
 +    for (const line of raw.split('\n')) {
 +        if (line.length === 0) continue;
 +        const parts = line.split('\t');
@@ -3020,11 +3142,72 @@ index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b
 +            malformed += 1;
 +            continue;
 +        }
++        const date = parts[0] as string;
++        if (!DATE_RE.test(date)) {
++            malformed += 1;
++            continue;
++        }
++        if (window.since !== undefined && date < window.since) continue;
++        if (window.until !== undefined && date > window.until) continue;
 +        const event = parts[1] as string;
 +        byEvent[event] = (byEvent[event] ?? 0) + 1;
 +        total += 1;
++        if (firstDate === null || date < firstDate) firstDate = date;
++        if (lastDate === null || date > lastDate) lastDate = date;
 +    }
-+    return Object.freeze({ total, byEvent: Object.freeze(byEvent), malformed });
++    return Object.freeze({
++        total,
++        byEvent: Object.freeze(byEvent),
++        malformed,
++        firstDate,
++        lastDate,
++    });
++}
++
++/**
++ * Drop opportunity lines older than the retention horizon, rewriting the log.
++ *
++ * The denominator's half of what `pruneOlderThan` does for the store, and it
++ * exists for two reasons that are easy to conflate. The ratio one: both sides
++ * must age out on the same clock or the rate drifts by construction. The
++ * resource one: nothing bounded this file, and it lives inside the directory
++ * `RESOURCE_BUDGETS.disk_bytes` puts a ceiling on — a ceiling whose breach
++ * STOPS the collector. An unbounded log in a budgeted directory is a slow
++ * self-shutdown.
++ *
++ * Whole-file rewrite through a temp and a rename, so a crash mid-prune leaves
++ * either the old file or the new one and never a truncated log. Returns how
++ * many lines were dropped.
++ */
++export function pruneOpportunitiesOlderThan(
++    userRoot: string | undefined,
++    today: string,
++    days: number = RETENTION_DAYS,
++): number {
++    const target = denominatorPath(userRoot);
++    let raw = '';
++    try {
++        raw = fs.readFileSync(target, 'utf8');
++    } catch {
++        return 0;
++    }
++    const cutoff = new Date(Date.parse(`${today}T00:00:00Z`) - days * 86_400_000)
++        .toISOString()
++        .slice(0, 10);
++    const lines = raw.split('\n').filter((l) => l.length > 0);
++    const kept = lines.filter((l) => {
++        const date = l.split('\t')[0] ?? '';
++        // A line whose date does not parse is KEPT: it is already counted as
++        // malformed by the reader, and deleting what you cannot classify is how
++        // a prune quietly becomes a truncation.
++        if (!DATE_RE.test(date)) return true;
++        return date >= cutoff;
++    });
++    if (kept.length === lines.length) return 0;
++    const tmp = `${target}.tmp`;
++    fs.writeFileSync(tmp, kept.length === 0 ? '' : `${kept.join('\n')}\n`);
++    fs.renameSync(tmp, target);
++    return lines.length - kept.length;
 +}
 +
 +/**
@@ -3060,10 +3243,23 @@ index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b
 + * the old inode finish into the claimed file, and every writer that opens after
 + * the rename creates a fresh `pending.jsonl`. No lock, no lost line.
 + */
++let claimSequence = 0;
++
 +export function claimSpool(userRoot?: string, at: number = Date.now()): string | null {
 +    const pending = spoolPendingPath(userRoot);
 +    if (!fs.existsSync(pending)) return null;
-+    const claimed = path.join(spoolDir(userRoot), `draining-${at}-${process.pid}.jsonl`);
++    // A monotonic per-process counter, because the timestamp alone is not
++    // unique (R2 round-2 finding 14): two claims by one process inside the same
++    // millisecond produced the same name, and `renameSync` overwrites silently
++    // — so the earlier batch was destroyed rather than the collision being
++    // noticed. The per-user lock makes that narrow in production, but both
++    // functions are exported and driven directly by tests, and the docstring's
++    // "no lock, no lost line" is only true if the claimed name is unique.
++    claimSequence += 1;
++    const claimed = path.join(
++        spoolDir(userRoot),
++        `draining-${at}-${process.pid}-${claimSequence}.jsonl`,
++    );
 +    try {
 +        fs.renameSync(pending, claimed);
 +        return claimed;
@@ -3094,10 +3290,10 @@ index 0000000000000000000000000000000000000000..7aa73f2b6e0868e7cebac065e4704c6b
 +}
 diff --git a/src/scripts/_lib/collector_supervision.ts b/src/scripts/_lib/collector_supervision.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a582772d16aab3
+index 0000000000000000000000000000000000000000..6bbe4aee0d3035864a5e8215378ae5e53be1baa4
 --- /dev/null
 +++ b/src/scripts/_lib/collector_supervision.ts
-@@ -0,0 +1,753 @@
+@@ -0,0 +1,795 @@
 +/**
 + * collector_supervision — the supervised telemetry collector's OPERATIONAL
 + * contract (`road-to-supervised-telemetry-collector` Phase 3, steps 3.2–3.4).
@@ -3234,11 +3430,17 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +        unit: 'bytes, the collector directory including quarantine',
 +        expectedPeak: 12 * 1024 * 1024,
 +        basis:
-+            'RETENTION_DAYS is 63 and a record is nine small columns. At the metric ' +
++            'DERIVED. RETENTION_DAYS is 63 and a record is nine small columns. At the metric ' +
 +            'definition\'s upper dispatch estimate a full retention window is single-digit ' +
 +            'MiB; 12 MiB is that plus SQLite page overhead and one quarantined store. The ' +
 +            'ceiling is deliberately ~5x: quarantine is never deleted by design, so the ' +
-+            'directory has one growth term this budget cannot bound by retention alone.',
++            'directory has one growth term this budget cannot bound by retention alone. '
++            + 'CORRECTED after R2 round-2 finding 5: this derivation counted only the store, '
++            + 'while `opportunities.log` sits in the same directory and was UNBOUNDED — an '
++            + 'unbounded file inside a budget whose breach stops the collector is a slow '
++            + 'self-shutdown. It is now pruned on the same 63-day clock, so the derivation '
++            + 'covers it; the 12 MiB peak is unchanged because a denominator line is ~30 bytes '
++            + 'and 63 days of them is well inside the SQLite page overhead already allowed.',
 +    }),
 +    file_descriptors: Object.freeze({
 +        ceiling: 128,
@@ -3395,8 +3597,24 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +    readonly acquired: boolean;
 +    /** The pid recorded in the lock — ours when acquired, the incumbent's when not. */
 +    readonly holder: number | null;
-+    /** Set when `acquired` is false. */
-+    readonly reason: 'held-by-live-process' | 'kill-switch-engaged' | null;
++    /**
++     * Set when `acquired` is false.
++     *
++     * `unwritable` and `contested-out` exist because reporting everything as
++     * `held-by-live-process` sent an operator to the two-collectors row of the
++     * ops page for an `EACCES` or a full disk (R2 round-2 finding 11). A create
++     * that failed for a reason other than "the file is already there" is not
++     * contention, and a retry loop that ran out of attempts is not the same as
++     * losing to a live incumbent.
++     */
++    readonly reason:
++        | 'held-by-live-process'
++        | 'kill-switch-engaged'
++        | 'unwritable'
++        | 'contested-out'
++        | null;
++    /** The errno when `reason` is `unwritable`. Carried so the operator sees the real cause. */
++    readonly errno: string | null;
 +}
 +
 +function pidIsAlive(pid: number): boolean {
@@ -3435,7 +3653,12 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 + */
 +export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid): LockOutcome {
 +    if (killSwitchEngaged(userRoot)) {
-+        return Object.freeze({ acquired: false, holder: null, reason: 'kill-switch-engaged' as const });
++        return Object.freeze({
++            acquired: false,
++            holder: null,
++            reason: 'kill-switch-engaged' as const,
++            errno: null,
++        });
 +    }
 +    const target = runtimeLockPath(userRoot);
 +    fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -3443,8 +3666,20 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +    for (let attempt = 0; attempt < FENCE_ATTEMPTS; attempt += 1) {
 +        try {
 +            fs.writeFileSync(target, `${pid}\n`, { flag: 'wx' });
-+            return Object.freeze({ acquired: true, holder: pid, reason: null });
-+        } catch {
++            return Object.freeze({ acquired: true, holder: pid, reason: null, errno: null });
++        } catch (err) {
++            // EEXIST is contention; everything else is an environment problem,
++            // and calling a full disk "held by a live process" is worse than
++            // saying nothing.
++            const code = (err as NodeJS.ErrnoException).code ?? '';
++            if (code !== 'EEXIST') {
++                return Object.freeze({
++                    acquired: false,
++                    holder: null,
++                    reason: 'unwritable' as const,
++                    errno: code === '' ? 'unknown' : code,
++                });
++            }
 +            const raw = readLockPid(target);
 +            if (raw === null) {
 +                // The file vanished between our failed `wx` and this read — a
@@ -3458,6 +3693,7 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +                    acquired: false,
 +                    holder: incumbent,
 +                    reason: 'held-by-live-process' as const,
++                    errno: null,
 +                });
 +            }
 +            // Stale owner: unlink and let the next `wx` pick the winner.
@@ -3468,14 +3704,16 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +            }
 +        }
 +    }
-+    // Bounded out: somebody is winning the race repeatedly. Report the current
-+    // holder rather than claiming a lock this function never took.
++    // Bounded out: somebody is winning the race repeatedly. Its own reason —
++    // this is not "a live process holds it", it is "the fence loop kept losing",
++    // and the two send an operator to different places.
 +    const raw = readLockPid(target);
 +    const incumbent = Number.parseInt(raw ?? '', 10);
 +    return Object.freeze({
 +        acquired: false,
 +        holder: Number.isFinite(incumbent) ? incumbent : null,
-+        reason: 'held-by-live-process' as const,
++        reason: 'contested-out' as const,
++        errno: null,
 +    });
 +}
 +
@@ -3853,10 +4091,10 @@ index 0000000000000000000000000000000000000000..9105a8a64983c8edcbb1f00263a58277
 +}
 diff --git a/src/scripts/check_static_parity.ts b/src/scripts/check_static_parity.ts
 new file mode 100755
-index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8eed648d03
+index 0000000000000000000000000000000000000000..7dc8ef19df1aac76f5848f90fbdfba328de1f461
 --- /dev/null
 +++ b/src/scripts/check_static_parity.ts
-@@ -0,0 +1,243 @@
+@@ -0,0 +1,272 @@
 +/**
 + * check_static_parity — prove that static operation is unregressed by the
 + * collector (`road-to-supervised-telemetry-collector` step 4.2, AC-7).
@@ -3889,10 +4127,20 @@ index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8e
 + * grep rather than by a hand-maintained list — and the discovery is printed, so
 + * a reader can check the denominator of the claim instead of trusting it.
 + *
-+ * The honest limit, stated rather than implied: this proves parity for the
-+ * dispatcher surface. It does not prove that the whole suite is byte-identical
-+ * under both runs, and it is not evidence about a future collector call site
-+ * placed somewhere else. Adding one is what re-runs the grep.
++ * The honest limits, stated rather than implied, and there are TWO of them —
++ * the second was missing until a completion review named it:
++ *
++ * 1. This proves parity for the dispatcher surface. It does not prove that the
++ *    whole suite is byte-identical under both runs, and it is not evidence
++ *    about a future collector call site placed somewhere else. Adding one is
++ *    what re-runs the grep.
++ * 2. **Discovery is a literal token search, not module resolution.** `grep -rl
++ *    'dispatch_hook'` finds files that SPELL the token. A test that reaches the
++ *    dispatcher transitively — through a helper, a fixture builder, or a
++ *    re-export that never writes the name — is outside the compared population,
++ *    and nothing reports the omission. The set is therefore a lower bound on
++ *    the tests that could diverge, not the exact set. Closing it needs real
++ *    import-graph resolution, which is a larger tool than this gate.
 + */
 +
 +import { spawnSync } from 'node:child_process';
@@ -3934,6 +4182,10 @@ index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8e
 + * Discovered, never listed: a hand-written set goes stale the first time a test
 + * file is added, and a stale parity set reports parity over the wrong
 + * population.
++ *
++ * "Every test file" is the intent and a LOWER BOUND in practice — see limit 2
++ * in the module docstring. This finds files that spell `dispatch_hook`, not
++ * files that reach it.
 + */
 +export function parityFiles(repo: string = REPO): string[] {
 +    const grep = spawnSync(
@@ -4032,6 +4284,12 @@ index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8e
 +    return { verdicts, exitCode: result.status ?? 1 };
 +}
 +
++// self-test-exempt: the discriminating behaviour is `compare()`, and it is
++// unit-tested with a REJECTING case — tests/scripts/check_static_parity.test.ts
++// drives the `passed → skipped` divergence a length-only comparison would miss,
++// plus both only-in-one-run directions. A CLI `--self-test` here would have to
++// spawn two whole-suite vitest runs against a fixture repository, minutes per
++// invocation, to prove the same property through the slowest possible harness.
 +export function main(argv: readonly string[] = process.argv.slice(2)): number {
 +    const quiet = argv.includes('--quiet');
 +    const files = parityFiles();
@@ -4058,16 +4316,25 @@ index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8e
 +        for (const file of files) process.stdout.write(`  · ${file}\n`);
 +    }
 +
-+    // One empty home for both runs: no ENABLED marker, no OPT-OUT marker, no
-+    // pre-existing store. Whatever the invoking user has is out of the picture.
-+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'static-parity-home-'));
++    // A FRESH empty home PER RUN (R2 round-2 finding 10). One shared directory
++    // meant run B started against whatever the first run's tests had left in it,
++    // per-test difference caused by that leak is indistinguishable from one
++    // caused by the collector — on a gate whose failure message says static
++    // operation regressed. A second `mkdtemp` costs nothing and removes the
++    // ambiguity entirely.
++    const homes: string[] = [];
++    const freshHome = (): string => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'static-parity-home-'));
++        homes.push(dir);
++        return dir;
++    };
 +    let present: RunResult;
 +    let absent: RunResult;
 +    try {
-+        present = runSuite('present-off', files, false, home);
-+        absent = runSuite('absent', files, true, home);
++        present = runSuite('present-off', files, false, freshHome());
++        absent = runSuite('absent', files, true, freshHome());
 +    } finally {
-+        fs.rmSync(home, { recursive: true, force: true });
++        for (const dir of homes) fs.rmSync(dir, { recursive: true, force: true });
 +    }
 +
 +    const differences = compare(present.verdicts, absent.verdicts);
@@ -4102,10 +4369,10 @@ index 0000000000000000000000000000000000000000..2db1936f98740756a2e2601548ce8f8e
 +}
 diff --git a/src/scripts/collector_daemon.ts b/src/scripts/collector_daemon.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca06a2f1500
+index 0000000000000000000000000000000000000000..4e7f0c19a6006fd693292ef7e6ae39cf5566d706
 --- /dev/null
 +++ b/src/scripts/collector_daemon.ts
-@@ -0,0 +1,544 @@
+@@ -0,0 +1,642 @@
 +/**
 + * collector_daemon — the supervised telemetry collector itself
 + * (`road-to-supervised-telemetry-collector` step 4.1).
@@ -4152,6 +4419,7 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +import {
 +    claimSpool,
 +    isCollectorEnabled,
++    pruneOpportunitiesOlderThan,
 +    readClaimedSpool,
 +    spoolDir,
 +} from './_lib/collector_denominator.js';
@@ -4384,9 +4652,17 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +
 +let stopRequested = false;
 +
-+/** Ask the loop to finish its current iteration and exit. Idempotent. */
++/**
++ * Ask the loop to finish and exit. Idempotent.
++ *
++ * Wakes an in-flight {@link sleep} rather than only setting the flag: a daemon
++ * that acknowledges `SIGTERM` and then waits out a 30-second beat before acting
++ * on it has not honoured the signal in any sense an operator or a supervisor
++ * would recognise.
++ */
 +export function requestStop(): void {
 +    stopRequested = true;
++    wake?.();
 +}
 +
 +/**
@@ -4449,17 +4725,35 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +/**
 + * The loop. Beat, drain, sample, decide.
 + *
++ * ## Why this is `async`, and why the synchronous version was a real bug
++ *
++ * R2 round-2 finding 1. The first version slept with `Atomics.wait`, which
++ * blocks the main thread — and a Node signal handler is a JS callback on the
++ * event loop, so `SIGTERM` could not be observed until the sleep returned. Stop
++ * latency was therefore up to a full beat, the shipped default beat is 30 s and
++ * `terminateCollector`'s grace is 5 s, so **in the shipped configuration the
++ * graceful half of the kill switch could never win**: every stop escalated to
++ * `SIGKILL`, leaving the lock and heartbeat residue of an unclean death and an
++ * unclosed SQLite handle, every time.
++ *
++ * PROPERTY 2 passed anyway, and that is the part worth remembering: the
++ * lifecycle suite spawns with `--beat-ms 50`, the one configuration in which
++ * the graceful path is reachable. The suite certified a beat production never
++ * uses.
++ *
++ * `await setTimeout` yields to the event loop, so a handler runs while the
++ * daemon waits. Nothing else about the loop changed.
++ *
 + * A budget breach stops the collector on the SECOND consecutive reading, not
 + * the first. One sample is not a breach: the first CPU sample after start
 + * measures a window of a few milliseconds that includes the store open, and
 + * stopping on it would make the daemon unable to start under its own budget.
 + * Two consecutive readings over the ceiling is a load; one is a sample.
 + */
-+export function runLoop(options: RunOptions = {}): RunSummary {
++export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
 +    const userRoot = options.userRoot;
 +    const beatMs = options.beatMs ?? DEFAULT_BEAT_MS;
 +    const sample = options.sample ?? sampleResources;
-+    const handle = openCollectorStore(userRoot);
 +
 +    let iterations = 0;
 +    let consecutiveBreaches = 0;
@@ -4472,7 +4766,15 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +    });
 +    let stoppedBy: RunSummary['stoppedBy'] = 'iterations';
 +
++    // INSIDE the try (R2 round-2 finding 13): opening the store can throw on a
++    // corrupt or unreadable file, and `isStoreAvailable()` in `start()` probes
++    // the runtime rather than this file. Outside the try that throw skipped the
++    // `finally` and left behind the lock and heartbeat `start()` had already
++    // taken — so a supervisor restart loop met its own stale lock on every
++    // attempt until the fencing path cleared it.
++    let handle: StoreHandle | null = null;
 +    try {
++        handle = openCollectorStore(userRoot);
 +        for (;;) {
 +            iterations += 1;
 +
@@ -4504,7 +4806,13 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +                refused: drained.refused + result.refused,
 +                malformed: drained.malformed + result.malformed,
 +            });
-+            pruneOlderThan(handle, new Date(now).toISOString().slice(0, 10));
++            const today = new Date(now).toISOString().slice(0, 10);
++            pruneOlderThan(handle, today);
++            // BOTH sides age on the same clock (R2 round-2 finding 5). Pruning
++            // only the store made the ratio fall toward zero as the numerator
++            // aged out against a lifetime denominator, and left an unbounded
++            // file inside the directory the disk budget ceilings.
++            pruneOpportunitiesOlderThan(userRoot, today);
 +
 +            const verdict = budgetVerdict(sample(userRoot));
 +            if (verdict.action === 'stop') {
@@ -4523,25 +4831,53 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +                stoppedBy = 'iterations';
 +                break;
 +            }
-+            sleepSync(beatMs);
++            await sleep(beatMs);
 +        }
 +    } finally {
-+        handle.db.close();
++        handle?.db.close();
 +        stop(userRoot);
 +    }
 +
 +    return Object.freeze({ iterations, drained, stoppedBy, exceeded });
 +}
 +
-+function sleepSync(ms: number): void {
-+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
++/**
++ * Wakes the current {@link sleep} early. Set while the loop is waiting.
++ *
++ * Yielding to the event loop is necessary and NOT sufficient, which cost a
++ * measured round: with `await setTimeout` the `SIGTERM` handler ran promptly —
++ * and the loop still finished the full 30 s beat before it looked at
++ * `stopRequested`, so the observed stop latency was 29,995 ms against a 5 s
++ * grace. The handler has to be able to END the wait, not merely run during it.
++ */
++let wake: (() => void) | null = null;
++
++/**
++ * Wait up to `ms`, or until {@link requestStop} wakes us — whichever is first.
++ *
++ * Two properties, and the loop needs both (R2 round-2 finding 1). It yields, so
++ * signal handlers run at all; and it is interruptible, so a handler's effect is
++ * immediate rather than deferred to the end of the beat.
++ */
++function sleep(ms: number): Promise<void> {
++    return new Promise((resolve) => {
++        const timer = setTimeout(() => {
++            wake = null;
++            resolve();
++        }, ms);
++        wake = () => {
++            clearTimeout(timer);
++            wake = null;
++            resolve();
++        };
++    });
 +}
 +
 +/* -------------------------------------------------------------------------- */
 +/* Entry point                                                                 */
 +/* -------------------------------------------------------------------------- */
 +
-+export function main(argv: readonly string[] = process.argv.slice(2)): number {
++export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
 +    const command = argv[0] ?? 'status';
 +
 +    // `--root` exists for the process-level lifecycle suite (step 5.1), which
@@ -4554,21 +4890,36 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +    // 16). `argv[i + 1]` is `undefined` there, and `undefined` is precisely the
 +    // value that falls back to the real user root — so a malformed invocation
 +    // would do the one thing this flag was added to prevent.
-+    const rootFlag = argv.indexOf('--root');
-+    if (rootFlag >= 0 && argv[rootFlag + 1] === undefined) {
++    // A flag's value must exist AND not be another flag (R2 round-2 finding 12).
++    // `--root --beat-ms 5` used to pass the presence check and silently take the
++    // literal string `--beat-ms` as the user root — which is the failure `--root`
++    // was added to prevent, arriving through a typo instead of an omission.
++    const flagValue = (name: string): string | null | undefined => {
++        const at = argv.indexOf(name);
++        if (at < 0) return undefined;
++        const value = argv[at + 1];
++        if (value === undefined || value.startsWith('--')) return null;
++        return value;
++    };
++
++    const rootValue = flagValue('--root');
++    if (rootValue === null) {
 +        process.stderr.write('collector: --root needs a directory argument\n');
 +        return 2;
 +    }
-+    const userRoot = rootFlag >= 0 ? argv[rootFlag + 1] : undefined;
++    const userRoot = rootValue;
 +
-+    const beatFlag = argv.indexOf('--beat-ms');
-+    if (beatFlag >= 0 && argv[beatFlag + 1] === undefined) {
++    const beatValue = flagValue('--beat-ms');
++    if (beatValue === null) {
 +        process.stderr.write('collector: --beat-ms needs a number\n');
 +        return 2;
 +    }
-+    const beatMs = beatFlag >= 0 ? Number.parseInt(argv[beatFlag + 1] ?? '', 10) : undefined;
-+    if (beatMs !== undefined && !Number.isFinite(beatMs)) {
-+        process.stderr.write('collector: --beat-ms must be a number\n');
++    const beatMs = beatValue === undefined ? undefined : Number.parseInt(beatValue, 10);
++    // Positive, not merely finite: 0 and a negative both turned the wait into a
++    // no-op, i.e. a busy loop that budget-stops the collector after two
++    // iterations — a spin dressed as a configuration.
++    if (beatMs !== undefined && (!Number.isFinite(beatMs) || beatMs <= 0)) {
++        process.stderr.write('collector: --beat-ms must be a positive number of milliseconds\n');
 +        return 2;
 +    }
 +
@@ -4627,9 +4978,21 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +        process.stdout.write(
 +            `collector: running pid=${process.pid} mode=${outcome.mode}\n`,
 +        );
-+        const summary = runLoop(
-+            beatMs !== undefined ? { userRoot, beatMs } : { userRoot },
-+        );
++        // WRAPPED (R2 round-2 finding 13): an uncaught throw out of the loop
++        // used to kill the process with `start()`'s lock and heartbeat still on
++        // disk. `runLoop`'s own `finally` releases them, but only for throws it
++        // can see; this catches the rest so a supervisor restart does not meet
++        // a stale lock every attempt.
++        let summary: RunSummary;
++        try {
++            summary = await runLoop(
++                beatMs !== undefined ? { userRoot, beatMs } : { userRoot },
++            );
++        } catch (err) {
++            stop(userRoot);
++            process.stderr.write(`collector: loop failed — ${(err as Error).message}\n`);
++            return 1;
++        }
 +        process.stderr.write(
 +            `collector: stopped by ${summary.stoppedBy}`
 +                + (summary.exceeded.length > 0 ? ` (${summary.exceeded.join(', ')})` : '')
@@ -4648,7 +5011,9 @@ index 0000000000000000000000000000000000000000..ff817b6ecc4c3391f1c277d2d8741ca0
 +const invokedDirectly =
 +    process.argv[1] !== undefined && process.argv[1].includes('collector_daemon');
 +if (invokedDirectly) {
-+    process.exitCode = main();
++    void main().then((code) => {
++        process.exitCode = code;
++    });
 +}
 diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
 index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..5753a54b9420b225582bfb8a139e991eab2bbeb5 100644
@@ -5317,17 +5682,22 @@ index 0000000000000000000000000000000000000000..0b5cd95c2872c6c5dd7cce0756f95c57
 +});
 diff --git a/tests/scripts/check_static_parity.test.ts b/tests/scripts/check_static_parity.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..f03d90323490d954ceeb5e4bf5be3da496ee5498
+index 0000000000000000000000000000000000000000..63d72252eb51f743f8b31f3317030f79abb133a2
 --- /dev/null
 +++ b/tests/scripts/check_static_parity.test.ts
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,75 @@
 +// The static-parity comparator — `road-to-supervised-telemetry-collector`
 +// step 4.2 (AC-7).
 +//
-+// The gate itself runs 551 tests twice and takes about a minute, so it is not
-+// invoked from here. What IS asserted here is the part that could silently stop
-+// working: the comparator that turns "two green runs" into "two IDENTICAL
-+// runs", and the discovery that decides what gets compared at all.
++// The gate itself runs the whole dispatcher-reaching set twice and takes about
++// a minute, so it is not invoked from here. The exact test count is deliberately
++// not written down anywhere in this change (R2 round-2 finding 15): it moves
++// every time a test is added to a file in the parity set, and three different
++// figures for it appeared across one diff. The gate prints the live number.
++//
++// What IS asserted here is the part that could silently stop working: the
++// comparator that turns "two green runs" into "two IDENTICAL runs", and the
++// discovery that decides what gets compared at all.
 +//
 +// A gate that scans nothing exits green. Both risks below are the shapes that
 +// failure takes for this gate — an empty parity set, and a comparator that
@@ -5393,10 +5763,10 @@ index 0000000000000000000000000000000000000000..f03d90323490d954ceeb5e4bf5be3da4
 +});
 diff --git a/tests/scripts/collector_daemon.test.ts b/tests/scripts/collector_daemon.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d41ecdf32
+index 0000000000000000000000000000000000000000..1eb4104eaccd3a8ed2f50dc11cf4dee4876cd2df
 --- /dev/null
 +++ b/tests/scripts/collector_daemon.test.ts
-@@ -0,0 +1,409 @@
+@@ -0,0 +1,492 @@
 +// The collector itself — default-off proven by process enumeration, the
 +// denominator's independence from the daemon, and the drain loop.
 +//
@@ -5414,7 +5784,7 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +import * as path from 'node:path';
 +import { fileURLToPath } from 'node:url';
 +
-+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 +
 +import {
 +    claimSpool,
@@ -5422,6 +5792,7 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +    disableCollector,
 +    enableCollector,
 +    isCollectorEnabled,
++    pruneOpportunitiesOlderThan,
 +    readOpportunities,
 +    recordOpportunity,
 +    spoolPendingPath,
@@ -5456,6 +5827,10 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +const DAEMON = path.join(REPO, 'src', 'scripts', 'collector_daemon.ts');
 +
 +let userRoot: string;
++
++beforeAll(() => {
++    for (const line of enumerateDaemonProcesses()) baselineDaemonPids.add(pidOf(line));
++});
 +
 +beforeEach(() => {
 +    userRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-daemon-'));
@@ -5502,6 +5877,20 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 + * nothing a process writes afterwards changes it. The constant was removed
 + * rather than left asserting something untrue.)
 + */
++/** The pid column of a `ps -eo pid,args` line. */
++function pidOf(line: string): string {
++    return (line.trim().split(/\s+/)[0] ?? '').trim();
++}
++
++/**
++ * Daemons already running against the real user root when this file loaded.
++ *
++ * The denominator of the default-off assertion: it asks whether THIS SUITE
++ * started one, and a machine that legitimately has a collector running is not
++ * evidence about the suite.
++ */
++const baselineDaemonPids = new Set<string>();
++
 +function enumerateDaemonProcesses(opts: { includeTestOwned?: boolean } = {}): string[] {
 +    const ps = spawnSync('ps', ['-eo', 'pid,args'], { encoding: 'utf8' });
 +    if (ps.status !== 0) return [];
@@ -5558,20 +5947,27 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +        }
 +    }, 60_000);
 +
-+    it('starts NO process on a fresh install — nothing in the process table', async () => {
-+        // The suite has been running for a while by the time this executes, and
-+        // no test has enabled the collector on the real user root. If any code
-+        // path started a daemon against it, it is visible here.
++    it('THIS SUITE starts no daemon against the real user root', async () => {
++        // The property the step asks for is "a fresh install runs the full test
++        // suite with no collector process started", and the assertion has to
++        // match it (R2 round-2 finding 7). The first version asserted "no
++        // daemon is running on this machine" — which reds on exactly the
++        // machine the feature is aimed at, a developer who has opted in and has
++        // a supervised collector running, with a message about a fresh install.
++        // Phase 6's whole purpose is to make that state common.
 +        //
-+        // Test-owned daemons (`--root <tmp>`) are excluded, so a concurrently
-+        // running `collector_lifecycle.test.ts` cannot red this. That exclusion
-+        // is not a loophole: this assertion is about the DEVELOPER's collector,
-+        // and a daemon pinned to a temp root is by construction not it.
++        // So the comparison is against a BASELINE taken before this file ran
++        // anything: what matters is whether the suite ADDED a daemon, not
++        // whether the machine has one. Test-owned daemons (`--root <tmp>`) are
++        // excluded on top, so a concurrently running lifecycle suite cannot red
++        // this either.
 +        const deadline = Date.now() + 1_000;
 +        while (Date.now() < deadline) {
 +            await new Promise<void>((r) => setTimeout(r, 100));
 +        }
-+        expect(enumerateDaemonProcesses()).toEqual([]);
++        const now = new Set(enumerateDaemonProcesses().map(pidOf));
++        const added = [...now].filter((pid) => !baselineDaemonPids.has(pid));
++        expect(added, 'the suite started a collector against the real user root').toEqual([]);
 +    });
 +
 +    // removing_this_constraint_reds_it: nothing in the collector can red this
@@ -5664,6 +6060,63 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +        expect(readOpportunities(userRoot).total).toBe(0);
 +    });
 +
++    it('reads a WINDOW, so both halves of the ratio age on the same clock', () => {
++        // R2 round-2 finding 5. `readOpportunities` used to return a LIFETIME
++        // total while the store was pruned to RETENTION_DAYS every iteration, so
++        // the two sides of the capture rate were computed over different time
++        // bases and the measured rate would fall toward zero as the numerator
++        // aged out — the exact failure the two-writer design exists to prevent,
++        // arriving through the back door.
++        enableCollector(userRoot);
++        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
++        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'));
++
++        expect(readOpportunities(userRoot).total).toBe(3);
++        expect(readOpportunities(userRoot, { since: '2026-06-01' }).total).toBe(2);
++        expect(readOpportunities(userRoot, { since: '2026-06-02' }).total).toBe(1);
++        expect(readOpportunities(userRoot, { until: '2026-01-31' }).total).toBe(1);
++        const all = readOpportunities(userRoot);
++        expect(all.firstDate).toBe('2026-01-01');
++        expect(all.lastDate).toBe('2026-06-02');
++    });
++
++    // removing_this_constraint_reds_it: drop the `since`/`until` comparisons
++    // from `readOpportunities` — every windowed assertion returns 3.
++
++    it('PRUNES the log on the same retention clock as the store', () => {
++        enableCollector(userRoot);
++        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
++        expect(readOpportunities(userRoot).total).toBe(2);
++
++        // 63 days before 2026-06-02 is 2026-03-31, so January goes and June stays.
++        const dropped = pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
++        expect(dropped).toBe(1);
++        expect(readOpportunities(userRoot).total).toBe(1);
++        expect(readOpportunities(userRoot).firstDate).toBe('2026-06-01');
++        // Idempotent: a second prune over the same horizon drops nothing.
++        expect(pruneOpportunitiesOlderThan(userRoot, '2026-06-02')).toBe(0);
++    });
++
++    // removing_this_constraint_reds_it: make `pruneOpportunitiesOlderThan`
++    // return 0 without rewriting — the log keeps growing inside the directory
++    // the disk budget ceilings, and a breach STOPS the collector.
++
++    it('KEEPS a line whose date does not parse rather than deleting it', () => {
++        enableCollector(userRoot);
++        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
++        fs.appendFileSync(denominatorPath(userRoot), 'not-a-date\tsession_start\tclaude\n');
++        // Deleting what you cannot classify is how a prune quietly becomes a
++        // truncation; the reader already counts it as malformed.
++        pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
++        const raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
++        expect(raw).toContain('not-a-date');
++        expect(readOpportunities(userRoot).malformed).toBe(1);
++    });
++
 +    it('never throws, whatever the filesystem does', () => {
 +        enableCollector(userRoot);
 +        // Make the collector directory unwritable, then ask for a write. A
@@ -5742,7 +6195,7 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +        expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
 +    });
 +
-+    it('stops on the SECOND consecutive budget breach, not the first', () => {
++    it('stops on the SECOND consecutive budget breach, not the first', async () => {
 +        enableCollector(userRoot);
 +        expect(start(userRoot).started).toBe(true);
 +        const over = {
@@ -5751,7 +6204,7 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +            disk_bytes: 1,
 +            file_descriptors: 1,
 +        };
-+        const summary = runLoop({ userRoot, beatMs: 1, sample: () => over });
++        const summary = await runLoop({ userRoot, beatMs: 1, sample: () => over });
 +        expect(summary.stoppedBy).toBe('budget');
 +        expect(summary.exceeded).toEqual(['cpu_percent']);
 +        // Two iterations, because one reading is a sample and two are a load.
@@ -5761,19 +6214,19 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +    // removing_this_constraint_reds_it: stop on the first breach
 +    // (`consecutiveBreaches >= 1`) — `iterations` becomes 1.
 +
-+    it('stops when the kill switch is pulled mid-run', () => {
++    it('stops when the kill switch is pulled mid-run', async () => {
 +        enableCollector(userRoot);
 +        expect(start(userRoot).started).toBe(true);
 +        pullKillSwitch(userRoot);
-+        const summary = runLoop({ userRoot, beatMs: 1, maxIterations: 5 });
++        const summary = await runLoop({ userRoot, beatMs: 1, maxIterations: 5 });
 +        expect(summary.stoppedBy).toBe('kill-switch');
 +    });
 +
-+    it('releases the lock and removes the heartbeat when it stops', () => {
++    it('releases the lock and removes the heartbeat when it stops', async () => {
 +        enableCollector(userRoot);
 +        expect(start(userRoot).started).toBe(true);
 +        expect(readHeartbeat(userRoot)).not.toBeNull();
-+        runLoop({ userRoot, beatMs: 1, maxIterations: 1 });
++        await runLoop({ userRoot, beatMs: 1, maxIterations: 1 });
 +        expect(readHeartbeat(userRoot)).toBeNull();
 +        // The next starter can take the lock: no permanent lockout.
 +        expect(start(userRoot).started).toBe(true);
@@ -5808,10 +6261,10 @@ index 0000000000000000000000000000000000000000..e827881ed0655d2373ade74954090e2d
 +});
 diff --git a/tests/scripts/collector_lifecycle.test.ts b/tests/scripts/collector_lifecycle.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..8ed55a345e73a8916e6465e1f186dc332480fb05
+index 0000000000000000000000000000000000000000..9785659a57f728941eaf2e727d88b5df2ea544ff
 --- /dev/null
 +++ b/tests/scripts/collector_lifecycle.test.ts
-@@ -0,0 +1,350 @@
+@@ -0,0 +1,393 @@
 +// The five lifecycle properties, on REAL processes.
 +//
 +// `road-to-supervised-telemetry-collector` step 5.1 (AC-8). The step's whole
@@ -5853,6 +6306,7 @@ index 0000000000000000000000000000000000000000..8ed55a345e73a8916e6465e1f186dc33
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
 +import { enableCollector } from '../../src/scripts/_lib/collector_denominator.js';
++import { DEFAULT_BEAT_MS } from '../../src/scripts/collector_daemon.js';
 +import { isStoreAvailable } from '../../src/scripts/_lib/collector_store.js';
 +import {
 +    HEARTBEAT_STALE_AFTER_MS,
@@ -5921,7 +6375,15 @@ index 0000000000000000000000000000000000000000..8ed55a345e73a8916e6465e1f186dc33
 +
 +/** Spawn a real daemon and wait until it announces readiness on stdout. */
 +async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
-+    const child = spawn(TSX, [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50', ...extraArgs], {
++    // `extraArgs` comes AFTER the default `--beat-ms 50`, and the flag parser
++    // takes the first occurrence — so a caller overriding the beat must pass it
++    // as the only one. Handled by dropping the default when the caller supplies
++    // it, rather than by relying on argument order.
++    const overridesBeat = extraArgs.includes('--beat-ms');
++    const base = overridesBeat
++        ? [DAEMON, 'run', '--root', userRoot]
++        : [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50'];
++    const child = spawn(TSX, [...base, ...extraArgs], {
 +        stdio: ['ignore', 'pipe', 'pipe'],
 +    });
 +    spawned.push(child);
@@ -6086,6 +6548,40 @@ index 0000000000000000000000000000000000000000..8ed55a345e73a8916e6465e1f186dc33
 +        ).toBe('stale');
 +        expect(pidAlive(beat?.pid as number)).toBe(false);
 +    }, CASE_TIMEOUT_MS);
++
++    it('honours SIGTERM PROMPTLY at the PRODUCTION beat, not only at a test beat', async () => {
++        // R2 round-2 finding 1, and the test that would have caught it. Every
++        // other case here spawns with `--beat-ms 50`, which is the one
++        // configuration where a synchronous sleep still lets the graceful path
++        // win. This one uses the shipped default (30 s) and asserts the process
++        // is gone in a fraction of it.
++        //
++        // Under the old `Atomics.wait` loop the signal handler could not run
++        // until the sleep returned, so stop latency was a full beat: 30 s
++        // against `terminateCollector`'s 5 s grace, i.e. every production stop
++        // escalated to SIGKILL and left the residue of an unclean death.
++        const daemon = await spawnDaemon(['--beat-ms', String(DEFAULT_BEAT_MS)]);
++        expect(daemon.stdout()).toContain('collector: running');
++        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
++
++        const sentAt = Date.now();
++        process.kill(daemon.pid, 'SIGTERM');
++        await daemon.exited();
++        const elapsed = Date.now() - sentAt;
++
++        expect(pidAlive(daemon.pid)).toBe(false);
++        // Well inside `terminateCollector`'s 5 s default grace, and two orders
++        // of magnitude inside the 30 s beat it was sleeping on.
++        expect(elapsed, `SIGTERM honoured in ${String(elapsed)}ms`).toBeLessThan(5_000);
++        // And it was a CLEAN stop: the `finally` ran.
++        expect(readHeartbeat(userRoot)).toBeNull();
++        expect(fs.existsSync(runtimeLockPath(userRoot))).toBe(false);
++    }, CASE_TIMEOUT_MS);
++
++    // removing_this_constraint_reds_it: restore the synchronous
++    // `Atomics.wait` sleep in `runLoop` — this case times out at the 5 s
++    // assertion while every other case in the file stays green, which is
++    // exactly the asymmetry that hid the bug.
 +
 +    it('the operator STOP verb ends a real daemon through the documented path', async () => {
 +        // R2 finding 3: `terminateCollector` had no production caller and
@@ -6823,10 +7319,10 @@ index 0000000000000000000000000000000000000000..955d9eded4db1b275aed392353006312
 +});
 diff --git a/tests/scripts/collector_vocabulary_parity.test.ts b/tests/scripts/collector_vocabulary_parity.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..59f37b2b1aeec21ed714f520c3b26f19f49e420f
+index 0000000000000000000000000000000000000000..e2ac30204cb85e4ce6a5c693e56cd93c27523813
 --- /dev/null
 +++ b/tests/scripts/collector_vocabulary_parity.test.ts
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,73 @@
 +// The denominator's vocabularies must equal the dispatcher's.
 +//
 +// `road-to-supervised-telemetry-collector`, R2 finding 11. `recordOpportunity`
@@ -6840,10 +7336,20 @@ index 0000000000000000000000000000000000000000..59f37b2b1aeec21ed714f520c3b26f19
 +// biased UPWARD, which is the one direction that makes a 90 % target look met.
 +// A test is the only thing that can catch it, because both sides are literals.
 +
-+import { describe, expect, it } from 'vitest';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
 +
-+import { COLLECTOR_EVENTS } from '../../src/scripts/_lib/collector_record.js';
++import { describe, expect, it } from 'vitest';
++import { parse as parseYaml } from 'yaml';
++
++import {
++    COLLECTOR_EVENTS,
++    COLLECTOR_PLATFORMS,
++} from '../../src/scripts/_lib/collector_record.js';
 +import { EVENT_VOCABULARY } from '../../src/scripts/hooks/dispatch_hook.js';
++
++const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 +
 +describe('collector vocabulary parity', () => {
 +    it('COLLECTOR_EVENTS equals the dispatcher\'s EVENT_VOCABULARY, exactly', () => {
@@ -6855,6 +7361,30 @@ index 0000000000000000000000000000000000000000..59f37b2b1aeec21ed714f520c3b26f19
 +    // removing_this_constraint_reds_it: add an eleventh event to either literal
 +    // without the other. Nothing else in the tree reds — which is the whole
 +    // reason this file exists.
++
++    it('COLLECTOR_PLATFORMS equals the hook manifest\'s platform keys, exactly', () => {
++        // The SECOND axis, and it has the identical, identically-directional
++        // failure (R2 round-2 finding 6). `recordOpportunity` refuses any
++        // platform outside `COLLECTOR_PLATFORMS`, and the dispatcher validates
++        // no platform at all — `args.platform` is whatever the trampoline
++        // passes, and there is no `PLATFORM_VOCABULARY` to compare against. So
++        // the authority is the manifest that declares which platforms exist.
++        //
++        // A platform added there and not here is dropped from the denominator
++        // silently, shrinking the opportunity set and biasing the rate UPWARD —
++        // the one direction that makes the 90 % target look met.
++        const manifest = parseYaml(
++            fs.readFileSync(path.join(REPO, 'src', 'scripts', 'hook_manifest.yaml'), 'utf8'),
++        ) as { platforms?: Record<string, unknown> };
++        const declared = Object.keys(manifest.platforms ?? {}).sort();
++        expect(declared.length, 'the manifest declares platforms').toBeGreaterThan(0);
++        expect([...COLLECTOR_PLATFORMS].sort()).toEqual(declared);
++    });
++
++    // removing_this_constraint_reds_it: add a platform key to
++    // `hook_manifest.yaml` without adding it to `COLLECTOR_PLATFORMS` — this
++    // reds and nothing else in the tree does, which is the whole reason the
++    // file exists.
 +
 +    it('states the direction of the bias, so a future reader does not have to re-derive it', () => {
 +        // Not a tautology: it pins WHICH set is the denominator's gate, so a

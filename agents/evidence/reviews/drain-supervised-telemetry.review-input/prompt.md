@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3a4815f6a926ae80d0c1611011f82039be87ab85, review
-  artefacts excluded), scope hash `db7d66ecded2127418a54101764ddf3f675179539b61427c01cf9f8b42cc4ca2`
+- diff: `diff.patch` — the review scope (branch head 974abdf957c3d1b71b6cfc15b0faf178614f85d4, review
+  artefacts excluded), scope hash `0968aaad1d4a841a6ff22a0b6defe8735874a16fab7660c063f6d56484a73b4f`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -35,6 +35,7 @@ Changed files:
 - docs/contracts/ci-cost-budget.md
 - docs/contracts/collector-operations.md
 - src/config/ci-local-parity.yml
+- src/config/gate-coverage.yml
 - src/scripts/_lib/capture_rate.ts
 - src/scripts/_lib/collector_denominator.ts
 - src/scripts/_lib/collector_supervision.ts
@@ -72,7 +73,7 @@ Fill the findings table in `drain-supervised-telemetry.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope db7d66ecded2127418a54101764ddf3f675179539b61427c01cf9f8b42cc4ca2, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 0968aaad1d4a841a6ff22a0b6defe8735874a16fab7660c063f6d56484a73b4f, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
