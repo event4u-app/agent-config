@@ -636,15 +636,31 @@ the blocker existed to protect.
       Landed: `INLINE_FINDINGS_CONTRACT` (`ai_council/prompts.ts`) appended to
       the FINAL deliberation round via `ConsultOptions.inline_findings`, exactly
       the seam `STANCE_LINE_CONTRACT` already uses — off means the prompt is
-      byte-identical. `harvest_inline_findings` (`ai_council/orchestrator.ts`)
-      reads the block; `run_consensus_scoring` consumes the harvested map and
-      issues no extraction call for a member that has an entry.
+      byte-identical. `ai_council/inline_findings.ts` holds the whole concern:
+      the trailing-block locator, the `RecordedExtractionOutcome` union,
+      `harvest_inline_findings`, the final-round suffix composer, the
+      short-circuit helper and the config predicate.
+      `run_consensus_scoring` consumes the harvested map and issues no
+      extraction call for a member that has an entry.
       `consensus_scoring.inline_findings` (default `false`) is the switch, and
       `docs/contracts/ai-council-config.md` § Consensus scoring — inline
       findings documents it. 30 tests in
-      `tests/scripts/ai_council/inline_findings.test.ts`, all green, with SIX
+      `tests/scripts/ai_council/inline_findings.test.ts`, all green, with FIVE
       sensitivity arms — each mechanism neutralised in turn and the matching
       test observed red, then restored.
+
+      **The source-size ratchet is what decided where the code lives, and it
+      was paid rather than bumped.** The change first charged +153 lines across
+      `orchestrator.ts`, `council_cli.ts` and `ai_council/config.ts` — all three
+      far past the 1500-line ceiling, so every line counts. Concentrating the
+      concern in its own module took that to +23; the residual was irreducible
+      call sites. `run_consensus_scoring` — the function this change actually
+      edits — then moved whole into `ai_council/consensus_round.ts`, with
+      `orchestrator.ts` re-exporting the name so no importer changed. Net for
+      the tree: **-174 lines**, and the baseline was lowered to the exact live
+      total rather than left loose, because `check_source_size_budget.test.ts`
+      asserts baseline equals tree total. The gate is the reason the new
+      concern got its own module, which is the outcome that gate exists for.
 
       **A live run WAS made, and what it produced is a defect rather than the
       evidence.** One openai seat, analysis lens, `--rounds 1`, consensus and
