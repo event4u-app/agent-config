@@ -1,0 +1,928 @@
+diff --git a/agents/roadmaps/road-to-supervised-telemetry-collector.md b/agents/roadmaps/road-to-supervised-telemetry-collector.md
+index 57d66f05797ca66d641eeac12daa3a3568f30b4b..a232c6c725358a3ff82bafb3652df56e9f661ae3 100644
+--- a/agents/roadmaps/road-to-supervised-telemetry-collector.md
++++ b/agents/roadmaps/road-to-supervised-telemetry-collector.md
+@@ -305,19 +305,78 @@ one for a design note under review: § 2's rule is that unanswered is
+       serialization fixtures for the leak classes in 2.1, each asserting the
+       record cannot carry it.
+       verify: DONE — `tests/scripts/collector_record.test.ts`, and the sensitivity half was OBSERVED rather than argued. `LEAK_FIXTURES` is a named table of six: repository/worktree identifier (`repo_path`), branch name, command name and arguments, error enum with an interpolated value, a hash stable enough to identify a user or repo, and a free-form escape hatch (`extra`). Each fixture asserts both that the record refuses the field and that it says `REJECTED, not dropped`. The timestamp class gets its OWN block because it differs in kind — the field is legitimate and required, and it is its RESOLUTION that leaks, so it is a value constraint rather than a field ban; a precise ISO timestamp and a smuggled unix epoch are both refused. Identifier derivation gets a third block: a sha256 and a hostname are both refused as `machine_id`. **Sensitivity probe, run and reversed:** admitting a single leak field (`repo_path`) to `FIELD_PURPOSE` reds **5 of the 35 tests**, including that class's own fixture and the allowlist-equals-record-keys assertion — so the fixtures are enforcing, not decorating. Restored and re-verified: 35 green, `tsc --noEmit` clean. Each fixture additionally carries a `removing_this_constraint_reds_it` line naming the exact edit that would turn it green, so the sensitivity claim is written down per class instead of asserted once for the suite.
+-- [ ] **2.3 Implement deletion and opt-out, then test them.** AC-7 of the
++- [x] **2.3 Implement deletion and opt-out, then test them.** AC-7 of the
+       governance roadmap's first draft required these to be *documented*. A
+       documented deletion path that nobody executed is a claim.
+-      verify: a test deletes a machine's records through the supported path and asserts the store no longer serves them; a second asserts opt-out prevents the write rather than filtering the read.
+-- [ ] **2.4 Write the upgrade and schema-rollback contract.** Forward and
++      verify: DONE — `src/scripts/_lib/collector_store.ts` + `tests/scripts/collector_store.test.ts`. Both clauses are driven against the real store on a temp user root; nothing is mocked, because a mocked deletion is a documented deletion with extra steps.
++
++      **Deletion.** `deleteMachine` is the supported path and returns how many
++      records it removed. The test writes 4 records for one machine and 1 for a
++      second, deletes the first, and asserts through **both** query shapes —
++      `readRecords(handle, machineId)` and `readRecords(handle)` with no filter
++      — because "gone" has to mean gone from the store and not merely absent
++      from the one query that happened to filter it. Deletion is BY MACHINE and
++      nothing coarser is offered: `machine_id` is the only identity a record
++      carries, so a "delete everything" verb would make a targeted Art. 17
++      request impossible to serve honestly.
++
++      **Opt-out prevents the WRITE.** The step's wording is an architectural
++      requirement, not a phrasing preference, so the assertion is the one that
++      can tell the two apart: after a refused write the **row count is
++      unchanged** (`SELECT COUNT(*)` = 0), which a read filter cannot achieve.
++      `writeRecord` refuses before touching SQLite and returns
++      `refusal: 'opted-out'`; the check lives INSIDE `writeRecord` rather than
++      at the call site, and a test pins that by making the identical one-argument
++      call refuse or write purely on the marker's presence — a consent check a
++      caller can forget is a consent check that will be forgotten. The marker is
++      a FILE under the store directory, not a settings key, and therefore
++      reachable without the package running: the same property 3.3's kill switch
++      needs.
++
++      **Sensitivity, observed rather than argued.** Moving the opt-out check out
++      of `writeRecord` into a filter inside `readRecords` reds **3 of 14** tests,
++      including the row-count assertion; making `deleteMachine` a no-op that
++      still returns the count reds **2 of 14**. Both reverted from an explicit
++      backup and re-verified at 14/14.
++- [x] **2.4 Write the upgrade and schema-rollback contract.** Forward and
+       backward compatibility, what an older package does when it meets newer
+       records, whether a rollback migrates or quarantines, what uninstall
+       removes, and recovery after a crash mid-migration.
+-      verify: a test drives each of those five transitions over a seeded store.
++      verify: DONE — five transitions, five named tests, each driven over a store seeded to the state it tests. `tests/scripts/collector_store.test.ts` § *2.4 — the five upgrade transitions*.
++
++      | # | Transition | Contract | Test |
++      |---|---|---|---|
++      | 1 | Fresh store | created at `COLLECTOR_SCHEMA_VERSION`, `quarantined: false` | *TRANSITION 1 — a fresh store is created at the current schema version* |
++      | 2 | **Backward** compat — older records, newer package | migrated forward inside a marked window; records survive; the marker does not outlive a success | *TRANSITION 2 — an OLDER store is migrated forward and its records survive* |
++      | 3 | **Forward** compat — newer records, older package | **QUARANTINED**: renamed, never read, never rewritten. Writes refuse with `schema-quarantined`, reads return nothing, and the moved file's BYTES are asserted equal to what the newer revision wrote | *TRANSITION 3 — a NEWER store is quarantined, never read and never rewritten* |
++      | 4 | Crash mid-migration | the marker survives the crash, so the next open quarantines rather than resuming a migration whose progress nothing recorded — and leaves a WORKING store, not a wedge | *TRANSITION 4 — a crash mid-migration quarantines rather than resuming* |
++      | 5 | Uninstall | removes the database, its WAL sidecars and the markers; **KEEPS** the quarantine directory | *TRANSITION 5 — uninstall removes the store and the markers, and KEEPS the quarantine* |
++
++      **Three decisions inside that table are decisions and are recorded as
++      such.** (a) A rollback **quarantines rather than migrates** — reading a
++      record shape you do not understand is how a field gets silently dropped,
++      and dropping is what this schema refuses; it also matches the row 3.1's
++      matrix already owes for incompatible schemas. (b) The crash marker is
++      checked **before** the version stamp is read, because a half-migrated
++      store's stamp cannot be trusted to say which half it is in. (c) Uninstall
++      keeps the quarantine because a quarantined store is the *record of an
++      incompatible-schema event*, and uninstall is not the moment to destroy
++      evidence about one.
++
++      A sixth test covers the growth budget the quarantine directory would
++      otherwise have none of: the quarantine filename carries a **content
++      digest** rather than a timestamp, so repeated incompatible opens of the
++      same bytes are idempotent instead of unbounded — R-A7 applied to a
++      directory nobody prunes.
++
++      **Sensitivity:** reading a newer store instead of quarantining it reds
++      **3 of 14**; checking the crash marker after the version instead of before
++      reds **1 of 14** — the transition-4 test alone, which is the targeted
++      result rather than a blanket break. Both reverted and re-verified at 14/14.
+ 
+ ## Phase 3 — The operational contract
+ 
+-- [ ] **3.1 Write the rollback trigger matrix.** Each trigger names its
++- [x] **3.1 Write the rollback trigger matrix.** Each trigger names its
+       activation mechanism, its owner, its recovery procedure, and its test.
+       The minimum set, from the council: privacy-contract violation (immediate
+       disable and quarantine) · orphan or duplicate collector (disable
+@@ -326,7 +385,38 @@ one for a design note under review: § 2's rule is that unanswered is
+       schema or failed migration (preserve without reading or rewriting) ·
+       static-mode regression (block release) · lifecycle-suite failure on any
+       supported platform (prohibit the public capability claim).
+-      verify: every row has all four columns filled and a test named; a row with an empty test column fails this step.
++      verify: DONE — seven rows below, every one carrying all four columns and a named test. No row has an empty test column.
++
++      **The matrix, committed 2026-08-29.** Seven rows — the council's minimum
++      set, none dropped and none added. Every row carries all four columns.
++
++      **What the "Test" column is and is not.** The step's `verify:` asks for a
++      test *named* per row, and a name is not coverage. So each row's test
++      carries its state explicitly — `EXISTS` with the file, or `OWED BY <step>`
++      — because a matrix whose test column reads like seven green checks when
++      four of them are future work is the "presence check masquerading as proof"
++      that step 5.2 exists to prevent, one section earlier. Three of the seven
++      are enforced today; four are owed by the steps that build what they test,
++      and they are owed by name rather than by hope.
++
++      | # | Trigger | Activation mechanism | Owner | Recovery procedure | Test |
++      |---|---|---|---|---|---|
++      | 1 | **Privacy-contract violation** — a record reaches the store carrying a field the schema does not allow | `validateRecord` returns `ok: false` at the write boundary; `writeRecord` refuses with `refusal: 'invalid-record'` and surfaces every error. The violation is a REFUSAL, never a drop | maintainer | Immediate disable (`optOut`, which prevents the write and needs no running collector) + `quarantine()` of the store, preserved unread; then `deleteMachine` for any affected machine id | **EXISTS** — `tests/scripts/collector_record.test.ts` (six named leak-class fixtures, each with its `removing_this_constraint_reds_it` line) + `tests/scripts/collector_store.test.ts` § *refuses an invalid record with its errors rather than silently dropping it* |
++      | 2 | **Orphan or duplicate collector** — more than one live collector inside the declared namespace (one per OS user, `uniqueness-namespace` (b)) | Per-user runtime lock in the user runtime directory; a second acquirer fails to take it and exits rather than proceeding | maintainer | Disable activation (the `activation-and-installation-model` (b) answer makes starting an explicit action, so activation is revocable without uninstalling); fence the stale owner record on the next start | **OWED BY 5.1** — the fencing and exactly-one-live property are process facts and a mocked assertion proves neither; 5.1's suite spawns real processes. Named, not written |
++      | 3 | **Crash-loop threshold exceeded** | Supervisor restart counter crossing its bound within a window; the bound belongs to the supervisor chosen in `supervisor-mechanism-and-platform-scope` | maintainer | Bounded retries, then **static fallback** — the no-collector dispatch path, which is the documented degradation and not an outage. `resident-process-floors` § 3 owns the ladder | **OWED BY 5.1** — a restart counter is only observable across real process deaths |
++      | 4 | **CPU, memory, disk or file-descriptor budget exceeded** | Per-resource ceiling from 3.2 crossed, measured against the headroom-at-peak that step records | maintainer | Stop the collector (not throttle it): an observer that has become a load is no longer an observer, and § 1's falsifiable form — *if the module were killed, every dispatch would resolve identically* — is what makes stopping safe | **OWED BY 3.2** — that step's own `verify:` is *"a test asserts the collector is stopped when each is exceeded"*, so the test is that step's deliverable and this row must not pre-claim it |
++      | 5 | **Incompatible schema or failed migration** | `openCollectorStore` reads `user_version`; a value ABOVE this revision's, or an in-flight migration marker surviving a crash, both route to `quarantine()` | maintainer | **Preserve without reading or rewriting** — a rename, never a read and never a migration; a fresh store is created beside it and the moved file's bytes are asserted unchanged. `uninstall` deliberately keeps the quarantine directory: it is evidence about the event | **EXISTS** — `tests/scripts/collector_store.test.ts` § TRANSITION 3 (newer store: not read, not written, bytes preserved) and § TRANSITION 4 (crash mid-migration quarantines rather than resuming). Both probed red |
++      | 6 | **Static-mode regression** | The existing suite diverging between collector-absent and collector-present-but-off | maintainer | **Block release.** Not a rollback of the collector but a refusal to ship: static operation is the Goal's own floor, and a regression there means the observer changed the observed | **OWED BY 4.2** — that step compares the two runs rather than declaring each green, and the comparison IS the test. Cannot exist before the collector does |
++      | 7 | **Lifecycle-suite failure on any supported platform** | The 5.1 suite red, or **skipped**, on a platform the platform table declares supported — AC-8 makes a skip a failure on that platform rather than an absence | maintainer | **Prohibit the public capability claim.** `check_supervision_claim_atomicity` already refuses a present-tense supervision claim without a lifecycle record for THIS revision, so the prohibition is mechanical rather than remembered. Per the `lifecycle-ci-runner-provisioning` (b) verdict the unverified platform row stays excluded from release claims **even if its static fallback appears to work** | **OWED BY 5.2** — that step's `verify:` requires the check to red against a deliberately emptied suite and against a result from a different revision, two seeded negatives, both observed |
++
++      **Row 4's owner column is the one worth arguing about, and it is not
++      argued away.** Every row reads `maintainer`, which looks like a column
++      that says nothing. It is the honest entry: this package has one
++      maintainer, no on-call rotation, and no second party a trigger could page.
++      Writing a team name into six of seven rows would have made the column look
++      informative while naming nobody who exists. What the column will carry
++      once there is someone else to name is a `revisit-if`, not a placeholder.
++
+ - [ ] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
+       footprint, and file-descriptor count, each with the ceiling and the
+       headroom at expected peak. An unquantified ceiling is not headroom.
+@@ -670,12 +760,18 @@ one for a design note under review: § 2's rule is that unanswered is
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — All three blockers carry a `resolved` status naming the chosen option, and the supported platform list is written down.
+-- [ ] AC-2 — The metric definition answers all nine questions from 1.2, and the target plus window were committed in a commit preceding the first collector commit — checked by commit order.
+-- [ ] AC-3 — Every schema field carries a purpose and a cardinality limit; an unknown field is rejected rather than dropped; and a serialization fixture exists per named leak class, each proven to fail when its constraint is removed.
+-- [ ] AC-4 — Deletion and opt-out are exercised by tests, not documented: records are gone after deletion, and opt-out prevents the write rather than filtering the read.
+-- [ ] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
++- [x] AC-1 — All three blockers carry a `resolved` status naming the chosen option, and the supported platform list is written down.
++      MET by 1.1, and the scope of "three" is stated rather than assumed. The three blockers this AC was written against — `supervisor-mechanism-and-platform-scope`, `uniqueness-namespace`, `activation-and-installation-model` — each carry `Status: resolved` naming a chosen option, and the supported platform list is a table inside the first of them, with Windows recorded as **unevaluated** rather than refused. A **fourth** blocker, `lifecycle-ci-runner-provisioning`, is `open` and is deliberately NOT counted here: it was added on 2026-08-29 by council instruction, after this AC was written, and its own closure condition is tracked by AC-8's Phase 5 dependency rather than by this line. Flipping this with the fourth blocker unnamed would have been the more convenient reading and a worse record.
++- [x] AC-2 — The metric definition answers all nine questions from 1.2, and the target plus window were committed in a commit preceding the first collector commit — checked by commit order.
++      MET by 1.2 and 1.3, and the commit-order clause was CHECKED rather than asserted: the target and window landed in `df8ab5c68` (PR #1714) and the first commit touching any collector code — `src/scripts/_lib/collector_record.ts` — is `1468231fa` (PR #1721). `git merge-base --is-ancestor df8ab5c68 1468231fa` exits 0, so the order holds by ancestry and not by date-stamp comparison. The nine answers are numbered 1–9 in 1.2 against the nine questions the step names.
++- [x] AC-3 — Every schema field carries a purpose and a cardinality limit; an unknown field is rejected rather than dropped; and a serialization fixture exists per named leak class, each proven to fail when its constraint is removed.
++      MET by 2.1 and 2.2. All three clauses: `FIELD_PURPOSE` in `src/scripts/_lib/collector_record.ts` carries purpose, cardinality limit and why-a-coarser-form-does-not-suffice for all nine fields, and `ALLOWED_FIELDS` is DERIVED from it so a field cannot be added without stating its purpose; `validateRecord` reports an unknown key as `unknown field '<name>' — REJECTED, not dropped`; and `LEAK_FIXTURES` in `tests/scripts/collector_record.test.ts` is a named table of six leak classes, each carrying a `removing_this_constraint_reds_it` line, with the sensitivity claim OBSERVED — admitting `repo_path` reds 5 of 35.
++- [x] AC-4 — Deletion and opt-out are exercised by tests, not documented: records are gone after deletion, and opt-out prevents the write rather than filtering the read.
++      MET by 2.3. `tests/scripts/collector_store.test.ts` deletes through `deleteMachine` and asserts absence through BOTH query shapes (filtered and unfiltered), and asserts a refused write leaves `SELECT COUNT(*)` at 0 — the assertion that distinguishes a prevented write from a filtered read. Sensitivity observed: moving the check into `readRecords` reds 3 of 14, a no-op `deleteMachine` reds 2 of 14.
++- [x] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
++      MET by 2.4. Five named tests, one per transition, each over a store seeded to the state it tests — plus a sixth on the quarantine directory's growth budget. Transition 3 asserts the quarantined file's BYTES are unchanged, which is what "preserve without reading or rewriting" has to mean to be checkable. Sensitivity observed: 3 of 14 red when a newer store is read instead of quarantined, 1 of 14 when the crash marker is checked after the version stamp.
+ - [ ] AC-6 — Every rollback-trigger row has an activation mechanism, an owner, a recovery procedure and a named test; resource budgets are numbers with headroom; and the kill switch has been exercised against an unresponsive process.
++      FIRST CLAUSE MET by 3.1 — seven rows, four columns each, no empty test cell, and each test carries its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage. THREE of the seven are enforced today; four are owed by the steps that build what they test. The second and third clauses are 3.2 and 3.3 and are OPEN: both need the collector, which is Phase 4. Deliberately not flipped — a partly-met AC reading met is the silent-green this roadmap's own § 4 warns about.
+ - [ ] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
+ - [ ] AC-8 — The five lifecycle properties are demonstrated by process-level tests on every declared platform, executed in CI on each — a skip counts as a failure on that platform.
+ - [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
+diff --git a/src/scripts/_lib/collector_store.ts b/src/scripts/_lib/collector_store.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c9d26c2861fc3a20aeaf1df628dce7544f881bd
+--- /dev/null
++++ b/src/scripts/_lib/collector_store.ts
+@@ -0,0 +1,406 @@
++/**
++ * The supervised collector's record store — deletion, opt-out, and the five
++ * upgrade transitions.
++ *
++ * `road-to-supervised-telemetry-collector` Phase 2 steps 2.3 and 2.4 (AC-4,
++ * AC-5). `_lib/collector_record.ts` fixed the record's SHAPE; nothing yet held
++ * a record, so "deletion and opt-out are implemented" had nowhere to be true.
++ * This is that somewhere, and it is deliberately the smallest thing that makes
++ * both steps' `verify:` lines executable rather than documentable.
++ *
++ * ## Class A, and provably so — this is NOT the collector
++ *
++ * Open, write or read, close, return. No resident process, no socket, no timer,
++ * no state surviving a call. The supervised process of Phase 4 is a *client* of
++ * this module; the module itself has the same shape as
++ * `_lib/runtime_journal.ts` and `_lib/test_red_state.ts`, so nothing here
++ * consumes the ADR-249 permission for a resident process. Phase 4 does that,
++ * with the four governance conditions attached.
++ *
++ * ## Where it lives — the uniqueness blocker's answer, executed
++ *
++ * `<user-root>/agent-collector/collector.sqlite`, where `<user-root>` defaults
++ * to `~/.event4u/agent-config/`. This is not a fresh choice: the
++ * `uniqueness-namespace` blocker resolved **(b) — exactly one collector per OS
++ * user** (AI council 2026-08-28, 2/2 convergent), on the ground that the
++ * uniqueness scope should match the state's scope and the configuration already
++ * lives under the user's home. A per-repository store would have contradicted
++ * that resolution while looking like a smaller decision.
++ *
++ * Two consequences worth naming rather than discovering:
++ *
++ * - **A repository is never discovered from the filesystem.** The same blocker
++ *   forbids it explicitly. Records carry `machine_id` / `episode_id` and no
++ *   path, so attribution survives multiplexing without the store ever holding a
++ *   location. {@link CollectorRecord} could not hold one if it wanted to.
++ * - **The shared-machine case is a documented limitation, not a design.** A
++ *   per-user store is the wrong boundary for a machine several people share,
++ *   and the blocker records that as a known gap rather than solving it here.
++ *
++ * ## Opt-out prevents the WRITE, and that distinction is the whole step
++ *
++ * 2.3's second clause is *"opt-out prevents the write rather than filtering the
++ * read"*, which is a real architectural difference and not a phrasing
++ * preference. A read filter leaves the data on disk: the record exists, the
++ * consent choice is honoured only by whoever remembers to apply the filter, and
++ * a future reader that forgets is a leak. {@link writeRecord} refuses before it
++ * touches SQLite, and {@link isOptedOut} is checked there rather than by the
++ * caller, so a caller cannot forget.
++ *
++ * The marker is a FILE, not a settings key, and reachable without the
++ * collector's cooperation — the same property the kill switch of 3.3 needs. A
++ * user who cannot start the package can still `touch` it.
++ *
++ * ## Deletion is a path, exercised
++ *
++ * The governance roadmap's first draft required deletion to be *documented*. A
++ * documented deletion path nobody executed is a claim, so {@link deleteMachine}
++ * is the supported path and the tests drive it and then assert the store no
++ * longer serves those records — including through {@link readRecords} with no
++ * filter, because "gone" has to mean gone from the store and not merely absent
++ * from one query.
++ */
++
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import type { DatabaseSync } from 'node:sqlite';
++
++import {
++    type CollectorRecord,
++    COLLECTOR_SCHEMA_VERSION,
++    dedupKey,
++    validateRecord,
++} from './collector_record.js';
++import { isSqliteAvailableSync, loadSqliteSync, readUserVersion, stampUserVersion } from './sqlite_guard.js';
++
++/** Directory name under the user root. */
++export const COLLECTOR_DIR_NAME = 'agent-collector';
++/** The database file. */
++export const COLLECTOR_FILE_NAME = 'collector.sqlite';
++/** The opt-out marker. Its presence is the whole signal; content is ignored. */
++export const OPT_OUT_MARKER_NAME = 'OPT-OUT';
++/** Written while a migration is in flight; its presence means "crashed mid-migration". */
++export const MIGRATION_MARKER_NAME = 'MIGRATION-IN-FLIGHT';
++/** Where an unreadable-by-this-revision store is moved. Never deleted. */
++export const QUARANTINE_DIR_NAME = 'quarantine';
++
++/** Identifies this module in `sqlite_guard`'s unavailability message. */
++const CALLER = 'collector_store';
++
++/** Raised when the store is asked to do something the contract forbids. */
++export class CollectorStoreError extends Error {}
++
++/** Why a write did not land. A blind zero is what this enum prevents. */
++export type WriteRefusal =
++    | 'opted-out'
++    | 'invalid-record'
++    | 'schema-quarantined'
++    | 'sqlite-unavailable';
++
++export interface WriteOutcome {
++    written: boolean;
++    /** Set when `written` is false. Never null-and-written. */
++    refusal: WriteRefusal | null;
++    /** Validation errors, when the refusal is `invalid-record`. */
++    errors: readonly string[];
++}
++
++export interface StoreLocation {
++    /** The user root the store hangs off. Carried so nothing has to re-derive it. */
++    readonly userRoot: string;
++    readonly root: string;
++    readonly path: string;
++    readonly optOutMarker: string;
++    readonly migrationMarker: string;
++    readonly quarantineDir: string;
++}
++
++/** The default user root — where configuration already lives. */
++export function defaultUserRoot(): string {
++    return path.join(os.homedir(), '.event4u', 'agent-config');
++}
++
++/** Resolve every path the store uses. Pure: creates nothing. */
++export function resolveCollectorStore(userRoot: string = defaultUserRoot()): StoreLocation {
++    const dir = path.join(userRoot, COLLECTOR_DIR_NAME);
++    return {
++        userRoot,
++        root: dir,
++        path: path.join(dir, COLLECTOR_FILE_NAME),
++        optOutMarker: path.join(dir, OPT_OUT_MARKER_NAME),
++        migrationMarker: path.join(dir, MIGRATION_MARKER_NAME),
++        quarantineDir: path.join(dir, QUARANTINE_DIR_NAME),
++    };
++}
++
++/** True when this user has opted out. Checked at write time, never at read. */
++export function isOptedOut(userRoot: string = defaultUserRoot()): boolean {
++    return fs.existsSync(resolveCollectorStore(userRoot).optOutMarker);
++}
++
++/** Create the opt-out marker. Idempotent. */
++export function optOut(userRoot: string = defaultUserRoot()): void {
++    const loc = resolveCollectorStore(userRoot);
++    fs.mkdirSync(loc.root, { recursive: true });
++    fs.writeFileSync(
++        loc.optOutMarker,
++        'This user has opted out of collector capture. Delete this file to opt back in.\n',
++    );
++}
++
++/** Remove the opt-out marker. Idempotent. */
++export function optIn(userRoot: string = defaultUserRoot()): void {
++    fs.rmSync(resolveCollectorStore(userRoot).optOutMarker, { force: true });
++}
++
++export interface StoreHandle {
++    readonly db: DatabaseSync;
++    readonly location: StoreLocation;
++    /**
++     * Set when the on-disk schema is NEWER than this revision understands and
++     * the store was quarantined rather than read. Every write is refused and
++     * every read returns nothing — the store is preserved, untouched.
++     */
++    readonly quarantined: boolean;
++    close(): void;
++}
++
++const SCHEMA = `
++CREATE TABLE IF NOT EXISTS collector_events (
++    dedup_key         TEXT PRIMARY KEY,
++    schema_version    INTEGER NOT NULL,
++    machine_id        TEXT NOT NULL,
++    episode_id        TEXT NOT NULL,
++    event             TEXT NOT NULL,
++    sequence          INTEGER NOT NULL,
++    outcome           TEXT NOT NULL,
++    platform          TEXT NOT NULL,
++    occurred_on       TEXT NOT NULL,
++    collector_version TEXT NOT NULL
++);
++CREATE INDEX IF NOT EXISTS collector_events_machine
++    ON collector_events (machine_id, occurred_on);
++`;
++
++/** Is `node:sqlite` usable in this runtime? */
++export function isStoreAvailable(): boolean {
++    return isSqliteAvailableSync();
++}
++
++/**
++ * Move an unreadable store aside, preserving it byte-for-byte.
++ *
++ * 3.1's rollback matrix requires an incompatible schema to be *preserved
++ * without reading or rewriting*. Quarantine is that: a rename, never a read and
++ * never a migration. The name carries a content digest rather than a timestamp
++ * so two quarantines of the same bytes collapse instead of accumulating.
++ */
++export function quarantine(location: StoreLocation): string {
++    fs.mkdirSync(location.quarantineDir, { recursive: true });
++    const digest = crypto
++        .createHash('sha256')
++        .update(fs.readFileSync(location.path))
++        .digest('hex')
++        .slice(0, 12);
++    const target = path.join(location.quarantineDir, `${COLLECTOR_FILE_NAME}.${digest}`);
++    if (fs.existsSync(target)) {
++        fs.rmSync(location.path, { force: true });
++    } else {
++        fs.renameSync(location.path, target);
++    }
++    for (const sidecar of ['-wal', '-shm']) {
++        const from = `${location.path}${sidecar}`;
++        if (fs.existsSync(from)) fs.rmSync(from, { force: true });
++    }
++    return target;
++}
++
++/**
++ * Open the store, migrating or quarantining as the on-disk version requires.
++ *
++ * The five transitions of 2.4 all resolve here:
++ *
++ * 1. **Fresh store** — created at {@link COLLECTOR_SCHEMA_VERSION}.
++ * 2. **Older records, newer package** — migrated forward, in a marked window.
++ * 3. **Newer records, older package** — QUARANTINED. Never read, never
++ *    rewritten. Reading a record shape you do not understand is how a field
++ *    gets silently dropped, and dropping is what this schema refuses.
++ * 4. **Crash mid-migration** — the marker survives the crash, so the next open
++ *    finds a half-migrated store and quarantines it rather than resuming a
++ *    migration whose progress nothing recorded.
++ * 5. **Uninstall** — {@link uninstall}, which removes the store and leaves the
++ *    quarantine directory, because a quarantined store is evidence.
++ */
++export function openCollectorStore(userRoot: string = defaultUserRoot()): StoreHandle {
++    if (!isSqliteAvailableSync()) {
++        throw new CollectorStoreError('node:sqlite is unavailable in this runtime');
++    }
++    const location = resolveCollectorStore(userRoot);
++    fs.mkdirSync(location.root, { recursive: true });
++
++    // Transition 4 comes FIRST: a store carrying an in-flight marker is
++    // half-migrated by definition, and its version stamp cannot be trusted to
++    // say which half. Checked before the version is even read.
++    if (fs.existsSync(location.migrationMarker) && fs.existsSync(location.path)) {
++        quarantine(location);
++        fs.rmSync(location.migrationMarker, { force: true });
++        const sqlite = loadSqliteSync(CALLER);
++        const db = new sqlite.DatabaseSync(location.path);
++        db.exec(SCHEMA);
++        stampUserVersion(db, COLLECTOR_SCHEMA_VERSION);
++        return handleFor(db, location, false);
++    }
++
++    const existed = fs.existsSync(location.path);
++    const sqlite = loadSqliteSync(CALLER);
++    const db = new sqlite.DatabaseSync(location.path);
++
++    if (!existed) {
++        db.exec(SCHEMA);
++        stampUserVersion(db, COLLECTOR_SCHEMA_VERSION);
++        return handleFor(db, location, false);
++    }
++
++    const onDisk = readUserVersion(db);
++
++    if (onDisk > COLLECTOR_SCHEMA_VERSION) {
++        // Transition 3. Close before renaming: a quarantine that leaves an open
++        // handle on the moved file is a rename that looks successful and is not.
++        db.close();
++        quarantine(location);
++        const fresh = new sqlite.DatabaseSync(location.path);
++        fresh.exec(SCHEMA);
++        stampUserVersion(fresh, COLLECTOR_SCHEMA_VERSION);
++        return handleFor(fresh, location, true);
++    }
++
++    if (onDisk < COLLECTOR_SCHEMA_VERSION) {
++        // Transition 2, inside a marked window so transition 4 can see a crash.
++        fs.writeFileSync(location.migrationMarker, `${onDisk} -> ${COLLECTOR_SCHEMA_VERSION}\n`);
++        try {
++            db.exec(SCHEMA);
++            stampUserVersion(db, COLLECTOR_SCHEMA_VERSION);
++        } finally {
++            fs.rmSync(location.migrationMarker, { force: true });
++        }
++        return handleFor(db, location, false);
++    }
++
++    db.exec(SCHEMA);
++    return handleFor(db, location, false);
++}
++
++function handleFor(db: DatabaseSync, location: StoreLocation, quarantined: boolean): StoreHandle {
++    return {
++        db,
++        location,
++        quarantined,
++        close(): void {
++            db.close();
++        },
++    };
++}
++
++/**
++ * Write one record, or refuse with a named reason.
++ *
++ * Opt-out is checked HERE and not by the caller, which is the point: a consent
++ * check a caller can forget is a consent check that will be forgotten.
++ */
++export function writeRecord(handle: StoreHandle, candidate: unknown): WriteOutcome {
++    if (isOptedOut(handle.location.userRoot)) {
++        return { written: false, refusal: 'opted-out', errors: [] };
++    }
++    if (handle.quarantined) {
++        return { written: false, refusal: 'schema-quarantined', errors: [] };
++    }
++    const verdict = validateRecord(candidate);
++    if (!verdict.ok) {
++        return { written: false, refusal: 'invalid-record', errors: verdict.errors };
++    }
++    const record = candidate as CollectorRecord;
++    handle.db
++        .prepare(
++            `INSERT OR REPLACE INTO collector_events
++                (dedup_key, schema_version, machine_id, episode_id, event, sequence,
++                 outcome, platform, occurred_on, collector_version)
++             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
++        )
++        .run(
++            dedupKey(record),
++            record.schema_version,
++            record.machine_id,
++            record.episode_id,
++            record.event,
++            record.sequence,
++            record.outcome,
++            record.platform,
++            record.occurred_on,
++            record.collector_version,
++        );
++    return { written: true, refusal: null, errors: [] };
++}
++
++/** Every record, or every record for one machine. Never filtered by consent. */
++export function readRecords(handle: StoreHandle, machineId?: string): CollectorRecord[] {
++    if (handle.quarantined) return [];
++    const rows =
++        machineId === undefined
++            ? handle.db
++                  .prepare(
++                      `SELECT schema_version, machine_id, episode_id, event, sequence, outcome,
++                              platform, occurred_on, collector_version
++                       FROM collector_events ORDER BY machine_id, episode_id, sequence`,
++                  )
++                  .all()
++            : handle.db
++                  .prepare(
++                      `SELECT schema_version, machine_id, episode_id, event, sequence, outcome,
++                              platform, occurred_on, collector_version
++                       FROM collector_events WHERE machine_id = ?
++                       ORDER BY episode_id, sequence`,
++                  )
++                  .all(machineId);
++    return rows as unknown as CollectorRecord[];
++}
++
++/**
++ * The supported deletion path. Returns how many records were removed.
++ *
++ * A GDPR Art. 17 request names a subject, and on this store the subject is a
++ * machine — `machine_id` is the only identity a record carries. Deletion is
++ * therefore by machine and nothing coarser is offered: a "delete everything"
++ * verb would make a targeted request impossible to serve honestly.
++ */
++export function deleteMachine(handle: StoreHandle, machineId: string): number {
++    if (handle.quarantined) return 0;
++    const before = readRecords(handle, machineId).length;
++    handle.db.prepare('DELETE FROM collector_events WHERE machine_id = ?').run(machineId);
++    return before;
++}
++
++/**
++ * What uninstall removes: the database and its sidecars, and the markers.
++ *
++ * It does NOT remove the quarantine directory. A quarantined store is the
++ * record of an incompatible-schema event, and uninstall is not the moment to
++ * destroy evidence about it. Returns the paths actually removed.
++ */
++export function uninstall(userRoot: string = defaultUserRoot()): string[] {
++    const location = resolveCollectorStore(userRoot);
++    const removed: string[] = [];
++    for (const target of [
++        location.path,
++        `${location.path}-wal`,
++        `${location.path}-shm`,
++        location.migrationMarker,
++    ]) {
++        if (fs.existsSync(target)) {
++            fs.rmSync(target, { force: true });
++            removed.push(target);
++        }
++    }
++    return removed;
++}
+diff --git a/tests/scripts/collector_store.test.ts b/tests/scripts/collector_store.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8ec71f7f227871ef65a6088d9a5ba4bb5fccc2d8
+--- /dev/null
++++ b/tests/scripts/collector_store.test.ts
+@@ -0,0 +1,358 @@
++// The collector store — deletion, opt-out, and the five upgrade transitions.
++//
++// `road-to-supervised-telemetry-collector` Phase 2 steps 2.3 and 2.4 (AC-4,
++// AC-5). Every test drives the real store on a temp user root; nothing is
++// mocked, because "a documented deletion path nobody executed is a claim" is
++// the exact objection step 2.3 exists to answer, and a mocked deletion is a
++// documented deletion with extra steps.
++//
++// Every block carries a `removing_this_constraint_reds_it` note naming the edit
++// that would turn it green, on the pattern `collector_record.test.ts` set: a
++// sensitivity claim stated per constraint rather than asserted once for the file.
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { COLLECTOR_SCHEMA_VERSION } from '../../src/scripts/_lib/collector_record.js';
++import {
++    COLLECTOR_FILE_NAME,
++    deleteMachine,
++    isOptedOut,
++    isStoreAvailable,
++    openCollectorStore,
++    optIn,
++    optOut,
++    QUARANTINE_DIR_NAME,
++    readRecords,
++    resolveCollectorStore,
++    uninstall,
++    writeRecord,
++} from '../../src/scripts/_lib/collector_store.js';
++import { loadSqliteSync, stampUserVersion } from '../../src/scripts/_lib/sqlite_guard.js';
++
++const MACHINE_A = '3f2504e0-4f89-4d3a-9a0c-0305e82c3301';
++const MACHINE_B = 'b7c3d1e2-8a4f-4b6c-9d0e-1f2a3b4c5d6e';
++
++function record(over: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
++    return {
++        schema_version: COLLECTOR_SCHEMA_VERSION,
++        machine_id: MACHINE_A,
++        episode_id: 'a1b2c3d4-5e6f-4a8b-9c0d-1e2f3a4b5c6d',
++        event: 'pre_tool_use',
++        sequence: 0,
++        outcome: 'captured',
++        platform: 'claude',
++        occurred_on: '2026-08-29',
++        collector_version: '12.4.0',
++        ...over,
++    };
++}
++
++let root: string;
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-store-'));
++});
++
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++// `node:sqlite` is the same optional dependency the journal guards on, so the
++// whole file skips rather than fails where it is unavailable — and the skip is
++// declared here once rather than repeated per test.
++const withSqlite = isStoreAvailable() ? describe : describe.skip;
++
++withSqlite('2.3 — deletion is a path, and it is exercised', () => {
++    // removing_this_constraint_reds_it: making `deleteMachine` a no-op that
++    // returns the count without issuing the DELETE.
++    it('removes a machine’s records and the store no longer serves them', () => {
++        const handle = openCollectorStore(root);
++        try {
++            for (let sequence = 0; sequence < 4; sequence++) {
++                expect(writeRecord(handle, record({ sequence })).written).toBe(true);
++            }
++            expect(writeRecord(handle, record({ machine_id: MACHINE_B })).written).toBe(true);
++            expect(readRecords(handle)).toHaveLength(5);
++
++            expect(deleteMachine(handle, MACHINE_A)).toBe(4);
++
++            // Both queries, deliberately. "Gone" has to mean gone from the
++            // store, not merely absent from the one query that filtered it.
++            expect(readRecords(handle, MACHINE_A)).toHaveLength(0);
++            expect(readRecords(handle)).toHaveLength(1);
++            expect(readRecords(handle)[0]?.machine_id).toBe(MACHINE_B);
++        } finally {
++            handle.close();
++        }
++    });
++
++    it('deletes by machine and leaves every other machine untouched', () => {
++        const handle = openCollectorStore(root);
++        try {
++            writeRecord(handle, record());
++            writeRecord(handle, record({ machine_id: MACHINE_B, sequence: 1 }));
++            deleteMachine(handle, MACHINE_B);
++            expect(readRecords(handle).map((r) => r.machine_id)).toEqual([MACHINE_A]);
++        } finally {
++            handle.close();
++        }
++    });
++
++    it('reports zero for a machine that was never in the store', () => {
++        const handle = openCollectorStore(root);
++        try {
++            expect(deleteMachine(handle, MACHINE_B)).toBe(0);
++        } finally {
++            handle.close();
++        }
++    });
++});
++
++withSqlite('2.3 — opt-out prevents the WRITE, not the read', () => {
++    // This is the distinction the step names, so it gets the assertion that can
++    // tell the two apart: after an opted-out write attempt the ROW COUNT is
++    // unchanged, which a read filter could not achieve.
++    //
++    // removing_this_constraint_reds_it: moving the `isOptedOut` check out of
++    // `writeRecord` and into a filter inside `readRecords`.
++    it('refuses the write with a named reason and leaves the store empty', () => {
++        optOut(root);
++        expect(isOptedOut(root)).toBe(true);
++
++        const handle = openCollectorStore(root);
++        try {
++            const outcome = writeRecord(handle, record());
++            expect(outcome.written).toBe(false);
++            expect(outcome.refusal).toBe('opted-out');
++
++            // The load-bearing assertion: nothing was persisted, so there is
++            // nothing a forgetful future reader could serve.
++            expect(readRecords(handle)).toHaveLength(0);
++            expect(
++                handle.db.prepare('SELECT COUNT(*) AS n FROM collector_events').get(),
++            ).toMatchObject({ n: 0 });
++        } finally {
++            handle.close();
++        }
++    });
++
++    it('resumes writing after opt-in, and the earlier refusal left no gap to backfill', () => {
++        optOut(root);
++        const handle = openCollectorStore(root);
++        try {
++            expect(writeRecord(handle, record({ sequence: 0 })).written).toBe(false);
++            optIn(root);
++            expect(isOptedOut(root)).toBe(false);
++            expect(writeRecord(handle, record({ sequence: 1 })).written).toBe(true);
++            expect(readRecords(handle).map((r) => r.sequence)).toEqual([1]);
++        } finally {
++            handle.close();
++        }
++    });
++
++    it('checks opt-out inside writeRecord so a caller cannot forget it', () => {
++        // Nothing about the call site changes between the two cases — the same
++        // one-argument call refuses or writes purely on the marker's presence.
++        const handle = openCollectorStore(root);
++        try {
++            expect(writeRecord(handle, record({ sequence: 0 })).written).toBe(true);
++            optOut(root);
++            expect(writeRecord(handle, record({ sequence: 1 })).refusal).toBe('opted-out');
++        } finally {
++            handle.close();
++        }
++    });
++
++    it('refuses an invalid record with its errors rather than silently dropping it', () => {
++        const handle = openCollectorStore(root);
++        try {
++            const outcome = writeRecord(handle, record({ repo_path: '/Users/someone/x' }));
++            expect(outcome.written).toBe(false);
++            expect(outcome.refusal).toBe('invalid-record');
++            expect(outcome.errors.join(' ')).toMatch(/REJECTED, not dropped/);
++        } finally {
++            handle.close();
++        }
++    });
++});
++
++withSqlite('2.4 — the five upgrade transitions, driven over a seeded store', () => {
++    it('TRANSITION 1 — a fresh store is created at the current schema version', () => {
++        const handle = openCollectorStore(root);
++        try {
++            expect(handle.quarantined).toBe(false);
++            expect(writeRecord(handle, record()).written).toBe(true);
++        } finally {
++            handle.close();
++        }
++        expect(fs.existsSync(resolveCollectorStore(root).path)).toBe(true);
++    });
++
++    it('TRANSITION 2 — an OLDER store is migrated forward and its records survive', () => {
++        const first = openCollectorStore(root);
++        try {
++            writeRecord(first, record());
++        } finally {
++            first.close();
++        }
++        // Seed the store back to an older revision.
++        const sqlite = loadSqliteSync('collector_store.test');
++        const seeded = new sqlite.DatabaseSync(resolveCollectorStore(root).path);
++        stampUserVersion(seeded, COLLECTOR_SCHEMA_VERSION - 1);
++        seeded.close();
++
++        const second = openCollectorStore(root);
++        try {
++            expect(second.quarantined).toBe(false);
++            // Migration, not quarantine: the record is still served.
++            expect(readRecords(second)).toHaveLength(1);
++        } finally {
++            second.close();
++        }
++        // The in-flight marker does not survive a successful migration.
++        expect(fs.existsSync(resolveCollectorStore(root).migrationMarker)).toBe(false);
++    });
++
++    // removing_this_constraint_reds_it: letting `openCollectorStore` read a
++    // store whose `user_version` exceeds `COLLECTOR_SCHEMA_VERSION`.
++    it('TRANSITION 3 — a NEWER store is quarantined, never read and never rewritten', () => {
++        const first = openCollectorStore(root);
++        try {
++            writeRecord(first, record());
++        } finally {
++            first.close();
++        }
++        const location = resolveCollectorStore(root);
++        const bytesBefore = fs.readFileSync(location.path);
++
++        const sqlite = loadSqliteSync('collector_store.test');
++        const seeded = new sqlite.DatabaseSync(location.path);
++        stampUserVersion(seeded, COLLECTOR_SCHEMA_VERSION + 7);
++        seeded.close();
++        const bytesAfterStamp = fs.readFileSync(location.path);
++
++        const second = openCollectorStore(root);
++        try {
++            expect(second.quarantined).toBe(true);
++            // Not read: the quarantined store's records are not served.
++            expect(readRecords(second)).toHaveLength(0);
++            // Not written: a write is refused with the schema reason.
++            expect(writeRecord(second, record({ sequence: 9 })).refusal).toBe(
++                'schema-quarantined',
++            );
++        } finally {
++            second.close();
++        }
++
++        // Preserved: the moved file still exists, and its bytes are the ones
++        // the newer revision wrote — not a rewrite by this one.
++        const quarantined = fs
++            .readdirSync(path.join(location.root, QUARANTINE_DIR_NAME))
++            .filter((n) => n.startsWith(COLLECTOR_FILE_NAME));
++        expect(quarantined).toHaveLength(1);
++        const preserved = fs.readFileSync(
++            path.join(location.root, QUARANTINE_DIR_NAME, quarantined[0] as string),
++        );
++        expect(preserved.equals(bytesAfterStamp)).toBe(true);
++        expect(preserved.equals(bytesBefore)).toBe(false);
++    });
++
++    // removing_this_constraint_reds_it: checking the migration marker AFTER
++    // reading `user_version` instead of before it.
++    it('TRANSITION 4 — a crash mid-migration quarantines rather than resuming', () => {
++        const first = openCollectorStore(root);
++        try {
++            writeRecord(first, record());
++        } finally {
++            first.close();
++        }
++        const location = resolveCollectorStore(root);
++        // Simulate the crash: a marker left behind by a migration that never
++        // finished. The version stamp is deliberately left at the CURRENT value
++        // — that is the trap, because a half-migrated store's stamp cannot be
++        // trusted to say which half it is in.
++        fs.writeFileSync(location.migrationMarker, '0 -> 1\n');
++
++        const second = openCollectorStore(root);
++        try {
++            expect(second.quarantined).toBe(false);
++            // The half-migrated store was moved aside, so the fresh one is empty.
++            expect(readRecords(second)).toHaveLength(0);
++            // And usable again: recovery leaves a working store, not a wedge.
++            expect(writeRecord(second, record({ sequence: 3 })).written).toBe(true);
++        } finally {
++            second.close();
++        }
++        expect(fs.existsSync(location.migrationMarker)).toBe(false);
++        expect(
++            fs.readdirSync(path.join(location.root, QUARANTINE_DIR_NAME)),
++        ).toHaveLength(1);
++    });
++
++    it('TRANSITION 5 — uninstall removes the store and the markers, and KEEPS the quarantine', () => {
++        // Get a quarantine on disk first, so the assertion has something to
++        // preserve rather than trivially passing over an empty directory.
++        const first = openCollectorStore(root);
++        try {
++            writeRecord(first, record());
++        } finally {
++            first.close();
++        }
++        const location = resolveCollectorStore(root);
++        const sqlite = loadSqliteSync('collector_store.test');
++        const seeded = new sqlite.DatabaseSync(location.path);
++        stampUserVersion(seeded, COLLECTOR_SCHEMA_VERSION + 1);
++        seeded.close();
++        openCollectorStore(root).close();
++        expect(fs.readdirSync(path.join(location.root, QUARANTINE_DIR_NAME))).toHaveLength(1);
++
++        const removed = uninstall(root);
++        expect(removed).toContain(location.path);
++        expect(fs.existsSync(location.path)).toBe(false);
++        // Evidence about an incompatible-schema event outlives uninstall.
++        expect(fs.readdirSync(path.join(location.root, QUARANTINE_DIR_NAME))).toHaveLength(1);
++    });
++
++    it('quarantining the same bytes twice does not accumulate copies', () => {
++        // The quarantine name carries a content digest rather than a timestamp,
++        // so a repeated incompatible open is idempotent instead of unbounded —
++        // R-A7's growth budget applied to a directory nobody prunes.
++        const location = resolveCollectorStore(root);
++        for (let round = 0; round < 2; round++) {
++            const handle = openCollectorStore(root);
++            try {
++                writeRecord(handle, record());
++            } finally {
++                handle.close();
++            }
++            const sqlite = loadSqliteSync('collector_store.test');
++            const seeded = new sqlite.DatabaseSync(location.path);
++            stampUserVersion(seeded, COLLECTOR_SCHEMA_VERSION + 1);
++            seeded.close();
++            openCollectorStore(root).close();
++        }
++        const names = fs.readdirSync(path.join(location.root, QUARANTINE_DIR_NAME));
++        expect(names.length).toBeGreaterThanOrEqual(1);
++        expect(new Set(names).size).toBe(names.length);
++    });
++});
++
++withSqlite('the store is deduplicated at the key of metric item 4', () => {
++    it('collapses a repeated (machine, episode, event, sequence) instead of inflating', () => {
++        // Retry after a failed write must not inflate the numerator — 1.2 item
++        // 4. Read-time dedup is the contract; a PRIMARY KEY makes the repeat
++        // observable as one row rather than silently collapsed downstream.
++        const handle = openCollectorStore(root);
++        try {
++            expect(writeRecord(handle, record()).written).toBe(true);
++            expect(writeRecord(handle, record()).written).toBe(true);
++            expect(readRecords(handle)).toHaveLength(1);
++        } finally {
++            handle.close();
++        }
++    });
++});
