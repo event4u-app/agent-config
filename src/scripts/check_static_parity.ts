@@ -42,6 +42,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
 
@@ -165,11 +167,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
     const files = parityFiles();
 
-    if (files.length === 0) {
-        process.stderr.write(
-            'check_static_parity: the parity set is EMPTY. That is a broken discovery, '
-                + 'not a clean bill of health — a gate that scans nothing exits green.\n',
-        );
+    // Publishes the count AND asserts it is non-zero, in one call, so the number
+    // printed is by construction the number that was validated. No `allowEmpty`
+    // reason: an empty parity set here is a broken discovery, never a clean bill
+    // of health — a gate that scans nothing exits green, and this one would
+    // compare two suites of zero tests and report them identical.
+    try {
+        reportScanned({
+            gate: 'check_static_parity',
+            scanned: files.length,
+            units: 'test file(s) reaching the dispatcher',
+            roots: ['tests', 'src'],
+        });
+    } catch (err) {
+        process.stderr.write(`${(err as Error).message}\n`);
         return 1;
     }
 
