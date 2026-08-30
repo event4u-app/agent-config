@@ -191,7 +191,7 @@ STOP. Nothing modified.
 ## `#1728` — a required-check red that belonged to `main`, not to the PR
 
 `Sync + Generate Tools Consistency` — the **only** mechanically required check
-in the `main` ruleset — was red. It was red on `main` too, at `97687edc3`
+in the branch protection on `main` — was red. It was red on `main` too, at `97687edc3`
 (run `33286217256`), for the identical reason, so the PR inherited it through
 the merge rather than causing it.
 
@@ -258,7 +258,7 @@ branch carries the blocklisted token `tmp` in `fix(shape): a working-set tmp
 directory is not a harvest round`. Three facts settle the disposition, and the
 2026-08-29 run above reached the same one independently:
 
-- It is **advisory**. The `main` ruleset requires exactly one check
+- It is **advisory**. The branch protection on `main` requires exactly one check
   (`Sync + Generate Tools Consistency`), verified via
   `gh api repos/.../rulesets/17749383`; `branch-protection-policy.md` says the
   same in prose.
