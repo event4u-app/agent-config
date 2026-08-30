@@ -28,6 +28,8 @@ collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
 # obligation: line 36
 obligation_frequency: "per-edit"
+evidence:
+  source_type: own-analysis
 ---
 
 # Security-Sensitive Stop Rule

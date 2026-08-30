@@ -59,20 +59,32 @@ was published when the list was written.
 
 ## Phase 1 — Give a retired claim something to retire
 
-- [ ] **1.1 Add a `retires_phrasings:` field to closed ledger entries.** On a
+- [x] **1.1 Add a `retires_phrasings:` field to closed ledger entries.** On a
       `withdrawn` or `resolved-null` row, a short list of the literal phrasings
       that claim was published as. The list lives on the row so that retiring a
       claim and forbidding its wording are one edit — a separate deny-list is a
       second file, and the second file is the one nobody updates.
       verify: `check_claims` accepts a closed entry with the field and one
       without; a `withdrawn` entry whose field is present but empty fails.
-- [ ] **1.2 Populate it for the four closed entries that have published
+- [x] **1.2 Populate it for the four closed entries that have published
       phrasings.** One `withdrawn` and six `resolved-null` rows exist; read
       each and record the phrasings it actually shipped under, or record that
       it never appeared outside the ledger.
       verify: every closed row carries either a non-empty list or a stated
       never-published note.
-- [ ] **1.3 Name the publish-surface set once, with the rule for extending
+      <!-- Executed 2026-08-30. TWO corrections to this step's own premises,
+      both found by running it. (a) The ledger holds SEVEN `resolved-null`
+      rows, not six — this roadmap's figure was written at `6e37584a1` and
+      `dispatch-event-capture-reliability` landed with #1742 before execution
+      began, so eight closed rows were populated rather than seven. (b) The
+      step title says "the four closed entries that have published phrasings";
+      the measured answer is ONE. `git log -S` over README.md, package.json,
+      .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json
+      across the full history returns commits for `no-runtime-daemon` alone;
+      the other seven never appeared outside the ledger and carry the
+      `never-published` sentinel with that evidence. A four that was never
+      measured is exactly the class of number this roadmap exists to catch. -->
+- [x] **1.3 Name the publish-surface set once, with the rule for extending
       it.** Both prior closes fixed an instance and left a list. State the
       decision rule instead: any file whose content is rendered by a
       distribution channel the package publishes to. Record it where the
@@ -82,26 +94,26 @@ was published when the list was written.
 
 ## Phase 2 — Refuse a retired phrasing on any publish surface
 
-- [ ] **2.1 Extend `check_claims` to scan the publish-surface set for
+- [x] **2.1 Extend `check_claims` to scan the publish-surface set for
       `retires_phrasings`.** Extend rather than add a sibling gate: the
       withdrawn/retired axis is already modelled there and a second gate needs
       its own copy of the ledger parser. The surface set comes from 1.3.
       verify: a fixture whose `package.json` description carries a retired
       phrasing fails; the same fixture with the current wording passes. Seen
       red before green.
-- [ ] **2.2 Prove the gate on the case that motivated it.** Re-introduce the
+- [x] **2.2 Prove the gate on the case that motivated it.** Re-introduce the
       exact historical string in a fixture — not a synthetic near-miss — and
       watch it fail. A gate never seen red on the real instance has unknown
       sensitivity.
       verify: the fixture carries the literal historical wording; the red and
       the restored green are both recorded.
-- [ ] **2.3 Register the widened gate** in the gate-coverage ledger with the
+- [x] **2.3 Register the widened gate** in the gate-coverage ledger with the
       new `scanned` paths and a self-test.
       verify: the coverage gate is green and the row names every surface added.
 
 ## Phase 3 — Say where a rule's content came from, and what it was when it left
 
-- [ ] **3.1 Add an optional `evidence:` frontmatter block to the rule schema.**
+- [x] **3.1 Add an optional `evidence:` frontmatter block to the rule schema.**
       Fields: `source_type`, `source_urls` (ENC1 tokens where the source is
       confidential, per `source-confidentiality`), `verified_on`,
       `normative_level`. Optional on day one — **0 of 120** rules carry any
@@ -111,18 +123,48 @@ was published when the list was written.
       precedent.
       verify: `validate_frontmatter` accepts a rule with the block and one
       without; a malformed block fails.
-- [ ] **3.2 Populate ten rules and register the ratchet.** Pick the ten whose
+- [x] **3.2 Populate ten rules and register the ratchet.** Pick the ten whose
       normative content most plausibly came from outside — the security and
       safety floors — because an unsourced normative claim costs most there.
       verify: ten rules carry a populated block; the ratchet baseline is the
       measured ten, and an eleventh rule added without one fails.
-- [ ] **3.3 Create `docs/removed-rules.md` as a tombstone register.** One row
+      <!-- Executed 2026-08-30. Shape decision, taken because the step does
+      not fix one: the ratchet is expressed as a DECLARED SCOPE with a hard zero
+      rather than a count of adopters with a floor. Reason it is not derivable
+      from frontmatter — measured, not assumed: the ten span three `tier` values
+      (2a, 2b, safety-floor), two `type` values and three pack sets, and
+      `packs: [engineering-base]` also holds rules that are not safety floors.
+      A proxy would silently admit and drop rules as unrelated frontmatter
+      moved. `check_rule_evidence_declaration.SCOPE` is the list; adding a row
+      is how the obligation widens, and it fails until that rule declares —
+      proven by adding `scope-control` transiently (1 finding, exit 1). -->
+      <!-- Second correction, found by `check_always_budget` rather than by
+      review: `non-destructive-by-default` was in the first ten and is OUT.
+      It is `type: "always"`, so its bytes are charged to the kernel budget —
+      the four-line block moved it 9,657 -> 9,752 chars and breached the top-3
+      cap (37,948 > 37,855) on a ratchet whose ext dimension sits at
+      60,252 / 60,254, i.e. two characters of headroom. An optional frontmatter
+      block is NOT free on an always-rule, and trimming a kernel rule to make
+      room is a maintainer decision a provenance gate has no business forcing.
+      `domain-safety-retention` took the slot: same class, `type: "auto"`, and
+      more externally sourced than most (GDPR Art. 17, tax and VAT floors).
+      The constraint is recorded at the SCOPE row so the next widening does not
+      rediscover it. -->
+- [x] **3.3 Create `docs/removed-rules.md` as a tombstone register.** One row
       per removed rule: name, what it required, when it went, why. A rule that
       vanishes without a row is indistinguishable from one that never existed,
       which is how a removed obligation returns as a fresh proposal.
       verify: the file exists, accounts for every rule removed in the two
       releases preceding this roadmap's landing as read from `git log`, and
       `check_references` stays green.
+      <!-- Executed 2026-08-30. The measured answer over 14.10.0..HEAD is
+      ZERO removals, and over the WHOLE history of src/rules/ exactly one `D`
+      — a 2026-06-09 rename (augment-source-of-truth -> source-of-truth), not a
+      removal. Both are recorded in the register with the re-derivation command,
+      because "the table is empty" and "nothing has ever been deleted" are
+      different statements. `--no-renames` is load-bearing in that command: with
+      rename detection on, a real removal coinciding with an unrelated addition
+      can be paired away and reported as a rename. -->
 
 ## Blockers
 
@@ -143,16 +185,16 @@ are the ones the package already publishes to.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every closed ledger entry carries either a non-empty
+- [x] AC-1 — Every closed ledger entry carries either a non-empty
       `retires_phrasings` list or a stated note that the claim never appeared
       outside the ledger.
-- [ ] AC-2 — A fixture publishing a retired phrasing on any surface in the
+- [x] AC-2 — A fixture publishing a retired phrasing on any surface in the
       declared set fails `check_claims`, and the red was observed on the literal
       historical wording before the green.
-- [ ] AC-3 — The publish-surface set carries, where it is defined, a stated rule
+- [x] AC-3 — The publish-surface set carries, where it is defined, a stated rule
       for deciding whether a channel belongs — applicable by a reader to a
       channel not yet listed.
-- [ ] AC-4 — The rule schema accepts an `evidence:` block, at least ten rules
+- [x] AC-4 — The rule schema accepts an `evidence:` block, at least ten rules
       carry a populated one, and an eleventh added without it fails a ratchet.
-- [ ] AC-5 — `docs/removed-rules.md` exists and accounts for every rule removed
+- [x] AC-5 — `docs/removed-rules.md` exists and accounts for every rule removed
       in the two releases preceding this roadmap's landing.

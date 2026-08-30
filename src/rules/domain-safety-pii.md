@@ -44,6 +44,10 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 # obligation: line 52
 obligation_frequency: "per-task"
+evidence:
+  source_type: external-standard
+  verified_on: 2026-08-30
+  normative_level: mandatory
 ---
 
 # Domain Safety — PII Redaction

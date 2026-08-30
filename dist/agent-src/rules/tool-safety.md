@@ -12,6 +12,10 @@ enforced_by:
   - "validator:src/scripts/lint_agent_security.ts"
 # obligation: line 19
 obligation_frequency: "per-edit"
+evidence:
+  source_type: external-standard
+  verified_on: 2026-08-30
+  normative_level: recommended
 ---
 
 # Tool Safety

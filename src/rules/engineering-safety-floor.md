@@ -30,6 +30,8 @@ collision_ok:
   "migration": "a prod migration is a hard-floor evidence surface (rollback path, blast radius)"
 # obligation: line 49
 obligation_frequency: "per-commit"
+evidence:
+  source_type: own-analysis
 ---
 
 # Engineering Safety Floor

@@ -25,6 +25,10 @@ enforced_by:
   - "instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation"
 # obligation: line 40
 obligation_frequency: "per-edit"
+evidence:
+  source_type: external-research
+  verified_on: 2026-08-30
+  normative_level: informative
 ---
 
 # Code Provenance
