@@ -138,6 +138,18 @@ was published when the list was written.
       moved. `check_rule_evidence_declaration.SCOPE` is the list; adding a row
       is how the obligation widens, and it fails until that rule declares —
       proven by adding `scope-control` transiently (1 finding, exit 1). -->
+      <!-- Second correction, found by `check_always_budget` rather than by
+      review: `non-destructive-by-default` was in the first ten and is OUT.
+      It is `type: "always"`, so its bytes are charged to the kernel budget —
+      the four-line block moved it 9,657 -> 9,752 chars and breached the top-3
+      cap (37,948 > 37,855) on a ratchet whose ext dimension sits at
+      60,252 / 60,254, i.e. two characters of headroom. An optional frontmatter
+      block is NOT free on an always-rule, and trimming a kernel rule to make
+      room is a maintainer decision a provenance gate has no business forcing.
+      `domain-safety-retention` took the slot: same class, `type: "auto"`, and
+      more externally sourced than most (GDPR Art. 17, tax and VAT floors).
+      The constraint is recorded at the SCOPE row so the next widening does not
+      rediscover it. -->
 - [x] **3.3 Create `docs/removed-rules.md` as a tombstone register.** One row
       per removed rule: name, what it required, when it went, why. A rule that
       vanishes without a row is indistinguishable from one that never existed,

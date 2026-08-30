@@ -65,7 +65,16 @@ export const SCOPE: ReadonlyArray<{ rule: string; why: string }> = [
     { rule: 'broken-access-control', why: 'cites OWASP A01:2021 and BOLA/IDOR, and GDPR exposure' },
     { rule: 'tool-safety', why: 'Least Agency; cites OWASP ASI excessive-agency and LLM06' },
     { rule: 'domain-safety-pii', why: 'cites GDPR, CCPA, HIPAA, EEO and a k-anonymity figure' },
-    { rule: 'non-destructive-by-default', why: 'the Hard Floor no other rule may lift' },
+    // NOT `non-destructive-by-default`, and the reason is a real constraint on
+    // this scope rather than a preference. That rule is `type: "always"`, so its
+    // bytes are charged to the kernel budget: adding the four-line block moved
+    // it 9,657 -> 9,752 chars and breached `check_always_budget`'s top-3 cap
+    // (37,948 > 37,855). An optional frontmatter block is not free on an
+    // always-rule, and trimming a kernel rule to make room is a maintainer
+    // decision this gate has no business forcing. `domain-safety-retention`
+    // takes the slot: same class, `type: "auto"`, and its normative content is
+    // more externally sourced than most (GDPR Art. 17, tax and VAT floors).
+    { rule: 'domain-safety-retention', why: 'cites GDPR Art. 17 plus tax and VAT retention floors by jurisdiction' },
     { rule: 'engineering-safety-floor', why: 'the production / infra / bulk-destructive floor' },
     { rule: 'code-provenance', why: 'states the knowledge-layer obligation this gate enforces' },
 ];
