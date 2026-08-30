@@ -283,7 +283,26 @@ export function checkSpec(
     const desc = typeof d['description'] === 'string' ? d['description'] : '';
     if (queries.length > 0 && desc !== '') {
         const pos = queries.filter((q) => q['trigger'] === true).length;
-        const neg = queries.filter((q) => q['trigger'] === false).length;
+        // Two vocabularies, and which one applies is read off the FILE.
+        //
+        // This gate was written when "near-miss" and "negative" were synonyms,
+        // so it compared a declared near-miss count against every non-triggering
+        // query. `lint_skill_trigger_corpus` has since introduced a three-class
+        // vocabulary — `exemplar | near-miss | counterexample` — in which a
+        // near-miss is a STRICT SUBSET of the negatives, the rest being
+        // counterexamples. Against a classed file the old comparison demands a
+        // description that contradicts the file's own classes.
+        //
+        // So a file that declares classes is counted by its declared near-miss
+        // class, and a file that declares none keeps the historical
+        // negative-count reading. That is a TIGHTENING, not a relaxation: a
+        // classed file must now state its true near-miss count instead of being
+        // forced to inflate it to the negative total, and the 175 unclassed
+        // files are unaffected.
+        const classed = queries.some((q) => typeof q['class'] === 'string' && q['class'] !== '');
+        const neg = classed
+            ? queries.filter((q) => q['class'] === 'near-miss').length
+            : queries.filter((q) => q['trigger'] === false).length;
         const mp = POSITIVE_COUNT.exec(desc);
         const mn = NEGATIVE_COUNT.exec(desc);
         if (mp !== null && Number(mp[1]) !== pos) {
@@ -299,7 +318,9 @@ export function checkSpec(
                 kind: 'declared-count-mismatch',
                 file: rel,
                 line: lineOf(source, '"description"'),
-                message: `description claims ${mn[1]} near-misses; the query list holds ${String(neg)}.`,
+                message:
+                    `description claims ${mn[1]} near-misses; the query list holds ${String(neg)}` +
+                    `${classed ? ' case(s) classed `near-miss`' : ' non-triggering quer(ies)'}.`,
             });
         }
     }
