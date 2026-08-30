@@ -783,11 +783,29 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 7 — Experience cards
 
-- [ ] **7.1 Cards come only from the mining gate.** `extract_audit_patterns`
+- [x] **7.1 Cards come only from the mining gate.** `extract_audit_patterns`
       count ≥ 2 over independent `work_id`s, outcome-differentiated — or from an
       explicit seed block. Never invented, never pre-seeded as families.
+      **DONE 2026-08-30. Where cards live was a real decision, taken by AI
+      council (anthropic + openai, 2/2 convergent): `agents/knowledge/`, as a
+      STRICT TAGGED UNION on a required `kind: external | experience` — never
+      one schema with conditional fields.** The council's reason is the design:
+      making the external variant's checks optional would hide two contracts in
+      one nominal schema, the union-of-what-producers-send failure this repo
+      refuses elsewhere. They are variant invariants instead — in full for
+      `external`, not part of `experience` at all. AC-1's "no second store" is
+      honoured without pretending the two card kinds are one thing.
+      **The reusable boundary the council left behind**, recorded at the store
+      so the next proposal is measured rather than re-argued: *a new store is
+      justified only when its records cannot share the existing carrier's
+      identity, discovery path and consumer lifecycle — not merely because they
+      have different provenance or validation rules.*
+      Admission: a `pattern_ref` from the mining gate (count ≥ 2 across
+      independent `work_id`s) or an explicit `seed_ref`. A whitespace-only ref
+      is not a ref — the cheapest way to fake admission is a present-but-empty
+      field.
       verify: an attempt to author a card with no backing pattern is refused.
-- [ ] **7.2 Field set, with a size budget.** Scope, trigger context, the
+- [x] **7.2 Field set, with a size budget.** Scope, trigger context, the
       strategy itself (compact), falsifier, confidence, contradictions,
       supersedes, expiry / review-by — plus an **epistemic type**
       (`observed | derived | inferred | hypothesized`), `from-skipped-parent`.
@@ -795,17 +813,38 @@ So the state is deliberate and bounded rather than an oversight:
       act as a hard filter, and inferred or hypothesized ones may at most
       influence ranking with reduced weight. That restriction is what makes the
       Phase 9 gate answerable in degrees instead of all-or-nothing.
+      **DONE 2026-08-30.** The falsifier and the expiry are what make a card a
+      CLAIM rather than an opinion: without a falsifier it can never be retired
+      on evidence, only on taste; without an expiry an empirical claim outlives
+      the conditions that produced it and nobody notices, because nothing ever
+      asks.
+      **The epistemic split is load-bearing, not descriptive.** `observed` and
+      `derived` are FACTUAL; `inferred` and `hypothesized` are GENERATIVE. Only
+      the factual pair may hard-filter, enforced by an exported predicate rather
+      than by prose — letting a hypothesis filter is how a guess becomes a rule
+      without anyone deciding it should.
       verify: a card missing a falsifier, an expiry or an epistemic type fails
       the lint.
-- [ ] **7.3 Failures narrow, they never widen.** A failure adds an anti-pattern
+- [x] **7.3 Failures narrow, they never widen.** A failure adds an anti-pattern
       entry; it never extends the card's applicability scope.
+      **DONE 2026-08-30.** The temptation this refuses is specific: a card fails
+      in a neighbouring context, and the natural-sounding repair is "so the card
+      is really about the broader case". That turns every piece of disconfirming
+      evidence into an expansion, which is the exact inverse of what evidence is
+      for. `applyFailure` throws on a widening and otherwise appends an
+      anti-pattern and changes nothing else.
       verify: a fixture where a failure attempts a scope widening is refused.
-- [ ] **7.4 A card is not a rule.** Empirical, scoped and probabilistic versus
+- [x] **7.4 A card is not a rule.** Empirical, scoped and probabilistic versus
       normative. A duplicate lint runs against the existing rule and skill
       corpus, and promotion into authority happens only through
       `learning-to-rule-or-skill`.
+      **DONE 2026-08-30**, reusing `text_similarity.ts` rather than authoring a
+      second similarity function. A card restating a live rule adds no knowledge
+      and creates a second place the same instruction can drift. The threshold
+      is a named constant the tests and the checker share, so it is one number a
+      reviewer can argue with rather than a literal buried in a comparison.
       verify: a card whose text duplicates a live rule fails the lint.
-- [ ] **7.5 Promote by scope, one level at a time, with transfer evidence.**
+- [x] **7.5 Promote by scope, one level at a time, with transfer evidence.**
       `from-skipped-parent`: a card carries a scope on the ladder
       `session → repo → workspace → organization → global`, promotion moves one
       level at a time, and a raise beyond repo scope requires held-out or
@@ -813,6 +852,13 @@ So the state is deliberate and bounded rather than an oversight:
       master gates promotion only on the human review skill, so a card mined
       from one repository's runs can become global on that repository's evidence
       alone.
+      **DONE 2026-08-30.** Two refusals, answering the two ways a card gets
+      over-promoted. A two-level raise skips the rung where the card would have
+      been checked against a wider population. And **past `repo`, the runs that
+      minted a card cannot also show it transfers** — that is the same data
+      answering its own question — so the evidence pool must be held-out or
+      independent. Development-pool evidence stays fine up to `repo`, because
+      that is where the card produced it.
       verify: a two-level raise is refused, and a raise past repo scope with only
       development-pool evidence is refused.
 - [~] **7.6 Incremental card updates rather than rewrites.** Deferred: needs
