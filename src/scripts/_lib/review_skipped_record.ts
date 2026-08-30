@@ -34,6 +34,17 @@
  */
 export type MutationMeasure = 'exact' | 'capped_approximation';
 
+import type { NoFreeForm } from './runtime_journal.js';
+import { type PrivacyClass } from './privacy_class.js';
+
+type Assert<T extends true> = T;
+
+/**
+ * What THIS producer's lines carry: counts (`diff_lines`), enums, and the
+ * `rules_applied` id array. `ids-only`, same as the orchestration producer.
+ */
+const PRODUCER_PRIVACY_CLASS: PrivacyClass = 'ids-only';
+
 export interface ReviewSkippedInput {
     /** Non-doc tracked-file mutation size that triggered the nudge (count only). */
     diff_lines: number;
@@ -92,6 +103,8 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
         rules_applied: ['delegation-policy'],
+        // MANDATORY on every audit line, same as the orchestration producer.
+        privacy_class: PRODUCER_PRIVACY_CLASS,
         // `skills_applied` is OMITTED here, deliberately and not by oversight.
         // audit-log-v1 distinguishes an absent key ("not recorded") from `[]`
         // ("recorded, none applied"), and this writer observes a review that
@@ -107,3 +120,20 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
 
     return { line, errors: [] };
 }
+
+/**
+ * The SECOND producer's half of the compile-time privacy floor.
+ *
+ * `docs/contracts/audit-log-v1.md` states that the floor holds by construction
+ * "on two paths"; guarding only the first would leave that sentence half true
+ * while reading as fully true. Same mechanism as
+ * `orchestration_record.ts`: a free-form key on the input type makes this
+ * `Assert<false>` and stops the build.
+ *
+ * The negative direction is fixtured there rather than duplicated here — one
+ * proof that `NoFreeForm` still rejects is enough for both call sites, since
+ * they share the type.
+ */
+type _ReviewSkippedInputCarriesNoFreeFormField = Assert<
+    [NoFreeForm<ReviewSkippedInput>] extends [never] ? false : true
+>;

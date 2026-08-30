@@ -41,7 +41,7 @@ consumer projects; the contract does not require commit.
 One JSON object per line, UTF-8, no trailing whitespace:
 
 ```json
-{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"skills_applied":["code-review"],"persona":"backend","input_kind":"ticket","type":"phase"}
+{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"privacy_class":"ids-only","skills_applied":["code-review"],"persona":"backend","input_kind":"ticket","type":"phase"}
 ```
 
 Single-line. The pretty-printed reference shape:
@@ -59,6 +59,7 @@ Single-line. The pretty-printed reference shape:
   "memory": { "asks": 3, "hits": 2 },
   "verify": { "claims": 1, "first_try_passes": 1 },
   "rules_applied": ["verify-before-complete", "commit-policy"],
+  "privacy_class": "ids-only",
   "skills_applied": ["code-review"],
   "persona": "backend",
   "input_kind": "ticket",
@@ -81,6 +82,7 @@ Single-line. The pretty-printed reference shape:
 | `memory.asks` / `memory.hits` | int | Counts only — never ids, never bodies. |
 | `verify.claims` / `verify.first_try_passes` | int | Verify-gate counts. |
 | `rules_applied` | string[] | Stable rule ids whose Iron Law fired this phase. Bounded to ≤ 32; remainder dropped silently. |
+| `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. Both shipped producers emit `ids-only`, because both carry `rules_applied`. |
 | `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
 | `persona` | string \| null | Resolved `roles.active_role` from `.agent-settings.yml` at phase start. |
 | `input_kind` | enum | One of `prompt` · `ticket` · `orchestration`. Matches `WorkState.input.kind`. |
@@ -106,19 +108,39 @@ Lines MUST NOT contain:
 - Secrets, tokens, environment values, file contents.
 - Paths outside the package's `agents/runtime/state/` and `tests/` allowlist.
 
-**Enforcement, stated honestly.** No test enforces this floor. The file this
-paragraph named for months — tests/contracts/test_audit_log_redaction.py,
-deliberately written WITHOUT backticks so the existence check below cannot read
-a dead name as a live claim — exists in no tree this repository has, so the sentence asserted an enforcement
-that was never there (found 2026-08-29,
-`road-to-experience-loop-broadening` 1.3). What IS enforced is narrower and
-real: the two producers build their lines through validated builders with no
-free-form field — `src/scripts/_lib/orchestration_record.ts` and
-`src/scripts/_lib/review_skipped_record.ts` — so the floor holds by
-CONSTRUCTION on those paths rather than by a scan. A third producer added
-outside that shape would not be caught by anything. Step 1.4 of that roadmap
-owns closing this; until it does, "privacy by construction, on two paths,
-unscanned" is the accurate claim.
+**Enforcement — a compile-time guard on both producers, since 2026-08-30.**
+The floor used to be prose. The file this paragraph named for months —
+tests/contracts/test_audit_log_redaction.py, deliberately written WITHOUT
+backticks so an existence check cannot read a dead name as a live claim —
+exists in no tree this repository has, so the sentence asserted an enforcement
+that was never there (found 2026-08-29, `road-to-experience-loop-broadening`
+1.3; closed by its step 1.4).
+
+What is enforced now, and by what: both producers' input types carry
+`Assert<[NoFreeForm<T>] extends [never] ? false : true>`, where `NoFreeForm`
+resolves to `never` for any type carrying a key from `FREE_FORM_KEYS`
+(`src/scripts/_lib/runtime_journal.ts`) — `prompt`, `body`, `file_path`,
+`stdout`, `reason`, `payload` and the rest of the set an author reaches for
+when they want to stash content. Adding such a field to
+`src/scripts/_lib/orchestration_record.ts`'s `RecordInput` or
+`src/scripts/_lib/review_skipped_record.ts`'s `ReviewSkippedInput` is a BUILD
+ERROR, not a lint warning. Both directions are checked: a negative fixture
+carrying `@ts-expect-error` asserts the guard still REJECTS, so a `NoFreeForm`
+broken into an identity type fails the build instead of passing everything.
+
+Both were verified by sabotage rather than by inspection — adding a free-form
+key produced `error TS2344` on each producer, and removing it returned the tree
+to zero errors.
+
+**Two limits, named rather than implied.** (1) `tsc -p tsconfig.json` does NOT
+reach these files; that config covers `src/cli`, `src/server`, `src/shared` and
+`src/install` only, and `src/scripts/**` is reached solely by
+`tsconfig.scripts.json`. The command that checks this floor is `npm run
+typecheck`, which runs both — a bare `tsc -p tsconfig.json` here is a gate that
+scans nothing and exits green. (2) The guard binds the two shipped producers by
+name. A THIRD producer added outside that shape is still caught by nothing, and
+the honest claim remains "privacy by construction, on two paths, guarded at
+compile time, unscanned elsewhere".
 
 ## Append-only invariant
 

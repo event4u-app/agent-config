@@ -18,6 +18,14 @@
 
 import type { LookupClass } from './auto_dispatch.js';
 import type { EvidenceBasis } from './evidence_basis.js';
+// TYPE-ONLY on purpose. `runtime_journal.ts` imports `node:sqlite` at runtime,
+// and this module is loaded by a PreToolUse-adjacent CLI path where opening a
+// database would be both wrong and slow. A `import type` is erased at compile
+// time, so the guard costs nothing at runtime while still being one definition
+// rather than a second copy of the key list -- the duplicate-enum failure step
+// 9.1 exists to prevent.
+import type { NoFreeForm } from './runtime_journal.js';
+import { type PrivacyClass } from './privacy_class.js';
 import type { PhaseOutcome } from './outcome_vocabularies.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
@@ -223,6 +231,63 @@ const ORIGIN_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
  * be checked against one another instead of against a literal.
  */
 const MAX_APPLIED_IDS = 32;
+
+/**
+ * What THIS producer's lines carry. `ids-only` and not `counts-only` because
+ * every line carries `rules_applied`, and some carry `skills_applied`.
+ */
+const PRODUCER_PRIVACY_CLASS: PrivacyClass = 'ids-only';
+
+type Assert<T extends true> = T;
+
+/**
+ * PRIVACY BY CONSTRUCTION, enforced rather than asserted.
+ *
+ * Until 2026-08-30 the privacy floor on this module was a docstring, and
+ * `docs/contracts/audit-log-v1.md` said so in its own words: "No test enforces
+ * this floor". A docstring cannot stop the next author adding a `payload` or a
+ * `detail` field, and `audit-log-v1`'s forward-compat rule means readers would
+ * silently carry it.
+ *
+ * This assertion makes that a COMPILE error. If {@link RecordInput} ever grows
+ * a key from `FREE_FORM_KEYS` -- `prompt`, `body`, `file_path`, `stdout`,
+ * `reason`, `payload` and the rest of the set an author reaches for when they
+ * want to stash content -- `NoFreeForm` resolves to `never`, this becomes
+ * `Assert<false>`, and the build stops. The type cannot be widened back without
+ * deleting this line, which is a visible act in a diff.
+ */
+type _RecordInputCarriesNoFreeFormField = Assert<
+    [NoFreeForm<RecordInput>] extends [never] ? false : true
+>;
+
+/**
+ * The NEGATIVE fixture, and it is the half that is easy to leave out.
+ *
+ * The assertion above proves the guard ACCEPTS the current type. On its own
+ * that is satisfied just as well by a guard that accepts everything -- a
+ * `NoFreeForm` that had been broken into `type NoFreeForm<T> = T` would keep it
+ * green forever. This fixture proves the guard REJECTS, which is the direction
+ * that actually protects anything.
+ *
+ * The `@ts-expect-error` is itself the assertion: the line below is required to
+ * be a type error. If the guard ever stops rejecting a free-form key, the error
+ * disappears, the directive becomes unused, and `tsc` fails on the unused
+ * directive. Either way the build stops -- so `npm run typecheck` checks both
+ * directions, not only the flattering one.
+ *
+ * NOTE for whoever runs this by hand: `tsc -p tsconfig.json` does NOT cover
+ * this file. That config includes only `src/cli`, `src/server`, `src/shared`
+ * and `src/install`; `src/scripts/**` is reached solely by
+ * `tsconfig.scripts.json`. Use `npm run typecheck`, which runs both. A bare
+ * `tsc -p tsconfig.json` over this module is a gate that scans nothing and
+ * exits green.
+ */
+interface _RecordInputWithForbiddenField extends RecordInput {
+    prompt?: string | undefined;
+}
+type _Rejected = [NoFreeForm<_RecordInputWithForbiddenField>] extends [never] ? false : true;
+// @ts-expect-error — a type carrying a free-form key must make this Assert<false>
+type _ForbiddenFieldIsRejected = Assert<_Rejected>;
 
 /** Map a dispatch outcome to the audit-log envelope outcome enum. */
 function envelopeOutcome(d: DispatchOutcome): LineOutcome {
@@ -449,6 +514,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
         rules_applied: ['delegation-policy'],
+        // MANDATORY, never optional and never derived by the reader. This line
+        // carries `rules_applied` and may carry `skills_applied`, both of which
+        // are stable artefact ids, so the class it declares is `ids-only`
+        // rather than `counts-only`. A consumer deciding whether this stream is
+        // safe to aggregate or export reads this field instead of re-deriving
+        // the answer from the producer's source.
+        privacy_class: PRODUCER_PRIVACY_CLASS,
         // Emitted ONLY when the producer offered one. An omitted key means "not
         // recorded"; `[]` means "recorded, none applied". Writing `null` or `[]`
         // unconditionally would erase that distinction for every existing

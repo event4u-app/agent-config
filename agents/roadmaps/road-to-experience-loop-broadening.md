@@ -387,7 +387,7 @@ So the state is deliberate and bounded rather than an oversight:
       Dissent preserved: anthropic's (c) remains live if producer analysis ever
       shows phase and step share identical terminal semantics with a lossless
       mapping — carried as the module's own `revisit-if`.
-- [ ] **1.4 Carry a privacy class on every captured event, and a redaction rule
+- [x] **1.4 Carry a privacy class on every captured event, and a redaction rule
       for anything free-form.** `from-skipped-parent`, and this is the gap with
       the sharpest consequence. The master has **no** privacy, redaction or
       purge content at all, while its card phase writes mined experience into
@@ -399,12 +399,64 @@ So the state is deliberate and bounded rather than an oversight:
       `domain-safety-pii` § Surface 2 already prescribes for logs: make the
       event type incapable of holding free-form content rather than scrubbing it
       afterwards.
+      **DONE 2026-08-30 — two mechanisms, not one restated twice.** (a) A
+      COMPILE-TIME guard: both producers' input types now carry
+      `Assert<[NoFreeForm<T>] extends [never] ? false : true>`, so adding
+      `prompt`, `body`, `file_path`, `stdout`, `reason`, `payload` or any other
+      `FREE_FORM_KEYS` member to `RecordInput` or `ReviewSkippedInput` is a
+      build error. (b) A MANDATORY `privacy_class` field
+      (`src/scripts/_lib/privacy_class.ts`, one module per 9.1's rule), so a
+      consumer reads what a line carries instead of re-deriving it from the
+      producer's source. The guard without the declaration leaves every reader
+      inferring; the declaration without the guard is a label with nothing
+      behind it.
+      **Both directions are checked, which is the half that is easy to omit.** A
+      `@ts-expect-error` negative fixture asserts the guard still REJECTS, so a
+      `NoFreeForm` broken into an identity type fails the build rather than
+      passing everything. All four probes were run by sabotage, not inspection:
+      a free-form key produces `error TS2344` on each producer, a non-free-form
+      fixture field makes the directive unused and fails too, and restoring
+      returns the tree to zero errors.
+      **A real trap found while executing, and recorded because it makes gates
+      vacuous:** `tsc -p tsconfig.json` does **not** reach `src/scripts/**` —
+      that config covers `src/cli`, `src/server`, `src/shared`, `src/install`
+      only, and `src/scripts/**` is reached solely by `tsconfig.scripts.json`.
+      The first sensitivity probe run under the wrong command reported the
+      sabotage as clean. The command that checks this floor is `npm run
+      typecheck`, which runs both.
+      **Residual, stated rather than implied:** the guard binds the two shipped
+      producers by name. A third producer added outside that shape is still
+      caught by nothing. `docs/contracts/audit-log-v1.md`'s enforcement
+      paragraph — which named a test file that exists in no tree — is corrected
+      to say exactly this.
       verify: the event type has no field able to hold a prompt, a file body or
       a path; a fixture attempting to write one fails to compile.
-- [ ] **1.5 Everything default-off and local.** No dark-channel ratchet is
+- [x] **1.5 Everything default-off and local.** No dark-channel ratchet is
       touched.
+      **DONE 2026-08-30.** The existing suite asserted the log file does not
+      exist, which is an assertion about the OUTCOME. The verify line asks for
+      something stricter: *operations*, not output. A concern that created a
+      directory, or wrote and then deleted, or reached the network and wrote
+      nothing, would pass the outcome check and violate the contract. The new
+      cases therefore compare a full recursive snapshot of the consumer root —
+      path, size and mtime — before and after, on all four not-fully-opted-in
+      shapes, plus a `globalThis.fetch` spy asserted at zero calls.
+      **`vi.spyOn(fs, ...)` cannot express this** and the attempt is recorded
+      rather than quietly replaced: `node:fs` exports are non-configurable under
+      ESM, so spying `appendFileSync` throws `TypeError: Cannot redefine
+      property`. The snapshot is strictly WIDER than the spy would have been —
+      it also catches a directory creation and a write-then-delete that a spy on
+      one function misses. The settings read stays allowed, deliberately: the
+      concern reads `.agent-settings.yml` to learn it is off, its docstring says
+      so, and reads leave the snapshot unchanged.
+      **A POSITIVE CONTROL ships with it.** Four assertions of ABSENCE are the
+      shape most easily satisfied by a broken instrument — a snapshot function
+      that always returned the same list would pass every one. So the same
+      helper runs against a fully opted-in install and the snapshot must change.
+      **Citation corrected while executing:** the block cited as
+      `telemetry_usage_hook.ts:21-29` is at `:22-33`.
       verify: with the feature off, zero telemetry file operations and zero
-      network calls — the shape `telemetry_usage_hook.ts:21-29` already
+      network calls — the shape `telemetry_usage_hook.ts:22-33` already
       documents for itself.
 
 ## Phase 2 — Outcome integrity: anti-forgery at the subagent return

@@ -336,3 +336,37 @@ describe('skills_applied — the committed fixture is a REAL emission', () => {
         expect(rec.skills_applied).toEqual(['code-review', 'git-workflow']);
     });
 });
+
+describe('privacy_class — mandatory, and it says what the line carries', () => {
+    // Step 1.4. The compile-time NoFreeForm guard is what STOPS a body reaching
+    // the line; this field is what lets a consumer decide whether the stream is
+    // safe to aggregate or export without re-deriving the answer from each
+    // producer's source. Two mechanisms, not one restated twice -- the guard
+    // without the declaration leaves every reader inferring the class, and the
+    // declaration without the guard is a label with nothing behind it.
+
+    it('is present on every built line, never optional', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE });
+        expect(errors).toEqual([]);
+        expect(line!.privacy_class).toBe('ids-only');
+    });
+
+    it('declares ids-only rather than counts-only, because the line carries id arrays', () => {
+        // Not a style preference: `rules_applied` is always emitted and
+        // `skills_applied` may be, so a `counts-only` declaration would be
+        // false about this producer's own output.
+        const { line } = buildOrchestrationLine({ ...BASE, skills_applied: ['code-review'] });
+        expect(line!.rules_applied).toBeDefined();
+        expect(line!.privacy_class).toBe('ids-only');
+    });
+
+    it('the committed real-emission fixture carries it too', async () => {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const url = await import('node:url');
+        const here = path.dirname(url.fileURLToPath(import.meta.url));
+        const fixture = path.join(here, '..', 'fixtures', 'audit-log', 'skills-applied-real-emission.jsonl');
+        const rec = JSON.parse(fs.readFileSync(fixture, 'utf-8').trim().split('\n')[0]!) as Record<string, unknown>;
+        expect(rec.privacy_class).toBe('ids-only');
+    });
+});
