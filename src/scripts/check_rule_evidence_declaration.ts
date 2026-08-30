@@ -79,8 +79,20 @@ export const SCOPE: ReadonlyArray<{ rule: string; why: string }> = [
     { rule: 'code-provenance', why: 'states the knowledge-layer obligation this gate enforces' },
 ];
 
-/** The three keys a declaration must carry, per rule.schema.json. */
-const REQUIRED_KEYS = ['source_type', 'verified_on', 'normative_level'] as const;
+/** Keys every declaration must carry, per rule.schema.json. */
+const REQUIRED_KEYS = ['source_type'] as const;
+
+/**
+ * `normative_level` is required only where an external source exists.
+ *
+ * It states how binding the SOURCE is. For `own-analysis` there is no external
+ * source, so the field answers a question that does not arise and `informative`
+ * is its only coherent value — requiring it there forces a non-answer. The
+ * schema draws the same line with an `if`/`then`, and the two are kept in step
+ * deliberately rather than one being inferred from the other: a gate that
+ * enforced more than the schema would reject a rule the schema accepts.
+ */
+const OWN_ANALYSIS = 'own-analysis';
 
 export interface Finding {
     rule: string;
@@ -141,9 +153,21 @@ export function analyse(root = REPO_ROOT): Finding[] {
             });
             continue;
         }
+        const has = (key: string): boolean =>
+            block.some((l) => new RegExp(`^\\s+${key}:\\s*\\S`).test(l));
         for (const key of REQUIRED_KEYS) {
-            if (!block.some((l) => new RegExp(`^\\s+${key}:\\s*\\S`).test(l))) {
-                findings.push({ rule, reason: `evidence block is missing \`${key}\`` });
+            if (!has(key)) findings.push({ rule, reason: `evidence block is missing \`${key}\`` });
+        }
+        const ownAnalysis = block.some((l) => l.includes(`source_type: ${OWN_ANALYSIS}`));
+        if (!ownAnalysis && has('source_type')) {
+            for (const key of ['normative_level', 'verified_on'] as const) {
+                if (has(key)) continue;
+                findings.push({
+                    rule,
+                    reason:
+                        `evidence block names an external source but no \`${key}\` — both are real ` +
+                        'questions wherever a source exists, and neither is where one does not',
+                });
             }
         }
     }
@@ -193,12 +217,7 @@ function selfTest(): number {
         fs.mkdirSync(path.join(dir, 'src', 'rules'), { recursive: true });
         // Every in-scope rule must exist or the run fails for the wrong reason;
         // the ones not under test get a well-formed block.
-        const good = [
-            'evidence:',
-            '  source_type: own-analysis',
-            '  verified_on: 2026-08-30',
-            '  normative_level: informative',
-        ].join('\n');
+        const good = ['evidence:', '  source_type: own-analysis'].join('\n');
         for (const { rule } of SCOPE) {
             const fm = rules.includes(rule) ? frontmatterBody : good;
             fs.writeFileSync(
@@ -209,14 +228,14 @@ function selfTest(): number {
         return runGate(dir);
     };
 
+    const EXT = ['evidence:', '  source_type: external-standard', '  verified_on: 2026-08-30', '  normative_level: recommended'];
+    const OWN = ['evidence:', '  source_type: own-analysis'];
+
     const cases: SelfTestCase[] = [
         {
             name: 'every in-scope rule declares → accept',
             expect: 'accept',
-            run: () =>
-                fixture(
-                    ['evidence:', '  source_type: own-analysis', '  verified_on: 2026-08-30', '  normative_level: informative'].join('\n'),
-                ),
+            run: () => fixture(EXT.join('\n')),
         },
         {
             name: 'an in-scope rule with NO evidence block → reject',
@@ -224,32 +243,31 @@ function selfTest(): number {
             run: () => fixture('description: "a rule with no provenance"'),
         },
         {
-            name: 'an evidence block missing normative_level → reject',
+            // The conditional rule, in the direction that must REJECT: an
+            // external source is named, so how binding it is and when it was
+            // last checked are both real questions.
+            name: 'an external-source block missing normative_level → reject',
             expect: 'reject',
-            run: () =>
-                fixture(['evidence:', '  source_type: own-analysis', '  verified_on: 2026-08-30'].join('\n')),
+            run: () => fixture(['evidence:', '  source_type: external-standard', '  verified_on: 2026-08-30'].join('\n')),
         },
         {
-            name: 'an evidence key present but valueless → reject',
+            name: 'an external-source block missing verified_on → reject',
             expect: 'reject',
-            run: () =>
-                fixture(
-                    ['evidence:', '  source_type: own-analysis', '  verified_on:', '  normative_level: informative'].join('\n'),
-                ),
+            run: () => fixture(['evidence:', '  source_type: external-standard', '  normative_level: recommended'].join('\n')),
         },
         {
-            name: 'a populated external-standard block → accept',
+            name: 'a source_type present but valueless → reject',
+            expect: 'reject',
+            run: () => fixture(['evidence:', '  source_type:'].join('\n')),
+        },
+        {
+            // The same shape in the direction that must ACCEPT. `own-analysis`
+            // names no external source, so neither field has a question to
+            // answer — requiring them there would force a non-answer, and a
+            // gate that rejected this would reject what the schema accepts.
+            name: 'an own-analysis block with neither field → accept',
             expect: 'accept',
-            run: () =>
-                fixture(
-                    [
-                        'evidence:',
-                        '  source_type: external-standard',
-                        '  source_urls: ["https://example.invalid/standard"]',
-                        '  verified_on: 2026-08-30',
-                        '  normative_level: recommended',
-                    ].join('\n'),
-                ),
+            run: () => fixture(OWN.join('\n')),
         },
     ];
 
@@ -257,8 +275,8 @@ function selfTest(): number {
         return runSelfTest({
             gate: 'check_rule_evidence_declaration',
             cases,
-            minCases: 5,
-            minRejectCases: 3,
+            minCases: 6,
+            minRejectCases: 4,
         });
     } finally {
         for (const d of roots) fs.rmSync(d, { recursive: true, force: true });

@@ -24,7 +24,6 @@ collision_ok:
 obligation_frequency: "per-edit"
 evidence:
   source_type: external-standard
-  source_urls: ["https://owasp.org/www-project-top-10-for-large-language-model-applications/"]
   verified_on: 2026-08-30
   normative_level: recommended
 ---

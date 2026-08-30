@@ -31,7 +31,6 @@ packs: [meta]
 obligation_frequency: "per-turn"
 evidence:
   source_type: external-standard
-  source_urls: ["https://eur-lex.europa.eu/eli/reg/2016/679/oj"]
   verified_on: 2026-08-30
   normative_level: mandatory
 ---

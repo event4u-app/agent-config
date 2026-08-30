@@ -163,7 +163,14 @@
     "evidence": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_type", "verified_on", "normative_level"],
+      "required": ["source_type"],
+      "allOf": [
+        {
+          "$comment": "`normative_level` states how binding the SOURCE is. For `own-analysis` there is no external source, so the field answers a question that does not arise and `informative` is its only coherent value — requiring it there forces a non-answer. `verified_on` is conditional for the same reason and not a second exception: it stamps when an EXTERNAL source pointer was last checked, and where there is no external source the rule\u2019s own git history is its staleness. Both are required for every other source_type, where the questions are real. Surfaced by the delivered-payload ceiling: ten blocks did not fit, and the two fields that did not fit were the two that were not saying anything.",
+          "if": { "properties": { "source_type": { "not": { "const": "own-analysis" } } }, "required": ["source_type"] },
+          "then": { "required": ["normative_level", "verified_on"] }
+        }
+      ],
       "description": "Where this rule's NORMATIVE CONTENT came from, and what it was when it left. Optional; road-to-retired-claims-stay-retired Phase 3. Distinct from `decision_impact_evidence`, which points at an observation that the model already complies WITHOUT the rule \u2014 the opposite direction. A rule stating a threshold, a number, or a mechanism taken from outside this repository either cites it here or is recorded as own analysis; `src/rules/code-provenance.md` \u00a7 The knowledge layer states that obligation for prose, and this block is where a rule discharges it structurally. Optional on day one by design: 0 of 120 rules carried any provenance field before this, and a required field would fail the build on all of them at once \u2014 the gate-that-can-only-block shape this repository's own records name as the reason a gate gets suppressed.",
       "properties": {
         "source_type": {

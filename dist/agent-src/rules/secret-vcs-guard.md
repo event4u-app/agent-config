@@ -31,8 +31,6 @@ collision_ok:
 obligation_frequency: "per-edit"
 evidence:
   source_type: own-analysis
-  verified_on: 2026-08-30
-  normative_level: informative
 ---
 
 # Secret-in-VCS Guard
