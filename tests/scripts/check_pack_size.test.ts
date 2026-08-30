@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import {
     evaluate,
     parsePackJson,
+    recordedBuiltPackedMb,
     skillBytes,
     type PackResult,
     type PackSizeBudget,
@@ -178,5 +179,68 @@ describe('committed pack-size budget', () => {
             expect(entry.reason.length, name).toBeGreaterThan(60);
             expect(entry.max_pct, name).toBeGreaterThanOrEqual(entry.measured_pct);
         }
+    });
+});
+
+describe('built vs unbuilt surface — the cap describes only one of them', () => {
+    // The false red this split removes, measured 2026-08-30: main packed 8.985
+    // MB over 2715 entries with `--ignore-scripts`; a branch adding six source
+    // files packed 9.922 over 2827 and failed `max: 9.1`. The 112-entry
+    // difference is `dist/cli` + `dist/cli-delegate` — the build, not the diff.
+    const builtPack = (mb: number): PackResult => ({
+        size: mb * 1e6,
+        unpackedSize: mb * 3e6,
+        files: [
+            { path: 'dist/cli/index.js', size: 10 },
+            { path: 'dist/agent-src/skills/a/SKILL.md', size: 10 },
+        ],
+    });
+    const unbuiltPack = (mb: number): PackResult => ({
+        size: mb * 1e6,
+        unpackedSize: mb * 3e6,
+        files: [{ path: 'dist/agent-src/skills/a/SKILL.md', size: 10 }],
+    });
+    const withBuilt: PackSizeBudget = {
+        ...budget,
+         
+        built_surface_measurement_2026_08_24: { built: { packed_mb: 10.5 } },
+    } as unknown as PackSizeBudget;
+
+    // The fixtures carry one tiny skill, so the per-skill rules fire on every
+    // case; this narrows each assertion to the size rule under test.
+    const sizeErrors = (b: PackSizeBudget, p: PackResult): string[] =>
+        evaluate(b, p).filter((e) => e.startsWith('packed_size_mb'));
+
+    it('does NOT apply the unbuilt cap to a built payload', () => {
+        // 10.8 is over `max: 10` and under the built ceiling 10.5 × 1.10.
+        expect(sizeErrors(withBuilt, builtPack(10.8))).toEqual([]);
+    });
+
+    it('still applies the unbuilt cap to an unbuilt payload', () => {
+        expect(sizeErrors(withBuilt, unbuiltPack(10.8)).join(' ')).toContain('exceeds budget 10');
+    });
+
+    it('fails a built payload that regressed past the recorded built figure', () => {
+        // 11.7 > 10.5 × 1.10 = 11.55.
+        const errs = sizeErrors(withBuilt, builtPack(11.7));
+        expect(errs.join(' ')).toContain('BUILT surface');
+        expect(errs.join(' ')).toContain('regressed');
+    });
+
+    it('REFUSES a built payload when no built figure is recorded, rather than passing it', () => {
+        // The vacuous-pass shape: without this branch a built tree would be
+        // compared against a cap that does not describe it, in either
+        // direction. A missing baseline is a finding, not a green.
+        expect(sizeErrors(budget, builtPack(1)).join(' ')).toContain('records no built-surface');
+    });
+
+    // removing_this_constraint_reds_it: delete the `built` branch in
+    // `evaluate` — cases 1 and 4 red (case 1 fails the unbuilt cap, case 4
+    // passes vacuously).
+
+    it('reads the committed budget file: it carries a built figure', () => {
+        // A fixture-only test would leave the real file free to drop the key
+        // and turn every built run into the refusal above.
+        expect(recordedBuiltPackedMb(COMMITTED)).toBeGreaterThan(0);
     });
 });
