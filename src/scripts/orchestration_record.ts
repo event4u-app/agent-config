@@ -127,6 +127,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         tier_source: str(flags, 'tier-source') as TierSource | undefined,
         task_class: str(flags, 'task-class'),
         dispatch_mode: str(flags, 'dispatch-mode') as never,
+        // `--skills-applied=a,b` records ids; `--skills-applied=` (empty)
+        // records the EMPTY array, which is a real observation ("none
+        // applied") and deliberately not the same as omitting the flag
+        // ("not recorded"). The empty-string check therefore cannot be folded
+        // into the `?.split()` chain above, which would map both onto
+        // undefined and destroy the distinction the field exists for.
+        skills_applied: (() => {
+            const raw = str(flags, 'skills-applied');
+            if (raw === undefined) return undefined;
+            return raw.split(',').map((v) => v.trim()).filter(Boolean);
+        })(),
         task_size_estimate: int(flags, 'task-size-estimate'),
         wall_clock_ms: int(flags, 'wall-clock-ms'),
         dispatch_tokens: int(flags, 'dispatch-tokens'),

@@ -92,6 +92,13 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
         rules_applied: ['delegation-policy'],
+        // `skills_applied` is OMITTED here, deliberately and not by oversight.
+        // audit-log-v1 distinguishes an absent key ("not recorded") from `[]`
+        // ("recorded, none applied"), and this writer observes a review that
+        // did not happen -- it has no skill observation to offer in either
+        // direction. Emitting `[]` would assert "no skills applied" on evidence
+        // this producer never gathered, which is the exact fabrication the
+        // absent/empty split exists to make impossible.
         persona: null,
         input_kind: 'prompt',
         type: 'note',

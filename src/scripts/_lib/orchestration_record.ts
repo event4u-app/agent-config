@@ -78,6 +78,24 @@ export interface RecordInput {
     task_class?: string | null | undefined;
     /** Form-gate outcome: which of the seven modes (or 'none') the gate selected. */
     dispatch_mode?: DispatchModeId | null | undefined;
+    /**
+     * Stable skill ids that were APPLIED during this phase — the skills
+     * counterpart of `rules_applied`, which `audit-log-v1` has carried since v1
+     * while carrying no skills field at all.
+     *
+     * ABSENT and EMPTY mean different things, and the distinction is
+     * load-bearing rather than stylistic: the field OMITTED means *not
+     * recorded* (the producer had no skill observation to offer), while `[]`
+     * means *recorded, and none applied*. Folding the two together is what
+     * makes a per-asset report unable to tell "no signal" from "a negative
+     * signal", which is the failure `unknown != 0` exists to prevent
+     * downstream.
+     *
+     * Ids only, never bodies — privacy by construction, same as
+     * `rules_applied`. Bounded to <= 32; the remainder is dropped, mirroring
+     * the rules bound in the contract.
+     */
+    skills_applied?: string[] | null | undefined;
     task_size_estimate?: number | undefined;
     wall_clock_ms?: number | undefined;
     /** Absolute measured tokens the dispatched slice consumed (feeds the modeled cost-%). */
@@ -198,6 +216,14 @@ const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
 /** Id-shaped origin tag — enum-ish, never free-form prose. */
 const ORIGIN_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+/**
+ * Upper bound on an applied-id array, mirroring the `rules_applied` bound the
+ * contract has carried since v1 ("Bounded to <= 32; remainder dropped
+ * silently"). Stated as a named constant so the contract row and the code can
+ * be checked against one another instead of against a literal.
+ */
+const MAX_APPLIED_IDS = 32;
+
 /** Map a dispatch outcome to the audit-log envelope outcome enum. */
 function envelopeOutcome(d: DispatchOutcome): LineOutcome {
     if (d === 'BLOCKED') return 'blocked';
@@ -308,6 +334,15 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.origin != null && !ORIGIN_RE.test(input.origin)) {
         errors.push("origin must be an id-shaped tag like 'lean-init-2026' (lowercase alnum + hyphens)");
     }
+    if (input.skills_applied != null) {
+        if (!Array.isArray(input.skills_applied)) {
+            errors.push('skills_applied must be an array of skill ids, [] , or omitted');
+        } else if (!input.skills_applied.every((v) => typeof v === 'string' && ORIGIN_RE.test(v))) {
+            errors.push(
+                "skills_applied entries must be id-shaped skill names like 'code-review' (lowercase alnum + hyphens) — ids only, never bodies",
+            );
+        }
+    }
     for (const [key, v] of [
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
@@ -414,6 +449,14 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
         rules_applied: ['delegation-policy'],
+        // Emitted ONLY when the producer offered one. An omitted key means "not
+        // recorded"; `[]` means "recorded, none applied". Writing `null` or `[]`
+        // unconditionally would erase that distinction for every existing
+        // producer that has no skill observation to give, which is the whole
+        // reason the field is optional rather than defaulted.
+        ...(input.skills_applied != null
+            ? { skills_applied: input.skills_applied.slice(0, MAX_APPLIED_IDS) }
+            : {}),
         persona: input.persona ?? null,
         input_kind: 'orchestration',
         type: 'phase',

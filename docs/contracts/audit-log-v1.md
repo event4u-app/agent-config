@@ -41,7 +41,7 @@ consumer projects; the contract does not require commit.
 One JSON object per line, UTF-8, no trailing whitespace:
 
 ```json
-{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"persona":"backend","input_kind":"ticket","type":"phase"}
+{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"skills_applied":["code-review"],"persona":"backend","input_kind":"ticket","type":"phase"}
 ```
 
 Single-line. The pretty-printed reference shape:
@@ -59,6 +59,7 @@ Single-line. The pretty-printed reference shape:
   "memory": { "asks": 3, "hits": 2 },
   "verify": { "claims": 1, "first_try_passes": 1 },
   "rules_applied": ["verify-before-complete", "commit-policy"],
+  "skills_applied": ["code-review"],
   "persona": "backend",
   "input_kind": "ticket",
   "type": "phase"
@@ -80,6 +81,7 @@ Single-line. The pretty-printed reference shape:
 | `memory.asks` / `memory.hits` | int | Counts only — never ids, never bodies. |
 | `verify.claims` / `verify.first_try_passes` | int | Verify-gate counts. |
 | `rules_applied` | string[] | Stable rule ids whose Iron Law fired this phase. Bounded to ≤ 32; remainder dropped silently. |
+| `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
 | `persona` | string \| null | Resolved `roles.active_role` from `.agent-settings.yml` at phase start. |
 | `input_kind` | enum | One of `prompt` · `ticket` · `orchestration`. Matches `WorkState.input.kind`. |
 | `type` | enum | One of `phase` · `supersede` · `note`. `supersede` carries an extra `supersedes` field with the prior `id`. |

@@ -261,7 +261,27 @@ So the state is deliberate and bounded rather than an oversight:
       honest null and the work rescales to skill events.
       verify: the pre-registration commit precedes the measurement commit, and
       the measured rate is reported whichever way it lands.
-- [ ] **1.2 Add `skills_applied` to the audit line.**
+- [x] **1.2 Add `skills_applied` to the audit line.** **DONE 2026-08-30.**
+      The field is optional and bounded to <= 32, mirroring `rules_applied`, and
+      **absent is not `[]`**: an omitted key means *not recorded*, `[]` means
+      *recorded, none applied*. That split is the load-bearing part — every
+      existing producer omits the field, so defaulting it to `[]` would have
+      asserted a negative signal for every caller with nothing to say, and a
+      per-asset report could then never tell no-signal from no-skills. The
+      second writer (`src/scripts/_lib/review_skipped_record.ts`) therefore
+      omits it on purpose, with the reason written at the emission site: it
+      observes a review that did not happen and has no skill observation in
+      either direction. **`schema_version` stays 1 and no supersede lines were
+      needed** — the field is additive under the contract's own forward-compat
+      rule, which is a correction to this step's original migration plan.
+      **The verify line's "real emission" bar is met by a real emission:**
+      `tests/fixtures/audit-log/skills-applied-real-emission.jsonl` is the
+      literal output of `src/scripts/orchestration_record` writing to a temp
+      audit dir, not a hand-written object, and a test asserts the field
+      survives that CLI path. **Sensitivity checked rather than assumed:**
+      making the emission unconditional (`absent -> []`) turns the
+      absent-vs-empty test red, and restoring it turns it green, so the test is
+      known to be able to fail.
       `corrected-from-reproduction`: verified — `audit-log-v1` carries
       `rules_applied` (`:82`, bounded to ≤ 32) and carries **no** skills field at
       all. Migrate by `type=supersede` lines, exactly as that contract already

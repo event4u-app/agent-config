@@ -266,3 +266,73 @@ describe('buildOrchestrationLine — served-model divergence', () => {
         expect(line).toBeNull();
     });
 });
+
+describe('skills_applied — absent, empty and populated are three observations', () => {
+    // audit-log-v1 gained `skills_applied` on 2026-08-30
+    // (road-to-experience-loop-broadening step 1.2). The contract states that an
+    // OMITTED key means "not recorded" while `[]` means "recorded, none
+    // applied". These are asserted separately because folding them together is
+    // silent: every existing producer omits the field, so a builder that
+    // defaulted it to `[]` would report a negative signal for every caller that
+    // simply has nothing to say — and a per-asset report could then never
+    // distinguish no-signal from no-skills.
+
+    it('omits the key entirely when the producer offered nothing', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE });
+        expect(errors).toEqual([]);
+        expect(line).not.toBeNull();
+        expect(Object.prototype.hasOwnProperty.call(line!, 'skills_applied')).toBe(false);
+    });
+
+    it('emits an empty array when the producer recorded "none applied"', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, skills_applied: [] });
+        expect(errors).toEqual([]);
+        expect(Object.prototype.hasOwnProperty.call(line!, 'skills_applied')).toBe(true);
+        expect(line!.skills_applied).toEqual([]);
+    });
+
+    it('emits the ids when the producer recorded some', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            skills_applied: ['code-review', 'git-workflow'],
+        });
+        expect(errors).toEqual([]);
+        expect(line!.skills_applied).toEqual(['code-review', 'git-workflow']);
+    });
+
+    it('bounds the array at 32, mirroring the rules_applied bound in the contract', () => {
+        const many = Array.from({ length: 40 }, (_, i) => `skill-${i}`);
+        const { line, errors } = buildOrchestrationLine({ ...BASE, skills_applied: many });
+        expect(errors).toEqual([]);
+        expect((line!.skills_applied as string[]).length).toBe(32);
+    });
+
+    it('rejects a non-id-shaped entry, so a body can never reach the line', () => {
+        const { errors } = buildOrchestrationLine({
+            ...BASE,
+            skills_applied: ['this is a sentence, not an id'],
+        });
+        expect(errors.length).toBeGreaterThan(0);
+        expect(errors.join(' ')).toMatch(/skills_applied/);
+    });
+});
+
+describe('skills_applied — the committed fixture is a REAL emission', () => {
+    // The step's verify line rejects a "collector exists" proxy explicitly: the
+    // tree's own 0-of-89 finding is what that mistake cost. This fixture is the
+    // literal stdout of `src/scripts/orchestration_record` writing to a temp
+    // audit dir -- not a hand-written object -- so the assertion below proves
+    // the field survives the real CLI path, not just the builder.
+    it('carries skills_applied through the real CLI write path', async () => {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const url = await import('node:url');
+        const here = path.dirname(url.fileURLToPath(import.meta.url));
+        const fixture = path.join(here, '..', 'fixtures', 'audit-log', 'skills-applied-real-emission.jsonl');
+        const lines = fs.readFileSync(fixture, 'utf-8').trim().split('\n');
+        expect(lines.length).toBeGreaterThan(0);
+        const rec = JSON.parse(lines[0]!) as Record<string, unknown>;
+        expect(rec.schema_version).toBe(1);
+        expect(rec.skills_applied).toEqual(['code-review', 'git-workflow']);
+    });
+});
