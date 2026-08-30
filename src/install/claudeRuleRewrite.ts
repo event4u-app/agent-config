@@ -50,6 +50,29 @@ import * as path from 'node:path';
 import { _claude_paths_plan } from './claudePathsPlan.js';
 import { parseFrontmatter } from './ruleInScope.js';
 
+/**
+ * Frontmatter keys the rewrite must carry across, and why each one.
+ *
+ * `_inject_package_tag` (install.ts) writes these during the copy that runs
+ * immediately BEFORE this rewrite. `reap_tagged_orphans` then matches on the
+ * literal `package:` line — its own docblock calls itself "the only path with
+ * ownership proof independent of inventory history" — and doctor's stale-orphan
+ * check reads the same tag.
+ *
+ * A rewrite that rebuilt each file from the activation plan alone therefore
+ * DELETED the reaper's only evidence: zero files under the host anchor would
+ * carry the tag, the marker-based reaper would be dead for that subtree, and
+ * doctor would report `ok` there permanently. Found by the completion review of
+ * 2026-08-30, with a fixture: a tagged orphan was reaped before the rewrite and
+ * invisible after it.
+ *
+ * So the host form is activation keys PLUS these, and the two concerns are kept
+ * apart on purpose — {@link renderClaudeRule} stays activation-only so it can go
+ * on being compared byte-for-byte against the projection emitter, which never
+ * sees an install-time tag.
+ */
+export const PRESERVED_KEYS: readonly string[] = ['package', 'source_path'];
+
 export interface ClaudeRuleRewriteResult {
     /** Files read and rewritten. */
     rewritten: number;
@@ -61,6 +84,37 @@ export interface ClaudeRuleRewriteResult {
      * from path-gated to unconditional.
      */
     dropped: { rule: string; pattern: string; reason: string }[];
+    /** Rules the rewrite could not write, with the reason. Never thrown. */
+    failed: { rule: string; reason: string }[];
+}
+
+/**
+ * Splice the ownership keys of `original` into the activation-only `rendered`.
+ *
+ * Raw lines are carried across verbatim rather than re-serialised, so a quoted
+ * or unusually-spaced value cannot drift on the way through — the reaper matches
+ * a literal.
+ */
+export function _withPreservedKeys(rendered: string, original: string): string {
+    const keep: string[] = [];
+    if (original.startsWith('---')) {
+        const end = original.indexOf('\n---', 3);
+        if (end !== -1) {
+            for (const line of original.slice(3, end).split('\n')) {
+                if (PRESERVED_KEYS.some((k) => line.startsWith(`${k}:`))) keep.push(line);
+            }
+        }
+    }
+    if (keep.length === 0) return rendered;
+    if (rendered.startsWith('---\n')) {
+        const end = rendered.indexOf('\n---', 3);
+        if (end !== -1) {
+            return rendered.slice(0, end) + '\n' + keep.join('\n') + rendered.slice(end);
+        }
+    }
+    // No activation block: the rule loads unconditionally and still needs its
+    // tag, so it gets a frontmatter block holding ONLY the ownership keys.
+    return ['---', ...keep, '---', '', rendered].join('\n');
 }
 
 /**
@@ -109,11 +163,22 @@ export function rewriteAndReport(
                 `${result.scoped.length} path-scoped (${result.scoped.join(', ') || 'none'})`,
         );
     }
-    for (const d of result.dropped) {
-        warn(
-            `  claude-code: ${d.rule}: dropped \`paths:\` pattern ` +
-                `${JSON.stringify(d.pattern)} (${d.reason})`,
+    // NOT one line per dropped pattern. Every mixed-trigger rule drops every
+    // pattern it has, by design and permanently, so the per-pattern loop emitted
+    // 19 stderr lines on every single install — unactionable by any consumer,
+    // surviving --quiet because `warn` writes unconditionally. This repository
+    // has already recorded its verdict on exactly that pattern elsewhere in the
+    // emitter. One counted line under --quiet's own guard; the detail stays in
+    // the returned struct for a caller that wants it.
+    if (result.dropped.length > 0 && !quiet) {
+        const rules = [...new Set(result.dropped.map((d) => d.rule))];
+        info(
+            `  claude-code: ${rules.length} rule(s) keep unconditional activation ` +
+                '(mixed path + keyword triggers; `paths:` is exclusive on this host)',
         );
+    }
+    for (const f of result.failed) {
+        warn(`  claude-code: ${f.rule}: could not write host form — ${f.reason}`);
     }
     return result;
 }
@@ -166,7 +231,7 @@ export function renderClaudeRule(sourceText: string): {
  * Returns counts rather than printing. The caller owns the reporting surface.
  */
 export function rewriteClaudeRules(rulesDir: string): ClaudeRuleRewriteResult {
-    const result: ClaudeRuleRewriteResult = { rewritten: 0, scoped: [], dropped: [] };
+    const result: ClaudeRuleRewriteResult = { rewritten: 0, scoped: [], dropped: [], failed: [] };
     let entries: string[];
     try {
         entries = fs.readdirSync(rulesDir);
@@ -196,8 +261,21 @@ export function rewriteClaudeRules(rulesDir: string): ClaudeRuleRewriteResult {
         if (meta['paths'] !== undefined && meta['triggers'] === undefined) continue;
 
         const rendered = renderClaudeRule(text);
-        if (rendered.text !== text) {
-            fs.writeFileSync(full, rendered.text, 'utf-8');
+        const withOwnership = _withPreservedKeys(rendered.text, text);
+        if (withOwnership !== text) {
+            try {
+                fs.writeFileSync(full, withOwnership, 'utf-8');
+            } catch (e) {
+                // A single unwritable rule — a root-owned file left by an
+                // earlier `sudo` install — must not abort the whole install and
+                // skip every remaining tool, the inventory record, the lockfile
+                // correction and the fingerprint stamp. Report and continue.
+                result.failed.push({
+                    rule: name.slice(0, -3),
+                    reason: e instanceof Error ? e.message : String(e),
+                });
+                continue;
+            }
             result.rewritten += 1;
         }
         const stem = name.slice(0, -3);

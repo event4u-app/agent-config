@@ -81,6 +81,31 @@ describe('--projection divergence reporting', () => {
         }
     });
 
+    it('does NOT subtract when the projection actually carries the package-only rule', () => {
+        // Regression for the completion review of 2026-08-30: the subtraction
+        // was unconditional, so it fired against a full or project-layer
+        // projection — which is also the fail-safe default partitionEligibility
+        // returns on a fresh checkout — and inverted the line, claiming the one
+        // rule that layer DOES deliver was "never delivered".
+        const pkgOnly = census(REPO_ROOT).filter((r) => r.verdict === 'scoped' && r.package_only);
+        expect(pkgOnly.length).toBeGreaterThan(0);
+        // One short, because the package-only file added below is the last of
+        // the `scoped.length` the un-subtracted expectation asks for.
+        const dir = makeProjection(scoped.length - 1, scoped.length + 3);
+        try {
+            // Present the package-only rule in the projection: not a global layer.
+            fs.writeFileSync(
+                path.join(dir, `${pkgOnly[0]!.id}.md`),
+                '---\npaths:\n  - "x/**"\n---\n\nBody.\n',
+            );
+            const out = runCensus(dir);
+            expect(out).not.toContain('package-only and never');
+            expect(out).toContain('consistent with the source verdict');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
     it('names the withheld rules so a reader can check the subtraction', () => {
         const dir = makeProjection(expectedDelivered, expectedDelivered + 3);
         try {

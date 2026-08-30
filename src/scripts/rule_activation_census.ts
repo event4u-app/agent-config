@@ -240,10 +240,14 @@ export function main(): number {
 
     const rows = census(root);
     const sum = summarize(rows);
+    const resolved_projection_dir =
+        projection_dir === undefined || projection_dir === null || projection_dir === ''
+            ? ''
+            : path.isAbsolute(projection_dir)
+              ? projection_dir
+              : path.join(root, projection_dir);
     const projection = projection_dir
-        ? projection_reading(path.isAbsolute(projection_dir)
-            ? projection_dir
-            : path.join(root, projection_dir))
+        ? projection_reading(resolved_projection_dir)
         : null;
 
     if (as_json) {
@@ -276,15 +280,30 @@ export function main(): number {
             `\n  host projection at ${projection_dir} — reported SEPARATELY, not merged:\n` +
                 `    files ${projection.files} · declaring paths: ${projection.with_paths}\n`,
         );
-        // The source verdict counts EVERY rule in `src/rules/`. A delivered
-        // projection does not carry the package-only ones: ADR-236 partitions
-        // them to the project layer, so a globally-partitioned host tree is
-        // expected to be short by exactly that many. Comparing the raw counts
-        // reported a divergence on every partitioned install forever — the
-        // emitter was right and the comparator was not subtracting.
-        const scoped_pkg_only = rows.filter(
-            (r) => r.verdict === 'scoped' && r.package_only,
+        // The source verdict counts EVERY rule in `src/rules/`. A GLOBAL host
+        // layer does not carry the package-only ones: ADR-236 partitions them to
+        // the project layer, so such a tree is expected to be short by exactly
+        // that many. Comparing the raw counts reported a divergence on every
+        // partitioned install forever — the emitter was right and the
+        // comparator was not subtracting.
+        //
+        // But the subtraction is NOT unconditional, and making it so was its own
+        // regression (completion review, 2026-08-30): a full or project-layer
+        // projection — which is also the fail-safe default `partitionEligibility`
+        // returns on a fresh checkout, an absent install record, or a version or
+        // fingerprint mismatch — DOES carry those rules, and for this repo's own
+        // project layer `source-of-truth` is the one rule delivered there and the
+        // only one declaring `paths:`. Subtracting it there inverts the line.
+        //
+        // So the partition is DETECTED from the projection rather than assumed:
+        // if a package-only rule's file is present, this is not a global layer.
+        const pkg_only_ids = rows.filter((r) => r.package_only).map((r) => r.id);
+        const partitioned = !pkg_only_ids.some((id) =>
+            fs.existsSync(path.join(resolved_projection_dir, `${id}.md`)),
         );
+        const scoped_pkg_only = partitioned
+            ? rows.filter((r) => r.verdict === 'scoped' && r.package_only)
+            : [];
         const expected = sum.scoped - scoped_pkg_only.length;
         if (scoped_pkg_only.length > 0) {
             process.stdout.write(
@@ -296,11 +315,11 @@ export function main(): number {
         }
         if (projection.with_paths !== expected) {
             process.stdout.write(
-                `    ⚠️  diverges from the source verdict (${expected} expected, ` +
-                    `${sum.scoped} scoped before the\n` +
-                    `        package-only partition). A projection carries no record of the scope\n` +
-                    `        or commit it was generated at, so this is a reason to regenerate it —\n` +
-                    `        never a reading of the emitter.\n`,
+                `    ⚠️  diverges from the source verdict (${expected} expected` +
+                    `${scoped_pkg_only.length > 0 ? `, ${sum.scoped} before the package-only partition` : ''}).\n` +
+                    `        A projection carries no record of the scope or commit it was generated\n` +
+                    `        at, so this is a reason to regenerate it — never a reading of the\n` +
+                    `        emitter.\n`,
             );
         } else {
             process.stdout.write(
