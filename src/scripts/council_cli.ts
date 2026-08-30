@@ -136,7 +136,6 @@ import {
     render,
     run_consensus_scoring,
     run_debate,
-    harvest_inline_findings,
     run_peer_review,
 } from './ai_council/orchestrator.js';
 import {
@@ -154,6 +153,7 @@ import {
     render_decision_replay,
 } from './ai_council/replay.js';
 import type { FindingsExtraction } from './ai_council/consensus.js';
+import { harvest_inline_findings, inlineFindingsActive } from './ai_council/inline_findings.js';
 import {
     Finding as ConsensusFinding,
     FindingScore as ConsensusFindingScore,
@@ -1177,25 +1177,6 @@ function _consensus_cost_delta(
     const extra_calls = 2 * _n_billable;
     const extra_usd = 2.0 * estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
     return [extra_calls, extra_usd];
-}
-
-/**
- * Phase 1B — will the inline-findings contract ride this run's final round?
- *
- * Read BEFORE the deliberation, because the contract is a prompt change and the
- * prompt is built first; the harvest below reads the same predicate so the two
- * cannot disagree about whether a member was asked for the block. Three
- * conjuncts, all required: consensus scoring on, this lens in its lens list, and
- * `inline_findings` explicitly on. Any missing → `false`, and `false` is a
- * byte-identical prompt.
- */
-export function _inline_findings_active(ai_cfg: Dict, mode: string): boolean {
-    const cs = (ai_cfg['consensus_scoring'] as Dict) || {};
-    if (!_pyBool(cs['enabled']) || !_pyBool(cs['inline_findings'])) {
-        return false;
-    }
-    const lenses = (cs['lenses'] as string[]) || ['analysis'];
-    return lenses.includes(mode);
 }
 
 function _maybe_run_consensus(
@@ -2647,10 +2628,9 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
-        // Phase 1B: same predicate the harvest uses, so a member is asked for the
-        // inline block exactly when the consensus round intends to read one.
-        // Default-off → this is `false` and the prompt is unchanged.
-        inline_findings: _inline_findings_active(ai_cfg, question.mode),
+        // Phase 1B — the same predicate the harvest below reads, so a member is asked
+        // for the block exactly when the consensus round intends to read one.
+        inline_findings: inlineFindingsActive(ai_cfg, question.mode),
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -2734,14 +2714,9 @@ function cmd_run(
     // this is always additive, never a fabricated decision.
     const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
     const persona_labels = build_persona_labels(advisor_plans, billable);
-    // Phase 1B — harvest BEFORE peer review, chairman synthesis, or rendering read
-    // `responses`. The findings block is extraction scaffolding, not argument;
-    // leaving it in the text those three evaluate would amplify a concise finding
-    // purely because it appears twice. Off (the default) → the map is null, no
-    // response is touched, and every consumer sees exactly today's bytes.
-    const inline_extractions = _inline_findings_active(ai_cfg, question.mode)
-        ? harvest_inline_findings(members, responses)
-        : null;
+    // Phase 1B — BEFORE peer review, chairman synthesis and rendering read
+    // `responses`; the block is scaffolding, not argument. Off → null, nothing touched.
+    const inline_extractions = inlineFindingsActive(ai_cfg, question.mode) ? harvest_inline_findings(members, responses) : null;
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
         args,

@@ -95,7 +95,7 @@ export function synthesizeAiCouncilBlock(cfg: CouncilConfig): Dict {
             minority_threshold: cfg.consensus_scoring.minority_threshold,
             lenses: [...cfg.consensus_scoring.lenses],
             // Phase 1B. Omitting it here is not a missing default — it is the key
-            // becoming UNREADABLE: `_inline_findings_active` reads this projected
+            // becoming UNREADABLE: `inlineFindingsActive` reads this projected
             // dict, not the typed config, so an absent key resolves to `false` and
             // the feature is silently off no matter what the YAML says. A live
             // analysis run on 2026-08-30 is what found it, after the tests passed.

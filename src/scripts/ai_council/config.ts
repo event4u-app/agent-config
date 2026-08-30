@@ -359,15 +359,7 @@ export interface ConsensusScoringConfig {
     readonly strong_threshold: number;
     readonly minority_threshold: number;
     readonly lenses: readonly string[];
-    /**
-     * Phase 1B: ask each member for its findings inline, in the deliberation
-     * reply, and issue the separate extraction call only as the repair path.
-     *
-     * Default `false` on purpose. 1B.4 gates promotion on a measured inline
-     * parse rate, and a default that ships ahead of its own gate would make
-     * the gate unfalsifiable — the measurement would be of the thing already
-     * promoted. Flip it when the gate is met, not before.
-     */
+    /** Phase 1B — see `inline_findings.ts`. Default `false` until 1B.4's gate is met. */
     readonly inline_findings: boolean;
 }
 

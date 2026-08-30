@@ -31,8 +31,8 @@ import type {
     Finding,
     FindingScore,
     FindingsExtraction,
-    RecordedExtractionOutcome,
 } from './consensus.js';
+import type { RecordedExtractionOutcome } from './inline_findings.js';
 
 /**
  * Bundle returned by `run_peer_review()` (Phase 5 / F1).

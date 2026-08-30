@@ -28,12 +28,14 @@ import { describe, expect, it } from 'vitest';
 import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
 import { synthesizeAiCouncilBlock } from '../../../src/scripts/_lib/council_settings_block.js';
 import { load_council_config } from '../../../src/scripts/ai_council/config.js';
-import { split_inline_findings } from '../../../src/scripts/ai_council/consensus.js';
-import { _inline_findings_active } from '../../../src/scripts/council_cli.js';
+import {
+    harvest_inline_findings,
+    inlineFindingsActive,
+    split_inline_findings,
+} from '../../../src/scripts/ai_council/inline_findings.js';
 import {
     consult,
     CouncilQuestion,
-    harvest_inline_findings,
     run_consensus_scoring,
 } from '../../../src/scripts/ai_council/orchestrator.js';
 import {
@@ -345,7 +347,7 @@ describe('the harvest runs BEFORE peer review and synthesis read the responses',
     });
 
     it('the consensus round is handed the harvested map, not a flag it would act on too late', () => {
-        // `inline_findings: _inline_findings_active(...)` is CORRECT on the `consult`
+        // `inline_findings: inlineFindingsActive(...)` is CORRECT on the `consult`
         // call — that is the prompt-side flag, and it has to be read before the
         // deliberation. What must not come back is the consensus round computing it
         // for itself, which is what put the parse downstream of peer review.
@@ -355,7 +357,7 @@ describe('the harvest runs BEFORE peer review and synthesis read the responses',
 
 describe('the config key survives the projection and gates on all three conjuncts', () => {
     // This block exists because a LIVE analysis run on 2026-08-30 found the feature
-    // silently off with every unit test green. `_inline_findings_active` reads the
+    // silently off with every unit test green. `inlineFindingsActive` reads the
     // SYNTHESISED settings dict, not the typed config, and the synthesiser did not
     // carry the new key — so a `true` in the YAML resolved to `undefined` and the
     // contract never reached a prompt. The tests below are the ones that would have
@@ -365,24 +367,24 @@ describe('the config key survives the projection and gates on all three conjunct
     });
 
     it('all three conjuncts present → active', () => {
-        expect(_inline_findings_active(cfg() as never, 'analysis')).toBe(true);
+        expect(inlineFindingsActive(cfg() as never, 'analysis')).toBe(true);
     });
 
     it('consensus scoring off → inactive, even with the key set', () => {
-        expect(_inline_findings_active(cfg({ enabled: false, lenses: ['analysis'], inline_findings: true }) as never, 'analysis')).toBe(false);
+        expect(inlineFindingsActive(cfg({ enabled: false, lenses: ['analysis'], inline_findings: true }) as never, 'analysis')).toBe(false);
     });
 
     it('the key absent → inactive, and absent is the shipped state', () => {
-        expect(_inline_findings_active({ consensus_scoring: { enabled: true, lenses: ['analysis'] } } as never, 'analysis')).toBe(false);
+        expect(inlineFindingsActive({ consensus_scoring: { enabled: true, lenses: ['analysis'] } } as never, 'analysis')).toBe(false);
     });
 
     it('a lens outside the lens list → inactive', () => {
-        expect(_inline_findings_active(cfg() as never, 'roadmap')).toBe(false);
-        expect(_inline_findings_active(cfg({ enabled: true, lenses: ['roadmap'], inline_findings: true }) as never, 'roadmap')).toBe(true);
+        expect(inlineFindingsActive(cfg() as never, 'roadmap')).toBe(false);
+        expect(inlineFindingsActive(cfg({ enabled: true, lenses: ['roadmap'], inline_findings: true }) as never, 'roadmap')).toBe(true);
     });
 
     it('no consensus_scoring block at all → inactive', () => {
-        expect(_inline_findings_active({} as never, 'analysis')).toBe(false);
+        expect(inlineFindingsActive({} as never, 'analysis')).toBe(false);
     });
 
     it('the YAML key survives load → synthesise → predicate, in both states', () => {
@@ -413,7 +415,7 @@ describe('the config key survives the projection and gates on all three conjunct
                 const file = path.join(dir, '.ai-council.yml');
                 fs.writeFileSync(file, `${yaml}\n`, 'utf-8');
                 const block = synthesizeAiCouncilBlock(load_council_config(file));
-                return _inline_findings_active(block as never, 'analysis');
+                return inlineFindingsActive(block as never, 'analysis');
             } finally {
                 fs.rmSync(dir, { recursive: true, force: true });
             }
