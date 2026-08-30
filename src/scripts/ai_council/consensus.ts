@@ -455,6 +455,106 @@ function _extract_json_array(text: string): string {
 }
 
 /**
+ * Phase 1B — the deliberation reply split into argument and findings block.
+ *
+ * `deliberation_text` is what every downstream consumer should see: peer
+ * review, chairman synthesis, and the rendered artefact evaluate the member's
+ * REASONING, and a schema block restating selected conclusions is scaffolding,
+ * not argument. Leaving it in amplifies a concise finding simply because it
+ * appears twice — the AI council's stated reason (2026-08-30, 2 of 2 seats) for
+ * choosing to strip.
+ *
+ * `block` is the exact consumed span. One locator produces both halves, so the
+ * text that is parsed and the text that is removed cannot disagree — the
+ * council's other requirement, and the reason there is no separate
+ * "find and remove a JSON fence" function anywhere in this change.
+ */
+export interface InlineFindingsSplit {
+    /** The reply with the consumed block removed. Equals the input when `found` is false. */
+    readonly deliberation_text: string;
+    /** The consumed span, ready for `parse_findings_outcome`. `''` when `found` is false. */
+    readonly block: string;
+    readonly found: boolean;
+}
+
+/**
+ * Split a full analysis reply at its TRAILING findings block.
+ *
+ * A locator, deliberately not a second parser: `parse_findings_outcome` stays
+ * the only thing that decides whether a candidate IS a findings block, and this
+ * narrows where it looks.
+ *
+ * The narrowing is not cosmetic. `_extract_json_array` returns the FIRST match,
+ * which is correct for an extraction reply (the reply IS the array) and wrong
+ * for an analysis reply, where the prose above may legitimately quote a JSON
+ * array — the analysis lens exists to critique analyser OUTPUT, so a quoted
+ * array is an ordinary thing to find there. First-match would read the quoted
+ * array as the member's findings and never reach the real block.
+ *
+ * `INLINE_FINDINGS_CONTRACT` asks for the block LAST, so LAST is what this
+ * reads. `found: false` when nothing array-shaped is present, which the caller
+ * treats as "no inline block" and repairs with the extraction call — the same
+ * outcome as today, never worse.
+ */
+export function split_inline_findings(text: string): InlineFindingsSplit {
+    const none: InlineFindingsSplit = { deliberation_text: text, block: '', found: false };
+    if (!text) {
+        return none;
+    }
+    // Deliberately the same two patterns `_extract_json_array` uses, in the same
+    // precedence order — fenced beats bare — so a block this locator returns is
+    // one that function can also read. Only the match SELECTION differs: last,
+    // not first.
+    for (const src of [_JSON_BLOCK_SRC, _BARE_ARRAY_SRC]) {
+        const re = new RegExp(src, 'gs');
+        let last: RegExpExecArray | null = null;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(text)) !== null) {
+            last = m;
+            // A zero-length match would spin forever; the patterns cannot produce
+            // one (both require at least `[]`), but the guard costs nothing and a
+            // future pattern edit is exactly when it would matter.
+            if (m.index === re.lastIndex) {
+                re.lastIndex += 1;
+            }
+        }
+        if (last) {
+            const start = last.index;
+            const end = start + last[0].length;
+            return {
+                deliberation_text: `${text.slice(0, start)}${text.slice(end)}`,
+                block: text.slice(start, end),
+                found: true,
+            };
+        }
+    }
+    return none;
+}
+
+/**
+ * How a member's findings were obtained — the RECORDED provenance, wider than
+ * `FindingsParseOutcome`, which describes one parse of one piece of text.
+ *
+ * Typed rather than a bare string because Phase 1B's promotion gate is computed
+ * off exactly these values: an untyped `Map<string, string>` makes the number
+ * that decides the experiment vulnerable to a misspelling no compiler would
+ * catch. The AI council (2026-08-30, 2 of 2 seats) called the pre-existing bare
+ * `'parsed-after-reask'` technical debt rather than a precedent to extend.
+ *
+ * `'parsed'` keeps its shipped meaning — read from the separate extraction
+ * call — and is unambiguous now that `'parsed-inline'` names the other source.
+ * One seat asked for a rename to `'parsed-extraction'`; renaming a value that
+ * is already recorded and compared against is a separate change with its own
+ * migration, and is recorded here as declined-with-a-reason, not overlooked.
+ */
+export type RecordedExtractionOutcome =
+    | 'parsed'
+    | 'empty'
+    | 'parse_failed'
+    | 'parsed-after-reask'
+    | 'parsed-inline';
+
+/**
  * Return `{anon_label: Finding}` map so scorers see neutral labels.
  *
  * Labels are `Finding-A`, `Finding-B`, … in input order. The author

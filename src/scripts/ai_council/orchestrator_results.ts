@@ -25,7 +25,14 @@ import type { ProjectContext } from './project_context.js';
 // The alternative was leaving the two options interfaces behind, which would have meant
 // finding 19 lines elsewhere for no design reason.
 import type { OnOverrunCallback } from './orchestrator.js';
-import type { ConsensusBucket, ConsensusMetadata, Finding, FindingScore } from './consensus.js';
+import type {
+    ConsensusBucket,
+    ConsensusMetadata,
+    Finding,
+    FindingScore,
+    FindingsExtraction,
+    RecordedExtractionOutcome,
+} from './consensus.js';
 
 /**
  * Bundle returned by `run_peer_review()` (Phase 5 / F1).
@@ -121,7 +128,7 @@ export class ConsensusResult {
      *
      * Additive and optional, so no existing constructor call changes.
      */
-    parse_outcomes: Map<string, string>;
+    parse_outcomes: Map<string, RecordedExtractionOutcome>;
     extraction_responses: CouncilResponse[];
     scoring_responses: CouncilResponse[];
 
@@ -130,7 +137,7 @@ export class ConsensusResult {
         findings: Finding[];
         scores: FindingScore[];
         metadata: Map<string, ConsensusMetadata>;
-        parse_outcomes?: Map<string, string>;
+        parse_outcomes?: Map<string, RecordedExtractionOutcome>;
         extraction_responses: CouncilResponse[];
         scoring_responses: CouncilResponse[];
     }) {
@@ -163,4 +170,17 @@ export interface RunConsensusScoringOptions {
     max_tokens?: number;
     strong_threshold?: number;
     minority_threshold?: number;
+    /**
+     * Phase 1B: findings already harvested from each member's own deliberation
+     * reply by `harvest_inline_findings`, keyed `provider:model`. A member with
+     * an entry skips the separate extraction call entirely; a member without one
+     * takes the shipped extraction path unchanged. Absent → extraction-always,
+     * call-for-call identical to today.
+     *
+     * A pre-computed map rather than a boolean because the harvest must run
+     * BEFORE peer review and synthesis read the responses, which is upstream of
+     * this function — see `harvest_inline_findings` for why that ordering is
+     * load-bearing.
+     */
+    inline_extractions?: ReadonlyMap<string, FindingsExtraction> | null;
 }

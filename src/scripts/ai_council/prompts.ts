@@ -215,6 +215,39 @@ Rules:
 - \`text\` is a single sentence, no markdown, no reviewer self-reference.
 - Wrap the array in a \`\`\`json\`\`\` fenced block. No commentary outside it.`;
 
+/**
+ * Phase 1B — inline findings contract, analysis lens only.
+ *
+ * Appended to the FINAL deliberation round so a member emits its own findings
+ * in the SAME response as its analysis, in the schema
+ * `FINDING_EXTRACTION_PROMPT` already defines. When the block parses, the
+ * separate extraction call at `run_consensus_scoring`'s pass 1 is not issued.
+ *
+ * Deliberately a RESTATEMENT of the existing schema and not a second schema:
+ * `parse_findings_outcome` is the only reader, so two shapes here would be two
+ * answers to "what is a finding". The rules below are the extraction prompt's
+ * rules with the framing changed from "re-emit" to "append", because the member
+ * has not finished writing when it reads this.
+ *
+ * Appended exactly like `STANCE_LINE_CONTRACT` (`orchestrator.ts` final-round
+ * suffix) — off by default, and off means the prompt is byte-identical.
+ */
+export const INLINE_FINDINGS_CONTRACT = `After your analysis, and only after it, append your top findings as a
+strict JSON array so downstream tooling can read them without asking
+you again. Each item MUST have:
+
+    {"id": "<short-slug>", "text": "<one-sentence finding>"}
+
+Rules:
+- 3-7 findings, ordered by importance (most important first).
+- \`id\` is a 1-3 word kebab-case slug, unique within your array.
+- \`text\` is a single sentence, no markdown, no reviewer self-reference.
+- Wrap the array in a \`\`\`json\`\`\` fenced block, as the LAST thing in your
+  reply. No commentary after it.
+- An empty array \`[]\` is a valid answer meaning you found nothing.
+- The prose analysis above it is still the primary deliverable — the block
+  summarises it, it does not replace it.`;
+
 export const FINDING_SCORING_PROMPT = `Below are findings from other independent reviewers, presented with
 neutral labels (Finding-A, Finding-B, …). Score each one on its
 merits. You MUST emit a strict JSON array, one entry per finding,

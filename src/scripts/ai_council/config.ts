@@ -359,6 +359,16 @@ export interface ConsensusScoringConfig {
     readonly strong_threshold: number;
     readonly minority_threshold: number;
     readonly lenses: readonly string[];
+    /**
+     * Phase 1B: ask each member for its findings inline, in the deliberation
+     * reply, and issue the separate extraction call only as the repair path.
+     *
+     * Default `false` on purpose. 1B.4 gates promotion on a measured inline
+     * parse rate, and a default that ships ahead of its own gate would make
+     * the gate unfalsifiable — the measurement would be of the thing already
+     * promoted. Flip it when the gate is met, not before.
+     */
+    readonly inline_findings: boolean;
 }
 
 const _VALID_NECESSITY_MODES: ReadonlySet<string> = new Set([
@@ -1462,6 +1472,7 @@ function _build_consensus_scoring(d: Dict): ConsensusScoringConfig {
         strong_threshold: strong,
         minority_threshold: minority,
         lenses: lenses_raw as string[],
+        inline_findings: Boolean(_pyTruthy(_get(d, 'inline_findings', false))),
     };
 }
 

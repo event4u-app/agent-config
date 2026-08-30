@@ -136,6 +136,7 @@ import {
     render,
     run_consensus_scoring,
     run_debate,
+    harvest_inline_findings,
     run_peer_review,
 } from './ai_council/orchestrator.js';
 import {
@@ -152,6 +153,7 @@ import {
     DecisionReplayInputs,
     render_decision_replay,
 } from './ai_council/replay.js';
+import type { FindingsExtraction } from './ai_council/consensus.js';
 import {
     Finding as ConsensusFinding,
     FindingScore as ConsensusFindingScore,
@@ -1177,6 +1179,25 @@ function _consensus_cost_delta(
     return [extra_calls, extra_usd];
 }
 
+/**
+ * Phase 1B — will the inline-findings contract ride this run's final round?
+ *
+ * Read BEFORE the deliberation, because the contract is a prompt change and the
+ * prompt is built first; the harvest below reads the same predicate so the two
+ * cannot disagree about whether a member was asked for the block. Three
+ * conjuncts, all required: consensus scoring on, this lens in its lens list, and
+ * `inline_findings` explicitly on. Any missing → `false`, and `false` is a
+ * byte-identical prompt.
+ */
+export function _inline_findings_active(ai_cfg: Dict, mode: string): boolean {
+    const cs = (ai_cfg['consensus_scoring'] as Dict) || {};
+    if (!_pyBool(cs['enabled']) || !_pyBool(cs['inline_findings'])) {
+        return false;
+    }
+    const lenses = (cs['lenses'] as string[]) || ['analysis'];
+    return lenses.includes(mode);
+}
+
 function _maybe_run_consensus(
     ai_cfg: Dict,
     question: CouncilQuestion,
@@ -1186,6 +1207,7 @@ function _maybe_run_consensus(
     table: PriceTable,
     project: unknown,
     args: Args,
+    inline_extractions: ReadonlyMap<string, FindingsExtraction> | null = null,
 ): ConsensusResult | null {
     const cs = (ai_cfg['consensus_scoring'] as Dict) || {};
     if (!_pyBool(cs['enabled'])) {
@@ -1196,6 +1218,7 @@ function _maybe_run_consensus(
         return null;
     }
     return run_consensus_scoring(members, responses, {
+        inline_extractions,
         budget,
         table,
         project: project as never,
@@ -2624,6 +2647,10 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
+        // Phase 1B: same predicate the harvest uses, so a member is asked for the
+        // inline block exactly when the consensus round intends to read one.
+        // Default-off → this is `false` and the prompt is unchanged.
+        inline_findings: _inline_findings_active(ai_cfg, question.mode),
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -2707,6 +2734,14 @@ function cmd_run(
     // this is always additive, never a fabricated decision.
     const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
     const persona_labels = build_persona_labels(advisor_plans, billable);
+    // Phase 1B — harvest BEFORE peer review, chairman synthesis, or rendering read
+    // `responses`. The findings block is extraction scaffolding, not argument;
+    // leaving it in the text those three evaluate would amplify a concise finding
+    // purely because it appears twice. Off (the default) → the map is null, no
+    // response is touched, and every consumer sees exactly today's bytes.
+    const inline_extractions = _inline_findings_active(ai_cfg, question.mode)
+        ? harvest_inline_findings(members, responses)
+        : null;
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
         args,
@@ -2718,7 +2753,7 @@ function cmd_run(
         project,
         { persona_labels },
     );
-    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
+    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args, inline_extractions);
     // Rendered attendance, re-derived after the parser. The event does not move.
     quorum_out.result = annotateRenderedQuorum(quorum_out.result, consensus?.parse_outcomes);
     const chairman = _maybe_run_chairman(

@@ -762,6 +762,53 @@ The trailer additionally carries two aggregate lines — **Evidence spread**
 (high/medium/low counts across findings) and **Provider spread** (distinct
 providers that deliberated) — folded in beside `_artefact mode:_`.
 
+### Consensus scoring — inline findings (Phase 1B)
+
+The consensus round's pass 1 asks every member a SECOND time, in a separate
+paid call, to restate its own analysis as a JSON findings array
+(`FINDING_EXTRACTION_PROMPT`). `inline_findings` asks for that array in the
+FIRST reply instead, and issues the extraction call only when the first reply
+did not carry a usable one.
+
+**Configuration.**
+
+- `consensus_scoring.inline_findings` (bool, default `false`) — master switch.
+  Active only when **all three** hold: `consensus_scoring.enabled` is true,
+  this run's lens is in `consensus_scoring.lenses` (default `[analysis]`), and
+  this key is true. Any one missing → the deliberation prompt is byte-identical
+  to a run without the feature.
+
+**Behaviour when active.**
+
+- The FINAL deliberation round appends `INLINE_FINDINGS_CONTRACT`, which
+  restates the extraction schema — same `{"id", "text"}` shape, same 3–7 bound
+  — and asks for it as the last thing in the reply. Composed with
+  `stance_tally`, the findings block comes first and the `STANCE:` line stays
+  last, because that contract requires the stance to be the final line.
+- Between the deliberation and every consumer of its text, the trailing block
+  is located, parsed, and **removed** from the response, leaving a one-line
+  marker in its place. Peer review, chairman synthesis, and the rendered
+  artefact therefore evaluate the member's argument, not the schema
+  scaffolding that restates it. The removal is deliberately observable — a
+  silent edit to what reads as a transcript is the failure this marker exists
+  to prevent — and the raw reply is retained in the session record.
+- The locator reads the LAST array-shaped span, not the first. The analysis
+  lens exists to critique analyser OUTPUT, so a JSON array quoted in the prose
+  above is ordinary; first-match would read that as the member's findings.
+- A reply whose block is absent or unreadable is **not** modified, and takes
+  the shipped extraction path — including its one bounded re-ask — against the
+  full raw text. The worst case is therefore exactly today's call count.
+- The per-member outcome is recorded as `parsed-inline` (read from the
+  deliberation reply) versus `parsed` (read from the extraction call), so the
+  two sources are distinguishable in the attendance data.
+
+**Promotion status.** Default-off pending the Phase 1B gate: ≥ 10 real analysis
+runs at ≥ 70 % inline parse rate, no `unparsed` regression, no substantive
+finding-quality regression. The pre-registered rate is
+`parsed-inline ÷ replies that received the contract` — a member that answered
+`[]` counts in the denominator AND as a success, because an empty array from a
+readable reply is a result, not a failure.
+
 ### Stance tally (Phase 1 — option-level verdict)
 
 `consensus_scoring` scores *findings*; `stance_tally` produces an

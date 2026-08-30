@@ -38,7 +38,9 @@ import {
 } from './clients.js';
 import type {
     ConsensusMetadata,
-    Finding} from './consensus.js';
+    Finding,
+    FindingsExtraction,
+    RecordedExtractionOutcome} from './consensus.js';
 import {
     ConsensusBucket,
     FindingScore,
@@ -48,6 +50,7 @@ import {
     bucket_by_threshold,
     parse_findings_outcome,
     parse_scores_response,
+    split_inline_findings,
 } from './consensus.js';
 import type {
     CostEstimate,
@@ -63,6 +66,7 @@ import {
     advisor_system_prompt,
     ANTI_CONFORMITY_DIRECTIVE,
     describe_verdict_mismatch,
+    INLINE_FINDINGS_CONTRACT,
     STANCE_LINE_CONTRACT,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
@@ -366,6 +370,15 @@ export interface ConsultOptions {
      * context). Default `null` → byte-identical to today.
      */
     no_project_context_members?: ReadonlySet<string> | null;
+    /**
+     * Phase 1B (inline findings): when true, the FINAL round's user prompt
+     * appends `INLINE_FINDINGS_CONTRACT` so the member emits its findings in
+     * the same response as its analysis and `run_consensus_scoring` can skip
+     * the separate extraction call. Default `false` → every round's prompt is
+     * byte-identical to today. Composes with `stance_tally`; when both are on
+     * the stance contract comes LAST, because it demands to be the final line.
+     */
+    inline_findings?: boolean;
     /** Mid-flight cli→api fallback; absent → no retry. See `mid_flight_fallback`. */
     cli_fallback?: CliFallbackOptions | null;
 }
@@ -435,15 +448,24 @@ export function consult(
     let current_suffix = '';
 
     const stance_tally = opts.stance_tally ?? false;
+    const inline_findings = opts.inline_findings ?? false;
     for (let round_idx = 0; round_idx < rounds; round_idx++) {
         // Phase 1: the FINAL round carries the mandatory STANCE closing-line
         // contract when the tally is enabled. Off (default) → the original
         // question object flows through untouched, byte-identical to today.
         const is_final = round_idx === rounds - 1;
-        const suffix_for_round =
-            is_final && stance_tally
-                ? `${current_suffix}\n\n---\n\n${STANCE_LINE_CONTRACT}`
-                : current_suffix;
+        // Phase 1B: the inline-findings contract rides the same final-round
+        // suffix. Order is load-bearing — `STANCE_LINE_CONTRACT` requires the
+        // stance to be the last line of the reply, so it is appended last and
+        // the findings block sits above it. Both off → `current_suffix`
+        // unchanged, so the composed default is byte-identical to today.
+        let suffix_for_round = current_suffix;
+        if (is_final && inline_findings) {
+            suffix_for_round = `${suffix_for_round}\n\n---\n\n${INLINE_FINDINGS_CONTRACT}`;
+        }
+        if (is_final && stance_tally) {
+            suffix_for_round = `${suffix_for_round}\n\n---\n\n${STANCE_LINE_CONTRACT}`;
+        }
         const prompt_for_round = `${question.user_prompt}${suffix_for_round}`;
         const round_question =
             round_idx === 0 && prompt_for_round === question.user_prompt
@@ -1582,6 +1604,68 @@ export function run_peer_review(
 
 
 /**
+ * Phase 1B — harvest the inline findings block out of each deliberation reply.
+ *
+ * Runs BETWEEN the deliberation and every consumer of its text. That placement
+ * is the load-bearing part and it was a defect the AI council caught
+ * (2026-08-30, 2 of 2 seats): peer review and chairman synthesis read the
+ * responses BEFORE the consensus round does, so parsing inside
+ * `run_consensus_scoring` would have left the schema block in the text those
+ * two evaluate — which is precisely the amplification the strip exists to
+ * prevent.
+ *
+ * MUTATES `text` on each response whose block parsed, replacing the consumed
+ * span with a one-line marker. Mutation rather than a parallel clean copy
+ * because two representations of one response means every downstream consumer
+ * has to know which one it holds, and the one that forgets is a silent bug.
+ * `CouncilResponse.text` is already mutated on the stance-repair path, so this
+ * is the established seam rather than a new one.
+ *
+ * The marker is deliberately visible. Stripping without an observable trace is
+ * a silent mutation of the artefact a reader takes for a transcript, and one
+ * seat made an observable marker a condition of its verdict; the other reached
+ * the same concern from the auditability side. ~90 characters replaces ~300 of
+ * JSON, so the scaffolding is gone and the fact of its removal is not.
+ *
+ * Returns the per-member extraction keyed by `provider:model` — the same key
+ * `run_consensus_scoring` records outcomes under. A member whose block did not
+ * parse gets NO entry and its `text` is left exactly as the model wrote it, so
+ * the repair extraction call downstream still sees the raw reply.
+ */
+export function harvest_inline_findings(
+    members: readonly ExternalAIClient[],
+    responses: readonly CouncilResponse[],
+): Map<string, FindingsExtraction> {
+    const out = new Map<string, FindingsExtraction>();
+    const model_by_name = new Map<string, string>();
+    for (const m of members) {
+        model_by_name.set(m.name, m.model);
+    }
+    for (const resp of responses) {
+        const model = model_by_name.get(resp.provider);
+        if (model === undefined || resp.error || !_pyStrip(resp.text)) {
+            continue;
+        }
+        const split = split_inline_findings(resp.text);
+        if (!split.found) {
+            continue;
+        }
+        const source = `${resp.provider}:${model}`;
+        const ex = parse_findings_outcome(split.block, { source });
+        if (ex.outcome !== 'parsed') {
+            // Not a findings block after all — most likely a JSON array the member
+            // quoted from the artefact. Leave the reply untouched: stripping text
+            // we could not read would remove evidence and buy nothing.
+            continue;
+        }
+        out.set(source, ex);
+        const marker = `_[inline findings block extracted: ${String(ex.findings.length)} item(s); the raw reply is retained in the session record.]_`;
+        resp.text = `${_pyStrip(split.deliberation_text)}\n\n${marker}`;
+    }
+    return out;
+}
+
+/**
  * Two-pass consensus round (Phase 4 / F3).
  *
  * Pass 1 — extraction: each member re-emits its own deliberation as
@@ -1606,6 +1690,7 @@ export function run_consensus_scoring(
     const max_tokens = opts.max_tokens ?? DEFAULT_MAX_TOKENS;
     const strong_threshold = opts.strong_threshold ?? 0.7;
     const minority_threshold = opts.minority_threshold ?? 0.4;
+    const inline_extractions = opts.inline_extractions ?? null;
 
     if (members.length === 0 || deliberation_responses.length === 0) {
         return new ConsensusResult({
@@ -1631,12 +1716,35 @@ export function run_consensus_scoring(
     // `parsed`: a member that needed a second ask is a signal about the prompt or the
     // member, and collapsing it into `parsed` would hide the only evidence that the
     // re-ask is doing anything.
-    const parse_outcomes = new Map<string, string>();
+    const parse_outcomes = new Map<string, RecordedExtractionOutcome>();
     for (const resp of deliberation_responses) {
         const member = member_by_name.get(resp.provider);
         if (member === undefined || resp.error || !_pyStrip(resp.text)) {
             continue;
         }
+        const source = `${member.name}:${member.model}`;
+
+        // ── Phase 1B: inline first, extraction as the repair path ──────────
+        //
+        // 1B.1 replaces the second call, it does not delete it. When the contract
+        // rode the final deliberation round the member already wrote its findings
+        // there, `harvest_inline_findings` already read them with the SAME parser
+        // this path uses, and paying for a second call to restate them is the
+        // waste the phase names.
+        //
+        // `harvest_inline_findings` records ONLY a member whose block parsed, so an
+        // entry here is always a short-circuit. A member with no entry ignored or
+        // mangled the contract — exactly the case 1B.2 keeps the extraction call
+        // for — and its `text` was left raw, so the repair call still sees the
+        // full reply. Worst case is therefore one extraction call, today's cost,
+        // and never two.
+        const inline = inline_extractions?.get(source);
+        if (inline !== undefined) {
+            parse_outcomes.set(source, 'parsed-inline');
+            all_findings.push(...inline.findings);
+            continue;
+        }
+
         const question = new CouncilQuestion({
             mode: 'prompt',
             user_prompt: build_extraction_user_prompt(resp.text),
@@ -1652,7 +1760,6 @@ export function run_consensus_scoring(
         if (extracted.length === 0 || extracted[0]!.error) {
             continue;
         }
-        const source = `${member.name}:${member.model}`;
         let ex = parse_findings_outcome(extracted[0]!.text, { source });
 
         // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
