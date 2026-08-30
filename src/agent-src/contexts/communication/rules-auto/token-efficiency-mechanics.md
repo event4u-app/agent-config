@@ -115,3 +115,43 @@ the enumerated-set carve-out.
 - User explicitly asks for full output — show it.
 
 → Detailed patterns: `docs/guidelines/agent-infra/output-patterns.md`
+
+## Independent calls go in ONE block — the evidence
+
+```
+CALLS WITH NO DEPENDENCY BETWEEN THEM GO IN THE SAME BLOCK.
+A SECOND CALL THAT DOES NOT READ THE FIRST ONE'S RESULT IS NOT A SECOND TURN.
+BEFORE EMITTING A SINGLE CALL, ASK WHAT ELSE IS ALREADY KNOWN TO BE NEEDED.
+```
+
+The ceiling above forbids repetition; this forbids the opposite failure —
+splitting work that had no reason to be split. It is stated because it is
+**measured, not suspected**: over ten sessions of this package,
+`probe_turnaround` reports a mean tool-call batch size of **1.01**, with 27 of
+2,889 tool-using requests (0.93 %) carrying more than one call. At a 4.7 s
+median generation latency, a request that fans out to 42 calls spends about five
+minutes on serialization before a single tool runs.
+
+**Nothing in this package caused that, and nothing in it can fix it.** The cause
+was looked for and is recorded as absent
+(`agents/evidence/analysis/agent-turnaround-2026-08-30.md` § E2): no rule, skill
+or template forbids parallel calls, and parallel calls do occur — so 1.01 is a
+tendency, not a floor with a mechanism behind it.
+
+**The discriminator is the dependency, never the count.** Two greps over
+different files, a status and a log, three independent reads named before the
+first one runs — one block. A read whose path comes out of the previous result —
+two blocks, and batching them would be guessing.
+
+**Do not read this as "write shorter commands".** In the same corpus, 98.1 % of
+`Bash` calls are already compound or heredoc, and the 18 % that exceed 1,500
+characters carry 75 % of all command bytes — those are one-shot scripts that each
+replace three to six round-trips. Splitting them trades one expensive call for
+several cheap ones and makes the number worse while looking like a fix.
+
+**Honest enforcement — `instruction-only`.** No gate can observe a call that was
+not batched: a transcript records the calls that happened, never the block they
+could have shared. `probe_turnaround` reports the rate afterwards and refuses to
+gate on a store CI does not have. This paragraph is the whole mechanism, and the
+roadmap that added it pre-committed to recording a null if the rate does not
+move rather than repeating the reminder more loudly.

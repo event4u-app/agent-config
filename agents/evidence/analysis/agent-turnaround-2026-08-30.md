@@ -292,3 +292,207 @@ the headline metric **worse** while looking like a fix.
 Where the residue is: class B, 1,993 calls at a 210-char median, is 68 % of the
 calls and 15 % of the characters. That is where a shorter command would save
 something real, and it is not where the 980-char mean comes from.
+
+## E5 — Both pre-push numbers were wrong, in opposite directions (step 3.2)
+
+Fresh timed runs, 2026-08-30, on a clean tree in this worktree:
+
+```
+$ for i in 1 2 3; do /usr/bin/time -p task consistency; done
+real 9.79   real 10.19   real 10.26
+
+$ /usr/bin/time -p task preflight        # exit 0
+real 36.05
+```
+
+| claim, and where it lived | claimed | measured | direction |
+|---|---|---|---|
+| `install-hooks.sh:35` — `task consistency` | ~15–40 s | **~10 s** | over-stated 1.5–4× |
+| `install-hooks.sh:86` — `task preflight` | 15 s | **36.05 s** | under-stated 2.4× |
+| `ci-local-parity.yml` — `pre_push_budget_seconds` | 25 s ceiling | **36.05 s** | **44 % over budget** |
+
+The budget breach is the finding. That config's own comment calls the ceiling
+*"a real budget, not a wish"*, and **nothing measures the hook** — so the
+preflight gate set grew past its declared ceiling with no signal anywhere. Both
+headers are corrected in the same change; the breach is recorded rather than
+fixed, because narrowing preflight to the pushed paths is one edit from turning
+a push-blocking mirror into a partial one, which is how drift reaches CI instead
+of the developer (risk 5).
+
+Together the hook costs **≈ 46 s** of local work before the network push starts,
+which is most of what the corpus's 67 s median `git push` is made of. The
+scoping lever the step asks about is therefore in preflight (36 s), not in
+consistency (10 s) — and it is the one the risk register says not to pull.
+
+## E6 — Zero whole-suite test runs; the suite itself is the cost (step 3.3)
+
+Every `Bash` command in the window was parsed for a real `vitest` INVOCATION —
+`npx|pnpm|yarn|npm run vitest` or `vitest` at the start of a shell segment —
+rather than for the string, which is what an earlier pass did and why it
+reported twenty whole-suite runs that were `grep`, `pgrep` and roadmap prose.
+
+| class | calls | invocations | total | median |
+|---|---|---|---|---|
+| filtered (explicit paths or `-t`) | **223** | 234 | 118.4 min | 5.3 s |
+| whole-suite (unfiltered) | **0** | 0 | — | — |
+| false matches (`pgrep -fl vitest`) | 2 | 2 | 0.1 min | 2.1 s |
+
+**Not one unfiltered run.** The package already forbids a full-pipeline probe
+per iteration, and the corpus says the rule is being followed — so the roadmap's
+own second branch applies: **the finding is that the suite itself is the cost.**
+
+The shape of that cost is a long tail, not a plateau: 223 filtered calls at a
+5.3 s median but a 31.9 s mean, i.e. a minority of test files dominate 118
+minutes. That is a test-performance question, not an invocation-discipline one,
+and pointing "run fewer tests" at a corpus with zero whole-suite runs would be
+advice against a behaviour nobody exhibits.
+
+## E7 — The user-scope bucket is derivable, and it was never invisible (step 4.1/4.2)
+
+`src/config/preamble-payload-budget.json` excluded the user-scope bucket as
+*"machine-dependent, not CI-checkable"*. Both halves are false. The layer is
+written by this package's own installer out of `dist/agent-src/rules/`, and
+which rules reach the **global** layer rather than the project one is decided by
+frontmatter — a `workspaces:` list naming the maintainer workspace.
+
+`censusDeliveredRulePayload` computes it from the projection alone, reading
+nothing under `~/`. Measured 2026-08-30:
+
+| | files | chars | tokens |
+|---|---|---|---|
+| user-scope, MEASURED off the machine | 104 | 451,912 | 112,978 |
+| user-scope, DERIVED from the projection | 104 | 445,046 | 111,262 |
+| package-only (never delivered) | 15 | 46,147 | 11,537 |
+
+119 projected − 15 package-only = **104**, matching the installed file count
+exactly. The 1.5 % char gap is install drift, not a defect in either number.
+
+**Council, two rounds, 2/2 each.** Round 1 chose *"gate the bucket and
+rebaseline"*. Round 2 was given the checker's bucket definitions — which round 1
+had explicitly deferred to, its two seats' proposed baselines differing by
+~124k — and found the decisive fact: `measureDeterministicPayload` gates
+`dist/agent-src/rules/` **in full**, all 119 files. The 104 are a SUBSET of a
+bucket already counted. Adding them would move the baseline ~111k for zero
+additional delivered payload.
+
+Round 2 chose **(a′)**: correct the false reason, add the reconciliation test,
+leave the baseline alone. Recorded verbatim in the config's `excluded_buckets`
+entry. What remains genuinely unreported by the GATE is the 104 / 13 / 2
+destination split — the census prints it, and the council placed it there until
+distinct destinations need independent budget enforcement.
+
+**A defect this change made and caught.** The derived rows were first added to
+`sources`, which `buildByteCensus` SUMS — adding ~123k phantom tokens and
+reddening `check_preamble_payload_budget` on the first run. A second VIEW of an
+existing row belongs beside a total, never inside it. The field now sits outside
+`sources` with that reason in its docstring.
+
+## E8 — `paths:` is emitted; the global write path does not run the emitter (step 4.3)
+
+The originating measurement read *"zero of 104 installed rules emit a top-level
+`paths:`"* as the emitter refusing to scope. Re-measured with
+`rule_activation_census`, it is three facts and only one is a refusal:
+
+| set | n | outcome |
+|---|---|---|
+| path-only | 4 | the emitter DOES write `paths:` |
+| mixed (path + keyword) | 17 | no `paths:`, deliberately |
+| no path trigger | 99 | nothing to lift |
+
+**The 17 are the correct refusal.** `paths:` is the host's only activation key,
+so writing it for a rule that also carries a keyword trigger makes the keyword
+unreachable — the rule goes silent on exactly the prompts it was written for.
+
+**The wiring gap is the finding.** Of the 4 the emitter would scope, one carries
+`paths:` in a host tree — `source-of-truth`, and only because it is
+package-only and therefore travels the project write path. `condense.ts` calls
+`_claude_paths_plan`; **nothing under `src/install/` calls it at all**, so the
+global layer receives the source form verbatim. `ui-audit-gate`,
+`design-review-after-ui-write` and `roadmap-progress-sync` are installed
+globally without `paths:` for that reason, not because the install is stale.
+
+Documented in `docs/contracts/rule-router.md` with the table; deliberately not
+repaired here, because the repair is a consumer-facing installer change that
+would silently narrow three rules' activation from inside a measurement
+roadmap. Carried to the follow-up.
+
+## E9 — Phase 4 changed no delivered payload, and says so (step 4.4)
+
+| | before Phase 4 | after |
+|---|---|---|
+| first-call context floor | 217,385–230,705 | **217,385–230,705** |
+| delivered global rule payload | 111,262 tok | 110,861 tok |
+| mean batch size | 1.01 | 1.01 |
+
+The floor is **unchanged**, against the source's recorded 218,705–230,705. That
+is the correct outcome for a phase that corrected a false reason, added a
+report, and repaired a double-count: none of those move bytes. The 401-token
+fall in the delivered payload is step 2.2's rule text being trimmed into its
+context file, not a payload reduction.
+
+**`calls_per_request` is now reported, never gated.** It moved twice for reasons
+that are not regressions — 81.42 → 72.67 when the measuring session was
+excluded, then 72.67 → 73.73 within the same afternoon, because the corpus is an
+mtime window and concurrent sessions in the same project store keep sliding into
+it. A ratchet on a number that moves when nothing changed teaches a reader to
+ignore the gate. The other three metrics were stable across every one of those
+runs and stay gated.
+
+## E10 — The bundle gate was already on the local path, and it discriminates (step 5.1)
+
+The step asks to move `check_hook_bundle_content` onto `task preflight`, where
+`dist/hooks/` actually exists. **It is already there** —
+`taskfiles/ci-fast.yml:174`, inside the `preflight` task that begins at line 4.
+The move landed before this roadmap executed; the step is satisfied by the tree,
+not by this change, and saying so is cheaper than a no-op commit.
+
+What was NOT established is the half that matters: that it *discriminates*.
+Verified 2026-08-30 with two probes, both preserving mtime so the freshness gate
+next to it could not have contributed:
+
+| probe | edit | verdict |
+|---|---|---|
+| behavioural | `LEDGER_MAX_AGE_MS` 30 → 31 min in `block_unauthorized_git.ts` | **REFUSED**, exit 1 — `0347bf44ec5b` vs `83c92178ad79`, both 1,233,375 bytes |
+| comment-only | appended a `//` line to `block_no_verify.ts` | passed, correctly |
+
+The behavioural probe is deliberately the incident's *own* constant, and the
+byte sizes are identical — the mtime gate beside it could not have seen this,
+which is the whole reason the content gate exists. The comment-only pass is not
+a gap: esbuild strips comments, so the bundle genuinely is unchanged, and a gate
+that fired there would be reporting on the source rather than on what executes.
+
+Both edits were reverted with `cp -p` from a copy taken before the probe, never
+with `git checkout`, and the gate reports green on the restored tree.
+
+## E11 — The recurrence, classified (step 5.2)
+
+The 2026-08-30 widening of `LEDGER_MAX_AGE_MS` is a verbatim repeat of
+2026-08-21: same constant, same twelvefold value, same `PR-drain` marker, same
+promised revert that never came. Under `recurring-criticism` the repetition is
+evidence about the SYSTEM, and exactly one of three outcomes applies.
+
+**It is the third: right, recorded, and unreachable.** Not the first — nobody
+argues the 30-minute window was wrong. Not the second — the prohibition is
+recorded, in full, with the prior incident's date and value, at
+`src/scripts/hooks/block_unauthorized_git.ts:509-524`. It is **immediately above
+the line that was edited**. Recording could not have been more proximate.
+
+So what failed is REACHABILITY, and the shape of the failure is specific:
+prose cannot refuse. A docblock is read by whoever is already reading the file,
+and an agent editing a constant is looking at the constant. Three things would
+have made it reachable, in ascending order of what they cost:
+
+1. **A gate that runs where the artefact is.** `check_hook_bundle_content`
+   caught the live weakening on its first run, and E10 shows it refuses the
+   exact edit. It is on `task preflight`. This is the one that now exists.
+2. **A guard on the write.** `block_kernel_rule_writes` denies agent edits to
+   kernel rules; nothing equivalent guards the `BLOCK_OPS` constants. A
+   PreToolUse deny on this file's authorization constants would refuse at the
+   moment of the edit rather than at the next push.
+3. **Removing the pressure.** Both widenings were motivated by run length, not
+   by disagreement with the window — which is step 5.3's subject and is
+   owner-reserved.
+
+The first is in place. The second is not proposed here: a new deny surface on a
+security constant is a change to a safety floor, and this roadmap's own
+Phase 5 forbids the agent taking that decision.

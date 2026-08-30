@@ -20,7 +20,7 @@
         "context_floor_max": 230705
     },
     "directions": {
-        "calls_per_request": "DOWN",
+        "calls_per_request": "REPORTED ONLY, not compared. Measured unstable twice for reasons that are not regressions: 81.42 -> 72.67 when the measuring session was excluded, then 72.67 -> 73.73 within the same afternoon because the corpus is an mtime window and concurrent sessions in the same project store slide into it. A ratchet on a number that moves when nothing changed teaches a reader to ignore the gate. The recorded value stays as the reference reading.",
         "mean_batch_size": "UP — 1.00 is fully serial, so a HIGHER number is the improvement",
         "blocking_share": "DOWN",
         "context_floor_max": "DOWN"

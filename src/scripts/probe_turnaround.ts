@@ -253,7 +253,8 @@ export function readBudget(root = REPO_ROOT): Budget | null {
 /**
  * Baseline comparison.
  *
- * Direction is DOWN for `calls_per_request` and `blocking_share`, and UP for
+ * `calls_per_request` is deliberately ABSENT — see the comment in the body.
+ * Direction is DOWN for `blocking_share`, and UP for
  * `mean_batch_size` — a batch of 1.00 is the floor being fixed, so a higher
  * number is the improvement and the ratchet must not read it as a regression.
  * `context_floor_max` is DOWN. Getting one of these directions backwards would
@@ -262,11 +263,14 @@ export function readBudget(root = REPO_ROOT): Budget | null {
  */
 export function compare(t: Turnaround, b: Budget): string[] {
     const out: string[] = [];
-    if (t.callsPerRequest > b.baseline.calls_per_request) {
-        out.push(
-            `calls per request ${String(t.callsPerRequest)} > baseline ${String(b.baseline.calls_per_request)} (direction: DOWN)`,
-        );
-    }
+    // `calls_per_request` is REPORTED, never compared. Twice measured unstable
+    // for reasons that are not regressions: it fell 81.42 -> 72.67 when the
+    // measuring session was excluded, then drifted 72.67 -> 73.73 within the
+    // same afternoon because the corpus is an MTIME WINDOW and other sessions
+    // in the same project store keep sliding into it. A ratchet on a number
+    // that moves when nothing changed teaches the reader to ignore the gate,
+    // which is the failure this repository records for gates that can only
+    // block. The three metrics below are stable across the same runs.
     if (t.meanBatchSize < b.baseline.mean_batch_size) {
         out.push(
             `mean batch size ${String(t.meanBatchSize)} < baseline ${String(b.baseline.mean_batch_size)} (direction: UP — 1.00 is fully serial)`,

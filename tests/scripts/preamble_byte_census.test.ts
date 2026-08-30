@@ -13,6 +13,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { censusDuplicateScope } from '../../src/scripts/_lib/duplicate_scope_census.js';
 import {
     buildByteCensus,
+    censusDeliveredRulePayload,
+    censusRuleDir,
     censusClaudeMdHierarchy,
     censusGlobalProfile,
     censusSkillsCatalog,
@@ -206,6 +208,10 @@ describe('buildByteCensus', () => {
         const c = buildByteCensus({
             ...fixed,
             duplicateScope: dup,
+            // road-to-agent-turnaround 4.1: the projection-derived user-scope
+            // bucket. Zeroed in these fixtures on purpose — they exercise the
+            // SUMMING, and a non-zero value here would move every total they pin.
+            deliveredRules: { delivered: { files: 0, chars: 0 }, packageOnly: { files: 0, chars: 0 } },
             measuredColdStartMedian: median,
             coldStartLegs: 42,
         });
@@ -239,6 +245,10 @@ describe('buildByteCensus', () => {
         const c = buildByteCensus({
             ...fixed,
             duplicateScope: dup,
+            // road-to-agent-turnaround 4.1: the projection-derived user-scope
+            // bucket. Zeroed in these fixtures on purpose — they exercise the
+            // SUMMING, and a non-zero value here would move every total they pin.
+            deliveredRules: { delivered: { files: 0, chars: 0 }, packageOnly: { files: 0, chars: 0 } },
             measuredColdStartMedian: null,
             coldStartLegs: 0,
         });
@@ -260,6 +270,10 @@ describe('buildByteCensus', () => {
         const c = buildByteCensus({
             ...fixed,
             duplicateScope: dup,
+            // road-to-agent-turnaround 4.1: the projection-derived user-scope
+            // bucket. Zeroed in these fixtures on purpose — they exercise the
+            // SUMMING, and a non-zero value here would move every total they pin.
+            deliveredRules: { delivered: { files: 0, chars: 0 }, packageOnly: { files: 0, chars: 0 } },
             measuredColdStartMedian: median,
             coldStartLegs: 7,
         });
@@ -274,11 +288,76 @@ describe('buildByteCensus', () => {
         const c = buildByteCensus({
             ...fixed,
             duplicateScope: dup,
+            // road-to-agent-turnaround 4.1: the projection-derived user-scope
+            // bucket. Zeroed in these fixtures on purpose — they exercise the
+            // SUMMING, and a non-zero value here would move every total they pin.
+            deliveredRules: { delivered: { files: 0, chars: 0 }, packageOnly: { files: 0, chars: 0 } },
             measuredColdStartMedian: 5000,
             coldStartLegs: 3,
         });
         expect(c.modelled_duplicate_removal.applicable).toBe(false);
         expect(c.modelled_duplicate_removal.modelled_new_median).toBeNull();
         expect(c.modelled_duplicate_removal.reason).toMatch(/no shared/);
+    });
+});
+
+// road-to-agent-turnaround 4.2 — the reconciliation test the AI council asked
+// for in both rounds (2/2 each, 2026-08-30).
+//
+// The invariant it pins is the one that BROKE the exclusion: which rules reach
+// the host's GLOBAL layer is decided by frontmatter, not by the developer's
+// machine, so the split is derivable from the projection alone. If that stops
+// holding — a rule selected by something outside `workspaces:`, an installer
+// writing the layer from a different source — the corrected exclusion reason in
+// src/config/preamble-payload-budget.json becomes wrong again, and this says so.
+//
+// FIXTURE-BASED, per this file's own header: every expectation is derived from
+// the fixture constants, never copied from a real run. Reading the live
+// projection here would make the test a second measurement of the thing the
+// census already measures, and it would move whenever a rule was added.
+describe('censusDeliveredRulePayload — the projection partitions exactly', () => {
+    const rule = (workspaces: string | null): string =>
+        ['---', 'type: "auto"', ...(workspaces === null ? [] : [`workspaces: [${workspaces}]`]), '---', '', 'body', ''].join('\n');
+
+    function projection(): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'delivered-rules-'));
+        made.push(dir);
+        // Three shapes, and the third is the one a naive predicate gets wrong:
+        // a rule listing the maintainer workspace ALONGSIDE others still ships.
+        fs.writeFileSync(path.join(dir, 'a.md'), rule(null));
+        fs.writeFileSync(path.join(dir, 'b.md'), rule('agent-config-maintainer, engineering'));
+        fs.writeFileSync(path.join(dir, 'c.md'), rule('agent-config-maintainer'));
+        fs.writeFileSync(path.join(dir, 'notes.txt'), 'ignored — not a rule');
+        return dir;
+    }
+    const made: string[] = [];
+    afterEach(() => {
+        for (const d of made.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+    });
+
+    it('counts a maintainer-only rule as package-only and everything else as delivered', () => {
+        const d = censusDeliveredRulePayload(projection());
+        expect(d.delivered.files).toBe(2);
+        expect(d.packageOnly.files).toBe(1);
+    });
+
+    it('delivered + package-only accounts for every .md, with no overlap', () => {
+        const dir = projection();
+        const d = censusDeliveredRulePayload(dir);
+        const projected = fs.readdirSync(dir).filter((f) => f.endsWith('.md')).length;
+        expect(d.delivered.files + d.packageOnly.files).toBe(projected);
+    });
+
+    it('the byte totals partition too — neither half double-counts the other', () => {
+        const dir = projection();
+        const d = censusDeliveredRulePayload(dir);
+        const all = censusRuleDir(dir);
+        expect(d.delivered.chars + d.packageOnly.chars).toBe(all.chars);
+    });
+
+    it('returns an empty census for a directory that does not exist, never throws', () => {
+        const d = censusDeliveredRulePayload(path.join(os.tmpdir(), 'no-such-projection-dir'));
+        expect(d.delivered.files).toBe(0);
+        expect(d.packageOnly.files).toBe(0);
     });
 });
