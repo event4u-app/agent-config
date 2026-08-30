@@ -78,9 +78,9 @@ run and are the cheapest resume point.
 | PR | branch | what it carries | state at close |
 |---|---|---|---|
 | **#1744** | `drain/gates-that-do-not-run` | inherited from Run 4; this run fixed **three** CI defects in it and merged `main` twice | **merged** |
-| **#1746** | `drain/retired-claims-stay-retired` | `road-to-retired-claims-stay-retired` **14/14**, archived | **merged** |
+| **#1746** | `drain/retired-claims-stay-retired` | `road-to-retired-claims-stay-retired` **14/14**, archived | merged into a STALE BASE — **re-opened as #1751**, see the correction below |
 | **#1747** | `drain/agent-turnaround` | `road-to-agent-turnaround` **19/21**, 2 deferred behind named blockers | **merged** |
-| **#1748** | `drain/governed-harness` | `road-to-governed-harness-evolution` Phases 0–1, **12/58** | **merged** |
+| **#1748** | `drain/governed-harness` | `road-to-governed-harness-evolution` Phases 0–1, **12/58** | merged into a STALE BASE — **re-opened as #1752**, see the correction below |
 | **#1749** | `drain/capability-native-2` | `road-to-capability-native-execution` step 0.6 — the only step AC-14 permits | open |
 | **#1750** | `drain/council-topology-2` | council-topology Phase 0 + Phase 1A, **12/77**, and this file | open |
 
@@ -169,3 +169,41 @@ both seats asked for — is in the roadmap.
 - **It wired no Phase 1–9 code into `capability-native`,** because AC-14 forbids
   it. One pre-registration step is the whole legal surface, and that is the
   roadmap working rather than stalling.
+
+## Correction — two PRs read MERGED and their content was not on `main`
+
+Found by re-reading the tree at the end of the run rather than by trusting the
+PR list, which is the only way it could have been found: `gh pr view` reported
+`MERGED` for both.
+
+**The mechanism.** #1746 and #1748 were opened with `--base
+drain/gates-that-do-not-run`, deliberately, because each needed something that
+branch carried. #1744 then **squash-merged** to `main`, and GitHub did *not*
+retarget the two children — it left them pointing at a branch that had already
+shipped. Their merges therefore landed in that stale branch and went nowhere.
+
+**What it looked like on `main`:** `check_claims.ts` with zero occurrences of
+`retires_phrasings`, no `road-to-retired-claims-stay-retired.md` under
+`agents/roadmaps/archive/`, the active copy still the 0/14 file from #1740, and
+no `src/scripts/_lib/harness_evolution_guards.ts` at all. Every one of those is
+a *file-level* check; the PR list said the opposite.
+
+**The fix, and it is not a re-authoring.** Both branches still hold every
+commit. `main` was merged into each, the conflicts resolved, and each re-opened
+against `main`: **#1751** (retired-claims) and **#1752** (governed-harness).
+`#1747`, `#1749` and `#1750` were based on `main` directly and did reach it —
+verified the same way, by file presence rather than by PR state.
+
+**The lesson, stated as a rule rather than an anecdote.** A stacked PR whose
+base merges first does not follow it. Either re-target the child the moment the
+parent merges, or verify the content on `main` by reading the tree — a PR
+marked MERGED is a claim about a merge, never about which branch received it.
+This repository's own `direct-answers` Iron Law 2 already says live state is
+never asserted from memory; this is the same rule applied to a status field.
+
+**One consequence for the numbers above.** The corpus count in
+`lint_budget_ownership.test.ts` is **14** on the merged tree, not 13: two
+independently added budgets — `turnaround-budget.json` and
+`harness-evolution-budget.json` — met in the merge, and the number was measured
+on the merged tree rather than taken from either side, which is the method this
+repository's own ratchet entries prescribe.
