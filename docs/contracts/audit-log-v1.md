@@ -86,12 +86,27 @@ Single-line. The pretty-printed reference shape:
 | `outcome_semantics` | int (optional) | Which version of the `DispatchOutcome` → `outcome` mapping produced this line. `1` = unconditional (`DONE`/`DONE_WITH_CONCERNS` always `success`); `2` = contract-gated (a `code-change` dispatch claiming success with a **measured** empty diff does not resolve to `success`). **An ABSENT field means `1`** — every line written before 2026-08-30 predates the versioning and carries no marker. A reader aggregating across the cutover MUST segment on this field or normalize deliberately; inferring the semantics from a timestamp is not sufficient, because producers upgrade independently. Rationale: an enforcement gate rolls back, but a labelling change poisons historical analysis permanently, since lines here are append-only and cannot be rewritten. |
 | `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. Both shipped producers emit `ids-only`, because both carry `rules_applied`. |
 | `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
+| `activation` | object (optional) | The six-rung activation ladder for one artefact, plus the precedence reason a rung was not reached. Shape and semantics in `src/scripts/_lib/activation_ladder.ts`; added 2026-08-30 by `road-to-governed-harness-evolution` 1.1/1.3. **ABSENT and a rung set to `not-reached` are different observations and readers MUST NOT fold them together** — an absent rung means *not observed* and reads `unknown`, and `ladderRate()` keeps `unknown` out of its denominator rather than counting it either way. This is the same distinction `skills_applied` above draws between an omitted key and `[]`, and it exists for the same reason: a reader that folds them cannot tell no signal from a negative signal, and every downstream rate is then inflated by exactly the capture gap. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
 | `persona` | string \| null | Resolved `roles.active_role` from `.agent-settings.yml` at phase start. |
 | `input_kind` | enum | One of `prompt` · `ticket` · `orchestration`. Matches `WorkState.input.kind`. |
 | `type` | enum | One of `phase` · `supersede` · `note`. `supersede` carries an extra `supersedes` field with the prior `id`. |
 
 Unknown trailing fields are forward-compat extensions; readers MUST
 NOT raise on them.
+
+A line MAY carry an optional `activation` object recording how far one
+artefact climbed the six-rung activation ladder, and why it stopped. Additive
+and non-breaking on the same terms as `orchestration` below — `schema_version`
+unchanged, no existing field removed or renamed, readers that do not understand
+it ignore it. Shape in
+[`src/scripts/_lib/activation_ladder.ts`](../../src/scripts/_lib/activation_ladder.ts).
+
+**A field addition, deliberately, rather than a new store.**
+`road-to-governed-harness-evolution` 1.3 requires it: the receipt extends an
+existing carrier and adds no path under `agents/runtime/state/`. A correction
+to a recorded ladder is a `type=supersede` line naming the prior `id`, exactly
+as this contract already prescribes for every other field — the append-only
+rule is not relaxed for it.
 
 A line MAY carry an optional `orchestration` object when the run was
 produced by the auto-dispatch orchestration layer. It is additive and
