@@ -171,3 +171,124 @@ ruled in nor out as a lever here.
 - **Read-loops / flailing** — 0.3 % duplicate re-runs.
 - **Subagent overspawn** — 38 `Agent` calls in 3,196, 0.06 h of tool time.
 - **Context length as latency** — F4.
+
+---
+
+# Execution findings — `road-to-agent-turnaround`, 2026-08-30
+
+Everything above is the original measurement, unchanged. Everything below was
+produced by executing the roadmap it motivated, using the committed instrument
+(`src/scripts/probe_turnaround.ts`) rather than the throwaway script. Where the
+instrument disagrees with a number above, the disagreement is recorded rather
+than reconciled — a second reading that is quietly edited to match the first is
+not a second reading.
+
+## E0 — The instrument measured itself, and failed its own baseline
+
+The first registered baseline was `calls_per_request: 81.42`. Re-running the
+probe minutes later against that baseline reported **81.61 — a regression** with
+nothing having changed but the clock.
+
+Cause: the probe was reading the transcript of the session that was running it.
+API calls accumulate in the newest transcript while its user-request denominator
+stays at one, so the metric climbs monotonically for as long as the measurement
+takes. The original analysis excluded the measuring session and said so; this
+rediscovered why.
+
+`recentSessions` now drops the measuring session by default — by
+`CLAUDE_CODE_SESSION_ID` where the host exports it, otherwise the single
+most-recently-modified file, which is the same session on any machine actually
+running this. `--include-current` opts back in for an offline corpus nobody is
+writing to. Two consecutive runs afterwards report **72.67 identically**.
+
+This is recorded as a finding and not as a bug fix because it generalises: any
+transcript instrument that gates is measuring a corpus it is a member of.
+
+## E1 — The instrument agrees with the source where it should, and the two
+places it disagrees are both informative
+
+| metric | source (throwaway) | instrument | reading |
+|---|---|---|---|
+| first-call context floor | 218,705–230,705 | **217,385–230,705** | agrees; upper bound identical, lower differs 0.6 % |
+| blocking share of tool time | 64 % | **62.0 %** | agrees within the window difference |
+| mean tool-call batch size | 1.00 | **1.01** | disagrees — see E2 |
+| API calls per user request | 42.6 | **72.67** | disagrees — denominator effect, see E3 |
+
+Two instruments built independently agreeing on the context floor to 0.6 % is
+the strongest available evidence that they parse the store the same way.
+
+## E2 — Batch size is a tendency, not a floor (step 2.1: cause **(c)**)
+
+The source reports *"across 3,212 tool-using assistant messages the mean batch
+size is exactly 1.00 — not one message in the corpus carried two tool calls"*.
+A floor that exact invites the search for a mechanism, which is what step 2.1
+asks for.
+
+There is no mechanism. Over the current ten-session window, **27 of 2,889
+tool-using requests (0.93 %) carried more than one `tool_use` block** — 24 of
+size 2, two of size 3, one of size 4 — spread across five different sessions.
+Parallel calls occur. 1.00 was a property of that window, not a law.
+
+**Step 2.1's answer is (c): purely model-carried, no local cause.** The evidence
+for the negative half:
+
+- No rule, skill, or template in `src/` forbids or discourages parallel tool
+  calls. Searching for the shapes that would (`one tool at a time`, `never …
+  parallel`, `no parallel`, `single tool call`, `one call per turn`) returns
+  three hits, all off-topic: `mcp-builder`'s *"Four phases, one tool at a time"*
+  is about authoring MCP tools, `subagent-orchestration`'s *"NEVER run
+  `do-in-parallel` on slices that touch shared files"* is about subagent slices,
+  and `directives/ui/design.ts` is about a UI channel.
+- The package carries **no positive instruction to batch either**. The host
+  harness supplies one; nothing in this package repeats or reinforces it.
+
+Option **(b)** — that per-call obligations make each call feel like it needs its
+own turn — is **not ruled out and is not measured**. It is a claim about why the
+model chooses serially, and a transcript records the choice, never the reason.
+Stated as unmeasured rather than dismissed.
+
+## E3 — `calls_per_request` is session-shape sensitive, which limits it as a ratchet
+
+72.67 against the source's 42.6 is not a regression. `api_calls` is comparable
+(3,052 vs 3,241) while `user_requests` fell (42 vs 76): this window contains
+long autonomous runs in which one prompt drives hundreds of calls. The ratio
+moved because the denominator did.
+
+The budget config records the corpus SHAPE (sessions, requests, calls) beside
+the ratios for exactly this reason. A movement in this number that tracks
+`user_requests` is evidence of nothing.
+
+## E4 — The long commands ARE the batching (step 2.3)
+
+Split of all 2,921 `Bash` commands in the window, by length:
+
+| length | n | share of calls | share of all command chars |
+|---|---|---|---|
+| 0–80 | 135 | 4.6 % | 0.3 % |
+| 80–200 | 1,009 | 34.5 % | 4.9 % |
+| 200–500 | 945 | 32.4 % | 10.1 % |
+| 500–1,500 | 304 | 10.4 % | 9.5 % |
+| **≥ 1,500** | **528** | **18.1 %** | **75.3 %** |
+
+Total 2,861,874 chars, mean 980. And by shape:
+
+| class | n | median length | example |
+|---|---|---|---|
+| A — one-shot script (heredoc) | 706 | 2,648 | `cd … && python3 - <<'PY'` rewriting a set of roadmap files |
+| B — compound chain, no heredoc | 1,993 | 210 | `cd … && grep -n … \| head -5 && echo "===" && sed -n …` |
+| C — single command | **55** | 79 | `grep -n "ruleset" <path>` |
+
+**98.1 % of commands are compound, heredoc, or piped.** Only 55 calls in 2,921
+(1.9 %) are a single command. The agent is already batching — inside the call,
+because that is the only place this corpus shows it batching at all.
+
+The conclusion the raw average invites — *"write shorter commands"* — is
+therefore the wrong lesson, and the risk register named it before the split
+existed. Class A is 706 one-shot scripts at a 2,648-char median; each replaces a
+read-edit-verify sequence that would otherwise be three to six round-trips.
+Splitting them would trade one expensive call for several cheap ones and make
+the headline metric **worse** while looking like a fix.
+
+Where the residue is: class B, 1,993 calls at a 210-char median, is 68 % of the
+calls and 15 % of the characters. That is where a shorter command would save
+something real, and it is not where the 980-char mean comes from.

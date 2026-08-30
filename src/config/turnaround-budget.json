@@ -1,0 +1,35 @@
+{
+    "_comment": "Turnaround baseline (road-to-agent-turnaround Phase 1.2/1.3). Produced by src/scripts/probe_turnaround.ts, NOT by the throwaway script that wrote agents/evidence/analysis/agent-turnaround-2026-08-30.md — see `instrument_vs_source` below, which records where the two disagree and why. EMPTY-CORPUS BEHAVIOUR, the whole of step 1.3: `empty_corpus: \"fail\"`, and the probe is deliberately NOT wired into `task ci` or any workflow. A transcript store is machine-local — `~/.claude/projects/<mangled-cwd>/*.jsonl` — so a fresh CI checkout has none, and a gate over it would be green-because-empty, which is the gate-that-scans-nothing-exits-green failure this repository names in src/config/gate-coverage.yml. Fail-closed plus local-only is the pair: the flag refuses an empty corpus rather than certifying it, and nothing schedules it where the corpus is always empty. Re-run it by hand, or from `task preflight` on a machine that has a store. THE MEASURING SESSION IS EXCLUDED, and that is correctness rather than hygiene: the first registered baseline (81.42) failed its own re-run minutes later at 81.61, because the probe was reading its own execution — API calls accumulating in the newest transcript against a user-request denominator of one. With the exclusion, two consecutive runs report 72.67 identically. `--include-current` opts back in for an offline corpus nobody is writing to.",
+    "schema_version": 1,
+    "registered_at": "2026-08-30",
+    "owner": "maintainer",
+    "review_by": "2027-02-28",
+    "instrument": "src/scripts/probe_turnaround.ts",
+    "corpus": {
+        "window": "the 10 most recently modified sessions in this package's transcript store, EXCLUDING the measuring session, read 2026-08-30",
+        "sessions": 10,
+        "user_requests": 42,
+        "api_calls": 3052,
+        "tool_calls": 3031,
+        "note": "The corpus is a MOVING WINDOW by construction — `--limit 10` over mtime — so a re-run is never the same ten sessions. That is why the baseline records the window's shape (sessions, requests, calls) alongside the ratios: a ratio that moves because the denominator changed is not a regression, and without the shape nobody can tell the two apart."
+    },
+    "baseline": {
+        "calls_per_request": 72.67,
+        "mean_batch_size": 1.01,
+        "blocking_share": 0.6202,
+        "context_floor_max": 230705
+    },
+    "directions": {
+        "calls_per_request": "DOWN",
+        "mean_batch_size": "UP — 1.00 is fully serial, so a HIGHER number is the improvement",
+        "blocking_share": "DOWN",
+        "context_floor_max": "DOWN"
+    },
+    "empty_corpus": "fail",
+    "instrument_vs_source": {
+        "context_floor": "AGREES. Instrument 217,385–230,705; source analysis 218,705–230,705. The upper bound is identical and the lower differs by 0.6 %, which is the strongest available evidence that the two readers parse the same store the same way.",
+        "blocking_share": "AGREES within the window difference: 60 % here, 64 % in the source.",
+        "mean_batch_size": "DISAGREES, and this is a FINDING rather than an instrument defect. The source reports 1.00 across 3,212 tool-using messages — 'not one message in the corpus carried two tool calls'. This window reports 1.01: 27 of 2,889 tool-using requests (0.93 %) carried 2–4 tool_use blocks, spread over five sessions. Parallel calls therefore DO occur, so 1.00 was a property of that window and not a floor with a mechanism behind it. Step 2.1 turns on exactly this.",
+        "calls_per_request": "DISAGREES LARGELY — 72.67 here against 42.6 in the source — and the difference is a DENOMINATOR effect, not a regression. This window contains long autonomous runs in which one user prompt drives hundreds of calls, so `user_requests` falls (42 vs 76) while `api_calls` stays comparable (3,052 vs 3,241). The metric is sensitive to session SHAPE, which is a real limitation of it as a ratchet and is recorded here rather than smoothed over: read it together with `corpus`, and treat a movement that tracks `user_requests` as no evidence at all."
+    }
+}
