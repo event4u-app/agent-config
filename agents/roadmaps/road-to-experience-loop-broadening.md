@@ -520,7 +520,20 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 5 — Activation versus adherence
 
-- [ ] **5.1 Separate "was it loaded" from "was it followed".**
+- [x] **5.1 Separate "was it loaded" from "was it followed".** **DONE
+      2026-08-30** — `src/scripts/_lib/activation_states.ts`. Three rungs
+      (`available`, `activated`, `followed`) are observed independently and each
+      is `true`, `false`, or `null` for *not observed*. `null` is not a
+      pessimistic `false`: an unobserved rung is a statement about the
+      instrument, so `classify` returns `unknown` the moment any rung it needs
+      is unobserved.
+      **The subtlety that made this a function rather than a lookup table:** an
+      IRRELEVANT rung is not an UNKNOWN rung. Once `available` is observed
+      `false`, the other two are meaningless rather than unobserved — an absent
+      asset cannot have been activated — so an unobserved `followed` must not
+      drag that case to `unknown` and hide a fact the instrument did establish.
+      Same one rung down. `countsTowardWinRate` is exported so a report cannot
+      quietly pick a different denominator per column.
       `from-skipped-parent`, and the master has no `adherence` token anywhere,
       which makes its per-asset win rate uninterpretable. The five states are
       `not available / available-not-activated / activated-not-followed /
@@ -531,11 +544,28 @@ So the state is deliberate and bounded rather than an oversight:
       verify: a failing case is classifiable into one of the five states, and a
       case with an unobserved rung reports `unknown` rather than a success or a
       failure.
-- [ ] **5.2 Prefer deterministic adherence evidence where a rule has an
+- [x] **5.2 Prefer deterministic adherence evidence where a rule has an
       observable footprint.** `from-skipped-parent`'s example: test-first
       discipline is provable from the order of the first observed write to a test
       file versus a production file. Where no footprint exists, adherence stays
       `unknown` — never inferred.
+      **DONE 2026-08-30** — `src/scripts/_lib/adherence_detectors.ts`. One real
+      detector: the test-first clause of `think-before-action`
+      (`dist/agent-src/rules/think-before-action.md:43`), decided from write
+      ORDER — first write to a test path versus first write to a production
+      path. Every unregistered rule returns `unknown`, which is 118 of this
+      tree's 119 rules and is the point: the honest report says so instead of
+      filling the column with inference.
+      **A detector answers for ONE CLAUSE, not for a rule** — rules here carry
+      many, and a registration that claimed the rule would overclaim by
+      construction, so the registry key is the pair and each entry cites where
+      its clause is written.
+      **A one-sided observation is `unknown` in BOTH directions**, and the
+      production-only case is the one worth stating: calling it a violation is
+      tempting and would be a guess, because the test may exist from an earlier
+      task and the clause's own "when behavior can be defined" qualifier may
+      exclude the change. The module carries no content field at all, so a
+      detector cannot become a second path for file bodies to travel.
       verify: at least one rule has a deterministic adherence detector, and the
       rest report `unknown` rather than a model's guess.
 
