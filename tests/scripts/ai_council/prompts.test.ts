@@ -135,9 +135,17 @@ describe('prompts — advisor + builder prompts', () => {
         expect(out).toContain('### Finding-A\n\nfirst');
         expect(out).toContain('### Finding-B\n\nsecond');
     });
-    it('build_peer_review_user_prompt renders labels', () => {
+    it('build_peer_review_user_prompt renders labels, with the body fenced (3.6)', () => {
+        // Was `toContain('### Response-A\n\nbody')`. Step 3.6 moved the body
+        // inside a nonced untrusted fence and left the label outside it, so the
+        // label and the body are no longer adjacent — that separation IS the
+        // control. Both halves are still asserted, and their ORDER is asserted,
+        // which is what "the label is outside the fence" means at this layer.
         const out = build_peer_review_user_prompt(new Map([['Response-A', 'body']]));
-        expect(out).toContain('### Response-A\n\nbody');
+        expect(out).toContain('### Response-A');
+        expect(out).toContain('body');
+        expect(out.indexOf('### Response-A')).toBeLessThan(out.indexOf('<untrusted_content id='));
+        expect(out.indexOf('<untrusted_content id=')).toBeLessThan(out.lastIndexOf('body'));
     });
     it('build_extraction_user_prompt strips host identity', () => {
         const out = build_extraction_user_prompt('line one with Windsurf\nline two');
