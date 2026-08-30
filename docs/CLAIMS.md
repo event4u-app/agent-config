@@ -988,3 +988,39 @@ is the named exception in the claim itself.
   a push makes them public. `.github/workflows/source-surface-sweep.yml` runs
   the full five-surface census weekly so drift on the surfaces no per-PR gate
   reaches is observed rather than assumed.
+
+### claim: dispatch-event-capture-reliability
+
+- claim: PRE-REGISTERED, unmeasured at the time of writing. The question is
+  whether the **dispatch** event is as reliable a capture surface as the
+  **skill** event, and therefore whether the experience loop may be built on
+  dispatch events at all.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-08-30 (`road-to-experience-loop-broadening`
+  step 1.1 — written BEFORE any line of `agents/runtime/state/audit/*.jsonl`
+  was counted for this question; the numbers below are thresholds, not
+  readings). Bars fixed before data, per the step's own `verify:` line ("the
+  pre-registration commit precedes the measurement commit, and the measured
+  rate is reported whichever way it lands"):
+  (1) POPULATION — dispatch events observed in `agents/runtime/state/audit/*.jsonl`,
+  counted as audit lines carrying an `orchestration` sub-object, against the
+  total number of dispatches those same lines evidence. A run with **fewer than
+  50 dispatches** in the corpus is reported UNDERPOWERED and settles nothing in
+  either direction; it may not be cited as a null and may not be cited as a pass.
+  (2) PASS — capture rate **≥ 95 %**. At or above that bar the dispatch event is
+  declared as reliable as the skill event and Phases 2-9 may be built on it.
+  (3) FAIL — capture rate **< 95 %** is an HONEST NULL, pre-registered with the
+  same force as the pass: the recorded consequence is that the work **rescales
+  to skill events**, which the step already names as the fallback, and no
+  dispatch-event-based mechanism is authored on this evidence.
+  (4) The comparator is not re-measured here. `docs/CLAIMS.md` already records
+  0.27 % (370 dispatches, 1 recorded line) for the dispatch side and 164/164 for
+  the skill side; this spike asks whether that gap has closed since the
+  `orchestration-record` concern landed, so the PRIOR is failure and a pass is
+  the surprising result.
+  (5) PROVENANCE — the corpus is one machine's local runtime state, which is
+  gitignored and therefore not reproducible from a clone. That is a scope bound
+  on the finding, stated before the reading: it measures THIS install's capture
+  rate and is never reported as the package's.
+- status: unbacked
+- last_verified: 2026-08-30
