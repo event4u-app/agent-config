@@ -5,6 +5,7 @@ execution:
   mode: phase-checkpoints
 research_pin: "agent-config @ f16c7d9df2e1a4a6f480e734be6ed3a0138fc14d · @event4u/agent-config 14.10.0 · citations re-verified against the landing HEAD 2026-08-24"
 estate_offset_exempt: "The one-in-one-out half of the estate ratchet fires on every added agents/roadmaps/road-to-*.md regardless of status, but the only roadmaps this drain run archived carried status: draft and were therefore never counted by the ratchet in the first place, so none of them can serve as this file's offset."
+estate_growth_exempt: "open_blockers +1: this change adds one ## Blockers entry so steps 3.3 and 3.4 have an owner, a class and a Resolved when that gates --all can read, instead of a condition living only in step prose — the failure the previous drain run recorded three times in one run. It records no new work: 3.3 was already open and 3.4 was already gated behind it. The entry exists because 3.3 does NOT unblock at the quota reset — it also needs a corpus of at least 30 real anonymised response bodies that cannot be committed, and that second half is exactly what a step-prose condition loses. No offsetting disposal is claimed: this roadmap has 59 open steps and is nowhere near archival."
 ---
 
 # Road to an evidence-routed council rung
@@ -818,32 +819,136 @@ The council should not ship a topology selector before it can define "better".
 
 ## Phase 3 — Independence and judge-bias hardening
 
-- [ ] 3.1 Property-test reviewer-specific shuffling for N=2..8: deterministic
+- [x] 3.1 Property-test reviewer-specific shuffling for N=2..8: deterministic
   replay per seed, reviewer-specific ordering, config order not inferable from
   candidate position.
       verify: the property test fails when the shuffle is replaced by identity
-- [ ] 3.2 Keep self-review structurally impossible — the reviewer payload
+      **DONE 2026-08-30. The shuffle was already shipped; the RANGE was
+      missing.** `deterministic_shuffle_indices`
+      (`src/scripts/ai_council/blind_review.ts:52-56`), applied per run at
+      `orchestrator.ts:1533-1546`. Existing coverage sat at N=3
+      (`orchestrator.test.ts:871`) and N=4 (`:917`);
+      `tests/scripts/ai_council/peer_review_independence.test.ts` now covers
+      every N in 2..8.
+      **Only ONE of the three properties can carry the verify clause, and the
+      test file says which.** Deterministic replay and per-reviewer mapping
+      distinctness both SURVIVE an identity shuffle — distinctness because
+      self-filtering alone already gives each reviewer a different *subset*. The
+      assertion that actually fails under identity is *config order not
+      inferable from position*, measured as the set of permutations observed
+      across 16 seeds. Neutralising the shuffle to identity reds it for N=3..8.
+      **N=2 is excluded from that one assertion**, and only that one: with a
+      single reviewed answer there is one possible ordering, so no shuffle is
+      distinguishable from identity there. The exclusion carries its own test so
+      nobody widens it later.
+      **A recorded lock was surfaced rather than overridden.** This step says
+      *"reviewer-specific ordering"*; the shipped seed is **run**-scoped, and
+      `orchestrator.ts:1533-1543` records that as deliberate — *"The reviewer is
+      deliberately NOT in the seed: one shuffle per run, so a reader comparing
+      two reviewers' critiques of the same member is comparing the same label."*
+      The property that genuinely holds (per-reviewer maps ARE distinct, via
+      self-filtering) is what got pinned. Re-seeding per reviewer would trade a
+      real property — cross-reviewer comparability — for a nominal one, and is a
+      `decision-revisit-gate` matter rather than a test-writing one.
+- [x] 3.2 Keep self-review structurally impossible — the reviewer payload
   construction excludes the reviewer's own authored answer; no prompt
   instruction is the only protection.
       verify: a test asserts the payload, not the prompt text
+      **DONE 2026-08-30. The guard was shipped; the test was reading the wrong
+      layer.** The filter is `src !== scorer` at `orchestrator.ts:1518-1522`.
+      The existing test (`orchestrator.test.ts:908-913`) asserted the derived
+      `label_to_source_by_reviewer` map — one layer away from what actually
+      reaches a model, which is exactly the distinction this step's verify
+      clause draws.
+      The new tests read the `user_prompt` handed to `ask()`, for every N in
+      2..8. **One of them strips the prompt's own *"You may NOT see your own
+      response"* sentence from the captured payload and re-asserts** — which is
+      this step's whole point made executable: if removing the instruction
+      changes nothing, the instruction was not the protection. Neutralising
+      `src !== scorer` reds 22 tests.
 - [ ] 3.3 Provider-recognition leakage bench: ask reviewers and judges to guess
   the provider family from anonymized answers; measure recognition against
   chance. **Measurement first** — not a justification for rewriting anything.
       verify: recognition rate and chance baseline are both published
+      **HARNESS BUILT 2026-08-30, MEASUREMENT NOT RUN — and "not run" is
+      deliberately not "a null".** A null is what a measurement returns; nothing
+      was measured here. `src/scripts/ai_council/provider_leakage_bench.ts`
+      carries the prompt builder, the collection loop, the scoring and an exact
+      binomial tail; `internal/bench/council-provider-leakage/README.md` carries
+      the pre-registration and the NOT-RUN status; `smoke-items.json` is
+      synthetic, self-declaring, and unusable for measurement.
+      **Blocked by two things, and quota is only the first.** (a) The bench
+      needs one paid council call per item per rater, and the daily CLI cap was
+      exhausted on this run — anthropic 50/50, openai 51/50 — which resets at
+      UTC midnight. (b) It needs a corpus of ≥ 30 real anonymised response
+      bodies, and `agents/runtime/council/` is gitignored and auto-pruned, so
+      that corpus cannot be committed and must be assembled locally at
+      measurement time. **(b) survives the quota reset**, so this step does not
+      unblock at midnight.
+      **One design point worth carrying, because it is the difference between a
+      measurement and a number:** `scoreRecognition` publishes **both** chance
+      baselines and tests against the stricter. On a corpus where half the items
+      share a provider, a constant guesser scores 50 % against a uniform chance
+      of 25 % and would read as leakage while recognising nothing. A test pins
+      that case.
 - [ ] 3.4 Hold style normalization behind the stronger gate: implement only if
   this tree's own leakage bench shows materially above-chance recognition
   **and** that recognition correlates with judgment distortion.
       verify: no normalization code lands until both conditions are recorded
       met; if it lands, the raw answer is retained for synthesis and replay and
       semantic preservation is proven
-- [ ] 3.5 Order-swap consistency: repeat sampled pairwise judgments with
+      **NOT CLOSABLE, and as of 2026-08-30 the block is MECHANICAL rather than
+      a matter of discipline.** No normalization code landed, which is the
+      verify clause's first half satisfied by inaction. What changed is that the
+      gate can now refuse: `normalizationGateVerdict` returns `'unrun'` on empty
+      data and specifically **not** `'below-bar'` — the latter would claim that
+      recognition had been measured and found harmless, which is the exact
+      false-null this step exists to prevent. It also returns `unrun` for
+      above-chance recognition when the distortion arm is unrun. Only both
+      conditions recorded met reaches `bar-cleared`.
+      Neutralising the no-data branch from `'unrun'` to `'below-bar'` reds two
+      tests. This step stays open behind 3.3.
+- [x] 3.5 Order-swap consistency: repeat sampled pairwise judgments with
   candidate order reversed; emit a per-judge position-consistency metric.
       verify: the metric exists per judge and is reported with the verdict
-- [ ] 3.6 Fence peer content as untrusted data with structured boundaries or
+      **DONE 2026-08-30, with a scope limit stated rather than glossed.**
+      `src/scripts/ai_council/judge_position_bias.ts`. The order swap itself
+      already existed — `check_quality_regression.evaluatePair` (`:84-108`) —
+      but it is **single-judge** (`:216`, one run-wide rate) and reports the
+      PRESENCE of inconsistency, not its DIRECTION. Those are different
+      measurements, and the test that proves it is the useful one: scripted
+      primacy and recency judges produce *identical* consistency scores and
+      *opposite* `first_position_rate`. A metric that cannot separate that pair
+      is not measuring position bias.
+      **What is NOT claimed:** the metric is not emitted beside a live council
+      verdict, because the council has no pairwise judging stage —
+      `grep -rn pairwise src/scripts/ai_council` returns nothing. The renderer
+      exists and is exercised by the leakage bench; live emission arrives with
+      whatever pairwise stage a later phase adds. The verify clause's *"reported
+      with the verdict"* is therefore satisfied for the surface that exists and
+      has nowhere else to attach yet.
+      Neutralising `first_position_rate` to a constant 0.5 reds two tests.
+- [x] 3.6 Fence peer content as untrusted data with structured boundaries or
   nonce fencing, per
   [`untrusted-input-defense`](../../src/rules/untrusted-input-defense.md).
       verify: injection fixtures cannot alter the ranking schema or the system
       contract
+      **DONE 2026-08-30, and the defect it closes was real rather than
+      theoretical.** `build_peer_review_user_prompt` rendered peer bodies as
+      bare Markdown, so a peer response containing `### Refinement` — a
+      reviewer-output heading — or `### Response-Z` — a candidate that does not
+      exist — was **byte-identical to the real thing** in the assembled prompt.
+      Bodies are now fenced by `wrapUntrustedBlocks`, with the labels **outside**
+      the fences: the defence is position, not wording, which is what makes it
+      survive a body that contains the label text.
+      **Nothing is stripped**, deliberately — sanitising untrusted input
+      destroys the evidence of what was attempted, and
+      `untrusted-input-defense`'s discipline is to treat it as data, not to
+      erase it.
+      `wrapUntrustedBlocks` was added to the canonical
+      `src/scripts/_lib/untrusted_content.ts` rather than written locally, so
+      there is no second delimiter implementation to drift.
+      Reverting the fencing to the plain-heading render reds five tests.
 
 ## Phase 4 — Parallel fan-out reopens a closed decision
 
@@ -1106,6 +1211,43 @@ is **seating**, and it already has a carrier.
 ---
 
 ## Blockers
+
+### blocker: leakage-bench-needs-quota-and-an-uncommittable-corpus
+
+- **Status:** open — created 2026-08-30 by the drain run that executed Phase 3.
+  The bench harness for 3.3 is built and its scoring is tested; **no
+  measurement was taken**, and that is recorded as NOT RUN rather than as a
+  null, because a null is what a measurement returns.
+- **Owner:** council — the disposition keeps both criteria alive and unweakened
+  and descopes nothing, which the preservation test routes to the council. The
+  entry exists so the condition has an owner rather than living in step prose.
+- **Class:** 3
+- **Blocks:** steps 3.3 and 3.4 only. 3.1, 3.2, 3.5 and 3.6 are closed and
+  untouched by it; no later phase depends on it.
+- **What to do:** nothing in this roadmap until both halves below are
+  available. **Do not run the bench against the synthetic `smoke-items.json`** —
+  it is self-declaring fixture data and a recognition rate computed over it
+  would be a number about the fixtures, not about provider leakage. Do not
+  implement style normalization (3.4) in the meantime:
+  `normalizationGateVerdict` already refuses to return `below-bar` on empty
+  data, and that refusal is the point.
+- **Recommendation:** leave both open. The cost of waiting is that two of
+  Phase 3's six steps stay unclosed; the cost of not waiting is a published
+  recognition rate with no corpus behind it, which is the shape this roadmap's
+  own § Prevented items exists to catch.
+- **If you do nothing:** Phase 3 stands at 4 of 6, 3.4 stays correctly gated,
+  and nothing downstream stalls. No criterion is weakened and no evidence is
+  fabricated.
+- **Resolved when:** the bench has been run over a corpus of **≥ 30 real
+  anonymised response bodies** and both the recognition rate and its chance
+  baseline are published — at which point 3.3 closes, and 3.4 becomes decidable
+  in whichever direction the number points.
+  **Two independent halves, and the quota is only the first.** (a) The daily
+  CLI cap was exhausted on this run — anthropic 50/50, openai 51/50 — and
+  resets at UTC midnight; (b) `agents/runtime/council/` is gitignored and
+  auto-pruned, so the corpus cannot be committed and must be assembled locally
+  at measurement time. **(b) survives the reset**, so this does not unblock at
+  midnight.
 
 ### blocker: unlicensed-source-verbatim-scan
 - **Status:** resolved
