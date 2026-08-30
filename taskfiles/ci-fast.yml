@@ -1626,12 +1626,35 @@ tasks:
   lint-mcp-registry-manifest:
     silent: true
     desc: Validate dist/mcp/registry-manifest.json against the schema; assert payload shapes — R5 Phase 2 exit gate
+    # `deps:` rather than a bare cmd, matching `lint-discovery-manifest` above:
+    # dist/ is gitignored (.gitignore:212), so the artefact this gate reads does
+    # not exist in a fresh checkout and the gate dies on a missing file rather
+    # than on the property it measures. That is exactly what happened when
+    # road-to-gates-that-do-not-run Phase 2 wired the gate into a workflow —
+    # "❌ missing: dist/mcp/registry-manifest.json" on every PR run.
+    #
+    # The dep also settles CI↔local parity: with the builder reachable from
+    # `task ci` through this target, `check_ci_local_parity` no longer reports
+    # it as a gate CI runs and no local chain reaches. Declaring it `ci_only:`
+    # would have been the wrong shape — it is a BUILDER, and it does run
+    # locally.
+    deps: [build-mcp-registry-manifest]
     cmd: ./scripts-run src/scripts/lint_mcp_registry_manifest {{.QUIET_FLAG}}
 
   lint-positioning:
     silent: true
     desc: Assert README tagline ↔ package.json.description ↔ .github/about.yml agree and every topic appears in README — R5 Phase 3
     cmd: ./scripts-run src/scripts/lint_positioning {{.QUIET_FLAG}}
+
+  check-gate-reachability:
+    silent: true
+    desc: >-
+      Fail when a gate-shaped task target is reachable from neither `task ci`
+      nor any workflow and carries no row in
+      src/config/gate-reachability-exemptions.json — and when a row names a
+      target that IS reachable, because an exemption nobody withdrew is how a
+      registry stops being read.
+    cmd: ./scripts-run src/scripts/check_gate_reachability --gate {{.QUIET_FLAG}}
 
   visibility-check:
     silent: true

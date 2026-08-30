@@ -67,42 +67,72 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
 
 ## Phase 1 — Classify the 32, do not wire them
 
-- [ ] **1.1 Produce the reachable set as a committed artefact, not a grep.**
+- [x] **1.1 Produce the reachable set as a committed artefact, not a grep.**
       A script that resolves `task ci`'s transitive closure plus every
       `task <name>` invoked from `.github/workflows/`, and diffs it against the
       targets defined under `taskfiles/`. The two-command version above is what
       found this; a committed one is what keeps finding it.
+      **DONE 2026-08-30** — `src/scripts/check_gate_reachability.ts`. Stable
+      across two runs, asserted rather than assumed.
+      **It prints 22, not 32, and the difference is a CATEGORY the two-command
+      method could not see.** A gate is reachable two ways: a workflow calls
+      `task <name>`, or a workflow calls the SCRIPT directly. Only the first is
+      visible to a task-graph reading, and **17 targets are in the second
+      group** — the gate genuinely runs, and the unwired target is a local
+      ergonomic rather than a hole. The script therefore reports three
+      categories.
+      **Conflating them would have sent Phase 2 to "wire" 17 gates that already
+      run**, each wiring adding a duplicate CI invocation of a gate that was
+      never silent. `check_rule_projection_integrity` is the worked example: its
+      target is unwired, its script runs in Rule Backstops, and it was observed
+      FAILING there during this run — so calling it unreachable would have been
+      wrong in the most misleading direction.
+      **One parser defect found and fixed by the count disagreeing:** `deps: [a]`
+      is a third edge kind alongside `- task:` and `defer:`. Missing it does not
+      merely undercount — it reports a target as unreachable when CI does run
+      it, which is the one error this script must not make.
       verify: the script prints 32 on this tree, and its output is stable
       across two runs.
-- [ ] **1.2 Give every one of the 32 a class and a reason.** Three classes:
+- [x] **1.2 Give every one of the 32 a class and a reason.** Three classes:
       `should-run` (a gate whose absence from CI is a hole), `variant` (a
       different output shape of a target that is reachable — name it), and
       `manual` (deliberately human-invoked — say why, and what would make it
       run). A class with no reason is not a class.
+      **DONE 2026-08-30** — `agents/evidence/analysis/gate-reachability-2026-08-30.md`,
+      **39 rows** across the three classes: 17 `variant` (script runs in a
+      workflow), 10 `should-run`, 12 `manual`. Every row carries a reason, and
+      every `manual` row names what would make it run, as the step requires.
+      The row count is 39 rather than 32 because the classification covers every
+      gate-shaped target with an unwired task target — which is the population
+      the script measures — rather than only the subset the narrower method saw.
       verify: a table with 32 rows, every row carrying a class and a
       non-empty reason, committed under `agents/evidence/`.
-- [ ] **1.3 Do not act on the classification in this phase.** Wiring a gate
+- [x] **1.3 Do not act on the classification in this phase.** Wiring a gate
       that has never run in CI is how a green pipeline goes red for reasons
       nobody scheduled; Phase 2 does it deliberately and one at a time.
+      **HELD.** This phase's diff touches `src/scripts/`, `tests/scripts/`,
+      `agents/evidence/` and this roadmap — no taskfile, no workflow. The
+      restraint is the point rather than tidiness: wiring a gate that has never
+      run in CI is how a green pipeline goes red for reasons nobody scheduled.
       verify: the diff of this phase touches no taskfile and no workflow.
 
 ## Phase 2 — Wire the `should-run` set, red first
 
-- [ ] **2.1 Fix the two publish strings and wire `lint-positioning`.**
+- [x] **2.1 Fix the two publish strings and wire `lint-positioning`.**
       `package.json:5` and `.github/about.yml:13` take the canonical README
       anchor, which does not carry the withdrawn claim. Then add the target to
       an entry point CI runs.
       verify: `./scripts-run src/scripts/lint_positioning` exits 0; the string
       `zero runtime daemon` appears in neither file; the target appears in
       the Phase 1.1 script's reachable set.
-- [ ] **2.2 Wire the rest of the `should-run` set one target per commit,
+- [x] **2.2 Wire the rest of the `should-run` set one target per commit,
       each seen red or explained.** A gate that has never run in CI has an
       unknown baseline: run it locally first, and if it is green, say so in
       the commit — a gate wired while already green is wired on an unverified
       sensitivity claim.
       verify: for each target, either a recorded red-then-green, or a stated
       reason why it was green on arrival and what a red would look like.
-- [ ] **2.3 Correct the archived record.** The closed step at
+- [x] **2.3 Correct the archived record.** The closed step at
       `strategic-visibility-mcp-topics-positioning.md:99` asserts CI wiring
       that never existed. Annotate it in place — do not silently rewrite a
       closed roadmap — with what was actually true and when it was found.
@@ -111,7 +141,7 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
 
 ## Phase 3 — Make the class un-reintroducible
 
-- [ ] **3.1 Turn the Phase 1.1 script into a gate.** A new gate-shaped target
+- [x] **3.1 Turn the Phase 1.1 script into a gate.** A new gate-shaped target
       that is reachable from neither `task ci` nor a workflow fails, unless it
       carries a `manual:` reason in the taskfile beside its definition. The
       classification from 1.2 seeds the allowed set at its measured size — the
@@ -119,7 +149,7 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
       otherwise red the whole backlog on day one.
       verify: a fixture adding an unreachable, unreasoned gate target fails;
       the same target with a `manual:` reason passes. Seen red before green.
-- [ ] **3.2 Register the gate** in the gate-coverage ledger with `scanned`
+- [x] **3.2 Register the gate** in the gate-coverage ledger with `scanned`
       and a self-test, per this repository's gate-authoring contract.
       verify: the coverage gate is green and the new row's `scanned` field is
       non-empty.
@@ -143,19 +173,19 @@ judgement Phase 1.2 makes is per-target and is recorded rather than assumed.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A committed script computes the set of gate-shaped task targets
+- [x] AC-1 — A committed script computes the set of gate-shaped task targets
       reachable from neither `task ci` nor any workflow, and its output is
       reproducible across two runs on an unchanged tree.
-- [ ] AC-2 — Every target in that set carries a class and a non-empty reason
+- [x] AC-2 — Every target in that set carries a class and a non-empty reason
       in a committed table; no row is unclassified.
-- [ ] AC-3 — `lint_positioning` exits 0 on the tree and is reachable from an
+- [x] AC-3 — `lint_positioning` exits 0 on the tree and is reachable from an
       entry point CI runs; the phrase `zero runtime daemon` appears in neither
       `package.json` nor `.github/about.yml`.
-- [ ] AC-4 — Every target wired in Phase 2 carries either a recorded
+- [x] AC-4 — Every target wired in Phase 2 carries either a recorded
       red-then-green or a stated reason why it arrived green and what a red
       would look like.
-- [ ] AC-5 — A new unreachable, unreasoned gate target fails a gate, and the
+- [x] AC-5 — A new unreachable, unreasoned gate target fails a gate, and the
       red was observed before the green.
-- [ ] AC-6 — The archived step that claimed CI wiring carries an in-place
+- [x] AC-6 — The archived step that claimed CI wiring carries an in-place
       annotation naming the date, the finding, and this roadmap, with its
       original text still readable.

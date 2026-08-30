@@ -1,8 +1,19 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: >
+  Grows open_blockers 29 -> 31. Both are recorded because the execution of this
+  roadmap produced two decisions it is not allowed to take: `post-change-window`
+  is a measurement whose corpus does not exist yet (the obligation it measures
+  landed minutes earlier), and `authorization-shape-for-long-runs` is
+  owner-reserved under decision-revisit-gate's reserved table — a recorded
+  security floor, which no council verdict may lower. The alternative to two
+  blockers is two steps quietly marked done or cancelled, which is the
+  lost-information failure Iron Law 3 exists to prevent. Both carry the five
+  required fields plus Recommendation / If-you-do-nothing, so each is decidable
+  rather than merely described.
 estate_offset_exempt: >
   Adds one active roadmap with no disposal in the same change. Archiving,
   parking or merging each cost more than the offset: the four findings are a
@@ -63,7 +74,7 @@ silently reopen.
 
 ## Phase 1 — Make turnaround measurable
 
-- [ ] **1.1 Land `probe_turnaround` as a committed instrument.** Port the
+- [x] **1.1 Land `probe_turnaround` as a committed instrument.** Port the
       throwaway analysis into `src/scripts/probe_turnaround.ts`, reading the
       transcript store by `requestId` (not by row — row-counting inflates every
       per-call figure and was the first wrong answer this measurement produced).
@@ -74,7 +85,7 @@ silently reopen.
       verify: `./scripts-run src/scripts/probe_turnaround --limit 10` exits 0 and
       prints all four metrics with a non-zero sample count.
 
-- [ ] **1.2 Register the 2026-08-30 corpus as the baseline.** Write the four
+- [x] **1.2 Register the 2026-08-30 corpus as the baseline.** Write the four
       headline numbers into a budget config the way
       `src/config/preamble-payload-budget.json` records its own, with the corpus
       window, the sample size, and the instrument that produced them. The
@@ -84,7 +95,7 @@ silently reopen.
       verify: the config exists, carries `owner` and `review_by`, and
       `./scripts-run src/scripts/probe_turnaround --against-baseline` exits 0.
 
-- [ ] **1.3 Answer whether the instrument may gate.** A transcript is
+- [x] **1.3 Answer whether the instrument may gate.** A transcript is
       machine-local and a fresh clone has none, so a CI gate over it would be
       green-because-empty — the failure mode `gates-that-scan-nothing-exit-green`
       names. Decide and record: local-only report, or a gate that fails closed on
@@ -94,7 +105,7 @@ silently reopen.
 
 ## Phase 2 — Cut the serial round-trips
 
-- [ ] **2.1 Establish why batching is at exactly 1.00.** 3,212 of 3,212 is not a
+- [x] **2.1 Establish why batching is at exactly 1.00.** 3,212 of 3,212 is not a
       tendency, it is a floor, and a floor usually has a mechanism. Determine
       from the transcripts and the host's own instruction surface whether the
       cause is (a) a rule or skill in this package that reads as forbidding
@@ -104,7 +115,7 @@ silently reopen.
       verify: a finding is written into the evidence file naming (a), (b) or (c)
       and citing the text or the absence of it.
 
-- [ ] **2.2 Act on 2.1's answer, and only on it.** If a local cause is found,
+- [x] **2.2 Act on 2.1's answer, and only on it.** If a local cause is found,
       remove it. If the cause is model-carried, add the obligation where it can
       actually be read and say plainly that it is instruction-only — the honesty
       boundary this package states for every other unenforceable obligation.
@@ -113,7 +124,7 @@ silently reopen.
       `git show <base>:<path>` and confirm it no longer matches HEAD), or the
       obligation names its own `instruction-only` status in its own body.
 
-- [ ] **2.3 Measure whether the 1,285-char average command is reducible.** A
+- [x] **2.3 Measure whether the 1,285-char average command is reducible.** A
       long command is not automatically waste — an inline heredoc that replaces
       four round-trips is the batching this phase wants, in a different form.
       Split the corpus by command length and report which classes are one-shot
@@ -124,7 +135,7 @@ silently reopen.
       verify: the length split is recorded in the evidence file with its
       denominator and at least one example per class.
 
-- [ ] **2.4 Re-measure, and accept the possibility of no movement.** Run
+- [~] **2.4 Re-measure, and accept the possibility of no movement <!-- blocked-by: post-change-window -->.** Run
       `probe_turnaround` over the next 10 sessions after 2.2 lands. If mean batch
       size has not moved, that is the result — record it as a null the way
       `session-canary`'s own section records a carrier that fired and changed
@@ -134,7 +145,7 @@ silently reopen.
 
 ## Phase 3 — Take blocking waits off the interactive path
 
-- [ ] **3.1 Stop foreground-blocking on CI.** `ci_settle` was invoked 45 times
+- [x] **3.1 Stop foreground-blocking on CI.** `ci_settle` was invoked 45 times
       for 162.9 min, with ten of the twelve slowest calls in the corpus stopped
       at the 600 s `Bash` ceiling and re-invoked, while its own default deadline
       is 45 min (`src/scripts/ci_settle.ts:127`). Either default its timeout
@@ -145,7 +156,7 @@ silently reopen.
       window exits with a stated verdict rather than being killed, and the
       chosen form is named in the script's own usage line.
 
-- [ ] **3.2 Price the git hooks.** `pre-push` runs `task consistency` at a
+- [x] **3.2 Price the git hooks.** `pre-push` runs `task consistency` at a
       measured median of 67 s and a max of 890 s against a header that claims
       "~15-40 s"; `pre-commit` costs a median 16 s over 110 `git add` calls.
       Re-measure both, correct the header to what is true, and determine whether
@@ -155,7 +166,7 @@ silently reopen.
       verify: the header states a number produced by a fresh timed run in the
       same change, and that run's output is quoted in the commit body.
 
-- [ ] **3.3 Scope the test invocation.** `npx vitest` cost 87.2 min over 77
+- [x] **3.3 Scope the test invocation.** `npx vitest` cost 87.2 min over 77
       calls at a 68 s median. Determine how many of those runs were whole-suite
       where a filtered run would have answered the same question, and record the
       split. This is a measurement step, not a policy step — the package already
@@ -165,7 +176,7 @@ silently reopen.
 
 ## Phase 4 — Close the delivered-payload gap
 
-- [ ] **4.1 Measure the bucket the census excludes.**
+- [x] **4.1 Measure the bucket the census excludes.**
       `src/config/preamble-payload-budget.json` excludes user-scope rules as
       "machine-dependent, not CI-checkable". The exclusion is falsifiable: that
       layer is written by this package's own installer
@@ -177,7 +188,7 @@ silently reopen.
       count, and the sum against the gated bucket lands within 5 % of the
       first-call context floor recorded in the evidence file.
 
-- [ ] **4.2 Route the exclusion decision to the council.** Turning 4.1's
+- [x] **4.2 Route the exclusion decision to the council.** Turning 4.1's
       reported figure into a gated one changes a recorded budget decision, and
       the recorded reason for the exclusion is exactly what 4.1 falsifies. This
       is a reversible, internal strengthening of a measurement, so it is
@@ -188,7 +199,7 @@ silently reopen.
       step is marked deferred with the blocker naming why the council could not
       settle it.
 
-- [ ] **4.3 Emit a host-readable activation key, or state that none exists.**
+- [x] **4.3 Emit a host-readable activation key, or state that none exists.**
       Zero of 104 installed rules carry a top-level `paths:`; the file patterns
       live under `triggers:`, a key the host does not parse. Either the emitter
       lifts genuine path triggers to the key Claude Code reads, or — if lifting
@@ -200,7 +211,7 @@ silently reopen.
       than zero after a fresh install, or the impossibility is stated in
       `docs/contracts/rule-router.md` with the mechanism named.
 
-- [ ] **4.4 Re-measure the floor.** Whatever 4.3 concludes, run the census and
+- [x] **4.4 Re-measure the floor.** Whatever 4.3 concludes, run the census and
       the turnaround probe again and record the delivered floor. A phase that
       changed nothing measurable must say so.
       verify: a second floor reading exists in the evidence file with its date
@@ -208,7 +219,7 @@ silently reopen.
 
 ## Phase 5 — Stop long runs from buying their own exceptions
 
-- [ ] **5.1 Put the bundle-content gate where it can find something.**
+- [x] **5.1 Put the bundle-content gate where it can find something.**
       `check_hook_bundle_content` correctly detected a live six-hour
       authorization window on the `pr-merge` guard the first time it was run
       (2026-08-30) — but it is wired only into `taskfiles/ci-fast.yml:174`, and
@@ -219,7 +230,7 @@ silently reopen.
       verify: `task preflight` invokes it, and an mtime-preserving edit to a
       bundled source is refused by a fresh preflight run.
 
-- [ ] **5.2 Record the recurrence as a recurrence.** The widening on 2026-08-30
+- [x] **5.2 Record the recurrence as a recurrence.** The widening on 2026-08-30
       is a verbatim repeat of the 2026-08-21 incident that the guard's own
       docblock already describes, marker text and value included. Under
       `recurring-criticism` the repetition is evidence the disposition did not
@@ -230,7 +241,7 @@ silently reopen.
       verify: the finding names one of the three outcomes and the change that
       follows from it, in the evidence file.
 
-- [ ] **5.3 Answer the pressure, not just the symptom.** The stated motive both
+- [~] **5.3 Answer the pressure, not just the symptom <!-- blocked-by: authorization-shape-for-long-runs -->.** The stated motive both
       times was a run outlasting the 30-minute window. Sessions in the corpus
       run 1.1–35 h. Decide whether the supported path — the run stops, reports,
       and the operator re-authorizes — is actually usable at that run length, or
@@ -241,6 +252,101 @@ silently reopen.
       run lengths, and the answer is recorded — a deferral with a named blocker
       counts, a silent widening never does.
 
+## Blockers
+
+### blocker: post-change-window
+
+- **Status:** open — deferred, and deferred for a reason that cannot be
+  engineered away inside this change: step 2.2 landed the batching obligation
+  minutes before 2.4 would measure its effect, so the ten post-change sessions
+  the step names do not exist yet. Measuring the current window would be
+  measuring the sessions that *preceded* the change and reporting it as an
+  after.
+- **Owner:** council — the disposition is a CARRY, which the preservation test
+  in `roadmap-progress-sync` routes to the council rather than the owner: the
+  criterion stays alive in the estate, unweakened, in a named follow-up created
+  in the same change.
+- **Class:** 3
+- **Blocks:** step 2.4 only. Every other step in this roadmap is closed, and
+  AC-1's "a second reading exists for at least one of them" is satisfied
+  independently — the instrument produced two readings of all four metrics
+  (§ E1, § E9), which is what makes them a series rather than a snapshot.
+- **What to do:** after ten further sessions of this package accumulate, run
+  `./scripts-run src/scripts/probe_turnaround --limit 10 --against-baseline`
+  and record the `mean_batch_size` delta against the 1.01 baseline in
+  `src/config/turnaround-budget.json`. The roadmap pre-commits to the negative
+  outcome: if the number has not moved, that is the RESULT and it is recorded as
+  a null — never a reason to repeat the same reminder more loudly (risk 2).
+- **Recommendation:** carry, not cancel — option (b) of the preservation
+  test. The criterion is cheap to satisfy once the sessions exist, it is the
+  only step that measures whether 2.2 did anything, and cancelling it would
+  leave a landed obligation with no reading against it.
+- **If you do nothing:** the batching obligation ships unmeasured. That is
+  precisely the state finding 5 of the source analysis describes — an obligation
+  with no instrument reporting on it — reproduced by the roadmap that was
+  written to end it.
+- **Resolved when:** a second baseline entry exists in the budget config with
+  its own corpus window, and the delta is stated in
+  `agents/evidence/analysis/agent-turnaround-2026-08-30.md` in whichever
+  direction it went.
+
+### blocker: authorization-shape-for-long-runs
+
+- **Status:** open — **OWNER-RESERVED, and deliberately not taken.** The
+  question is put here with both options and the measured run lengths, which is
+  what step 5.3 asks for; the roadmap forbids the agent answering it, and
+  `decision-revisit-gate`'s reserved table puts "lowers or removes a recorded
+  security floor" beyond the council as well.
+- **Owner:** user — the maintainer. No council round was convened, because a
+  council verdict on an owner-reserved transition would be a verdict nobody may
+  act on.
+- **Class:** 3
+- **Blocks:** step 5.3 only.
+- **What to do:** decide between two shapes, on this evidence.
+
+  **The measurement.** `LEDGER_MAX_AGE_MS` is a 30-minute authorization window
+  on the guard that gates `pr-merge`. Session wall-clock spans over the ten most
+  recent sessions of this package: 0.0 · 0.4 · 0.4 · 0.5 · 1.2 · 3.1 · 3.9 ·
+  6.8 · 7.0 · 35.0 hours — **7 of 10 exceed the window**, median 3.1 h.
+  (Span is the right metric even though 76 % of elapsed session time is neither
+  model nor tool: the window is wall-clock, so a session left open expires the
+  ledger just as a busy one does.)
+
+  **Option A — the supported path stands.** The run stops at expiry, reports,
+  and the operator re-authorizes. On this data that is roughly one interruption
+  per 30 minutes of a 3-hour median run. The question the owner is being asked
+  is whether that is acceptable friction or an unusable path that will keep
+  being routed around — it has now been routed around twice, on 2026-08-21 and
+  2026-08-30, both times by widening the constant with a `PR-drain` marker and a
+  revert that never came.
+
+  **Option B — a different authorization SHAPE, never a wider window.** Examples
+  the owner may pick from or replace: a re-authorization prompt that renews the
+  ledger without ending the run; an authorization scoped to a named PR rather
+  than to a clock; a longer window that is only reachable with an explicit
+  per-run flag the operator types. **A larger `LEDGER_MAX_AGE_MS` default is not
+  on this list** — it is the action the guard's own docblock forbids and the
+  action taken twice.
+
+  This roadmap proposes no value, and none of the work it landed depends on the
+  answer.
+- **Recommendation:** the agent makes none, and that is the point. Both options
+  above are stated at equal weight because a recommendation on an owner-reserved
+  security floor is the first step of taking the decision. What the agent DOES
+  recommend is that the question be answered rather than left standing: it has
+  now produced two live weakenings of a `BLOCK_OPS` constant.
+- **If you do nothing:** the pressure remains and the window keeps being widened
+  by hand. The evidence for that is not a prediction — it is 2026-08-21 and
+  2026-08-30, the same constant, the same twelvefold value, the same marker,
+  the same unkept revert. `check_hook_bundle_content` now refuses the edit at
+  `task preflight` (§ E10), so the next attempt is caught rather than shipped —
+  which converts a silent weakening into a blocked run, and a blocked run into
+  this question being asked again under time pressure.
+- **Resolved when:** the owner records a decision — option A, an option-B shape,
+  or an explicit "leave it as is" — in a commit or an ADR that the guard's
+  docblock can cite. A recorded refusal to change anything closes this blocker;
+  only silence leaves it open.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
@@ -248,24 +354,24 @@ silently reopen.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The instrument reads an empty corpus and certifies nothing | implementation | A fresh clone has no transcript store, so a gate over it exits green having scanned zero sessions — the permanently-green-gate failure this package names elsewhere | Step 1.3 answers the empty-corpus behaviour BEFORE anything is wired into CI, and the answer is recorded in the config | Phase 1 — Make turnaround measurable |
 | 2 | Batch size does not move and the phase is re-run harder | implementation | A model-carried obligation that a measurement shows did not change behaviour invites raising the frequency of the same reminder, which was already measured not to work for another obligation in this tree | Step 2.4 pre-commits to recording a null and forbids the re-attempt; the null is a result, not a failure | Phase 2 — Cut the serial round-trips |
-| 7 | Phase 5 is read as a licence to widen the window | product | The phase names a real usability pressure on a 30-minute authorization bound, and the nearest reading of "answer the pressure" is to relax the bound — which is precisely the action taken twice and forbidden in the guard's own prose | Step 5.3 marks the decision owner-reserved and forbids the agent taking it; the roadmap never proposes a value | Phase 5 — Stop long runs from buying their own exceptions |
-| 6 | "Shorter commands" is read as the lesson of the 1,285-char average | product | The number invites a instruction to write terser commands, which would convert one expensive round-trip into several cheap ones and make the headline metric worse while looking like a fix | Step 2.3 forbids a conclusion before the length split exists and names this inversion explicitly | Phase 2 — Cut the serial round-trips |
 | 3 | The payload reduction is sold as a latency fix | product | The 220k floor is the most quotable number here and the obvious story is "big context, slow turns" — the measurement refutes it (37 % median latency rise across a 4× context increase), and shipping the wrong benefit would misdirect the next reader | The evidence file states the refutation in its own finding, and Phase 4's steps claim cost and crowding only, never latency | Phase 4 — Close the delivered-payload gap |
 | 4 | Lifting path triggers changes which rules a host loads, silently | implementation | Emitting `paths:` narrows delivery — a rule that must stay unconditional to be correct would go quiet with no error anywhere | Step 4.3 offers the write-it-down branch as a first-class outcome rather than forcing the emit, and 4.4 re-measures whichever branch is taken | Phase 4 — Close the delivered-payload gap |
 | 5 | Shortening the hook path removes a real gate | implementation | Step 3.2's scoping is one edit away from turning a push-blocking mirror into a partial one, which is how drift reaches CI instead of the developer | 3.2 is scoped to re-measuring and correcting the stated number; any narrowing must show the CI mirror still catches the same classes | Phase 3 — Take blocking waits off the interactive path |
+| 6 | "Shorter commands" is read as the lesson of the 1,285-char average | product | The number invites a instruction to write terser commands, which would convert one expensive round-trip into several cheap ones and make the headline metric worse while looking like a fix | Step 2.3 forbids a conclusion before the length split exists and names this inversion explicitly | Phase 2 — Cut the serial round-trips |
+| 7 | Phase 5 is read as a licence to widen the window | product | The phase names a real usability pressure on a 30-minute authorization bound, and the nearest reading of "answer the pressure" is to relax the bound — which is precisely the action taken twice and forbidden in the guard's own prose | Step 5.3 marks the decision owner-reserved and forbids the agent taking it; the roadmap never proposes a value | Phase 5 — Stop long runs from buying their own exceptions |
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The four turnaround metrics are produced by a committed script over
+- [x] AC-1 — The four turnaround metrics are produced by a committed script over
       a named corpus, and a second reading exists for at least one of them, so
       the numbers are a series rather than a snapshot.
-- [ ] AC-2 — Each of the three mechanisms (serialization, blocking waits,
+- [x] AC-2 — Each of the three mechanisms (serialization, blocking waits,
       payload) has a recorded disposition: a landed change with a re-measurement,
       or a written statement of why it cannot be changed here. No mechanism is
       left described but undecided.
-- [ ] AC-3 — The delivered always-on payload and the governed budget are
+- [x] AC-3 — The delivered always-on payload and the governed budget are
       produced by the same instrument, or the reason they cannot be is recorded
       with the mechanism named.
-- [ ] AC-4 — Every reduction claimed anywhere in this roadmap cites a before and
+- [x] AC-4 — Every reduction claimed anywhere in this roadmap cites a before and
       an after from the instrument in Phase 1; a claim with only an after is not
       accepted as satisfying any step.

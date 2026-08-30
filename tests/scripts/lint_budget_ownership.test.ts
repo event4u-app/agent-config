@@ -133,16 +133,22 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         expect(rels).toContain('budgets.yml');
     });
 
-    it('the corpus is 12 — the eleven JSON budgets plus the one named YAML', () => {
+    it('the corpus is 13 — the twelve JSON budgets plus the one named YAML', () => {
         // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
         // is exactly the glob-widening failure this mechanism exists to prevent.
         //
-        // `capability-native-outcome-bars.json` does NOT join this corpus and
+        // 12 -> 13 on 2026-08-30: `turnaround-budget.json` joined, registered by
+        // road-to-agent-turnaround 1.2 with `owner` and `review_by` as
+        // lint_budget_ownership requires. Raising this number is legitimate ONLY
+        // alongside a budget that clears that linter — which is why the count
+        // lives here rather than being derived from the glob it guards.
+        //
+        // `capability-native-outcome-bars.json` does NOT join this corpus, and
         // that is checked rather than assumed: the glob matches `*budget*`, and
         // an outcome-bar prereg is not a budget. It carries `owner` and
         // `review_by` anyway — see its own shape check in
         // tests/scripts/capability_native_outcome_bars.test.ts.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(12);
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(13);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {
