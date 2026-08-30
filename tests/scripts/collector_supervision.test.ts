@@ -463,7 +463,7 @@ describe('3.4 — static and daemon mode against the same tree', () => {
             .toBe(String(process.pid + 1));
     });
 
-    it('CONCURRENT fencers of one dead lock produce exactly one winner', async () => {
+    it('the lock names exactly ONE of two concurrent fencers of a dead lock', async () => {
         const gone = await deadPid();
         fs.mkdirSync(path.dirname(runtimeLockPath(userRoot)), { recursive: true });
         fs.writeFileSync(runtimeLockPath(userRoot), `${gone}\n`);
@@ -503,8 +503,14 @@ describe('3.4 — static and daemon mode against the same tree', () => {
                 return false;
             }
         });
-        // At least one must win — a stale lock that locks everyone out forever
-        // is the other half of row 2's recovery procedure.
+        // RENAMED on R2 round-4 finding 10: the old title said "produce exactly
+        // one winner" and the assertions accept both acquiring, which is the
+        // correct outcome when two `tsx` cold starts do not overlap. A name
+        // stating a property no assertion checks is worse than a modest one — a
+        // reader scanning for the one-collector invariant would read it as
+        // covered. What IS checked is below: at least one wins (a stale lock
+        // must not lock everyone out forever), and the lock names exactly one
+        // contender.
         expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeGreaterThanOrEqual(1);
         expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeLessThanOrEqual(2);
         // The honest statement: two `tsx` cold starts do not reliably overlap,

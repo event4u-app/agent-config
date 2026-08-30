@@ -44,6 +44,19 @@
  *    and nothing reports the omission. The set is therefore a lower bound on
  *    the tests that could diverge, not the exact set. Closing it needs real
  *    import-graph resolution, which is a larger tool than this gate.
+ * 3. **Under vitest the collector is INERT by construction, so what is compared
+ *    is the call SITE and not the write path.** The metric definition excludes
+ *    self-observed dispatches, and a test always is one, so both writers return
+ *    at their first line in run A exactly as the stub does in run B. The
+ *    comparison therefore covers module load, import resolution and call-site
+ *    evaluation — which is what caught the stub's missing export — and does not
+ *    cover the branch that appends to disk.
+ *
+ *    Stated rather than left to be discovered: an earlier version put the
+ *    exclusion in the DISPATCHER's control flow, which meant neither run
+ *    reached the calls at all and the comparison was vacuous even about the
+ *    call site. Moving it into the writers is what makes this limit a scope
+ *    statement instead of a hole.
  */
 
 import { spawnSync } from 'node:child_process';

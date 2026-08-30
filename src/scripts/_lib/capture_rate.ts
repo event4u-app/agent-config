@@ -33,6 +33,21 @@
  * suppression — all verifiable with zero elapsed days. **It proves the
  * instrument. It claims nothing about the field measurement**, which needs 21
  * days that no run can compress.
+ *
+ * ## NO PRODUCTION CALLER, and that is the honest state rather than an omission
+ *
+ * `judgeCapture`, `judgeEnablement` and `readOpportunities`' window parameter
+ * are called from tests and from nothing else (R2 round-4 finding 12). The
+ * consumer is Phase 6, which is parked: 6.1 needs a 21-day window, 6.2 reads
+ * these verdicts, and neither has run. Naming it here because this module's own
+ * argument — that the two halves of the ratio must age on the same clock — reads
+ * as if something computed the ratio today, and nothing does.
+ *
+ * It is deliberately NOT the same class as the two no-caller defects this
+ * change fixed. `spoolRecord` and `terminateCollector` had consumers that were
+ * supposed to exist and did not; these have a consumer that is scheduled and
+ * blocked, which is why the roadmap leaves AC-10 unchecked rather than claiming
+ * the instrument is in use.
  */
 
 /** The confidence level the decision rule fixes. Not a parameter — 1.2 item 9 names it. */

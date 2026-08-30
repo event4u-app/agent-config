@@ -44,6 +44,7 @@ import path from 'node:path';
 import {
     claimSpool,
     isCollectorEnabled,
+    pruneEpisodeCounters,
     pruneOpportunitiesOlderThan,
     readClaimedSpool,
     spoolDir,
@@ -291,6 +292,18 @@ export interface RunSummary {
 let stopRequested = false;
 
 /**
+ * What `start()` learned, kept for the loop.
+ *
+ * The heartbeat's `mode` is the SUPERVISOR PROBE's answer, and it must survive a
+ * beat in which the heartbeat file is missing (R2 round-4 finding 8). Module
+ * state rather than a parameter because `runLoop` is called both by `main` and
+ * directly by tests, and a required parameter would make every test assert a
+ * fact it does not care about.
+ */
+let startedMode: 'supervised' | 'degraded' = 'degraded';
+let startedAt = Date.now();
+
+/**
  * Ask the loop to finish and exit. Idempotent.
  *
  * Wakes an in-flight {@link sleep} rather than only setting the flag: a daemon
@@ -336,6 +349,8 @@ export function start(userRoot?: string): StartOutcome {
     const probe = detectSupervisor();
     const mode = probe.tier === 'supported' ? ('supervised' as const) : ('degraded' as const);
     const now = Date.now();
+    startedMode = mode;
+    startedAt = now;
     writeHeartbeat({ pid: process.pid, started_at: now, last_heartbeat: now, mode }, userRoot);
     stopRequested = false;
     return Object.freeze({ started: true, refusal: null, mode });
@@ -431,9 +446,16 @@ export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
             writeHeartbeat(
                 {
                     pid: process.pid,
-                    started_at: beat?.started_at ?? now,
+                    started_at: beat?.started_at ?? startedAt,
                     last_heartbeat: now,
-                    mode: beat?.mode ?? 'degraded',
+                    // The mode `start()` computed from `detectSupervisor()`, not
+                    // one re-derived from the beat we just read (R2 round-4
+                    // finding 8). A heartbeat absent for one beat — an operator,
+                    // a cleanup, a race — silently re-labelled a genuinely
+                    // SUPERVISED daemon as `degraded` for the rest of its life,
+                    // and nothing restored it. The probe result was available at
+                    // start and was being discarded.
+                    mode: startedMode,
                 },
                 userRoot,
             );
@@ -453,6 +475,7 @@ export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
             // aged out against a lifetime denominator, and left an unbounded
             // file inside the directory the disk budget ceilings.
             pruneOpportunitiesOlderThan(userRoot, today);
+            pruneEpisodeCounters(userRoot, now);
 
             const verdict = budgetVerdict(sample(userRoot));
             if (verdict.action === 'stop') {

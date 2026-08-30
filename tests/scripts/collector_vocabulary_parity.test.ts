@@ -23,35 +23,8 @@ import {
     COLLECTOR_PLATFORMS,
 } from '../../src/scripts/_lib/collector_record.js';
 import { EVENT_VOCABULARY } from '../../src/scripts/hooks/dispatch_hook.js';
-import { isSelfObservation } from '../../src/scripts/_lib/collector_denominator.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-
-describe('self-observation exclusion', () => {
-    it('excludes the package\'s own test suite and CI from the denominator', () => {
-        // Metric definition item 3 excludes "dispatches in the package's own
-        // test suite and CI (self-observation)", and nothing implemented it
-        // (R2 round-3 finding 3): on an opted-in developer machine every
-        // dispatcher test that reached `main` appended to the REAL
-        // `~/.event4u/agent-config` opportunity log, and spooled no capture —
-        // so it biased the measured rate DOWN.
-        expect(isSelfObservation({ VITEST: 'true' })).toBe(true);
-        expect(isSelfObservation({ CI: 'true' })).toBe(true);
-        expect(isSelfObservation({ NODE_ENV: 'test' })).toBe(true);
-        expect(isSelfObservation({})).toBe(false);
-        expect(isSelfObservation({ NODE_ENV: 'production' })).toBe(false);
-    });
-
-    it('is live in THIS process, which is the only self-check that matters', () => {
-        // If this ever reads false under vitest, the exclusion is not excluding
-        // the thing it was written for.
-        expect(isSelfObservation()).toBe(true);
-    });
-
-    // removing_this_constraint_reds_it: make `_isSelfObservation` return false
-    // unconditionally — both cases red, and the dispatcher starts counting its
-    // own suite again with nothing else noticing.
-});
 
 describe('collector vocabulary parity', () => {
     it('COLLECTOR_EVENTS equals the dispatcher\'s EVENT_VOCABULARY, exactly', () => {

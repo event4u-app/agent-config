@@ -25,11 +25,13 @@ import {
     isCollectorEnabled,
     machineId,
     machineIdPath,
+    pruneEpisodeCounters,
     pruneOpportunitiesOlderThan,
     readOpportunities,
     recordCapture,
     recordOpportunity,
     spoolPendingPath,
+    SPOOL_MAX_BYTES,
     spoolRecord,
 } from '../../src/scripts/_lib/collector_denominator.js';
 import {
@@ -75,6 +77,14 @@ afterEach(() => {
     stop(userRoot);
     fs.rmSync(userRoot, { recursive: true, force: true });
 });
+
+/**
+ * The writers exclude self-observed dispatches, and a test always IS one
+ * (vitest sets `VITEST`). This seam is how a test exercises the write path;
+ * nothing in `src/` passes it, and the vocabulary-parity suite asserts the
+ * default still excludes.
+ */
+const SELF_OK = { includeSelfObserved: true } as const;
 
 function record(over: Partial<CollectorRecord> = {}): CollectorRecord {
     return {
@@ -257,8 +267,8 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
 describe('4.1 — the denominator is independent of the daemon', () => {
     it('counts opportunities with NO collector process running', () => {
         enableCollector(userRoot);
-        for (let i = 0; i < 5; i += 1) recordOpportunity('pre_tool_use', 'claude', userRoot);
-        recordOpportunity('stop', 'claude', userRoot);
+        for (let i = 0; i < 5; i += 1) recordOpportunity('pre_tool_use', 'claude', userRoot, undefined, SELF_OK);
+        recordOpportunity('stop', 'claude', userRoot, undefined, SELF_OK);
 
         const reading = readOpportunities(userRoot);
         expect(reading.total).toBe(6);
@@ -276,14 +286,14 @@ describe('4.1 — the denominator is independent of the daemon', () => {
     // module exists to prevent.
 
     it('writes nothing at all on a default-off install', () => {
-        expect(recordOpportunity('session_start', 'claude', userRoot)).toBe(false);
+        expect(recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
         expect(fs.existsSync(denominatorPath(userRoot))).toBe(false);
         expect(readOpportunities(userRoot).total).toBe(0);
     });
 
     it('carries no payload: the line is a date, an event and a platform', () => {
         enableCollector(userRoot);
-        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-08-30T13:45:12Z'));
+        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-08-30T13:45:12Z'), SELF_OK);
         const line = fs.readFileSync(denominatorPath(userRoot), 'utf8').trim();
         expect(line).toBe('2026-08-30\tsession_start\tclaude');
         // A DATE, never a time — a per-second stamp beside a stable id is a
@@ -296,7 +306,7 @@ describe('4.1 — the denominator is independent of the daemon', () => {
 
     it('refuses an event or platform outside the closed enums', () => {
         enableCollector(userRoot);
-        expect(recordOpportunity('made_up_event', 'claude', userRoot)).toBe(false);
+        expect(recordOpportunity('made_up_event', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
         expect(recordOpportunity('session_start', 'made_up_host', userRoot)).toBe(false);
         expect(readOpportunities(userRoot).total).toBe(0);
     });
@@ -310,9 +320,9 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         // arriving through the back door.
         enableCollector(userRoot);
         const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
-        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
+        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'), SELF_OK);
 
         expect(readOpportunities(userRoot).total).toBe(3);
         expect(readOpportunities(userRoot, { since: '2026-06-01' }).total).toBe(2);
@@ -329,8 +339,8 @@ describe('4.1 — the denominator is independent of the daemon', () => {
     it('PRUNES the log on the same retention clock as the store', () => {
         enableCollector(userRoot);
         const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
         expect(readOpportunities(userRoot).total).toBe(2);
 
         // 63 days before 2026-06-02 is 2026-03-31, so January goes and June stays.
@@ -359,8 +369,8 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         // run afterwards exercises the same code path deterministically.
         enableCollector(userRoot);
         const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
         // A line that arrives "during" the prune, appended to the same file.
         fs.appendFileSync(denominatorPath(userRoot), '2026-06-02\tstop\tclaude\n');
 
@@ -373,7 +383,7 @@ describe('4.1 — the denominator is independent of the daemon', () => {
 
     it('KEEPS a line whose date does not parse rather than deleting it', () => {
         enableCollector(userRoot);
-        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
+        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'), SELF_OK);
         fs.appendFileSync(denominatorPath(userRoot), 'not-a-date\tsession_start\tclaude\n');
         // Deleting what you cannot classify is how a prune quietly becomes a
         // truncation; the reader already counts it as malformed.
@@ -391,8 +401,8 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         // the capture rate was 0 % for a WIRING omission and the miss branch
         // could not tell that from a real capture failure.
         enableCollector(userRoot);
-        expect(recordCapture('session_start', 'claude', userRoot)).toBe(true);
-        expect(recordCapture('pre_tool_use', 'claude', userRoot)).toBe(true);
+        expect(recordCapture('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
+        expect(recordCapture('pre_tool_use', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
 
         const spooled = fs
             .readFileSync(spoolPendingPath(userRoot), 'utf8')
@@ -433,10 +443,56 @@ describe('4.1 — the denominator is independent of the daemon', () => {
 
     it('writes NOTHING while the collector is off', () => {
         disableCollector(userRoot);
-        expect(recordCapture('session_start', 'claude', userRoot)).toBe(false);
+        expect(recordCapture('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
         expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
         expect(fs.existsSync(machineIdPath(userRoot))).toBe(false);
     });
+
+    it('PRUNES episode counters on the same clock — they are inside the disk budget', () => {
+        // R2 round-4 finding 4. `nextSequence` writes one file per session and
+        // nothing pruned the directory, inside the very directory the disk
+        // budget ceilings — whose breach STOPS the collector. That is the
+        // argument the budget's own basis already makes for `opportunities.log`,
+        // left unapplied to the sibling directory added in the same change.
+        enableCollector(userRoot);
+        const dir = path.join(userRoot, 'agent-collector', 'episodes');
+        fs.mkdirSync(dir, { recursive: true });
+        const old = path.join(dir, 'aaaaaaaa-0000-4000-8000-000000000000.seq');
+        const fresh = path.join(dir, 'bbbbbbbb-0000-4000-8000-000000000000.seq');
+        fs.writeFileSync(old, '3\n');
+        fs.writeFileSync(fresh, '1\n');
+        const longAgo = Date.now() - 200 * 86_400_000;
+        fs.utimesSync(old, longAgo / 1000, longAgo / 1000);
+
+        expect(pruneEpisodeCounters(userRoot)).toBe(1);
+        expect(fs.existsSync(old)).toBe(false);
+        expect(fs.existsSync(fresh), 'a live episode keeps its counter').toBe(true);
+    });
+
+    // removing_this_constraint_reds_it: make `pruneEpisodeCounters` return 0
+    // without unlinking — the stale counter survives and the directory grows
+    // with every session forever.
+
+    it('BOUNDS the spool, because the only thing that drains it may not be running', () => {
+        // R2 round-4 finding 5. "Collector enabled, daemon not running" is a
+        // supported state — the daemon is a separate opt-in process and
+        // `start()` legitimately refuses on `lock-held` or `store-unavailable` —
+        // and the disk budget that would notice is enforced by the process that
+        // is not running.
+        enableCollector(userRoot);
+        const pending = spoolPendingPath(userRoot);
+        fs.mkdirSync(path.dirname(pending), { recursive: true });
+        fs.writeFileSync(pending, 'x'.repeat(SPOOL_MAX_BYTES));
+
+        expect(spoolRecord(record(), userRoot), 'refused at the ceiling').toBe(false);
+        // Refused, not rotated: dropping the oldest captures to keep the newest
+        // inflates the measured rate for the window after an outage. The loss is
+        // the same; only one version lies about it.
+        expect(fs.statSync(pending).size).toBe(SPOOL_MAX_BYTES);
+    });
+
+    // removing_this_constraint_reds_it: delete the size check in `spoolRecord` —
+    // the append lands and the spool grows past its ceiling.
 
     it('never throws, whatever the filesystem does', () => {
         enableCollector(userRoot);
@@ -445,7 +501,7 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         const dir = path.join(userRoot, 'agent-collector');
         fs.chmodSync(dir, 0o500);
         try {
-            expect(() => recordOpportunity('session_start', 'claude', userRoot)).not.toThrow();
+            expect(() => recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).not.toThrow();
         } finally {
             fs.chmodSync(dir, 0o700);
         }

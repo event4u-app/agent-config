@@ -25,6 +25,26 @@
  * only if the hook itself does not run; the numerator fails if the daemon is
  * absent, wedged, budget-stopped, opted out, or refusing invalid records.
  *
+ * ## What that property does NOT survive: a restart
+ *
+ * R2 round-4 finding 6, and the correction is to the CLAIM rather than to the
+ * code. Captures are spooled to disk while the daemon is down, and the next
+ * start replays the whole spool with each record's ORIGINAL `occurred_on` — so
+ * the historical rate is repaired retroactively and the outage becomes
+ * invisible in the very window the design says would expose it. The two writers
+ * fail differently *while the daemon stays down*, not across a restart.
+ *
+ * That is the right behaviour and the wrong sentence. Dropping the spool on
+ * restart would lose real captures to make a graph honest; re-dating them to
+ * the drain would move a dispatch that happened on Tuesday into Thursday's
+ * denominator. The spool is bounded ({@link SPOOL_MAX_BYTES}) so an unbounded
+ * outage still loses records rather than replaying forever, and the reading a
+ * human takes from a repaired window is the one this paragraph exists to
+ * qualify: a rate that recovered may mean capture recovered, or may mean a
+ * daemon came back and flushed. `heartbeat.json`'s three-valued liveness is
+ * what distinguishes them, and it is why that file is a state rather than a
+ * boolean.
+ *
  * ## Never throws, and that is a contract rather than defensive habit
  *
  * `docs/contracts/resident-process-floors.md` § 1 permits observation only, and
@@ -125,6 +145,22 @@ export function disableCollector(userRoot?: string): void {
     fs.rmSync(enabledMarkerPath(userRoot), { force: true });
 }
 
+/**
+ * The one option both writers take.
+ *
+ * `includeSelfObserved` is a TEST SEAM and is named as one. The exclusion sits
+ * inside the writers rather than at the call site, because putting it in the
+ * dispatcher's control flow made both `check_static_parity` runs skip the calls
+ * entirely and the comparison vacuous (R2 round-4 finding 3). But the same
+ * placement means a test — which always runs under `VITEST` — cannot exercise
+ * the write path at all without saying so explicitly. Nothing in `src/` passes
+ * it, and `tests/scripts/collector_vocabulary_parity.test.ts` asserts the
+ * default still excludes.
+ */
+export interface WriterOptions {
+    readonly includeSelfObserved?: boolean;
+}
+
 /** The UTC date, `YYYY-MM-DD`. Never a time. */
 export function utcDate(at: number = Date.now()): string {
     return new Date(at).toISOString().slice(0, 10);
@@ -148,7 +184,7 @@ export function utcDate(at: number = Date.now()): string {
  *
  * Gating on the marker at all is a cost decision, and it is the reason a
  * default-off install writes nothing on any hook invocation: **two `existsSync`
- * calls and a return** — the opt-out probe first, then the ENABLED marker, in
+ * calls and a return per writer, so FOUR per dispatch once both are wired** — the opt-out probe first, then the ENABLED marker, in
  * that order because the privacy answer outranks. (The first draft of this
  * paragraph said "one `stat`", counting only the marker and forgetting the
  * opt-out check immediately above it — R2 finding 14.) An earlier draft wrote
@@ -161,8 +197,10 @@ export function recordOpportunity(
     platform: CollectorPlatform | string,
     userRoot?: string,
     at: number = Date.now(),
+    opts: WriterOptions = {},
 ): boolean {
     try {
+        if (opts.includeSelfObserved !== true && isSelfObservation()) return false;
         if (!isCollectorEnabled(userRoot)) return false;
         if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
         if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
@@ -310,7 +348,16 @@ export function pruneOpportunitiesOlderThan(
     // read and the rename is still lost — the window is now microseconds rather
     // than the whole filter, and closing it completely needs a lock the
     // append path deliberately does not take.
-    const consumed = Buffer.byteLength(raw, 'utf8');
+    // The ON-DISK length, not a re-encode of the decoded string (R2 round-4
+    // finding 7). `Buffer.byteLength(raw)` round-trips through U+FFFD for any
+    // invalid byte, so a log with one bad byte yielded a wrong offset and the
+    // carried tail was misaligned into the rewritten file.
+    let consumed = 0;
+    try {
+        consumed = fs.statSync(target).size;
+    } catch {
+        consumed = Buffer.byteLength(raw, 'utf8');
+    }
     let tail = '';
     try {
         const fd = fs.openSync(target, 'r');
@@ -328,7 +375,11 @@ export function pruneOpportunitiesOlderThan(
         /* the file vanished; the rename below re-creates it from `kept` */
     }
 
-    const tmp = `${target}.tmp`;
+    // A unique temp name, for the reason `claimSpool` was given a counter: the
+    // function is exported and driven directly by tests, and two concurrent
+    // prunes sharing one staging path clobber each other.
+    pruneSequence += 1;
+    const tmp = `${target}.${String(process.pid)}.${String(pruneSequence)}.tmp`;
     const body = kept.length === 0 ? '' : `${kept.join('\n')}\n`;
     fs.writeFileSync(tmp, `${body}${tail}`);
     fs.renameSync(tmp, target);
@@ -363,6 +414,11 @@ export const MACHINE_ID_NAME = 'machine-id';
 /** Where the per-episode sequence counter lives, keyed by episode. */
 export const EPISODE_DIR_NAME = 'episodes';
 
+/** Declared ABOVE its first use: `machineId` reads it, and a TDZ ReferenceError
+ * inside a function whose whole contract is never to throw is a defect waiting
+ * for a re-order (R2 round-4 finding 11). */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function machineIdPath(userRoot?: string): string {
     return path.join(resolveCollectorStore(userRoot).root, MACHINE_ID_NAME);
 }
@@ -393,8 +449,6 @@ export function machineId(userRoot?: string): string | null {
         return null;
     }
 }
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * The episode id for this process.
@@ -450,6 +504,49 @@ export function nextSequence(episode: string, userRoot?: string): number {
 }
 
 /**
+ * Drop episode counters older than the retention horizon.
+ *
+ * `nextSequence` writes one `episodes/<id>.seq` per session and nothing pruned
+ * the directory (R2 round-4 finding 4) — inside the very directory
+ * `RESOURCE_BUDGETS.disk_bytes` ceilings, whose breach STOPS the collector.
+ * That is the argument the disk-budget basis already makes for
+ * `opportunities.log`, left unapplied to the sibling directory added in the
+ * same change. `directorySize` also re-`stat`s every one of these files on
+ * every beat, so the per-beat cost grew without bound too.
+ *
+ * Pruned by MTIME rather than by content: a counter file carries a number, not
+ * a date, and inventing a date format for it would be a second thing to keep in
+ * sync with the retention horizon.
+ */
+export function pruneEpisodeCounters(
+    userRoot: string | undefined,
+    now: number = Date.now(),
+    days: number = RETENTION_DAYS,
+): number {
+    const dir = path.join(resolveCollectorStore(userRoot).root, EPISODE_DIR_NAME);
+    let entries: string[];
+    try {
+        entries = fs.readdirSync(dir);
+    } catch {
+        return 0;
+    }
+    const cutoff = now - days * 86_400_000;
+    let dropped = 0;
+    for (const name of entries) {
+        if (!name.endsWith('.seq')) continue;
+        const full = path.join(dir, name);
+        try {
+            if (fs.statSync(full).mtimeMs >= cutoff) continue;
+            fs.rmSync(full, { force: true });
+            dropped += 1;
+        } catch {
+            /* raced with another prune */
+        }
+    }
+    return dropped;
+}
+
+/**
  * Record a CAPTURE — the numerator's production writer.
  *
  * **This function is the fix for the defect three review rounds took to find**
@@ -470,8 +567,10 @@ export function recordCapture(
     platform: CollectorPlatform | string,
     userRoot?: string,
     at: number = Date.now(),
+    opts: WriterOptions = {},
 ): boolean {
     try {
+        if (opts.includeSelfObserved !== true && isSelfObservation()) return false;
         if (!isCollectorEnabled(userRoot)) return false;
         if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
         if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
@@ -510,11 +609,38 @@ export function recordCapture(
  * spool to drain later. That is deliberate: a spool that survives the disabled
  * period would make a re-enable look like a capture spike.
  */
+/**
+ * Hard ceiling on the undrained spool, in bytes.
+ *
+ * The spool is written by hook processes and drained ONLY by the daemon, and
+ * "collector enabled, daemon not running" is a supported state — the daemon is
+ * a separate opt-in process and `start()` legitimately refuses on `lock-held`
+ * or `store-unavailable`. Without a cap the spool grew without limit in exactly
+ * that state, and the disk budget that would have noticed is enforced by the
+ * process that is not running (R2 round-4 finding 5).
+ *
+ * 8 MiB is two thirds of the disk budget's 12 MiB expected peak, so a spool at
+ * its ceiling still leaves the store's own share. A record is ~250 bytes, so
+ * this is roughly 33,000 undrained captures — far past any plausible drain
+ * interval, which is what makes hitting it a signal rather than a limit.
+ */
+export const SPOOL_MAX_BYTES = 8 * 1024 * 1024;
+
 export function spoolRecord(record: unknown, userRoot?: string): boolean {
     try {
         if (!isCollectorEnabled(userRoot)) return false;
         const target = spoolPendingPath(userRoot);
         fs.mkdirSync(path.dirname(target), { recursive: true });
+        // Refuse rather than rotate. A rotated spool would keep the newest
+        // captures and silently drop the oldest, which inflates the measured
+        // rate for the window that follows an outage; refusing loses the same
+        // records and does not pretend otherwise. Either way the loss is real —
+        // the difference is whether the numerator lies about it.
+        try {
+            if (fs.statSync(target).size >= SPOOL_MAX_BYTES) return false;
+        } catch {
+            /* absent is size 0 */
+        }
         fs.appendFileSync(target, `${JSON.stringify(record)}\n`);
         return true;
     } catch {
@@ -531,6 +657,7 @@ export function spoolRecord(record: unknown, userRoot?: string): boolean {
  * the rename creates a fresh `pending.jsonl`. No lock, no lost line.
  */
 let claimSequence = 0;
+let pruneSequence = 0;
 
 export function claimSpool(userRoot?: string, at: number = Date.now()): string | null {
     const pending = spoolPendingPath(userRoot);

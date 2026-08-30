@@ -45,6 +45,12 @@ import {
 } from '../../src/scripts/_lib/collector_store.js';
 import { drainOnce } from '../../src/scripts/collector_daemon.js';
 
+/**
+ * The writers exclude self-observed dispatches and a test always IS one, so a
+ * test that wants the write path says so. Nothing in `src/` passes it.
+ */
+const SELF_OK = { includeSelfObserved: true } as const;
+
 let userRoot: string;
 
 beforeEach(() => {
@@ -307,7 +313,7 @@ describe.runIf(isStoreAvailable())('end to end — the REAL writers feed the rat
         // 40 dispatch opportunities, of which 34 produce a spooled record. The
         // 6 that do not are the loss the ratio exists to measure.
         for (let i = 0; i < 40; i += 1) {
-            expect(recordOpportunity('pre_tool_use', 'claude', userRoot)).toBe(true);
+            expect(recordOpportunity('pre_tool_use', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
             if (i >= 34) continue;
             spoolRecord(
                 {
