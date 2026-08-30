@@ -1155,7 +1155,7 @@ gates:
   - id: check_estate_count
     argv: []
     min_scanned: 20
-    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/)"
+    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/), plus src/scripts/hook_manifest.yaml for the concern axis — a single file read with `git show` at the base ref rather than a third materialised subtree"
     status: enforced
     canary:
       class: contract-violation

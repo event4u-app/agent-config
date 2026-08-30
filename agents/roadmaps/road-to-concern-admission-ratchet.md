@@ -127,10 +127,29 @@ skills only.
       verify: a fixture branch adding one concern without a claim fails; the
       same branch with `estate_growth_exempt` in a touched roadmap's
       frontmatter passes, and the reason is printed.
-- [ ] **1.3 Register the metric in `src/config/estate-count-budget.json`.**
+- [x] **1.3 Register the metric in `src/config/estate-count-budget.json`.**
       Document the basis, the reproduce command, and the measured value 71 —
       in the shape the `skill_count` entry uses, including the rejected
       candidates measured rather than argued.
+      **DONE 2026-08-30.** The budget entry records the basis, the reproduce
+      command, and the measured value **55** — with the over-count correction
+      written here rather than only in this roadmap, because this file is what a
+      later reader checks the number against.
+      **Rejected candidates, measured rather than argued**, as the step asks:
+      counting `platforms:` rows instead — rejected, it is 8 and flat across all
+      six pins, so it measures host coverage and not concern growth; leaning on
+      `lint_hook_concern_budget.ts` — rejected, `DEFAULT_MAX_PER_EVENT = 8` is
+      blind to total growth by construction and it ships
+      `DEFAULT_HARD_FAIL = false`, which is why this axis needed a ratchet at
+      all.
+      **The self-test covers BOTH directions**, 15/15 cases green: a concern
+      added above the base-tree floor rejects, and a non-concern top-level map
+      gaining members at the same two-space indent **accepts** — the case that
+      proves the parser is scoped rather than a grep, since the roadmap's own
+      reproduce command would have counted that as growth.
+      The gate-coverage row's `corpus` now names the manifest and states that
+      the base ref is read with `git show` rather than a third materialised
+      subtree.
       verify: `check_estate_count`'s own self-test covers the concern branch,
       and the gate-coverage row for the script names the new scanned path.
 

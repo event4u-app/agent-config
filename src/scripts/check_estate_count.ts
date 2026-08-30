@@ -863,6 +863,48 @@ function selfTest(): number {
             run: () => fixture({ roadmaps: 3, base: 'main', after: () => undefined }),
         },
         {
+            // The concern axis, both directions. Seeded into the BASE tree so
+            // the floor is a real reading of the fixture's own manifest rather
+            // than this repository's -- the whole point of measuring the floor
+            // from the base ref.
+            name: 'concern count grows above the base-tree floor → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\n'),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            CONCERN_MANIFEST_POSIX,
+                            'concerns:\n  one:\n    severity: advisory\n  two:\n    severity: advisory\n',
+                        ),
+                }),
+        },
+        {
+            // The half that proves the parser is SCOPED rather than a grep: a
+            // top-level map gaining members at the same two-space indent is not
+            // concern growth, and the roadmap's own reproduce command would
+            // have counted it as such.
+            name: 'a non-concern top-level map growing is not concern growth → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\nroles:\n  dev:\n'),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            CONCERN_MANIFEST_POSIX,
+                            'concerns:\n  one:\n    severity: advisory\nroles:\n  dev:\n  ops:\n  sre:\n',
+                        ),
+                }),
+        },
+        {
             // The floor is now exact, so this case no longer depends on anyone
             // having typed the right number at the base commit.
             name: 'active count grows above the base-tree floor → reject',
