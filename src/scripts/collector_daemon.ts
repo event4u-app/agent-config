@@ -250,7 +250,10 @@ export function drainOnce(handle: StoreHandle, userRoot?: string): DrainResult {
 /* -------------------------------------------------------------------------- */
 
 export interface RunOptions {
-    readonly userRoot?: string;
+    // `| undefined` is required, not decoration: `exactOptionalPropertyTypes` is
+    // on, so an optional property does NOT implicitly accept `undefined`, and
+    // `main` threads a `--root` that may legitimately be absent.
+    readonly userRoot?: string | undefined;
     readonly beatMs?: number;
     /** Stop after this many iterations. Tests use it; the real daemon does not pass it. */
     readonly maxIterations?: number;
