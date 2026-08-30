@@ -236,8 +236,25 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 1 — Broaden capture
 
-- [ ] **1.1 Spike whether the dispatch event is as reliable as the skill
-      event.** `docs/CLAIMS.md:328` records the measured reality verbatim:
+- [x] **1.1 Spike whether the dispatch event is as reliable as the skill
+      event.** **DONE 2026-08-30 — MEASURED NULL at 85.7 %, bar not moved.**
+      905 of 1,056 dispatches recorded, against a pre-registered bar of >= 95 %
+      over >= 50 dispatches. n is 21x the underpowered floor, so this is a
+      reading and not an absence of one, and the pre-registered consequence
+      applies as written: **the work rescales to skill events**, and no
+      dispatch-event-based mechanism is authored on this evidence. The rate rose
+      by a factor of ~317 from the 0.27 % prior once `orchestration-record`
+      stopped being model-carried — large, and still short of the bar, which is
+      what fixing the bar first buys. Full working, including the
+      `CLAUDE_PROJECT_DIR`-in-a-worktree denominator effect that first returned
+      an impossible 187 %:
+      `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`; ledger
+      entry `claim: dispatch-event-capture-reliability`, `status: resolved-null`.
+      **Citation corrected while executing:** this step cited
+      `docs/CLAIMS.md:328`, which is `claim: 120 governed rules`. The verbatim
+      string below is at `docs/CLAIMS.md:370`, inside
+      `claim: orchestration-observed-dispatch-cost`.
+      `docs/CLAIMS.md:370` records the measured reality verbatim:
       "0.27% telemetry capture (370 dispatches, 1 recorded line)". The skill
       event by contrast is 164/164. Pre-register the numbers before building:
       success is ≥ 95 % capture over ≥ 50 dispatches; below that the result is an

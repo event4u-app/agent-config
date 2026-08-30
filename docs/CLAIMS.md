@@ -1022,5 +1022,28 @@ is the named exception in the claim itself.
   gitignored and therefore not reproducible from a clone. That is a scope bound
   on the finding, stated before the reading: it measures THIS install's capture
   rate and is never reported as the package's.
-- status: unbacked
+- resolution: MEASURED 2026-08-30 → **NULL, and the bar is not moved.** 905 of
+  1,056 dispatches recorded = **85.7 %**, against a pre-registered pass bar of
+  ≥ 95 %. n is twenty-one times the underpowered floor, so this is a real
+  reading and not an absence of one. The pre-registered consequence applies as
+  written: the work rescales to skill events and no dispatch-event-based
+  mechanism is authored on this evidence.
+
+  The improvement is large and does not change the verdict. The prior reading in
+  this ledger is 0.27 % (370 dispatches, 1 recorded line, `claim:
+  orchestration-observed-dispatch-cost`), from the era when the record step was
+  model-carried; the `orchestration-record` concern now emits deterministically
+  and the rate rose by a factor of ~317. The bar was fixed at 95 % before the
+  number was known so that exactly this shape of result — impressive, and short
+  — could not be re-scoped into a pass afterwards. At 85.7 % roughly one
+  dispatch in seven goes unrecorded, so a per-asset rate over this stream
+  carries a ~14 % silent denominator hole.
+
+  Denominator note, because it is the part that can be got wrong:
+  `CLAUDE_PROJECT_DIR` resolves to the parent checkout inside a worktree, so
+  `.claude/worktrees/*` sessions write audit lines into the main checkout while
+  their transcripts live elsewhere. Counting the main checkout alone returns
+  187 % — that over-100 % reading is how the effect was found. Full working:
+  `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`.
+- status: resolved-null
 - last_verified: 2026-08-30
