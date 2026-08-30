@@ -702,13 +702,38 @@ once.
 
 ## Phase 3 — Candidate isolation and lifecycle
 
-- [ ] **3.1 Add a candidate variant to the existing variant enum.** A new member
+- [x] **3.1 Add a candidate variant to the existing variant enum.** A new member
       plus its surface definition; `bench_ab_integrity` keeps asserting
       byte-wise against it.
       verify: five candidates materialised and destroyed with no diff in the
       original tree; sabotaging a path ownership makes `bench_ab_integrity` exit
       non-zero.
-- [ ] **3.2 One primary dimension per candidate.** `from-skipped-parent`, raised
+      **DONE 2026-08-30, and the § What already exists note was right — this was
+      an enum member on existing machinery, not new isolation.** `Variant`
+      (`bench_ab_clone.ts:402`), accepted at `_checkVariant:470`, plus a
+      `--candidate-record` flag. `clone_candidate` (`:325`) materialises at
+      `clones/candidate-<id>`; `apply_candidate_mutations` (`:296`);
+      `load_candidate_record` (`:360`) validates **before** any bytes are copied.
+      The `all` aggregate is deliberately NOT extended (`:517`) — a candidate
+      needs a record to know its dimension, so there is no blind aggregate that
+      could produce one.
+      `bench_ab_integrity` keeps asserting byte-wise: `discover_candidate_clones`
+      (`:179`) finds candidate roots **by directory prefix** rather than from a
+      passed list, so a candidate cannot escape the sweep by not being named, and
+      `compare_indexes` (`:151`) compares each against the **`without`**
+      baseline — not `with`, which would let a candidate inherit an unnoticed
+      `with` violation.
+      **Both polarities, and the sabotage was seen red.**
+      `tests/scripts/bench_ab_candidate.test.ts` VERIFY 1 builds five clones,
+      lands mutations, destroys them, then asserts `git status --porcelain` over
+      the four surface paths and a byte snapshot are identical to the pre-run
+      values. VERIFY 2 runs three phases in one test: five clean candidates →
+      exit 0 (each named in `--verbose`, so a check that scanned nothing could
+      not pass it); one file written outside the surface → **exit 1**, naming
+      only the guilty candidate; that file removed → exit 0 again. **The third
+      phase is the load-bearing one** — without it the red could have been the
+      setup rather than the guard.
+- [x] **3.2 One primary dimension per candidate.** `from-skipped-parent`, raised
       to doctrine level there and absent from the master. Reducing the mutation
       *alphabet* to three dimensions — which the master did — is not the same
       invariant as limiting a candidate's *arity*. If routing and body both
@@ -717,12 +742,52 @@ once.
       separate, later re-run, not a candidate.
       verify: the schema rejects a candidate touching two primary dimensions,
       and a consolidation run is a distinct record type.
-- [ ] **3.3 Restrict the mutation alphabet to three dimensions.** `activation`,
+      **DONE 2026-08-30 — the arity lives in the TYPE, not only in a
+      validator.** `CandidateRecord.dimension` is a scalar
+      (`src/scripts/_lib/candidate_record.ts`), so a two-dimension candidate is
+      not expressible rather than merely refused. `parseCandidateRecord` (`:455`)
+      then closes the three ways round it: a `dimensions` key rejected **by
+      name**, `dimension` supplied as an array rejected **even with one member**
+      (the invariant is about what the field CAN hold), and no cross-parsing
+      between the two record types. `ConsolidationRecord` +
+      `parseConsolidationRecord` (`:500`) is the distinct type and requires ≥ 2
+      **distinct** dimensions and ≥ 2 source candidates, so it cannot be used as
+      an escape hatch for a one-dimension candidate — `['routing','routing']` is
+      refused, and that case is tested.
+- [x] **3.3 Restrict the mutation alphabet to three dimensions.** `activation`,
       `routing`, `content`. Precedence, composition, verification, tool
       strategy, budget and scope are named and unimplemented until the three
       carry.
       verify: the schema rejects a mutation naming a fourth dimension.
-- [ ] **3.4 A candidate lifecycle state enum, so "mutated" and "accepted" cannot
+      **DONE 2026-08-30, and E10 SPLIT rather than converging — recorded as a
+      split, not dressed as a verdict.** AI council 2026-08-30, anthropic
+      (claude-sonnet-4-5) + openai (gpt-4o), **1/1**: anthropic for FOUR
+      dimensions, adding `verification` now on an irreversibility argument —
+      *"mutation dimensions are metadata on candidate records; adding
+      verification later means all prior candidates are permanently
+      unclassifiable under the new dimension"* — openai for THREE, adding it only
+      on demonstrated need. Per this repository's escalation handling a split is
+      not a licence to pick the convenient half, so the **conservative side was
+      taken: three**, which is what this step already specified. The verify
+      clause therefore stands unchanged rather than being re-scoped to fit an
+      answer.
+      `MUTATION_DIMENSIONS` (`candidate_record.ts:71`) is exactly `activation |
+      routing | content`. The six named-and-unimplemented dimensions are
+      **absent**, not present-and-disabled. The negative test probes
+      `verification` specifically — the fourth the losing seat argued for — plus
+      `precedence`, `composition`, `tool-strategy`, `budget`, `scope` and `''`,
+      and the clone boundary rejects them with **no clone directory created**.
+      **The losing seat's concern is satisfied as a design constraint rather
+      than waved off**, which is what a split obliges: `CANDIDATE_RECORD_VERSION`
+      (`:58`) is stamped on every record, and the unknown-dimension refusal lives
+      in the **validator** (`parseCandidateRecord`) and never in the **reader**
+      (`readCandidateRecord:576`), which returns such a record with the dimension
+      **flagged, not thrown**. So adding a fourth dimension later is an additive
+      change and historical records never become unclassifiable — the exact
+      information loss the anthropic seat named. Both directions are tested:
+      *"the READER survives an unknown dimension"* and *"the VALIDATOR still
+      refuses that same record"*.
+- [x] **3.4 A candidate lifecycle state enum, so "mutated" and "accepted" cannot
       be confused.** `from-skipped-parent`: both parents made this the
       structural guard, one tracing the defect to the reference implementation
       passing `mutated` in where `accepted` was expected. The master has no
@@ -731,6 +796,48 @@ once.
       promotion-proposed → promoted | rejected | retired.
       verify: no code path reads a candidate as accepted from the mere fact that
       it exists; a state transition skipping a stage is refused.
+      **DONE 2026-08-30.** `LIFECYCLE_SPINE` (`candidate_record.ts:87`) +
+      `LIFECYCLE_STATES` (`:97`); `ACCEPTED_STATE` (`:112`) and `isAccepted`
+      (`:122`) are the **single** acceptance site, so there is one place to read
+      rather than a predicate repeated per caller. `requireLifecycle` (`:386`)
+      **refuses an absent state rather than defaulting it** — a default would
+      reintroduce exactly the reference-implementation defect this step cites,
+      where `mutated` arrived where `accepted` was expected.
+      `assertTransition` (`:196`) allows one forward spine step, any → `rejected`
+      and `promoted` → `retired`; it refuses skips, backwards moves,
+      self-transitions and any move out of a terminal state.
+      **The negative tests are exhaustive rather than exemplary**, which matters
+      for a spine: *"a transition skipping a stage is refused"* iterates **every**
+      skip of size ≥ 2 across the spine, not one example, and *"existence is not
+      acceptance"* asserts `isAccepted` is false for all eight non-promoted
+      states including `sealed-evaluated` and `promotion-proposed`.
+      **Phase 0's carried non-promotion condition — the transition half only, and
+      the other half is NOT claimed.** `→ promoted` additionally requires a
+      **named** human approver (`assertHumanApproval:237`); blank or
+      whitespace-only is refused, and an approver does not buy a stage skip (the
+      two guards are independent and tested as such). What holds is narrower than
+      the condition: no code path can move a candidate into `promoted` without a
+      name **on any surface that calls this function**. The verb half is 3.6.
+      A gate asserting *"no Phase 1–6 code promotes"* was deliberately **not**
+      written: there is still no promotion verb, so it would scan a population of
+      zero and exit green — which this roadmap itself calls worse than no gate.
+      **One implementation change was made because of the sensitivity
+      discipline, and it is worth recording:** `apply_candidate_mutations`'
+      resolved-path check originally called `die()` (`process.exit`), which no
+      unit test can exercise without killing the runner. It now throws
+      `PathOwnershipError` and `main` converts it back to exit 1 — an untestable
+      branch is worse than a testable one.
+      **Every guard in Phase 3 was seen RED.** Twelve guards were neutralised in
+      source one at a time, the suite re-run, and the source restored from a
+      scratchpad copy (never `git checkout`, per this repository's recorded
+      probe discipline): the `dimensions`-key rejection, the array-dimension
+      rejection, the alphabet check, the stage-skip check, the promotion approver
+      gate, lifecycle-defaulted-not-refused, `isAccepted` widened past
+      `promoted`, the path-traversal check, the reader made to throw on an
+      unknown dimension, integrity ceasing to enumerate candidates, candidate
+      failures dropped from the exit code, the candidate prefix drifting between
+      the two scripts, and the resolved-path escape check. All went red; all
+      restored byte-clean. A guard never seen red has unknown sensitivity.
 - [ ] **3.5 Ship a deterministic proposer first.** Fixed recipes for known
       defect classes, so the loop is validated without model quality as a
       confound.
@@ -1319,19 +1426,89 @@ If this cut fails, the architecture is refuted before anything is built.
   stays `unknown` across representative Phase 1 evaluations — in which case
   keep the six rungs and reconsider the nine-stage cascade independently.
   Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
-- **E5 — Minimality tie-break order,** and whether the fifth criterion (simpler
-  mechanism) is in. The two parents' orders invert, so this changes outcomes.
-- **E6 — Curator operation set:** 4 ops or 7? Recommendation: 7 — split and
+- **E5 — Minimality tie-break order: DECIDED 2026-08-30, option A — the FOUR
+  criteria `tokens → artifacts → scope → precedence`, and the fifth criterion is
+  OUT.** AI council, anthropic (claude-sonnet-4-5) + openai (gpt-4o), **2/2**.
+  The argument that carried it is about *when* the tie-break runs, not about
+  which values matter: by the time two candidates are tied they have both
+  already survived selection evaluation and every hygiene check, so the
+  blast-radius constraint option B leads with is **already satisfied** and cost
+  is what is left to decide. "Simpler mechanism" was rejected as unquantifiable
+  at that point — one seat put it directly: the candidates have passed all
+  functional checks, so there is no outcome signal left to measure simplicity
+  against, and admitting it converts a mechanical decision into a reviewer's
+  taste vote. The four surviving criteria are all countable from candidate
+  metadata (token count, artifact count, scope enum, precedence rank), which is
+  what makes the order reproducible.
+  **`revisit-if`:** a promoted candidate chosen by cost-first ordering causes an
+  incident that scope-first ordering would have prevented, **and** that incident
+  was not detectable by the outcome metrics which declared the two equivalent —
+  the conjunction matters, because the second half means the metrics were
+  incomplete rather than the ordering wrong.
+  Original framing, kept: the two parents' orders invert, so this changes
+  outcomes. Spent in Phase 4.5.
+- **E6 — Curator operation set: DECIDED 2026-08-30, option B — SEVEN ops**,
+  `KEEP / ADD / MERGE / REPLACE / SPLIT / RETIRE / SKIP`. AI council, anthropic +
+  openai, **2/2**. The contradiction argument carried it and is not a preference:
+  step 7.6 is already adopted in this same roadmap and specifies the verdict set
+  `KEEP / REVISE / MERGE / SPLIT / RETIRE`, so a 4-op curator would produce
+  verdicts it cannot execute.
+  **The 6-op middle — deferring `SPLIT` — is explicitly REJECTED**, and the
+  brief's own recommendation is overruled on this point. One seat called it *"an
+  unstable equilibrium"*: it still contradicts 7.6's verdict set, so it buys
+  nothing the 4-op answer does not also cost. The same seat added the algebra
+  argument the brief did not have — `MERGE` is n→1 and `SPLIT` is 1→n, and
+  without it an overgrown rule becoming two must be expressed as
+  `RETIRE + 2×ADD`, which loses the semantic link and makes the operation's
+  intent unreadable in the audit log.
+  `SPLIT` remains the one genuinely new mechanism and its cost stays visible;
+  `RETIRE` lands on the existing surface the brief identified.
+  **`revisit-if`:** 7.6 is revised to drop `SPLIT` from its verdict set, or
+  `SPLIT` is never invoked in twelve months and no curator reports its absence
+  blocking a refactoring.
+  Original framing, kept: 4 ops or 7? Recommendation was: 7 — split and
   retire are the anti-sprawl actions, and 7.6 depends on them existing. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — it adds that `RETIRE` already has a carrier
   (`artifact-engagement-flow.md:32-33`) while `SPLIT` is the one genuinely new
   mechanism, so a 6-op middle exists.
-- **E7 — Sealed-holdout cadence:** every cascade, or promotion candidates only?
+- **E7 — Sealed-holdout cadence: DECIDED 2026-08-30, option B — promotion
+  candidates ONLY.** AI council, anthropic + openai, **2/2**. The gating
+  condition is free: 3.4's lifecycle enum already carries `promotion-eligible`,
+  so option B costs a state read rather than new machinery. The decisive
+  argument is that option A cannot buy anything with what it spends —
+  `_lib/paired_verdict.ts:54-65`'s discordant-trial floor means only a powered
+  verdict can conclude, so a cascade that reads the holdout before promotion
+  eligibility spends unbiased signal on runs that could not have concluded
+  anyway. Consulting it every iteration converts a held-back validator into part
+  of the optimisation loop, which is the adaptive-overfitting risk one parent
+  killed the option by name for. One seat put the trade plainly: option A's
+  "simpler control flow" trades code simplicity for statistical validity.
+  **`revisit-if`** — refined by the council over the brief's looser version,
+  because "fewer than 5 % reach sealed evaluation" measures the wrong thing:
+  reopen when **holdout verdicts would have CHANGED the promotion decision in
+  fewer than 5 % of promotion-eligible cases**, which is the condition under
+  which the sealed partition adds no marginal signal over selection evaluation.
+  Original framing, kept: every cascade, or promotion candidates only?
   One parent killed every-iteration as an adaptive-overfitting risk; the other
   runs it every cascade. Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — and it
   reframes the question: there is **no** holdout machinery in this repository
   yet, so nothing is being preserved and the decision is greenfield.
-- **E8 — State-taxonomy arity:** 4 classes or 5, splitting experiment-adaptive
+- **E8 — State-taxonomy arity: DECIDED 2026-08-30, FOUR classes plus an explicit
+  pointer to the existing Class A / Class C boundary.** AI council, anthropic +
+  openai, **2/2**. The brief's redundancy finding held — the proposed fifth class
+  restates a boundary an ADR already records, and the prohibition it would add
+  already exists — and one seat named the principle underneath it, which is the
+  part worth carrying forward: **taxonomies classify; validations enforce.** The
+  fifth class attempts enforcement work (prohibiting production-adaptive
+  behaviour) inside a classification system. The correct shape keeps the taxonomy
+  describing *what an artefact does* and leaves a validation layer to reference
+  the ADR for *where it may do it* — which also makes the prohibition's reason
+  explicit rather than hiding it inside an enum variant's name.
+  **`revisit-if`:** a Class C artefact is allowed production-adaptive behaviour
+  and the existing ADR-level boundary check fails to prevent it — i.e. the
+  boundary turns out to need taxonomy-level encoding because it is not enforced
+  where it lives now.
+  Original framing, kept: 4 classes or 5, splitting experiment-adaptive
   from production-adaptive with the latter prohibited by default? Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — which finds the proposed 5th class
   restates ADR-124's Class A/C boundary, and the prohibition it would add
@@ -1344,7 +1521,28 @@ If this cut fails, the architecture is refuted before anything is built.
   reconsidered on its own. Original framing, kept: 9 stages or 12? If 9,
   Phase 1's exit criterion cannot be produced and must be rewritten. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
-- **E10 — Mutation dimensions:** do `activation/routing/content` stand alone, or
+- **E10 — Mutation dimensions: SPLIT 2026-08-30, conservative side taken —
+  THREE.** AI council, anthropic + openai, **1/1, not convergent**, which
+  `roadmap-progress-sync` classes as an escalation condition rather than a
+  verdict. anthropic: four, adding `verification` now, on an irreversibility
+  argument — dimensions are metadata on candidate records, so adding one later
+  makes every prior candidate unclassifiable under it, and the seat reframed the
+  question as *"not premature optimization — avoid irreversible information
+  loss"*. openai: three, adding `verification` only on demonstrated need.
+  **Three was taken because a split is not a licence to pick the more convenient
+  half**, and here three is also what 3.3 already specified, so its verify clause
+  stands unchanged rather than being re-scoped to fit an answer.
+  **The losing seat's concern is discharged as a design constraint, not
+  dismissed** — see 3.3 for the mechanism: the record is versioned, and the
+  unknown-dimension refusal lives in the validator while the reader flags rather
+  than throws, so adding a fourth dimension later is additive and historical
+  records stay readable. That was the whole substance of the irreversibility
+  argument, and it is satisfied without widening the alphabet.
+  **`revisit-if`:** after 100 candidates, fewer than 3 carry `verification` as a
+  primary dimension **and** no curator reports verification changes being
+  mislabelled as `content` to fit the available vocabulary — the conjunction is
+  the point, since mislabelling is how a missing dimension hides.
+  Original framing, kept: do `activation/routing/content` stand alone, or
   does `verification` join immediately? Separate from 3.2, which is about arity.
 - **E11 — Second opinion:** is the fixture holdout enough, or does a council
   blind round attach as an independent evaluator when Phase 4 blocks?
