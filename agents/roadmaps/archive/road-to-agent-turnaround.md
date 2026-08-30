@@ -135,13 +135,27 @@ silently reopen.
       verify: the length split is recorded in the evidence file with its
       denominator and at least one example per class.
 
-- [~] **2.4 Re-measure, and accept the possibility of no movement <!-- blocked-by: post-change-window -->.** Run
+- [-] **2.4 Re-measure, and accept the possibility of no movement.** Run
       `probe_turnaround` over the next 10 sessions after 2.2 lands. If mean batch
       size has not moved, that is the result — record it as a null the way
       `session-canary`'s own section records a carrier that fired and changed
       nothing, rather than re-attempting the same lever at higher volume.
       verify: a second baseline entry exists with its own corpus window, and the
       delta is stated in the evidence file whichever direction it went.
+      **MERGED 2026-08-30 (outcome `transferred`, NOT cancelled) —
+      [`road-to-turnaround-followups.md`](../road-to-turnaround-followups.md)
+      Phase 1 step 1.1, which carries this criterion verbatim including its
+      pre-committed null.** Council 2/2, 2026-08-30, anthropic + openai: the
+      preservation test's CARRY branch requires a follow-up "created in the SAME
+      change" and this one was created in a prior change, so the lawful
+      disposition is the test's separate MERGE branch — *merge into existing
+      active work that already covers it* — not a CARRY. The criterion is
+      unchanged and stays live in the active estate; the glyph is `[-]` because
+      `update_roadmap_progress.ts:900` archives only at `deferred === 0`, and
+      `[-]`-with-a-transfer-note is this repository's existing shape for a
+      relocated obligation (`archive/road-to-context-fidelity.md:161`). The
+      dashboard will count it in its `cancelled` column; that column is a glyph
+      tally, and this note is the disposition.
 
 ## Phase 3 — Take blocking waits off the interactive path
 
@@ -241,7 +255,7 @@ silently reopen.
       verify: the finding names one of the three outcomes and the change that
       follows from it, in the evidence file.
 
-- [~] **5.3 Answer the pressure, not just the symptom <!-- blocked-by: authorization-shape-for-long-runs -->.** The stated motive both
+- [-] **5.3 Answer the pressure, not just the symptom.** The stated motive both
       times was a run outlasting the 30-minute window. Sessions in the corpus
       run 1.1–35 h. Decide whether the supported path — the run stops, reports,
       and the operator re-authorizes — is actually usable at that run length, or
@@ -251,13 +265,32 @@ silently reopen.
       verify: the question is put to the owner with both options and the measured
       run lengths, and the answer is recorded — a deferral with a named blocker
       counts, a silent widening never does.
+      **MERGED 2026-08-30 (outcome `transferred`, NOT cancelled) —
+      [`road-to-turnaround-followups.md`](../road-to-turnaround-followups.md)
+      Phase 2 step 2.1.** Council 2/2, 2026-08-30, anthropic + openai, on the
+      same MERGE-not-CARRY reasoning as 2.4, plus one bound both members stated
+      independently: **relocating an owner-reserved question is not answering
+      it.** The destination step keeps the owner (`user`), keeps Class 3, and
+      keeps the "the agent proposes no value for `LEDGER_MAX_AGE_MS` and does
+      not take the decision" clause verbatim. Nothing about the security floor
+      moved; only the file the question waits in did.
 
 ## Blockers
 
 ### blocker: post-change-window
 
-- **Status:** open — deferred, and deferred for a reason that cannot be
-  engineered away inside this change: step 2.2 landed the batching obligation
+- **Status:** resolved 2026-08-30 — **resolved FOR THIS ROADMAP BY MERGER, not
+  substantively.** The measurement itself is still outstanding; what closed is
+  this roadmap's disposition of it. Council 2/2 (anthropic + openai,
+  2026-08-30) ruled the CARRY branch of the preservation test unavailable —
+  it requires a follow-up "created in the SAME change" and
+  `road-to-turnaround-followups` was created in a prior change — and directed
+  the test's separate MERGE branch instead: *merge into existing active work
+  that already covers it*. Destination:
+  [`road-to-turnaround-followups.md`](../road-to-turnaround-followups.md) Phase 1
+  step 1.1, which carries the criterion below verbatim, including its
+  pre-committed null. Original deferral reason, unchanged and still true: step
+  2.2 landed the batching obligation
   minutes before 2.4 would measure its effect, so the ten post-change sessions
   the step names do not exist yet. Measuring the current window would be
   measuring the sessions that *preceded* the change and reporting it as an
@@ -292,7 +325,15 @@ silently reopen.
 
 ### blocker: authorization-shape-for-long-runs
 
-- **Status:** open — **OWNER-RESERVED, and deliberately not taken.** The
+- **Status:** resolved 2026-08-30 — **resolved FOR THIS ROADMAP BY MERGER, and
+  the decision itself is untouched.** Destination:
+  [`road-to-turnaround-followups.md`](../road-to-turnaround-followups.md) Phase 2
+  step 2.1, which keeps `Owner: user`, keeps Class 3, and keeps the "the agent
+  proposes no value and does not take the decision" bound verbatim. Council 2/2
+  (anthropic + openai, 2026-08-30) stated the boundary in both responses:
+  relocating an owner-reserved question is a disposition of WHERE it waits, not
+  an ANSWER to it, so the council may move it and may not settle it. **Still
+  OWNER-RESERVED, and still deliberately not taken.** The
   question is put here with both options and the measured run lengths, which is
   what step 5.3 asks for; the roadmap forbids the agent answering it, and
   `decision-revisit-gate`'s reserved table puts "lowers or removes a recorded
