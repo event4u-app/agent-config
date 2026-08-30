@@ -398,6 +398,7 @@ tasks:
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
+      - task: lint-positioning
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma
