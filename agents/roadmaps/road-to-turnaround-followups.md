@@ -1,32 +1,49 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: >
-  Grows active_roadmaps 5 -> 6, and the offset that would have paid for it is
-  not available: `road-to-agent-turnaround` cannot archive. It sits at 19/21
-  with two `[~]` items, and update_roadmap_progress archives only at
-  `deferred === 0` — by design, since Iron Law 3 exists to stop exactly the
-  silent burial of planned-for-later work. So this is a genuine +1, claimed
-  rather than disguised. What it buys: three items that provably could not
+  CORRECTED 2026-08-30 — the second sentence has since been falsified by the
+  change that carries this correction. It read "the offset that would have paid
+  for it is not available: road-to-agent-turnaround cannot archive", on the
+  ground that its two `[~]` items put it above update_roadmap_progress's
+  `deferred === 0` archive condition. That was true of the tree as it stood and
+  is no longer: a council (2/2, anthropic + openai, 2026-08-30) ruled the
+  preservation test's MERGE branch available for both items, they are now
+  `[-] MERGED (outcome transferred)` pointing at steps 1.1 and 2.1 here, and
+  that roadmap archives in this same change. The original +1 was claimed
+  honestly on the evidence available then; the offset exists now. What the
+  roadmap buys is unchanged: three items that provably could not
   close in the roadmap that found them — a re-measurement whose corpus does not
   exist yet, an owner-reserved security decision the agent is forbidden to take,
   and an installer change that would silently narrow three rules' activation
   from inside a measurement roadmap. Folding any of them into an existing
   roadmap would separate the work from the measurement that justifies it.
 estate_offset_exempt: >
-  Created in the same change that archives `road-to-agent-turnaround` at 19/21,
-  as the CARRY disposition for its two deferred items — the council-decidable
-  branch of the preservation test in roadmap-progress-sync, taken because both
-  criteria stay alive in the active estate rather than being weakened or
-  dropped. One in, one out. Measure the actual delta with check_estate_count
-  after the commit — do not read the number from this sentence.
+  CORRECTED 2026-08-30. The original line said this roadmap was "created in the
+  same change that archives road-to-agent-turnaround", as its CARRY disposition.
+  That was false in both halves: the archive did not happen in that change, and
+  a council (2/2, anthropic + openai, 2026-08-30) subsequently ruled the CARRY
+  branch of the preservation test unavailable precisely because this file was
+  created in a PRIOR change — the branch requires a follow-up created in the
+  SAME one. What actually applies is the test's separate MERGE branch, *merge
+  into existing active work that already covers it*, and that merge lands in the
+  change that archives `road-to-agent-turnaround`. So the offset is real and is
+  one-in-one-out, but this roadmap is the pre-existing destination of a merge
+  rather than the same-change product of a carry. Measure the actual delta with
+  check_estate_count after the commit — do not read the number from this
+  sentence.
 ---
 # Road to turnaround follow-ups
 
-> **Source:** the two `[~]` items and one recorded-but-unrepaired defect from
-> `agents/roadmaps/archive/road-to-agent-turnaround.md`, executed 2026-08-30.
+> **Source:** the two deferred items and one recorded-but-unrepaired defect from
+> `road-to-agent-turnaround`, executed 2026-08-30. Steps 1.1 and 2.1 below are
+> the destination of a MERGE disposition ruled by council 2/2 (anthropic +
+> openai, 2026-08-30); the source items are marked `[-] MERGED (outcome
+> transferred)` there, and the source roadmap archives in the same change.
+> **Step 2.1 stays owner-reserved:** relocating the question is not answering
+> it, which both council members stated independently.
 > Every number below is from
 > `agents/evidence/analysis/agent-turnaround-2026-08-30.md`; none is estimated
 > here.
