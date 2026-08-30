@@ -492,18 +492,107 @@ one for a design note under review: § 2's rule is that unanswered is
       informative while naming nobody who exists. What the column will carry
       once there is someone else to name is a `revisit-if`, not a placeholder.
 
-- [ ] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
+- [x] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
       footprint, and file-descriptor count, each with the ceiling and the
       headroom at expected peak. An unquantified ceiling is not headroom.
-      verify: the budgets are recorded and a test asserts the collector is stopped when each is exceeded.
-- [ ] **3.3 Define the kill switch and who may pull it.** One mechanism,
+      verify: DONE — `RESOURCE_BUDGETS` in `src/scripts/_lib/collector_supervision.ts` records four budgets, and `tests/scripts/collector_supervision.test.ts` § 3.2 asserts `action: 'stop'` for EACH budget individually.
+
+      **Four numbers, and the honest part is where they come from.** Every row
+      carries `ceiling`, `expectedPeak` and a `basis` string stating the
+      arithmetic the peak comes from; `headroomAtPeak()` DERIVES the headroom as
+      `ceiling - expectedPeak` rather than storing it, so the two numbers cannot
+      drift into a headroom that is not their difference. CPU 2 % of one core
+      (peak 0.2 %) · RSS 96 MiB (peak 60 MiB) · disk 64 MiB (peak 12 MiB) ·
+      file descriptors 32 (peak 12).
+
+      **Every `expectedPeak` is a DERIVATION, not a measurement, and the module
+      says so in those words.** No collector exists to measure — that is Phase 4
+      — so a row whose basis read like an observation would be the same
+      overclaim this roadmap's risk 1 already caught once. A measured peak above
+      a derived one FALSIFIES the derivation; the row is re-derived and the
+      ceiling is not raised to accommodate it. That is written as a `revisit-if`
+      on `RESOURCE_BUDGETS`.
+
+      Breach semantics are `stop`, never throttle — row 4 of the 3.1 matrix, on
+      the grounds that an observer which has become a load is no longer an
+      observer. Two boundary cases are tested rather than assumed: a reading
+      exactly AT the ceiling is INSIDE it (the ceiling is the last permitted
+      value), and a **missing or non-finite reading is a breach, not a pass**.
+
+      SENSITIVITY, observed: flipping `>` to `>=` in `budgetVerdict` reds 1 of
+      21; making the non-finite branch continue silently reds 1 of 21. Neither
+      probe reds the whole file, which is what distinguishes a probe from a
+      broken import.
+- [x] **3.3 Define the kill switch and who may pull it.** One mechanism,
       reachable without the collector's cooperation, documented where an
       operator will find it under pressure rather than in this roadmap.
-      verify: a test kills a wedged collector through the documented mechanism with the process unresponsive to graceful shutdown.
-- [ ] **3.4 Define static mode and daemon mode against the same tree.** Whether
+      verify: DONE — `tests/scripts/collector_supervision.test.ts` § 3.3 *KILLS A REAL WEDGED PROCESS that ignores SIGTERM*, and asserts `via: 'forced'` plus an ESRCH on the pid afterwards.
+
+      **The mechanism is a marker file, and its presence is the whole signal.**
+      `touch ~/.event4u/agent-config/agent-collector/STOP`. Nothing parses its
+      contents, so it cannot be half-pulled, and it needs no cooperation from
+      the collector — which is the step's binding requirement. While it exists
+      `acquireRuntimeLock` refuses, so a supervisor restart loop cannot bring
+      the collector back, and `resolveDispatchMode` reports `static` whatever
+      the lock says.
+
+      **Documented where an operator will find it under pressure**, which the
+      step requires explicitly and which this roadmap is not:
+      `docs/contracts/collector-operations.md` — stop it, is it running, what it
+      may cost, which mode, and what to look at when something went wrong.
+
+      **The wedged-process test is a real process, and two things about how it
+      is built are load-bearing rather than ceremony.** The victim is a
+      GRANDCHILD, re-parented to init when its launching shell exits: a direct
+      child stays a ZOMBIE after `SIGKILL`, `kill(pid, 0)` succeeds against an
+      unreaped child, and `terminateCollector` is synchronous so the event loop
+      that would reap it never runs — the first draft of this test failed
+      exactly there and reported `unreachable`. And the test WAITS for the child
+      to write a readiness file before signalling, because Node installs the
+      `SIGTERM` handler only once the script runs; a signal delivered during
+      interpreter startup takes the default action and the test goes green as
+      `graceful` — which is a pass for a test whose entire point is the
+      escalation. Both failures were observed, not anticipated.
+
+      SENSITIVITY, observed: deleting the `SIGKILL` escalation block reds 1 of
+      21; dropping the kill-switch guard from `acquireRuntimeLock` reds 1 of 21.
+
+      **`agent-config collector:stop` does not exist and the doc does not claim
+      it does.** There is no process to end until Phase 4; the verb ships with
+      the collector, in the same change, and the ops page says so in those words
+      rather than describing a command a reader would try and fail to run.
+- [x] **3.4 Define static mode and daemon mode against the same tree.** Whether
       both may run concurrently, and if not, what prevents it. Left undefined
       this is duplicate capture and version skew.
-      verify: a test asserts the declared behaviour — either concurrent operation is correct and proven, or it is prevented and the prevention is proven.
+      verify: DONE — declared PREVENTED in `DISPATCH_MODE_CONTRACT`, and `tests/scripts/collector_supervision.test.ts` § 3.4 proves the prevention: two contenders, exactly one lock, the loser routed to `static`.
+
+      **The declared behaviour is refusal, not correctness.** Concurrent
+      operation is not made safe; it is prevented by the per-user runtime lock
+      (`agent-collector/collector.lock`), which is the `uniqueness-namespace`
+      (b) verdict made concrete. Two checkouts of this repository — two
+      worktrees, which `resident-process-floors` § 2 Q5 calls the common case
+      here rather than the exotic one — resolve to the SAME lock path, so the
+      second does not get a second collector. It gets static mode.
+
+      What is refused, named rather than implied: duplicate capture (one
+      dispatch counted twice, in the numerator of the very ratio this
+      instrument exists to measure) and version skew (two revisions disagreeing
+      about the schema). Neither is worth solving for this instrument.
+
+      **What makes the exclusion cheap is what "static mode" means:** there is
+      no collector process and nothing is captured. It is not a second, quieter
+      writer — so the losing contender has nothing to flush and no partial
+      state, and § 1's falsifiable form (*if the module were killed, every
+      dispatch would resolve identically*) holds unchanged.
+
+      A lock whose recorded pid is not alive is FENCED rather than respected —
+      row 2's recovery procedure in the 3.1 matrix — so a crashed collector does
+      not lock its successor out forever. Atomicity is `wx`, not
+      compare-then-write.
+
+      SENSITIVITY, observed: dropping the `wx` flag reds 1 of 21 (both
+      contenders acquire); returning `held-by-live-process` without probing
+      liveness reds 1 of 21 (the crashed owner's lock becomes permanent).
 
 ## Phase 4 — Implement, default-off
 
@@ -537,13 +626,112 @@ one for a design note under review: § 2's rule is that unanswered is
 > assume permanence — *"platforms change, deprecation happens."*
 
 
-- [ ] **4.1 Build the collector against the contracts above.** Default-off, and
+- [x] **4.1 Build the collector against the contracts above.** Default-off, and
       default-off is a tested property rather than a config line nobody
       exercised.
-      verify: a fresh install runs the full test suite with no collector process started, asserted by process enumeration rather than by reading the setting.
-- [ ] **4.2 Prove static operation is unregressed.** The Goal of the governance
+      verify: DONE — `tests/scripts/collector_daemon.test.ts` § 4.1 greps the live process table (`ps -eo pid,args`) and asserts no collector process exists, with a POSITIVE CONTROL that spawns one first and proves the same grep can see it.
+
+      **Three modules, and the daemon adds a loop and a signal handler to them.**
+      `src/scripts/collector_daemon.ts` builds against the Phase 1–3 contracts
+      rather than beside them: the record shape is `collector_record`, the store
+      and quarantine are `collector_store`, the budgets, kill switch, lock and
+      heartbeat are `collector_supervision`, and the denominator plus spool are
+      the new `src/scripts/_lib/collector_denominator.ts`. Every rule it obeys
+      was decided earlier and is imported, not restated.
+
+      **Default-off is the ABSENCE of a file, which is what makes it a property
+      rather than a config line.** `ENABLED` is an opt-IN marker; a fresh
+      install has none, so there is no default that could be misread and no
+      environment variable CI could set by accident. Opt-out still beats opt-in.
+
+      **The verify clause is honoured literally: process enumeration, not a
+      setting read.** And the negative assertion is preceded by a positive
+      control, because "the grep found nothing" is worthless until the same grep
+      has been shown to find something — a grep that can never match reports
+      "no collector" on a machine running ten.
+
+      **The merged received item is discharged here, and it is the denominator.**
+      Step 1.2 item 1 requires that *"the denominator must be produced by a
+      writer that cannot fail in the same way the numerator does"*.
+      `recordOpportunity` runs in the HOOK process, synchronously, with no
+      daemon involved — so a dead collector yields a climbing denominator
+      against a flat numerator and the capture rate falls instead of reading
+      0/0. It is gated on the opt-in MARKER, never on the daemon: gating on the
+      daemon would make the instrument self-reporting, which is exactly the
+      failure `road-to-journal-host-capture-measurement` exists for.
+
+      One `stat` is the whole cost on a default-off install. The wiring is a
+      single call in `dispatch_hook.main`, placed after the vocabulary check (an
+      unknown event is not an opportunity) and before the manifest load (a
+      missing manifest fails open, and the dispatch still WAS an opportunity) —
+      that ordering is the difference between measuring dispatches and measuring
+      successful dispatches, and the metric definition asks for the former.
+
+      **It never throws, and that is the observation-only contract rather than
+      defensive habit.** `resident-process-floors` § 1's falsifiable form is
+      that killing the module leaves every dispatch resolving identically; a
+      raising counter breaks precisely that. Tested against an unwritable
+      directory.
+
+      SENSITIVITY, observed (20 tests in the file): inverting
+      `isCollectorEnabled` to default-ON reds 1; dropping the `isOptedOut` guard
+      reds 1; gating the denominator on a running daemon reds 1; swapping the
+      UTC date for a full timestamp reds 1; removing `recordOpportunity`'s
+      try/catch reds 1; stopping on the first budget breach instead of the
+      second reds 1; dropping `runLoop`'s `finally { stop() }` reds 1.
+
+      **The negative default-off assertion has no red edit, and that is stated
+      rather than hidden.** It is a negative claim about the machine, so its
+      sensitivity is carried by the positive control beside it — which is the
+      honest structure for an assertion no module edit can falsify.
+- [x] **4.2 Prove static operation is unregressed.** The Goal of the governance
       roadmap says static operation still works. Nothing tested it.
-      verify: the existing suite passes with the collector absent AND with it present-but-off, and the two results are compared rather than each declared green.
+      verify: DONE — `./scripts-run src/scripts/check_static_parity` ran both suites and COMPARED them: `present-but-off: 551 test(s), exit 0` · `absent: 551 test(s), exit 0` · `✅ static operation is unregressed — per-test verdicts are identical`.
+
+      **Two green runs are not the assertion; two runs with identical per-test
+      verdicts is.** The difference is the whole point of the step's wording: a
+      suite that passes both times while one test silently turned from `passed`
+      to `skipped` has regressed static operation in the one way "both green"
+      cannot see. `compare()` is keyed on test name → status, in both
+      directions, and is order-independent.
+
+      **"Absent" is absent, not disabled.** The second run aliases
+      `collector_denominator` to `tests/_lib/collector-absent-stub.ts` through a
+      `vitest.config.ts` branch that is inert unless
+      `AGENT_CONFIG_COLLECTOR_ABSENT=1`, so the dispatcher resolves a
+      do-nothing module and the real one is never loaded — its imports, its
+      filesystem probes and its existence all out of the picture. Run A is the
+      real module with no opt-in marker: present, and off.
+
+      **The parity set is DISCOVERED, not listed.** `parityFiles()` greps for
+      every test file that reaches `dispatch_hook` — 31 files, 551 tests — and
+      prints them, so a reader can check the denominator of the claim. A
+      hand-written list goes stale the first time a test file is added, and a
+      stale parity set reports parity over the wrong population. An empty set
+      exits 1 with *"a gate that scans nothing exits green"*, because that is
+      this gate's silent-failure shape.
+
+      **The scope limit, stated rather than implied:** this proves parity for
+      the dispatcher surface, which is the collector's entire contact with the
+      tree (one call in `dispatch_hook.main`). A test that never reaches that
+      function cannot diverge, because nothing differs on the path it takes. It
+      is NOT evidence that the whole suite is identical under both runs, and it
+      is not evidence about a future collector call site placed elsewhere —
+      adding one is what re-runs the grep.
+
+      SENSITIVITY, observed: making `recordOpportunity` throw (and removing its
+      try/catch) turns the present-but-off run red — 174 tests, exit 1 — and the
+      gate refuses with *"parity over a red suite proves nothing"* rather than
+      comparing two broken runs. The comparator's own sensitivity is unit-tested
+      in `tests/scripts/check_static_parity.test.ts`: a length-only comparison
+      passes the `passed → skipped` case and reds that block.
+
+      **Not wired into CI, and that is a decision with a cost.** The gate takes
+      about a minute (two 551-test runs) and registering a new gate touches six
+      further surfaces plus the gate-coverage ledger. It is run on demand, which
+      means it can rot between runs. *Revisit-if:* a second collector call site
+      lands anywhere outside `dispatch_hook.main`, or a static-mode regression
+      reaches `main` — either falsifies "on demand is enough".
 
 ## Phase 5 — Prove the five lifecycle properties on real processes
 

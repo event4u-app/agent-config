@@ -1,16 +1,34 @@
 import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 
+const BASE_ALIAS: Record<string, string> = {
+    '@cli': new URL('./src/cli', import.meta.url).pathname,
+    '@server': new URL('./src/server', import.meta.url).pathname,
+    '@shared': new URL('./src/shared', import.meta.url).pathname,
+    '@ui': new URL('./src/ui', import.meta.url).pathname,
+    '@install': new URL('./src/install', import.meta.url).pathname,
+};
+
+// `AGENT_CONFIG_COLLECTOR_ABSENT=1` is the second half of
+// `src/scripts/check_static_parity.ts` (roadmap step 4.2): it resolves the
+// collector's denominator module to a do-nothing stub, so the dispatcher runs
+// with the collector genuinely ABSENT rather than merely disabled. Unset — which
+// is every normal run, local and CI — this branch does nothing at all.
+const COLLECTOR_ABSENT = process.env.AGENT_CONFIG_COLLECTOR_ABSENT === '1';
+const COLLECTOR_STUB = new URL('./tests/_lib/collector-absent-stub.ts', import.meta.url).pathname;
+
 export default defineConfig({
     plugins: [preact()],
     resolve: {
-        alias: {
-            '@cli': new URL('./src/cli', import.meta.url).pathname,
-            '@server': new URL('./src/server', import.meta.url).pathname,
-            '@shared': new URL('./src/shared', import.meta.url).pathname,
-            '@ui': new URL('./src/ui', import.meta.url).pathname,
-            '@install': new URL('./src/install', import.meta.url).pathname,
-        },
+        alias: COLLECTOR_ABSENT
+            ? [
+                  ...Object.entries(BASE_ALIAS).map(([find, replacement]) => ({
+                      find,
+                      replacement,
+                  })),
+                  { find: /^.*collector_denominator\.js$/, replacement: COLLECTOR_STUB },
+              ]
+            : BASE_ALIAS,
     },
     test: {
         include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
