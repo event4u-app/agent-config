@@ -17,6 +17,40 @@ for `agents/runtime/state/` writes, and the Copilot fallback pattern. Does
 
 Last refreshed: 2026-08-17.
 
+## Admitting a concern — the five questions
+
+```
+A CONCERN ADDED FROM 2026-08-30 ON CARRIES A RECORDED ANSWER, OR THE GATE FAILS.
+```
+
+`agents/decisions/concern-admissions.jsonl` is the ledger; `check_concern_admissions`
+is the gate. The 55 concerns present when it landed are **grandfathered by
+construction** — the scope is a set difference over concern ids between the base
+ref and HEAD, so a pre-existing concern can neither demand a row nor be
+forgotten off one.
+
+The questions are deliberately **not** the skill ledger's questions. What makes
+a concern risky is that it binds to a slot, on hosts that may or may not honour
+a deny, inside a per-event budget — and none of that has a skill analogue.
+
+| Field | The question |
+|---|---|
+| `slot` | Which lifecycle slot does it bind? |
+| `binding_hosts` | Which hosts actually **bind** it — not which declare the slot. The two differ, and treating them as one is the usual over-claim this contract already documents. |
+| `behaviour_where_deny_ignored` | What does it do where the host ignores a deny? A concern whose only answer is "it blocks" is describing one host. |
+| `why_not_extend` | Why can no existing concern carry this? |
+| `per_event_budget_impact` | What does it cost against the per-`(platform, event)` cap? |
+
+`decision: rejected` is a **first-class row** — a recorded refusal is the point,
+not an absence — and a rejected row naming a concern that exists is a hard
+failure, because it means the refusal was overridden without the row being
+updated.
+
+The **total** count is ratcheted separately, as `concern_count` in
+`check_estate_count`. Both exist because the per-event cap is blind to total
+growth by construction: eight new concerns spread across eight events violate it
+zero times.
+
 ## Vocabulary
 
 | Term | Meaning |

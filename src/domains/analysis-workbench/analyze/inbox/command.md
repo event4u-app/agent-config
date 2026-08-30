@@ -464,6 +464,16 @@ visibly not a new one, and the resulting learning is emitted as an artefact in
 Phase 5 like any other survivor — never as a line in the reply that nothing reads
 again.
 
+**A status-update prediction naming a concrete mechanism becomes a stub or a
+roadmap in the SAME run, never a line in a file about to be consumed.** That is
+the "right, never recorded" outcome caught at its source: the round before
+`inbox-2026-08-g` already named the hook-concern axis as the next ratchet
+candidate at 68→69, the sentence sat in an untracked inbox file, the file was
+consumed, and nothing under `agents/roadmaps/` inherited it — so the same
+recommendation arrived again a round later, correct both times and durable
+neither. A prediction that names a mechanism is already an artefact; the only
+question is whether anyone writes it down before its carrier disappears.
+
 ### Phase 5 — Map survivors onto this suite's artefact types
 
 The question is never "what does the file say" but **"what does it become here"**:
