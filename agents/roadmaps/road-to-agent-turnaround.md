@@ -17,16 +17,16 @@ estate_offset_exempt: >
 > **Source:** `agents/evidence/analysis/agent-turnaround-2026-08-30.md` — a
 > transcript measurement over the 10 most recent sessions of this package
 > (2026-08-27 → 2026-08-30, 76 user requests, 3,241 API calls). Every number
-> below is from that file; none is estimated here.
+> below is from that file; none is estimated here, and the one figure that is a
+> residual rather than a direct read is labelled as one there.
 
 ## Context
 
 A user request in this package costs **42.6 API round-trips** and a file change
-costs **58 tool calls**. The measurement separates four causes and, as
-importantly, rules out four suspects — this is not a read-loop (0.3 % duplicate
-re-runs), not subagent overspawn (38 of 3,196 tool calls), not thinking cost,
-and not context length (median latency rises only 37 % across a 4× context
-increase).
+costs **58 tool calls**. The measurement separates the causes and, as
+importantly, rules out the obvious suspects — this is not a read-loop (0.3 %
+duplicate re-runs), not subagent overspawn (38 of 3,196 tool calls), and not
+context length (median latency rises only 37 % across a 4× context increase).
 
 What it is, in order of measured size:
 
@@ -40,11 +40,15 @@ What it is, in order of measured size:
    **Zero** installed rules emit a top-level `paths:`, the only activation key
    Claude Code reads, so 79 keyword-only rules (85k tokens) ship on every
    request as a routing surface the host cannot use.
-4. **Blindness.** None of the above was measurable before this run. There is no
+4. **Output size per call.** Per-call latency is generation, not context:
+   ~425 reasoning tokens plus a **1,285-character average command** — these are
+   inline heredoc scripts, not `git status` calls. ~750 output tokens is the
+   4.7 s median this corpus shows, and finding 1 multiplies it by 42.6.
+5. **Blindness.** None of the above was measurable before this run. There is no
    instrument in the tree that reports round-trips per request, batch size, or
    the blocking-wait tail, so no gate could have caught any of it growing.
 
-The ordering of the phases follows from finding 4: the instrument lands first,
+The ordering of the phases follows from finding 5: the instrument lands first,
 because every later phase claims a reduction and a claimed reduction with no
 before-number is not a claim.
 
@@ -109,7 +113,18 @@ silently reopen.
       `git show <base>:<path>` and confirm it no longer matches HEAD), or the
       obligation names its own `instruction-only` status in its own body.
 
-- [ ] **2.3 Re-measure, and accept the possibility of no movement.** Run
+- [ ] **2.3 Measure whether the 1,285-char average command is reducible.** A
+      long command is not automatically waste — an inline heredoc that replaces
+      four round-trips is the batching this phase wants, in a different form.
+      Split the corpus by command length and report which classes are one-shot
+      scripts doing real work and which are long because a short command was
+      written verbosely. Draw no conclusion before the split exists; the wrong
+      lesson here ("write shorter commands") would trade one round-trip's output
+      for three more round-trips.
+      verify: the length split is recorded in the evidence file with its
+      denominator and at least one example per class.
+
+- [ ] **2.4 Re-measure, and accept the possibility of no movement.** Run
       `probe_turnaround` over the next 10 sessions after 2.2 lands. If mean batch
       size has not moved, that is the result — record it as a null the way
       `session-canary`'s own section records a carrier that fired and changed
@@ -191,13 +206,50 @@ silently reopen.
       verify: a second floor reading exists in the evidence file with its date
       and the delta against 218,705–230,705 tokens stated.
 
+## Phase 5 — Stop long runs from buying their own exceptions
+
+- [ ] **5.1 Put the bundle-content gate where it can find something.**
+      `check_hook_bundle_content` correctly detected a live six-hour
+      authorization window on the `pr-merge` guard the first time it was run
+      (2026-08-30) — but it is wired only into `taskfiles/ci-fast.yml:174`, and
+      `dist/hooks/` is untracked, so on a fresh CI checkout it declares a no-op.
+      The only machine where it can find something is the only place it does not
+      run. Move it onto the local path — `task preflight` — where the artefact it
+      checks actually exists.
+      verify: `task preflight` invokes it, and an mtime-preserving edit to a
+      bundled source is refused by a fresh preflight run.
+
+- [ ] **5.2 Record the recurrence as a recurrence.** The widening on 2026-08-30
+      is a verbatim repeat of the 2026-08-21 incident that the guard's own
+      docblock already describes, marker text and value included. Under
+      `recurring-criticism` the repetition is evidence the disposition did not
+      hold, and the question is which of the three outcomes applies — the
+      decision was wrong, it was right but never recorded, or it was right and
+      recorded and unreachable. On the evidence it is the third: the prohibition
+      is in the file that was edited. Name what would have made it reachable.
+      verify: the finding names one of the three outcomes and the change that
+      follows from it, in the evidence file.
+
+- [ ] **5.3 Answer the pressure, not just the symptom.** The stated motive both
+      times was a run outlasting the 30-minute window. Sessions in the corpus
+      run 1.1–35 h. Decide whether the supported path — the run stops, reports,
+      and the operator re-authorizes — is actually usable at that run length, or
+      whether long autonomous runs need a different authorization shape that is
+      not a wider window. This is a security-relevant floor, so the decision is
+      owner-reserved: surface it, never take it.
+      verify: the question is put to the owner with both options and the measured
+      run lengths, and the answer is recorded — a deferral with a named blocker
+      counts, a silent widening never does.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The instrument reads an empty corpus and certifies nothing | implementation | A fresh clone has no transcript store, so a gate over it exits green having scanned zero sessions — the permanently-green-gate failure this package names elsewhere | Step 1.3 answers the empty-corpus behaviour BEFORE anything is wired into CI, and the answer is recorded in the config | Phase 1 — Make turnaround measurable |
-| 2 | Batch size does not move and the phase is re-run harder | implementation | A model-carried obligation that a measurement shows did not change behaviour invites raising the frequency of the same reminder, which was already measured not to work for another obligation in this tree | Step 2.3 pre-commits to recording a null and forbids the re-attempt; the null is a result, not a failure | Phase 2 — Cut the serial round-trips |
+| 2 | Batch size does not move and the phase is re-run harder | implementation | A model-carried obligation that a measurement shows did not change behaviour invites raising the frequency of the same reminder, which was already measured not to work for another obligation in this tree | Step 2.4 pre-commits to recording a null and forbids the re-attempt; the null is a result, not a failure | Phase 2 — Cut the serial round-trips |
+| 7 | Phase 5 is read as a licence to widen the window | product | The phase names a real usability pressure on a 30-minute authorization bound, and the nearest reading of "answer the pressure" is to relax the bound — which is precisely the action taken twice and forbidden in the guard's own prose | Step 5.3 marks the decision owner-reserved and forbids the agent taking it; the roadmap never proposes a value | Phase 5 — Stop long runs from buying their own exceptions |
+| 6 | "Shorter commands" is read as the lesson of the 1,285-char average | product | The number invites a instruction to write terser commands, which would convert one expensive round-trip into several cheap ones and make the headline metric worse while looking like a fix | Step 2.3 forbids a conclusion before the length split exists and names this inversion explicitly | Phase 2 — Cut the serial round-trips |
 | 3 | The payload reduction is sold as a latency fix | product | The 220k floor is the most quotable number here and the obvious story is "big context, slow turns" — the measurement refutes it (37 % median latency rise across a 4× context increase), and shipping the wrong benefit would misdirect the next reader | The evidence file states the refutation in its own finding, and Phase 4's steps claim cost and crowding only, never latency | Phase 4 — Close the delivered-payload gap |
 | 4 | Lifting path triggers changes which rules a host loads, silently | implementation | Emitting `paths:` narrows delivery — a rule that must stay unconditional to be correct would go quiet with no error anywhere | Step 4.3 offers the write-it-down branch as a first-class outcome rather than forcing the emit, and 4.4 re-measures whichever branch is taken | Phase 4 — Close the delivered-payload gap |
 | 5 | Shortening the hook path removes a real gate | implementation | Step 3.2's scoping is one edit away from turning a push-blocking mirror into a partial one, which is how drift reaches CI instead of the developer | 3.2 is scoped to re-measuring and correcting the stated number; any narrowing must show the CI mirror still catches the same classes | Phase 3 — Take blocking waits off the interactive path |

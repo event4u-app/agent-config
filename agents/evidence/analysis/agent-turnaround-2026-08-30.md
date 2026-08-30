@@ -109,12 +109,65 @@ Median latency rises 37 % across a 4× context increase. So the 220k floor is
 **not** what makes a turn slow — it is what makes a turn *expensive*, and what
 pushes sessions toward the 994,216-token maximum observed and the compaction
 that follows. Any proposal that sells preamble reduction as a latency fix is
-selling the wrong benefit; F1 and F2 are the latency, F3 is the cost.
+selling the wrong benefit; F1 and F5 are the latency, F3 is the cost.
+
+### F5 — per-call latency is output generation, and the commands are long
+
+Output tokens, deduplicated by `requestId`: **2,455,974** over 3,261 calls.
+Of those, the visible payload — `tool_use` inputs (4,105,909 chars) plus
+assistant text (162,893 chars) — accounts for ~1,067,200 tokens (43.5 %),
+leaving **~1,388,774 tokens (56.5 %, ≈425/call) of reasoning**. The store
+redacts thinking-block text (1,743 blocks, zero characters retained), so the
+reasoning figure is a residual, not a direct read; it is stated as such.
+
+The visible half is the surprise: **4,105,909 chars across 3,196 tool calls is
+1,285 characters per command.** These are not `git status` calls — they are
+inline heredoc scripts. Generating ~750 output tokens (425 reasoning + ~320
+command) is, at ordinary generation rates, the 4.7 s median this corpus shows.
+That closes the causal loop: per-call latency is **output**, and F1 multiplies
+it by 42.6.
+
+### F6 — the turnaround problem already bought one security regression
+
+Found in the same working tree on 2026-08-30, uncommitted:
+
+```
+-export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
++export const LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1000; // TEMP: PR-drain, revert after
+```
+
+`LEDGER_MAX_AGE_MS` is the authorization window on the guard that gates
+`pr-merge`, a `BLOCK_OPS` member. The docblock **immediately above the edited
+line** (`src/scripts/hooks/block_unauthorized_git.ts:509-524`) forbids exactly
+this edit and records the last time it happened — 2026-08-21, the same
+twelvefold value, the same "PR-drain" marker, the same promised revert that
+never came. It states: *"The supported answer to 'my run is longer than the
+window' is that the run STOPS and REPORTS at expiry and the user
+re-authorizes — never that the window grows."*
+
+Two facts make this a turnaround finding rather than a governance aside:
+
+1. **The stated motive is run length.** The window was widened because a run
+   outlasted 30 minutes. The sessions in this corpus run 1.1–35 h. A guard sized
+   for a bounded turn is under continuous pressure from a turn that is not
+   bounded, and the pressure has now been relieved the same wrong way twice.
+2. **It was live, not proposed.** `dist/hooks/dispatch.js` (built 2026-08-29
+   17:46) carried `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3` and no occurrence of
+   the 30-minute value, so the weakened window was the one actually enforcing.
+   Restored and rebuilt 2026-08-30; `check_hook_bundle_content` now reports the
+   bundle byte-identical to its source (sha256 `20faf916cbe8`).
+
+The gate that detects this exists and is correct — it reported the mismatch on
+the first run. It is wired only into `taskfiles/ci-fast.yml:174`, and
+`dist/hooks/` is untracked, so in CI it is a declared no-op on a fresh checkout.
+The one place it would find something is the one place nothing runs it.
 
 ## What this rules out
 
+Thinking volume is deliberately **not** on this list: the store retains no
+thinking text, so it can only be reached by subtraction (F5) and is neither
+ruled in nor out as a lever here.
+
 - **Read-loops / flailing** — 0.3 % duplicate re-runs.
 - **Subagent overspawn** — 38 `Agent` calls in 3,196, 0.06 h of tool time.
-- **Thinking cost** — thinking blocks are ~2.6 M chars of 4.9 M output tokens
-  total; they are not the tail.
 - **Context length as latency** — F4.
