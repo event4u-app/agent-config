@@ -32,8 +32,12 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # outputs (e.g. a new guideline bumping the count in README + docs/architecture).
 # `task consistency` is the EXACT CI mirror (sync-check + sync + generate-tools
 # + compile-router + compile-corpus + `git diff --quiet`),
-# so any derived-output drift blocks the push here. Runtime ~15-40s (it
-# regenerates the tool trees) — cheaper than a red CI run and a fixup re-push.
+# so any derived-output drift blocks the push here. Runtime ~10s: three
+# consecutive timed runs on 2026-08-30 measured 9.79s / 10.19s / 10.26s
+# (road-to-agent-turnaround 3.2). The header said "~15-40s" until then, which
+# over-stated this half of the hook by 1.5-4x while the hook AS A WHOLE was far
+# more expensive than either number — see the preflight block below. Still
+# cheaper than a red CI run and a fixup re-push.
 
 # A delete-only push has no content to gate, so every check below is answering
 # a question nobody asked. Measured 2026-08-18 during the 14.0.0 release:
@@ -83,9 +87,20 @@ fi
 # preflight gates read that tree, so on a FRESH worktree (this repo's standard
 # workflow) running preflight first would fail with "produced by regeneration
 # but absent before" — red for a reason the contributor did not cause, which is
-# exactly the anti-pattern this gate set exists to avoid. Measured 15s against
-# the 25s `pre_push_budget_seconds` ceiling in src/config/ci-local-parity.yml.
-# `check_enforcement_coverage` (30.7s) stays out of preflight by design.
+# exactly the anti-pattern this gate set exists to avoid.
+#
+# BUDGET: measured 36.05s on 2026-08-30 (road-to-agent-turnaround 3.2, a clean
+# exit-0 run), against the 25s `pre_push_budget_seconds` ceiling in
+# src/config/ci-local-parity.yml. That is 44% OVER, and the header claimed 15s
+# until this measurement. The ceiling's own comment calls it "a real budget, not
+# a wish" — and nothing measures the hook, so the gate set grew past it with no
+# signal. Recorded rather than fixed here: narrowing preflight to the pushed
+# paths is one edit away from turning a push-blocking mirror into a partial one,
+# which is how drift reaches CI instead of the developer.
+#
+# The hook's local cost is therefore ~46s (10s consistency + 36s preflight),
+# which is what the 67s median `git push` in the ten-session corpus is mostly
+# made of. `check_enforcement_coverage` (30.7s) stays out of preflight by design.
 echo "🔍 Preflight — the CI-only repo-content gates..."
 if [ "${AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT:-}" = "1" ]; then
     echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_PREFLIGHT=1"

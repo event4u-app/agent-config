@@ -10,5 +10,5 @@
 # The `description` field is asserted by `scripts/lint_positioning.py`
 # to be consistent with the README tagline and the `package.json`
 # description.
-description: "Every claim machine-checked, including \"zero runtime daemon\" — governed skills, rules and replayable state. One contract, every host agent."
+description: "Every claim machine-checked, including the counts in these badges — governed skills, rules and replayable state. One contract, every host agent."
 homepage: "https://event4u.app"

@@ -24,9 +24,32 @@
  *                 read — NEVER a verdict, and the reason is printed.
  *
  * Usage: ./scripts-run src/scripts/ci_settle <pr> [--timeout-min N] [--interval-sec N]
+ *
+ * THE DEFAULT DEADLINE IS UNDER THE TOOL CEILING, deliberately (9 min, see
+ * {@link FOREGROUND_CEILING_MIN}). It used to be 45, and a `Bash` tool call is
+ * capped at 600 s: measured over ten sessions
+ * (`agents/evidence/analysis/agent-turnaround-2026-08-30.md` F2), ten of the
+ * twelve slowest calls in the corpus were this script KILLED at 592-603 s and
+ * re-invoked, for 2.7 h of a 14.2 h tool budget. A wait that is killed reports
+ * nothing — the exit-code contract below is exactly what the truncation
+ * destroys, which makes a deadline past the ceiling worse than a shorter one.
+ *
+ * A longer wait is still available and is a BACKGROUND job, not a bigger
+ * number: run this with the host's background-execution primitive, or
+ * `--timeout-min N` explicitly. Passing a value above the ceiling prints a
+ * warning naming the truncation rather than silently accepting it.
  */
 
 import { spawnSync } from 'node:child_process';
+
+/**
+ * The largest default deadline that fits inside one foreground `Bash` call.
+ *
+ * The tool caps at 600 s. 9 min = 540 s leaves one 60 s poll interval of
+ * headroom, so the loop reaches its own `DID NOT SETTLE` branch and RETURNS a
+ * stated non-verdict instead of being killed mid-poll.
+ */
+export const FOREGROUND_CEILING_MIN = 9;
 
 /** What one poll told us. `unreadable` is deliberately not a verdict. */
 export type PollState =
@@ -114,7 +137,11 @@ export function main(argv: readonly string[]): number {
     const positional = argv.filter((a) => !a.startsWith('--'));
     const pr = positional[0];
     if (pr === undefined) {
-        process.stderr.write('usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n');
+        process.stderr.write(
+            'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
+                `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
+                '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n',
+        );
         return 2;
     }
     const num = (flag: string, dflt: number): number => {
@@ -124,7 +151,17 @@ export function main(argv: readonly string[]): number {
         const n = v === undefined ? NaN : parseInt(v, 10);
         return Number.isFinite(n) && n > 0 ? n : dflt;
     };
-    const timeoutMin = num('--timeout-min', 45);
+    const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
+    if (timeoutMin > FOREGROUND_CEILING_MIN) {
+        // Said once, up front, rather than discovered when the call is killed:
+        // a truncated wait produces no line at all, so the warning has to come
+        // before the wait rather than at its expiry.
+        process.stdout.write(
+            `ci_settle: --timeout-min ${String(timeoutMin)} exceeds the ${String(FOREGROUND_CEILING_MIN)} min that fits ` +
+                'inside one foreground Bash call (600 s cap). In the foreground this call will be KILLED before ' +
+                'the deadline and will report nothing — run it as a background job for a wait this long.\n',
+        );
+    }
     const intervalSec = num('--interval-sec', 60);
 
     const deadline = Date.now() + timeoutMin * 60_000;
