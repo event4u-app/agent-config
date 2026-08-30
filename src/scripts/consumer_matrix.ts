@@ -344,7 +344,64 @@ interface MissingModule {
  * deliberately ignores bare package specifiers (`from 'commander'`) so the
  * walk never leaves the package's own `dist/` tree.
  */
-export function parseRelativeSpecifiers(source: string): string[] {
+/**
+ * Strip comments before scanning for import specifiers.
+ *
+ * A doc comment can contain a perfectly well-formed `export { X } from './X'`
+ * as an EXAMPLE, and the scanner had no way to tell one from a real import —
+ * `src/cli/commands/uiAudit.ts` carries exactly that line, and the built output
+ * keeps it, so the gate reported `commands/uiAudit.js → missing ./X` for a
+ * module nobody imports. That is a false red on a completeness gate, which is
+ * the worst kind: it says the shipped tarball is broken when it is not.
+ *
+ * Deliberately a lexer rather than a regex sweep: a `//` inside a string
+ * literal (`'https://…'`) is not a comment, and stripping it would join two
+ * lines and hide a real specifier. Handles line comments, block comments, and
+ * all three quote forms including escapes.
+ */
+export function stripComments(source: string): string {
+    let out = '';
+    let i = 0;
+    type Mode = 'code' | 'line' | 'block' | 'single' | 'double' | 'template';
+    let mode: Mode = 'code';
+    while (i < source.length) {
+        const c = source[i] as string;
+        const next = source[i + 1];
+        if (mode === 'code') {
+            if (c === '/' && next === '/') { mode = 'line'; i += 2; continue; }
+            if (c === '/' && next === '*') { mode = 'block'; i += 2; continue; }
+            if (c === "'") mode = 'single';
+            else if (c === '"') mode = 'double';
+            else if (c === '`') mode = 'template';
+            out += c;
+            i += 1;
+            continue;
+        }
+        if (mode === 'line') {
+            if (c === '\n') { mode = 'code'; out += c; }
+            i += 1;
+            continue;
+        }
+        if (mode === 'block') {
+            if (c === '*' && next === '/') { mode = 'code'; i += 2; continue; }
+            // Keep newlines so line-anchored patterns still see line starts.
+            if (c === '\n') out += c;
+            i += 1;
+            continue;
+        }
+        // Inside a string: copy verbatim, honour escapes, and close on the
+        // matching quote.
+        out += c;
+        if (c === '\\' && next !== undefined) { out += next; i += 2; continue; }
+        const closer = mode === 'single' ? "'" : mode === 'double' ? '"' : '`';
+        if (c === closer) mode = 'code';
+        i += 1;
+    }
+    return out;
+}
+
+export function parseRelativeSpecifiers(rawSource: string): string[] {
+    const source = stripComments(rawSource);
     const out = new Set<string>();
     const patterns = [
         /\bfrom\s*["']([^"']+)["']/g,
