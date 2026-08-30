@@ -807,9 +807,24 @@ The council should not ship a topology selector before it can define "better".
 - [ ] 2.5 Separate model quality from topology quality — same topology across
   model sets, and same model set across topologies.
       verify: both axes appear in the result table
-- [ ] 2.6 No promotion from N=1: confidence intervals or explicit variance
+- [x] 2.6 No promotion from N=1: confidence intervals or explicit variance
   bands.
       verify: every promotion claim carries a trial count and a band
+      **DONE 2026-08-31 — pre-registered, and the ordering is the evidence.**
+      [`internal/bench/council-topology-promotion-stats-PREREG.md`](../../internal/bench/council-topology-promotion-stats-PREREG.md)
+      fixes the two mandatory fields every promotion claim renders **in the
+      claim itself** — `n` per arm (with the drop asymmetry when trials error
+      out) and a 95 % CI, or an explicit min/median/max variance band where the
+      metric supports no CI. A row missing either is not a weakened promotion,
+      it is an **observation**.
+      Written before any arm exists and before step 2.1's family list is
+      committed, so the floors cannot have been fitted to a result — that
+      ordering is checkable in the git history rather than asserted.
+      Deliberately narrow: this step buys the **reporting bar**, not the metric
+      set (2.3) and not the eligible families (2.1). Trial-count floors are
+      stated defaults with their own `revisit-if`, and are admissibility only —
+      clearing a floor with a band spanning zero is a null, and publishing it as
+      one is the correct outcome.
 - [ ] 2.7 Round-count bias arm: rounds 1 vs 2, verdict flips, dissent
   retention, correctness where gradeable, confidence-vs-correctness, cost
   delta. Grounded in **arXiv 2505.19477** (round-1 debate bias amplification) —
@@ -960,33 +975,101 @@ are **0** `Promise.all` occurrences in that file and the dispatch order is
 byte-pinned by tests. Any work here runs through
 [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md).
 
-- [ ] 4.1 Run the revisit gate before writing code: state the recorded
+- [x] 4.1 Run the revisit gate before writing code: state the recorded
   decision, the condition it encoded (interactive mid-flow overrun prompts at
   2-3 members), and what has changed since. Route per that rule.
       verify: the revisit record exists with a verdict and a `revisit-if`
       line; a verdict of "keep sequential" closes Phase 4 as a null and is a
       legitimate outcome
-- [ ] 4.2 Answer the interactive-overrun question the reversal bought: how a
+      **DONE 2026-08-31 — verdict: keep sequential. Phase 4 closes as a
+      published null.** Record:
+      [`agents/evidence/analysis/parallel-fanout-revisit-2026-08-31.md`](../evidence/analysis/parallel-fanout-revisit-2026-08-31.md).
+      It is a **transcription** of a verdict already reached, not a fresh
+      decision: `blocker: parallel-fanout-reopens-a-closed-decision` below
+      carries `Status: resolved` with resolution (a), AI council 2026-08-28,
+      **2/2**. What was missing was a record the next session can read without
+      re-deriving it from a blocker body.
+      The record states the decision (`orchestrator.ts:8-12`), the condition it
+      encoded (interactive mid-flow `on_overrun` prompts at 2-3 members), what
+      changed (**materially nothing** — `agents/templates/.ai-council.yml.example:39`
+      still ships **two** members `enabled: true`, `on_overrun` is still wired
+      at `orchestrator.ts:691-711`, and no latency complaint exists anywhere in
+      the tree), the routing (council-decidable, not owner-reserved — the
+      transition weakens no floor and is reversible inside `orchestrator.ts`),
+      the verdict, and a `revisit-if`.
+      **Revisit-if** (also carried in the record): a real recorded latency
+      complaint against a council run, **or** the typical enabled-member count
+      in the shipped example rising above 3. A topology experiment's
+      convenience is not new evidence — the mechanism under test is the same one
+      the original decision tested.
+- [-] 4.2 Answer the interactive-overrun question the reversal bought: how a
   parallel round presents a mid-flow spend prompt without losing
   predictability.
       verify: a written mechanism, or the phase stops here
-- [ ] 4.3 Preserve the sequential default — plain confirmation keeps today's
+      **NULL-CLOSED by 4.1 — the revisit verdict is "keep sequential", so this
+      step's precondition never arises.** The step's own verify line names the
+      alternative outcome ("or the phase stops here"), and that is the branch
+      taken. Not a dropped item: `blocker:
+      parallel-fanout-reopens-a-closed-decision` (`Blocks: all of Phase 4`) was
+      resolved by the maintainer-owned council decision of 2026-08-28 (2/2) to
+      close Phase 4 as a published null; this cancellation executes that
+      recorded resolution rather than making a new one.
+- [x] 4.3 Preserve the sequential default — plain confirmation keeps today's
   semantics exactly.
       verify: the byte-pinned dispatch-order tests stay green **unmodified**;
       needing to edit them is the signal to stop, not to update them
-- [ ] 4.4 Present the worst-case ceiling for all parallel member calls
+      **DONE 2026-08-31, verification-only — nothing was changed, which is the
+      point of the step.** Three readings, all on this branch against
+      `origin/main` @ `60ad56b7c`:
+      (1) `npx vitest run tests/scripts/ai_council/orchestrator.test.ts` →
+      **83 passed / 83**, including
+      `orchestrator.test.ts:125-136` (`dispatches members in input order,
+      accumulates tokens`), which is the byte-pinned dispatch-order assertion;
+      (2) `git diff origin/main --stat -- tests/` → **empty**, so the tests are
+      green **unmodified**, not green because they were edited into agreement;
+      (3) `grep -c 'Promise.all' src/scripts/ai_council/orchestrator.ts` → `0`,
+      so no parallel dispatch primitive was introduced.
+      The step's stop signal ("needing to edit them is the signal to stop") was
+      never reached, because 4.1's verdict means no parallel work was attempted.
+- [-] 4.4 Present the worst-case ceiling for all parallel member calls
   (including output-token ceiling and buffer rules) and require
   `--confirm-ceiling`; plain `--confirm` is insufficient.
       verify: a parallel run without the ceiling flag refuses
-- [ ] 4.5 Parallelize only **within** a round; rounds stay sequential because
+      **NULL-CLOSED by 4.1 — the revisit verdict is "keep sequential", so this
+      step's precondition never arises.** There is no parallel run for a
+      ceiling flag to gate; the verify criterion is unreachable by construction.
+      Executes the recorded resolution of `blocker:
+      parallel-fanout-reopens-a-closed-decision` (`Blocks: all of Phase 4`), not
+      a new decision. The shape to re-enter from, if the decision is ever
+      reopened, is recorded in 4.1's revisit record § 5: intra-round parallelism
+      **behind** exactly this ceiling flag.
+- [-] 4.5 Parallelize only **within** a round; rounds stay sequential because
   round N+1 depends on N. One member failure normalizes to an error-valued
   response, never a thrown whole-run failure.
       verify: a seeded member failure yields a rendered error response and the
       run completes
-- [ ] 4.6 Topology integration rule: a parallel topology may be selected only
+      **NULL-CLOSED by 4.1 — the revisit verdict is "keep sequential", so this
+      step's precondition never arises.** Executes the recorded resolution of
+      `blocker: parallel-fanout-reopens-a-closed-decision` (`Blocks: all of
+      Phase 4`), not a new decision.
+      Worth recording rather than glossing: the step's **second** half is
+      already shipped independently of any parallelism —
+      `orchestrator.test.ts:138` (`member exception → error-tagged response,
+      never raises`) pins exactly that normalization on the sequential path. So
+      what is cancelled here is the parallelism clause, not the failure-handling
+      property, which is live.
+- [-] 4.6 Topology integration rule: a parallel topology may be selected only
   when its spend authorization precondition is already satisfied, and may
   never silently upgrade `--confirm` into ceiling authorization.
       verify: a test asserts the upgrade is impossible
+      **NULL-CLOSED by 4.1 — the revisit verdict is "keep sequential", so this
+      step's precondition never arises.** There is no parallel topology to
+      integrate, so there is no `--confirm` → ceiling upgrade path to forbid.
+      Executes the recorded resolution of `blocker:
+      parallel-fanout-reopens-a-closed-decision` (`Blocks: all of Phase 4`), not
+      a new decision. The prohibition itself is not lost: step **12.3** already
+      carries the general form ("a force-topology debug control ... cannot
+      override ... spend authorization"), and it stays open.
 
 ## Phase 5 — Synthesis-policy showdown
 
@@ -1120,13 +1203,47 @@ is **seating**, and it already has a carrier.
   pre-registered bench gate. Do not duplicate it here.
       verify: this roadmap adds no rival implementation; the stub's own gate is
       the promotion condition; blocked on `blocker: persona-seating-gap`
-- [ ] 9.2 Never represent same-provider fan-out as external-model
+- [x] 9.2 Never represent same-provider fan-out as external-model
   independence.
       verify: no rendered surface labels it "external council"
-- [ ] 9.3 No further personas until the existing five can be intentionally
+      **DONE 2026-08-31 — asserted, and the assertion found no violation to
+      fix.** `grep -rni "external council" src/ dist/ agents/templates/ docs/`
+      returns 16 hits outside `agents/roadmaps/`. Every one of them names the
+      **real** multi-provider council (the `/council` path, gated on
+      `ai_council.enabled` plus an enabled member), and the two surfaces that
+      could plausibly have confused the two both draw the line explicitly:
+      `src/domains/engineering-base/review/changes/command.md:183` renders
+      *"Add an external council review alongside the six internal judges?"* —
+      contrasting external with the same-provider host subagents by name — and
+      `:280` folds "external council blocks" into the report as a separately
+      marked source.
+      The nearest same-provider-shaped mechanism is Mode 9
+      `adversarial-verification-council`
+      (`src/skills/subagent-orchestration/SKILL.md:217-229`). It is **not**
+      labelled "external council" anywhere, and it states its own independence
+      grade rather than borrowing one: *"distinct-model skeptics"*, with
+      *"registered claim + high-risk tier need cross-**vendor** skeptics"*.
+      Advisors are also not the failure this step names: `advisors.ts:2-10`
+      shows replace-mode swaps a **persona** on a member's own external
+      provider, so an advisor run is not a same-provider host fan-out.
+      **Honest scope:** the fan-out lane 9.1 describes does not exist yet (9.1
+      is blocked on `blocker: persona-seating-gap`), so this closes as a clean
+      baseline over today's surfaces — it is a "no violation present", not a
+      guarantee about a lane nobody has written.
+- [x] 9.3 No further personas until the existing five can be intentionally
   seated or evaluated.
       verify: `src/agent-src/personas/advisors/` still holds exactly five
       entries when this phase closes
+      **DONE 2026-08-31 — the count holds.** `ls
+      src/agent-src/personas/advisors/` returns exactly five entries and no
+      others: `contrarian.md`, `executor.md`, `expansionist.md`,
+      `first-principles.md`, `outsider.md`. `git diff origin/main --stat --
+      src/agent-src/personas/advisors/` is empty, so the branch added none.
+      **What this step is and is not.** It is a hold, not a build: the verify
+      line asks for a count, and the count is the whole deliverable. The
+      constraint stays live for the rest of the phase — seating is still
+      unsolved (9.1 is blocked on `blocker: persona-seating-gap`), which is
+      precisely the condition under which "no further personas" binds.
 - [ ] 9.4 After seating is solved, benchmark governed bundles (architecture /
   code review / roadmap / product) chosen from tracked persona definitions
   only, with persona and provider assignment counterbalanced.
@@ -1163,9 +1280,33 @@ is **seating**, and it already has a carrier.
 - [ ] 11.3 Promotion requires a material Pareto improvement in
   quality/cost/latency plus acceptable stability.
       verify: the comparison against the deterministic policy is published
-- [ ] 11.4 Keep the deterministic fallback permanently — no daemon, cloud
+- [x] 11.4 Keep the deterministic fallback permanently — no daemon, cloud
   router or learned model becomes necessary for basic council operation.
       verify: the suite runs green with the model artifact deleted
+      **DONE 2026-08-31 — the property was vacuously true and is now pinned.**
+      No learned-routing model artifact exists anywhere in the tree, so "runs
+      green with the model artifact deleted" held for the uninteresting reason
+      that there was nothing to delete. A vacuous property is exactly the kind
+      that regresses unnoticed, so it is now a falsifiable guard:
+      `tests/scripts/ai_council/deterministic_fallback.test.ts` (8 tests, green)
+      asserts that no file under `src/scripts/ai_council/` (59 `.ts` files) or
+      `src/scripts/_lib/judgment_ladder.ts` loads or names a learned-routing
+      model, and that no model artifact (`.pkl`/`.onnx`/`.joblib`/
+      `.safetensors`/`.gguf`) ships inside that scope.
+      **Sensitivity was proven, not assumed.** A sabotage probe — a temporary
+      `src/scripts/ai_council/__sabotage_probe.ts` containing
+      `export const R = "models/router.onnx";` — turned the claim test red
+      (1 failed / 7 passed); removing the probe restored 8/8. The file was
+      deleted in the same command and is not in the diff.
+      **Honest scope, stated because the test cannot state it at runtime:** this
+      is a naming-based shape gate over source text, not a module-graph proof —
+      a loader named outside the pattern set escapes it. That is why the file
+      also tests the **denial**: four synthetic violating snippets must match
+      and three ordinary council lines must not, so a zero in the claim test
+      means "nothing there" rather than "the detector is broken". It cannot pin
+      "permanently"; no test can. What it does is make the violation visible on
+      the day Phase 11.2 lands a loader on a runtime path — which is the trip
+      this step wants.
 - [ ] 11.5 Relevant model-generation changes mark affected routing evidence
   stale.
       verify: a simulated model-generation bump invalidates the right slices
@@ -1183,10 +1324,30 @@ is **seating**, and it already has a carrier.
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
       verify: one test per prohibition
-- [ ] 12.4 Consumer surfaces request **capabilities** (independent external
+- [x] 12.4 Consumer surfaces request **capabilities** (independent external
   review, adversarial decision, architecture trade-off, minority challenge),
   never topology names; the shared council-rung policy chooses.
       verify: no command file hardcodes a topology name
+      **DONE 2026-08-31 — grepped, clean, and vacuous in a way worth naming.**
+      All seven topology names from the goal diagram (`single_external`,
+      `dual_independent`, `advisor_diversity`, `peer_review`, `judge_synthesis`,
+      `targeted_cross_exam`, `full_debate`) return **zero** hits across
+      `src/agent-src/commands/` and `src/domains/` (222 `.md` files), in both
+      the underscore form and the hyphen/space variants.
+      **One near-hit, resolved rather than counted.** The variant grep matches
+      `judge-synthesis` in `src/domains/engineering-base/review/changes/command.md`
+      and `src/domains/meta/pack.yaml:40`. That is the **skill** of that name —
+      the cross-judge consolidation format — which predates this roadmap's
+      topology vocabulary and refers to a report shape, not a council topology.
+      It is a naming collision, not a hardcoded topology name, and it is
+      recorded here so a later grep does not re-litigate it.
+      **Vacuity is honest here, and is not the same as unverified.** No topology
+      vocabulary is implemented yet, so no command file *could* hardcode one —
+      the step closes as a **baseline** taken before the vocabulary exists,
+      which is the cheapest moment to take it. The constraint binds Phases 6-8
+      and 13 when they land; if one of them introduces a topology name into a
+      command file, this step's grep is the thing that was supposed to have
+      caught it, and this note is the record that it was clean beforehand.
 
 ## Phase 13 — Rollout and promotion gates
 
