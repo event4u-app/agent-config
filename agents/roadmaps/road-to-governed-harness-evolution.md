@@ -98,7 +98,7 @@ once.
 
 ## Phase 0 — Constitution, reconciliation, budget, stop conditions
 
-- [ ] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
+- [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
       of `planned capability → existing carrier in the tree → redirect / extend /
       build new (with the reason)`. Starting content is the table above. The
       phase does not close while a row reads "build new" without a stated reason
@@ -106,6 +106,39 @@ once.
       verify: `agents/evidence/analysis/` carries the matrix with an
       `<!-- evidence-type: analysis -->` first line, and every later phase names
       a row in it.
+
+      **CLOSED 2026-08-30 on the first half; the second half is a STANDING
+      obligation on Phases 1-7 and is recorded as such rather than claimed.**
+      `agents/evidence/analysis/governed-harness-capability-inventory.md` carries
+      twelve `redirect`/`extend` rows and three `build new` rows, each carrier
+      opened at `origin/main` and cited by `file:line` rather than recalled.
+
+      **The three `build new` rows each name what was SEARCHED**, because "no
+      carrier fits" is a claim about absence and absence is the easiest thing to
+      assert without looking: the candidate lifecycle enum (`ls src/scripts/ |
+      grep -iE 'candidate|proposer|evolve'` returns one file, whose durable state
+      is an integer mention count — a counter cannot express a state machine, and
+      the enum lands on that existing record rather than in a new store), the
+      operator command surface (no verb addresses candidates; deliberately left
+      to 3.6, since a command surface with no lifecycle behind it is the
+      speculative-infrastructure shape this estate has measured twice), and the
+      metric vector (both existing modules produce per-item verdicts and neither
+      assembles across metrics — and the new part is the *refusal to weight*,
+      which is a report shape).
+
+      **Two corrections the matrix makes to assumptions in this roadmap's own
+      text, both from reading the files:** `lean_projection_mode.ts:19` already
+      declares all three arms (`eager-all | thin | delivery`) with `eager-all`
+      merely the shipped default, so 6.1 measures a substrate that exists rather
+      than building one; and `bench_ab_clone.ts` carries `with-rdp` at `:141`,
+      `:218` and `:220` on an axis distinct from `with`/`without`, so 3.1 is a
+      new enum member rather than an axis extension.
+
+      **The second half cannot be satisfied by any document written today** —
+      *"every later phase names a row"* binds Phases 1-7 as they execute. It is
+      live from here: the first later-phase step that cites no row is where it
+      fails, and the matrix's own § What this matrix does NOT establish says so
+      in the artefact rather than only here.
 - [ ] **0.2 Reconcile the estate with an explicit disposition per overlapping
       plan.** `from-skipped-parent`: the skipped parent made this a P0 exit
       criterion with a five-verb disposition — `own here / fold into existing /
@@ -591,14 +624,32 @@ once.
   same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
   0's exit criteria rather than left here.
 
-  **`Resolved when` (AMENDED 2026-08-29).** The original — *"ADR-239 § Decision 3
-  no longer reads as an open question and its `review_trigger` no longer names
-  the `merge-authority` blocker"* — is **unsatisfiable by option (c) and by any
-  council**, because (c) leaves § Decision 3 open by construction. It bundled
-  two things one authority cannot discharge, exactly as `b-adr-088` did. Split:
-  the Phases 1–6 scope decision is **recorded above and needs nothing further**;
-  this blocker now closes only when the **owner** settles ADR-239 § Decision 3 in
-  either direction, at which point Phase 7 becomes enterable or is redesigned.
+  **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
+  now lives inside the field's value rather than in a heading above it.** The
+  original — *"ADR-239 § Decision 3 no longer reads as an open question and its
+  `review_trigger` no longer names the `merge-authority` blocker"* — is
+  **unsatisfiable by option (c) and by any council**, because (c) leaves §
+  Decision 3 open by construction. It bundled two things one authority cannot
+  discharge, exactly as `b-adr-088` did.
+
+  **Why the fix is a field edit and not a paragraph, 2026-08-30.** The 2026-08-29
+  amendment was written as prose here and left the original `- **Resolved
+  when:**` field standing three fields below, still stating the unsatisfiable
+  condition — two contradictory closure conditions on one blocker, with
+  `lint_roadmap_blockers` green throughout. This is the **same defect, in a
+  second roadmap**: `road-to-capability-native-execution`'s
+  `b-adr-088-external-runtime-federation` carried an identical stale twin, found
+  and fixed on 2026-08-29, and its own note predicted the recurrence by naming
+  the mechanism. The gate matches a literal label
+  (`/^-[ \t]*\*\*Resolved when:\*\*/im`, `src/scripts/lint_roadmap_blockers.ts:52`),
+  so a heading that says *"Resolved when (AMENDED …)"* satisfies nothing and the
+  contradictory line was the only thing keeping the blocker legal.
+
+  **Searched rather than assumed:** a tree-wide grep for `Resolved when` outside
+  the literal `- **Resolved when:**` field across `agents/roadmaps/**` returns
+  these two blockers and no third. Both are now fixed the same way — rename the
+  amended field to the literal label first, delete the stale one second, because
+  the other order turns the gate red in between.
 - **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
   proposed that would promote anything — in which case the scoping decision above
   no longer covers it and this blocker binds earlier than Phase 7.
@@ -613,9 +664,11 @@ once.
   cheapest option and the one this roadmap is cut for. Read
   `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:79-81`
   and its decision table at `:188`.
-- **Resolved when:** ADR-239 § Decision 3 no longer reads as an open question
-  and its `review_trigger` no longer names the `merge-authority` blocker as the
-  reopen condition.
+- **Resolved when:** *(AMENDED 2026-08-29 — the marker sits inside the value on
+  purpose; see the note above this field.)* the Phases 1–6 scope decision is
+  recorded above and needs nothing further. This blocker closes when the
+  **owner** settles ADR-239 § Decision 3 in either direction, at which point
+  Phase 7 becomes enterable or is redesigned.
 - **Recommendation:** (c). Phases 1–6 build measurement and isolation and
   promote nothing, so they are unaffected by where merge authority lands; (a)
   and (b) are owner-reserved and should not be forced by a plan that merely
