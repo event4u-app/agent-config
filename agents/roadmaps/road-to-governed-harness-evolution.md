@@ -98,7 +98,7 @@ once.
 
 ## Phase 0 — Constitution, reconciliation, budget, stop conditions
 
-- [ ] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
+- [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
       of `planned capability → existing carrier in the tree → redirect / extend /
       build new (with the reason)`. Starting content is the table above. The
       phase does not close while a row reads "build new" without a stated reason
@@ -106,7 +106,40 @@ once.
       verify: `agents/evidence/analysis/` carries the matrix with an
       `<!-- evidence-type: analysis -->` first line, and every later phase names
       a row in it.
-- [ ] **0.2 Reconcile the estate with an explicit disposition per overlapping
+
+      **CLOSED 2026-08-30 on the first half; the second half is a STANDING
+      obligation on Phases 1-7 and is recorded as such rather than claimed.**
+      `agents/evidence/analysis/governed-harness-capability-inventory.md` carries
+      twelve `redirect`/`extend` rows and three `build new` rows, each carrier
+      opened at `origin/main` and cited by `file:line` rather than recalled.
+
+      **The three `build new` rows each name what was SEARCHED**, because "no
+      carrier fits" is a claim about absence and absence is the easiest thing to
+      assert without looking: the candidate lifecycle enum (`ls src/scripts/ |
+      grep -iE 'candidate|proposer|evolve'` returns one file, whose durable state
+      is an integer mention count — a counter cannot express a state machine, and
+      the enum lands on that existing record rather than in a new store), the
+      operator command surface (no verb addresses candidates; deliberately left
+      to 3.6, since a command surface with no lifecycle behind it is the
+      speculative-infrastructure shape this estate has measured twice), and the
+      metric vector (both existing modules produce per-item verdicts and neither
+      assembles across metrics — and the new part is the *refusal to weight*,
+      which is a report shape).
+
+      **Two corrections the matrix makes to assumptions in this roadmap's own
+      text, both from reading the files:** `lean_projection_mode.ts:19` already
+      declares all three arms (`eager-all | thin | delivery`) with `eager-all`
+      merely the shipped default, so 6.1 measures a substrate that exists rather
+      than building one; and `bench_ab_clone.ts` carries `with-rdp` at `:141`,
+      `:218` and `:220` on an axis distinct from `with`/`without`, so 3.1 is a
+      new enum member rather than an axis extension.
+
+      **The second half cannot be satisfied by any document written today** —
+      *"every later phase names a row"* binds Phases 1-7 as they execute. It is
+      live from here: the first later-phase step that cites no row is where it
+      fails, and the matrix's own § What this matrix does NOT establish says so
+      in the artefact rather than only here.
+- [x] **0.2 Reconcile the estate with an explicit disposition per overlapping
       plan.** `from-skipped-parent`: the skipped parent made this a P0 exit
       criterion with a five-verb disposition — `own here / fold into existing /
       depend on existing / supersede proposal / drop` — and the closing
@@ -116,7 +149,32 @@ once.
       matrix in 0.1 does not.
       verify: every roadmap this one overlaps carries one of the five verbs, and
       no capability has two execution owners.
-- [ ] **0.3 Name the state classes without touching any claim.** Label
+
+      **CLOSED 2026-08-30.** The seven-row disposition table is in
+      `agents/evidence/analysis/governed-harness-capability-inventory.md`
+      § Estate reconciliation — three active roadmaps, one parked, three
+      superseded proposals, one verb each.
+
+      **The two `drop` rows are MEASURED, because "no overlap" is the easiest
+      claim to make without looking.** `grep -ciE 'trigger corpus|paired.?verdict|
+      outcome vocabular|activation ladder|promotion bridge'` returns **0** over
+      both `road-to-capability-native-execution` and
+      `road-to-inbox-harvest-2026-08-e-council-topology-evidence`.
+
+      **The one real overlap was already reconciled, and this step consumes that
+      rather than re-deciding it.** `road-to-experience-loop-broadening`'s E1
+      (AI council 2/2, 2026-08-29) assigns the three shared mechanisms: this
+      roadmap owns the trigger corpus and the paired-verdict mechanism, the
+      sibling owns outcome-vocabulary reconciliation — which is exactly why this
+      roadmap's 1.4 already reads `[x]` as a non-blocking consumption reference.
+      Re-deciding it here would create the second execution owner the invariant
+      forbids.
+
+      **`road-to-gated-harness-evolution-deep-v4` takes `supersede`, not
+      `drop`**, and the distinction is Risk 2: it is the skipped parent the
+      master never named, so dropping it is the consolidation defect rather than
+      a tidy-up. Its content is folded back in and marked `from-skipped-parent`.
+- [x] **0.3 Name the state classes without touching any claim.** Label
       authoritative / derived / evidence / adaptive state, citing
       `docs/contracts/audit-log-v1.md` as the already-sanctioned evidence-state
       precedent. Whether the adaptive class splits in two (E8) is decided here.
@@ -124,6 +182,46 @@ once.
       verify: `grep -c 'claim:no-runtime-daemon' README.md` returns **0** and
       `docs/CLAIMS.md` shows no diff for that entry attributable to THIS
       roadmap.
+      **CLOSED 2026-08-30, and E8 is decided: FIVE classes.**
+      `agents/evidence/analysis/governed-harness-state-classes.md` labels
+      authoritative / derived / evidence / **experiment-adaptive** /
+      **production-adaptive**, the last defined as EMPTY and prohibited. AI
+      council, anthropic + openai, both converging on option (c) over four
+      classes and over a five-class split with a merely default-off member.
+
+      **Four was rejected for a stated reason, not a preference:** it gives one
+      name to state that is freely deletable and state that is governed, which
+      openai's seat called the conflation every future producer and consumer
+      would have to rediscover from prose. Both seats said independently that
+      naming a prohibited class is not authorising it.
+
+      **The council's condition is what makes (c) real, and it is carried
+      verbatim into the artefact: EMPTY prohibits creating runtime DEPENDENCIES,
+      not merely populating a labelled directory.** An empty folder with a
+      consumer pointed at it is not an empty class. The falsifiable form:
+      no state in this repository is production-adaptive on 2026-08-30, and a
+      change that makes that false has populated the class whatever it names the
+      file.
+
+      **The three promotion transitions are named** — openai's seat refused the
+      taxonomy without them, because *"may promote a candidate"* hides several
+      architectures and only one preserves the boundary. A human-reviewed commit
+      into `src/` is legal (the thing stops being adaptive at the commit); a
+      deployment updating a runtime-readable pointer and a runtime consuming
+      learned state are not. Phase 7 stays gated on `merge-authority`
+      regardless — who may perform even the legal transition is ADR-239 §
+      Decision 3.
+
+      **The sequencing invariant is the part that binds:** every later step that
+      introduces state or a consumer names its class, or a step can add a
+      runtime-readable projection while calling it `derived`. Same shape as
+      0.1's second half, and stated because a taxonomy that binds nothing is a
+      glossary.
+
+      **The guard is measured, not asserted:** `grep -c 'claim:no-runtime-daemon'
+      README.md` returns **0**, and `git diff origin/main -- docs/CLAIMS.md` is
+      empty. This step touched no claim.
+
       <!-- corrected 2026-08-27: the clause read "still returns 1", which was
       true when written and is now false. `road-to-runtime-governance-flip`
       Phase 2 retired the claim under ADR-249 — the ledger entry moved from
@@ -135,6 +233,18 @@ once.
       count, and a guard keyed to a count breaks the moment a different
       roadmap legitimately changes it. The count is now 0 and the guard reads
       against the post-retirement state. -->
+> **ORDERING NOTE for 0.4-0.6, recorded 2026-08-30.** All three are
+> pre-registration steps whose verify clauses name a RUN: *"a run in which a
+> holdout value reaches proposer context exits non-zero"*, *"a run configured
+> past the ceiling exits non-zero before spending"*, *"a synthetic diversity
+> collapse trips the stop"*. No run harness exists — Phases 3-5 build it — so
+> each of the three can be pre-registered now and **verified only once its
+> detector has something to run against**. They are left open rather than closed
+> on the written half, because closing a step on half its verify is how a
+> detector that never got built reads as one that passed. 0.7 is closed instead:
+> its verify asks for a committed, falsifiable document and nothing more, which
+> is satisfiable today and is worth less every day it waits.
+
 - [ ] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
@@ -158,7 +268,7 @@ once.
       honest null is a success when it prevents unnecessary architecture.
       verify: each condition has a detector or is explicitly marked
       model-carried; a synthetic diversity collapse trips the stop.
-- [ ] **0.7 Define programme success and failure before the first run.**
+- [x] **0.7 Define programme success and failure before the first run.**
       `from-skipped-parent`: the master has no success-criteria section at all.
       It adopts the per-candidate metric vector and drops the per-programme
       metrics, so nothing defines when Phases 0–7 as a whole have succeeded.
@@ -591,14 +701,32 @@ once.
   same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
   0's exit criteria rather than left here.
 
-  **`Resolved when` (AMENDED 2026-08-29).** The original — *"ADR-239 § Decision 3
-  no longer reads as an open question and its `review_trigger` no longer names
-  the `merge-authority` blocker"* — is **unsatisfiable by option (c) and by any
-  council**, because (c) leaves § Decision 3 open by construction. It bundled
-  two things one authority cannot discharge, exactly as `b-adr-088` did. Split:
-  the Phases 1–6 scope decision is **recorded above and needs nothing further**;
-  this blocker now closes only when the **owner** settles ADR-239 § Decision 3 in
-  either direction, at which point Phase 7 becomes enterable or is redesigned.
+  **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
+  now lives inside the field's value rather than in a heading above it.** The
+  original — *"ADR-239 § Decision 3 no longer reads as an open question and its
+  `review_trigger` no longer names the `merge-authority` blocker"* — is
+  **unsatisfiable by option (c) and by any council**, because (c) leaves §
+  Decision 3 open by construction. It bundled two things one authority cannot
+  discharge, exactly as `b-adr-088` did.
+
+  **Why the fix is a field edit and not a paragraph, 2026-08-30.** The 2026-08-29
+  amendment was written as prose here and left the original `- **Resolved
+  when:**` field standing three fields below, still stating the unsatisfiable
+  condition — two contradictory closure conditions on one blocker, with
+  `lint_roadmap_blockers` green throughout. This is the **same defect, in a
+  second roadmap**: `road-to-capability-native-execution`'s
+  `b-adr-088-external-runtime-federation` carried an identical stale twin, found
+  and fixed on 2026-08-29, and its own note predicted the recurrence by naming
+  the mechanism. The gate matches a literal label
+  (`/^-[ \t]*\*\*Resolved when:\*\*/im`, `src/scripts/lint_roadmap_blockers.ts:52`),
+  so a heading that says *"Resolved when (AMENDED …)"* satisfies nothing and the
+  contradictory line was the only thing keeping the blocker legal.
+
+  **Searched rather than assumed:** a tree-wide grep for `Resolved when` outside
+  the literal `- **Resolved when:**` field across `agents/roadmaps/**` returns
+  these two blockers and no third. Both are now fixed the same way — rename the
+  amended field to the literal label first, delete the stale one second, because
+  the other order turns the gate red in between.
 - **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
   proposed that would promote anything — in which case the scoping decision above
   no longer covers it and this blocker binds earlier than Phase 7.
@@ -613,9 +741,11 @@ once.
   cheapest option and the one this roadmap is cut for. Read
   `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:79-81`
   and its decision table at `:188`.
-- **Resolved when:** ADR-239 § Decision 3 no longer reads as an open question
-  and its `review_trigger` no longer names the `merge-authority` blocker as the
-  reopen condition.
+- **Resolved when:** *(AMENDED 2026-08-29 — the marker sits inside the value on
+  purpose; see the note above this field.)* the Phases 1–6 scope decision is
+  recorded above and needs nothing further. This blocker closes when the
+  **owner** settles ADR-239 § Decision 3 in either direction, at which point
+  Phase 7 becomes enterable or is redesigned.
 - **Recommendation:** (c). Phases 1–6 build measurement and isolation and
   promote nothing, so they are unaffected by where merge authority lands; (a)
   and (b) are owner-reserved and should not be forced by a plan that merely
