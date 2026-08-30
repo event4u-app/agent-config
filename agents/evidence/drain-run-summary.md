@@ -357,3 +357,169 @@ was found with no phase, no step and no owner — a council condition recorded
 inside a blocker and carried nowhere. It is the same failure Iron Law 3 exists
 to prevent, one level up: not a deferred *step* that goes silently missing, but a
 deferred *condition*.
+
+---
+
+# Autonomous drain run 7 — 2026-08-30/31
+
+> **The queue was three roadmaps, not the thirty-six the run prompt named.** The
+> prompt's seed table was pinned at `c536dbd`; `main` was at `de939f769` and
+> earlier drain runs had already cleared the rest. Recomputed live before
+> starting, per the prompt's own instruction not to trust the seed order.
+>
+> **Nothing was descoped, cancelled, or weakened.** Three roadmaps advanced,
+> one closed a phase-pair, and the three items that did not close each have a
+> named owner and a falsifiable release condition rather than a note.
+
+## PRs
+
+| PR | Roadmap | What it did | CI |
+|---|---|---|---|
+| [#1759](https://github.com/event4u-app/agent-config/pull/1759) | `road-to-turnaround-followups` | 2.1 + AC-2 closed on ADR-251; 1.1 deferred with an owner; AC-1 held open on a council verdict | 39 green · **merged** |
+| [#1760](https://github.com/event4u-app/agent-config/pull/1760) | `road-to-inbox-harvest-…-council-topology-evidence` | Phase 3 → 4/6; 3.3 and 3.4 blocked with an owner | 43 green |
+| [#1761](https://github.com/event4u-app/agent-config/pull/1761) | `road-to-governed-harness-evolution` | **Phase 0 → 8/8, Phase 3 → 6/6**; a split blocker resolved on its own terms; 5 maintainer decisions settled | 42 green |
+
+## Council decisions — 7 across 3 passes
+
+**The CLI quota was exhausted on entry** — anthropic 50/50, openai 51/50
+against `DEFAULT_CLI_CALLS_PER_DAY`, resetting at UTC midnight. Every pass ran
+on the metered API rung via `--mode-override api`, under the maintainer's
+standing paid-council authorization. **Total spend $0.1266** against a $1.2564
+estimate. The daily CLI cap was **not** raised — raising it to fit a
+measurement is the one thing that guard exists to prevent, and a failed attempt
+still increments the counter.
+
+| # | Question | Verdict |
+|---|---|---|
+| 1 | E5 — minimality tie-break order, and is the fifth criterion in? | **2/2 — four criteria**, `tokens → artifacts → scope → precedence`; fifth out. By the time two candidates tie, both have survived selection and hygiene, so the constraint option B leads with is already satisfied and cost is what is left |
+| 2 | E6 — curator operation set, 4 ops or 7? | **2/2 — seven.** Step 7.6 already specifies a verdict set including `SPLIT`, so a 4-op curator produces verdicts it cannot execute. **The 6-op middle was rejected, not adopted** — "an unstable equilibrium", since it contradicts 7.6 too |
+| 3 | E7 — sealed-holdout cadence? | **2/2 — promotion candidates only.** The gate is free from the lifecycle enum, and the discordant-trial floor means an earlier read spends unbiased signal on runs that could not have concluded |
+| 4 | E8 — state taxonomy, 4 classes or 5? | **2/2 — four plus a pointer.** *Taxonomies classify; validations enforce* |
+| 5 | E10 — mutation alphabet, three dimensions or four? | **SPLIT 1/1.** Conservative side taken: three. Recorded as a split, not dressed as a verdict |
+| 6 | The 30-minute git-authorization window — does the supported path stand? | **2/2 — Option B**, a different authorization SHAPE, never a wider window. Both seats proposed the same shape independently |
+| 7 | Does a re-measurement close its AC when the change it measures reached nobody? | **2/2 — `not-met`.** "Post-change corpus" means EXPOSED to the change |
+
+### The one that needed its authority checked before it was asked
+
+Decision 6 sat behind a bound the roadmap states twice: *the agent proposes no
+value and does not take the decision*, and a prior council had already ruled it
+may only **move** the question, not settle it.
+
+What made the rest settleable is that the reserved-decision table routes
+**lowering** a security floor to the owner and **keeping or strengthening** one
+to the council. Option B lowers nothing — `LEDGER_MAX_AGE_MS` stays at 30
+minutes and raising it stays owner-reserved and untaken. Both seats reached
+that reading independently and both classified their own verdict
+`within-council-authority`. ADR-251 carries `reopen_policy: owner` and
+`protected_dimensions: security_floor` so the substitution cannot later be read
+as a grant of authority, and AC-2 says in the diff that its decision-maker was
+the council rather than the owner.
+
+The mechanism was **verified, not assumed**: `git_authorization_hook` is
+stateless per prompt with no once-per-session latch, and every human-typed
+prompt rewrites the session ledger with a fresh `detected_at` — so a mid-run
+reply already renews the window. Option B is a behaviour and contract change,
+not new machinery, and introduces no agent-writable authorization store.
+
+## Descopes — none
+
+No item was descoped, cancelled, weakened, or re-scoped to fit an answer. Three
+are **held open with an owner**, which is the opposite disposition:
+
+- `batching-corpus-never-received-the-obligation` — council-owned. AC-1 stays
+  open; the delivery half is routed to its own stub.
+- `leakage-bench-needs-quota-and-an-uncommittable-corpus` — council-owned. 3.3
+  and 3.4 stay open.
+- `merge-authority` — **owner-reserved and untouched.** The council ruled in a
+  prior run that granting or refusing preauthorized merge authority is a
+  resolution of ADR-239 § Decision 3, which a council may recommend and may not
+  perform. It gates Phase 7 alone; this run did not reach Phase 7, so nothing
+  waited on it.
+
+Two roadmaps had a `[~]` re-closed rather than carried: **0.4 and 0.5**, whose
+blocker turned out to be satisfiable in the same run that took the conservative
+side on it.
+
+## What the execution found — six defects that outlived their step
+
+1. **Two acceptance criteria shared the number AC-8** on
+   `road-to-governed-harness-evolution`, and neither referenced the other — so
+   a blocker's *"AC-8 below is it"* pointed ambiguously at a call-site criterion
+   and a programme-success criterion. Renumbered to AC-11, blocker repointed in
+   a parenthesis rather than silently rewritten.
+
+2. **The resume probe fires on a reference, not on the condition.**
+   `gates --all` reports `later/road-to-elicitation-front-door` as `fired`
+   because `road-to-suggestion-block-capture` archived — but that roadmap's
+   resume condition names `claim:suggestion-capture-rate`, which carries
+   `status: unbacked` and no figure. `resume_probe.ts:520` treats an archived
+   reference as satisfaction. A roadmap can archive without its claim resolving,
+   which is exactly what happened. Filed as a stub; a careless fix produces a
+   probe that reports `unmet` forever, and `resumeUndecidable` already stands at
+   72 of 73, so a regression would be invisible.
+
+3. **`check_estate_count` cannot see a claim amended in place.**
+   `growthClaims` reads only an **added** `+estate_growth_exempt:` key line from
+   the patch, so amending an existing **block scalar** adds value lines and no
+   key line — the claim is invisible and a legitimately claimed growth is
+   refused. Worked around by writing the claim as a single-line scalar the
+   parser reads, with the superseded narrative preserved in a sibling key. **The
+   gate is unchanged**; the defect will bite every future in-place amendment.
+
+4. **A guard was deleted because its red could not be produced.**
+   `proposeCandidates` sorted its output by id as well as its input;
+   neutralising the output sort changed nothing observable. A guard whose red
+   cannot be produced is indistinguishable from one that does not work.
+
+5. **A verify clause that cannot be met as written, recorded rather than
+   stretched.** 3.6's *"every phase's exit criterion is reachable through a
+   named verb"* cannot bind on Phases 4–7, which do not exist. The coverage map
+   is scoped to the phases that do, and a **test asserts every key belongs to an
+   existing phase** — that forcing function is what makes it a scope rather than
+   a claim about unwritten phases.
+
+6. **A budget ceiling enforced against a declaration.** `run` derives
+   `candidates` from the record set but takes `trials` and `spend` from flags
+   defaulting to 1 and 0. Honest today — the verb spends nothing — and a hole
+   the moment something does. Landed as risk-register row 12 rather than a
+   commit message, because the person wiring Phase 4 is not the person who found
+   it.
+
+## Sensitivity — 46 guards seen red
+
+Every new guard across the three branches was neutralised in source, its named
+test run, and the source restored from a scratchpad copy — never
+`git checkout`. Twelve on the candidate schema, seventeen on the proposer and
+verb set, ten on the guard call sites, and seven across the council-topology
+work.
+
+Two of those are the ones that settled a council split: neutralising **only**
+the throw→process-exit conversion, leaving the guard call in place, still reds
+the test — which is the property one seat held a unit test observing a thrown
+exception cannot establish.
+
+## Where the run stopped, and why
+
+**Not on quota, and not on a wall.** All three roadmaps advanced and every gate
+this run touched is green. What is left is bounded by things the run could not
+manufacture:
+
+- **`road-to-turnaround-followups`** — AC-1 needs ten sessions that actually
+  received an obligation which, measured, reached at most one and plausibly
+  zero. The reading was taken and recorded as a null **about an undelivered
+  reminder**; the delivery question has its own stub.
+- **`road-to-inbox-harvest-…-council-topology-evidence`** — 3.3 needs ≥ 30 real
+  anonymised response bodies, and the council output directory is gitignored and
+  auto-pruned, so that corpus cannot be committed. **This does not unblock at
+  the quota reset**, which is the half a step-prose condition would have lost.
+- **`road-to-governed-harness-evolution`** — Phases 4–7 are ungated and
+  unstarted; Phase 7 waits on the owner-reserved `merge-authority`. Phase 4 is
+  the natural next cut, and risk row 12 names the first thing it must do.
+
+**One shape worth naming, because it recurred three times in one run.** Every
+condition this run could not discharge was given a `## Blockers` entry with an
+owner, a class and a `Resolved when` — never a sentence in a step. That is the
+direct answer to the failure the previous run recorded, also three times: *"not
+a deferred step that goes silently missing, but a deferred condition."* It cost
+two `open_blockers` against the ratchet, both claimed in the diff with a real
+reason, and it is the cheapest thing in this run.
