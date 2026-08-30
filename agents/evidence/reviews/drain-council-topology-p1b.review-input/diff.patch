@@ -1,0 +1,1705 @@
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+index f0ce0d7f9a576188b7164ef0f42922b73ffc1f05..448fc8bb5a42b044db280957b1bddff6fed64d65 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
+@@ -558,22 +558,203 @@ is not paying twice for the same deliberation.
+ 
+ ### 1B — Inline findings, analysis lens only
+ 
++**AI council, 2026-08-30, anthropic + openai, 2 of 2 seats, deep depth, $0.00
++(both seats subscription-authed). Two design forks put to it before any code
++was written; both converged, and one of the convergent conditions turned out to
++name a defect the implementation already had.**
++
++*Fork 1 — does the consumed findings block stay in the response text that peer
++review, chairman synthesis, and the rendered artefact read?* **Both seats:
++strip it, retain the raw reply.** The reasoning was the same on both sides and
++it is not about noise: the block restates selected conclusions, so leaving it in
++amplifies a concise finding purely because it appears twice in the text a
++reviewer scores. Both seats attached the same two conditions — the parsed span
++and the removed span must be the SAME span (never an independent
++"find and remove a JSON fence" regex, which could disagree with the parser about
++what was consumed), and the raw reply must survive for audit. One seat made an
++**observable marker** at the removal site a condition of its verdict; the other
++reached the same concern from the auditability side, warning that if the
++rendered artefact is contractually a byte-faithful transcript then not stripping
++would be the safer answer. The marker is implemented, so both concerns are met
++without deciding that contract question.
++
++*Fork 2 — does the recorded parse-outcome vocabulary become a typed union now,
++or a bare string first and a union after the gate?* **Both seats: type it now.**
++The argument that decided it is measurement integrity rather than hygiene — the
++1B.4 gate is computed off exactly these values, so an untyped
++`Map<string, string>` leaves the number that decides the experiment exposed to a
++misspelling no compiler would catch. One seat called the pre-existing bare
++`'parsed-after-reask'` technical debt rather than a precedent worth extending;
++the other priced the deferral and found doing it twice strictly more expensive
++than doing it once. `RecordedExtractionOutcome` is the result.
++
++**The council also caught an ordering defect in the implementation as it then
++stood, and it is the finding worth carrying forward:** `_maybe_run_peer_review`
++runs BEFORE `_maybe_run_consensus`, so parsing the block inside
++`run_consensus_scoring` would have left the schema block in the very text peer
++review and synthesis evaluate — the amplification Fork 1 exists to prevent,
++reintroduced by where the code sat rather than by what it did. The harvest now
++runs between the deliberation and every consumer, and a source-order test pins
++it. That test's own limit is stated where it lives: it reads call-site order out
++of `council_cli.ts` and cannot see a call moved into a helper.
++
++*Divergence, recorded rather than silently resolved:* one seat asked that
++`'parsed'` be renamed `'parsed-extraction'`. Declined here with a reason —
++renaming a value that is already recorded and compared against is a separate
++change with its own migration, and `'parsed'` is unambiguous now that
++`'parsed-inline'` names the other source.
++
++*Revisit-if:* a corpus scan finds the locator stripping a legitimate prose
++block; deliberation prose measurably degrades under the contract; or the
++rendered artefact acquires a documented byte-faithful-transcript contract, which
++would reopen Fork 1 in favour of not stripping.
++
++
++**The blocker gating this section is discharged by citation, which is what its
++own `Resolved when` asked for.** `blocker: evidence-integrity-unparsed-dependency`
++required the `unparsed`-versus-zero-findings distinction to be cited at
++`file:line` or 1B scoped out. It shipped: `ai_council/consensus.ts:314`
++`parse_findings_outcome` returns the three-way
++`'parsed' | 'empty' | 'parse_failed'`, its docstring naming the exact confusion
++the blocker feared; `ai_council/orchestrator.ts` records it per member in
++`parse_outcomes`; and `ai_council/quorum_wiring.ts:256` folds the
++`parse_failed` count into the rendered `present-unparsed` line. The archived
++`road-to-council-evidence-integrity.md:178-197` is the delivering step. So the
++promotion gate below has a real denominator to measure against — the condition
++the blocker existed to protect.
++
+ - [ ] 1B.1 Require the existing findings schema as a fenced trailing block in
+   the initial analysis response, replacing the second extraction call.
+       verify: a real analysis run parses inline with no second call; blocked by
+       `blocker: evidence-integrity-unparsed-dependency`
+-- [ ] 1B.2 Keep the repair path: absent or invalid inline block falls back to
++
++      **BUILT AND WIRED 2026-08-30; the step stays OPEN because its verify asks
++      for a live run and the day's call quota is spent.** The honest split
++      matters here, so both halves are stated: the mechanism exists, is tested,
++      and is default-off; the *evidence this step names* does not exist yet.
++
++      Landed: `INLINE_FINDINGS_CONTRACT` (`ai_council/prompts.ts`) appended to
++      the FINAL deliberation round via `ConsultOptions.inline_findings`, exactly
++      the seam `STANCE_LINE_CONTRACT` already uses — off means the prompt is
++      byte-identical. `ai_council/inline_findings.ts` holds the whole concern:
++      the trailing-block locator, the `RecordedExtractionOutcome` union,
++      `harvest_inline_findings`, the final-round suffix composer, the
++      short-circuit helper and the config predicate.
++      `run_consensus_scoring` consumes the harvested map and issues no
++      extraction call for a member that has an entry.
++      `consensus_scoring.inline_findings` (default `false`) is the switch, and
++      `docs/contracts/ai-council-config.md` § Consensus scoring — inline
++      findings documents it. 30 tests in
++      `tests/scripts/ai_council/inline_findings.test.ts`, all green, with FIVE
++      sensitivity arms — each mechanism neutralised in turn and the matching
++      test observed red, then restored.
++
++      **The source-size ratchet is what decided where the code lives, and it
++      was paid rather than bumped.** The change first charged +153 lines across
++      `orchestrator.ts`, `council_cli.ts` and `ai_council/config.ts` — all three
++      far past the 1500-line ceiling, so every line counts. Concentrating the
++      concern in its own module took that to +23; the residual was irreducible
++      call sites. `run_consensus_scoring` — the function this change actually
++      edits — then moved whole into `ai_council/consensus_round.ts`, with
++      `orchestrator.ts` re-exporting the name so no importer changed. Net for
++      the tree: **-174 lines**, and the baseline was lowered to the exact live
++      total rather than left loose, because `check_source_size_budget.test.ts`
++      asserts baseline equals tree total. The gate is the reason the new
++      concern got its own module, which is the outcome that gate exists for.
++
++      **A live run WAS made, and what it produced is a defect rather than the
++      evidence.** One openai seat, analysis lens, `--rounds 1`, consensus and
++      inline both on via a temporary `AI_COUNCIL_CONFIG`. The extraction call
++      fired anyway. Cause:
++      `_lib/council_settings_block.ts` synthesises the settings dict the CLI
++      predicate actually reads, and it did not carry the new key — so a `true`
++      in the YAML resolved to `undefined` and the feature was silently off with
++      every unit test green. Fixed, and pinned by a test that walks the real
++      chain (parse the file → synthesise → read the predicate) rather than
++      stopping at any one link, because a test that stopped short is exactly
++      what passed while the feature was dead.
++
++      **What closes this step:** one analysis-lens run, post-fix, whose member
++      reply carries the block and whose consensus round issues zero extraction
++      calls. It could not be made today — `~/.event4u/agent-config/cli-calls.json`
++      reads `anthropic 50 / openai 50` against the shipped
++      `DEFAULT_CLI_CALLS_PER_DAY = 50` (`ai_council/cli_call_budget.ts:60`), so
++      both seats are at the daily cap. Raising that cap to fit a measurement is
++      the one thing a guard exists to prevent, so the step waits for the counter
++      to roll rather than for the guard to move.
++- [x] 1B.2 Keep the repair path: absent or invalid inline block falls back to
+   the existing extraction call at `prompts.ts:206`.
+       verify: a corrupted inline block still yields findings, and the
+       worst-case call count is no worse than today's
+-- [ ] 1B.3 Scope to the analysis lens only — do not force structured tails
++
++      **CLOSED 2026-08-30.** Both halves are asserted, and the second one is
++      asserted by COMPARISON rather than by a remembered number: the
++      worst-case test runs the identical scripted member through the harvest
++      path and the shipped path and requires `on.calls === off.calls`, so the
++      claim cannot drift as the extraction path changes. Four arms —
++      no block at all, a mangled block, an unreadable reply reaching the one
++      bounded re-ask, and the parity arm.
++
++      **The structural reason the worst case cannot be worse:**
++      `harvest_inline_findings` records ONLY a member whose block parsed, so an
++      entry in the map is always a short-circuit and never a partial one. A
++      member without an entry takes the shipped path over text nothing touched —
++      pinned by its own test, because the council made "the repair call sees the
++      RAW reply" a condition: stripping text we could not read would remove
++      evidence from the very prompt that has to recover from it.
++- [x] 1B.3 Scope to the analysis lens only — do not force structured tails
+   into every lens without a named second consumer.
+       verify: other lenses' prompts are byte-unchanged
++
++      **CLOSED 2026-08-30.** Three conjuncts gate the contract
++      (`_inline_findings_active`): consensus scoring on, the run's lens inside
++      `consensus_scoring.lenses` (default `[analysis]`), and the key on. Each is
++      tested in isolation, plus the absent-key case, plus a no-block-at-all
++      case — five arms, because "byte-unchanged" fails five different ways and a
++      single happy-path assertion would catch none of them.
++
++      The system-prompt arm iterates `all_modes()` rather than a literal lens
++      list, so a lens added later is covered without anyone remembering to add
++      it. That is deliberate: the failure this step guards against is a future
++      edit folding the contract into `ANALYSIS_MODE`, which would leak it into
++      every mode's lens table and be invisible to a hardcoded list.
+ - [ ] 1B.4 Promotion gate across ≥ 10 real analysis runs: ≥ 70 % inline parse
+   rate, no `unparsed` regression, no substantive finding-quality regression.
+       verify: gate met, or the null result is recorded and the change reverts
+       to extraction-always
+ 
++      **OPEN — the gate could not be RUN, which is not the same as a null and is
++      not recorded as one.** A null is what a measurement returns; this is the
++      measurement never happening. Both seats are at the shipped 50-call daily
++      cap (see 1B.1), and ≥ 10 runs × 2 members needs roughly 40–60 calls.
++
++      **Nothing is at risk from leaving it open, and that is the point of the
++      default.** The verify's own second branch — "the change reverts to
++      extraction-always" — describes the state that shipped:
++      `consensus_scoring.inline_findings` defaults `false`, so the unmet gate
++      and the shipped behaviour already agree. A default that shipped ahead of
++      its own gate would have made the gate unfalsifiable, since the
++      measurement would then be of the thing already promoted.
++
++      **The denominator is pre-registered here, before any arm runs**, because
++      the AI council (2026-08-30, 2 of 2 seats) found the obvious formula wrong
++      in a way that would have inflated the result:
++
++      > `inline_parse_rate = parsed-inline ÷ replies that received the contract`
++
++      A member answering `[]` counts in the denominator AND as a success — an
++      empty array from a readable reply is a RESULT, not a failure, and
++      `parse_findings_outcome` already classifies it `parsed`
++      (`consensus.ts:337`). Excluding it, which one draft proposed, would have
++      measured contract compliance over the members most likely to comply.
++      Report fallback recovery and the final unparsed rate as separate columns,
++      never folded into this one.
++
++      **The `unparsed` comparator must be fixed before the arms run**, per the
++      same seats: matched runs over the same artefacts, or a pre-declared
++      baseline window. Comparing unrelated runs lets a change in task difficulty
++      pass for a change in parse rate.
++
+ ## Phase 2 — Build the benchmark before automating topology
+ 
+ The council should not ship a topology selector before it can define "better".
+diff --git a/docs/contracts/ai-council-config.md b/docs/contracts/ai-council-config.md
+index e36e1459c3e713a14a1c4e53eb96c8e5478a84bd..d03f45c593a5756a78bf06f3e1440f0a92910514 100644
+--- a/docs/contracts/ai-council-config.md
++++ b/docs/contracts/ai-council-config.md
+@@ -762,6 +762,53 @@ The trailer additionally carries two aggregate lines — **Evidence spread**
+ (high/medium/low counts across findings) and **Provider spread** (distinct
+ providers that deliberated) — folded in beside `_artefact mode:_`.
+ 
++### Consensus scoring — inline findings (Phase 1B)
++
++The consensus round's pass 1 asks every member a SECOND time, in a separate
++paid call, to restate its own analysis as a JSON findings array
++(`FINDING_EXTRACTION_PROMPT`). `inline_findings` asks for that array in the
++FIRST reply instead, and issues the extraction call only when the first reply
++did not carry a usable one.
++
++**Configuration.**
++
++- `consensus_scoring.inline_findings` (bool, default `false`) — master switch.
++  Active only when **all three** hold: `consensus_scoring.enabled` is true,
++  this run's lens is in `consensus_scoring.lenses` (default `[analysis]`), and
++  this key is true. Any one missing → the deliberation prompt is byte-identical
++  to a run without the feature.
++
++**Behaviour when active.**
++
++- The FINAL deliberation round appends `INLINE_FINDINGS_CONTRACT`, which
++  restates the extraction schema — same `{"id", "text"}` shape, same 3–7 bound
++  — and asks for it as the last thing in the reply. Composed with
++  `stance_tally`, the findings block comes first and the `STANCE:` line stays
++  last, because that contract requires the stance to be the final line.
++- Between the deliberation and every consumer of its text, the trailing block
++  is located, parsed, and **removed** from the response, leaving a one-line
++  marker in its place. Peer review, chairman synthesis, and the rendered
++  artefact therefore evaluate the member's argument, not the schema
++  scaffolding that restates it. The removal is deliberately observable — a
++  silent edit to what reads as a transcript is the failure this marker exists
++  to prevent — and the raw reply is retained in the session record.
++- The locator reads the LAST array-shaped span, not the first. The analysis
++  lens exists to critique analyser OUTPUT, so a JSON array quoted in the prose
++  above is ordinary; first-match would read that as the member's findings.
++- A reply whose block is absent or unreadable is **not** modified, and takes
++  the shipped extraction path — including its one bounded re-ask — against the
++  full raw text. The worst case is therefore exactly today's call count.
++- The per-member outcome is recorded as `parsed-inline` (read from the
++  deliberation reply) versus `parsed` (read from the extraction call), so the
++  two sources are distinguishable in the attendance data.
++
++**Promotion status.** Default-off pending the Phase 1B gate: ≥ 10 real analysis
++runs at ≥ 70 % inline parse rate, no `unparsed` regression, no substantive
++finding-quality regression. The pre-registered rate is
++`parsed-inline ÷ replies that received the contract` — a member that answered
++`[]` counts in the denominator AND as a success, because an empty array from a
++readable reply is a result, not a failure.
++
+ ### Stance tally (Phase 1 — option-level verdict)
+ 
+ `consensus_scoring` scores *findings*; `stance_tally` produces an
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 49340e803249ceab2379efdc161a39b71f7b4a56..8d84fc3dfbec0d27a15772cbf777fdbc9445efb9 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -34,9 +34,9 @@
+             "note": "The nine active non-draft roadmaps that predate the `relates:` requirement (road-to-agentic-engineering-assurance, road-to-component-library-lifecycle, road-to-council-evidence-integrity, road-to-frontend-fidelity-calibration, road-to-monorepo-scope-and-detection, road-to-observability-plate, road-to-role-scoped-spawn-profiles, road-to-skill-delivery-over-mcp, road-to-standing-payload-diet). This is a NEW obligation rather than a repaired scan root, and the ratchet is the point: `depends:` shipped in the template with nothing requiring it and measured 0 adoption, so requiring `relates:` retroactively across the estate would be an owner-reserved write with no analysis behind the edges it would have to invent (held as step 4.3, deferred). Clearing an entry here is one roadmap at a time: run `agent-config roadmap:context` on it, write the rows the probe surfaces, and lower the count."
+         },
+         "check_source_size_budget": {
+-            "count": 18440,
+-            "landed": "2026-08-27",
+-            "note": "Lowered 18,446 -> 18,440 on 2026-08-27 by fix/council-cost-truth, which paid its own way through EXTRACTION rather than a bump. Replacing three inline cost-accumulation loops in council_cli.ts with calls to sumBillableCost took that file 3,981 -> 3,975 lines, and it sits 2,475 lines PAST the 1500-line threshold, so all six removed lines count. The three new helpers -- sumBillableCost, isBillableResponse, allSeatsNonBillable -- landed in ai_council/pricing.ts, which goes 445 -> 551 lines and is therefore still FAR under the threshold: those 106 added lines are free. Net -6, which is exactly the gate's reading. pricing.ts is where they belong on merit, not only on budget: it already owns estimate_cost and the price table, so cost logic reading a price table has no other home. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- and that is how this lowering surfaced: CI shard 2/4 red on both ubuntu and macOS with 'expected 18446 to be 18440', where the gate itself only advises. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,474 -> 18,446 on 2026-08-26 by road-to-consumer-repo-reality Phase 1, which had to pay its own way before it could pass. Wiring the three install-reach checks into cmd_doctor.ts charged +5 lines, because that file is ~2,150 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: the two runtime-presence checks -- _check_python_runtime and _check_humanizer_runtime -- moved WHOLE into _lib/doctor_runtime_checks.ts. They are cohesive with each other and with nothing else in that file (each answers 'is a runtime present, and what happens when it is not'; neither reads the manifest, the drift sets, or the project root), and their one dependency, shutilWhich, is PASSED IN rather than imported -- it is defined in cmd_doctor.ts itself, so importing it back would have made the two modules circular, and a parameter is cheaper than moving a shared utility four other call sites already resolve from there. Thin wrappers keep the historical names and arity, so the runner map, the export block and the existing fallback test are untouched. cmd_doctor.ts goes 3,666 -> 3,638 lines. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a RED TEST rather than tolerated slack -- which is how this lowering surfaced, in a neutral review of the branch rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,489 -> 18,474 on 2026-08-26 by road-to-internal-estate-fit Phase 2, which paid its own way and then some. De-duplicating SCOPE_DETECT_MANIFESTS and SCOPE_DETECT_AI_DIRS removed two byte-for-byte constant blocks from src/scripts/install.ts, which is 3,902 lines PAST the 1500-line threshold, so every removed line counts. One exported definition each now lives in src/install/detect.ts (far under the threshold and therefore free) and install.ts imports them. Net -15. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- a baseline left loose by even one line is a red test, and that is how this lowering surfaced rather than by inspection: CI reported 'expected 18489 to be 18474'. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Lowered 18,511 -> 18,489 ON THE MERGE, 2026-08-26, by MEASURING the merged tree rather than picking a side — which is the method every prior entry here prescribes and the exact case several of them describe. Two branches of one drain run each paid their own way independently: road-to-skill-ecosystem-runtime-enforcement extracted the four runtime-wiring checks into _lib/runtime_wiring_checks.ts and the transcript reader into _lib/loop_guards, reaching 18,490 against a base of 18,512; road-to-skill-ecosystem-eval-integrity extracted the exact binary tests, the CPython erf port, wilcoxon and the float-parity rounder into _lib/paired_stats.ts, reaching 18,511 against the same base. The merged tree measures 18,489 — which is 18,512 - 22 - 1, i.e. the SUM of both gains, so picking either branch's number would have silently given back the other branch's. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by even one line is a red test. Both derivations are preserved below rather than one being dropped, because each records a real extraction and the pair is the evidence for this number. Prior entry (runtime-enforcement branch): lowered 18,512 -> 18,490 on 2026-08-26. Prior entry (eval-integrity branch): lowered 18,512 -> 18,511 on 2026-08-26 by road-to-skill-ecosystem-eval-integrity Phase 2, which had to pay its own way before it could pass. Adding direction counts to `_paired_median_block` charged +24 lines, because bench_ab_v2_stats.ts was 25 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: _lib/paired_stats.ts now holds mcnemar_exact, cohens_h, the CPython erf/normal-CDF port, wilcoxon, and the float-parity rounder those need. Every name is re-exported from bench_ab_v2_stats.ts, so `check_quality_regression`'s existing `wilcoxon` import and every other consumer resolve unchanged. bench_ab_v2_stats.ts goes 1525 -> 1329 lines, well under the threshold, so those lines are now free. Net -1 past zero rather than exactly to it, for the reason every prior entry here gives: the unit that pays is a unit. Set to the EXACT live total — check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by one line is a red test, and that is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,561 -> 18,512 on 2026-08-24 by the same method every prior entry here prescribes — the merged tree MEASURED, never a side picked. main had reached 18,561; this branch (road-to-skill-delivery-over-mcp) carries its own extractions, and the merged total reads 18,512, a -49 gain that would have been silently given back by keeping main's number. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total; a baseline loose by one line is a red test, and that is how this surfaced. Prior entry: lowered 18,566 -> 18,561 on 2026-08-24 by the method the two prior entries prescribe, for the same reason: independent gains met in a merge, so the merged tree was MEASURED rather than a side picked. main had reached 18,566 via road-to-skill-link-integrity-and-manifest-sync Phase 2; this branch had already paid its own extraction under road-to-trigger-delivered-rule-bodies 1.6 (condense.ts's inline mode literal moved whole to _lib/lean_projection_mode.ts, -5; the new module is 45 lines and therefore free). check_source_size_budget reports 18,561 on the merged tree, exactly 18,566 - 5, so picking either side's number would have given back the other's gain. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by one line is a red test — which is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,574 -> 18,571 on 2026-08-23, and the -3 is the SUM of two independent lowerings-through-extraction that met in a merge, not a new reduction. main had already reached 18,573 via road-to-override-efficacy-proof (-1: _check_overrides moved whole to _cli/doctor_overrides.ts, -119, and the install-mode detector plus its marker constant to _cli/doctor_install_mode.ts, -14, both names forwarded with `export ... from`; net -1 past zero rather than exactly to it, because the unit that paid is a unit). This branch had reached 18,572 via road-to-council-evidence-integrity Phases 1-2 (-2: the two result bundles PeerReviewResult and ConsensusResult, -98, the two options interfaces, -19, and CouncilQuestion, -11, all PURE MOVES into ai_council/orchestrator_results.ts, with orchestrator.ts re-exporting every name; the options interfaces required a TYPE-ONLY back-import of OnOverrunCallback, legal and runtime-free since both directions are erased). The merge conflict was resolved by MEASURING the merged tree rather than picking a side: check_source_size_budget reports 18571 on it, which is exactly 18,574 - 1 - 2. Picking either branch's number would have silently given back the other branch's gain -- the failure main's own entry names one line above. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a red test. Lowered 18,571 -> 18,566 on 2026-08-23 by road-to-skill-link-integrity-and-manifest-sync Phase 2, which had to pay its own way before it could pass: adding set_augment_manifest_version to release.ts charged +35 lines, because release.ts is 564 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump. Both manifest-version writers -- the new set_augment_manifest_version and its pre-existing twin set_marketplace_version -- moved whole into release_env.ts, the leaf that already owns both manifest paths AND jsonDumpsIndent, so neither function needed anything it did not already have there. release_env.ts is 298 lines, far under the threshold, so those lines are now free. release.ts re-exports set_marketplace_version so its existing test import keeps resolving; the new function is imported from release_env directly. Net -5 past zero rather than exactly to it, for the same reason main's entry gives: the unit that pays is a unit."
++            "count": 18266,
++            "landed": "2026-08-30",
++            "note": "Lowered 18,440 -> 18,266 on 2026-08-30 by road-to-inbox-harvest-2026-08-e-council-topology-evidence Phase 1B, which had to pay its own way before it could pass — and then paid 153 lines past zero. The inline-findings change charged +153: orchestrator.ts +107, council_cli.ts +35, ai_council/config.ts +11, all three being files 700-2,500 lines PAST the 1500-line threshold, so every added line counts. The fix was EXTRACTION, never a bump, and it went in two steps because the first was not enough. Step one moved the whole new concern into ai_council/inline_findings.ts (266 lines, far under the threshold and therefore free): the trailing-block locator and its span type, the RecordedExtractionOutcome union, harvest_inline_findings, the final-round suffix composer, the short-circuit helper, and the config predicate. That took the charge 153 -> 23 but not to zero, because the remaining lines are irreducible call sites in the three over-budget files. Step two moved run_consensus_scoring — the function this change actually edits, ~190 lines with its docblock — out of orchestrator.ts into ai_council/consensus_round.ts. orchestrator.ts re-exports the name, so every existing importer resolves unchanged; the new module imports consult back from orchestrator.ts, closing a module cycle that is call-time rather than init-time (nothing there runs at module load), which is the shape ESM resolves without a partial-initialisation hazard. orchestrator.ts goes 2,225 -> 2,067 lines and is still past the threshold, so all 158 removed lines count. Set to the EXACT live total measured on the MERGED tree (this branch merged origin/main at 7b57734cf before measuring), because check_source_size_budget.test.ts asserts baseline == tree total — a baseline left loose by even one line is a red test, and that is how this lowering surfaced rather than by inspection: the test reported 'expected 18440 to be 18266' while the gate itself only advised. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,446 -> 18,440 on 2026-08-27 by fix/council-cost-truth, which paid its own way through EXTRACTION rather than a bump. Replacing three inline cost-accumulation loops in council_cli.ts with calls to sumBillableCost took that file 3,981 -> 3,975 lines, and it sits 2,475 lines PAST the 1500-line threshold, so all six removed lines count. The three new helpers -- sumBillableCost, isBillableResponse, allSeatsNonBillable -- landed in ai_council/pricing.ts, which goes 445 -> 551 lines and is therefore still FAR under the threshold: those 106 added lines are free. Net -6, which is exactly the gate's reading. pricing.ts is where they belong on merit, not only on budget: it already owns estimate_cost and the price table, so cost logic reading a price table has no other home. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- and that is how this lowering surfaced: CI shard 2/4 red on both ubuntu and macOS with 'expected 18446 to be 18440', where the gate itself only advises. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,474 -> 18,446 on 2026-08-26 by road-to-consumer-repo-reality Phase 1, which had to pay its own way before it could pass. Wiring the three install-reach checks into cmd_doctor.ts charged +5 lines, because that file is ~2,150 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: the two runtime-presence checks -- _check_python_runtime and _check_humanizer_runtime -- moved WHOLE into _lib/doctor_runtime_checks.ts. They are cohesive with each other and with nothing else in that file (each answers 'is a runtime present, and what happens when it is not'; neither reads the manifest, the drift sets, or the project root), and their one dependency, shutilWhich, is PASSED IN rather than imported -- it is defined in cmd_doctor.ts itself, so importing it back would have made the two modules circular, and a parameter is cheaper than moving a shared utility four other call sites already resolve from there. Thin wrappers keep the historical names and arity, so the runner map, the export block and the existing fallback test are untouched. cmd_doctor.ts goes 3,666 -> 3,638 lines. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a RED TEST rather than tolerated slack -- which is how this lowering surfaced, in a neutral review of the branch rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,489 -> 18,474 on 2026-08-26 by road-to-internal-estate-fit Phase 2, which paid its own way and then some. De-duplicating SCOPE_DETECT_MANIFESTS and SCOPE_DETECT_AI_DIRS removed two byte-for-byte constant blocks from src/scripts/install.ts, which is 3,902 lines PAST the 1500-line threshold, so every removed line counts. One exported definition each now lives in src/install/detect.ts (far under the threshold and therefore free) and install.ts imports them. Net -15. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- a baseline left loose by even one line is a red test, and that is how this lowering surfaced rather than by inspection: CI reported 'expected 18489 to be 18474'. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Lowered 18,511 -> 18,489 ON THE MERGE, 2026-08-26, by MEASURING the merged tree rather than picking a side — which is the method every prior entry here prescribes and the exact case several of them describe. Two branches of one drain run each paid their own way independently: road-to-skill-ecosystem-runtime-enforcement extracted the four runtime-wiring checks into _lib/runtime_wiring_checks.ts and the transcript reader into _lib/loop_guards, reaching 18,490 against a base of 18,512; road-to-skill-ecosystem-eval-integrity extracted the exact binary tests, the CPython erf port, wilcoxon and the float-parity rounder into _lib/paired_stats.ts, reaching 18,511 against the same base. The merged tree measures 18,489 — which is 18,512 - 22 - 1, i.e. the SUM of both gains, so picking either branch's number would have silently given back the other branch's. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by even one line is a red test. Both derivations are preserved below rather than one being dropped, because each records a real extraction and the pair is the evidence for this number. Prior entry (runtime-enforcement branch): lowered 18,512 -> 18,490 on 2026-08-26. Prior entry (eval-integrity branch): lowered 18,512 -> 18,511 on 2026-08-26 by road-to-skill-ecosystem-eval-integrity Phase 2, which had to pay its own way before it could pass. Adding direction counts to `_paired_median_block` charged +24 lines, because bench_ab_v2_stats.ts was 25 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: _lib/paired_stats.ts now holds mcnemar_exact, cohens_h, the CPython erf/normal-CDF port, wilcoxon, and the float-parity rounder those need. Every name is re-exported from bench_ab_v2_stats.ts, so `check_quality_regression`'s existing `wilcoxon` import and every other consumer resolve unchanged. bench_ab_v2_stats.ts goes 1525 -> 1329 lines, well under the threshold, so those lines are now free. Net -1 past zero rather than exactly to it, for the reason every prior entry here gives: the unit that pays is a unit. Set to the EXACT live total — check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by one line is a red test, and that is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,561 -> 18,512 on 2026-08-24 by the same method every prior entry here prescribes — the merged tree MEASURED, never a side picked. main had reached 18,561; this branch (road-to-skill-delivery-over-mcp) carries its own extractions, and the merged total reads 18,512, a -49 gain that would have been silently given back by keeping main's number. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total; a baseline loose by one line is a red test, and that is how this surfaced. Prior entry: lowered 18,566 -> 18,561 on 2026-08-24 by the method the two prior entries prescribe, for the same reason: independent gains met in a merge, so the merged tree was MEASURED rather than a side picked. main had reached 18,566 via road-to-skill-link-integrity-and-manifest-sync Phase 2; this branch had already paid its own extraction under road-to-trigger-delivered-rule-bodies 1.6 (condense.ts's inline mode literal moved whole to _lib/lean_projection_mode.ts, -5; the new module is 45 lines and therefore free). check_source_size_budget reports 18,561 on the merged tree, exactly 18,566 - 5, so picking either side's number would have given back the other's gain. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by one line is a red test — which is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,574 -> 18,571 on 2026-08-23, and the -3 is the SUM of two independent lowerings-through-extraction that met in a merge, not a new reduction. main had already reached 18,573 via road-to-override-efficacy-proof (-1: _check_overrides moved whole to _cli/doctor_overrides.ts, -119, and the install-mode detector plus its marker constant to _cli/doctor_install_mode.ts, -14, both names forwarded with `export ... from`; net -1 past zero rather than exactly to it, because the unit that paid is a unit). This branch had reached 18,572 via road-to-council-evidence-integrity Phases 1-2 (-2: the two result bundles PeerReviewResult and ConsensusResult, -98, the two options interfaces, -19, and CouncilQuestion, -11, all PURE MOVES into ai_council/orchestrator_results.ts, with orchestrator.ts re-exporting every name; the options interfaces required a TYPE-ONLY back-import of OnOverrunCallback, legal and runtime-free since both directions are erased). The merge conflict was resolved by MEASURING the merged tree rather than picking a side: check_source_size_budget reports 18571 on it, which is exactly 18,574 - 1 - 2. Picking either branch's number would have silently given back the other branch's gain -- the failure main's own entry names one line above. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a red test. Lowered 18,571 -> 18,566 on 2026-08-23 by road-to-skill-link-integrity-and-manifest-sync Phase 2, which had to pay its own way before it could pass: adding set_augment_manifest_version to release.ts charged +35 lines, because release.ts is 564 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump. Both manifest-version writers -- the new set_augment_manifest_version and its pre-existing twin set_marketplace_version -- moved whole into release_env.ts, the leaf that already owns both manifest paths AND jsonDumpsIndent, so neither function needed anything it did not already have there. release_env.ts is 298 lines, far under the threshold, so those lines are now free. release.ts re-exports set_marketplace_version so its existing test import keeps resolving; the new function is imported from release_env directly. Net -5 past zero rather than exactly to it, for the same reason main's entry gives: the unit that pays is a unit."
+         },
+         "ci-parity:local-only": {
+             "count": 165,
+diff --git a/src/scripts/_lib/council_settings_block.ts b/src/scripts/_lib/council_settings_block.ts
+index 68be7e64948b938527bf61772b90332546562bfc..ff3e756e6d002f7998e27383fc22ad8d4bdafb3b 100644
+--- a/src/scripts/_lib/council_settings_block.ts
++++ b/src/scripts/_lib/council_settings_block.ts
+@@ -94,6 +94,12 @@ export function synthesizeAiCouncilBlock(cfg: CouncilConfig): Dict {
+             strong_threshold: cfg.consensus_scoring.strong_threshold,
+             minority_threshold: cfg.consensus_scoring.minority_threshold,
+             lenses: [...cfg.consensus_scoring.lenses],
++            // Phase 1B. Omitting it here is not a missing default — it is the key
++            // becoming UNREADABLE: `inlineFindingsActive` reads this projected
++            // dict, not the typed config, so an absent key resolves to `false` and
++            // the feature is silently off no matter what the YAML says. A live
++            // analysis run on 2026-08-30 is what found it, after the tests passed.
++            inline_findings: cfg.consensus_scoring.inline_findings,
+         },
+         cli_call_budget: {
+             max_calls_per_day: _mapToObject(cfg.cli_call_budget.max_calls_per_day),
+diff --git a/src/scripts/ai_council/config.ts b/src/scripts/ai_council/config.ts
+index ab12af6069a82930fabd94582c8c5e4025a5a7b3..437ad7a8b56b52d9182fa2fec993b3693e61e133 100644
+--- a/src/scripts/ai_council/config.ts
++++ b/src/scripts/ai_council/config.ts
+@@ -359,6 +359,8 @@ export interface ConsensusScoringConfig {
+     readonly strong_threshold: number;
+     readonly minority_threshold: number;
+     readonly lenses: readonly string[];
++    /** Phase 1B — see `inline_findings.ts`. Default `false` until 1B.4's gate is met. */
++    readonly inline_findings: boolean;
+ }
+ 
+ const _VALID_NECESSITY_MODES: ReadonlySet<string> = new Set([
+@@ -1462,6 +1464,7 @@ function _build_consensus_scoring(d: Dict): ConsensusScoringConfig {
+         strong_threshold: strong,
+         minority_threshold: minority,
+         lenses: lenses_raw as string[],
++        inline_findings: Boolean(_pyTruthy(_get(d, 'inline_findings', false))),
+     };
+ }
+ 
+diff --git a/src/scripts/ai_council/consensus.ts b/src/scripts/ai_council/consensus.ts
+index e5b925548a533e76feb0ced90ad287ee3afc60c6..88191900d1711a4b9663aabd49faaf2a9f45b5e1 100644
+--- a/src/scripts/ai_council/consensus.ts
++++ b/src/scripts/ai_council/consensus.ts
+@@ -34,9 +34,9 @@ import { pyRound } from '../_lib/value_ladder.js';
+ // Python: re.compile(r"```(?:json)?\s*(\[.*?\])\s*```", re.DOTALL)
+ // re.DOTALL → 's'. Python regex is not global; a fresh RegExp per call avoids
+ // lastIndex carryover, and we use .exec() (first match) below.
+-const _JSON_BLOCK_SRC = '```(?:json)?\\s*(\\[[\\s\\S]*?\\])\\s*```';
++export const _JSON_BLOCK_SRC = '```(?:json)?\\s*(\\[[\\s\\S]*?\\])\\s*```';
+ // Python: re.compile(r"(\[\s*\{.*?\}\s*\])", re.DOTALL)
+-const _BARE_ARRAY_SRC = '(\\[\\s*\\{[\\s\\S]*?\\}\\s*\\])';
++export const _BARE_ARRAY_SRC = '(\\[\\s*\\{[\\s\\S]*?\\}\\s*\\])';
+ 
+ // Defaults mirror the roadmap (Phase 4 Step 4). The .agent-settings.yml
+ // block overrides them at run time.
+diff --git a/src/scripts/ai_council/consensus_round.ts b/src/scripts/ai_council/consensus_round.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ff5cf49381b246cd63de53e871f847c221ca2522
+--- /dev/null
++++ b/src/scripts/ai_council/consensus_round.ts
+@@ -0,0 +1,226 @@
++// The two-pass consensus round.
++//
++// Split out of `orchestrator.ts` in the change that made pass 1 conditional
++// (Phase 1B, inline findings). `orchestrator.ts` sits ~750 lines past the
++// 1500-line source-size ceiling, so the budget gate refuses new lines there —
++// correctly: the fix for a bloated file is not a shorter comment, it is the
++// concern moving out. This is the concern that moved, and it is the one the
++// change actually edits.
++//
++// `orchestrator.ts` re-exports `run_consensus_scoring`, so every existing
++// importer is untouched. The import of `consult` below closes a module cycle
++// with that file; it is call-time, not init-time — nothing here runs at module
++// load — which is the shape ESM resolves without a partial-initialisation
++// hazard.
++import type { CouncilResponse, ExternalAIClient } from './clients.js';
++import { DEFAULT_MAX_TOKENS } from './clients.js';
++import type { Finding } from './consensus.js';
++import {
++    ConsensusBucket,
++    FindingScore,
++    aggregate_scores,
++    anonymize_findings,
++    bucket_by_threshold,
++    parse_findings_outcome,
++    parse_scores_response,
++} from './consensus.js';
++import type { RecordedExtractionOutcome } from './inline_findings.js';
++import { takeInlineFindings } from './inline_findings.js';
++import { consult } from './orchestrator.js';
++import type { RunConsensusScoringOptions } from './orchestrator_results.js';
++import { ConsensusResult, CouncilQuestion } from './orchestrator_results.js';
++import { build_extraction_user_prompt, build_scoring_user_prompt } from './prompts.js';
++
++/** Python `str.strip()` parity, as everywhere else in this package. */
++const _pyStrip = (s: string): string => s.replace(/^\s+|\s+$/g, '');
++
++/**
++ * Two-pass consensus round (Phase 4 / F3).
++ *
++ * Pass 1 — extraction: each member re-emits its own deliberation as
++ * a JSON array of `{id, text}` findings. Pass 2 — scoring: each
++ * member sees the *other* members' findings under anonymous labels
++ * and rates them 1-10 + agree/disagree + reason.
++ *
++ * The cost budget is shared across both passes; the daily ledger
++ * receives both. Errors in one member's extraction or scoring tag
++ * that member but never abort the round.
++ */
++export function run_consensus_scoring(
++    members: ExternalAIClient[],
++    deliberation_responses: CouncilResponse[],
++    opts: RunConsensusScoringOptions = {},
++): ConsensusResult {
++    const budget = opts.budget ?? null;
++    const table = opts.table ?? null;
++    const on_overrun = opts.on_overrun ?? null;
++    const project = opts.project ?? null;
++    const original_ask = opts.original_ask ?? '';
++    const max_tokens = opts.max_tokens ?? DEFAULT_MAX_TOKENS;
++    const strong_threshold = opts.strong_threshold ?? 0.7;
++    const minority_threshold = opts.minority_threshold ?? 0.4;
++    const inline_extractions = opts.inline_extractions ?? null;
++
++    if (members.length === 0 || deliberation_responses.length === 0) {
++        return new ConsensusResult({
++            bucket: new ConsensusBucket(),
++            findings: [],
++            scores: [],
++            metadata: new Map(),
++            extraction_responses: [],
++            scoring_responses: [],
++        });
++    }
++
++    // ── Pass 1: extraction ──────────────────────────────────────────
++    const member_by_name = new Map<string, ExternalAIClient>();
++    for (const m of members) {
++        member_by_name.set(m.name, m);
++    }
++    const extraction_responses: CouncilResponse[] = [];
++    const all_findings: Finding[] = [];
++    // Per-member extraction outcome — step 2.2. Recorded rather than derived from the
++    // findings count, because "zero findings" and "could not be read" are different facts
++    // and the count cannot tell them apart. `parsed-after-reask` is kept distinct from
++    // `parsed`: a member that needed a second ask is a signal about the prompt or the
++    // member, and collapsing it into `parsed` would hide the only evidence that the
++    // re-ask is doing anything.
++    const parse_outcomes = new Map<string, RecordedExtractionOutcome>();
++    for (const resp of deliberation_responses) {
++        const member = member_by_name.get(resp.provider);
++        if (member === undefined || resp.error || !_pyStrip(resp.text)) {
++            continue;
++        }
++        const source = `${member.name}:${member.model}`;
++
++        // Phase 1B replaces the second call, it does not delete it: no harvested
++        // block → fall through to the extraction call over untouched text.
++        if (takeInlineFindings(inline_extractions, source, parse_outcomes, all_findings)) {
++            continue;
++        }
++
++        const question = new CouncilQuestion({
++            mode: 'prompt',
++            user_prompt: build_extraction_user_prompt(resp.text),
++            max_tokens,
++        });
++        const extracted = consult([member], question, budget, {
++            table,
++            on_overrun,
++            project,
++            original_ask,
++        });
++        extraction_responses.push(...extracted);
++        if (extracted.length === 0 || extracted[0]!.error) {
++            continue;
++        }
++        let ex = parse_findings_outcome(extracted[0]!.text, { source });
++
++        // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
++        //
++        // A member that said something no parser could read used to be indistinguishable
++        // from a member that found nothing: `parse_findings_response` returned `[]` for
++        // both, and this loop pushed the empty array with no branch. So an unparseable
++        // answer counted as a clean zero-findings review.
++        //
++        // ONE re-ask, not a loop. A re-ask is a paid call, and an unbounded retry turns
++        // one unparseable answer into open-ended spend — the failure mode the N=3
++        // validation budget exists for, reached here by a different road. `empty` is NOT
++        // re-asked: a member that said nothing has nothing to restate, and re-asking it
++        // buys a second silence.
++        if (ex.outcome === 'parse_failed') {
++            const retry_q = new CouncilQuestion({
++                mode: 'prompt',
++                user_prompt:
++                    build_extraction_user_prompt(resp.text) +
++                    '\n\nYour previous answer could not be parsed. Reply with ONLY a JSON ' +
++                    'array of {"id": string, "text": string} objects, no prose before or ' +
++                    'after it. An empty array [] is a valid answer meaning you found nothing.',
++                max_tokens,
++            });
++            const retried = consult([member], retry_q, budget, {
++                table,
++                on_overrun,
++                project,
++                original_ask,
++            });
++            extraction_responses.push(...retried);
++            if (retried.length > 0 && !retried[0]!.error) {
++                ex = parse_findings_outcome(retried[0]!.text, { source });
++            }
++            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
++        } else {
++            parse_outcomes.set(source, ex.outcome);
++        }
++        all_findings.push(...ex.findings);
++    }
++
++    if (all_findings.length === 0) {
++        return new ConsensusResult({
++            bucket: new ConsensusBucket(),
++            findings: [],
++            scores: [],
++            metadata: new Map(),
++            parse_outcomes,
++            extraction_responses,
++            scoring_responses: [],
++        });
++    }
++
++    // ── Pass 2: scoring (each member rates the OTHERS' findings) ────
++    const scoring_responses: CouncilResponse[] = [];
++    const all_scores: FindingScore[] = [];
++    for (const member of members) {
++        const scorer = `${member.name}:${member.model}`;
++        const others = all_findings.filter((f) => f.source !== scorer);
++        if (others.length === 0) {
++            continue;
++        }
++        const anon = anonymize_findings(others);
++        const label_to_id = new Map<string, string>();
++        const anon_text = new Map<string, string>();
++        for (const [label, f] of anon) {
++            label_to_id.set(label, f.id);
++            anon_text.set(label, f.text);
++        }
++        const question = new CouncilQuestion({
++            mode: 'prompt',
++            user_prompt: build_scoring_user_prompt(anon_text),
++            max_tokens,
++        });
++        const scored = consult([member], question, budget, {
++            table,
++            on_overrun,
++            project,
++            original_ask,
++        });
++        scoring_responses.push(...scored);
++        if (scored.length === 0 || scored[0]!.error) {
++            continue;
++        }
++        for (const s of parse_scores_response(scored[0]!.text, { scorer })) {
++            const real_id = label_to_id.get(s.finding_id);
++            if (real_id === undefined) {
++                continue;
++            }
++            all_scores.push(
++                new FindingScore(real_id, s.scorer, s.score, s.agree, s.reason),
++            );
++        }
++    }
++
++    const metadata = aggregate_scores(all_findings, all_scores);
++    const bucket = bucket_by_threshold(all_findings, metadata, {
++        strong: strong_threshold,
++        minority: minority_threshold,
++    });
++    return new ConsensusResult({
++        bucket,
++        findings: all_findings,
++        scores: all_scores,
++        metadata,
++        parse_outcomes,
++        extraction_responses,
++        scoring_responses,
++    });
++}
+diff --git a/src/scripts/ai_council/inline_findings.ts b/src/scripts/ai_council/inline_findings.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4130db84f8874ad71998cae27da11c0d4e6373b7
+--- /dev/null
++++ b/src/scripts/ai_council/inline_findings.ts
+@@ -0,0 +1,266 @@
++// Phase 1B — inline findings, the whole concern in one module.
++//
++// The consensus round's pass 1 asks every member a SECOND time, in a separate
++// paid call, to restate its own analysis as a JSON findings array. Phase 1B of
++// `road-to-inbox-harvest-2026-08-e-council-topology-evidence` asks for that
++// array in the FIRST reply instead, and keeps the extraction call as the
++// repair path.
++//
++// It lives here rather than spread across `orchestrator.ts`, `consensus.ts` and
++// `council_cli.ts` for a reason the source-size budget made concrete: all three
++// are far past the 1500-line ceiling, so a new concern added to them is new
++// budget excess with nowhere to go. Concentrating it also puts the four pieces
++// that have to agree — the contract text's promise, the locator, the harvest
++// and the config predicate — where a reader meets them together.
++import type { ExternalAIClient, CouncilResponse } from './clients.js';
++import type { Finding, FindingsExtraction } from './consensus.js';
++import { _BARE_ARRAY_SRC, _JSON_BLOCK_SRC, parse_findings_outcome } from './consensus.js';
++import { INLINE_FINDINGS_CONTRACT, STANCE_LINE_CONTRACT } from './prompts.js';
++
++/** Python `str.strip()` parity, as everywhere else in this package. */
++const _strip = (s: string): string => s.replace(/^\s+|\s+$/g, '');
++
++/**
++ * Phase 1B — the deliberation reply split into argument and findings block.
++ *
++ * `deliberation_text` is what every downstream consumer should see: peer
++ * review, chairman synthesis, and the rendered artefact evaluate the member's
++ * REASONING, and a schema block restating selected conclusions is scaffolding,
++ * not argument. Leaving it in amplifies a concise finding simply because it
++ * appears twice — the AI council's stated reason (2026-08-30, 2 of 2 seats) for
++ * choosing to strip.
++ *
++ * `block` is the exact consumed span. One locator produces both halves, so the
++ * text that is parsed and the text that is removed cannot disagree — the
++ * council's other requirement, and the reason there is no separate
++ * "find and remove a JSON fence" function anywhere in this change.
++ */
++export interface InlineFindingsSplit {
++    /** The reply with the consumed block removed. Equals the input when `found` is false. */
++    readonly deliberation_text: string;
++    /** The consumed span, ready for `parse_findings_outcome`. `''` when `found` is false. */
++    readonly block: string;
++    readonly found: boolean;
++}
++
++/**
++ * Split a full analysis reply at its TRAILING findings block.
++ *
++ * A locator, deliberately not a second parser: `parse_findings_outcome` stays
++ * the only thing that decides whether a candidate IS a findings block, and this
++ * narrows where it looks.
++ *
++ * The narrowing is not cosmetic. `_extract_json_array` returns the FIRST match,
++ * which is correct for an extraction reply (the reply IS the array) and wrong
++ * for an analysis reply, where the prose above may legitimately quote a JSON
++ * array — the analysis lens exists to critique analyser OUTPUT, so a quoted
++ * array is an ordinary thing to find there. First-match would read the quoted
++ * array as the member's findings and never reach the real block.
++ *
++ * `INLINE_FINDINGS_CONTRACT` asks for the block LAST, so LAST is what this
++ * reads. `found: false` when nothing array-shaped is present, which the caller
++ * treats as "no inline block" and repairs with the extraction call — the same
++ * outcome as today, never worse.
++ */
++export function split_inline_findings(text: string): InlineFindingsSplit {
++    const none: InlineFindingsSplit = { deliberation_text: text, block: '', found: false };
++    if (!text) {
++        return none;
++    }
++    // Deliberately the same two patterns `_extract_json_array` uses, in the same
++    // precedence order — fenced beats bare — so a block this locator returns is
++    // one that function can also read. Only the match SELECTION differs: last,
++    // not first.
++    for (const src of [_JSON_BLOCK_SRC, _BARE_ARRAY_SRC]) {
++        const re = new RegExp(src, 'gs');
++        let last: RegExpExecArray | null = null;
++        let m: RegExpExecArray | null;
++        while ((m = re.exec(text)) !== null) {
++            last = m;
++            // A zero-length match would spin forever; the patterns cannot produce
++            // one (both require at least `[]`), but the guard costs nothing and a
++            // future pattern edit is exactly when it would matter.
++            if (m.index === re.lastIndex) {
++                re.lastIndex += 1;
++            }
++        }
++        if (last) {
++            const start = last.index;
++            const end = start + last[0].length;
++            return {
++                deliberation_text: `${text.slice(0, start)}${text.slice(end)}`,
++                block: text.slice(start, end),
++                found: true,
++            };
++        }
++    }
++    return none;
++}
++
++/**
++ * How a member's findings were obtained — the RECORDED provenance, wider than
++ * `FindingsParseOutcome`, which describes one parse of one piece of text.
++ *
++ * Typed rather than a bare string because Phase 1B's promotion gate is computed
++ * off exactly these values: an untyped `Map<string, string>` makes the number
++ * that decides the experiment vulnerable to a misspelling no compiler would
++ * catch. The AI council (2026-08-30, 2 of 2 seats) called the pre-existing bare
++ * `'parsed-after-reask'` technical debt rather than a precedent to extend.
++ *
++ * `'parsed'` keeps its shipped meaning — read from the separate extraction
++ * call — and is unambiguous now that `'parsed-inline'` names the other source.
++ * One seat asked for a rename to `'parsed-extraction'`; renaming a value that
++ * is already recorded and compared against is a separate change with its own
++ * migration, and is recorded here as declined-with-a-reason, not overlooked.
++ */
++export type RecordedExtractionOutcome =
++    | 'parsed'
++    | 'empty'
++    | 'parse_failed'
++    | 'parsed-after-reask'
++    | 'parsed-inline';
++
++/**
++ * Phase 1B — harvest the inline findings block out of each deliberation reply.
++ *
++ * Runs BETWEEN the deliberation and every consumer of its text. That placement
++ * is the load-bearing part and it was a defect the AI council caught
++ * (2026-08-30, 2 of 2 seats): peer review and chairman synthesis read the
++ * responses BEFORE the consensus round does, so parsing inside
++ * `run_consensus_scoring` would have left the schema block in the text those
++ * two evaluate — which is precisely the amplification the strip exists to
++ * prevent.
++ *
++ * MUTATES `text` on each response whose block parsed, replacing the consumed
++ * span with a one-line marker. Mutation rather than a parallel clean copy
++ * because two representations of one response means every downstream consumer
++ * has to know which one it holds, and the one that forgets is a silent bug.
++ * `CouncilResponse.text` is already mutated on the stance-repair path, so this
++ * is the established seam rather than a new one.
++ *
++ * The marker is deliberately visible. Stripping without an observable trace is
++ * a silent mutation of the artefact a reader takes for a transcript, and one
++ * seat made an observable marker a condition of its verdict; the other reached
++ * the same concern from the auditability side. ~90 characters replaces ~300 of
++ * JSON, so the scaffolding is gone and the fact of its removal is not.
++ *
++ * Returns the per-member extraction keyed by `provider:model` — the same key
++ * `run_consensus_scoring` records outcomes under. A member whose block did not
++ * parse gets NO entry and its `text` is left exactly as the model wrote it, so
++ * the repair extraction call downstream still sees the raw reply.
++ */
++export function harvest_inline_findings(
++    members: readonly ExternalAIClient[],
++    responses: readonly CouncilResponse[],
++): Map<string, FindingsExtraction> {
++    const out = new Map<string, FindingsExtraction>();
++    const model_by_name = new Map<string, string>();
++    for (const m of members) {
++        model_by_name.set(m.name, m.model);
++    }
++    for (const resp of responses) {
++        const model = model_by_name.get(resp.provider);
++        if (model === undefined || resp.error || !_strip(resp.text)) {
++            continue;
++        }
++        const split = split_inline_findings(resp.text);
++        if (!split.found) {
++            continue;
++        }
++        const source = `${resp.provider}:${model}`;
++        const ex = parse_findings_outcome(split.block, { source });
++        if (ex.outcome !== 'parsed') {
++            // Not a findings block after all — most likely a JSON array the member
++            // quoted from the artefact. Leave the reply untouched: stripping text
++            // we could not read would remove evidence and buy nothing.
++            continue;
++        }
++        out.set(source, ex);
++        const marker = `_[inline findings block extracted: ${String(ex.findings.length)} item(s); the raw reply is retained in the session record.]_`;
++        resp.text = `${_strip(split.deliberation_text)}\n\n${marker}`;
++    }
++    return out;
++}
++
++
++/**
++ * The FINAL deliberation round's volatile suffix.
++ *
++ * Two opt-in contracts ride it and their ORDER is load-bearing:
++ * `STANCE_LINE_CONTRACT` requires the stance to be the last line of the reply,
++ * so it is appended last and the findings block sits above it. A findings block
++ * appended after the stance line would contradict the instruction the member is
++ * reading, which is the one composition bug this function exists to make
++ * impossible to reintroduce.
++ *
++ * Both off → the caller's suffix is returned unchanged, so the composed default
++ * is byte-identical to a run without either feature.
++ */
++export function composeFinalRoundSuffix(
++    suffix: string,
++    opts: { is_final: boolean; inline_findings: boolean; stance_tally: boolean },
++): string {
++    if (!opts.is_final) {
++        return suffix;
++    }
++    let out = suffix;
++    if (opts.inline_findings) {
++        out = `${out}\n\n---\n\n${INLINE_FINDINGS_CONTRACT}`;
++    }
++    if (opts.stance_tally) {
++        out = `${out}\n\n---\n\n${STANCE_LINE_CONTRACT}`;
++    }
++    return out;
++}
++
++/**
++ * Consume a member's harvested findings, or report that it has none.
++ *
++ * Returns `true` when the caller should SKIP its extraction call. An entry in
++ * the map is always a short-circuit and never a partial one, because
++ * `harvest_inline_findings` records only a member whose block PARSED — a member
++ * with no entry had its reply left raw and takes the shipped extraction path
++ * over the full text.
++ */
++export function takeInlineFindings(
++    inline_extractions: ReadonlyMap<string, FindingsExtraction> | null,
++    source: string,
++    parse_outcomes: Map<string, RecordedExtractionOutcome>,
++    all_findings: Finding[],
++): boolean {
++    const inline = inline_extractions?.get(source);
++    if (inline === undefined) {
++        return false;
++    }
++    parse_outcomes.set(source, 'parsed-inline');
++    all_findings.push(...inline.findings);
++    return true;
++}
++
++/**
++ * Is the inline-findings contract active for this run?
++ *
++ * Read BEFORE the deliberation, because the contract is a prompt change and the
++ * prompt is built first; the harvest reads the same predicate so the two cannot
++ * disagree about whether a member was asked for the block. Three conjuncts, all
++ * required: consensus scoring on, this lens in its lens list, and
++ * `inline_findings` explicitly on. Any missing → `false`, and `false` is a
++ * byte-identical prompt.
++ *
++ * Reads the SYNTHESISED settings dict, not the typed config. That distinction
++ * is not academic: `_lib/council_settings_block.ts` projects the typed config
++ * into this dict, and when it did not carry the key a `true` in the YAML
++ * resolved to `undefined` and the feature was silently off with every unit test
++ * green — found by a live analysis run on 2026-08-30, not by review.
++ */
++export function inlineFindingsActive(
++    ai_cfg: Record<string, unknown>,
++    mode: string,
++): boolean {
++    const cs = (ai_cfg['consensus_scoring'] as Record<string, unknown> | undefined) ?? {};
++    if (cs['enabled'] !== true || cs['inline_findings'] !== true) {
++        return false;
++    }
++    const lenses = (cs['lenses'] as string[] | undefined) ?? ['analysis'];
++    return lenses.includes(mode);
++}
+diff --git a/src/scripts/ai_council/orchestrator.ts b/src/scripts/ai_council/orchestrator.ts
+index 891eaf4bc2304c82cb3e7a9536f0f1912ed77a06..7b004e018ae22cab660dfd7fe2f71556efb048c9 100644
+--- a/src/scripts/ai_council/orchestrator.ts
++++ b/src/scripts/ai_council/orchestrator.ts
+@@ -21,10 +21,14 @@
+ // Failure normalisation (one member's exception → `error`-set
+ // CouncilResponse, never raise) is unchanged.
+ 
+-import { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+-import type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
++import type { ConsensusResult } from './orchestrator_results.js';
++import { CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
++import type { RunPeerReviewOptions } from './orchestrator_results.js';
+ export { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+ export type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
++// Moved to its own module for the source-size budget; re-exported so every
++// existing importer of `run_consensus_scoring` is untouched.
++export { run_consensus_scoring } from './consensus_round.js';
+ import {
+     record_spend as _record_daily_spend,
+     today_spend_usd as _today_spend_usd,
+@@ -39,16 +43,9 @@ import {
+ import type {
+     ConsensusMetadata,
+     Finding} from './consensus.js';
+-import {
+-    ConsensusBucket,
+-    FindingScore,
+-    aggregate_scores,
+-    anonymize_findings,
+-    anonymize_responses,
+-    bucket_by_threshold,
+-    parse_findings_outcome,
+-    parse_scores_response,
+-} from './consensus.js';
++import type { ConsensusBucket } from './consensus.js';
++import { anonymize_responses } from './consensus.js';
++import { composeFinalRoundSuffix } from './inline_findings.js';
+ import type {
+     CostEstimate,
+     PriceTable} from './pricing.js';
+@@ -64,9 +61,7 @@ import {
+     ANTI_CONFORMITY_DIRECTIVE,
+     describe_verdict_mismatch,
+     STANCE_LINE_CONTRACT,
+-    build_extraction_user_prompt,
+     build_peer_review_user_prompt,
+-    build_scoring_user_prompt,
+     peer_review_synthesis_addendum,
+     synthesis_template,
+     system_prompt_for,
+@@ -366,6 +361,8 @@ export interface ConsultOptions {
+      * context). Default `null` → byte-identical to today.
+      */
+     no_project_context_members?: ReadonlySet<string> | null;
++    /** Phase 1B — `composeFinalRoundSuffix`. Default `false` → prompt unchanged. */
++    inline_findings?: boolean;
+     /** Mid-flight cli→api fallback; absent → no retry. See `mid_flight_fallback`. */
+     cli_fallback?: CliFallbackOptions | null;
+ }
+@@ -435,15 +432,13 @@ export function consult(
+     let current_suffix = '';
+ 
+     const stance_tally = opts.stance_tally ?? false;
++    const inline_findings = opts.inline_findings ?? false;
+     for (let round_idx = 0; round_idx < rounds; round_idx++) {
+-        // Phase 1: the FINAL round carries the mandatory STANCE closing-line
+-        // contract when the tally is enabled. Off (default) → the original
+-        // question object flows through untouched, byte-identical to today.
++        // The FINAL round carries the opt-in closing contracts (STANCE line,
++        // inline findings). Both off → the question flows through untouched,
++        // byte-identical to today. Order lives in the composer.
+         const is_final = round_idx === rounds - 1;
+-        const suffix_for_round =
+-            is_final && stance_tally
+-                ? `${current_suffix}\n\n---\n\n${STANCE_LINE_CONTRACT}`
+-                : current_suffix;
++        const suffix_for_round = composeFinalRoundSuffix(current_suffix, { is_final, inline_findings, stance_tally });
+         const prompt_for_round = `${question.user_prompt}${suffix_for_round}`;
+         const round_question =
+             round_idx === 0 && prompt_for_round === question.user_prompt
+@@ -1581,188 +1576,6 @@ export function run_peer_review(
+ 
+ 
+ 
+-/**
+- * Two-pass consensus round (Phase 4 / F3).
+- *
+- * Pass 1 — extraction: each member re-emits its own deliberation as
+- * a JSON array of `{id, text}` findings. Pass 2 — scoring: each
+- * member sees the *other* members' findings under anonymous labels
+- * and rates them 1-10 + agree/disagree + reason.
+- *
+- * The cost budget is shared across both passes; the daily ledger
+- * receives both. Errors in one member's extraction or scoring tag
+- * that member but never abort the round.
+- */
+-export function run_consensus_scoring(
+-    members: ExternalAIClient[],
+-    deliberation_responses: CouncilResponse[],
+-    opts: RunConsensusScoringOptions = {},
+-): ConsensusResult {
+-    const budget = opts.budget ?? null;
+-    const table = opts.table ?? null;
+-    const on_overrun = opts.on_overrun ?? null;
+-    const project = opts.project ?? null;
+-    const original_ask = opts.original_ask ?? '';
+-    const max_tokens = opts.max_tokens ?? DEFAULT_MAX_TOKENS;
+-    const strong_threshold = opts.strong_threshold ?? 0.7;
+-    const minority_threshold = opts.minority_threshold ?? 0.4;
+-
+-    if (members.length === 0 || deliberation_responses.length === 0) {
+-        return new ConsensusResult({
+-            bucket: new ConsensusBucket(),
+-            findings: [],
+-            scores: [],
+-            metadata: new Map(),
+-            extraction_responses: [],
+-            scoring_responses: [],
+-        });
+-    }
+-
+-    // ── Pass 1: extraction ──────────────────────────────────────────
+-    const member_by_name = new Map<string, ExternalAIClient>();
+-    for (const m of members) {
+-        member_by_name.set(m.name, m);
+-    }
+-    const extraction_responses: CouncilResponse[] = [];
+-    const all_findings: Finding[] = [];
+-    // Per-member extraction outcome — step 2.2. Recorded rather than derived from the
+-    // findings count, because "zero findings" and "could not be read" are different facts
+-    // and the count cannot tell them apart. `parsed-after-reask` is kept distinct from
+-    // `parsed`: a member that needed a second ask is a signal about the prompt or the
+-    // member, and collapsing it into `parsed` would hide the only evidence that the
+-    // re-ask is doing anything.
+-    const parse_outcomes = new Map<string, string>();
+-    for (const resp of deliberation_responses) {
+-        const member = member_by_name.get(resp.provider);
+-        if (member === undefined || resp.error || !_pyStrip(resp.text)) {
+-            continue;
+-        }
+-        const question = new CouncilQuestion({
+-            mode: 'prompt',
+-            user_prompt: build_extraction_user_prompt(resp.text),
+-            max_tokens,
+-        });
+-        const extracted = consult([member], question, budget, {
+-            table,
+-            on_overrun,
+-            project,
+-            original_ask,
+-        });
+-        extraction_responses.push(...extracted);
+-        if (extracted.length === 0 || extracted[0]!.error) {
+-            continue;
+-        }
+-        const source = `${member.name}:${member.model}`;
+-        let ex = parse_findings_outcome(extracted[0]!.text, { source });
+-
+-        // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
+-        //
+-        // A member that said something no parser could read used to be indistinguishable
+-        // from a member that found nothing: `parse_findings_response` returned `[]` for
+-        // both, and this loop pushed the empty array with no branch. So an unparseable
+-        // answer counted as a clean zero-findings review.
+-        //
+-        // ONE re-ask, not a loop. A re-ask is a paid call, and an unbounded retry turns
+-        // one unparseable answer into open-ended spend — the failure mode the N=3
+-        // validation budget exists for, reached here by a different road. `empty` is NOT
+-        // re-asked: a member that said nothing has nothing to restate, and re-asking it
+-        // buys a second silence.
+-        if (ex.outcome === 'parse_failed') {
+-            const retry_q = new CouncilQuestion({
+-                mode: 'prompt',
+-                user_prompt:
+-                    build_extraction_user_prompt(resp.text) +
+-                    '\n\nYour previous answer could not be parsed. Reply with ONLY a JSON ' +
+-                    'array of {"id": string, "text": string} objects, no prose before or ' +
+-                    'after it. An empty array [] is a valid answer meaning you found nothing.',
+-                max_tokens,
+-            });
+-            const retried = consult([member], retry_q, budget, {
+-                table,
+-                on_overrun,
+-                project,
+-                original_ask,
+-            });
+-            extraction_responses.push(...retried);
+-            if (retried.length > 0 && !retried[0]!.error) {
+-                ex = parse_findings_outcome(retried[0]!.text, { source });
+-            }
+-            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
+-        } else {
+-            parse_outcomes.set(source, ex.outcome);
+-        }
+-        all_findings.push(...ex.findings);
+-    }
+-
+-    if (all_findings.length === 0) {
+-        return new ConsensusResult({
+-            bucket: new ConsensusBucket(),
+-            findings: [],
+-            scores: [],
+-            metadata: new Map(),
+-            parse_outcomes,
+-            extraction_responses,
+-            scoring_responses: [],
+-        });
+-    }
+-
+-    // ── Pass 2: scoring (each member rates the OTHERS' findings) ────
+-    const scoring_responses: CouncilResponse[] = [];
+-    const all_scores: FindingScore[] = [];
+-    for (const member of members) {
+-        const scorer = `${member.name}:${member.model}`;
+-        const others = all_findings.filter((f) => f.source !== scorer);
+-        if (others.length === 0) {
+-            continue;
+-        }
+-        const anon = anonymize_findings(others);
+-        const label_to_id = new Map<string, string>();
+-        const anon_text = new Map<string, string>();
+-        for (const [label, f] of anon) {
+-            label_to_id.set(label, f.id);
+-            anon_text.set(label, f.text);
+-        }
+-        const question = new CouncilQuestion({
+-            mode: 'prompt',
+-            user_prompt: build_scoring_user_prompt(anon_text),
+-            max_tokens,
+-        });
+-        const scored = consult([member], question, budget, {
+-            table,
+-            on_overrun,
+-            project,
+-            original_ask,
+-        });
+-        scoring_responses.push(...scored);
+-        if (scored.length === 0 || scored[0]!.error) {
+-            continue;
+-        }
+-        for (const s of parse_scores_response(scored[0]!.text, { scorer })) {
+-            const real_id = label_to_id.get(s.finding_id);
+-            if (real_id === undefined) {
+-                continue;
+-            }
+-            all_scores.push(
+-                new FindingScore(real_id, s.scorer, s.score, s.agree, s.reason),
+-            );
+-        }
+-    }
+-
+-    const metadata = aggregate_scores(all_findings, all_scores);
+-    const bucket = bucket_by_threshold(all_findings, metadata, {
+-        strong: strong_threshold,
+-        minority: minority_threshold,
+-    });
+-    return new ConsensusResult({
+-        bucket,
+-        findings: all_findings,
+-        scores: all_scores,
+-        metadata,
+-        parse_outcomes,
+-        extraction_responses,
+-        scoring_responses,
+-    });
+-}
+ 
+ /**
+  * Format the per-member meta line — tokens, cost (or subscription), latency.
+diff --git a/src/scripts/ai_council/orchestrator_results.ts b/src/scripts/ai_council/orchestrator_results.ts
+index a6b9cc6b45cd9491559e7569f8a7df9c7df9d907..6d28c45c02b49ed61ea56cd805a91513737fa261 100644
+--- a/src/scripts/ai_council/orchestrator_results.ts
++++ b/src/scripts/ai_council/orchestrator_results.ts
+@@ -25,7 +25,14 @@ import type { ProjectContext } from './project_context.js';
+ // The alternative was leaving the two options interfaces behind, which would have meant
+ // finding 19 lines elsewhere for no design reason.
+ import type { OnOverrunCallback } from './orchestrator.js';
+-import type { ConsensusBucket, ConsensusMetadata, Finding, FindingScore } from './consensus.js';
++import type {
++    ConsensusBucket,
++    ConsensusMetadata,
++    Finding,
++    FindingScore,
++    FindingsExtraction,
++} from './consensus.js';
++import type { RecordedExtractionOutcome } from './inline_findings.js';
+ 
+ /**
+  * Bundle returned by `run_peer_review()` (Phase 5 / F1).
+@@ -121,7 +128,7 @@ export class ConsensusResult {
+      *
+      * Additive and optional, so no existing constructor call changes.
+      */
+-    parse_outcomes: Map<string, string>;
++    parse_outcomes: Map<string, RecordedExtractionOutcome>;
+     extraction_responses: CouncilResponse[];
+     scoring_responses: CouncilResponse[];
+ 
+@@ -130,7 +137,7 @@ export class ConsensusResult {
+         findings: Finding[];
+         scores: FindingScore[];
+         metadata: Map<string, ConsensusMetadata>;
+-        parse_outcomes?: Map<string, string>;
++        parse_outcomes?: Map<string, RecordedExtractionOutcome>;
+         extraction_responses: CouncilResponse[];
+         scoring_responses: CouncilResponse[];
+     }) {
+@@ -163,4 +170,17 @@ export interface RunConsensusScoringOptions {
+     max_tokens?: number;
+     strong_threshold?: number;
+     minority_threshold?: number;
++    /**
++     * Phase 1B: findings already harvested from each member's own deliberation
++     * reply by `harvest_inline_findings`, keyed `provider:model`. A member with
++     * an entry skips the separate extraction call entirely; a member without one
++     * takes the shipped extraction path unchanged. Absent → extraction-always,
++     * call-for-call identical to today.
++     *
++     * A pre-computed map rather than a boolean because the harvest must run
++     * BEFORE peer review and synthesis read the responses, which is upstream of
++     * this function — see `harvest_inline_findings` for why that ordering is
++     * load-bearing.
++     */
++    inline_extractions?: ReadonlyMap<string, FindingsExtraction> | null;
+ }
+diff --git a/src/scripts/ai_council/prompts.ts b/src/scripts/ai_council/prompts.ts
+index 9b0a1b3684c436fcc4a76da8b7a8f32764a1a161..c22a1b19811d99e55dc57deebe57ee5592097575 100644
+--- a/src/scripts/ai_council/prompts.ts
++++ b/src/scripts/ai_council/prompts.ts
+@@ -215,6 +215,39 @@ Rules:
+ - \`text\` is a single sentence, no markdown, no reviewer self-reference.
+ - Wrap the array in a \`\`\`json\`\`\` fenced block. No commentary outside it.`;
+ 
++/**
++ * Phase 1B — inline findings contract, analysis lens only.
++ *
++ * Appended to the FINAL deliberation round so a member emits its own findings
++ * in the SAME response as its analysis, in the schema
++ * `FINDING_EXTRACTION_PROMPT` already defines. When the block parses, the
++ * separate extraction call at `run_consensus_scoring`'s pass 1 is not issued.
++ *
++ * Deliberately a RESTATEMENT of the existing schema and not a second schema:
++ * `parse_findings_outcome` is the only reader, so two shapes here would be two
++ * answers to "what is a finding". The rules below are the extraction prompt's
++ * rules with the framing changed from "re-emit" to "append", because the member
++ * has not finished writing when it reads this.
++ *
++ * Appended exactly like `STANCE_LINE_CONTRACT` (`orchestrator.ts` final-round
++ * suffix) — off by default, and off means the prompt is byte-identical.
++ */
++export const INLINE_FINDINGS_CONTRACT = `After your analysis, and only after it, append your top findings as a
++strict JSON array so downstream tooling can read them without asking
++you again. Each item MUST have:
++
++    {"id": "<short-slug>", "text": "<one-sentence finding>"}
++
++Rules:
++- 3-7 findings, ordered by importance (most important first).
++- \`id\` is a 1-3 word kebab-case slug, unique within your array.
++- \`text\` is a single sentence, no markdown, no reviewer self-reference.
++- Wrap the array in a \`\`\`json\`\`\` fenced block, as the LAST thing in your
++  reply. No commentary after it.
++- An empty array \`[]\` is a valid answer meaning you found nothing.
++- The prose analysis above it is still the primary deliverable — the block
++  summarises it, it does not replace it.`;
++
+ export const FINDING_SCORING_PROMPT = `Below are findings from other independent reviewers, presented with
+ neutral labels (Finding-A, Finding-B, …). Score each one on its
+ merits. You MUST emit a strict JSON array, one entry per finding,
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index d0ad47568595d2d9c1554589dc1e38354d561eed..aef0a65cb33723c97a4db017cf8077c42ea5e77b 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -152,6 +152,8 @@ import {
+     DecisionReplayInputs,
+     render_decision_replay,
+ } from './ai_council/replay.js';
++import type { FindingsExtraction } from './ai_council/consensus.js';
++import { harvest_inline_findings, inlineFindingsActive } from './ai_council/inline_findings.js';
+ import {
+     Finding as ConsensusFinding,
+     FindingScore as ConsensusFindingScore,
+@@ -1186,6 +1188,7 @@ function _maybe_run_consensus(
+     table: PriceTable,
+     project: unknown,
+     args: Args,
++    inline_extractions: ReadonlyMap<string, FindingsExtraction> | null = null,
+ ): ConsensusResult | null {
+     const cs = (ai_cfg['consensus_scoring'] as Dict) || {};
+     if (!_pyBool(cs['enabled'])) {
+@@ -1196,6 +1199,7 @@ function _maybe_run_consensus(
+         return null;
+     }
+     return run_consensus_scoring(members, responses, {
++        inline_extractions,
+         budget,
+         table,
+         project: project as never,
+@@ -2624,6 +2628,9 @@ function cmd_run(
+         rounds,
+         advisor_plans,
+         stance_tally: stance_tally_on,
++        // Phase 1B — the same predicate the harvest below reads, so a member is asked
++        // for the block exactly when the consensus round intends to read one.
++        inline_findings: inlineFindingsActive(ai_cfg, question.mode),
+         member_prompt_suffix,
+         no_project_context_members,
+         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
+@@ -2707,6 +2714,9 @@ function cmd_run(
+     // this is always additive, never a fabricated decision.
+     const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
+     const persona_labels = build_persona_labels(advisor_plans, billable);
++    // Phase 1B — BEFORE peer review, chairman synthesis and rendering read
++    // `responses`; the block is scaffolding, not argument. Off → null, nothing touched.
++    const inline_extractions = inlineFindingsActive(ai_cfg, question.mode) ? harvest_inline_findings(members, responses) : null;
+     const peer_review = _maybe_run_peer_review(
+         ai_cfg,
+         args,
+@@ -2718,7 +2728,7 @@ function cmd_run(
+         project,
+         { persona_labels },
+     );
+-    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
++    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args, inline_extractions);
+     // Rendered attendance, re-derived after the parser. The event does not move.
+     quorum_out.result = annotateRenderedQuorum(quorum_out.result, consensus?.parse_outcomes);
+     const chairman = _maybe_run_chairman(
+diff --git a/tests/scripts/ai_council/inline_findings.test.ts b/tests/scripts/ai_council/inline_findings.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9551ac53486a4319e67e58ee475ee8e50e1022fc
+--- /dev/null
++++ b/tests/scripts/ai_council/inline_findings.test.ts
+@@ -0,0 +1,428 @@
++// Phase 1B — inline findings, analysis lens only.
++//
++// The step replaces the SECOND (extraction) call of the consensus round with a
++// findings block the member already wrote into its analysis reply. What is
++// under test is therefore not "can we parse JSON" — `consensus.ts` already
++// could — but the properties the phase and the AI council named:
++//
++//   1B.1  a reply carrying the block parses inline and issues NO second call
++//   1B.2  a reply without a usable block still yields findings, via the
++//         extraction call that is kept, and never costs more than today
++//   1B.3  the contract reaches the analysis lens only; every other lens'
++//         prompt is byte-unchanged
++//
++// plus the three the council (2026-08-30, 2 of 2 seats) made conditions of its
++// verdict: the consumed block is stripped from what peer review and synthesis
++// read; the SAME span is parsed and removed; and the repair path still sees the
++// raw reply.
++//
++// Transport is stubbed the way `orchestrator.test.ts` stubs it — a subclass of
++// `ExternalAIClient` whose `ask()` returns a canned response and COUNTS its
++// calls, because the call count is the measurement 1B.1 rests on.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
++import { synthesizeAiCouncilBlock } from '../../../src/scripts/_lib/council_settings_block.js';
++import { load_council_config } from '../../../src/scripts/ai_council/config.js';
++import {
++    harvest_inline_findings,
++    inlineFindingsActive,
++    split_inline_findings,
++} from '../../../src/scripts/ai_council/inline_findings.js';
++import {
++    consult,
++    CouncilQuestion,
++    run_consensus_scoring,
++} from '../../../src/scripts/ai_council/orchestrator.js';
++import {
++    all_modes,
++    ANALYSIS_MODE,
++    INLINE_FINDINGS_CONTRACT,
++    system_prompt_for,
++} from '../../../src/scripts/ai_council/prompts.js';
++
++/** Counts `ask()` calls and replays a scripted list — the call count IS the test. */
++class Counting extends ExternalAIClient {
++    calls = 0;
++    prompts: string[] = [];
++    constructor(
++        name: string,
++        model: string,
++        private readonly script: readonly string[],
++    ) {
++        super();
++        this.name = name;
++        this.model = model;
++        this.billable = false;
++        this.transport = 'manual';
++    }
++    override ask(_system: string, user: string): CouncilResponse {
++        this.prompts.push(user);
++        const text = this.script[Math.min(this.calls, this.script.length - 1)] ?? '';
++        this.calls += 1;
++        return new CouncilResponse({ provider: this.name, model: this.model, text, latency_ms: 1 });
++    }
++}
++
++const FINDINGS_JSON = '```json\n[{"id":"leaky-abstraction","text":"The audit conflates two layers."}]\n```';
++
++/** A realistic analysis reply: prose, then the contract's trailing block. */
++const analysisReply = (body: string, block = FINDINGS_JSON): string => `${body}\n\n${block}`;
++
++const delib = (provider: string, model: string, text: string): CouncilResponse =>
++    new CouncilResponse({ provider, model, text });
++
++/** The production sequence: harvest first, then score. */
++const harvestThenScore = (
++    m: Counting,
++    responses: CouncilResponse[],
++): ReturnType<typeof run_consensus_scoring> => {
++    const inline = harvest_inline_findings([m as never], responses);
++    return run_consensus_scoring([m as never], responses, { inline_extractions: inline });
++};
++
++describe('1B.1 — a reply carrying the block parses inline, with no second call', () => {
++    it('block present → parsed-inline, 1 finding, and the member is never re-asked for it', () => {
++        // The scripted answer would produce a DIFFERENT finding id. If the extraction
++        // call were issued, that id is what would land — so the assertion on the id is
++        // simultaneously the assertion that no second call happened, and it fails
++        // loudly rather than silently if the short-circuit is removed.
++        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
++        const r = harvestThenScore(m, [delib('anthropic', 'c', analysisReply('A prose analysis.'))]);
++        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-inline');
++        expect(r.findings.map((f) => f.id)).toEqual(['leaky-abstraction']);
++        // With a single member there is nothing to score, so a correct run makes ZERO
++        // calls. Any call at all is the extraction pass firing when it should not.
++        expect(m.calls).toBe(0);
++        expect(r.extraction_responses).toEqual([]);
++    });
++
++    it('the same reply WITHOUT the harvest costs a call and records the old outcome — the control arm', () => {
++        // Without this arm the test above proves only that SOMETHING produced a
++        // finding. This pins that the saving is caused by the harvest.
++        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
++        const r = run_consensus_scoring([m as never], [delib('anthropic', 'c', analysisReply('A prose analysis.'))]);
++        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed');
++        expect(r.findings.map((f) => f.id)).toEqual(['from-extraction']);
++        expect(m.calls).toBe(1);
++    });
++
++    it('an empty array inline is a RESULT, not a failure — no repair call is bought', () => {
++        const m = new Counting('anthropic', 'c', ['[{"id":"never","text":"reached"}]']);
++        const r = harvestThenScore(m, [delib('anthropic', 'c', 'Nothing wrong here.\n\n```json\n[]\n```')]);
++        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-inline');
++        expect(r.findings).toEqual([]);
++        expect(m.calls).toBe(0);
++    });
++});
++
++describe('1B.2 — the repair path survives, and never costs more than today', () => {
++    it('no block at all → the extraction call still yields findings', () => {
++        const m = new Counting('anthropic', 'c', ['[{"id":"repaired","text":"from extraction"}]']);
++        const r = harvestThenScore(m, [delib('anthropic', 'c', 'Prose only. No block anywhere in this reply.')]);
++        expect(r.findings.map((f) => f.id)).toEqual(['repaired']);
++        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed');
++        expect(m.calls).toBe(1);
++    });
++
++    it('a MANGLED block falls through to extraction rather than yielding garbage', () => {
++        const m = new Counting('anthropic', 'c', ['[{"id":"repaired","text":"from extraction"}]']);
++        // Array-shaped enough to be located, not valid enough to parse.
++        const r = harvestThenScore(m, [
++            delib('anthropic', 'c', 'Prose.\n\n```json\n[{"id": "broken", "text":]\n```'),
++        ]);
++        expect(r.findings.map((f) => f.id)).toEqual(['repaired']);
++        expect(m.calls).toBe(1);
++    });
++
++    it('the repair call sees the RAW reply — an unparsed block is never stripped', () => {
++        // The council made this a condition: stripping text we could not read would
++        // remove evidence from the very prompt that has to recover from it.
++        const raw = 'Prose.\n\n```json\n[{"id": "broken", "text":]\n```';
++        const m = new Counting('anthropic', 'c', ['[{"id":"repaired","text":"x"}]']);
++        const responses = [delib('anthropic', 'c', raw)];
++        harvest_inline_findings([m as never], responses);
++        expect(responses[0]?.text).toBe(raw);
++    });
++
++    it('worst case with the harvest equals worst case without it — one extraction plus one bounded re-ask', () => {
++        // The bound is the claim: 1B may not turn one unreadable reply into more spend
++        // than the shipped path already permits.
++        const script = ['not json at all', '[{"id":"f1","text":"after the re-ask"}]'];
++        const on = new Counting('anthropic', 'c', script);
++        const off = new Counting('anthropic', 'c', script);
++        const rOn = harvestThenScore(on, [delib('anthropic', 'c', 'Prose only, no block.')]);
++        const rOff = run_consensus_scoring([off as never], [delib('anthropic', 'c', 'Prose only, no block.')]);
++        expect(on.calls).toBe(off.calls);
++        expect(rOn.parse_outcomes.get('anthropic:c')).toBe(rOff.parse_outcomes.get('anthropic:c'));
++        expect(rOn.parse_outcomes.get('anthropic:c')).toBe('parsed-after-reask');
++    });
++});
++
++describe('the consumed block is stripped from what peer review and synthesis read', () => {
++    it('a harvested reply loses the JSON and gains an observable marker', () => {
++        const m = new Counting('anthropic', 'c', ['unused']);
++        const responses = [delib('anthropic', 'c', analysisReply('The audit conflates two layers.'))];
++        harvest_inline_findings([m as never], responses);
++        const text = responses[0]?.text ?? '';
++        expect(text).toContain('The audit conflates two layers.');
++        expect(text).not.toContain('leaky-abstraction');
++        expect(text).not.toContain('```json');
++        // Observable, not silent: one seat made a visible marker a condition of its
++        // verdict, and the other reached the same concern from auditability. A reader
++        // of the artefact must be able to tell that something was removed.
++        expect(text).toContain('inline findings block extracted: 1 item(s)');
++    });
++
++    it('an error or empty response is never touched', () => {
++        const m = new Counting('anthropic', 'c', ['unused']);
++        const errored = new CouncilResponse({ provider: 'anthropic', model: 'c', text: FINDINGS_JSON, error: 'boom' });
++        const blank = new CouncilResponse({ provider: 'anthropic', model: 'c', text: '   ' });
++        const got = harvest_inline_findings([m as never], [errored, blank]);
++        expect(got.size).toBe(0);
++        expect(errored.text).toBe(FINDINGS_JSON);
++        expect(blank.text).toBe('   ');
++    });
++
++    it('a member the roster does not know is skipped rather than keyed under a guess', () => {
++        const m = new Counting('anthropic', 'c', ['unused']);
++        const responses = [delib('gemini', 'g', analysisReply('body'))];
++        expect(harvest_inline_findings([m as never], responses).size).toBe(0);
++        expect(responses[0]?.text).toContain('```json');
++    });
++});
++
++describe('1B.1 — the contract rides the FINAL round, and OFF is byte-identical', () => {
++    const q = (): CouncilQuestion => new CouncilQuestion({ mode: 'analysis', user_prompt: 'Critique this.' });
++
++    it('inline on → the final round carries the contract; earlier rounds do not', () => {
++        const a = new Counting('anthropic', 'm', ['round one', analysisReply('round two')]);
++        const b = new Counting('openai', 'm', ['round one', analysisReply('round two')]);
++        consult([a, b], q(), null, { rounds: 2, inline_findings: true });
++        expect(a.prompts).toHaveLength(2);
++        expect(a.prompts[0]).not.toContain(INLINE_FINDINGS_CONTRACT);
++        expect(a.prompts[1]).toContain(INLINE_FINDINGS_CONTRACT);
++    });
++
++    it('inline off → the prompt is byte-identical to the bare question', () => {
++        const a = new Counting('anthropic', 'm', ['reply']);
++        consult([a], q(), null, {});
++        expect(a.prompts[0]).toBe('Critique this.');
++    });
++
++    it('inline on + stance tally on → the STANCE line is still LAST', () => {
++        // One unambiguous grammar, which the council asked for explicitly: the stance
++        // contract demands the stance be the final line of the reply, so a findings
++        // block appended after it would contradict the instruction the member reads.
++        const a = new Counting('anthropic', 'm', ['reply']);
++        consult([a], q(), null, { inline_findings: true, stance_tally: true });
++        const p = a.prompts[0] ?? '';
++        expect(p.indexOf(INLINE_FINDINGS_CONTRACT)).toBeGreaterThan(-1);
++        expect(p.indexOf('STANCE: <option-label>')).toBeGreaterThan(p.indexOf(INLINE_FINDINGS_CONTRACT));
++    });
++});
++
++describe('1B.3 — analysis lens only', () => {
++    it('no lens system prompt is touched by this phase', () => {
++        // The contract is appended to the USER prompt by `consult`, gated by a flag the
++        // CLI only sets for a lens in `consensus_scoring.lenses`. Nothing this phase
++        // adds touches a system prompt — asserted rather than assumed, because a
++        // future edit folding the contract into `ANALYSIS_MODE` would leak it into the
++        // lens table for every mode and would be invisible otherwise.
++        //
++        // `all_modes()` rather than a literal list: a lens added later is then covered
++        // without anyone remembering to add it here.
++        expect(all_modes().length).toBeGreaterThan(1);
++        for (const mode of all_modes()) {
++            expect(system_prompt_for(mode), `${mode} system prompt`).not.toContain(INLINE_FINDINGS_CONTRACT);
++        }
++        // And the analysis lens body itself is untouched — the contract is an additive
++        // suffix, never a rewrite of the lens.
++        expect(system_prompt_for('analysis')).toContain(ANALYSIS_MODE);
++    });
++
++    it('the contract never appears when the flag is off, whatever the lens', () => {
++        for (const mode of ['analysis', 'prompt', 'roadmap']) {
++            const a = new Counting('anthropic', 'm', ['reply']);
++            consult([a], new CouncilQuestion({ mode, user_prompt: 'X' }), null, {});
++            expect(a.prompts[0], mode).toBe('X');
++        }
++    });
++});
++
++describe('split_inline_findings — one locator produces both halves', () => {
++    it('reads the LAST block, so a quoted array in the prose does not win', () => {
++        // This is the defect the locator exists for. `_extract_json_array` returns the
++        // FIRST match, which is right for an extraction reply (the reply IS the array)
++        // and wrong for an analysis reply — the analysis lens critiques analyser
++        // OUTPUT, so a quoted JSON array above the block is ordinary, not exotic.
++        const text = [
++            'The analyser emitted:',
++            '```json',
++            '[{"id":"quoted-from-the-artefact","text":"not my finding"}]',
++            '```',
++            'which conflates two layers. My findings:',
++            FINDINGS_JSON,
++        ].join('\n');
++        const split = split_inline_findings(text);
++        expect(split.found).toBe(true);
++        expect(split.block).toContain('leaky-abstraction');
++        // The quoted array survives the strip — it is the member's evidence, not its
++        // findings block, and removing it would delete argument.
++        expect(split.deliberation_text).toContain('quoted-from-the-artefact');
++        expect(split.deliberation_text).not.toContain('leaky-abstraction');
++    });
++
++    it('the end-to-end path picks the trailing block too, not just the locator in isolation', () => {
++        const m = new Counting('anthropic', 'c', ['[{"id":"unused","text":"x"}]']);
++        const text = `Prose.\n\n\`\`\`json\n[{"id":"quoted","text":"artefact"}]\n\`\`\`\n\nMine:\n${FINDINGS_JSON}`;
++        const r = harvestThenScore(m, [delib('anthropic', 'c', text)]);
++        expect(r.findings.map((f) => f.id)).toEqual(['leaky-abstraction']);
++    });
++
++    it('parsed span and removed span are the same span', () => {
++        // The council's other condition: an independent stripping regex could disagree
++        // with the parser about what was consumed. One locator makes that impossible,
++        // and this is the assertion that keeps it that way.
++        const text = analysisReply('Body.');
++        const split = split_inline_findings(text);
++        expect(`${split.deliberation_text.slice(0, text.indexOf(split.block))}${split.block}${text.slice(text.indexOf(split.block) + split.block.length)}`).toBe(text);
++    });
++
++    it('a bare array is found when no fenced block is present', () => {
++        const split = split_inline_findings('Prose.\n\n[{"id":"bare","text":"unfenced"}]');
++        expect(split.found).toBe(true);
++        expect(split.block).toContain('bare');
++        expect(split.deliberation_text.trim()).toBe('Prose.');
++    });
++
++    it('fenced beats bare at the same position, matching _extract_json_array precedence', () => {
++        const text = '[{"id":"bare-first","text":"a"}]\n\n```json\n[{"id":"fenced-later","text":"b"}]\n```';
++        expect(split_inline_findings(text).block).toContain('fenced-later');
++    });
++
++    it('no array anywhere → found:false and the text is returned untouched', () => {
++        const split = split_inline_findings('nothing array-shaped here');
++        expect(split.found).toBe(false);
++        expect(split.deliberation_text).toBe('nothing array-shaped here');
++        expect(split.block).toBe('');
++    });
++
++    it('an empty string is not a block', () => {
++        expect(split_inline_findings('').found).toBe(false);
++    });
++});
++
++describe('the harvest runs BEFORE peer review and synthesis read the responses', () => {
++    // The defect the AI council caught (2026-08-30): `_maybe_run_peer_review` and the
++    // chairman synthesis consume `responses` before the consensus round does, so
++    // parsing the block inside `run_consensus_scoring` would have left the schema
++    // block in the very text those two evaluate — the amplification the strip exists
++    // to prevent.
++    //
++    // Pinned by source ORDER rather than by execution, and the limit is stated rather
++    // than implied: `cmd_run` is a single ~400-line function that builds a live
++    // roster, so driving it here would be a rewrite of the CLI's seams, not a test.
++    // A source-order assertion is weaker — it cannot see a call moved into a helper —
++    // but it fails on the exact edit that reintroduced the defect, which nothing else
++    // in this file does.
++    const cli = fs.readFileSync(
++        path.resolve(__dirname, '../../../src/scripts/council_cli.ts'),
++        'utf-8',
++    );
++
++    it('harvest_inline_findings is invoked before _maybe_run_peer_review in cmd_run', () => {
++        const harvest = cli.indexOf('harvest_inline_findings(members, responses)');
++        const peer = cli.indexOf('const peer_review = _maybe_run_peer_review(');
++        const consensus = cli.indexOf('const consensus = _maybe_run_consensus(');
++        expect(harvest, 'harvest call site not found').toBeGreaterThan(-1);
++        expect(peer, 'peer-review call site not found').toBeGreaterThan(-1);
++        expect(consensus, 'consensus call site not found').toBeGreaterThan(-1);
++        expect(harvest).toBeLessThan(peer);
++        expect(peer).toBeLessThan(consensus);
++    });
++
++    it('the consensus round is handed the harvested map, not a flag it would act on too late', () => {
++        // `inline_findings: inlineFindingsActive(...)` is CORRECT on the `consult`
++        // call — that is the prompt-side flag, and it has to be read before the
++        // deliberation. What must not come back is the consensus round computing it
++        // for itself, which is what put the parse downstream of peer review.
++        expect(cli).toContain('run_consensus_scoring(members, responses, {\n        inline_extractions,');
++    });
++});
++
++describe('the config key survives the projection and gates on all three conjuncts', () => {
++    // This block exists because a LIVE analysis run on 2026-08-30 found the feature
++    // silently off with every unit test green. `inlineFindingsActive` reads the
++    // SYNTHESISED settings dict, not the typed config, and the synthesiser did not
++    // carry the new key — so a `true` in the YAML resolved to `undefined` and the
++    // contract never reached a prompt. The tests below are the ones that would have
++    // caught it before the call was spent.
++    const cfg = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
++        consensus_scoring: { enabled: true, lenses: ['analysis'], inline_findings: true, ...over },
++    });
++
++    it('all three conjuncts present → active', () => {
++        expect(inlineFindingsActive(cfg() as never, 'analysis')).toBe(true);
++    });
++
++    it('consensus scoring off → inactive, even with the key set', () => {
++        expect(inlineFindingsActive(cfg({ enabled: false, lenses: ['analysis'], inline_findings: true }) as never, 'analysis')).toBe(false);
++    });
++
++    it('the key absent → inactive, and absent is the shipped state', () => {
++        expect(inlineFindingsActive({ consensus_scoring: { enabled: true, lenses: ['analysis'] } } as never, 'analysis')).toBe(false);
++    });
++
++    it('a lens outside the lens list → inactive', () => {
++        expect(inlineFindingsActive(cfg() as never, 'roadmap')).toBe(false);
++        expect(inlineFindingsActive(cfg({ enabled: true, lenses: ['roadmap'], inline_findings: true }) as never, 'roadmap')).toBe(true);
++    });
++
++    it('no consensus_scoring block at all → inactive', () => {
++        expect(inlineFindingsActive({} as never, 'analysis')).toBe(false);
++    });
++
++    it('the YAML key survives load → synthesise → predicate, in both states', () => {
++        // The predicate above can be perfect and the feature still dead if the value
++        // never reaches it. This walks the ACTUAL chain the CLI walks — parse the
++        // config file, synthesise the settings block, read the predicate — because
++        // the defect a live run found on 2026-08-30 lived between two of those three
++        // steps and every test that stopped short of the chain passed.
++        const base = [
++            'enabled: true',
++            'defaults:',
++            '  mode: api',
++            'cost_budget:',
++            '  max_total_usd: 20.0',
++            'members:',
++            '  anthropic:',
++            '    enabled: true',
++            '    model: claude-x',
++            '    api_key_ref: env:ANTHROPIC_KEY',
++            'consensus_scoring:',
++            '  enabled: true',
++            '  lenses:',
++            '    - analysis',
++        ].join('\n');
++        const walk = (yaml: string): boolean => {
++            const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ac-1b-'));
++            try {
++                const file = path.join(dir, '.ai-council.yml');
++                fs.writeFileSync(file, `${yaml}\n`, 'utf-8');
++                const block = synthesizeAiCouncilBlock(load_council_config(file));
++                return inlineFindingsActive(block as never, 'analysis');
++            } finally {
++                fs.rmSync(dir, { recursive: true, force: true });
++            }
++        };
++        expect(walk(`${base}\n  inline_findings: true`)).toBe(true);
++        expect(walk(`${base}\n  inline_findings: false`)).toBe(false);
++        // Absent is the shipped state and must read as off, never as "unset so on".
++        expect(walk(base)).toBe(false);
++    });
++});
