@@ -1,6 +1,7 @@
 ---
 complexity: structural
-status: draft
+status: ready
+estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The roadmap is executable now: four of its five blockers are resolved and the open b-adr-088 parks only Phase 6.4s second half, leaving Phases 0-5 and 7-9 legal. The growth is a status flip, not a new file — the estate gains no roadmap it did not already carry, only one collect() now counts."
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted by collect() and so cannot serve as offsets. The addition is sanctioned on its own terms: a tree-wide grep over agents/roadmaps/*.md and agents/roadmaps/later/*.md for `adapter manifest` and `dispatchab` returns zero files, so no active or parked roadmap owns the subject."
 execution:
   mode: phase-checkpoints
