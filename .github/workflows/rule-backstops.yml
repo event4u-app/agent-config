@@ -502,6 +502,11 @@ jobs:
       # outside those roots.
       - name: Skill admissions and refusals are recorded
         run: ./scripts-run src/scripts/check_skill_admissions
+      # Same grounds as the step above. Corpus check rather than assumption:
+      # this workflow's `paths:` already covers `agents/**` (the ledger) and
+      # `src/scripts/**` (the manifest), which is this gate's whole corpus.
+      - name: Hook-concern admissions and refusals are recorded
+        run: ./scripts-run src/scripts/check_concern_admissions
       # Wired here on the same ci-parity:local-only grounds as the step above.
       # Corpus check rather than assumption: this workflow's `paths:` already
       # carried `src/skills/**`, `tests/**` and `dist/router.json` — both
