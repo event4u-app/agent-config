@@ -473,8 +473,6 @@ function load_settings(
     return settings;
 }
 
-
-
 // ── member construction ─────────────────────────────────────────────
 
 interface BuildMembersOptions {
