@@ -133,6 +133,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // ("not recorded"). The empty-string check therefore cannot be folded
         // into the `?.split()` chain above, which would map both onto
         // undefined and destroy the distinction the field exists for.
+        expected_output: str(flags, 'expected-output') as never,
+        diff_lines: int(flags, 'diff-lines'),
+        empty_cycles: int(flags, 'empty-cycles'),
         skills_applied: (() => {
             const raw = str(flags, 'skills-applied');
             if (raw === undefined) return undefined;

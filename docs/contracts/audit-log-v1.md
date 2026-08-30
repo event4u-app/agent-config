@@ -41,7 +41,7 @@ consumer projects; the contract does not require commit.
 One JSON object per line, UTF-8, no trailing whitespace:
 
 ```json
-{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"privacy_class":"ids-only","skills_applied":["code-review"],"persona":"backend","input_kind":"ticket","type":"phase"}
+{"schema_version":1,"id":"01HXY...","ts":"2026-05-11T12:34:56Z","work_id":"PROJ-123-2026-05-11T12-30-00Z","phase":"verify","outcome":"success","confidence_band":"high","risk_class":"low","memory":{"asks":3,"hits":2},"verify":{"claims":1,"first_try_passes":1},"rules_applied":["verify-before-complete","commit-policy"],"privacy_class":"ids-only","outcome_semantics":2,"skills_applied":["code-review"],"persona":"backend","input_kind":"ticket","type":"phase"}
 ```
 
 Single-line. The pretty-printed reference shape:
@@ -60,6 +60,7 @@ Single-line. The pretty-printed reference shape:
   "verify": { "claims": 1, "first_try_passes": 1 },
   "rules_applied": ["verify-before-complete", "commit-policy"],
   "privacy_class": "ids-only",
+  "outcome_semantics": 2,
   "skills_applied": ["code-review"],
   "persona": "backend",
   "input_kind": "ticket",
@@ -82,6 +83,7 @@ Single-line. The pretty-printed reference shape:
 | `memory.asks` / `memory.hits` | int | Counts only — never ids, never bodies. |
 | `verify.claims` / `verify.first_try_passes` | int | Verify-gate counts. |
 | `rules_applied` | string[] | Stable rule ids whose Iron Law fired this phase. Bounded to ≤ 32; remainder dropped silently. |
+| `outcome_semantics` | int (optional) | Which version of the `DispatchOutcome` → `outcome` mapping produced this line. `1` = unconditional (`DONE`/`DONE_WITH_CONCERNS` always `success`); `2` = contract-gated (a `code-change` dispatch claiming success with a **measured** empty diff does not resolve to `success`). **An ABSENT field means `1`** — every line written before 2026-08-30 predates the versioning and carries no marker. A reader aggregating across the cutover MUST segment on this field or normalize deliberately; inferring the semantics from a timestamp is not sufficient, because producers upgrade independently. Rationale: an enforcement gate rolls back, but a labelling change poisons historical analysis permanently, since lines here are append-only and cannot be rewritten. |
 | `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. Both shipped producers emit `ids-only`, because both carry `rules_applied`. |
 | `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
 | `persona` | string \| null | Resolved `roles.active_role` from `.agent-settings.yml` at phase start. |

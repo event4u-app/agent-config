@@ -461,11 +461,35 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 2 — Outcome integrity: anti-forgery at the subagent return
 
-- [ ] **2.1 Dock onto the existing stub, do not open a parallel plan.**
+- [x] **2.1 Dock onto the existing stub, do not open a parallel plan.** **DONE
+      2026-08-30, and the docking required settling a real conflict rather than
+      adding a cross-reference.** The stub's own section "Why it is not being
+      built" argues AGAINST building the gate, and its four preconditions are
+      all unmet — so docking onto it needed an answer to whether its parking
+      binds this phase.
+      **AI council 2026-08-30, anthropic + openai, 2/2 convergent: it does
+      not — different mechanism.** The stub parks a gate that BLOCKS parent
+      completion on `subagent_stop`. Phase 2 changes how a telemetry record is
+      LABELLED after the fact; nothing is blocked, refused, retried or delayed.
+      The four preconditions are properties of a gate that ACTS — an `ok` path
+      to fall back from, a recovery producer, demonstrated recovery — and none
+      is meaningful for a value written into a JSONL line.
+      **The council attached a switch-back condition, recorded at the stub so a
+      future reader can check rather than re-argue:** the parking binds this
+      change the moment the label is consumed, directly or transitively and
+      without a separate discretionary decision, to block, retry, refuse,
+      release or delay work. Audited against this tree 2026-08-30 — the
+      condition is NOT met: `envelopeOutcome` has zero callers outside its own
+      module, the only reader of `outcome` is `extract_audit_patterns.ts`
+      (read-only, stdout, sole non-zero exit is argument validation), and that
+      script is in no Taskfile, no `gate-coverage.yml` entry and no workflow.
+      **No second gate is authored**, verified by grep: the only other estate
+      mention is `stubs/road-to-task-completion-observability.md:117`, which
+      DEFERS to this stub rather than authoring anything.
       `agents/roadmaps/stubs/road-to-subagent-return-gate.md` exists on this
       tree — verified — and carries the council decision this phase extends.
       verify: the stub is the referenced parent and no second gate is authored.
-- [ ] **2.2 Gate anti-forgery on the task's expected output contract, not on
+- [x] **2.2 Gate anti-forgery on the task's expected output contract, not on
       the diff alone.** `corrected-from-reproduction`, and this reverses the
       master. The master ships the unconditional form — claimed success × empty
       diff ⇒ never `success`. The skipped parent named exactly that form as the
@@ -475,16 +499,55 @@ So the state is deliberate and bounded rather than an oversight:
       a large share of this repository's subagent traffic and legitimately
       produce no diff; the unconditional rule would mark them all as failures
       and poison the very aggregation Phase 4 depends on.
+      **DONE 2026-08-30.** `envelopeOutcome` now reads an `expected_output`
+      discriminator (`code-change | analysis | review | unknown`) plus a
+      MEASURED `diff_lines`, and fires only when all three hold: the dispatch
+      declared a code change, claimed success, and the diff was measured at
+      zero. **An unmeasured diff never becomes a failure** — treating "not
+      measured" as zero manufactures the same forgery with the opposite sign.
+      **The council's two conditions were met before shipping, not asserted.**
+      (a) Consumer audit: `envelopeOutcome` has zero callers outside its module,
+      the only reader of `outcome` is `extract_audit_patterns.ts` (read-only,
+      stdout, sole non-zero exit is argument validation), wired into no
+      Taskfile, gate or workflow — so the label enters no automated control
+      path. (b) A cutover marker: lines carry `outcome_semantics: 2`, an absent
+      field means the pre-2026-08-30 unconditional semantics, and
+      `CROSS_DOMAIN_MAPPINGS` records the version at the crossing. This exists
+      because of an asymmetry both seats raised: an enforcement gate rolls back,
+      a labelling change over an append-only log does not.
       verify: a read-only analysis dispatch returning no diff but satisfying its
       declared output contract resolves to `success`; a code dispatch claiming
       success with an empty diff does not.
-- [ ] **2.3 Count empty cycles separately.** A double trigger must not read as
+- [x] **2.3 Count empty cycles separately.** A double trigger must not read as
       two outcomes.
+      **DONE 2026-08-30** — `src/scripts/_lib/empty_cycles.ts`, pure and
+      host-free so the arithmetic is testable without a host payload. A
+      duplicate produces NO second outcome and DOES increment a counter that is
+      reported as its own quantity, never folded into a rate: a duplicate is not
+      an outcome, and it is also not nothing, because a rising count is what an
+      idle loop looks like from outside.
+      **Both conjuncts are required and neither is sufficient** — same key AND
+      inside the window. Key alone would erase a genuine repeat of the same work
+      an hour later; window alone would collapse unrelated events under any
+      fan-out. **A duplicate does not advance `last`**, so three fires in one
+      window are one outcome and two empty cycles rather than a third fire
+      drifting out of the window and reappearing as an outcome that never
+      happened.
       verify: a synthetic double trigger produces one outcome and one empty-cycle
       increment.
-- [ ] **2.4 State the reason in the contract, not only in the code.** Without
+- [x] **2.4 State the reason in the contract, not only in the code.** Without
       this gate every later aggregation poisons its own data, because an
       unverified self-report is indistinguishable from a result.
+      **DONE 2026-08-30** — `subagent-response-contract.md` § "Why success is
+      gated, and not accepted" carries both halves the verify asks for. The
+      RATIONALE: a return claiming success with no change against its own
+      declared output contract is evidence of a claim, not of a result. The
+      FAILURE IT PREVENTS: every downstream aggregation reads the recorded
+      outcome, so a forged `success` becomes signal — the report then recommends
+      keeping an asset that never worked and retiring one that did, and nothing
+      downstream can detect it, because by then the forgery is indistinguishable
+      from the thing it imitates. That is why the check belongs where the record
+      is written rather than where it is read.
       verify: the contract text carries the rationale and the failure it
       prevents.
 

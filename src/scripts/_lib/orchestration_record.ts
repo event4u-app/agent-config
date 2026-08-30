@@ -104,6 +104,27 @@ export interface RecordInput {
      * the rules bound in the contract.
      */
     skills_applied?: string[] | null | undefined;
+    /**
+     * What this dispatch was supposed to produce. Drives the anti-forgery gate
+     * in `envelopeOutcome`. Absent or `unknown` disables the gate for this
+     * line, which is the safe default: a producer that cannot say what it
+     * expected must not have its outcome downgraded on a guess.
+     */
+    expected_output?: ExpectedOutput | null | undefined;
+    /**
+     * Measured lines changed by this dispatch. `null` means NOT MEASURED and is
+     * never read as zero — an unmeasured diff must not become a failure.
+     */
+    diff_lines?: number | null | undefined;
+    /**
+     * Trigger fires suppressed as duplicates since the last outcome record.
+     *
+     * Reported as its own quantity, never folded into a success rate's
+     * numerator or denominator: a duplicate is not an outcome, and it is also
+     * not nothing — a rising count is what an idle loop looks like from
+     * outside. See `src/scripts/_lib/empty_cycles.ts`.
+     */
+    empty_cycles?: number | null | undefined;
     task_size_estimate?: number | undefined;
     wall_clock_ms?: number | undefined;
     /** Absolute measured tokens the dispatched slice consumed (feeds the modeled cost-%). */
@@ -290,11 +311,82 @@ type _Rejected = [NoFreeForm<_RecordInputWithForbiddenField>] extends [never] ? 
 type _ForbiddenFieldIsRejected = Assert<_Rejected>;
 
 /** Map a dispatch outcome to the audit-log envelope outcome enum. */
-function envelopeOutcome(d: DispatchOutcome): LineOutcome {
+/**
+ * What a dispatch was supposed to produce. The gate below reads THIS, never the
+ * diff alone.
+ *
+ * The unconditional rule -- claimed success x empty diff => never `success` --
+ * is the form this step deliberately does NOT ship. Analysis, review and
+ * read-only research dispatches are a large share of this repository's subagent
+ * traffic and legitimately produce no diff; marking them all as failures would
+ * poison the very aggregation the gate exists to protect, in the opposite
+ * direction. Zero diff may be valid, so "zero diff = failure" must not be
+ * global.
+ */
+export const EXPECTED_OUTPUTS = ['code-change', 'analysis', 'review', 'unknown'] as const;
+export type ExpectedOutput = (typeof EXPECTED_OUTPUTS)[number];
+
+/**
+ * Version of the DispatchOutcome -> phase-outcome mapping that produced a line.
+ *
+ * Required by the AI council (2026-08-30, anthropic + openai, 2/2) as the
+ * condition on proceeding at all, and it addresses an asymmetry worth stating:
+ * a bad enforcement gate rolls back, a bad LABELLING change poisons historical
+ * analysis permanently, because audit-log-v1 lines are append-only and cannot
+ * be rewritten. A reader aggregating across the cutover must be able to see
+ * which semantics produced each line rather than infer it from a date.
+ *
+ * `1` -- unconditional: DONE / DONE_WITH_CONCERNS always mapped to `success`.
+ *        Every line written before 2026-08-30 carries these semantics and
+ *        carries NO `outcome_semantics` field, so an absent field reads as 1.
+ * `2` -- contract-gated: a `code-change` dispatch claiming success with a
+ *        measured empty diff no longer maps to `success`.
+ */
+export const OUTCOME_SEMANTICS_VERSION = 2;
+
+/**
+ * Translate a dispatch outcome into an audit-log phase outcome.
+ *
+ * This is the tree's ONLY cross-domain outcome mapping
+ * (`src/scripts/_lib/outcome_vocabularies.ts` CROSS_DOMAIN_MAPPINGS), so a
+ * change here reaches every downstream aggregation. It was audited before
+ * changing: `envelopeOutcome` has no caller outside this module, the only
+ * reader of `outcome` is `src/scripts/extract_audit_patterns.ts` -- read-only,
+ * stdout, whose sole non-zero exit is argument validation -- and that script is
+ * wired into no Taskfile, no gate-coverage entry and no workflow. The label
+ * therefore enters no automated control path, which is the condition the
+ * council set for this being a labelling change rather than an enforcement one.
+ *
+ * The anti-forgery clause fires only when ALL THREE hold: the dispatch declared
+ * itself a `code-change`, it claimed success, and the diff was MEASURED at
+ * zero. `diff_lines == null` means not measured, and an unmeasured diff must
+ * never become a failure -- that would manufacture the forgery in the other
+ * direction, which is the same defect wearing the opposite sign.
+ */
+function envelopeOutcome(d: DispatchOutcome, ctx?: OutcomeContext): LineOutcome {
     if (d === 'BLOCKED') return 'blocked';
     if (d === 'NEEDS_CONTEXT') return 'skipped';
     if (d === 'killed') return 'error';
-    return 'success'; // DONE / DONE_WITH_CONCERNS
+
+    const claimsSuccess = d === 'DONE' || d === 'DONE_WITH_CONCERNS';
+    if (
+        claimsSuccess &&
+        ctx?.expected_output === 'code-change' &&
+        typeof ctx.diff_lines === 'number' &&
+        ctx.diff_lines === 0
+    ) {
+        // A code dispatch that claims success and demonstrably changed nothing
+        // is an unverified self-report, not a result. `error` rather than
+        // `blocked`: nothing prevented it from running, and `blocked` is
+        // already the value for a dispatch that never got to try.
+        return 'error';
+    }
+    return 'success';
+}
+
+interface OutcomeContext {
+    expected_output?: ExpectedOutput | null | undefined;
+    diff_lines?: number | null | undefined;
 }
 
 function isInt(n: unknown): n is number {
@@ -399,6 +491,12 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.origin != null && !ORIGIN_RE.test(input.origin)) {
         errors.push("origin must be an id-shaped tag like 'lean-init-2026' (lowercase alnum + hyphens)");
     }
+    if (input.expected_output != null && !EXPECTED_OUTPUTS.includes(input.expected_output)) {
+        errors.push(`expected_output must be one of ${EXPECTED_OUTPUTS.join(' | ')} (or omitted)`);
+    }
+    if (input.diff_lines != null && (!isInt(input.diff_lines) || input.diff_lines < 0)) {
+        errors.push('diff_lines must be a non-negative integer count, null for not-measured, or omitted');
+    }
     if (input.skills_applied != null) {
         if (!Array.isArray(input.skills_applied)) {
             errors.push('skills_applied must be an array of skill ids, [] , or omitted');
@@ -409,6 +507,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         }
     }
     for (const [key, v] of [
+        ['empty_cycles', input.empty_cycles],
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
         ['work_tokens', input.work_tokens],
@@ -456,6 +555,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const orchestration: Record<string, unknown> = {
         task_size_estimate: input.task_size_estimate ?? 0,
         spawn_count: input.spawn_count,
+        // Its OWN quantity, never folded into a rate. `null` = not tracked by
+        // this producer, which is not the same as zero duplicates observed.
+        empty_cycles: input.empty_cycles ?? null,
         tiers: input.tiers ?? [],
         token_delta: input.token_delta,
         token_delta_provenance: prov,
@@ -508,7 +610,18 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         ts: input.ts,
         work_id: input.work_id ?? `orchestration-${input.ts}`,
         phase,
-        outcome: input.outcome ?? envelopeOutcome(dOutcome),
+        outcome:
+            input.outcome ??
+            envelopeOutcome(dOutcome, {
+                expected_output: input.expected_output,
+                diff_lines: input.diff_lines,
+            }),
+        // The cutover marker. An ABSENT field means semantics 1 (unconditional),
+        // which is every line written before 2026-08-30 -- so a reader
+        // aggregating across the boundary can segment rather than infer from a
+        // date. Emitted unconditionally because this producer always applies
+        // the current mapping.
+        outcome_semantics: OUTCOME_SEMANTICS_VERSION,
         confidence_band: band,
         risk_class: risk,
         memory: { asks: 0, hits: 0 },

@@ -370,3 +370,107 @@ describe('privacy_class — mandatory, and it says what the line carries', () =>
         expect(rec.privacy_class).toBe('ids-only');
     });
 });
+
+describe('anti-forgery gate — the output contract decides, never the diff alone', () => {
+    // Step 2.2. The unconditional form (claimed success x empty diff => never
+    // success) is deliberately NOT shipped: analysis, review and read-only
+    // research dispatches are a large share of this repo's subagent traffic and
+    // legitimately produce no diff. Marking them failures would poison the
+    // aggregation the gate protects, in the opposite direction.
+
+    it('a read-only analysis dispatch with no diff still resolves to success', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'analysis',
+            diff_lines: 0,
+        });
+        expect(errors).toEqual([]);
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('a code dispatch claiming success with a measured empty diff does not', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: 0,
+        });
+        expect(errors).toEqual([]);
+        expect(line!.outcome).not.toBe('success');
+    });
+
+    it('a code dispatch that actually changed something is untouched', () => {
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: 42,
+        });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('an UNMEASURED diff never becomes a failure', () => {
+        // The symmetric defect: manufacturing a forgery in the other direction.
+        // `null` means the producer did not measure, which is not evidence of
+        // an empty change.
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'code-change',
+            diff_lines: null,
+        });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('a producer that cannot declare its expected output is not downgraded', () => {
+        const { line } = buildOrchestrationLine({ ...BASE, dispatch_outcome: 'DONE', diff_lines: 0 });
+        expect(line!.outcome).toBe('success');
+    });
+
+    it('does not disturb the outcomes that were never about the diff', () => {
+        for (const [d, expected] of [
+            ['BLOCKED', 'blocked'],
+            ['NEEDS_CONTEXT', 'skipped'],
+            ['killed', 'error'],
+        ] as const) {
+            const { line } = buildOrchestrationLine({
+                ...BASE,
+                dispatch_outcome: d,
+                expected_output: 'code-change',
+                diff_lines: 0,
+            });
+            expect(line!.outcome).toBe(expected);
+        }
+    });
+
+    it('rejects an expected_output outside the closed set', () => {
+        const { errors } = buildOrchestrationLine({
+            ...BASE,
+            expected_output: 'whatever-i-felt-like' as never,
+        });
+        expect(errors.join(' ')).toMatch(/expected_output/);
+    });
+});
+
+describe('outcome_semantics — the cutover marker the council required', () => {
+    // A bad enforcement gate rolls back; a bad LABELLING change poisons
+    // historical analysis permanently, because audit-log-v1 is append-only. A
+    // reader aggregating across the boundary must be able to segment rather
+    // than infer from a date.
+    it('every line declares which mapping produced it', () => {
+        const { line } = buildOrchestrationLine({ ...BASE });
+        expect(line!.outcome_semantics).toBe(2);
+    });
+
+    it('the marker is present even when the gate did not fire', () => {
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            dispatch_outcome: 'DONE',
+            expected_output: 'analysis',
+            diff_lines: 0,
+        });
+        expect(line!.outcome).toBe('success');
+        expect(line!.outcome_semantics).toBe(2);
+    });
+});
