@@ -48,9 +48,9 @@
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,
 # check_loss_class_declared, check_benchmark_report_fields, and
 # check_no_currency_in_cost_surfaces).
-# **77 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and 74 of those 77 are listed below.** The manifest is
-# complete for every gate that can carry a floor, covering ~24 % of the population.
+# **78 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and 75 of those 78 are listed below.** The manifest is
+# complete for every gate that can carry a floor, covering ~25 % of the population.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -1151,6 +1151,34 @@ gates:
       cannot survive a collapse: at that point the gate's own `reportScanned`
       fires first. (Set to 50 in the first version, corrected on an R2 finding.)
 
+  - id: check_static_parity
+    argv: ["--quiet"]
+    min_scanned: 20
+    corpus: "test files that spell the dispatcher module name, discovered by grep over tests/ and src/. The count is deliberately not written here — it moves with the suite, and four different figures for it appeared across the rounds of this change (R2 round-5 finding 12). The floor is 20, not 1: this gate's silent-failure shape is a discovery COLLAPSE — a grep that stops matching would run two suites of one file each and report them identical, which is the 'gate that scans nothing exits green' case in its most convincing disguise."
+    status: enforced
+    no_canary_reason: >-
+      No plantable violation: the gate's finding is a DIVERGENCE between two
+      whole-suite runs, not a pattern in a file. Planting one would mean making
+      the collector behave differently under the two runs, i.e. writing the bug
+      it exists to detect.
+    note: >
+      road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
+      dispatcher-reaching suite twice — collector present-but-off, then aliased
+      away entirely — and compares per-test verdicts rather than declaring each
+      run green. Two green runs are not the assertion; a test that silently
+      turns from `passed` to `skipped` keeps both suites green and only the
+      per-test comparison sees it.
+
+      SELF-TEST EXEMPT, with the reason rather than the omission: a
+      `--self-test` here would have to spawn two full vitest runs over a fixture
+      repository, minutes per invocation, to prove a comparator that is already
+      unit-tested with a REJECTING case —
+      `tests/scripts/check_static_parity.test.ts` drives `compare()` through the
+      `passed → skipped` divergence a length-only check would miss, plus both
+      only-in-one-run directions. The discrimination is proven; what is skipped
+      is proving it a second time through the slowest possible harness. The
+      marker the self-test ratchet reads lives in the gate's own source, beside
+      `main` — this note explains it; that line is what is counted.
   - id: check_completion_review
     argv: ["--advisory", "--base", "origin/main"]
     min_scanned: 1

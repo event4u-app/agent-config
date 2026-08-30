@@ -254,6 +254,7 @@ jobs:
           --shard=${{ matrix.shard }}/4
           --exclude 'tests/golden/**'
           --exclude 'tests/server/workspace.test.ts'
+          --exclude 'tests/scripts/collector_lifecycle.test.ts'
           --exclude 'tests/scripts/cli/python/**'
 
   static-checks:
@@ -484,6 +485,133 @@ jobs:
 
       - name: Vitest (tests/golden — fork-parallel)
         run: npm run test:ts --silent -- tests/golden
+
+  collector-lifecycle:
+    # The five process-level lifecycle properties of the telemetry collector
+    # (road-to-supervised-telemetry-collector step 5.1, AC-8). Spawns real
+    # daemons — orphan behaviour, signal handling and file locking are process
+    # facts and a mocked suite proves none of them.
+    #
+    # PLATFORMS, NAMED, because the blocker `lifecycle-ci-runner-provisioning`
+    # requires this job to name them rather than leave them to be inferred:
+    #
+    #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
+    #   Linux with a user session bus — the second declared supported row.
+    #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
+    #                   runner: ubuntu-latest has no user session bus, so it is
+    #                   the static-fallback row of the platform table, not the
+    #                   supported one. Running the suite there would produce a
+    #                   green tick that says nothing about `systemd --user`.
+    #
+    # "NOT CERTIFIED" rather than "NOT RUN", corrected on R2 round-2 finding 3:
+    # the suite is excluded from `node-tests` now, but the distinction is the
+    # honest one either way — whether the file executes somewhere and whether
+    # this project claims a platform from it are different questions, and only
+    # the second one is what AC-8 turns on.
+    #
+    # That split IS the AI council's decision of 2026-08-29 (UNANIMOUS, 2/2):
+    # option (b) — run on the one platform CI provides, record the other as
+    # unverified, and keep it out of release claims EVEN IF its static fallback
+    # appears to work. (a), provisioning a runner with a real user session bus,
+    # remains the target.
+    name: Collector Lifecycle (macos-latest — the macOS row only)
+    runs-on: macos-latest
+    # Spawns real daemons with 90 s per-case timeouts, and runs the
+    # dispatcher-reaching suite twice for the parity comparison; a hang here
+    # would otherwise sit at the runner default (R2 round-2 finding 2).
+    timeout-minutes: 20
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          # Node 24, not the repo-wide 20: the suite opens `node:sqlite`, which does
+          # not exist before 22.5 and carries an ExperimentalWarning on 22. On 20
+          # `isStoreAvailable()` is false, `describe.runIf(STORE)` skips all seven
+          # cases, and `run_lifecycle_suite` reds on the skip — so as first authored
+          # this job could never execute the properties it exists to certify.
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Build discovery manifest (gitignored; the suites read it)
+        # R2 round-2 finding 2: this job runs vitest twice — once through
+        # `run_lifecycle_suite`, once through `check_static_parity`'s
+        # double run — and was the only vitest job in this workflow skipping the
+        # two preparation steps every other one performs. A test depending on
+        # the generated manifest or on `dist/` reds identically in both parity
+        # runs, and the gate then exits 1 on "one of the two runs is red".
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: Run the lifecycle suite and write its evidence artifact
+        # Non-zero on a red suite, on ANY skipped case (AC-8: a skip is a
+        # failure on that platform, not an absence), and when not every named
+        # property passed.
+        run: ./scripts-run src/scripts/run_lifecycle_suite
+
+      - name: Consume the evidence in the SAME job
+        # R2 finding 1. The artifact used to be written here and read only by
+        # `check_supervision_claim_atomicity` in `rule-backstops.yml` — a
+        # different workflow, so a different filesystem, with no
+        # upload/download-artifact wiring and a gitignored file. The gate
+        # therefore always took its "no lifecycle evidence" branch and the
+        # AC-8/AC-9 chain was broken at the workflow boundary.
+        #
+        # Running the reader in the producing job is what closes it: this is the
+        # only place in CI where the artifact and the revision that produced it
+        # exist together. The gate in `rule-backstops.yml` stays — there it is
+        # correctly vacuous, because a checkout with no artifact and no
+        # present-tense supervision claim has nothing to refuse.
+        run: |
+          # The gate reads the artifact only after a present-tense supervision
+          # claim matches on a public surface, and none carries one — so on its
+          # own this step passes identically whether the artifact is correct,
+          # stale or absent (R2 round-5 finding 6). The assertions below are
+          # what actually exercise the producer -> reader link: the artifact
+          # exists, names this revision, and records real processes.
+          test -f internal/reports/supervision-lifecycle.json
+          node -e '
+            const fs = require("node:fs");
+            const { execFileSync } = require("node:child_process");
+            const ev = JSON.parse(fs.readFileSync("internal/reports/supervision-lifecycle.json", "utf8"));
+            const head = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+            const fail = (m) => { console.error("evidence chain: " + m); process.exit(1); };
+            if (ev.revision !== head) fail("revision " + ev.revision + " != HEAD " + head);
+            if (ev.processes_exercised !== true) fail("processes_exercised is not true");
+            if (!(ev.cases_run > 0) || ev.cases_skipped !== 0) fail("cases_run/skipped are not a clean run");
+            console.log("evidence chain: artifact matches HEAD and records " + ev.cases_run + " real-process cases");
+          '
+          ./scripts-run src/scripts/check_supervision_claim_atomicity
+
+      - name: Show the evidence artifact
+        # `always()` so a RED run still prints the artifact — which is exactly
+        # the run where its contents matter, and the step had no condition at
+        # all before.
+        if: always()
+        run: cat internal/reports/supervision-lifecycle.json || true
+
+      - name: Static-operation parity (AC-7)
+        # R2 finding 5: this gate was invoked by nothing — no workflow, no task,
+        # no package script. Its AC-7 evidence was a single hand-run that CI
+        # could not reproduce or regression-detect, which is the shape step 5.2
+        # argues against for the sibling suite.
+        #
+        # It runs the dispatcher-reaching suite twice (once with the collector
+        # present-but-off, once with it aliased away) and compares per-test
+        # verdicts. Placed here rather than in `task ci` because the double run
+        # is roughly a minute, which is not a per-change local gate; declared
+        # `ci_only` in `src/config/ci-local-parity.yml` with that reason and
+        # reachable on demand. The test count is deliberately not written here —
+        # it moves with the suite and the gate prints the live figure.
+        run: ./scripts-run src/scripts/check_static_parity --quiet
 
   workspace-tests:
     # The workspace cluster: tests/server/workspace.test.ts + the cli/python

@@ -12,6 +12,39 @@ contributors whose skills, rules or commands were merged.
 | `design-intelligence` (corpus + grounding engine) | Next Level Builder — `ui-ux-pro-max-skill` | MIT | [`src/skills/design-intelligence/ATTRIBUTION.md`](src/skills/design-intelligence/ATTRIBUTION.md) |
 | `design-intelligence` (`ui-styling`-derived assets) | "claudekit" | Apache-2.0 | [`LICENSE.apache-2.0.txt`](src/skills/design-intelligence/LICENSE.apache-2.0.txt) + modified-file markers per §4b |
 | `corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer` (derived slices) | see per-skill notices | MIT / Apache-2.0 | ADR-061 — the per-skill attribution notice is authoritative |
+| `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs` | ruvnet/ruflo — `plugins/ruflo-cost-tracker` | MIT | full notice below; transformation record in [`provenance/borrows.jsonl`](provenance/borrows.jsonl) and [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md) |
+
+#### MIT notice — ruvnet/ruflo
+
+Reproduced in full rather than by reference, because MIT requires the copyright
+notice AND the permission notice to travel with copies or substantial portions
+of the Software. This file ships in the npm package (`package.json` → `files`),
+which is what discharges the obligation for a consumer who receives
+`src/scripts/cost/` from the registry — the source files themselves carry no
+in-file source name, per
+[`source-confidentiality`](src/rules/source-confidentiality.md), and MIT does not
+require one.
+
+```
+Copyright (c) 2024-2026 ruvnet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
 
 ### Comparators (benchmark baselines, no vendored material)
 

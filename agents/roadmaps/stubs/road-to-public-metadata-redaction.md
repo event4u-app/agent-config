@@ -98,7 +98,7 @@ name from history. Any description of the outcome inherits that limit.
 
 ## See also
 
-- `agents/roadmaps/road-to-source-silence-cutover.md` — the sibling
+- `agents/roadmaps/later/road-to-source-silence-cutover.md` — the sibling
   carry-forward, for the items gated on a repository secret rather than on a
   Hard-Floor confirmation.
 - `docs/decisions/ADR-250-confidentiality-redaction-is-not-an-archive-content-change.md`

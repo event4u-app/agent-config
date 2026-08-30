@@ -344,7 +344,80 @@ interface MissingModule {
  * deliberately ignores bare package specifiers (`from 'commander'`) so the
  * walk never leaves the package's own `dist/` tree.
  */
-export function parseRelativeSpecifiers(source: string): string[] {
+/**
+ * Strip comments before scanning for import specifiers.
+ *
+ * A doc comment can contain a perfectly well-formed `export { X } from './X'`
+ * as an EXAMPLE, and the scanner had no way to tell one from a real import —
+ * `src/cli/commands/uiAudit.ts` carries exactly that line, and the built output
+ * keeps it, so the gate reported `commands/uiAudit.js → missing ./X` for a
+ * module nobody imports. That is a false red on a completeness gate, which is
+ * the worst kind: it says the shipped tarball is broken when it is not.
+ *
+ * ## Why the string state resets at every newline
+ *
+ * The first version carried quote state across the whole file, and it did not
+ * survive contact with that very comment: prose says `module's body`, and an
+ * apostrophe inside a comment is only inert while the lexer KNOWS it is inside
+ * one. One desync — a regex literal, an unpaired apostrophe reached in the
+ * wrong mode — and every subsequent `/*` reads as string content, so the doc
+ * comment is scanned as code and the false red survives the fix. Measured: the
+ * fix shipped, CI stayed red on the identical message.
+ *
+ * So block-comment state is tracked ACROSS lines (a block comment is the thing
+ * being removed) while quote state is tracked WITHIN one line and discarded at
+ * the newline. A desync then costs the remainder of one line instead of the
+ * remainder of the file. A multi-line template literal containing a relative
+ * specifier would be read as code — a false red, the same direction the gate
+ * already errs, and no such literal exists in the compiled output this walks.
+ */
+export function stripComments(source: string): string {
+    const out: string[] = [];
+    let inBlock = false;
+    for (const rawLine of source.split('\n')) {
+        let line = '';
+        let i = 0;
+        let quote: string | null = null;
+        while (i < rawLine.length) {
+            const c = rawLine[i] as string;
+            const next = rawLine[i + 1];
+            if (inBlock) {
+                if (c === '*' && next === '/') {
+                    inBlock = false;
+                    i += 2;
+                    continue;
+                }
+                i += 1;
+                continue;
+            }
+            if (quote !== null) {
+                line += c;
+                if (c === '\\' && next !== undefined) {
+                    line += next;
+                    i += 2;
+                    continue;
+                }
+                if (c === quote) quote = null;
+                i += 1;
+                continue;
+            }
+            if (c === '/' && next === '/') break;
+            if (c === '/' && next === '*') {
+                inBlock = true;
+                i += 2;
+                continue;
+            }
+            if (c === "'" || c === '"' || c === '`') quote = c;
+            line += c;
+            i += 1;
+        }
+        out.push(line);
+    }
+    return out.join('\n');
+}
+
+export function parseRelativeSpecifiers(rawSource: string): string[] {
+    const source = stripComments(rawSource);
     const out = new Set<string>();
     const patterns = [
         /\bfrom\s*["']([^"']+)["']/g,

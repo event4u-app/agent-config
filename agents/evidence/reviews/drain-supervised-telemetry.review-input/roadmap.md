@@ -1,6 +1,8 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -26,9 +28,82 @@ depends:
 estate_growth_exempt: "AMENDED 2026-08-29 — this change charges +1 open_blockers (29 to 30): the `lifecycle-ci-runner-provisioning` blocker added below. It is the AI council verdict of 2026-08-29 executed, not a discretionary addition. Both seats (2/2) chose option B — leave active, flip draft to ready — on the ground that the execution frontier is Phase 2 and Phase 2 is externally blocked by nothing; and BOTH seats independently required the missing CI capability to be named as an explicit dependency NOW rather than discovered when the frontier reaches Phase 5, openai because 'missing' and 'externally blocked' are not the same classification and the choice must be made before it is load-bearing. The flip without the blocker would have been half the verdict. Phase 1 closed 3/28 in the same change, including the supported-platform list AC-1 required and that did not exist. ORIGINAL CLAIM, still standing: Charges +1 on one-in-one-out and +0 on the count half (status: draft). Warranted on a council instruction rather than an opinion: both seats (2/2, deep pass, 2026-08-27) required the telemetry delivery to either move fully into the governance roadmap with its own acceptance criteria or become a formally related dependency with its own — and named the concrete failure of leaving it folded, that two roadmaps would share ownership of one rollback with no answer to which closes when measurement is inconclusive. Draft rather than ready because three architecture decisions below are undecided, and the owner decision that authorises runtime does not make them."
 estate_offset_exempt: "The offset is the governance roadmap flipping ready to draft in this same change, which removes it from the active count — this file replaces it there rather than adding beside it. No archive move is available."
 ---
+
+> **PARKED 2026-08-30 — Phases 1 to 5 complete and verified; Phase 6 cannot be
+> executed and is explicitly INCOMPLETE.** Resume when the six conditions below
+> clear and a real observation window has started.
+>
+> Phase 6.1 is a **21-consecutive-day window with ≥ 2,000 eligible dispatches
+> across ≥ 5 machines** (1.2 items 7–8). Zero days have elapsed and the
+> collector is default-off, so nobody has started the clock. This is not a
+> missing implementation; it is a missing elapsed calendar, and the roadmap's
+> own § 4 already said so: *"Phase 6.1 is a 21-day observation window no run can
+> compress."*
+>
+> **AI council, 2026-08-30 — DEGRADED, 1 of 2 seats present (`anthropic`
+> `claude-sonnet-4-5`; `openai` `codex-default` absent, `os_error: ENOBUFS`).
+> Quorum 1, concluded. $0.00 — subscription-authed. This is a degraded verdict,
+> not convergence, and it is recorded as such.** The maintainer delegated the
+> disposition to the council for the autonomous drain run of 2026-08-30.
+>
+> The seat was offered four options — (a) park, (b) descope Phase 6 into a
+> follow-up roadmap, (c) re-scope 6.1 to a synthetic verification, (d) name
+> something else — and chose **(d): a hybrid.** Park at Phase 5 with Phase 6
+> explicitly incomplete, AFTER landing a synthetic measurement-machinery
+> checkpoint as a prerequisite. That checkpoint is step **5.3**, which shipped
+> in the same change.
+>
+> It rejected (b) explicitly: *"Descoping to Phase 5 as 'complete' retroactively
+> redefines what this roadmap promised. Phase 6 was always part of scope."* And
+> it rejected treating the synthetic test as a substitute: *"Synthetic
+> verification is a prerequisite, not a substitute for 6.1."*
+>
+> **Resume conditions, recorded as the seat required — all six must clear:**
+>
+> 1. **Platform coverage resolved.** Linux lifecycle/rollback verification
+>    passes in a real user-session-bus environment, OR Linux is formally removed
+>    from the supported-platform contract by an explicit support-policy decision.
+>    The seat was emphatic that spending 21–63 days on an observation 6.2 will
+>    then reject is waste — so this is a RESUME condition, not a park condition.
+> 2. **Cohort and enablement design defined** — eligibility criteria, machine
+>    identity for deduplication, who may enable collection, version-skew
+>    handling, clock authority for window boundaries, representative-sample
+>    threshold. *"'Somebody enables it' is not an operational plan."*
+> 3. **Privacy and data-integrity boundaries specified** — allowed fields,
+>    retention, access controls, deletion path, PII-exclusion verification, and
+>    incident-detection criteria. *"'No privacy incident' is only measurable if
+>    'incident' has a definition."*
+> 4. **Kill-switch and rollback design complete** — automatic stop criteria,
+>    stop-propagation time bound, verification that disabling reaches the entire
+>    cohort, and a fallback if telemetry infrastructure fails.
+> 5. **Observation window formally started** — the collector enabled on a
+>    qualifying multi-machine cohort per condition 2, with the start timestamp
+>    recorded. *"Single-machine or maintainer-only testing does not start the
+>    clock."*
+> 6. **Synthetic measurement-machinery verification green** — step 5.3. **MET
+>    2026-08-30**, and it is the only one of the six that is.
+>
+> **The one point where this record disagrees with its own seat, stated rather
+> than smoothed over.** Conditions 3 and 4 are partly discharged by Phases 2 and
+> 3 as shipped — the schema is an allowlist with per-field purpose and six
+> named leak-class fixtures (2.1, 2.2), deletion and opt-out are exercised by
+> tests rather than documented (2.3), and the kill switch has an automatic stop
+> criterion (budget breach), a mechanism reachable without the collector's
+> cooperation, and a test that kills a real wedged process (3.2, 3.3). What is
+> genuinely missing from both is the **cohort** half: propagation to more than
+> one machine, and an operational definition of "incident" across a fleet. The
+> conditions are therefore kept as written rather than marked partly met, since
+> the missing half is the half that matters for a fleet measurement — but a
+> future reader should not re-derive the parts that exist.
+>
+> **Revisit-if:** all six conditions clear and the 21-day window completes with
+> ≥ 2,000 sampled dispatches and a computed Wilson lower bound; OR the telemetry
+> strategy changes so field measurement is unnecessary; OR the Linux CI
+> infrastructure gap closes and the platform-coverage reading can be
+> re-verified.
 # Road to a supervised telemetry collector — the first resident process, and the eight things the owner decision does not decide
 
-> **Source:** split out of `road-to-runtime-governance-flip.md` on 2026-08-27
+> **Source:** [REDACTED:src-conf]
 > after a deep council pass (2/2, both seats "not ready"). The originating
 > analysis is `agents/tmp.old/inbox-2026-08-h/`; the durable record of the owner
 > decision and the surface census is
@@ -492,18 +567,107 @@ one for a design note under review: § 2's rule is that unanswered is
       informative while naming nobody who exists. What the column will carry
       once there is someone else to name is a `revisit-if`, not a placeholder.
 
-- [ ] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
+- [x] **3.2 Set resource budgets as numbers.** CPU, resident memory, disk
       footprint, and file-descriptor count, each with the ceiling and the
       headroom at expected peak. An unquantified ceiling is not headroom.
-      verify: the budgets are recorded and a test asserts the collector is stopped when each is exceeded.
-- [ ] **3.3 Define the kill switch and who may pull it.** One mechanism,
+      verify: DONE — `RESOURCE_BUDGETS` in `src/scripts/_lib/collector_supervision.ts` records four budgets, and `tests/scripts/collector_supervision.test.ts` § 3.2 asserts `action: 'stop'` for EACH budget individually.
+
+      **Four numbers, and the honest part is where they come from.** Every row
+      carries `ceiling`, `expectedPeak` and a `basis` string stating the
+      arithmetic the peak comes from; `headroomAtPeak()` DERIVES the headroom as
+      `ceiling - expectedPeak` rather than storing it, so the two numbers cannot
+      drift into a headroom that is not their difference. CPU 2 % of one core
+      (peak 0.2 %) · RSS 96 MiB (peak 60 MiB) · disk 64 MiB (peak 12 MiB) ·
+      file descriptors 32 (peak 12).
+
+      **Every `expectedPeak` is a DERIVATION, not a measurement, and the module
+      says so in those words.** No collector exists to measure — that is Phase 4
+      — so a row whose basis read like an observation would be the same
+      overclaim this roadmap's risk 1 already caught once. A measured peak above
+      a derived one FALSIFIES the derivation; the row is re-derived and the
+      ceiling is not raised to accommodate it. That is written as a `revisit-if`
+      on `RESOURCE_BUDGETS`.
+
+      Breach semantics are `stop`, never throttle — row 4 of the 3.1 matrix, on
+      the grounds that an observer which has become a load is no longer an
+      observer. Two boundary cases are tested rather than assumed: a reading
+      exactly AT the ceiling is INSIDE it (the ceiling is the last permitted
+      value), and a **missing or non-finite reading is a breach, not a pass**.
+
+      SENSITIVITY, observed: flipping `>` to `>=` in `budgetVerdict` reds 1 of
+      21; making the non-finite branch continue silently reds 1 of 21. Neither
+      probe reds the whole file, which is what distinguishes a probe from a
+      broken import.
+- [x] **3.3 Define the kill switch and who may pull it.** One mechanism,
       reachable without the collector's cooperation, documented where an
       operator will find it under pressure rather than in this roadmap.
-      verify: a test kills a wedged collector through the documented mechanism with the process unresponsive to graceful shutdown.
-- [ ] **3.4 Define static mode and daemon mode against the same tree.** Whether
+      verify: DONE — `tests/scripts/collector_supervision.test.ts` § 3.3 *KILLS A REAL WEDGED PROCESS that ignores SIGTERM*, and asserts `via: 'forced'` plus an ESRCH on the pid afterwards.
+
+      **The mechanism is a marker file, and its presence is the whole signal.**
+      `touch ~/.event4u/agent-config/agent-collector/STOP`. Nothing parses its
+      contents, so it cannot be half-pulled, and it needs no cooperation from
+      the collector — which is the step's binding requirement. While it exists
+      `acquireRuntimeLock` refuses, so a supervisor restart loop cannot bring
+      the collector back, and `resolveDispatchMode` reports `static` whatever
+      the lock says.
+
+      **Documented where an operator will find it under pressure**, which the
+      step requires explicitly and which this roadmap is not:
+      `docs/contracts/collector-operations.md` — stop it, is it running, what it
+      may cost, which mode, and what to look at when something went wrong.
+
+      **The wedged-process test is a real process, and two things about how it
+      is built are load-bearing rather than ceremony.** The victim is a
+      GRANDCHILD, re-parented to init when its launching shell exits: a direct
+      child stays a ZOMBIE after `SIGKILL`, `kill(pid, 0)` succeeds against an
+      unreaped child, and `terminateCollector` is synchronous so the event loop
+      that would reap it never runs — the first draft of this test failed
+      exactly there and reported `unreachable`. And the test WAITS for the child
+      to write a readiness file before signalling, because Node installs the
+      `SIGTERM` handler only once the script runs; a signal delivered during
+      interpreter startup takes the default action and the test goes green as
+      `graceful` — which is a pass for a test whose entire point is the
+      escalation. Both failures were observed, not anticipated.
+
+      SENSITIVITY, observed: deleting the `SIGKILL` escalation block reds 1 of
+      21; dropping the kill-switch guard from `acquireRuntimeLock` reds 1 of 21.
+
+      **`agent-config collector:stop` does not exist and the doc does not claim
+      it does.** There is no process to end until Phase 4; the verb ships with
+      the collector, in the same change, and the ops page says so in those words
+      rather than describing a command a reader would try and fail to run.
+- [x] **3.4 Define static mode and daemon mode against the same tree.** Whether
       both may run concurrently, and if not, what prevents it. Left undefined
       this is duplicate capture and version skew.
-      verify: a test asserts the declared behaviour — either concurrent operation is correct and proven, or it is prevented and the prevention is proven.
+      verify: DONE — declared PREVENTED in `DISPATCH_MODE_CONTRACT`, and `tests/scripts/collector_supervision.test.ts` § 3.4 proves the prevention: two contenders, exactly one lock, the loser routed to `static`.
+
+      **The declared behaviour is refusal, not correctness.** Concurrent
+      operation is not made safe; it is prevented by the per-user runtime lock
+      (`agent-collector/collector.lock`), which is the `uniqueness-namespace`
+      (b) verdict made concrete. Two checkouts of this repository — two
+      worktrees, which `resident-process-floors` § 2 Q5 calls the common case
+      here rather than the exotic one — resolve to the SAME lock path, so the
+      second does not get a second collector. It gets static mode.
+
+      What is refused, named rather than implied: duplicate capture (one
+      dispatch counted twice, in the numerator of the very ratio this
+      instrument exists to measure) and version skew (two revisions disagreeing
+      about the schema). Neither is worth solving for this instrument.
+
+      **What makes the exclusion cheap is what "static mode" means:** there is
+      no collector process and nothing is captured. It is not a second, quieter
+      writer — so the losing contender has nothing to flush and no partial
+      state, and § 1's falsifiable form (*if the module were killed, every
+      dispatch would resolve identically*) holds unchanged.
+
+      A lock whose recorded pid is not alive is FENCED rather than respected —
+      row 2's recovery procedure in the 3.1 matrix — so a crashed collector does
+      not lock its successor out forever. Atomicity is `wx`, not
+      compare-then-write.
+
+      SENSITIVITY, observed: dropping the `wx` flag reds 1 of 21 (both
+      contenders acquire); returning `held-by-live-process` without probing
+      liveness reds 1 of 21 (the crashed owner's lock becomes permanent).
 
 ## Phase 4 — Implement, default-off
 
@@ -537,13 +701,117 @@ one for a design note under review: § 2's rule is that unanswered is
 > assume permanence — *"platforms change, deprecation happens."*
 
 
-- [ ] **4.1 Build the collector against the contracts above.** Default-off, and
+- [x] **4.1 Build the collector against the contracts above.** Default-off, and
       default-off is a tested property rather than a config line nobody
       exercised.
-      verify: a fresh install runs the full test suite with no collector process started, asserted by process enumeration rather than by reading the setting.
-- [ ] **4.2 Prove static operation is unregressed.** The Goal of the governance
+      verify: DONE — `tests/scripts/collector_daemon.test.ts` § 4.1 greps the live process table (`ps -eo pid,args`) and asserts no collector process exists, with a POSITIVE CONTROL that spawns one first and proves the same grep can see it.
+
+      **Three modules, and the daemon adds a loop and a signal handler to them.**
+      `src/scripts/collector_daemon.ts` builds against the Phase 1–3 contracts
+      rather than beside them: the record shape is `collector_record`, the store
+      and quarantine are `collector_store`, the budgets, kill switch, lock and
+      heartbeat are `collector_supervision`, and the denominator plus spool are
+      the new `src/scripts/_lib/collector_denominator.ts`. Every rule it obeys
+      was decided earlier and is imported, not restated.
+
+      **Default-off is the ABSENCE of a file, which is what makes it a property
+      rather than a config line.** `ENABLED` is an opt-IN marker; a fresh
+      install has none, so there is no default that could be misread and no
+      environment variable CI could set by accident. Opt-out still beats opt-in.
+
+      **The verify clause is honoured literally: process enumeration, not a
+      setting read.** And the negative assertion is preceded by a positive
+      control, because "the grep found nothing" is worthless until the same grep
+      has been shown to find something — a grep that can never match reports
+      "no collector" on a machine running ten.
+
+      **The merged received item is discharged here, and it is the denominator.**
+      Step 1.2 item 1 requires that *"the denominator must be produced by a
+      writer that cannot fail in the same way the numerator does"*.
+      `recordOpportunity` runs in the HOOK process, synchronously, with no
+      daemon involved — so a dead collector yields a climbing denominator
+      against a flat numerator and the capture rate falls instead of reading
+      0/0. It is gated on the opt-in MARKER, never on the daemon: gating on the
+      daemon would make the instrument self-reporting, which is exactly the
+      failure `road-to-journal-host-capture-measurement` exists for.
+
+      **TWO `existsSync` calls are the whole cost on a default-off install**, and
+      the number is stated correctly here because it was stated wrongly first
+      (R2 finding 14, then round-3 finding 11 for this copy of it):
+      `isCollectorEnabled` probes the OPT-OUT marker before the ENABLED one, so
+      the opt-out check — not the marker — is what usually returns first. The
+      correction landed in the code and its docstring and not here, leaving the
+      two halves of one change disagreeing on the fact each cites the other for. The wiring is a
+      single call in `dispatch_hook.main`, placed after the vocabulary check (an
+      unknown event is not an opportunity) and before the manifest load (a
+      missing manifest fails open, and the dispatch still WAS an opportunity) —
+      that ordering is the difference between measuring dispatches and measuring
+      successful dispatches, and the metric definition asks for the former.
+
+      **It never throws, and that is the observation-only contract rather than
+      defensive habit.** `resident-process-floors` § 1's falsifiable form is
+      that killing the module leaves every dispatch resolving identically; a
+      raising counter breaks precisely that. Tested against an unwritable
+      directory.
+
+      SENSITIVITY, observed (20 tests in the file): inverting
+      `isCollectorEnabled` to default-ON reds 1; dropping the `isOptedOut` guard
+      reds 1; gating the denominator on a running daemon reds 1; swapping the
+      UTC date for a full timestamp reds 1; removing `recordOpportunity`'s
+      try/catch reds 1; stopping on the first budget breach instead of the
+      second reds 1; dropping `runLoop`'s `finally { stop() }` reds 1.
+
+      **The negative default-off assertion has no red edit, and that is stated
+      rather than hidden.** It is a negative claim about the machine, so its
+      sensitivity is carried by the positive control beside it — which is the
+      honest structure for an assertion no module edit can falsify.
+- [x] **4.2 Prove static operation is unregressed.** The Goal of the governance
       roadmap says static operation still works. Nothing tested it.
-      verify: the existing suite passes with the collector absent AND with it present-but-off, and the two results are compared rather than each declared green.
+      verify: DONE — `./scripts-run src/scripts/check_static_parity` ran both suites and COMPARED them: equal test counts on both sides, both exit 0, `✅ static operation is unregressed — per-test verdicts are identical`. The count itself moves with the suite and is deliberately not pinned in prose (R2 round-2 finding 15 caught three different figures for it in one change); the gate prints the live number.
+
+      **Two green runs are not the assertion; two runs with identical per-test
+      verdicts is.** The difference is the whole point of the step's wording: a
+      suite that passes both times while one test silently turned from `passed`
+      to `skipped` has regressed static operation in the one way "both green"
+      cannot see. `compare()` is keyed on test name → status, in both
+      directions, and is order-independent.
+
+      **"Absent" is absent, not disabled.** The second run aliases
+      `collector_denominator` to `tests/_lib/collector-absent-stub.ts` through a
+      `vitest.config.ts` branch that is inert unless
+      `AGENT_CONFIG_COLLECTOR_ABSENT=1`, so the dispatcher resolves a
+      do-nothing module and the real one is never loaded — its imports, its
+      filesystem probes and its existence all out of the picture. Run A is the
+      real module with no opt-in marker: present, and off.
+
+      **The parity set is DISCOVERED, not listed.** `parityFiles()` greps for
+      every test file that reaches `dispatch_hook` and prints them, so a reader can check the denominator of the claim. A
+      hand-written list goes stale the first time a test file is added, and a
+      stale parity set reports parity over the wrong population. An empty set
+      exits 1 with *"a gate that scans nothing exits green"*, because that is
+      this gate's silent-failure shape.
+
+      **The scope limit, stated rather than implied:** this proves parity for
+      the dispatcher surface, which is the collector's entire contact with the
+      tree (one call in `dispatch_hook.main`). A test that never reaches that
+      function cannot diverge, because nothing differs on the path it takes. It
+      is NOT evidence that the whole suite is identical under both runs, and it
+      is not evidence about a future collector call site placed elsewhere —
+      adding one is what re-runs the grep.
+
+      SENSITIVITY, observed: making `recordOpportunity` throw (and removing its
+      try/catch) turns the present-but-off run red — 174 tests, exit 1 — and the
+      gate refuses with *"parity over a red suite proves nothing"* rather than
+      comparing two broken runs. The comparator's own sensitivity is unit-tested
+      in `tests/scripts/check_static_parity.test.ts`: a length-only comparison
+      passes the `passed → skipped` case and reds that block.
+
+      **Not wired into CI, and that is a decision with a cost.** The gate takes
+      about a minute (two runs of the whole set) and registering a new gate touches six
+      further surfaces plus the gate-coverage ledger. It is run on demand, which
+      means it can rot between runs. *Revisit-if:* a second collector call site
+      lands anywhere outside `dispatch_hook.main`, or a static-mode regression
+      reaches `main` — either falsifies "on demand is enough".
 
 ## Phase 5 — Prove the five lifecycle properties on real processes
 
@@ -559,15 +827,142 @@ one for a design note under review: § 2's rule is that unanswered is
 > attached. Tracked as `blocker: lifecycle-ci-runner-provisioning`.
 
 
-- [ ] **5.1 Test each of the five properties as a process-level test.** Mocks
+- [x] **5.1 Test each of the five properties as a process-level test.** Mocks
       do not establish orphan behaviour, signal handling, or file locking.
-      verify: the suite spawns real processes, runs on every platform the blocker declared supported, and CI executes it on each — a suite that skips on a platform is a failure on that platform, not an absence.
-- [ ] **5.2 Make the evidence protocol explicit, so a presence check cannot
+      verify: DONE on the macOS row — `tests/scripts/collector_lifecycle.test.ts` spawns real `collector_daemon run` processes for all five properties, 5 run / 0 skipped, and the `Collector Lifecycle` job in `.github/workflows/tests.yml` executes it on `macos-latest`. The second declared row is NOT run and is recorded unverified, per the council's (b).
+
+      **The five properties, named rather than counted.** 1 — exactly one live
+      collector per OS user (two real daemons contend; the loser EXITS rather
+      than becoming a second writer). 2 — SIGTERM ends it cleanly: lock
+      released, heartbeat removed, successor starts with no fencing needed. 3 —
+      SIGKILL leaves real residue (a lock and a heartbeat, because an unclean
+      death cannot run a handler) and the successor FENCES both. 4 — a dead
+      collector is readable as dead: the corpse's beat survives and reads
+      `stale` past the threshold, never `running`. 5 — an orphan survives its
+      parent, keeps beating, and its ppid is not this test's.
+
+      **Nothing is mocked, and the test found three real defects by being
+      real.** All three were the same confusion: `tsx` is a LAUNCHER, so
+      `child.pid` is a wrapper and the daemon runs in a grandchild. Signalling
+      the wrapper left the daemon alive; comparing `child.pid` to the heartbeat
+      compared two different processes. Properties 1, 3 and 4 all failed on it,
+      and the failures read like product bugs. The suite now reads the daemon's
+      pid from its own readiness line, which the daemon prints only AFTER the
+      lock and heartbeat exist — the same startup race step 3.3 learned.
+
+      **The first real start also falsified two of 3.2's four budgets**, which
+      is exactly what that step's `revisit-if` said would happen and is recorded
+      there rather than quietly patched: resident memory read 116.2 MiB against
+      a 96 MiB ceiling and the daemon budget-stopped itself within seconds; file
+      descriptors read 28 against a derived peak of 12. Both rows are now
+      MEASURED (192 MiB / 128 fd ceilings) and the other two still say DERIVED.
+      A third defect surfaced in the same run: back-to-back CPU sampling
+      produced `103 %` and then `36800 %`, because a sub-millisecond window
+      divides into any CPU time to give nonsense — `MIN_CPU_WINDOW_MS` now
+      refuses to recompute below one second and carries the previous value,
+      with the three-way trade-off written out at the call site.
+
+      **The platform gap is named, not implied.** `ubuntu-latest` has no user
+      session bus, so it is the platform table's STATIC-FALLBACK row, not the
+      supported `systemd --user` row. Running the suite there would produce a
+      green tick that says nothing about the row AC-8 cares about — so the job
+      does not run it, and the workflow comment says why. Per the (b) verdict's
+      binding conditions, the unverified row stays out of release claims **even
+      if its static fallback appears to work**.
+- [x] **5.2 Make the evidence protocol explicit, so a presence check cannot
       masquerade as proof.** The governance roadmap's atomicity check asks
       whether this suite is green. That check must establish that the named
       suite exists, ran on the same revision, exercised real processes, and was
       not empty or skipped.
-      verify: the check reds against a deliberately emptied suite and against a suite result from a different revision — two seeded negatives, both observed.
+      verify: DONE — `./scripts-run src/scripts/check_supervision_claim_atomicity --self-test` reports `7/7 case(s) behaved (5 rejecting, floor 7)`, and two of those five are exactly the seeded negatives this step names: *"an emptied suite — every case skipped, none run"* and *"a result recorded against a different revision"*. Both observed rejecting with exit 1.
+
+      **The check existed; what was missing was a producer.** The gate already
+      demanded that the artifact name a suite, match HEAD's revision, record
+      `processes_exercised: true`, and carry integer counts with `run > skipped`
+      — four conditions, each with its own refusal string. Nothing wrote the
+      artifact. `src/scripts/run_lifecycle_suite.ts` is that producer, and every
+      field in it is OBSERVED rather than asserted: the revision from `git
+      rev-parse HEAD` at run time, the counts parsed out of vitest's own JSON
+      report, and `processes_exercised` true only when all five NAMED properties
+      passed — matched by name, because a count cannot tell five properties from
+      five repeats of one. A hardcoded `true` there would defeat the gate
+      entirely, since the gate exists because a mocked suite can demonstrate all
+      five properties and prove none.
+
+      A skip is a failure: the producer exits non-zero on any skipped case, and
+      still writes the artifact with the honest counts — a missing artifact and
+      a skipped suite need different remediation, and the gate distinguishes
+      them by design.
+
+      **The artifact is deliberately gitignored.** The gate refuses a result
+      whose recorded revision is not HEAD, so a committed artifact would forever
+      name the commit before the one it ships in and could never match. It is a
+      CI-time fact, produced by the `Collector Lifecycle` job at the revision
+      under test.
+
+      **What the negatives do NOT show, stated because the difference matters.**
+      Run against the REAL tree, the gate passes whatever the artifact says —
+      because no public surface currently makes a present-tense supervision
+      claim, so there is nothing for it to refuse. That is the correct state
+      (AC-8 is unverified on one row, so no such claim may be made), and it is
+      why the step asks for SEEDED negatives: the self-test plants the claim
+      alongside the bad evidence. Reporting the vacuous real-tree pass as
+      evidence of the protocol working would have been the available mistake.
+
+- [x] **5.3 Prove the measurement machinery before the measurement.** Seeded
+      opportunities and captures, an asserted ratio, an asserted Wilson bound,
+      the minimum-sample boundary, malformed input, and duplicate suppression —
+      all verifiable with zero elapsed days. It proves the instrument; it claims
+      nothing about the field measurement.
+      verify: a test computes the rate and its interval from the REAL denominator writer and the REAL store, and the eligibility boundary is asserted at the exact minimum sample.
+
+      > **ADDED 2026-08-30 on AI council instruction (DEGRADED — 1 of 2 seats;
+      > `openai` absent, `os_error: ENOBUFS`).** The seat made this a
+      > **prerequisite checkpoint between Phase 5 and Phase 6**, explicitly not a
+      > Phase 6 step and explicitly not a substitute for 6.1: *"The synthetic
+      > test is a checkpoint, not a Phase 6 step. It answers 'does the instrument
+      > work?' before asking 'what does it measure?'"* Recording it as its own
+      > step rather than folding it into 6.1 is the whole point — folding it in
+      > would let a green instrument read as a completed measurement.
+
+      **DONE.** `src/scripts/_lib/capture_rate.ts` + 19 tests in
+      `tests/scripts/capture_rate.test.ts`.
+
+      **The decision rule is implemented as 1.2 item 9 fixed it, and the test
+      that matters is the one that fails.** 1800/2000 is exactly 90 % as a point
+      estimate and its Wilson lower bound is below 90 %, so the rule says it has
+      NOT cleared the target. A consequence worth stating because it is easy to
+      discover late and expensive: at the 2,000 minimum sample, a 90 % LOWER
+      BOUND needs a point estimate of roughly **91.3 %**. The test computes that
+      threshold rather than asserting it, so it moves if the sample floor does.
+
+      **Ineligible is `null`, never `false`, and that is a three-valued verdict
+      on purpose.** A 200-dispatch sample over 3 days is *keep observing*, not
+      *missed* — and a miss is what fires 6.3's decision record. Collapsing the
+      two would produce a recorded shortfall for a measurement that never
+      happened. Same shape in `judgeEnablement`: a MISSING reading and a FALSE
+      reading are reported separately, because "we did not look" and "we looked
+      and it was bad" call for different actions.
+
+      **Wilson rather than the normal approximation**, because the normal one is
+      wrong exactly where this measurement lives: near a proportion of 1 it
+      returns an upper bound above 1 and a spuriously narrow interval. At `n = 0`
+      the interval is `[0, 1]` — *we measured nothing* — never `[0, 0]`, which
+      would read as a total capture failure.
+
+      **The end-to-end block drives the REAL writers**: 40 opportunities through
+      `recordOpportunity`, 34 records through `spoolRecord` and `drainOnce` into
+      the real store, giving 34/40. Duplicate suppression is asserted against the
+      store's actual behaviour — three identical spooled records produce three
+      ROWS and one record, because the store is append-only and de-duplicates at
+      read time — which is what keeps the numerator from exceeding the
+      denominator without an insert-time unique constraint.
+
+      SENSITIVITY, observed (19 tests): judging on the point estimate instead of
+      the lower bound reds 1; returning `false` instead of `null` for an
+      ineligible reading reds 4; `[0, 0]` at `n = 0` reds 1; treating a missing
+      enablement reading as `false` reds 1; dropping the
+      numerator-above-denominator check reds 1.
 
 ## Phase 6 — Measure, then decide
 
@@ -580,6 +975,28 @@ one for a design note under review: § 2's rule is that unanswered is
       platform · resource budgets met · no privacy or data-integrity incident ·
       static-mode compatibility green · window and minimum sample satisfied.
       verify: each of the six is recorded with its reading; a missing reading blocks the flip.
+
+      **The platform reading is REVISED to match the evidence, and it is
+      revised as BLOCKING rather than as met** (AI council 2026-08-30, the same
+      degraded verdict that parked this roadmap). It now reads:
+
+      > *Lifecycle and rollback tests verified on macOS (AC-8 green on that row);
+      > Linux verification infrastructure-blocked — no user session bus on any
+      > GitHub-hosted runner.*
+
+      The seat was explicit about why this is a revision of the WORDING and not
+      of the bar: *"Do not treat a known unverified platform as 'met'."* The gap
+      closes one of two ways — Linux lifecycle tests pass in a real
+      user-session-bus environment, or Linux is formally removed from the
+      supported-platform contract through a separate support-policy decision.
+      Until then this reading is `false`, not `null`: it has been looked at.
+
+      Two readings are recordable today and are recorded here so a resumer does
+      not re-derive them. **Resource budgets: met** — measured 2026-08-30, and
+      two of the four ceilings were re-derived from that measurement rather than
+      the reading being fitted to them (3.2). **Static-mode compatibility:
+      green** — the dispatcher-reaching suite run twice with identical per-test verdicts (4.2). The
+      other four need the window, the cohort, or the Linux row.
 - [ ] **6.3 Act on a miss.** Below target, the collector stays default-off and
       the shortfall becomes a decision record naming what was measured and what
       closing it would cost. Disposition options are predefined — removal, a
@@ -790,7 +1207,18 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ### blocker: lifecycle-ci-runner-provisioning
 
-- **Status:** open
+- **Status:** resolved 2026-08-30 — both clauses of `Resolved when` are now met.
+  The choice was recorded here on 2026-08-29 (council, (b)); the second clause
+  — *"the CI workflow that runs the suite names the platforms it runs on"* — is
+  met by the `Collector Lifecycle` job in `.github/workflows/tests.yml`, which
+  runs on `macos-latest` and states in its own comment that the
+  Linux-with-a-user-session-bus row is NOT run and NOT verifiable on a
+  GitHub-hosted runner, because `ubuntu-latest` has no user session bus and is
+  therefore the platform table's static-fallback row rather than the supported
+  one. The (b) verdict's binding condition is carried into the workflow text:
+  the unverified row stays out of release claims even if its static fallback
+  appears to work. Option (a) remains the target and is unchanged; see the
+  `Revisit-if` below.
 - **Owner:** maintainer
 - **Blocks:** Phase 5 entirely, and through AC-8 the public capability claim.
   Phases 2, 3 and 4 are unaffected and are the current execution frontier.
@@ -841,14 +1269,14 @@ one for a design note under review: § 2's rule is that unanswered is
   failure exposes material cross-platform divergence.
 - **Resolved when:** the choice is recorded here and, for (a) or (b), the CI
   workflow that runs the suite names the platforms it runs on.
-- **Why this is still `open` after the decision:** the first clause above is now
-  met and the second is not, and a blocker whose criterion is half-met is open.
-  The CI workflow that clause requires cannot exist yet — it runs the Phase 5
-  lifecycle suite, which is not built, because Phases 2–4 are the current
-  execution frontier. Flipping this to `resolved` on the strength of the
-  recorded choice alone would be exactly the silent-green this repository's own
-  records name as a recurring defect. It closes when Phase 5 lands a workflow
-  that names its platforms.
+- **Why it was `open` after the decision, and what closed it (2026-08-30):** the
+  first clause was met on 2026-08-29 and the second was not, and a blocker whose
+  criterion is half-met is open — flipping it on the strength of the recorded
+  choice alone would have been exactly the silent-green this repository's own
+  records name as a recurring defect. The paragraph then said it *"closes when
+  Phase 5 lands a workflow that names its platforms"*. Phase 5 landed and the
+  workflow names them, so it is closed on the condition it stated, not on a
+  reinterpretation of it.
 
 
 ## Risk Register
@@ -877,9 +1305,14 @@ one for a design note under review: § 2's rule is that unanswered is
       MET by 2.3. `tests/scripts/collector_store.test.ts` deletes through `deleteMachine` and asserts absence through BOTH query shapes (filtered and unfiltered), and asserts a refused write leaves `SELECT COUNT(*)` at 0 — the assertion that distinguishes a prevented write from a filtered read. Sensitivity observed: moving the check into `readRecords` reds 3 of 14, a no-op `deleteMachine` reds 2 of 14.
 - [x] AC-5 — The five upgrade transitions in 2.4 are driven by tests over a seeded store.
       MET by 2.4. Five named tests, one per transition, each over a store seeded to the state it tests — plus a sixth on the quarantine directory's growth budget. Transition 3 asserts the quarantined file's BYTES are unchanged, which is what "preserve without reading or rewriting" has to mean to be checkable. Sensitivity observed: 3 of 14 red when a newer store is read instead of quarantined, 1 of 14 when the crash marker is checked after the version stamp.
-- [ ] AC-6 — Every rollback-trigger row has an activation mechanism, an owner, a recovery procedure and a named test; resource budgets are numbers with headroom; and the kill switch has been exercised against an unresponsive process.
-      FIRST CLAUSE MET by 3.1 — seven rows, four columns each, no empty test cell, and each test carries its state (`EXISTS` with the file, or `OWED BY <step>`) so a name is not mistaken for coverage. TWO of the seven are enforced today (rows 1 and 5); five are owed by the steps that build what they test. The second and third clauses are 3.2 and 3.3 and are OPEN: both need the collector, which is Phase 4. Deliberately not flipped — a partly-met AC reading met is the silent-green this roadmap's own § 4 warns about.
-- [ ] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
+- [x] AC-6 — Every rollback-trigger row has an activation mechanism, an owner, a recovery procedure and a named test; resource budgets are numbers with headroom; and the kill switch has been exercised against an unresponsive process.
+      MET by 3.1, 3.2 and 3.3. **The rationale below is REWRITTEN, and the rewrite is itself a finding** (R2 finding 12): it still said the second and third clauses "are OPEN: both need the collector, which is Phase 4" while the same file marked 3.2, 3.3 and all of Phase 4 `[x]` and opened with "Phases 1 to 5 complete and verified". That is this roadmap's own § 4 silent-green discipline running in reverse — understating rather than overstating — and it is equally uncheckable.
+      Clause 1: seven rows, four columns each, no empty test cell, each test carrying its state (`EXISTS` with the file, or `OWED BY <step>`). Clause 2: `RESOURCE_BUDGETS` carries four ceilings with a derived headroom apiece, two of them re-measured after the first real daemon start falsified the derivation. Clause 3: `collector_supervision.test.ts` § 3.3 kills a REAL wedged process — a grandchild that installs a `SIGTERM` handler and ignores it — and asserts `via: 'forced'` plus ESRCH afterwards.
+      Two of the 3.1 matrix's seven test cells were `OWED BY` a Phase-5 step when it was written and are now `EXISTS`: rows 2 and 3 are covered by `collector_lifecycle.test.ts` PROPERTIES 1 and 3. Rows 4, 6 and 7 are covered by 3.2's budget tests, 4.2's parity comparison and 5.2's seeded negatives respectively. The matrix text still reads `OWED BY`, which is now stale in the safe direction and is left for the resumer rather than rewritten from a step that is closed.
+- [x] AC-7 — Static operation is proven unregressed both with the collector absent and with it present-but-off, by comparing the two runs.
+      MET by 4.2. `./scripts-run src/scripts/check_static_parity` ran every dispatcher-reaching test file twice — present-but-off, then with `collector_denominator` aliased to a do-nothing stub so the real module is never loaded — and COMPARED them per test: identical verdicts, both exit 0. Two green runs would not have satisfied this; a test silently turning from `passed` to `skipped` keeps both suites green and only the per-test comparison sees it. The gate now runs in CI (`Collector Lifecycle` job), which it did not when this AC was first evidenced — R2 finding 5 caught that the evidence was a hand-run nothing could reproduce.
 - [ ] AC-8 — The five lifecycle properties are demonstrated by process-level tests on every declared platform, executed in CI on each — a skip counts as a failure on that platform.
-- [ ] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
+      PARTLY MET, and deliberately NOT flipped. The five properties are demonstrated on real spawned processes (5.1) and the `Collector Lifecycle` job executes them in CI on `macos-latest`, where a skip fails the job because `run_lifecycle_suite` exits non-zero on any skipped case. The criterion says **every declared platform**, and the second declared row — Linux with a user session bus — is not run and is not runnable on a GitHub-hosted runner. Per the `lifecycle-ci-runner-provisioning` (b) verdict that row is recorded **unverified** and stays out of release claims even if its static fallback appears to work. Flipping this on one of two rows is exactly the silent-green this roadmap exists to avoid; it closes when option (a) — a runner with a real user session bus — is provisioned.
+- [x] AC-9 — The evidence protocol reds against an emptied suite and against a result from a different revision, both observed.
+      MET by 5.2. `check_supervision_claim_atomicity --self-test` reports `7/7 case(s) behaved (5 rejecting, floor 7)`, and two of those five rejections are precisely the seeded negatives this AC names: *"an emptied suite — every case skipped, none run"* and *"a result recorded against a different revision"*, both exit 1. Seeded rather than real, because the real tree makes no present-tense supervision claim and the gate is therefore vacuous against it — reporting that vacuous pass as evidence would have been the available mistake. The producer (`run_lifecycle_suite`) and the reader now run in the SAME CI job, which R2 finding 1 established they did not: the artifact was written in `tests.yml` and read in `rule-backstops.yml`, across a workflow boundary with no shared filesystem, so the chain could never close.
 - [ ] AC-10 — The capture rate is measured over the declared window at or above the minimum sample, and the outcome is acted on: all six enablement readings recorded and the default flipped, or default-off plus a decision record naming the reading and the chosen disposition.

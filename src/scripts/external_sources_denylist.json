@@ -77,7 +77,6 @@
     "src/skills/design-tokens/*",
     "src/skills/react-shadcn-ui/*",
     "src/skills/tailwind-engineer/*",
-    "src/scripts/cost/*",
     "dist/agent-src/skills/design-intelligence/*",
     "dist/agent-src/skills/corpus-grounding/*",
     "dist/agent-src/skills/design-tokens/*",
