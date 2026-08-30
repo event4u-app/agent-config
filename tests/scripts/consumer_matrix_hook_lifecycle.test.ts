@@ -9,7 +9,7 @@
  * `tests/scripts/_cli/cmd_conformance.test.ts` uses for its dispatcher smoke
  * (a fake runner script instead of the real dispatcher).
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -195,4 +195,75 @@ describe('invokeHookCommand', () => {
         expect(result.stderrTail.length).toBeGreaterThan(0);
         expect(result.stderrTail).toMatch(/does-not-exist|MODULE_NOT_FOUND|Cannot find/);
     });
+});
+
+describe('parseRelativeSpecifiers — a comment is not an import', () => {
+    // A doc comment can carry a well-formed `export { X } from './X'` as an
+    // EXAMPLE. `src/cli/commands/uiAudit.ts` carries exactly that line, the
+    // built output keeps it, and the dist-manifest gate reported
+    // `commands/uiAudit.js → missing ./X` for a module nobody imports — a false
+    // red on a COMPLETENESS gate, which is the worst kind: it says the shipped
+    // tarball is broken when it is not.
+    //
+    // Surfaced by a PR whose only package.json change was three added `files[]`
+    // entries. That change did not cause the defect; it caused the job to run.
+
+    it('ignores a specifier inside a block comment', () => {
+        expect(
+            parseRelativeSpecifiers("/** two `export { X } from './X'` lines */\nimport a from './real.js';"),
+        ).toEqual(['./real.js']);
+    });
+
+    it('ignores a specifier inside a line comment', () => {
+        expect(parseRelativeSpecifiers("// export { Y } from './Y'\nimport b from './b.js';")).toEqual([
+            './b.js',
+        ]);
+    });
+
+    it('does NOT treat `//` inside a string as a comment', () => {
+        // Why this is a lexer and not a regex sweep: stripping from the `//` in
+        // `'https://…'` joins two lines and hides a real specifier — trading a
+        // false positive for a false negative on a completeness gate.
+        expect(parseRelativeSpecifiers("const u = 'https://x.dev/a';\nimport c from './c.js';")).toEqual([
+            './c.js',
+        ]);
+    });
+
+    it('still finds every real specifier form', () => {
+        expect(
+            parseRelativeSpecifiers(
+                "import a from './a.js';\nexport { B } from './b.js';\nawait import('./c.js');\nimport './d.js';",
+            ).sort(),
+        ).toEqual(['./a.js', './b.js', './c.js', './d.js']);
+    });
+
+    it('survives an apostrophe in comment prose — the desync that made the first fix inert', () => {
+        // THE regression. The first `stripComments` carried quote state across
+        // the whole file, so `module's` inside a doc comment opened a string
+        // that swallowed every later `/*`: the doc comment two paragraphs down
+        // was then scanned as code and the false red survived the fix. CI
+        // stayed red on the identical message, which is why this asserts the
+        // shape rather than the outcome of one file.
+        const source = [
+            "/** a module's body, described in prose */",
+            "/** an example: `export { X } from './X'` */",
+            "import real from './real.js';",
+        ].join('\n');
+        expect(parseRelativeSpecifiers(source)).toEqual(['./real.js']);
+    });
+
+    it('reads the real file the gate went red on, and finds only its true imports', () => {
+        // A literal-shape test can pass while the file that failed still fails.
+        // This one opens `src/cli/commands/uiAudit.ts` — the module whose doc
+        // comment produced `commands/uiAudit.js → missing ./X` on four jobs.
+        const real = readFileSync(
+            join(process.cwd(), 'src', 'cli', 'commands', 'uiAudit.ts'),
+            'utf8',
+        );
+        expect(parseRelativeSpecifiers(real)).not.toContain('./X');
+    });
+
+    // removing_this_constraint_reds_it: drop the `stripComments` call — the
+    // first two cases red and the last two stay green, which is the asymmetry
+    // between a false positive and a lost import.
 });

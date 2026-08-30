@@ -1,0 +1,1637 @@
+diff --git a/CREDITS.md b/CREDITS.md
+index 55a40002640dbe77828f58c7a822c3dfcff1ea92..e9f3131c875a0815caead5fcb33e0b79d190e231 100644
+--- a/CREDITS.md
++++ b/CREDITS.md
+@@ -12,6 +12,39 @@ contributors whose skills, rules or commands were merged.
+ | `design-intelligence` (corpus + grounding engine) | Next Level Builder — `[REDACTED:src-conf]-skill` | MIT | [`src/skills/design-intelligence/ATTRIBUTION.md`](src/skills/design-intelligence/ATTRIBUTION.md) |
+ | `design-intelligence` (`ui-styling`-derived assets) | "[REDACTED:src-conf]" | Apache-2.0 | [`LICENSE.apache-2.0.txt`](src/skills/design-intelligence/LICENSE.apache-2.0.txt) + modified-file markers per §4b |
+ | `corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer` (derived slices) | see per-skill notices | MIT / Apache-2.0 | ADR-061 — the per-skill attribution notice is authoritative |
++| `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs` | [REDACTED:src-conf]/[REDACTED:src-conf] — `plugins/[REDACTED:src-conf]-cost-tracker` | MIT | full notice below; transformation record in [`provenance/borrows.jsonl`](provenance/borrows.jsonl) and [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md) |
++
++#### MIT notice — [REDACTED:src-conf]/[REDACTED:src-conf]
++
++Reproduced in full rather than by reference, because MIT requires the copyright
++notice AND the permission notice to travel with copies or substantial portions
++of the Software. This file ships in the npm package (`package.json` → `files`),
++which is what discharges the obligation for a consumer who receives
++`src/scripts/cost/` from the registry — the source files themselves carry no
++in-file source name, per
++[`source-confidentiality`](src/rules/source-confidentiality.md), and MIT does not
++require one.
++
++```
++Copyright (c) 2024-2026 [REDACTED:src-conf]
++
++Permission is hereby granted, free of charge, to any person obtaining a copy of
++this software and associated documentation files (the "Software"), to deal in
++the Software without restriction, including without limitation the rights to
++use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
++the Software, and to permit persons to whom the Software is furnished to do so,
++subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
++FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
++COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
++IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
++CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++```
+ 
+ ### Comparators (benchmark baselines, no vendored material)
+ 
+diff --git a/agents/evidence/reports/source-skip-paths-ledger.md b/agents/evidence/reports/source-skip-paths-ledger.md
+index f1cf03cdbf770e48d2f4153e4b3f32216ee094f5..89a8fd9feda983b163fe4a8e19ca0c1662363447 100644
+--- a/agents/evidence/reports/source-skip-paths-ledger.md
++++ b/agents/evidence/reports/source-skip-paths-ledger.md
+@@ -29,7 +29,7 @@ is **0 before** and **0 after**.
+ | 5 | `src/skills/design-tokens/*` | 2 | 2 | vendored corpus (ADR-061) | kept |
+ | 6 | `src/skills/react-shadcn-ui/*` | 1 | 1 | vendored, Apache-2.0 §4b in-file notice | kept |
+ | 7 | `src/skills/tailwind-engineer/*` | 1 | 1 | vendored, Apache-2.0 §4b in-file notice | kept |
+-| 8 | `src/scripts/cost/*` | 4 | 4 | forked upstream, un-ledgered — see § What did not move | kept |
++| 8 | `src/scripts/cost/*` | 4 | 4 | forked upstream, un-ledgered — see § What did not move | **RETIRED 2026-08-30** (see the update below) |
+ | 9 | `dist/agent-src/skills/design-intelligence/*` | 12 | 12 | generated projection of src (ADR-201) | kept |
+ | 10 | `dist/agent-src/skills/corpus-grounding/*` | 2 | 2 | generated projection of src (ADR-201) | kept |
+ | 11 | `dist/agent-src/skills/design-tokens/*` | 2 | 2 | generated projection of src (ADR-201) | kept |
+@@ -89,8 +89,33 @@ attribution without knowing whether the license requires it in-file is
+ exactly that guess. It is carried into
+ `road-to-source-silence-cutover` as a maintainer item.
+ 
++#### UPDATE 2026-08-30 — retired, and the escalation was right
++
++`road-to-source-silence-cutover` step 2.2 established the license: **MIT**,
++read from the upstream repository's own `LICENSE` rather than inferred. MIT
++requires the copyright and permission notice to travel with copies and says
++nothing about placement, so a distributed notice discharges it and the in-file
++source name was never required. Branch (a) executed: ledger entry, notices
++regenerated, both comments de-named, entry removed. **The floor is 21.**
++
++Two things the escalation bought that a guess would not have. The in-file
++comment was a *"Forked from"* line and **not** an MIT copyright or permission
++notice, so the previous state discharged the obligation nowhere — it only named
++a source where a rule forbids it. And verifying the *packaged* artifact, which
++the resolving council made a binding precondition, turned up that
++`package.json`'s `files` list carried none of `NOTICE`, `CREDITS.md`,
++`docs/THIRD-PARTY-NOTICES.md` or `provenance/borrows.jsonl` while carrying
++`src/scripts/` — so every notice surface was missing from the published
++package, the pre-existing Apache-2.0 entry included. All four are now shipped.
++
+ ## The measured floor, against the authored criterion
+ 
++> **Settled 2026-08-30: the target is 21**, by AI council with 2/2 seats
++> present (`road-to-source-silence-cutover` step 2.1). The paragraphs below are
++> the state as measured on 2026-08-29 and are kept as written — they are the
++> evidence the decision was taken on, and rewriting them to match the outcome
++> would erase the question.
++
+ Step 2.3 and AC-6 as authored require **≤ 20**. The measured floor with every
+ principled carve-out intact is **22**, and 21 if the fork attribution above is
+ resolved. Reaching 20 requires removing entries from the principled set — a
+diff --git a/agents/roadmaps/later/road-to-source-silence-cutover.md b/agents/roadmaps/later/road-to-source-silence-cutover.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..be6f6b1f0ba6102bdfcaa2e199c99890eb1935d3
+--- /dev/null
++++ b/agents/roadmaps/later/road-to-source-silence-cutover.md
+@@ -0,0 +1,492 @@
++---
++complexity: structural
++status: later
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++review_by: 2026-10-24
++relates: []
++# relates: the predecessor `road-to-source-silence` archived on 2026-08-29;
++# every item below is a carry-forward from it, with the blocker that stopped it.
++# Nothing here is new scope.
++research_pin: "agent-config @ 63d06b7eb (origin/main, 2026-08-29) plus the drain/source-silence change that archived the predecessor. Every count below was measured at that state, not carried."
++---
++
++> **PARKED 2026-08-30. Phases 2 and 3 are complete; Phase 1 is gated on a
++> repository secret no agent can mint.** Resume when a maintainer with secret
++> access has provisioned `SOURCE_DENY_KEY`.
++>
++> This is the `later/` disposition applied as written — *"a roadmap whose open
++> work cannot proceed now (gated on an external trigger) but will resume"* — and
++> not a judgement call. Step 1.1 is `gh secret set SOURCE_DENY_KEY`: minting a
++> secret and writing it into the repository's configuration is an outward
++> mutation of public state that no roadmap authorization substitutes for, and
++> the value itself must never pass through an agent's context.
++>
++> **Phase 1 is NOT split, and that refusal is a standing council verdict rather
++> than caution.** AI council 2026-08-28, 2/2 convergent and unqualified: shipping
++> the executable half as a *replacement* is net-negative, because the half an
++> agent can build without secrets is precisely the half that enforces nothing.
++> One seat: *"you've added complexity without adding protection, and you've
++> broken a gate that at least worked before."* So the three steps an agent
++> COULD prepare (1.2's candidate reading, 1.3's digest generation, 1.4's CI
++> wiring) are deliberately left undone rather than landed as a partial cutover.
++>
++> **Why parked rather than descoped to a stub.** Parking preserves every item
++> and its blocker in one file with an exact resume condition, and costs the
++> estate nothing. A stub would split the four atomic steps away from the
++> acceptance criteria that depend on them (AC-1 and AC-2), which is the same
++> split the council refused, performed on the paperwork instead of the code.
++>
++> **What landed and is not waiting on anything:** the `skip_paths` target is
++> settled at 21 with the `src/scripts/cost/` entry retired and its MIT notice
++> shipped (Phase 2), and the attribution-shape ratchet is down from 243 to 148
++> by fixing a class that was scoring compliance as debt (Phase 3). AC-3 and
++> AC-4 are met. AC-1 and AC-2 remain open and are exactly Phase 1.
++>
++> **The cost of waiting, restated because it is the reason this file exists:**
++> the tracked denylist keeps publishing the 65 harvest source names it exists to
++> hide, in a public repository, and the mechanism to stop that sits in the tree
++> built and tested, enforcing nothing.
++>
++> **Revisit-if:** `SOURCE_DENY_KEY` is provisioned; or the digest cutover is
++> abandoned as a design, which is an owner decision and would retire this file
++> rather than resume it.
++# Road to source-silence cutover — the four things an agent cannot do, and the one it would not
++
++> **Origin:** carry-forward from `road-to-source-silence`, archived 2026-08-29.
++> Internally originated — no external source, so no `Source:` header, per the
++> roadmap template's Provenance rule.
++> The AI council (2026-08-29, anthropic + openai, 2/2) directed this roadmap's
++> creation in decision **D3(a)**: *"Carry both items, with their blocker, into a
++> follow-up roadmap created in the same change, immediately active in the
++> estate."* Both seats explicitly refused cancellation as owner-reserved. The
++> D2 items were added on the same principle after the council **split** on D2,
++> and a split escalates rather than resolves.
++
++## Goal
++
++Every item the predecessor could not close is closed, and each is here because
++of a **named** capability gap rather than because it was hard. Three of the four
++groups need a repository secret or a license fact the executing agent has no
++access to; the fourth needs an owner decision the council could not reach. When
++this roadmap is finished: the tracked deny set publishes no readable source
++name, a keyless CI run fails rather than warns, the `skip_paths` estate has a
++recorded target it actually meets, and the shape-debt ratchet has been lowered
++or reaffirmed before it expires on **2026-10-24**.
++
++Two things are stated up front so they are not discovered later. First, the
++digest cutover is **one atomic change** by a recorded council decision — four
++steps that must land together, and splitting them is the specific failure mode
++the predecessor's `where-the-key-lives` blocker was written about. Second, this
++roadmap inherits the predecessor's honesty limit unchanged: nothing here is
++historical eradication. Trunk commit messages and merged PR bodies still name
++sources — 341 occurrences, counted as accepted residual — and no phase here
++changes that.
++
++## What the predecessor already landed, so this roadmap does not re-do it
++
++Measured at the archiving change, all re-runnable:
++
++| Property | State |
++|---|---|
++| Readable source names in tracked content and paths | **0** — `check_no_external_sources` exits 0, and that exit code is the `exec:` evidence behind `claim:plaintext-source-attribution` |
++| `skip_paths` estate | 32 to **22**, per-entry measured, ledger at `agents/evidence/reports/source-skip-paths-ledger.md` |
++| Attribution-shape block debt | 275 to **243**, shrink-only ratchet, expires 2026-10-24 |
++| Keyed-digest machinery | built, tested against a non-production fixture key, **dormant** (`deny_digests` empty) |
++| Off-tree metadata | gated on `pull_request` and on pre-push — branch name, PR title, PR body, commit messages |
++| Write-time inbox naming | `block-speaking-inbox-dir` refuses a new speaking round directory |
++| Archive redaction governance | **ADR-250**, accepted; five by-name archive exceptions removed |
++
++## Phase 1 — The atomic digest cutover
++
++**Read this before touching any step.** All four steps are ONE change. AI
++council 2026-08-28, 2/2 convergent and unqualified: shipping the executable half
++as a *replacement* is net-negative, because the half that can be built without
++repository secrets is precisely the half that enforces nothing. One seat: *"you've
++added complexity without adding protection, and you've broken a gate that at
++least worked before."* The other: *"the security cutover must be atomic …
++missing keys in CI must fail, never warn."* The recipe is
++`docs/maintainers/source-deny-digests.md`, which already carries all four steps.
++
++- [ ] **1.1 Provision `SOURCE_DENY_KEY` and create the private master.**
++      Generate a high-entropy secret, store it as the repository secret, keep a
++      copy where the other maintainer secrets live, and move the current
++      plaintext `deny` array verbatim into the gitignored
++      `src/scripts/external_sources_denylist.private.json`.
++      verify: `./scripts-run src/scripts/build_source_digests --check` exits 0 against the private master, and `git check-ignore src/scripts/external_sources_denylist.private.json` confirms the master is untracked. <!-- blocked-by: agent-cannot-provision-a-secret -->
++- [ ] **1.2 Extend the deny set from the census candidates.** Decrypt the Phase
++      0 census and read its `candidates` array — 219 un-denied identifier tokens
++      found on attribution-cue lines. A human decides which are real source
++      families; the list over-reports by design, because an exact-match set
++      structurally cannot find a family nobody listed. Adopted families go into
++      the private master, never into tracked plaintext.
++      verify: the private master's `deny` array is longer than the 65 entries it started with, and `sweep_source_surfaces` reports a LOWER `candidates:` count than 219 at the same pin. <!-- blocked-by: agent-cannot-provision-a-secret -->
++- [ ] **1.3 Generate the digests and delete the tracked plaintext.**
++      `build_source_digests` writes `deny_digests`; the `deny` array is removed
++      from the tracked config in the same commit. Keep
++      `_deny_digests_README`, `skip_paths` and `skip_reason`.
++      verify: every entry of `deny_digests` matches the 64-hex digest form, the tracked config has no `deny` key, and `check_no_external_sources` still exits 1 on a seeded fixture violation. <!-- blocked-by: agent-cannot-provision-a-secret -->
++- [ ] **1.4 Make CI strict, with a key-presence assertion before the gate.**
++      Set `SOURCE_DENY_KEY` and `SOURCE_DENY_STRICT` on the gate step, and add a
++      step before it that fails when the secret is empty — so a mis-scoped
++      secret fails visibly rather than as a confusing gate error.
++      verify: a CI run with the secret deliberately unset exits **3** (not 0), and the key-presence step is the one that reports it. `tests/scripts/source_digest.test.ts`'s last case — which asserts the shipped config is still dormant — is INVERTED rather than deleted, because that assertion is the tripwire that catches a half-cutover. <!-- blocked-by: agent-cannot-provision-a-secret -->
++
++## Phase 2 — The two decisions the council could not settle
++
++- [x] **2.1 Settle the `skip_paths` target: 22, 21, or 18.** The predecessor's
++      criterion said at most 20 and the measured floor with every principled
++      carve-out intact is 22. The council was asked twice and **split** on the
++      second round: one seat chose "correct the criterion to the measured floor",
++      the other "hold at most 20 and leave it unmet". A split escalates, so this
++      is an owner decision. Both seats agreed on everything else — the ledger
++      discharges the evidentiary question, and the `dist/agent-src/` glob
++      consolidation must not be done *to hit a number*.
++      verify: DONE — the number is **21**, recorded below with the council's rationale; the predecessor's AC-6 is restated as this roadmap's AC-3; `check_suppression_hygiene` reports `src/scripts/external_sources_denylist.json: 21 entry(ies) (22 at base, 1 removed)`.
++
++      **Decision: 21.** AI council, 2026-08-30 — **2/2 seats present**
++      (anthropic `claude-sonnet-4-5`, openai `codex-default`), $0.00,
++      subscription-authed. The maintainer delegated this decision to the council
++      for the autonomous drain run of 2026-08-30; the earlier round SPLIT 1–1,
++      and this round converged because two facts changed rather than because the
++      question was asked louder.
++
++      **What changed.** The per-entry ledger now exists, so every survivor's
++      suppressed-hit count is measured rather than estimated. And the
++      `src/scripts/cost/` entry, which was blocked on an unknown upstream
++      license, is unblocked — the license is MIT (step 2.2), MIT discharges
++      through a distributed notice rather than an in-file one, so that entry is
++      retirable and the measured floor is 21 rather than 22.
++
++      **Both seats rejected (c), the 18-entry consolidation, and for the same
++      reason** — it must not be done to reach a number. openai put the principle
++      sharpest: ADR-201's byte-exact projection proves *content* equivalence,
++      not *policy* equivalence, and replacing five narrow `dist/agent-src/`
++      patterns with one broad glob changes which future paths are automatically
++      authorised. The five entries are a review boundary; a comment saying the
++      projection "mechanically inherits" exceptions records the coupling without
++      making it safe. anthropic agreed on the framing and pushed back on gating
++      consolidation behind a new CI invariant, calling that gold-plating — but
++      not on the refusal to use it as target arithmetic. **Consolidation is
++      therefore available only as an independently argued gate-design change,
++      never as a way to hit a number.**
++
++      **Both rejected (d), holding at 20**, on the argument this blocker already
++      carried: a criterion left unmet at 21 implies the last defensible entries
++      should go *despite* being defensible, which is satisfying a number rather
++      than a principle.
++
++      **The binding condition, from openai, and it is a SEQUENCE rather than a
++      preference:** the MIT notice must be on a surface included in every
++      relevant distributed artifact, and the packaged outputs — not just the
++      repository tree — must be verified, BEFORE the `src/scripts/cost/` entry is
++      removed. Establishing the license only removes the legal uncertainty; it
++      does not discharge the notice obligation. Step 2.2 executes that order and
++      records what it found: `CREDITS.md`, `NOTICE`, `docs/THIRD-PARTY-NOTICES.md`
++      and `provenance/borrows.jsonl` were **all absent from `package.json`'s
++      `files` list**, while `src/scripts/` was present — so the affected code
++      shipped and every notice surface did not. Three of the four are now added.
++
++      **Rollback, as the seat specified:** if any packaged artifact lacks the
++      notice or the deny scan develops an unskipped hit, restore the narrow
++      `src/scripts/cost/` exemption until the distribution defect is fixed. That
++      is containment, not permanent acceptance.
++
++      **One recorded observation neither acted on nor buried.** openai flagged
++      that the gate exempting its own source and denylist (entries 1 and 2) is a
++      trust boundary this roadmap does not examine: whole-file exemption means
++      edits to those files can evade the policy they enforce. "Self-reference"
++      explains the exception; it does not eliminate the risk. Out of scope here,
++      and recorded so the next reader does not have to rediscover it.
++
++      *Revisit-if:* another exemption becomes unnecessary; the MIT notice
++      distribution cannot be verified in a packed artifact; the deny scan gains
++      an unskipped hit; or CI begins rejecting a source-exemption change that
++      implicitly broadens `dist/agent-src/` coverage without explicit review.
++
++- [x] **2.2 Establish the upstream license for `src/scripts/cost/` and place its
++      attribution.** Two files there carry a fork-attribution header comment
++      (4 suppressed hits, the last entry that could leave the estate without
++      touching a principled carve-out). It is harvest-shaped attribution outside
++      the three license surfaces, so step 1.3 of the predecessor would move it
++      into `provenance/borrows.jsonl` and de-name the comment. The agent did
++      not, and the reason is a rule: the upstream license is established nowhere
++      in this tree, and `code-provenance` says an unknown source license is
++      never permissive-by-default — stop and escalate, never guess.
++      verify: DONE — `provenance/borrows.jsonl` carries the entry (upstream, `MIT`, `source_sha`, both files); `lint_provenance` reports `2 ledger record(s) OK · docs/THIRD-PARTY-NOTICES.md in sync`; the in-file comments are de-named and `src/scripts/cost/*` is removed from `skip_paths`, which is branch (a).
++
++      **The license is MIT**, established from the upstream repository's own
++      `LICENSE` via the GitHub API rather than inferred — `spdx_id: MIT`, with
++      the copyright line reproduced on the license surface where it belongs
++      (`CREDITS.md`) rather than quoted here, since a roadmap is not one of the
++      three exempt surfaces. The upstream is not archived and the two forked
++      files still exist there, so the `source_sha` pins a revision a reader can
++      fetch.
++
++      **Branch (a), and the license text is why.** MIT requires the copyright
++      notice and the permission notice to be *included in all copies or
++      substantial portions of the Software* — it says nothing about placement,
++      and a notices file distributed with the software is the conventional
++      discharge. So the in-file source name is not required by the license, and
++      `source-confidentiality` forbids it: both comments now point at the
++      notice surfaces without naming the upstream.
++
++      **What the in-file comment actually was, which matters:** a "Forked from
++      <repo>" attribution line and NOT an MIT copyright or permission notice. So
++      the previous state discharged the license obligation nowhere — it merely
++      named a source in a place a rule forbids. Recording it properly is a
++      compliance improvement, not a relocation.
++
++      **A live compliance gap was found and closed on the way, and it is worth
++      stating plainly.** The council's sequencing condition ("verify packaged
++      outputs, not just the repository tree") turned up that `package.json`'s
++      `files` list carried **neither `NOTICE` nor `CREDITS.md` nor
++      `docs/THIRD-PARTY-NOTICES.md` nor `provenance/borrows.jsonl`** — while it
++      does carry `src/scripts/`. npm auto-includes `LICENSE` and `README` and
++      nothing else from that set, so every third-party notice surface was absent
++      from the published package while the code it covers shipped. That is not
++      only the new MIT entry: the pre-existing Apache-2.0 entry in `NOTICE` has
++      the same problem, and Apache-2.0 § 4(d) is explicit about distributing
++      NOTICE. All four paths are now in `files`.
++
++      The MIT notice itself is reproduced IN FULL in `CREDITS.md` — copyright
++      line, permission notice, warranty disclaimer — rather than by reference to
++      `LICENSES/MIT.txt`, which is an unfilled template carrying
++      `<year> <copyright holders>` and is therefore a notice for no particular
++      work.
++
++
++## Phase 3 — The ratchet expiry, which has a date
++
++- [x] **3.1 Lower, clear, or reaffirm the shape-debt baseline before
++      2026-10-24.** `check_no_external_sources:shape-block` sits at 243 and goes
++      stale 56 days after its `landed` date. The debt is the predecessor's
++      Phase 2.1 codename rewrite on the NON-anchored occurrences — roughly 190
++      quoted non-opaque inbox directory paths and 107 speaking `**Source:**`
++      header values across the roadmap corpus. The anchored occurrences are
++      already done; this is the corpus-wide remainder.
++      verify: DONE — `check_no_external_sources` reports `attribution shape — block(agents/**) 148 / baseline 148`, `landed: 2026-08-30`, by a REAL reduction of 95: 243 → 148.
++
++      **The reduction is a heuristic fix, not a paydown, and the difference is
++      the whole finding.** The `source-header` class flagged the VALUE of every
++      `**Source:**` header that was not an `ENC1:` token or an opaque round id —
++      so a correctly ANONYMISED header scored exactly like a leaking one. All 95
++      were read: **not one named an external source in readable form**, and six
++      were flagging the anonymisation notice itself (`**Source:** anonymisation
++      (source-confidentiality).** External harvest sources …`). The detector was
++      reporting compliance as debt.
++
++      **AI council 2026-08-30, 2/2 seats present** (anthropic `claude-sonnet-4-5`
++      + openai `codex-default`), $0.00, subscription-authed; delegated by the
++      maintainer for the autonomous drain run. Verdict: **(a) — narrow the
++      class, do not delete it, baseline 148.** Both seats REFUSED (c), removing
++      the class: a `**Source:**` header is where policy directs authors to
++      record attribution and is therefore the highest-value place to keep
++      looking. Both refused (d), reaffirming at 243, because that would
++      characterise all 243 as established debt when 95 of them are not.
++
++      **The test that separates this from metric gaming, in the council's own
++      words:** *"whether the revised detector preserves recall for the prohibited
++      behaviour while removing findings that do not represent it"* — which is
++      why the fixtures are a condition and not a nicety.
++
++      **The operational grammar is written out**, because a seat named the exact
++      risk: *"'readable slug' is still an open question disguised as a decision …
++      without that specification, option (a) merely moves subjective
++      classification into code."* `readableIdentifierIn` flags three shapes,
++      none of which prose produces by accident — an `owner/repo` slug, a domain,
++      an `@scope/package` — with this repository's own paths, roadmap slugs, ADR
++      ids and PR references excluded first.
++
++      **The delta is audited, and the first attempt was wrong.** A full-tree
++      recount removed exactly the 95 audited `source-header` findings and ADDED
++      ZERO; 148 = 127 `tmp-quote` + 21 `repo-slug`, which is openai's stated
++      reviewer check verbatim. The first run produced **150**, on
++      `uncondensed/rules` and `installer/src` — two middle-of-path segments that
++      read like repository slugs unless you look at what surrounds them. Both
++      are pinned as fixtures.
++
++      **Evidence:** `tests/scripts/source_header_narrowing.test.ts`, 30 cases
++      over three labeled fixtures in `tests/fixtures/source-headers/` —
++      `compliant.md` (anonymised, must not flag, and asserted to be exactly what
++      the OLD detector flagged), `internal-ref.md` (repo paths, must not flag),
++      `leaking.md` (invented names covering all three identifier shapes, MUST
++      flag). The fixture names are invented on purpose: a fixture carrying a real
++      source name would itself be the leak.
++
++      **Shadow metric, a council condition:** `legacySourceHeaderHits` is kept
++      and the gate reports its raw count (107) beside the live one. It enforces
++      nothing, and the line says plainly that it is not comparable to the 95 —
++      that figure was measured after snapshot deduplication and this one is not.
++
++      **What remains is real debt and was NOT paid down here:** 127 quoted
++      speaking inbox-directory names and 21 repository slugs, 152 of them in
++      `agents/roadmaps/archive/`. Paying it down is in-place redaction under
++      ADR-250 across ~150 historical files, which this change deliberately did
++      not attempt and which the council explicitly separated from fixing a
++      defective metric.
++
++      *Revisit-if:* a readable identifier in a `**Source:**` fixture escapes
++      detection; the full-tree count is not reproducibly 148; the observed delta
++      contains anything outside the audited `source-header` set. Any of the
++      three reverts the matcher and restores 243.
++
++## Blockers
++
++### blocker: agent-cannot-provision-a-secret
++
++- **Status:** open
++- **Class:** 3
++- **Owner:** maintainer
++- **Blocks:** Phase 1 in full — steps 1.1, 1.2, 1.3 and 1.4, which are one
++  atomic change and cannot be split.
++- **What to do:** the four steps of `docs/maintainers/source-deny-digests.md`,
++  in one change: (a) `gh secret set SOURCE_DENY_KEY`; (b) create the gitignored
++  `src/scripts/external_sources_denylist.private.json` <!-- ref-ignore --> from
++  the current plaintext `deny` array; (c) `./scripts-run src/scripts/build_source_digests`
++  then delete the tracked `deny` array in the same commit; (d) add the key and
++  the strict flag to the gate's CI step behind a key-presence assertion.
++- **Resolved when:** the tracked config carries digests and no `deny` array, a
++  keyless CI run exits 3, and `build_source_digests --check` passes against the
++  private master.
++- **Recommendation:** do it as one PR authored by a human with secret access.
++  An agent can prepare the diff for (c) and (d) but cannot perform (a), and a
++  PR containing (c) without (a) breaks the gate — which is precisely the
++  net-negative outcome the 2026-08-28 council refused.
++- **If you do nothing:** the tracked denylist keeps publishing the 65 harvest
++  source names it exists to hide, in a public repository, and every family
++  Phase 1.2 would have added makes the disclosure larger. The mechanism sits in
++  the tree, built and tested, enforcing nothing.
++
++### blocker: skip-paths-target-is-owner-reserved
++
++- **Status:** resolved 2026-08-30 — **(b), 21**. AI council, 2/2 seats present
++  (anthropic + openai), $0.00. The maintainer delegated the decision to the
++  council for the autonomous drain run of 2026-08-30; the earlier round split
++  1–1 and this one converged, because the per-entry ledger landed and the
++  `src/scripts/cost/` entry became retirable once its license was established.
++  Both seats rejected (c) as target arithmetic and (d) as a criterion that
++  implies removing defensible entries. The number and the full rationale are
++  recorded at step 2.1; the binding sequencing condition — notice on a
++  distributed surface, packaged outputs verified, THEN the entry removed — is
++  recorded and was executed in that order at step 2.2.
++- **Class:** 3
++- **Owner:** maintainer
++- **Blocks:** Phase 2 step 2.1, and the predecessor's AC-6.
++- **What to do:** pick exactly one — (a) correct the target to the measured
++  floor of **22**, recording
++  `agents/evidence/reports/source-skip-paths-ledger.md` as the basis, and keep
++  the entry shrink-only so 22 can only go down; (b) resolve 2.2 first and take
++  the target to **21**; (c) additionally exclude the `dist/agent-src/` globs as
++  a derived surface, replacing 5 entries with 1 for a floor of **18** — coverage
++  is materially unchanged because byte-exact projection is CI-verified
++  (ADR-201), and the cost is visibility: a future `src/` exception would then
++  silently extend to the projection where today it takes two entries a reviewer
++  can see; (d) hold at most 20 and accept that the criterion stays unmet.
++- **Resolved when:** the number is recorded here with its rationale and the
++  predecessor's AC-6 is restated against it.
++- **Recommendation:** (a). The 22 survivors are each justified by the
++  predecessor's own step 1.3 — gate-own, license-required corpus, registry
++  docs, license surfaces — and one seat's argument is the decisive one: a
++  criterion left unmet at 22 implies the last two entries should go *despite*
++  being defensible, which is satisfying a number rather than a principle. Take
++  (c) only as an independently argued gate-design change, never to reach 20.
++- **If you do nothing:** AC-6 stays open indefinitely and the 32-to-22 reduction
++  that already landed has no recorded target to be measured against, so the
++  next drift has nothing to fail.
++
++### blocker: upstream-license-unknown
++
++- **Status:** resolved 2026-08-30 — the license is **MIT**, read from the
++  upstream repository's own `LICENSE` via the GitHub API rather than guessed,
++  and branch **(a)** was executed: the entry is in `provenance/borrows.jsonl`,
++  `lint_provenance` passes, both in-file comments are de-named, and
++  `src/scripts/cost/*` is out of `skip_paths`. `code-provenance`'s rule that an
++  unknown license is never permissive-by-default is what kept this open; the
++  answer was one API call away and the previous session was right not to guess
++  it. Detail, including the live packaging gap this uncovered, is at step 2.2.
++- **Class:** 3
++- **Owner:** maintainer
++- **Blocks:** Phase 2 step 2.2 only. Nothing else depends on it, and the
++  `src/scripts/cost/` exception is stable meanwhile.
++- **What to do:** read the upstream named in the header comment at
++  `src/scripts/cost/budget.mjs:5` and `src/scripts/cost/track.mjs:5`, establish
++  its license, then either (a) record it in `provenance/borrows.jsonl` with
++  these two files and de-name the in-file comment — the license surface is
++  already an excepted path, so the attribution survives where it belongs; or
++  (b) keep the in-file notice because the license requires retention in
++  derivative source, and record that one-line reason beside the `skip_paths`
++  entry.
++- **Resolved when:** the license is named in `provenance/borrows.jsonl` and one
++  of (a) or (b) is executed.
++- **Recommendation:** (a) for a license whose notices file discharges the
++  obligation; (b) for one whose retention language makes stripping an in-file
++  notice a legal question rather than a hygiene one. Either way
++  `lint_provenance` must pass afterwards.
++- **If you do nothing:** a harvest-shaped attribution stays in a source file
++  outside the three license surfaces, and one `skip_paths` entry that could
++  have been retired keeps the estate one above its reachable floor.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The atomic cutover gets split across PRs | implementation | Steps 1.3 and 1.4 land in different changes, leaving the gate either failing every run for want of a key or silently degraded to warn mode — the exact failure the predecessor was written about. | Phase 1's own preamble states it, the maintainer recipe states it, and 1.4's verify asserts the keyless run exits 3 rather than 0, so a half-cutover is observable rather than quiet. | Phase 1 — The atomic digest cutover |
++| 2 | The 2026-10-24 ratchet expiry passes unnoticed | implementation | The shape-debt baseline goes stale before anyone lowers it, and the gate then reports a stale entry instead of a real count. | Phase 3 exists only for this date, `review_by` is set to it rather than to a comfortable later month, and the baseline's own note names the expiry and this roadmap as its owner. | Phase 3 — The ratchet expiry, which has a date |
++| 3 | This roadmap becomes the parking lot | product | A carry-forward roadmap whose every item is maintainer-gated is the shape that sits untouched for a year, which is the specific objection both council seats raised against disposition D3(a). | Each blocker names the exact command or decision, an accountable owner, and a falsifiable Resolved-when; and one item — Phase 3 — has a hard date rather than a condition, so at least one thing here cannot be deferred silently. | Blockers |
++| 4 | 2.2 is resolved by guessing the license | product | The fastest way to close 2.2 is to assume permissive and strip the notice, which is the guess `code-provenance` forbids and the reason the predecessor left it open. | The blocker's option set is written as a license-conditional fork, so "which license" has to be answered before either branch is reachable. | Phase 2 — The two decisions the council could not settle |
++
++## Acceptance Criteria
++
++- [ ] AC-1 — The tracked config holds no readable source name: every
++      `deny_digests` entry is a 64-hex digest, no `deny` array is present, and
++      the gate still exits 1 on a seeded fixture violation in CI.
++- [ ] AC-2 — A keyless run is loud, never green: with the key unset the gate
++      exits **3** under the strict flag, and a CI step asserts key presence
++      before the gate step runs.
++- [x] AC-3 — `skip_paths` has a recorded target it meets, and the entry is
++      shrink-only, so the next drift fails rather than accumulating.
++      MET by 2.1 and 2.2, and this line IS the predecessor's AC-6 restated
++      against the settled number, which is what 2.1's `verify:` asks for.
++      **The target is 21**, decided by the AI council on 2026-08-30 with 2/2
++      seats present after an earlier 1–1 split; `check_suppression_hygiene`
++      reports `21 entry(ies) (22 at base, 1 removed)`. The entry is shrink-only
++      by that gate's own construction — a base of 22 with one removed is a
++      ratchet reading, and a 22nd entry would fail it rather than accumulate.
++      Each of the 21 survivors is individually justified in
++      `agents/evidence/reports/source-skip-paths-ledger.md` with a MEASURED
++      suppressed-hit count, and unskipped deny hits are 0.
++- [x] AC-4 — `check_no_external_sources:shape-block` carries a `landed` date
++      within its 56-day window, reached by a reduction or by a `reaffirmed`
++      block that states a real reason.
++      MET by 3.1, and by a REDUCTION rather than a reaffirm: 243 → **148**,
++      `landed: 2026-08-30`, expiry 2026-10-25. The 95 removed findings were each
++      read and are each a false positive of a class that flagged the presence of
++      a `**Source:**` header rather than a leaked name; the delta was recounted
++      full-tree and added zero. What remains — 127 speaking inbox-directory names
++      and 21 repository slugs — is real debt with a named paydown mechanism
++      (ADR-250 in-place redaction) that this change did not attempt.
++
++## What this roadmap will NOT build
++
++- **A git-history rewrite.** Resolved **(a) no rewrite** by the predecessor's
++  `whether-history-gets-rewritten` blocker, 2/2 convergent, one seat
++  "strongly": a rewrite converts every pinned reproduced-at-sha in the evidence
++  estate into an unverifiable claim. The 341 residual occurrences on trunk
++  commit messages and merged PR bodies stay counted, not removed.
++- **PR-metadata edits or branch-ref deletions on the live repository.** Descoped
++  to `agents/roadmaps/stubs/road-to-public-metadata-redaction.md` as a
++  Hard-Floor action under `non-destructive-by-default`. Deleting a ref is
++  irreversible and both are outward mutations of public state, so they need a
++  this-turn owner confirmation naming the exact objects — no roadmap
++  authorization substitutes.
++- **The corpus-wide codename rewrite as a separate programme.** It is Phase 3
++  here, bounded by the ratchet's expiry date, deliberately not re-opened as its
++  own roadmap.
++- **A wider attribution-shape heuristic.** The bare slug class was built,
++  measured at 3,109 hits against 202 for the URL form, and removed. The recall
++  hole it leaves is recorded in `src/scripts/_lib/source_shape.ts` and pinned by
++  a negative test; a future attempt has to pass the measured false positives
++  first.
+diff --git a/agents/roadmaps/road-to-source-silence-cutover.md b/agents/roadmaps/road-to-source-silence-cutover.md
+deleted file mode 100644
+index a125452f6360a623cffa1f729b58e47a17b95998..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-source-silence-cutover.md
++++ /dev/null
+@@ -1,252 +0,0 @@
+----
+-complexity: structural
+-status: draft
+-execution:
+-  mode: phase-checkpoints
+-owner: maintainer
+-review_by: 2026-10-24
+-relates: []
+-# relates: the predecessor `road-to-source-silence` archived on 2026-08-29;
+-# every item below is a carry-forward from it, with the blocker that stopped it.
+-# Nothing here is new scope.
+-research_pin: "agent-config @ 63d06b7eb (origin/main, 2026-08-29) plus the drain/source-silence change that archived the predecessor. Every count below was measured at that state, not carried."
+----
+-# Road to source-silence cutover — the four things an agent cannot do, and the one it would not
+-
+-> **Origin:** carry-forward from `road-to-source-silence`, archived 2026-08-29.
+-> Internally originated — no external source, so no `Source:` header, per the
+-> roadmap template's Provenance rule.
+-> The AI council (2026-08-29, anthropic + openai, 2/2) directed this roadmap's
+-> creation in decision **D3(a)**: *"Carry both items, with their blocker, into a
+-> follow-up roadmap created in the same change, immediately active in the
+-> estate."* Both seats explicitly refused cancellation as owner-reserved. The
+-> D2 items were added on the same principle after the council **split** on D2,
+-> and a split escalates rather than resolves.
+-
+-## Goal
+-
+-Every item the predecessor could not close is closed, and each is here because
+-of a **named** capability gap rather than because it was hard. Three of the four
+-groups need a repository secret or a license fact the executing agent has no
+-access to; the fourth needs an owner decision the council could not reach. When
+-this roadmap is finished: the tracked deny set publishes no readable source
+-name, a keyless CI run fails rather than warns, the `skip_paths` estate has a
+-recorded target it actually meets, and the shape-debt ratchet has been lowered
+-or reaffirmed before it expires on **2026-10-24**.
+-
+-Two things are stated up front so they are not discovered later. First, the
+-digest cutover is **one atomic change** by a recorded council decision — four
+-steps that must land together, and splitting them is the specific failure mode
+-the predecessor's `where-the-key-lives` blocker was written about. Second, this
+-roadmap inherits the predecessor's honesty limit unchanged: nothing here is
+-historical eradication. Trunk commit messages and merged PR bodies still name
+-sources — 341 occurrences, counted as accepted residual — and no phase here
+-changes that.
+-
+-## What the predecessor already landed, so this roadmap does not re-do it
+-
+-Measured at the archiving change, all re-runnable:
+-
+-| Property | State |
+-|---|---|
+-| Readable source names in tracked content and paths | **0** — `check_no_external_sources` exits 0, and that exit code is the `exec:` evidence behind `claim:plaintext-source-attribution` |
+-| `skip_paths` estate | 32 to **22**, per-entry measured, ledger at `agents/evidence/reports/source-skip-paths-ledger.md` |
+-| Attribution-shape block debt | 275 to **243**, shrink-only ratchet, expires 2026-10-24 |
+-| Keyed-digest machinery | built, tested against a non-production fixture key, **dormant** (`deny_digests` empty) |
+-| Off-tree metadata | gated on `pull_request` and on pre-push — branch name, PR title, PR body, commit messages |
+-| Write-time inbox naming | `block-speaking-inbox-dir` refuses a new speaking round directory |
+-| Archive redaction governance | **ADR-250**, accepted; five by-name archive exceptions removed |
+-
+-## Phase 1 — The atomic digest cutover
+-
+-**Read this before touching any step.** All four steps are ONE change. AI
+-council 2026-08-28, 2/2 convergent and unqualified: shipping the executable half
+-as a *replacement* is net-negative, because the half that can be built without
+-repository secrets is precisely the half that enforces nothing. One seat: *"you've
+-added complexity without adding protection, and you've broken a gate that at
+-least worked before."* The other: *"the security cutover must be atomic …
+-missing keys in CI must fail, never warn."* The recipe is
+-`docs/maintainers/source-deny-digests.md`, which already carries all four steps.
+-
+-- [ ] **1.1 Provision `SOURCE_DENY_KEY` and create the private master.**
+-      Generate a high-entropy secret, store it as the repository secret, keep a
+-      copy where the other maintainer secrets live, and move the current
+-      plaintext `deny` array verbatim into the gitignored
+-      `src/scripts/external_sources_denylist.private.json`.
+-      verify: `./scripts-run src/scripts/build_source_digests --check` exits 0 against the private master, and `git check-ignore src/scripts/external_sources_denylist.private.json` confirms the master is untracked. <!-- blocked-by: agent-cannot-provision-a-secret -->
+-- [ ] **1.2 Extend the deny set from the census candidates.** Decrypt the Phase
+-      0 census and read its `candidates` array — 219 un-denied identifier tokens
+-      found on attribution-cue lines. A human decides which are real source
+-      families; the list over-reports by design, because an exact-match set
+-      structurally cannot find a family nobody listed. Adopted families go into
+-      the private master, never into tracked plaintext.
+-      verify: the private master's `deny` array is longer than the 65 entries it started with, and `sweep_source_surfaces` reports a LOWER `candidates:` count than 219 at the same pin. <!-- blocked-by: agent-cannot-provision-a-secret -->
+-- [ ] **1.3 Generate the digests and delete the tracked plaintext.**
+-      `build_source_digests` writes `deny_digests`; the `deny` array is removed
+-      from the tracked config in the same commit. Keep
+-      `_deny_digests_README`, `skip_paths` and `skip_reason`.
+-      verify: every entry of `deny_digests` matches the 64-hex digest form, the tracked config has no `deny` key, and `check_no_external_sources` still exits 1 on a seeded fixture violation. <!-- blocked-by: agent-cannot-provision-a-secret -->
+-- [ ] **1.4 Make CI strict, with a key-presence assertion before the gate.**
+-      Set `SOURCE_DENY_KEY` and `SOURCE_DENY_STRICT` on the gate step, and add a
+-      step before it that fails when the secret is empty — so a mis-scoped
+-      secret fails visibly rather than as a confusing gate error.
+-      verify: a CI run with the secret deliberately unset exits **3** (not 0), and the key-presence step is the one that reports it. `tests/scripts/source_digest.test.ts`'s last case — which asserts the shipped config is still dormant — is INVERTED rather than deleted, because that assertion is the tripwire that catches a half-cutover. <!-- blocked-by: agent-cannot-provision-a-secret -->
+-
+-## Phase 2 — The two decisions the council could not settle
+-
+-- [ ] **2.1 Settle the `skip_paths` target: 22, 21, or 18.** The predecessor's
+-      criterion said at most 20 and the measured floor with every principled
+-      carve-out intact is 22. The council was asked twice and **split** on the
+-      second round: one seat chose "correct the criterion to the measured floor",
+-      the other "hold at most 20 and leave it unmet". A split escalates, so this
+-      is an owner decision. Both seats agreed on everything else — the ledger
+-      discharges the evidentiary question, and the `dist/agent-src/` glob
+-      consolidation must not be done *to hit a number*.
+-      verify: the chosen number is recorded here with its rationale, the predecessor's AC-6 is restated against it, and `check_suppression_hygiene` holds at or below it. <!-- blocked-by: skip-paths-target-is-owner-reserved -->
+-- [ ] **2.2 Establish the upstream license for `src/scripts/cost/` and place its
+-      attribution.** Two files there carry a fork-attribution header comment
+-      (4 suppressed hits, the last entry that could leave the estate without
+-      touching a principled carve-out). It is harvest-shaped attribution outside
+-      the three license surfaces, so step 1.3 of the predecessor would move it
+-      into `provenance/borrows.jsonl` and de-name the comment. The agent did
+-      not, and the reason is a rule: the upstream license is established nowhere
+-      in this tree, and `code-provenance` says an unknown source license is
+-      never permissive-by-default — stop and escalate, never guess.
+-      verify: `provenance/borrows.jsonl` carries an entry naming the upstream, its license and these two files; `lint_provenance` passes; and either the in-file comment is de-named and the `src/scripts/cost/` entry removed from `skip_paths`, or the entry stays with a one-line reason recording that the license requires in-file retention. <!-- blocked-by: upstream-license-unknown -->
+-
+-## Phase 3 — The ratchet expiry, which has a date
+-
+-- [ ] **3.1 Lower, clear, or reaffirm the shape-debt baseline before
+-      2026-10-24.** `check_no_external_sources:shape-block` sits at 243 and goes
+-      stale 56 days after its `landed` date. The debt is the predecessor's
+-      Phase 2.1 codename rewrite on the NON-anchored occurrences — roughly 190
+-      quoted non-opaque inbox directory paths and 107 speaking `**Source:**`
+-      header values across the roadmap corpus. The anchored occurrences are
+-      already done; this is the corpus-wide remainder.
+-      verify: on the day of the change, `check_no_external_sources` reports the block count at or below a baseline whose `landed` date is within 56 days — by a real reduction, by clearing the class, or by a `reaffirmed` block stating a real reason. A refreshed date with no reduction and no reason does not satisfy this.
+-
+-## Blockers
+-
+-### blocker: agent-cannot-provision-a-secret
+-
+-- **Status:** open
+-- **Class:** 3
+-- **Owner:** maintainer
+-- **Blocks:** Phase 1 in full — steps 1.1, 1.2, 1.3 and 1.4, which are one
+-  atomic change and cannot be split.
+-- **What to do:** the four steps of `docs/maintainers/source-deny-digests.md`,
+-  in one change: (a) `gh secret set SOURCE_DENY_KEY`; (b) create the gitignored
+-  `src/scripts/external_sources_denylist.private.json` <!-- ref-ignore --> from
+-  the current plaintext `deny` array; (c) `./scripts-run src/scripts/build_source_digests`
+-  then delete the tracked `deny` array in the same commit; (d) add the key and
+-  the strict flag to the gate's CI step behind a key-presence assertion.
+-- **Resolved when:** the tracked config carries digests and no `deny` array, a
+-  keyless CI run exits 3, and `build_source_digests --check` passes against the
+-  private master.
+-- **Recommendation:** do it as one PR authored by a human with secret access.
+-  An agent can prepare the diff for (c) and (d) but cannot perform (a), and a
+-  PR containing (c) without (a) breaks the gate — which is precisely the
+-  net-negative outcome the 2026-08-28 council refused.
+-- **If you do nothing:** the tracked denylist keeps publishing the 65 harvest
+-  source names it exists to hide, in a public repository, and every family
+-  Phase 1.2 would have added makes the disclosure larger. The mechanism sits in
+-  the tree, built and tested, enforcing nothing.
+-
+-### blocker: skip-paths-target-is-owner-reserved
+-
+-- **Status:** open
+-- **Class:** 3
+-- **Owner:** maintainer
+-- **Blocks:** Phase 2 step 2.1, and the predecessor's AC-6.
+-- **What to do:** pick exactly one — (a) correct the target to the measured
+-  floor of **22**, recording
+-  `agents/evidence/reports/source-skip-paths-ledger.md` as the basis, and keep
+-  the entry shrink-only so 22 can only go down; (b) resolve 2.2 first and take
+-  the target to **21**; (c) additionally exclude the `dist/agent-src/` globs as
+-  a derived surface, replacing 5 entries with 1 for a floor of **18** — coverage
+-  is materially unchanged because byte-exact projection is CI-verified
+-  (ADR-201), and the cost is visibility: a future `src/` exception would then
+-  silently extend to the projection where today it takes two entries a reviewer
+-  can see; (d) hold at most 20 and accept that the criterion stays unmet.
+-- **Resolved when:** the number is recorded here with its rationale and the
+-  predecessor's AC-6 is restated against it.
+-- **Recommendation:** (a). The 22 survivors are each justified by the
+-  predecessor's own step 1.3 — gate-own, license-required corpus, registry
+-  docs, license surfaces — and one seat's argument is the decisive one: a
+-  criterion left unmet at 22 implies the last two entries should go *despite*
+-  being defensible, which is satisfying a number rather than a principle. Take
+-  (c) only as an independently argued gate-design change, never to reach 20.
+-- **If you do nothing:** AC-6 stays open indefinitely and the 32-to-22 reduction
+-  that already landed has no recorded target to be measured against, so the
+-  next drift has nothing to fail.
+-
+-### blocker: upstream-license-unknown
+-
+-- **Status:** open
+-- **Class:** 3
+-- **Owner:** maintainer
+-- **Blocks:** Phase 2 step 2.2 only. Nothing else depends on it, and the
+-  `src/scripts/cost/` exception is stable meanwhile.
+-- **What to do:** read the upstream named in the header comment at
+-  `src/scripts/cost/budget.mjs:5` and `src/scripts/cost/track.mjs:5`, establish
+-  its license, then either (a) record it in `provenance/borrows.jsonl` with
+-  these two files and de-name the in-file comment — the license surface is
+-  already an excepted path, so the attribution survives where it belongs; or
+-  (b) keep the in-file notice because the license requires retention in
+-  derivative source, and record that one-line reason beside the `skip_paths`
+-  entry.
+-- **Resolved when:** the license is named in `provenance/borrows.jsonl` and one
+-  of (a) or (b) is executed.
+-- **Recommendation:** (a) for a license whose notices file discharges the
+-  obligation; (b) for one whose retention language makes stripping an in-file
+-  notice a legal question rather than a hygiene one. Either way
+-  `lint_provenance` must pass afterwards.
+-- **If you do nothing:** a harvest-shaped attribution stays in a source file
+-  outside the three license surfaces, and one `skip_paths` entry that could
+-  have been retired keeps the estate one above its reachable floor.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The atomic cutover gets split across PRs | implementation | Steps 1.3 and 1.4 land in different changes, leaving the gate either failing every run for want of a key or silently degraded to warn mode — the exact failure the predecessor was written about. | Phase 1's own preamble states it, the maintainer recipe states it, and 1.4's verify asserts the keyless run exits 3 rather than 0, so a half-cutover is observable rather than quiet. | Phase 1 — The atomic digest cutover |
+-| 2 | The 2026-10-24 ratchet expiry passes unnoticed | implementation | The shape-debt baseline goes stale before anyone lowers it, and the gate then reports a stale entry instead of a real count. | Phase 3 exists only for this date, `review_by` is set to it rather than to a comfortable later month, and the baseline's own note names the expiry and this roadmap as its owner. | Phase 3 — The ratchet expiry, which has a date |
+-| 3 | This roadmap becomes the parking lot | product | A carry-forward roadmap whose every item is maintainer-gated is the shape that sits untouched for a year, which is the specific objection both council seats raised against disposition D3(a). | Each blocker names the exact command or decision, an accountable owner, and a falsifiable Resolved-when; and one item — Phase 3 — has a hard date rather than a condition, so at least one thing here cannot be deferred silently. | Blockers |
+-| 4 | 2.2 is resolved by guessing the license | product | The fastest way to close 2.2 is to assume permissive and strip the notice, which is the guess `code-provenance` forbids and the reason the predecessor left it open. | The blocker's option set is written as a license-conditional fork, so "which license" has to be answered before either branch is reachable. | Phase 2 — The two decisions the council could not settle |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — The tracked config holds no readable source name: every
+-      `deny_digests` entry is a 64-hex digest, no `deny` array is present, and
+-      the gate still exits 1 on a seeded fixture violation in CI.
+-- [ ] AC-2 — A keyless run is loud, never green: with the key unset the gate
+-      exits **3** under the strict flag, and a CI step asserts key presence
+-      before the gate step runs.
+-- [ ] AC-3 — `skip_paths` has a recorded target it meets, and the entry is
+-      shrink-only, so the next drift fails rather than accumulating.
+-- [ ] AC-4 — `check_no_external_sources:shape-block` carries a `landed` date
+-      within its 56-day window, reached by a reduction or by a `reaffirmed`
+-      block that states a real reason.
+-
+-## What this roadmap will NOT build
+-
+-- **A git-history rewrite.** Resolved **(a) no rewrite** by the predecessor's
+-  `whether-history-gets-rewritten` blocker, 2/2 convergent, one seat
+-  "strongly": a rewrite converts every pinned reproduced-at-sha in the evidence
+-  estate into an unverifiable claim. The 341 residual occurrences on trunk
+-  commit messages and merged PR bodies stay counted, not removed.
+-- **PR-metadata edits or branch-ref deletions on the live repository.** Descoped
+-  to `agents/roadmaps/stubs/road-to-public-metadata-redaction.md` as a
+-  Hard-Floor action under `non-destructive-by-default`. Deleting a ref is
+-  irreversible and both are outward mutations of public state, so they need a
+-  this-turn owner confirmation naming the exact objects — no roadmap
+-  authorization substitutes.
+-- **The corpus-wide codename rewrite as a separate programme.** It is Phase 3
+-  here, bounded by the ratchet's expiry date, deliberately not re-opened as its
+-  own roadmap.
+-- **A wider attribution-shape heuristic.** The bare slug class was built,
+-  measured at 3,109 hits against 202 for the URL form, and removed. The recall
+-  hole it leaves is recorded in `src/scripts/_lib/source_shape.ts` and pinned by
+-  a negative test; a future attempt has to pass the measured false positives
+-  first.
+diff --git a/agents/roadmaps/stubs/road-to-public-metadata-redaction.md b/agents/roadmaps/stubs/road-to-public-metadata-redaction.md
+index 221165fa8f3b7198a660db738566133b043eacbc..14c71723206d3194bb16c12ee353ca3dce91c819 100644
+--- a/agents/roadmaps/stubs/road-to-public-metadata-redaction.md
++++ b/agents/roadmaps/stubs/road-to-public-metadata-redaction.md
+@@ -98,7 +98,7 @@ name from history. Any description of the outcome inherits that limit.
+ 
+ ## See also
+ 
+-- `agents/roadmaps/road-to-source-silence-cutover.md` — the sibling
++- `agents/roadmaps/later/road-to-source-silence-cutover.md` — the sibling
+   carry-forward, for the items gated on a repository secret rather than on a
+   Hard-Floor confirmation.
+ - `docs/decisions/ADR-250-confidentiality-redaction-is-not-an-archive-content-change.md`
+diff --git a/docs/THIRD-PARTY-NOTICES.md b/docs/THIRD-PARTY-NOTICES.md
+index 0360ff246b11f66c7d0d50a2c27540ea73745829..c818767bb713eab8e1670a9c849ab926dba73172 100644
+--- a/docs/THIRD-PARTY-NOTICES.md
++++ b/docs/THIRD-PARTY-NOTICES.md
+@@ -14,3 +14,12 @@
+ - **Files:** `src/skills/corpus-grounding/scripts/decision_engine.ts`, `src/skills/corpus-grounding/scripts/ground.ts`
+ - **Transformation:** Adopted the three design dials as a tier TABLE and re-derived the plumbing against this engine's own shape. Upstream threads variance/motion/density through a generate() and a set of render functions that do not exist here; this tree has ground(), so the dials enter as an optional fourth parameter and leave as an additive output block that is omitted entirely when no dial is passed, keeping the no-flag result byte-identical. Variance biases SELECTION and never RETRIEVAL: the rule's own corpus-grounded keywords alone augment the query, so the rows that come back are unchanged by the dial, and a separate selection list carries the dial in front only for choosing among those rows — and when that choice differs from the one the rule's keywords would have made, the run reports the divergence in evidence_gap rather than leaving it invisible. Motion resolves through this repo's search_domain against a 'gsap' manifest domain added in the same change, filtering by Intensity Tier BEFORE ranking (retrieve-then-filter drops tier rows that lost the global cut) and taking its row count from the manifest rather than a literal; a missing domain or an empty tier emits an evidence_gap and no motion block at all. Range clamping moved out of the caller into the resolver, the CLI rejects a non-numeric dial rather than reading it as unset, and all three dials render in the text output and the persisted MASTER.md, not only under --json.
+ - **Cleared by:** human
++
++## https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]
++
++- **License:** MIT
++- **Source SHA:** d33ef4bf8ab27a8f9ef08352c9c293b53312a861
++- **Borrowed:** 2026-08-30
++- **Files:** `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs`
++- **Transformation:** Forked from the upstream cost-tracker plugin's budget.mjs and track.mjs, then re-derived against a store this repository already had. The upstream persists through an MCP memory tool (`mcp__claude-flow__memory_store`); that dependency is removed entirely and replaced with a local append-only JSONL at agents/cost-tracking/sessions.jsonl plus a budget.json beside it, so the scripts run under bare `node` with no MCP server present — which is what lets them ship to consumers as plain .mjs (the /cost:report command doc states why tsx is not available on that path). track.mjs additionally gained dedup and a main/subagent split whose logic is MIRRORED, not imported, from src/scripts/_lib/cc_transcript.ts, and pricing constants are kept in sync with REFERENCE.md rather than carried from upstream. The borrow is recorded here rather than as an in-file source name because MIT requires the copyright and permission notice to travel with copies, not to sit inside each source file: docs/THIRD-PARTY-NOTICES.md is generated from this ledger and is shipped in package.json's files list in the same change, which is what actually discharges the obligation for a consumer who receives src/scripts/ from npm.
++- **Cleared by:** human
+diff --git a/package.json b/package.json
+index d210bbd27b1a94e85e39935d71125b9a3b289b99..0191d59b35db516e70305deb58b4fedfb1368132 100644
+--- a/package.json
++++ b/package.json
+@@ -53,6 +53,10 @@
+         "CHANGELOG.md",
+         "CONTRIBUTING.md",
+         "LICENSE",
++    "NOTICE",
++    "CREDITS.md",
++    "docs/THIRD-PARTY-NOTICES.md",
++    "provenance/borrows.jsonl",
+         "MIGRATION.md",
+         "README.md",
+         "llms.txt",
+diff --git a/provenance/borrows.jsonl b/provenance/borrows.jsonl
+index 46c3eed4bb9f0e1026df8a26dcee837b7d74d0f3..01dd07a4e2ce4295b53521e5b47def702ceae154 100644
+--- a/provenance/borrows.jsonl
++++ b/provenance/borrows.jsonl
+@@ -1 +1,2 @@
+ {"source_url": "https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]-skill", "license": "MIT", "source_sha": "97eb2a20", "borrowed_at": "2026-08-13", "files": ["src/skills/corpus-grounding/scripts/decision_engine.ts", "src/skills/corpus-grounding/scripts/ground.ts"], "transformation_note": "Adopted the three design dials as a tier TABLE and re-derived the plumbing against this engine's own shape. Upstream threads variance/motion/density through a generate() and a set of render functions that do not exist here; this tree has ground(), so the dials enter as an optional fourth parameter and leave as an additive output block that is omitted entirely when no dial is passed, keeping the no-flag result byte-identical. Variance biases SELECTION and never RETRIEVAL: the rule's own corpus-grounded keywords alone augment the query, so the rows that come back are unchanged by the dial, and a separate selection list carries the dial in front only for choosing among those rows — and when that choice differs from the one the rule's keywords would have made, the run reports the divergence in evidence_gap rather than leaving it invisible. Motion resolves through this repo's search_domain against a 'gsap' manifest domain added in the same change, filtering by Intensity Tier BEFORE ranking (retrieve-then-filter drops tier rows that lost the global cut) and taking its row count from the manifest rather than a literal; a missing domain or an empty tier emits an evidence_gap and no motion block at all. Range clamping moved out of the caller into the resolver, the CLI rejects a non-numeric dial rather than reading it as unset, and all three dials render in the text output and the persisted MASTER.md, not only under --json.", "cleared_by": "human"}
++{"source_url": "https://github.com/[REDACTED:src-conf]/[REDACTED:src-conf]", "license": "MIT", "source_sha": "d33ef4bf8ab27a8f9ef08352c9c293b53312a861", "borrowed_at": "2026-08-30", "files": ["src/scripts/cost/budget.mjs", "src/scripts/cost/track.mjs"], "transformation_note": "Forked from the upstream cost-tracker plugin's budget.mjs and track.mjs, then re-derived against a store this repository already had. The upstream persists through an MCP memory tool (`mcp__claude-flow__memory_store`); that dependency is removed entirely and replaced with a local append-only JSONL at agents/cost-tracking/sessions.jsonl plus a budget.json beside it, so the scripts run under bare `node` with no MCP server present \u2014 which is what lets them ship to consumers as plain .mjs (the /cost:report command doc states why tsx is not available on that path). track.mjs additionally gained dedup and a main/subagent split whose logic is MIRRORED, not imported, from src/scripts/_lib/cc_transcript.ts, and pricing constants are kept in sync with REFERENCE.md rather than carried from upstream. The borrow is recorded here rather than as an in-file source name because MIT requires the copyright and permission notice to travel with copies, not to sit inside each source file: docs/THIRD-PARTY-NOTICES.md is generated from this ledger and is shipped in package.json's files list in the same change, which is what actually discharges the obligation for a consumer who receives src/scripts/ from npm.", "cleared_by": "human"}
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 973b35d2392217ccfd785f12b447ccb260541190..2459672b98852a93328828f41d8190065279c6ba 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -1,98 +1,98 @@
+ {
+-    "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time — the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
+-    "gates": {
+-        "check_claims:non-inference": {
+-            "count": 40,
+-            "landed": "2026-08-26",
+-            "falsifier": "./scripts-run src/scripts/check_claims  # the ratchet line names the current count; it fails when the count RISES above this entry",
+-            "note": "Backed `kind: quant` ledger entries carrying no `non_inference` field, which enumerates the readings the data does NOT license. Introduced by road-to-skill-ecosystem-eval-integrity Phase 5 Step 5. NOT a scan-root repair — the field is new, so every pre-existing quant entry lacks it by construction and 40 is the count at introduction rather than revealed debt. A ratchet rather than a requirement because failing the build on 41 entries at once produces a gate that can only block, which this repository's own records name as the reason a gate gets suppressed. Every NEW backed quant claim must carry one; the inherited entries come along as they are touched. One was written at introduction (`injection-scan-corpus-rates`) to prove the field is real rather than declared, which is why the count is 40 and not 41. Clearing this entry is authoring work spread across whoever next touches each claim, not a sweep: a non_inference written in bulk without re-reading the evidence would be the placeholder the <20-character check already refuses."
+-        },
+-        "audit_user_type_axis": {
+-            "count": 1,
+-            "landed": "2026-08-02",
+-            "note": "One orphan user-type value: `legal`. Five legal-review-prep skills (contract-review, dpa-review, nda-triage, legal-intake-triage, legal-practice-profile) declare `recommended_for_user_types: [legal]`, but there is no `user-types/legal.yml` — the pack shipped an axis value with no user-type definition behind it, and the dead scan root hid it (the audit reported used=0 orphans=0 while reading zero skills; it now reads 288 and reports used=8). Clearing this entry is a product call, not a copy edit: either author `user-types/legal.yml` (tagline, recommended packs, install-path hint) or drop `legal` from those five skills. Not decided here because both options change shipped pack behaviour."
+-        },
+-        "check_depth_budget": {
+-            "count": 4,
+-            "landed": "2026-08-06",
+-            "note": "Four depth files exceed the 16,000-char per-file ceiling: rule-body-migration-inventory.md (23,782), design-antipatterns.md (20,707), roadmap-process-loop.md (20,360), orchestration-telemetry.md (16,155). Recorded rather than fixed because splitting four large reference documents is unrelated to the change that introduced the ceiling, and a gate that lands as four instant blockers is the shape this repository has already recorded as a failure. Shrink-only from here: a FIFTH over-ceiling file reds. roadmap-process-loop.md is the file that motivated the gate — it states 'Size budget: <= 4,000 chars' in its own header and is 5x over it, which is what a declared budget with nothing measuring it decays into. The ceiling is a GROWTH RATCHET, not a measured quality threshold: the 7,308-trajectory study behind the 3,500-token skill ceiling (ADR-217) was taken on procedural always-co-loaded skills, and this layer is declarative and loaded one or two files at a time. Replace the number when someone measures comprehension on THIS layer."
+-        },
+-        "check_gate_completeness": {
+-            "count": 215,
+-            "landed": "2026-08-17",
+-            "note": "Ledger adoption ratchet. Gates registered under the CI task roots that carry neither per-target completeness accounting (`_lib/gate_ledger.ts`) nor a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt. Lowered 216 -> 215 on 2026-08-17 by discharging the obligation three NEW arrivals had incurred, which is the standing rule being enforced rather than a drain: the registered population grew 244 -> 258 and three of the fourteen arrivals adopted nothing — `build_archive_index`, `check_gate_coverage`, `check_pr_ci_current`. The reading was 218 against this baseline of 216, and the missing arithmetic is that one PRE-existing gate (`lint_rule_skill_pack_reach`) had adopted in the meantime: 216 + 3 - 1 = 218. All three adopted a real ledger. `check_pr_ci_current` first took a reasoned exemption claiming no target population; the completion review refuted it from the file itself — the check rows ARE a population, and rows whose `state` is not a string were being dropped before any verdict ran, so a dropped row could be the failing one. The exemption was withdrawn and the ledger adopted, counting kept rows as read, dropped rows as skips, and rows a pre-row verdict never reached as out of scope. The denominator in this note was 14 stale (it said 244) and is now expressed without one, because a count pinned to a population that grows weekly rots faster than the count itself. Note what this lowering does NOT buy: headroom is zero either way, so the next un-adopted arrival reds this gate immediately — which is the intended behaviour and the reason the number is not padded. The refreshed `landed` is load-bearing rather than bookkeeping: `checkRatchet` returns `improved` BEFORE it evaluates staleness, so an entry left at 216 while the tree measures 215 would never expire at any age (pinned by tests/lib/gate_baseline.test.ts, which asserts `improved` at landed + STALE_AFTER_DAYS + 400 days) — the greenest available state and the worst, since it switches off the anti-fossilization clause exactly when someone has done real work.",
+-            "falsifier": "./scripts-run src/scripts/check_gate_completeness"
+-        },
+-        "check_no_new_legacy_path:hardcoded-scan-roots": {
+-            "count": 47,
+-            "landed": "2026-08-13",
+-            "note": "Lines under src/scripts/**/*.{ts,mts,mjs} that pass the retired `.agent-src.uncondensed` directory into `path.join(...)` — a filesystem path CONSTRUCTED against the tree ADR-051 abandoned, which is the exact shape of all 14 dead gates. Deliberately narrow so the number is signal, not noise: 236 raw mentions under src/scripts → 147 string-literal lines → 67 path-constructing lines when the pass was written, after exempting src/scripts/_lib/agent_src.ts (the shared resolver, whose job IS owning the constant — gates that route through it survived the move). Detectors holding the literal as data to match, strip, or print are not counted, and no prose, docs, tests or fixtures are read: that full-tree shape was measured at 44 files / 213 hits and rejected as the wrong lint (see the note in check_no_new_legacy_path.ts::find_offenders). Recorded at 58 rather than 67 because Phase 1's scan-root repairs were landing on this branch while the pass was being written and had already removed 9 — a baseline above the truth silently permits new violations. This count goes to ZERO as the remaining repairs land; every repair is a lowering commit. Lowered 56→51 by the road-to-renewal-foundation Phase 1 dead-root sweep (check_always_budget, check_portability, check_references, lint_framework_leakage, lint_agents_md). Lowered 51→49 by the gate-hardening adoption PR: skill_collision_clusters and skill_overlap were repointed at the live skills tree via the shared resolver — two gates that had been reading the retired container and scoring 0 of 288 skills. Lowered 49→48 by road-to-rule-delivery-integrity P2.2: score_skill_selection was repointed at the live skills tree via the shared resolver. It is the same shape as the two gates lowered before it — a scorer reading the retired container and scoring 0 of 288 skills — and here the consequence was sharper than a dead gate: the roadmap's pre-registered selection-accuracy criteria would have been compared against a baseline of silent zeros. Lowered 48→47 on 2026-08-13, and this one is a catch-up rather than a repair: the pass reported 47 against a baseline of 48, so a gain had already landed without the ratchet following it. Attributed to 455160160 (fix(evals): resolve the eval orchestrator against the live skills tree), the most recent repair in this branch's base that removes a path-constructing line — SKILLS_ROOT repointed through _lib/agent_src.ts::SRC_SKILLS(). A loose ratchet is not harmless: it silently permits one new violation to be added back without any gate noticing, which is the shape this entry exists to prevent."
+-        },
+-        "check_roadmap_trackable:relates": {
+-            "count": 9,
+-            "landed": "2026-08-23",
+-            "note": "The nine active non-draft roadmaps that predate the `relates:` requirement (road-to-agentic-engineering-assurance, road-to-component-library-lifecycle, road-to-council-evidence-integrity, road-to-frontend-fidelity-calibration, road-to-monorepo-scope-and-detection, road-to-observability-plate, road-to-role-scoped-spawn-profiles, road-to-skill-delivery-over-mcp, road-to-standing-payload-diet). This is a NEW obligation rather than a repaired scan root, and the ratchet is the point: `depends:` shipped in the template with nothing requiring it and measured 0 adoption, so requiring `relates:` retroactively across the estate would be an owner-reserved write with no analysis behind the edges it would have to invent (held as step 4.3, deferred). Clearing an entry here is one roadmap at a time: run `agent-config roadmap:context` on it, write the rows the probe surfaces, and lower the count."
+-        },
+-        "check_source_size_budget": {
+-            "count": 18440,
+-            "landed": "2026-08-27",
+-            "note": "Lowered 18,446 -> 18,440 on 2026-08-27 by fix/council-cost-truth, which paid its own way through EXTRACTION rather than a bump. Replacing three inline cost-accumulation loops in council_cli.ts with calls to sumBillableCost took that file 3,981 -> 3,975 lines, and it sits 2,475 lines PAST the 1500-line threshold, so all six removed lines count. The three new helpers -- sumBillableCost, isBillableResponse, allSeatsNonBillable -- landed in ai_council/pricing.ts, which goes 445 -> 551 lines and is therefore still FAR under the threshold: those 106 added lines are free. Net -6, which is exactly the gate's reading. pricing.ts is where they belong on merit, not only on budget: it already owns estimate_cost and the price table, so cost logic reading a price table has no other home. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- and that is how this lowering surfaced: CI shard 2/4 red on both ubuntu and macOS with 'expected 18446 to be 18440', where the gate itself only advises. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,474 -> 18,446 on 2026-08-26 by road-to-consumer-repo-reality Phase 1, which had to pay its own way before it could pass. Wiring the three install-reach checks into cmd_doctor.ts charged +5 lines, because that file is ~2,150 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: the two runtime-presence checks -- _check_python_runtime and _check_humanizer_runtime -- moved WHOLE into _lib/doctor_runtime_checks.ts. They are cohesive with each other and with nothing else in that file (each answers 'is a runtime present, and what happens when it is not'; neither reads the manifest, the drift sets, or the project root), and their one dependency, shutilWhich, is PASSED IN rather than imported -- it is defined in cmd_doctor.ts itself, so importing it back would have made the two modules circular, and a parameter is cheaper than moving a shared utility four other call sites already resolve from there. Thin wrappers keep the historical names and arity, so the runner map, the export block and the existing fallback test are untouched. cmd_doctor.ts goes 3,666 -> 3,638 lines. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a RED TEST rather than tolerated slack -- which is how this lowering surfaced, in a neutral review of the branch rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,489 -> 18,474 on 2026-08-26 by road-to-internal-estate-fit Phase 2, which paid its own way and then some. De-duplicating SCOPE_DETECT_MANIFESTS and SCOPE_DETECT_AI_DIRS removed two byte-for-byte constant blocks from src/scripts/install.ts, which is 3,902 lines PAST the 1500-line threshold, so every removed line counts. One exported definition each now lives in src/install/detect.ts (far under the threshold and therefore free) and install.ts imports them. Net -15. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- a baseline left loose by even one line is a red test, and that is how this lowering surfaced rather than by inspection: CI reported 'expected 18489 to be 18474'. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Lowered 18,511 -> 18,489 ON THE MERGE, 2026-08-26, by MEASURING the merged tree rather than picking a side — which is the method every prior entry here prescribes and the exact case several of them describe. Two branches of one drain run each paid their own way independently: road-to-skill-ecosystem-runtime-enforcement extracted the four runtime-wiring checks into _lib/runtime_wiring_checks.ts and the transcript reader into _lib/loop_guards, reaching 18,490 against a base of 18,512; road-to-skill-ecosystem-eval-integrity extracted the exact binary tests, the CPython erf port, wilcoxon and the float-parity rounder into _lib/paired_stats.ts, reaching 18,511 against the same base. The merged tree measures 18,489 — which is 18,512 - 22 - 1, i.e. the SUM of both gains, so picking either branch's number would have silently given back the other branch's. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by even one line is a red test. Both derivations are preserved below rather than one being dropped, because each records a real extraction and the pair is the evidence for this number. Prior entry (runtime-enforcement branch): lowered 18,512 -> 18,490 on 2026-08-26. Prior entry (eval-integrity branch): lowered 18,512 -> 18,511 on 2026-08-26 by road-to-skill-ecosystem-eval-integrity Phase 2, which had to pay its own way before it could pass. Adding direction counts to `_paired_median_block` charged +24 lines, because bench_ab_v2_stats.ts was 25 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: _lib/paired_stats.ts now holds mcnemar_exact, cohens_h, the CPython erf/normal-CDF port, wilcoxon, and the float-parity rounder those need. Every name is re-exported from bench_ab_v2_stats.ts, so `check_quality_regression`'s existing `wilcoxon` import and every other consumer resolve unchanged. bench_ab_v2_stats.ts goes 1525 -> 1329 lines, well under the threshold, so those lines are now free. Net -1 past zero rather than exactly to it, for the reason every prior entry here gives: the unit that pays is a unit. Set to the EXACT live total — check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by one line is a red test, and that is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,561 -> 18,512 on 2026-08-24 by the same method every prior entry here prescribes — the merged tree MEASURED, never a side picked. main had reached 18,561; this branch (road-to-skill-delivery-over-mcp) carries its own extractions, and the merged total reads 18,512, a -49 gain that would have been silently given back by keeping main's number. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total; a baseline loose by one line is a red test, and that is how this surfaced. Prior entry: lowered 18,566 -> 18,561 on 2026-08-24 by the method the two prior entries prescribe, for the same reason: independent gains met in a merge, so the merged tree was MEASURED rather than a side picked. main had reached 18,566 via road-to-skill-link-integrity-and-manifest-sync Phase 2; this branch had already paid its own extraction under road-to-trigger-delivered-rule-bodies 1.6 (condense.ts's inline mode literal moved whole to _lib/lean_projection_mode.ts, -5; the new module is 45 lines and therefore free). check_source_size_budget reports 18,561 on the merged tree, exactly 18,566 - 5, so picking either side's number would have given back the other's gain. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by one line is a red test — which is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,574 -> 18,571 on 2026-08-23, and the -3 is the SUM of two independent lowerings-through-extraction that met in a merge, not a new reduction. main had already reached 18,573 via road-to-override-efficacy-proof (-1: _check_overrides moved whole to _cli/doctor_overrides.ts, -119, and the install-mode detector plus its marker constant to _cli/doctor_install_mode.ts, -14, both names forwarded with `export ... from`; net -1 past zero rather than exactly to it, because the unit that paid is a unit). This branch had reached 18,572 via road-to-council-evidence-integrity Phases 1-2 (-2: the two result bundles PeerReviewResult and ConsensusResult, -98, the two options interfaces, -19, and CouncilQuestion, -11, all PURE MOVES into ai_council/orchestrator_results.ts, with orchestrator.ts re-exporting every name; the options interfaces required a TYPE-ONLY back-import of OnOverrunCallback, legal and runtime-free since both directions are erased). The merge conflict was resolved by MEASURING the merged tree rather than picking a side: check_source_size_budget reports 18571 on it, which is exactly 18,574 - 1 - 2. Picking either branch's number would have silently given back the other branch's gain -- the failure main's own entry names one line above. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a red test. Lowered 18,571 -> 18,566 on 2026-08-23 by road-to-skill-link-integrity-and-manifest-sync Phase 2, which had to pay its own way before it could pass: adding set_augment_manifest_version to release.ts charged +35 lines, because release.ts is 564 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump. Both manifest-version writers -- the new set_augment_manifest_version and its pre-existing twin set_marketplace_version -- moved whole into release_env.ts, the leaf that already owns both manifest paths AND jsonDumpsIndent, so neither function needed anything it did not already have there. release_env.ts is 298 lines, far under the threshold, so those lines are now free. release.ts re-exports set_marketplace_version so its existing test import keeps resolving; the new function is imported from release_env directly. Net -5 past zero rather than exactly to it, for the same reason main's entry gives: the unit that pays is a unit."
+-        },
+-        "ci-parity:local-only": {
+-            "count": 165,
+-            "landed": "2026-08-24",
+-            "note": "Gates that `task ci` runs and no workflow does — the direction this manifest's own header calls the one that let real defects merge (16 stale index rows reached the trunk behind a local-only check-index). Revealed, not created, by repairing the checker's extraction: check_ci_local_parity built its CI-side set by regexing RAW workflow text for `task <name>` and expanding each closure, comments included. Several workflow comments contain the literal string `task ci` while stating that no workflow invokes it, so `ci` was read as an invocation and its full 247-gate closure entered the 'runs in CI' set. The count was therefore 0 BY CONSTRUCTION, and the prose documenting the gap was what suppressed it. Measured at the repair: CI-side 273 → 106, undeclared_local_only 0 → 167 of 247 local gates (68%). Baselined rather than hard-failed because 167 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before; shrink-only keeps the property that matters, namely that a NEW gate registered in `task ci` with no workflow reds immediately. Lowering happens by wiring gates into workflows or declaring them under `local_only:` with a reason. Note the punchline, because it bounds the risk of this entry: check_ci_local_parity ITSELF runs in no workflow, so it is its own finding and this ratchet has no remote reach either — clearing the backlog is what gives it teeth. DRAINED BY ONE, 2026-08-13: check_ci_local_parity itself was wired into consistency.yml, so it left the set it exists to report. That is the whole shape of a legitimate drain here — the gate stops being local-only because a workflow now runs it, not because the declaration list grew. The floor in gate-coverage.yml moved in the same change and for the same reason: wiring two gates raised the parsed population 357 -> 360 (109 CI + 251 local). The intermediate 359 was the reading after the CI-side wiring alone and before check_gate_coverage joined the local `ci` chain; it was committed here by mistake and is corrected rather than left as a second number for the same measurement. WALKED DOWN 166 -> 165 on 2026-08-20 (road-to-session-closeout 5.2): check_ci_local_parity reported `ci-parity:local-only: 165 violation(s), baseline 166 - ratchet is loose` and asked for exactly this, so the gain cannot be silently given back. The measurement is the gate's own output on the merged tree, not a branch. What is NOT done here is the classification the same step asks for: 165 gates each need a recorded class (belongs-in-CI / developer-aid / dead), which is per-gate judgement, and migrating them would red the trunk on the landing day - the step forbids it for that reason. ATTEMPTED 165 -> 164 on 2026-08-24 and REVERTED in the same change, recorded because the mistake is instructive rather than embarrassing. A local run of check_ci_local_parity reported the ratchet LOOSE at 164 and asked to be lowered; CI then measured 165 and red the gate at '1 new'. The local reading was environment-dependent -- the drain worktree resolves the projection surface differently from a clean checkout, which is the same worktree divergence check_rule_projection_integrity shows on the same tree -- so the number was never real slack. THE RULE THIS CONFIRMS: this baseline is walked down on a reading from the ENFORCING environment, never on a local one, exactly as the 166 -> 165 paragraph above says ('the measurement is the gate's own output on the merged tree, not a branch'). A gate inviting a lowering is not evidence that the lowering is correct.",
+-            "falsifier": "./scripts-run src/scripts/check_ci_local_parity"
+-        },
+-        "gate-self-test:registered-non-adopters": {
+-            "count": 24,
+-            "landed": "2026-08-06",
+-            "note": "Self-test adoption ratchet, expressed as a shrink-only NON-adopter count. 24 of the 32 gates registered enforced in gate-coverage.yml carry neither a `--self-test` (`_lib/gate_self_test.ts`) nor a `// self-test-exempt: <reason>` marker, so nothing proves they DISCRIMINATE — an enforced `scanned:` floor proves a gate read something, only a self-test proves the reading changes the verdict. Deliberately NOT an adoption column ratcheted upward: check_gate_coverage.ts's own report_hardening_ratchet rejects that shape in this same file (\"grades the solution instead of the problem\"), and the sibling adoption ratchet (check_gate_completeness) is already a non-adopter count. Population is the manifest, not every script under src/scripts: padding the manifest to move this number would mean adding a floor per row. Shrink-only from here — a NEW registered gate must adopt or exempt. Migration mechanism, same as the ledger ratchet above: gates adopt as they are touched, not in a sweep — the eight current adopters were each added alongside a real change to that gate. The 56-day non-stagnation clause applies unchanged, so a count parked here fails on its own.",
+-            "falsifier": "./scripts-run src/scripts/check_gate_coverage"
+-        },
+-        "lint_canonical_terms": {
+-            "count": 1007,
+-            "landed": "2026-08-26",
+-            "note": "House-dialect debt in authored prose under src/ and docs/, measured by the gate this entry governs (road-to-canonical-terms 2.2). NOT a dead-root repair: the gate is new, and the debt is the corpus that predates the dialect decision recorded in src/config/canonical-terms.yml. A hard-zero gate was refused on the same ground the AI council refused an unconditional sweep on 2026-08-25 — `sweep_authorised: false` is a live constraint, and 1,025 occurrences cannot be rewritten in the change that introduces the check. The ratchet IS the council's staged promotion: report-only for existing debt, blocking for anything new. Measured 1,025 before the bounded pilot and 1,007 after it — the pilot was chosen by BLAST RADIUS, not by pair, per the council's explicit condition: the three smallest-radius pairs (`sub-agent`→`subagent`, `grey`→`gray`, `canonicalise`→`canonicalize`) at 18 occurrences across 12 files, with zero overlap with active work (no open PRs at the time). What remains is dominated by two large-radius pairs — `artefact`→`artifact` (619 occurrences / 239 files) and `behaviour`→`behavior` (325 / 171) — plus `hand-off`→`handoff` (46 / 36) and `licence`→`license` (17 / 12), the last of which the map flags `semantic-care-required` because licence TITLES are protected text. Shrink-only from here: each further wave lowers this number. Full classified inventory: agents/evidence/analysis/canonical-terms-inventory-2026-08-26.md.",
+-            "falsifier": "./scripts-run src/scripts/lint_canonical_terms"
+-        },
+-        "lint_handoffs": {
+-            "count": 18,
+-            "landed": "2026-08-02",
+-            "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
+-        },
+-        "lint_pack_boundaries": {
+-            "count": 337,
+-            "landed": "2026-08-02",
+-            "note": "Markdown links between source artefacts that cross a pack boundary the source pack's `requires` graph does not reach — revealed when the scan root moved off the deleted packages/ tree to the live corpus (0 -> 753 artefacts scanned). 82 distinct pack pairs across 131 source files; largest single class is engineering-base -> meta (73), skills in a consumer-installable pack citing this package's own maintenance skills. Each is a link that dangles for a consumer who installs the source pack without the target's. Judged real drift rather than an over-strict gate because it is long-tailed — top bucket 22%, no single systematic cause — unlike the lint_artefact_frontmatter case, where one required shape had 0-of-288 adoption. Fix per finding: add the edge to packs.yml requires, retarget the link, or move the artefact."
+-        },
+-        "lint_provenance_vocabulary:permanence-language": {
+-            "count": 5,
+-            "landed": "2026-08-22",
+-            "note": "Permanence language in an ADR record's load-bearing positions -- its `# ` title, its `decision:` frontmatter slug, its `## Decision` section, or an `Addendum` heading. Revealed by adding rule 4 to lint_provenance_vocabulary, not created by it: ADR-240 section 6 states the doctrine (`forever`, `permanently`, `never revisit`, `never reconsider` and their kin do not belong in a mechanism decision's title, slug or Decision section) and the corpus had five records violating it on the day the rule landed. Baselined rather than hard-failed because a gate that lands as five instant blockers is the shape this repository has already refused (see ci-parity:local-only and lint_roadmap_blockers:decidability above), and every one of the five is a content decision rather than a copy edit: ADR-208 (slug `dist-agent-src-keep-forever`, title \"kept forever\", Decision \"KEEP -- permanently\") is the standing self-contradiction ADR-240 cites, since lines 10-11 of its own frontmatter carry the conditions under which it should be reopened; ADR-107:37 and ADR-108:5/12/24/29 are owner PURPOSE statements (\"open-source forever\", \"now or in the future\", \"liability disclaimer is permanent\") whose fix is the escape ADR-240 names -- record `authority_basis: owner_intent` -- which is an owner ruling, not an agent edit; ADR-122:77/154 and ADR-124:229 assert a permanently-off default whose honest form is a default-off setting plus a reopen condition. The rule is deliberately SCOPED and the scoping is the gate: the same word list applied to whole files matches many more, and the large majority are legitimate. The comparison figure is given with its method because 'unscoped' has two readings and an earlier version of this note picked one without saying which, giving 41 lines across 30 records which reproduces neither way: the bare word list over both ADR surfaces matches 45 lines in 26 records, and the word list PLUS the lint's own line filters (code fences, quoted spans, table rows, in-sentence negation, attributive `permanent`, hyphen compounds) but WITHOUT position scoping matches 29 in 17. Scoping to the four load-bearing positions takes it to 11 in 5. The 29-to-11 step is what the scoping buys; the 45 is what a naive grep would report -- an `## Alternatives considered` entry rejecting a permanence option (ADR-105:97, ADR-137:148-151, ADR-212:133), a `## Consequences` line reporting one (ADR-136:90, ADR-208:73, ADR-216:278/298), a `## Context` recounting one (ADR-042:36, ADR-232:34), a quoted open question (ADR-201:342/343) and a table rationale cell bounding a failure mode (ADR-074:41, ADR-225:64) are all describing a permanence claim rather than making one. Shrink-only from here, which is the property that matters: a NEW record asserting permanence in any of the four positions reds this gate immediately, and headroom is zero. Lowering happens one record at a time -- convert an owner purpose statement to `authority_basis: owner_intent`, or restate a mechanism decision with the reopen condition it already carries. The 56-day expiry is the point rather than a hazard: if this number has not moved in two months, the doctrine is not being applied and the gate should fail until someone decides whether it is real.\n\nWALKED 11 -> 5 on 2026-08-22 by road-to-evidence-based-adr-governance 4.3, and the split is exactly the one this note predicted: the six AGENT-EXECUTABLE hits are fixed and the five OWNER-RESERVED ones are untouched. ADR-208's slug is now `dist-agent-src-is-the-shipped-projection-tree`, its title says \"until its `review_trigger` fires\", and its Decision reads \"KEEP, until `review_trigger` (a), (b) or (c) fires\" -- the escape ADR-240 section 6 names, taken against reopen conditions the record's own frontmatter already carried, which is why it needed no new judgement. ADR-122:77/154 and ADR-124:229 asserted a permanently-off default; each now states default-off plus the reopen condition its own measurement supplies (for ADR-122, a re-run clearing both locked thresholds with the FP control held; for ADR-124, the category limit behind the null being shown not to hold). Those two carry no `review_trigger` at all -- both predate the 2026-07-25 requirement -- so the condition was derived from the measurement in the record rather than restated from frontmatter, and that difference is recorded because it is the weaker of the two moves. The FILE NAME of ADR-208 is deliberately unchanged: no gate couples the `decision:` slug to the filename (regenerate_index reads the slug only as a fallback when `decision:` is absent), and renaming would rewrite eight inbound references, two of them inside frozen review-input diffs and one inside an archived roadmap whose path was correct when written -- rewriting history to fix a name, which is the trade this tree already refused for out-of-directory decision records. The remaining five are ADR-107:37 and ADR-108:5/12/24/29, owner PURPOSE statements whose fix is `authority_basis: owner_intent`; they are routed to stubs/road-to-owner-authority-decisions.md and are not agent-editable. Zero headroom still holds for the four load-bearing positions.",
+-            "falsifier": "./scripts-run src/scripts/lint_provenance_vocabulary"
+-        },
+-        "lint_settings_classes:derivable-surface": {
+-            "count": 83,
+-            "landed": "2026-08-12",
+-            "note": "Anti-regrowth ratchet for the settings disposition axis. 83 of 134 template leaves are classified `derivable` — the mechanism can decide from the situation, so the key should not exist — and each names the replacement that would decide instead (`lint_settings_classes` rejects the bare label, which is what keeps the class from becoming a synonym for \"inconvenient to keep\"). This is a DELETION QUEUE, not 83 deletions: a row stays until the mechanism it names actually exists, and deleting a key ahead of its mechanism is a silently-changed default rather than a simplification. Shrink-only from here, which is the anti-regrowth half — a NEW key classified `derivable` raises the number and reds, so a key whose answer the situation already carries cannot be added at all. The 56-day non-stagnation clause is the other half and is wanted here rather than tolerated: a queue that never drains is a stated direction nobody is walking. The queue opened at 88 of 140 on 2026-08-12 and drained to 83 of 134 the same day: six keys had no reader whatsoever (telegraph.speak_scope, chat_history.max_size_kb, chat_history.on_overflow, quality.wait_for_remote_ci, screenshots.data_bearing_gate, legal_review_prep.consented_at), five of them `derivable` and one a `consent` row reclassified because a published-egress confirmation is a Hard Floor no setting may lift. An unread key is the only deletion that cannot silently change a default, which is why that batch went first. The classification itself is docs/contracts/settings-classes.md.",
+-            "falsifier": "./scripts-run src/scripts/lint_settings_classes"
+-        },
+-        "check_no_external_sources:shape-block": {
+-            "count": 243,
+-            "landed": "2026-08-29",
+-            "falsifier": "./scripts-run src/scripts/check_no_external_sources  # the 'attribution shape' line names the current block count; the gate fails when it RISES above this entry",
+-            "note": "Lowered 275 -> 243 on 2026-08-29 by road-to-source-silence Phases 2.1, 3.4 and the placeholder-allowlist fix. Set to the EXACT live total, per this file's convention. Three mechanisms, each measured: (1) the two anchored speaking inbox directory names were rewritten to opaque round ids (inbox-2026-08-f / inbox-2026-08-h) across all 14 tracked occurrences, and five archived roadmaps + one roadmap-asset were redacted in place under ADR-250 with dated markers and a mechanical word-diff audit (0 unexplained changes); (2) provenance-aware deduplication of R2 review-snapshot mirrors, _lib/source_snapshot_dedup.ts - exclusions EARNED per finding (53 at the time of writing: 10 hunk-target, 43 tracked-tree). The exclusion COUNT is deliberately not pinned here and must not be read as one: removing the diff.patch carve-out made the shape ratchet a function of the review-snapshot corpus, which grows by one package per gated PR, so the number moves without the DEBT moving. The pinned number is `count` and only `count`, each EARNED against an identical class+value independently block-counted in a scanned file, fail-closed on no match / no hunk target / untracked target; (3) two documentation placeholder owners (someone, o) allowlisted in _lib/source_shape.ts on a measured false positive - they were the only 2 of 26 formerly-carved-out snapshot findings that survived dedup, which is the mechanism working as the AI council specified. This number is NET of removing the agents/evidence/reviews/*.review-input/diff.patch skip_paths carve-out, which added 26 findings back to the scanned surface. The remaining 243 are the Phase 2.1 codename debt on the NON-anchored occurrences (~190 tmp-quote across the roadmap corpus, ~107 speaking **Source:** headers) that Phase 2.1 scoped out; clearing them is a corpus-wide rewrite, not this change. Every NEW occurrence still fails immediately. EXPIRY, restated rather than inherited: this entry goes stale 56 days after `landed` (2026-10-24), which is BEFORE road-to-source-silence's review_by of 2026-11-27 - the successor roadmap road-to-source-silence-cutover carries the obligation to lower it again, reaffirm it with a real reason, or clear it."
+-        }
++  "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time — the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
++  "gates": {
++    "check_claims:non-inference": {
++      "count": 40,
++      "landed": "2026-08-26",
++      "falsifier": "./scripts-run src/scripts/check_claims  # the ratchet line names the current count; it fails when the count RISES above this entry",
++      "note": "Backed `kind: quant` ledger entries carrying no `non_inference` field, which enumerates the readings the data does NOT license. Introduced by road-to-skill-ecosystem-eval-integrity Phase 5 Step 5. NOT a scan-root repair — the field is new, so every pre-existing quant entry lacks it by construction and 40 is the count at introduction rather than revealed debt. A ratchet rather than a requirement because failing the build on 41 entries at once produces a gate that can only block, which this repository's own records name as the reason a gate gets suppressed. Every NEW backed quant claim must carry one; the inherited entries come along as they are touched. One was written at introduction (`injection-scan-corpus-rates`) to prove the field is real rather than declared, which is why the count is 40 and not 41. Clearing this entry is authoring work spread across whoever next touches each claim, not a sweep: a non_inference written in bulk without re-reading the evidence would be the placeholder the <20-character check already refuses."
+     },
+-    "retired": {
+-        "lint_roadmap_blockers:decidability": {
+-            "count": 0,
+-            "landed": "2026-08-22",
+-            "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` was one of the few that was not the common no-cost answer — the release gate that PR ships would have refused the next major cut while the blocker stayed open. Recorded in the past tense because the maintainer then RESOLVED that blocker on the trunk by withdrawing the commitment, so nothing refuses a cut today. The lowering stands on the rewrite, not on the consequence, and the sentence is corrected rather than deleted because a baseline note arguing from a retracted state is how a ratchet's rationale rots. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently. Lowered 34→29 on 2026-08-16 by rewriting six entries to the new standard (raw-capture-needs-host-env, telemetry-sample-size, repo-admin-and-usage, benchmark-spend, measurement-a-no-per-arm-builder-tier, measurement-b-no-renderable-lane-pair) in a PR whose only purpose was the drain — the first lowering not taken on the back of another change, which the note above says is the usual shape. Two findings from that pass are worth keeping. The tree measured 35 against a baseline of 34 BEFORE the drain, i.e. the ratchet was already red on main and nobody knew: this gate runs in `task ci`, no workflow invokes `task ci`, and the local run that would have shown it was read through a `tail`, which hid every row above the last six. And four of the six `If you do nothing:` answers are honestly that nothing degrades — that is the true answer for a held measurement, and writing it is what makes the entry decidable, so the field earns its place by being cheap to answer truthfully rather than by always carrying a cost. Lowered 29 → 27 on 2026-08-16 by the merge of this branch and the trunk drain above, and the arithmetic matters more than the delta: both sides rewrote entries from the same tree of 35 independently — the trunk six (recorded above), this branch two (deferred-finding-decision-reopen, spent-inbox-artifacts-await-deletion, rewritten because road-to-inbox-harvest-residuals was being touched anyway). The sets are disjoint, so the merged tree measures 27 and the gate itself reported the slack. Tightened rather than banked: 29 against a 27-entry tree would absorb the next two undecidable blockers without anything noticing, which is the lag this note has now corrected twice. Lowered 27 → 26 on 2026-08-16 by rewriting `picktier-wire-or-archive` (road-to-inbox-harvest-2026-08-d-top-band-model-economy), and this one is the usual shape the note describes rather than the dedicated-drain shape: the roadmap was being worked for its own Step 4.1 and the entry was rewritten because it was open on the desk. Worth recording for what writing the two fields SURFACED, which is the argument for the requirement: `Recommendation:` forced the question 'which option, and why' and the honest answer turned out not to be one of the three options at all — the entry defers to a converged council verdict, and the council cannot reach quorum (re-measured 0 of 2 the same day), so the actionable next step is a one-line fix to a user-global config file outside this repository. Five fields had described that situation accurately for two weeks without anyone noticing that the named blocker was infrastructure rather than judgement. Lowered 26 → 22 on 2026-08-18 by road-to-estate-drawdown Step 0.1, which needed the two fields for a different reason and therefore drained six entries as a by-product: the consolidated decision sheet renders a DEFAULT plus that default's provenance per user-owned decision, and 7 of the 21 live entries recorded no `Recommendation:` to derive one from. Six were rewritten to the new standard (skill-activation-window, b-convergence-machine, maintainer-blind-ratings, real-orchestration-usage, human-gated-live-trigger-eval, manual-rubric-rater), each marked `agent-drafted` in the field itself so the sheet can label the provenance rather than presenting a drafted default beside a maintainer-recorded one as the same kind of statement. The seventh, `road-to-gated-reach-followup`'s legacy `> Blocked until …` note, is NOT counted here and was not rewritten: it is a blocked-until note rather than a `### blocker:` entry, so it has no field to carry, and converting it is a roadmap restructure this change did not take. **The tree was RED at 28 against this baseline of 26 before the drain, and again nobody knew** — the same failure the 34→29 paragraph above records, one gate cycle later: two entries had been added on the trunk without the fields, and this gate runs in `task ci`, which no workflow invokes. That is the second recorded instance of this ratchet being red on main undetected, which is an argument about where it runs rather than about its number. `human-gated-live-trigger-eval` also gained a command in `What to do:` (`rule_trigger_eval`, verified to exist at src/scripts/) because the field carried a path-less instruction; the other five needed only the two decidability fields. Lowered 22 -> 20 on 2026-08-19 by road-to-estate-drawdown Phase 2 triage batch 1, and RE-MEASURED after two merges of origin/main rather than carried over: the trunk gained roadmaps in between (the long-horizon pair and the council-fallback set), and the live count over the merged tree is still 20 across 39 roadmaps. Six roadmaps moved to later/, and two of them carried an undecidable open blocker each. The gain is a side effect of parking rather than of drafting a recommendation, so it is recorded as such — the two entries are unchanged and still undecidable where they sit; they are simply outside the active tree this ratchet scans. Walked down because the gate reported itself loose, and a baseline above the measurement is headroom a later change can spend with nothing objecting. Lowered 20 -> 17 on 2026-08-20 by the road-to-frontend-skill-application closeout, and the shape is the usual one this note describes: the roadmap was being closed for its own reasons and its three open blockers were on the desk anyway. Two (ui-corpus-has-no-ui, enforcement-evidence) left the population by being RESOLVED rather than rewritten, which is the cleanest way to lower this number and the only one that does not add prose; the third (ui-session-capture-window) was rewritten to the new standard. Worth recording what writing the two fields surfaced, since that is the standing argument for the requirement: on ui-corpus-has-no-ui, `Recommendation:` forced the question \"which option, and why\" and the honest answer was that the entry's own premise was false — it asserted the question could not be answered without a human naming a consumer store, and the stores were already on the machine, readable by the command the entry itself printed. Five fields had described that situation accurately for a week without anyone noticing the blocker was a measurement nobody had run. Tightened rather than banked because 20 against a 17-entry tree is headroom the next three undecidable blockers would spend with nothing objecting, which is the lag the paragraphs above have now corrected three times. Walked 17 -> 12 at the drain/road-to-frontend-skill-application merge, 2026-08-21, on the gate's own loose-ratchet report. Re-measured against the merged tree rather than attributed: sibling drain PRs made entries decidable in parallel, so this branch's share is not separable here and is not claimed. Banked at the measurement rather than left as headroom a later change could spend.\n\nWALKED 12 -> 1 on 2026-08-22 by resolving the two `road-to-evidence-based-adr-governance` blockers (`owner-autonomy-batch`, `authority-coupling-decision`), which were undecidable in exactly the way this ratchet names: each handed a Hard-Floor question to the reader without a landed outcome. Both now carry one. The single remaining violation is `road-to-drain-commands:395` (`merge-authority`), which PR #1517 resolves and archives — so the honest count for THIS tree is 1 and it is expected to reach 0 once that lands. It is not lowered to 0 here, because a baseline must describe the tree it ships with rather than the tree someone expects next. Lowered 1 -> 0 on 2026-08-22, and the prediction the previous entry made is what closed it: the single remaining violation was `road-to-drain-commands:395` (`merge-authority`), and PR #1517 archived that roadmap, taking the entry out of the scanned population. Nothing was rewritten to reach zero -- the record left the active tree with its blocker RESOLVED, which is the cleanest of the two ways this number goes down and the only one that adds no prose. Zero is now the ceiling: any new open blocker missing `Recommendation:`, `If you do nothing:` or an actionable `What to do:` reds this gate immediately, with no headroom at all.",
+-            "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers --quiet",
+-            "retired_on": "2026-08-22",
+-            "retired_because": "Walked to 0 and therefore removed from `gates`: an entry recording no debt is what gate_baseline.test.ts refuses, and a missing entry is not weaker — evaluateGate treats an absent baseline as ok only when the live count is 0, which is the same ceiling the note below asked for. Kept here because the note is dated history, not commentary; nothing reads this key at runtime."
+-        }
++    "audit_user_type_axis": {
++      "count": 1,
++      "landed": "2026-08-02",
++      "note": "One orphan user-type value: `legal`. Five legal-review-prep skills (contract-review, dpa-review, nda-triage, legal-intake-triage, legal-practice-profile) declare `recommended_for_user_types: [legal]`, but there is no `user-types/legal.yml` — the pack shipped an axis value with no user-type definition behind it, and the dead scan root hid it (the audit reported used=0 orphans=0 while reading zero skills; it now reads 288 and reports used=8). Clearing this entry is a product call, not a copy edit: either author `user-types/legal.yml` (tagline, recommended packs, install-path hint) or drop `legal` from those five skills. Not decided here because both options change shipped pack behaviour."
++    },
++    "check_depth_budget": {
++      "count": 4,
++      "landed": "2026-08-06",
++      "note": "Four depth files exceed the 16,000-char per-file ceiling: rule-body-migration-inventory.md (23,782), design-antipatterns.md (20,707), roadmap-process-loop.md (20,360), orchestration-telemetry.md (16,155). Recorded rather than fixed because splitting four large reference documents is unrelated to the change that introduced the ceiling, and a gate that lands as four instant blockers is the shape this repository has already recorded as a failure. Shrink-only from here: a FIFTH over-ceiling file reds. roadmap-process-loop.md is the file that motivated the gate — it states 'Size budget: <= 4,000 chars' in its own header and is 5x over it, which is what a declared budget with nothing measuring it decays into. The ceiling is a GROWTH RATCHET, not a measured quality threshold: the 7,308-trajectory study behind the 3,500-token skill ceiling (ADR-217) was taken on procedural always-co-loaded skills, and this layer is declarative and loaded one or two files at a time. Replace the number when someone measures comprehension on THIS layer."
++    },
++    "check_gate_completeness": {
++      "count": 215,
++      "landed": "2026-08-17",
++      "note": "Ledger adoption ratchet. Gates registered under the CI task roots that carry neither per-target completeness accounting (`_lib/gate_ledger.ts`) nor a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt. Lowered 216 -> 215 on 2026-08-17 by discharging the obligation three NEW arrivals had incurred, which is the standing rule being enforced rather than a drain: the registered population grew 244 -> 258 and three of the fourteen arrivals adopted nothing — `build_archive_index`, `check_gate_coverage`, `check_pr_ci_current`. The reading was 218 against this baseline of 216, and the missing arithmetic is that one PRE-existing gate (`lint_rule_skill_pack_reach`) had adopted in the meantime: 216 + 3 - 1 = 218. All three adopted a real ledger. `check_pr_ci_current` first took a reasoned exemption claiming no target population; the completion review refuted it from the file itself — the check rows ARE a population, and rows whose `state` is not a string were being dropped before any verdict ran, so a dropped row could be the failing one. The exemption was withdrawn and the ledger adopted, counting kept rows as read, dropped rows as skips, and rows a pre-row verdict never reached as out of scope. The denominator in this note was 14 stale (it said 244) and is now expressed without one, because a count pinned to a population that grows weekly rots faster than the count itself. Note what this lowering does NOT buy: headroom is zero either way, so the next un-adopted arrival reds this gate immediately — which is the intended behaviour and the reason the number is not padded. The refreshed `landed` is load-bearing rather than bookkeeping: `checkRatchet` returns `improved` BEFORE it evaluates staleness, so an entry left at 216 while the tree measures 215 would never expire at any age (pinned by tests/lib/gate_baseline.test.ts, which asserts `improved` at landed + STALE_AFTER_DAYS + 400 days) — the greenest available state and the worst, since it switches off the anti-fossilization clause exactly when someone has done real work.",
++      "falsifier": "./scripts-run src/scripts/check_gate_completeness"
++    },
++    "check_no_new_legacy_path:hardcoded-scan-roots": {
++      "count": 47,
++      "landed": "2026-08-13",
++      "note": "Lines under src/scripts/**/*.{ts,mts,mjs} that pass the retired `.agent-src.uncondensed` directory into `path.join(...)` — a filesystem path CONSTRUCTED against the tree ADR-051 abandoned, which is the exact shape of all 14 dead gates. Deliberately narrow so the number is signal, not noise: 236 raw mentions under src/scripts → 147 string-literal lines → 67 path-constructing lines when the pass was written, after exempting src/scripts/_lib/agent_src.ts (the shared resolver, whose job IS owning the constant — gates that route through it survived the move). Detectors holding the literal as data to match, strip, or print are not counted, and no prose, docs, tests or fixtures are read: that full-tree shape was measured at 44 files / 213 hits and rejected as the wrong lint (see the note in check_no_new_legacy_path.ts::find_offenders). Recorded at 58 rather than 67 because Phase 1's scan-root repairs were landing on this branch while the pass was being written and had already removed 9 — a baseline above the truth silently permits new violations. This count goes to ZERO as the remaining repairs land; every repair is a lowering commit. Lowered 56→51 by the road-to-renewal-foundation Phase 1 dead-root sweep (check_always_budget, check_portability, check_references, lint_framework_leakage, lint_agents_md). Lowered 51→49 by the gate-hardening adoption PR: skill_collision_clusters and skill_overlap were repointed at the live skills tree via the shared resolver — two gates that had been reading the retired container and scoring 0 of 288 skills. Lowered 49→48 by road-to-rule-delivery-integrity P2.2: score_skill_selection was repointed at the live skills tree via the shared resolver. It is the same shape as the two gates lowered before it — a scorer reading the retired container and scoring 0 of 288 skills — and here the consequence was sharper than a dead gate: the roadmap's pre-registered selection-accuracy criteria would have been compared against a baseline of silent zeros. Lowered 48→47 on 2026-08-13, and this one is a catch-up rather than a repair: the pass reported 47 against a baseline of 48, so a gain had already landed without the ratchet following it. Attributed to 455160160 (fix(evals): resolve the eval orchestrator against the live skills tree), the most recent repair in this branch's base that removes a path-constructing line — SKILLS_ROOT repointed through _lib/agent_src.ts::SRC_SKILLS(). A loose ratchet is not harmless: it silently permits one new violation to be added back without any gate noticing, which is the shape this entry exists to prevent."
++    },
++    "check_roadmap_trackable:relates": {
++      "count": 9,
++      "landed": "2026-08-23",
++      "note": "The nine active non-draft roadmaps that predate the `relates:` requirement (road-to-agentic-engineering-assurance, road-to-component-library-lifecycle, road-to-council-evidence-integrity, road-to-frontend-fidelity-calibration, road-to-monorepo-scope-and-detection, road-to-observability-plate, road-to-role-scoped-spawn-profiles, road-to-skill-delivery-over-mcp, road-to-standing-payload-diet). This is a NEW obligation rather than a repaired scan root, and the ratchet is the point: `depends:` shipped in the template with nothing requiring it and measured 0 adoption, so requiring `relates:` retroactively across the estate would be an owner-reserved write with no analysis behind the edges it would have to invent (held as step 4.3, deferred). Clearing an entry here is one roadmap at a time: run `agent-config roadmap:context` on it, write the rows the probe surfaces, and lower the count."
++    },
++    "check_source_size_budget": {
++      "count": 18440,
++      "landed": "2026-08-27",
++      "note": "Lowered 18,446 -> 18,440 on 2026-08-27 by fix/council-cost-truth, which paid its own way through EXTRACTION rather than a bump. Replacing three inline cost-accumulation loops in council_cli.ts with calls to sumBillableCost took that file 3,981 -> 3,975 lines, and it sits 2,475 lines PAST the 1500-line threshold, so all six removed lines count. The three new helpers -- sumBillableCost, isBillableResponse, allSeatsNonBillable -- landed in ai_council/pricing.ts, which goes 445 -> 551 lines and is therefore still FAR under the threshold: those 106 added lines are free. Net -6, which is exactly the gate's reading. pricing.ts is where they belong on merit, not only on budget: it already owns estimate_cost and the price table, so cost logic reading a price table has no other home. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- and that is how this lowering surfaced: CI shard 2/4 red on both ubuntu and macOS with 'expected 18446 to be 18440', where the gate itself only advises. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,474 -> 18,446 on 2026-08-26 by road-to-consumer-repo-reality Phase 1, which had to pay its own way before it could pass. Wiring the three install-reach checks into cmd_doctor.ts charged +5 lines, because that file is ~2,150 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: the two runtime-presence checks -- _check_python_runtime and _check_humanizer_runtime -- moved WHOLE into _lib/doctor_runtime_checks.ts. They are cohesive with each other and with nothing else in that file (each answers 'is a runtime present, and what happens when it is not'; neither reads the manifest, the drift sets, or the project root), and their one dependency, shutilWhich, is PASSED IN rather than imported -- it is defined in cmd_doctor.ts itself, so importing it back would have made the two modules circular, and a parameter is cheaper than moving a shared utility four other call sites already resolve from there. Thin wrappers keep the historical names and arity, so the runner map, the export block and the existing fallback test are untouched. cmd_doctor.ts goes 3,666 -> 3,638 lines. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a RED TEST rather than tolerated slack -- which is how this lowering surfaced, in a neutral review of the branch rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: Lowered 18,489 -> 18,474 on 2026-08-26 by road-to-internal-estate-fit Phase 2, which paid its own way and then some. De-duplicating SCOPE_DETECT_MANIFESTS and SCOPE_DETECT_AI_DIRS removed two byte-for-byte constant blocks from src/scripts/install.ts, which is 3,902 lines PAST the 1500-line threshold, so every removed line counts. One exported definition each now lives in src/install/detect.ts (far under the threshold and therefore free) and install.ts imports them. Net -15. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total -- a baseline left loose by even one line is a red test, and that is how this lowering surfaced rather than by inspection: CI reported 'expected 18489 to be 18474'. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Lowered 18,511 -> 18,489 ON THE MERGE, 2026-08-26, by MEASURING the merged tree rather than picking a side — which is the method every prior entry here prescribes and the exact case several of them describe. Two branches of one drain run each paid their own way independently: road-to-skill-ecosystem-runtime-enforcement extracted the four runtime-wiring checks into _lib/runtime_wiring_checks.ts and the transcript reader into _lib/loop_guards, reaching 18,490 against a base of 18,512; road-to-skill-ecosystem-eval-integrity extracted the exact binary tests, the CPython erf port, wilcoxon and the float-parity rounder into _lib/paired_stats.ts, reaching 18,511 against the same base. The merged tree measures 18,489 — which is 18,512 - 22 - 1, i.e. the SUM of both gains, so picking either branch's number would have silently given back the other branch's. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by even one line is a red test. Both derivations are preserved below rather than one being dropped, because each records a real extraction and the pair is the evidence for this number. Prior entry (runtime-enforcement branch): lowered 18,512 -> 18,490 on 2026-08-26. Prior entry (eval-integrity branch): lowered 18,512 -> 18,511 on 2026-08-26 by road-to-skill-ecosystem-eval-integrity Phase 2, which had to pay its own way before it could pass. Adding direction counts to `_paired_median_block` charged +24 lines, because bench_ab_v2_stats.ts was 25 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump: _lib/paired_stats.ts now holds mcnemar_exact, cohens_h, the CPython erf/normal-CDF port, wilcoxon, and the float-parity rounder those need. Every name is re-exported from bench_ab_v2_stats.ts, so `check_quality_regression`'s existing `wilcoxon` import and every other consumer resolve unchanged. bench_ab_v2_stats.ts goes 1525 -> 1329 lines, well under the threshold, so those lines are now free. Net -1 past zero rather than exactly to it, for the reason every prior entry here gives: the unit that pays is a unit. Set to the EXACT live total — check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by one line is a red test, and that is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,561 -> 18,512 on 2026-08-24 by the same method every prior entry here prescribes — the merged tree MEASURED, never a side picked. main had reached 18,561; this branch (road-to-skill-delivery-over-mcp) carries its own extractions, and the merged total reads 18,512, a -49 gain that would have been silently given back by keeping main's number. Set to the EXACT live total, because check_source_size_budget.test.ts asserts baseline == tree total; a baseline loose by one line is a red test, and that is how this surfaced. Prior entry: lowered 18,566 -> 18,561 on 2026-08-24 by the method the two prior entries prescribe, for the same reason: independent gains met in a merge, so the merged tree was MEASURED rather than a side picked. main had reached 18,566 via road-to-skill-link-integrity-and-manifest-sync Phase 2; this branch had already paid its own extraction under road-to-trigger-delivered-rule-bodies 1.6 (condense.ts's inline mode literal moved whole to _lib/lean_projection_mode.ts, -5; the new module is 45 lines and therefore free). check_source_size_budget reports 18,561 on the merged tree, exactly 18,566 - 5, so picking either side's number would have given back the other's gain. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline loose by one line is a red test — which is how this lowering surfaced rather than by inspection. `landed` refreshed deliberately, not as bookkeeping: checkRatchet returns `improved` BEFORE it evaluates staleness, so an entry left at the old number while the tree measures lower would never expire at any age. Prior entry: lowered 18,574 -> 18,571 on 2026-08-23, and the -3 is the SUM of two independent lowerings-through-extraction that met in a merge, not a new reduction. main had already reached 18,573 via road-to-override-efficacy-proof (-1: _check_overrides moved whole to _cli/doctor_overrides.ts, -119, and the install-mode detector plus its marker constant to _cli/doctor_install_mode.ts, -14, both names forwarded with `export ... from`; net -1 past zero rather than exactly to it, because the unit that paid is a unit). This branch had reached 18,572 via road-to-council-evidence-integrity Phases 1-2 (-2: the two result bundles PeerReviewResult and ConsensusResult, -98, the two options interfaces, -19, and CouncilQuestion, -11, all PURE MOVES into ai_council/orchestrator_results.ts, with orchestrator.ts re-exporting every name; the options interfaces required a TYPE-ONLY back-import of OnOverrunCallback, legal and runtime-free since both directions are erased). The merge conflict was resolved by MEASURING the merged tree rather than picking a side: check_source_size_budget reports 18571 on it, which is exactly 18,574 - 1 - 2. Picking either branch's number would have silently given back the other branch's gain -- the failure main's own entry names one line above. Set to the EXACT live total: check_source_size_budget.test.ts asserts baseline == tree total, so a baseline left loose by even one line is a red test. Lowered 18,571 -> 18,566 on 2026-08-23 by road-to-skill-link-integrity-and-manifest-sync Phase 2, which had to pay its own way before it could pass: adding set_augment_manifest_version to release.ts charged +35 lines, because release.ts is 564 lines PAST the 1500-line threshold and every line above it counts. The fix was extraction, never a bump. Both manifest-version writers -- the new set_augment_manifest_version and its pre-existing twin set_marketplace_version -- moved whole into release_env.ts, the leaf that already owns both manifest paths AND jsonDumpsIndent, so neither function needed anything it did not already have there. release_env.ts is 298 lines, far under the threshold, so those lines are now free. release.ts re-exports set_marketplace_version so its existing test import keeps resolving; the new function is imported from release_env directly. Net -5 past zero rather than exactly to it, for the same reason main's entry gives: the unit that pays is a unit."
++    },
++    "ci-parity:local-only": {
++      "count": 165,
++      "landed": "2026-08-24",
++      "note": "Gates that `task ci` runs and no workflow does — the direction this manifest's own header calls the one that let real defects merge (16 stale index rows reached the trunk behind a local-only check-index). Revealed, not created, by repairing the checker's extraction: check_ci_local_parity built its CI-side set by regexing RAW workflow text for `task <name>` and expanding each closure, comments included. Several workflow comments contain the literal string `task ci` while stating that no workflow invokes it, so `ci` was read as an invocation and its full 247-gate closure entered the 'runs in CI' set. The count was therefore 0 BY CONSTRUCTION, and the prose documenting the gap was what suppressed it. Measured at the repair: CI-side 273 → 106, undeclared_local_only 0 → 167 of 247 local gates (68%). Baselined rather than hard-failed because 167 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before; shrink-only keeps the property that matters, namely that a NEW gate registered in `task ci` with no workflow reds immediately. Lowering happens by wiring gates into workflows or declaring them under `local_only:` with a reason. Note the punchline, because it bounds the risk of this entry: check_ci_local_parity ITSELF runs in no workflow, so it is its own finding and this ratchet has no remote reach either — clearing the backlog is what gives it teeth. DRAINED BY ONE, 2026-08-13: check_ci_local_parity itself was wired into consistency.yml, so it left the set it exists to report. That is the whole shape of a legitimate drain here — the gate stops being local-only because a workflow now runs it, not because the declaration list grew. The floor in gate-coverage.yml moved in the same change and for the same reason: wiring two gates raised the parsed population 357 -> 360 (109 CI + 251 local). The intermediate 359 was the reading after the CI-side wiring alone and before check_gate_coverage joined the local `ci` chain; it was committed here by mistake and is corrected rather than left as a second number for the same measurement. WALKED DOWN 166 -> 165 on 2026-08-20 (road-to-session-closeout 5.2): check_ci_local_parity reported `ci-parity:local-only: 165 violation(s), baseline 166 - ratchet is loose` and asked for exactly this, so the gain cannot be silently given back. The measurement is the gate's own output on the merged tree, not a branch. What is NOT done here is the classification the same step asks for: 165 gates each need a recorded class (belongs-in-CI / developer-aid / dead), which is per-gate judgement, and migrating them would red the trunk on the landing day - the step forbids it for that reason. ATTEMPTED 165 -> 164 on 2026-08-24 and REVERTED in the same change, recorded because the mistake is instructive rather than embarrassing. A local run of check_ci_local_parity reported the ratchet LOOSE at 164 and asked to be lowered; CI then measured 165 and red the gate at '1 new'. The local reading was environment-dependent -- the drain worktree resolves the projection surface differently from a clean checkout, which is the same worktree divergence check_rule_projection_integrity shows on the same tree -- so the number was never real slack. THE RULE THIS CONFIRMS: this baseline is walked down on a reading from the ENFORCING environment, never on a local one, exactly as the 166 -> 165 paragraph above says ('the measurement is the gate's own output on the merged tree, not a branch'). A gate inviting a lowering is not evidence that the lowering is correct.",
++      "falsifier": "./scripts-run src/scripts/check_ci_local_parity"
++    },
++    "gate-self-test:registered-non-adopters": {
++      "count": 24,
++      "landed": "2026-08-06",
++      "note": "Self-test adoption ratchet, expressed as a shrink-only NON-adopter count. 24 of the 32 gates registered enforced in gate-coverage.yml carry neither a `--self-test` (`_lib/gate_self_test.ts`) nor a `// self-test-exempt: <reason>` marker, so nothing proves they DISCRIMINATE — an enforced `scanned:` floor proves a gate read something, only a self-test proves the reading changes the verdict. Deliberately NOT an adoption column ratcheted upward: check_gate_coverage.ts's own report_hardening_ratchet rejects that shape in this same file (\"grades the solution instead of the problem\"), and the sibling adoption ratchet (check_gate_completeness) is already a non-adopter count. Population is the manifest, not every script under src/scripts: padding the manifest to move this number would mean adding a floor per row. Shrink-only from here — a NEW registered gate must adopt or exempt. Migration mechanism, same as the ledger ratchet above: gates adopt as they are touched, not in a sweep — the eight current adopters were each added alongside a real change to that gate. The 56-day non-stagnation clause applies unchanged, so a count parked here fails on its own.",
++      "falsifier": "./scripts-run src/scripts/check_gate_coverage"
++    },
++    "lint_canonical_terms": {
++      "count": 1007,
++      "landed": "2026-08-26",
++      "note": "House-dialect debt in authored prose under src/ and docs/, measured by the gate this entry governs (road-to-canonical-terms 2.2). NOT a dead-root repair: the gate is new, and the debt is the corpus that predates the dialect decision recorded in src/config/canonical-terms.yml. A hard-zero gate was refused on the same ground the AI council refused an unconditional sweep on 2026-08-25 — `sweep_authorised: false` is a live constraint, and 1,025 occurrences cannot be rewritten in the change that introduces the check. The ratchet IS the council's staged promotion: report-only for existing debt, blocking for anything new. Measured 1,025 before the bounded pilot and 1,007 after it — the pilot was chosen by BLAST RADIUS, not by pair, per the council's explicit condition: the three smallest-radius pairs (`sub-agent`→`subagent`, `grey`→`gray`, `canonicalise`→`canonicalize`) at 18 occurrences across 12 files, with zero overlap with active work (no open PRs at the time). What remains is dominated by two large-radius pairs — `artefact`→`artifact` (619 occurrences / 239 files) and `behaviour`→`behavior` (325 / 171) — plus `hand-off`→`handoff` (46 / 36) and `licence`→`license` (17 / 12), the last of which the map flags `semantic-care-required` because licence TITLES are protected text. Shrink-only from here: each further wave lowers this number. Full classified inventory: agents/evidence/analysis/canonical-terms-inventory-2026-08-26.md.",
++      "falsifier": "./scripts-run src/scripts/lint_canonical_terms"
++    },
++    "lint_handoffs": {
++      "count": 18,
++      "landed": "2026-08-02",
++      "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
++    },
++    "lint_pack_boundaries": {
++      "count": 337,
++      "landed": "2026-08-02",
++      "note": "Markdown links between source artefacts that cross a pack boundary the source pack's `requires` graph does not reach — revealed when the scan root moved off the deleted packages/ tree to the live corpus (0 -> 753 artefacts scanned). 82 distinct pack pairs across 131 source files; largest single class is engineering-base -> meta (73), skills in a consumer-installable pack citing this package's own maintenance skills. Each is a link that dangles for a consumer who installs the source pack without the target's. Judged real drift rather than an over-strict gate because it is long-tailed — top bucket 22%, no single systematic cause — unlike the lint_artefact_frontmatter case, where one required shape had 0-of-288 adoption. Fix per finding: add the edge to packs.yml requires, retarget the link, or move the artefact."
++    },
++    "lint_provenance_vocabulary:permanence-language": {
++      "count": 5,
++      "landed": "2026-08-22",
++      "note": "Permanence language in an ADR record's load-bearing positions -- its `# ` title, its `decision:` frontmatter slug, its `## Decision` section, or an `Addendum` heading. Revealed by adding rule 4 to lint_provenance_vocabulary, not created by it: ADR-240 section 6 states the doctrine (`forever`, `permanently`, `never revisit`, `never reconsider` and their kin do not belong in a mechanism decision's title, slug or Decision section) and the corpus had five records violating it on the day the rule landed. Baselined rather than hard-failed because a gate that lands as five instant blockers is the shape this repository has already refused (see ci-parity:local-only and lint_roadmap_blockers:decidability above), and every one of the five is a content decision rather than a copy edit: ADR-208 (slug `dist-agent-src-keep-forever`, title \"kept forever\", Decision \"KEEP -- permanently\") is the standing self-contradiction ADR-240 cites, since lines 10-11 of its own frontmatter carry the conditions under which it should be reopened; ADR-107:37 and ADR-108:5/12/24/29 are owner PURPOSE statements (\"open-source forever\", \"now or in the future\", \"liability disclaimer is permanent\") whose fix is the escape ADR-240 names -- record `authority_basis: owner_intent` -- which is an owner ruling, not an agent edit; ADR-122:77/154 and ADR-124:229 assert a permanently-off default whose honest form is a default-off setting plus a reopen condition. The rule is deliberately SCOPED and the scoping is the gate: the same word list applied to whole files matches many more, and the large majority are legitimate. The comparison figure is given with its method because 'unscoped' has two readings and an earlier version of this note picked one without saying which, giving 41 lines across 30 records which reproduces neither way: the bare word list over both ADR surfaces matches 45 lines in 26 records, and the word list PLUS the lint's own line filters (code fences, quoted spans, table rows, in-sentence negation, attributive `permanent`, hyphen compounds) but WITHOUT position scoping matches 29 in 17. Scoping to the four load-bearing positions takes it to 11 in 5. The 29-to-11 step is what the scoping buys; the 45 is what a naive grep would report -- an `## Alternatives considered` entry rejecting a permanence option (ADR-105:97, ADR-137:148-151, ADR-212:133), a `## Consequences` line reporting one (ADR-136:90, ADR-208:73, ADR-216:278/298), a `## Context` recounting one (ADR-042:36, ADR-232:34), a quoted open question (ADR-201:342/343) and a table rationale cell bounding a failure mode (ADR-074:41, ADR-225:64) are all describing a permanence claim rather than making one. Shrink-only from here, which is the property that matters: a NEW record asserting permanence in any of the four positions reds this gate immediately, and headroom is zero. Lowering happens one record at a time -- convert an owner purpose statement to `authority_basis: owner_intent`, or restate a mechanism decision with the reopen condition it already carries. The 56-day expiry is the point rather than a hazard: if this number has not moved in two months, the doctrine is not being applied and the gate should fail until someone decides whether it is real.\n\nWALKED 11 -> 5 on 2026-08-22 by road-to-evidence-based-adr-governance 4.3, and the split is exactly the one this note predicted: the six AGENT-EXECUTABLE hits are fixed and the five OWNER-RESERVED ones are untouched. ADR-208's slug is now `dist-agent-src-is-the-shipped-projection-tree`, its title says \"until its `review_trigger` fires\", and its Decision reads \"KEEP, until `review_trigger` (a), (b) or (c) fires\" -- the escape ADR-240 section 6 names, taken against reopen conditions the record's own frontmatter already carried, which is why it needed no new judgement. ADR-122:77/154 and ADR-124:229 asserted a permanently-off default; each now states default-off plus the reopen condition its own measurement supplies (for ADR-122, a re-run clearing both locked thresholds with the FP control held; for ADR-124, the category limit behind the null being shown not to hold). Those two carry no `review_trigger` at all -- both predate the 2026-07-25 requirement -- so the condition was derived from the measurement in the record rather than restated from frontmatter, and that difference is recorded because it is the weaker of the two moves. The FILE NAME of ADR-208 is deliberately unchanged: no gate couples the `decision:` slug to the filename (regenerate_index reads the slug only as a fallback when `decision:` is absent), and renaming would rewrite eight inbound references, two of them inside frozen review-input diffs and one inside an archived roadmap whose path was correct when written -- rewriting history to fix a name, which is the trade this tree already refused for out-of-directory decision records. The remaining five are ADR-107:37 and ADR-108:5/12/24/29, owner PURPOSE statements whose fix is `authority_basis: owner_intent`; they are routed to stubs/road-to-owner-authority-decisions.md and are not agent-editable. Zero headroom still holds for the four load-bearing positions.",
++      "falsifier": "./scripts-run src/scripts/lint_provenance_vocabulary"
++    },
++    "lint_settings_classes:derivable-surface": {
++      "count": 83,
++      "landed": "2026-08-12",
++      "note": "Anti-regrowth ratchet for the settings disposition axis. 83 of 134 template leaves are classified `derivable` — the mechanism can decide from the situation, so the key should not exist — and each names the replacement that would decide instead (`lint_settings_classes` rejects the bare label, which is what keeps the class from becoming a synonym for \"inconvenient to keep\"). This is a DELETION QUEUE, not 83 deletions: a row stays until the mechanism it names actually exists, and deleting a key ahead of its mechanism is a silently-changed default rather than a simplification. Shrink-only from here, which is the anti-regrowth half — a NEW key classified `derivable` raises the number and reds, so a key whose answer the situation already carries cannot be added at all. The 56-day non-stagnation clause is the other half and is wanted here rather than tolerated: a queue that never drains is a stated direction nobody is walking. The queue opened at 88 of 140 on 2026-08-12 and drained to 83 of 134 the same day: six keys had no reader whatsoever (telegraph.speak_scope, chat_history.max_size_kb, chat_history.on_overflow, quality.wait_for_remote_ci, screenshots.data_bearing_gate, legal_review_prep.consented_at), five of them `derivable` and one a `consent` row reclassified because a published-egress confirmation is a Hard Floor no setting may lift. An unread key is the only deletion that cannot silently change a default, which is why that batch went first. The classification itself is docs/contracts/settings-classes.md.",
++      "falsifier": "./scripts-run src/scripts/lint_settings_classes"
++    },
++    "check_no_external_sources:shape-block": {
++      "count": 148,
++      "landed": "2026-08-30",
++      "falsifier": "./scripts-run src/scripts/check_no_external_sources  # the 'attribution shape' line names the current block count; the gate fails when it RISES above this entry",
++      "note": "Lowered 243 -> 148 on 2026-08-30 by road-to-source-silence-cutover step 3.1. AI COUNCIL 2026-08-30, 2/2 seats present (anthropic + openai), option (a): NARROW the `source-header` class, do not delete it, and lower the baseline to the new measured total. REASON THE OLD NUMBER WAS WRONG, not merely high: the class flagged the VALUE of every `**Source:**` header that was not an ENC1 token or an opaque round id, so a correctly ANONYMISED header scored exactly like a leaking one. All 95 findings were read; not one named an external source in readable form, and six were flagging the anonymisation notice itself. One seat: the detector penalised correct behaviour. WHAT CHANGED: `sourceHeaderHits` now flags only a value carrying a readable identifier - an owner/repo slug, a domain, or an @scope/package - per the operational grammar in `readableIdentifierIn`, written out because a seat warned that 'readable slug' left unspecified 'merely moves subjective classification into code'. Both seats REFUSED option (c), deleting the class: a `**Source:**` header is where policy tells authors to record attribution and is therefore the highest-value place to keep looking. THE DELTA IS AUDITED: 148 = 127 tmp-quote + 21 repo-slug, and a full-tree recount removed exactly the 95 audited source-header findings and ADDED ZERO. The first run produced 150, on two middle-of-path segments (`uncondensed/rules`, `installer/src`) that read like slugs; both are pinned as fixtures. EVIDENCE: `tests/scripts/source_header_narrowing.test.ts` over three labeled fixtures under `tests/fixtures/source-headers/` - compliant (must not flag), internal-ref (must not flag), leaking (MUST flag, all three identifier shapes). The pre-narrowing predicate is kept as `legacySourceHeaderHits` and shadow-reported by the gate; it enforces nothing. ROLLBACK, as specified: revert the matcher and restore 243 if a readable identifier in a `**Source:**` fixture escapes detection, if the full-tree count is not reproducibly 148, or if the delta contains anything outside the audited source-header set. WHAT REMAINS IS REAL DEBT: 127 quoted speaking inbox-directory names and 21 repository slugs, 152 of them in `agents/roadmaps/archive/`. Paying it down is in-place redaction under ADR-250, which this change deliberately did not attempt. EXPIRY: 56 days from `landed`, i.e. 2026-10-25."
++    }
++  },
++  "retired": {
++    "lint_roadmap_blockers:decidability": {
++      "count": 0,
++      "landed": "2026-08-22",
++      "note": "Open blocker entries that are not yet DECIDABLE by the person who owns them — missing `Recommendation:` (which option and why), missing `If you do nothing:` (the cost of the non-decision), or a `What to do:` carrying no command, path or enumerated option set. Revealed by adding the decidability half to lint_roadmap_blockers, not created by it: the five original fields describe a situation and never made it actionable, so a blocker could pass the contract while handing the analysis back to the person least equipped to redo it. Measured at introduction: 36 open entries, ALL 36 undecidable, and 14 of the 46 total entries carry no command/path/option at all in `What to do`. Baselined rather than hard-failed because 36 findings nobody can clear in the change that reveals them is the gate-that-lands-as-N-instant-blockers failure this repository has refused before — the same reasoning as ci-parity:local-only above. First measured at 34 rather than 36 because the two blockers on the branch that introduced this (`ac3-false-positive-reading`, `publish-side-marker-invariant`) were rewritten to the new standard and then closed in the same change; a baseline above the truth silently permits new violations. Re-measured at 38 when the branch was re-pointed at current main, and the +4 is population growth rather than a loosening: main gained the four `road-to-inbox-harvest-2026-08-d-*` roadmaps (context-ledger, runtime-skill-routing, scheduled-deprecation, top-band-model-economy), each carrying one open blocker authored before this requirement existed. That is the honest number for the population this gate now scans — recording 34 against a 38-entry tree would have failed the gate on its own introducing commit and taught the next reader to distrust it. Lowering happens one blocker at a time, and every roadmap touched for other reasons is a chance to lower it. Lowered 38→37 by the scheduled-deprecation PR, which is exactly that shape: code-graph-removal-authorisation was rewritten to the new standard because the roadmap was being touched anyway. Its `If you do nothing:` was one of the few that was not the common no-cost answer — the release gate that PR ships would have refused the next major cut while the blocker stayed open. Recorded in the past tense because the maintainer then RESOLVED that blocker on the trunk by withdrawing the commitment, so nothing refuses a cut today. The lowering stands on the rewrite, not on the consequence, and the sentence is corrected rather than deleted because a baseline note arguing from a retracted state is how a ratchet's rationale rots. The 56-day expiry is the point, not a hazard: if this number has not moved in two months, the fields are not being written and the gate should fail until someone decides whether the requirement is real. Lowered 37→34 when the scheduled-deprecation branch merged current main: three blockers were resolved or rewritten on the trunk in the meantime, so the drop is a genuine drain plus a merge, not a loosening. Re-tightened here rather than left loose because a ratchet that lags its own tree permits violations back in silently. Lowered 34→29 on 2026-08-16 by rewriting six entries to the new standard (raw-capture-needs-host-env, telemetry-sample-size, repo-admin-and-usage, benchmark-spend, measurement-a-no-per-arm-builder-tier, measurement-b-no-renderable-lane-pair) in a PR whose only purpose was the drain — the first lowering not taken on the back of another change, which the note above says is the usual shape. Two findings from that pass are worth keeping. The tree measured 35 against a baseline of 34 BEFORE the drain, i.e. the ratchet was already red on main and nobody knew: this gate runs in `task ci`, no workflow invokes `task ci`, and the local run that would have shown it was read through a `tail`, which hid every row above the last six. And four of the six `If you do nothing:` answers are honestly that nothing degrades — that is the true answer for a held measurement, and writing it is what makes the entry decidable, so the field earns its place by being cheap to answer truthfully rather than by always carrying a cost. Lowered 29 → 27 on 2026-08-16 by the merge of this branch and the trunk drain above, and the arithmetic matters more than the delta: both sides rewrote entries from the same tree of 35 independently — the trunk six (recorded above), this branch two (deferred-finding-decision-reopen, spent-inbox-artifacts-await-deletion, rewritten because road-to-inbox-harvest-residuals was being touched anyway). The sets are disjoint, so the merged tree measures 27 and the gate itself reported the slack. Tightened rather than banked: 29 against a 27-entry tree would absorb the next two undecidable blockers without anything noticing, which is the lag this note has now corrected twice. Lowered 27 → 26 on 2026-08-16 by rewriting `picktier-wire-or-archive` (road-to-inbox-harvest-2026-08-d-top-band-model-economy), and this one is the usual shape the note describes rather than the dedicated-drain shape: the roadmap was being worked for its own Step 4.1 and the entry was rewritten because it was open on the desk. Worth recording for what writing the two fields SURFACED, which is the argument for the requirement: `Recommendation:` forced the question 'which option, and why' and the honest answer turned out not to be one of the three options at all — the entry defers to a converged council verdict, and the council cannot reach quorum (re-measured 0 of 2 the same day), so the actionable next step is a one-line fix to a user-global config file outside this repository. Five fields had described that situation accurately for two weeks without anyone noticing that the named blocker was infrastructure rather than judgement. Lowered 26 → 22 on 2026-08-18 by road-to-estate-drawdown Step 0.1, which needed the two fields for a different reason and therefore drained six entries as a by-product: the consolidated decision sheet renders a DEFAULT plus that default's provenance per user-owned decision, and 7 of the 21 live entries recorded no `Recommendation:` to derive one from. Six were rewritten to the new standard (skill-activation-window, b-convergence-machine, maintainer-blind-ratings, real-orchestration-usage, human-gated-live-trigger-eval, manual-rubric-rater), each marked `agent-drafted` in the field itself so the sheet can label the provenance rather than presenting a drafted default beside a maintainer-recorded one as the same kind of statement. The seventh, `road-to-gated-reach-followup`'s legacy `> Blocked until …` note, is NOT counted here and was not rewritten: it is a blocked-until note rather than a `### blocker:` entry, so it has no field to carry, and converting it is a roadmap restructure this change did not take. **The tree was RED at 28 against this baseline of 26 before the drain, and again nobody knew** — the same failure the 34→29 paragraph above records, one gate cycle later: two entries had been added on the trunk without the fields, and this gate runs in `task ci`, which no workflow invokes. That is the second recorded instance of this ratchet being red on main undetected, which is an argument about where it runs rather than about its number. `human-gated-live-trigger-eval` also gained a command in `What to do:` (`rule_trigger_eval`, verified to exist at src/scripts/) because the field carried a path-less instruction; the other five needed only the two decidability fields. Lowered 22 -> 20 on 2026-08-19 by road-to-estate-drawdown Phase 2 triage batch 1, and RE-MEASURED after two merges of origin/main rather than carried over: the trunk gained roadmaps in between (the long-horizon pair and the council-fallback set), and the live count over the merged tree is still 20 across 39 roadmaps. Six roadmaps moved to later/, and two of them carried an undecidable open blocker each. The gain is a side effect of parking rather than of drafting a recommendation, so it is recorded as such — the two entries are unchanged and still undecidable where they sit; they are simply outside the active tree this ratchet scans. Walked down because the gate reported itself loose, and a baseline above the measurement is headroom a later change can spend with nothing objecting. Lowered 20 -> 17 on 2026-08-20 by the road-to-frontend-skill-application closeout, and the shape is the usual one this note describes: the roadmap was being closed for its own reasons and its three open blockers were on the desk anyway. Two (ui-corpus-has-no-ui, enforcement-evidence) left the population by being RESOLVED rather than rewritten, which is the cleanest way to lower this number and the only one that does not add prose; the third (ui-session-capture-window) was rewritten to the new standard. Worth recording what writing the two fields surfaced, since that is the standing argument for the requirement: on ui-corpus-has-no-ui, `Recommendation:` forced the question \"which option, and why\" and the honest answer was that the entry's own premise was false — it asserted the question could not be answered without a human naming a consumer store, and the stores were already on the machine, readable by the command the entry itself printed. Five fields had described that situation accurately for a week without anyone noticing the blocker was a measurement nobody had run. Tightened rather than banked because 20 against a 17-entry tree is headroom the next three undecidable blockers would spend with nothing objecting, which is the lag the paragraphs above have now corrected three times. Walked 17 -> 12 at the drain/road-to-frontend-skill-application merge, 2026-08-21, on the gate's own loose-ratchet report. Re-measured against the merged tree rather than attributed: sibling drain PRs made entries decidable in parallel, so this branch's share is not separable here and is not claimed. Banked at the measurement rather than left as headroom a later change could spend.\n\nWALKED 12 -> 1 on 2026-08-22 by resolving the two `road-to-evidence-based-adr-governance` blockers (`owner-autonomy-batch`, `authority-coupling-decision`), which were undecidable in exactly the way this ratchet names: each handed a Hard-Floor question to the reader without a landed outcome. Both now carry one. The single remaining violation is `road-to-drain-commands:395` (`merge-authority`), which PR #1517 resolves and archives — so the honest count for THIS tree is 1 and it is expected to reach 0 once that lands. It is not lowered to 0 here, because a baseline must describe the tree it ships with rather than the tree someone expects next. Lowered 1 -> 0 on 2026-08-22, and the prediction the previous entry made is what closed it: the single remaining violation was `road-to-drain-commands:395` (`merge-authority`), and PR #1517 archived that roadmap, taking the entry out of the scanned population. Nothing was rewritten to reach zero -- the record left the active tree with its blocker RESOLVED, which is the cleanest of the two ways this number goes down and the only one that adds no prose. Zero is now the ceiling: any new open blocker missing `Recommendation:`, `If you do nothing:` or an actionable `What to do:` reds this gate immediately, with no headroom at all.",
++      "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers --quiet",
++      "retired_on": "2026-08-22",
++      "retired_because": "Walked to 0 and therefore removed from `gates`: an entry recording no debt is what gate_baseline.test.ts refuses, and a missing entry is not weaker — evaluateGate treats an absent baseline as ok only when the live count is 0, which is the same ceiling the note below asked for. Kept here because the note is dated history, not commentary; nothing reads this key at runtime."
+     }
++  }
+ }
+diff --git a/src/scripts/_lib/source_shape.ts b/src/scripts/_lib/source_shape.ts
+index 648de95b49f41718223771fa3397b632b2756655..dd385cdfdffab29f45eaef626a4af9c51c474d80 100644
+--- a/src/scripts/_lib/source_shape.ts
++++ b/src/scripts/_lib/source_shape.ts
+@@ -201,7 +201,116 @@ function fold(s: string): string {
+     return s.trim().toLowerCase();
+ }
+ 
+-/** `source-header` hits on one line. */
++/**
++ * Repo-relative prefixes that make a token an INTERNAL reference.
++ *
++ * A `**Source:**` value pointing at this repository's own tree names nothing
++ * external, whatever shape it has. Listed rather than pattern-matched because
++ * the set is small, closed, and a reviewer should be able to read it.
++ */
++const INTERNAL_PATH_PREFIXES: readonly string[] = [
++    'agents/', 'docs/', 'src/', 'tests/', 'scripts/', 'internal/', 'evals/',
++    'dist/', 'provenance/', 'templates/', 'packages/', '.agent-src',
++    '.augment/', '.claude/', '.github/', 'road-to-', 'adr-', 'pr #',
++];
++
++/** Hosts a value may name openly — the same carve-out `ALLOWED_OWNERS` encodes. */
++const ALLOWED_HOSTS: readonly string[] = [
++    'example.com', 'example.org', 'example.net', 'localhost',
++    'github.com', 'anthropic.com', 'openai.com', 'nodejs.org', 'npmjs.com',
++];
++
++const BARE_SLUG_RE = /\b([A-Za-z][A-Za-z0-9-]{1,38})\/([A-Za-z][A-Za-z0-9._-]{1,99})\b/g;
++const DOMAIN_RE = /\b([a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|io|dev|ai|org|net|sh|app|co))\b/gi;
++const SCOPED_PKG_RE = /(^|\s)@([a-z0-9-]+)\/([a-z0-9._-]+)/gi;
++
++function isInternalToken(token: string): boolean {
++    const t = fold(token);
++    return INTERNAL_PATH_PREFIXES.some((prefix) => t.startsWith(prefix));
++}
++
++/**
++ * Does this `**Source:**` value carry a READABLE identifier?
++ *
++ * This is the operational grammar the narrowing rests on, and it is written out
++ * rather than left to a reviewer's judgement because a council seat named
++ * exactly that risk: *"'readable slug' is still an open question disguised as a
++ * decision … without that specification, option (a) merely moves subjective
++ * classification into code."*
++ *
++ * An identifier is one of three shapes, none of which prose produces by
++ * accident: an `owner/repo` slug, a domain name, or an `@scope/package`. A
++ * value carrying none of them names nothing a reader could look up — it is a
++ * description, and a description is what `source-confidentiality` ASKS authors
++ * to write.
++ *
++ * Internal tokens are excluded first: this repository's own paths, its roadmap
++ * slugs, ADR ids and PR references are `owner/repo`-shaped and name nothing
++ * external.
++ */
++export function readableIdentifierIn(value: string): string | null {
++    const hosts = new Set(ALLOWED_HOSTS.map(fold));
++    const owners = new Set(ALLOWED_OWNERS.map(fold));
++
++    DOMAIN_RE.lastIndex = 0;
++    let d: RegExpExecArray | null;
++    while ((d = DOMAIN_RE.exec(value)) !== null) {
++        const host = fold(d[1] as string);
++        if (!hosts.has(host) && !host.endsWith('.example.com')) return host;
++    }
++
++    SCOPED_PKG_RE.lastIndex = 0;
++    let p: RegExpExecArray | null;
++    while ((p = SCOPED_PKG_RE.exec(value)) !== null) {
++        const scope = fold(p[2] as string);
++        if (!owners.has(scope)) return `@${scope}/${p[3] as string}`;
++    }
++
++    BARE_SLUG_RE.lastIndex = 0;
++    let m: RegExpExecArray | null;
++    while ((m = BARE_SLUG_RE.exec(value)) !== null) {
++        const whole = `${m[1] as string}/${m[2] as string}`;
++        if (isInternalToken(whole)) continue;
++        if (owners.has(fold(m[1] as string))) continue;
++        // A slug whose second half looks like a file extension is a path, not a
++        // repository: `road-to-x.md`, `results/2026-04-21T08.json`.
++        if (/\.(md|json|ts|tsx|js|mjs|yml|yaml|txt|jsonl|patch|png|svg)$/i.test(whole)) continue;
++        // A MIDDLE segment of a longer path is not an `owner/repo`, and this is
++        // the correction the first measurement forced: `.agent-src.uncondensed/
++        // rules/autonomous-execution.md` yielded `uncondensed/rules`, and
++        // `packages/installer/src/...` yielded `installer/src`. Both are two
++        // path segments that happen to sit next to each other, which is what a
++        // repository slug also looks like — the difference is entirely in what
++        // surrounds them. A separator on either side means path.
++        const before = value.slice(0, m.index);
++        const after = value.slice(m.index + whole.length);
++        if (/[/.\\]$/.test(before)) continue;
++        if (/^[/\\]/.test(after)) continue;
++        return whole;
++    }
++    return null;
++}
++
++/**
++ * `source-header` hits on one line.
++ *
++ * **NARROWED 2026-08-30 by AI-council verdict (2/2 seats present), and the
++ * reason is that the previous form measured the opposite of what it was
++ * baselined for.** It flagged the VALUE of every `**Source:**` header that was
++ * not an `ENC1:` token or an opaque round id — so a correctly anonymised header
++ * scored exactly like a leaking one. All 95 findings in the tracked tree were
++ * read: not one named an external source in readable form, and six of them were
++ * flagging the *anonymisation notice itself* (`**Source:** anonymisation
++ * (source-confidentiality). External harvest sources …`). One seat put it
++ * plainly: the detector penalised correct behaviour.
++ *
++ * The class is NARROWED, never deleted — both seats refused (c), removing it,
++ * on the grounds that a `**Source:**` header is the location policy directs
++ * authors to record attribution and is therefore the highest-value place to
++ * keep looking. What it now flags is a value carrying a readable identifier
++ * (see {@link readableIdentifierIn}); the reported `value` is that identifier
++ * rather than the whole header, so a finding names the thing that leaked.
++ */
+ export function sourceHeaderHits(line: string): ShapeHit[] {
+     const m = SOURCE_HEADER_RE.exec(line);
+     if (!m) return [];
+@@ -216,6 +325,30 @@ export function sourceHeaderHits(line: string): ShapeHit[] {
+     // so the tmp-quote class owns it and this class stays silent — otherwise one
+     // line would be counted twice and the two ratchets would move together.
+     if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
++    const identifier = readableIdentifierIn(value);
++    if (identifier === null) return [];
++    return [{ cls: 'source-header', value: identifier.slice(0, 120) }];
++}
++
++/**
++ * The PRE-narrowing `source-header` predicate, kept as a shadow metric.
++ *
++ * A council condition, and its purpose is auditability rather than enforcement:
++ * *"keep the old detector shadow-reporting until at least one subsequent
++ * corpus-changing release passes both detectors"*. It is exported so
++ * `check_no_external_sources` can report the legacy count beside the live one,
++ * and it gates nothing.
++ */
++export function legacySourceHeaderHits(line: string): ShapeHit[] {
++    const m = SOURCE_HEADER_RE.exec(line);
++    if (!m) return [];
++    const raw = (m[1] as string).trim();
++    const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
++    if (value === '') return [];
++    if (ENC_TOKEN_RE.test(value)) return [];
++    if (REDACTION_VALUE_RE.test(value)) return [];
++    if (isOpaqueRoundId(value)) return [];
++    if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
+     return [{ cls: 'source-header', value: value.slice(0, 120) }];
+ }
+ 
+diff --git a/src/scripts/check_no_external_sources.ts b/src/scripts/check_no_external_sources.ts
+index 844597314c91827f45486b62776d5ed33467f53e..65eb43eb8362f5eca9ca517734c5429729a5331a 100644
+--- a/src/scripts/check_no_external_sources.ts
++++ b/src/scripts/check_no_external_sources.ts
+@@ -67,7 +67,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
+ import { checkRatchet } from './_lib/gate_baseline.js';
+ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+ import { DigestMatcher, digestMode, EXIT_NO_KEY, KEY_ENV, STRICT_ENV } from './_lib/source_digest.js';
+-import { shapeHits as shapeHitsOf, shapePathHits, tierFor, type ShapeClass } from './_lib/source_shape.js';
++import {
++    legacySourceHeaderHits,
++    shapeHits as shapeHitsOf,
++    shapePathHits,
++    tierFor,
++    type ShapeClass,
++} from './_lib/source_shape.js';
+ import {
+     dedupVerdict,
+     findingKey,
+@@ -366,6 +372,8 @@ function main(argv: readonly string[]): number {
+ 
+     const hits: Hit[] = [];
+     const shapes: ShapeFinding[] = [];
++    /** Pre-narrowing `source-header` count. Reported, never enforced. */
++    let legacyHeaderShadow = 0;
+     for (const rel of tracked) {
+         if (_skipped(rel, skipGlobs)) {
+             continue;
+@@ -425,6 +433,15 @@ function main(argv: readonly string[]): number {
+             for (const h of shapeHitsOf(line)) {
+                 shapes.push({ file: rel, line: idx + 1, cls: h.cls, tier, value: h.value });
+             }
++            // SHADOW METRIC, gating nothing. A council condition of the
++            // 2026-08-30 narrowing: "keep the old detector shadow-reporting
++            // until at least one subsequent corpus-changing release passes both
++            // detectors". It exists so the discontinuity from 243 to 148 stays
++            // visible and auditable rather than becoming a number nobody can
++            // reconstruct.
++            if (tier === 'block') {
++                legacyHeaderShadow += legacySourceHeaderHits(line).length;
++            }
+         }
+     }
+ 
+@@ -561,6 +578,13 @@ function main(argv: readonly string[]): number {
+             `\nattribution shape — block(agents/**) ${String(blockShapes.length)}` +
+                 ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}\n`,
+         );
++        process.stdout.write(
++            `legacy source-header shadow — ${String(legacyHeaderShadow)} raw finding(s) under the` +
++                ` PRE-2026-08-30 predicate. Reported, enforces nothing, and NOT` +
++                ` comparable to the 95 audited: this count is pre-dedup, while the` +
++                ` audited delta was measured after snapshot deduplication. See the` +
++                ` check_no_external_sources:shape-block baseline note.\n`,
++        );
+         if (excluded.length > 0) {
+             process.stdout.write(
+                 `snapshot dedup — ${String(excluded.length)} review-snapshot finding(s) excluded` +
+diff --git a/src/scripts/cost/budget.mjs b/src/scripts/cost/budget.mjs
+index 88018222f10991164f12abe4eafca31b8feecf49..638e9db3cbd4c7b2d174c56ff73b09195bd4ad17 100755
+--- a/src/scripts/cost/budget.mjs
++++ b/src/scripts/cost/budget.mjs
+@@ -2,9 +2,13 @@
+ // cost-budget — set / get / check the project's cost budget against
+ // accumulated session spend in agents/cost-tracking/sessions.jsonl.
+ //
+-// Forked from [REDACTED:src-conf]/[REDACTED:src-conf] plugins/[REDACTED:src-conf]-cost-tracker/scripts/budget.mjs.
+-// Local-JSONL swap replaces the upstream `mcp__claude-flow__memory_store`
+-// dependency. Budget config lives next to the sessions store as budget.json.
++// Derived work. Upstream, its license and the full transformation record are in
++// NOTICE, docs/THIRD-PARTY-NOTICES.md and provenance/borrows.jsonl — the three
++// surfaces that ship with the package. The source is not named here because a
++// source name in a tracked source file is what `source-confidentiality` forbids,
++// and MIT discharges through a distributed notice rather than an in-file one.
++// Local-JSONL swap replaces the upstream MCP memory-store dependency. Budget
++// config lives next to the sessions store as budget.json.
+ //
+ // Usage: node scripts/cost/budget.mjs {set <usd>|get|check}
+ // Env: BUDGET_STORE, BUDGET_CONFIG, BUDGET_PERIOD={today|week|month|all}, BUDGET_QUIET=1
+diff --git a/src/scripts/cost/track.mjs b/src/scripts/cost/track.mjs
+index efd562807891f5d1f5f6ab81bda2e2614e4b031c..d49783a317782ab2f193c1ccfdd2c5395cb1989c 100755
+--- a/src/scripts/cost/track.mjs
++++ b/src/scripts/cost/track.mjs
+@@ -2,9 +2,13 @@
+ // cost-track — auto-capture token usage from a Claude Code session jsonl
+ // and append a structured record to agents/cost-tracking/sessions.jsonl.
+ //
+-// Forked from [REDACTED:src-conf]/[REDACTED:src-conf] plugins/[REDACTED:src-conf]-cost-tracker/scripts/track.mjs.
+-// Local-JSONL swap replaces the upstream `mcp__claude-flow__memory_store`
+-// dependency. Pricing constants are kept in sync with REFERENCE.md.
++// Derived work. Upstream, its license and the full transformation record are in
++// NOTICE, docs/THIRD-PARTY-NOTICES.md and provenance/borrows.jsonl — the three
++// surfaces that ship with the package. The source is not named here because a
++// source name in a tracked source file is what `source-confidentiality` forbids,
++// and MIT discharges through a distributed notice rather than an in-file one.
++// Local-JSONL swap replaces the upstream MCP memory-store dependency. Pricing
++// constants are kept in sync with REFERENCE.md.
+ //
+ // Dedup + main/subagent split, and the logic driving them, are mirrored
+ // (not imported) from `src/scripts/_lib/cc_transcript.ts`: this file ships
+diff --git a/src/scripts/external_sources_denylist.json b/src/scripts/external_sources_denylist.json
+index 32e30b89c863c5f3ea06c61f09bc5eddad358493..5ebcf0f51f4eae46c57da6f75cc1165089b9f526 100644
+--- a/src/scripts/external_sources_denylist.json
++++ b/src/scripts/external_sources_denylist.json
+@@ -77,7 +77,6 @@
+     "src/skills/design-tokens/*",
+     "src/skills/react-shadcn-ui/*",
+     "src/skills/tailwind-engineer/*",
+-    "src/scripts/cost/*",
+     "dist/agent-src/skills/design-intelligence/*",
+     "dist/agent-src/skills/corpus-grounding/*",
+     "dist/agent-src/skills/design-tokens/*",
+diff --git a/tests/fixtures/source-headers/compliant.md b/tests/fixtures/source-headers/compliant.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..233eb6ca248adfb8bb63406b6836673ce797c262
+--- /dev/null
++++ b/tests/fixtures/source-headers/compliant.md
+@@ -0,0 +1,22 @@
++<!--
++Anonymised `**Source:**` headers — the shape `source-confidentiality` ASKS
++authors to write. Every line here MUST score zero: a detector that flags these
++is penalising compliance, which is what the pre-2026-08-30 `source-header`
++class did.
++-->
++
++> **Source:** an external analysis session, 2026-08-18
++
++> **Source:** anonymisation (`source-confidentiality`).** External harvest sources
++
++> **Source:** identity:** an external LLM-gateway reference ("Source B") — a
++
++> **Source:** four independent external release reviews of 9.11.0-9.14.0
++
++> **Source:** an external research report (22 Aug 2026, "Agent-Coding-Assurance")
++
++> **Source:** an outside-in review of a multi-repository developer estate
++
++> **Source:** an external, German-language viral-prompt collection
++
++> **Source:** a two-round source-level comparison intake plus follow-up
+diff --git a/tests/fixtures/source-headers/internal-ref.md b/tests/fixtures/source-headers/internal-ref.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a1beba89bcbee3edc60c3554024b92500aa97a6a
+--- /dev/null
++++ b/tests/fixtures/source-headers/internal-ref.md
+@@ -0,0 +1,23 @@
++<!--
++`**Source:**` headers pointing INSIDE this repository. Every line MUST score
++zero: a repo path, a roadmap slug, an ADR id and a PR reference are all
++`owner/repo`-shaped and name nothing external. Two of these are the exact
++strings that made the first narrowed matcher over-report — a middle segment of
++a longer path reads like a slug unless you look at what surrounds it.
++-->
++
++> **Source:** agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md
++
++> **Source:** PR #1016 review (maintainer, 2026-07-27)
++
++> **Source:** road-to-product-adoption.md Phase 5 Step 1
++
++> **Source:** under inventory:** `.agent-src.uncondensed/rules/autonomous-execution.md` (192 lines)
++
++> **Source:** packages/installer/src/index.ts
++
++> **Source:** docs/contracts/rule-router.md
++
++> **Source:** evals/results/2026-04-21T08.json
++
++> **Source:** src/scripts/_lib/source_shape.ts
+diff --git a/tests/fixtures/source-headers/leaking.md b/tests/fixtures/source-headers/leaking.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..5ef8607644d9bc7830af4ce80e1f8d7fff27d167
+--- /dev/null
++++ b/tests/fixtures/source-headers/leaking.md
+@@ -0,0 +1,19 @@
++<!--
++`**Source:**` headers that DO name something a reader could look up. Every line
++here MUST be flagged. These are the cases the narrowing must not lose: if one of
++them escapes, the matcher is reverted and the baseline goes back to 243.
++
++The names below are invented for this fixture and correspond to nothing real —
++a fixture that carried a genuine source name would itself be the leak the gate
++exists to prevent.
++-->
++
++> **Source:** somevendor/some-agent-suite, read at 9f2a1c4
++
++> **Source:** ported from acme-labs/prompt-registry
++
++> **Source:** https://not-a-real-vendor.dev/blog/agent-patterns
++
++> **Source:** the @notreal-scope/agent-kit package
++
++> **Source:** an internal fork of otherorg/otherrepo
+diff --git a/tests/scripts/source_header_narrowing.test.ts b/tests/scripts/source_header_narrowing.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..06c1f6c3018c1ffc87f9152d16fe31160b536a86
+--- /dev/null
++++ b/tests/scripts/source_header_narrowing.test.ts
+@@ -0,0 +1,155 @@
++// The narrowed `source-header` class, against a labeled corpus.
++//
++// `road-to-source-silence-cutover` step 3.1, AI council 2026-08-30 (2/2 seats
++// present). The council chose option (a) — narrow the heuristic and lower the
++// baseline from 243 to 148 — and made a labeled fixture corpus a CONDITION of
++// that choice, for a stated reason:
++//
++//   "The largest glossed-over trust boundary is control of the detector and its
++//    baseline. If the same change can redefine 'debt', regenerate the count, and
++//    approve the reduction, the ratchet is self-attesting."
++//
++// So the reduction is only legitimate if the revised detector keeps recall for
++// the prohibited behaviour while dropping findings that never represented it.
++// That is what these three fixtures test, and the third one is the half that
++// matters: a narrowing nobody probed from the positive side is indistinguishable
++// from deletion.
++//
++// ROLLBACK, as the seat specified: revert the matcher and restore the 243
++// baseline if a readable external identifier in a `**Source:**` fixture escapes
++// detection, if the full-tree count is not reproducibly 148, or if the observed
++// 95-item delta contains anything outside the audited `source-header` set.
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    legacySourceHeaderHits,
++    readableIdentifierIn,
++    sourceHeaderHits,
++} from '../../src/scripts/_lib/source_shape.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const FIXTURES = path.resolve(HERE, '..', 'fixtures', 'source-headers');
++
++/** Every `**Source:**` line in a fixture, with its 1-based line number. */
++function headerLines(name: string): { line: string; n: number }[] {
++    const raw = fs.readFileSync(path.join(FIXTURES, `${name}.md`), 'utf8');
++    return raw
++        .split('\n')
++        .map((line, i) => ({ line, n: i + 1 }))
++        // Only real header LINES: the explanatory HTML comment at the top of
++        // each fixture mentions `**Source:**` in prose, and counting it would
++        // make the corpus one case larger than the fixture actually declares.
++        .filter((e) => /^>\s*\*\*Source\*?\*?:/.test(e.line));
++}
++
++describe('compliant.md — anonymised headers score ZERO', () => {
++    const cases = headerLines('compliant');
++
++    it('has a non-trivial corpus', () => {
++        // A fixture file that stopped matching would make every assertion below
++        // vacuously true — the "gate that scans nothing exits green" shape.
++        expect(cases.length).toBeGreaterThanOrEqual(8);
++    });
++
++    it.each(cases)('does not flag: $line', ({ line }) => {
++        expect(sourceHeaderHits(line)).toEqual([]);
++    });
++
++    it('is exactly what the OLD detector flagged — which is the whole finding', () => {
++        // Every one of these scored under the pre-narrowing predicate. Six of
++        // the tracked-tree findings were the anonymisation notice itself, so the
++        // detector was reporting adherence to `source-confidentiality` as debt.
++        const flaggedByLegacy = cases.filter((c) => legacySourceHeaderHits(c.line).length > 0);
++        expect(flaggedByLegacy.length).toBe(cases.length);
++    });
++});
++
++describe('internal-ref.md — headers pointing inside this repo score ZERO', () => {
++    const cases = headerLines('internal-ref');
++
++    it('has a non-trivial corpus', () => {
++        expect(cases.length).toBeGreaterThanOrEqual(8);
++    });
++
++    it.each(cases)('does not flag: $line', ({ line }) => {
++        expect(sourceHeaderHits(line)).toEqual([]);
++    });
++
++    it('includes the two strings that made the FIRST narrowed matcher over-report', () => {
++        // `.agent-src.uncondensed/rules/…` yielded `uncondensed/rules` and
++        // `packages/installer/src/…` yielded `installer/src`: two path segments
++        // side by side look exactly like a repository slug, and the difference
++        // is entirely in what surrounds them. Pinned here because the first
++        // full-tree run produced 150 rather than 148 on precisely these, and a
++        // fix with no test is a fix that comes back.
++        expect(readableIdentifierIn('`.agent-src.uncondensed/rules/autonomous-execution.md`')).toBeNull();
++        expect(readableIdentifierIn('packages/installer/src/index.ts')).toBeNull();
++    });
++});
++
++describe('leaking.md — headers naming something a reader could look up MUST flag', () => {
++    const cases = headerLines('leaking');
++
++    it('has a non-trivial corpus', () => {
++        expect(cases.length).toBeGreaterThanOrEqual(5);
++    });
++
++    it.each(cases)('flags: $line', ({ line }) => {
++        const hits = sourceHeaderHits(line);
++        expect(hits.length, 'a readable identifier must be detected').toBeGreaterThan(0);
++        expect(hits[0]?.cls).toBe('source-header');
++        // The reported value is the IDENTIFIER, not the whole header — a finding
++        // should name the thing that leaked.
++        expect((hits[0]?.value ?? '').length).toBeGreaterThan(0);
++        expect(hits[0]?.value).not.toContain('**Source');
++    });
++
++    // removing_this_constraint_reds_it: make `readableIdentifierIn` return null
++    // unconditionally — every case in this block reds and the other two stay
++    // green, which is the asymmetry that separates a narrowing from a deletion.
++
++    it('covers all three identifier shapes the grammar recognises', () => {
++        expect(readableIdentifierIn('somevendor/some-agent-suite')).toBe('somevendor/some-agent-suite');
++        expect(readableIdentifierIn('see https://not-a-real-vendor.dev/blog/x')).toBe(
++            'not-a-real-vendor.dev',
++        );
++        expect(readableIdentifierIn('the @notreal-scope/agent-kit package')).toBe(
++            '@notreal-scope/agent-kit',
++        );
++    });
++});
++
++describe('the grammar itself', () => {
++    it('does not treat a bare date, version or prose as an identifier', () => {
++        for (const value of [
++            'external adversarial review of 9.8.0',
++            'AI council on guard severity (anthropic + openai, 2026-08-12)',
++            'a 50-session review run on 2026-08-22 over the transcripts',
++            'maintainer handover 2026-08-21',
++            'Items carried over from completed roadmaps',
++        ]) {
++            expect(readableIdentifierIn(value), value).toBeNull();
++        }
++    });
++
++    it('keeps the allowlist meaning it already had', () => {
++        // `ALLOWED_OWNERS` is a precision guard for a URL host pattern, and the
++        // narrowed grammar reuses it rather than growing a second list — a
++        // second list is how an exemption register starts.
++        // The own-org owner is `event4u-app`, which is what `ALLOWED_OWNERS`
++        // carries — `event4u/…` is a different owner and correctly flags.
++        expect(readableIdentifierIn('event4u-app/agent-config')).toBeNull();
++    });
++
++    it('the legacy predicate still exists and still flags broadly', () => {
++        // Shadow metric, a council condition: kept until a subsequent
++        // corpus-changing release has passed both detectors. It gates nothing.
++        expect(legacySourceHeaderHits('> **Source:** an external analysis session')).toHaveLength(1);
++        expect(sourceHeaderHits('> **Source:** an external analysis session')).toEqual([]);
++    });
++});
+diff --git a/tests/scripts/source_shape.test.ts b/tests/scripts/source_shape.test.ts
+index efc8da0750fcdd38d8211c6d704c530852152212..a5f2bba6765d10daaa463813e5cc4ab446008531 100644
+--- a/tests/scripts/source_shape.test.ts
++++ b/tests/scripts/source_shape.test.ts
+@@ -29,11 +29,26 @@ import {
+ } from '../../src/scripts/_lib/source_shape.js';
+ 
+ describe('source_shape — the three blocking fixtures from Phase 3.2', () => {
+-    it('fires on a speaking `> **Source:**` header', () => {
+-        const hits = shapeHits('> **Source:** the-external-thing we read in June');
++    it('fires on a `> **Source:**` header that NAMES something', () => {
++        // NARROWED 2026-08-30 (AI council, 2/2). This case used to read
++        // `the-external-thing we read in June` — descriptive prose with no
++        // identifier — and it fired, which is precisely the defect the council
++        // acted on: all 95 tracked-tree findings of this class were descriptive
++        // or internal, six of them the anonymisation notice itself, so the
++        // detector scored compliance as debt. The fixture is updated to a header
++        // that carries a readable identifier, which is what the class now means.
++        const hits = shapeHits('> **Source:** ported from somevendor/some-suite');
+         expect(hits.map((h) => h.cls)).toContain('source-header');
+     });
+ 
++    it('does NOT fire on a `> **Source:**` header that only describes', () => {
++        // The other half of the narrowing, asserted rather than implied: an
++        // anonymised description is what `source-confidentiality` asks authors
++        // to write, and flagging it penalised the correct behaviour.
++        expect(shapeHits('> **Source:** the-external-thing we read in June')).toEqual([]);
++        expect(shapeHits('> **Source:** an external analysis session, 2026-08-18')).toEqual([]);
++    });
++
+     it('fires on a speaking agents/tmp quote', () => {
+         const hits = shapeHits('see `agents/tmp.old/[REDACTED:src-conf]/` for the intake');
+         expect(hits.map((h) => h.cls)).toContain('tmp-quote');

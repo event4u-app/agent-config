@@ -29,7 +29,7 @@ is **0 before** and **0 after**.
 | 5 | `src/skills/design-tokens/*` | 2 | 2 | vendored corpus (ADR-061) | kept |
 | 6 | `src/skills/react-shadcn-ui/*` | 1 | 1 | vendored, Apache-2.0 §4b in-file notice | kept |
 | 7 | `src/skills/tailwind-engineer/*` | 1 | 1 | vendored, Apache-2.0 §4b in-file notice | kept |
-| 8 | `src/scripts/cost/*` | 4 | 4 | forked upstream, un-ledgered — see § What did not move | kept |
+| 8 | `src/scripts/cost/*` | 4 | 4 | forked upstream, un-ledgered — see § What did not move | **RETIRED 2026-08-30** (see the update below) |
 | 9 | `dist/agent-src/skills/design-intelligence/*` | 12 | 12 | generated projection of src (ADR-201) | kept |
 | 10 | `dist/agent-src/skills/corpus-grounding/*` | 2 | 2 | generated projection of src (ADR-201) | kept |
 | 11 | `dist/agent-src/skills/design-tokens/*` | 2 | 2 | generated projection of src (ADR-201) | kept |
@@ -89,7 +89,32 @@ attribution without knowing whether the license requires it in-file is
 exactly that guess. It is carried into
 `road-to-source-silence-cutover` as a maintainer item.
 
+#### UPDATE 2026-08-30 — retired, and the escalation was right
+
+`road-to-source-silence-cutover` step 2.2 established the license: **MIT**,
+read from the upstream repository's own `LICENSE` rather than inferred. MIT
+requires the copyright and permission notice to travel with copies and says
+nothing about placement, so a distributed notice discharges it and the in-file
+source name was never required. Branch (a) executed: ledger entry, notices
+regenerated, both comments de-named, entry removed. **The floor is 21.**
+
+Two things the escalation bought that a guess would not have. The in-file
+comment was a *"Forked from"* line and **not** an MIT copyright or permission
+notice, so the previous state discharged the obligation nowhere — it only named
+a source where a rule forbids it. And verifying the *packaged* artifact, which
+the resolving council made a binding precondition, turned up that
+`package.json`'s `files` list carried none of `NOTICE`, `CREDITS.md`,
+`docs/THIRD-PARTY-NOTICES.md` or `provenance/borrows.jsonl` while carrying
+`src/scripts/` — so every notice surface was missing from the published
+package, the pre-existing Apache-2.0 entry included. All four are now shipped.
+
 ## The measured floor, against the authored criterion
+
+> **Settled 2026-08-30: the target is 21**, by AI council with 2/2 seats
+> present (`road-to-source-silence-cutover` step 2.1). The paragraphs below are
+> the state as measured on 2026-08-29 and are kept as written — they are the
+> evidence the decision was taken on, and rewriting them to match the outcome
+> would erase the question.
 
 Step 2.3 and AC-6 as authored require **≤ 20**. The measured floor with every
 principled carve-out intact is **22**, and 21 if the fork attribution above is
