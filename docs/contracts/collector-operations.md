@@ -1,0 +1,131 @@
+# Collector operations — stopping it, what it may cost, and which mode you are in
+
+The supervised telemetry collector is **default-off**. This page is for the
+moment when it is on and you need it to stop, or you need to know whether it is
+running at all. It is deliberately short and deliberately not in a roadmap: a
+kill switch documented inside a planning file is a kill switch nobody finds
+under pressure.
+
+Source of truth for every number and mechanism here:
+`src/scripts/_lib/collector_supervision.ts`. Where this page and that module
+disagree, the module is right and this page is a bug.
+
+## Stop it now
+
+```bash
+touch ~/.event4u/agent-config/agent-collector/STOP
+```
+
+That is the whole switch. Its **presence** is the signal; nothing reads its
+contents. Two things follow immediately:
+
+- No collector can start. `acquireRuntimeLock` refuses while the marker exists,
+  so a supervisor restart loop cannot bring it back.
+- Every dispatch resolves in **static mode** — the no-collector path. Nothing is
+  captured and nothing blocks.
+
+To also end a process that is already running, the mechanism is
+`terminateCollector` in `collector_supervision.ts`: `SIGTERM`, then `SIGKILL`
+after a grace period. The escalation is not optional — a collector that has
+installed a `SIGTERM` handler and does not honour it is stopped by `SIGKILL`,
+which is why the two supported platform rows are both Unix.
+
+**The operator-facing verb for that second half does not exist yet, and this
+page will not pretend it does.** The collector is Phase 4 of
+`road-to-supervised-telemetry-collector`; until it lands there is no process to
+end, and the marker above is the entire switch. The verb ships with the
+collector, in the same change, and this paragraph is replaced by it. Stopping a
+process by hand in the meantime is `kill` against the pid in the heartbeat file
+below.
+
+**Undo:** delete the marker.
+
+```bash
+rm ~/.event4u/agent-config/agent-collector/STOP
+```
+
+## Is it running?
+
+```bash
+cat ~/.event4u/agent-config/agent-collector/heartbeat.json
+```
+
+Three states, and the middle one is why this is a file rather than a boolean:
+
+| State | What you see | What it means |
+|---|---|---|
+| `absent` | no heartbeat file | nothing claims to be running |
+| `stale` | `last_heartbeat` older than 90 s | something claimed to be running and has stopped beating — **likely dead** |
+| `running` | `last_heartbeat` within 90 s | alive |
+
+A silently dead collector that still looks healthy is the failure this
+three-valued reading exists to prevent: an understated capture rate reads as a
+product finding rather than as an outage.
+
+## What it is allowed to cost
+
+Four budgets. Crossing a ceiling **stops** the collector — it never throttles
+it, because an observer that has become a load is no longer an observer.
+
+| Resource | Ceiling | Expected peak | Headroom |
+|---|---|---|---|
+| CPU | 2 % of one core, 60 s average | 0.2 % | 1.8 % |
+| Resident memory | 96 MiB | 60 MiB | 36 MiB |
+| Disk (collector directory, incl. quarantine) | 64 MiB | 12 MiB | 52 MiB |
+| Open file descriptors | 32 | 12 | 20 |
+
+**Every expected peak is a derivation, not a measurement.** No collector has run
+long enough to measure one. Each row's basis is stated in
+`RESOURCE_BUDGETS`, and a measured peak above a derived one falsifies the
+derivation rather than breaching the budget — the row is re-derived, the ceiling
+is not raised to accommodate it.
+
+## Static mode and daemon mode
+
+They are **mutually exclusive per OS user**, and the exclusion is enforced by a
+lock rather than by convention:
+
+```
+~/.event4u/agent-config/agent-collector/collector.lock
+```
+
+Two checkouts of this repository — two worktrees, the common case — resolve to
+the same lock. The second one does not get a second collector; it gets static
+mode. That refuses duplicate capture (one dispatch counted twice) and version
+skew (two revisions disagreeing about the schema), neither of which is worth
+solving for an instrument whose entire purpose is an accurate ratio.
+
+A lock whose recorded pid is not alive is **fenced** — taken over — so a crashed
+collector does not lock its successor out forever.
+
+## Which platforms are supervised
+
+Positively probed, never assumed.
+
+| Platform | Supervisor | Tier |
+|---|---|---|
+| macOS | per-user `launchd` agent under `~/Library/LaunchAgents/` | supported |
+| Linux with a user session bus | `systemd --user` under `~/.config/systemd/user/` | supported |
+| Linux without a user session bus (containers, minimal images, CI runners) | none | static fallback |
+| Windows | none evaluated | static fallback |
+
+Neither supported row needs administrator privilege, and neither installs
+anything outside your home directory. **`systemd` being installed is not the
+condition** — a user session bus must exist, which is what the probe checks.
+Windows is `static fallback` because no Windows supervisor has been evaluated:
+unevaluated, not refused.
+
+## If something went wrong
+
+| Symptom | Where to look |
+|---|---|
+| A record with a field the schema forbids | the write was **refused**, not dropped — `collector_store.writeRecord` returns `refusal: 'invalid-record'` with every error |
+| A store this revision cannot read | it was moved to `agent-collector/quarantine/`, unread and byte-for-byte. It is never deleted, including by `uninstall` — it is evidence |
+| Two collectors | cannot happen inside one OS user; if you believe it did, the lock file and both heartbeats are the evidence to keep |
+
+## See also
+
+- `docs/contracts/resident-process-floors.md` — the observation-only contract
+  and the five questions every resident process answers.
+- `src/scripts/_lib/collector_supervision.ts` — the module this page describes.
+- `src/scripts/_lib/collector_store.ts` — opt-out, deletion, quarantine.
