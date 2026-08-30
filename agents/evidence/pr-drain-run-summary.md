@@ -292,3 +292,172 @@ rather than assumed: the worktree was clean, `7fd04fd1f` is still a reachable
 commit object, its remote was deleted by the merge itself, and the corrected
 risk row is present in `origin/main`'s copy of the roadmap. Recorded because
 the intent was to move the worktree, and the command that ran rewrote a branch.
+
+---
+
+# PR drain run — 2026-08-30, second run of the day
+
+Appended, not rewritten. This run started from the same mandate text as the run
+above and found the queue in a different state again, so the first section is
+the correction rather than a footnote.
+
+**The run's defining fact: a second autonomous drain session was working the
+same queue at the same time.** Two of the four PRs this run touched were
+repaired concurrently by that session, and on one of them its fix was better
+than mine and mine was discarded unpushed. That is recorded as the outcome, not
+as an aside — it is what the run mostly consisted of.
+
+## Step 0 — the authorisation premise, verified read-only
+
+`dist/hooks/dispatch.js:26316` reads `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3`.
+The one remaining `30 * 60 * 1e3` literal is at `:32477`, inside
+`WALL_CLOCK_ARMS_MS` (`{ label: "30m", ms: … }`) declared at `:32474` — a
+duration-label table, not the ledger. Located by enclosing declaration rather
+than by pattern presence, because the pattern alone yields a false STOP.
+Nothing modified.
+
+## Rows
+
+| # | Queue pos | Sync conflicts → resolution class | CI iters | Disposition |
+|---|---|---|---|---|
+| 1493 · 1488 · 1480 · 1489 · 1482 · 1499 | pre-run | — | — | merged 2026-08-20/21, nine days before this run — the mandate's "already merged this run" set |
+| 1734 | 1 | none — branch already contained `origin/main` | 1 | **merged `190651687`** (squash) |
+| 1733 | 2 | not attempted — see § The concurrent session | 0 | **merged `970e930d0` by the concurrent session**, not by this run |
+| 1735 | 3 | one, on a measured number → re-derived, then **discarded** | 1, discarded | **superseded by the concurrent session**; nothing of mine pushed |
+| 1736 | — | — | — | opened by the concurrent session after this run stopped draining |
+| this file | last | none | — | see the PR that carries it |
+
+## `#1734` — a job that could not run the properties it certifies
+
+Two defects, both in the `Collector Lifecycle` job this PR **adds**, and both
+made it red rather than informative.
+
+**It pinned `node-version: '20'`, and the suite opens `node:sqlite`.** That
+module does not exist before 22.5, so `isStoreAvailable()` was false,
+`describe.runIf(STORE)` skipped all seven cases, and `run_lifecycle_suite`
+reported `0 run, 7 skipped, processes_exercised=false` and exited 1. The red
+was the round-5 review's deliberate "a skip is a failure, not an absence" rule
+firing on a condition the job itself guaranteed — a gate that could only ever
+report the same thing.
+
+Pinned to Node 24, and the version was **verified rather than assumed**:
+`node:sqlite` resolves on 24 with no warning and on 22 only with an
+`ExperimentalWarning`. Reproduced locally on macOS before pushing — `7 run,
+0 skipped, suite_exit=0, processes_exercised=true`. The repo-wide Node 20 pin
+is untouched, and the roadmap's own qualifier at its step 2.3 — that
+`collector_store.test.ts`'s `withSqlite` blocks stay unverified on CI because
+Node Tests runs on 20 — remains true, because this job runs only the lifecycle
+suite.
+
+**actionlint / SC2016 at `tests.yml:568`.** The `node -e '…'` block is
+single-quoted and one line inside it used a JS template literal, so shellcheck
+read `${ev.revision}` and `${head}` as shell expansions that would not expand.
+Replaced with string concatenation — the cause removed, not a directive added.
+Node syntax re-checked after the edit.
+
+Both fixes are on `main` and were confirmed there after the merge rather than
+assumed from the push.
+
+## The concurrent session
+
+`git worktree list` showed **both** open PRs checked out in worktrees this
+session does not own, at exactly their remote tips, and `ListAgents` showed a
+busy interactive peer session. What followed is the record:
+
+**`#1733` — not merged by this run, deliberately.** It reached fully green
+(51 pass, 8 skipped, 0 fail) while its worktree carried **staged, uncommitted**
+work that grew from three files to four between two checks. Merging a snapshot
+a session is still building on top of is the parallel-work hazard, so it was
+left alone; that session merged it itself as `970e930d0`. Before backing out,
+one working-tree edit of mine in that worktree was restored with
+`git checkout -- <file>`, which preserves their staged state — verified after,
+not assumed.
+
+**`#1735` — worked, then discarded.** Its worktree was clean and its PR red on
+one finding, so it was fair to take:
+
+- `Rule backstops` / `secret-vcs-guard` red on
+  `gate-coverage.yml:509  pem-private-key`. A false positive `.secret-allow`
+  already covers — the `--pack` mutation canary, body `zz-canary-not-a-real-key-zz`.
+  The entry is **line-pinned** and the PR's new rows moved the recipe 487 → 509.
+  Re-derived by reading the line off the file, not by adding 22 to the old pin,
+  for the reason that file's own 2026-08-24 note gives. Verified in both
+  directions: `check_secret_leak` clean, and `check_gate_coverage --canary`
+  still reported `check_secret_leak: caught the planted contract-violation
+  defect (exit 1)` — the pin did not blind the gate it exempts one line of.
+- Then the push was rejected: the peer had pushed
+  *"re-derive the secret-allow pin the merge moved again"*. Same defect, same
+  fix, minutes apart.
+
+**The floor decision, and why the better answer was the other session's.** The
+merge of `main` into `#1735` left one conflict, and it was a **measured** number
+on both sides — coverage `~24 %` against `~25 %`. Neither side was taken;
+`count_gate_scripts()` re-run on the merged tree returned 306 against 76 listed
+rows, so both sides were stale. That exposed the real red:
+`lint_consolidation_lineage: scanned 4, floor 5`, already red **on `main`** at
+`970e930d0`.
+
+The drain itself caused it. The floor's own text called it a collapse detector
+calibrated to the recorded historical minimum, and sampling `origin/main` every
+20 commits confirmed the premise held (12, 11, 16, 5, 11, 7, then 4 — 5 was the
+minimum, 4 is new).
+
+This run routed it to the AI council (deep, 2/2 seats present, $0.00). Both
+seats refused to lower the floor on the historical fact alone — a historical
+minimum measures novelty, not harm — and converged on lowering it to 4 **only
+after** an inspection showing no committed front uncovered. That inspection was
+done and passed: the four remaining roadmaps carry 216 open steps between them
+and none is stale, and the three that left active status today each left
+traceably (one archived at zero open, two parked into `later/` with a named
+blocker and a resume condition apiece).
+
+**The concurrent session reached a better answer and got there first.** Its
+council (same two providers, convergent on its option b) **retired the floor
+entirely** and replaced it with an enumeration assertion inside the production
+linter — which refuses when a declared root is missing, is not a directory, or
+cannot be enumerated — and named that check's limits honestly (it does not
+catch a glob narrowed to nothing, or a wrong working directory, or roadmaps
+moved into untraversed nested directories). That is the option this run's own
+second seat preferred as `(d)` and which this run declined as scope creep under
+a freeze. Lowering 5 → 4 was, in its own council's words, a treadmill whose
+terminus is a floor of 0.
+
+So both of this run's `#1735` commits were **discarded unpushed** — the merge
+resolution and the decision record — because publishing a record saying "the
+floor is now 4" when the floor had been retired would have put a false
+statement in the tree. They are kept as patch files outside the repository.
+
+## What this run did not do, and why
+
+**It stopped draining rather than finish the queue.** `#1735` and `#1736` are
+open at the time of writing, both owned by the concurrent session, and the
+queue grew during the run rather than shrinking. Continuing would have meant
+re-doing work that session was already doing — twice measured, minutes apart —
+with a live risk of overwriting its in-flight edits. Neither PR is
+twice-exhausted and neither is superseded-closed; the honest label is that they
+have an owner and it is not this run.
+
+**`main` is red at the time of writing**, at `970e930d0`, on the consolidation
+floor described above. The fix-forward is `#1735`, which the concurrent session
+holds. This run did not revert and did not merge past it.
+
+## Process notes
+
+**A council run was spent twice for one verdict.** The first invocation used
+`--output` into a scratch directory; the CLI validates that path **after**
+polling the seats, so the run completed, cost $0.00 (both seats
+subscription-authed), consumed one quota tick each, and then refused to write.
+Re-run with a path under `agents/runtime/council/responses/`.
+
+**Four gates report as dead under `check_gate_coverage --canary`** —
+`check_prefix_stable_mutation`, `check_loss_class_declared`,
+`check_no_currency_in_cost_surfaces`, and one further row — meaning each stayed
+green over a planted contract-violation defect. None is touched by any PR this
+run handled, the canary mode is not wired into CI, and they are pre-existing on
+`main`. Recorded here rather than fixed, because a drain PR is not their scope
+and a finding nobody wrote down is a finding nobody has.
+
+## Terminal PRs
+
+None. Two PRs are open and owned by a concurrent session; nothing is
+twice-exhausted, superseded-closed, or blocked on credentials.
