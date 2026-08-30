@@ -140,7 +140,11 @@ export interface CaptureReading {
      * the caller, `null` when unknown. `null` is INELIGIBLE rather than
      * passing — an unmeasured concentration is not a satisfied one.
      */
-    readonly maxMachineShare?: number | null;
+    // `| undefined` explicitly: `exactOptionalPropertyTypes` is on, so an
+    // optional property does NOT implicitly accept `undefined` — and a caller
+    // that has not measured the share is exactly the case this field exists to
+    // report as ineligible.
+    readonly maxMachineShare?: number | null | undefined;
     /** Whole days elapsed in the observation window. */
     readonly windowDays: number;
 }
