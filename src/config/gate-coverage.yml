@@ -42,7 +42,7 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
 # ----------------------------------------------------------
-# 304 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 306 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, which now include the four gates the
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,
@@ -51,6 +51,13 @@
 # **78 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.
+#
+# RECOUNTED ON A MERGE, 2026-08-30 — the fifth time, and the same shape as the
+# 2026-08-26 blocks below: two sides each correct for their own tree (~24 % from
+# the branch, ~25 % from main) meeting in one number. Recomputed rather than
+# picked: `count_gate_scripts()` returns **306** and `grep -c '^  - id:'`
+# returns **76** on the merged tree, so 76/306 = 24.8 % and main's side is the
+# right one — arrived at by arithmetic, not by taking theirs.
 #
 # RECOUNTED ON A MERGE, 2026-08-26 — the fourth time this file has met the case
 # the 2026-08-24 block below describes, and this one left TWO STACKED claim
@@ -356,10 +363,32 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_metric_consumers
+    argv: ["--quiet"]
+    min_scanned: 5
+    corpus: "entries in src/config/metric-registry.yml (7 at the time of writing). The floor is 5, not 1: the registry's failure shape is a scan that reads a truncated or renamed file, and a single surviving entry would still pass a `> 0` check while the other six went unchecked."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is
+      the `metrics:` list inside ONE tracked file, so a planted file lands in no
+      row; every violation it can have is a MODIFICATION — a field emptied, a
+      field replaced with boilerplate, an id duplicated. Same class as
+      `check_no_automerge_key` and `lint_memory_twin_parity`. Discrimination is
+      proven instead by the gate's own `--self-test`: 7 cases, 6 rejecting,
+      each driving the real CLI against a throwaway registry.
+    note: >
+      road-to-experience-loop-broadening step 0.3. Refuses a metric that does
+      not name its consumer, the decision it feeds, and what fails without it.
+      The third field is the falsifiable one: the first two are answerable for a
+      metric nobody needs, and if the honest answer to "what fails without it"
+      is nothing, the entry cannot be written. HONEST LIMIT, stated in the
+      gate's own docstring: it checks SHAPE, not truth — it makes the omission
+      impossible, not the answer correct, because telling a real consumer from a
+      plausible sentence is a review judgement no parser has.
   - id: lint_consolidation_lineage
     argv: []
-    min_scanned: 5
-    corpus: "every agents/roadmaps/*.md, counted as FILES rather than as declarations. Today none of them carries a `consolidates:` field, so the finding count is legitimately zero while the scanned count is not — that split is the point: a declaration-count floor would be a zero-check wearing a ratchet's name, and would go green the moment the scan root moved. The floor sits at 5 rather than near the present 12 because the active estate is under deliberate drawdown (one-in-one-out plus an explicit drain), so a falling count is expected work rather than a collapse; below 5 the estate would be smaller than any point in its recorded history. NO CANARY, deliberately: the council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in REPORT mode, so it exits 0 on findings by design and a planted violation could not turn it red. Its ability to go red is proven instead by `--self-test`, which the same decision required: six declaration spellings must parse identically, all four finding types must fire, and a complete folder must stay silent."
+    min_scanned: 0
+    corpus: "every agents/roadmaps/*.md, counted as FILES rather than as declarations. THE FLOOR WAS RETIRED ON 2026-08-30 AND REPLACED WITH AN ENUMERATION ASSERTION IN THE LINTER ITSELF (AI council, anthropic + openai, convergent on option b). It sat at 5 over a population under deliberate drawdown to ZERO, so it went red the day the drain succeeded — 6 active roadmaps to 4 in one afternoon — and the only available move was lowering the number again, a treadmill ending at a floor of 0, which is no floor. What guards the scope now is `lint_consolidation_lineage` refusing outright when a declared root is missing, is not a directory, or cannot be enumerated; that check lives in the PRODUCTION linter rather than here on purpose, because an independent existsSync in this gate would observe a directory without proving the linter enumerated it. Honest limit, named rather than implied: it catches a missing or renamed root, not a glob narrowed to match nothing, not enumeration in the wrong working directory, and not roadmaps moved into nested directories the walk no longer traverses. Today none of them carries a `consolidates:` field, so the finding count is legitimately zero while the scanned count is not — that split is the point: a declaration-count floor would be a zero-check wearing a ratchet's name, and would go green the moment the scan root moved. The floor sits at 5 rather than near the present 12 because the active estate is under deliberate drawdown (one-in-one-out plus an explicit drain), so a falling count is expected work rather than a collapse; below 5 the estate would be smaller than any point in its recorded history. NO CANARY, deliberately: the council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in REPORT mode, so it exits 0 on findings by design and a planted violation could not turn it red. Its ability to go red is proven instead by `--self-test`, which the same decision required: six declaration spellings must parse identically, all four finding types must fire, and a complete folder must stay silent."
     status: enforced
     no_canary_reason: "A report-mode gate cannot be turned red by a planted file. The council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in report mode deliberately: the four measured failures come from a high-noise drafting context and do not establish precision on the tracked estate, so blocking is earned by tracked-scope evidence rather than assumed. A canary here would either be planted and ignored (proving nothing) or force `--strict` into CI, which would decide E2 by wiring instead of by evidence. The negative control is `--self-test` instead, required by the same decision and stronger than a single planted file: six declaration spellings must parse to an identical parent set, all four finding types must fire, and a complete folder must stay silent — the third arm being what stops a checker that returned every code unconditionally from passing the second. Revisit together with E2: when the tracked half is promoted to blocking, it owes a canary."
   - id: lint_skill_trigger_corpus

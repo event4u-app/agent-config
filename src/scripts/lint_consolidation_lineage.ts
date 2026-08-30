@@ -552,8 +552,58 @@ export function main(argv: string[] | null = null): number {
     if (args.selfTest) return selfTest();
 
     const folders: Array<{ dir: string; label: string }> = [];
+    // ENUMERATION, not a count, is this gate's dead-scope invariant.
+    //
+    // AI council 2026-08-30, anthropic + openai, convergent on option (b). The
+    // count floor that used to guard this scope (`min_scanned: 5` in
+    // gate-coverage.yml) sat over a population under deliberate drawdown to
+    // ZERO, so every successful drain red the build and the only available
+    // move was lowering the number again — a treadmill that would have ended at
+    // a floor of 0, which is no floor at all.
+    //
+    // What replaced it has to live HERE rather than in check_gate_coverage, and
+    // that placement is the load-bearing half of the verdict: an independent
+    // `existsSync` in the coverage gate would observe a directory without
+    // proving that THIS linter enumerated it. openai's seat put the invariant
+    // as "successful enumeration of the exact declared root by the production
+    // linter invocation". So a declared root that is missing, is not a
+    // directory, or cannot be read is a hard failure naming the resolved path —
+    // where the old code silently `continue`d, contributed zero, and passed
+    // under the `allowEmpty` reason below.
+    //
+    // What this deliberately does NOT claim, because openai's seat listed the
+    // gap and it would be dishonest to imply otherwise: it detects a missing or
+    // renamed root. It does not detect a glob narrowed to match nothing,
+    // enumeration in the wrong working directory, or roadmaps moved into nested
+    // directories the walk no longer traverses. Those remain uncovered.
     for (const root of args.roots) {
-        if (!fs.existsSync(root)) continue;
+        let stat: fs.Stats;
+        try {
+            stat = fs.statSync(root);
+        } catch (err) {
+            process.stderr.write(
+                `❌  lint_consolidation_lineage: declared scan root does not exist: ${root}\n`
+                    + `    (${(err as Error).message})\n`
+                    + '    A root that cannot be resolved is a DEAD SCOPE, not an empty estate.\n',
+            );
+            return 1;
+        }
+        if (!stat.isDirectory()) {
+            process.stderr.write(
+                `❌  lint_consolidation_lineage: declared scan root is not a directory: ${root}\n`,
+            );
+            return 1;
+        }
+        try {
+            fs.readdirSync(root);
+        } catch (err) {
+            process.stderr.write(
+                `❌  lint_consolidation_lineage: declared scan root cannot be enumerated: ${root}\n`
+                    + `    (${(err as Error).message})\n`
+                    + '    Unreadable is not empty — a permission error must not read as a clean scan.\n',
+            );
+            return 1;
+        }
         // A root that directly holds roadmaps IS a folder. Without this, a
         // `--root` pointed at a single consolidation folder scans zero files
         // and exits green — the "gates that scan nothing exit green" shape the
