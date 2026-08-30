@@ -63,7 +63,12 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const AB_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const FIXTURE = path.join(AB_ROOT, 'fixture');
-const CLONES = path.join(AB_ROOT, 'clones');
+/**
+ * The clones tree. Exported so a caller can DISCOVER candidate clones without
+ * recomputing the path from the repo root — a fourth copy of that join is a
+ * fourth thing to keep in step with the two scripts that already hardcode it.
+ */
+export const CLONES = path.join(AB_ROOT, 'clones');
 
 // Surfaces the `with` clone inherits from the package root.
 export const WITH_SURFACES: readonly string[] = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md'];
