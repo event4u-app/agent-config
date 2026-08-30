@@ -5,6 +5,17 @@ estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The merge-authority b
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-experience-loop-broadening is the open question E2 puts to the owner — pre-merging would decide it by authoring."
+estate_growth_exempt: >
+  Grows open_blockers 29 -> 30, and the growth is a CONSERVATIVE reading of a
+  split council rather than new work. Steps 0.4 and 0.5 were closed earlier in
+  the same run; put to the council as a reversal of a recorded disposition, the
+  two seats split 1/1 — (b) closure stands with a call-site acceptance
+  criterion, (d) reopen 0.4-0.5 until an end-to-end test proves the runner
+  routes through the guards. A split is an escalation condition, not a verdict,
+  so the side that risks UNDER-claiming was taken and `guard-call-site-integration`
+  records both rationales verbatim so the owner can reverse it cheaply. The
+  alternative to one blocker is two steps marked `[x]` on the more convenient
+  half of a split, which is the over-claim this roadmap exists to prevent.
 ---
 # Road to governed harness evolution
 
@@ -246,7 +257,7 @@ once.
 > its verify asks for a committed, falsifiable document and nothing more, which
 > is satisfiable today and is worth less every day it waits.
 
-- [x] **0.4 Make the evaluator trust boundary detectable, not just declared.**
+- [~] **0.4 Make the evaluator trust boundary detectable, not just declared.** <!-- blocked-by: guard-call-site-integration -->
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
       and stops there. Add a per-field `visibility_class` on every observation, a
@@ -254,7 +265,7 @@ once.
       truth appears in proposer context.
       verify: a run in which a holdout value reaches proposer context exits
       non-zero, and the disclosure log names the field.
-- [x] **0.5 Pre-register the budget invariant.** Candidate count, trial
+- [~] **0.5 Pre-register the budget invariant.** <!-- blocked-by: guard-call-site-integration --> Candidate count, trial
       repetitions and a spend ceiling per run, fixed before the run. Exceeding it
       aborts rather than truncates — a truncated run yields `underpowered`, which
       `paired_verdict` refuses to call a pass and which a reader mistakes for one.
@@ -269,6 +280,10 @@ once.
       honest null is a success when it prevents unnecessary architecture.
       verify: each condition has a detector or is explicitly marked
       model-carried; a synthetic diversity collapse trips the stop.
+      <!-- CLOSED 2026-08-30. Both council seats agreed this clause names no
+      run at all — it asks that each condition carry a detector or a marker and
+      that a synthetic collapse trip the stop, and both are satisfied. It is the
+      one of the three the split did NOT touch. -->
 - [x] **0.7 Define programme success and failure before the first run.**
       `from-skipped-parent`: the master has no success-criteria section at all.
       It adopts the per-candidate metric vector and drops the per-programme
@@ -666,6 +681,53 @@ once.
 
 ## Blockers
 
+### blocker: guard-call-site-integration
+
+- **Status:** open — **the council SPLIT on this, and the conservative side was
+  taken.** AI council 2026-08-30, anthropic + openai, **1/1 for (b) and 1/1 for
+  (d)** — not convergent, which `roadmap-progress-sync` classes as an escalation
+  condition rather than a verdict.
+- **Owner:** council — the disposition is a DEFERRAL that keeps both criteria
+  alive and unweakened, which the preservation test routes to the council. The
+  substance of the split is recorded below so the owner can reverse it cheaply.
+- **Class:** 3
+- **Blocks:** steps 0.4 and 0.5 only. 0.6 is closed and untouched by the split.
+- **What the two seats agreed on** — this half is not in dispute and is acted on
+  in full: the guards work, their unit tests prove the behaviour their verify
+  clauses name, and **the gap is real** — nothing in Phase 0 forces a future
+  runner to call `assertWithinBudget` or `discloseToProposer`. Both seats asked
+  for a call-site acceptance criterion; **AC-8 below is it.**
+- **Where they split.** (b): the clauses are BEHAVIOURAL, a test that invokes
+  the guard and observes the throw is a run of it, and reopening holds Phase 0
+  hostage to a later artefact. (d): the clauses say *"a run"* that *"exits
+  non-zero"*, and a unit test observing a thrown exception does not prove an
+  executable runner routes through the guard or converts that throw into a
+  non-zero PROCESS exit; *"the invariant must exist before the runner"*
+  establishes implementation order, not permission to mark integration
+  verification complete.
+- **What to do:** take the conservative side, which is what happened here —
+  0.4 and 0.5 are `[~]`, not `[x]`, and not `[ ]` either: the guards and their
+  16 tests are completed prerequisites, recorded as such, and what is pending is
+  integration. Re-close each after an end-to-end test proves the real runner
+  routes every relevant path through the guard and exits non-zero before any
+  spend or disclosure. Nothing is rebuilt.
+- **Recommendation:** the conservative side, taken, and the reason is
+  asymmetry rather than agreement with (d): under-claiming a closed step costs a
+  checkbox, while over-claiming one is exactly the failure the prior run named —
+  *"a detector that never got built reads as one that passed"* — with "never got
+  built" replaced by "never got called". A split council is not a licence to
+  pick the more convenient half.
+- **If you do nothing:** 0.4 and 0.5 stay deferred and Phase 0 stays at 5 of 8.
+  Nothing downstream is blocked by that: the roadmap's own § First cut needs the
+  budget invariant to EXIST before its step 3, and it does — the config is
+  committed and the guard is callable. What is pending is proof that it is
+  called.
+- **Resolved when:** an end-to-end test drives the real runner and observes a
+  non-zero process exit on (a) a holdout value reaching proposer context and
+  (b) a plan configured past the pre-registered ceiling, both before any
+  external call — and the two steps are re-closed citing it.
+
+
 > **REPAIRED 2026-08-29 — the entry below was invisible to every gate.** It was
 > written `### merge-authority` without the literal `blocker:` prefix that
 > `lint_roadmap_blockers.ts:40` requires
@@ -773,6 +835,15 @@ once.
 | 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | 0.4 adds a per-field visibility class, a disclosure log, and a run abort | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 
 ## Acceptance Criteria
+
+- [ ] AC-8 — The runner routes every governed action through the Phase-0 guards,
+      proven end-to-end rather than by inspection: a holdout value reaching
+      proposer context and a plan configured past the pre-registered ceiling each
+      terminate the process non-zero **before any external call**. Added
+      2026-08-30 at the request of BOTH council seats, which agreed on this even
+      where they split on whether 0.4/0.5 may close without it — a guard nothing
+      calls has no coverage, and Phase 0 alone cannot force a later phase to
+      call it.
 
 - [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
