@@ -1,0 +1,37 @@
+{
+  "synthetic": true,
+  "why_synthetic_cannot_measure": "These bodies were written by hand for this fixture. They carry no provider house style, so any recognition rate computed over them describes the fixture author and not a model. A live runner must refuse this file; it exists to exercise the harness in tests.",
+  "families": ["anthropic", "openai", "google", "unknown"],
+  "items": [
+    {
+      "id": "smoke-1",
+      "true_family": "anthropic",
+      "text": "The proposal holds if the retention window outlives the audit period. It does not, so the archive path has to be explicit rather than implied by the prune job."
+    },
+    {
+      "id": "smoke-2",
+      "true_family": "openai",
+      "text": "Three options. First, keep the sequential dispatch and accept the latency. Second, parallelise within a round. Third, drop the round entirely. The second is the only one that preserves the confirmation prompt."
+    },
+    {
+      "id": "smoke-3",
+      "true_family": "google",
+      "text": "The weakest assumption is that the reviewer set and the deliberating set are the same. Where they diverge, the self-filter matches nothing and the reviewer receives everything."
+    },
+    {
+      "id": "smoke-4",
+      "true_family": "anthropic",
+      "text": "A label stripped from a header is not a signal removed from the prose. Until that gap is measured the blindness claim rests on the mechanism rather than on a result."
+    },
+    {
+      "id": "smoke-5",
+      "true_family": "openai",
+      "text": "Cost first: doubling every judged pair to measure the judge is a cost the measurement does not need. Sample it, seed the sample, and publish the seed."
+    },
+    {
+      "id": "smoke-6",
+      "true_family": "google",
+      "text": "If the corpus is skewed, uniform chance is the wrong bar. Report the majority-class share alongside it or the significance claim is against a baseline nobody would use."
+    }
+  ]
+}
