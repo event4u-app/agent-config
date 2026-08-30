@@ -359,6 +359,8 @@ export interface ConsensusScoringConfig {
     readonly strong_threshold: number;
     readonly minority_threshold: number;
     readonly lenses: readonly string[];
+    /** Phase 1B — see `inline_findings.ts`. Default `false` until 1B.4's gate is met. */
+    readonly inline_findings: boolean;
 }
 
 const _VALID_NECESSITY_MODES: ReadonlySet<string> = new Set([
@@ -1462,6 +1464,7 @@ function _build_consensus_scoring(d: Dict): ConsensusScoringConfig {
         strong_threshold: strong,
         minority_threshold: minority,
         lenses: lenses_raw as string[],
+        inline_findings: Boolean(_pyTruthy(_get(d, 'inline_findings', false))),
     };
 }
 

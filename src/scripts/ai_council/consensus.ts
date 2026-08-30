@@ -34,9 +34,9 @@ import { pyRound } from '../_lib/value_ladder.js';
 // Python: re.compile(r"```(?:json)?\s*(\[.*?\])\s*```", re.DOTALL)
 // re.DOTALL → 's'. Python regex is not global; a fresh RegExp per call avoids
 // lastIndex carryover, and we use .exec() (first match) below.
-const _JSON_BLOCK_SRC = '```(?:json)?\\s*(\\[[\\s\\S]*?\\])\\s*```';
+export const _JSON_BLOCK_SRC = '```(?:json)?\\s*(\\[[\\s\\S]*?\\])\\s*```';
 // Python: re.compile(r"(\[\s*\{.*?\}\s*\])", re.DOTALL)
-const _BARE_ARRAY_SRC = '(\\[\\s*\\{[\\s\\S]*?\\}\\s*\\])';
+export const _BARE_ARRAY_SRC = '(\\[\\s*\\{[\\s\\S]*?\\}\\s*\\])';
 
 // Defaults mirror the roadmap (Phase 4 Step 4). The .agent-settings.yml
 // block overrides them at run time.
@@ -302,6 +302,22 @@ export type FindingsParseOutcome = 'parsed' | 'empty' | 'parse_failed';
 export interface FindingsExtraction {
     readonly findings: Finding[];
     readonly outcome: FindingsParseOutcome;
+    /**
+     * How many array items the parse SAW, before `_collect_findings` skipped the
+     * ones missing `id` or `text`.
+     *
+     * `outcome: 'parsed'` alone says only "this was a syntactically valid JSON
+     * array". A caller deciding whether the array is a member's own findings
+     * BLOCK — as opposed to some other JSON the member happened to quote —
+     * needs to know whether every item survived. Added 2026-08-30 after a
+     * completion review found the inline-findings short-circuit reading
+     * `'parsed'` as "this is a findings block" and silently deleting quoted
+     * evidence from the text peer review reads.
+     *
+     * 0 for `empty` and `parse_failed`, and 0 for the bare-`[]` branch, whose
+     * item count genuinely is zero.
+     */
+    readonly item_count: number;
 }
 
 /**
@@ -317,7 +333,7 @@ export function parse_findings_outcome(
 ): FindingsExtraction {
     const source = opts.source;
     if (text.trim() === '') {
-        return { findings: [], outcome: 'empty' };
+        return { findings: [], outcome: 'empty', item_count: 0 };
     }
     const array = _extract_json_array(text);
     if (!array) {
@@ -335,20 +351,24 @@ export function parse_findings_outcome(
         // `parse_findings_response` and `parse_scores_response` accept, which is a
         // behaviour change this step did not ask for.
         if (/(^|[\s`])\[\s*\](\s|`|$)/.test(text)) {
-            return { findings: [], outcome: 'parsed' };
+            return { findings: [], outcome: 'parsed', item_count: 0 };
         }
-        return { findings: [], outcome: 'parse_failed' };
+        return { findings: [], outcome: 'parse_failed', item_count: 0 };
     }
     let parsed: unknown;
     try {
         parsed = JSON.parse(array);
     } catch {
-        return { findings: [], outcome: 'parse_failed' };
+        return { findings: [], outcome: 'parse_failed', item_count: 0 };
     }
     if (!Array.isArray(parsed)) {
-        return { findings: [], outcome: 'parse_failed' };
+        return { findings: [], outcome: 'parse_failed', item_count: 0 };
     }
-    return { findings: _collect_findings(parsed, source), outcome: 'parsed' };
+    return {
+        findings: _collect_findings(parsed, source),
+        outcome: 'parsed',
+        item_count: parsed.length,
+    };
 }
 
 export function parse_findings_response(

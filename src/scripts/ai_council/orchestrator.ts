@@ -21,10 +21,14 @@
 // Failure normalisation (one member's exception → `error`-set
 // CouncilResponse, never raise) is unchanged.
 
-import { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
-import type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
+import type { ConsensusResult } from './orchestrator_results.js';
+import { CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
+import type { RunPeerReviewOptions } from './orchestrator_results.js';
 export { ConsensusResult, CouncilQuestion, PeerReviewResult } from './orchestrator_results.js';
 export type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchestrator_results.js';
+// Moved to its own module for the source-size budget; re-exported so every
+// existing importer of `run_consensus_scoring` is untouched.
+export { run_consensus_scoring } from './consensus_round.js';
 import {
     record_spend as _record_daily_spend,
     today_spend_usd as _today_spend_usd,
@@ -39,16 +43,9 @@ import {
 import type {
     ConsensusMetadata,
     Finding} from './consensus.js';
-import {
-    ConsensusBucket,
-    FindingScore,
-    aggregate_scores,
-    anonymize_findings,
-    anonymize_responses,
-    bucket_by_threshold,
-    parse_findings_outcome,
-    parse_scores_response,
-} from './consensus.js';
+import type { ConsensusBucket } from './consensus.js';
+import { anonymize_responses } from './consensus.js';
+import { composeFinalRoundSuffix } from './inline_findings.js';
 import type {
     CostEstimate,
     PriceTable} from './pricing.js';
@@ -64,9 +61,7 @@ import {
     ANTI_CONFORMITY_DIRECTIVE,
     describe_verdict_mismatch,
     STANCE_LINE_CONTRACT,
-    build_extraction_user_prompt,
     build_peer_review_user_prompt,
-    build_scoring_user_prompt,
     peer_review_synthesis_addendum,
     synthesis_template,
     system_prompt_for,
@@ -366,6 +361,8 @@ export interface ConsultOptions {
      * context). Default `null` → byte-identical to today.
      */
     no_project_context_members?: ReadonlySet<string> | null;
+    /** Phase 1B — `composeFinalRoundSuffix`. Default `false` → prompt unchanged. */
+    inline_findings?: boolean;
     /** Mid-flight cli→api fallback; absent → no retry. See `mid_flight_fallback`. */
     cli_fallback?: CliFallbackOptions | null;
 }
@@ -435,15 +432,13 @@ export function consult(
     let current_suffix = '';
 
     const stance_tally = opts.stance_tally ?? false;
+    const inline_findings = opts.inline_findings ?? false;
     for (let round_idx = 0; round_idx < rounds; round_idx++) {
-        // Phase 1: the FINAL round carries the mandatory STANCE closing-line
-        // contract when the tally is enabled. Off (default) → the original
-        // question object flows through untouched, byte-identical to today.
+        // The FINAL round carries the opt-in closing contracts (STANCE line,
+        // inline findings). Both off → the question flows through untouched,
+        // byte-identical to today. Order lives in the composer.
         const is_final = round_idx === rounds - 1;
-        const suffix_for_round =
-            is_final && stance_tally
-                ? `${current_suffix}\n\n---\n\n${STANCE_LINE_CONTRACT}`
-                : current_suffix;
+        const suffix_for_round = composeFinalRoundSuffix(current_suffix, { is_final, inline_findings, stance_tally });
         const prompt_for_round = `${question.user_prompt}${suffix_for_round}`;
         const round_question =
             round_idx === 0 && prompt_for_round === question.user_prompt
@@ -1581,188 +1576,6 @@ export function run_peer_review(
 
 
 
-/**
- * Two-pass consensus round (Phase 4 / F3).
- *
- * Pass 1 — extraction: each member re-emits its own deliberation as
- * a JSON array of `{id, text}` findings. Pass 2 — scoring: each
- * member sees the *other* members' findings under anonymous labels
- * and rates them 1-10 + agree/disagree + reason.
- *
- * The cost budget is shared across both passes; the daily ledger
- * receives both. Errors in one member's extraction or scoring tag
- * that member but never abort the round.
- */
-export function run_consensus_scoring(
-    members: ExternalAIClient[],
-    deliberation_responses: CouncilResponse[],
-    opts: RunConsensusScoringOptions = {},
-): ConsensusResult {
-    const budget = opts.budget ?? null;
-    const table = opts.table ?? null;
-    const on_overrun = opts.on_overrun ?? null;
-    const project = opts.project ?? null;
-    const original_ask = opts.original_ask ?? '';
-    const max_tokens = opts.max_tokens ?? DEFAULT_MAX_TOKENS;
-    const strong_threshold = opts.strong_threshold ?? 0.7;
-    const minority_threshold = opts.minority_threshold ?? 0.4;
-
-    if (members.length === 0 || deliberation_responses.length === 0) {
-        return new ConsensusResult({
-            bucket: new ConsensusBucket(),
-            findings: [],
-            scores: [],
-            metadata: new Map(),
-            extraction_responses: [],
-            scoring_responses: [],
-        });
-    }
-
-    // ── Pass 1: extraction ──────────────────────────────────────────
-    const member_by_name = new Map<string, ExternalAIClient>();
-    for (const m of members) {
-        member_by_name.set(m.name, m);
-    }
-    const extraction_responses: CouncilResponse[] = [];
-    const all_findings: Finding[] = [];
-    // Per-member extraction outcome — step 2.2. Recorded rather than derived from the
-    // findings count, because "zero findings" and "could not be read" are different facts
-    // and the count cannot tell them apart. `parsed-after-reask` is kept distinct from
-    // `parsed`: a member that needed a second ask is a signal about the prompt or the
-    // member, and collapsing it into `parsed` would hide the only evidence that the
-    // re-ask is doing anything.
-    const parse_outcomes = new Map<string, string>();
-    for (const resp of deliberation_responses) {
-        const member = member_by_name.get(resp.provider);
-        if (member === undefined || resp.error || !_pyStrip(resp.text)) {
-            continue;
-        }
-        const question = new CouncilQuestion({
-            mode: 'prompt',
-            user_prompt: build_extraction_user_prompt(resp.text),
-            max_tokens,
-        });
-        const extracted = consult([member], question, budget, {
-            table,
-            on_overrun,
-            project,
-            original_ask,
-        });
-        extraction_responses.push(...extracted);
-        if (extracted.length === 0 || extracted[0]!.error) {
-            continue;
-        }
-        const source = `${member.name}:${member.model}`;
-        let ex = parse_findings_outcome(extracted[0]!.text, { source });
-
-        // Step 2.2 — ONE bounded re-ask on `parse_failed`, and one only.
-        //
-        // A member that said something no parser could read used to be indistinguishable
-        // from a member that found nothing: `parse_findings_response` returned `[]` for
-        // both, and this loop pushed the empty array with no branch. So an unparseable
-        // answer counted as a clean zero-findings review.
-        //
-        // ONE re-ask, not a loop. A re-ask is a paid call, and an unbounded retry turns
-        // one unparseable answer into open-ended spend — the failure mode the N=3
-        // validation budget exists for, reached here by a different road. `empty` is NOT
-        // re-asked: a member that said nothing has nothing to restate, and re-asking it
-        // buys a second silence.
-        if (ex.outcome === 'parse_failed') {
-            const retry_q = new CouncilQuestion({
-                mode: 'prompt',
-                user_prompt:
-                    build_extraction_user_prompt(resp.text) +
-                    '\n\nYour previous answer could not be parsed. Reply with ONLY a JSON ' +
-                    'array of {"id": string, "text": string} objects, no prose before or ' +
-                    'after it. An empty array [] is a valid answer meaning you found nothing.',
-                max_tokens,
-            });
-            const retried = consult([member], retry_q, budget, {
-                table,
-                on_overrun,
-                project,
-                original_ask,
-            });
-            extraction_responses.push(...retried);
-            if (retried.length > 0 && !retried[0]!.error) {
-                ex = parse_findings_outcome(retried[0]!.text, { source });
-            }
-            parse_outcomes.set(source, ex.outcome === 'parsed' ? 'parsed-after-reask' : 'parse_failed');
-        } else {
-            parse_outcomes.set(source, ex.outcome);
-        }
-        all_findings.push(...ex.findings);
-    }
-
-    if (all_findings.length === 0) {
-        return new ConsensusResult({
-            bucket: new ConsensusBucket(),
-            findings: [],
-            scores: [],
-            metadata: new Map(),
-            parse_outcomes,
-            extraction_responses,
-            scoring_responses: [],
-        });
-    }
-
-    // ── Pass 2: scoring (each member rates the OTHERS' findings) ────
-    const scoring_responses: CouncilResponse[] = [];
-    const all_scores: FindingScore[] = [];
-    for (const member of members) {
-        const scorer = `${member.name}:${member.model}`;
-        const others = all_findings.filter((f) => f.source !== scorer);
-        if (others.length === 0) {
-            continue;
-        }
-        const anon = anonymize_findings(others);
-        const label_to_id = new Map<string, string>();
-        const anon_text = new Map<string, string>();
-        for (const [label, f] of anon) {
-            label_to_id.set(label, f.id);
-            anon_text.set(label, f.text);
-        }
-        const question = new CouncilQuestion({
-            mode: 'prompt',
-            user_prompt: build_scoring_user_prompt(anon_text),
-            max_tokens,
-        });
-        const scored = consult([member], question, budget, {
-            table,
-            on_overrun,
-            project,
-            original_ask,
-        });
-        scoring_responses.push(...scored);
-        if (scored.length === 0 || scored[0]!.error) {
-            continue;
-        }
-        for (const s of parse_scores_response(scored[0]!.text, { scorer })) {
-            const real_id = label_to_id.get(s.finding_id);
-            if (real_id === undefined) {
-                continue;
-            }
-            all_scores.push(
-                new FindingScore(real_id, s.scorer, s.score, s.agree, s.reason),
-            );
-        }
-    }
-
-    const metadata = aggregate_scores(all_findings, all_scores);
-    const bucket = bucket_by_threshold(all_findings, metadata, {
-        strong: strong_threshold,
-        minority: minority_threshold,
-    });
-    return new ConsensusResult({
-        bucket,
-        findings: all_findings,
-        scores: all_scores,
-        metadata,
-        parse_outcomes,
-        extraction_responses,
-        scoring_responses,
-    });
-}
 
 /**
  * Format the per-member meta line — tokens, cost (or subscription), latency.

@@ -138,6 +138,7 @@ import {
     run_debate,
     run_peer_review,
 } from './ai_council/orchestrator.js';
+import { serializeResponses } from './ai_council/response_record.js';
 import {
     type PriceTable,
     downgrade_coupling,
@@ -152,6 +153,8 @@ import {
     DecisionReplayInputs,
     render_decision_replay,
 } from './ai_council/replay.js';
+import type { FindingsExtraction } from './ai_council/consensus.js';
+import { harvest_inline_findings, inlineFindingsActive } from './ai_council/inline_findings.js';
 import {
     Finding as ConsensusFinding,
     FindingScore as ConsensusFindingScore,
@@ -1186,6 +1189,7 @@ function _maybe_run_consensus(
     table: PriceTable,
     project: unknown,
     args: Args,
+    inline_extractions: ReadonlyMap<string, FindingsExtraction> | null = null,
 ): ConsensusResult | null {
     const cs = (ai_cfg['consensus_scoring'] as Dict) || {};
     if (!_pyBool(cs['enabled'])) {
@@ -1196,6 +1200,7 @@ function _maybe_run_consensus(
         return null;
     }
     return run_consensus_scoring(members, responses, {
+        inline_extractions,
         budget,
         table,
         project: project as never,
@@ -1230,8 +1235,8 @@ function _serialise_consensus(consensus: ConsensusResult): Dict {
             reason: s.reason,
         })),
         metadata,
-        extraction_responses: _serialise_responses(consensus.extraction_responses),
-        scoring_responses: _serialise_responses(consensus.scoring_responses),
+        extraction_responses: serializeResponses(consensus.extraction_responses),
+        scoring_responses: serializeResponses(consensus.scoring_responses),
     };
 }
 
@@ -1478,7 +1483,7 @@ function _maybe_run_peer_review(
 
 function _serialise_peer_review(peer_review: PeerReviewResult): Dict {
     return {
-        responses: _serialise_responses(peer_review.responses),
+        responses: serializeResponses(peer_review.responses),
         label_to_source: _mapToObject(peer_review.label_to_source),
         persona_labels: _mapToObject(peer_review.persona_labels),
     };
@@ -1773,28 +1778,6 @@ function _emit_debate_estimate(
     return 0;
 }
 
-function _serialise_responses(responses: CouncilResponse[]): Dict[] {
-    const out: Dict[] = [];
-    for (const r of responses) {
-        const metadata: Dict = {};
-        for (const [k, v] of Object.entries(r.metadata || {})) {
-            metadata[k] = String(v);
-        }
-        out.push({
-            provider: r.provider,
-            model: r.model,
-            text: r.text,
-            input_tokens: r.input_tokens,
-            output_tokens: r.output_tokens,
-            cache_creation_input_tokens: r.cache_creation_input_tokens,
-            cache_read_input_tokens: r.cache_read_input_tokens,
-            latency_ms: r.latency_ms,
-            error: r.error,
-            metadata,
-        });
-    }
-    return out;
-}
 
 function _deserialise_responses(items: Dict[]): CouncilResponse[] {
     const out: CouncilResponse[] = [];
@@ -2624,6 +2607,9 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
+        // Phase 1B — the same predicate the harvest below reads, so a member is asked
+        // for the block exactly when the consensus round intends to read one.
+        inline_findings: inlineFindingsActive(ai_cfg, question.mode),
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -2707,6 +2693,9 @@ function cmd_run(
     // this is always additive, never a fabricated decision.
     const handoff: HandoffEnvelope = buildHandoffFromStanceTally(stance_tally_result);
     const persona_labels = build_persona_labels(advisor_plans, billable);
+    // Phase 1B — BEFORE peer review, chairman synthesis and rendering read
+    // `responses`; the block is scaffolding, not argument. Off → null, nothing touched.
+    const inline_extractions = inlineFindingsActive(ai_cfg, question.mode) ? harvest_inline_findings(members, responses) : null;
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
         args,
@@ -2718,7 +2707,7 @@ function cmd_run(
         project,
         { persona_labels },
     );
-    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args);
+    const consensus = _maybe_run_consensus(ai_cfg, question, members, responses, budget, table, project, args, inline_extractions);
     // Rendered attendance, re-derived after the parser. The event does not move.
     quorum_out.result = annotateRenderedQuorum(quorum_out.result, consensus?.parse_outcomes);
     const chairman = _maybe_run_chairman(
@@ -2782,7 +2771,7 @@ function cmd_run(
         stances: stances_on,
         blind_chairman: blind_chairman_on,
         chairman_fields: chairman_fields_on,
-        responses: _serialise_responses(responses),
+        responses: serializeResponses(responses),
     };
     if (peer_review !== null) {
         payload['peer_review'] = _serialise_peer_review(peer_review);
@@ -2884,7 +2873,7 @@ function _write_debate_round(
         rounds: 1,
         cost_usd_actual: _pyRound(actual_total, 6),
         prompt_cache_round_gap_ms: opts.cache_gap_ms_since_previous_round ?? null,
-        responses: _serialise_responses(responses),
+        responses: serializeResponses(responses),
     };
     const out_path = path.join(_resolveTarget(out_dir), _debate_round_filename(round_number));
     fs.writeFileSync(out_path, _jsonDumpsIndent2(payload) + '\n', { encoding: 'utf-8' });
