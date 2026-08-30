@@ -299,3 +299,81 @@ describe('telemetry-usage — the declared growth budget reaches the log', () =>
         expect(lines).toHaveLength(40);
     });
 });
+
+describe('off means zero OPERATIONS, not merely zero output', () => {
+    // road-to-experience-loop-broadening step 1.5. The suite above asserts the
+    // log file does not exist, which is an assertion about the OUTCOME. The
+    // verify line asks for something stricter and genuinely different: "zero
+    // telemetry file operations and zero network calls". A concern that created
+    // a directory, or wrote and then removed a file, or reached the network and
+    // wrote nothing, would satisfy the outcome check and violate the contract.
+    //
+    // `vi.spyOn(fs, ...)` cannot express this: `node:fs` exports are
+    // non-configurable under ESM and redefining them throws
+    // `TypeError: Cannot redefine property`. So the file half is observed at the
+    // filesystem instead -- a full recursive snapshot of the consumer root
+    // before and after, compared on path, size and mtime. That is strictly
+    // WIDER than a write spy: it also catches a directory creation, and a
+    // write-then-delete that a spy on one function would miss.
+    //
+    // The settings read is deliberately NOT forbidden: the concern reads
+    // `.agent-settings.yml` to learn that it is off, and its own docstring says
+    // so. Reads leave the snapshot unchanged, so this shape allows exactly the
+    // operation the contract allows.
+
+    function snapshot(dir: string): string[] {
+        const out: string[] = [];
+        const walk = (d: string, rel: string): void => {
+            for (const entry of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+                const abs = path.join(d, entry.name);
+                const relPath = rel ? `${rel}/${entry.name}` : entry.name;
+                if (entry.isDirectory()) {
+                    out.push(`dir  ${relPath}`);
+                    walk(abs, relPath);
+                } else {
+                    const st = fs.statSync(abs);
+                    out.push(`file ${relPath} ${st.size} ${st.mtimeMs}`);
+                }
+            }
+        };
+        walk(dir, '');
+        return out;
+    }
+
+    it.each([
+        ['no settings file at all', null],
+        ['no telemetry section', 'quality:\n  local_auto_run: false\n'],
+        ['enabled but no endpoint/org/salt', 'telemetry:\n  remote:\n    enabled: true\n'],
+        ['fully configured but disabled', `${ACTIVE.replace('enabled: true', 'enabled: false')}`],
+    ])('%s → the tree is untouched and nothing is fetched', async (_label, body) => {
+        const { vi } = await import('vitest');
+        const root = makeRoot(body);
+        const before = snapshot(root);
+
+        const originalFetch = globalThis.fetch;
+        const fetchSpy = vi.fn();
+        globalThis.fetch = fetchSpy as unknown as typeof fetch;
+
+        try {
+            expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
+            expect(snapshot(root)).toEqual(before);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
+    });
+
+    it('POSITIVE CONTROL — the same snapshot detects a write on an active install', () => {
+        // Without this, the four assertions above are satisfied just as well by
+        // a snapshot function that always returns the same list. A detector
+        // never seen firing has unknown sensitivity, and every one of those
+        // cases is an ASSERTION OF ABSENCE -- the shape most easily faked by a
+        // broken instrument. So: same helper, same root shape, an install that
+        // IS fully opted in, and the snapshot must change.
+        const root = makeRoot(ACTIVE);
+        const before = snapshot(root);
+        expect(run(envelope('brand-identity'), { consumer_root: root })).toBe(0);
+        expect(snapshot(root)).not.toEqual(before);
+        expect(fs.existsSync(logPath(root))).toBe(true);
+    });
+});

@@ -1,11 +1,20 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal. UPDATED 2026-08-30: Phase 0 has now run, so the original clause 'nothing has run' is false and is corrected rather than left standing — see § Why Phase 0 shipped under status: draft in the body for why the status did not change with it. Archiving is still impossible (39 of 43 steps are open), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-governed-harness-evolution is exactly the open question E1 puts to the owner — pre-merging would decide it by authoring."
 ---
 # Road to experience loop broadening
+
+> **CLOSED 2026-08-30 — implementation complete; operational validation
+> deferred.** The qualifier is the council's wording and is deliberate: 44 of 47
+> boxes are done, and the three that are not are `[~]` with recorded
+> dispositions rather than quietly green. AC-9 was **carried verbatim** into
+> `later/road-to-experience-lifecycle-operational-proof.md` because it needs
+> elapsed operational time, not effort; 7.6 and 9.6 rest on owner-reserved
+> decisions no council may take. Claiming plain "complete" over that would be
+> the silent-green this roadmap spent nine phases building instruments against.
 
 > **Source:** `agents/tmp.old/evolver/` — three session proposals plus the
 > operator transcript. Every repo claim below was re-verified against this tree
@@ -236,15 +245,52 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 1 — Broaden capture
 
-- [ ] **1.1 Spike whether the dispatch event is as reliable as the skill
-      event.** `docs/CLAIMS.md:328` records the measured reality verbatim:
+- [x] **1.1 Spike whether the dispatch event is as reliable as the skill
+      event.** **DONE 2026-08-30 — MEASURED NULL at 85.7 %, bar not moved.**
+      905 of 1,056 dispatches recorded, against a pre-registered bar of >= 95 %
+      over >= 50 dispatches. n is 21x the underpowered floor, so this is a
+      reading and not an absence of one, and the pre-registered consequence
+      applies as written: **the work rescales to skill events**, and no
+      dispatch-event-based mechanism is authored on this evidence. The rate rose
+      by a factor of ~317 from the 0.27 % prior once `orchestration-record`
+      stopped being model-carried — large, and still short of the bar, which is
+      what fixing the bar first buys. Full working, including the
+      `CLAUDE_PROJECT_DIR`-in-a-worktree denominator effect that first returned
+      an impossible 187 %:
+      `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`; ledger
+      entry `claim: dispatch-event-capture-reliability`, `status: resolved-null`.
+      **Citation corrected while executing:** this step cited
+      `docs/CLAIMS.md:328`, which is `claim: 120 governed rules`. The verbatim
+      string below is at `docs/CLAIMS.md:370`, inside
+      `claim: orchestration-observed-dispatch-cost`.
+      `docs/CLAIMS.md:370` records the measured reality verbatim:
       "0.27% telemetry capture (370 dispatches, 1 recorded line)". The skill
       event by contrast is 164/164. Pre-register the numbers before building:
       success is ≥ 95 % capture over ≥ 50 dispatches; below that the result is an
       honest null and the work rescales to skill events.
       verify: the pre-registration commit precedes the measurement commit, and
       the measured rate is reported whichever way it lands.
-- [ ] **1.2 Add `skills_applied` to the audit line.**
+- [x] **1.2 Add `skills_applied` to the audit line.** **DONE 2026-08-30.**
+      The field is optional and bounded to <= 32, mirroring `rules_applied`, and
+      **absent is not `[]`**: an omitted key means *not recorded*, `[]` means
+      *recorded, none applied*. That split is the load-bearing part — every
+      existing producer omits the field, so defaulting it to `[]` would have
+      asserted a negative signal for every caller with nothing to say, and a
+      per-asset report could then never tell no-signal from no-skills. The
+      second writer (`src/scripts/_lib/review_skipped_record.ts`) therefore
+      omits it on purpose, with the reason written at the emission site: it
+      observes a review that did not happen and has no skill observation in
+      either direction. **`schema_version` stays 1 and no supersede lines were
+      needed** — the field is additive under the contract's own forward-compat
+      rule, which is a correction to this step's original migration plan.
+      **The verify line's "real emission" bar is met by a real emission:**
+      `tests/fixtures/audit-log/skills-applied-real-emission.jsonl` is the
+      literal output of `src/scripts/orchestration_record` writing to a temp
+      audit dir, not a hand-written object, and a test asserts the field
+      survives that CLI path. **Sensitivity checked rather than assumed:**
+      making the emission unconditional (`absent -> []`) turns the
+      absent-vs-empty test red, and restoring it turns it green, so the test is
+      known to be able to fail.
       `corrected-from-reproduction`: verified — `audit-log-v1` carries
       `rules_applied` (`:82`, bounded to ≤ 32) and carries **no** skills field at
       all. Migrate by `type=supersede` lines, exactly as that contract already
@@ -350,7 +396,7 @@ So the state is deliberate and bounded rather than an oversight:
       Dissent preserved: anthropic's (c) remains live if producer analysis ever
       shows phase and step share identical terminal semantics with a lossless
       mapping — carried as the module's own `revisit-if`.
-- [ ] **1.4 Carry a privacy class on every captured event, and a redaction rule
+- [x] **1.4 Carry a privacy class on every captured event, and a redaction rule
       for anything free-form.** `from-skipped-parent`, and this is the gap with
       the sharpest consequence. The master has **no** privacy, redaction or
       purge content at all, while its card phase writes mined experience into
@@ -362,21 +408,97 @@ So the state is deliberate and bounded rather than an oversight:
       `domain-safety-pii` § Surface 2 already prescribes for logs: make the
       event type incapable of holding free-form content rather than scrubbing it
       afterwards.
+      **DONE 2026-08-30 — two mechanisms, not one restated twice.** (a) A
+      COMPILE-TIME guard: both producers' input types now carry
+      `Assert<[NoFreeForm<T>] extends [never] ? false : true>`, so adding
+      `prompt`, `body`, `file_path`, `stdout`, `reason`, `payload` or any other
+      `FREE_FORM_KEYS` member to `RecordInput` or `ReviewSkippedInput` is a
+      build error. (b) A MANDATORY `privacy_class` field
+      (`src/scripts/_lib/privacy_class.ts`, one module per 9.1's rule), so a
+      consumer reads what a line carries instead of re-deriving it from the
+      producer's source. The guard without the declaration leaves every reader
+      inferring; the declaration without the guard is a label with nothing
+      behind it.
+      **Both directions are checked, which is the half that is easy to omit.** A
+      `@ts-expect-error` negative fixture asserts the guard still REJECTS, so a
+      `NoFreeForm` broken into an identity type fails the build rather than
+      passing everything. All four probes were run by sabotage, not inspection:
+      a free-form key produces `error TS2344` on each producer, a non-free-form
+      fixture field makes the directive unused and fails too, and restoring
+      returns the tree to zero errors.
+      **A real trap found while executing, and recorded because it makes gates
+      vacuous:** `tsc -p tsconfig.json` does **not** reach `src/scripts/**` —
+      that config covers `src/cli`, `src/server`, `src/shared`, `src/install`
+      only, and `src/scripts/**` is reached solely by `tsconfig.scripts.json`.
+      The first sensitivity probe run under the wrong command reported the
+      sabotage as clean. The command that checks this floor is `npm run
+      typecheck`, which runs both.
+      **Residual, stated rather than implied:** the guard binds the two shipped
+      producers by name. A third producer added outside that shape is still
+      caught by nothing. `docs/contracts/audit-log-v1.md`'s enforcement
+      paragraph — which named a test file that exists in no tree — is corrected
+      to say exactly this.
       verify: the event type has no field able to hold a prompt, a file body or
       a path; a fixture attempting to write one fails to compile.
-- [ ] **1.5 Everything default-off and local.** No dark-channel ratchet is
+- [x] **1.5 Everything default-off and local.** No dark-channel ratchet is
       touched.
+      **DONE 2026-08-30.** The existing suite asserted the log file does not
+      exist, which is an assertion about the OUTCOME. The verify line asks for
+      something stricter: *operations*, not output. A concern that created a
+      directory, or wrote and then deleted, or reached the network and wrote
+      nothing, would pass the outcome check and violate the contract. The new
+      cases therefore compare a full recursive snapshot of the consumer root —
+      path, size and mtime — before and after, on all four not-fully-opted-in
+      shapes, plus a `globalThis.fetch` spy asserted at zero calls.
+      **`vi.spyOn(fs, ...)` cannot express this** and the attempt is recorded
+      rather than quietly replaced: `node:fs` exports are non-configurable under
+      ESM, so spying `appendFileSync` throws `TypeError: Cannot redefine
+      property`. The snapshot is strictly WIDER than the spy would have been —
+      it also catches a directory creation and a write-then-delete that a spy on
+      one function misses. The settings read stays allowed, deliberately: the
+      concern reads `.agent-settings.yml` to learn it is off, its docstring says
+      so, and reads leave the snapshot unchanged.
+      **A POSITIVE CONTROL ships with it.** Four assertions of ABSENCE are the
+      shape most easily satisfied by a broken instrument — a snapshot function
+      that always returned the same list would pass every one. So the same
+      helper runs against a fully opted-in install and the snapshot must change.
+      **Citation corrected while executing:** the block cited as
+      `telemetry_usage_hook.ts:21-29` is at `:22-33`.
       verify: with the feature off, zero telemetry file operations and zero
-      network calls — the shape `telemetry_usage_hook.ts:21-29` already
+      network calls — the shape `telemetry_usage_hook.ts:22-33` already
       documents for itself.
 
 ## Phase 2 — Outcome integrity: anti-forgery at the subagent return
 
-- [ ] **2.1 Dock onto the existing stub, do not open a parallel plan.**
+- [x] **2.1 Dock onto the existing stub, do not open a parallel plan.** **DONE
+      2026-08-30, and the docking required settling a real conflict rather than
+      adding a cross-reference.** The stub's own section "Why it is not being
+      built" argues AGAINST building the gate, and its four preconditions are
+      all unmet — so docking onto it needed an answer to whether its parking
+      binds this phase.
+      **AI council 2026-08-30, anthropic + openai, 2/2 convergent: it does
+      not — different mechanism.** The stub parks a gate that BLOCKS parent
+      completion on `subagent_stop`. Phase 2 changes how a telemetry record is
+      LABELLED after the fact; nothing is blocked, refused, retried or delayed.
+      The four preconditions are properties of a gate that ACTS — an `ok` path
+      to fall back from, a recovery producer, demonstrated recovery — and none
+      is meaningful for a value written into a JSONL line.
+      **The council attached a switch-back condition, recorded at the stub so a
+      future reader can check rather than re-argue:** the parking binds this
+      change the moment the label is consumed, directly or transitively and
+      without a separate discretionary decision, to block, retry, refuse,
+      release or delay work. Audited against this tree 2026-08-30 — the
+      condition is NOT met: `envelopeOutcome` has zero callers outside its own
+      module, the only reader of `outcome` is `extract_audit_patterns.ts`
+      (read-only, stdout, sole non-zero exit is argument validation), and that
+      script is in no Taskfile, no `gate-coverage.yml` entry and no workflow.
+      **No second gate is authored**, verified by grep: the only other estate
+      mention is `stubs/road-to-task-completion-observability.md:117`, which
+      DEFERS to this stub rather than authoring anything.
       `agents/roadmaps/stubs/road-to-subagent-return-gate.md` exists on this
       tree — verified — and carries the council decision this phase extends.
       verify: the stub is the referenced parent and no second gate is authored.
-- [ ] **2.2 Gate anti-forgery on the task's expected output contract, not on
+- [x] **2.2 Gate anti-forgery on the task's expected output contract, not on
       the diff alone.** `corrected-from-reproduction`, and this reverses the
       master. The master ships the unconditional form — claimed success × empty
       diff ⇒ never `success`. The skipped parent named exactly that form as the
@@ -386,22 +508,61 @@ So the state is deliberate and bounded rather than an oversight:
       a large share of this repository's subagent traffic and legitimately
       produce no diff; the unconditional rule would mark them all as failures
       and poison the very aggregation Phase 4 depends on.
+      **DONE 2026-08-30.** `envelopeOutcome` now reads an `expected_output`
+      discriminator (`code-change | analysis | review | unknown`) plus a
+      MEASURED `diff_lines`, and fires only when all three hold: the dispatch
+      declared a code change, claimed success, and the diff was measured at
+      zero. **An unmeasured diff never becomes a failure** — treating "not
+      measured" as zero manufactures the same forgery with the opposite sign.
+      **The council's two conditions were met before shipping, not asserted.**
+      (a) Consumer audit: `envelopeOutcome` has zero callers outside its module,
+      the only reader of `outcome` is `extract_audit_patterns.ts` (read-only,
+      stdout, sole non-zero exit is argument validation), wired into no
+      Taskfile, gate or workflow — so the label enters no automated control
+      path. (b) A cutover marker: lines carry `outcome_semantics: 2`, an absent
+      field means the pre-2026-08-30 unconditional semantics, and
+      `CROSS_DOMAIN_MAPPINGS` records the version at the crossing. This exists
+      because of an asymmetry both seats raised: an enforcement gate rolls back,
+      a labelling change over an append-only log does not.
       verify: a read-only analysis dispatch returning no diff but satisfying its
       declared output contract resolves to `success`; a code dispatch claiming
       success with an empty diff does not.
-- [ ] **2.3 Count empty cycles separately.** A double trigger must not read as
+- [x] **2.3 Count empty cycles separately.** A double trigger must not read as
       two outcomes.
+      **DONE 2026-08-30** — `src/scripts/_lib/empty_cycles.ts`, pure and
+      host-free so the arithmetic is testable without a host payload. A
+      duplicate produces NO second outcome and DOES increment a counter that is
+      reported as its own quantity, never folded into a rate: a duplicate is not
+      an outcome, and it is also not nothing, because a rising count is what an
+      idle loop looks like from outside.
+      **Both conjuncts are required and neither is sufficient** — same key AND
+      inside the window. Key alone would erase a genuine repeat of the same work
+      an hour later; window alone would collapse unrelated events under any
+      fan-out. **A duplicate does not advance `last`**, so three fires in one
+      window are one outcome and two empty cycles rather than a third fire
+      drifting out of the window and reappearing as an outcome that never
+      happened.
       verify: a synthetic double trigger produces one outcome and one empty-cycle
       increment.
-- [ ] **2.4 State the reason in the contract, not only in the code.** Without
+- [x] **2.4 State the reason in the contract, not only in the code.** Without
       this gate every later aggregation poisons its own data, because an
       unverified self-report is indistinguishable from a result.
+      **DONE 2026-08-30** — `subagent-response-contract.md` § "Why success is
+      gated, and not accepted" carries both halves the verify asks for. The
+      RATIONALE: a return claiming success with no change against its own
+      declared output contract is evidence of a claim, not of a result. The
+      FAILURE IT PREVENTS: every downstream aggregation reads the recorded
+      outcome, so a forged `success` becomes signal — the report then recommends
+      keeping an asset that never worked and retiring one that did, and nothing
+      downstream can detect it, because by then the forgery is indistinguishable
+      from the thing it imitates. That is why the check belongs where the record
+      is written rather than where it is read.
       verify: the contract text carries the rationale and the failure it
       prevents.
 
 ## Phase 3 — Episode lifecycle and delayed amendment
 
-- [ ] **3.1 Give an episode a lifecycle, because outcomes arrive late.**
+- [x] **3.1 Give an episode a lifecycle, because outcomes arrive late.**
       `from-skipped-parent`: rework and regressions arrive after a task is
       already terminal, so an episode needs `open → terminal → observed →
       amended`, with historical events never rewritten — an amendment is a new
@@ -410,28 +571,96 @@ So the state is deliberate and bounded rather than an oversight:
       repeat is precisely the signal that surfaces after the audit line is
       written, so without amendment the master's one metric cannot be computed
       correctly.
+      **DONE 2026-08-30, on the carrier this step does not name.**
+      `src/scripts/_lib/runtime_journal.ts` already had three of the four rungs
+      — `open` (`opened_at`/`opened_by`), `terminal` (`terminal_state`), and
+      `observed` (the `consumption` column, stored and unfilled). Only
+      `amended` was missing, so nothing new was built: an `amends_seq` column
+      was added, `JOURNAL_SCHEMA_VERSION` bumped to 3 (a mismatch discards and
+      rebuilds — the store is gitignored and rebuildable by design), and
+      `reconstructEpisode` taught to fold.
+      **Byte-identical is asserted on the STORED ROW**, compared before and
+      after as raw SQLite output rather than as a reconstructed object — the
+      append-only guarantee is about the row, not about a projection of it. The
+      reconstruction still returns every original row unfiltered; what folding
+      changes is which rows are *effective*.
+      **The one-line defect the fold fixes:** `closing` was
+      `events.find(e => e.terminal_state !== null)` — the FIRST terminal state.
+      With amendments that returns the superseded verdict forever while the
+      amendment sits in the table unread. It is now the LAST effective one.
+      **The second conjunct needed a metric that did not exist**, so
+      `src/scripts/_lib/repeated_failure.ts` computes it — and reads the amended
+      view **by construction, not by documentation**: its input type is
+      `EpisodeReconstruction` and it has no overload taking raw
+      `JournalEvent[]`, so a caller cannot compute the rate over unamended rows
+      because there is nothing to pass. The test pins the gap the amendment path
+      exists for: the same two episodes read 0/2 unamended and 1/2 amended.
+      **Sensitivity checked by sabotage:** restoring `find` turns both amendment
+      tests red; restoring the fold turns them green.
       verify: an amendment arriving after a terminal state produces a new record
       and leaves the original byte-identical; the repeated-failure rate reads the
       amended view.
 
 ## Phase 4 — Loop guards for drain and continuation
 
-- [ ] **4.1 Detect more than two shapes.** The master carries two counters —
+- [x] **4.1 Detect more than two shapes.** The master carries two counters —
       consecutive empty cycles, and the same signal or roadmap in ≥ 3 of the
       last 8 runs. `from-skipped-parent` adds three the master dropped: the same
       failure *signature* recurring, the same tactic repeated after it was
       rejected, and the same asset activating repeatedly with no progress. The
       last two are the ones a counter over signals cannot see.
+      **DONE 2026-08-30** — `rejectedTacticRepeat` in
+      `src/scripts/_lib/loop_guards.ts`, beside `stallSignal` rather than in the
+      1,500-line hook, because that file is over the source-size budget and this
+      one exists for exactly this.
+      **Correction to this step's premise, found while executing:** it says "the
+      master carries two counters". This TREE carries **one** — `stallSignal`,
+      a numeric detector over open-step counts. None of the five shapes the step
+      discusses was implemented. The premise described the source proposal, not
+      the tree.
+      **Why a second detector rather than a tuning of the first:** `stallSignal`
+      keys on a NUMBER and cannot see the failure this catches — an agent
+      retrying the same rejected approach while the count moves and the wording
+      changes every time. So the new detector keys on an IDENTITY, and is given
+      no text field at all rather than being trusted to ignore one, which is the
+      only way "even when the signal string differs" is actually achievable.
+      **Only REJECTED attempts count.** A tactic tried three times and accepted
+      twice is not a loop, it is a tactic that works; counting every attempt
+      would fire on productive repetition, which is the false positive that gets
+      a guard switched off.
       verify: a synthetic run repeating a rejected tactic trips suppression even
       when the signal string differs.
-- [ ] **4.2 No strategy presets.** Suppression escalates through the existing
+- [x] **4.2 No strategy presets.** Suppression escalates through the existing
       triage ladder.
+      **DONE 2026-08-30.** `SUPPRESSION_WINDOW = 8` and `SUPPRESSION_REPEATS = 3`
+      are named constants beside the detector — **not** a settings block. A
+      configurable strategy preset is the shape K5 kills by name: presets
+      multiply the states a reader must reason about while the underlying
+      question ("is this run going in circles?") has one answer. Two numbers
+      with a stated meaning are auditable; a tuning surface is not.
+      **No parallel escalation was built**, which is the other half of "no
+      presets": the detector returns a signal and nothing else, so escalation
+      remains the existing triage ladder's job rather than a second ladder
+      living next to it.
       verify: a run of 8 with 3 repeats trips suppression exactly once, and a run
       of 8 with 2 repeats does not.
 
 ## Phase 5 — Activation versus adherence
 
-- [ ] **5.1 Separate "was it loaded" from "was it followed".**
+- [x] **5.1 Separate "was it loaded" from "was it followed".** **DONE
+      2026-08-30** — `src/scripts/_lib/activation_states.ts`. Three rungs
+      (`available`, `activated`, `followed`) are observed independently and each
+      is `true`, `false`, or `null` for *not observed*. `null` is not a
+      pessimistic `false`: an unobserved rung is a statement about the
+      instrument, so `classify` returns `unknown` the moment any rung it needs
+      is unobserved.
+      **The subtlety that made this a function rather than a lookup table:** an
+      IRRELEVANT rung is not an UNKNOWN rung. Once `available` is observed
+      `false`, the other two are meaningless rather than unobserved — an absent
+      asset cannot have been activated — so an unobserved `followed` must not
+      drag that case to `unknown` and hide a fact the instrument did establish.
+      Same one rung down. `countsTowardWinRate` is exported so a report cannot
+      quietly pick a different denominator per column.
       `from-skipped-parent`, and the master has no `adherence` token anywhere,
       which makes its per-asset win rate uninterpretable. The five states are
       `not available / available-not-activated / activated-not-followed /
@@ -442,58 +671,150 @@ So the state is deliberate and bounded rather than an oversight:
       verify: a failing case is classifiable into one of the five states, and a
       case with an unobserved rung reports `unknown` rather than a success or a
       failure.
-- [ ] **5.2 Prefer deterministic adherence evidence where a rule has an
+- [x] **5.2 Prefer deterministic adherence evidence where a rule has an
       observable footprint.** `from-skipped-parent`'s example: test-first
       discipline is provable from the order of the first observed write to a test
       file versus a production file. Where no footprint exists, adherence stays
       `unknown` — never inferred.
+      **DONE 2026-08-30** — `src/scripts/_lib/adherence_detectors.ts`. One real
+      detector: the test-first clause of `think-before-action`
+      (`dist/agent-src/rules/think-before-action.md:43`), decided from write
+      ORDER — first write to a test path versus first write to a production
+      path. Every unregistered rule returns `unknown`, which is 118 of this
+      tree's 119 rules and is the point: the honest report says so instead of
+      filling the column with inference.
+      **A detector answers for ONE CLAUSE, not for a rule** — rules here carry
+      many, and a registration that claimed the rule would overclaim by
+      construction, so the registry key is the pair and each entry cites where
+      its clause is written.
+      **A one-sided observation is `unknown` in BOTH directions**, and the
+      production-only case is the one worth stating: calling it a violation is
+      tempting and would be a guess, because the test may exist from an earlier
+      task and the clause's own "when behavior can be defined" qualifier may
+      exclude the change. The module carries no content field at all, so a
+      detector cannot become a second path for file bodies to travel.
       verify: at least one rule has a deterministic adherence detector, and the
       rest report `unknown` rather than a model's guess.
 
 ## Phase 6 — Evaluation: a per-asset report, read-only
 
-- [ ] **6.1 Aggregate over the audit JSONL.** Per rule and per skill: win rate,
+- [x] **6.1 Aggregate over the audit JSONL.** Per rule and per skill: win rate,
       streak, and the harmful / neutral / **unknown** shares. A missing signal
       counts as unknown, never as success.
+      **DONE 2026-08-30** — `src/scripts/_lib/experience_report.ts`.
+      **`win_rate` is `null`, never `0`, when nothing classifiable was seen**,
+      and the distinction is the one a reader acts on: zero is a measurement
+      meaning *it never worked*; null means *we do not know*. A reader seeing
+      `0.0` acts, a reader seeing `—` asks.
+      **`unknown` never enters the denominator either.** A rate over "everything
+      we saw" answers a different question from a rate over "everything we could
+      classify", and only the second is about the asset.
+      **Absent `skills_applied` invents nothing.** A line omitting the field
+      recorded nothing about skills, so it produces no skill row — it is not
+      evidence that no skill was applied, and may not become an `unknown`
+      against a skill nobody named. This is where 1.2's absent-vs-empty split
+      stops being philosophical.
       verify: an asset with no signal appears with unknown ≠ 0 and win rate
       undefined, not with a fabricated score.
-- [ ] **6.2 Every derived figure states its basis.** `from-skipped-parent`, and
+- [x] **6.2 Every derived figure states its basis.** `from-skipped-parent`, and
       both a parent and the master's own rationale depend on it: each number
       carries `basis: measured | estimated:<method> | inferred | unknown`. The
       master lists win-rate, streak and the share fields and has no basis field,
       so a measured cost and an estimated one render identically — the exact
       self-report failure Phase 2 exists to prevent, reintroduced one layer up.
+      **DONE 2026-08-30** — `BasisTag` in `src/scripts/_lib/evidence_basis.ts`.
+      `estimated` on its own is a CATEGORY, not a basis: two figures both marked
+      `estimated` can differ by an order of magnitude in how much they should be
+      trusted — one derived by arithmetic from measured inputs, one from a
+      response-length heuristic — and a report rendering them identically has
+      told the reader nothing actionable. So the type REJECTS a bare
+      `estimated`, and rejects `estimated:` with an empty method too, since that
+      is the same omission wearing a colon. Every other basis is
+      self-describing and takes no suffix.
+      **Enforced by the type rather than by a lint**, which is stronger than the
+      step asked for: a lint scans what it is pointed at, while a figure typed
+      `BasisTag` cannot carry a method-less `estimated` at all.
       verify: a report line with an estimated component that does not name its
       method fails the lint.
-- [ ] **6.3 Report only. No runtime consumption.** A human or CI reads it;
+- [x] **6.3 Report only. No runtime consumption.** A human or CI reads it;
       nothing in selection or routing does. Crossing that line is the Phase 9
       gate, not an implementation detail.
+      **DONE 2026-08-30.** The twelve routing and selection paths are enumerated
+      EXPLICITLY rather than globbed, and a companion assertion proves each one
+      exists — a glob that silently matched nothing would pass forever, and a
+      rename must turn this red rather than quietly emptying the sweep.
       verify: no import of the report module from any routing or selection path.
-- [ ] **6.4 Wire the report to retirement, with a safety carve-out.**
+- [x] **6.4 Wire the report to retirement, with a safety carve-out.**
       `from-skipped-parent` on both halves. The report's most obvious near-term
       consumer is the existing utilization-window retirement path — the ledger
       supplies the data, the rules stay the authority. And precisely there:
       pruning on low usage can delete a rare but important safety behaviour, so
       authority and safety assets are **excluded** from usage-based pruning. The
       master dropped both the wiring and the carve-out.
+      **DONE 2026-08-30, and executing it found a live hole in the carve-out.**
+      `read_exempt`'s predicate was `id.endsWith('-safety-floor')`, which
+      exempted **4 of this tree's 9 safety rules**. The five it missed —
+      `domain-safety-disclaimer`, `domain-safety-pii`,
+      `domain-safety-retention`, `runtime-safety`, `tool-safety` — are none of
+      them kernel, so every one was REAP-eligible on low usage. A usage-based
+      retirement proposal for `domain-safety-pii` or `tool-safety` is precisely
+      the outcome this carve-out exists to prevent, and **low usage is exactly
+      what a working safety floor looks like**: it fires rarely, and rarely is
+      not the same as never needed.
+      Widened to match `safety` as a hyphen-delimited token, which covers all
+      nine and — verified against the 119 projected rules — matches nothing
+      else. The direction is the conservative one: it can only REMOVE
+      retirement proposals, never add one. A third assertion pins the exemption
+      set at exactly those nine, so the predicate cannot silently become a
+      blanket that disables retirement entirely.
       verify: a low-usage safety-classified asset is not proposed for
       retirement, and a low-usage ordinary asset is.
-- [ ] **6.5 Defer the SQLite index until latency is measured.** Allowed **only**
+- [x] **6.5 Defer the SQLite index until latency is measured.** Allowed **only**
       as a rebuildable Class-A artefact under `agents/runtime/state/`; as the
       *source* of experience it is a contract violation.
-      `docs/contracts/no-runtime-boundary.md:40` states the test verbatim: "if
+      **DONE 2026-08-30 — the deferral holds and is now CHECKABLE rather than
+      asserted.** No index exists and none was built; 6.1's report reads the
+      JSONL directly. Ticking this on the deferral alone would have been a green
+      with nothing behind it, since the verify below is a conditional guard on a
+      build that has not happened — so a test asserts the absence instead: the
+      report module opens no database, and no index artefact is committed. If
+      someone builds one, that test goes red and the verify below becomes the
+      thing they must satisfy, which is exactly when it should start applying.
+      **Citation corrected while executing, and it mattered.**
+      `docs/contracts/no-runtime-boundary.md` is `stability: superseded` and its
+      line 40 carries different text entirely. The state-store test lives at
+      **`docs/contracts/resident-process-governance.md:78-82`**, verbatim: "if
       deleting the artifact changes *what* the tool can answer rather than only
-      *how fast* it answers, it is a state store and prohibited".
+      *how fast* it answers, it is a state store and prohibited. A code-graph
+      cache passes; a vector index fails."
       verify: deleting the index changes only runtime, and a rebuild reproduces
       it byte-for-byte from the JSONL.
 
 ## Phase 7 — Experience cards
 
-- [ ] **7.1 Cards come only from the mining gate.** `extract_audit_patterns`
+- [x] **7.1 Cards come only from the mining gate.** `extract_audit_patterns`
       count ≥ 2 over independent `work_id`s, outcome-differentiated — or from an
       explicit seed block. Never invented, never pre-seeded as families.
+      **DONE 2026-08-30. Where cards live was a real decision, taken by AI
+      council (anthropic + openai, 2/2 convergent): `agents/knowledge/`, as a
+      STRICT TAGGED UNION on a required `kind: external | experience` — never
+      one schema with conditional fields.** The council's reason is the design:
+      making the external variant's checks optional would hide two contracts in
+      one nominal schema, the union-of-what-producers-send failure this repo
+      refuses elsewhere. They are variant invariants instead — in full for
+      `external`, not part of `experience` at all. AC-1's "no second store" is
+      honoured without pretending the two card kinds are one thing.
+      **The reusable boundary the council left behind**, recorded at the store
+      so the next proposal is measured rather than re-argued: *a new store is
+      justified only when its records cannot share the existing carrier's
+      identity, discovery path and consumer lifecycle — not merely because they
+      have different provenance or validation rules.*
+      Admission: a `pattern_ref` from the mining gate (count ≥ 2 across
+      independent `work_id`s) or an explicit `seed_ref`. A whitespace-only ref
+      is not a ref — the cheapest way to fake admission is a present-but-empty
+      field.
       verify: an attempt to author a card with no backing pattern is refused.
-- [ ] **7.2 Field set, with a size budget.** Scope, trigger context, the
+- [x] **7.2 Field set, with a size budget.** Scope, trigger context, the
       strategy itself (compact), falsifier, confidence, contradictions,
       supersedes, expiry / review-by — plus an **epistemic type**
       (`observed | derived | inferred | hypothesized`), `from-skipped-parent`.
@@ -501,17 +822,38 @@ So the state is deliberate and bounded rather than an oversight:
       act as a hard filter, and inferred or hypothesized ones may at most
       influence ranking with reduced weight. That restriction is what makes the
       Phase 9 gate answerable in degrees instead of all-or-nothing.
+      **DONE 2026-08-30.** The falsifier and the expiry are what make a card a
+      CLAIM rather than an opinion: without a falsifier it can never be retired
+      on evidence, only on taste; without an expiry an empirical claim outlives
+      the conditions that produced it and nobody notices, because nothing ever
+      asks.
+      **The epistemic split is load-bearing, not descriptive.** `observed` and
+      `derived` are FACTUAL; `inferred` and `hypothesized` are GENERATIVE. Only
+      the factual pair may hard-filter, enforced by an exported predicate rather
+      than by prose — letting a hypothesis filter is how a guess becomes a rule
+      without anyone deciding it should.
       verify: a card missing a falsifier, an expiry or an epistemic type fails
       the lint.
-- [ ] **7.3 Failures narrow, they never widen.** A failure adds an anti-pattern
+- [x] **7.3 Failures narrow, they never widen.** A failure adds an anti-pattern
       entry; it never extends the card's applicability scope.
+      **DONE 2026-08-30.** The temptation this refuses is specific: a card fails
+      in a neighbouring context, and the natural-sounding repair is "so the card
+      is really about the broader case". That turns every piece of disconfirming
+      evidence into an expansion, which is the exact inverse of what evidence is
+      for. `applyFailure` throws on a widening and otherwise appends an
+      anti-pattern and changes nothing else.
       verify: a fixture where a failure attempts a scope widening is refused.
-- [ ] **7.4 A card is not a rule.** Empirical, scoped and probabilistic versus
+- [x] **7.4 A card is not a rule.** Empirical, scoped and probabilistic versus
       normative. A duplicate lint runs against the existing rule and skill
       corpus, and promotion into authority happens only through
       `learning-to-rule-or-skill`.
+      **DONE 2026-08-30**, reusing `text_similarity.ts` rather than authoring a
+      second similarity function. A card restating a live rule adds no knowledge
+      and creates a second place the same instruction can drift. The threshold
+      is a named constant the tests and the checker share, so it is one number a
+      reviewer can argue with rather than a literal buried in a comparison.
       verify: a card whose text duplicates a live rule fails the lint.
-- [ ] **7.5 Promote by scope, one level at a time, with transfer evidence.**
+- [x] **7.5 Promote by scope, one level at a time, with transfer evidence.**
       `from-skipped-parent`: a card carries a scope on the ladder
       `session → repo → workspace → organization → global`, promotion moves one
       level at a time, and a raise beyond repo scope requires held-out or
@@ -519,81 +861,221 @@ So the state is deliberate and bounded rather than an oversight:
       master gates promotion only on the human review skill, so a card mined
       from one repository's runs can become global on that repository's evidence
       alone.
+      **DONE 2026-08-30.** Two refusals, answering the two ways a card gets
+      over-promoted. A two-level raise skips the rung where the card would have
+      been checked against a wider population. And **past `repo`, the runs that
+      minted a card cannot also show it transfers** — that is the same data
+      answering its own question — so the evidence pool must be held-out or
+      independent. Development-pool evidence stays fine up to `repo`, because
+      that is where the card produced it.
       verify: a two-level raise is refused, and a raise past repo scope with only
       development-pool evidence is refused.
 - [~] **7.6 Incremental card updates rather than rewrites.** Deferred: needs
-      E8. `from-skipped-parent` promoted `ADD / UPDATE / REMOVE` delta-updates
+      E8. **DEFERRAL AFFIRMED at closure, 2026-08-30** — AI council, anthropic +
+      openai, 2/2: closing this roadmap with 7.6 and 9.6 still `[~]` is
+      legitimate, because both rest on decisions no council may take. E8 is an
+      open maintainer decision and remains one; the card mechanism 7.1–7.5
+      shipped without it, so nothing is blocked on it that this roadmap
+      promised. `from-skipped-parent` promoted `ADD / UPDATE / REMOVE` delta-updates
       from optional to core, with a reflector/curator split whose boundary is
       "the model may interpret evidence; it may not rewrite the evidence". The
       master cites the source paper and carries neither the mechanism nor a
       decision about it.
 
+      <!-- deferred-resolution: carried-to=road-to-experience-loop-owner-decisions -->
 ## Phase 8 — Trigger-shift pairs, offline
 
-- [ ] **8.1 Extend `triggers.json` backward-compatibly.** A `shift_of` field
+- [x] **8.1 Extend `triggers.json` backward-compatibly.** A `shift_of` field
       plus an axis set, producing an offline train-versus-shifted gap report in
       the `description_route_check` neighbourhood. The master lists three axes
       (wrapper, temporal, phrasing); `from-skipped-parent` adds host framing and
       context/tool availability, which are the two a purely textual shift cannot
       express. Pilot scope is a decision (E6).
+      **DONE 2026-08-30** — `src/scripts/_lib/trigger_shift.ts`, five axes
+      including the two from the skipped parent that a purely textual shift
+      cannot express.
+      **The backward-compatibility claim is STRUCTURAL, not a promise.** All six
+      readers of `triggers.json` key-pick, and no JSON Schema governs the file —
+      `evals.schema.json` says so in its own `$comment` — so an unknown key
+      cannot break a parse. The test asserts it anyway, through the production
+      reader and across the whole 94-file corpus, because "cannot break" is the
+      kind of claim that is cheap to make and cheap to check.
+      **Pilot: `code-intelligence`** — the roadmap's own § First cut names it as
+      already carrying `evals/triggers.json`, so E6 is followed rather than
+      decided. Two twins, `wrapper` and `temporal`.
+      **The gap report deliberately does not count a pair whose BASE already
+      fails.** That says the corpus row is wrong or the description never
+      worked; it says nothing about generalisation, which is the only thing this
+      measures.
+      **A dangling twin is REPORTED, never dropped** — swallowing one makes the
+      corpus quietly smaller while the report still looks complete.
       verify: existing `triggers.json` files parse unchanged, and the gap report
       is produced with zero live-harness calls.
-- [ ] **8.2 The live-floors park stays parked.**
+- [x] **8.2 The live-floors park stays parked.**
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree and its council decision (2/2, evaluator independence) is not
       reopened here.
+      **DONE 2026-08-30, and asserted more strongly than "does not call one".**
+      The gap report takes the router as a caller-supplied PREDICATE, so there
+      is no harness reference to follow: a future author cannot reach a live
+      backend without changing the module's imports, which is a visible act in a
+      diff. A test pins both — no import of `description_route_check` or
+      `cross_model_smoke`, and no `cached-live`, `fetch(` or URL literal.
       verify: no step in this roadmap invokes a live routing harness.
 
 ## Phase 9 — Canonical enums, effect, and the consumption door
 
-- [ ] **9.1 One shared module per enum family** that appears in both
+- [x] **9.1 One shared module per enum family** that appears in both
       `src/scripts/` and a template or prompt, plus a lint against inline
       duplicates. Phase 1.3's outcome-vocabulary split is the worked example and
       the first customer.
+      **DONE 2026-08-30, and it found two live duplicates the old check could
+      not see.** Three holes were closed, each of which let the check pass while
+      covering nothing:
+      (1) `VOCAB_SETS` omitted **`step`** — the one family with a sanctioned
+      template twin, i.e. exactly the family 9.1 is about.
+      (2) The walk started at `src/scripts` only, so **templates and prompts —
+      the surface this step names** — were never scanned. Scanning only the side
+      that cannot drift is not a check.
+      (3) The suite asserted the offender list was empty and nothing else, so a
+      detector broken into one that finds nothing would have passed forever. The
+      detector is now extracted and tested in BOTH directions: it must FIRE on a
+      planted duplicate of every covered vocabulary, and must NOT fire on a
+      partial reference. A sweep that scanned nothing also fails now.
+      **The two duplicates found:**
+      `templates/scripts/work_engine/directives/backend/verify.ts` and
+      `.../mixed/stitch.ts` each re-declared `['success', 'blocked', 'partial']`
+      inline — the third and fourth copies of the step vocabulary. Both now
+      derive from `Object.values(Outcome)` against `delivery_state.ts`, which is
+      the template tree's declaration (templates may not import from
+      `src/scripts/`, so the registry mirrors it rather than the reverse).
       verify: the lint fails on a reintroduced inline duplicate of any covered
       enum.
-- [ ] **9.2 State what this is part of, without inventing a parent.**
+- [x] **9.2 State what this is part of, without inventing a parent.**
       `corrected-from-reproduction`: the master called this "the mechanical core
       of `road-to-canonical-wording-and-propagation`" and an attachment point
       for "the open script-twin decision from PR #1636". Verified on this tree:
       **no plan by that name exists.** `grep -rl` over `*.md`, `*.ts` and
       `*.json` returned zero hits when the check was run, and now returns exactly
       one — this roadmap, because the name is written here; a reader re-running it
-      should expect that single self-hit and nothing else. It is not active, not
+      should expect that single self-hit and nothing else.
+
+      It is not active, not
       parked, not a stub, not archived. The PR reference was **not checked**: that is an external system
       and this analysis ran offline by its own bound, so it is unverified rather
       than false. Either author the parent or drop the framing; do not cite a
       plan that does not exist.
+      **Re-measured 2026-08-30 while executing this step, and that sentence was
+      already stale.** The grep now returns **two** — this roadmap, and the
+      review-input copy under `agents/evidence/reviews/`, created after the
+      original was written. Both are self-hits: the name exists in this tree
+      only because this step writes it down. The conclusion is unchanged and
+      stronger for having been re-checked — **no plan by that name exists**, in
+      any disposition.
+      **This is the step's own failure mode, caught on itself.** A count written
+      into prose goes false the moment the tree moves, and 9.2 is precisely the
+      step about not citing what a grep cannot find. A reader re-running it
+      should expect those two self-hits and nothing else.
+      **The other stale citation this step is responsible for was corrected
+      under 6.5**: `docs/contracts/no-runtime-boundary.md:40` is `stability:
+      superseded` and its line 40 carries different text; the state-store test
+      lives at `docs/contracts/resident-process-governance.md:78-82`.
       verify: the roadmap text cites only artefacts a `grep` in this tree finds.
-- [ ] **9.3 Show that the loop can make the estate smaller.**
+- [x] **9.3 Show that the loop can make the estate smaller.**
       `from-skipped-parent`, an acceptance criterion in both parents and absent
       from the master: self-evolution must be able to *remove*. Prefer modify,
       merge, delete and crystallize over add. In a repository governed by an
       estate ratchet and a one-in-one-out gate, a learning loop that can only
       add is a growth engine.
+      **DONE 2026-08-30, and the loop found the defect rather than a reviewer.**
+      Mining the real audit stream — `extract_audit_patterns --min-count 2` over
+      935 lines — mints exactly ONE pattern:
+      `implement:success:delegation-policy`, **count 914**. A regularity that
+      strong in a field that varied would be remarkable; in a field that does
+      not vary it is arithmetic. Both shipped producers write the literal
+      `['delegation-policy']`.
+      **The prose that was deleted:** `audit-log-v1`'s `rules_applied` row read
+      "Stable rule ids whose Iron Law fired this phase" — an OBSERVATION — which
+      is false for every line either producer has ever written. A consumer
+      following it computes a 100 % win rate for one rule and `undefined` for
+      the other 118, and that reads as a finding.
+      **Deleted, not softened**, and replaced by
+      `src/scripts/_lib/audit_field_provenance.ts`: a sentence cannot stop a
+      consumer aggregating over a constant, and a function they must call can. A
+      test asserts the producers still write that literal, so the helper goes
+      stale LOUDLY — a stale "this is a constant" would be exactly as misleading
+      as the prose it replaced, in the other direction.
+      The card is in the store with its `pattern_ref`, and the test proves it
+      **admissible under the Phase 7 contract** via `checkCard` rather than by
+      grepping for the word "falsifier" — a string match would pass on a card
+      that merely mentions the field.
       verify: at least one repeated card has resulted in a removal — a
       deterministic query or helper replacing a prose instruction, with the
       prose deleted in the same change.
-- [ ] **9.4 One pre-registered paired question.** Not a metric catalogue.
+- [x] **9.4 One pre-registered paired question.** Not a metric catalogue.
       Exactly one core metric: the repeated-failure rate out of
       `extract_audit_patterns` (patterns whose outcome ≠ success across
       independent `work_id`s), read from the amended view per Phase 3. The
       verdict is a vector — quality held × cost × repeated failures — and a
       failed arm yields inconclusive, never a fabricated score. Both directions
       are written into the claims ledger before the data lands.
+      **DONE 2026-08-30, and the commit ORDER is the artefact.** The verify line
+      is a commit-ordering assertion, so `agents/evidence/experience-loop-prereg.md`,
+      the `repeated-failure-rate` registry entry and the `status: unbacked`
+      ledger claim all land in this commit — before any run exists. Nothing in
+      them was written with a number in hand.
+      **The negative carries the same force as the positive**, which is the
+      clause that actually costs something: no movement, a rise, or an
+      unmeasurable arm means the loop is not built out further on this evidence,
+      the result is filed `resolved-null`, and **no re-scoped claim is invented
+      afterwards** — "it helped in a different way than we measured" is
+      precisely the move this pre-registration makes unavailable.
+      **UNDERPOWERED is neither a pass nor a null**, mirroring `paired_verdict`:
+      below the power floor the run settles nothing and may be cited for neither
+      direction.
+      **Efficacy must be measured externally.** A loop scored on whether it
+      agrees with its own experience report validates itself, so no component of
+      the verdict may be sourced from the report's output — the constraint the
+      council attached to the runtime-consumption blocker, carried here rather
+      than left there.
       verify: the negative consequence is committed before the measurement run.
-- [ ] **9.5 Freeze the experiment set.** `from-skipped-parent`: evaluator,
+- [x] **9.5 Freeze the experiment set.** `from-skipped-parent`: evaluator,
       corpus, task definition, baseline and protected fixtures are frozen for
       the duration of a comparison.
+      **DONE 2026-08-30** — `src/scripts/_lib/experiment_freeze.ts`.
+      **`assertUnchanged` THROWS rather than returning a verdict**, and that is
+      the design decision rather than an implementation detail: a verdict is a
+      value a caller mid-run can log and step past, and a caller mid-run has
+      every incentive to — the run is already expensive and the drift usually
+      looks small. An abort is the only shape that cannot be quietly absorbed,
+      and "aborts rather than continuing" is what the step asks for in those
+      words.
+      **All five are covered by construction**: the test table asserts its own
+      mutation set equals the frozen-element list, so a sixth element cannot be
+      added to the type and silently go untested while the suite still reads as
+      exhaustive.
+      **A reordered fixture list is NOT drift.** Order is a property of how a
+      caller enumerated a directory, not of the experiment, and a freeze that
+      fired there would be switched off the first time it fired spuriously —
+      which is how guards die.
       verify: a mid-run change to any of the five aborts the comparison rather
       than continuing it.
-- [~] **9.6 The Class-C question, as an owner decision.** Deferred: may
+- [~] **9.6 The Class-C question, as an owner decision.** **DEFERRAL AFFIRMED
+      at closure, 2026-08-30** — its blocker is `resolved` as *(c) defer until
+      9.4 has a measured effect*, and 9.4 is now committed as a pre-registration
+      with no run behind it, so the condition has not fired. The blocker's
+      remaining half is owner-reserved: it crosses
+      `docs/contracts/no-runtime-boundary.md`'s recorded architectural boundary,
+      which a council may recommend crossing and may not authorise. AC-7 holds
+      precisely because this stays deferred — nothing in any routing path
+      imports the report, and 6.3's test enforces it. Deferred: may
       selection or routing consume experience at runtime? Reading it at runtime
       means deleting it changes *what* the system does, which the state-store
       test classifies Class C. Without an owner yes it stays a report. 7.2's
       epistemic type is what makes a partial yes expressible.
       <!-- blocked-by: runtime-consumption-of-experience -->
 
+      <!-- deferred-resolution: carried-to=road-to-experience-loop-owner-decisions -->
 ## Blockers
 
 > **REPAIRED 2026-08-29 — both entries below were invisible to every gate and to
@@ -734,17 +1216,17 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every phase names an existing carrier it widens, and no phase
+- [x] AC-1 — Every phase names an existing carrier it widens, and no phase
       introduces a second store, second loop, or second promotion path.
-- [ ] AC-2 — No recorded `success` in the audit stream is backed by an empty
+- [x] AC-2 — No recorded `success` in the audit stream is backed by an empty
       change *against that task's declared output contract*, and a read-only
       analysis dispatch that satisfies its contract is not marked a failure.
-- [ ] AC-3 — The captured event type has no field capable of holding a prompt, a
+- [x] AC-3 — The captured event type has no field capable of holding a prompt, a
       file body, or a path, and every event carries a privacy class.
-- [ ] AC-4 — The per-asset report distinguishes helpful, neutral, harmful and
+- [x] AC-4 — The per-asset report distinguishes helpful, neutral, harmful and
       unknown, reports unknown as its own share, and states a basis on every
       derived figure.
-- [ ] AC-5 — A failing case is classifiable into one of the five
+- [x] AC-5 — A failing case is classifiable into one of the five
       activation/adherence states, and `unknown` is used wherever no evidence
       exists rather than a model's inference.
 - [x] AC-6 — One outcome vocabulary is authoritative, or the mapping between the
@@ -769,16 +1251,43 @@ So the state is deliberate and bounded rather than an oversight:
       logic away from its only caller for no gain. So: both readers import the
       committed module — the AC as written — and the one real translation is
       registered and checked rather than relocated.
-- [ ] AC-7 — Nothing in any selection or routing path imports the experience
+- [x] AC-7 — Nothing in any selection or routing path imports the experience
       report, until and unless the Phase 9 blocker is resolved with a yes.
-- [ ] AC-8 — The retention rule is written into the contract, and every claim
+- [x] AC-8 — The retention rule is written into the contract, and every claim
       resting on the ledger states whether its floor is reachable at that
       retention.
-- [ ] AC-9 — At least one repeated-failure pattern has produced a reviewed card,
+- [~] AC-9 — At least one repeated-failure pattern has produced a reviewed card,
       and at least one card has been either promoted through
       `learning-to-rule-or-skill` or expired — so the lifecycle closes in both
       directions rather than only accumulating.
-- [ ] AC-10 — At least one removal has landed that the loop itself motivated:
+      **CARRIED VERBATIM, not cancelled and not weakened.** AI council
+      2026-08-30, anthropic + openai, **2/2 convergent on (b)**: descope into
+      `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md`,
+      created in this same change.
+      **Why not re-scoped.** The tempting repair was to rewrite AC-9 as a claim
+      about the mechanism — a card *can* be promoted, a card *can* expire, both
+      shown by test. Both seats refused it on the distinction the criterion
+      exists to hold: **"can close" is not "has closed"**. Re-scoping would have
+      replaced the promised evidence with a weaker claim while the box went
+      green.
+      **Why it is unmeetable by effort rather than by scheduling.** No failure
+      pattern exists to mine — the full 935-line stream mints one pattern,
+      `implement:success:delegation-policy` at count 914 — and authoring a
+      failure card without a backing pattern is the invented card 7.1 refuses.
+      Nothing can have expired: the store was created today.
+      **The council's substantive addition is a DATA-QUALITY gate before the
+      lifecycle gate**, because a follow-up gated only on elapsed time never
+      closes if the sensor cannot record what it waits for. Gate 1: `outcome`
+      has recorded one non-success, non-skipped value end-to-end.
+      **Measured while executing, and it refutes the council's own
+      hypothesis:** both seats suspected `outcome` was a producer constant like
+      `rules_applied`. It is not — the distribution is `success` 914 + `skipped`
+      29, one pair per producer, and `envelopeOutcome` maps four outcomes. The
+      field **can vary and never has**, which is narrower than "the sensor is
+      broken" and wider than "there was nothing to learn". Gate 1 is exactly
+      what separates those.
+      <!-- deferred-resolution: carried-to=road-to-experience-lifecycle-operational-proof -->
+- [x] AC-10 — At least one removal has landed that the loop itself motivated:
       prose replaced by a deterministic query or helper, with the prose deleted
       in the same change.
 

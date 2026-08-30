@@ -11,6 +11,31 @@ review_by: 2026-12-24
 > [`agents/evidence/council/subagent-lifecycle-closeout-2026-08-22.md`](../../evidence/council/subagent-lifecycle-closeout-2026-08-22.md)
 > § Decision 1.
 
+> **Referenced by `road-to-experience-loop-broadening` Phase 2, and the
+> reference does NOT reopen this parking.** AI council 2026-08-30, anthropic +
+> openai, **2/2 convergent**: this stub parks a gate that BLOCKS parent
+> completion on `subagent_stop`; that roadmap's Phase 2 changes how a telemetry
+> record is LABELLED after the fact. Nothing is blocked, refused, retried or
+> delayed — a line reads `blocked` or `error` instead of `success`. The four
+> preconditions below are all properties of a gate that ACTS (an `ok` path to
+> fall back from, a recovery producer, demonstrated recovery), and none of them
+> is meaningful for a value written into a JSONL line.
+>
+> **The condition that would make it reopen this parking**, in the council's own
+> terms and recorded so a future reader can check rather than re-argue: *the
+> changed label is consumed, directly or transitively and without a separate
+> discretionary decision, to block, retry, refuse, release, or delay work.*
+> Merely informing analysis — even analysis a human later acts on — does not
+> meet it. Audited 2026-08-30 against this tree: `envelopeOutcome` has zero
+> callers outside its own module, the only reader of `outcome` is
+> `src/scripts/extract_audit_patterns.ts` (read-only, stdout, its sole non-zero
+> exit is argument validation), and that script is wired into no Taskfile, no
+> `gate-coverage.yml` entry and no workflow. **The condition is not met.** If it
+> ever is, this parking binds the labelling change too.
+>
+> Neither of the four preconditions below is discharged by that roadmap, and it
+> does not claim any of them.
+
 ## What moved here
 
 The `subagent-return-gate` concern on `subagent_stop` — parse

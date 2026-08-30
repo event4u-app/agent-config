@@ -33,7 +33,16 @@ import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_s
 import { resolve_policy } from '../../persona_policy.js';
 import { decide, partial_exit, record_attempt, retry_halt, unmet_dod, verdict_signature } from './_self_fix.js';
 
-const _ALLOWED_VERDICTS = ['success', 'blocked', 'partial'] as const;
+/**
+ * DERIVED, never re-declared. `delivery_state.ts` is the step vocabulary's
+ * declaration for the template tree (templates are self-contained by contract
+ * and may not import from `src/scripts/`, so the registry mirrors it rather
+ * than the other way round). Spelling the three values again here made this the
+ * THIRD copy, and a third copy is how one vocabulary becomes two truths --
+ * which is the defect the outcome-vocabulary reconciliation was opened to fix.
+ * Found by the widened duplicate detector, 2026-08-30.
+ */
+const _ALLOWED_VERDICTS = Object.values(Outcome) as ReadonlyArray<Outcome>;
 
 /** Declared ambiguity surfaces. Advisory personas skip this step entirely. */
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
