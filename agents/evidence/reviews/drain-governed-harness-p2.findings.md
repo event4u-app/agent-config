@@ -1,12 +1,12 @@
 # Findings: drain-governed-harness-p2
-<!-- completion-review: v1 | reviewed: 2026-08-30 | scope: 0a388c9fb6decc3578171695b5d48a77701cc456e8a632e19ae6c07bfc501710 | diff: b1063e0248451c2327d8b3b5b014c0af0852e7b0 | reviewer: r2-fresh-subagent-drain-governed-harness-p2 | prompt_hash: 163532112bc230beb6e45473c90c203862e952539d192fac6c5d07928d2406b3 -->
+<!-- completion-review: v1 | reviewed: 2026-08-30 | scope: cadb76a83f5cec74d2084aa95b1f3ce162f0665bff1347bf58e47b9b403b0b55 | diff: 9fb61f89ed28e5b938d31133429bd33ec1119a8b | reviewer: r2-fresh-subagent-drain-governed-harness-p2 | prompt_hash: 163532112bc230beb6e45473c90c203862e952539d192fac6c5d07928d2406b3 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-governed-harness-p2"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-30 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: b1063e0248451c2327d8b3b5b014c0af0852e7b0
-  scope_hash: 0a388c9fb6decc3578171695b5d48a77701cc456e8a632e19ae6c07bfc501710
+  diff_sha: 9fb61f89ed28e5b938d31133429bd33ec1119a8b
+  scope_hash: cadb76a83f5cec74d2084aa95b1f3ce162f0665bff1347bf58e47b9b403b0b55
   roadmap: agents/roadmaps/road-to-governed-harness-evolution.md
   roadmap_hash: 52f187388b4953ecb345210ef59d16dc45925474f6057353a11fb03fcfd2b956
   ac_hash: b1b82ecc9b038697d2727423516659df31c4228e1a7add1cb3afb7963c9174a9
