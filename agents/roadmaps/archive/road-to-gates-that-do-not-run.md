@@ -118,21 +118,21 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
 
 ## Phase 2 — Wire the `should-run` set, red first
 
-- [ ] **2.1 Fix the two publish strings and wire `lint-positioning`.**
+- [x] **2.1 Fix the two publish strings and wire `lint-positioning`.**
       `package.json:5` and `.github/about.yml:13` take the canonical README
       anchor, which does not carry the withdrawn claim. Then add the target to
       an entry point CI runs.
       verify: `./scripts-run src/scripts/lint_positioning` exits 0; the string
       `zero runtime daemon` appears in neither file; the target appears in
       the Phase 1.1 script's reachable set.
-- [ ] **2.2 Wire the rest of the `should-run` set one target per commit,
+- [x] **2.2 Wire the rest of the `should-run` set one target per commit,
       each seen red or explained.** A gate that has never run in CI has an
       unknown baseline: run it locally first, and if it is green, say so in
       the commit — a gate wired while already green is wired on an unverified
       sensitivity claim.
       verify: for each target, either a recorded red-then-green, or a stated
       reason why it was green on arrival and what a red would look like.
-- [ ] **2.3 Correct the archived record.** The closed step at
+- [x] **2.3 Correct the archived record.** The closed step at
       `strategic-visibility-mcp-topics-positioning.md:99` asserts CI wiring
       that never existed. Annotate it in place — do not silently rewrite a
       closed roadmap — with what was actually true and when it was found.
@@ -141,7 +141,7 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
 
 ## Phase 3 — Make the class un-reintroducible
 
-- [ ] **3.1 Turn the Phase 1.1 script into a gate.** A new gate-shaped target
+- [x] **3.1 Turn the Phase 1.1 script into a gate.** A new gate-shaped target
       that is reachable from neither `task ci` nor a workflow fails, unless it
       carries a `manual:` reason in the taskfile beside its definition. The
       classification from 1.2 seeds the allowed set at its measured size — the
@@ -149,7 +149,7 @@ tracked tree). Which is which is Phase 1's job and is not asserted here.
       otherwise red the whole backlog on day one.
       verify: a fixture adding an unreachable, unreasoned gate target fails;
       the same target with a `manual:` reason passes. Seen red before green.
-- [ ] **3.2 Register the gate** in the gate-coverage ledger with `scanned`
+- [x] **3.2 Register the gate** in the gate-coverage ledger with `scanned`
       and a self-test, per this repository's gate-authoring contract.
       verify: the coverage gate is green and the new row's `scanned` field is
       non-empty.
@@ -173,19 +173,19 @@ judgement Phase 1.2 makes is per-target and is recorded rather than assumed.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A committed script computes the set of gate-shaped task targets
+- [x] AC-1 — A committed script computes the set of gate-shaped task targets
       reachable from neither `task ci` nor any workflow, and its output is
       reproducible across two runs on an unchanged tree.
-- [ ] AC-2 — Every target in that set carries a class and a non-empty reason
+- [x] AC-2 — Every target in that set carries a class and a non-empty reason
       in a committed table; no row is unclassified.
-- [ ] AC-3 — `lint_positioning` exits 0 on the tree and is reachable from an
+- [x] AC-3 — `lint_positioning` exits 0 on the tree and is reachable from an
       entry point CI runs; the phrase `zero runtime daemon` appears in neither
       `package.json` nor `.github/about.yml`.
-- [ ] AC-4 — Every target wired in Phase 2 carries either a recorded
+- [x] AC-4 — Every target wired in Phase 2 carries either a recorded
       red-then-green or a stated reason why it arrived green and what a red
       would look like.
-- [ ] AC-5 — A new unreachable, unreasoned gate target fails a gate, and the
+- [x] AC-5 — A new unreachable, unreasoned gate target fails a gate, and the
       red was observed before the green.
-- [ ] AC-6 — The archived step that claimed CI wiring carries an in-place
+- [x] AC-6 — The archived step that claimed CI wiring carries an in-place
       annotation naming the date, the finding, and this roadmap, with its
       original text still readable.

@@ -1633,6 +1633,16 @@ tasks:
     desc: Assert README tagline ↔ package.json.description ↔ .github/about.yml agree and every topic appears in README — R5 Phase 3
     cmd: ./scripts-run src/scripts/lint_positioning {{.QUIET_FLAG}}
 
+  check-gate-reachability:
+    silent: true
+    desc: >-
+      Fail when a gate-shaped task target is reachable from neither `task ci`
+      nor any workflow and carries no row in
+      src/config/gate-reachability-exemptions.json — and when a row names a
+      target that IS reachable, because an exemption nobody withdrew is how a
+      registry stops being read.
+    cmd: ./scripts-run src/scripts/check_gate_reachability --gate {{.QUIET_FLAG}}
+
   visibility-check:
     silent: true
     desc: Run every visibility-as-code lint in sequence (topics + MCP registry + positioning) — R5 Phase 3.3

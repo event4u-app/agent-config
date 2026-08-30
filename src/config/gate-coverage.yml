@@ -1152,6 +1152,13 @@ gates:
       or if a drop to 0 is ever traced to a scanner defect rather than to an
       empty corpus.
 
+  - id: check_gate_reachability
+    script: src/scripts/check_gate_reachability.ts
+    min_scanned: 10
+    corpus: "exemption rows in src/config/gate-reachability-exemptions.json PLUS the gate-shaped task targets reachable from neither `task ci`'s transitive closure nor any workflow. Reachability is measured three ways, not two: a workflow may call `task <name>` OR the script directly, and conflating those overstated the hole 39 -> 22 on this tree."
+    status: enforced
+    no_canary_reason: "The negative control is the gate's own --self-test, run in CI: 4 cases, 2 rejecting, covering BOTH directions — an unreachable target with no row, and a row naming a target that is reachable. It builds throwaway task trees rather than touching this one, which is strictly better than a planted canary here: a canary would mean adding a real unreachable gate target to taskfiles/ and removing it again, and a forgotten one is the exact defect this gate exists to catch."
+
   - id: check_estate_count
     argv: []
     min_scanned: 20

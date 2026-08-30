@@ -32,6 +32,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import * as os from 'node:os';
+
+import { reportScanned } from './_lib/scan_scope.js';
+import { runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+
 const REPO_ROOT = process.cwd();
 const TASKFILES_DIR = 'taskfiles';
 const ROOT_TASKFILE = 'Taskfile.yml';
@@ -218,12 +223,151 @@ export function analyse(root = REPO_ROOT): Reachability {
     };
 }
 
+export const EXEMPTIONS_REL = 'src/config/gate-reachability-exemptions.json';
+
+/** Targets recorded as deliberately unreachable, id → reason. */
+export function readExemptions(root = REPO_ROOT): Map<string, string> {
+    const p = path.join(root, EXEMPTIONS_REL);
+    if (!fs.existsSync(p)) return new Map();
+    const doc = JSON.parse(fs.readFileSync(p, 'utf-8')) as { exempt?: Record<string, string> };
+    return new Map(Object.entries(doc.exempt ?? {}));
+}
+
+export interface GateVerdict {
+    /** Unreachable and NOT recorded — the failure. */
+    unreasoned: string[];
+    /** Recorded exemptions that are no longer unreachable — stale rows. */
+    stale: string[];
+}
+
+/**
+ * The gate verdict.
+ *
+ * Both directions, because a one-way check rots. An unreachable target with no
+ * row is the defect this roadmap is about; a row for a target that is now
+ * reachable is an exemption nobody withdrew, and a registry full of those stops
+ * being read.
+ */
+export function gateVerdict(root = REPO_ROOT): GateVerdict {
+    const r = analyse(root);
+    const exempt = readExemptions(root);
+    const unreachable = new Set(r.unreachable);
+    return {
+        unreasoned: r.unreachable.filter((n) => !exempt.has(n)).sort(),
+        stale: [...exempt.keys()].filter((n) => !unreachable.has(n)).sort(),
+    };
+}
+
+function runGate(root: string): number {
+    const v = gateVerdict(root);
+    const exempt = readExemptions(root);
+    reportScanned({
+        gate: 'check_gate_reachability',
+        scanned: exempt.size + analyse(root).unreachable.length,
+        units: 'exemption row(s) + unreachable target(s)',
+        roots: [EXEMPTIONS_REL, ROOT_TASKFILE, TASKFILES_DIR],
+    });
+    if (v.unreasoned.length === 0 && v.stale.length === 0) {
+        process.stdout.write(
+            `✅  check_gate_reachability: every unreachable gate target carries a recorded reason ` +
+                `(${String(exempt.size)} exempt).\n`,
+        );
+        return 0;
+    }
+    for (const n of v.unreasoned) {
+        process.stderr.write(
+            `❌  ${n} is gate-shaped, unreachable from \`task ci\` and every workflow, and carries ` +
+                `no row in ${EXEMPTIONS_REL}. Wire it, or record why it is manual AND what would make it run.\n`,
+        );
+    }
+    for (const n of v.stale) {
+        process.stderr.write(
+            `❌  ${n} is exempt in ${EXEMPTIONS_REL} but is now reachable. Remove the row — an ` +
+                'exemption nobody withdrew is how a registry stops being read.\n',
+        );
+    }
+    return 1;
+}
+
+/**
+ * The self-test builds throwaway trees rather than touching this one, so both
+ * directions are proven without a canary that has to be removed again.
+ */
+function selfTest(): number {
+    const roots: string[] = [];
+    const fixture = (opts: { target: string; wired: boolean; exempt: Record<string, string> }): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gr-selftest-'));
+        roots.push(dir);
+        fs.mkdirSync(path.join(dir, TASKFILES_DIR), { recursive: true });
+        fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+        fs.mkdirSync(path.join(dir, WORKFLOWS_DIR), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, ROOT_TASKFILE),
+            ['tasks:', '  ci:', '    cmds:', ...(opts.wired ? [`      - task: ${opts.target}`] : [])].join('\n'),
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(dir, TASKFILES_DIR, 'a.yml'),
+            ['tasks:', `  ${opts.target}:`, '    cmd: ./scripts-run src/scripts/check_thing'].join('\n'),
+            'utf-8',
+        );
+        fs.writeFileSync(
+            path.join(dir, EXEMPTIONS_REL),
+            JSON.stringify({ exempt: opts.exempt }, null, 2),
+            'utf-8',
+        );
+        const v = gateVerdict(dir);
+        return v.unreasoned.length === 0 && v.stale.length === 0 ? 0 : 1;
+    };
+
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a wired gate target → accept',
+            expect: 'accept',
+            run: () => fixture({ target: 'check-x', wired: true, exempt: {} }),
+        },
+        {
+            name: 'an unreachable gate target with no row → reject',
+            expect: 'reject',
+            run: () => fixture({ target: 'check-x', wired: false, exempt: {} }),
+        },
+        {
+            name: 'an unreachable gate target WITH a row → accept',
+            expect: 'accept',
+            run: () => fixture({ target: 'check-x', wired: false, exempt: { 'check-x': 'a stated reason' } }),
+        },
+        {
+            // The other direction. Without it a registry accumulates rows for
+            // targets that were wired long ago, and stops being read.
+            name: 'a row for a target that IS reachable → reject (stale exemption)',
+            expect: 'reject',
+            run: () => fixture({ target: 'check-x', wired: true, exempt: { 'check-x': 'stale' } }),
+        },
+    ];
+    try {
+        return runSelfTest({ gate: 'check_gate_reachability', cases, minCases: 4, minRejectCases: 2 });
+    } finally {
+        for (const d of roots) fs.rmSync(d, { recursive: true, force: true });
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): number {
+    if (argv.includes('--self-test')) return selfTest();
+    if (argv.includes('--gate')) return runGate(root);
     const r = analyse(root);
     if (argv.includes('--json')) {
         process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
         return 0;
     }
+    // Emitted on the DEFAULT invocation too, not only under `--gate`: the
+    // coverage gate reads a bare run, and a gate that reports what it inspected
+    // only in one mode is a gate that reports nothing in the other.
+    reportScanned({
+        gate: 'check_gate_reachability',
+        scanned: readExemptions(root).size + r.unreachable.length,
+        units: 'exemption row(s) + unreachable target(s)',
+        roots: [EXEMPTIONS_REL, ROOT_TASKFILE, TASKFILES_DIR],
+    });
     const total = r.reachable.length + r.scriptInWorkflow.length + r.unreachable.length;
     process.stdout.write(
         `gate-shaped targets: ${String(total)} · target-reachable ${String(r.reachable.length)} · ` +

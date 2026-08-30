@@ -61,7 +61,7 @@ already runs.
 | `lint-topics-yaml` | `lint_topics_yaml` | script invoked directly by a workflow step |
 | `memory:shadow-report` | `check_memory` | `--shadow-report` shape of `check-memory`, target-reachable |
 
-## Class 2 — `should-run`: absence from CI is a hole (10)
+## Class 2 — `should-run`: absence from CI is a hole (8, after two Phase-2 reclassifications)
 
 | Target | Reason |
 |---|---|
@@ -71,12 +71,21 @@ already runs.
 | `check-publish-surface` | Same class as `lint-positioning` — a published-string surface with no other guard. |
 | `check-release-includes-discovery` | A release that omits the discovery manifest ships a broken install; the failure is silent until first use. |
 | `check-requirements-trace` | Traceability decays continuously and nothing else reports it. |
-| `check-trunk-drift` | Detects a divergence whose whole nature is that nobody noticed. |
 | `lint-adr-sweep-routing` | ADR routing drift is invisible to every other gate. |
-| `lint-explain-trace` | Guards a user-facing explanation surface. |
 | `lint-mcp-registry-manifest` | The manifest is a published integration contract. |
 
-## Class 3 — `manual`: deliberately human-invoked (12)
+## Reclassified during Phase 2 — because 2.2 said run it locally first
+
+Two of the ten `should-run` rows were wrong, and running each gate before wiring
+it is what caught them. This is the rule earning its keep rather than a
+formality.
+
+| Target | Was | Is | Why the first reading was wrong |
+|---|---|---|---|
+| `lint-explain-trace` | `should-run` | `manual` | **Not a gate.** It is a validator taking a JSON document; a bare invocation exits non-zero with `pass a JSON file path or --stdin`. Wiring it would have made CI permanently red. |
+| `check-trunk-drift` | `should-run` | `manual` | **Advisory by its own docstring** — *"run it in the /create-pr pre-flight or wire into CI per your branch-protection policy"*. Its red state is "this branch is behind trunk", which is the normal state of an open PR, so wiring it would fail correct work. |
+
+## Class 3 — `manual`: deliberately human-invoked (14, including the two above)
 
 Each names what would make it run.
 
@@ -95,9 +104,20 @@ Each names what would make it run.
 | `value` | Renders a dashboard; the render is the product, not a check. | Nothing — it is not a gate. |
 | `value:lint` | Lints that dashboard, which is generated and regenerated on demand. | The dashboard becoming a committed artefact a drift could break. |
 
-## Not acted on here
+## Outcome after Phase 2
 
-Per step 1.3, this phase touches no taskfile and no workflow. Wiring a gate that
+**22 unreachable → 14.** The eight that left were wired one target per commit,
+each run locally first; all eight were green on arrival, which the commits state
+rather than imply — a gate wired while already green is wired on an unverified
+sensitivity claim. Every one of the remaining 14 now carries a row in
+`src/config/gate-reachability-exemptions.json` with a reason **and** what would
+make it run, and `check_gate_reachability --gate` fails on any unreachable
+target without one — in both directions, so a stale exemption for a
+now-reachable target fails too.
+
+## Not acted on in Phase 1
+
+Per step 1.3, that phase touched no taskfile and no workflow. Wiring a gate that
 has never run in CI is how a green pipeline goes red for reasons nobody
 scheduled; Phase 2 does it deliberately, one target at a time, each seen red or
 explained.

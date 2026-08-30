@@ -1,0 +1,21 @@
+{
+    "_comment": "Gate-shaped task targets that are deliberately NOT reachable from `task ci` or any workflow. road-to-gates-that-do-not-run Phase 3. Every entry carries a reason AND what would make it run — a class with no reason is not a class, and 'manual' without a promotion condition is a shrug. check_gate_reachability --gate fails on any unreachable target absent from this map, so a new one cannot join the set silently.",
+    "_registered_at": "2026-08-30",
+    "_measured": "22 unreachable at the start of Phase 2, 14 after it. The 8 that left were wired one per commit, each run locally first.",
+    "exempt": {
+        "ci-strict": "An ENTRY POINT, not a gate — the stricter sibling of `ci` itself, so wiring it into `ci` would be a cycle. Would run if strict became the default, which is a policy change rather than a wiring one.",
+        "check-augment-budget": "Emits a MEASUREMENT, not a verdict; a gate that cannot fail is a report. Would run once a pre-registered threshold exists to fail on.",
+        "check-corpus": "Requires council configuration, which is user-global (ADR-104) and absent in CI by construction. Would run against a fixture corpus that needs no configured council.",
+        "check-media-deps": "Requires external media tooling not installed on runners. Would run with those dependencies in the runner image, or behind a skip-with-reason path.",
+        "check-trunk-drift": "ADVISORY BY ITS OWN DOCSTRING — 'run it in the /create-pr pre-flight or wire into CI per your branch-protection policy'. Its red state is 'this branch is behind trunk', which is the normal state of an open PR, so wiring it would fail correct work. RECLASSIFIED from should-run during Phase 2 after reading what it asserts. Would run under a branch-protection policy that requires an up-to-date base.",
+        "dev:standing-rule-delivery": "`dev:` namespace — an inspection aid for a maintainer mid-change. Would run if promoted out of `dev:`, which is a scope decision.",
+        "lint-agents-layout-strict": "`--strict` over a corpus whose non-strict form is already reachable; strict carries a known backlog. Would run once that backlog is cleared and strict becomes the default.",
+        "lint-bench-ab": "Bench namespace, spend-bearing. Would run given a cached or dry arm that costs nothing per invocation.",
+        "lint-explain-trace": "NOT A GATE — a validator that takes a JSON document, and a bare invocation exits non-zero with 'pass a JSON file path or --stdin'. RECLASSIFIED from should-run during Phase 2, which is exactly what 2.2's run-it-locally-first rule exists to catch: wiring it would have made CI permanently red. Would run wired to a specific trace fixture.",
+        "lint-originality-shingles": "`--top 10` is a ranked REPORT, not a pass/fail. Would run given a ratcheted threshold, like the other originality gates carry.",
+        "mcp:glama-drift-check": "Queries an external registry — network-dependent and flaky by construction. Would run against a recorded snapshot instead of a live query.",
+        "migration-verify": "Verifies a physical move during a migration; there is no migration in flight. Would run during one.",
+        "value": "Renders a dashboard; the render is the product, not a check. Nothing would make it a gate.",
+        "value:lint": "Lints that dashboard, which is generated and regenerated on demand. Would run if the dashboard became a committed artefact a drift could break."
+    }
+}
