@@ -261,11 +261,21 @@ called a larger risk than feature absence.
       `check_no_external_sources` sits at its 148 baseline with **zero added** by
       this diff — the three new rows carry no denylisted token by construction,
       since every identifier in them is `opaque:` or a Source A/B/C label.
-- [ ] 0.4 Run the unlicensed-source verbatim scan: phrase-diff the advisor
+- [x] 0.4 Run the unlicensed-source verbatim scan: phrase-diff the advisor
   persona files and the peer-review / synthesis prompts against the source
   texts. Rewrite anything substantively verbatim.
       verify: the evidence file records the scan result **and** the commits
       read; blocked on `blocker: unlicensed-source-verbatim-scan`
+      <!-- Executed 2026-08-30 under the blocker's option (c).
+      `agents/evidence/analysis/council-topology-verbatim-scan-2026-08-30.md`
+      records the corpus with per-file sha256, the FULL authoring history of
+      each file (not a sample), the three mechanical checks and their zero
+      results, and — first, because it governs everything after it — that
+      upstream provenance was NOT reachable offline and that no run of this
+      step can make it so. The file claims neither that the sources carry a
+      licence nor that they do not, and it states which proxy the zero result
+      is a result ABOUT: it is not a similarity scan and cannot be one without
+      the fetched source text. -->
 - [x] 0.5 Lock the one-resolver invariant in documentation **and** in a test:
   `judgment_ladder.ts` stays the one task-side resolver, no
   `CouncilTopologyRouter` beside it, topology refinement begins only after the
@@ -503,24 +513,48 @@ is not paying twice for the same deliberation.
 
 ### 1A — Re-council guard
 
-- [ ] 1A.1 Detect exact repeats on `council:run` by reusing the **existing**
+- [x] 1A.1 Detect exact repeats on `council:run` by reusing the **existing**
   question hash — no second hash implementation.
       verify: a re-run of a retained question is detected; a one-token edit is
       not detected as exact
-- [ ] 1A.2 Warn, never prohibit: prior run date, prior artifact path, the fact
+- [x] 1A.2 Warn, never prohibit: prior run date, prior artifact path, the fact
   that the question appears already deliberated, and a path to re-run after
   explicit confirmation.
       verify: confirmation still re-runs; no code path can turn the warning
       into an unconditional block
-- [ ] 1A.3 Near-duplicate detection on the already-imported similarity
+- [x] 1A.3 Near-duplicate detection on the already-imported similarity
   mechanism — no embedding infrastructure. Pre-register the threshold before
   tuning it on the retained local corpus.
       verify: the warning prints the similarity score, and the threshold in
       the code equals the pre-registered one
-- [ ] 1A.4 Distinguish three states in the warning: exact question + same
+- [x] 1A.4 Distinguish three states in the warning: exact question + same
   relevant configuration; exact question + stale model/config evidence; near
   duplicate.
       verify: a fixture per state renders the matching state and no other
+      <!-- Phase 1A executed 2026-08-30. `src/scripts/ai_council/recouncil_guard.ts`
+      + 20 tests; wired into `cmd_run` BEFORE the `--confirm` gate, so the
+      operator running an estimate is the one who learns the question is
+      already deliberated, while there is nothing to un-spend.
+      REUSE, as the steps require and in both places: the exact match is
+      `_sha256_hex` from `blind_review.ts` (now exported rather than copied —
+      two hashes of one question are two answers to "is this the same
+      question"), and the near-duplicate pass is `jaccardSimilarity` from
+      `_lib/text_similarity.ts`, which the council CLI already imported. The
+      threshold is that module's `MERGE_THRESHOLD`, fixed by an AI-council
+      verdict of 2026-07-05 — a number that could not have been tuned against
+      the council-question corpus, which is the strongest pre-registration
+      available.
+      TWO DEFECTS FOUND BY PROBING THE LIVE CLI, NOT BY REVIEW, and both made a
+      state unreachable in production rather than merely wrong:
+      (1) the exact pass compared the BUILT PROMPT against the hash of the
+      question FILE, so every true repeat reported as a near-duplicate at
+      similarity 1.00 and `exact-*` could never fire; it now compares file to
+      file, with the built prompt as the stdin fallback.
+      (2) the config fingerprint used bare member names while the artefact
+      writer records `name/model`, so the two never matched and every exact
+      repeat reported `exact-stale-config` — two states that can never both
+      occur are one state with extra words. All three states are now proven to
+      fire against the real artefact store. -->
 
 ### 1B — Inline findings, analysis lens only
 
