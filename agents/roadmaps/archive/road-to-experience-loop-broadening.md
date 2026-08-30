@@ -1,11 +1,20 @@
 ---
 complexity: structural
-status: draft
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal. UPDATED 2026-08-30: Phase 0 has now run, so the original clause 'nothing has run' is false and is corrected rather than left standing — see § Why Phase 0 shipped under status: draft in the body for why the status did not change with it. Archiving is still impossible (39 of 43 steps are open), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-governed-harness-evolution is exactly the open question E1 puts to the owner — pre-merging would decide it by authoring."
 ---
 # Road to experience loop broadening
+
+> **CLOSED 2026-08-30 — implementation complete; operational validation
+> deferred.** The qualifier is the council's wording and is deliberate: 44 of 47
+> boxes are done, and the three that are not are `[~]` with recorded
+> dispositions rather than quietly green. AC-9 was **carried verbatim** into
+> `stubs/road-to-experience-lifecycle-operational-proof.md` because it needs
+> elapsed operational time, not effort; 7.6 and 9.6 rest on owner-reserved
+> decisions no council may take. Claiming plain "complete" over that would be
+> the silent-green this roadmap spent nine phases building instruments against.
 
 > **Source:** `agents/tmp.old/evolver/` — three session proposals plus the
 > operator transcript. Every repo claim below was re-verified against this tree
@@ -862,12 +871,18 @@ So the state is deliberate and bounded rather than an oversight:
       verify: a two-level raise is refused, and a raise past repo scope with only
       development-pool evidence is refused.
 - [~] **7.6 Incremental card updates rather than rewrites.** Deferred: needs
-      E8. `from-skipped-parent` promoted `ADD / UPDATE / REMOVE` delta-updates
+      E8. **DEFERRAL AFFIRMED at closure, 2026-08-30** — AI council, anthropic +
+      openai, 2/2: closing this roadmap with 7.6 and 9.6 still `[~]` is
+      legitimate, because both rest on decisions no council may take. E8 is an
+      open maintainer decision and remains one; the card mechanism 7.1–7.5
+      shipped without it, so nothing is blocked on it that this roadmap
+      promised. `from-skipped-parent` promoted `ADD / UPDATE / REMOVE` delta-updates
       from optional to core, with a reflector/curator split whose boundary is
       "the model may interpret evidence; it may not rewrite the evidence". The
       master cites the source paper and carries neither the mechanism nor a
       decision about it.
 
+      <!-- deferred-resolution: carried-to=road-to-experience-loop-owner-decisions -->
 ## Phase 8 — Trigger-shift pairs, offline
 
 - [x] **8.1 Extend `triggers.json` backward-compatibly.** A `shift_of` field
@@ -1045,13 +1060,22 @@ So the state is deliberate and bounded rather than an oversight:
       which is how guards die.
       verify: a mid-run change to any of the five aborts the comparison rather
       than continuing it.
-- [~] **9.6 The Class-C question, as an owner decision.** Deferred: may
+- [~] **9.6 The Class-C question, as an owner decision.** **DEFERRAL AFFIRMED
+      at closure, 2026-08-30** — its blocker is `resolved` as *(c) defer until
+      9.4 has a measured effect*, and 9.4 is now committed as a pre-registration
+      with no run behind it, so the condition has not fired. The blocker's
+      remaining half is owner-reserved: it crosses
+      `docs/contracts/no-runtime-boundary.md`'s recorded architectural boundary,
+      which a council may recommend crossing and may not authorise. AC-7 holds
+      precisely because this stays deferred — nothing in any routing path
+      imports the report, and 6.3's test enforces it. Deferred: may
       selection or routing consume experience at runtime? Reading it at runtime
       means deleting it changes *what* the system does, which the state-store
       test classifies Class C. Without an owner yes it stays a report. 7.2's
       epistemic type is what makes a partial yes expressible.
       <!-- blocked-by: runtime-consumption-of-experience -->
 
+      <!-- deferred-resolution: carried-to=road-to-experience-loop-owner-decisions -->
 ## Blockers
 
 > **REPAIRED 2026-08-29 — both entries below were invisible to every gate and to
@@ -1232,10 +1256,37 @@ So the state is deliberate and bounded rather than an oversight:
 - [x] AC-8 — The retention rule is written into the contract, and every claim
       resting on the ledger states whether its floor is reachable at that
       retention.
-- [ ] AC-9 — At least one repeated-failure pattern has produced a reviewed card,
+- [~] AC-9 — At least one repeated-failure pattern has produced a reviewed card,
       and at least one card has been either promoted through
       `learning-to-rule-or-skill` or expired — so the lifecycle closes in both
       directions rather than only accumulating.
+      **CARRIED VERBATIM, not cancelled and not weakened.** AI council
+      2026-08-30, anthropic + openai, **2/2 convergent on (b)**: descope into
+      `agents/roadmaps/stubs/road-to-experience-lifecycle-operational-proof.md`,
+      created in this same change.
+      **Why not re-scoped.** The tempting repair was to rewrite AC-9 as a claim
+      about the mechanism — a card *can* be promoted, a card *can* expire, both
+      shown by test. Both seats refused it on the distinction the criterion
+      exists to hold: **"can close" is not "has closed"**. Re-scoping would have
+      replaced the promised evidence with a weaker claim while the box went
+      green.
+      **Why it is unmeetable by effort rather than by scheduling.** No failure
+      pattern exists to mine — the full 935-line stream mints one pattern,
+      `implement:success:delegation-policy` at count 914 — and authoring a
+      failure card without a backing pattern is the invented card 7.1 refuses.
+      Nothing can have expired: the store was created today.
+      **The council's substantive addition is a DATA-QUALITY gate before the
+      lifecycle gate**, because a follow-up gated only on elapsed time never
+      closes if the sensor cannot record what it waits for. Gate 1: `outcome`
+      has recorded one non-success, non-skipped value end-to-end.
+      **Measured while executing, and it refutes the council's own
+      hypothesis:** both seats suspected `outcome` was a producer constant like
+      `rules_applied`. It is not — the distribution is `success` 914 + `skipped`
+      29, one pair per producer, and `envelopeOutcome` maps four outcomes. The
+      field **can vary and never has**, which is narrower than "the sensor is
+      broken" and wider than "there was nothing to learn". Gate 1 is exactly
+      what separates those.
+      <!-- deferred-resolution: carried-to=road-to-experience-lifecycle-operational-proof -->
 - [x] AC-10 — At least one removal has landed that the loop itself motivated:
       prose replaced by a deterministic query or helper, with the prose deleted
       in the same change.
