@@ -1146,7 +1146,7 @@ once.
       total order to sort with and falls back to the candidate id; the header and
       a dedicated test record that this is a sort STABILISER, never a fifth
       criterion — it never appears in a `TieBreakResult`.
-- [ ] **4.6 Select regressions from the affected neighbourhood.**
+- [x] **4.6 Select regressions from the affected neighbourhood.**
       `from-skipped-parent`: use the code graph to choose which regressions to
       run for a given candidate. The master adopted the attack "local
       improvement, global regression" as a risk with no mechanism behind it.
@@ -1154,6 +1154,57 @@ once.
       existing regressions, it does not author tasks.
       verify: a candidate touching one surface runs the regressions its
       neighbourhood names, and a fixture proves a neighbour regression is caught.
+      **DONE 2026-08-31, and the graph is NOT the one the step names — stated
+      rather than hidden.** `src/scripts/_lib/regression_neighbourhood.ts`.
+      This tree carries two graph surfaces and only one resolves:
+      `agent-config code-graph detect` answers `no code-graph source detected`,
+      because `hooks.code_graph.enabled` ships `false`
+      (`src/config/agent-settings.template.yml:1373-1374`), so the native
+      engine has no index to select against. `src/scripts/discovery_graph.ts`
+      does answer — 785 nodes and 1672 edges on this checkout — so the
+      neighbourhood is built on its `affected` BFS. The substitution changes
+      what a neighbour IS: artefact relations (`supersedes`, `routes_to`,
+      `references_adr`, pack and workspace membership) rather than symbol
+      relations. For rule / skill / guideline candidates that is the surface
+      carrying the coupling a rewrite breaks; for a `.ts` symbol candidate it is
+      the weaker one, and the module says so by REFUSING rather than by
+      degrading.
+      **The verify clause's first half.** `selectRegressions` (`:172`) walks
+      `DEFAULT_NEIGHBOURHOOD_DEPTH = 2` (`:125`, a STATED default with a
+      `revisit-if`, not a measured optimum) out from each touched surface and
+      selects every registry entry whose guards intersect the result. A
+      candidate touching one rule selects the regression guarding the skill it
+      `routes_to`, with `reason: 'neighbour'` recorded so the selection is
+      explainable from the diff.
+      **The fixture, and it is falsifiable rather than decorative**
+      (`tests/scripts/regression_neighbourhood.test.ts:111-139`). The candidate
+      edits a rule and breaks the skill it routes to; only the NEIGHBOUR
+      regression fails. `catchReport` (`:249`) is fed the FULL registry's
+      outcomes, so a failure the selection never ran lands in `missed` instead
+      of `caught` — which is what makes narrowing observable. The sibling case
+      at `:131` pins the other polarity: the same outcomes under a diff-scoped
+      selection yield `caught: []` and `missed: ['reg-neighbour']`.
+      **Sensitivity was OBSERVED, not argued.** The expansion in the MODULE was
+      broken (`affected(graph, t, depth)` to `affected(graph, t, 0)`) and the
+      suite went red 5/13, the load-bearing failure being *"catches the
+      neighbour breakage, and misses nothing"* with
+      `AssertionError: expected [] to deeply equal [ 'reg-neighbour' ]`.
+      Restoring the line returned 13/13.
+      **An unknown neighbourhood refuses, it does not read as a clean sheet**
+      (`selectionVerdict`, `:210`; test `:141`). A touched surface absent from
+      the graph would otherwise select zero regressions and report success,
+      which is the "local improvement, global regression" hole arriving through
+      the selector instead of around it. There is no option flag that relaxes
+      it. The refusal was exercised against the real graph, not only the
+      fixture: a probe naming a non-existent rule path refused, and the same
+      probe with a real path returned `verdict: null` and a neighbour-reason
+      selection.
+      **K9 is honoured structurally.** This selects; it never authors. No code
+      path constructs a `RegressionSpec`, every selected entry is the caller's
+      registry object BY REFERENCE, and the test asserts object identity
+      (`:160`) rather than an id match — an id match would also pass for a
+      synthesized spec carrying a copied id. `authored: 0` is a literal type
+      (`:113`).
 - [x] **4.7 Reuse the discrimination and hygiene machinery.**
       `eval_publication.PlantedItem` for plants, `judge_hygiene` for order-swap.
       Add the evaluator-promotion procedure the master omitted: an old and a new
@@ -1238,7 +1289,7 @@ once.
       **The park itself is asserted intact** — the file exists under `later/`,
       carries `status: later`, and its 2/2 council record is present. It is not
       reopened here: nothing in this change touches it.
-- [ ] **5.3 Split the roles: analyzer, curator, proposer.**
+- [x] **5.3 Split the roles: analyzer, curator, proposer.**
       `from-skipped-parent`, which states the failure directly — do not collapse
       them into one unconstrained rewrite prompt. The master has one LLM
       proposer plus a one-shot compiler, so the curator role that owns lifecycle
@@ -1246,6 +1297,62 @@ once.
       only, under a frozen evaluator contract.
       verify: the three roles are separate prompts with separate input sets, and
       the judge cannot see outcome truth.
+      **DONE 2026-08-31.** `src/scripts/_lib/role_split.ts`, reusing
+      `_lib/curator_ops.ts` for the op vocabulary, `_lib/evaluator_promotion.ts`
+      for the contract gate and `_lib/judge_hygiene.ts` for the advisory rubric
+      shape — nothing here decides anything those three already decided.
+      **First conjunct — separate prompts, separate input sets, enforced at the
+      boundary.** `ROLE_INPUTS` (`:94`) declares each role's admissible input
+      kinds and `buildPrompt` (`:136`) REFUSES an input outside that set. The
+      separation is the one the step names: the analyzer never sees
+      `corpus-inventory` so it cannot pick an artifact, the curator never sees
+      `authoring-contract` so it cannot write one, the proposer never sees
+      `trigger-census` so it cannot relitigate the decision. The sets are
+      deliberately NOT disjoint — all three see `defect-observation`, because a
+      curator choosing `RETIRE` without the motivating evidence is guessing —
+      but no role receives the union, and a test pins each set as a strict
+      subset. The collapse this step exists to prevent is tested directly: a
+      supplier handing one bag of every input kind to all three roles is
+      refused (`tests/scripts/role_split.test.ts:111`), which is how three roles
+      actually become one unconstrained rewrite prompt — not by a decision, but
+      by the input set widening one field at a time.
+      **Second conjunct — the judge cannot see outcome truth, structurally, in
+      three layers that fail independently.** (1) `JudgeInput` (`:175`) has
+      three fields — a contract id, rubric question ids, artifact text — and no
+      field capable of holding a verdict, an arm label, a metric, a winner or a
+      ground-truth label. A scanner reads the DECLARED interface block and
+      matches an outcome-field vocabulary; it is proved to FIRE on a synthetic
+      interface carrying `paired_verdict` and `winning_arm` before it is trusted
+      to be silent on the real one, and the field extractor carries its own
+      anti-vacuity assertion because an extractor returning nothing would also
+      "pass" (test `:175-197`). (2) Types vanish at runtime, so
+      `buildJudgePrompt` (`:266`) refuses any key outside `JUDGE_INPUT_KEYS`
+      (`:166`) — exercised with an object cast through `as JudgeInput` carrying
+      `paired_verdict: 'treatment-won'`, which the type system cannot see and
+      the refusal does (test `:199`). A test also pins the allowlist against the
+      declared fields, so there is no third list to drift. (3) The prompt is
+      asserted to be a PURE FUNCTION of the three allowlisted values by exact
+      string equality (test `:218`) — a builder interpolating an outcome from
+      anywhere at all, not merely from its own argument, breaks that equality,
+      which layers 1 and 2 would both miss.
+      **Rubric questions only, and the answers cannot name an arm.**
+      `assertRubricOnly` (`:233`) throws on a question asking which arm won,
+      which candidate was better, or what the ground truth was — because such a
+      question makes the judge a second verdict beside `paired_verdict`, which
+      is Risk 1 on this roadmap. `JUDGE_GRADES` (`:182`) is
+      `yes / no / not-assessable`: a closed vocabulary with no value that names
+      an arm. The `judge_hygiene` shape classification rides along as ADVISORY
+      and gates nothing, exactly as that module states it must.
+      **The frozen evaluator contract is the existing one, not a second gate.**
+      The contract id travels on the prompt, `assertJudgeContractFrozen`
+      (`:292`) refuses a mismatch, and `promoteJudgeContract` (`:309`) is the
+      only way forward — it delegates to step 4.7's `assertEvaluatorPromotable`,
+      so a judge-contract change inherits the cross-grade and
+      discrimination-plant requirements rather than getting a weaker gate of its
+      own. A test shows a null cross-grade refusing the judge-contract promotion.
+      **The judge stays optional**, as the step says: `buildSplitPipeline`
+      (`:330`) returns `judge: null` when none is configured, and the three role
+      prompts are produced regardless.
 - [ ] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
