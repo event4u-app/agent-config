@@ -90,16 +90,72 @@ parents must restate the letter's meaning rather than carry it.
 
 ## Phase 0 — Scope, classification, decisions
 
-- [ ] **0.1 Write a classification note, not an ADR rewrite.** Every runtime
+- [x] **0.1 Write a classification note, not an ADR rewrite.** Every runtime
       component lacking an explicit ADR-124 class label gets one. No ADR is
       rewritten, because the taxonomy the parents wanted to author already
       exists.
-      verify: every entry in the runtime registry carries a class label, and
-      `git diff docs/decisions/` is empty for ADR-124.
-- [ ] **0.2 Fix the boundaries in writing.** ADR-094 untouched (Layer 2 revival
+      verify: DONE — `docs/contracts/runtime-component-classes.md` labels every runtime component against ADR-124, and `git diff docs/decisions/` is empty (no ADR is touched by this change).
+
+      **What "the runtime registry" turned out to be, because the step's own
+      wording points at the wrong file.** There is a `runtime_registry.ts` in
+      this tree and it is NOT this: it records how a SKILL declares execution
+      (`manual` / `assisted` / `automated`, plus a handler), which is a
+      different axis from ADR-124's process lifecycle — a skill with
+      `handler: shell` still runs inside a Class-A invocation. No inventory of
+      runtime COMPONENTS with class labels existed, which is why the step reads
+      as if one did. The note says this in its own § What is NOT in this table,
+      because the two registries sound alike and a reader who conflates them
+      looks for class labels in the wrong file.
+
+      **The inventory is eleven rows, each naming the file that DECIDES its
+      class** rather than asserting it: the hook dispatcher and its 47 concerns,
+      the work engine, the code-graph engine, the gate population, `ui:audit`,
+      `ui:render` and the council CLI as Class A; the UI/settings server and the
+      MCP server as Class B; and the supervised collector as the Class-B row
+      ADR-249 exists for. Two claims were checked rather than written from
+      memory: `ls src/scripts/hooks/*.ts` is 47, and a grep for
+      `createServer|.listen(|setInterval` across all 47 returns nothing.
+
+      **The collector row names no file, and that is deliberate.** It is not in
+      this tree — `road-to-supervised-telemetry-collector` builds it — and a
+      cross-branch citation would be a broken reference. Omitting the row would
+      have been worse: the table would read as if ADR-249 reversed a prohibition
+      for nothing.
+
+      **The two hazards the note is really for.** ADR-124's Class-B reversal is
+      SCOPED (`supersedes_scope` names ADR-124 `:111` and ADR-109 `:28`), so
+      "Class B is allowed now" is the misreading to prevent; and this roadmap's
+      own § A hazard the parents created records that the two source proposals
+      swap B and C, so a letter carried across from either silently exchanges
+      "the thing to build" for "the thing that is banned". Both are restated at
+      the point of use.
+
+      **Honest limit, stated in the note:** it is a labelling, not a gate.
+      Nothing refuses a new runtime component that arrives without a row, and a
+      script that guessed at what counts as a component would be worse than the
+      review obligation it replaced.
+- [x] **0.2 Fix the boundaries in writing.** ADR-094 untouched (Layer 2 revival
       stays behind its own gate); the runtime-consumption question is carried
       only as the Phase 9 gate, never assumed either way.
-      verify: no step below reads experience data at selection or routing time.
+      verify: DONE — audited, not asserted. Of this roadmap's 37 numbered steps exactly two mention runtime consumption: `6.3`, which FORBIDS it (*"Report only. No runtime consumption … nothing in selection or routing does"*), and `9.6`, which is the deferred owner decision. No step reads experience data at selection or routing time.
+
+      **Both boundaries are now in writing**, in
+      `docs/contracts/runtime-component-classes.md` § The two boundaries, rather
+      than held as an intention by whoever last read the roadmap.
+
+      **ADR-094 is untouched — `git diff docs/decisions/` is empty for this
+      change** — and the boundary is restated in the form the roadmap's own
+      `corrected-from-reproduction` note demands: Layer 2 revival is **gated**,
+      not forbidden (*"requires ≥2 funded consumer projects"*), the gate is
+      unmet, and citing the gate is what stops a re-litigation that citing a
+      prohibition invites.
+
+      **The runtime-consumption question is carried as the Phase 9 gate and
+      assumed in neither direction.** The reason it is a boundary rather than a
+      preference is written out: reading experience at runtime means deleting it
+      changes what the system does, which is ADR-124's state-store test for
+      Class C. So an accidental yes would reclassify the component, not merely
+      widen a feature.
 - [ ] **0.3 Adopt consumer-before-producer for every metric.**
       `from-skipped-parent`, and it is the rule this repository has already paid
       for not having: each metric declares its `consumer`, the `decision` it
