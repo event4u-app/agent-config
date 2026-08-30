@@ -1,0 +1,686 @@
+diff --git a/agents/roadmaps/road-to-turnaround-followups.md b/agents/roadmaps/road-to-turnaround-followups.md
+index 483433ff8421eeb660092c9f0409ea8cf49a119f..c047ba408bb8560af3d1f7b2d0926c056a88a469 100644
+--- a/agents/roadmaps/road-to-turnaround-followups.md
++++ b/agents/roadmaps/road-to-turnaround-followups.md
+@@ -94,7 +94,7 @@ Each is blocked by a different thing, and none of them is effort:
+ 
+ ## Phase 3 — Emit `paths:` on the write path that does not
+ 
+-- [ ] **3.1 Call the host-form rewrite from the installer's global write
++- [x] **3.1 Call the host-form rewrite from the installer's global write
+       path.** `condense.ts` calls `_claude_paths_plan` when it writes the
+       project tree; nothing under `src/install/` calls it at all, so
+       `~/.claude/rules/` receives the source form and three rules the emitter
+@@ -107,7 +107,36 @@ Each is blocked by a different thing, and none of them is effort:
+       verify: after a fresh install,
+       `grep -lE '^paths:' ~/.claude/rules/*.md | wc -l` is 3, and those three are
+       the path-only rules named above.
+-- [ ] **3.2 Prove the three still fire, and that nothing else went quiet.**
++      **DONE 2026-08-30.** The emitter now runs on the install side:
++      `src/install/claudeRuleRewrite.ts` renders the host form from
++      `_claude_paths_plan` + `parseFrontmatter`, both already installer-side, so
++      the installer bundle gains no dependency on the projection graph. It is
++      called from `src/scripts/install.ts` in the `tool_id === 'claude-code'`
++      branch, immediately beside `_apply_claude_flat_command_wrappers` and for
++      the same reason: the deploy loop's `_copy_dir_dereferencing_symlinks`
++      copies `dist/agent-src/rules/` verbatim, so the anchor receives the source
++      frontmatter vocabulary and every rule loads unconditionally.
++      **Verified against the real delivery filter rather than by running a
++      global install** — writing into the operator's `~/.claude` to prove a
++      point is not a verification, it is a side effect. The simulation applies
++      `isExclusivelyPackageOnly` exactly as `_rule_filter_for_source` does,
++      copies what survives, and runs the rewrite:
++      `copied 104 withheld(package-only) 15` · `paths: before 0 -> after 3` ·
++      `scoped: design-review-after-ui-write, roadmap-progress-sync,
++      ui-audit-gate`. 104 is the same file count the operator's live
++      `~/.claude/rules` carries, so the simulated tree is the delivered one.
++      The three are exactly the rules this step names.
++      Equivalence with the maintainer emitter is held by
++      `tests/install/claude_rule_rewrite.test.ts`, which renders every rule in
++      `src/rules/` through BOTH `condense._emit_claude_rule` and this module and
++      asserts byte-identity — the two emitters deliberately share no call, so a
++      test is what keeps one host from receiving two activation surfaces.
++      The scope bound held: the 17 mixed rules are untouched and still
++      unconditional, which the same test pins from the other side (a mixed rule
++      must render with NO frontmatter, because `paths:` is exclusive on this
++      host and emitting it would silence the rule on the keyword prompts it was
++      written for).
++- [x] **3.2 Prove the three still fire, and that nothing else went quiet.**
+       Narrowing activation fails silently by construction — a rule that should
+       have loaded simply does not, with no error anywhere. Re-run
+       `rule_activation_census --projection ~/.claude/rules` and assert the
+@@ -115,6 +144,33 @@ Each is blocked by a different thing, and none of them is effort:
+       fell by exactly three.
+       verify: the census reports no divergence between the source verdict and
+       the projection, and the before/after unconditional counts are recorded.
++      **DONE 2026-08-30, and it found a second defect on the way — in the
++      census, not in the emitter.** Run against the delivered tree the fixed
++      installer produces, the census still reported
++      `⚠️ diverges from the source verdict (4 scoped)` against a projection
++      declaring 3. Both numbers were right. The comparator was subtracting
++      nothing: the source verdict counts every rule in `src/rules/`, while a
++      delivered tree never carries the package-only ones (ADR-236 partitions
++      them to the project layer), so **every correctly-emitted globally
++      partitioned projection would have reported a divergence forever.** The
++      fourth scoped rule is `source-of-truth`, package-only, and absent from
++      the operator's live `~/.claude/rules` — checked directly.
++      `rule_activation_census.ts` now carries `package_only` per row (from
++      `isExclusivelyPackageOnly`, the installer's own predicate, not a
++      re-derivation) and compares against the partition-adjusted expectation,
++      naming the withheld rules so a reader can check the subtraction:
++      `source scopes 4; 1 of those is package-only and never delivered
++      (source-of-truth), so a partitioned projection is expected to declare 3` ·
++      `✅ consistent with the source verdict (3 expected, 3 found)`.
++      **Before / after, both from the same instrument:** live
++      `~/.claude/rules` — `files 104 · declaring paths: 0`, ⚠️ divergence;
++      delivered tree after the fix — `files 104 · declaring paths: 3`, ✅
++      consistent. Unconditional count falls by exactly three, which is the
++      three named in 3.1 and no others.
++      `tests/scripts/rule_activation_census_partition.test.ts` pins **both
++      polarities** — the quiet case AND a real one-file divergence that must
++      still fire — because a comparator shown only to stay silent has not been
++      shown to work.
+ 
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
+@@ -134,6 +190,11 @@ Each is blocked by a different thing, and none of them is effort:
+ - [ ] AC-2 — The 30-minute authorization window carries a recorded owner
+       decision that `block_unauthorized_git.ts` cites, or an explicit recorded
+       refusal to change it. Silence does not satisfy this.
+-- [ ] AC-3 — A fresh install emits `paths:` for exactly the rules the emitter
++- [x] AC-3 — A fresh install emits `paths:` for exactly the rules the emitter
+       classifies path-only, and the activation census reports no divergence
+-      between its source verdict and the projection.
++      between its source verdict and the projection. **Met 2026-08-30 with one
++      clarification the criterion needed and did not have: "exactly the rules
++      the emitter classifies path-only" is FOUR in the source and THREE in any
++      global delivery, because `source-of-truth` is package-only and withheld.
++      The census now states that subtraction rather than reporting it as
++      drift.**
+diff --git a/src/install/claudeRuleRewrite.ts b/src/install/claudeRuleRewrite.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..478e9c8e48fb59f8d7a8d4e1ec4298178d6a12ce
+--- /dev/null
++++ b/src/install/claudeRuleRewrite.ts
+@@ -0,0 +1,210 @@
++/**
++ * Rewrite installed Claude Code rule files into host form, in place.
++ *
++ * ## The gap this closes
++ *
++ * `condense.ts::_emit_claude_rule` shapes a rule for Claude Code — it emits
++ * `paths:` and nothing else, because `paths:` is the one activation key the
++ * probed contract records this host as reading. It runs on the MAINTAINER
++ * projection path only. The installer's deploy loop copies
++ * `dist/agent-src/rules/` verbatim into the host anchor
++ * (`_copy_dir_dereferencing_symlinks`, `install.ts`), so an installed
++ * `~/.claude/rules/` receives the SOURCE form: agent-config's own frontmatter
++ * vocabulary (`type`, `tier`, `triggers`, …), none of which this host reads.
++ *
++ * Measured on a real install, 2026-08-30, before this module existed:
++ *
++ * ```
++ * files 104 · declaring paths: 0
++ * ⚠️  diverges from the source verdict (4 scoped)
++ * ```
++ *
++ * The consequence is not cosmetic. On Claude Code `paths:` is EXCLUSIVE — with
++ * it a rule loads on a path match, without it the rule loads unconditionally —
++ * so three rules the emitter classifies path-only arrived in every session
++ * instead of on file contact.
++ *
++ * ## Why it lives here and not in `condense.ts`
++ *
++ * Same reasoning `claudePathsPlan.ts` beside it records: this is
++ * host-activation-key logic on the INSTALL side, and `condense.ts` is a
++ * multi-thousand-line orchestrator already past the source-size ceiling. Both
++ * of this module's inputs are already installer-side — `_claude_paths_plan`
++ * from `claudePathsPlan.ts` and `parseFrontmatter` from `ruleInScope.ts` — so
++ * nothing here reaches back into the projection graph, and the installer bundle
++ * gains no dependency on it.
++ *
++ * The two emitters are held together by a test rather than by a shared call:
++ * `tests/install/claude_rule_rewrite.test.ts` asserts, over every rule in
++ * `src/rules/`, that this module's plan is byte-identical to the one
++ * `condense.ts` emits. A divergence fails there rather than silently shipping
++ * two different activation surfaces to the same host.
++ *
++ * Side-effect-free apart from the writes it is asked to make. No CLI entry, no
++ * `process.exit`.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { _claude_paths_plan } from './claudePathsPlan.js';
++import { parseFrontmatter } from './ruleInScope.js';
++
++export interface ClaudeRuleRewriteResult {
++    /** Files read and rewritten. */
++    rewritten: number;
++    /** Basenames (without `.md`) that received a `paths:` block. */
++    scoped: string[];
++    /**
++     * Patterns the plan deliberately dropped, per file — surfaced rather than
++     * swallowed, because a dropped pattern silently widens a rule's activation
++     * from path-gated to unconditional.
++     */
++    dropped: { rule: string; pattern: string; reason: string }[];
++}
++
++/**
++ * Rewrite, then render the two operator-facing lines the installer prints.
++ *
++ * The reporting lives here rather than at the call site for the reason
++ * `claudePathsPlan.ts` records for itself: `install.ts` is thousands of lines
++ * past `check_source_size_budget`'s ceiling, where every added line counts as a
++ * violation, and that gate's convention is that the total moves down through
++ * extraction and never up through a baseline raise. So the caller gets one call
++ * and a list of strings.
++ */
++export function rewriteAndReport(
++    rulesDir: string,
++    quiet: boolean,
++    info: (m: string) => void,
++    warn: (m: string) => void,
++    wrappers?: { wrapped: readonly string[]; reserved: readonly string[] },
++): ClaudeRuleRewriteResult {
++    const result = rewriteClaudeRules(rulesDir);
++    // The flat-command wrapper report rides along rather than sitting at the
++    // call site: `install.ts` is thousands of lines past
++    // `check_source_size_budget`'s ceiling, and this module is the one place
++    // that already owns claude-code post-copy reporting. Moving it here is the
++    // reduction that pays for this feature's own lines — that gate's stated
++    // convention is that the total falls through extraction and never rises
++    // through a baseline edit. Messages are byte-identical to the originals.
++    if (wrappers && !quiet) {
++        if (wrappers.wrapped.length > 0) {
++            info(
++                `  claude-code: ${wrappers.wrapped.length} visible flat command(s) projected as ` +
++                    'skill wrappers (Claude Code flat-command discovery workaround)',
++            );
++        }
++        if (wrappers.reserved.length > 0) {
++            info(
++                `  claude-code: ${wrappers.reserved.length} flat command(s) withheld — name is a ` +
++                    `Claude Code built-in (${wrappers.reserved.join(', ')}); nested /cluster:sub ` +
++                    'commands remain available',
++            );
++        }
++    }
++    if (result.rewritten > 0 && !quiet) {
++        info(
++            `  claude-code: ${result.rewritten} rule(s) rewritten to host form; ` +
++                `${result.scoped.length} path-scoped (${result.scoped.join(', ') || 'none'})`,
++        );
++    }
++    for (const d of result.dropped) {
++        warn(
++            `  claude-code: ${d.rule}: dropped \`paths:\` pattern ` +
++                `${JSON.stringify(d.pattern)} (${d.reason})`,
++        );
++    }
++    return result;
++}
++
++/** Python `str.rstrip()` with no args — mirrors `condense.ts::_pyRstrip`. */
++function pyRstrip(s: string): string {
++    return s.replace(/\s+$/u, '');
++}
++
++/** Mirrors `condense.ts::_yaml_scalar`. */
++function yamlScalar(value: string): string {
++    return JSON.stringify(value);
++}
++
++/**
++ * Render one rule's host form from its source text.
++ *
++ * Exported for the equivalence test. A rule with no path-shaped trigger gets
++ * NO frontmatter at all rather than an empty block the host would ignore —
++ * keys that do nothing are bytes in every session's standing context.
++ */
++export function renderClaudeRule(sourceText: string): {
++    text: string;
++    globs: string[];
++    dropped: { pattern: string; reason: string }[];
++} {
++    const [meta, body] = parseFrontmatter(sourceText);
++    const plan = _claude_paths_plan(meta);
++    const lines: string[] = [];
++    if (plan.globs.length > 0) {
++        lines.push('---', 'paths:');
++        for (const g of plan.globs) {
++            lines.push(`  - ${yamlScalar(g)}`);
++        }
++        lines.push('---', '');
++    }
++    lines.push(pyRstrip(body) + '\n');
++    return { text: lines.join('\n'), globs: plan.globs, dropped: plan.dropped };
++}
++
++/**
++ * Rewrite every `*.md` directly under `rulesDir` into Claude host form.
++ *
++ * Idempotent: a file already in host form parses to `{paths: [...]}`, which
++ * carries no `triggers:` key, so `_claude_paths_plan` returns no globs and the
++ * rewrite would DROP the block. That is why the already-rewritten case is
++ * detected and skipped rather than re-run — re-running is the silent-widening
++ * failure this module exists to fix, applied to its own output.
++ *
++ * Returns counts rather than printing. The caller owns the reporting surface.
++ */
++export function rewriteClaudeRules(rulesDir: string): ClaudeRuleRewriteResult {
++    const result: ClaudeRuleRewriteResult = { rewritten: 0, scoped: [], dropped: [] };
++    let entries: string[];
++    try {
++        entries = fs.readdirSync(rulesDir);
++    } catch {
++        return result;
++    }
++    for (const name of entries.filter((n) => n.endsWith('.md')).sort()) {
++        const full = path.join(rulesDir, name);
++        let stat: fs.Stats;
++        try {
++            stat = fs.lstatSync(full);
++        } catch {
++            continue;
++        }
++        // A symlink here is the legacy raw-md farm, not an installed copy.
++        // Rewriting through it would write into the projection source.
++        if (!stat.isFile() || stat.isSymbolicLink()) continue;
++
++        let text: string;
++        try {
++            text = fs.readFileSync(full, 'utf-8');
++        } catch {
++            continue;
++        }
++        const [meta] = parseFrontmatter(text);
++        // Already host form: `paths:` present and no source vocabulary left.
++        if (meta['paths'] !== undefined && meta['triggers'] === undefined) continue;
++
++        const rendered = renderClaudeRule(text);
++        if (rendered.text !== text) {
++            fs.writeFileSync(full, rendered.text, 'utf-8');
++            result.rewritten += 1;
++        }
++        const stem = name.slice(0, -3);
++        if (rendered.globs.length > 0) result.scoped.push(stem);
++        for (const d of rendered.dropped) {
++            result.dropped.push({ rule: stem, pattern: d.pattern, reason: d.reason });
++        }
++    }
++    return result;
++}
+diff --git a/src/scripts/install.ts b/src/scripts/install.ts
+index 9743876e0895d9d8bccf5ca6c3b1ca317e6adc7f..bc08f17da5d13e237b28c6141d295f7ca6399d9f 100644
+--- a/src/scripts/install.ts
++++ b/src/scripts/install.ts
+@@ -98,6 +98,7 @@ import {
+     type RuleScope,
+ } from '../install/rule_scope.js';
+ import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
++import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
+ import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
+ import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
+ import { settingsSchema } from '../server/schemas/settings.js';
+@@ -3231,20 +3232,16 @@ function _deploy_global_content(
+         // Runs before the postcheck + inventory record so `current_files`
+         // reflects the transformed tree and reaping stays consistent.
+         if (tool_id === 'claude-code') {
++            // Rules land verbatim from the copy above; see the module. It also
++            // renders the flat-command wrapper report, unchanged.
+             const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
+-            if (res.wrapped.length > 0 && !state.QUIET) {
+-                info(
+-                    `  claude-code: ${res.wrapped.length} visible flat command(s) projected as ` +
+-                        'skill wrappers (Claude Code flat-command discovery workaround)',
+-                );
+-            }
+-            if (res.reserved.length > 0 && !state.QUIET) {
+-                info(
+-                    `  claude-code: ${res.reserved.length} flat command(s) withheld — name is a ` +
+-                        `Claude Code built-in (${res.reserved.join(', ')}); nested /cluster:sub ` +
+-                        'commands remain available',
+-                );
+-            }
++            claude_rule_rewrite.rewriteAndReport(
++                path.join(anchor, 'rules'),
++                state.QUIET,
++                info,
++                warn,
++                res,
++            );
+         }
+ 
+         const missing_targets = _verify_deploy_targets(anchor, plan);
+diff --git a/src/scripts/rule_activation_census.ts b/src/scripts/rule_activation_census.ts
+index be72f3ff17a7003ace21ab8eb8a76a494b5574e7..677caaeb903b656a0da05af1e5d187f262fc204f 100644
+--- a/src/scripts/rule_activation_census.ts
++++ b/src/scripts/rule_activation_census.ts
+@@ -58,6 +58,7 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
+ import { _claude_paths_plan, _has_non_path_trigger, _parse_frontmatter } from './condense.js';
+ 
+ const RULES_DIR = path.join('src', 'rules');
+@@ -83,6 +84,13 @@ export interface RuleActivation {
+     emitted_globs: string[];
+     /** Patterns the emitter deliberately drops, with the reason it records. */
+     dropped: { pattern: string; reason: string }[];
++    /**
++     * Scoped to this package alone, so ADR-236 withholds it from every global
++     * host layer. Load-bearing for the projection comparison: a package-only
++     * rule is counted by the source verdict and is absent from a delivered
++     * tree by design, not by drift.
++     */
++    package_only: boolean;
+     /**
+      * The emitter's verdict in one word.
+      * `scoped` — loads on a path match · `unconditional` — loads every session ·
+@@ -111,7 +119,11 @@ function _declares(meta: Record<string, unknown>, keys: readonly string[]): bool
+ }
+ 
+ /** Classify one rule file through the emitter's own exported decision path. */
+-export function classify_rule(id: string, content: string): RuleActivation {
++export function classify_rule(
++    id: string,
++    content: string,
++    package_only = false,
++): RuleActivation {
+     const [meta] = _parse_frontmatter(content);
+     const plan = _claude_paths_plan(meta);
+     const has_path_trigger = _declares(meta, PATH_TRIGGER_KEYS);
+@@ -139,6 +151,7 @@ export function classify_rule(id: string, content: string): RuleActivation {
+         emitted_globs: plan.globs,
+         dropped: plan.dropped.map((d) => ({ pattern: d.pattern, reason: d.reason })),
+         verdict,
++        package_only,
+     };
+ }
+ 
+@@ -150,7 +163,11 @@ export function census(root: string): RuleActivation[] {
+         .map((e) => e.name)
+         .sort();
+     return files.map((f) =>
+-        classify_rule(f.replace(/\.md$/, ''), fs.readFileSync(path.join(dir, f), 'utf8')),
++        classify_rule(
++            f.replace(/\.md$/, ''),
++            fs.readFileSync(path.join(dir, f), 'utf8'),
++            isExclusivelyPackageOnly(path.join(dir, f)),
++        ),
+     );
+ }
+ 
+@@ -259,11 +276,36 @@ export function main(): number {
+             `\n  host projection at ${projection_dir} — reported SEPARATELY, not merged:\n` +
+                 `    files ${projection.files} · declaring paths: ${projection.with_paths}\n`,
+         );
+-        if (projection.with_paths !== sum.scoped) {
++        // The source verdict counts EVERY rule in `src/rules/`. A delivered
++        // projection does not carry the package-only ones: ADR-236 partitions
++        // them to the project layer, so a globally-partitioned host tree is
++        // expected to be short by exactly that many. Comparing the raw counts
++        // reported a divergence on every partitioned install forever — the
++        // emitter was right and the comparator was not subtracting.
++        const scoped_pkg_only = rows.filter(
++            (r) => r.verdict === 'scoped' && r.package_only,
++        );
++        const expected = sum.scoped - scoped_pkg_only.length;
++        if (scoped_pkg_only.length > 0) {
++            process.stdout.write(
++                `    source scopes ${sum.scoped}; ${scoped_pkg_only.length} of those ` +
++                    `${scoped_pkg_only.length === 1 ? 'is' : 'are'} package-only and never\n` +
++                    `      delivered (${scoped_pkg_only.map((r) => r.id).join(', ')}), so a ` +
++                    `partitioned projection is\n      expected to declare ${expected}.\n`,
++            );
++        }
++        if (projection.with_paths !== expected) {
++            process.stdout.write(
++                `    ⚠️  diverges from the source verdict (${expected} expected, ` +
++                    `${sum.scoped} scoped before the\n` +
++                    `        package-only partition). A projection carries no record of the scope\n` +
++                    `        or commit it was generated at, so this is a reason to regenerate it —\n` +
++                    `        never a reading of the emitter.\n`,
++            );
++        } else {
+             process.stdout.write(
+-                `    ⚠️  diverges from the source verdict (${sum.scoped} scoped). A projection\n` +
+-                    `        carries no record of the scope or commit it was generated at, so this\n` +
+-                    `        is a reason to regenerate it — never a reading of the emitter.\n`,
++                `    ✅  consistent with the source verdict (${expected} expected, ` +
++                    `${projection.with_paths} found).\n`,
+             );
+         }
+     } else if (projection_dir) {
+diff --git a/tests/install/claude_rule_rewrite.test.ts b/tests/install/claude_rule_rewrite.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3765f0c903c749b0fba10bb61c27fb1f7b75df6d
+--- /dev/null
++++ b/tests/install/claude_rule_rewrite.test.ts
+@@ -0,0 +1,122 @@
++/**
++ * The installer's Claude host-form rewrite must produce byte-identical output
++ * to the maintainer projection's `_emit_claude_rule`.
++ *
++ * Two emitters now shape rules for the same host from opposite sides of the
++ * pipeline — `condense.ts` on the projection path, `claudeRuleRewrite.ts` on
++ * the install path. They deliberately do not share a call: the installer must
++ * not pull the projection graph into its bundle, which is the same reason
++ * `claudePathsPlan.ts` was extracted in the first place.
++ *
++ * So the invariant is held HERE instead. If the two ever disagree on any rule
++ * in `src/rules/`, this fails rather than shipping two different activation
++ * surfaces to one host.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import { renderClaudeRule, rewriteClaudeRules } from '../../src/install/claudeRuleRewrite.js';
++import { _emit_claude_rule } from '../../src/scripts/condense.js';
++
++const REPO_ROOT = path.resolve(__dirname, '../..');
++const RULES_DIR = path.join(REPO_ROOT, 'src/rules');
++
++function ruleFiles(): string[] {
++    return fs
++        .readdirSync(RULES_DIR)
++        .filter((n) => n.endsWith('.md'))
++        .sort();
++}
++
++describe('claudeRuleRewrite ↔ condense._emit_claude_rule equivalence', () => {
++    it('has rules to compare — a green run over an empty set proves nothing', () => {
++        expect(ruleFiles().length).toBeGreaterThan(50);
++    });
++
++    it('renders byte-identically to the projection emitter for every rule', () => {
++        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-rule-eq-'));
++        try {
++            const mismatches: string[] = [];
++            for (const name of ruleFiles()) {
++                const src = path.join(RULES_DIR, name);
++                const viaCondense = path.join(tmp, name);
++                _emit_claude_rule(src, viaCondense);
++                const expected = fs.readFileSync(viaCondense, 'utf-8');
++                const actual = renderClaudeRule(fs.readFileSync(src, 'utf-8')).text;
++                if (actual !== expected) mismatches.push(name);
++            }
++            expect(mismatches).toEqual([]);
++        } finally {
++            fs.rmSync(tmp, { recursive: true, force: true });
++        }
++    });
++});
++
++describe('rewriteClaudeRules', () => {
++    it('emits paths: for a path-only rule and nothing for a mixed one', () => {
++        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-rule-rw-'));
++        try {
++            fs.writeFileSync(
++                path.join(tmp, 'path-only.md'),
++                '---\ntype: auto\ntriggers:\n  - file_pattern: "*.vue"\n---\n\nBody.\n',
++            );
++            fs.writeFileSync(
++                path.join(tmp, 'mixed.md'),
++                '---\ntype: auto\ntriggers:\n  - file_pattern: "*.vue"\n  - keyword: "design"\n---\n\nBody.\n',
++            );
++            const res = rewriteClaudeRules(tmp);
++
++            expect(res.scoped).toEqual(['path-only']);
++            expect(fs.readFileSync(path.join(tmp, 'path-only.md'), 'utf-8')).toBe(
++                '---\npaths:\n  - "*.vue"\n---\n\nBody.\n',
++            );
++            // Mixed triggers must NOT become path-gated: `paths:` is exclusive
++            // on this host, so emitting it would silence the rule on exactly
++            // the keyword prompts it was written for.
++            expect(fs.readFileSync(path.join(tmp, 'mixed.md'), 'utf-8')).toBe('Body.\n');
++            expect(res.dropped.map((d) => d.rule)).toContain('mixed');
++        } finally {
++            fs.rmSync(tmp, { recursive: true, force: true });
++        }
++    });
++
++    it('is idempotent — a second pass does not strip the paths: block it wrote', () => {
++        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-rule-idem-'));
++        try {
++            const f = path.join(tmp, 'path-only.md');
++            fs.writeFileSync(f, '---\ntype: auto\ntriggers:\n  - file_pattern: "*.vue"\n---\n\nBody.\n');
++            rewriteClaudeRules(tmp);
++            const afterFirst = fs.readFileSync(f, 'utf-8');
++            const second = rewriteClaudeRules(tmp);
++            expect(fs.readFileSync(f, 'utf-8')).toBe(afterFirst);
++            expect(second.rewritten).toBe(0);
++        } finally {
++            fs.rmSync(tmp, { recursive: true, force: true });
++        }
++    });
++
++    it('never writes through a symlink — the legacy raw-md farm is left alone', () => {
++        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-rule-link-'));
++        try {
++            const realSrc = path.join(tmp, 'source.md');
++            fs.writeFileSync(realSrc, '---\ntype: auto\ntriggers:\n  - file_pattern: "*.vue"\n---\n\nBody.\n');
++            const linkDir = path.join(tmp, 'linked');
++            fs.mkdirSync(linkDir);
++            fs.symlinkSync(realSrc, path.join(linkDir, 'source.md'));
++
++            const res = rewriteClaudeRules(linkDir);
++            expect(res.rewritten).toBe(0);
++            expect(fs.readFileSync(realSrc, 'utf-8')).toContain('triggers:');
++        } finally {
++            fs.rmSync(tmp, { recursive: true, force: true });
++        }
++    });
++
++    it('returns an empty result for a missing directory rather than throwing', () => {
++        const res = rewriteClaudeRules(path.join(os.tmpdir(), 'definitely-not-here-9f3a2'));
++        expect(res).toEqual({ rewritten: 0, scoped: [], dropped: [] });
++    });
++});
+diff --git a/tests/scripts/rule_activation_census_partition.test.ts b/tests/scripts/rule_activation_census_partition.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f3099cdde4ebb39edfa868677e749db96d12172
+--- /dev/null
++++ b/tests/scripts/rule_activation_census_partition.test.ts
+@@ -0,0 +1,94 @@
++/**
++ * The census must not report a divergence that the delivery partition explains.
++ *
++ * `--projection` compares a host tree's `paths:` count against the source
++ * verdict. The source verdict counts every rule in `src/rules/`; a delivered
++ * tree does not carry the package-only ones, because ADR-236 partitions those
++ * to the project layer. Before the subtraction existed, a correctly-emitted,
++ * globally-partitioned projection reported ⚠️ divergence permanently — measured
++ * 2026-08-30: source 4 scoped, projection 3, one of the four (`source-of-truth`)
++ * package-only.
++ *
++ * Both polarities are pinned. A gate that only proves it stays quiet has not
++ * been shown to fire.
++ */
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import { census } from '../../src/scripts/rule_activation_census.js';
++
++const REPO_ROOT = path.resolve(__dirname, '../..');
++
++function runCensus(projectionDir: string): string {
++    return execFileSync(
++        path.join(REPO_ROOT, 'node_modules/.bin/tsx'),
++        [path.join(REPO_ROOT, 'src/scripts/rule_activation_census.ts'), '--projection', projectionDir],
++        { cwd: REPO_ROOT, encoding: 'utf-8', env: { ...process.env, TMPDIR: '/tmp' } },
++    );
++}
++
++/** A projection carrying exactly `n` files that declare `paths:`. */
++function makeProjection(withPaths: number, total: number): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'census-proj-'));
++    for (let i = 0; i < total; i += 1) {
++        const body = i < withPaths ? '---\npaths:\n  - "*.vue"\n---\n\nBody.\n' : 'Body.\n';
++        fs.writeFileSync(path.join(dir, `rule-${i}.md`), body);
++    }
++    return dir;
++}
++
++describe('census() package_only classification', () => {
++    it('marks at least one scoped rule package-only — the case the subtraction exists for', () => {
++        const rows = census(REPO_ROOT);
++        const scoped = rows.filter((r) => r.verdict === 'scoped');
++        expect(scoped.length).toBeGreaterThan(0);
++        const pkgOnly = scoped.filter((r) => r.package_only);
++        expect(pkgOnly.map((r) => r.id)).toContain('source-of-truth');
++        // And it must NOT mark every scoped rule package-only, or the
++        // subtraction would silently expect zero and never diverge again.
++        expect(pkgOnly.length).toBeLessThan(scoped.length);
++    });
++});
++
++describe('--projection divergence reporting', () => {
++    const rows = census(REPO_ROOT);
++    const scoped = rows.filter((r) => r.verdict === 'scoped');
++    const expectedDelivered = scoped.filter((r) => !r.package_only).length;
++
++    it('stays quiet when the projection matches the partition-adjusted count', () => {
++        const dir = makeProjection(expectedDelivered, expectedDelivered + 3);
++        try {
++            const out = runCensus(dir);
++            expect(out).toContain('consistent with the source verdict');
++            expect(out).not.toContain('⚠️  diverges');
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    });
++
++    it('STILL fires on a real divergence — one fewer scoped file than delivery expects', () => {
++        const dir = makeProjection(expectedDelivered - 1, expectedDelivered + 3);
++        try {
++            const out = runCensus(dir);
++            expect(out).toContain('⚠️  diverges');
++            expect(out).not.toContain('consistent with the source verdict');
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    });
++
++    it('names the withheld rules so a reader can check the subtraction', () => {
++        const dir = makeProjection(expectedDelivered, expectedDelivered + 3);
++        try {
++            const out = runCensus(dir);
++            expect(out).toContain('package-only and never');
++            expect(out).toContain('source-of-truth');
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    });
++});
