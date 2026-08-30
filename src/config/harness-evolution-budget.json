@@ -1,0 +1,25 @@
+{
+    "_comment": "Pre-registered budget invariant for the governed harness-evolution programme (road-to-governed-harness-evolution step 0.5). FIXED BEFORE THE FIRST RUN, which is the whole of the step: a budget written afterwards is a description of what was spent. Enforced by assertWithinBudget() in src/scripts/_lib/harness_evolution_guards.ts, which ABORTS rather than truncating — a truncated run yields `underpowered`, which _lib/paired_verdict.ts:26 refuses to call a pass and which a reader mistakes for one. The numbers below are sized for the roadmap's own First cut (3-5 deterministic candidate descriptions for `code-intelligence` activation, evaluated against its existing 10-query evals/triggers.json), not for a programme-wide campaign. Raising any ceiling needs the reason as a sentence in the same commit, the discipline check_estate_count already enforces elsewhere.",
+    "schema_version": 1,
+    "registered_at": "2026-08-30",
+    "owner": "maintainer",
+    "review_by": "2027-02-28",
+    "enforced_by": "src/scripts/_lib/harness_evolution_guards.ts#assertWithinBudget",
+    "budget": {
+        "max_candidates": 5,
+        "max_trials_per_candidate": 20,
+        "max_spend_cents": 500
+    },
+    "why_these_numbers": {
+        "max_candidates": "The First cut asks for 3-5 candidates on ONE mutation dimension (steps 3.2, 3.5). Five is that ceiling exactly, so a run that wants six is a run that changed the cut.",
+        "max_trials_per_candidate": "The exact one-sided sign test in _lib/paired_verdict.ts derives its minimum discordant-trial floor from ALPHA rather than choosing one; 20 leaves room above that floor for a corpus of 10 queries run in both orders (judge_hygiene.ts:5-9). NOT a power calculation — stated as a ceiling with its reasoning, not as a sample size somebody computed.",
+        "max_spend_cents": "The cut is spend-bearing and the roadmap says so: description_route_check routes through a model backend behind a cache layer (src/scripts/description_route_check.ts:112-125). 500 cents is a deliberately small first ceiling — the point of the invariant is that the run STOPS at it, so the first number should be one an operator is willing to see an abort at."
+    },
+    "stop_conditions": {
+        "_comment": "Step 0.6. A spend cap stops on cost; these stop on VALIDITY. Each carries a detector or is explicitly marked model-carried — the list and the detectors are STOP_CONDITIONS in the same module. Stopping with INDETERMINATE is a valid result.",
+        "holdout-underpowered": "detector: holdoutUnderpowered",
+        "evaluator-leakage": "detector: discloseToProposer (throws HoldoutLeakError)",
+        "diversity-collapse": "detector: diversityCollapsed",
+        "cross-component-interference": "MODEL-CARRIED, no detector. Deciding whether two changes interfere needs a causal model of the components and this programme has none. Written out rather than given a detector that would pattern-match on file paths and report confidence it does not have."
+    }
+}

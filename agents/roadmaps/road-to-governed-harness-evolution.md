@@ -246,7 +246,7 @@ once.
 > its verify asks for a committed, falsifiable document and nothing more, which
 > is satisfiable today and is worth less every day it waits.
 
-- [ ] **0.4 Make the evaluator trust boundary detectable, not just declared.**
+- [x] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
       and stops there. Add a per-field `visibility_class` on every observation, a
@@ -254,12 +254,12 @@ once.
       truth appears in proposer context.
       verify: a run in which a holdout value reaches proposer context exits
       non-zero, and the disclosure log names the field.
-- [ ] **0.5 Pre-register the budget invariant.** Candidate count, trial
+- [x] **0.5 Pre-register the budget invariant.** Candidate count, trial
       repetitions and a spend ceiling per run, fixed before the run. Exceeding it
       aborts rather than truncates — a truncated run yields `underpowered`, which
       `paired_verdict` refuses to call a pass and which a reader mistakes for one.
       verify: a run configured past the ceiling exits non-zero before spending.
-- [ ] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
+- [x] **0.6 Pre-register stop conditions on epistemic invalidity, not only on
       spend.** `from-skipped-parent`: both parents carried eight or nine stop
       conditions; the master compressed them into the budget cap. A spend cap
       stops on cost, and most of those conditions stop on validity — holdout
