@@ -4,7 +4,7 @@ status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
-review_by: 2026-10-24
+review_by: 2026-10-20
 relates: []
 # relates: the predecessor `road-to-source-silence` archived on 2026-08-29;
 # every item below is a carry-forward from it, with the blocker that stopped it.
@@ -429,13 +429,13 @@ missing keys in CI must fail, never warn."* The recipe is
   have been retired keeps the estate one above its reachable floor.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-29 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The atomic cutover gets split across PRs | implementation | Steps 1.3 and 1.4 land in different changes, leaving the gate either failing every run for want of a key or silently degraded to warn mode — the exact failure the predecessor was written about. | Phase 1's own preamble states it, the maintainer recipe states it, and 1.4's verify asserts the keyless run exits 3 rather than 0, so a half-cutover is observable rather than quiet. | Phase 1 — The atomic digest cutover |
-| 2 | The 2026-10-24 ratchet expiry passes unnoticed | implementation | The shape-debt baseline goes stale before anyone lowers it, and the gate then reports a stale entry instead of a real count. | Phase 3 exists only for this date, `review_by` is set to it rather than to a comfortable later month, and the baseline's own note names the expiry and this roadmap as its owner. | Phase 3 — The ratchet expiry, which has a date |
-| 3 | This roadmap becomes the parking lot | product | A carry-forward roadmap whose every item is maintainer-gated is the shape that sits untouched for a year, which is the specific objection both council seats raised against disposition D3(a). | Each blocker names the exact command or decision, an accountable owner, and a falsifiable Resolved-when; and one item — Phase 3 — has a hard date rather than a condition, so at least one thing here cannot be deferred silently. | Blockers |
+| 2 | The ratchet expiry passes unnoticed | implementation | The shape-debt baseline goes stale before anyone lowers it, and the gate then reports a stale entry instead of a real count. | **UPDATED 2026-08-30: the date moved with the lowering.** Phase 3 closed by reducing 243 → 148, which reset `landed` to 2026-08-30 and the expiry to **2026-10-25**. `review_by` is 2026-10-20 — before the expiry rather than after it, which the previous pairing (2026-10-24 against a 2026-10-24 expiry, then one day after) did not guarantee. The baseline's own note still names the expiry and this roadmap as its owner. | Phase 3 — The ratchet expiry, which has a date |
+| 3 | This roadmap becomes the parking lot | product | A carry-forward roadmap whose every item is maintainer-gated is the shape that sits untouched for a year, which is the specific objection both council seats raised against disposition D3(a). | Each blocker names the exact command or decision, an accountable owner, and a falsifiable Resolved-when; and one item — Phase 3 — had a hard date rather than a condition, so at least one thing here could not be deferred silently. **RE-REVIEWED 2026-08-30 and the mitigation is SPENT: Phase 3 is closed, so every remaining item is maintainer-condition-gated in a `later/` file that the dashboard and `/roadmap:process-*` both exclude.** What replaces it is weaker and is named rather than implied: the roadmap's own resume condition (`SOURCE_DENY_KEY` provisioned) plus the shape-block baseline's 2026-10-25 expiry, which fails on its own and points here. `review_by` is moved to 2026-10-20 so this file is looked at BEFORE that expiry rather than one day after it. | Blockers |
 | 4 | 2.2 is resolved by guessing the license | product | The fastest way to close 2.2 is to assume permissive and strip the notice, which is the guess `code-provenance` forbids and the reason the predecessor left it open. | The blocker's option set is written as a license-conditional fork, so "which license" has to be answered before either branch is reachable. | Phase 2 — The two decisions the council could not settle |
 
 ## Acceptance Criteria

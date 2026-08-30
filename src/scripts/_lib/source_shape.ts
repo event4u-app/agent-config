@@ -206,18 +206,46 @@ function fold(s: string): string {
  *
  * A `**Source:**` value pointing at this repository's own tree names nothing
  * external, whatever shape it has. Listed rather than pattern-matched because
- * the set is small, closed, and a reviewer should be able to read it.
+ * the set is small, closed, and a reviewer should be able to read it — which is
+ * why two INERT entries were removed rather than left in place (R2 finding 13):
+ * `'pr #'` could never match, since the tokens tested here come from a path or
+ * slug scan and contain no space, and it made a reader believe PR references
+ * were handled here when they are handled by carrying no identifier at all.
+ * `.agent-src` stays because the token now carries its whole path.
  */
 const INTERNAL_PATH_PREFIXES: readonly string[] = [
     'agents/', 'docs/', 'src/', 'tests/', 'scripts/', 'internal/', 'evals/',
-    'dist/', 'provenance/', 'templates/', 'packages/', '.agent-src',
-    '.augment/', '.claude/', '.github/', 'road-to-', 'adr-', 'pr #',
+    'dist/', 'provenance/', 'templates/', 'packages/', 'node_modules/',
+    '.agent-src', '.augment/', '.claude/', '.github/', 'road-to-', 'adr-',
 ];
 
-/** Hosts a value may name openly — the same carve-out `ALLOWED_OWNERS` encodes. */
+/**
+ * Hosts a value may name openly — the same carve-out `ALLOWED_OWNERS` encodes.
+ *
+ * Matched by SUFFIX, so a documentation subdomain of a permitted vendor is
+ * permitted too. See {@link firstDomainIn} for why exact matching was wrong.
+ */
 const ALLOWED_HOSTS: readonly string[] = [
     'example.com', 'example.org', 'example.net', 'localhost',
-    'github.com', 'anthropic.com', 'openai.com', 'nodejs.org', 'npmjs.com',
+    'github.com', 'githubusercontent.com', 'anthropic.com', 'openai.com',
+    'nodejs.org', 'npmjs.com',
+];
+
+/**
+ * npm SCOPES a value may name openly.
+ *
+ * Separate from `ALLOWED_OWNERS` because they are different namespaces (R2
+ * finding 6). That list is a GitHub-owner list — its own docstring calls it "a
+ * precision guard for a URL-host pattern" — and reusing it meant an integrated
+ * vendor whose npm scope differs from its GitHub org was flagged:
+ * `@anthropic-ai/claude-code` and `@types/node` both did, though
+ * `source-confidentiality` explicitly permits naming an integrated tool.
+ * Reusing one list avoided a second allowlist at the cost of applying it to a
+ * namespace nobody measured it against.
+ */
+const ALLOWED_NPM_SCOPES: readonly string[] = [
+    'event4u', 'anthropic-ai', 'openai', 'types', 'modelcontextprotocol',
+    'preact', 'eslint', 'typescript-eslint', 'vitest',
 ];
 
 const BARE_SLUG_RE = /\b([A-Za-z][A-Za-z0-9-]{1,38})\/([A-Za-z][A-Za-z0-9._-]{1,99})\b/g;
@@ -249,46 +277,97 @@ function isInternalToken(token: string): boolean {
  * external.
  */
 export function readableIdentifierIn(value: string): string | null {
-    const hosts = new Set(ALLOWED_HOSTS.map(fold));
+    const hosts = ALLOWED_HOSTS.map(fold);
     const owners = new Set(ALLOWED_OWNERS.map(fold));
+    const scopes = new Set(ALLOWED_NPM_SCOPES.map(fold));
 
-    DOMAIN_RE.lastIndex = 0;
-    let d: RegExpExecArray | null;
-    while ((d = DOMAIN_RE.exec(value)) !== null) {
-        const host = fold(d[1] as string);
-        if (!hosts.has(host) && !host.endsWith('.example.com')) return host;
-    }
+    for (const token of pathLikeTokens(value)) {
+        // INTERNAL FIRST, for every branch (R2 finding 4). The domain branch
+        // used to run before this check and no branch but the slug one applied
+        // it, so any internal path whose extension collides with a TLD was
+        // reported as a leak: `agents/tooling/setup.sh` produced `setup.sh`, at
+        // block tier, contradicting this function's own docstring.
+        if (isInternalToken(token)) continue;
 
-    SCOPED_PKG_RE.lastIndex = 0;
-    let p: RegExpExecArray | null;
-    while ((p = SCOPED_PKG_RE.exec(value)) !== null) {
-        const scope = fold(p[2] as string);
-        if (!owners.has(scope)) return `@${scope}/${p[3] as string}`;
-    }
+        const domain = firstDomainIn(token, hosts);
+        if (domain !== null) return domain;
 
-    BARE_SLUG_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = BARE_SLUG_RE.exec(value)) !== null) {
-        const whole = `${m[1] as string}/${m[2] as string}`;
-        if (isInternalToken(whole)) continue;
-        if (owners.has(fold(m[1] as string))) continue;
-        // A slug whose second half looks like a file extension is a path, not a
-        // repository: `road-to-x.md`, `results/2026-04-21T08.json`.
-        if (/\.(md|json|ts|tsx|js|mjs|yml|yaml|txt|jsonl|patch|png|svg)$/i.test(whole)) continue;
-        // A MIDDLE segment of a longer path is not an `owner/repo`, and this is
-        // the correction the first measurement forced: `.agent-src.uncondensed/
-        // rules/autonomous-execution.md` yielded `uncondensed/rules`, and
-        // `packages/installer/src/...` yielded `installer/src`. Both are two
-        // path segments that happen to sit next to each other, which is what a
-        // repository slug also looks like — the difference is entirely in what
-        // surrounds them. A separator on either side means path.
-        const before = value.slice(0, m.index);
-        const after = value.slice(m.index + whole.length);
-        if (/[/.\\]$/.test(before)) continue;
-        if (/^[/\\]/.test(after)) continue;
-        return whole;
+        const scoped = SCOPED_PKG_RE.exec(token);
+        SCOPED_PKG_RE.lastIndex = 0;
+        if (scoped !== null && !scopes.has(fold(scoped[2] as string))) {
+            return `@${fold(scoped[2] as string)}/${scoped[3] as string}`;
+        }
+
+        const slug = firstSlugIn(token, owners);
+        if (slug !== null) return slug;
     }
     return null;
+}
+
+/**
+ * Split a header value into whitespace-delimited tokens, stripped of the
+ * punctuation a sentence wraps them in.
+ *
+ * Tokenising is what closed the recall hole (R2 finding 2). The first version
+ * scanned the WHOLE value with a slug regex and then tried to tell a repository
+ * from a path by looking at the characters either side of the match — which
+ * dropped every slug followed by a further segment. Measured: `somevendor/
+ * some-suite/skills/foo.md`, `ported from somevendor/some-suite/README.md` and
+ * `./somevendor/some-suite` all returned nothing, and citing a FILE inside an
+ * external repository is the most natural Source-header shape there is.
+ *
+ * With the whole token in hand the question answers itself: an internal path
+ * starts with an internal prefix, and anything else that carries an
+ * `owner/repo` head is a citation into somewhere else.
+ */
+export function pathLikeTokens(value: string): string[] {
+    return value
+        .split(/\s+/)
+        .map((t) => t.replace(/^[`*_[(<"'.,;:]+/, '').replace(/[`*_\])>"'.,;:]+$/, ''))
+        // Leading path noise AFTER the punctuation strip, not before: the
+        // punctuation pass already removes the `.` of `./`, so checking for
+        // `./` first never fires — which is how `./somevendor/some-suite`
+        // survived the first version of this fix.
+        .map((t) => t.replace(/^[/]+/, ''))
+        .filter((t) => t.length > 0);
+}
+
+/** The first non-allowlisted domain in a token, or null. */
+function firstDomainIn(token: string, hosts: readonly string[]): string | null {
+    DOMAIN_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = DOMAIN_RE.exec(token)) !== null) {
+        const host = fold(m[1] as string);
+        // SUFFIX match, not exact (R2 finding 5). The first version carved out
+        // `.example.com` alone, so `docs.anthropic.com` and
+        // `platform.openai.com` — vendors the rule explicitly permits naming —
+        // were reported as leaks. A subdomain of an allowed host is the same
+        // host's documentation, not a different source.
+        if (hosts.some((h) => host === h || host.endsWith(`.${h}`))) continue;
+        return host;
+    }
+    return null;
+}
+
+/** The first non-allowlisted `owner/repo` head in a token, or null. */
+function firstSlugIn(token: string, owners: ReadonlySet<string>): string | null {
+    BARE_SLUG_RE.lastIndex = 0;
+    const m = BARE_SLUG_RE.exec(token);
+    BARE_SLUG_RE.lastIndex = 0;
+    if (m === null) return null;
+    // Only the HEAD of the token counts: `owner/repo/path/to/file.md` names one
+    // repository, and reporting `path/to` from the same token would report a
+    // directory as a source.
+    if (m.index !== 0) return null;
+    const owner = m[1] as string;
+    if (owners.has(fold(owner))) return null;
+    const repo = m[2] as string;
+    // A two-segment token ending in a file extension is a path, not a repo:
+    // `results/2026-04-21T08.json`, `road-to-x.md`.
+    if (token === `${owner}/${repo}` && /\.(md|json|ts|tsx|js|mjs|yml|yaml|txt|jsonl|patch|png|svg|sh|lock)$/i.test(repo)) {
+        return null;
+    }
+    return `${owner}/${repo}`;
 }
 
 /**
@@ -312,22 +391,39 @@ export function readableIdentifierIn(value: string): string | null {
  * rather than the whole header, so a finding names the thing that leaked.
  */
 export function sourceHeaderHits(line: string): ShapeHit[] {
-    const m = SOURCE_HEADER_RE.exec(line);
-    if (!m) return [];
-    const raw = (m[1] as string).trim();
-    // Strip markdown emphasis, backticks and trailing punctuation before judging.
-    const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
-    if (value === '') return [];
-    if (ENC_TOKEN_RE.test(value)) return [];
-    if (REDACTION_VALUE_RE.test(value)) return [];
-    if (isOpaqueRoundId(value)) return [];
-    // A header pointing at an inbox directory is judged on the directory NAME,
-    // so the tmp-quote class owns it and this class stays silent — otherwise one
-    // line would be counted twice and the two ratchets would move together.
-    if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
+    const value = normalisedHeaderValue(line);
+    if (value === null) return [];
     const identifier = readableIdentifierIn(value);
     if (identifier === null) return [];
     return [{ cls: 'source-header', value: identifier.slice(0, 120) }];
+}
+
+/**
+ * The value of a `**Source:**` header, normalised — or null when the line is
+ * not a header, or carries a form that is already opaque.
+ *
+ * EXTRACTED (R2 finding 9). Both predicates below used to carry this eight-line
+ * prefilter as a verbatim copy, so any future edit to it — a new `ENC` form, a
+ * different redaction marker, a change to what counts as an opaque round id —
+ * would silently change what the "pre-2026-08-30" baseline MEANS, in one copy
+ * or in both. A shadow metric whose definition can drift away from the live one
+ * measures nothing about the live one.
+ */
+export function normalisedHeaderValue(line: string): string | null {
+    const m = SOURCE_HEADER_RE.exec(line);
+    if (!m) return null;
+    const raw = (m[1] as string).trim();
+    // Strip markdown emphasis, backticks and trailing punctuation before judging.
+    const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
+    if (value === '') return null;
+    if (ENC_TOKEN_RE.test(value)) return null;
+    if (REDACTION_VALUE_RE.test(value)) return null;
+    if (isOpaqueRoundId(value)) return null;
+    // A header pointing at an inbox directory is judged on the directory NAME,
+    // so the tmp-quote class owns it and this class stays silent — otherwise one
+    // line would be counted twice and the two ratchets would move together.
+    if (/agents\/tmp(?:\.old)?\//.test(value)) return null;
+    return value;
 }
 
 /**
@@ -338,17 +434,14 @@ export function sourceHeaderHits(line: string): ShapeHit[] {
  * corpus-changing release passes both detectors"*. It is exported so
  * `check_no_external_sources` can report the legacy count beside the live one,
  * and it gates nothing.
+ *
+ * It shares {@link normalisedHeaderValue} with the live predicate deliberately:
+ * the only difference between the two is the readable-identifier test, and
+ * making that the ONLY difference is what keeps the comparison meaningful.
  */
 export function legacySourceHeaderHits(line: string): ShapeHit[] {
-    const m = SOURCE_HEADER_RE.exec(line);
-    if (!m) return [];
-    const raw = (m[1] as string).trim();
-    const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
-    if (value === '') return [];
-    if (ENC_TOKEN_RE.test(value)) return [];
-    if (REDACTION_VALUE_RE.test(value)) return [];
-    if (isOpaqueRoundId(value)) return [];
-    if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
+    const value = normalisedHeaderValue(line);
+    if (value === null) return [];
     return [{ cls: 'source-header', value: value.slice(0, 120) }];
 }
 

@@ -520,6 +520,19 @@ function main(argv: readonly string[]): number {
                     warn: warnShapes.length,
                     baseline: verdict.baseline,
                     status: verdict.status,
+                    // The council's shadow-metric condition, in the ARTEFACT
+                    // rather than only on stdout (R2 finding 8): "keep the old
+                    // detector shadow-reporting until at least one subsequent
+                    // corpus-changing release passes both detectors" cannot be
+                    // checked across releases by anything that is not written
+                    // down. `pre_dedup` says why the two numbers differ, so a
+                    // reader can reconstruct the comparison instead of being
+                    // told it holds.
+                    legacy_source_header: {
+                        count: legacyHeaderShadow,
+                        pre_dedup: true,
+                        note: 'pre-2026-08-30 predicate; enforces nothing; not comparable to the audited delta, which was measured after snapshot deduplication',
+                    },
                 },
                 // Phase 3.4 — every exclusion names its leg and the tracked
                 // file whose independent block-count justified it, so the
@@ -553,6 +566,11 @@ function main(argv: readonly string[]): number {
                     status: verdict.status,
                     ok: verdict.ok,
                     snapshot_dedup: { excluded: excluded.length, by_leg: dedupByLeg },
+                    legacy_source_header: {
+                        count: legacyHeaderShadow,
+                        pre_dedup: true,
+                        note: 'pre-2026-08-30 predicate; enforces nothing; not comparable to the audited delta, which was measured after snapshot deduplication',
+                    },
                 },
             }) + '\n',
         );

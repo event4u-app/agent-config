@@ -2,11 +2,14 @@
 // cost-track — auto-capture token usage from a Claude Code session jsonl
 // and append a structured record to agents/cost-tracking/sessions.jsonl.
 //
-// Derived work. Upstream, its license and the full transformation record are in
-// NOTICE, docs/THIRD-PARTY-NOTICES.md and provenance/borrows.jsonl — the three
-// surfaces that ship with the package. The source is not named here because a
-// source name in a tracked source file is what `source-confidentiality` forbids,
-// and MIT discharges through a distributed notice rather than an in-file one.
+// Derived work. The upstream, its MIT terms and the reproduced copyright and
+// permission notice are in CREDITS.md; the transformation record is in
+// docs/THIRD-PARTY-NOTICES.md, generated from provenance/borrows.jsonl. The
+// first two ship with the package, which is what discharges the obligation for
+// a consumer who receives this file from npm. The source is not named here
+// because a source name in a tracked source file is what
+// `source-confidentiality` forbids, and MIT discharges through a distributed
+// notice rather than an in-file one.
 // Local-JSONL swap replaces the upstream MCP memory-store dependency. Pricing
 // constants are kept in sync with REFERENCE.md.
 //

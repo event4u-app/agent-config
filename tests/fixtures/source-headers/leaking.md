@@ -17,3 +17,17 @@ exists to prevent.
 > **Source:** the @notreal-scope/agent-kit package
 
 > **Source:** an internal fork of otherorg/otherrepo
+
+<!--
+Added after a completion review measured a RECALL HOLE the original five cases
+could not see: citing a FILE inside an external repository — the most natural
+Source-header shape there is — escaped the class entirely, because the matcher
+tried to tell a repository from a path by looking at the characters either side
+of the slug rather than at the whole token.
+-->
+
+> **Source:** somevendor/some-suite/skills/foo.md
+
+> **Source:** ported from somevendor/some-suite/README.md
+
+> **Source:** ./somevendor/some-suite
