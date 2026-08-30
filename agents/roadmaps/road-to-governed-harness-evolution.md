@@ -110,6 +110,39 @@ once.
 
 ## Phase 0 — Constitution, reconciliation, budget, stop conditions
 
+> **CARRIED CONDITION, placed here 2026-08-30 — the `merge-authority` council's
+> own instruction, executed late.** When the AI council scoped `merge-authority`
+> on 2026-08-29 (anthropic + openai, 2/2) it declared Phases 1–6 legal while
+> ADR-239 § Decision 3 stays open, and attached one condition it called *"an
+> addition to what the blocker proposed"*: **the non-promotion property of
+> Phases 1–6 must be MECHANICALLY ENFORCED, not merely stated** — *"a phase that
+> promises to promote nothing while nothing prevents it from promoting is the
+> same class of guarantee ADR-239 § Decision 3 is open about."* It said the
+> condition belonged in this phase's exit criteria. It was never written here;
+> found on 2026-08-30 and carried now.
+>
+> **It is carried UNMET, and that is the honest state.** Nothing in this tree
+> promotes anything: there is no promotion path, no candidate, and no merge
+> verb — `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returns
+> the guards, their tests and their config, and no caller. A gate written today
+> to assert "no Phase 1–6 code promotes" would scan a population of zero and
+> exit green, which is worse than no gate because it would look like the
+> mechanical enforcement the council asked for. That is the vacuous-check
+> refusal 1.4 and 2.3 both already made on this roadmap.
+>
+> **What discharges it, falsifiably.** The first commit that creates a promotion
+> path — a verb, a state transition into `promoted`, or any write into `src/`
+> derived from a candidate — owes the enforcement in the same change. Concretely:
+> the 3.4 lifecycle enum's `promoted` transition and the 3.6 verb set are where
+> the population stops being empty, so the check lands there and this note is
+> what stops it being read as already-satisfied when it does.
+>
+> **This does not resolve `merge-authority` and does not touch it.** ADR-239 §
+> Decision 3 — *"Preauthorized merge authority is granted or refused | owner |
+> open"*, re-verified at `ADR-239:188` on 2026-08-30 — is owner-reserved in both
+> directions, and no council verdict may perform it. Option (c) stands, Phase 7
+> stays gated, 0.8 stays `[~]`.
+
 - [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
       of `planned capability → existing carrier in the tree → redirect / extend /
       build new (with the reason)`. Starting content is the table above. The
@@ -953,6 +986,27 @@ once.
   non-zero process exit on (a) a holdout value reaching proposer context and
   (b) a plan configured past the pre-registered ceiling, both before any
   external call — and the two steps are re-closed citing it.
+- **MEASURED 2026-08-30, and it makes the ordering a fact rather than an
+  expectation.** `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/`
+  returns exactly three paths: `src/scripts/_lib/harness_evolution_guards.ts`
+  (the guards themselves), `tests/scripts/harness_evolution_guards.test.ts`
+  (their unit tests) and `src/config/harness-evolution-budget.json` (the
+  pre-registered budget they read). **Zero production call sites.** There is no
+  runner in this tree to route through them.
+
+  Recorded, not re-argued: this is the (d) seat's position turning out to be
+  measurable rather than merely arguable, and it does NOT reopen the split. The
+  disposition is unchanged and the conservative side stands. What changes is
+  that "pending integration" now has a number behind it, so a later reader does
+  not have to re-derive whether the gap is real.
+
+  **The consequence for sequencing, stated so nobody waits on the wrong thing:**
+  this blocker is not resolvable by any amount of Phase 0 or Phase 2 work. The
+  first artefact that could satisfy it is the deterministic proposer of **3.5**
+  and the operator verb set of **3.6** — the first things in this roadmap that
+  are a runner. Attempting to satisfy it earlier would mean building a runner
+  outside the phase that owns one, which is the speculative-infrastructure shape
+  0.1 already declined for the command surface.
 
 
 > **REPAIRED 2026-08-29 — the entry below was invisible to every gate.** It was
@@ -990,6 +1044,23 @@ once.
   promises to promote nothing while nothing prevents it from promoting is the
   same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
   0's exit criteria rather than left here.
+
+  **FOUND UNCARRIED 2026-08-30, and carried now.** The sentence above said the
+  condition was carried into Phase 0's exit criteria. It was not: a tree-wide
+  grep for `mechanically enforced` / `non-promotion` over this roadmap returned
+  only these lines, inside this blocker. The condition existed exactly where the
+  paragraph said it should not be left.
+
+  This is the **third instance in this cohort of the same defect shape** — a
+  criterion with no phase, no step and no owner, which Risk 11 names for AC-8
+  and which the `Resolved when` twin above records for `b-adr-088`. It is
+  recorded as a pattern rather than a slip because that is now three.
+
+  The condition is carried as a Phase 0 exit-criterion note (see the
+  **CARRIED CONDITION** block at the head of Phase 0), which is where the
+  council put it. It is carried **unmet**, with the reason it cannot be
+  discharged today stated there rather than being quietly satisfied by a check
+  that would scan nothing.
 
   **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
   now lives inside the field's value rather than in a heading above it.** The
