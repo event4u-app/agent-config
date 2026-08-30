@@ -1,7 +1,9 @@
 ---
 complexity: structural
-status: ready
-estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The roadmap is executable now: four of its five blockers are resolved and the open b-adr-088 parks only Phase 6.4s second half, leaving Phases 0-5 and 7-9 legal. The growth is a status flip, not a new file — the estate gains no roadmap it did not already carry, only one collect() now counts."
+status: later
+park: later
+entry_condition: "The owner records a decision on AC-14 s scope — either (i) AC-14 is narrowed so a phase is frozen only where an OPEN blocker s own Blocks field names it, at which point Phases 0-5 and 7-9 resume immediately and only Phase 6 step 6.4 s parked half stays shut; or (ii) AC-14 stands as written, at which point this roadmap stays parked until b-adr-088 reaches Status: resolved, which needs the owner s reading of ADR-088 s external tool runtimes boundary. Either answer releases or confirms the park; only silence keeps it here. NOTHING in this condition asks the owner to decide the browser-engine classification itself — that is b-adr-088 s own owner-reserved half and it is untouched by this park."
+estate_growth_exempt: "Charges +1 later_roadmaps and -1 active_roadmaps on 2026-08-30, a net-zero move rather than an addition: this is the same file, parked, not a new one. It supersedes the 2026-08-30 draft -> ready promotion recorded in the line this replaces, and the supersession is the point — that promotion rested on the reading of AC-14 that a council has since SPLIT on, so the ready status was resting on an unsettled premise. The prior line read: Promoted draft -> ready 2026-08-30. The roadmap is executable now: four of its five blockers are resolved and the open b-adr-088 parks only Phase 6.4s second half, leaving Phases 0-5 and 7-9 legal. That claim is exactly Reading 2 of the contradiction recorded at the head of this file, and one of two council seats rejects it."
 estate_offset_exempt: "Landed by the /analyze:inbox run of 2026-08-24. The one-in-one-out half fires on every added agents/roadmaps/road-to-*.md whatever its status, and this run archived only status: draft roadmaps, which were never counted by collect() and so cannot serve as offsets. The addition is sanctioned on its own terms: a tree-wide grep over agents/roadmaps/*.md and agents/roadmaps/later/*.md for `adapter manifest` and `dispatchab` returns zero files, so no active or parked roadmap owns the subject."
 execution:
   mode: phase-checkpoints
@@ -10,6 +12,83 @@ ac_pin: d7072e910d0478814358cca576eef585c3a04bfc
 ---
 
 # Road to capability-native execution — a browser resolver that earns its generality
+
+> **PARKED 2026-08-30 in `agents/roadmaps/later/`, on a SPLIT council and the
+> conservative side of it.** All 48 remaining steps are frozen. Nothing is
+> weakened, nothing is dropped, and the resume condition is one owner sentence.
+> Read § The AC-14 contradiction below before touching any step.
+
+## The AC-14 contradiction — why this roadmap is parked
+
+Two statements in this file disagree, and the disagreement decides whether 48
+steps are legal or frozen.
+
+**Statement A — AC-14, written 2026-08-24 at landing, and cited as live at
+line 361 of the pre-park file:**
+
+> All five blockers read `Status: resolved` before any code in Phases 1-9 is
+> authored.
+
+**Statement B — the `Blocks:` field of `b-adr-088-external-runtime-federation`,
+amended 2026-08-29 by the council that deliberately narrowed that blocker:**
+
+> Phase 6 Step 6.4's parked half. Phases 0-5 and 7-9 proceed.
+
+Four of the five blockers read `resolved`. The fifth, `b-adr-088`, is open and
+**cannot be closed by any council** — its amended `Resolved when:` requires the
+owner to state whether four deterministic local browser engines fall inside or
+outside ADR-088's accepted "external tool runtimes" boundary. So under
+Statement A this roadmap is frozen behind an unscheduled owner decision; under
+Statement B only one half-step is.
+
+### What the council said, 2026-08-30, anthropic + openai — SPLIT 1/1
+
+**Seat 1 — Reading 2 governs; correcting AC-14 is council-decidable.** The
+`Blocks:` field exists to be authoritative about what a blocker blocks; if an
+acceptance criterion can override it after scoping, "the field serves no
+function — it becomes decorative notation". The substantive relaxation happened
+on 2026-08-29 when the blocker was scoped; what remains is textual alignment.
+One refinement it insisted on: any correction must pin to the field **as of
+2026-08-29**, never delegate open-endedly to a future mutable `Blocks:` line,
+or a later blocker edit could release roadmap gates with no authorized review.
+It also said plainly: *if there is doubt, escalate.*
+
+**Seat 2 — Reading 1 governs; correcting AC-14 is OWNER-reserved.** AC-14 is an
+independent roadmap-wide condition keyed on blocker **status**, not blocker
+**scope**, and line 361 confirms that reading in the roadmap's own words. The
+2026-08-29 council amended `Blocks:` and `Resolved when:` while deliberately
+leaving the blocker open; had it meant to lift a known explicit status gate,
+AC-14 was the text that needed amending and was not amended. The proposed edit
+"changes the permitted execution state from *no Phase 1-9 code* to *almost all
+Phase 1-9 code may proceed*", which is substantive rather than documentary, and
+reversibility does not make a change fall inside delegated authority.
+
+### What was decided, and by what rule
+
+A split is an **escalation condition** under `roadmap-progress-sync`, not a
+tie to be broken by preference, so the conservative side stands: **AC-14 binds
+as written until the owner says otherwise.** This package's own precedent is the
+same — the `guard-call-site-integration` split of 2026-08-29 took the
+conservative side and recorded both rationales.
+
+**The one thing both seats agreed on is the disposition.** Asked what an
+honestly-frozen roadmap should do, both named the same option unprompted:
+`agents/roadmaps/later/`, which `roadmap-progress-sync` defines as the
+disposition for a roadmap whose open work cannot proceed now but will resume.
+Seat 2's reason is the sharper one: leaving it active but frozen
+*"misrepresents actionability when every remaining phase is prohibited by an
+unsatisfied criterion and the only resolving decision is unscheduled."*
+
+### What this park does NOT do
+
+- **It does not answer the browser-engine question.** ADR-088 is untouched, no
+  interpretation of "external tool runtimes" is proposed, and `b-adr-088`'s
+  owner-reserved half is exactly as open as it was.
+- **It does not correct AC-14.** The text stands as written; seat 2 held that
+  editing it is the owner's call, and on a split the conservative side stands.
+- **It does not cancel or weaken a single step.** All 48 open steps, all
+  acceptance criteria and all five blockers travel unchanged.
+
 
 > **Source:** agents/tmp.old/nxt-lvl-frontend/road-to-capability-native-execution-v2.md
 
