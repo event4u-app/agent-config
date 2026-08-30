@@ -87,6 +87,39 @@ dependency-floor gate scans only `dependencies` and no longer sees the pair):
 Re-enabling as a consumer means installing them yourself:
 `npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13`.
 
+## Method lineage — inspiration, not incorporated material
+
+Three external sources shaped the *method* behind this package's AI-council
+topology: how a multi-model council is staged, how its advisor personas frame a
+question, and how the CLI is packaged. **No code or text from any of them is
+incorporated**, which is why they appear here rather than in the
+license-required section above — nothing about them is license-required, and
+recording them anyway is an epistemic obligation rather than a legal one
+(`code-provenance` § the knowledge layer: an artefact asserting an
+externally-sourced claim either cites a harvest id or labels the statement as
+own analysis).
+
+They are named **anonymously**, per `source-confidentiality`: a shipped artifact
+in this tree does not carry derivation attribution to a named external project.
+The maintainer-side record holds the real identities; the links are retained as
+`ENC1:` tokens, which are opaque here and decryptable only with the key in the
+maintainer's user-global settings.
+
+| Label | What it contributed | Link |
+|---|---|---|
+| **Source A** <!-- harvest:council-topology-three-stage-shape --> | The three-stage method shape: independent generation → blind peer evaluation → synthesis. | `ENC1:` (pending maintainer encryption) |
+| **Source B** <!-- harvest:council-advisor-lens-framing --> | The thinking-lens framing that informed the shipped advisor personas. | `ENC1:` (pending maintainer encryption) |
+| **Source C** <!-- harvest:council-cli-first-packaging --> | CLI-first / fallback packaging ergonomics. | `ENC1:` (pending maintainer encryption) |
+
+**What the `ENC1:` placeholder means, stated rather than left to look like a
+finished token.** The real links are held maintainer-side and are not encrypted
+into this file yet; `src/scripts/_lib/link_crypto.ts` needs
+`secrets.link_encryption_key`, which is deliberately absent from any tracked
+tree and from an agent's reach. The rows in `provenance/harvests.jsonl` carry
+`source_ref: opaque:…` instead, which is that ledger's own sanctioned form for a
+source that cannot be pinned to a public revision — so the record is complete on
+the ledger's terms while this column stays a placeholder.
+
 ## Community contributions
 
 External contributions merged into the catalog are credited here and carry

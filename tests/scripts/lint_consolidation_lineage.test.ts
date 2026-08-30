@@ -13,6 +13,8 @@
  * the same ten findings with the same declared/present/omitted counts.
  */
 import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -165,5 +167,59 @@ describe('lint_consolidation_lineage — the estate surface is narrower, deliber
     it('a glob is never a parent', () => {
         expect(normalizeParent('`road-to-*.md`')).toBe('');
         expect(parseDeclaration('# m\n\nset difference over `road-to-*.md` in the folder.\n').parents).toEqual([]);
+    });
+});
+
+describe('dead-scope: enumeration of the declared root, not a count of what it holds', () => {
+    // AI council 2026-08-30 (anthropic + openai, convergent, option b). The
+    // `min_scanned: 5` floor that used to guard this scope sat over a
+    // population under deliberate drawdown to zero: it went red the day the
+    // drain succeeded — six active roadmaps to four in one afternoon — and the
+    // only move left was lowering the number again, a treadmill ending at a
+    // floor of 0, which is no floor.
+    //
+    // The invariant is now enumeration of the exact declared root BY THIS
+    // LINTER, which is why these tests invoke the CLI rather than a helper: an
+    // independent existsSync in check_gate_coverage would observe a directory
+    // without proving this process enumerated it.
+    const run = (root: string): { status: number | null; stderr: string } => {
+        const r = spawnSync(TSX, [SCRIPT, '--root', root], { cwd: REPO, encoding: 'utf8' });
+        return { status: r.status, stderr: r.stderr };
+    };
+
+    it('REFUSES a declared root that does not exist', () => {
+        const r = run(path.join(REPO, 'tests', 'fixtures', 'consolidation-lineage', 'no-such-root'));
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('DEAD SCOPE');
+    });
+
+    it('REFUSES a declared root that is a file, not a directory', () => {
+        const r = run(path.join(REPO, 'package.json'));
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('not a directory');
+    });
+
+    // removing_this_constraint_reds_it: restore `if (!fs.existsSync(root))
+    // continue;` in main(). MEASURED: 1 of these 2 reds, not both, and the
+    // difference is worth recording rather than rounding up. The missing-root
+    // case reds — a skipped root contributes zero and passes under the
+    // allowEmpty reason, which is the hole. The file-root case stays green
+    // under the old code too, but for an unrelated reason: `readdirSync` on a
+    // file throws ENOTDIR out of an uncaught call, so the process exits
+    // non-zero by crashing rather than by refusing. What the new code buys
+    // there is a stated refusal instead of a stack trace, which the assertion
+    // on `not a directory` pins.
+
+    it('ACCEPTS an existing but EMPTY root — a completed drain is not a dead scope', () => {
+        // The other half, and the reason the floor could not stay: this must
+        // pass, or the drain can never finish.
+        const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'lineage-empty-'));
+        try {
+            const r = spawnSync(TSX, [SCRIPT, '--root', empty], { cwd: REPO, encoding: 'utf8' });
+            expect(r.status).toBe(0);
+            expect(`${r.stdout}${r.stderr}`).toContain('scanned: 0');
+        } finally {
+            fs.rmSync(empty, { recursive: true, force: true });
+        }
     });
 });
