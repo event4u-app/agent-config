@@ -153,6 +153,7 @@ import { GateLedger } from './_lib/gate_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
+import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
@@ -190,6 +191,23 @@ export interface EstateCounts {
      * "no tokens" — see `tokensExact`.
      */
     skill_description_tokens: number;
+    /**
+     * Hook concerns declared in `src/scripts/hook_manifest.yaml`.
+     *
+     * A FIFTH corpus on the same machinery, and the same argument that admitted
+     * skills: the floor-from-the-base-ref work is the expensive part and should
+     * not be written a third time, and a separate ratchet is a separate place to
+     * forget.
+     *
+     * Read with the SCOPED parser in `_lib/concern_estate.ts`, not the
+     * whole-file grep the originating roadmap reproduces its series with. That
+     * grep over-counts by exactly 16 at every one of its six pins, because
+     * `roles:`, `platforms:` and `native_event_aliases:` sit at the same indent.
+     * The growth finding survives the correction — the delta is constant — but
+     * the absolute figure does not: the axis stands at 55, not 71, and a floor
+     * of 71 is one this gate's own parser could never reproduce.
+     */
+    concern_count: number;
 }
 
 export type MetricName = keyof EstateCounts;
@@ -200,6 +218,7 @@ export const METRICS: readonly MetricName[] = [
     'open_blockers',
     'skill_count',
     'skill_description_tokens',
+    'concern_count',
 ];
 
 export interface EstateBudget {
@@ -303,6 +322,15 @@ function repoRootFrom(start: string): string {
     }
 }
 
+/** File contents, or `null` when it is absent. Absent is a real state here. */
+function readIfPresent(file: string): string | null {
+    try {
+        return fs.readFileSync(file, 'utf-8');
+    } catch {
+        return null;
+    }
+}
+
 function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
     const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 32 * 1024 * 1024 });
     return { ok: res.status === 0, stdout: res.stdout ?? '' };
@@ -389,6 +417,7 @@ export function countEstate(repoRoot: string): EstateCounts {
         // against a proxy one — they differ by more than the growth a ratchet
         // is trying to catch.
         skill_description_tokens: skills.skill_description_tokens ?? 0,
+        concern_count: countConcerns(readIfPresent(path.join(repoRoot, CONCERN_MANIFEST_POSIX)) ?? ''),
     };
 }
 
@@ -584,7 +613,12 @@ export function evaluate(
                 if (baseSkills.error !== null || baseSkills.files === 0) {
                     // Roadmap floor stands; the skill floor is stated as
                     // unavailable and its metrics are dropped from the compare.
-                    floor = roadmapFloor;
+                    floor = {
+                        ...roadmapFloor,
+                        concern_count: countConcerns(
+                            git(['show', `${baseRef}:${CONCERN_MANIFEST_POSIX}`], repoRoot).stdout,
+                        ),
+                    };
                     skillFloorSkipReason =
                         `could not read ${SKILLS_POSIX} at ${baseRef} — ` +
                         `${baseSkills.error ?? 'no files'}`;
@@ -594,6 +628,18 @@ export function evaluate(
                         ...roadmapFloor,
                         skill_count: s.skill_count,
                         skill_description_tokens: s.skill_description_tokens ?? 0,
+                        // A SINGLE FILE, so `git show` rather than a third
+                        // `materialiseSubtree` — stated because the roadmap asks
+                        // which of the two this uses. Materialising a subtree to
+                        // reach one known path would spend a temp tree and a
+                        // recursive ls-tree on a `git cat-file` in disguise.
+                        //
+                        // An unreadable manifest at the base ref reads as 0,
+                        // which makes the floor 0 and can only ever ALLOW growth
+                        // — the safe direction for a ref that predates the file.
+                        concern_count: countConcerns(
+                            git(['show', `${baseRef}:${CONCERN_MANIFEST_POSIX}`], repoRoot).stdout,
+                        ),
                     };
                     if (s.skill_description_tokens === null) {
                         skillTokenSkipReason =
@@ -663,6 +709,14 @@ export function evaluate(
         // claim path — a recorded reason in the diff — or it fails.
         skill_count: 0,
         skill_description_tokens: 0,
+        // Step 1.2: NO new allowance key. The concern axis joins `skill_count`
+        // in taking the claim path or nothing, for the reason the budget file
+        // already records for skills — an allowance reopens the gaming path the
+        // dimension exists to close. Eight concerns spread across eight events
+        // violate the existing per-event cap zero times, which is exactly why a
+        // total-growth ratchet was needed and exactly why it must not carry a
+        // per-change freebie.
+        concern_count: 0,
     };
 
     /** Metrics dropped from the compare, with the reason, never silently. */

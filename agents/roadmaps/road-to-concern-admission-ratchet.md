@@ -59,21 +59,71 @@ skills only.
 
 ## Phase 1 — Measure the axis where the other axes are measured
 
-- [ ] **1.1 Add a concern-count metric to `check_estate_count.ts`.** Count
+- [x] **1.1 Add a concern-count metric to `check_estate_count.ts`.** Count
       concerns at HEAD and at the base ref with the *same* function, the way
       `_lib/skill_estate.ts` already does for skills — one parser shared by
       both sides, never two readings. The manifest is a single file at
       `src/scripts/hook_manifest.yaml`, so the existing `materialiseSubtree`
       call needs a second prefix or a single-file `git cat-file` read; state
       which in the implementation note.
+      **DONE 2026-08-30 — one shared parser (`src/scripts/_lib/concern_estate.ts`),
+      `git show` for the base ref.** Stated as the step asks: a SINGLE FILE, so
+      `git show <ref>:src/scripts/hook_manifest.yaml` rather than a third
+      `materialiseSubtree` — materialising a subtree to reach one known path
+      spends a temp tree and a recursive `ls-tree` on a `git cat-file` in
+      disguise. An unreadable manifest at the base reads as 0, which makes the
+      floor 0 and can only ever ALLOW growth: the safe direction for a ref that
+      predates the file.
+      **CORRECTION — this roadmap's reproduce command over-counts, and the
+      figures in § Measured state are wrong.**
+      `grep -cE '^  [a-z][a-z0-9_-]*:$'` greps the WHOLE manifest, so it also
+      counts members of `roles:`, `platforms:` and `native_event_aliases:`,
+      which sit at the same two-space indent. Re-measured at all six pins with
+      a parser scoped to the `concerns:` block:
+
+      | pin | grep | true concerns |
+      |---|---|---|
+      | `7c6a71d` | 63 | 47 |
+      | `1dba34c8` | 65 | 49 |
+      | `40791536` | 65 | 49 |
+      | `0f7c26ee9` | 68 | 52 |
+      | `2bcefb8b1` | 69 | 53 |
+      | `6e37584a1` | 71 | **55** |
+
+      **The FINDING survives untouched and the ABSOLUTE FIGURES do not.** The
+      over-count is exactly 16 at every pin, so the series climbs +8 either way
+      and the concern axis is growing precisely as this roadmap says. But the
+      axis stands at **55, not 71**, and a ratchet seeded with 71 would carry a
+      floor its own parser could never reproduce — a gate that fails on its
+      first honest run. The gate now reports
+      `concern_count 55 (floor 55 at origin/main, +0)`.
+      **Both directions verified by sabotage, on a branch carrying no claim:**
+      a 56th concern with NO `estate_growth_exempt` in the diff fails —
+      `❌ the roadmap estate grew: concern_count 55 → 56` — and restoring the
+      manifest returns it to `55 (floor 55, +0)`. The claim path is exercised
+      live too: on a sibling branch that did carry a real claim, the same +1 was
+      detected and authorised, which is the designed behaviour rather than
+      blindness. Detection and refusal are therefore both known to fire.
       verify: `./scripts-run src/scripts/check_estate_count --base <a pin
       carrying 69 concerns>` prints the concern floor and the HEAD count, and
       exits non-zero when HEAD is higher with no claim in the diff.
-- [ ] **1.2 Extend the `estate_growth_exempt` claim path to the new metric.**
+- [x] **1.2 Extend the `estate_growth_exempt` claim path to the new metric.**
       No new allowance key: the metric joins `skill_count` in taking the claim
       path or nothing, for the reason the estate budget file already records
       for skills — an allowance reopens the gaming path the dimension exists
       to close.
+      **DONE 2026-08-30 for the mechanism half: `concern_count: 0` in the
+      allowance map — no new key.** It joins `skill_count` in taking the claim
+      path or nothing, for the reason the budget file already records: an
+      allowance reopens the gaming path the dimension exists to close. That is
+      sharper here than for skills — eight concerns spread across eight events
+      violate the existing per-event cap zero times, which is why a
+      total-growth ratchet was needed at all and exactly why it must not carry
+      a per-change freebie.
+      **Both directions are demonstrated**, though by sabotage on real branches
+      rather than by a committed fixture: no-claim growth fails here, and a
+      claim authorises the same growth on the sibling branch. A committed
+      fixture belongs with 1.3's self-test and is not in this change.
       verify: a fixture branch adding one concern without a claim fails; the
       same branch with `estate_growth_exempt` in a touched roadmap's
       frontmatter passes, and the reason is printed.
