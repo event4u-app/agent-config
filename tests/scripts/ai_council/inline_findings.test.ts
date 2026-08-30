@@ -426,3 +426,106 @@ describe('the config key survives the projection and gates on all three conjunct
         expect(walk(base)).toBe(false);
     });
 });
+
+describe('a quoted JSON array is NOT the member’s findings block', () => {
+    /**
+     * Regression for the CRITICAL finding of the 2026-08-30 completion review.
+     *
+     * The short-circuit tested `outcome !== 'parsed'`, and
+     * `parse_findings_outcome` returns `'parsed'` for ANY syntactically valid
+     * JSON array — `_collect_findings` skips items missing `id`/`text` and the
+     * outcome stays `'parsed'`. So a reply with no findings block, quoting a
+     * JSON array as evidence, was recorded as a successful inline extraction
+     * with zero findings, its quoted evidence DELETED from what the peer review
+     * and the chairman read, and the failure counted as a SUCCESS in the rate
+     * the 1B.4 promotion gate reads.
+     */
+    const quotedEvidence =
+        'The handler is unguarded. Here is the record I am reading:\n\n' +
+        '```json\n[{"file":"src/a.ts","line":42}]\n```\n';
+
+    it('leaves the reply untouched and does NOT record an inline extraction', () => {
+        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
+        const responses = [delib('anthropic', 'c', quotedEvidence)];
+        const inline = harvest_inline_findings([m as never], responses);
+
+        // Nothing recorded...
+        expect(inline.size).toBe(0);
+        // ...the quoted evidence still there for peer review to read...
+        expect(responses[0]!.text).toBe(quotedEvidence);
+        expect(responses[0]!.text).toContain('"line":42');
+        // ...no marker claiming an extraction happened...
+        expect(responses[0]!.text).not.toContain('inline findings block extracted');
+        // ...and the raw reply was never displaced, so raw_text stays null.
+        expect(responses[0]!.raw_text).toBeNull();
+    });
+
+    it('falls through to the paid extraction call rather than reporting a false success', () => {
+        // The other half: the short-circuit must not fire, so the member IS
+        // asked. Before the fix this call was skipped and 0 findings recorded.
+        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
+        const r = harvestThenScore(m, [delib('anthropic', 'c', quotedEvidence)]);
+        expect(r.parse_outcomes.get('anthropic:c')).not.toBe('parsed-inline');
+        expect(m.calls).toBe(1);
+    });
+
+    it('a PARTIALLY well-formed array is not a findings block either', () => {
+        // One item carries id/text, one does not. A member following the
+        // contract emits well-formed items throughout; a mixed array is
+        // something else, whatever it parsed to.
+        const mixed =
+            'Analysis.\n\n```json\n' +
+            '[{"id":"real","text":"a finding"},{"file":"src/b.ts","line":7}]\n```\n';
+        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
+        const responses = [delib('anthropic', 'c', mixed)];
+        expect(harvest_inline_findings([m as never], responses).size).toBe(0);
+        expect(responses[0]!.text).toBe(mixed);
+    });
+
+    it('STILL short-circuits on a well-formed block — the fix must not disarm the feature', () => {
+        // The polarity that matters: a predicate shown only to reject has not
+        // been shown to accept.
+        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
+        const r = harvestThenScore(m, [delib('anthropic', 'c', analysisReply('A prose analysis.'))]);
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-inline');
+        expect(m.calls).toBe(0);
+    });
+
+    it('an empty [] answer still parses inline — "I found nothing" is an answer', () => {
+        // item_count 0 and findings 0, so the conjunction holds. Without this
+        // the fix would re-ask a member that followed the schema most literally.
+        const m = new Counting('anthropic', 'c', ['[{"id":"from-extraction","text":"second call"}]']);
+        const r = harvestThenScore(m, [delib('anthropic', 'c', 'Nothing found.\n\n```json\n[]\n```\n')]);
+        expect(r.parse_outcomes.get('anthropic:c')).toBe('parsed-inline');
+        expect(r.findings).toEqual([]);
+        expect(m.calls).toBe(0);
+    });
+});
+
+describe('the raw reply really is retained, as the marker promises', () => {
+    /**
+     * Regression for the HIGH finding of the same review. `harvest_inline_findings`
+     * mutates `resp.text` in place and the persisted session record is serialised
+     * from those same objects afterwards, so the stripped text was the only text
+     * anywhere and the marker's claim was false.
+     */
+    it('sets raw_text to the pre-strip reply when it strips a block', () => {
+        const m = new Counting('anthropic', 'c', ['[]']);
+        const original = analysisReply('A prose analysis.');
+        const responses = [delib('anthropic', 'c', original)];
+        harvest_inline_findings([m as never], responses);
+
+        expect(responses[0]!.text).toContain('inline findings block extracted');
+        expect(responses[0]!.text).not.toContain('leaky-abstraction');
+        // The claim the marker makes, now checkable.
+        expect(responses[0]!.raw_text).toBe(original);
+        expect(responses[0]!.raw_text).toContain('leaky-abstraction');
+    });
+
+    it('leaves raw_text null when nothing was stripped, rather than duplicating the reply', () => {
+        const m = new Counting('anthropic', 'c', ['[]']);
+        const responses = [delib('anthropic', 'c', 'Plain prose, no block.')];
+        harvest_inline_findings([m as never], responses);
+        expect(responses[0]!.raw_text).toBeNull();
+    });
+});

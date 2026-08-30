@@ -269,6 +269,8 @@ export class CouncilResponse {
     // persisted response JSON stay backward-compatible.
     model_served: string;
     text: string;
+    /** Pre-rewrite reply; `null` when nothing rewrote `text`. See inline_findings.ts. */
+    raw_text: string | null;
     input_tokens: number;
     output_tokens: number;
     // Prompt-cache accounting (Anthropic). `cache_read_input_tokens` bill at
@@ -286,6 +288,7 @@ export class CouncilResponse {
         model: string;
         model_served?: string;
         text: string;
+        raw_text?: string | null;
         input_tokens?: number;
         output_tokens?: number;
         cache_creation_input_tokens?: number;
@@ -298,6 +301,7 @@ export class CouncilResponse {
         this.model = opts.model;
         this.model_served = opts.model_served ?? '';
         this.text = opts.text;
+        this.raw_text = opts.raw_text ?? null;
         this.input_tokens = opts.input_tokens ?? 0;
         this.output_tokens = opts.output_tokens ?? 0;
         this.cache_creation_input_tokens = opts.cache_creation_input_tokens ?? 0;

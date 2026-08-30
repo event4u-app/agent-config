@@ -61,6 +61,21 @@ export interface InlineFindingsSplit {
  * reads. `found: false` when nothing array-shaped is present, which the caller
  * treats as "no inline block" and repairs with the extraction call — the same
  * outcome as today, never worse.
+ *
+ * **Precisely: "last FENCED, else last bare" — not "last in the text."** The
+ * two patterns are tried in `_extract_json_array`'s precedence order and the
+ * first pattern that matches at all wins, so a reply carrying a quoted FENCED
+ * array above its own trailing BARE array selects the quoted one. Stated
+ * because the docstring used to claim the simpler rule, which a completion
+ * review of 2026-08-30 found untrue against that ordering; the precedence test
+ * puts the bare array first and so never exercises the collision.
+ *
+ * The consequence is bounded rather than eliminated. `_isOwnFindingsBlock`
+ * below now rejects any array whose items are not all well-formed findings, so
+ * the common shape of a quoted array — evidence rows, log lines, a schema
+ * fragment — no longer wins. What survives is a quoted array of well-formed
+ * findings sitting fenced above the member's own bare one, and that is recorded
+ * as a known residual of 1B.4's gate rather than claimed away.
  */
 export function split_inline_findings(text: string): InlineFindingsSplit {
     const none: InlineFindingsSplit = { deliberation_text: text, block: '', found: false };
@@ -149,6 +164,49 @@ export type RecordedExtractionOutcome =
  * parse gets NO entry and its `text` is left exactly as the model wrote it, so
  * the repair extraction call downstream still sees the raw reply.
  */
+/**
+ * Is this extraction the member's OWN findings block, or just some JSON it quoted?
+ *
+ * `outcome === 'parsed'` was the whole test until a completion review of
+ * 2026-08-30 showed it decides nothing: `parse_findings_outcome` returns
+ * `'parsed'` for ANY syntactically valid JSON array, and `_collect_findings`
+ * silently skips items missing `id` or `text` while the outcome stays `'parsed'`.
+ * So a reply carrying no findings block at all, but quoting
+ * `[{"file":"src/a.ts","line":42}]` as evidence, was recorded as a successful
+ * inline extraction with zero findings — and its quoted evidence was DELETED
+ * from the text the peer review, the chairman and the artefact read. Worse, the
+ * failure was recorded as a success in the rate the 1B.4 promotion gate reads,
+ * so the gate could not see it.
+ *
+ * Two conjuncts, and both are needed:
+ *
+ * - **it parsed** — unchanged;
+ * - **every item it saw became a finding** — `findings.length === item_count`.
+ *   A findings block from a member following the contract has well-formed items
+ *   throughout. An array where some or all items lack `id`/`text` is something
+ *   else, whatever it parsed to.
+ *
+ * The bare-`[]` answer keeps working: `item_count` is 0 and `findings.length`
+ * is 0, so the conjunction holds and "I found nothing" is still an answer
+ * rather than a re-ask.
+ *
+ * **What this does NOT decide, stated rather than implied away.** A member that
+ * quotes ANOTHER member's well-formed `[{"id":…,"text":…}]` array, as the last
+ * block in its reply, is indistinguishable from its own by shape — and would
+ * still be attributed to the quoting member. Shape cannot separate those; only
+ * provenance could, and the reply carries none. It is narrower than the case
+ * fixed here (the quote must be well-formed AND last AND the member must have
+ * emitted no block of its own), it is visible in the emitted marker, and it is
+ * carried into 1B.4's gate as a known residual rather than counted as a success.
+ */
+function _isOwnFindingsBlock(ex: {
+    outcome: string;
+    findings: readonly unknown[];
+    item_count: number;
+}): boolean {
+    return ex.outcome === 'parsed' && ex.findings.length === ex.item_count;
+}
+
 export function harvest_inline_findings(
     members: readonly ExternalAIClient[],
     responses: readonly CouncilResponse[],
@@ -169,13 +227,29 @@ export function harvest_inline_findings(
         }
         const source = `${resp.provider}:${model}`;
         const ex = parse_findings_outcome(split.block, { source });
-        if (ex.outcome !== 'parsed') {
+        if (!_isOwnFindingsBlock(ex)) {
             // Not a findings block after all — most likely a JSON array the member
             // quoted from the artefact. Leave the reply untouched: stripping text
             // we could not read would remove evidence and buy nothing.
             continue;
         }
         out.set(source, ex);
+        // Retain the reply BEFORE rewriting it — this is the single write of
+        // `CouncilResponse.raw_text`, and the reason that field exists.
+        //
+        // The marker appended below promises "the raw reply is retained in the
+        // session record". Until 2026-08-30 that promise was false, and a
+        // completion review is what caught it: the persisted record is
+        // serialised from these same objects AFTER this harvest runs
+        // (`council_cli._serialise_responses`), so the stripped text was the
+        // only text that survived anywhere, and the auditability condition the
+        // council attached to this feature was unmet.
+        //
+        // `null` stays the honest value for a reply nothing rewrote — it means
+        // "`text` IS the raw reply", never "the raw reply was lost" — which is
+        // also why the serialiser omits the key entirely in that case rather
+        // than writing a duplicate of the reply into every session record.
+        resp.raw_text = resp.text;
         const marker = `_[inline findings block extracted: ${String(ex.findings.length)} item(s); the raw reply is retained in the session record.]_`;
         resp.text = `${_strip(split.deliberation_text)}\n\n${marker}`;
     }

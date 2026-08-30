@@ -242,8 +242,11 @@ Rules:
 - 3-7 findings, ordered by importance (most important first).
 - \`id\` is a 1-3 word kebab-case slug, unique within your array.
 - \`text\` is a single sentence, no markdown, no reviewer self-reference.
-- Wrap the array in a \`\`\`json\`\`\` fenced block, as the LAST thing in your
-  reply. No commentary after it.
+- Wrap the array in a \`\`\`json\`\`\` fenced block, at the END of your reply,
+  below the prose. No commentary between the prose and it.
+- If you were also asked to close with a stance line, that line comes AFTER
+  this block and is the true last line. These two instructions do not compete:
+  prose, then the findings block, then the stance line.
 - An empty array \`[]\` is a valid answer meaning you found nothing.
 - The prose analysis above it is still the primary deliverable — the block
   summarises it, it does not replace it.`;

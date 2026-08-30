@@ -707,7 +707,7 @@ the blocker existed to protect.
       verify: other lenses' prompts are byte-unchanged
 
       **CLOSED 2026-08-30.** Three conjuncts gate the contract
-      (`_inline_findings_active`): consensus scoring on, the run's lens inside
+      (`inlineFindingsActive`): consensus scoring on, the run's lens inside
       `consensus_scoring.lenses` (default `[analysis]`), and the key on. Each is
       tested in isolation, plus the absent-key case, plus a no-block-at-all
       case — five arms, because "byte-unchanged" fails five different ways and a
@@ -749,6 +749,27 @@ the blocker existed to protect.
       measured contract compliance over the members most likely to comply.
       Report fallback recovery and the final unparsed rate as separate columns,
       never folded into this one.
+
+      **Two amendments from the completion review of 2026-08-30, both narrowing
+      what this rate may be read as saying.**
+
+      First, the `[]` rationale is true of `parse_findings_outcome` and NOT of
+      the inline path it is being applied to. A *bare* `[]` is unlocatable by
+      `split_inline_findings` — `_BARE_ARRAY_SRC` requires at least one `{...}`
+      object — so an unfenced empty answer produces `found: false` and counts as
+      a MISS here, not a success. A fenced ```` ```json\n[]\n``` ```` does
+      locate and does count. So the sentence above holds only for the fenced
+      form, and the numerator must be read that way.
+
+      Second, a **known residual** is pre-registered rather than discovered
+      later: a member that quotes ANOTHER member's well-formed findings array as
+      the last fenced block in its reply is indistinguishable by shape from one
+      emitting its own, and would be counted a success with the findings
+      attributed to the wrong member. `_isOwnFindingsBlock` rejects every
+      malformed or partial array, which is the common shape of a quotation; what
+      it cannot reject is a well-formed one. Shape cannot separate those and the
+      reply carries no provenance. The arms therefore report this rate WITH the
+      residual named, never as a clean compliance figure.
 
       **The `unparsed` comparator must be fixed before the arms run**, per the
       same seats: matched runs over the same artefacts, or a pre-declared

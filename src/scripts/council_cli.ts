@@ -138,6 +138,7 @@ import {
     run_debate,
     run_peer_review,
 } from './ai_council/orchestrator.js';
+import { serialiseResponses } from './ai_council/response_record.js';
 import {
     type PriceTable,
     downgrade_coupling,
@@ -1234,8 +1235,8 @@ function _serialise_consensus(consensus: ConsensusResult): Dict {
             reason: s.reason,
         })),
         metadata,
-        extraction_responses: _serialise_responses(consensus.extraction_responses),
-        scoring_responses: _serialise_responses(consensus.scoring_responses),
+        extraction_responses: serialiseResponses(consensus.extraction_responses),
+        scoring_responses: serialiseResponses(consensus.scoring_responses),
     };
 }
 
@@ -1482,7 +1483,7 @@ function _maybe_run_peer_review(
 
 function _serialise_peer_review(peer_review: PeerReviewResult): Dict {
     return {
-        responses: _serialise_responses(peer_review.responses),
+        responses: serialiseResponses(peer_review.responses),
         label_to_source: _mapToObject(peer_review.label_to_source),
         persona_labels: _mapToObject(peer_review.persona_labels),
     };
@@ -1777,28 +1778,6 @@ function _emit_debate_estimate(
     return 0;
 }
 
-function _serialise_responses(responses: CouncilResponse[]): Dict[] {
-    const out: Dict[] = [];
-    for (const r of responses) {
-        const metadata: Dict = {};
-        for (const [k, v] of Object.entries(r.metadata || {})) {
-            metadata[k] = String(v);
-        }
-        out.push({
-            provider: r.provider,
-            model: r.model,
-            text: r.text,
-            input_tokens: r.input_tokens,
-            output_tokens: r.output_tokens,
-            cache_creation_input_tokens: r.cache_creation_input_tokens,
-            cache_read_input_tokens: r.cache_read_input_tokens,
-            latency_ms: r.latency_ms,
-            error: r.error,
-            metadata,
-        });
-    }
-    return out;
-}
 
 function _deserialise_responses(items: Dict[]): CouncilResponse[] {
     const out: CouncilResponse[] = [];
@@ -2792,7 +2771,7 @@ function cmd_run(
         stances: stances_on,
         blind_chairman: blind_chairman_on,
         chairman_fields: chairman_fields_on,
-        responses: _serialise_responses(responses),
+        responses: serialiseResponses(responses),
     };
     if (peer_review !== null) {
         payload['peer_review'] = _serialise_peer_review(peer_review);
@@ -2894,7 +2873,7 @@ function _write_debate_round(
         rounds: 1,
         cost_usd_actual: _pyRound(actual_total, 6),
         prompt_cache_round_gap_ms: opts.cache_gap_ms_since_previous_round ?? null,
-        responses: _serialise_responses(responses),
+        responses: serialiseResponses(responses),
     };
     const out_path = path.join(_resolveTarget(out_dir), _debate_round_filename(round_number));
     fs.writeFileSync(out_path, _jsonDumpsIndent2(payload) + '\n', { encoding: 'utf-8' });
