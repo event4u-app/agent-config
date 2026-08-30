@@ -258,6 +258,7 @@ tasks:
       - task: lint-command-budget
       - task: lint-command-verbs
       - task: check-skill-admissions
+      - task: check-concern-admissions
       - task: check-command-examples
       - task: lint-skill-trigger-corpus
       - task: check-routing-coverage

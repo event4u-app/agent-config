@@ -530,8 +530,21 @@ jobs:
         run: ./scripts-run src/scripts/check_requirements_trace
       - name: ADR sweep routing
         run: ./scripts-run src/scripts/lint_adr_sweep_routing
+      # Second instance of the same class as the discovery-manifest step above,
+      # and found the same way — by CI, not by review. `dist/*` is gitignored
+      # (.gitignore:212), so a fresh checkout has no dist/mcp/ and this gate dies
+      # on "missing: dist/mcp/registry-manifest.json" rather than on the property
+      # it measures. Reproduced locally by `rm -rf dist/mcp` and repaired by the
+      # build below, which writes the four files the gate reads.
+      - name: Build the MCP registry manifest (dependency of the gate below)
+        run: ./scripts-run src/scripts/build_mcp_registry_manifest --write --strict
       - name: MCP registry manifest
         run: ./scripts-run src/scripts/lint_mcp_registry_manifest
+      # Same grounds as the step above. Corpus check rather than assumption:
+      # this workflow's `paths:` already covers `agents/**` (the ledger) and
+      # `src/scripts/**` (the manifest), which is this gate's whole corpus.
+      - name: Hook-concern admissions and refusals are recorded
+        run: ./scripts-run src/scripts/check_concern_admissions
       # Wired here on the same ci-parity:local-only grounds as the step above.
       # Corpus check rather than assumption: this workflow's `paths:` already
       # carried `src/skills/**`, `tests/**` and `dist/router.json` — both
