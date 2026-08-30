@@ -154,3 +154,141 @@ pops somebody else's work.
 ## Terminal PRs
 
 None. The queue is at zero.
+
+---
+
+# PR drain run — 2026-08-30
+
+Second run against this file, appended rather than rewritten. **The mandate's
+queue was again stale, and in the same direction:** it named `#1499` as the
+first merge and six PRs as already merged "this run". All six merged on
+2026-08-20/21 — nine days before this run — and the recomputed live queue held
+**one** open PR, `#1728`. Every number below is reproducible from the commands
+beside it.
+
+## Step 0 — the authorisation premise, verified read-only
+
+`dist/hooks/dispatch.js` reads `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3`. The 6h
+TTL is in the effective bundle. One `30 * 60 * 1e3` literal remains at `:32477`
+and is **not** the ledger constant — it is the `{ label: "30m" }` entry of
+`WALL_CLOCK_ARMS_MS` at `:32474`. Located by line and by enclosing declaration
+rather than by pattern presence, because the pattern alone produces a false
+STOP. Nothing modified.
+
+## Rows
+
+| # | Queue pos | Sync conflicts → resolution class | CI iters | Disposition |
+|---|---|---|---|---|
+| 1493 | pre-run | — | — | merged `9b7934e6c` 2026-08-20 (nine days before this run) |
+| 1488 | pre-run | — | — | merged `46837f58b` 2026-08-20 |
+| 1480 | pre-run | — | — | merged `b593d8c00` 2026-08-20 |
+| 1489 | pre-run | — | — | merged `d0fad2ccd` 2026-08-21 |
+| 1482 | pre-run | — | — | merged `52cfb4bb8` 2026-08-21 |
+| 1499 | pre-run | — | — | merged `dd6a14406` 2026-08-21 — the mandate's "merge this first" target, already merged |
+| 1728 | 1 (only open PR) | **none** — `origin/drain/source-silence` already contained `origin/main` (`merge-base --is-ancestor` exits 0); the local worktree was merely behind its own remote and fast-forwarded | 2 | **merged `227b01697`** (squash) |
+| this file | 2, authored this run | none | — | see the PR that carries it |
+
+## `#1728` — a required-check red that belonged to `main`, not to the PR
+
+`Sync + Generate Tools Consistency` — the **only** mechanically required check
+in the `main` ruleset — was red. It was red on `main` too, at `97687edc3`
+(run `33286217256`), for the identical reason, so the PR inherited it through
+the merge rather than causing it.
+
+**Cause.** Gate R1 (`lint_plan_risk_register`) reported `stale_review` on
+`agents/roadmaps/road-to-supervised-telemetry-collector.md`: `reviewed:
+2026-08-29` predated PR #1730, which closed steps 2.3, 2.4 and 3.1, flipped
+AC-1 through AC-5 to met, and created the seven-row rollback trigger matrix.
+
+**This is the sanctioned action, not a freeze violation.**
+`docs/contracts/ci-green-floor.md` § Freeze rule names two exits from a
+required-check red on `main`: revert, or "ship a fix-forward PR that turns the
+required check green". `#1728` is the second, and the check is green on its
+head.
+
+**Fixed by re-reviewing, not by stamping a date.** Reading the seven existing
+rows against the changed surface: risk 1 already demands a sensitivity reading
+per flip, and the three newly-closed steps each record one. What no row named
+was the state 3.1 created — the matrix has seven rows and two are enforced
+(1 and 5), while the other five carry `OWED BY` against steps 5.1, 5.1, 3.2,
+4.2 and 5.2. That is risk 1 one level up: not a check that ran and proved
+nothing, but a control that is named and not yet wired. Added as its own row.
+
+## The correction round — a neutral reviewer found five errors in the fix
+
+A fresh reviewer with no session context was dispatched over the single commit
+`3a39a5ef4`, with a prompt stating no expected outcome. It confirmed the gate
+red was real and inherited and the risk non-duplicative — and found **five
+checkable factual errors in the row's own prose**, none of them a judgement
+call. All five were repaired in `7fd04fd1f`:
+
+1. "steps in Phases 4 and 5" — false; the owed set includes 3.2, a Phase 3 step.
+2. "closes when 5.2 lands" — misattributed four of five rows; they close at
+   5.1, 3.2, 4.2 and 5.2. A single closure condition for a four-step set is
+   unfalsifiable at the point it names.
+3. "Phase 4 ships with five unwired triggers" — contradicts the file's own
+   `mode: phase-checkpoints`, under which 3.2 precedes Phase 4 and the number
+   is four. The alternative reading (3.2's verify cannot run before the
+   collector exists) means Phase 3 is blocked on Phase 4; the row now carries
+   both branches instead of absorbing the conflict silently.
+4. "Surfaced by the 2026-08-30 re-review" — overclaimed. Step 3.1's own prose
+   already states that five of seven are future work. The row now says it
+   **promotes** that observation into the register.
+5. Rank 8 asserted least-risky without argument and departed from the
+   precedent set one commit earlier, where #1730 re-ranked the whole register
+   to insert at 1. Placed at 5; old 5-7 renumbered to 6-8.
+
+Two errors in the **first** commit message were not repairable without
+rewriting a pushed branch, so `7fd04fd1f` corrects them in the record instead:
+"added row 7 to the rollback trigger matrix" conflated two tables (97687edc3
+created the whole matrix; it was the Risk Register that went 6→7), and "risks
+1 and 4 cover the new step flips" is half unsupported, since risk 4 is about
+mocked supervision in Phase 5 and names no mechanism covering Phase 2 store
+tests.
+
+**Recorded as the run's finding, not as housekeeping:** a re-review dispatched
+to repair a gate produced prose less careful than its own self-description
+claimed, and only an independently-prompted reader caught it. The gate went
+green after the first commit; four of the five errors would have shipped.
+
+## Residuals, disclosed
+
+**`lint commit subjects` merged red.** An intermediate commit 22 back on the
+branch carries the blocklisted token `tmp` in `fix(shape): a working-set tmp
+directory is not a harvest round`. Three facts settle the disposition, and the
+2026-08-29 run above reached the same one independently:
+
+- It is **advisory**. The `main` ruleset requires exactly one check
+  (`Sync + Generate Tools Consistency`), verified via
+  `gh api repos/.../rulesets/17749383`; `branch-protection-policy.md` says the
+  same in prose.
+- The only root-cause fix is rewording a pushed commit, which the mandate
+  forbids ("Never rebase pushed branches").
+- Squash-merge makes it moot for the thing the gate protects:
+  `release.ts:441` builds the CHANGELOG from `git log <tag>..HEAD --no-merges`
+  on `main`, and the squashed subject is the PR title, which carries no
+  blocklisted token.
+
+**Completion-review scope drift, advisory, not repaired.** The branch's
+`drain-source-silence.findings.md` binds scope
+`bdf90bcf…`; the two commits above moved it to `9a1a5e64…`.
+`check_completion_review --advisory` exits 0 and CI is unaffected. It was not
+rebound: the branch's own post-review delta is two commits, one of which is a
+prior rebind and the other the R1 repair — everything else in the scope
+difference arrived from `main` and was reviewed there. Writing a rebind marker
+whose scope hash covers a diff no fresh reader examined would manufacture the
+evidence the marker exists to record, so the drift is reported instead.
+
+**No terminal PRs, no superseded closes, no blocked-external, no dropped
+edits.** The queue is at zero.
+
+## Process note — one mistake made and verified harmless
+
+After the merge, `git reset --hard origin/main` was run in a worktree still on
+`drain/source-silence` (the `git checkout main` before it had failed — `main`
+is checked out in the primary clone). It therefore moved the local drain branch
+pointer rather than a detached HEAD. No work was lost and this was checked
+rather than assumed: the worktree was clean, `7fd04fd1f` is still a reachable
+commit object, its remote was deleted by the merge itself, and the corrected
+risk row is present in `origin/main`'s copy of the roadmap. Recorded because
+the intent was to move the worktree, and the command that ran rewrote a branch.
