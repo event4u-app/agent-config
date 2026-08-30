@@ -42,7 +42,7 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-28)
 # ----------------------------------------------------------
-# 304 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 305 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows, which now include the four gates the
 # two runtime-cost roadmaps add: check_prefix_stable_mutation,

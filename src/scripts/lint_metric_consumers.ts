@@ -30,16 +30,23 @@
  * rather than left for someone to discover by trusting the gate further than it
  * goes.
  *
- * Exit codes: 0 clean · 1 finding · 2 usage or config error.
+ * Exit codes: 0 clean · 1 finding · 2 usage error.
+ *
+ * A CONFIG error — a missing, unparseable or `metrics:`-less registry — exits
+ * **1**, not 2, and the docstring said 2 (R2 finding 6). 1 is right: a registry
+ * the gate cannot read is a finding about the tree, which is what this gate
+ * reports; 2 is reserved for being invoked wrongly. The prose is corrected
+ * rather than the code, because changing the exit code would change what a
+ * caller distinguishes.
  */
 
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -113,7 +120,12 @@ export function findingsFor(entry: MetricEntry, index: number): Finding[] {
             out.push({ id, field, reason: 'missing or empty' });
             continue;
         }
-        if (BOILERPLATE.some((b) => value.toLowerCase() === b || value.toLowerCase().startsWith(`${b} `))) {
+        // Matched at a WORD BOUNDARY, not on an exact token or a token plus a
+        // space (R2 finding 1). `TBD:` and `TODO:` are the natural writing
+        // forms of exactly the placeholder class this refuses, and both were
+        // accepted — the filter caught only the one spelling nobody uses.
+        const lower = value.toLowerCase();
+        if (BOILERPLATE.some((b) => lower === b || new RegExp(`^${b}\\b`).test(lower))) {
             out.push({ id, field, reason: `boilerplate ("${value.slice(0, 40)}") — a placeholder, not an answer` });
             continue;
         }
@@ -170,13 +182,9 @@ function selfTest(): number {
             const abs = path.join(dir, REGISTRY_REL);
             fs.mkdirSync(path.dirname(abs), { recursive: true });
             fs.writeFileSync(abs, yaml);
-            // Init a git repo so the fixture root looks like a checkout to any
-            // helper that asks; cheap, and it removes a class of surprise.
-            try {
-                execFileSync('git', ['-C', dir, 'init', '-q'], { stdio: 'ignore' });
-            } catch {
-                /* git absent is not this gate's problem */
-            }
+            // No `git init` here (R2 finding 7): this gate reads one YAML file
+            // and asks git nothing, so seeding a repo was seven subprocess
+            // spawns buying nothing.
             return runGateCli(REPO_ROOT, SELF_REL, ['--root', dir], dir);
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
@@ -220,9 +228,14 @@ metrics:
             run: () => fixture(complete.replace(/    consumer: .*\n/, '    consumer: TBD\n')),
         },
         {
-            name: 'a too-short field is refused',
+            // The value must be short AND not boilerplate, or the boilerplate
+            // branch `continue`s past it and MIN_FIELD_CHARS gets no coverage
+            // at all — which is what happened with `nothing much` (R2 finding
+            // 2), while the gate-coverage row and the roadmap's verify clause
+            // both lean on this self-test as the discrimination proof.
+            name: 'a too-short field is refused, on the LENGTH floor rather than the boilerplate list',
             expect: 'reject',
-            run: () => fixture(complete.replace(/    absent: .*\n/, '    absent: nothing much\n')),
+            run: () => fixture(complete.replace(/    absent: .*\n/, '    absent: it breaks\n')),
         },
         {
             name: 'an EMPTY registry is refused — a gate that scans nothing exits green',
@@ -273,16 +286,42 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
 
+    // Per-target accounting (R2 finding 4). A NEW gate adopts a ledger or takes
+    // an exemption; this one has a real target population — the registry's
+    // entries — so there is nothing to exempt. The plan is built from the index
+    // rather than from the id, because an entry MISSING its id is one of the
+    // findings, and a ledger keyed on a value that may be absent could not
+    // account for exactly the target that failed.
+    const ledger = new GateLedger('lint_metric_consumers');
+    const targetOf = (i: number): string => `${REGISTRY_REL}#${String(i + 1)}`;
+    ledger.plan(read.entries.map((_e, i) => targetOf(i)));
+
     const findings: Finding[] = [];
     const seen = new Set<string>();
     read.entries.forEach((entry, i) => {
+        // A null or non-object element is a FINDING, not a crash (R2 finding
+        // 5). `metrics: [null]` reached `normalise(entry.id)` and threw an
+        // unhandled TypeError out of a gate whose job is to report.
+        if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+            findings.push({
+                id: `#${String(i + 1)}`,
+                field: '(entry)',
+                reason: 'not a mapping — a metric entry must be a key/value block',
+            });
+            ledger.fail(targetOf(i), 'not a mapping');
+            return;
+        }
+        const before = findings.length;
         findings.push(...findingsFor(entry, i));
         const id = normalise(entry.id);
         if (id !== '' && seen.has(id)) {
             findings.push({ id, field: 'id', reason: 'duplicate — two entries claim the same metric' });
         }
         if (id !== '') seen.add(id);
+        if (findings.length > before) ledger.fail(targetOf(i), findings[before]?.reason ?? 'finding');
+        else ledger.complete(targetOf(i));
     });
+    ledger.report();
 
     if (findings.length > 0) {
         process.stderr.write(

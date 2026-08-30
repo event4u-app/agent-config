@@ -3,7 +3,7 @@ complexity: structural
 status: draft
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-governed-harness-evolution is exactly the open question E1 puts to the owner — pre-merging would decide it by authoring."
+estate_offset_exempt: "Added as a draft proposal. UPDATED 2026-08-30: Phase 0 has now run, so the original clause 'nothing has run' is false and is corrected rather than left standing — see § Why Phase 0 shipped under status: draft in the body for why the status did not change with it. Archiving is still impossible (39 of 43 steps are open), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-governed-harness-evolution is exactly the open question E1 puts to the owner — pre-merging would decide it by authoring."
 ---
 # Road to experience loop broadening
 
@@ -87,6 +87,34 @@ is *prohibited*. So a cross-citation between those two documents silently
 inverts "the thing to build" and "the thing that is banned". Every class letter
 in this roadmap refers to **ADR-124 only**, and any future citation into those
 parents must restate the letter's meaning rather than carry it.
+
+## Why Phase 0 shipped under `status: draft`
+
+Steps 0.1–0.3 landed real artifacts — `docs/contracts/runtime-component-classes.md`,
+the two boundaries, `src/config/metric-registry.yml` and the gate that enforces it.
+A roadmap that ships code while calling itself a draft is a contradiction, and a
+neutral review named it. It is recorded here rather than resolved by flipping the
+field, because the flip has a cost this run is specifically trying not to pay.
+
+`check_estate_count` measures `active_roadmaps 2` against a floor of 2 —
+**zero headroom**, and `status: draft` is exactly what keeps this file out of the
+counted set. Promoting it needs a disposal in the same change or an
+`estate_growth_exempt` claim, i.e. growing the active estate during a run whose
+purpose is to shrink it. The reasoning is not new: it is written out above under
+E1, where an AI council (anthropic + openai, 2/2) resolved the sibling question
+on 2026-08-29.
+
+So the state is deliberate and bounded rather than an oversight:
+
+- **What the draft status does NOT excuse.** Every artifact Phase 0 shipped is
+  live, gated and verified like any other. Nothing here is provisional because
+  the frontmatter says draft.
+- **Promotion condition.** The first change that either disposes of an active
+  roadmap or is willing to carry an `estate_growth_exempt` claim for this file
+  flips `status` to `ready` in the same commit. Whichever comes first.
+- **What would falsify this note.** A reading of `check_estate_count` showing
+  `active_roadmaps` below its floor — headroom exists, and the reason above has
+  expired.
 
 ## Phase 0 — Scope, classification, decisions
 
