@@ -103,7 +103,7 @@ const withSqlite = isStoreAvailable() ? describe : describe.skip;
 //                                 runtime-conditional. Delete that qualifier and
 //                                 this test reds, on CI, where it matters.
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const ROADMAP_REL = 'agents/roadmaps/road-to-supervised-telemetry-collector.md';
+const ROADMAP_REL = 'agents/roadmaps/later/road-to-supervised-telemetry-collector.md';
 
 describe('the runtime this suite’s evidence line depends on', () => {
     const available = isStoreAvailable();

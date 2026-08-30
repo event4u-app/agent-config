@@ -57,6 +57,7 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
+import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 export { _fallback_yaml } from './fallback_yaml.js';
 
 // Free-form JSON values flow through every helper here; a documented
@@ -1143,6 +1144,37 @@ export function main(argv?: string[]): number {
     );
     return EXIT_ALLOW; // fail-open per contract for unknown events
   }
+
+  // ── The capture rate: both halves, written here ─────────────────────────────
+  //
+  // Two calls rather than one, because they must be able to FAIL DIFFERENTLY.
+  // `recordOpportunity` is the denominator's independent writer — in-process,
+  // no daemon — so a dead collector yields a climbing denominator against a
+  // flat numerator and the rate falls instead of reading 0/0. `recordCapture`
+  // is the numerator, and its absence was a real defect three review rounds
+  // took to find. Both are gated on the opt-in marker, both refuse a
+  // self-observed dispatch, and neither throws; the rationale, the ordering and
+  // the exclusion all live in `collector_denominator.ts`.
+  //
+  // UNGUARDED HERE, and that is finding 3 of round 4. The guard used to be
+  // `if (!isSelfObservation())` around these two lines — and vitest always sets
+  // `VITEST`, so under the parity comparison NEITHER run ever reached them.
+  // `check_static_parity` could observe a module-load difference and nothing
+  // else, which made the AC-7 comparison vacuous with respect to the thing it
+  // claims to compare. The exclusion is a property of the METRIC, so it belongs
+  // inside the metric functions where the opt-in check already is; putting it
+  // in the caller's control flow is what made the calls disappear.
+  //
+  // Cost on a default-off install: FOUR `existsSync` calls, not two — each
+  // function calls `isCollectorEnabled`, which probes the opt-out marker and
+  // then the ENABLED one. The number is stated correctly here at the third
+  // attempt (R2 finding 14 corrected one to two, round 4 finding 9 caught that
+  // a second caller had since doubled it).
+  //
+  // Placed after the vocabulary check so an unknown event is not an
+  // opportunity, and before the manifest load so a missing manifest still is.
+  recordOpportunity(args.event, args.platform);
+  recordCapture(args.event, args.platform);
 
   const manifest_path = args.manifest;
   if (!fs.existsSync(manifest_path)) {

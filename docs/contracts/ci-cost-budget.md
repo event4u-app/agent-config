@@ -40,8 +40,11 @@ it: `smoke.yml` reads 82 s at run level and 20–23 s per job. Comparing one
 against the other manufactures regressions that did not happen — which is
 exactly what the first version of this re-measurement did.
 
-`tests.yml` declares 6 job keys that matrix-expand to 23 jobs. The table
-lists each shard family once, with the per-shard average.
+`tests.yml` declares **7** job keys that matrix-expand to **24** jobs. The table
+lists each shard family once, with the per-shard average. (It read 6 and 23
+until `collector-lifecycle` was added on 2026-08-30 without its row — caught by
+a completion review, not by a gate, which is what the note under the table is
+about.)
 
 | Workflow | Job | OS × variant | Avg duration | Trigger surface |
 |---|---|---|--:|---|
@@ -52,11 +55,34 @@ lists each shard family once, with the per-shard average.
 | `tests.yml` | `static-checks` | ubuntu, no matrix | 140 s | same as above |
 | `tests.yml` | `golden-tests` | 2 OS | 124 s ubuntu / 122 s macOS | same as above |
 | `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 100 s macOS | same as above |
+| `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
 | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
 | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
 | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+
+**`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
+five process-level lifecycle properties plus the operator stop verb — six cases,
+each spawning one or two real `tsx` daemons — then the supervision-claim gate
+that consumes their evidence, then the static-parity comparison (the
+dispatcher-reaching suite, twice — the count is deliberately not written down
+anywhere in this change, per R2 round-2 finding 15, because it moves with the
+suite and three different figures for it appeared in one diff). Its duration figure is a LOCAL measurement of the suite plus an estimate
+for the parity pair; the CI number is unknown until the job has run, and saying
+so is cheaper than publishing a guess in a table of measurements.
+
+It is macOS-only by an AI-council decision (2026-08-29, 2/2), not by preference:
+the second declared supported platform is Linux **with a user session bus**, and
+no GitHub-hosted runner provides one. Running the suite on `ubuntu-latest` would
+produce a green tick about the platform table's static-fallback row while
+claiming the supported one. macOS is the more expensive runner, which is the
+cost this row exists to make visible.
+
+*Revisit-if:* the job's first CI runs give a real duration (this row is then
+re-measured), or a Linux runner with a user session bus becomes available (the
+job gains a matrix and this row doubles).
+
 
 Three rows from the 2026-05-26 baseline were removed because the jobs and
 workflows they named no longer exist: `python-tests` (no such job key in

@@ -219,17 +219,71 @@ export function payloadClassCounts(
     }));
 }
 
+/**
+ * The recorded BUILT-surface figure, if the budget file carries one.
+ *
+ * Read by key SHAPE (`built_surface_measurement_<date>`) rather than by the one
+ * dated key that exists today, so re-measuring the built surface is an added
+ * record rather than an edit to this function. The newest key wins.
+ */
+export function recordedBuiltPackedMb(budget: PackSizeBudget): number | null {
+    const keys = Object.keys(budget)
+        .filter((k) => /^built_surface_measurement_/.test(k))
+        .sort();
+    const newest = keys[keys.length - 1];
+    if (newest === undefined) return null;
+    const block = (budget as unknown as Record<string, unknown>)[newest];
+    if (block === null || typeof block !== 'object') return null;
+    const built = (block as { built?: unknown }).built;
+    if (built === null || typeof built !== 'object') return null;
+    const value = (built as { packed_mb?: unknown }).packed_mb;
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
 export function evaluate(budget: PackSizeBudget, pack: PackResult): string[] {
     const errors: string[] = [];
 
     const packedMb = pack.size / 1e6;
     const entry = budget.budgets['packed_size_mb'];
+    const built = payloadIsBuilt(pack.files);
+    const pct = budget.regression_pct;
     if (entry === undefined) {
         errors.push('packed_size_mb: missing from the budget file — gate would pass vacuously');
+    } else if (built) {
+        // A BUILT payload is not the surface `max` describes, and comparing
+        // them is the category error `pack-size-budget.json` warns about in its
+        // own `measurement_conditions`: every cap in that file, `max: 9.1`
+        // included, was measured with `--ignore-scripts` on a tree with no
+        // `dist/cli/**`. The built surface it records separately is ~2 MB
+        // larger *by construction*, so a job that happens to build first turns
+        // a green branch red for a reason that has nothing to do with its diff.
+        // Measured 2026-08-30: main 8.985 (2715 entries, unbuilt) against a
+        // branch adding six source files at 9.922 (2827 entries) — the 112-file
+        // difference is `dist/cli` + `dist/cli-delegate`, not the diff.
+        //
+        // So the built payload is judged against the recorded BUILT figure,
+        // with the same creep percentage. That keeps teeth on the surface a
+        // consumer installs instead of pretending the unbuilt cap covers it.
+        const baseline = recordedBuiltPackedMb(budget);
+        if (baseline === null) {
+            errors.push(
+                `packed_size_mb: measured ${packedMb.toFixed(3)} on a BUILT payload, and the budget `
+                    + 'file records no built-surface measurement to compare it against — the unbuilt '
+                    + 'cap does not describe this tree. Record one, or pack with --ignore-scripts.',
+            );
+        } else {
+            const ceiling = baseline * (1 + pct / 100);
+            if (packedMb > ceiling) {
+                errors.push(
+                    `packed_size_mb (BUILT surface): measured ${packedMb.toFixed(3)} regressed `
+                        + `>${String(pct)}% vs the recorded built figure ${String(baseline)} `
+                        + `(ceiling ${ceiling.toFixed(3)})`,
+                );
+            }
+        }
     } else if (packedMb > entry.max) {
         errors.push(`packed_size_mb: measured ${packedMb.toFixed(3)} exceeds budget ${entry.max}`);
     } else {
-        const pct = budget.regression_pct;
         const ceiling = entry.last_measured * (1 + pct / 100);
         if (entry.last_measured > 0 && packedMb > ceiling) {
             errors.push(
@@ -436,7 +490,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
     process.stdout.write(
-        `✅  pack size within budget — ${(pack.size / 1e6).toFixed(3)} MB packed, ` +
+        // The SURFACE is named on the green path too. A figure with no surface
+        // label is how two numbers for one lever start circulating, which is
+        // the confusion this budget file opens by warning about.
+        `✅  pack size within budget (${payloadIsBuilt(pack.files) ? 'BUILT surface, vs the recorded built figure' : 'UNBUILT surface, vs max'}) — ${(pack.size / 1e6).toFixed(3)} MB packed, ` +
             `${Object.keys(perSkill).length} skills, largest share ` +
             `${Math.max(...Object.values(perSkill).map((b) => (b / total) * 100)).toFixed(2)}%\n`,
     );
