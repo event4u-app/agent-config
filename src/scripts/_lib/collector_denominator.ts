@@ -498,9 +498,29 @@ export function machineId(userRoot?: string): string | null {
  * this schema's rule is that no field holds a foreign identifier. The hash is
  * one-way and the result is shaped as a UUID so `validateRecord` accepts it.
  */
+/**
+ * The per-process fallback episode, minted once.
+ *
+ * A fresh UUID per CALL was the defect: with no host session id in the
+ * environment, two `recordCapture` calls in one process landed in two
+ * episodes, so `dedup_key` scoping and the per-episode sequence counter both
+ * broke. It was invisible on a developer machine because the host exports
+ * `CLAUDE_CODE_SESSION_ID`, and it surfaced only on CI, where nothing does —
+ * which is the whole population of unattended runs.
+ *
+ * Memoised per process, not per file: a hook is one process per event, so the
+ * honest degradation without a host session is one episode per event rather
+ * than one episode per record. That is a coarser grouping, and it is a
+ * grouping.
+ */
+let fallbackEpisode: string | null = null;
+
 export function episodeId(env: NodeJS.ProcessEnv = process.env): string {
     const hostSession = env.CLAUDE_CODE_SESSION_ID ?? env.AGENT_CONFIG_SESSION_ID ?? '';
-    if (hostSession === '') return crypto.randomUUID();
+    if (hostSession === '') {
+        fallbackEpisode ??= crypto.randomUUID();
+        return fallbackEpisode;
+    }
     const digest = crypto.createHash('sha256').update(hostSession).digest('hex');
     return [
         digest.slice(0, 8),

@@ -28,6 +28,7 @@ import {
     pruneEpisodeCounters,
     pruneOpportunitiesOlderThan,
     readOpportunities,
+    episodeId,
     recordCapture,
     recordOpportunity,
     spoolPendingPath,
@@ -247,7 +248,14 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
         expect(start(userRoot).refusal).toBe('kill-switch-engaged');
     });
 
-    it('refuses to start when another collector holds the lock', () => {
+    // Store-gated, and the gate is not a convenience: `start()` probes the
+    // store BEFORE the lock, deliberately, so on a runtime without sqlite the
+    // lock branch is unreachable and the assertion below would be testing the
+    // probe. Measured: CI shards returned `store-unavailable` where a
+    // developer machine returns `lock-held`. The lock's own behaviour —
+    // held-by-live-process, contested-out, unwritable — is covered directly in
+    // `tests/scripts/collector_supervision.test.ts`, which needs no store.
+    it.skipIf(!isStoreAvailable())('refuses to start when another collector holds the lock', () => {
         enableCollector(userRoot);
         acquireRuntimeLock(userRoot, process.pid);
         expect(start(userRoot).refusal).toBe('lock-held');
@@ -263,6 +271,32 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
 
     // removing_this_constraint_reds_it: drop the `isOptedOut` guard from
     // `isCollectorEnabled` — opt-out stops being terminal.
+});
+
+describe('episodeId — one episode per process when the host names none', () => {
+    it('returns the SAME id on every call with no session id in the environment', () => {
+        // The unattended case, and the one a developer machine cannot see: the
+        // host exports `CLAUDE_CODE_SESSION_ID`, CI exports nothing. A fresh
+        // UUID per call put two records of one process in two episodes, which
+        // is what `dedup_key` scoping and the sequence counter are keyed on.
+        const bare = {} as NodeJS.ProcessEnv;
+        const first = episodeId(bare);
+        expect(episodeId(bare)).toBe(first);
+        expect(episodeId({} as NodeJS.ProcessEnv)).toBe(first);
+    });
+
+    // removing_this_constraint_reds_it: replace the `??=` memo with a bare
+    // `crypto.randomUUID()` — this test and the numerator test both red.
+
+    it('still DERIVES the id when the host names a session, and derives it stably', () => {
+        // The memo must not shadow the derived path: a real host session id is
+        // the grouping key, and two processes sharing one session must agree.
+        const env = { CLAUDE_CODE_SESSION_ID: 'abc-123' } as NodeJS.ProcessEnv;
+        const derived = episodeId(env);
+        expect(derived).toBe(episodeId(env));
+        expect(derived).not.toBe(episodeId({} as NodeJS.ProcessEnv));
+        expect(derived).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
 });
 
 describe('4.1 — the denominator is independent of the daemon', () => {
@@ -440,6 +474,10 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         }
         // The sequence orders records within one episode, which is what
         // `dedupKey` scopes; two captures in one episode must not collide.
+        // Same episode WITHOUT a host session id in the environment, which is
+        // the CI case and was the defect: `episodeId` minted a fresh UUID per
+        // call, so this passed only on a machine whose host exports
+        // `CLAUDE_CODE_SESSION_ID`.
         expect(spooled[0]?.episode_id).toBe(spooled[1]?.episode_id);
         expect(spooled[0]?.sequence).not.toBe(spooled[1]?.sequence);
     });
