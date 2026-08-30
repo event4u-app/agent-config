@@ -351,7 +351,18 @@ describe('the diff scope is a THIRD dead-scope, not an empty set', () => {
 
 describe('the shipped tree', () => {
     it('holds the discipline on every non-grandfathered corpus', () => {
-        const r = evaluate(REPO);
+        // `HEAD`, explicitly, and it is not a workaround — it is what this
+        // assertion means. The subject here is the CORPUS, not the diff: every
+        // non-grandfathered file must satisfy the count discipline whatever
+        // changed. `HEAD...HEAD` is an empty diff that always resolves, so the
+        // forward-only rules stay quiet and the count rules run over all 100.
+        //
+        // Leaving it to the default resolver made this test environment-
+        // dependent and it failed on CI: the Node Tests job's checkout exposes
+        // neither a remote-tracking main nor GITHUB_BASE_REF, so resolveBaseRef
+        // returns null and `evaluate` correctly refuses — a refusal about the
+        // runner, in a test about the corpus.
+        const r = evaluate(REPO, 'HEAD');
         expect(r.violations).toEqual([]);
         expect(r.scanned).toBeGreaterThanOrEqual(90);
     });
