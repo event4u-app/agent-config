@@ -12,6 +12,9 @@ relates:
   - slug: road-to-experience-loop-broadening
     relation: extends
     note: "owns the 0.27% capture figure and names a collector as the missing writer; this file is that collector"
+  - slug: road-to-journal-host-capture-measurement
+    relation: extends
+    note: "receives that roadmap's step 1.2 dispatch-counter item, merged in on AI-council verdict 2026-08-29; Phase 4 is where it lands"
 depends:
   - road-to-runtime-governance-flip
 # relates: the governance roadmap is a HARD dependency — every step here is a
@@ -341,6 +344,36 @@ one for a design note under review: § 2's rule is that unanswered is
       verify: a test asserts the declared behaviour — either concurrent operation is correct and proven, or it is prevented and the prevention is proven.
 
 ## Phase 4 — Implement, default-off
+
+> **Received item, AI council 2026-08-29 (DEGRADED — 1 of 2 seats, quorum 1;
+> `openai` absent, `os_error: ENOBUFS` then reported unavailable by the free
+> probe).** `road-to-journal-host-capture-measurement` step 1.2 — *"If no host
+> count exists, build the narrowest thing that counts"*, a per-event dispatch
+> counter with no payload and no free-form field, hook-invocation writes only —
+> was deferred there and **merged into this phase** rather than cancelled.
+>
+> Its antecedent went false in that roadmap: six `(claude, event)` cells turned
+> out to publish a host-readable count, so no counter was owed for ITS
+> measurement. The council refused to mark the step `[x]` on the grounds that a
+> vacuous discharge is *"cancellation wearing a checkmark"* under
+> `roadmap-progress-sync` Iron Law 3, and refused a new roadmap as +1 estate for
+> an instrument nobody currently needs. It chose this phase because **the item is
+> already owed here**: step 1.2 item 1 of this roadmap requires that *"the
+> denominator must be produced by a writer that cannot fail in the same way the
+> numerator does; a collector counting its own opportunities is the failure
+> `road-to-journal-host-capture-measurement` exists for."* That writer is the
+> same instrument, for the same reason.
+>
+> **This note adds no step and changes no acceptance criterion.** It records
+> where the item lives so it is not lost, which is the whole point of the merge
+> disposition. Step 4.1's denominator writer discharges it; if 4.1 ever ships
+> without one, this item is the open half.
+>
+> Recorded dissent, carried across with the verdict: if host-published counts
+> turn out to be permanent infrastructure, the merged item never activates and
+> documenting the false antecedent would have been better. The seat declined to
+> assume permanence — *"platforms change, deprecation happens."*
+
 
 - [ ] **4.1 Build the collector against the contracts above.** Default-off, and
       default-off is a tested property rather than a config line nobody

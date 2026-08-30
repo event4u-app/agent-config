@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -101,12 +103,59 @@ that same table routes to the council. This file is that promotion.
       gap in the survey.
       verify: DONE — `agents/evidence/analysis/host-denominator-obtainability-2026-08-29.md`. The table covers all **80** `(platform, event)` cells with **no blank**: 6 `counted`, 34 `emits-but-uncounted`, 40 `not-bound` (43 bound = counted + emits-but-uncounted). Bindings were read from `src/scripts/hook_manifest.yaml` at execution rather than carried. The `counted` six are on `claude` and rest on a HOST artefact this package does not write — the per-session transcript at `~/.claude/projects/<slug>/<session-id>.jsonl`, which exists whether or not any hook is bound; 156 were present for this project and the newest was analysed record by record, yielding `session_start` (1/file), `user_prompt_submit` (3 real prompts, discriminated from 163 `user` records that are tool results), `pre_tool_use`/`post_tool_use` (164 `tool_use` blocks) and `subagent_start`/`subagent_stop` (0 Agent/Task calls — correct for that session). **`stop` was deliberately NOT classified `counted` although it looked reconstructable:** all 305 assistant records carry `stop_reason: tool_use` and none `end_turn`, so the field counts assistant MESSAGES while the hook fires once per TURN, and using it would have over-counted the denominator by about two orders of magnitude. The seven other platforms are `emits-but-uncounted` on an explicitly stated **absence of evidence within this package's reach** — no reader for a host-published emission count exists anywhere in the tree — never on a claim that those hosts publish nothing.
 
-- [ ] **1.2 If no host count exists, build the narrowest thing that counts.**
+- [~] **1.2 If no host count exists, build the narrowest thing that counts.**
       A counter that increments per dispatched event and nothing else — no
       payload, no free-form field, per the parent's 1.1 schema discipline. It is
       an instrument, so it is built as one: no resident process, hook-invocation
       writes only, per ADR-124's Class-A bar.
-      verify: NOT REQUIRED UNDER THE RESOLVED BLOCKER, AND DELIBERATELY LEFT OPEN RATHER THAN CANCELLED. This step is conditional — *"if no host count exists"* — and `host-denominator-obtainability` resolved to **(b)**, which measures only cells where a host count DOES exist. The 1.1 survey found six such cells, so the antecedent is false for the population 2.1 will measure and no dispatch counter is owed. It is not flipped to `[-]`: converting a step to cancelled is an **owner-reserved** disposition under `roadmap-progress-sync` Iron Law 3's preservation test, which no council verdict and no autonomous mandate lifts. It therefore stays `[ ]` with this note, and the owner decides whether it is cancelled or kept as the fallback instrument should a future survey find the six cells unusable. <!-- The council explicitly rejected building this counter AND reporting it as a host rate — option (a) — as a category substitution; that refusal is about the REPORTING, not about the instrument, so the step is moot rather than forbidden. -->
+      verify: NOT REQUIRED UNDER THE RESOLVED BLOCKER. The step is conditional — *"if no host count exists"* — and `host-denominator-obtainability` resolved to **(b)**, which measures only cells where a host count DOES exist. The 1.1 survey found six such cells, so the antecedent is false and no dispatch counter is owed.
+      <!-- deferred-resolution: merged-into=road-to-supervised-telemetry-collector -->
+
+      **Deferred and RESOLVED by merge, AI council 2026-08-29 (DEGRADED — 1 of 2
+      seats present, quorum 1; the `openai` seat did not answer, see below).**
+      Recorded in full because `roadmap-progress-sync` Iron Law 3 requires a
+      `[~]` resolution to carry its criterion, its options, the verdict, the
+      rationale, the dissent, the destination, and what closes it.
+
+      - **Criterion, verbatim:** *"If no host count exists, build the narrowest
+        thing that counts."*
+      - **Blocker it hangs off:** `host-denominator-obtainability`, resolved to
+        **(b)** — measure only the cells whose host publishes a count.
+      - **Options put to the council:** (A) `[x]` vacuously discharged, since a
+        conditional whose condition resolved false is satisfied rather than
+        dropped · (B) `[~]` then carry item and blocker into a NEW named
+        follow-up roadmap · (C) `[~]` then MERGE into existing active work,
+        concretely `road-to-supervised-telemetry-collector`, whose Phase 4
+        already owes a denominator writer for its own capture metric · (D) leave
+        `[ ]`, do not archive, keep the roadmap active with one permanently open
+        conditional step. Conversion to `[-]` cancelled was named as
+        **owner-reserved** and was not put as an option the council could take.
+      - **Verdict: (C).** Merge into `road-to-supervised-telemetry-collector`.
+      - **Rationale, the seat's own:** *"Vacuous discharge (option A) is formally
+        correct in propositional logic but practically illegitimate under Iron
+        Law 3. The rule isn't governing logical propositions; it's preventing
+        loss of planned work. A reader seeing `[x]` step 1.2 expects a counter
+        was built. Using `[x]` because 'the conditional didn't fire' bypasses the
+        owner-reserved `[-]` fence via formal-logic loophole."* Asked directly
+        whether (A) was cancellation wearing a checkmark, the seat answered
+        **yes**. (B) was refused as +1 active estate for an instrument nobody
+        currently needs; (D) as a permanently open step.
+      - **Dissent, recorded rather than resolved away:** the same seat noted that
+        if host counts are permanent infrastructure that will never disappear,
+        the merged item becomes deferred work that never activates — *"that's
+        worse than documenting the false antecedent and moving on"* — and that
+        (A) would then be defensible. It declined to assume permanence:
+        *"platforms change, deprecation happens."* The activation path is
+        preserved at near-zero cost against that uncertainty.
+      - **Destination:** `road-to-supervised-telemetry-collector`, which is
+        active (`status: ready`), is not being archived by this change, and now
+        carries the reciprocal `relates: [{slug: road-to-journal-host-capture-measurement, relation: extends}]`
+        link the archival sweep requires of a `merged-into` annotation.
+      - **What closes it there:** that roadmap's Phase 4 builds the denominator
+        writer its own 1.2 metric definition item 1 requires — *"the denominator
+        must be produced by a writer that cannot fail in the same way the
+        numerator does"* — which is the same instrument this step describes, for
+        the same reason. Its Phase 4 heading now records the receipt.
 
 - [x] **1.3 State the population the rate is over, before measuring it.**
       An opted-in install and a default install are different populations and
@@ -117,15 +166,49 @@ that same table routes to the council. This file is that promotion.
 
 ## Phase 2 — The measurement, published whichever way it lands
 
-- [ ] **2.1 Run the measurement and publish it.** A low host capture rate is the
+- [x] **2.1 Run the measurement and publish it.** A low host capture rate is the
       outcome this work is most likely to produce and is a complete result.
       Publish it as measured; do not re-scope the claim to fit the number.
-      verify: the evidence page carries numerator, denominator, population and configuration, and is typed with an `<!-- evidence-type: analysis -->` marker.
+      verify: DONE — `agents/evidence/analysis/journal-host-capture-2026-08-29.md`, typed with an `<!-- evidence-type: analysis -->` marker on line 1. Its first caption carries all four required fields: numerator **0** journal records, denominator **152,151** host-emitted events on the five journal-bound counted cells (**296,216** across all six), population **2,281 Claude Code sessions** on one machine over **2026-07-30..2026-08-29**, install configuration **shipped defaults** with `hooks.runtime_journal.enabled` absent from every settings layer present. **Rate: 0.00 %.** The number was published as measured and the claim was not re-scoped to fit it — the low outcome the step predicted is exactly what landed, and it replaces `undefined` with a zero over a KNOWN denominator, which is the difference between a result and a non-number. The instruments are `src/scripts/_lib/host_denominator.ts` (typed denominator record, rules pinned at v1), `src/scripts/measure_host_capture.ts` (re-runnable: `./scripts-run src/scripts/measure_host_capture --json`), and `tests/scripts/host_denominator.test.ts` (20 tests green, `npm run typecheck` clean).
 
-- [ ] **2.2 Close or restate the parent's 1.4 in this roadmap's own words.**
+      **The opted-in half is a MEASURED empty population, not a missing
+      number.** 1 settings layer observable on the measuring machine, 0 with the
+      key `true`, so there is no population for an opted-in rate to be over. The
+      council of 2026-08-29 required that wording specifically over
+      "unmeasurable": *"'population size = 0 in observable scope' (measured) …
+      the former is honest; the latter invites misreading."*
+
+      **Closure decision, AI council 2026-08-29 (DEGRADED — 1 of 2 seats;
+      `openai` returned `os_error: ENOBUFS` and the free estimate probe then
+      reported it `unavailable`, so it was not re-attempted. Quorum 1, met. This
+      is not convergence).** Options: (A) publish the default rate as measured
+      and the opted-in half as a documented empty population, closing 2.1 on the
+      Goal's own *"or the reason it cannot exist is published in its place with
+      the same rigour"* clause · (B) refuse to close on a null and produce the
+      opted-in figure by replay · (C) leave 2.1 open and park the roadmap in
+      `later/`. **Verdict (A), with three additions the seat made mandatory** —
+      scope the default result explicitly to one machine / one platform / six
+      cells; state the opted-in half as a measured empty population rather than
+      as unmeasurable; caption the default 0 % as a product-adoption /
+      configuration result rather than a capture-quality one. All three are
+      implemented in the evidence page. (B) was refused because a replay
+      re-derives the parent's known ~100 % dispatch figure over a bigger
+      denominator and hands a reader a number they can mistake for a host rate —
+      the substitution AC-4 forbids. (C) was refused as making completion hostage
+      to an external condition with no timeline. **Counter-argument, recorded at
+      the seat's insistence rather than resolved away:** the earlier unanimous
+      (c) verdict required *two rates*, and a documented null is not literally a
+      rate, so this closure rests on reading the Goal's alternative clause as
+      overriding (c)'s numeric half for the opted-in population. That reading is
+      written down so a later reader does not mistake the closure for a silent
+      violation of a unanimous verdict. *Revisit-if:* any machine runs with
+      `hooks.runtime_journal.enabled: true`, at which point the pair can be
+      completed by re-running the same script there.
+
+- [x] **2.2 Close or restate the parent's 1.4 in this roadmap's own words.**
       Either the number 1.4 asked for now exists, or the reason it cannot is
       stated at the same rigour the deferral was.
-      verify: this roadmap's acceptance criteria are decidable from the evidence page alone, without reading the parent.
+      verify: DONE. **The number 1.4 asked for now exists** for the default population: a host capture rate of 0.00 % over 152,151 host-emitted events, replacing the `undefined` the parent's revision 2 published. The acceptance criteria below are decidable from `journal-host-capture-2026-08-29.md` alone, without reading the parent — the 80-cell obtainability table is restated on that page rather than pointed at (AC-1), the record contract and its observed sensitivity probes are on it (AC-2), the four-field caption is its opening paragraph (AC-3), the non-comparability of the dispatch figure has its own section (AC-4), and both blocker choices are restated there (AC-5). What 1.4 asked for and did NOT get is an opted-in rate, and that half is stated at the rigour the deferral was: a measured population of zero, with the install census that measured it and the `Revisit-if` that would complete it.
 
 ## Blockers
 
@@ -257,21 +340,26 @@ that same table routes to the council. This file is that promotion.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A per-(platform, event) obtainability table exists in the evidence
+- [x] AC-1 — A per-(platform, event) obtainability table exists in the evidence
       page with no blank cell, so "we did not look" and "the host does not
       publish it" are distinguishable.
-- [ ] AC-2 — A denominator exists and its record type is asserted against a
+      MET: all 80 cells in `journal-host-capture-2026-08-29.md` § AC-1 (6 `counted`, 34 `emits-but-uncounted`, 40 `not-bound`), plus the derivation record in `host-denominator-obtainability-2026-08-29.md`. The `stop` row was re-opened on new evidence during 2.1 — a host-authored `hookInfos` record naming `--event stop` — and still resolves to `emits-but-uncounted` because that artefact is written selectively and under-counts; the three refused candidates read 305 / 95 / 7 on one session and are recorded in code as `STOP_CANDIDATES`.
+- [x] AC-2 — A denominator exists and its record type is asserted against a
       committed key set, with a free-form write failing to type-check — the same
       privacy property the journal's own record carries.
-- [ ] AC-3 — The published rate carries numerator, denominator, population and
+      MET: `HostDenominator` in `src/scripts/_lib/host_denominator.ts`. `DENOMINATOR_RECORD_KEYS` is bound to the type in both directions; `_RecordCarriesNoFreeFormField` applies the journal's own exported `NoFreeForm` guard — imported, not re-implemented, so the two halves of the ratio cannot drift. **Observed, not argued:** admitting `payload` to the record reds `npm run typecheck` with `host_denominator.ts(220,5): error TS2344: Type 'false' does not satisfy the constraint 'true'` and reds 10 of 20 tests; a second, independent probe binding `journal-record` to `claude` `pre_tool_use` reds exactly 1 of 20 — the manifest-binding assertion — with the other 19 green, so each probe is targeted rather than a blanket break. Both reverted from explicit backups and re-verified: 20/20 green, typecheck clean, eslint clean.
+- [x] AC-3 — The published rate carries numerator, denominator, population and
       install configuration in one caption; a reader can tell which population
       it is over without reading any other file.
-- [ ] AC-4 — The dispatch-path figure is not reported as the host figure
+      MET: the first block-quote of the evidence page carries all four in one caption, and the second does the same for the opted-in population. Both are labelled, and the page states in its own words that neither is "the" capture rate.
+- [x] AC-4 — The dispatch-path figure is not reported as the host figure
       anywhere in the evidence page, and the page says why the two are not
       comparable.
-- [ ] AC-5 — Both blockers above carry a recorded choice, or this roadmap closes
+      MET: § AC-4 of the evidence page. The 100.00 % / 1,000-envelope figure appears only inside that section, named as a floor on the writer, with the reason the two are incomparable stated as a difference of kind — the dispatch denominator is authored by the test, this one by the host — rather than of size. The same section records that a replay was considered as a closure option and refused for the same reason.
+- [x] AC-5 — Both blockers above carry a recorded choice, or this roadmap closes
       on the `host-denominator-obtainability` option (c) finding with the survey
       as its evidence.
+      MET on the first branch: `host-denominator-obtainability` → **(b)**, resolved by a measurement that falsified the prediction attached to the competing option; `measurement-population-default-off` → **(c)**, unanimous 2/2. Both `Status: resolved` with the option named and both `Resolved when` clauses met.
 
 ## What this roadmap will NOT build
 

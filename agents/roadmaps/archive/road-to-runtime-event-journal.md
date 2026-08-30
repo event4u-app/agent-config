@@ -143,9 +143,15 @@ accepts.
       construction*; it is now bound, exercisable, and measured on the path that
       exists.
 
-      **Carried to** `agents/roadmaps/road-to-journal-host-capture-measurement.md`
-      — an ACTIVE roadmap, `status: ready`, carrying both closers as blockers
-      with recorded option sets and the `session_fallback` finding.
+      **Carried to** `agents/roadmaps/archive/road-to-journal-host-capture-measurement.md`
+      — at the time of the carry an ACTIVE roadmap (`status: ready`) carrying
+      both closers as blockers with recorded option sets and the
+      `session_fallback` finding. It has since **closed and been archived**
+      (2026-08-29): both blockers resolved, the host capture rate published at
+      `agents/evidence/analysis/journal-host-capture-2026-08-29.md`. The path
+      above is an archive path for that reason, and this sentence was corrected
+      to match it — an R2 completion review caught the prose still calling an
+      archived file active one line below the path that says otherwise.
 
       > **CORRECTED 2026-08-29 by AI council decision** (anthropic + openai,
       > **4 verdicts across two independent runs, no dissent**). This item was

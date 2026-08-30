@@ -1,10 +1,10 @@
 <!-- evidence-type: analysis -->
 # Autonomous roadmap-drain runs — 2026-08-29
 
-> **Two runs landed on this date and both are recorded here.** Run 1 is
-> immediately below and is unchanged. Run 2 is appended at the end. The file was
-> appended to rather than rewritten: overwriting run 1's record to report run 2
-> would be the failure this document exists to prevent.
+> **Three runs landed on this date and all three are recorded here.** Run 1 is
+> immediately below and is unchanged; Run 2 and Run 3 are appended in order. The
+> file is appended to rather than rewritten: overwriting an earlier run's record
+> to report a later one would be the failure this document exists to prevent.
 
 ---
 
@@ -298,3 +298,182 @@ it was correct, and the review it forced found a live partial-disclosure defect
 in the very module written to prevent disclosure. While writing the comment that
 explains that fix, four real source names were pasted into it and caught by the
 gate — the same defect, committed inside its own repair.
+
+---
+
+# Run 3 — third drain run, 2026-08-29 (evening)
+
+Same mandate: one PR per roadmap, every open decision to the AI council, no user
+in the loop. Two delegated subagents plus the lead, three worktrees.
+
+## Queue, recomputed — and the seed was stale again
+
+The brief again supplied the `c536dbd` table of 36 roadmaps. Live inventory at
+`origin/main` (`63d06b7eb`): **7** active files, **none** of them in that table.
+Recomputed order per the brief's own rule (>= 10 % descending, then < 10 %
+by ascending complexity then ascending checkbox count):
+
+| # | Roadmap | Start | Owner this run |
+|---|---|---|---|
+| 1 | source-silence | 9/26 | subagent A |
+| 2 | journal-host-capture-measurement | 2/10 | subagent B |
+| 3 | supervised-telemetry-collector | 5/28 | subagent B |
+| 4 | experience-loop-broadening | 1/47 | lead |
+| 5 | capability-native-execution | 2/54 | lead |
+| 6 | governed-harness-evolution | 0/58 | lead |
+| 7 | inbox-harvest-…-e-council-topology-evidence | 4/77 | lead + subagent C |
+
+## Pull requests
+
+| PR | Roadmap | Progress | CI |
+|---|---|---|---|
+| #1724 | experience-loop-broadening | 1/47 → 3/47 | green 43/43 · **merged** |
+| #1725 | capability-native-execution | 2/54 → 3/54 | green 31/31 · **merged** |
+| #1726 | governed-harness-evolution | 0/58 → 1/58 | green 5/5 · **merged** |
+| #1727 | council-topology-evidence | 4/77 → 6/77 | green 6/6 |
+| #1728 | source-silence | 9/26 → closed + archived | required check green |
+| #1729 | journal-host-capture-measurement | 2/10 → closed + archived | required check green |
+| #1730 | supervised-telemetry-collector | 5/28 → 13/28 | required check green |
+
+The three merges at 17:28 were **not performed by this run.** The mandate covered
+opening one PR per roadmap; a trunk merge is Hard-Floor under
+`non-destructive-by-default` and was never taken autonomously.
+
+## Council sessions
+
+**One session run by the lead** — 2 rounds, $0.00, both seats
+subscription-authed, quorum 2/2 after the run, blind chairman. Three decisions:
+
+- **D1, outcome-vocabulary reconciliation (roadmap step 1.3).** The seats
+  **split** — anthropic leaned (c) unify phase+step, openai (b) map-don't-unify —
+  and named the **same discriminator**: trace the producers before choosing. The
+  trace settled it toward **(b)**, against a preference rather than by one: three
+  distinct subjects (phase / step / run), all three produced today, one
+  cross-domain mapping already in the tree, and a superset would admit states
+  that are nonsense for their subject. Anthropic's dissent is preserved as the
+  registry module's own `revisit-if`.
+- **D2, audit-log schema bump — (a) additive, `schema_version` stays 1**, 2/2
+  convergent. Both seats called the roadmap's own step-1.2 wording a misreading:
+  the supersede clause governs corrections, and restating history would
+  fabricate skill data never captured.
+- **D3, `clean-no-op` in the report — yes, as a tracked subtype of `neutral`**,
+  2/2 convergent, plus a per-asset attribution rule the roadmap had not asked
+  for.
+
+Both seats independently confirmed none of the three crosses an owner-reserved
+boundary.
+
+**One session run by subagent B** — `lifecycle-ci-runner-provisioning`,
+unanimous 2/2: **(b)** run the lifecycle suite on the one platform CI provides,
+record the other as **unverified**. Both rejected (c) explicitly as the "presence
+check masquerading as proof" step 5.2 exists to prevent. Two binding conditions
+attached, the sharper one from openai: the unverified platform stays out of
+release claims **even if its static fallback appears to work**.
+
+## Three blockers NOT taken to the council, on purpose
+
+`merge-authority`, `b-adr-088-external-runtime-federation` and
+`lifecycle-ci-runner-provisioning` all already carried fresh 2026-08-29
+2/2-convergent verdicts whose **residual half the council explicitly refused as
+owner-reserved** — narrowing an accepted ADR floor, and settling a
+human-in-the-loop promotion guarantee. Re-running them for a different answer is
+verdict shopping under `src/rules/evaluator-independence.md`. They were left as
+recorded. This is the brief's §5 condition met, not avoided.
+
+## Defects found that no roadmap step predicted
+
+1. **`docs/contracts/audit-log-v1.md:77`** claimed its outcome enum *"Mirrors
+   `Outcome` from `work_engine.directives`"* — false in both halves (no such
+   module path; the real enum carries `partial` and neither `skipped` nor
+   `error`), and false since the contract was created in **PR #183**.
+2. **The same contract named a privacy-floor enforcer that exists in no tree**
+   (`tests/contracts/test_audit_log_redaction.py`). Replaced with what is true:
+   privacy by construction on two validated builder paths, unscanned, and a
+   third producer would not be caught.
+3. **`extract_audit_patterns.ts:39`** typed `outcome` as bare `string`, so a typo
+   became its own pattern silently.
+4. **Blocker `b-adr-088` carried two contradictory `Resolved when` fields**, and
+   `lint_roadmap_blockers` was green **because of** the stale one: the amendment
+   had renamed the field out of the linter's literal-label regex
+   (`lint_roadmap_blockers.ts:52`), so the field a reader was meant to follow
+   never satisfied the contract. Verified in both directions.
+5. **A guarded duplicate of the run vocabulary** at `runtime_journal.ts:312`,
+   found by the new anti-duplicate check on its first run.
+6. **Two `[x]` steps on the supervised-telemetry roadmap whose checks could not
+   go red** — a growth-budget test asserting something true of every
+   `readdirSync` result by definition, and a transition-2 test that passed for a
+   migration consisting of a version stamp. Both `verify:` lines were rewritten,
+   and the risk register gained a **rank-1** row: the only risk in it observed to
+   have materialised.
+7. **`agents/evidence/reviews/*.findings.md` re-binds moved only two of four
+   input hashes** on two independent branches. Gate R2 caught both. Cause is the
+   procedure, not either branch: nothing re-derives the manifest half, and the
+   visible marker line is the half an author naturally edits.
+8. **A `(re-bound)` parenthetical inside a `scope:` value** broke
+   `parseMarkerLine` (`check_completion_review.ts:328` requires exactly 64 hex
+   then a pipe), so `lint_evidence_artifacts` reported an artefact as untyped —
+   asking for a marker the file already carried, in the extended `v1` form every
+   committed review artefact uses.
+
+## One reported correction rejected
+
+The council-surface pass reported step 0.5's *"80 tests, all green"* as actually
+**47**. It is **80**: `npx vitest run
+tests/scripts/one_resolver_invariant.test.ts` prints `Tests  80 passed (80)`; the
+47 counts line-anchored `it(` blocks and misses 33 parameterised `it.each` cases.
+Accepting it on report would have replaced a true number with a false one. The
+rejection is recorded in the roadmap, not silently dropped.
+
+## Delegation failure, named as such
+
+Both roadmap subagents terminated on an **API spend limit** (HTTP 429, session
+limit resetting 21:10 Europe/Berlin), not on a substantive blocker — one
+mid-sentence before committing its review dispositions, the other before its risk
+register pass. Neither loss was silent: their worktrees carried 22 and 9 commits
+respectively, the lead picked both up, re-ran the gate batteries independently,
+and finished them. Nothing in PRs #1728–#1730 is asserted on a delegate's word.
+
+## Descopes and deliberate non-actions
+
+- **No merges.** Hard Floor; the mandate did not cover them.
+- **No force-push, so one non-required check stays red.** `lint commit subjects`
+  on #1728 flags a subagent commit subject containing the blocklisted token
+  `tmp`. The gate offers no allowlist and carve-outs cover only merge and revert
+  commits, so the only fix is a reword — a rewrite of published history plus a
+  force-push, which is Hard-Floor and additionally would invalidate the review
+  artefacts' `diff_sha` bindings and flatten two merge commits. Measured before
+  deciding: the repo ruleset makes **exactly one** check merge-blocking
+  (`Sync + Generate Tools Consistency`), which is green on all three PRs, so the
+  red check does not block the merge. Left for the maintainer, with the cost
+  stated.
+- **Steps 0.5 / 0.6 of capability-native-execution left open** — both require
+  their commit to *precede* any resolver or adapter code, so they do not belong
+  in the same PR as a step reasoning about resolver design.
+- **Step 1.2 of experience-loop-broadening left open** — D2 unblocks it, but its
+  own clause demands a fixture proving real emission from a live phase, and
+  explicitly refuses a "collector exists" proxy.
+- **The twelve contradictions in `docs/contracts/ai-council-config.md`** are
+  recorded in the baseline artefact, not fixed: steps 0.1 and 0.2 are
+  read-and-record steps, and a contract rewrite is its own change.
+- **Three roadmaps stay `status: draft`.** Promoting any of them would raise
+  `active_roadmaps` past its floor of 4 with no disposal in the same change.
+
+## Honest scope — the directory is not empty and could not be
+
+Four roadmaps remain active and three of the seven are large structural drafts
+(47, 54, 58 and 77 steps; ~236 open steps between them). The mandate's terminal
+condition — an empty roadmap directory — was not reachable in this run, and
+reaching it by descoping 236 legitimate steps into stubs would be the silent-green
+failure every gate in this repository exists to prevent. What was delivered is
+seven PRs of real, gate-verified progress, two roadmaps closed and archived, five
+council decisions recorded with their dissent, and eight defects found that no
+step had predicted.
+
+## Inherited work left untouched
+
+The main checkout carried uncommitted work from an earlier session — an
+un-archival of `road-to-published-number-truth`, a promotion of
+`road-to-ten-across-the-board` out of `later/`, and reverts to four scripts plus
+`docs/CLAIMS.md`. All work this run happened in worktrees; that state was left
+exactly as found. It is not lost, and it is in no PR.
+
