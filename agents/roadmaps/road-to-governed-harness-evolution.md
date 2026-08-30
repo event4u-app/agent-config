@@ -1084,6 +1084,10 @@ once.
   clauses name, and **the gap is real** — nothing in Phase 0 forces a future
   runner to call `assertWithinBudget` or `discloseToProposer`. Both seats asked
   for a call-site acceptance criterion; **AC-8 below is it.**
+  (**Renumbered to AC-11 on 2026-08-30** — it collided with a pre-existing AC-8
+  about programme success criteria, so this sentence pointed at two different
+  criteria. The original wording is kept above rather than rewritten, and this
+  parenthesis is the repointing; see AC-11 for the record.)
 - **Where they split.** (b): the clauses are BEHAVIOURAL, a test that invokes
   the guard and observes the throw is a run of it, and reopening holds Phase 0
   hostage to a later artefact. (d): the clauses say *"a run"* that *"exits
@@ -1262,7 +1266,7 @@ once.
 
 ## Acceptance Criteria
 
-- [ ] AC-8 — The runner routes every governed action through the Phase-0 guards,
+- [ ] AC-11 — The runner routes every governed action through the Phase-0 guards,
       proven end-to-end rather than by inspection: a holdout value reaching
       proposer context and a plan configured past the pre-registered ceiling each
       terminate the process non-zero **before any external call**. Added
@@ -1270,6 +1274,15 @@ once.
       where they split on whether 0.4/0.5 may close without it — a guard nothing
       calls has no coverage, and Phase 0 alone cannot force a later phase to
       call it.
+      **RENUMBERED 2026-08-30, from AC-8 to AC-11 — it collided with the
+      pre-existing AC-8 below.** Both criteria carried the number 8 and neither
+      referenced the other, so `blocker: guard-call-site-integration`'s
+      *"AC-8 below is it"* pointed ambiguously at two different criteria — one
+      about guard call sites, one about programme success criteria and the
+      evolution-ROI figure. The blocker text is left as written rather than
+      silently repointed; **it means this criterion**, which is the one added on
+      its own request and in the same change. Renumbering rather than merging
+      because the two test unrelated things.
 
 - [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
@@ -1279,9 +1292,33 @@ once.
 - [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
-- [ ] AC-4 — A candidate changing two primary dimensions is refused by the
+      **Two of its three verbs are met, and it stays OPEN on the third rather
+      than being read generously.** *Materialised* and *destroyed* with no diff
+      in the original tree: 3.1, five candidates, asserted by `git status
+      --porcelain` over the four surface paths plus a byte snapshot. *Sabotage
+      exits non-zero*: 3.1's three-phase test — clean passes, sabotage reds
+      naming only the guilty candidate, un-sabotage passes again. **`evaluated`
+      is not met**: no evaluation stage exists until Phase 4, so nothing has
+      evaluated a candidate. Closing this now would be the generous reading the
+      roadmap's own § blocker text warns about — *"a detector that never got
+      built reads as one that passed"*.
+- [x] AC-4 — A candidate changing two primary dimensions is refused by the
       schema, and "mutated" is not readable as "accepted" anywhere in the data
       model.
+      **Met 2026-08-30 by 3.2 and 3.4, both halves.** First half: the arity is
+      in the TYPE — `CandidateRecord.dimension` is a scalar, so a two-dimension
+      candidate is not expressible, and `parseCandidateRecord` additionally
+      refuses a `dimensions` key by name, an array `dimension` even with one
+      member, and cross-parsing with `ConsolidationRecord` (which itself needs
+      ≥ 2 **distinct** dimensions, so it is not an escape hatch). Second half:
+      `isAccepted` (`candidate_record.ts:122`) is the single acceptance site and
+      reads only `ACCEPTED_STATE`; `requireLifecycle` refuses an absent state
+      rather than defaulting it; and `mutated` is an unrecognised lifecycle
+      value that is refused outright — the test *"an unrecognised lifecycle
+      value is refused"* names it explicitly, because `mutated` arriving where
+      `accepted` was expected is the reference-implementation defect 3.4 cites.
+      *"Existence is not acceptance"* asserts `isAccepted` false for all eight
+      non-promoted states.
 - [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
