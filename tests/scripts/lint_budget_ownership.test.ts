@@ -136,6 +136,12 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
     it('the corpus is 12 — the eleven JSON budgets plus the one named YAML', () => {
         // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
         // is exactly the glob-widening failure this mechanism exists to prevent.
+        //
+        // `capability-native-outcome-bars.json` does NOT join this corpus and
+        // that is checked rather than assumed: the glob matches `*budget*`, and
+        // an outcome-bar prereg is not a budget. It carries `owner` and
+        // `review_by` anyway — see its own shape check in
+        // tests/scripts/capability_native_outcome_bars.test.ts.
         expect(budgetFiles(CONFIG_DIR)).toHaveLength(12);
     });
 
