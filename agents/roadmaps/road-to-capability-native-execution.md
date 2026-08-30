@@ -87,7 +87,47 @@ policy.
 
 ## Phase 0 — Governance, collisions and a frozen corpus
 
-Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
+Merge-blocking. **AMENDED 2026-08-30, AI council 2/2 convergent** — the original
+line read *"Nothing in Phases 1-9 is authored before this phase closes"*, and it
+contradicted `b-adr-088-external-runtime-federation`'s own `Blocks:` field
+(*"Phase 6 Step 6.4's parked half. Phases 0-5 and 7-9 proceed"*). One of the two
+had to give, because step 0.2's remaining half is owner-reserved by a prior 2/2
+council ruling and no council may close it — so under the original wording this
+roadmap was permanently stalled at Phase 0 until a human wrote an ADR
+interpretation, while its own blocker said 45 of 54 steps were executable.
+
+The amended rule, in the wording openai's seat refined:
+
+> Later phases may proceed once all Phase 0 prerequisites **within current
+> authority** are complete, except that **no work may implement, expose, depend
+> on, or assume availability of any ADR-088-reserved capability**.
+
+Phase 0 and step 0.2b stay **visibly incomplete**. "Closed for sequencing
+purposes" was rejected by both seats as giving one phase two meanings of closed;
+what changes is the gate's condition, not the step's status.
+
+**What the exception forbids, named rather than left to Step 6.4's scope.** No
+capability manifest entry, schema member, generated artifact, fixture, public
+type, test or documentation line may name, reserve a slot for, or assume the
+availability of `semantic-single-step` or `agentic-subflow`, and none may record
+the four deterministic browser-engine adapters as outside ADR-088's boundary.
+openai's seat named the leak path specifically: the disputed interpretation can
+be embedded in public types, fixtures, generated artifacts or compatibility
+contracts long before Phase 6, at which point discovering it at implementation
+time is too late. The conservative reading holds throughout.
+
+**Stop condition.** Any later-phase step that cannot be authored without taking
+a position on ADR-088's boundary halts and returns here rather than deciding it
+in passing.
+
+**Two things this amendment does NOT do**, stated because they are what a
+reviewer should check it against: it does not re-open the owner-reserved
+question — the 2026-08-29 split stands unchanged — and it authorises no work,
+because the roadmap is `status: draft` and sequencing structures planned work
+rather than greenlighting implementation. Both seats made that distinction
+independently; anthropic's called the draft status load-bearing, openai's split
+the three states this design was conflating (administratively executable,
+architecturally permitted, externally releasable).
 
 - [x] **0.1 Resolve the two naming collisions.** `execution.requires:` and a
       generated root `CAPABILITIES.yaml`. Either extend `runtime_requires` with
@@ -122,12 +162,35 @@ Merge-blocking. Nothing in Phases 1-9 is authored before this phase closes.
       different name. Both premises the blocker argued from were false; see the
       blocker for what survives.
 
-- [~] **0.2 Classify the roadmap against ADR-042, ADR-212 and ADR-088.** Each
-      of the three blockers below is answered with a written disposition, not an
-      assumption of non-overlap.
-      `verify:` each of the three blockers reads `Status: resolved` with a dated
-      disposition naming the ADR and the reason this work is or is not inside
-      its scope.
+- [x] **0.2a Classify the roadmap against ADR-042 and ADR-212.** Both blockers
+      answered with a written disposition, not an assumption of non-overlap.
+      `verify:` `b-adr-042-runtime-resolver` and `b-adr-212-declarative-routing`
+      each read `Status: resolved` with a dated disposition naming the ADR and
+      the reason this work is or is not inside its scope — both do, AI council
+      2/2, 2026-08-25.
+
+- [~] **0.2b Classify the roadmap against ADR-088.** The third disposition, and
+      the one no council may write.
+      `verify:` `b-adr-088-external-runtime-federation` reads
+      `Status: resolved`. It reads `open`, and stays open until an owner acts —
+      see the blocker's amended `Resolved when`.
+
+      **SPLIT from 0.2 on 2026-08-30, AI council 2/2.** The step bundled two
+      dispositions of DIFFERENT AUTHORITY under one checkbox, so its glyph could
+      only be wrong: `[x]` would claim an owner-reserved decision had been
+      taken, and `[~]` buried two completed council rulings inside a deferral.
+      anthropic's seat called the split *"mechanically honest"* — it resolves
+      the authority conflation structurally rather than by interpretation — and
+      openai's agreed it *"prevents the unresolved decision from being buried"*
+      while insisting, correctly, that the split alone does not fix the
+      sequencing rule: 0.2b stays `[~]`, so Phase 0 stays open and the header
+      had to be amended too. Both are done, and the header amendment is the
+      operative half.
+
+      **The step count moves 54 → 55 and no work was invented.** One checkbox
+      became two over the same subject; 0.2a's content is the two dispositions
+      that were already recorded as done under the old 0.2, quoted below
+      unchanged.
 
       **Two of three done, ADR-088 outstanding — deferred, not skipped.**
       `b-adr-042-runtime-resolver` and `b-adr-212-declarative-routing` both read
