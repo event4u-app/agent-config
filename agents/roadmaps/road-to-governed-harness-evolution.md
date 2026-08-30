@@ -284,7 +284,7 @@ once.
 
 ## Phase 1 — Observation and the activation ladder
 
-- [ ] **1.1 Record the activation ladder, not a flat category.** Per E4, either
+- [x] **1.1 Record the activation ladder, not a flat category.** Per E4, either
       the 4-state or the 6-state form; the recommendation is the 6-state one
       because Phase 6 measures delivery and `delivered ≠ visible` is exactly
       that axis. Add the precedence receipt naming why a step did not advance
@@ -294,14 +294,14 @@ once.
       a category and not a place.
       verify: a deliberately failing trigger eval is classifiable as *content*
       vs *activation* vs *adherence* from the recorded receipt alone.
-- [ ] **1.2 A missing state stays unknown.** `from-skipped-parent`, one line
+- [x] **1.2 A missing state stays unknown.** `from-skipped-parent`, one line
       and load-bearing: a state that was not observed must remain
       missing/unknown and is never silently converted to success. This is the
       ladder's soundness invariant; without it every downstream rate is inflated
       by exactly the capture gap.
       verify: a record with an unobserved rung reports `unknown` for it, and no
       aggregation folds `unknown` into a success denominator.
-- [ ] **1.3 Extend an existing carrier, do not add a store.** The receipt is a
+- [x] **1.3 Extend an existing carrier, do not add a store.** The receipt is a
       field addition to `audit-log-v1` or `decision-trace-v1`, migrated by
       `type=supersede` lines as that contract already prescribes.
       verify: the contract's schema table carries the new field and the
@@ -910,10 +910,25 @@ If this cut fails, the architecture is refuted before anything is built.
   either roadmap's scope changes such that acceptance authority moves.
 - **E3 — Budget ceiling** for 0.5 (candidates × trials × spend per run) and the
   sampling strategy for the 5.1 body variant.
-- **E4 — Activation-ladder arity:** 4 states or 6? Recommendation: 6, because
-  Phase 6 measures delivery and `delivered ≠ visible` is that axis. **Decide
-  together with E9 — they are one question**, and the evidence for both is in
-  `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
+- **E4 — Activation-ladder arity: DECIDED 2026-08-30, option B — SIX rungs,
+  twelve stages.** AI council, anthropic + openai, **2/2**. The argument that
+  carried it was not "more is better": option A requires EDITING Phase 1's exit
+  criterion in order to fit, and the distinction it drops is the one Phase 6's
+  delivery experiment exists to measure. Two independent roadmaps needing the
+  same distinction (`road-to-experience-loop-broadening` Phase 5 needs five
+  activation/adherence states) was the strongest evidence available, and the
+  cost asymmetry points the same way — an under-populated rung can be collapsed
+  later, a distinction never recorded cannot be added to historical data.
+  One seat attached a CONDITION and `src/scripts/_lib/activation_ladder.ts`
+  § `LADDER` is it: every rung maps to a receipt field and an observable
+  predicate, with an explicit `unknown`, asserted by
+  `tests/scripts/activation_ladder.test.ts`. Both seats rejected option (c) —
+  the coupling is definitional, not contingent: a 9-stage cascade has no
+  adherence stage.
+  **`revisit-if`:** any rung or stage lacks a distinct observable predicate, or
+  stays `unknown` across representative Phase 1 evaluations — in which case
+  keep the six rungs and reconsider the nine-stage cascade independently.
+  Brief: `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E5 — Minimality tie-break order,** and whether the fifth criterion (simpler
   mechanism) is in. The two parents' orders invert, so this changes outcomes.
 - **E6 — Curator operation set:** 4 ops or 7? Recommendation: 7 — split and
@@ -931,8 +946,13 @@ If this cut fails, the architecture is refuted before anything is built.
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md` — which finds the proposed 5th class
   restates ADR-124's Class A/C boundary, and the prohibition it would add
   already exists.
-- **E9 — Cascade stage set:** 9 stages or 12? If 9, Phase 1's exit criterion
-  cannot be produced and must be rewritten. **One question with E4**; brief:
+- **E9 — Cascade stage set: DECIDED with E4, option B — twelve stages.** Same
+  council round, 2/2. Phase 4 builds them; nothing in Phase 1 depends on the
+  stage count, so the verdict is recorded here and spent there. Its half of the
+  `revisit-if` is the live one: if a stage turns out to lack a distinct
+  observable predicate, the six-rung ladder stays and the cascade is
+  reconsidered on its own. Original framing, kept: 9 stages or 12? If 9,
+  Phase 1's exit criterion cannot be produced and must be rewritten. Brief:
   `agents/evidence/analysis/evolution-kernel-decisions-brief-2026-08-26.md`.
 - **E10 — Mutation dimensions:** do `activation/routing/content` stand alone, or
   does `verification` join immediately? Separate from 3.2, which is about arity.
