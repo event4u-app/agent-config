@@ -399,6 +399,15 @@ tasks:
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
+      - task: lint-positioning
+      - task: check-gate-reachability
+      - task: lint-mcp-registry-manifest
+      - task: lint-adr-sweep-routing
+      - task: check-requirements-trace
+      - task: check-release-includes-discovery
+      - task: check-publish-surface
+      - task: check-knowledge-sharing
+      - task: check-augmentignore
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma
