@@ -2678,10 +2678,10 @@ index c91d70c1d889d21cd749650773fc834ad55c9d95..640b5d0c9d1e2a3cc61fa4014098facf
      min_scanned: 1
 diff --git a/src/scripts/_lib/capture_rate.ts b/src/scripts/_lib/capture_rate.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..54d40a7aa6cadb915f8c9ef494bb7ae294265494
+index 0000000000000000000000000000000000000000..b8b3ba56e393f36155457250ac1473883b92c103
 --- /dev/null
 +++ b/src/scripts/_lib/capture_rate.ts
-@@ -0,0 +1,258 @@
+@@ -0,0 +1,273 @@
 +/**
 + * capture_rate — the measurement itself: numerator ÷ denominator, reported with
 + * a 95 % Wilson score interval, judged on the LOWER bound.
@@ -2717,6 +2717,21 @@ index 0000000000000000000000000000000000000000..54d40a7aa6cadb915f8c9ef494bb7ae2
 + * suppression — all verifiable with zero elapsed days. **It proves the
 + * instrument. It claims nothing about the field measurement**, which needs 21
 + * days that no run can compress.
++ *
++ * ## NO PRODUCTION CALLER, and that is the honest state rather than an omission
++ *
++ * `judgeCapture`, `judgeEnablement` and `readOpportunities`' window parameter
++ * are called from tests and from nothing else (R2 round-4 finding 12). The
++ * consumer is Phase 6, which is parked: 6.1 needs a 21-day window, 6.2 reads
++ * these verdicts, and neither has run. Naming it here because this module's own
++ * argument — that the two halves of the ratio must age on the same clock — reads
++ * as if something computed the ratio today, and nothing does.
++ *
++ * It is deliberately NOT the same class as the two no-caller defects this
++ * change fixed. `spoolRecord` and `terminateCollector` had consumers that were
++ * supposed to exist and did not; these have a consumer that is scheduled and
++ * blocked, which is why the roadmap leaves AC-10 unchecked rather than claiming
++ * the instrument is in use.
 + */
 +
 +/** The confidence level the decision rule fixes. Not a parameter — 1.2 item 9 names it. */
@@ -2942,10 +2957,10 @@ index 0000000000000000000000000000000000000000..54d40a7aa6cadb915f8c9ef494bb7ae2
 +}
 diff --git a/src/scripts/_lib/collector_denominator.ts b/src/scripts/_lib/collector_denominator.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf1f0a8c2d
+index 0000000000000000000000000000000000000000..470768ce12496d808a709eae827ccc5e2b22e989
 --- /dev/null
 +++ b/src/scripts/_lib/collector_denominator.ts
-@@ -0,0 +1,589 @@
+@@ -0,0 +1,716 @@
 +/**
 + * collector_denominator — the capture rate's DENOMINATOR, and the spool the
 + * numerator is drained from.
@@ -2972,6 +2987,26 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 + * The two writers therefore fail differently ON PURPOSE. The denominator fails
 + * only if the hook itself does not run; the numerator fails if the daemon is
 + * absent, wedged, budget-stopped, opted out, or refusing invalid records.
++ *
++ * ## What that property does NOT survive: a restart
++ *
++ * R2 round-4 finding 6, and the correction is to the CLAIM rather than to the
++ * code. Captures are spooled to disk while the daemon is down, and the next
++ * start replays the whole spool with each record's ORIGINAL `occurred_on` — so
++ * the historical rate is repaired retroactively and the outage becomes
++ * invisible in the very window the design says would expose it. The two writers
++ * fail differently *while the daemon stays down*, not across a restart.
++ *
++ * That is the right behaviour and the wrong sentence. Dropping the spool on
++ * restart would lose real captures to make a graph honest; re-dating them to
++ * the drain would move a dispatch that happened on Tuesday into Thursday's
++ * denominator. The spool is bounded ({@link SPOOL_MAX_BYTES}) so an unbounded
++ * outage still loses records rather than replaying forever, and the reading a
++ * human takes from a repaired window is the one this paragraph exists to
++ * qualify: a rate that recovered may mean capture recovered, or may mean a
++ * daemon came back and flushed. `heartbeat.json`'s three-valued liveness is
++ * what distinguishes them, and it is why that file is a state rather than a
++ * boolean.
 + *
 + * ## Never throws, and that is a contract rather than defensive habit
 + *
@@ -3073,6 +3108,22 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +    fs.rmSync(enabledMarkerPath(userRoot), { force: true });
 +}
 +
++/**
++ * The one option both writers take.
++ *
++ * `includeSelfObserved` is a TEST SEAM and is named as one. The exclusion sits
++ * inside the writers rather than at the call site, because putting it in the
++ * dispatcher's control flow made both `check_static_parity` runs skip the calls
++ * entirely and the comparison vacuous (R2 round-4 finding 3). But the same
++ * placement means a test — which always runs under `VITEST` — cannot exercise
++ * the write path at all without saying so explicitly. Nothing in `src/` passes
++ * it, and `tests/scripts/collector_vocabulary_parity.test.ts` asserts the
++ * default still excludes.
++ */
++export interface WriterOptions {
++    readonly includeSelfObserved?: boolean;
++}
++
 +/** The UTC date, `YYYY-MM-DD`. Never a time. */
 +export function utcDate(at: number = Date.now()): string {
 +    return new Date(at).toISOString().slice(0, 10);
@@ -3096,7 +3147,7 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 + *
 + * Gating on the marker at all is a cost decision, and it is the reason a
 + * default-off install writes nothing on any hook invocation: **two `existsSync`
-+ * calls and a return** — the opt-out probe first, then the ENABLED marker, in
++ * calls and a return per writer, so FOUR per dispatch once both are wired** — the opt-out probe first, then the ENABLED marker, in
 + * that order because the privacy answer outranks. (The first draft of this
 + * paragraph said "one `stat`", counting only the marker and forgetting the
 + * opt-out check immediately above it — R2 finding 14.) An earlier draft wrote
@@ -3109,8 +3160,10 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +    platform: CollectorPlatform | string,
 +    userRoot?: string,
 +    at: number = Date.now(),
++    opts: WriterOptions = {},
 +): boolean {
 +    try {
++        if (opts.includeSelfObserved !== true && isSelfObservation()) return false;
 +        if (!isCollectorEnabled(userRoot)) return false;
 +        if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
 +        if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
@@ -3258,7 +3311,16 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +    // read and the rename is still lost — the window is now microseconds rather
 +    // than the whole filter, and closing it completely needs a lock the
 +    // append path deliberately does not take.
-+    const consumed = Buffer.byteLength(raw, 'utf8');
++    // The ON-DISK length, not a re-encode of the decoded string (R2 round-4
++    // finding 7). `Buffer.byteLength(raw)` round-trips through U+FFFD for any
++    // invalid byte, so a log with one bad byte yielded a wrong offset and the
++    // carried tail was misaligned into the rewritten file.
++    let consumed = 0;
++    try {
++        consumed = fs.statSync(target).size;
++    } catch {
++        consumed = Buffer.byteLength(raw, 'utf8');
++    }
 +    let tail = '';
 +    try {
 +        const fd = fs.openSync(target, 'r');
@@ -3276,7 +3338,11 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +        /* the file vanished; the rename below re-creates it from `kept` */
 +    }
 +
-+    const tmp = `${target}.tmp`;
++    // A unique temp name, for the reason `claimSpool` was given a counter: the
++    // function is exported and driven directly by tests, and two concurrent
++    // prunes sharing one staging path clobber each other.
++    pruneSequence += 1;
++    const tmp = `${target}.${String(process.pid)}.${String(pruneSequence)}.tmp`;
 +    const body = kept.length === 0 ? '' : `${kept.join('\n')}\n`;
 +    fs.writeFileSync(tmp, `${body}${tail}`);
 +    fs.renameSync(tmp, target);
@@ -3311,6 +3377,11 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +/** Where the per-episode sequence counter lives, keyed by episode. */
 +export const EPISODE_DIR_NAME = 'episodes';
 +
++/** Declared ABOVE its first use: `machineId` reads it, and a TDZ ReferenceError
++ * inside a function whose whole contract is never to throw is a defect waiting
++ * for a re-order (R2 round-4 finding 11). */
++const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
++
 +export function machineIdPath(userRoot?: string): string {
 +    return path.join(resolveCollectorStore(userRoot).root, MACHINE_ID_NAME);
 +}
@@ -3341,8 +3412,6 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +        return null;
 +    }
 +}
-+
-+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 +
 +/**
 + * The episode id for this process.
@@ -3398,6 +3467,49 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +}
 +
 +/**
++ * Drop episode counters older than the retention horizon.
++ *
++ * `nextSequence` writes one `episodes/<id>.seq` per session and nothing pruned
++ * the directory (R2 round-4 finding 4) — inside the very directory
++ * `RESOURCE_BUDGETS.disk_bytes` ceilings, whose breach STOPS the collector.
++ * That is the argument the disk-budget basis already makes for
++ * `opportunities.log`, left unapplied to the sibling directory added in the
++ * same change. `directorySize` also re-`stat`s every one of these files on
++ * every beat, so the per-beat cost grew without bound too.
++ *
++ * Pruned by MTIME rather than by content: a counter file carries a number, not
++ * a date, and inventing a date format for it would be a second thing to keep in
++ * sync with the retention horizon.
++ */
++export function pruneEpisodeCounters(
++    userRoot: string | undefined,
++    now: number = Date.now(),
++    days: number = RETENTION_DAYS,
++): number {
++    const dir = path.join(resolveCollectorStore(userRoot).root, EPISODE_DIR_NAME);
++    let entries: string[];
++    try {
++        entries = fs.readdirSync(dir);
++    } catch {
++        return 0;
++    }
++    const cutoff = now - days * 86_400_000;
++    let dropped = 0;
++    for (const name of entries) {
++        if (!name.endsWith('.seq')) continue;
++        const full = path.join(dir, name);
++        try {
++            if (fs.statSync(full).mtimeMs >= cutoff) continue;
++            fs.rmSync(full, { force: true });
++            dropped += 1;
++        } catch {
++            /* raced with another prune */
++        }
++    }
++    return dropped;
++}
++
++/**
 + * Record a CAPTURE — the numerator's production writer.
 + *
 + * **This function is the fix for the defect three review rounds took to find**
@@ -3418,8 +3530,10 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 +    platform: CollectorPlatform | string,
 +    userRoot?: string,
 +    at: number = Date.now(),
++    opts: WriterOptions = {},
 +): boolean {
 +    try {
++        if (opts.includeSelfObserved !== true && isSelfObservation()) return false;
 +        if (!isCollectorEnabled(userRoot)) return false;
 +        if (!(COLLECTOR_EVENTS as readonly string[]).includes(event)) return false;
 +        if (!(COLLECTOR_PLATFORMS as readonly string[]).includes(platform)) return false;
@@ -3458,11 +3572,38 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 + * spool to drain later. That is deliberate: a spool that survives the disabled
 + * period would make a re-enable look like a capture spike.
 + */
++/**
++ * Hard ceiling on the undrained spool, in bytes.
++ *
++ * The spool is written by hook processes and drained ONLY by the daemon, and
++ * "collector enabled, daemon not running" is a supported state — the daemon is
++ * a separate opt-in process and `start()` legitimately refuses on `lock-held`
++ * or `store-unavailable`. Without a cap the spool grew without limit in exactly
++ * that state, and the disk budget that would have noticed is enforced by the
++ * process that is not running (R2 round-4 finding 5).
++ *
++ * 8 MiB is two thirds of the disk budget's 12 MiB expected peak, so a spool at
++ * its ceiling still leaves the store's own share. A record is ~250 bytes, so
++ * this is roughly 33,000 undrained captures — far past any plausible drain
++ * interval, which is what makes hitting it a signal rather than a limit.
++ */
++export const SPOOL_MAX_BYTES = 8 * 1024 * 1024;
++
 +export function spoolRecord(record: unknown, userRoot?: string): boolean {
 +    try {
 +        if (!isCollectorEnabled(userRoot)) return false;
 +        const target = spoolPendingPath(userRoot);
 +        fs.mkdirSync(path.dirname(target), { recursive: true });
++        // Refuse rather than rotate. A rotated spool would keep the newest
++        // captures and silently drop the oldest, which inflates the measured
++        // rate for the window that follows an outage; refusing loses the same
++        // records and does not pretend otherwise. Either way the loss is real —
++        // the difference is whether the numerator lies about it.
++        try {
++            if (fs.statSync(target).size >= SPOOL_MAX_BYTES) return false;
++        } catch {
++            /* absent is size 0 */
++        }
 +        fs.appendFileSync(target, `${JSON.stringify(record)}\n`);
 +        return true;
 +    } catch {
@@ -3479,6 +3620,7 @@ index 0000000000000000000000000000000000000000..74bcecc286a930cbc605ac569478abdf
 + * the rename creates a fresh `pending.jsonl`. No lock, no lost line.
 + */
 +let claimSequence = 0;
++let pruneSequence = 0;
 +
 +export function claimSpool(userRoot?: string, at: number = Date.now()): string | null {
 +    const pending = spoolPendingPath(userRoot);
@@ -4338,10 +4480,10 @@ index 0000000000000000000000000000000000000000..6bbe4aee0d3035864a5e8215378ae5e5
 +}
 diff --git a/src/scripts/check_static_parity.ts b/src/scripts/check_static_parity.ts
 new file mode 100755
-index 0000000000000000000000000000000000000000..7dc8ef19df1aac76f5848f90fbdfba328de1f461
+index 0000000000000000000000000000000000000000..f74f2fec49eeb8b643252e8376d86baa01454e62
 --- /dev/null
 +++ b/src/scripts/check_static_parity.ts
-@@ -0,0 +1,272 @@
+@@ -0,0 +1,285 @@
 +/**
 + * check_static_parity — prove that static operation is unregressed by the
 + * collector (`road-to-supervised-telemetry-collector` step 4.2, AC-7).
@@ -4388,6 +4530,19 @@ index 0000000000000000000000000000000000000000..7dc8ef19df1aac76f5848f90fbdfba32
 + *    and nothing reports the omission. The set is therefore a lower bound on
 + *    the tests that could diverge, not the exact set. Closing it needs real
 + *    import-graph resolution, which is a larger tool than this gate.
++ * 3. **Under vitest the collector is INERT by construction, so what is compared
++ *    is the call SITE and not the write path.** The metric definition excludes
++ *    self-observed dispatches, and a test always is one, so both writers return
++ *    at their first line in run A exactly as the stub does in run B. The
++ *    comparison therefore covers module load, import resolution and call-site
++ *    evaluation — which is what caught the stub's missing export — and does not
++ *    cover the branch that appends to disk.
++ *
++ *    Stated rather than left to be discovered: an earlier version put the
++ *    exclusion in the DISPATCHER's control flow, which meant neither run
++ *    reached the calls at all and the comparison was vacuous even about the
++ *    call site. Moving it into the writers is what makes this limit a scope
++ *    statement instead of a hole.
 + */
 +
 +import { spawnSync } from 'node:child_process';
@@ -4616,10 +4771,10 @@ index 0000000000000000000000000000000000000000..7dc8ef19df1aac76f5848f90fbdfba32
 +}
 diff --git a/src/scripts/collector_daemon.ts b/src/scripts/collector_daemon.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53abcd051ec
+index 0000000000000000000000000000000000000000..31038d9d4292fd7e924ab4887d5f4052d8e789a8
 --- /dev/null
 +++ b/src/scripts/collector_daemon.ts
-@@ -0,0 +1,666 @@
+@@ -0,0 +1,689 @@
 +/**
 + * collector_daemon — the supervised telemetry collector itself
 + * (`road-to-supervised-telemetry-collector` step 4.1).
@@ -4666,6 +4821,7 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +import {
 +    claimSpool,
 +    isCollectorEnabled,
++    pruneEpisodeCounters,
 +    pruneOpportunitiesOlderThan,
 +    readClaimedSpool,
 +    spoolDir,
@@ -4913,6 +5069,18 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +let stopRequested = false;
 +
 +/**
++ * What `start()` learned, kept for the loop.
++ *
++ * The heartbeat's `mode` is the SUPERVISOR PROBE's answer, and it must survive a
++ * beat in which the heartbeat file is missing (R2 round-4 finding 8). Module
++ * state rather than a parameter because `runLoop` is called both by `main` and
++ * directly by tests, and a required parameter would make every test assert a
++ * fact it does not care about.
++ */
++let startedMode: 'supervised' | 'degraded' = 'degraded';
++let startedAt = Date.now();
++
++/**
 + * Ask the loop to finish and exit. Idempotent.
 + *
 + * Wakes an in-flight {@link sleep} rather than only setting the flag: a daemon
@@ -4958,6 +5126,8 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +    const probe = detectSupervisor();
 +    const mode = probe.tier === 'supported' ? ('supervised' as const) : ('degraded' as const);
 +    const now = Date.now();
++    startedMode = mode;
++    startedAt = now;
 +    writeHeartbeat({ pid: process.pid, started_at: now, last_heartbeat: now, mode }, userRoot);
 +    stopRequested = false;
 +    return Object.freeze({ started: true, refusal: null, mode });
@@ -5053,9 +5223,16 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +            writeHeartbeat(
 +                {
 +                    pid: process.pid,
-+                    started_at: beat?.started_at ?? now,
++                    started_at: beat?.started_at ?? startedAt,
 +                    last_heartbeat: now,
-+                    mode: beat?.mode ?? 'degraded',
++                    // The mode `start()` computed from `detectSupervisor()`, not
++                    // one re-derived from the beat we just read (R2 round-4
++                    // finding 8). A heartbeat absent for one beat — an operator,
++                    // a cleanup, a race — silently re-labelled a genuinely
++                    // SUPERVISED daemon as `degraded` for the rest of its life,
++                    // and nothing restored it. The probe result was available at
++                    // start and was being discarded.
++                    mode: startedMode,
 +                },
 +                userRoot,
 +            );
@@ -5075,6 +5252,7 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +            // aged out against a lifetime denominator, and left an unbounded
 +            // file inside the directory the disk budget ceilings.
 +            pruneOpportunitiesOlderThan(userRoot, today);
++            pruneEpisodeCounters(userRoot, now);
 +
 +            const verdict = budgetVerdict(sample(userRoot));
 +            if (verdict.action === 'stop') {
@@ -5287,22 +5465,18 @@ index 0000000000000000000000000000000000000000..bc4a08846dc359a38cb4eba0b985b53a
 +    });
 +}
 diff --git a/src/scripts/hooks/dispatch_hook.ts b/src/scripts/hooks/dispatch_hook.ts
-index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..f16985a046d042493a4b568bd7de69462444343d 100644
+index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..60206aedba3b6c6ce21b0e2e60b57acc3783d3b9 100644
 --- a/src/scripts/hooks/dispatch_hook.ts
 +++ b/src/scripts/hooks/dispatch_hook.ts
-@@ -57,6 +57,11 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
+@@ -57,6 +57,7 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
  export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
  import { _py_json_dumps } from './py_json_dumps.js';
  import { _fallback_yaml } from './fallback_yaml.js';
-+import {
-+  isSelfObservation,
-+  recordCapture,
-+  recordOpportunity,
-+} from "../_lib/collector_denominator.js";
++import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
  export { _fallback_yaml } from './fallback_yaml.js';
  
  // Free-form JSON values flow through every helper here; a documented
-@@ -1144,6 +1149,26 @@ export function main(argv?: string[]): number {
+@@ -1144,6 +1145,37 @@ export function main(argv?: string[]): number {
      return EXIT_ALLOW; // fail-open per contract for unknown events
    }
  
@@ -5311,20 +5485,31 @@ index f4a8df7c5eb7ce9bf2fc65cf7a72a61817015491..f16985a046d042493a4b568bd7de6946
 +  // Two calls rather than one, because they must be able to FAIL DIFFERENTLY.
 +  // `recordOpportunity` is the denominator's independent writer — in-process,
 +  // no daemon — so a dead collector yields a climbing denominator against a
-+  // flat numerator and the rate falls instead of reading 0/0.
-+  // `recordCapture` is the numerator, and its absence was a real defect three
-+  // review rounds took to find: `spoolRecord` had no production caller, so the
-+  // rate was 0 % for a wiring omission and nothing could tell that from a
-+  // capture failure. Both are gated on the opt-in marker, never throw, and cost
-+  // two `existsSync` calls on a default-off install. Rationale, ordering and
-+  // the self-observation exclusion live in `collector_denominator.ts`.
++  // flat numerator and the rate falls instead of reading 0/0. `recordCapture`
++  // is the numerator, and its absence was a real defect three review rounds
++  // took to find. Both are gated on the opt-in marker, both refuse a
++  // self-observed dispatch, and neither throws; the rationale, the ordering and
++  // the exclusion all live in `collector_denominator.ts`.
++  //
++  // UNGUARDED HERE, and that is finding 3 of round 4. The guard used to be
++  // `if (!isSelfObservation())` around these two lines — and vitest always sets
++  // `VITEST`, so under the parity comparison NEITHER run ever reached them.
++  // `check_static_parity` could observe a module-load difference and nothing
++  // else, which made the AC-7 comparison vacuous with respect to the thing it
++  // claims to compare. The exclusion is a property of the METRIC, so it belongs
++  // inside the metric functions where the opt-in check already is; putting it
++  // in the caller's control flow is what made the calls disappear.
++  //
++  // Cost on a default-off install: FOUR `existsSync` calls, not two — each
++  // function calls `isCollectorEnabled`, which probes the opt-out marker and
++  // then the ENABLED one. The number is stated correctly here at the third
++  // attempt (R2 finding 14 corrected one to two, round 4 finding 9 caught that
++  // a second caller had since doubled it).
 +  //
 +  // Placed after the vocabulary check so an unknown event is not an
 +  // opportunity, and before the manifest load so a missing manifest still is.
-+  if (!isSelfObservation()) {
-+    recordOpportunity(args.event, args.platform);
-+    recordCapture(args.event, args.platform);
-+  }
++  recordOpportunity(args.event, args.platform);
++  recordCapture(args.event, args.platform);
 +
    const manifest_path = args.manifest;
    if (!fs.existsSync(manifest_path)) {
@@ -5536,34 +5721,133 @@ index 0000000000000000000000000000000000000000..4bcb279829e7628d063008527b37fd6c
 +}
 diff --git a/tests/_lib/collector-absent-stub.ts b/tests/_lib/collector-absent-stub.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..5ac6a7bd918e7331bcc94039bdb9b07caf92002b
+index 0000000000000000000000000000000000000000..d51e6dee0712f7d1bbacde49ad7db6738a034062
 --- /dev/null
 +++ b/tests/_lib/collector-absent-stub.ts
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,117 @@
 +/**
 + * The collector, ABSENT.
 + *
 + * `check_static_parity` aliases `src/scripts/_lib/collector_denominator.js` to
-+ * this file for its second run, so `dispatch_hook` resolves a module that does
++ * this file for its second run, so every importer resolves a module that does
 + * nothing. That is a truer "absent" than a disabled flag: the real module is
 + * not loaded at all, so its imports, its filesystem probes and its very
 + * existence are out of the picture — which is what step 4.2 compares against.
 + *
-+ * Only the symbols `dispatch_hook` actually imports are stubbed. Adding an
-+ * export here that the dispatcher does not import would widen the stub past the
-+ * surface under test; leaving one out breaks the alias loudly, which is the
-+ * failure mode to prefer.
++ * ## Why this mirrors the WHOLE export surface, not the dispatcher's slice
++ *
++ * The first version stubbed "only the symbols `dispatch_hook` actually
++ * imports", and that policy was structurally wrong (R2 round-4 findings 1 and
++ * 2): the vitest alias is a regex over the module specifier, so it rewrites the
++ * module for EVERY importer in the run, not for the dispatcher. When a third
++ * import was added to the dispatcher, run B died with
++ * `TypeError: isSelfObservation is not a function` and the gate went red — and
++ * a test in the parity set that imports the real module DIRECTLY would have
++ * broken it independently.
++ *
++ * So the stub mirrors the full surface, and
++ * `tests/scripts/collector_absent_stub_parity.test.ts` asserts it stays
++ * mirrored. A missing export is then a named test failure rather than a
++ * TypeError inside a gate whose message says static operation regressed.
 + */
 +
-+export function recordOpportunity(): boolean {
++import type { CollectorEvent, CollectorPlatform } from '../../src/scripts/_lib/collector_record.js';
++
++export const DENOMINATOR_FILE_NAME = 'opportunities.log';
++export const SPOOL_DIR_NAME = 'spool';
++export const SPOOL_PENDING_NAME = 'pending.jsonl';
++export const ENABLED_MARKER_NAME = 'ENABLED';
++export const MACHINE_ID_NAME = 'machine-id';
++export const EPISODE_DIR_NAME = 'episodes';
++export const COLLECTOR_VERSION = '1.0.0';
++export const SPOOL_MAX_BYTES = 0;
++
++export function denominatorPath(): string {
++    return '';
++}
++export function spoolDir(): string {
++    return '';
++}
++export function spoolPendingPath(): string {
++    return '';
++}
++export function enabledMarkerPath(): string {
++    return '';
++}
++export function machineIdPath(): string {
++    return '';
++}
++export function isCollectorEnabled(): boolean {
 +    return false;
++}
++export function enableCollector(): void {
++    /* absent */
++}
++export function disableCollector(): void {
++    /* absent */
++}
++export function isSelfObservation(): boolean {
++    // TRUE, not false, and the difference matters. Every caller uses this to
++    // decide whether to record; an ABSENT collector records nothing, so `true`
++    // is the value that makes the stub behave like absence. `false` would make
++    // a stubbed caller take the recording branch into other no-op stubs — the
++    // same answer by luck rather than by construction.
++    return true;
++}
++export function utcDate(): string {
++    return '1970-01-01';
++}
++export function machineId(): string | null {
++    return null;
++}
++export function episodeId(): string {
++    return '00000000-0000-4000-8000-000000000000';
++}
++export function nextSequence(): number {
++    return 0;
++}
++export function recordOpportunity(
++    _event?: CollectorEvent | string,
++    _platform?: CollectorPlatform | string,
++): boolean {
++    return false;
++}
++export function recordCapture(
++    _event?: CollectorEvent | string,
++    _platform?: CollectorPlatform | string,
++): boolean {
++    return false;
++}
++export function readOpportunities(): {
++    total: number;
++    byEvent: Record<string, number>;
++    malformed: number;
++    firstDate: string | null;
++    lastDate: string | null;
++} {
++    return { total: 0, byEvent: {}, malformed: 0, firstDate: null, lastDate: null };
++}
++export function pruneOpportunitiesOlderThan(): number {
++    return 0;
++}
++export function pruneEpisodeCounters(): number {
++    return 0;
++}
++export function spoolRecord(): boolean {
++    return false;
++}
++export function claimSpool(): string | null {
++    return null;
++}
++export function readClaimedSpool(): { records: unknown[]; malformed: number; unreadable: boolean } {
++    return { records: [], malformed: 0, unreadable: false };
 +}
 diff --git a/tests/scripts/capture_rate.test.ts b/tests/scripts/capture_rate.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c088d4b57f1887396c3f2f097ae4420d8413dd1c
+index 0000000000000000000000000000000000000000..8a914d90bdc94cd9f667d528b738bebed04d5f64
 --- /dev/null
 +++ b/tests/scripts/capture_rate.test.ts
-@@ -0,0 +1,406 @@
+@@ -0,0 +1,412 @@
 +// The measurement machinery, proven synthetically.
 +//
 +// `road-to-supervised-telemetry-collector` step 5.3 — the checkpoint the AI
@@ -5610,6 +5894,12 @@ index 0000000000000000000000000000000000000000..c088d4b57f1887396c3f2f097ae4420d
 +    readSummary,
 +} from '../../src/scripts/_lib/collector_store.js';
 +import { drainOnce } from '../../src/scripts/collector_daemon.js';
++
++/**
++ * The writers exclude self-observed dispatches and a test always IS one, so a
++ * test that wants the write path says so. Nothing in `src/` passes it.
++ */
++const SELF_OK = { includeSelfObserved: true } as const;
 +
 +let userRoot: string;
 +
@@ -5873,7 +6163,7 @@ index 0000000000000000000000000000000000000000..c088d4b57f1887396c3f2f097ae4420d
 +        // 40 dispatch opportunities, of which 34 produce a spooled record. The
 +        // 6 that do not are the loss the ratio exists to measure.
 +        for (let i = 0; i < 40; i += 1) {
-+            expect(recordOpportunity('pre_tool_use', 'claude', userRoot)).toBe(true);
++            expect(recordOpportunity('pre_tool_use', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
 +            if (i >= 34) continue;
 +            spoolRecord(
 +                {
@@ -6051,12 +6341,80 @@ index 0000000000000000000000000000000000000000..63d72252eb51f743f8b31f3317030f79
 +    // `parityFiles` to a token no test file contains — the set empties and both
 +    // the count and the containment assertion red.
 +});
+diff --git a/tests/scripts/collector_absent_stub_parity.test.ts b/tests/scripts/collector_absent_stub_parity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bbddabb8781d0345fe88b9c9b5702b634f431aa1
+--- /dev/null
++++ b/tests/scripts/collector_absent_stub_parity.test.ts
+@@ -0,0 +1,62 @@
++// The collector-absent stub must mirror the real module's export surface.
++//
++// R2 round-4 findings 1 and 2, and the reason this file exists is that the gap
++// it closes went red in CI rather than in a test. The vitest alias
++// (`vitest.config.ts`, active only under `AGENT_CONFIG_COLLECTOR_ABSENT=1`) is a
++// REGEX over the module specifier, so it rewrites `collector_denominator` for
++// every importer in the run — not, as the stub's first docstring claimed, for
++// the dispatcher alone. A binding the stub does not export therefore resolves
++// to `undefined` in run B, and the failure surfaces as
++// `TypeError: <name> is not a function` inside `check_static_parity`, whose own
++// message says static operation regressed.
++//
++// So the correspondence is asserted here. A new export is then a named test
++// failure with an obvious fix, rather than a red gate that reads as a product
++// defect.
++
++import { describe, expect, it } from 'vitest';
++
++import * as real from '../../src/scripts/_lib/collector_denominator.js';
++import * as stub from '../_lib/collector-absent-stub.js';
++
++describe('the collector-absent stub', () => {
++    it('exports every name the real module exports', () => {
++        const missing = Object.keys(real)
++            .filter((name) => !(name in stub))
++            .sort();
++        expect(
++            missing,
++            'add these to tests/_lib/collector-absent-stub.ts as no-ops, or check_static_parity\'s '
++                + 'absent run dies with a TypeError',
++        ).toEqual([]);
++    });
++
++    // removing_this_constraint_reds_it: delete any export from the stub — this
++    // names it. Deleting one from the REAL module does not red this test, which
++    // is correct: an over-complete stub is harmless, an under-complete one is
++    // the gate going red.
++
++    it('has a non-trivial surface to compare, so the assertion is not vacuous', () => {
++        // A real module that stopped exporting anything would make the check
++        // above trivially true. Belt-and-braces, cheap, and it is exactly the
++        // "gate that scans nothing" shape this package keeps finding.
++        expect(Object.keys(real).length).toBeGreaterThan(15);
++    });
++
++    it('is INERT: every stubbed writer refuses, and every path is empty', () => {
++        // The stub's job is that the collector does nothing at all. A stub that
++        // accidentally did something would make the parity comparison report a
++        // difference that is the stub's, not the collector's.
++        expect(stub.recordOpportunity()).toBe(false);
++        expect(stub.recordCapture()).toBe(false);
++        expect(stub.spoolRecord()).toBe(false);
++        expect(stub.isCollectorEnabled()).toBe(false);
++        // TRUE: an absent collector observes nothing, so every caller's
++        // recording branch is closed by construction rather than by each
++        // downstream stub happening to no-op.
++        expect(stub.isSelfObservation()).toBe(true);
++        expect(stub.claimSpool()).toBeNull();
++        expect(stub.readOpportunities().total).toBe(0);
++        expect(stub.denominatorPath()).toBe('');
++    });
++});
 diff --git a/tests/scripts/collector_daemon.test.ts b/tests/scripts/collector_daemon.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05ac640d09
+index 0000000000000000000000000000000000000000..eb4d84659e2eb660e5fefdde903a6da70ce6e8c1
 --- /dev/null
 +++ b/tests/scripts/collector_daemon.test.ts
-@@ -0,0 +1,615 @@
+@@ -0,0 +1,671 @@
 +// The collector itself — default-off proven by process enumeration, the
 +// denominator's independence from the daemon, and the drain loop.
 +//
@@ -6084,11 +6442,13 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +    isCollectorEnabled,
 +    machineId,
 +    machineIdPath,
++    pruneEpisodeCounters,
 +    pruneOpportunitiesOlderThan,
 +    readOpportunities,
 +    recordCapture,
 +    recordOpportunity,
 +    spoolPendingPath,
++    SPOOL_MAX_BYTES,
 +    spoolRecord,
 +} from '../../src/scripts/_lib/collector_denominator.js';
 +import {
@@ -6134,6 +6494,14 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +    stop(userRoot);
 +    fs.rmSync(userRoot, { recursive: true, force: true });
 +});
++
++/**
++ * The writers exclude self-observed dispatches, and a test always IS one
++ * (vitest sets `VITEST`). This seam is how a test exercises the write path;
++ * nothing in `src/` passes it, and the vocabulary-parity suite asserts the
++ * default still excludes.
++ */
++const SELF_OK = { includeSelfObserved: true } as const;
 +
 +function record(over: Partial<CollectorRecord> = {}): CollectorRecord {
 +    return {
@@ -6316,8 +6684,8 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +describe('4.1 — the denominator is independent of the daemon', () => {
 +    it('counts opportunities with NO collector process running', () => {
 +        enableCollector(userRoot);
-+        for (let i = 0; i < 5; i += 1) recordOpportunity('pre_tool_use', 'claude', userRoot);
-+        recordOpportunity('stop', 'claude', userRoot);
++        for (let i = 0; i < 5; i += 1) recordOpportunity('pre_tool_use', 'claude', userRoot, undefined, SELF_OK);
++        recordOpportunity('stop', 'claude', userRoot, undefined, SELF_OK);
 +
 +        const reading = readOpportunities(userRoot);
 +        expect(reading.total).toBe(6);
@@ -6335,14 +6703,14 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +    // module exists to prevent.
 +
 +    it('writes nothing at all on a default-off install', () => {
-+        expect(recordOpportunity('session_start', 'claude', userRoot)).toBe(false);
++        expect(recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
 +        expect(fs.existsSync(denominatorPath(userRoot))).toBe(false);
 +        expect(readOpportunities(userRoot).total).toBe(0);
 +    });
 +
 +    it('carries no payload: the line is a date, an event and a platform', () => {
 +        enableCollector(userRoot);
-+        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-08-30T13:45:12Z'));
++        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-08-30T13:45:12Z'), SELF_OK);
 +        const line = fs.readFileSync(denominatorPath(userRoot), 'utf8').trim();
 +        expect(line).toBe('2026-08-30\tsession_start\tclaude');
 +        // A DATE, never a time — a per-second stamp beside a stable id is a
@@ -6355,7 +6723,7 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +
 +    it('refuses an event or platform outside the closed enums', () => {
 +        enableCollector(userRoot);
-+        expect(recordOpportunity('made_up_event', 'claude', userRoot)).toBe(false);
++        expect(recordOpportunity('made_up_event', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
 +        expect(recordOpportunity('session_start', 'made_up_host', userRoot)).toBe(false);
 +        expect(readOpportunities(userRoot).total).toBe(0);
 +    });
@@ -6369,9 +6737,9 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +        // arriving through the back door.
 +        enableCollector(userRoot);
 +        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
-+        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
++        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'), SELF_OK);
 +
 +        expect(readOpportunities(userRoot).total).toBe(3);
 +        expect(readOpportunities(userRoot, { since: '2026-06-01' }).total).toBe(2);
@@ -6388,8 +6756,8 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +    it('PRUNES the log on the same retention clock as the store', () => {
 +        enableCollector(userRoot);
 +        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
 +        expect(readOpportunities(userRoot).total).toBe(2);
 +
 +        // 63 days before 2026-06-02 is 2026-03-31, so January goes and June stays.
@@ -6418,8 +6786,8 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +        // run afterwards exercises the same code path deterministically.
 +        enableCollector(userRoot);
 +        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
-+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'), SELF_OK);
++        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'), SELF_OK);
 +        // A line that arrives "during" the prune, appended to the same file.
 +        fs.appendFileSync(denominatorPath(userRoot), '2026-06-02\tstop\tclaude\n');
 +
@@ -6432,7 +6800,7 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +
 +    it('KEEPS a line whose date does not parse rather than deleting it', () => {
 +        enableCollector(userRoot);
-+        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
++        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'), SELF_OK);
 +        fs.appendFileSync(denominatorPath(userRoot), 'not-a-date\tsession_start\tclaude\n');
 +        // Deleting what you cannot classify is how a prune quietly becomes a
 +        // truncation; the reader already counts it as malformed.
@@ -6450,8 +6818,8 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +        // the capture rate was 0 % for a WIRING omission and the miss branch
 +        // could not tell that from a real capture failure.
 +        enableCollector(userRoot);
-+        expect(recordCapture('session_start', 'claude', userRoot)).toBe(true);
-+        expect(recordCapture('pre_tool_use', 'claude', userRoot)).toBe(true);
++        expect(recordCapture('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
++        expect(recordCapture('pre_tool_use', 'claude', userRoot, undefined, SELF_OK)).toBe(true);
 +
 +        const spooled = fs
 +            .readFileSync(spoolPendingPath(userRoot), 'utf8')
@@ -6492,10 +6860,56 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +
 +    it('writes NOTHING while the collector is off', () => {
 +        disableCollector(userRoot);
-+        expect(recordCapture('session_start', 'claude', userRoot)).toBe(false);
++        expect(recordCapture('session_start', 'claude', userRoot, undefined, SELF_OK)).toBe(false);
 +        expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
 +        expect(fs.existsSync(machineIdPath(userRoot))).toBe(false);
 +    });
++
++    it('PRUNES episode counters on the same clock — they are inside the disk budget', () => {
++        // R2 round-4 finding 4. `nextSequence` writes one file per session and
++        // nothing pruned the directory, inside the very directory the disk
++        // budget ceilings — whose breach STOPS the collector. That is the
++        // argument the budget's own basis already makes for `opportunities.log`,
++        // left unapplied to the sibling directory added in the same change.
++        enableCollector(userRoot);
++        const dir = path.join(userRoot, 'agent-collector', 'episodes');
++        fs.mkdirSync(dir, { recursive: true });
++        const old = path.join(dir, 'aaaaaaaa-0000-4000-8000-000000000000.seq');
++        const fresh = path.join(dir, 'bbbbbbbb-0000-4000-8000-000000000000.seq');
++        fs.writeFileSync(old, '3\n');
++        fs.writeFileSync(fresh, '1\n');
++        const longAgo = Date.now() - 200 * 86_400_000;
++        fs.utimesSync(old, longAgo / 1000, longAgo / 1000);
++
++        expect(pruneEpisodeCounters(userRoot)).toBe(1);
++        expect(fs.existsSync(old)).toBe(false);
++        expect(fs.existsSync(fresh), 'a live episode keeps its counter').toBe(true);
++    });
++
++    // removing_this_constraint_reds_it: make `pruneEpisodeCounters` return 0
++    // without unlinking — the stale counter survives and the directory grows
++    // with every session forever.
++
++    it('BOUNDS the spool, because the only thing that drains it may not be running', () => {
++        // R2 round-4 finding 5. "Collector enabled, daemon not running" is a
++        // supported state — the daemon is a separate opt-in process and
++        // `start()` legitimately refuses on `lock-held` or `store-unavailable` —
++        // and the disk budget that would notice is enforced by the process that
++        // is not running.
++        enableCollector(userRoot);
++        const pending = spoolPendingPath(userRoot);
++        fs.mkdirSync(path.dirname(pending), { recursive: true });
++        fs.writeFileSync(pending, 'x'.repeat(SPOOL_MAX_BYTES));
++
++        expect(spoolRecord(record(), userRoot), 'refused at the ceiling').toBe(false);
++        // Refused, not rotated: dropping the oldest captures to keep the newest
++        // inflates the measured rate for the window after an outage. The loss is
++        // the same; only one version lies about it.
++        expect(fs.statSync(pending).size).toBe(SPOOL_MAX_BYTES);
++    });
++
++    // removing_this_constraint_reds_it: delete the size check in `spoolRecord` —
++    // the append lands and the spool grows past its ceiling.
 +
 +    it('never throws, whatever the filesystem does', () => {
 +        enableCollector(userRoot);
@@ -6504,7 +6918,7 @@ index 0000000000000000000000000000000000000000..0b1e30f6d553098b2dd723bb81771f05
 +        const dir = path.join(userRoot, 'agent-collector');
 +        fs.chmodSync(dir, 0o500);
 +        try {
-+            expect(() => recordOpportunity('session_start', 'claude', userRoot)).not.toThrow();
++            expect(() => recordOpportunity('session_start', 'claude', userRoot, undefined, SELF_OK)).not.toThrow();
 +        } finally {
 +            fs.chmodSync(dir, 0o700);
 +        }
@@ -7071,6 +7485,64 @@ index 0000000000000000000000000000000000000000..9785659a57f728941eaf2e727d88b5df
 +        }
 +    }, CASE_TIMEOUT_MS);
 +});
+diff --git a/tests/scripts/collector_self_observation.test.ts b/tests/scripts/collector_self_observation.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c6ef1c48ee28ed0f2b5423f7fcc24b7b978c18be
+--- /dev/null
++++ b/tests/scripts/collector_self_observation.test.ts
+@@ -0,0 +1,52 @@
++// The self-observation exclusion.
++//
++// Metric definition item 3 excludes "dispatches in the package's own test suite
++// and CI (self-observation)", and nothing implemented it until R2 round-3
++// finding 3.
++//
++// ## Why this is its OWN file
++//
++// It asserts the REAL module's behaviour, and `check_static_parity` aliases
++// that module to a do-nothing stub for its second run — over every importer,
++// not just the dispatcher. A file in the parity set that asserts real-module
++// behaviour therefore fails in run B on its own account, which is round-4
++// finding 2 and is how these two cases first went red.
++//
++// Membership of that set is decided by a literal grep for the dispatcher's
++// module name, so this comment deliberately does NOT spell it — writing the
++// token here put the file straight back into the set on the first attempt,
++// which is finding 9's "literal token search, not module resolution" limit
++// demonstrating itself one paragraph after being written down.
++//
++// The stub's export surface is guarded separately, by
++// `collector_absent_stub_parity.test.ts`.
++
++import { describe, expect, it } from 'vitest';
++
++import { isSelfObservation } from '../../src/scripts/_lib/collector_denominator.js';
++
++describe('self-observation exclusion', () => {
++    it('excludes the package\'s own test suite and CI from the denominator', () => {
++        // Metric definition item 3 excludes "dispatches in the package's own
++        // test suite and CI (self-observation)", and nothing implemented it
++        // (R2 round-3 finding 3): on an opted-in developer machine every
++        // dispatcher test that reached `main` appended to the REAL
++        // `~/.event4u/agent-config` opportunity log, and spooled no capture —
++        // so it biased the measured rate DOWN.
++        expect(isSelfObservation({ VITEST: 'true' })).toBe(true);
++        expect(isSelfObservation({ CI: 'true' })).toBe(true);
++        expect(isSelfObservation({ NODE_ENV: 'test' })).toBe(true);
++        expect(isSelfObservation({})).toBe(false);
++        expect(isSelfObservation({ NODE_ENV: 'production' })).toBe(false);
++    });
++
++    it('is live in THIS process, which is the only self-check that matters', () => {
++        // If this ever reads false under vitest, the exclusion is not excluding
++        // the thing it was written for.
++        expect(isSelfObservation()).toBe(true);
++    });
++
++    // removing_this_constraint_reds_it: make `_isSelfObservation` return false
++    // unconditionally — both cases red, and the dispatcher starts counting its
++    // own suite again with nothing else noticing.
++});
 diff --git a/tests/scripts/collector_store.test.ts b/tests/scripts/collector_store.test.ts
 index 8d726017c4fd485dfcef362372106d97c41a0a0a..86407dcdf19ecaf222edca14f0abe6877e879544 100644
 --- a/tests/scripts/collector_store.test.ts
@@ -7086,10 +7558,10 @@ index 8d726017c4fd485dfcef362372106d97c41a0a0a..86407dcdf19ecaf222edca14f0abe687
      const available = isStoreAvailable();
 diff --git a/tests/scripts/collector_supervision.test.ts b/tests/scripts/collector_supervision.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..955d9eded4db1b275aed3923530063125258b571
+index 0000000000000000000000000000000000000000..f76e6dd567cb512d03ee90c621e1b8b81e4223d4
 --- /dev/null
 +++ b/tests/scripts/collector_supervision.test.ts
-@@ -0,0 +1,640 @@
+@@ -0,0 +1,646 @@
 +// The collector's operational contract — resource budgets, the kill switch,
 +// and static-vs-daemon exclusivity.
 +//
@@ -7555,7 +8027,7 @@ index 0000000000000000000000000000000000000000..955d9eded4db1b275aed392353006312
 +            .toBe(String(process.pid + 1));
 +    });
 +
-+    it('CONCURRENT fencers of one dead lock produce exactly one winner', async () => {
++    it('the lock names exactly ONE of two concurrent fencers of a dead lock', async () => {
 +        const gone = await deadPid();
 +        fs.mkdirSync(path.dirname(runtimeLockPath(userRoot)), { recursive: true });
 +        fs.writeFileSync(runtimeLockPath(userRoot), `${gone}\n`);
@@ -7595,8 +8067,14 @@ index 0000000000000000000000000000000000000000..955d9eded4db1b275aed392353006312
 +                return false;
 +            }
 +        });
-+        // At least one must win — a stale lock that locks everyone out forever
-+        // is the other half of row 2's recovery procedure.
++        // RENAMED on R2 round-4 finding 10: the old title said "produce exactly
++        // one winner" and the assertions accept both acquiring, which is the
++        // correct outcome when two `tsx` cold starts do not overlap. A name
++        // stating a property no assertion checks is worse than a modest one — a
++        // reader scanning for the one-collector invariant would read it as
++        // covered. What IS checked is below: at least one wins (a stale lock
++        // must not lock everyone out forever), and the lock names exactly one
++        // contender.
 +        expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeGreaterThanOrEqual(1);
 +        expect(acquired.length, `both outcomes: ${runs.join(' | ')}`).toBeLessThanOrEqual(2);
 +        // The honest statement: two `tsx` cold starts do not reliably overlap,
@@ -7732,10 +8210,10 @@ index 0000000000000000000000000000000000000000..955d9eded4db1b275aed392353006312
 +});
 diff --git a/tests/scripts/collector_vocabulary_parity.test.ts b/tests/scripts/collector_vocabulary_parity.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..59320e9e3ff2e8e02521943aacfbf57648780f5c
+index 0000000000000000000000000000000000000000..e2ac30204cb85e4ce6a5c693e56cd93c27523813
 --- /dev/null
 +++ b/tests/scripts/collector_vocabulary_parity.test.ts
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,73 @@
 +// The denominator's vocabularies must equal the dispatcher's.
 +//
 +// `road-to-supervised-telemetry-collector`, R2 finding 11. `recordOpportunity`
@@ -7761,35 +8239,8 @@ index 0000000000000000000000000000000000000000..59320e9e3ff2e8e02521943aacfbf576
 +    COLLECTOR_PLATFORMS,
 +} from '../../src/scripts/_lib/collector_record.js';
 +import { EVENT_VOCABULARY } from '../../src/scripts/hooks/dispatch_hook.js';
-+import { isSelfObservation } from '../../src/scripts/_lib/collector_denominator.js';
 +
 +const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-+
-+describe('self-observation exclusion', () => {
-+    it('excludes the package\'s own test suite and CI from the denominator', () => {
-+        // Metric definition item 3 excludes "dispatches in the package's own
-+        // test suite and CI (self-observation)", and nothing implemented it
-+        // (R2 round-3 finding 3): on an opted-in developer machine every
-+        // dispatcher test that reached `main` appended to the REAL
-+        // `~/.event4u/agent-config` opportunity log, and spooled no capture —
-+        // so it biased the measured rate DOWN.
-+        expect(isSelfObservation({ VITEST: 'true' })).toBe(true);
-+        expect(isSelfObservation({ CI: 'true' })).toBe(true);
-+        expect(isSelfObservation({ NODE_ENV: 'test' })).toBe(true);
-+        expect(isSelfObservation({})).toBe(false);
-+        expect(isSelfObservation({ NODE_ENV: 'production' })).toBe(false);
-+    });
-+
-+    it('is live in THIS process, which is the only self-check that matters', () => {
-+        // If this ever reads false under vitest, the exclusion is not excluding
-+        // the thing it was written for.
-+        expect(isSelfObservation()).toBe(true);
-+    });
-+
-+    // removing_this_constraint_reds_it: make `_isSelfObservation` return false
-+    // unconditionally — both cases red, and the dispatcher starts counting its
-+    // own suite again with nothing else noticing.
-+});
 +
 +describe('collector vocabulary parity', () => {
 +    it('COLLECTOR_EVENTS equals the dispatcher\'s EVENT_VOCABULARY, exactly', () => {

@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head f173d9d1e9e3b0635739b26ca8674078ac1c888d, review
-  artefacts excluded), scope hash `328e0c9947a55db4bba6a0bf890cee6b6628122207f85dfaeb711eab4be63043`
+- diff: `diff.patch` — the review scope (branch head b4a3c67c66749cc909b3a1451ba115e4e2c7b41d, review
+  artefacts excluded), scope hash `1e11c93435b4fc9bc1848bffaf73314c72f3c61e5f1cb6b9b9e169aa954c3a71`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -46,8 +46,10 @@ Changed files:
 - tests/_lib/collector-absent-stub.ts
 - tests/scripts/capture_rate.test.ts
 - tests/scripts/check_static_parity.test.ts
+- tests/scripts/collector_absent_stub_parity.test.ts
 - tests/scripts/collector_daemon.test.ts
 - tests/scripts/collector_lifecycle.test.ts
+- tests/scripts/collector_self_observation.test.ts
 - tests/scripts/collector_store.test.ts
 - tests/scripts/collector_supervision.test.ts
 - tests/scripts/collector_vocabulary_parity.test.ts
@@ -73,7 +75,7 @@ Fill the findings table in `drain-supervised-telemetry.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 328e0c9947a55db4bba6a0bf890cee6b6628122207f85dfaeb711eab4be63043, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 1e11c93435b4fc9bc1848bffaf73314c72f3c61e5f1cb6b9b9e169aa954c3a71, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
