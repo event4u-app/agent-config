@@ -1,0 +1,81 @@
+{
+    "_comment": "Pre-registered outcome bars for road-to-capability-native-execution, step 0.6. FIXED BEFORE ANY MEASUREMENT — the step requires the prereg commit to precede any default-preference change, so a bar edited after a run is a moved goalpost and must be recorded as one. Phase 3.4 binds the other direction: the published set must cover EVERY bar named here, with none missing and none present that this file does not name. Shape asserted by tests/scripts/capability_native_outcome_bars.test.ts — a bar with no falsifier FAILS the shape check rather than passing, which is the step's own verify clause. HONESTY ABOUT THE NUMBERS: three bars are DERIVED from a contract or a frozen-fixture property and say so; three are STATED DEFAULTS with a revisit-if, and say that instead of implying a derivation they do not have; one (evidence-completeness) is a contract restatement. A pre-registered threshold nobody can source is worse than none, because it looks measured.",
+    "schema_version": 1,
+    "registered_at": "2026-08-30",
+    "owner": "maintainer",
+    "review_by": "2027-02-28",
+    "roadmap": "road-to-capability-native-execution",
+    "step": "0.6",
+    "bars": [
+        {
+            "id": "dispatch-success",
+            "what": "Of the frozen 0.5 fixtures a dispatchable adapter advertises it can handle, the share it completes without an execution error.",
+            "threshold": 0.95,
+            "direction": "at-least",
+            "unit": "ratio",
+            "basis": "DERIVED, not chosen. 0.5 froze the fixture set and 2.4/3.5 require an advertised-but-undispatchable fixture to be REFUSED BEFORE EXECUTION — so a dispatch that reaches execution has already passed a dispatchability probe, and anything below near-total success means the probe is not doing its job. The bar is on the post-probe population, which is why it is high.",
+            "falsifier": "any dispatchable adapter completes fewer than 95% of the fixtures it advertised, measured on the frozen 0.5 set with its digest recorded",
+            "measured_by": "phase 3.2"
+        },
+        {
+            "id": "evidence-completeness",
+            "what": "Every field the evidence contract requires is present in the adapter's output for a completed run.",
+            "threshold": 1.0,
+            "direction": "at-least",
+            "unit": "ratio",
+            "basis": "DERIVED from the contract, not chosen: 3.2 requires each adapter to produce THE SAME required evidence contract on the same fixture. A required field is required; 0.99 would mean the contract is advisory, and a partial evidence envelope is the shape a reader mistakes for a complete one.",
+            "falsifier": "any completed run emits an envelope missing a field the contract marks required",
+            "measured_by": "phase 3.2"
+        },
+        {
+            "id": "token-context-cost",
+            "what": "Per-fixture token cost of the capability-dispatched arm against the direct-call arm.",
+            "threshold": 1.1,
+            "direction": "at-most",
+            "unit": "ratio-vs-baseline",
+            "basis": "STATED DEFAULT, not a measured optimum — said plainly rather than implying a derivation it does not have. 1.10 encodes 'the indirection may cost something, and not much'. Revisit-if: 3.3's first paired run lands outside 0.9-1.3 in either direction, which would mean the bar was set against the wrong order of magnitude rather than against a real regression.",
+            "falsifier": "the dispatched arm costs more than 1.10x the direct arm on the frozen fixtures, both figures reproducible from a command in the bench log",
+            "measured_by": "phase 3.3"
+        },
+        {
+            "id": "wall-clock",
+            "what": "Per-fixture wall-clock of the capability-dispatched arm against the direct-call arm.",
+            "threshold": 1.25,
+            "direction": "at-most",
+            "unit": "ratio-vs-baseline",
+            "basis": "STATED DEFAULT. Looser than the token bar on purpose: dispatch adds a probe and a selection step whose cost is wall-clock rather than tokens, so a bar equal to the token one would fail on the mechanism working as designed. Revisit-if: the probe's own measured cost exceeds a quarter of the baseline, at which point the bar is measuring the probe rather than the dispatch.",
+            "falsifier": "median wall-clock of the dispatched arm exceeds 1.25x the direct arm over the frozen fixtures",
+            "measured_by": "phase 3.3"
+        },
+        {
+            "id": "setup-friction",
+            "what": "Manual steps a first-time operator performs before a dispatchable adapter runs at all.",
+            "threshold": 2,
+            "direction": "at-most",
+            "unit": "manual-steps",
+            "basis": "STATED DEFAULT, and the unit is the argument: steps are counted, not timed, because a timing figure on one machine is not transferable and a step count is. Two is 'install the engine, point at it'. Revisit-if: any adapter needs a credential, at which point the honest count is three and the bar moves with the reason recorded rather than the adapter being excluded.",
+            "falsifier": "any adapter counted as dispatchable needs more than two manual steps from a clean machine, counted from its own documented setup",
+            "measured_by": "phase 3.2"
+        },
+        {
+            "id": "deterministic-replay",
+            "what": "Re-running one fixture through one adapter twice yields the same required evidence fields.",
+            "threshold": 1.0,
+            "direction": "at-least",
+            "unit": "ratio",
+            "basis": "DERIVED. The frozen fixtures exist so a result is reproducible; an adapter whose required fields vary between runs cannot be compared against another adapter at all, which is what 3.2 exists to do. Timestamps and durations are explicitly OUT of the compared set — a bar that failed on a clock would be measuring the clock.",
+            "falsifier": "two runs of one fixture through one adapter differ in any required evidence field outside the declared volatile set",
+            "measured_by": "phase 3.2"
+        },
+        {
+            "id": "degraded-run-honesty",
+            "what": "A run that could not complete the full contract reports the degradation rather than emitting a partial envelope as if complete.",
+            "threshold": 1.0,
+            "direction": "at-least",
+            "unit": "ratio",
+            "basis": "DERIVED, and it is the bar the others rest on. Every ratio above is computed over runs the adapter CLAIMS completed; a degraded run silently counted as complete inflates all six. This is the same soundness invariant road-to-governed-harness-evolution 1.2 states for its activation ladder — an unobserved state is never silently converted to success.",
+            "falsifier": "any degraded run emits an envelope that a consumer cannot distinguish from a complete one",
+            "measured_by": "phase 3.2, phase 3.4"
+        }
+    ]
+}

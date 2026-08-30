@@ -142,6 +142,12 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // lint_budget_ownership requires. Raising this number is legitimate ONLY
         // alongside a budget that clears that linter — which is why the count
         // lives here rather than being derived from the glob it guards.
+        //
+        // `capability-native-outcome-bars.json` does NOT join this corpus, and
+        // that is checked rather than assumed: the glob matches `*budget*`, and
+        // an outcome-bar prereg is not a budget. It carries `owner` and
+        // `review_by` anyway — see its own shape check in
+        // tests/scripts/capability_native_outcome_bars.test.ts.
         expect(budgetFiles(CONFIG_DIR)).toHaveLength(13);
     });
 
