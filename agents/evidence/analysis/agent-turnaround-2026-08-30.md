@@ -496,3 +496,121 @@ have made it reachable, in ascending order of what they cost:
 The first is in place. The second is not proposed here: a new deny surface on a
 security constant is a change to a safety floor, and this roadmap's own
 Phase 5 forbids the agent taking that decision.
+
+---
+
+# Re-reading — `road-to-turnaround-followups` step 1.1, 2026-08-30
+
+The batching obligation of step 2.2 above landed in `af0cf0bf0`
+(2026-08-30 16:38:40 +0200 = 14:38:40Z). This is the reading against it. The
+step pre-committed to a null being the RESULT, and it is a null — but the
+finding that matters is upstream of the number: **the corpus could not have
+received the obligation.**
+
+## R1 — The precondition is not met, and it is not met by a wide margin
+
+Risk 2 of the roadmap that ordered this step names the failure exactly: *"the
+window is mtime-ordered, so running it early measures sessions that predate the
+obligation and reports them as an after"*. Measured, by first transcript
+timestamp:
+
+| session | first → last (UTC) | relative to 14:38:40Z |
+|---|---|---|
+| `25ee3009` | 13:05:10 → 18:43:23 | spans |
+| `4fb84fae` | 16:25:33 → 20:11:58 | **after** |
+| `d116c1ff` | 11:46:05 → 16:08:59 | spans |
+| `89e9b7f9` | 11:47:04 → 12:10:08 | before |
+| `5698425e` | 09:38:01 → 10:10:01 | before |
+| `dc58b2a9` | 08:35:24 → 11:44:05 | before |
+| `399c9e09` | 01:41:47 → 08:39:21 | before |
+| `0ffa69c5` | 08:55:19 → 09:18:33 | before |
+| `43a60a50` | 01:44:16 → 08:32:32 | before |
+| `3dfb42bc` | 2026-08-29 16:20 → 20:12 | before |
+
+**One of ten** began after the obligation landed; two span it; seven ended
+entirely before. The required ten do not exist.
+
+A second check makes it stronger than a counting problem. `grep -rl` for the
+obligation's own heading over `~/.claude` finds it in **no installed tree** —
+not `~/.claude/rules/token-efficiency.md` (mtime 2026-08-25, i.e. five days
+older than the change), not the marketplace plugin copy under
+`~/.claude/plugins/marketplaces/event4u-agent-config/`. The two hits are both
+transcripts: the session that authored the text, and a subagent of the session
+that took this reading. The only delivered copy is the main checkout's own
+projection (`dist/agent-src/…/token-efficiency-mechanics.md`, mtime 2026-08-30
+16:39), which is a context reachable on demand through `load_context` and not
+otherwise. So the number of sessions that could have **received** the reminder
+is at most one, and on this evidence plausibly zero.
+
+That is a finding about the delivery of a context-file obligation, not about
+batching. It is recorded here rather than acted on: re-running the probe later
+is one command, and the roadmap's step is what schedules it.
+
+## R2 — The number: null, as pre-committed
+
+| metric | first reading (2026-08-30) | this reading | delta |
+|---|---|---|---|
+| `mean_batch_size` | 1.01 | **1.01** | **none** (unrounded 1.008959) |
+| multi-block requests | 27 / 2,889 = 0.93 % | 26 / 3,237 = **0.80 %** | −0.13 pp |
+| `blocking_share` | 0.6202 | 0.6641 | **+0.0439**, gate-red |
+| `context_floor_max` | 230,705 | 226,528 | −4,177, within baseline |
+| `calls_per_request` | 72.67 | 93.74 | reported only |
+
+The multi-block split is 24 of size 2, one of size 3, one of size 4 — the same
+shape § E2 reports, at the same order of magnitude. Nothing moved, in either
+direction, beyond what an mtime window moves on its own.
+
+**The pre-commitment holds and is restated rather than assumed:** this is the
+result. It is not a reason to raise the reminder's frequency or its volume —
+which this tree has already measured not to work for the session-canary
+obligation, where a per-turn carrier left the miss rate where it was. Here the
+case against escalating is stronger still, because R1 shows the reminder was
+never delivered: escalating an undelivered obligation would be tuning a channel
+that is not connected.
+
+## R3 — Two things this reading refused to do
+
+`blocking_share` regressed past its baseline and **was not re-baselined**. It is
+not this step's metric, one local mtime-window reading is not grounds to move a
+ratchet, and the config's own rule is that raising a baseline needs its reason as
+a sentence in the same change. The run therefore exits 1, on `blocking_share`
+alone; `mean_batch_size` passed.
+
+`context_floor_max` fell 4,177 tokens and **was not lowered** either. Tightening
+a ratchet on a single local reading is the mirror of the same error.
+
+## R4 — The first entry's corpus block cannot reproduce its own ratio
+
+Found while matching the new entry to the old one's shape. The registered
+corpus records `tool_calls: 3031`; § E2 records 2,889 tool-using requests.
+3,031 / 2,889 = 1.05, not the 1.01 the entry registers — the two figures came
+from different runs, and the corpus block omits `tool_using_requests`, which is
+the denominator. A corpus block exists precisely so a reader can tell a moved
+ratio from a moved denominator, and this one cannot re-derive its own numerator
+over its own denominator.
+
+The new entry records `tool_using_requests` for that reason and is a deliberate
+one-field departure from "match the existing shape exactly": 3,266 / 3,237 =
+1.008959 → 1.01 is checkable from the entry alone. The first entry is left as
+recorded — it is a historical reading, and editing a past measurement to be
+consistent is not a second reading.
+
+## R5 — The roadmap's literal command measures nothing from a worktree
+
+`./scripts-run src/scripts/probe_turnaround --limit 10 --against-baseline`,
+run verbatim from the `drain/turnaround-followups` worktree at
+`/private/tmp/ac-drain10`:
+
+```
+probe:turnaround · 0 session(s) · …/projects/-private-tmp-ac-drain10
+❌  probe_turnaround: empty corpus … `empty_corpus: "fail"` so it refuses
+    rather than reporting green.                                    exit 1
+```
+
+The probe defaults to `defaultStore(process.cwd())`, and a worktree has its own
+slug with no store behind it. The fail-closed behaviour is correct and is the
+whole of step 1.3 working — but the step's command as written cannot take the
+reading it asks for from anywhere except the main checkout. `--store` was
+therefore pointed at the store the first reading measured, because a delta
+against a different corpus is not a delta. Anyone re-running this must pass it
+too, or run from the main checkout.

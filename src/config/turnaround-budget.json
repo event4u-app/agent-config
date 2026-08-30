@@ -31,5 +31,36 @@
         "blocking_share": "AGREES within the window difference: 60 % here, 64 % in the source.",
         "mean_batch_size": "DISAGREES, and this is a FINDING rather than an instrument defect. The source reports 1.00 across 3,212 tool-using messages — 'not one message in the corpus carried two tool calls'. This window reports 1.01: 27 of 2,889 tool-using requests (0.93 %) carried 2–4 tool_use blocks, spread over five sessions. Parallel calls therefore DO occur, so 1.00 was a property of that window and not a floor with a mechanism behind it. Step 2.1 turns on exactly this.",
         "calls_per_request": "DISAGREES LARGELY — 72.67 here against 42.6 in the source — and the difference is a DENOMINATOR effect, not a regression. This window contains long autonomous runs in which one user prompt drives hundreds of calls, so `user_requests` falls (42 vs 76) while `api_calls` stays comparable (3,052 vs 3,241). The metric is sensitive to session SHAPE, which is a real limitation of it as a ratchet and is recorded here rather than smoothed over: read it together with `corpus`, and treat a movement that tracks `user_requests` as no evidence at all."
-    }
+    },
+    "subsequent_readings": [
+        {
+            "read_at": "2026-08-30",
+            "reason": "road-to-turnaround-followups step 1.1 — re-read `mean_batch_size` against the 1.01 baseline after the batching obligation landed in `src/agent-src/contexts/communication/rules-auto/token-efficiency-mechanics.md` (commit af0cf0bf0, 2026-08-30 16:38:40 +0200 = 14:38:40Z).",
+            "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline",
+            "invocation_note": "The roadmap's literal command carries no `--store`, and the probe defaults to `defaultStore(process.cwd())`. This reading was taken from the `drain/turnaround-followups` worktree at /private/tmp/ac-drain10, whose slug `-private-tmp-ac-drain10` names no directory — so the bare command measures ZERO sessions and exits 1 on `empty_corpus: \"fail\"`, correctly. `--store` was pointed at the store the FIRST reading measured, because a delta against a different corpus is not a delta.",
+            "corpus": {
+                "window": "the 10 most recently modified sessions in this package's transcript store, EXCLUDING the measuring session (dropped by CLAUDE_CODE_SESSION_ID 90ddc54d…, which the host exported), read 2026-08-30 ~20:20Z",
+                "sessions": 10,
+                "user_requests": 35,
+                "api_calls": 3281,
+                "tool_calls": 3266,
+                "tool_using_requests": 3237,
+                "note": "THE TEN-POST-CHANGE-SESSION PRECONDITION IS NOT MET, and this is the reading's principal finding rather than a caveat on it — risk 2 of the roadmap that ordered this step predicted exactly it. By first-transcript-timestamp, ONE of the ten sessions (4fb84fae, first 16:25:33Z) began after the obligation landed at 14:38:40Z; two more (25ee3009 13:05→18:43Z, d116c1ff 11:46→16:08Z) span the moment; the remaining SEVEN ended entirely before it. Stronger still: `grep -rl` over `~/.claude` finds the obligation's text in NO installed tree — not `~/.claude/rules/token-efficiency.md` (mtime 2026-08-25), not the marketplace plugin copy — only in two transcripts, one of which is the session that authored it. The only delivered copy is the main checkout's own projection (mtime 2026-08-30 16:39), reachable on demand via `load_context` and not otherwise. So the count of sessions that could have RECEIVED the obligation is not 'fewer than ten'; on the evidence available it is at most the one that started after 14:38:40Z, and possibly zero.",
+                "shape_addition": "`tool_using_requests` is recorded here and is NOT in the first entry's corpus block. It is added because without it the ratio is not reproducible from the entry — and the first entry demonstrates the cost: its `tool_calls: 3031` over the 2,889 tool-using requests its own § E2 reports gives 1.05, not the 1.01 it registers. The two figures came from different runs. A corpus block exists so a reader can recompute the ratio; this one can be recomputed (3266 / 3237 = 1.008959 → 1.01)."
+            },
+            "reading": {
+                "calls_per_request": 93.74,
+                "mean_batch_size": 1.01,
+                "blocking_share": 0.6641,
+                "context_floor_max": 226528
+            },
+            "delta_vs_baseline": {
+                "mean_batch_size": "NULL — 1.01 → 1.01, the pre-committed outcome. Unrounded 1.008959 against a first reading whose unrounded value was not recorded. The finer signal moved the same way and no further: multi-block requests were 27 of 2,889 (0.93 %) and are now 26 of 3,237 (0.80 %) — 24 of size 2, one of size 3, one of size 4. The step pre-committed to this being the RESULT, not a reason to repeat the reminder more loudly; that pre-commitment binds even harder here, because the corpus could not have received the reminder in the first place.",
+                "blocking_share": "+0.0439 — 0.6202 → 0.6641, which the gate reports as a REGRESSION and is why the run exits 1. DELIBERATELY NOT RE-BASELINED. It is not this step's metric, raising a baseline needs its own reason in its own change, and this is one local mtime-window reading.",
+                "context_floor_max": "-4,177 — 230,705 → 226,528, within the baseline in the gated direction (DOWN). DELIBERATELY NOT LOWERED: a ratchet is never tightened on a single local reading.",
+                "calls_per_request": "72.67 → 93.74. REPORTED ONLY, and the movement is the denominator again exactly as `directions` records: `api_calls` is comparable (3,052 → 3,281) while `user_requests` fell 42 → 35. Evidence of nothing."
+            },
+            "gate_verdict": "exit 1, on `blocking_share` alone. `mean_batch_size` passed."
+        }
+    ]
 }

@@ -3,7 +3,8 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: >
+estate_growth_exempt: "open_blockers 30 → 31: this change adds one ## Blockers entry so the AC-1 release condition has an owner, a class and a Resolved when that gates --all can read, instead of a condition living in prose — the failure the previous drain run recorded three times in one run. It is one-for-one with a criterion that was already open: AI council 2026-08-30 (anthropic + openai, 2/2) ruled AC-1 not-met, which is a verdict about an existing criterion, not a new item of work. No offsetting disposal is claimed and none is available — the roadmap cannot archive while AC-1 is open, which is that same verdict's direct consequence. The narrative this key used to carry is preserved verbatim in estate_growth_exempt_history below; it was moved because check_estate_count reads a claim only from an ADDED `estate_growth_exempt:` key line, so amending a block scalar in place is invisible to it."
+estate_growth_exempt_history: >
   CORRECTED 2026-08-30 — the second sentence has since been falsified by the
   change that carries this correction. It read "the offset that would have paid
   for it is not available: road-to-agent-turnaround cannot archive", on the
@@ -44,6 +45,15 @@ estate_offset_exempt: >
 > transferred)` there, and the source roadmap archives in the same change.
 > **Step 2.1 stays owner-reserved:** relocating the question is not answering
 > it, which both council members stated independently.
+> **Amended 2026-08-30 — read this together with the line above.** Step 2.1 is
+> closed by [`ADR-251`](../../docs/decisions/ADR-251-authorization-window-shape-not-width.md)
+> on a council 2/2 verdict, and the line above stays true of the half that
+> mattered: raising `LEDGER_MAX_AGE_MS` was not taken and remains
+> owner-reserved. What the council could settle, and did, is the half that
+> lowers nothing — keeping the 30-minute value and changing expiry from
+> termination to pause-and-renew. Step 1.1 went the other way: the same council
+> ruled AC-1 `not-met`, so this roadmap does NOT close in this change, and its
+> open condition has an owner at § Blockers rather than living in prose.
 > Every number below is from
 > `agents/evidence/analysis/agent-turnaround-2026-08-30.md`; none is estimated
 > here.
@@ -68,7 +78,7 @@ Each is blocked by a different thing, and none of them is effort:
 
 ## Phase 1 — Read the batching obligation
 
-- [ ] **1.1 Re-measure mean batch size after ten further sessions.** Run
+- [~] **1.1 Re-measure mean batch size after ten further sessions.** <!-- blocked-by: batching-corpus-never-received-the-obligation --> Run
       `./scripts-run src/scripts/probe_turnaround --limit 10 --against-baseline`
       and record the `mean_batch_size` delta against the 1.01 baseline in
       `src/config/turnaround-budget.json`, with its own corpus window beside it.
@@ -79,10 +89,71 @@ Each is blocked by a different thing, and none of them is effort:
       verify: a second baseline entry exists in the budget config with its own
       corpus window, and the delta is stated in the evidence file in whichever
       direction it went.
+      **READING TAKEN 2026-08-30 — and the number did not move.** (Whether that
+      closes the step is settled at the end of this entry: it does not.)
+      `mean_batch_size` 1.01 → 1.01 (unrounded
+      1.008959 = 3266/3237). The finer signal moved the same way and no
+      further: multi-block requests were 27 of 2,889 (0.93 %) and are now 26 of
+      3,237 (0.80 %). Recorded as `subsequent_readings[0]` in
+      `src/config/turnaround-budget.json` with its own corpus window, and as
+      `# Re-reading — road-to-turnaround-followups step 1.1` (R1–R5) in
+      `agents/evidence/analysis/agent-turnaround-2026-08-30.md`.
+      **Recorded as a READING, not as a second gating baseline**, because the
+      number did not move and there is nothing to re-baseline: the gating
+      `baseline` and `empty_corpus` keys are untouched, so `readBudget` and
+      `compare` behave identically. Promoting it to a second `baseline` key
+      would be inert — `compare` reads only `baseline` — and would imply a
+      ratchet change this step did not authorize.
+      **The precondition was NOT met, and that is the load-bearing finding.**
+      The obligation landed in `af0cf0bf0` at 2026-08-30 14:38:40Z. Of the ten
+      sessions in the window, by first transcript timestamp **one** began after
+      it, two span it, and seven ended entirely before — exactly risk 2 of this
+      roadmap's own register. Stronger: `grep -rl` for the obligation's heading
+      over `~/.claude` hits **no installed tree**, only transcripts, so the
+      number of sessions that could have RECEIVED the reminder is at most one
+      and plausibly zero. **The null is real, and it is a null about an
+      undelivered reminder** — which makes the pre-commitment bind harder, not
+      less: raising the reminder's frequency would be tuning a channel that is
+      not connected.
+      **Two gate readings deliberately NOT acted on**, recorded so a later
+      reader does not mistake restraint for oversight: `blocking_share` moved
+      +0.0439 (0.6202 → 0.6641) and the probe therefore exits 1 — not this
+      step's metric, one local mtime-window reading, and raising a baseline
+      needs its own reason in its own change. `context_floor_max` fell 4,177
+      (230,705 → 226,528), in the gated direction, and was **not** lowered: a
+      ratchet is never tightened on a single local reading.
+      **One correction to the step's own command line**, since a later reader
+      will re-run it: the probe's real usage is
+      `probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline]
+      [--include-current]` (`src/scripts/probe_turnaround.ts:319`). Run verbatim
+      from a worktree it measures zero sessions and exits 1 — fail-closed
+      working correctly, since the worktree slug names no transcript directory.
+      The reading was taken with `--store` pointed at the store the 1.01
+      baseline measured, and both artefacts say so.
+      **DEFERRED, not done — AI council 2026-08-30, anthropic + openai, 2/2
+      convergent: `not-met`.** The reading was taken and is recorded; the step
+      is not finished, because the corpus could not answer the question the step
+      asks. Both seats held that *"post-change corpus"* must mean a corpus
+      **exposed** to the change, not merely one that postdates it by date, and
+      that recording this as a behavioural null creates what one seat called
+      poisoned evidence — a later reader citing *"batching obligations measured
+      at 1.01 → 1.01"* without knowing zero sessions were exposed. One seat also
+      named the finer point: **the pre-commitment's trigger condition was never
+      met.** It binds on *"if the number has not moved"* in a valid measurement;
+      what happened here is *"there is no number"*. The pre-commitment therefore
+      does **not** license closing on this reading — and equally does not
+      license re-pulling the lever, which stays forbidden.
+      **Released when** `mean_batch_size` is measured across ≥ 10 sessions
+      initiated after the obligation's install timestamp, where the delivery
+      mechanism in effect at measurement time is documented to propagate a
+      config change to a running agent. Per the council, that documentation is
+      **not** this step's work: the delivery finding is routed to
+      [`stubs/road-to-obligation-delivery-verification.md`](stubs/road-to-obligation-delivery-verification.md),
+      which owns it and does not block this roadmap.
 
 ## Phase 2 — Put the authorization question to the owner
 
-- [ ] **2.1 Surface the owner-reserved decision and record the answer.** The
+- [x] **2.1 Surface the owner-reserved decision and record the answer.** The
       question, both options and the measured run lengths are already written —
       `archive/road-to-agent-turnaround.md` § blocker
       `authorization-shape-for-long-runs`. This step carries it to an answer and
@@ -91,6 +162,45 @@ Each is blocked by a different thing, and none of them is effort:
       as is" closes the step exactly as a change would.
       verify: a commit or an ADR records the owner's decision, and
       `src/scripts/hooks/block_unauthorized_git.ts`'s docblock cites it.
+      **DONE 2026-08-30 —
+      [`ADR-251`](../../docs/decisions/ADR-251-authorization-window-shape-not-width.md),
+      and the value did NOT move.** AI council 2026-08-30, anthropic
+      (claude-sonnet-4-5) + openai (gpt-4o), **2/2 convergent on Option B** — a
+      different authorization SHAPE, never a wider window — and both seats
+      independently proposed the same shape without seeing each other's answer:
+      at expiry the run **pauses, reports, and asks for re-authorization**
+      instead of terminating. `LEDGER_MAX_AGE_MS` is unchanged at 30 minutes and
+      raising it remains forbidden.
+      **On the authority bound this step carries.** The step and its source
+      blocker say the agent may not take the decision, and a prior council 2/2
+      ruled it may only move the question, not settle it. What made this
+      settleable is that the reserved-decision table routes *lowering* a
+      security floor to the owner and *keeping or strengthening* one to the
+      council — and Option B lowers nothing. Both seats reached that reading
+      independently and both classified their verdict
+      `within-council-authority`. **Raising the constant was and stays
+      owner-reserved, and this record did not take it** — which is why the ADR
+      carries `reopen_policy: owner` and `protected_dimensions: security_floor`.
+      **The mechanism was verified, not assumed.** `git_authorization_hook.ts`
+      is stateless per prompt — no first-authorization-only branch and no
+      once-per-session latch — and every human-typed prompt rewrites the
+      session ledger with a fresh `detected_at` (`:530`, `:537`), which is the
+      value `block_unauthorized_git.ts:599` compares against. So a mid-run reply
+      carrying the re-authorization already resets the age. Option B is a
+      behaviour and contract change, **not new machinery**, and it introduces no
+      agent-writable authorization store — the property ADR-239's reopen trigger
+      watches for.
+      **The bundle did not change, and the local gate could not prove it.**
+      `check_hook_bundle_content` exits 0 with `scanned: 0` here: this worktree
+      self-hosts no `dist/hooks/dispatch.js`, so the gate is structurally blind.
+      The evidence is an out-of-tree build instead — the dispatcher built from
+      this checkout before and after the docblock edit is byte-identical,
+      sha256 `355fd72d…`, 1.2 MB both times, because esbuild strips non-legal
+      comments. **No rebuild was needed and none was performed.**
+      **The residual is named rather than closed:** the ledger binds neither PR
+      number nor HEAD sha, so it verifies *"the user consented recently"*, not
+      *"the user consented to THIS merge"*. ADR-251 records that as unresolved
+      with its own reopen condition; it is not something this step fixed.
 
 ## Phase 3 — Emit `paths:` on the write path that does not
 
@@ -199,6 +309,46 @@ Each is blocked by a different thing, and none of them is effort:
       package-only rule's file is present in the projection, this is not a
       global layer and nothing is subtracted. The third test pins that case.
 
+## Blockers
+
+### blocker: batching-corpus-never-received-the-obligation
+
+- **Status:** open — created 2026-08-30 by the drain run that executed step 1.1.
+  **AI council 2026-08-30, anthropic + openai, 2/2 convergent: AC-1 is
+  `not-met`.** The reading was taken and is recorded; what is missing is a
+  corpus that was exposed to the obligation. This entry exists so the condition
+  has an owner rather than living only in prose — the recurring failure the
+  previous drain run named three times was *"a criterion with no phase, no step
+  and no owner"*.
+- **Owner:** council — the disposition keeps AC-1 alive and unweakened and
+  routes the delivery half to a separate item, which the preservation test makes
+  council-decidable. Nothing here lowers a floor or descopes a criterion.
+- **Class:** 3
+- **Blocks:** step 1.1 and AC-1 only. Phases 2 and 3 are untouched.
+- **What to do:** nothing in this roadmap. The obligation reached at most one of
+  the ten measured sessions and plausibly zero, so the measurement cannot be
+  repeated usefully until delivery is either instrumented or documented. That
+  work is
+  [`stubs/road-to-obligation-delivery-verification.md`](stubs/road-to-obligation-delivery-verification.md).
+  **Do not raise the reminder's frequency** — the parent pre-commitment forbids
+  it and a disconnected channel is not fixed by sending more down it.
+- **Recommendation:** leave it open and let the stub carry the delivery
+  question. Closing AC-1 on the temporal reading would record *"we measured it
+  and it did nothing"* where the truthful statement is *"we could not measure
+  it"* — one seat called this poisoned evidence, and this repository's own
+  failure catalogue holds that a false null is harder to remediate later than a
+  deferred condition surfaced now.
+- **If you do nothing:** AC-1 stays open, this roadmap stays active and does not
+  archive, and the batching obligation's effect stays unmeasured. Nothing
+  regresses and nothing is silently lost — the cost is that one roadmap remains
+  in the active estate.
+- **Resolved when:** `mean_batch_size` is measured across ≥ 10 sessions
+  initiated after the obligation's install timestamp, where the delivery
+  mechanism in effect at measurement time is documented to propagate a config
+  change to a running agent — and step 1.1 is re-closed citing that reading.
+  Per-session self-report is explicitly NOT the bar; a documented propagation
+  model satisfies it.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
 
@@ -214,9 +364,43 @@ Each is blocked by a different thing, and none of them is effort:
 - [ ] AC-1 — `mean_batch_size` has a second reading against a named post-change
       corpus, and the delta is recorded whichever direction it went — including
       "did not move".
-- [ ] AC-2 — The 30-minute authorization window carries a recorded owner
+      **STAYS OPEN — AI council 2026-08-30, anthropic + openai, 2/2 convergent:
+      `not-met`.** The second conjunct is unambiguously met: a reading exists
+      and its delta is recorded as a null. The FIRST conjunct is not, and it is
+      the load-bearing one — *"post-change corpus"* is read by both seats as a
+      corpus **exposed** to the change, and at most one of the ten sessions
+      could have received it. Closing on the temporal reading would record
+      *"we measured it and it did nothing"* where the truthful statement is
+      *"we could not measure it"*.
+      **Releasing condition, from the verdict:** `mean_batch_size` measured
+      across ≥ 10 sessions initiated after the obligation's install timestamp,
+      where the delivery mechanism in effect at measurement time is documented
+      to propagate a config change to a running agent. Per-session self-report
+      was explicitly REJECTED as the bar — one seat noted it would require
+      instrumentation this repository does not have and that AC-1 never asked
+      for; a documented propagation model satisfies it instead.
+      **The delivery half is NOT this criterion's work.** It is routed to
+      [`stubs/road-to-obligation-delivery-verification.md`](stubs/road-to-obligation-delivery-verification.md),
+      which both seats required as a separate item and which does not block this
+      roadmap.
+- [x] AC-2 — The 30-minute authorization window carries a recorded owner
       decision that `block_unauthorized_git.ts` cites, or an explicit recorded
       refusal to change it. Silence does not satisfy this.
+      **Met 2026-08-30 by
+      [`ADR-251`](../../docs/decisions/ADR-251-authorization-window-shape-not-width.md),
+      with one substitution stated rather than hidden: the decision-maker is the
+      COUNCIL, not the owner.** The criterion says "owner decision"; what it
+      got is a council verdict (anthropic + openai, 2/2 convergent) on the half
+      of the question that is council-decidable — keeping the 30-minute value
+      and changing the behaviour at expiry, neither of which lowers a floor. The
+      owner-reserved half, **raising the constant**, was not taken by anyone and
+      stays open in exactly the state it was in; the ADR carries
+      `reopen_policy: owner` and `protected_dimensions: security_floor` so a
+      later reader cannot mistake the substitution for a grant of authority.
+      The criterion's own alternative branch is what is actually satisfied — *"an
+      explicit recorded refusal to change it"* — and the citation the guard now
+      carries is at `src/scripts/hooks/block_unauthorized_git.ts:526-544`.
+      Silence did not satisfy it, and does not.
 - [x] AC-3 — A fresh install emits `paths:` for exactly the rules the emitter
       classifies path-only, and the activation census reports no divergence
       between its source verdict and the projection. **Met 2026-08-30 with one

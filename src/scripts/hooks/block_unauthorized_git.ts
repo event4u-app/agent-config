@@ -523,6 +523,24 @@ export function commandOp(command: string): GitOp | null {
  * window grows. The agent never edits this constant, this file, or the built
  * bundle; `dist/hooks/dispatch.js` is what actually executes, and a source
  * edit without a rebuild is silently inert.
+ *
+ * **ADR-251 (2026-08-30) decided this question and KEPT the value.** An AI
+ * council converged 2/2 on a different authorization SHAPE rather than a wider
+ * window, against the measured pressure that 7 of the 10 most recent sessions
+ * of this package outlive a 30-minute window (median span 3.1 h) and that the
+ * constant has been hand-widened twice. `LEDGER_MAX_AGE_MS` is unchanged at 30
+ * minutes and raising it remains forbidden — that transition is owner-reserved,
+ * and this record did not take it.
+ *
+ * What the record DID change is the behaviour at expiry: the run PAUSES,
+ * reports the remaining work, and ASKS for re-authorization, instead of ending.
+ * The user's reply renews this ledger through the path that already exists —
+ * `git_authorization_hook.ts` rewrites the session's ledger with a fresh
+ * `detected_at` on every human-typed prompt (`:512-537`), so a mid-run reply
+ * carrying an authorization phrase resets the age this constant is compared
+ * against. No new machinery, and the signal stays agent-unforgeable.
+ *
+ * See `docs/decisions/ADR-251-authorization-window-shape-not-width.md`.
  */
 export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
 
