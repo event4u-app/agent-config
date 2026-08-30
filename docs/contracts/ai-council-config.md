@@ -778,7 +778,7 @@ did not carry a usable one.
   this key is true. Any one missing → the deliberation prompt is byte-identical
   to a run without the feature.
 
-**Behaviour when active.**
+**Behavior when active.**
 
 - The FINAL deliberation round appends `INLINE_FINDINGS_CONTRACT`, which
   restates the extraction schema — same `{"id", "text"}` shape, same 3–7 bound
@@ -788,7 +788,7 @@ did not carry a usable one.
 - Between the deliberation and every consumer of its text, the trailing block
   is located, parsed, and **removed** from the response, leaving a one-line
   marker in its place. Peer review, chairman synthesis, and the rendered
-  artefact therefore evaluate the member's argument, not the schema
+  artifact therefore evaluate the member's argument, not the schema
   scaffolding that restates it. The removal is deliberately observable — a
   silent edit to what reads as a transcript is the failure this marker exists
   to prevent — and the raw reply is retained in the session record.

@@ -10,7 +10,7 @@
 // `orchestrator.ts` re-exports `run_consensus_scoring`, so every existing
 // importer is untouched. The import of `consult` below closes a module cycle
 // with that file; it is call-time, not init-time — nothing here runs at module
-// load — which is the shape ESM resolves without a partial-initialisation
+// load — which is the shape ESM resolves without a partial-initialization
 // hazard.
 import type { CouncilResponse, ExternalAIClient } from './clients.js';
 import { DEFAULT_MAX_TOKENS } from './clients.js';

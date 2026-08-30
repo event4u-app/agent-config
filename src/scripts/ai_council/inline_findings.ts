@@ -24,7 +24,7 @@ const _strip = (s: string): string => s.replace(/^\s+|\s+$/g, '');
  * Phase 1B — the deliberation reply split into argument and findings block.
  *
  * `deliberation_text` is what every downstream consumer should see: peer
- * review, chairman synthesis, and the rendered artefact evaluate the member's
+ * review, chairman synthesis, and the rendered artifact evaluate the member's
  * REASONING, and a schema block restating selected conclusions is scaffolding,
  * not argument. Leaving it in amplifies a concise finding simply because it
  * appears twice — the AI council's stated reason (2026-08-30, 2 of 2 seats) for
@@ -154,7 +154,7 @@ export type RecordedExtractionOutcome =
  * is the established seam rather than a new one.
  *
  * The marker is deliberately visible. Stripping without an observable trace is
- * a silent mutation of the artefact a reader takes for a transcript, and one
+ * a silent mutation of the artifact a reader takes for a transcript, and one
  * seat made an observable marker a condition of its verdict; the other reached
  * the same concern from the auditability side. ~90 characters replaces ~300 of
  * JSON, so the scaffolding is gone and the fact of its removal is not.
@@ -174,7 +174,7 @@ export type RecordedExtractionOutcome =
  * So a reply carrying no findings block at all, but quoting
  * `[{"file":"src/a.ts","line":42}]` as evidence, was recorded as a successful
  * inline extraction with zero findings — and its quoted evidence was DELETED
- * from the text the peer review, the chairman and the artefact read. Worse, the
+ * from the text the peer review, the chairman and the artifact read. Worse, the
  * failure was recorded as a success in the rate the 1B.4 promotion gate reads,
  * so the gate could not see it.
  *
@@ -229,7 +229,7 @@ export function harvest_inline_findings(
         const ex = parse_findings_outcome(split.block, { source });
         if (!_isOwnFindingsBlock(ex)) {
             // Not a findings block after all — most likely a JSON array the member
-            // quoted from the artefact. Leave the reply untouched: stripping text
+            // quoted from the artifact. Leave the reply untouched: stripping text
             // we could not read would remove evidence and buy nothing.
             continue;
         }
@@ -240,14 +240,14 @@ export function harvest_inline_findings(
         // The marker appended below promises "the raw reply is retained in the
         // session record". Until 2026-08-30 that promise was false, and a
         // completion review is what caught it: the persisted record is
-        // serialised from these same objects AFTER this harvest runs
+        // serialized from these same objects AFTER this harvest runs
         // (`council_cli._serialise_responses`), so the stripped text was the
         // only text that survived anywhere, and the auditability condition the
         // council attached to this feature was unmet.
         //
         // `null` stays the honest value for a reply nothing rewrote — it means
         // "`text` IS the raw reply", never "the raw reply was lost" — which is
-        // also why the serialiser omits the key entirely in that case rather
+        // also why the serializer omits the key entirely in that case rather
         // than writing a duplicate of the reply into every session record.
         resp.raw_text = resp.text;
         const marker = `_[inline findings block extracted: ${String(ex.findings.length)} item(s); the raw reply is retained in the session record.]_`;

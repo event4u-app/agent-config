@@ -10,7 +10,7 @@
  *
  * `metadata` values are stringified deliberately, and two consumers depend on
  * it: `ai_council/pricing.ts` coerces them back, and `billable_cost.test.ts`
- * pins the behaviour.
+ * pins the behavior.
  *
  * Side-effect-free, no CLI entry, no `process.exit`.
  */
@@ -18,7 +18,7 @@ import type { CouncilResponse } from './clients.js';
 
 type Dict = Record<string, unknown>;
 
-export function serialiseResponses(responses: CouncilResponse[]): Dict[] {
+export function serializeResponses(responses: CouncilResponse[]): Dict[] {
     const out: Dict[] = [];
     for (const r of responses) {
         const metadata: Dict = {};
