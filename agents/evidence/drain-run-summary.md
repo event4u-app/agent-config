@@ -207,3 +207,153 @@ independently added budgets — `turnaround-budget.json` and
 `harness-evolution-budget.json` — met in the merge, and the number was measured
 on the merged tree rather than taken from either side, which is the method this
 repository's own ratchet entries prescribe.
+
+---
+
+# Run 6 — 2026-08-30
+
+Five PRs. Three merged, two green and awaiting the maintainer. **One roadmap
+archived, one parked, one advanced, two blockers closed by council, one split
+taken conservatively.** Active estate **5 → 3**.
+
+Every decision below was taken by the AI council or by a recorded rule, never by
+the maintainer, per the run's mandate. Two questions the council was **not**
+allowed to answer are named as such and left open.
+
+## PRs
+
+| PR | Subject | State |
+|---|---|---|
+| **#1753** | `road-to-agent-turnaround` closed and archived by MERGE disposition | merged |
+| **#1754** | `road-to-capability-native-execution` parked in `later/` on a split council | merged |
+| **#1756** | `road-to-turnaround-followups` Phase 3 — Claude host-form rules on the install path | merged |
+| **#1755** | `road-to-governed-harness-evolution` Phase 2 (5/5) + six review findings | green, open |
+| **#1757** | council-topology Phase 1B (2/4) + seven review findings | green, open |
+
+## Council decisions
+
+**#1753 — the disposition of two deferred items. 2/2 convergent, and it
+overruled the plan.** The obvious reading was CARRY into the existing follow-up.
+Both seats independently rejected it: the preservation test's CARRY branch
+requires a follow-up *"created in the SAME change"*, and it lists *"merge into
+existing active work"* as a **separate** branch — which would be redundant if
+"SAME change" merely meant "the destination is active". So the lawful
+disposition is MERGE. Both also drew the same line on the owner-reserved half:
+relocating **where** a decision waits is not **answering** it, so the council may
+move it and may not settle it.
+
+**#1754 — does AC-14's global hard stop survive the amendment to the blocker it
+names? SPLIT 1/1.** One seat: the `Blocks:` field exists to be authoritative, and
+if an acceptance criterion can override it after scoping, *"the field serves no
+function — it becomes decorative notation"*. The other: AC-14 is keyed on blocker
+**status**, not **scope**; the amending council left the blocker open and did not
+amend AC-14, and the edit would change the permitted state from *no Phase 1-9
+code* to *almost all of it*, which is substantive rather than documentary.
+
+A split is an escalation condition, not a tie to be broken by preference, so the
+conservative side stands. **The one thing both seats named unprompted was the
+disposition** — `later/` — and that is what shipped.
+
+**#1755 — the scope of a "four-class corpus". 2/2 convergent on a RE-SCOPE.**
+`failure` is an orthogonal axis: the other three describe *intended* routing,
+`failure` describes *observed* behavior, one case can be both, and a known-wrong
+case in a regression lock is red by construction. Both refused to close the step
+on its first conjunct without a recorded rewrite; one killed the other's proposed
+`known-failures.json` "schema TBD" as *"another vacuous mechanism"*, and nothing
+was created for it.
+
+**#1757 — strip the inline findings block, and type the vocabulary now. 2/2.**
+The council also caught an ordering defect the implementing pass had missed:
+peer review runs *before* consensus, so parsing inside `run_consensus_scoring`
+left the block in the text peer review evaluated.
+
+## What the reviews caught — and why that is the headline
+
+Every branch carrying code went to a **fresh completion reviewer** dispatched by
+`dispatch_r2_reviewer.ts`, which assembles the prompt so the implementing
+session never authors its own evaluator's. **Three reviews, eighteen findings,
+one critical and three high.** Two of the highs were regressions the drain
+itself had just introduced.
+
+- **critical (#1757)** — the inline-findings short-circuit tested
+  `outcome !== 'parsed'`, and `parse_findings_outcome` returns `'parsed'` for
+  *any* valid JSON array. A reply quoting an array as evidence was recorded as a
+  successful extraction, its evidence **deleted** from what peer review read, and
+  the failure counted as a **success** in the rate its own promotion gate reads.
+- **high (#1756)** — the new rule rewrite **deleted the package ownership tag**
+  that `reap_tagged_orphans` matches on, which that function's docblock calls
+  *"the only path with ownership proof independent of inventory history"*. Every
+  file under the host anchor would have lost it; doctor would have read `ok`
+  there permanently.
+- **high (#1755)** — the corpus gate silently no-opped wherever the base ref does
+  not resolve, **while printing a success line asserting the discipline had run**.
+- **high (#1757)** — the marker promised *"the raw reply is retained in the
+  session record"* and nothing retained it.
+
+All eighteen are fixed, each row terminal with its fix SHA and each artefact
+re-bound in place rather than re-dispatched.
+
+## What CI caught that nothing local did
+
+Recorded rather than smoothed over, because the gap is the finding:
+
+1. **`lint_eval_specs`** — the branch that introduced a three-class case
+   vocabulary made the gate's own "near-miss" reading ambiguous, and six corpora
+   were flagged. Fixing the *descriptions* would have made them contradict the
+   classes the same branch added; the gate was made class-aware instead, which
+   is strictly a tightening.
+2. **`dist/install/`** — two freshness gates, neither in the local battery.
+3. **A developer's home path in a shipped bundle.** The rebuild embedded
+   `/Users/<name>/…` 189 times, caught by `check_bundle_path_leakage`. Cause: the
+   worktree's `node_modules` was a symlink to another worktree's, itself a
+   symlink to the main checkout's, so esbuild resolved every dependency outside
+   the repo root. Produced entirely by worktree plumbing, by no source change.
+4. **The base-ref fix was right about the defect and wrong about the remedy.**
+   Turning a silent no-op into a hard `DeadScopeError` made every CI run red —
+   the same wrong answer with the opposite sign. `_lib/ratchet_base_ref.ts`
+   already existed for exactly this and names this exact cause in its docblock.
+
+## Ratchets
+
+Four moved, **every one paid by extraction and none by a baseline raise**:
+source-size 18,440 → 18,437 → 18,266 → 18,249, and **18,246 on the merge** —
+below both sides, because two branches paid independently against different
+bases and picking either would have given back the other's gain. Routing
+coverage 0.3144 → 0.3344 (94 → 100 of 299 skills carry a corpus).
+
+One reversal is recorded rather than quietly made: the size-budget baseline was
+first left alone on the *"never lower a ratchet on a local reading"* precedent.
+That precedent is about an environment-dependent gate; this one counts lines in
+tracked source and its own test asserts equality in both directions, so leaving
+it high is a red test rather than safe conservatism.
+
+## Descopes — none
+
+No item was descoped, cancelled, or weakened. Two are **carried**, both with
+their owner and class intact:
+
+- `authorization-shape-for-long-runs` — owner-reserved, moved from an archived
+  roadmap into an active one without being answered.
+- `b-adr-088`'s browser-engine half — owner-reserved, and the roadmap it gates
+  is parked with an entry condition naming the one owner sentence that releases
+  it in either direction.
+
+## Where the run stopped, and why
+
+**Council quota is exhausted** — 50/50 on both seats against
+`DEFAULT_CLI_CALLS_PER_DAY`. Raising that cap to fit a measurement is the one
+thing the guard exists to prevent, so it was not raised. Two steps that need a
+live run (`1B.1`, `1B.4`) are recorded as **not run**, explicitly *not* as nulls
+— a null is what a measurement returns.
+
+Three roadmaps remain active. Their open work is genuinely blocked in every case
+this run could reach: `turnaround-followups` needs ten post-change sessions that
+do not exist yet and an owner decision; `governed-harness` Phases 3-6 are
+ungated but none are cheap, and Phase 7 waits on `merge-authority`;
+`council-topology` needs council quota.
+
+**One recurring shape, worth naming.** Three separate times this run, a criterion
+was found with no phase, no step and no owner — a council condition recorded
+inside a blocker and carried nowhere. It is the same failure Iron Law 3 exists
+to prevent, one level up: not a deferred *step* that goes silently missing, but a
+deferred *condition*.
