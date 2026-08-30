@@ -174,7 +174,7 @@ once.
       `drop`**, and the distinction is Risk 2: it is the skipped parent the
       master never named, so dropping it is the consolidation defect rather than
       a tidy-up. Its content is folded back in and marked `from-skipped-parent`.
-- [ ] **0.3 Name the state classes without touching any claim.** Label
+- [x] **0.3 Name the state classes without touching any claim.** Label
       authoritative / derived / evidence / adaptive state, citing
       `docs/contracts/audit-log-v1.md` as the already-sanctioned evidence-state
       precedent. Whether the adaptive class splits in two (E8) is decided here.
@@ -182,6 +182,46 @@ once.
       verify: `grep -c 'claim:no-runtime-daemon' README.md` returns **0** and
       `docs/CLAIMS.md` shows no diff for that entry attributable to THIS
       roadmap.
+      **CLOSED 2026-08-30, and E8 is decided: FIVE classes.**
+      `agents/evidence/analysis/governed-harness-state-classes.md` labels
+      authoritative / derived / evidence / **experiment-adaptive** /
+      **production-adaptive**, the last defined as EMPTY and prohibited. AI
+      council, anthropic + openai, both converging on option (c) over four
+      classes and over a five-class split with a merely default-off member.
+
+      **Four was rejected for a stated reason, not a preference:** it gives one
+      name to state that is freely deletable and state that is governed, which
+      openai's seat called the conflation every future producer and consumer
+      would have to rediscover from prose. Both seats said independently that
+      naming a prohibited class is not authorising it.
+
+      **The council's condition is what makes (c) real, and it is carried
+      verbatim into the artefact: EMPTY prohibits creating runtime DEPENDENCIES,
+      not merely populating a labelled directory.** An empty folder with a
+      consumer pointed at it is not an empty class. The falsifiable form:
+      no state in this repository is production-adaptive on 2026-08-30, and a
+      change that makes that false has populated the class whatever it names the
+      file.
+
+      **The three promotion transitions are named** — openai's seat refused the
+      taxonomy without them, because *"may promote a candidate"* hides several
+      architectures and only one preserves the boundary. A human-reviewed commit
+      into `src/` is legal (the thing stops being adaptive at the commit); a
+      deployment updating a runtime-readable pointer and a runtime consuming
+      learned state are not. Phase 7 stays gated on `merge-authority`
+      regardless — who may perform even the legal transition is ADR-239 §
+      Decision 3.
+
+      **The sequencing invariant is the part that binds:** every later step that
+      introduces state or a consumer names its class, or a step can add a
+      runtime-readable projection while calling it `derived`. Same shape as
+      0.1's second half, and stated because a taxonomy that binds nothing is a
+      glossary.
+
+      **The guard is measured, not asserted:** `grep -c 'claim:no-runtime-daemon'
+      README.md` returns **0**, and `git diff origin/main -- docs/CLAIMS.md` is
+      empty. This step touched no claim.
+
       <!-- corrected 2026-08-27: the clause read "still returns 1", which was
       true when written and is now false. `road-to-runtime-governance-flip`
       Phase 2 retired the claim under ADR-249 — the ledger entry moved from
