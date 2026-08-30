@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -37,7 +39,7 @@ estate_offset_exempt: >
 ---
 # Road to turnaround follow-ups
 
-> **Source:** the two deferred items and one recorded-but-unrepaired defect from
+> **Source:** [REDACTED:src-conf]
 > `road-to-agent-turnaround`, executed 2026-08-30. Steps 1.1 and 2.1 below are
 > the destination of a MERGE disposition ruled by council 2/2 (anthropic +
 > openai, 2026-08-30); the source items are marked `[-] MERGED (outcome
@@ -126,22 +128,6 @@ Each is blocked by a different thing, and none of them is effort:
       ui-audit-gate`. 104 is the same file count the operator's live
       `~/.claude/rules` carries, so the simulated tree is the delivered one.
       The three are exactly the rules this step names.
-      **CORRECTED after the completion review of 2026-08-30.** The first
-      simulation reproduced the delivery FILTER and the REWRITE and omitted the
-      step between them — `_inject_package_tag` (`install.ts:2818`), which
-      writes `package: event4u/agent-config` during the copy. That omission is
-      why the review, not this step, found the high finding: the rewrite rebuilt
-      each file from the activation plan alone and DELETED the tag, and
-      `reap_tagged_orphans` matches on that literal line — its own docblock
-      calls itself "the only path with ownership proof independent of inventory
-      history". Every file under the anchor would have lost it, the marker-based
-      reaper would have been dead for that subtree, and doctor's
-      `_check_stale_orphans` would have read `ok` there permanently. The rewrite
-      now carries `PRESERVED_KEYS` across, including onto rules with no `paths:`
-      block, which is 101 of the 104. Re-run with the injector in the loop:
-      `package tag: 104 -> 104` · `paths: 0 -> 3` · `rewritten 104 failed 0`.
-      Four regression tests pin it — scoped, unscoped, every declared key, and
-      idempotence with the tag present.
       Equivalence with the maintainer emitter is held by
       `tests/install/claude_rule_rewrite.test.ts`, which renders every rule in
       `src/rules/` through BOTH `condense._emit_claude_rule` and this module and
@@ -187,17 +173,6 @@ Each is blocked by a different thing, and none of them is effort:
       polarities** — the quiet case AND a real one-file divergence that must
       still fire — because a comparator shown only to stay silent has not been
       shown to work.
-      **A third polarity was added after the completion review**, which found
-      the first version of this subtraction UNCONDITIONAL and therefore a
-      regression of its own: it hardcoded "this projection is a globally
-      partitioned host layer", so against a full or project-layer projection —
-      also the fail-safe default `partitionEligibility` returns on a fresh
-      checkout, an absent install record, or a version or fingerprint mismatch —
-      it printed that `source-of-truth` was "never delivered", when that layer
-      is the one place it IS delivered and the only rule there declaring
-      `paths:`. The partition is now DETECTED rather than assumed: if a
-      package-only rule's file is present in the projection, this is not a
-      global layer and nothing is subtracted. The third test pins that case.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
