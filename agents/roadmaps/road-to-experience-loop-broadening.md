@@ -824,18 +824,42 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 8 — Trigger-shift pairs, offline
 
-- [ ] **8.1 Extend `triggers.json` backward-compatibly.** A `shift_of` field
+- [x] **8.1 Extend `triggers.json` backward-compatibly.** A `shift_of` field
       plus an axis set, producing an offline train-versus-shifted gap report in
       the `description_route_check` neighbourhood. The master lists three axes
       (wrapper, temporal, phrasing); `from-skipped-parent` adds host framing and
       context/tool availability, which are the two a purely textual shift cannot
       express. Pilot scope is a decision (E6).
+      **DONE 2026-08-30** — `src/scripts/_lib/trigger_shift.ts`, five axes
+      including the two from the skipped parent that a purely textual shift
+      cannot express.
+      **The backward-compatibility claim is STRUCTURAL, not a promise.** All six
+      readers of `triggers.json` key-pick, and no JSON Schema governs the file —
+      `evals.schema.json` says so in its own `$comment` — so an unknown key
+      cannot break a parse. The test asserts it anyway, through the production
+      reader and across the whole 94-file corpus, because "cannot break" is the
+      kind of claim that is cheap to make and cheap to check.
+      **Pilot: `code-intelligence`** — the roadmap's own § First cut names it as
+      already carrying `evals/triggers.json`, so E6 is followed rather than
+      decided. Two twins, `wrapper` and `temporal`.
+      **The gap report deliberately does not count a pair whose BASE already
+      fails.** That says the corpus row is wrong or the description never
+      worked; it says nothing about generalisation, which is the only thing this
+      measures.
+      **A dangling twin is REPORTED, never dropped** — swallowing one makes the
+      corpus quietly smaller while the report still looks complete.
       verify: existing `triggers.json` files parse unchanged, and the gap report
       is produced with zero live-harness calls.
-- [ ] **8.2 The live-floors park stays parked.**
+- [x] **8.2 The live-floors park stays parked.**
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree and its council decision (2/2, evaluator independence) is not
       reopened here.
+      **DONE 2026-08-30, and asserted more strongly than "does not call one".**
+      The gap report takes the router as a caller-supplied PREDICATE, so there
+      is no harness reference to follow: a future author cannot reach a live
+      backend without changing the module's imports, which is a visible act in a
+      diff. A test pins both — no import of `description_route_check` or
+      `cross_model_smoke`, and no `cached-live`, `fetch(` or URL literal.
       verify: no step in this roadmap invokes a live routing harness.
 
 ## Phase 9 — Canonical enums, effect, and the consumption door
