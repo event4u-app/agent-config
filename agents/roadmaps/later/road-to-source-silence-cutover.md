@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -11,6 +11,47 @@ relates: []
 # Nothing here is new scope.
 research_pin: "agent-config @ 63d06b7eb (origin/main, 2026-08-29) plus the drain/source-silence change that archived the predecessor. Every count below was measured at that state, not carried."
 ---
+
+> **PARKED 2026-08-30. Phases 2 and 3 are complete; Phase 1 is gated on a
+> repository secret no agent can mint.** Resume when a maintainer with secret
+> access has provisioned `SOURCE_DENY_KEY`.
+>
+> This is the `later/` disposition applied as written — *"a roadmap whose open
+> work cannot proceed now (gated on an external trigger) but will resume"* — and
+> not a judgement call. Step 1.1 is `gh secret set SOURCE_DENY_KEY`: minting a
+> secret and writing it into the repository's configuration is an outward
+> mutation of public state that no roadmap authorization substitutes for, and
+> the value itself must never pass through an agent's context.
+>
+> **Phase 1 is NOT split, and that refusal is a standing council verdict rather
+> than caution.** AI council 2026-08-28, 2/2 convergent and unqualified: shipping
+> the executable half as a *replacement* is net-negative, because the half an
+> agent can build without secrets is precisely the half that enforces nothing.
+> One seat: *"you've added complexity without adding protection, and you've
+> broken a gate that at least worked before."* So the three steps an agent
+> COULD prepare (1.2's candidate reading, 1.3's digest generation, 1.4's CI
+> wiring) are deliberately left undone rather than landed as a partial cutover.
+>
+> **Why parked rather than descoped to a stub.** Parking preserves every item
+> and its blocker in one file with an exact resume condition, and costs the
+> estate nothing. A stub would split the four atomic steps away from the
+> acceptance criteria that depend on them (AC-1 and AC-2), which is the same
+> split the council refused, performed on the paperwork instead of the code.
+>
+> **What landed and is not waiting on anything:** the `skip_paths` target is
+> settled at 21 with the `src/scripts/cost/` entry retired and its MIT notice
+> shipped (Phase 2), and the attribution-shape ratchet is down from 243 to 148
+> by fixing a class that was scoring compliance as debt (Phase 3). AC-3 and
+> AC-4 are met. AC-1 and AC-2 remain open and are exactly Phase 1.
+>
+> **The cost of waiting, restated because it is the reason this file exists:**
+> the tracked denylist keeps publishing the 65 harvest source names it exists to
+> hide, in a public repository, and the mechanism to stop that sits in the tree
+> built and tested, enforcing nothing.
+>
+> **Revisit-if:** `SOURCE_DENY_KEY` is provisioned; or the digest cutover is
+> abandoned as a design, which is an owner decision and would retire this file
+> rather than resume it.
 # Road to source-silence cutover — the four things an agent cannot do, and the one it would not
 
 > **Origin:** carry-forward from `road-to-source-silence`, archived 2026-08-29.
