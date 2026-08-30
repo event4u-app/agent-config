@@ -1180,10 +1180,17 @@ gates:
     status: enforced
     no_canary_reason: "The gate carries its own `--self-test` (5 cases, 3 rejecting), each building a throwaway src/rules/ tree and running the real gate against it — a missing block, a missing required key, and a key present with no value, which are three different ways a declaration can be hollow and which a file-presence check catches none of. A planted canary cannot express any of them: the violation is a MODIFICATION of one of ten tracked rule files, and a newly created file lands outside the declared scope by construction. Same class as check_no_automerge_key and check_score_contract."
 
+  - id: check_concern_admissions
+    script: src/scripts/check_concern_admissions.ts
+    min_scanned: 0
+    corpus: "agents/decisions/concern-admissions.jsonl rows PLUS the concerns added since the base ref (a SET DIFFERENCE over ids in src/scripts/hook_manifest.yaml, because a concern is a key inside one file rather than a file of its own). Ships at 0: the 55 pre-existing concerns are grandfathered by that forward-only scope, so the first row arrives with the first new concern, and a MALFORMED ledger is a separate hard error in readLedger() rather than an empty read."
+    status: enforced
+    no_canary_reason: "The negative control is the gate's own --self-test, which is stronger than a single planted canary and is run in CI: 6 cases, 3 of them rejecting, covering a concern added with no row, a row with a blank answer, and a rejected row naming a live concern — plus two ACCEPT cases that pin the grandfathering, so a gate that started failing everything would not pass either. A planted canary in the real ledger would additionally have to be removed again, and a forgotten one is a false rejection row in a decision record."
+
   - id: check_estate_count
     argv: []
     min_scanned: 20
-    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/)"
+    corpus: "active + parked roadmap files (81 at baseline: 38 active, 43 in later/), plus src/scripts/hook_manifest.yaml for the concern axis — a single file read with `git show` at the base ref rather than a third materialised subtree"
     status: enforced
     canary:
       class: contract-violation

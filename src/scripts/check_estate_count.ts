@@ -153,6 +153,7 @@ import { GateLedger } from './_lib/gate_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
+import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
@@ -190,6 +191,23 @@ export interface EstateCounts {
      * "no tokens" — see `tokensExact`.
      */
     skill_description_tokens: number;
+    /**
+     * Hook concerns declared in `src/scripts/hook_manifest.yaml`.
+     *
+     * A FIFTH corpus on the same machinery, and the same argument that admitted
+     * skills: the floor-from-the-base-ref work is the expensive part and should
+     * not be written a third time, and a separate ratchet is a separate place to
+     * forget.
+     *
+     * Read with the SCOPED parser in `_lib/concern_estate.ts`, not the
+     * whole-file grep the originating roadmap reproduces its series with. That
+     * grep over-counts by exactly 16 at every one of its six pins, because
+     * `roles:`, `platforms:` and `native_event_aliases:` sit at the same indent.
+     * The growth finding survives the correction — the delta is constant — but
+     * the absolute figure does not: the axis stands at 55, not 71, and a floor
+     * of 71 is one this gate's own parser could never reproduce.
+     */
+    concern_count: number;
 }
 
 export type MetricName = keyof EstateCounts;
@@ -200,6 +218,7 @@ export const METRICS: readonly MetricName[] = [
     'open_blockers',
     'skill_count',
     'skill_description_tokens',
+    'concern_count',
 ];
 
 export interface EstateBudget {
@@ -303,6 +322,29 @@ function repoRootFrom(start: string): string {
     }
 }
 
+/** File contents, or `null` when it is absent. Absent is a real state here. */
+function readIfPresent(file: string): string | null {
+    try {
+        return fs.readFileSync(file, 'utf-8');
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Concern count at a git ref, or `null` when the manifest is unreadable there.
+ *
+ * `null` is NOT zero, and the distinction is the whole reason this returns an
+ * option. A missing manifest read as 0 makes the floor 0, which makes the
+ * ratchet inert on that path while still printing a green line — "a gate that
+ * read nothing has not passed", in this repository's own words. The caller
+ * turns `null` into a floor-skip, which this gate already treats as a failure.
+ */
+function concernCountAt(repoRoot: string, ref: string): number | null {
+    const res = git(['show', `${ref}:${CONCERN_MANIFEST_POSIX}`], repoRoot);
+    return res.ok ? countConcerns(res.stdout) : null;
+}
+
 function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
     const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 32 * 1024 * 1024 });
     return { ok: res.status === 0, stdout: res.stdout ?? '' };
@@ -389,6 +431,7 @@ export function countEstate(repoRoot: string): EstateCounts {
         // against a proxy one — they differ by more than the growth a ratchet
         // is trying to catch.
         skill_description_tokens: skills.skill_description_tokens ?? 0,
+        concern_count: countConcerns(readIfPresent(path.join(repoRoot, CONCERN_MANIFEST_POSIX)) ?? ''),
     };
 }
 
@@ -554,6 +597,15 @@ export function evaluate(
     // property, and unlike a number nobody has to remember to update it.
     let floor: EstateCounts | null = null;
     let floorSkipReason: string | null = null;
+    /**
+     * Does the WORKING TREE carry a manifest at all?
+     *
+     * The base-ref read only matters when it does. A repository with no manifest
+     * on either side has no concern axis to ratchet, and failing there would
+     * turn every unrelated fixture red — which is how the first version of this
+     * clause was caught.
+     */
+    const headHasManifest = fs.existsSync(path.join(repoRoot, CONCERN_MANIFEST_POSIX));
     /** Set when the base ref carries no `src/skills` — the skill metrics drop. */
     let skillFloorSkipReason: string | null = null;
     /** Set when either side's tokeniser did not resolve — that ONE metric drops. */
@@ -584,7 +636,14 @@ export function evaluate(
                 if (baseSkills.error !== null || baseSkills.files === 0) {
                     // Roadmap floor stands; the skill floor is stated as
                     // unavailable and its metrics are dropped from the compare.
-                    floor = roadmapFloor;
+                    const cf = concernCountAt(repoRoot, baseRef);
+                    floor = { ...roadmapFloor, concern_count: cf ?? 0 };
+                    if (cf === null && headHasManifest) {
+                        floorSkipReason =
+                            `could not read ${CONCERN_MANIFEST_POSIX} at ${baseRef} while HEAD ` +
+                            'carries one. A floor of 0 would make the concern ratchet inert while ' +
+                            'still printing green, so this fails rather than skips.';
+                    }
                     skillFloorSkipReason =
                         `could not read ${SKILLS_POSIX} at ${baseRef} — ` +
                         `${baseSkills.error ?? 'no files'}`;
@@ -594,7 +653,23 @@ export function evaluate(
                         ...roadmapFloor,
                         skill_count: s.skill_count,
                         skill_description_tokens: s.skill_description_tokens ?? 0,
+                        // A SINGLE FILE, so `git show` rather than a third
+                        // `materialiseSubtree` — stated because the roadmap asks
+                        // which of the two this uses. Materialising a subtree to
+                        // reach one known path would spend a temp tree and a
+                        // recursive ls-tree on a `git cat-file` in disguise.
+                        //
+                        // `?? 0` never stands for "unreadable": the branch below
+                        // turns that into a floor-skip, which fails. This
+                        // coalesce only satisfies the type.
+                        concern_count: concernCountAt(repoRoot, baseRef) ?? 0,
                     };
+                    if (concernCountAt(repoRoot, baseRef) === null && headHasManifest) {
+                        floorSkipReason =
+                            `could not read ${CONCERN_MANIFEST_POSIX} at ${baseRef} while HEAD ` +
+                            'carries one. A floor of 0 would make the concern ratchet inert while ' +
+                            'still printing green, so this fails rather than skips.';
+                    }
                     if (s.skill_description_tokens === null) {
                         skillTokenSkipReason =
                             `the tokeniser did not resolve at ${baseRef}; an exact reading may ` +
@@ -663,6 +738,14 @@ export function evaluate(
         // claim path — a recorded reason in the diff — or it fails.
         skill_count: 0,
         skill_description_tokens: 0,
+        // Step 1.2: NO new allowance key. The concern axis joins `skill_count`
+        // in taking the claim path or nothing, for the reason the budget file
+        // already records for skills — an allowance reopens the gaming path the
+        // dimension exists to close. Eight concerns spread across eight events
+        // violate the existing per-event cap zero times, which is exactly why a
+        // total-growth ratchet was needed and exactly why it must not carry a
+        // per-change freebie.
+        concern_count: 0,
     };
 
     /** Metrics dropped from the compare, with the reason, never silently. */
@@ -807,6 +890,64 @@ function selfTest(): number {
             name: 'estate unchanged against the base tree → accept',
             expect: 'accept',
             run: () => fixture({ roadmaps: 3, base: 'main', after: () => undefined }),
+        },
+        {
+            // The concern axis, both directions. Seeded into the BASE tree so
+            // the floor is a real reading of the fixture's own manifest rather
+            // than this repository's -- the whole point of measuring the floor
+            // from the base ref.
+            name: 'concern count grows above the base-tree floor → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\n'),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            CONCERN_MANIFEST_POSIX,
+                            'concerns:\n  one:\n    severity: advisory\n  two:\n    severity: advisory\n',
+                        ),
+                }),
+        },
+        {
+            // AC-3's explicit clause, and it corrects the first implementation
+            // of this metric: an unreadable manifest at the base ref must FAIL,
+            // never read as 0. A floor of 0 makes the ratchet inert on that
+            // path while still printing a green line, which is the shape this
+            // repository calls "a gate that read nothing has not passed".
+            name: 'base ref carries no manifest → reject (a 0 floor is not a floor)',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\n'),
+                }),
+        },
+        {
+            // The half that proves the parser is SCOPED rather than a grep: a
+            // top-level map gaining members at the same two-space indent is not
+            // concern growth, and the roadmap's own reproduce command would
+            // have counted it as such.
+            name: 'a non-concern top-level map growing is not concern growth → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, CONCERN_MANIFEST_POSIX, 'concerns:\n  one:\n    severity: advisory\nroles:\n  dev:\n'),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            CONCERN_MANIFEST_POSIX,
+                            'concerns:\n  one:\n    severity: advisory\nroles:\n  dev:\n  ops:\n  sre:\n',
+                        ),
+                }),
         },
         {
             // The floor is now exact, so this case no longer depends on anyone

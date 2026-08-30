@@ -8,9 +8,33 @@
 # Per-platform event-name mapping: agents/settings/contexts/chat-history-platform-hooks.md.
 #
 # When you add or remove a concern, also update:
+#   - agents/decisions/concern-admissions.jsonl   (REQUIRED — see below)
 #   - scripts/agent-config         (CLI subcommand wiring, if exposed)
 #   - the source rule's "Copilot fallback" section (Phase 7.9)
 #   - the relevant snapshot tests under tests/hooks/ (Phase 7.11)
+#
+# ADDING A CONCERN — the five questions, answered in the ledger row.
+# `check_concern_admissions` fails a concern added since the base ref with no
+# `admitted` row, or with a row whose answers are blank. The 55 present on
+# 2026-08-30 are grandfathered: the scope is a SET DIFFERENCE over concern ids,
+# so a pre-existing concern can neither demand a row nor be forgotten off one.
+#
+#   slot                          Which lifecycle slot does it bind?
+#   binding_hosts                 Which hosts actually BIND it — not which ones
+#                                 declare the slot. These differ, and the
+#                                 difference is the usual over-claim.
+#   behaviour_where_deny_ignored  What does it do where the host ignores a deny?
+#                                 A concern whose only answer is "it blocks" is
+#                                 describing one host.
+#   why_not_extend                Why can no existing concern carry this?
+#   per_event_budget_impact       What does it cost against the per-(platform,
+#                                 event) cap in lint_hook_concern_budget.ts?
+#
+# The total count is ALSO ratcheted, in check_estate_count's `concern_count`
+# axis, because the per-event cap is blind to total growth by construction:
+# eight new concerns spread across eight events violate it zero times.
+#
+# `decision: rejected` is a first-class row. A recorded refusal is the point.
 schema_version: 1
 
 concerns:

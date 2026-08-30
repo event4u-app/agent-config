@@ -1763,6 +1763,17 @@ tasks:
       names a skill that exists. Forward-only: the 299 pre-existing skills are
       grandfathered by the diff scope.
     cmd: ./scripts-run src/scripts/check_skill_admissions {{.QUIET_FLAG}}
+  check-concern-admissions:
+    silent: true
+    desc: >-
+      Fail when a hook concern added since the base ref carries no `admitted`
+      row in agents/decisions/concern-admissions.jsonl, when a row's five
+      answers are missing, or when a `rejected` row names a concern that
+      exists. Forward-only: the 55 pre-existing concerns are grandfathered by
+      the scope, which is a SET DIFFERENCE over concern ids rather than a file
+      diff — a concern is a key inside one manifest, so a file-level diff would
+      say only "the manifest changed" and discriminate nothing.
+    cmd: ./scripts-run src/scripts/check_concern_admissions {{.QUIET_FLAG}}
   lint-skill-trigger-corpus:
     silent: true
     desc: >-
