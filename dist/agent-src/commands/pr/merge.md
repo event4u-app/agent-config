@@ -287,9 +287,9 @@ built bundle.
 ## 7. Expiry is a reported state, never a stall
 
 ```
-WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN STOPS CLEANLY
-AND REPORTS. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS THE GUARD,
-ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
+WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN PAUSES, REPORTS,
+AND ASKS FOR RE-AUTHORIZATION. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS
+THE GUARD, ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
 ```
 
 **Unreachable while the merge step is gated**, and stated rather than left for
@@ -298,9 +298,22 @@ operation (`push` and `commit` are `WARN_OPS`), so the window governs nothing
 it does. This section is the contract for when the gate opens.
 
 Write the summary as-is with a `window-expired` disposition per unprocessed PR
-and name the exact re-authorization needed. Widening `LEDGER_MAX_AGE_MS` is
-forbidden practice: on 2026-08-21 it was patched to six hours for a drain run
-and the widening reached the trunk.
+and name the exact re-authorization needed. Then STOP and wait — do not end the
+run, and do not proceed to the next PR. ADR-251 (2026-08-30) decided this
+shape: expiry is a pause, not a termination.
+
+**The operator's reply is what resumes it, and it renews the window through the
+path that already exists.** `git_authorization_hook.ts` rewrites this session's
+ledger with a fresh `detected_at` on every human-typed prompt, so a reply
+carrying the re-authorization you named resets the age the guard compares
+against — no new mechanism, and the signal still comes from text the user typed.
+Re-verify the manifest entry (number and head SHA) before resuming, exactly as
+§ 8 requires: the pause is a window in which the world can move.
+
+Widening `LEDGER_MAX_AGE_MS` is still forbidden practice, and ADR-251 kept the
+30-minute value deliberately rather than by omission: on 2026-08-21 it was
+patched to six hours for a drain run and the widening reached the trunk. The run proposes no value for it, edits neither it nor its bundles,
+and treats a refusal as the answer.
 
 ## 8. Kill switches, and what happens after a merge
 
