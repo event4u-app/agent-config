@@ -36,6 +36,7 @@
  *     CI=true ./scripts-run src/scripts/check_claims     # re-runs exec: claims
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -45,7 +46,12 @@ import {
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import {
+    assertWatchlistResolves,
+    DeadScopeError,
+    reportScanned,
+} from './_lib/scan_scope.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const _HERE = path.dirname(_FILE);
@@ -69,6 +75,61 @@ const URL_DATED = /^https?:\/\/\S+\s*\(\d{4}-\d{2}-\d{2}\)\s*$/;
  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
  *  are structurally witnessed (pointer columns + their own linters). */
 const WITNESS_SURFACES = ['README.md', 'CAPABILITIES.yaml'];
+
+/**
+ * The publish-surface set — and the RULE that decides membership.
+ *
+ * `SURFACE_ROOTS` above is where the package looks for claim MARKERS; this is
+ * where the package's own words are RENDERED BY SOMEBODY ELSE. The two are not
+ * the same set and conflating them is what let a retired claim keep shipping:
+ * `package.json.description` and `.github/about.yml` carried the withdrawn
+ * `no-runtime-daemon` wording for weeks while `check_claims` read neither.
+ *
+ * THE RULE, stated once so a channel that does not appear below is still
+ * answerable: a file belongs to this set when a distribution channel the
+ * package publishes to renders its content to a reader who never opens the
+ * repository. Three consequences, each of which decides a real case:
+ *
+ *  1. SOURCE, not derived artefact. `dist/mcp/server.json` and
+ *     `dist/mcp/registry-manifest.json` are published, and they are BUILT from
+ *     `package.json` + `README.md`. Scanning the source covers them and
+ *     scanning the artefact would not — a fresh checkout has no `dist/`, so a
+ *     gate reading it dies on a missing file rather than on the property.
+ *  2. RENDERED, not merely shipped. `docs/**` ships inside the npm tarball but
+ *     no channel renders it as the package's pitch; it is documentation a
+ *     reader reaches after choosing the package. `README.md` is rendered by
+ *     both the npm page and the GitHub repo page, so it is in.
+ *  3. THE PITCH FIELD, not the whole file. A JSON/YAML publish surface is
+ *     scanned whole rather than per-key on purpose: a retired phrasing is
+ *     equally wrong in `keywords`, in a nested plugin `description`, or in a
+ *     comment, and a per-key list is the snapshot-of-today this rule exists to
+ *     replace.
+ *
+ * Applying the rule to a channel not listed: a registry page whose copy is
+ * pasted by hand is IN and needs a file here holding that copy; a generated
+ * badge is OUT because its text derives from a source already in the set.
+ */
+const PUBLISH_SURFACES = [
+    'README.md',
+    'package.json',
+    '.github/about.yml',
+    '.github/topics.yml',
+    '.claude-plugin/marketplace.json',
+];
+
+/** The sentinel `retires_phrasings` value for a claim that never left the ledger. */
+const NEVER_PUBLISHED = 'never-published';
+
+/** A phrasing shorter than this matches too much prose to be a safe needle. */
+const MIN_PHRASING_CHARS = 12;
+
+/** Split a `retires_phrasings` value into its literal phrasings. */
+export function parse_retired_phrasings(raw: string): string[] {
+    return raw
+        .split('|')
+        .map((x) => x.trim())
+        .filter((x) => x !== '');
+}
 
 /**
  * Shapes that read as a measured capability figure.
@@ -228,6 +289,39 @@ export interface LedgerEntry {
      * records call a gate that could only block.
      */
     non_inference: string;
+    /**
+     * Optional, CLOSED entries only: the literal phrasings this claim was
+     * PUBLISHED under, `|`-separated — or the sentinel
+     * `never-published — <reason>` when it never appeared outside the ledger.
+     *
+     * `road-to-retired-claims-stay-retired` Phase 1. Retiring a claim was a
+     * bookkeeping act with no reach: `check_claims` validated a `withdrawn`
+     * row's own shape and `lint_positioning` validated three surfaces agreeing
+     * with each other, and neither read the other's input. A row could go
+     * `withdrawn` while its exact wording stayed on the npm page.
+     *
+     * The list lives ON THE ROW rather than in a sibling deny-list file, so
+     * retiring a claim and forbidding its wording are one edit. A second file
+     * is the one nobody updates.
+     *
+     * Populated from HISTORY, never from imagination — `MIN_PHRASING_CHARS` and
+     * the read-it-from-git discipline in docs/CLAIMS.md are both aimed at the
+     * same failure: a list of plausible paraphrases becomes a gate that fires
+     * on legitimate prose and is muted within a release.
+     */
+    retires_phrasings: string;
+    /**
+     * Whether the `- retires_phrasings:` LINE exists at all, independent of
+     * whether it carries a value.
+     *
+     * The two states are different findings and the string alone cannot tell
+     * them apart: an ABSENT field is a row nobody has got to yet (the coverage
+     * ratchet's business), while a PRESENT-BUT-EMPTY one is an author who
+     * answered the question with silence — the same distinction `non_inference`
+     * draws with its 20-character floor, and the reason that field's check is
+     * separate from its ratchet.
+     */
+    retires_phrasings_present: boolean;
 }
 
 interface Args {
@@ -239,6 +333,10 @@ function parse_args(argv: string[]): Args {
     for (const a of argv) {
         if (a === '--quiet') {
             out.quiet = true;
+        } else if (a === '--self-test') {
+            // Handled in main() before parse_args is reached; accepted here so
+            // a stray ordering never turns the flag into a usage error.
+            continue;
         } else if (a === '-h' || a === '--help') {
             process.stdout.write('usage: check_claims [--quiet]\n');
             throw new ExitCode(0);
@@ -272,6 +370,8 @@ function load_ledger(): Map<string, LedgerEntry> {
                 retired_by: cur.retired_by ?? '',
                 measured_on: cur.measured_on ?? '',
                 non_inference: cur.non_inference ?? '',
+                retires_phrasings: cur.retires_phrasings ?? '',
+                retires_phrasings_present: cur.retires_phrasings_present ?? false,
             });
         }
         cur = {};
@@ -289,11 +389,14 @@ function load_ledger(): Map<string, LedgerEntry> {
         // would have silently ignored the second and dropped whichever field
         // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
             (cur as Record<string, string>)[key] = (field[2] ?? '').trim();
+            if (key === 'retires_phrasings') {
+                (cur as Record<string, unknown>)['retires_phrasings_present'] = true;
+            }
         }
     }
     flush();
@@ -390,6 +493,7 @@ interface Finding {
 }
 
 function main(argv: string[] = process.argv.slice(2)): number {
+    if (argv.includes('--self-test')) return selfTest();
     const args = parse_args(argv);
     const ledger = load_ledger();
     // The ledger is the corpus both passes depend on: markers resolve against
@@ -400,7 +504,7 @@ function main(argv: string[] = process.argv.slice(2)): number {
     // Marker count is deliberately not the unit: a surface tree with zero
     // markers is a legitimate state, an absent ledger never is.
     try {
-        assertScanned({
+        reportScanned({
             gate: 'check_claims',
             scanned: ledger.size,
             units: 'ledger entry(s)',
@@ -497,6 +601,130 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 file: LEDGER_REL,
                 reason: `retired_by is only meaningful on a withdrawn entry (status: ${entry.status || 'missing'})`,
             });
+        }
+    }
+
+    // 2d. `retires_phrasings` — shape. A retirement that names no wording
+    //     forbids no wording, and a wording too short to be specific forbids
+    //     half the tree. Both are findings at any count; the COVERAGE question
+    //     (is every closed row populated?) is a ratchet further down, because
+    //     that is the number that can only shrink.
+    for (const entry of ledger.values()) {
+        const raw = entry.retires_phrasings;
+        if (!entry.retires_phrasings_present) continue;
+        if (entry.status !== 'resolved-null' && entry.status !== 'withdrawn') {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `retires_phrasings is only meaningful on a closed entry — resolved-null or withdrawn (status: ${entry.status || 'missing'})`,
+            });
+            continue;
+        }
+        if (raw.startsWith(NEVER_PUBLISHED)) {
+            // The sentinel is a claim about history, so it carries its reason.
+            // `never-published` alone is indistinguishable from "nobody looked".
+            const reason = raw.slice(NEVER_PUBLISHED.length).replace(/^[\s\u2014-]+/, '').trim();
+            if (reason.length < 20) {
+                findings.push({
+                    id: entry.id,
+                    file: LEDGER_REL,
+                    reason:
+                        'retires_phrasings says never-published but states no reason — the sentinel ' +
+                        'asserts that history was read and came back empty, and an unreasoned one is ' +
+                        'indistinguishable from nobody having looked',
+                });
+            }
+            continue;
+        }
+        const phrasings = parse_retired_phrasings(raw);
+        if (phrasings.length === 0) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: 'retires_phrasings is present but empty — a retirement that names no wording forbids none',
+            });
+            continue;
+        }
+        for (const ph of phrasings) {
+            if (ph.length < MIN_PHRASING_CHARS) {
+                findings.push({
+                    id: entry.id,
+                    file: LEDGER_REL,
+                    reason: `retires_phrasings carries "${ph}" (${ph.length} chars) — under ${MIN_PHRASING_CHARS} it is a needle that matches ordinary prose, which is how this gate gets muted`,
+                });
+            }
+        }
+    }
+
+    // 2e. THE REACH. A retired phrasing may not appear on a publish surface.
+    //     This is the half the ledger never had: `check_claims` read the row's
+    //     own shape, `lint_positioning` read three surfaces against each other,
+    //     and nothing read the row against the surfaces. The live instance was
+    //     the withdrawn `no-runtime-daemon` wording still shipping in
+    //     `package.json.description` and `.github/about.yml`.
+    //
+    //     Match is case-insensitive substring over the raw file, per rule (3)
+    //     at PUBLISH_SURFACES: a retired phrasing is equally wrong in a
+    //     keyword, a nested description, or a comment.
+    //
+    //     THE SCAN ROOT IS ASSERTED, and asserted CONDITIONALLY. A watch-list
+    //     guard whose paths all vanish reports clean forever — the
+    //     `check_safety_floor_untouched` shape, which announced "4 rules
+    //     guarded" while guarding none. `assertWatchlistResolves` is that
+    //     assertion. It runs only when there is at least one needle to look
+    //     for, because a ledger carrying no retired phrasings has nothing to
+    //     watch, and a phantom watchlist over an empty needle set is a false
+    //     alarm rather than a caught defect (it is also every fixture tree).
+    //
+    //     A needle under MIN_PHRASING_CHARS is already a finding above and is
+    //     excluded here rather than searched: reporting it twice, once as a
+    //     bad needle and once as a phantom watchlist, buries the actionable
+    //     message under the derived one.
+    const usableNeedles = new Map<string, string[]>();
+    for (const e of ledger.values()) {
+        if (e.status !== 'resolved-null' && e.status !== 'withdrawn') continue;
+        if (e.retires_phrasings === '' || e.retires_phrasings.startsWith(NEVER_PUBLISHED)) continue;
+        const usable = parse_retired_phrasings(e.retires_phrasings).filter(
+            (ph) => ph.length >= MIN_PHRASING_CHARS,
+        );
+        if (usable.length > 0) usableNeedles.set(e.id, usable);
+    }
+    let liveSurfaces: string[] = [];
+    if (usableNeedles.size > 0) {
+        try {
+            liveSurfaces = assertWatchlistResolves({
+                gate: 'check_claims:publish-surfaces',
+                candidates: PUBLISH_SURFACES,
+                repoRoot: REPO,
+            });
+        } catch (exc) {
+            if (!(exc instanceof DeadScopeError)) throw exc;
+            // A FINDING, not an early return. Returning here would suppress
+            // every finding already collected, and the dead-root message would
+            // arrive alone — hiding the shape errors that are usually the
+            // reason somebody is reading this output.
+            findings.push({
+                id: 'publish-surfaces',
+                file: LEDGER_REL,
+                reason: exc.message,
+            });
+        }
+    }
+    for (const entry of ledger.values()) {
+        const phrasings = usableNeedles.get(entry.id);
+        if (phrasings === undefined) continue;
+        for (const rel of liveSurfaces) {
+            const abs = path.join(REPO, rel);
+            const body = fs.readFileSync(abs, 'utf8').toLowerCase();
+            for (const ph of phrasings) {
+                if (body.includes(ph.toLowerCase())) {
+                    findings.push({
+                        id: entry.id,
+                        file: rel,
+                        reason: `publishes the retired phrasing "${ph}" — claim:${entry.id} is ${entry.status}, so this wording may no longer ship`,
+                    });
+                }
+            }
         }
     }
 
@@ -670,6 +898,45 @@ function main(argv: string[] = process.argv.slice(2)): number {
         });
     }
 
+    // 6. Retired-phrasings COVERAGE ratchet (road-to-retired-claims-stay-retired
+    //    Phase 1.2). Every closed entry names what its retirement forbids; the
+    //    field stays optional at the SCHEMA level so a fixture and a
+    //    mid-authoring row still parse, and this is where absence becomes a
+    //    finding.
+    //
+    //    DELIBERATELY UNBASELINED, unlike the `non_inference` ratchet above.
+    //    All eight closed rows were populated in the change that introduced the
+    //    field, so there is no inherited debt to carry — and `checkRatchet`
+    //    with no recorded entry returns `ok: actual === 0`
+    //    (src/scripts/_lib/gate_baseline.ts:288-301), which is exactly the
+    //    hard-zero this needs. Recording a baseline of 0 would be worse than
+    //    recording none: a 0 can never DROP, so the 56-day anti-fossilization
+    //    clause (STALE_AFTER_DAYS, :41) would fail the gate two months from now
+    //    for a count that was correct the whole time.
+    const closedWithoutPhrasings = [...ledger.values()].filter(
+        (e) =>
+            (e.status === 'resolved-null' || e.status === 'withdrawn') &&
+            !e.retires_phrasings_present,
+    );
+    const phrasingsVerdict = fs.existsSync(baselinesPath)
+        ? checkRatchet({
+              gate: 'check_claims:retired-phrasings',
+              actual: closedWithoutPhrasings.length,
+              repoRoot: REPO,
+          })
+        : { ok: true, message: '' };
+    if (!phrasingsVerdict.ok) {
+        findings.push({
+            id: 'retired-phrasings',
+            file: LEDGER_REL,
+            reason:
+                `${phrasingsVerdict.message}` +
+                (closedWithoutPhrasings.length > 0
+                    ? ` — closed without the field: ${closedWithoutPhrasings.map((e) => e.id).join(', ')}`
+                    : ''),
+        });
+    }
+
     if (findings.length > 0) {
         process.stderr.write(`❌  check_claims: ${findings.length} unbacked/dangling claim(s):\n`);
         for (const f of findings) {
@@ -710,6 +977,125 @@ function _isCliEntry(): boolean {
         return false;
     }
 }
+/**
+ * `--self-test` — the gate proving its own rejections still fire.
+ *
+ * Required by the `gate-self-test:registered-non-adopters` ratchet once this
+ * gate joined `src/config/gate-coverage.yml`, and worth having on its own
+ * terms: `check_claims` resolves `REPO` from its own file location rather than
+ * from `cwd`, so the only way to point it at a fixture is to COPY it into one.
+ * That is what the harness below does, and it is why `runGateCli` is handed a
+ * path that walks back out of the repository — `path.join(REPO, relative)`
+ * resolves into the temporary tree while `tsx` is still found under the real
+ * `node_modules`.
+ *
+ * Four of the five cases are the retired-phrasings reach added by
+ * road-to-retired-claims-stay-retired; the fixture in the rejecting one carries
+ * the LITERAL historical string that shipped on two publish surfaces while
+ * `claim:no-runtime-daemon` was already `withdrawn`.
+ */
+function selfTest(): number {
+    const roots: string[] = [];
+    // FOUR, not three: this gate imports `gate_self_test.ts` for the harness
+    // it is running right now, and a missing fourth lib fails as a module
+    // resolution error in EVERY case at once — which reads as the detection
+    // having broken rather than the fixture being incomplete.
+    const libs = ['exec_evidence.ts', 'scan_scope.ts', 'gate_baseline.ts', 'gate_self_test.ts'];
+
+    const fixture = (files: Record<string, string>): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-claims-selftest-'));
+        roots.push(dir);
+        fs.mkdirSync(path.join(dir, 'src', 'scripts', '_lib'), { recursive: true });
+        fs.copyFileSync(_FILE, path.join(dir, 'src', 'scripts', 'check_claims.ts'));
+        for (const lib of libs) {
+            fs.copyFileSync(
+                path.join(REPO, 'src', 'scripts', '_lib', lib),
+                path.join(dir, 'src', 'scripts', '_lib', lib),
+            );
+        }
+        fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'docs', 'evidence.md'), 'Contains the ANCHOR string.\n');
+        for (const [rel, body] of Object.entries(files)) {
+            const abs = path.join(dir, rel);
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, body);
+        }
+        const rel = path.relative(REPO, path.join(dir, 'src', 'scripts', 'check_claims.ts'));
+        return runGateCli(REPO, rel, [], dir);
+    };
+
+    const closed = (phrasings: string | null): string =>
+        [
+            '# Claims Ledger',
+            '',
+            '### claim: no-runtime-daemon',
+            '- claim: Compiled into host agents with zero runtime daemon.',
+            '- kind: qual',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: withdrawn',
+            '- last_verified: 2026-07-04',
+            '- retired_by: ADR-249',
+            ...(phrasings === null ? [] : [`- retires_phrasings: ${phrasings}`]),
+            '',
+        ].join('\n');
+
+    const CLEAN_README = '# Agent Config\n\nGoverned skills, rules and commands.\n';
+
+    const cases: SelfTestCase[] = [
+        {
+            name: 'a retired phrasing absent from every publish surface → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed('zero runtime daemon'),
+                    'README.md': CLEAN_README,
+                }),
+        },
+        {
+            name: 'the LITERAL historical string in package.json.description → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed('zero runtime daemon'),
+                    'package.json':
+                        '{\n  "description": "every claim machine-checked, including \\"zero runtime daemon\\"."\n}\n',
+                }),
+        },
+        {
+            name: 'a present-but-empty retires_phrasings → reject',
+            expect: 'reject',
+            run: () => fixture({ 'docs/CLAIMS.md': closed(''), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a needle too short to be specific → reject',
+            expect: 'reject',
+            run: () => fixture({ 'docs/CLAIMS.md': closed('daemon'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'the never-published sentinel with a stated reason → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    'docs/CLAIMS.md': closed(
+                        'never-published — verified by `git log -S` over every publish surface: zero commits.',
+                    ),
+                    'README.md': `${CLEAN_README}\nIt mentions zero runtime daemon freely.\n`,
+                }),
+        },
+    ];
+
+    try {
+        return runSelfTest({
+            gate: 'check_claims',
+            cases,
+            minCases: 5,
+            minRejectCases: 3,
+        });
+    } finally {
+        for (const d of roots) fs.rmSync(d, { recursive: true, force: true });
+    }
+}
+
 if (_isCliEntry()) {
     try {
         process.exit(main());

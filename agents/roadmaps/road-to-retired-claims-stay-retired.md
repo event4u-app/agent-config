@@ -59,20 +59,32 @@ was published when the list was written.
 
 ## Phase 1 — Give a retired claim something to retire
 
-- [ ] **1.1 Add a `retires_phrasings:` field to closed ledger entries.** On a
+- [x] **1.1 Add a `retires_phrasings:` field to closed ledger entries.** On a
       `withdrawn` or `resolved-null` row, a short list of the literal phrasings
       that claim was published as. The list lives on the row so that retiring a
       claim and forbidding its wording are one edit — a separate deny-list is a
       second file, and the second file is the one nobody updates.
       verify: `check_claims` accepts a closed entry with the field and one
       without; a `withdrawn` entry whose field is present but empty fails.
-- [ ] **1.2 Populate it for the four closed entries that have published
+- [x] **1.2 Populate it for the four closed entries that have published
       phrasings.** One `withdrawn` and six `resolved-null` rows exist; read
       each and record the phrasings it actually shipped under, or record that
       it never appeared outside the ledger.
       verify: every closed row carries either a non-empty list or a stated
       never-published note.
-- [ ] **1.3 Name the publish-surface set once, with the rule for extending
+      <!-- Executed 2026-08-30. TWO corrections to this step's own premises,
+      both found by running it. (a) The ledger holds SEVEN `resolved-null`
+      rows, not six — this roadmap's figure was written at `6e37584a1` and
+      `dispatch-event-capture-reliability` landed with #1742 before execution
+      began, so eight closed rows were populated rather than seven. (b) The
+      step title says "the four closed entries that have published phrasings";
+      the measured answer is ONE. `git log -S` over README.md, package.json,
+      .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json
+      across the full history returns commits for `no-runtime-daemon` alone;
+      the other seven never appeared outside the ledger and carry the
+      `never-published` sentinel with that evidence. A four that was never
+      measured is exactly the class of number this roadmap exists to catch. -->
+- [x] **1.3 Name the publish-surface set once, with the rule for extending
       it.** Both prior closes fixed an instance and left a list. State the
       decision rule instead: any file whose content is rendered by a
       distribution channel the package publishes to. Record it where the
@@ -82,20 +94,20 @@ was published when the list was written.
 
 ## Phase 2 — Refuse a retired phrasing on any publish surface
 
-- [ ] **2.1 Extend `check_claims` to scan the publish-surface set for
+- [x] **2.1 Extend `check_claims` to scan the publish-surface set for
       `retires_phrasings`.** Extend rather than add a sibling gate: the
       withdrawn/retired axis is already modelled there and a second gate needs
       its own copy of the ledger parser. The surface set comes from 1.3.
       verify: a fixture whose `package.json` description carries a retired
       phrasing fails; the same fixture with the current wording passes. Seen
       red before green.
-- [ ] **2.2 Prove the gate on the case that motivated it.** Re-introduce the
+- [x] **2.2 Prove the gate on the case that motivated it.** Re-introduce the
       exact historical string in a fixture — not a synthetic near-miss — and
       watch it fail. A gate never seen red on the real instance has unknown
       sensitivity.
       verify: the fixture carries the literal historical wording; the red and
       the restored green are both recorded.
-- [ ] **2.3 Register the widened gate** in the gate-coverage ledger with the
+- [x] **2.3 Register the widened gate** in the gate-coverage ledger with the
       new `scanned` paths and a self-test.
       verify: the coverage gate is green and the row names every surface added.
 

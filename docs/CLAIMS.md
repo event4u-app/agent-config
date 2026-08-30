@@ -62,6 +62,7 @@
 - retired_by: <ADR-NNN>          # required on withdrawn entries; the decision that retired it
 - superseded_by: <kebab-id>      # optional; resolved-null and withdrawn entries only
 - non_inference: <what this data does NOT license>   # optional; ratcheted on backed quant
+- retires_phrasings: <phrase> | <phrase>             # closed entries only; or `never-published — <reason>`
 ```
 
 **`non_inference` — the sentence that stops a number travelling.** A measured
@@ -78,6 +79,71 @@ a gate that can only block. Every NEW backed quant claim must carry one; the
 inherited entries come along as they are touched. A field present but shorter
 than 20 characters is a finding at any count — that is answering the question
 with silence, and it reads as answered.
+
+**`retires_phrasings` — what a retirement actually forbids.** Retiring a claim
+has a consequence outside the ledger: its wording can no longer be published.
+Nothing enforced that. `check_claims` validated a `withdrawn` row's own shape
+and `lint_positioning` validated three publish surfaces against **each other**,
+and neither read the other's input — so `claim:no-runtime-daemon` went
+`withdrawn` on 2026-08-27 while the literal string `zero runtime daemon` kept
+shipping in `package.json.description` and `.github/about.yml`. Retirement was
+bookkeeping with no reach.
+
+This field is the reach. On a closed entry — `withdrawn` or `resolved-null` —
+it carries the literal phrasings the claim was **published under**,
+`|`-separated, and `check_claims` refuses those phrasings on every publish
+surface. Two design points, both load-bearing:
+
+- **It lives on the row, not in a sibling deny-list.** Retiring a claim and
+  forbidding its wording are then one edit. A second file is the one nobody
+  updates, and this ledger already has one class of defect from a list that
+  described the day it was written.
+- **The phrasings are read from history, never imagined.** A retired claim has
+  many near wordings, and a list that tries to cover them all fires on prose
+  that is not the claim — a gate that does that is muted within a release. Read
+  what actually shipped (`git log -S"<phrase>" -- <publish surfaces>`) and
+  record that. `check_claims` rejects any needle under 12 characters for the
+  same reason.
+
+A closed claim that never appeared outside the ledger carries the sentinel
+`never-published — <reason>` instead, and the reason is required: an unreasoned
+`never-published` is indistinguishable from nobody having looked. The count of
+closed entries carrying neither form is pinned at **zero** by
+`check_claims:retired-phrasings`, deliberately with no baseline row — a
+recorded 0 can never drop, so the 56-day anti-fossilization clause would fail
+the gate two months later for a count that was correct throughout.
+
+**The publish-surface set, and the rule for deciding membership.** Both prior
+closes of this defect class (`road-to-number-truth`, 2026-07-25;
+`road-to-published-number-truth`, 2026-08-24) fixed an instance and left a
+list, and a list is a snapshot of what was published the day it was written.
+The deliverable here is the rule instead:
+
+> A file belongs to the publish-surface set when **a distribution channel the
+> package publishes to renders its content to a reader who never opens the
+> repository.**
+
+Three consequences, each of which decides a real case:
+
+1. **Source, not derived artefact.** `dist/mcp/server.json` is published and is
+   *built* from `package.json` + `README.md`. Scanning the source covers it;
+   scanning the artefact would not, because a fresh checkout has no `dist/` and
+   the gate would die on a missing file rather than on the property.
+2. **Rendered, not merely shipped.** `docs/**` travels inside the npm tarball,
+   but no channel renders it as the package's pitch — it is documentation a
+   reader reaches *after* choosing the package. `README.md` is rendered by both
+   the npm page and the GitHub repo page, so it is in.
+3. **The whole file, not the pitch field.** A JSON/YAML surface is scanned
+   whole: a retired phrasing is equally wrong in `keywords`, in a nested plugin
+   `description`, or in a comment, and a per-key list is the
+   snapshot-of-today this rule replaces.
+
+Applying it to a channel not yet listed: a registry page whose copy is pasted
+by hand is **in**, and needs a file in the repository holding that copy; a
+generated badge is **out**, because its text derives from a source already in
+the set. The set itself lives at `PUBLISH_SURFACES` in
+[`src/scripts/check_claims.ts`](../src/scripts/check_claims.ts) — next to the
+code that reads it, not in a roadmap that gets archived.
 
 **`superseded_by` — the forward link out of a closed question.** The
 retire-never-delete lifecycle keeps a `resolved-null` readable forever, which is
@@ -146,6 +212,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite
 - status: withdrawn
 - last_verified: 2026-07-04
+- retires_phrasings: zero runtime daemon
 - retired_by: ADR-249
 - superseded_by: resident-process-permitted-under-governance
 - non_inference: WITHDRAWN BY DECISION, 2026-08-27, not by a failed measurement. The property was true on 2026-07-04 when it was last verified and the evidence pointer still resolves; the package decided to stop having it. ADR-249 permits a supervised resident process in core under four governance conditions, superseding ADR-124's Class-B row and ADR-109's no-daemon clause. Read this entry as "we no longer claim this", never as "we tried to show this and could not" -- the ledger's other closure, resolved-null, is the one that means the latter. The successor is deliberately unbacked rather than backed: it records a POLICY, and no supervised process has shipped for a property claim to be about.
@@ -341,6 +408,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: PRE-REGISTERED 2026-07-28 BEFORE the S0.3 baseline run (road-to-provenance-and-license-governance Phase 0; corpus frozen at content-sha256 dbbc84a7325e4fa38483ba05d35d9c0c98fa822ae25d873bd5efbafaf2534bb3 over internal/bench/provenance/, 36 files). Thresholds fixed BEFORE data, per the roadmap's S0.2 and its denominator fix: (1) detector recall on the verbatim+rename-only subset >= 10/16 (8 verbatim + 8 rename-only); (2) false positives on the 12 independent controls <= 1/12; (3) rename-only samples MUST hit (principle 6 — laundering by rename cannot clear a hit); (4) structural-rewrite samples form the residual class and their recall feeds the Phase-5 drop gate (>= 21/24 on the full seeded corpus DROPS Phase 5). The floor is a GO/NO-GO gate for building the CI layer, never the marketed capability — the marketed capability is the measured rate published per S3.1/S3.3 with the scope bound above co-located. HONEST-NULL consequence (K1): thresholds missed => no deterministic-gate claim ever, the behavioral layer ships alone, null published; no silent threshold adjustment.
 - status: resolved-null
 - last_verified: 2026-07-28
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 - resolution: HONEST-NULL (resolved, not pending). K1 fired: the registered run measured verbatim+rename-only recall 12/16 (union) against a >= 10/16 floor that it met, but false positives 2/12 against a <= 1/12 ceiling that it missed, and SCANOSS alone recalled rename-only 0/8 against principle 6's must-hit requirement — so the gate thresholds were missed and the pre-registered consequence applies: no deterministic-gate claim ever, no `lint_code_provenance.ts` in CI in any form (council 2026-07-28, Option A). The measured rates are published with the run; the sibling entry `provenance-gate-effectiveness` carries the same numbers as its G0 context. Reclassified 2026-08-02 (road-to-release-shape-honesty Phase 3): the answer was in since 2026-07-28 and the entry stayed filed as pending debt, which overstated what is open.
 
 ### claim: provenance-gate-effectiveness
@@ -371,6 +439,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: internal/bench/orchestration/backfill-2026-08-07-verdict.md#honest null
 - status: resolved-null
 - last_verified: 2026-08-07
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 
 ### claim: utilization-window-decidability
 - claim: The 2026-07-12 engagement observation window terminates in a DECIDABLE portfolio statement — at window close it either names >=1 concrete keep/cut/review decision per artifact kind, or records a pre-registered honest null (underpowered after one 30-day extension).
@@ -448,6 +517,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/benchmark.md#adversarial-verification-council
 - status: resolved-null
 - last_verified: 2026-07-21
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 - resolution: HONEST-NULL (resolved, not pending). Registered cross-vendor run 2026-07-21 on the curated judge-survivable corpus (internal/bench/adversarial-council/): on the judge-passed residual, the 2-vendor skeptic panel (anthropic+openai) matched the single skeptic exactly (residual recall 0.6 = 0.6, zero lift — the second vendor's residual catches were a strict subset of the first), at a 100% false-positive rate on the controversial-but-correct controls under the adversarial-skeptic posture. Both recall thresholds missed → honest-null → Mode 9 surface stays default-off permanently (like recursive-verification). Reproducible artifact: internal/bench/adversarial-council/runs/. Note: an initial run via `council_cli run` was REJECTED as a measurement artifact (that transport imposes multi-round peer-review + prose output, defeating the independent-skeptic + JSON-scoring protocol) — the valid run uses direct independent per-vendor client calls.
 
 ### claim: gated-platform-reads
@@ -563,6 +633,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/contracts/budget-routing.md#Why it was retired
 - status: resolved-null
 - last_verified: 2026-08-16
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 - resolution: RETIRED (closed, not pending). The mechanism this entry described was ARCHIVED on 2026-08-16 by a converged AI-council verdict (anthropic + openai, 2 of 2, neither reporting a premise correction), which reversed the v1 contract locked 2026-08-03 and retired its pre-registered AC1–AC5. Filed `resolved-null` rather than deleted because the answer is in and worth keeping: the layer was implemented and tested, and it still could never fire. `pickTier` required a `routing_switch` whose sole source — the `subagents.budget_routing` settings key — was deliberately deleted by always-on orchestration, so wiring it meant inventing a replacement for a removed category rather than finishing an integration; it had zero production callers; and with `session_tier` non-null in 0 of 327 orchestration records its saving was unmeasurable in principle, so AC1–AC5 could never fire. The claim text above is kept verbatim as the record of what was asserted while the code existed — it describes no current capability. What survives in the tree is `TIER_ORDER` + `readCooldowns`, monitoring rather than routing, consumed by `routing_doctor.ts`. Reopen only on the union revisit-if in the migration record: an authoritative per-request tier-selection signal WITH a named production dispatch point, AND telemetry carrying both the chosen and the realized tier.
 
 ### claim: plan-gates-measurement-protocol
@@ -578,6 +649,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: internal/bench/adversarial-council/runs/critic-protocol-ab-report.json
 - status: resolved-null
 - last_verified: 2026-08-09
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 - resolution: RESOLVED 2026-08-09, same day as registration, run AFTER the registration commit — NO PROMOTION, published in both directions. anthropic/claude-sonnet-4-5: the load_bearing arm PASSES both thresholds — FP 1/3 (33%) vs legacy 3/3 (100%, replicating the measured defect in the same run), TP retention exactly 0.80 (8/12 vs legacy 10/12). openai/gpt-4o: the load_bearing arm FAILS the retention floor in the most instructive way available — 0/12 defects caught, verdict "holds" on 14 of 15 fixtures, and the single "flawed" verdict (inv-02) missed the ground truth, so TP stays 0/12 — blanket approval in effect, the roadmap risk-register rank-2 risk materialized on the weaker model; FP 0/3 passes trivially as a side effect of approving nearly everything. Per the frozen registration (both conditions, both vendors) the arm does not promote; critic_protocol stays legacy. What survives: the mechanism hypothesis holds on the strong model (permitting "holds" cut FP from 100% to 33% at the exact retention floor) and is falsified in its general form — the permission to approve is only safe where the model retains defect-finding under the protocol. Run artifacts: internal/bench/adversarial-council/runs/critic-protocol-ab-{report.json,trace.txt}.
 
 ### claim: forensics-pack-value
@@ -790,6 +862,7 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-08-19 (road-to-long-horizon-execution Phase 4.2, sequencing UOTL Phase 7.3). REGISTERED BEFORE THE CAPABILITY EXISTS, which is the point and is stated rather than implied: at registration time NO unattended run has occurred and none can, because the headless spawn is deliberately unbuilt (`unattended_guard.ts` § "Why the spawn is not in this file") and the budget defaults to both ceilings zero, which disables the lane rather than permitting it. So this entry cannot have been written around a number already in hand. THRESHOLD, fixed now: the rework rate of PRs produced by unattended runs, measured over the 14 days after each merges, must not exceed the same-window rate for attended PRs; a breach flips `max_usd`/`max_tokens` back to 0 in the same change that reports the number. REWORK is defined before any data exists, because a metric defined after the fact is chosen: a follow-up commit touching a file the run's PR touched, within 14 days of merge, excluding (a) commits by the same run continuing planned roadmap work, (b) pure dependency bumps, (c) reverts of an unrelated change that merely collide. POWER: at least 10 unattended PRs and 10 attended PRs in the comparison window, else UNDERPOWERED and no claim either way — a two-PR sample producing a favourable ratio is the failure this line exists against. FALSIFICATION: (1) an unattended PR that a human had to substantially rewrite counts as rework even when no commit touched the same file, and that case is recorded by hand rather than dropped because the mechanical definition missed it; (2) the comparison is rate-vs-rate, never absolute counts, since the two populations will not be the same size; (3) a rate that is LOWER for unattended runs is reported as-is and is NOT used to argue for widening the lane — this gate can close a lane, never open one. HONEST-NULL PATH: if the lane never runs (the spawn stays unbuilt, or the budget stays at zero), the recorded finding is that the gate was pre-registered and never had data, and the capability is closed rather than left indefinitely pending — the same D-5 shape this roadmap opens by naming. **HONEST-NULL PATH TAKEN 2026-08-19 — the SAME DAY it was registered, and that is stated rather than rounded** (R2 round 1, finding 2 caught this entry claiming "one day after"; registration above is dated 2026-08-19 too, so the elapsed time is zero). A pre-registration closed on its own registration date deserves the suspicion it attracts, so here is why it is not a threshold written around a result: the entry was registered when the spawn was DEFERRED, and closed when the spawn became REFUSED. Nothing measured moved in between — a decision did, and it is recorded with its council and its reasoning. The threshold never met data in either state. The lane will not run: the headless spawn is no longer "deliberately unbuilt" but a published refusal (road-to-long-horizon-execution 4.0, AI council 2026-08-19), and the two acceptance criteria that depended on it are cancelled WILL-NOT-MEASURE. So the recorded finding is exactly the one this path fixed in advance: **the gate was pre-registered, never had data, and the capability is closed** — zero unattended PRs against the ≥ 10-vs-10 power floor, which is not a null result but an absent population, and the entry says which. Nothing here is read as evidence in either direction, and specifically not as "unattended runs are safe": an unrun lane has no rework rate. The threshold, the rework definition and the power floor are left EXACTLY as registered so that a future roadmap reopening the capability inherits a bar written before anyone knew the answer; reopening requires that new roadmap, never a re-reading of this entry. The reopen trigger is 4.0's: the first checkpoint written by a real dying run. STATUS `resolved-null`, not `unbacked` (R2 round 2, finding 3): the ledger already has the terminal status for exactly this state, and leaving a closed question inside the documented-debt inventory would inflate the unbacked count and leave it looking pending — the indefinite-pending shape this entry argues against, reproduced by the entry that argues against it.
 - status: resolved-null
 - last_verified: 2026-08-19
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 
 ### claim: adr-interruption-baseline
 - claim: ADR-caused synchronous contacts with the owner, measured per 20 roadmap runs, do not rise after the evidence axes land, and the post-window figure is published whether or not it falls.
@@ -1052,6 +1125,7 @@ is the named exception in the claim itself.
   `agents/evidence/analysis/dispatch-event-capture-2026-08-30.md`.
 - status: resolved-null
 - last_verified: 2026-08-30
+- retires_phrasings: never-published — verified 2026-08-30 by `git log -S` over README.md, package.json, .github/about.yml, .github/topics.yml and .claude-plugin/marketplace.json across the full history: zero commits carry this id's marker or any distinctive wording from it, so the retirement forbids nothing that ever shipped.
 
 ### claim: experience-loop-repeated-failure-effect
 
