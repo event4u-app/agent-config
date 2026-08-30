@@ -1,6 +1,7 @@
 ---
 complexity: structural
-status: draft
+status: ready
+estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The merge-authority blocker was scoped by the AI council on 2026-08-29 to gate Phase 7 alone; Phases 1-6 are declared legal, so executable work exists today. The growth is a status flip, not a new file - the estate gains no roadmap it did not already carry, only one collect() now counts."
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-experience-loop-broadening is the open question E2 puts to the owner — pre-merging would decide it by authoring."
