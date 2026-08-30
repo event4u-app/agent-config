@@ -558,21 +558,186 @@ is not paying twice for the same deliberation.
 
 ### 1B — Inline findings, analysis lens only
 
+**AI council, 2026-08-30, anthropic + openai, 2 of 2 seats, deep depth, $0.00
+(both seats subscription-authed). Two design forks put to it before any code
+was written; both converged, and one of the convergent conditions turned out to
+name a defect the implementation already had.**
+
+*Fork 1 — does the consumed findings block stay in the response text that peer
+review, chairman synthesis, and the rendered artefact read?* **Both seats:
+strip it, retain the raw reply.** The reasoning was the same on both sides and
+it is not about noise: the block restates selected conclusions, so leaving it in
+amplifies a concise finding purely because it appears twice in the text a
+reviewer scores. Both seats attached the same two conditions — the parsed span
+and the removed span must be the SAME span (never an independent
+"find and remove a JSON fence" regex, which could disagree with the parser about
+what was consumed), and the raw reply must survive for audit. One seat made an
+**observable marker** at the removal site a condition of its verdict; the other
+reached the same concern from the auditability side, warning that if the
+rendered artefact is contractually a byte-faithful transcript then not stripping
+would be the safer answer. The marker is implemented, so both concerns are met
+without deciding that contract question.
+
+*Fork 2 — does the recorded parse-outcome vocabulary become a typed union now,
+or a bare string first and a union after the gate?* **Both seats: type it now.**
+The argument that decided it is measurement integrity rather than hygiene — the
+1B.4 gate is computed off exactly these values, so an untyped
+`Map<string, string>` leaves the number that decides the experiment exposed to a
+misspelling no compiler would catch. One seat called the pre-existing bare
+`'parsed-after-reask'` technical debt rather than a precedent worth extending;
+the other priced the deferral and found doing it twice strictly more expensive
+than doing it once. `RecordedExtractionOutcome` is the result.
+
+**The council also caught an ordering defect in the implementation as it then
+stood, and it is the finding worth carrying forward:** `_maybe_run_peer_review`
+runs BEFORE `_maybe_run_consensus`, so parsing the block inside
+`run_consensus_scoring` would have left the schema block in the very text peer
+review and synthesis evaluate — the amplification Fork 1 exists to prevent,
+reintroduced by where the code sat rather than by what it did. The harvest now
+runs between the deliberation and every consumer, and a source-order test pins
+it. That test's own limit is stated where it lives: it reads call-site order out
+of `council_cli.ts` and cannot see a call moved into a helper.
+
+*Divergence, recorded rather than silently resolved:* one seat asked that
+`'parsed'` be renamed `'parsed-extraction'`. Declined here with a reason —
+renaming a value that is already recorded and compared against is a separate
+change with its own migration, and `'parsed'` is unambiguous now that
+`'parsed-inline'` names the other source.
+
+*Revisit-if:* a corpus scan finds the locator stripping a legitimate prose
+block; deliberation prose measurably degrades under the contract; or the
+rendered artefact acquires a documented byte-faithful-transcript contract, which
+would reopen Fork 1 in favour of not stripping.
+
+
+**The blocker gating this section is discharged by citation, which is what its
+own `Resolved when` asked for.** `blocker: evidence-integrity-unparsed-dependency`
+required the `unparsed`-versus-zero-findings distinction to be cited at
+`file:line` or 1B scoped out. It shipped: `ai_council/consensus.ts:314`
+`parse_findings_outcome` returns the three-way
+`'parsed' | 'empty' | 'parse_failed'`, its docstring naming the exact confusion
+the blocker feared; `ai_council/orchestrator.ts` records it per member in
+`parse_outcomes`; and `ai_council/quorum_wiring.ts:256` folds the
+`parse_failed` count into the rendered `present-unparsed` line. The archived
+`road-to-council-evidence-integrity.md:178-197` is the delivering step. So the
+promotion gate below has a real denominator to measure against — the condition
+the blocker existed to protect.
+
 - [ ] 1B.1 Require the existing findings schema as a fenced trailing block in
   the initial analysis response, replacing the second extraction call.
       verify: a real analysis run parses inline with no second call; blocked by
       `blocker: evidence-integrity-unparsed-dependency`
-- [ ] 1B.2 Keep the repair path: absent or invalid inline block falls back to
+
+      **BUILT AND WIRED 2026-08-30; the step stays OPEN because its verify asks
+      for a live run and the day's call quota is spent.** The honest split
+      matters here, so both halves are stated: the mechanism exists, is tested,
+      and is default-off; the *evidence this step names* does not exist yet.
+
+      Landed: `INLINE_FINDINGS_CONTRACT` (`ai_council/prompts.ts`) appended to
+      the FINAL deliberation round via `ConsultOptions.inline_findings`, exactly
+      the seam `STANCE_LINE_CONTRACT` already uses — off means the prompt is
+      byte-identical. `harvest_inline_findings` (`ai_council/orchestrator.ts`)
+      reads the block; `run_consensus_scoring` consumes the harvested map and
+      issues no extraction call for a member that has an entry.
+      `consensus_scoring.inline_findings` (default `false`) is the switch, and
+      `docs/contracts/ai-council-config.md` § Consensus scoring — inline
+      findings documents it. 30 tests in
+      `tests/scripts/ai_council/inline_findings.test.ts`, all green, with SIX
+      sensitivity arms — each mechanism neutralised in turn and the matching
+      test observed red, then restored.
+
+      **A live run WAS made, and what it produced is a defect rather than the
+      evidence.** One openai seat, analysis lens, `--rounds 1`, consensus and
+      inline both on via a temporary `AI_COUNCIL_CONFIG`. The extraction call
+      fired anyway. Cause:
+      `_lib/council_settings_block.ts` synthesises the settings dict the CLI
+      predicate actually reads, and it did not carry the new key — so a `true`
+      in the YAML resolved to `undefined` and the feature was silently off with
+      every unit test green. Fixed, and pinned by a test that walks the real
+      chain (parse the file → synthesise → read the predicate) rather than
+      stopping at any one link, because a test that stopped short is exactly
+      what passed while the feature was dead.
+
+      **What closes this step:** one analysis-lens run, post-fix, whose member
+      reply carries the block and whose consensus round issues zero extraction
+      calls. It could not be made today — `~/.event4u/agent-config/cli-calls.json`
+      reads `anthropic 50 / openai 50` against the shipped
+      `DEFAULT_CLI_CALLS_PER_DAY = 50` (`ai_council/cli_call_budget.ts:60`), so
+      both seats are at the daily cap. Raising that cap to fit a measurement is
+      the one thing a guard exists to prevent, so the step waits for the counter
+      to roll rather than for the guard to move.
+- [x] 1B.2 Keep the repair path: absent or invalid inline block falls back to
   the existing extraction call at `prompts.ts:206`.
       verify: a corrupted inline block still yields findings, and the
       worst-case call count is no worse than today's
-- [ ] 1B.3 Scope to the analysis lens only — do not force structured tails
+
+      **CLOSED 2026-08-30.** Both halves are asserted, and the second one is
+      asserted by COMPARISON rather than by a remembered number: the
+      worst-case test runs the identical scripted member through the harvest
+      path and the shipped path and requires `on.calls === off.calls`, so the
+      claim cannot drift as the extraction path changes. Four arms —
+      no block at all, a mangled block, an unreadable reply reaching the one
+      bounded re-ask, and the parity arm.
+
+      **The structural reason the worst case cannot be worse:**
+      `harvest_inline_findings` records ONLY a member whose block parsed, so an
+      entry in the map is always a short-circuit and never a partial one. A
+      member without an entry takes the shipped path over text nothing touched —
+      pinned by its own test, because the council made "the repair call sees the
+      RAW reply" a condition: stripping text we could not read would remove
+      evidence from the very prompt that has to recover from it.
+- [x] 1B.3 Scope to the analysis lens only — do not force structured tails
   into every lens without a named second consumer.
       verify: other lenses' prompts are byte-unchanged
+
+      **CLOSED 2026-08-30.** Three conjuncts gate the contract
+      (`_inline_findings_active`): consensus scoring on, the run's lens inside
+      `consensus_scoring.lenses` (default `[analysis]`), and the key on. Each is
+      tested in isolation, plus the absent-key case, plus a no-block-at-all
+      case — five arms, because "byte-unchanged" fails five different ways and a
+      single happy-path assertion would catch none of them.
+
+      The system-prompt arm iterates `all_modes()` rather than a literal lens
+      list, so a lens added later is covered without anyone remembering to add
+      it. That is deliberate: the failure this step guards against is a future
+      edit folding the contract into `ANALYSIS_MODE`, which would leak it into
+      every mode's lens table and be invisible to a hardcoded list.
 - [ ] 1B.4 Promotion gate across ≥ 10 real analysis runs: ≥ 70 % inline parse
   rate, no `unparsed` regression, no substantive finding-quality regression.
       verify: gate met, or the null result is recorded and the change reverts
       to extraction-always
+
+      **OPEN — the gate could not be RUN, which is not the same as a null and is
+      not recorded as one.** A null is what a measurement returns; this is the
+      measurement never happening. Both seats are at the shipped 50-call daily
+      cap (see 1B.1), and ≥ 10 runs × 2 members needs roughly 40–60 calls.
+
+      **Nothing is at risk from leaving it open, and that is the point of the
+      default.** The verify's own second branch — "the change reverts to
+      extraction-always" — describes the state that shipped:
+      `consensus_scoring.inline_findings` defaults `false`, so the unmet gate
+      and the shipped behaviour already agree. A default that shipped ahead of
+      its own gate would have made the gate unfalsifiable, since the
+      measurement would then be of the thing already promoted.
+
+      **The denominator is pre-registered here, before any arm runs**, because
+      the AI council (2026-08-30, 2 of 2 seats) found the obvious formula wrong
+      in a way that would have inflated the result:
+
+      > `inline_parse_rate = parsed-inline ÷ replies that received the contract`
+
+      A member answering `[]` counts in the denominator AND as a success — an
+      empty array from a readable reply is a RESULT, not a failure, and
+      `parse_findings_outcome` already classifies it `parsed`
+      (`consensus.ts:337`). Excluding it, which one draft proposed, would have
+      measured contract compliance over the members most likely to comply.
+      Report fallback recovery and the final unparsed rate as separate columns,
+      never folded into this one.
+
+      **The `unparsed` comparator must be fixed before the arms run**, per the
+      same seats: matched runs over the same artefacts, or a pre-declared
+      baseline window. Comparing unrelated runs lets a change in task difficulty
+      pass for a change in parse rate.
 
 ## Phase 2 — Build the benchmark before automating topology
 
