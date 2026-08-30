@@ -58,6 +58,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
 import { _claude_paths_plan, _has_non_path_trigger, _parse_frontmatter } from './condense.js';
 
 const RULES_DIR = path.join('src', 'rules');
@@ -83,6 +84,13 @@ export interface RuleActivation {
     emitted_globs: string[];
     /** Patterns the emitter deliberately drops, with the reason it records. */
     dropped: { pattern: string; reason: string }[];
+    /**
+     * Scoped to this package alone, so ADR-236 withholds it from every global
+     * host layer. Load-bearing for the projection comparison: a package-only
+     * rule is counted by the source verdict and is absent from a delivered
+     * tree by design, not by drift.
+     */
+    package_only: boolean;
     /**
      * The emitter's verdict in one word.
      * `scoped` — loads on a path match · `unconditional` — loads every session ·
@@ -111,7 +119,11 @@ function _declares(meta: Record<string, unknown>, keys: readonly string[]): bool
 }
 
 /** Classify one rule file through the emitter's own exported decision path. */
-export function classify_rule(id: string, content: string): RuleActivation {
+export function classify_rule(
+    id: string,
+    content: string,
+    package_only = false,
+): RuleActivation {
     const [meta] = _parse_frontmatter(content);
     const plan = _claude_paths_plan(meta);
     const has_path_trigger = _declares(meta, PATH_TRIGGER_KEYS);
@@ -139,6 +151,7 @@ export function classify_rule(id: string, content: string): RuleActivation {
         emitted_globs: plan.globs,
         dropped: plan.dropped.map((d) => ({ pattern: d.pattern, reason: d.reason })),
         verdict,
+        package_only,
     };
 }
 
@@ -150,7 +163,11 @@ export function census(root: string): RuleActivation[] {
         .map((e) => e.name)
         .sort();
     return files.map((f) =>
-        classify_rule(f.replace(/\.md$/, ''), fs.readFileSync(path.join(dir, f), 'utf8')),
+        classify_rule(
+            f.replace(/\.md$/, ''),
+            fs.readFileSync(path.join(dir, f), 'utf8'),
+            isExclusivelyPackageOnly(path.join(dir, f)),
+        ),
     );
 }
 
@@ -259,11 +276,36 @@ export function main(): number {
             `\n  host projection at ${projection_dir} — reported SEPARATELY, not merged:\n` +
                 `    files ${projection.files} · declaring paths: ${projection.with_paths}\n`,
         );
-        if (projection.with_paths !== sum.scoped) {
+        // The source verdict counts EVERY rule in `src/rules/`. A delivered
+        // projection does not carry the package-only ones: ADR-236 partitions
+        // them to the project layer, so a globally-partitioned host tree is
+        // expected to be short by exactly that many. Comparing the raw counts
+        // reported a divergence on every partitioned install forever — the
+        // emitter was right and the comparator was not subtracting.
+        const scoped_pkg_only = rows.filter(
+            (r) => r.verdict === 'scoped' && r.package_only,
+        );
+        const expected = sum.scoped - scoped_pkg_only.length;
+        if (scoped_pkg_only.length > 0) {
             process.stdout.write(
-                `    ⚠️  diverges from the source verdict (${sum.scoped} scoped). A projection\n` +
-                    `        carries no record of the scope or commit it was generated at, so this\n` +
-                    `        is a reason to regenerate it — never a reading of the emitter.\n`,
+                `    source scopes ${sum.scoped}; ${scoped_pkg_only.length} of those ` +
+                    `${scoped_pkg_only.length === 1 ? 'is' : 'are'} package-only and never\n` +
+                    `      delivered (${scoped_pkg_only.map((r) => r.id).join(', ')}), so a ` +
+                    `partitioned projection is\n      expected to declare ${expected}.\n`,
+            );
+        }
+        if (projection.with_paths !== expected) {
+            process.stdout.write(
+                `    ⚠️  diverges from the source verdict (${expected} expected, ` +
+                    `${sum.scoped} scoped before the\n` +
+                    `        package-only partition). A projection carries no record of the scope\n` +
+                    `        or commit it was generated at, so this is a reason to regenerate it —\n` +
+                    `        never a reading of the emitter.\n`,
+            );
+        } else {
+            process.stdout.write(
+                `    ✅  consistent with the source verdict (${expected} expected, ` +
+                    `${projection.with_paths} found).\n`,
             );
         }
     } else if (projection_dir) {

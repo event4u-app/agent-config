@@ -94,7 +94,7 @@ Each is blocked by a different thing, and none of them is effort:
 
 ## Phase 3 — Emit `paths:` on the write path that does not
 
-- [ ] **3.1 Call the host-form rewrite from the installer's global write
+- [x] **3.1 Call the host-form rewrite from the installer's global write
       path.** `condense.ts` calls `_claude_paths_plan` when it writes the
       project tree; nothing under `src/install/` calls it at all, so
       `~/.claude/rules/` receives the source form and three rules the emitter
@@ -107,7 +107,36 @@ Each is blocked by a different thing, and none of them is effort:
       verify: after a fresh install,
       `grep -lE '^paths:' ~/.claude/rules/*.md | wc -l` is 3, and those three are
       the path-only rules named above.
-- [ ] **3.2 Prove the three still fire, and that nothing else went quiet.**
+      **DONE 2026-08-30.** The emitter now runs on the install side:
+      `src/install/claudeRuleRewrite.ts` renders the host form from
+      `_claude_paths_plan` + `parseFrontmatter`, both already installer-side, so
+      the installer bundle gains no dependency on the projection graph. It is
+      called from `src/scripts/install.ts` in the `tool_id === 'claude-code'`
+      branch, immediately beside `_apply_claude_flat_command_wrappers` and for
+      the same reason: the deploy loop's `_copy_dir_dereferencing_symlinks`
+      copies `dist/agent-src/rules/` verbatim, so the anchor receives the source
+      frontmatter vocabulary and every rule loads unconditionally.
+      **Verified against the real delivery filter rather than by running a
+      global install** — writing into the operator's `~/.claude` to prove a
+      point is not a verification, it is a side effect. The simulation applies
+      `isExclusivelyPackageOnly` exactly as `_rule_filter_for_source` does,
+      copies what survives, and runs the rewrite:
+      `copied 104 withheld(package-only) 15` · `paths: before 0 -> after 3` ·
+      `scoped: design-review-after-ui-write, roadmap-progress-sync,
+      ui-audit-gate`. 104 is the same file count the operator's live
+      `~/.claude/rules` carries, so the simulated tree is the delivered one.
+      The three are exactly the rules this step names.
+      Equivalence with the maintainer emitter is held by
+      `tests/install/claude_rule_rewrite.test.ts`, which renders every rule in
+      `src/rules/` through BOTH `condense._emit_claude_rule` and this module and
+      asserts byte-identity — the two emitters deliberately share no call, so a
+      test is what keeps one host from receiving two activation surfaces.
+      The scope bound held: the 17 mixed rules are untouched and still
+      unconditional, which the same test pins from the other side (a mixed rule
+      must render with NO frontmatter, because `paths:` is exclusive on this
+      host and emitting it would silence the rule on the keyword prompts it was
+      written for).
+- [x] **3.2 Prove the three still fire, and that nothing else went quiet.**
       Narrowing activation fails silently by construction — a rule that should
       have loaded simply does not, with no error anywhere. Re-run
       `rule_activation_census --projection ~/.claude/rules` and assert the
@@ -115,6 +144,33 @@ Each is blocked by a different thing, and none of them is effort:
       fell by exactly three.
       verify: the census reports no divergence between the source verdict and
       the projection, and the before/after unconditional counts are recorded.
+      **DONE 2026-08-30, and it found a second defect on the way — in the
+      census, not in the emitter.** Run against the delivered tree the fixed
+      installer produces, the census still reported
+      `⚠️ diverges from the source verdict (4 scoped)` against a projection
+      declaring 3. Both numbers were right. The comparator was subtracting
+      nothing: the source verdict counts every rule in `src/rules/`, while a
+      delivered tree never carries the package-only ones (ADR-236 partitions
+      them to the project layer), so **every correctly-emitted globally
+      partitioned projection would have reported a divergence forever.** The
+      fourth scoped rule is `source-of-truth`, package-only, and absent from
+      the operator's live `~/.claude/rules` — checked directly.
+      `rule_activation_census.ts` now carries `package_only` per row (from
+      `isExclusivelyPackageOnly`, the installer's own predicate, not a
+      re-derivation) and compares against the partition-adjusted expectation,
+      naming the withheld rules so a reader can check the subtraction:
+      `source scopes 4; 1 of those is package-only and never delivered
+      (source-of-truth), so a partitioned projection is expected to declare 3` ·
+      `✅ consistent with the source verdict (3 expected, 3 found)`.
+      **Before / after, both from the same instrument:** live
+      `~/.claude/rules` — `files 104 · declaring paths: 0`, ⚠️ divergence;
+      delivered tree after the fix — `files 104 · declaring paths: 3`, ✅
+      consistent. Unconditional count falls by exactly three, which is the
+      three named in 3.1 and no others.
+      `tests/scripts/rule_activation_census_partition.test.ts` pins **both
+      polarities** — the quiet case AND a real one-file divergence that must
+      still fire — because a comparator shown only to stay silent has not been
+      shown to work.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-30 | reviewer: claude/host -->
@@ -134,6 +190,11 @@ Each is blocked by a different thing, and none of them is effort:
 - [ ] AC-2 — The 30-minute authorization window carries a recorded owner
       decision that `block_unauthorized_git.ts` cites, or an explicit recorded
       refusal to change it. Silence does not satisfy this.
-- [ ] AC-3 — A fresh install emits `paths:` for exactly the rules the emitter
+- [x] AC-3 — A fresh install emits `paths:` for exactly the rules the emitter
       classifies path-only, and the activation census reports no divergence
-      between its source verdict and the projection.
+      between its source verdict and the projection. **Met 2026-08-30 with one
+      clarification the criterion needed and did not have: "exactly the rules
+      the emitter classifies path-only" is FOUR in the source and THREE in any
+      global delivery, because `source-of-truth` is package-only and withheld.
+      The census now states that subtraction rather than reporting it as
+      drift.**

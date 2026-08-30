@@ -98,6 +98,7 @@ import {
     type RuleScope,
 } from '../install/rule_scope.js';
 import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
+import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
 import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
@@ -3231,20 +3232,16 @@ function _deploy_global_content(
         // Runs before the postcheck + inventory record so `current_files`
         // reflects the transformed tree and reaping stays consistent.
         if (tool_id === 'claude-code') {
+            // Rules land verbatim from the copy above; see the module. It also
+            // renders the flat-command wrapper report, unchanged.
             const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
-            if (res.wrapped.length > 0 && !state.QUIET) {
-                info(
-                    `  claude-code: ${res.wrapped.length} visible flat command(s) projected as ` +
-                        'skill wrappers (Claude Code flat-command discovery workaround)',
-                );
-            }
-            if (res.reserved.length > 0 && !state.QUIET) {
-                info(
-                    `  claude-code: ${res.reserved.length} flat command(s) withheld — name is a ` +
-                        `Claude Code built-in (${res.reserved.join(', ')}); nested /cluster:sub ` +
-                        'commands remain available',
-                );
-            }
+            claude_rule_rewrite.rewriteAndReport(
+                path.join(anchor, 'rules'),
+                state.QUIET,
+                info,
+                warn,
+                res,
+            );
         }
 
         const missing_targets = _verify_deploy_targets(anchor, plan);
