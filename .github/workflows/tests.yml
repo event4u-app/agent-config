@@ -254,6 +254,7 @@ jobs:
           --shard=${{ matrix.shard }}/4
           --exclude 'tests/golden/**'
           --exclude 'tests/server/workspace.test.ts'
+          --exclude 'tests/scripts/collector_lifecycle.test.ts'
           --exclude 'tests/scripts/cli/python/**'
 
   static-checks:
@@ -496,11 +497,17 @@ jobs:
     #
     #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
     #   Linux with a user session bus — the second declared supported row.
-    #                   NOT RUN, and NOT verifiable on a GitHub-hosted runner:
-    #                   ubuntu-latest has no user session bus, so it is the
-    #                   static-fallback row of the platform table, not the
+    #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
+    #                   runner: ubuntu-latest has no user session bus, so it is
+    #                   the static-fallback row of the platform table, not the
     #                   supported one. Running the suite there would produce a
     #                   green tick that says nothing about `systemd --user`.
+    #
+    # "NOT CERTIFIED" rather than "NOT RUN", corrected on R2 round-2 finding 3:
+    # the suite is excluded from `node-tests` now, but the distinction is the
+    # honest one either way — whether the file executes somewhere and whether
+    # this project claims a platform from it are different questions, and only
+    # the second one is what AC-8 turns on.
     #
     # That split IS the AI council's decision of 2026-08-29 (UNANIMOUS, 2/2):
     # option (b) — run on the one platform CI provides, record the other as
@@ -509,6 +516,10 @@ jobs:
     # remains the target.
     name: Collector Lifecycle (macos-latest — the macOS row only)
     runs-on: macos-latest
+    # Spawns real daemons with 90 s per-case timeouts and runs ~551 tests twice
+    # for the parity comparison; a hang here would otherwise sit at the runner
+    # default (R2 round-2 finding 2).
+    timeout-minutes: 20
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -522,6 +533,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Build discovery manifest (gitignored; the suites read it)
+        # R2 round-2 finding 2: this job runs vitest twice — once through
+        # `run_lifecycle_suite`, once through `check_static_parity`'s
+        # double run — and was the only vitest job in this workflow skipping the
+        # two preparation steps every other one performs. A test depending on
+        # the generated manifest or on `dist/` reds identically in both parity
+        # runs, and the gate then exits 1 on "one of the two runs is red".
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
 
       - name: Run the lifecycle suite and write its evidence artifact
         # Non-zero on a red suite, on ANY skipped case (AC-8: a skip is a
@@ -559,10 +582,11 @@ jobs:
         #
         # It runs the dispatcher-reaching suite twice (once with the collector
         # present-but-off, once with it aliased away) and compares per-test
-        # verdicts. Placed here rather than in `task ci` because a double
-        # 556-test run is roughly a minute, which is not a per-change local
-        # gate; declared `ci_only` in `src/config/ci-local-parity.yml` with that
-        # reason and reachable on demand.
+        # verdicts. Placed here rather than in `task ci` because the double run
+        # is roughly a minute, which is not a per-change local gate; declared
+        # `ci_only` in `src/config/ci-local-parity.yml` with that reason and
+        # reachable on demand. The test count is deliberately not written here —
+        # it moves with the suite and the gate prints the live figure.
         run: ./scripts-run src/scripts/check_static_parity --quiet
 
   workspace-tests:

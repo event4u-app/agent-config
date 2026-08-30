@@ -134,11 +134,17 @@ export const RESOURCE_BUDGETS: Readonly<Record<BudgetName, ResourceBudget>> = Ob
         unit: 'bytes, the collector directory including quarantine',
         expectedPeak: 12 * 1024 * 1024,
         basis:
-            'RETENTION_DAYS is 63 and a record is nine small columns. At the metric ' +
+            'DERIVED. RETENTION_DAYS is 63 and a record is nine small columns. At the metric ' +
             'definition\'s upper dispatch estimate a full retention window is single-digit ' +
             'MiB; 12 MiB is that plus SQLite page overhead and one quarantined store. The ' +
             'ceiling is deliberately ~5x: quarantine is never deleted by design, so the ' +
-            'directory has one growth term this budget cannot bound by retention alone.',
+            'directory has one growth term this budget cannot bound by retention alone. '
+            + 'CORRECTED after R2 round-2 finding 5: this derivation counted only the store, '
+            + 'while `opportunities.log` sits in the same directory and was UNBOUNDED — an '
+            + 'unbounded file inside a budget whose breach stops the collector is a slow '
+            + 'self-shutdown. It is now pruned on the same 63-day clock, so the derivation '
+            + 'covers it; the 12 MiB peak is unchanged because a denominator line is ~30 bytes '
+            + 'and 63 days of them is well inside the SQLite page overhead already allowed.',
     }),
     file_descriptors: Object.freeze({
         ceiling: 128,
@@ -295,8 +301,24 @@ export interface LockOutcome {
     readonly acquired: boolean;
     /** The pid recorded in the lock — ours when acquired, the incumbent's when not. */
     readonly holder: number | null;
-    /** Set when `acquired` is false. */
-    readonly reason: 'held-by-live-process' | 'kill-switch-engaged' | null;
+    /**
+     * Set when `acquired` is false.
+     *
+     * `unwritable` and `contested-out` exist because reporting everything as
+     * `held-by-live-process` sent an operator to the two-collectors row of the
+     * ops page for an `EACCES` or a full disk (R2 round-2 finding 11). A create
+     * that failed for a reason other than "the file is already there" is not
+     * contention, and a retry loop that ran out of attempts is not the same as
+     * losing to a live incumbent.
+     */
+    readonly reason:
+        | 'held-by-live-process'
+        | 'kill-switch-engaged'
+        | 'unwritable'
+        | 'contested-out'
+        | null;
+    /** The errno when `reason` is `unwritable`. Carried so the operator sees the real cause. */
+    readonly errno: string | null;
 }
 
 function pidIsAlive(pid: number): boolean {
@@ -335,7 +357,12 @@ const FENCE_ATTEMPTS = 4;
  */
 export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid): LockOutcome {
     if (killSwitchEngaged(userRoot)) {
-        return Object.freeze({ acquired: false, holder: null, reason: 'kill-switch-engaged' as const });
+        return Object.freeze({
+            acquired: false,
+            holder: null,
+            reason: 'kill-switch-engaged' as const,
+            errno: null,
+        });
     }
     const target = runtimeLockPath(userRoot);
     fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -343,8 +370,20 @@ export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid)
     for (let attempt = 0; attempt < FENCE_ATTEMPTS; attempt += 1) {
         try {
             fs.writeFileSync(target, `${pid}\n`, { flag: 'wx' });
-            return Object.freeze({ acquired: true, holder: pid, reason: null });
-        } catch {
+            return Object.freeze({ acquired: true, holder: pid, reason: null, errno: null });
+        } catch (err) {
+            // EEXIST is contention; everything else is an environment problem,
+            // and calling a full disk "held by a live process" is worse than
+            // saying nothing.
+            const code = (err as NodeJS.ErrnoException).code ?? '';
+            if (code !== 'EEXIST') {
+                return Object.freeze({
+                    acquired: false,
+                    holder: null,
+                    reason: 'unwritable' as const,
+                    errno: code === '' ? 'unknown' : code,
+                });
+            }
             const raw = readLockPid(target);
             if (raw === null) {
                 // The file vanished between our failed `wx` and this read — a
@@ -358,6 +397,7 @@ export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid)
                     acquired: false,
                     holder: incumbent,
                     reason: 'held-by-live-process' as const,
+                    errno: null,
                 });
             }
             // Stale owner: unlink and let the next `wx` pick the winner.
@@ -368,14 +408,16 @@ export function acquireRuntimeLock(userRoot?: string, pid: number = process.pid)
             }
         }
     }
-    // Bounded out: somebody is winning the race repeatedly. Report the current
-    // holder rather than claiming a lock this function never took.
+    // Bounded out: somebody is winning the race repeatedly. Its own reason —
+    // this is not "a live process holds it", it is "the fence loop kept losing",
+    // and the two send an operator to different places.
     const raw = readLockPid(target);
     const incumbent = Number.parseInt(raw ?? '', 10);
     return Object.freeze({
         acquired: false,
         holder: Number.isFinite(incumbent) ? incumbent : null,
-        reason: 'held-by-live-process' as const,
+        reason: 'contested-out' as const,
+        errno: null,
     });
 }
 

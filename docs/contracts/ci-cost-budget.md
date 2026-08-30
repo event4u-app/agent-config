@@ -56,7 +56,11 @@ about.)
 | `tests.yml` | `golden-tests` | 2 OS | 124 s ubuntu / 122 s macOS | same as above |
 | `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 100 s macOS | same as above |
 | `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
-
+| `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
+| `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
+| `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
+| `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
+| `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
 **`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 five process-level lifecycle properties plus the operator stop verb — six cases,
 each spawning one or two real `tsx` daemons — then the supervision-claim gate
@@ -75,11 +79,7 @@ cost this row exists to make visible.
 *Revisit-if:* the job's first CI runs give a real duration (this row is then
 re-measured), or a Linux runner with a user session bus becomes available (the
 job gains a matrix and this row doubles).
-| `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
-| `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
-| `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
-| `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
-| `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+
 
 Three rows from the 2026-05-26 baseline were removed because the jobs and
 workflows they named no longer exist: `python-tests` (no such job key in

@@ -1,10 +1,15 @@
 // The static-parity comparator — `road-to-supervised-telemetry-collector`
 // step 4.2 (AC-7).
 //
-// The gate itself runs 551 tests twice and takes about a minute, so it is not
-// invoked from here. What IS asserted here is the part that could silently stop
-// working: the comparator that turns "two green runs" into "two IDENTICAL
-// runs", and the discovery that decides what gets compared at all.
+// The gate itself runs the whole dispatcher-reaching set twice and takes about
+// a minute, so it is not invoked from here. The exact test count is deliberately
+// not written down anywhere in this change (R2 round-2 finding 15): it moves
+// every time a test is added to a file in the parity set, and three different
+// figures for it appeared across one diff. The gate prints the live number.
+//
+// What IS asserted here is the part that could silently stop working: the
+// comparator that turns "two green runs" into "two IDENTICAL runs", and the
+// discovery that decides what gets compared at all.
 //
 // A gate that scans nothing exits green. Both risks below are the shapes that
 // failure takes for this gate — an empty parity set, and a comparator that

@@ -30,10 +30,20 @@
  * grep rather than by a hand-maintained list — and the discovery is printed, so
  * a reader can check the denominator of the claim instead of trusting it.
  *
- * The honest limit, stated rather than implied: this proves parity for the
- * dispatcher surface. It does not prove that the whole suite is byte-identical
- * under both runs, and it is not evidence about a future collector call site
- * placed somewhere else. Adding one is what re-runs the grep.
+ * The honest limits, stated rather than implied, and there are TWO of them —
+ * the second was missing until a completion review named it:
+ *
+ * 1. This proves parity for the dispatcher surface. It does not prove that the
+ *    whole suite is byte-identical under both runs, and it is not evidence
+ *    about a future collector call site placed somewhere else. Adding one is
+ *    what re-runs the grep.
+ * 2. **Discovery is a literal token search, not module resolution.** `grep -rl
+ *    'dispatch_hook'` finds files that SPELL the token. A test that reaches the
+ *    dispatcher transitively — through a helper, a fixture builder, or a
+ *    re-export that never writes the name — is outside the compared population,
+ *    and nothing reports the omission. The set is therefore a lower bound on
+ *    the tests that could diverge, not the exact set. Closing it needs real
+ *    import-graph resolution, which is a larger tool than this gate.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -75,6 +85,10 @@ export interface RunResult {
  * Discovered, never listed: a hand-written set goes stale the first time a test
  * file is added, and a stale parity set reports parity over the wrong
  * population.
+ *
+ * "Every test file" is the intent and a LOWER BOUND in practice — see limit 2
+ * in the module docstring. This finds files that spell `dispatch_hook`, not
+ * files that reach it.
  */
 export function parityFiles(repo: string = REPO): string[] {
     const grep = spawnSync(
@@ -173,6 +187,12 @@ function runSuite(tag: string, files: string[], aliasStub: boolean, home: string
     return { verdicts, exitCode: result.status ?? 1 };
 }
 
+// self-test-exempt: the discriminating behaviour is `compare()`, and it is
+// unit-tested with a REJECTING case — tests/scripts/check_static_parity.test.ts
+// drives the `passed → skipped` divergence a length-only comparison would miss,
+// plus both only-in-one-run directions. A CLI `--self-test` here would have to
+// spawn two whole-suite vitest runs against a fixture repository, minutes per
+// invocation, to prove the same property through the slowest possible harness.
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
     const files = parityFiles();
@@ -199,16 +219,25 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         for (const file of files) process.stdout.write(`  · ${file}\n`);
     }
 
-    // One empty home for both runs: no ENABLED marker, no OPT-OUT marker, no
-    // pre-existing store. Whatever the invoking user has is out of the picture.
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'static-parity-home-'));
+    // A FRESH empty home PER RUN (R2 round-2 finding 10). One shared directory
+    // meant run B started against whatever the first run's tests had left in it,
+    // per-test difference caused by that leak is indistinguishable from one
+    // caused by the collector — on a gate whose failure message says static
+    // operation regressed. A second `mkdtemp` costs nothing and removes the
+    // ambiguity entirely.
+    const homes: string[] = [];
+    const freshHome = (): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'static-parity-home-'));
+        homes.push(dir);
+        return dir;
+    };
     let present: RunResult;
     let absent: RunResult;
     try {
-        present = runSuite('present-off', files, false, home);
-        absent = runSuite('absent', files, true, home);
+        present = runSuite('present-off', files, false, freshHome());
+        absent = runSuite('absent', files, true, freshHome());
     } finally {
-        fs.rmSync(home, { recursive: true, force: true });
+        for (const dir of homes) fs.rmSync(dir, { recursive: true, force: true });
     }
 
     const differences = compare(present.verdicts, absent.verdicts);

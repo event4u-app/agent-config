@@ -15,7 +15,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     claimSpool,
@@ -23,6 +23,7 @@ import {
     disableCollector,
     enableCollector,
     isCollectorEnabled,
+    pruneOpportunitiesOlderThan,
     readOpportunities,
     recordOpportunity,
     spoolPendingPath,
@@ -57,6 +58,10 @@ const REPO = path.resolve(HERE, '..', '..');
 const DAEMON = path.join(REPO, 'src', 'scripts', 'collector_daemon.ts');
 
 let userRoot: string;
+
+beforeAll(() => {
+    for (const line of enumerateDaemonProcesses()) baselineDaemonPids.add(pidOf(line));
+});
 
 beforeEach(() => {
     userRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-daemon-'));
@@ -103,6 +108,20 @@ function record(over: Partial<CollectorRecord> = {}): CollectorRecord {
  * nothing a process writes afterwards changes it. The constant was removed
  * rather than left asserting something untrue.)
  */
+/** The pid column of a `ps -eo pid,args` line. */
+function pidOf(line: string): string {
+    return (line.trim().split(/\s+/)[0] ?? '').trim();
+}
+
+/**
+ * Daemons already running against the real user root when this file loaded.
+ *
+ * The denominator of the default-off assertion: it asks whether THIS SUITE
+ * started one, and a machine that legitimately has a collector running is not
+ * evidence about the suite.
+ */
+const baselineDaemonPids = new Set<string>();
+
 function enumerateDaemonProcesses(opts: { includeTestOwned?: boolean } = {}): string[] {
     const ps = spawnSync('ps', ['-eo', 'pid,args'], { encoding: 'utf8' });
     if (ps.status !== 0) return [];
@@ -159,20 +178,27 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
         }
     }, 60_000);
 
-    it('starts NO process on a fresh install — nothing in the process table', async () => {
-        // The suite has been running for a while by the time this executes, and
-        // no test has enabled the collector on the real user root. If any code
-        // path started a daemon against it, it is visible here.
+    it('THIS SUITE starts no daemon against the real user root', async () => {
+        // The property the step asks for is "a fresh install runs the full test
+        // suite with no collector process started", and the assertion has to
+        // match it (R2 round-2 finding 7). The first version asserted "no
+        // daemon is running on this machine" — which reds on exactly the
+        // machine the feature is aimed at, a developer who has opted in and has
+        // a supervised collector running, with a message about a fresh install.
+        // Phase 6's whole purpose is to make that state common.
         //
-        // Test-owned daemons (`--root <tmp>`) are excluded, so a concurrently
-        // running `collector_lifecycle.test.ts` cannot red this. That exclusion
-        // is not a loophole: this assertion is about the DEVELOPER's collector,
-        // and a daemon pinned to a temp root is by construction not it.
+        // So the comparison is against a BASELINE taken before this file ran
+        // anything: what matters is whether the suite ADDED a daemon, not
+        // whether the machine has one. Test-owned daemons (`--root <tmp>`) are
+        // excluded on top, so a concurrently running lifecycle suite cannot red
+        // this either.
         const deadline = Date.now() + 1_000;
         while (Date.now() < deadline) {
             await new Promise<void>((r) => setTimeout(r, 100));
         }
-        expect(enumerateDaemonProcesses()).toEqual([]);
+        const now = new Set(enumerateDaemonProcesses().map(pidOf));
+        const added = [...now].filter((pid) => !baselineDaemonPids.has(pid));
+        expect(added, 'the suite started a collector against the real user root').toEqual([]);
     });
 
     // removing_this_constraint_reds_it: nothing in the collector can red this
@@ -265,6 +291,63 @@ describe('4.1 — the denominator is independent of the daemon', () => {
         expect(readOpportunities(userRoot).total).toBe(0);
     });
 
+    it('reads a WINDOW, so both halves of the ratio age on the same clock', () => {
+        // R2 round-2 finding 5. `readOpportunities` used to return a LIFETIME
+        // total while the store was pruned to RETENTION_DAYS every iteration, so
+        // the two sides of the capture rate were computed over different time
+        // bases and the measured rate would fall toward zero as the numerator
+        // aged out — the exact failure the two-writer design exists to prevent,
+        // arriving through the back door.
+        enableCollector(userRoot);
+        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
+        recordOpportunity('stop', 'claude', userRoot, day('2026-06-02'));
+
+        expect(readOpportunities(userRoot).total).toBe(3);
+        expect(readOpportunities(userRoot, { since: '2026-06-01' }).total).toBe(2);
+        expect(readOpportunities(userRoot, { since: '2026-06-02' }).total).toBe(1);
+        expect(readOpportunities(userRoot, { until: '2026-01-31' }).total).toBe(1);
+        const all = readOpportunities(userRoot);
+        expect(all.firstDate).toBe('2026-01-01');
+        expect(all.lastDate).toBe('2026-06-02');
+    });
+
+    // removing_this_constraint_reds_it: drop the `since`/`until` comparisons
+    // from `readOpportunities` — every windowed assertion returns 3.
+
+    it('PRUNES the log on the same retention clock as the store', () => {
+        enableCollector(userRoot);
+        const day = (iso: string): number => Date.parse(`${iso}T12:00:00Z`);
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-01-01'));
+        recordOpportunity('session_start', 'claude', userRoot, day('2026-06-01'));
+        expect(readOpportunities(userRoot).total).toBe(2);
+
+        // 63 days before 2026-06-02 is 2026-03-31, so January goes and June stays.
+        const dropped = pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
+        expect(dropped).toBe(1);
+        expect(readOpportunities(userRoot).total).toBe(1);
+        expect(readOpportunities(userRoot).firstDate).toBe('2026-06-01');
+        // Idempotent: a second prune over the same horizon drops nothing.
+        expect(pruneOpportunitiesOlderThan(userRoot, '2026-06-02')).toBe(0);
+    });
+
+    // removing_this_constraint_reds_it: make `pruneOpportunitiesOlderThan`
+    // return 0 without rewriting — the log keeps growing inside the directory
+    // the disk budget ceilings, and a breach STOPS the collector.
+
+    it('KEEPS a line whose date does not parse rather than deleting it', () => {
+        enableCollector(userRoot);
+        recordOpportunity('session_start', 'claude', userRoot, Date.parse('2026-01-01T00:00:00Z'));
+        fs.appendFileSync(denominatorPath(userRoot), 'not-a-date\tsession_start\tclaude\n');
+        // Deleting what you cannot classify is how a prune quietly becomes a
+        // truncation; the reader already counts it as malformed.
+        pruneOpportunitiesOlderThan(userRoot, '2026-06-02');
+        const raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
+        expect(raw).toContain('not-a-date');
+        expect(readOpportunities(userRoot).malformed).toBe(1);
+    });
+
     it('never throws, whatever the filesystem does', () => {
         enableCollector(userRoot);
         // Make the collector directory unwritable, then ask for a write. A
@@ -343,7 +426,7 @@ describe.runIf(isStoreAvailable())('4.1 — the drain loop', () => {
         expect(fs.existsSync(spoolPendingPath(userRoot))).toBe(false);
     });
 
-    it('stops on the SECOND consecutive budget breach, not the first', () => {
+    it('stops on the SECOND consecutive budget breach, not the first', async () => {
         enableCollector(userRoot);
         expect(start(userRoot).started).toBe(true);
         const over = {
@@ -352,7 +435,7 @@ describe.runIf(isStoreAvailable())('4.1 — the drain loop', () => {
             disk_bytes: 1,
             file_descriptors: 1,
         };
-        const summary = runLoop({ userRoot, beatMs: 1, sample: () => over });
+        const summary = await runLoop({ userRoot, beatMs: 1, sample: () => over });
         expect(summary.stoppedBy).toBe('budget');
         expect(summary.exceeded).toEqual(['cpu_percent']);
         // Two iterations, because one reading is a sample and two are a load.
@@ -362,19 +445,19 @@ describe.runIf(isStoreAvailable())('4.1 — the drain loop', () => {
     // removing_this_constraint_reds_it: stop on the first breach
     // (`consecutiveBreaches >= 1`) — `iterations` becomes 1.
 
-    it('stops when the kill switch is pulled mid-run', () => {
+    it('stops when the kill switch is pulled mid-run', async () => {
         enableCollector(userRoot);
         expect(start(userRoot).started).toBe(true);
         pullKillSwitch(userRoot);
-        const summary = runLoop({ userRoot, beatMs: 1, maxIterations: 5 });
+        const summary = await runLoop({ userRoot, beatMs: 1, maxIterations: 5 });
         expect(summary.stoppedBy).toBe('kill-switch');
     });
 
-    it('releases the lock and removes the heartbeat when it stops', () => {
+    it('releases the lock and removes the heartbeat when it stops', async () => {
         enableCollector(userRoot);
         expect(start(userRoot).started).toBe(true);
         expect(readHeartbeat(userRoot)).not.toBeNull();
-        runLoop({ userRoot, beatMs: 1, maxIterations: 1 });
+        await runLoop({ userRoot, beatMs: 1, maxIterations: 1 });
         expect(readHeartbeat(userRoot)).toBeNull();
         // The next starter can take the lock: no permanent lockout.
         expect(start(userRoot).started).toBe(true);

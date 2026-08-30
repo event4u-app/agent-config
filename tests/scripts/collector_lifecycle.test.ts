@@ -39,6 +39,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { enableCollector } from '../../src/scripts/_lib/collector_denominator.js';
+import { DEFAULT_BEAT_MS } from '../../src/scripts/collector_daemon.js';
 import { isStoreAvailable } from '../../src/scripts/_lib/collector_store.js';
 import {
     HEARTBEAT_STALE_AFTER_MS,
@@ -107,7 +108,15 @@ interface Daemon {
 
 /** Spawn a real daemon and wait until it announces readiness on stdout. */
 async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
-    const child = spawn(TSX, [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50', ...extraArgs], {
+    // `extraArgs` comes AFTER the default `--beat-ms 50`, and the flag parser
+    // takes the first occurrence — so a caller overriding the beat must pass it
+    // as the only one. Handled by dropping the default when the caller supplies
+    // it, rather than by relying on argument order.
+    const overridesBeat = extraArgs.includes('--beat-ms');
+    const base = overridesBeat
+        ? [DAEMON, 'run', '--root', userRoot]
+        : [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50'];
+    const child = spawn(TSX, [...base, ...extraArgs], {
         stdio: ['ignore', 'pipe', 'pipe'],
     });
     spawned.push(child);
@@ -272,6 +281,40 @@ describe.runIf(STORE)('the five lifecycle properties, on real processes', () => 
         ).toBe('stale');
         expect(pidAlive(beat?.pid as number)).toBe(false);
     }, CASE_TIMEOUT_MS);
+
+    it('honours SIGTERM PROMPTLY at the PRODUCTION beat, not only at a test beat', async () => {
+        // R2 round-2 finding 1, and the test that would have caught it. Every
+        // other case here spawns with `--beat-ms 50`, which is the one
+        // configuration where a synchronous sleep still lets the graceful path
+        // win. This one uses the shipped default (30 s) and asserts the process
+        // is gone in a fraction of it.
+        //
+        // Under the old `Atomics.wait` loop the signal handler could not run
+        // until the sleep returned, so stop latency was a full beat: 30 s
+        // against `terminateCollector`'s 5 s grace, i.e. every production stop
+        // escalated to SIGKILL and left the residue of an unclean death.
+        const daemon = await spawnDaemon(['--beat-ms', String(DEFAULT_BEAT_MS)]);
+        expect(daemon.stdout()).toContain('collector: running');
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
+
+        const sentAt = Date.now();
+        process.kill(daemon.pid, 'SIGTERM');
+        await daemon.exited();
+        const elapsed = Date.now() - sentAt;
+
+        expect(pidAlive(daemon.pid)).toBe(false);
+        // Well inside `terminateCollector`'s 5 s default grace, and two orders
+        // of magnitude inside the 30 s beat it was sleeping on.
+        expect(elapsed, `SIGTERM honoured in ${String(elapsed)}ms`).toBeLessThan(5_000);
+        // And it was a CLEAN stop: the `finally` ran.
+        expect(readHeartbeat(userRoot)).toBeNull();
+        expect(fs.existsSync(runtimeLockPath(userRoot))).toBe(false);
+    }, CASE_TIMEOUT_MS);
+
+    // removing_this_constraint_reds_it: restore the synchronous
+    // `Atomics.wait` sleep in `runLoop` — this case times out at the 5 s
+    // assertion while every other case in the file stays green, which is
+    // exactly the asymmetry that hid the bug.
 
     it('the operator STOP verb ends a real daemon through the documented path', async () => {
         // R2 finding 3: `terminateCollector` had no production caller and

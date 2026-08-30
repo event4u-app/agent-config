@@ -124,7 +124,7 @@ ci_only:
   # road-to-supervised-telemetry-collector step 4.2 (AC-7). Runs the
   # dispatcher-reaching suite TWICE — once with the collector present-but-off,
   # once with it aliased away entirely — and compares per-test verdicts rather
-  # than declaring each run green. That is ~556 tests twice, roughly a minute,
+  # than declaring each run green. That is the whole set twice, roughly a minute,
   # which is not a per-change local gate; and its result is a property of a
   # clean checkout rather than of a developer's working tree, since it pins
   # HOME to an empty directory precisely so the invoking user's own collector
@@ -133,7 +133,7 @@ ci_only:
   # Reachable on demand: `./scripts-run src/scripts/check_static_parity`.
   - id: check_static_parity
     class: benchmark
-    reason: "two full 556-test runs compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
+    reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
   # road-to-supervised-telemetry-collector step 5.2. The five lifecycle
   # PROPERTIES are verified locally like any other suite —
   # `tests/scripts/collector_lifecycle.test.ts` is inside `tests/scripts` and runs

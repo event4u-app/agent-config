@@ -44,6 +44,7 @@ import path from 'node:path';
 import {
     claimSpool,
     isCollectorEnabled,
+    pruneOpportunitiesOlderThan,
     readClaimedSpool,
     spoolDir,
 } from './_lib/collector_denominator.js';
@@ -276,9 +277,17 @@ export interface RunSummary {
 
 let stopRequested = false;
 
-/** Ask the loop to finish its current iteration and exit. Idempotent. */
+/**
+ * Ask the loop to finish and exit. Idempotent.
+ *
+ * Wakes an in-flight {@link sleep} rather than only setting the flag: a daemon
+ * that acknowledges `SIGTERM` and then waits out a 30-second beat before acting
+ * on it has not honoured the signal in any sense an operator or a supervisor
+ * would recognise.
+ */
 export function requestStop(): void {
     stopRequested = true;
+    wake?.();
 }
 
 /**
@@ -341,17 +350,35 @@ export function stop(userRoot?: string): { lock: boolean; heartbeat: boolean } {
 /**
  * The loop. Beat, drain, sample, decide.
  *
+ * ## Why this is `async`, and why the synchronous version was a real bug
+ *
+ * R2 round-2 finding 1. The first version slept with `Atomics.wait`, which
+ * blocks the main thread — and a Node signal handler is a JS callback on the
+ * event loop, so `SIGTERM` could not be observed until the sleep returned. Stop
+ * latency was therefore up to a full beat, the shipped default beat is 30 s and
+ * `terminateCollector`'s grace is 5 s, so **in the shipped configuration the
+ * graceful half of the kill switch could never win**: every stop escalated to
+ * `SIGKILL`, leaving the lock and heartbeat residue of an unclean death and an
+ * unclosed SQLite handle, every time.
+ *
+ * PROPERTY 2 passed anyway, and that is the part worth remembering: the
+ * lifecycle suite spawns with `--beat-ms 50`, the one configuration in which
+ * the graceful path is reachable. The suite certified a beat production never
+ * uses.
+ *
+ * `await setTimeout` yields to the event loop, so a handler runs while the
+ * daemon waits. Nothing else about the loop changed.
+ *
  * A budget breach stops the collector on the SECOND consecutive reading, not
  * the first. One sample is not a breach: the first CPU sample after start
  * measures a window of a few milliseconds that includes the store open, and
  * stopping on it would make the daemon unable to start under its own budget.
  * Two consecutive readings over the ceiling is a load; one is a sample.
  */
-export function runLoop(options: RunOptions = {}): RunSummary {
+export async function runLoop(options: RunOptions = {}): Promise<RunSummary> {
     const userRoot = options.userRoot;
     const beatMs = options.beatMs ?? DEFAULT_BEAT_MS;
     const sample = options.sample ?? sampleResources;
-    const handle = openCollectorStore(userRoot);
 
     let iterations = 0;
     let consecutiveBreaches = 0;
@@ -364,7 +391,15 @@ export function runLoop(options: RunOptions = {}): RunSummary {
     });
     let stoppedBy: RunSummary['stoppedBy'] = 'iterations';
 
+    // INSIDE the try (R2 round-2 finding 13): opening the store can throw on a
+    // corrupt or unreadable file, and `isStoreAvailable()` in `start()` probes
+    // the runtime rather than this file. Outside the try that throw skipped the
+    // `finally` and left behind the lock and heartbeat `start()` had already
+    // taken — so a supervisor restart loop met its own stale lock on every
+    // attempt until the fencing path cleared it.
+    let handle: StoreHandle | null = null;
     try {
+        handle = openCollectorStore(userRoot);
         for (;;) {
             iterations += 1;
 
@@ -396,7 +431,13 @@ export function runLoop(options: RunOptions = {}): RunSummary {
                 refused: drained.refused + result.refused,
                 malformed: drained.malformed + result.malformed,
             });
-            pruneOlderThan(handle, new Date(now).toISOString().slice(0, 10));
+            const today = new Date(now).toISOString().slice(0, 10);
+            pruneOlderThan(handle, today);
+            // BOTH sides age on the same clock (R2 round-2 finding 5). Pruning
+            // only the store made the ratio fall toward zero as the numerator
+            // aged out against a lifetime denominator, and left an unbounded
+            // file inside the directory the disk budget ceilings.
+            pruneOpportunitiesOlderThan(userRoot, today);
 
             const verdict = budgetVerdict(sample(userRoot));
             if (verdict.action === 'stop') {
@@ -415,25 +456,53 @@ export function runLoop(options: RunOptions = {}): RunSummary {
                 stoppedBy = 'iterations';
                 break;
             }
-            sleepSync(beatMs);
+            await sleep(beatMs);
         }
     } finally {
-        handle.db.close();
+        handle?.db.close();
         stop(userRoot);
     }
 
     return Object.freeze({ iterations, drained, stoppedBy, exceeded });
 }
 
-function sleepSync(ms: number): void {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+/**
+ * Wakes the current {@link sleep} early. Set while the loop is waiting.
+ *
+ * Yielding to the event loop is necessary and NOT sufficient, which cost a
+ * measured round: with `await setTimeout` the `SIGTERM` handler ran promptly —
+ * and the loop still finished the full 30 s beat before it looked at
+ * `stopRequested`, so the observed stop latency was 29,995 ms against a 5 s
+ * grace. The handler has to be able to END the wait, not merely run during it.
+ */
+let wake: (() => void) | null = null;
+
+/**
+ * Wait up to `ms`, or until {@link requestStop} wakes us — whichever is first.
+ *
+ * Two properties, and the loop needs both (R2 round-2 finding 1). It yields, so
+ * signal handlers run at all; and it is interruptible, so a handler's effect is
+ * immediate rather than deferred to the end of the beat.
+ */
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+            wake = null;
+            resolve();
+        }, ms);
+        wake = () => {
+            clearTimeout(timer);
+            wake = null;
+            resolve();
+        };
+    });
 }
 
 /* -------------------------------------------------------------------------- */
 /* Entry point                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export function main(argv: readonly string[] = process.argv.slice(2)): number {
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
     const command = argv[0] ?? 'status';
 
     // `--root` exists for the process-level lifecycle suite (step 5.1), which
@@ -446,21 +515,36 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // 16). `argv[i + 1]` is `undefined` there, and `undefined` is precisely the
     // value that falls back to the real user root — so a malformed invocation
     // would do the one thing this flag was added to prevent.
-    const rootFlag = argv.indexOf('--root');
-    if (rootFlag >= 0 && argv[rootFlag + 1] === undefined) {
+    // A flag's value must exist AND not be another flag (R2 round-2 finding 12).
+    // `--root --beat-ms 5` used to pass the presence check and silently take the
+    // literal string `--beat-ms` as the user root — which is the failure `--root`
+    // was added to prevent, arriving through a typo instead of an omission.
+    const flagValue = (name: string): string | null | undefined => {
+        const at = argv.indexOf(name);
+        if (at < 0) return undefined;
+        const value = argv[at + 1];
+        if (value === undefined || value.startsWith('--')) return null;
+        return value;
+    };
+
+    const rootValue = flagValue('--root');
+    if (rootValue === null) {
         process.stderr.write('collector: --root needs a directory argument\n');
         return 2;
     }
-    const userRoot = rootFlag >= 0 ? argv[rootFlag + 1] : undefined;
+    const userRoot = rootValue;
 
-    const beatFlag = argv.indexOf('--beat-ms');
-    if (beatFlag >= 0 && argv[beatFlag + 1] === undefined) {
+    const beatValue = flagValue('--beat-ms');
+    if (beatValue === null) {
         process.stderr.write('collector: --beat-ms needs a number\n');
         return 2;
     }
-    const beatMs = beatFlag >= 0 ? Number.parseInt(argv[beatFlag + 1] ?? '', 10) : undefined;
-    if (beatMs !== undefined && !Number.isFinite(beatMs)) {
-        process.stderr.write('collector: --beat-ms must be a number\n');
+    const beatMs = beatValue === undefined ? undefined : Number.parseInt(beatValue, 10);
+    // Positive, not merely finite: 0 and a negative both turned the wait into a
+    // no-op, i.e. a busy loop that budget-stops the collector after two
+    // iterations — a spin dressed as a configuration.
+    if (beatMs !== undefined && (!Number.isFinite(beatMs) || beatMs <= 0)) {
+        process.stderr.write('collector: --beat-ms must be a positive number of milliseconds\n');
         return 2;
     }
 
@@ -519,9 +603,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `collector: running pid=${process.pid} mode=${outcome.mode}\n`,
         );
-        const summary = runLoop(
-            beatMs !== undefined ? { userRoot, beatMs } : { userRoot },
-        );
+        // WRAPPED (R2 round-2 finding 13): an uncaught throw out of the loop
+        // used to kill the process with `start()`'s lock and heartbeat still on
+        // disk. `runLoop`'s own `finally` releases them, but only for throws it
+        // can see; this catches the rest so a supervisor restart does not meet
+        // a stale lock every attempt.
+        let summary: RunSummary;
+        try {
+            summary = await runLoop(
+                beatMs !== undefined ? { userRoot, beatMs } : { userRoot },
+            );
+        } catch (err) {
+            stop(userRoot);
+            process.stderr.write(`collector: loop failed — ${(err as Error).message}\n`);
+            return 1;
+        }
         process.stderr.write(
             `collector: stopped by ${summary.stoppedBy}`
                 + (summary.exceeded.length > 0 ? ` (${summary.exceeded.join(', ')})` : '')
@@ -540,5 +636,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 const invokedDirectly =
     process.argv[1] !== undefined && process.argv[1].includes('collector_daemon');
 if (invokedDirectly) {
-    process.exitCode = main();
+    void main().then((code) => {
+        process.exitCode = code;
+    });
 }

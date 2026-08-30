@@ -54,7 +54,7 @@ import {
     type CollectorEvent,
     type CollectorPlatform,
 } from './collector_record.js';
-import { isOptedOut, resolveCollectorStore } from './collector_store.js';
+import { isOptedOut, resolveCollectorStore, RETENTION_DAYS } from './collector_store.js';
 
 /** Append-only opportunity log. One short line per dispatch. */
 export const DENOMINATOR_FILE_NAME = 'opportunities.log';
@@ -170,19 +170,53 @@ export interface DenominatorReading {
     readonly byEvent: Readonly<Record<string, number>>;
     /** Lines the parser refused. A silent skip would understate the denominator. */
     readonly malformed: number;
+    /** Earliest and latest UTC date seen, or null on an empty read. */
+    readonly firstDate: string | null;
+    readonly lastDate: string | null;
 }
 
-/** Read the opportunity log. Absent file reads as zero, not as an error. */
-export function readOpportunities(userRoot?: string): DenominatorReading {
+export interface ReadWindow {
+    /** Inclusive lower bound, `YYYY-MM-DD`. Lines before it are not counted. */
+    readonly since?: string;
+    /** Inclusive upper bound, `YYYY-MM-DD`. */
+    readonly until?: string;
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Read the opportunity log. Absent file reads as zero, not as an error.
+ *
+ * **The window is a parameter now, and its absence was a real defect** (R2
+ * round-2 finding 5). Every line carries a UTC date and this function never
+ * parsed it, returning a LIFETIME total — while the numerator side is pruned to
+ * {@link RETENTION_DAYS} on every daemon iteration. The two halves of the ratio
+ * were therefore computed over different time bases, and once the store began
+ * pruning, the measured capture rate would have fallen monotonically toward
+ * zero regardless of real capture. That is precisely the failure the two-writer
+ * design exists to make impossible, arriving through the back door.
+ *
+ * A date that does not parse is `malformed`, not silently skipped: an
+ * understated denominator biases the rate UPWARD.
+ */
+export function readOpportunities(userRoot?: string, window: ReadWindow = {}): DenominatorReading {
     let raw = '';
     try {
         raw = fs.readFileSync(denominatorPath(userRoot), 'utf8');
     } catch {
-        return Object.freeze({ total: 0, byEvent: Object.freeze({}), malformed: 0 });
+        return Object.freeze({
+            total: 0,
+            byEvent: Object.freeze({}),
+            malformed: 0,
+            firstDate: null,
+            lastDate: null,
+        });
     }
     const byEvent: Record<string, number> = {};
     let total = 0;
     let malformed = 0;
+    let firstDate: string | null = null;
+    let lastDate: string | null = null;
     for (const line of raw.split('\n')) {
         if (line.length === 0) continue;
         const parts = line.split('\t');
@@ -190,11 +224,72 @@ export function readOpportunities(userRoot?: string): DenominatorReading {
             malformed += 1;
             continue;
         }
+        const date = parts[0] as string;
+        if (!DATE_RE.test(date)) {
+            malformed += 1;
+            continue;
+        }
+        if (window.since !== undefined && date < window.since) continue;
+        if (window.until !== undefined && date > window.until) continue;
         const event = parts[1] as string;
         byEvent[event] = (byEvent[event] ?? 0) + 1;
         total += 1;
+        if (firstDate === null || date < firstDate) firstDate = date;
+        if (lastDate === null || date > lastDate) lastDate = date;
     }
-    return Object.freeze({ total, byEvent: Object.freeze(byEvent), malformed });
+    return Object.freeze({
+        total,
+        byEvent: Object.freeze(byEvent),
+        malformed,
+        firstDate,
+        lastDate,
+    });
+}
+
+/**
+ * Drop opportunity lines older than the retention horizon, rewriting the log.
+ *
+ * The denominator's half of what `pruneOlderThan` does for the store, and it
+ * exists for two reasons that are easy to conflate. The ratio one: both sides
+ * must age out on the same clock or the rate drifts by construction. The
+ * resource one: nothing bounded this file, and it lives inside the directory
+ * `RESOURCE_BUDGETS.disk_bytes` puts a ceiling on — a ceiling whose breach
+ * STOPS the collector. An unbounded log in a budgeted directory is a slow
+ * self-shutdown.
+ *
+ * Whole-file rewrite through a temp and a rename, so a crash mid-prune leaves
+ * either the old file or the new one and never a truncated log. Returns how
+ * many lines were dropped.
+ */
+export function pruneOpportunitiesOlderThan(
+    userRoot: string | undefined,
+    today: string,
+    days: number = RETENTION_DAYS,
+): number {
+    const target = denominatorPath(userRoot);
+    let raw = '';
+    try {
+        raw = fs.readFileSync(target, 'utf8');
+    } catch {
+        return 0;
+    }
+    const cutoff = new Date(Date.parse(`${today}T00:00:00Z`) - days * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+    const lines = raw.split('\n').filter((l) => l.length > 0);
+    const kept = lines.filter((l) => {
+        const date = l.split('\t')[0] ?? '';
+        // A line whose date does not parse is KEPT: it is already counted as
+        // malformed by the reader, and deleting what you cannot classify is how
+        // a prune quietly becomes a truncation.
+        if (!DATE_RE.test(date)) return true;
+        return date >= cutoff;
+    });
+    if (kept.length === lines.length) return 0;
+    const tmp = `${target}.tmp`;
+    fs.writeFileSync(tmp, kept.length === 0 ? '' : `${kept.join('\n')}\n`);
+    fs.renameSync(tmp, target);
+    return lines.length - kept.length;
 }
 
 /**
@@ -230,10 +325,23 @@ export function spoolRecord(record: unknown, userRoot?: string): boolean {
  * the old inode finish into the claimed file, and every writer that opens after
  * the rename creates a fresh `pending.jsonl`. No lock, no lost line.
  */
+let claimSequence = 0;
+
 export function claimSpool(userRoot?: string, at: number = Date.now()): string | null {
     const pending = spoolPendingPath(userRoot);
     if (!fs.existsSync(pending)) return null;
-    const claimed = path.join(spoolDir(userRoot), `draining-${at}-${process.pid}.jsonl`);
+    // A monotonic per-process counter, because the timestamp alone is not
+    // unique (R2 round-2 finding 14): two claims by one process inside the same
+    // millisecond produced the same name, and `renameSync` overwrites silently
+    // — so the earlier batch was destroyed rather than the collision being
+    // noticed. The per-user lock makes that narrow in production, but both
+    // functions are exported and driven directly by tests, and the docstring's
+    // "no lock, no lost line" is only true if the claimed name is unique.
+    claimSequence += 1;
+    const claimed = path.join(
+        spoolDir(userRoot),
+        `draining-${at}-${process.pid}-${claimSequence}.jsonl`,
+    );
     try {
         fs.renameSync(pending, claimed);
         return claimed;
