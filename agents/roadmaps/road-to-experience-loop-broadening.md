@@ -864,24 +864,61 @@ So the state is deliberate and bounded rather than an oversight:
 
 ## Phase 9 — Canonical enums, effect, and the consumption door
 
-- [ ] **9.1 One shared module per enum family** that appears in both
+- [x] **9.1 One shared module per enum family** that appears in both
       `src/scripts/` and a template or prompt, plus a lint against inline
       duplicates. Phase 1.3's outcome-vocabulary split is the worked example and
       the first customer.
+      **DONE 2026-08-30, and it found two live duplicates the old check could
+      not see.** Three holes were closed, each of which let the check pass while
+      covering nothing:
+      (1) `VOCAB_SETS` omitted **`step`** — the one family with a sanctioned
+      template twin, i.e. exactly the family 9.1 is about.
+      (2) The walk started at `src/scripts` only, so **templates and prompts —
+      the surface this step names** — were never scanned. Scanning only the side
+      that cannot drift is not a check.
+      (3) The suite asserted the offender list was empty and nothing else, so a
+      detector broken into one that finds nothing would have passed forever. The
+      detector is now extracted and tested in BOTH directions: it must FIRE on a
+      planted duplicate of every covered vocabulary, and must NOT fire on a
+      partial reference. A sweep that scanned nothing also fails now.
+      **The two duplicates found:**
+      `templates/scripts/work_engine/directives/backend/verify.ts` and
+      `.../mixed/stitch.ts` each re-declared `['success', 'blocked', 'partial']`
+      inline — the third and fourth copies of the step vocabulary. Both now
+      derive from `Object.values(Outcome)` against `delivery_state.ts`, which is
+      the template tree's declaration (templates may not import from
+      `src/scripts/`, so the registry mirrors it rather than the reverse).
       verify: the lint fails on a reintroduced inline duplicate of any covered
       enum.
-- [ ] **9.2 State what this is part of, without inventing a parent.**
+- [x] **9.2 State what this is part of, without inventing a parent.**
       `corrected-from-reproduction`: the master called this "the mechanical core
       of `road-to-canonical-wording-and-propagation`" and an attachment point
       for "the open script-twin decision from PR #1636". Verified on this tree:
       **no plan by that name exists.** `grep -rl` over `*.md`, `*.ts` and
       `*.json` returned zero hits when the check was run, and now returns exactly
       one — this roadmap, because the name is written here; a reader re-running it
-      should expect that single self-hit and nothing else. It is not active, not
+      should expect that single self-hit and nothing else.
+
+      It is not active, not
       parked, not a stub, not archived. The PR reference was **not checked**: that is an external system
       and this analysis ran offline by its own bound, so it is unverified rather
       than false. Either author the parent or drop the framing; do not cite a
       plan that does not exist.
+      **Re-measured 2026-08-30 while executing this step, and that sentence was
+      already stale.** The grep now returns **two** — this roadmap, and the
+      review-input copy under `agents/evidence/reviews/`, created after the
+      original was written. Both are self-hits: the name exists in this tree
+      only because this step writes it down. The conclusion is unchanged and
+      stronger for having been re-checked — **no plan by that name exists**, in
+      any disposition.
+      **This is the step's own failure mode, caught on itself.** A count written
+      into prose goes false the moment the tree moves, and 9.2 is precisely the
+      step about not citing what a grep cannot find. A reader re-running it
+      should expect those two self-hits and nothing else.
+      **The other stale citation this step is responsible for was corrected
+      under 6.5**: `docs/contracts/no-runtime-boundary.md:40` is `stability:
+      superseded` and its line 40 carries different text; the state-store test
+      lives at `docs/contracts/resident-process-governance.md:78-82`.
       verify: the roadmap text cites only artefacts a `grep` in this tree finds.
 - [ ] **9.3 Show that the loop can make the estate smaller.**
       `from-skipped-parent`, an acceptance criterion in both parents and absent

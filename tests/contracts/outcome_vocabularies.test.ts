@@ -111,13 +111,80 @@ describe('run vocabulary <-> terminal-states contract', () => {
 });
 
 describe('no inline duplicate declares a vocabulary outside the registry', () => {
+    // road-to-experience-loop-broadening step 9.1 widened this in three ways,
+    // each closing a hole that let the check pass while covering nothing.
     const VOCAB_SETS: ReadonlyArray<readonly [string, readonly string[]]> = [
         ['phase', PHASE_OUTCOMES],
         ['run', RUN_TERMINAL_STATES],
+        // (1) `step` was MISSING, and it is the family with a template twin --
+        // i.e. exactly the one 9.1 is about. The check covered every family
+        // except the one whose duplicate is sanctioned and must stay singular.
+        ['step', STEP_OUTCOMES],
     ];
 
-    it('no file under src/scripts re-declares a full vocabulary as a union or literal array', () => {
+    /**
+     * The detector, extracted so it can be tested in BOTH directions.
+     *
+     * (3) Before this, the suite only asserted the offender list was empty. A
+     * detector broken into one that finds nothing would have satisfied that
+     * forever -- an assertion of absence with no proof the instrument works.
+     */
+    function findDuplicates(
+        src: string,
+        rel: string,
+        sets: ReadonlyArray<readonly [string, readonly string[]]> = VOCAB_SETS,
+    ): string[] {
+        const found: string[] = [];
+        for (const [name, values] of sets) {
+            // A declaration is a `type X =` / `const X = [` whose body carries
+            // EVERY member of the vocabulary. Referring to one or two values is
+            // normal and is not a duplicate.
+            for (const m of src.matchAll(/(?:type|const)\s+\w+\s*(?::[^=]*)?=\s*([\s\S]{0,400}?);/g)) {
+                const body = m[1] ?? '';
+                if (values.every((v) => body.includes(`'${v}'`))) {
+                    found.push(`${rel} re-declares the ${name} vocabulary`);
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * (2) The roots. `src/scripts` alone never reached a template or a prompt --
+     * which is the surface 9.1 names, and the surface the sanctioned mirror
+     * lives on. Scanning only the side that cannot drift is not a check.
+     */
+    const ROOTS = ['src/scripts', 'src/agent-src/templates/scripts'];
+
+    /** The mirror is sanctioned by contract; the registry is the declaration. */
+    const EXEMPT = new Set([
+        REGISTRY,
+        'src/agent-src/templates/scripts/work_engine/delivery_state.ts',
+    ]);
+
+    it('the detector FIRES on a planted duplicate — proving it can fail at all', () => {
+        for (const [name, values] of VOCAB_SETS) {
+            const planted = `const Fake = [${values.map((v) => `'${v}'`).join(', ')}] as const;`;
+            const hits = findDuplicates(planted, 'planted.ts');
+            expect(hits, `the ${name} vocabulary was not detected when planted verbatim`).not.toEqual([]);
+        }
+    });
+
+    it('the detector does NOT fire on a partial reference', () => {
+        // The other direction: a guard that flagged any mention would be
+        // unusable, and would be quietly disabled by whoever hit it first.
+        const partial = `const One = ['${PHASE_OUTCOMES[0]}'] as const;`;
+        expect(findDuplicates(partial, 'partial.ts')).toEqual([]);
+    });
+
+    it('every scanned root exists — so a rename fails loudly instead of scanning nothing', () => {
+        const missing = ROOTS.filter((r) => !fs.existsSync(path.join(REPO_ROOT, r)));
+        expect(missing).toEqual([]);
+    });
+
+    it('no file under the scanned roots re-declares a full vocabulary', () => {
         const offenders: string[] = [];
+        let scanned = 0;
         const walk = (d: string): void => {
             for (const e of fs.readdirSync(d, { withFileTypes: true })) {
                 const full = path.join(d, e.name);
@@ -126,23 +193,16 @@ describe('no inline duplicate declares a vocabulary outside the registry', () =>
                     continue;
                 }
                 if (!e.name.endsWith('.ts')) continue;
-                const rel = path.relative(REPO_ROOT, full);
-                if (rel === REGISTRY) continue;
-                const src = fs.readFileSync(full, 'utf8');
-                for (const [name, values] of VOCAB_SETS) {
-                    // A declaration is a `type X =` / `const X = [` whose body
-                    // carries EVERY member of the vocabulary. Referring to one
-                    // or two values is normal and is not a duplicate.
-                    for (const m of src.matchAll(/(?:type|const)\s+\w+\s*(?::[^=]*)?=\s*([\s\S]{0,400}?);/g)) {
-                        const body = m[1];
-                        if (values.every((v) => body.includes(`'${v}'`))) {
-                            offenders.push(`${rel} re-declares the ${name} vocabulary`);
-                        }
-                    }
-                }
+                const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
+                if (EXEMPT.has(rel)) continue;
+                scanned += 1;
+                offenders.push(...findDuplicates(fs.readFileSync(full, 'utf8'), rel));
             }
         };
-        walk(path.join(REPO_ROOT, 'src/scripts'));
+        for (const r of ROOTS) walk(path.join(REPO_ROOT, r));
+
+        // A sweep that scanned nothing exits green. Assert it saw a real corpus.
+        expect(scanned).toBeGreaterThan(50);
         expect([...new Set(offenders)]).toEqual([]);
     });
 });

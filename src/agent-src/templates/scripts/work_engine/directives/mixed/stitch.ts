@@ -20,7 +20,11 @@ import {
 /** Agent directive that drives end-to-end smoke scenarios. */
 export const INTEGRATION_TEST_DIRECTIVE = 'integration-test';
 
-const _ALLOWED_VERDICTS: ReadonlyArray<string> = ['success', 'blocked', 'partial'];
+/**
+ * DERIVED, never re-declared — see the note in `directives/backend/verify.ts`.
+ * This was the fourth copy of the step vocabulary.
+ */
+const _ALLOWED_VERDICTS: ReadonlyArray<string> = Object.values(Outcome);
 
 export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     {
