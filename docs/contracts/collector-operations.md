@@ -67,18 +67,23 @@ product finding rather than as an outage.
 Four budgets. Crossing a ceiling **stops** the collector — it never throttles
 it, because an observer that has become a load is no longer an observer.
 
-| Resource | Ceiling | Expected peak | Headroom |
-|---|---|---|---|
-| CPU | 2 % of one core, 60 s average | 0.2 % | 1.8 % |
-| Resident memory | 96 MiB | 60 MiB | 36 MiB |
-| Disk (collector directory, incl. quarantine) | 64 MiB | 12 MiB | 52 MiB |
-| Open file descriptors | 32 | 12 | 20 |
+| Resource | Ceiling | Expected peak | Headroom | Peak from |
+|---|---|---|---|---|
+| CPU | 2 % of one core, 60 s average | 0.2 % | 1.8 % | derived |
+| Resident memory | 192 MiB | 128 MiB | 64 MiB | **measured** |
+| Disk (collector directory, incl. quarantine) | 64 MiB | 12 MiB | 52 MiB | derived |
+| Open file descriptors | 128 | 48 | 80 | **measured** |
 
-**Every expected peak is a derivation, not a measurement.** No collector has run
-long enough to measure one. Each row's basis is stated in
-`RESOURCE_BUDGETS`, and a measured peak above a derived one falsifies the
-derivation rather than breaching the budget — the row is re-derived, the ceiling
-is not raised to accommodate it.
+**Two rows are measured and two are still derived, and the table says which.**
+The first draft derived all four. The first real daemon start falsified two of
+them within seconds — resident memory read 116.2 MiB against a 96 MiB ceiling
+and the collector budget-stopped itself — so those rows were re-measured rather
+than the ceiling being nudged up to make the reading fit.
+
+The measurement is **macOS, under `tsx`**, which loads a TypeScript transpiler
+into the same process. A built-JS daemon would very likely read far lower; the
+budget is calibrated to the mode this repository actually runs. `RESOURCE_BUDGETS`
+carries the per-row basis and the conditions that would re-open each number.
 
 ## Static mode and daemon mode
 

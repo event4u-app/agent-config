@@ -485,6 +485,53 @@ jobs:
       - name: Vitest (tests/golden — fork-parallel)
         run: npm run test:ts --silent -- tests/golden
 
+  collector-lifecycle:
+    # The five process-level lifecycle properties of the telemetry collector
+    # (road-to-supervised-telemetry-collector step 5.1, AC-8). Spawns real
+    # daemons — orphan behaviour, signal handling and file locking are process
+    # facts and a mocked suite proves none of them.
+    #
+    # PLATFORMS, NAMED, because the blocker `lifecycle-ci-runner-provisioning`
+    # requires this job to name them rather than leave them to be inferred:
+    #
+    #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
+    #   Linux with a user session bus — the second declared supported row.
+    #                   NOT RUN, and NOT verifiable on a GitHub-hosted runner:
+    #                   ubuntu-latest has no user session bus, so it is the
+    #                   static-fallback row of the platform table, not the
+    #                   supported one. Running the suite there would produce a
+    #                   green tick that says nothing about `systemd --user`.
+    #
+    # That split IS the AI council's decision of 2026-08-29 (UNANIMOUS, 2/2):
+    # option (b) — run on the one platform CI provides, record the other as
+    # unverified, and keep it out of release claims EVEN IF its static fallback
+    # appears to work. (a), provisioning a runner with a real user session bus,
+    # remains the target.
+    name: Collector Lifecycle (macos-latest — the macOS row only)
+    runs-on: macos-latest
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Run the lifecycle suite and write its evidence artifact
+        # Non-zero on a red suite, on ANY skipped case (AC-8: a skip is a
+        # failure on that platform, not an absence), and when not every named
+        # property passed.
+        run: ./scripts-run src/scripts/run_lifecycle_suite
+
+      - name: Show the evidence artifact
+        run: cat internal/reports/supervision-lifecycle.json
+
   workspace-tests:
     # The workspace cluster: tests/server/workspace.test.ts + the cli/python
     # workspace suite (each spawns `tsx src/cli/python/*.ts` per assertion).

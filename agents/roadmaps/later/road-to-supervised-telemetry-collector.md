@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -26,6 +26,79 @@ depends:
 estate_growth_exempt: "AMENDED 2026-08-29 — this change charges +1 open_blockers (29 to 30): the `lifecycle-ci-runner-provisioning` blocker added below. It is the AI council verdict of 2026-08-29 executed, not a discretionary addition. Both seats (2/2) chose option B — leave active, flip draft to ready — on the ground that the execution frontier is Phase 2 and Phase 2 is externally blocked by nothing; and BOTH seats independently required the missing CI capability to be named as an explicit dependency NOW rather than discovered when the frontier reaches Phase 5, openai because 'missing' and 'externally blocked' are not the same classification and the choice must be made before it is load-bearing. The flip without the blocker would have been half the verdict. Phase 1 closed 3/28 in the same change, including the supported-platform list AC-1 required and that did not exist. ORIGINAL CLAIM, still standing: Charges +1 on one-in-one-out and +0 on the count half (status: draft). Warranted on a council instruction rather than an opinion: both seats (2/2, deep pass, 2026-08-27) required the telemetry delivery to either move fully into the governance roadmap with its own acceptance criteria or become a formally related dependency with its own — and named the concrete failure of leaving it folded, that two roadmaps would share ownership of one rollback with no answer to which closes when measurement is inconclusive. Draft rather than ready because three architecture decisions below are undecided, and the owner decision that authorises runtime does not make them."
 estate_offset_exempt: "The offset is the governance roadmap flipping ready to draft in this same change, which removes it from the active count — this file replaces it there rather than adding beside it. No archive move is available."
 ---
+
+> **PARKED 2026-08-30 — Phases 1 to 5 complete and verified; Phase 6 cannot be
+> executed and is explicitly INCOMPLETE.** Resume when the six conditions below
+> clear and a real observation window has started.
+>
+> Phase 6.1 is a **21-consecutive-day window with ≥ 2,000 eligible dispatches
+> across ≥ 5 machines** (1.2 items 7–8). Zero days have elapsed and the
+> collector is default-off, so nobody has started the clock. This is not a
+> missing implementation; it is a missing elapsed calendar, and the roadmap's
+> own § 4 already said so: *"Phase 6.1 is a 21-day observation window no run can
+> compress."*
+>
+> **AI council, 2026-08-30 — DEGRADED, 1 of 2 seats present (`anthropic`
+> `claude-sonnet-4-5`; `openai` `codex-default` absent, `os_error: ENOBUFS`).
+> Quorum 1, concluded. $0.00 — subscription-authed. This is a degraded verdict,
+> not convergence, and it is recorded as such.** The maintainer delegated the
+> disposition to the council for the autonomous drain run of 2026-08-30.
+>
+> The seat was offered four options — (a) park, (b) descope Phase 6 into a
+> follow-up roadmap, (c) re-scope 6.1 to a synthetic verification, (d) name
+> something else — and chose **(d): a hybrid.** Park at Phase 5 with Phase 6
+> explicitly incomplete, AFTER landing a synthetic measurement-machinery
+> checkpoint as a prerequisite. That checkpoint is step **5.3**, which shipped
+> in the same change.
+>
+> It rejected (b) explicitly: *"Descoping to Phase 5 as 'complete' retroactively
+> redefines what this roadmap promised. Phase 6 was always part of scope."* And
+> it rejected treating the synthetic test as a substitute: *"Synthetic
+> verification is a prerequisite, not a substitute for 6.1."*
+>
+> **Resume conditions, recorded as the seat required — all six must clear:**
+>
+> 1. **Platform coverage resolved.** Linux lifecycle/rollback verification
+>    passes in a real user-session-bus environment, OR Linux is formally removed
+>    from the supported-platform contract by an explicit support-policy decision.
+>    The seat was emphatic that spending 21–63 days on an observation 6.2 will
+>    then reject is waste — so this is a RESUME condition, not a park condition.
+> 2. **Cohort and enablement design defined** — eligibility criteria, machine
+>    identity for deduplication, who may enable collection, version-skew
+>    handling, clock authority for window boundaries, representative-sample
+>    threshold. *"'Somebody enables it' is not an operational plan."*
+> 3. **Privacy and data-integrity boundaries specified** — allowed fields,
+>    retention, access controls, deletion path, PII-exclusion verification, and
+>    incident-detection criteria. *"'No privacy incident' is only measurable if
+>    'incident' has a definition."*
+> 4. **Kill-switch and rollback design complete** — automatic stop criteria,
+>    stop-propagation time bound, verification that disabling reaches the entire
+>    cohort, and a fallback if telemetry infrastructure fails.
+> 5. **Observation window formally started** — the collector enabled on a
+>    qualifying multi-machine cohort per condition 2, with the start timestamp
+>    recorded. *"Single-machine or maintainer-only testing does not start the
+>    clock."*
+> 6. **Synthetic measurement-machinery verification green** — step 5.3. **MET
+>    2026-08-30**, and it is the only one of the six that is.
+>
+> **The one point where this record disagrees with its own seat, stated rather
+> than smoothed over.** Conditions 3 and 4 are partly discharged by Phases 2 and
+> 3 as shipped — the schema is an allowlist with per-field purpose and six
+> named leak-class fixtures (2.1, 2.2), deletion and opt-out are exercised by
+> tests rather than documented (2.3), and the kill switch has an automatic stop
+> criterion (budget breach), a mechanism reachable without the collector's
+> cooperation, and a test that kills a real wedged process (3.2, 3.3). What is
+> genuinely missing from both is the **cohort** half: propagation to more than
+> one machine, and an operational definition of "incident" across a fleet. The
+> conditions are therefore kept as written rather than marked partly met, since
+> the missing half is the half that matters for a fleet measurement — but a
+> future reader should not re-derive the parts that exist.
+>
+> **Revisit-if:** all six conditions clear and the 21-day window completes with
+> ≥ 2,000 sampled dispatches and a computed Wilson lower bound; OR the telemetry
+> strategy changes so field measurement is unnecessary; OR the Linux CI
+> infrastructure gap closes and the platform-coverage reading can be
+> re-verified.
 # Road to a supervised telemetry collector — the first resident process, and the eight things the owner decision does not decide
 
 > **Source:** split out of `road-to-runtime-governance-flip.md` on 2026-08-27
@@ -747,15 +820,142 @@ one for a design note under review: § 2's rule is that unanswered is
 > attached. Tracked as `blocker: lifecycle-ci-runner-provisioning`.
 
 
-- [ ] **5.1 Test each of the five properties as a process-level test.** Mocks
+- [x] **5.1 Test each of the five properties as a process-level test.** Mocks
       do not establish orphan behaviour, signal handling, or file locking.
-      verify: the suite spawns real processes, runs on every platform the blocker declared supported, and CI executes it on each — a suite that skips on a platform is a failure on that platform, not an absence.
-- [ ] **5.2 Make the evidence protocol explicit, so a presence check cannot
+      verify: DONE on the macOS row — `tests/scripts/collector_lifecycle.test.ts` spawns real `collector_daemon run` processes for all five properties, 5 run / 0 skipped, and the `Collector Lifecycle` job in `.github/workflows/tests.yml` executes it on `macos-latest`. The second declared row is NOT run and is recorded unverified, per the council's (b).
+
+      **The five properties, named rather than counted.** 1 — exactly one live
+      collector per OS user (two real daemons contend; the loser EXITS rather
+      than becoming a second writer). 2 — SIGTERM ends it cleanly: lock
+      released, heartbeat removed, successor starts with no fencing needed. 3 —
+      SIGKILL leaves real residue (a lock and a heartbeat, because an unclean
+      death cannot run a handler) and the successor FENCES both. 4 — a dead
+      collector is readable as dead: the corpse's beat survives and reads
+      `stale` past the threshold, never `running`. 5 — an orphan survives its
+      parent, keeps beating, and its ppid is not this test's.
+
+      **Nothing is mocked, and the test found three real defects by being
+      real.** All three were the same confusion: `tsx` is a LAUNCHER, so
+      `child.pid` is a wrapper and the daemon runs in a grandchild. Signalling
+      the wrapper left the daemon alive; comparing `child.pid` to the heartbeat
+      compared two different processes. Properties 1, 3 and 4 all failed on it,
+      and the failures read like product bugs. The suite now reads the daemon's
+      pid from its own readiness line, which the daemon prints only AFTER the
+      lock and heartbeat exist — the same startup race step 3.3 learned.
+
+      **The first real start also falsified two of 3.2's four budgets**, which
+      is exactly what that step's `revisit-if` said would happen and is recorded
+      there rather than quietly patched: resident memory read 116.2 MiB against
+      a 96 MiB ceiling and the daemon budget-stopped itself within seconds; file
+      descriptors read 28 against a derived peak of 12. Both rows are now
+      MEASURED (192 MiB / 128 fd ceilings) and the other two still say DERIVED.
+      A third defect surfaced in the same run: back-to-back CPU sampling
+      produced `103 %` and then `36800 %`, because a sub-millisecond window
+      divides into any CPU time to give nonsense — `MIN_CPU_WINDOW_MS` now
+      refuses to recompute below one second and carries the previous value,
+      with the three-way trade-off written out at the call site.
+
+      **The platform gap is named, not implied.** `ubuntu-latest` has no user
+      session bus, so it is the platform table's STATIC-FALLBACK row, not the
+      supported `systemd --user` row. Running the suite there would produce a
+      green tick that says nothing about the row AC-8 cares about — so the job
+      does not run it, and the workflow comment says why. Per the (b) verdict's
+      binding conditions, the unverified row stays out of release claims **even
+      if its static fallback appears to work**.
+- [x] **5.2 Make the evidence protocol explicit, so a presence check cannot
       masquerade as proof.** The governance roadmap's atomicity check asks
       whether this suite is green. That check must establish that the named
       suite exists, ran on the same revision, exercised real processes, and was
       not empty or skipped.
-      verify: the check reds against a deliberately emptied suite and against a suite result from a different revision — two seeded negatives, both observed.
+      verify: DONE — `./scripts-run src/scripts/check_supervision_claim_atomicity --self-test` reports `7/7 case(s) behaved (5 rejecting, floor 7)`, and two of those five are exactly the seeded negatives this step names: *"an emptied suite — every case skipped, none run"* and *"a result recorded against a different revision"*. Both observed rejecting with exit 1.
+
+      **The check existed; what was missing was a producer.** The gate already
+      demanded that the artifact name a suite, match HEAD's revision, record
+      `processes_exercised: true`, and carry integer counts with `run > skipped`
+      — four conditions, each with its own refusal string. Nothing wrote the
+      artifact. `src/scripts/run_lifecycle_suite.ts` is that producer, and every
+      field in it is OBSERVED rather than asserted: the revision from `git
+      rev-parse HEAD` at run time, the counts parsed out of vitest's own JSON
+      report, and `processes_exercised` true only when all five NAMED properties
+      passed — matched by name, because a count cannot tell five properties from
+      five repeats of one. A hardcoded `true` there would defeat the gate
+      entirely, since the gate exists because a mocked suite can demonstrate all
+      five properties and prove none.
+
+      A skip is a failure: the producer exits non-zero on any skipped case, and
+      still writes the artifact with the honest counts — a missing artifact and
+      a skipped suite need different remediation, and the gate distinguishes
+      them by design.
+
+      **The artifact is deliberately gitignored.** The gate refuses a result
+      whose recorded revision is not HEAD, so a committed artifact would forever
+      name the commit before the one it ships in and could never match. It is a
+      CI-time fact, produced by the `Collector Lifecycle` job at the revision
+      under test.
+
+      **What the negatives do NOT show, stated because the difference matters.**
+      Run against the REAL tree, the gate passes whatever the artifact says —
+      because no public surface currently makes a present-tense supervision
+      claim, so there is nothing for it to refuse. That is the correct state
+      (AC-8 is unverified on one row, so no such claim may be made), and it is
+      why the step asks for SEEDED negatives: the self-test plants the claim
+      alongside the bad evidence. Reporting the vacuous real-tree pass as
+      evidence of the protocol working would have been the available mistake.
+
+- [x] **5.3 Prove the measurement machinery before the measurement.** Seeded
+      opportunities and captures, an asserted ratio, an asserted Wilson bound,
+      the minimum-sample boundary, malformed input, and duplicate suppression —
+      all verifiable with zero elapsed days. It proves the instrument; it claims
+      nothing about the field measurement.
+      verify: a test computes the rate and its interval from the REAL denominator writer and the REAL store, and the eligibility boundary is asserted at the exact minimum sample.
+
+      > **ADDED 2026-08-30 on AI council instruction (DEGRADED — 1 of 2 seats;
+      > `openai` absent, `os_error: ENOBUFS`).** The seat made this a
+      > **prerequisite checkpoint between Phase 5 and Phase 6**, explicitly not a
+      > Phase 6 step and explicitly not a substitute for 6.1: *"The synthetic
+      > test is a checkpoint, not a Phase 6 step. It answers 'does the instrument
+      > work?' before asking 'what does it measure?'"* Recording it as its own
+      > step rather than folding it into 6.1 is the whole point — folding it in
+      > would let a green instrument read as a completed measurement.
+
+      **DONE.** `src/scripts/_lib/capture_rate.ts` + 19 tests in
+      `tests/scripts/capture_rate.test.ts`.
+
+      **The decision rule is implemented as 1.2 item 9 fixed it, and the test
+      that matters is the one that fails.** 1800/2000 is exactly 90 % as a point
+      estimate and its Wilson lower bound is below 90 %, so the rule says it has
+      NOT cleared the target. A consequence worth stating because it is easy to
+      discover late and expensive: at the 2,000 minimum sample, a 90 % LOWER
+      BOUND needs a point estimate of roughly **91.3 %**. The test computes that
+      threshold rather than asserting it, so it moves if the sample floor does.
+
+      **Ineligible is `null`, never `false`, and that is a three-valued verdict
+      on purpose.** A 200-dispatch sample over 3 days is *keep observing*, not
+      *missed* — and a miss is what fires 6.3's decision record. Collapsing the
+      two would produce a recorded shortfall for a measurement that never
+      happened. Same shape in `judgeEnablement`: a MISSING reading and a FALSE
+      reading are reported separately, because "we did not look" and "we looked
+      and it was bad" call for different actions.
+
+      **Wilson rather than the normal approximation**, because the normal one is
+      wrong exactly where this measurement lives: near a proportion of 1 it
+      returns an upper bound above 1 and a spuriously narrow interval. At `n = 0`
+      the interval is `[0, 1]` — *we measured nothing* — never `[0, 0]`, which
+      would read as a total capture failure.
+
+      **The end-to-end block drives the REAL writers**: 40 opportunities through
+      `recordOpportunity`, 34 records through `spoolRecord` and `drainOnce` into
+      the real store, giving 34/40. Duplicate suppression is asserted against the
+      store's actual behaviour — three identical spooled records produce three
+      ROWS and one record, because the store is append-only and de-duplicates at
+      read time — which is what keeps the numerator from exceeding the
+      denominator without an insert-time unique constraint.
+
+      SENSITIVITY, observed (19 tests): judging on the point estimate instead of
+      the lower bound reds 1; returning `false` instead of `null` for an
+      ineligible reading reds 4; `[0, 0]` at `n = 0` reds 1; treating a missing
+      enablement reading as `false` reds 1; dropping the
+      numerator-above-denominator check reds 1.
 
 ## Phase 6 — Measure, then decide
 
@@ -768,6 +968,28 @@ one for a design note under review: § 2's rule is that unanswered is
       platform · resource budgets met · no privacy or data-integrity incident ·
       static-mode compatibility green · window and minimum sample satisfied.
       verify: each of the six is recorded with its reading; a missing reading blocks the flip.
+
+      **The platform reading is REVISED to match the evidence, and it is
+      revised as BLOCKING rather than as met** (AI council 2026-08-30, the same
+      degraded verdict that parked this roadmap). It now reads:
+
+      > *Lifecycle and rollback tests verified on macOS (AC-8 green on that row);
+      > Linux verification infrastructure-blocked — no user session bus on any
+      > GitHub-hosted runner.*
+
+      The seat was explicit about why this is a revision of the WORDING and not
+      of the bar: *"Do not treat a known unverified platform as 'met'."* The gap
+      closes one of two ways — Linux lifecycle tests pass in a real
+      user-session-bus environment, or Linux is formally removed from the
+      supported-platform contract through a separate support-policy decision.
+      Until then this reading is `false`, not `null`: it has been looked at.
+
+      Two readings are recordable today and are recorded here so a resumer does
+      not re-derive them. **Resource budgets: met** — measured 2026-08-30, and
+      two of the four ceilings were re-derived from that measurement rather than
+      the reading being fitted to them (3.2). **Static-mode compatibility:
+      green** — 551 tests run twice with identical per-test verdicts (4.2). The
+      other four need the window, the cohort, or the Linux row.
 - [ ] **6.3 Act on a miss.** Below target, the collector stays default-off and
       the shortfall becomes a decision record naming what was measured and what
       closing it would cost. Disposition options are predefined — removal, a
@@ -978,7 +1200,18 @@ one for a design note under review: § 2's rule is that unanswered is
 
 ### blocker: lifecycle-ci-runner-provisioning
 
-- **Status:** open
+- **Status:** resolved 2026-08-30 — both clauses of `Resolved when` are now met.
+  The choice was recorded here on 2026-08-29 (council, (b)); the second clause
+  — *"the CI workflow that runs the suite names the platforms it runs on"* — is
+  met by the `Collector Lifecycle` job in `.github/workflows/tests.yml`, which
+  runs on `macos-latest` and states in its own comment that the
+  Linux-with-a-user-session-bus row is NOT run and NOT verifiable on a
+  GitHub-hosted runner, because `ubuntu-latest` has no user session bus and is
+  therefore the platform table's static-fallback row rather than the supported
+  one. The (b) verdict's binding condition is carried into the workflow text:
+  the unverified row stays out of release claims even if its static fallback
+  appears to work. Option (a) remains the target and is unchanged; see the
+  `Revisit-if` below.
 - **Owner:** maintainer
 - **Blocks:** Phase 5 entirely, and through AC-8 the public capability claim.
   Phases 2, 3 and 4 are unaffected and are the current execution frontier.
@@ -1029,14 +1262,14 @@ one for a design note under review: § 2's rule is that unanswered is
   failure exposes material cross-platform divergence.
 - **Resolved when:** the choice is recorded here and, for (a) or (b), the CI
   workflow that runs the suite names the platforms it runs on.
-- **Why this is still `open` after the decision:** the first clause above is now
-  met and the second is not, and a blocker whose criterion is half-met is open.
-  The CI workflow that clause requires cannot exist yet — it runs the Phase 5
-  lifecycle suite, which is not built, because Phases 2–4 are the current
-  execution frontier. Flipping this to `resolved` on the strength of the
-  recorded choice alone would be exactly the silent-green this repository's own
-  records name as a recurring defect. It closes when Phase 5 lands a workflow
-  that names its platforms.
+- **Why it was `open` after the decision, and what closed it (2026-08-30):** the
+  first clause was met on 2026-08-29 and the second was not, and a blocker whose
+  criterion is half-met is open — flipping it on the strength of the recorded
+  choice alone would have been exactly the silent-green this repository's own
+  records name as a recurring defect. The paragraph then said it *"closes when
+  Phase 5 lands a workflow that names its platforms"*. Phase 5 landed and the
+  workflow names them, so it is closed on the condition it stated, not on a
+  reinterpretation of it.
 
 
 ## Risk Register

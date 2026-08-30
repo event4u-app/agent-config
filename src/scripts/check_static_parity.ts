@@ -45,9 +45,12 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
 
-/** The module the dispatcher imports, and the stub that replaces it in run B. */
-const REAL_MODULE = 'src/scripts/_lib/collector_denominator.ts';
-const STUB_MODULE = 'tests/_lib/collector-absent-stub.ts';
+// The alias itself lives in `vitest.config.ts` — it has to, because vitest reads
+// its resolver config at startup and this process only sets the environment
+// variable that switches it on. The two paths involved are
+// `src/scripts/_lib/collector_denominator.ts` and
+// `tests/_lib/collector-absent-stub.ts`; naming them again here as constants
+// would be a second source of truth that nothing reads.
 
 /** Where the two runs' JSON reports land. */
 function reportPath(tag: string): string {

@@ -77,16 +77,30 @@ export type BudgetName = 'cpu_percent' | 'resident_bytes' | 'disk_bytes' | 'file
 /**
  * The four budgets, committed 2026-08-30.
  *
- * **Every `expectedPeak` here is a DERIVATION, not a measurement**, and saying
- * so is the honest form. No collector exists to measure — that is Phase 4 — so
- * each basis states the arithmetic it comes from and what would falsify it.
- * The ceilings are set well above the derived peaks precisely because the peaks
- * are derived: the headroom is absorbing estimation error, not just load.
+ * **REVISED 2026-08-30, and the revision is the point.** The first draft's
+ * peaks were derivations, with a `revisit-if` saying that a measured peak above
+ * a derived one falsifies the derivation. Phase 4 landed, a real daemon ran,
+ * and it falsified two of the four on its first start: resident memory read
+ * 116.2 MiB against a 96 MiB ceiling, and file descriptors read 28 against a
+ * derived peak of 12. The daemon budget-stopped itself within seconds.
  *
- * *Revisit-if:* Phase 4 lands and a measured peak exceeds any `expectedPeak`
- * here. That is not a budget breach — it is a falsified derivation, and the row
- * is re-derived from the measurement rather than the ceiling being raised to
- * accommodate it.
+ * So two rows are now MEASURED and two are still derived, and each `basis` says
+ * which it is. That distinction is the whole value of the field — a table where
+ * every row reads with the same confidence tells a reader nothing about which
+ * numbers have met reality.
+ *
+ * **The measurement is one platform and one execution mode**: macOS, running
+ * under `tsx`, which loads a TypeScript transpiler into the same process. A
+ * built-JS daemon would very likely read far lower. The budget is set against
+ * the mode this repository ACTUALLY runs (`./scripts-run` is tsx), because a
+ * ceiling calibrated to a build that does not exist would stop the daemon that
+ * does.
+ *
+ * *Revisit-if:* the daemon ships as built JS rather than through `tsx` (both
+ * memory rows should then be re-measured and will likely fall by half); or a
+ * measured peak on the Linux row exceeds these; or a descriptor count climbs
+ * across a long run, which is a leak rather than a load and is the one thing
+ * the descriptor ceiling can usefully detect.
  */
 export const RESOURCE_BUDGETS: Readonly<Record<BudgetName, ResourceBudget>> = Object.freeze({
     cpu_percent: Object.freeze({
@@ -94,21 +108,26 @@ export const RESOURCE_BUDGETS: Readonly<Record<BudgetName, ResourceBudget>> = Ob
         unit: '% of one core, averaged over 60s',
         expectedPeak: 0.2,
         basis:
-            'The collector wakes on a hook write and on its heartbeat interval. At the ' +
-            'metric definition\'s observed dispatch volume the wake rate is under one per ' +
-            'second, and a wake is a single-row INSERT plus a stat(2). 0.2% of one core is ' +
-            'two orders of magnitude above the arithmetic and one below the ceiling.',
+            'DERIVED. The collector wakes on a hook write and on its heartbeat interval. ' +
+            'At the metric definition\'s observed dispatch volume the wake rate is under ' +
+            'one per second, and a wake is a single-row INSERT plus a stat(2). 0.2% of one ' +
+            'core is two orders of magnitude above the arithmetic and one below the ' +
+            'ceiling. Not yet measured over a full 60s window on a real run — the sampler ' +
+            'refuses to compute a percentage over a window shorter than a second, which is ' +
+            'itself a lesson from a measured 36800% reading.',
     }),
     resident_bytes: Object.freeze({
-        ceiling: 96 * 1024 * 1024,
+        ceiling: 192 * 1024 * 1024,
         unit: 'bytes RSS',
-        expectedPeak: 60 * 1024 * 1024,
+        expectedPeak: 128 * 1024 * 1024,
         basis:
-            'A bare Node process with no user modules resolves at roughly 40 MiB RSS on ' +
-            'both supported rows. The collector adds node:sqlite plus this package\'s two ' +
-            'collector modules. 60 MiB is that floor plus half again; the 96 MiB ceiling ' +
-            'leaves 36 MiB of headroom, which is the number that absorbs a V8 heap growth ' +
-            'this derivation cannot predict.',
+            'MEASURED 2026-08-30: a real daemon read 116.2 MiB RSS on macOS under tsx, ' +
+            'steady across three samples. The previous DERIVED pair (60 MiB peak, 96 MiB ' +
+            'ceiling) was built from a bare-Node floor of ~40 MiB and did not account for ' +
+            'the TypeScript transpiler tsx loads into the same process; the daemon ' +
+            'budget-stopped itself within seconds of its first start. 128 MiB is the ' +
+            'measurement plus ~10% for heap growth; the 192 MiB ceiling leaves 64 MiB, ' +
+            'which is what absorbs a GC high-water mark a three-sample reading cannot see.',
     }),
     disk_bytes: Object.freeze({
         ceiling: 64 * 1024 * 1024,
@@ -122,15 +141,17 @@ export const RESOURCE_BUDGETS: Readonly<Record<BudgetName, ResourceBudget>> = Ob
             'directory has one growth term this budget cannot bound by retention alone.',
     }),
     file_descriptors: Object.freeze({
-        ceiling: 32,
+        ceiling: 128,
         unit: 'open descriptors held by the collector process',
-        expectedPeak: 12,
+        expectedPeak: 48,
         basis:
-            'Steady state is the SQLite database plus its WAL and shared-memory files, the ' +
-            'heartbeat file, the runtime lock, and stdio. That is 8. 12 allows one ' +
-            'in-flight quarantine rename and a log rotation; the 32 ceiling is where a ' +
-            'descriptor LEAK becomes distinguishable from load, which is the only thing a ' +
-            'descriptor ceiling can usefully detect.',
+            'MEASURED 2026-08-30: 28 open descriptors on macOS under tsx with the store ' +
+            'open, steady across three samples. The previous DERIVED peak of 12 counted ' +
+            'only the files this module opens (database, WAL, shm, heartbeat, lock, stdio) ' +
+            'and ignored everything the runtime holds. 48 is the measurement plus room for ' +
+            'an in-flight quarantine rename; the 128 ceiling is set where a LEAK becomes ' +
+            'distinguishable from load, which is the only thing a descriptor ceiling can ' +
+            'usefully detect — a ceiling near the steady state would fire on noise instead.',
     }),
 });
 

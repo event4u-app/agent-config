@@ -1,0 +1,299 @@
+// The five lifecycle properties, on REAL processes.
+//
+// `road-to-supervised-telemetry-collector` step 5.1 (AC-8). The step's whole
+// argument is that mocks cannot establish orphan behaviour, signal handling or
+// file locking, so nothing in this file is mocked: every case spawns an actual
+// `collector_daemon run` and asserts against the process table, the lock file
+// and the heartbeat on disk.
+//
+// ## The five properties, named
+//
+// 1. **Exactly one** — two real daemons contending for one OS user's lock
+//    produce exactly one live collector; the loser exits rather than proceeding.
+// 2. **Signal handling** — SIGTERM ends the process cleanly: lock released,
+//    heartbeat removed, no residue that blocks a successor.
+// 3. **Unclean death is recoverable** — SIGKILL leaves a lock and a heartbeat
+//    behind, and the next start fences both instead of refusing forever.
+// 4. **Death is observable** — a killed collector's heartbeat is readable as
+//    stale/absent rather than as healthy. This is the property the supervisor
+//    blocker called decisive: a silently dead collector makes incomplete
+//    telemetry look fine.
+// 5. **Orphan survival** — a daemon whose parent exits keeps running and keeps
+//    beating. It is re-parented, not killed, which is what a supervisor-started
+//    process must do.
+//
+// ## Why this file is not `describe.runIf(platform)`-gated
+//
+// AC-8 makes a SKIP a failure on the declared platform, so a conditional skip
+// here would be the exact thing the acceptance criterion forbids. The two
+// declared rows (macOS, Linux-with-a-user-session-bus) are both POSIX and both
+// run this file in full. On a platform outside the declared set the file is not
+// expected to be run at all — that is a CI-matrix decision, not a runtime one.
+
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { enableCollector } from '../../src/scripts/_lib/collector_denominator.js';
+import { isStoreAvailable } from '../../src/scripts/_lib/collector_store.js';
+import {
+    HEARTBEAT_STALE_AFTER_MS,
+    livenessFromBeat,
+    readHeartbeat,
+    runtimeLockPath,
+} from '../../src/scripts/_lib/collector_supervision.js';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO = path.resolve(HERE, '..', '..');
+const TSX = path.join(REPO, 'node_modules', '.bin', 'tsx');
+const DAEMON = path.join(REPO, 'src', 'scripts', 'collector_daemon.ts');
+
+let userRoot: string;
+const spawned: ChildProcess[] = [];
+/** Daemon pids announced this test, so afterEach can reap the grandchildren. */
+const announcedPids: number[] = [];
+
+beforeEach(() => {
+    userRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-lifecycle-'));
+    enableCollector(userRoot);
+});
+
+afterEach(async () => {
+    for (const pid of announcedPids.splice(0)) {
+        try {
+            process.kill(pid, 'SIGKILL');
+        } catch {
+            /* already gone */
+        }
+    }
+    for (const child of spawned.splice(0)) {
+        if (child.exitCode === null && child.signalCode === null) {
+            try {
+                child.kill('SIGKILL');
+            } catch {
+                /* already gone */
+            }
+        }
+    }
+    fs.rmSync(userRoot, { recursive: true, force: true });
+});
+
+interface Daemon {
+    readonly child: ChildProcess;
+    /**
+     * The DAEMON's pid, read from its own readiness line — never `child.pid`.
+     *
+     * `tsx` is a launcher: `child.pid` is the wrapper, and the daemon runs in a
+     * grandchild. Signalling the wrapper leaves the daemon alive, and comparing
+     * `child.pid` against the heartbeat compares two different processes. Three
+     * of the five properties below failed on exactly that confusion before this
+     * field existed, and the failures looked like product bugs rather than test
+     * bugs — which is why the distinction is documented here rather than fixed
+     * quietly.
+     */
+    readonly pid: number;
+    /** Everything the daemon has written to stdout so far. */
+    stdout(): string;
+    exited(): Promise<void>;
+    /** Signal the DAEMON (not the launcher) and wait for it to be gone. */
+    signal(sig: NodeJS.Signals): Promise<void>;
+}
+
+/** Spawn a real daemon and wait until it announces readiness on stdout. */
+async function spawnDaemon(extraArgs: string[] = []): Promise<Daemon> {
+    const child = spawn(TSX, [DAEMON, 'run', '--root', userRoot, '--beat-ms', '50', ...extraArgs], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    spawned.push(child);
+    let out = '';
+    child.stdout?.on('data', (chunk: Buffer) => {
+        out += chunk.toString();
+    });
+    const exited = new Promise<void>((resolve) => {
+        if (child.exitCode !== null || child.signalCode !== null) return resolve();
+        child.once('exit', () => resolve());
+    });
+
+    const deadline = Date.now() + 30_000;
+    while (Date.now() < deadline) {
+        if (out.includes('collector: running') || out.includes('not started')) break;
+        if (child.exitCode !== null || child.signalCode !== null) break;
+        await new Promise<void>((r) => setTimeout(r, 25));
+    }
+    const announced = /collector: running pid=(\d+)/.exec(out);
+    const pid = announced === null ? Number.NaN : Number.parseInt(announced[1] as string, 10);
+    if (Number.isFinite(pid)) announcedPids.push(pid);
+
+    return {
+        child,
+        pid,
+        stdout: () => out,
+        exited: () => exited,
+        signal: async (sig: NodeJS.Signals) => {
+            if (Number.isFinite(pid)) {
+                try {
+                    process.kill(pid, sig);
+                } catch {
+                    /* already gone */
+                }
+            }
+            const deadline = Date.now() + 20_000;
+            while (Date.now() < deadline && Number.isFinite(pid) && pidAlive(pid)) {
+                await new Promise<void>((r) => setTimeout(r, 25));
+            }
+            await exited;
+        },
+    };
+}
+
+function pidAlive(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (err) {
+        return (err as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
+async function waitFor(predicate: () => boolean, ms = 15_000): Promise<boolean> {
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) {
+        if (predicate()) return true;
+        await new Promise<void>((r) => setTimeout(r, 25));
+    }
+    return predicate();
+}
+
+// `node:sqlite` is what the daemon opens on start. Where the runtime does not
+// provide it the daemon refuses with `store-unavailable`, which is correct
+// behaviour and not a lifecycle property — so the suite reports the platform as
+// unable to run rather than pretending it passed. `run_lifecycle_suite` treats
+// that as a failure, per AC-8's "a skip counts as a failure".
+const STORE = isStoreAvailable();
+
+describe.runIf(STORE)('the five lifecycle properties, on real processes', () => {
+    it('PROPERTY 1 — exactly one live collector per OS user', async () => {
+        const first = await spawnDaemon();
+        expect(first.stdout()).toContain('collector: running');
+        expect(await waitFor(() => fs.existsSync(runtimeLockPath(userRoot)))).toBe(true);
+
+        const second = await spawnDaemon();
+        await second.exited();
+        // The loser EXITS rather than proceeding — it does not become a second
+        // writer against the same store.
+        expect(second.child.exitCode).toBe(0);
+        expect(second.stdout()).not.toContain('collector: running');
+
+        const beat = readHeartbeat(userRoot);
+        expect(beat?.pid).toBe(first.pid);
+        expect(pidAlive(first.pid)).toBe(true);
+    });
+
+    it('PROPERTY 2 — SIGTERM ends it cleanly: lock released, heartbeat removed', async () => {
+        const daemon = await spawnDaemon();
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
+
+        await daemon.signal('SIGTERM');
+
+        expect(pidAlive(daemon.pid)).toBe(false);
+        expect(readHeartbeat(userRoot)).toBeNull();
+        expect(fs.existsSync(runtimeLockPath(userRoot))).toBe(false);
+
+        // The successor starts without any fencing being needed.
+        const successor = await spawnDaemon();
+        expect(successor.stdout()).toContain('collector: running');
+    });
+
+    it('PROPERTY 3 — SIGKILL leaves residue, and the successor FENCES it', async () => {
+        const daemon = await spawnDaemon();
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
+
+        await daemon.signal('SIGKILL');
+        expect(pidAlive(daemon.pid)).toBe(false);
+
+        // An unclean death cannot run a cleanup handler, so the residue is real
+        // — that is the state this property exists to test.
+        expect(fs.existsSync(runtimeLockPath(userRoot))).toBe(true);
+        expect(readHeartbeat(userRoot)).not.toBeNull();
+
+        const successor = await spawnDaemon();
+        expect(successor.stdout()).toContain('collector: running');
+        expect(await waitFor(() => readHeartbeat(userRoot)?.pid === successor.pid)).toBe(true);
+        expect(
+            fs.readFileSync(runtimeLockPath(userRoot), 'utf8').trim(),
+            'the lock names the successor',
+        ).toBe(String(successor.pid));
+    });
+
+    it('PROPERTY 4 — a dead collector is READABLE as dead, never as healthy', async () => {
+        const daemon = await spawnDaemon();
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null)).toBe(true);
+        expect(livenessFromBeat(readHeartbeat(userRoot))).toBe('running');
+
+        await daemon.signal('SIGKILL');
+
+        const beat = readHeartbeat(userRoot);
+        expect(beat, 'the beat of the dead process survives').not.toBeNull();
+        // Read at a clock past the staleness threshold, the surviving beat is
+        // `stale` — likely dead — rather than `running`. This is the property
+        // the supervisor blocker called decisive: a boolean would report the
+        // corpse as healthy and the capture-rate gap as a product finding.
+        expect(
+            livenessFromBeat(beat, (beat?.last_heartbeat ?? 0) + HEARTBEAT_STALE_AFTER_MS + 1),
+        ).toBe('stale');
+        expect(pidAlive(beat?.pid as number)).toBe(false);
+    });
+
+    it('PROPERTY 5 — an orphaned collector survives its parent and keeps beating', async () => {
+        // Launch through a shell that exits immediately, so the daemon is
+        // re-parented to init. A supervisor-started process is never a child of
+        // whatever asked for it, and a daemon that dies with its launcher is not
+        // supervised — it is a subprocess.
+        const launcher = spawn(
+            '/bin/sh',
+            [
+                '-c',
+                `${JSON.stringify(TSX)} ${JSON.stringify(DAEMON)} run `
+                    + `--root ${JSON.stringify(userRoot)} --beat-ms 50 >/dev/null 2>&1 & echo $!`,
+            ],
+            { stdio: ['ignore', 'pipe', 'ignore'] },
+        );
+        let out = '';
+        launcher.stdout.on('data', (c: Buffer) => {
+            out += c.toString();
+        });
+        await new Promise<void>((r) => launcher.once('exit', () => r()));
+        // `$!` is the shell's child — tsx — which execs or spawns the daemon.
+        // The daemon's pid is whatever the heartbeat records; that is the
+        // authoritative answer and it is what the assertions use.
+        expect(out.trim().length, 'the launcher printed a pid').toBeGreaterThan(0);
+
+        expect(await waitFor(() => readHeartbeat(userRoot) !== null, 30_000)).toBe(true);
+        const beat = readHeartbeat(userRoot);
+        expect(beat).not.toBeNull();
+        const pid = beat?.pid as number;
+        expect(pidAlive(pid)).toBe(true);
+
+        // Still beating after the launcher is long gone: the beat advances.
+        const first = beat?.last_heartbeat as number;
+        expect(
+            await waitFor(() => (readHeartbeat(userRoot)?.last_heartbeat ?? 0) > first, 20_000),
+            'the orphan keeps beating',
+        ).toBe(true);
+
+        // Its parent is not the launcher. On Linux an orphan re-parents to pid 1
+        // or to a subreaper; on macOS to 1. Either way it is not this test.
+        const ppid = spawnSync('ps', ['-o', 'ppid=', '-p', String(pid)], { encoding: 'utf8' });
+        expect(Number.parseInt(ppid.stdout.trim(), 10)).not.toBe(process.pid);
+
+        try {
+            process.kill(pid, 'SIGKILL');
+        } catch {
+            /* already gone */
+        }
+    });
+});

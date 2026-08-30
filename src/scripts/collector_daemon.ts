@@ -96,27 +96,47 @@ export interface StartOutcome {
 
 let lastCpu = process.cpuUsage();
 let lastCpuAt = Date.now();
+let lastCpuPercent = 0;
+
+/**
+ * The shortest window a CPU percentage is computed over.
+ *
+ * MEASURED, not chosen: back-to-back sampling produced `103 %` and then
+ * `36800 %` on a real run, because a few hundred microseconds of elapsed wall
+ * clock divides into any CPU time at all to give a nonsense ratio. The budget's
+ * own unit says *"% of one core, averaged over 60 s"*, and a sub-second window
+ * is not that average — it is noise wearing its units.
+ */
+export const MIN_CPU_WINDOW_MS = 1_000;
 
 /**
  * Sample the four budgeted resources for THIS process.
  *
  * CPU is a delta between samples rather than a lifetime average: a collector
  * that spun for ten minutes an hour ago and is idle now is not currently over
- * budget, and a lifetime figure would keep reporting the old spike. The first
- * sample after start has a short window and is therefore noisy — which is why
- * {@link runLoop} does not act on a breach until it has seen two consecutive
- * ones.
+ * budget, and a lifetime figure would keep reporting the old spike.
+ *
+ * **Below {@link MIN_CPU_WINDOW_MS} the previous percentage is carried forward
+ * rather than recomputed**, and the initial value is 0. That is a deliberate
+ * choice between three bad options: recomputing gives the 36800 % nonsense
+ * above; returning `NaN` is read as a breach by `budgetVerdict` and would stop
+ * the daemon during its own startup; carrying the last value reports a stale
+ * figure for at most one second. The staleness is bounded and the other two are
+ * wrong, so this one is documented rather than hidden.
  */
 export function sampleResources(userRoot?: string): ResourceReading {
     const now = Date.now();
-    const cpu = process.cpuUsage();
-    const elapsedMicros = Math.max(1, (now - lastCpuAt) * 1000);
-    const usedMicros = cpu.user - lastCpu.user + (cpu.system - lastCpu.system);
-    lastCpu = cpu;
-    lastCpuAt = now;
+    const elapsedMs = now - lastCpuAt;
+    if (elapsedMs >= MIN_CPU_WINDOW_MS) {
+        const cpu = process.cpuUsage();
+        const usedMicros = cpu.user - lastCpu.user + (cpu.system - lastCpu.system);
+        lastCpuPercent = (usedMicros / (elapsedMs * 1000)) * 100;
+        lastCpu = cpu;
+        lastCpuAt = now;
+    }
 
     return Object.freeze({
-        cpu_percent: (usedMicros / elapsedMicros) * 100,
+        cpu_percent: lastCpuPercent,
         resident_bytes: process.memoryUsage().rss,
         disk_bytes: directorySize(resolveCollectorStore(userRoot).root),
         file_descriptors: openDescriptorCount(),
@@ -394,10 +414,20 @@ function sleepSync(ms: number): void {
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const command = argv[0] ?? 'status';
 
+    // `--root` exists for the process-level lifecycle suite (step 5.1), which
+    // has to spawn REAL daemons and cannot be allowed to touch the developer's
+    // own `~/.event4u/agent-config`. It is not a production knob: the supervisor
+    // units never pass it, and omitting it resolves the real user root exactly
+    // as before.
+    const rootFlag = argv.indexOf('--root');
+    const userRoot = rootFlag >= 0 ? argv[rootFlag + 1] : undefined;
+    const beatFlag = argv.indexOf('--beat-ms');
+    const beatMs = beatFlag >= 0 ? Number.parseInt(argv[beatFlag + 1] ?? '', 10) : undefined;
+
     if (command === 'status') {
-        const beat = readHeartbeat();
+        const beat = readHeartbeat(userRoot);
         const liveness = livenessFromBeat(beat);
-        const enabled = isCollectorEnabled();
+        const enabled = isCollectorEnabled(userRoot);
         process.stdout.write(
             `collector: ${enabled ? 'enabled' : 'default-off'} · ${liveness}`
                 + (beat === null ? '' : ` (pid ${beat.pid}, ${beat.mode})`)
@@ -407,7 +437,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     if (command === 'run') {
-        const outcome = start();
+        const outcome = start(userRoot);
         if (!outcome.started) {
             process.stderr.write(`collector: not started — ${outcome.refusal}\n`);
             // Refusing to start is the designed behaviour on a default-off
@@ -417,7 +447,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
         process.on('SIGTERM', requestStop);
         process.on('SIGINT', requestStop);
-        const summary = runLoop();
+        // Announce readiness AFTER the lock and heartbeat exist. A test that
+        // signals before this line is racing the startup it is trying to test —
+        // the same race the 3.3 wedged-process test learned the hard way.
+        process.stdout.write(`collector: running pid=${process.pid} mode=${outcome.mode}\n`);
+        const summary = runLoop(
+            beatMs !== undefined && Number.isFinite(beatMs)
+                ? { userRoot, beatMs }
+                : { userRoot },
+        );
         process.stderr.write(
             `collector: stopped by ${summary.stoppedBy}`
                 + (summary.exceeded.length > 0 ? ` (${summary.exceeded.join(', ')})` : '')
@@ -426,7 +464,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    process.stderr.write(`usage: collector_daemon [status|run]  (${DAEMON_PROCESS_MARKER})\n`);
+    process.stderr.write(
+        `usage: collector_daemon [status|run] [--root <dir>] [--beat-ms <n>]  (${DAEMON_PROCESS_MARKER})\n`,
+    );
     return 2;
 }
 
