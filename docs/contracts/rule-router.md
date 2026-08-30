@@ -366,6 +366,74 @@ see. The `replay_opaque_triggers` escape hatch in the benchmark corpora
 therefore survives the removal — its justification shifts from "intent is
 invisible to replay" to "description-activation is invisible to replay".
 
+## Claude Code `paths:` — what is emitted, what is not, and why
+
+`road-to-agent-turnaround` step 4.3. `paths:` is the **only** per-file
+activation key Claude Code reads; `triggers:` is this package's own vocabulary
+and the host does not parse it. So a rule that reaches `~/.claude/rules/` with
+`triggers:` and no `paths:` arrives on **every** request regardless of what the
+request is about.
+
+The originating measurement reported *"zero of 104 installed rules emit a
+top-level `paths:`"* and read that as the emitter refusing to scope. Measured
+again on 2026-08-30 with `rule_activation_census`, the picture is three
+different facts, and only one of them is a refusal:
+
+| set | n | what happens | why |
+|---|---|---|---|
+| path-only rules | **4** | the emitter DOES write `paths:` | nothing else activates them, so scoping loses nothing |
+| mixed rules (path **and** keyword/phrase) | **17** | no `paths:` — unconditional, by design | see below |
+| everything else | 99 | no path trigger to lift | nothing to scope on |
+
+### The 17 mixed rules are a refusal, and it is the correct one
+
+`_claude_paths_plan` (`src/install/claudePathsPlan.ts:149`) writes **no**
+`paths:` at all for a rule carrying even one non-path trigger. That looks like
+timidity and is the opposite: because `paths:` is the host's only activation
+key, writing it for a rule that also has a keyword trigger makes the **keyword
+unreachable** — the rule would go silent on exactly the prompts it was written
+for, with no error anywhere. Risk 4 of the originating roadmap names this shape:
+*"a rule that must stay unconditional to be correct would go quiet with no error
+anywhere."*
+
+The 17: `augment-edit-discipline`, `design-fidelity`, `doc-screenshot-hygiene`,
+`domain-adoption-policy`, `framework-neutrality-in-generic-skills`,
+`image-likeness-and-rights`, `laravel-translations`, `lethal-trifecta-guard`,
+`linked-projects-onboarding-gate`, `low-impact-corpus-privacy-floor`,
+`markdown-safe-codeblocks`, `onboarding-gate`, `persona-governance`,
+`php-coding`, `provider-lifecycle-discipline`, `roadmap-ci-steps-policy`,
+`settings-ask-protocol`. Narrowing any of them is a per-rule decision about
+whether its keyword triggers still earn their place — not a blanket emitter
+change.
+
+### The wiring gap — a real defect, named rather than fixed here
+
+Of the 4 rules the emitter WOULD scope, exactly **one** carries `paths:` in a
+host tree today. The reason is not staleness:
+
+| rule | project `.claude/rules/` | global `~/.claude/rules/` |
+|---|---|---|
+| `source-of-truth` | `paths:` **yes** | not delivered there (package-only) |
+| `ui-audit-gate` | not delivered there | present, `paths:` **no** |
+| `design-review-after-ui-write` | not delivered there | present, `paths:` **no** |
+| `roadmap-progress-sync` | not delivered there | present, `paths:` **no** |
+
+`dist/agent-src/rules/*.md` carries the SOURCE form — `triggers:`, never
+`paths:`. The host form is produced by a rewrite, and **that rewrite runs on one
+of the two write paths**: `condense.ts` calls `_claude_paths_plan` when it
+writes the project tree, and nothing under `src/install/` calls it at all. So
+the global layer receives the source form verbatim.
+
+The one rule that is scoped in practice is the one that happens to be
+package-only and therefore travels the project path. That is a coincidence of
+delivery, not a design.
+
+**Deliberately not fixed in the change that documented it.** The repair is in a
+consumer-facing installer write path and would change which rules load on every
+installed machine — the silent-narrowing risk above, applied to three rules at
+once, from inside a roadmap whose subject is measurement. Carried instead into
+`road-to-turnaround-followups` with this section as its evidence.
+
 ## Activation end-state — one runtime knob (token program, 2026-07-07)
 
 Locked by the token-program integration council

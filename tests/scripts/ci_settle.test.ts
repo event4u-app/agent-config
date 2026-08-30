@@ -7,7 +7,7 @@
 // must never classify as settled.
 import { describe, expect, it } from 'vitest';
 
-import { classifyPoll } from '../../src/scripts/ci_settle.js';
+import { classifyPoll, FOREGROUND_CEILING_MIN } from '../../src/scripts/ci_settle.js';
 
 const roll = (rows: unknown[]): string => JSON.stringify({ statusCheckRollup: rows });
 
@@ -100,5 +100,24 @@ describe('classifyPoll', () => {
         for (const s of notSettled) {
             expect(s.kind).not.toBe('settled');
         }
+    });
+});
+
+// road-to-agent-turnaround 3.1. The measured defect was not a wrong verdict, it
+// was NO verdict: a 45-minute default deadline against a 600 s `Bash` ceiling
+// meant ten of the twelve slowest calls in a ten-session corpus were this script
+// killed at 592-603 s and re-invoked. A killed wait prints nothing, so the
+// carefully separated exit codes above never reach the caller at all.
+describe('foreground deadline', () => {
+    it('fits inside one Bash call with at least one poll interval to spare', () => {
+        // 600 s is the tool ceiling; 60 s is the default poll interval. The
+        // deadline must leave room for the loop to REACH its own DID-NOT-SETTLE
+        // branch, not merely to be under the cap.
+        expect(FOREGROUND_CEILING_MIN * 60).toBeLessThanOrEqual(600 - 60);
+    });
+
+    it('is a number, not a comment — a documented ceiling nobody reads is the old state', () => {
+        expect(Number.isInteger(FOREGROUND_CEILING_MIN)).toBe(true);
+        expect(FOREGROUND_CEILING_MIN).toBeGreaterThan(0);
     });
 });
