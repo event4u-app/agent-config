@@ -1,0 +1,58 @@
+{
+    "skill": "incident-commander",
+    "last_eval": "2026-08-30",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover the LIVE or just-closed incident — severity, comms cadence, who does what. Near-misses are the two neighbours that named it plus the post-mortem skill that consumes this one's skeleton, which is the sharpest edge because it is the same incident one step later.",
+    "queries": [
+        {
+            "q": "production is down — what do I do now?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we're ten minutes into an outage; set the severity and the comms cadence",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "customers are reporting 500s — who does what right now?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wir haben gerade einen Vorfall in Produktion, wie gehen wir vor?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "the incident is resolved — run the post-mortem and find the root cause",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the same incident one step later; facilitation of the blame-free retro consumes this skill's skeleton → blameless-post-mortem"
+        },
+        {
+            "q": "which of these alerts deserves to page someone?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "designing the paging policy in calm time, not running an incident → alerting-doctrine"
+        },
+        {
+            "q": "are we ready to go live with this service?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a go/no-go before anything has broken → operational-readiness"
+        },
+        {
+            "q": "our CI pipeline is red on main",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a broken build is not a production incident; guards against triggering on any 'X is down/broken' phrasing"
+        },
+        {
+            "q": "write the release notes for v3",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "routine release work that mentions shipping and no incident"
+        }
+    ]
+}

@@ -1,0 +1,58 @@
+{
+    "skill": "logging-monitoring",
+    "last_eval": "2026-08-30",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (2 inbound confusion edges, no corpus). Exemplars cover ESTABLISHING what observability a project actually has — the four Golden Signals, signal-to-implementation-to-evidence, SLI/SLO provenance. Near-misses are the two neighbours that named it plus the live-incident case, all of which CONSUME observability rather than establish it.",
+    "queries": [
+        {
+            "q": "what observability does this project actually have — do we cover all four Golden Signals?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does this service even emit an error-rate metric, and where is it implemented?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "trace our SLIs back to the code that produces them — I want provenance, not a dashboard screenshot",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "welche der vier Golden Signals fehlen diesem Projekt eigentlich?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "which of these alerts should actually page someone at 3am?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "deciding what earns a page, given signals that already exist → alerting-doctrine"
+        },
+        {
+            "q": "are we ready to go live — give me a go/no-go from the evidence",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "adjudicating readiness from typed evidence this skill produces → operational-readiness"
+        },
+        {
+            "q": "production is down, what do I do right now?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "running an open incident, not establishing what is measured → incident-commander"
+        },
+        {
+            "q": "add a log line here so I can debug this function",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a one-line code edit that happens to mention logging; no observability question is being asked"
+        },
+        {
+            "q": "set the log level to debug in the staging env file",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a config flip, not an inventory of what the project can detect"
+        }
+    ]
+}

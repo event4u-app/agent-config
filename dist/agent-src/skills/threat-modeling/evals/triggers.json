@@ -1,0 +1,58 @@
+{
+    "skill": "threat-modeling",
+    "last_eval": "2026-08-30",
+    "description": "4 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-08-30 under road-to-governed-harness-evolution 2.4, wave 1 (3 inbound confusion edges, no corpus). Exemplars cover the BEFORE-implementation pass on a named sensitive surface — auth, uploads, webhooks, tenancy. Near-misses are the three neighbours that named it, all of which look at code that already exists.",
+    "queries": [
+        {
+            "q": "threat-model this new file-upload endpoint before we build it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we're adding webhooks from a third party — what are the trust boundaries and abuse cases?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "before I implement tenant switching, map the abuse cases onto the files that would carry them",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "bevor wir den neuen Login bauen — erstell bitte ein Threat Model mit Missbrauchsfällen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "audit this module for SQL injection and XSS vulnerabilities",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "hunting defects in code that already exists, not enumerating abuse cases for a change → security-audit"
+        },
+        {
+            "q": "give me a posture score for this service across the security categories",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a rating of the current state rather than an abuse-case enumeration for a planned change → security-maturity-assessment"
+        },
+        {
+            "q": "review this diff for authorization holes — can user A reach user B's data?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the per-entrypoint authorization chain over a concrete diff → authz-review"
+        },
+        {
+            "q": "write the incident comms for the outage we're in right now",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "an open production incident; shares the word 'boundaries' with nothing and must not pull a modelling skill into a live outage"
+        },
+        {
+            "q": "rename this class everywhere and update all the callers",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a mechanical refactor with no trust boundary in it"
+        }
+    ]
+}
