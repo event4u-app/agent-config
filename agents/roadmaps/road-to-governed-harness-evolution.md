@@ -1036,15 +1036,68 @@ once.
       requires.
       verify: a candidate failing the cheapest stage consumes no model call, and
       the stage list can produce the Phase 1 classification.
-- [ ] **4.2 Report a metric vector, never a weighted total.** Include an
+- [x] **4.2 Report a metric vector, never a weighted total.** Include an
       `artifact-count delta` row — that is where the sprawl concern belongs,
       inside the gate where it can prevent something.
       verify: no code path computes a single scalar score.
-- [ ] **4.3 Make the verdict hierarchy explicit.** `paired_verdict` per metric
+      **DONE 2026-08-31.** The record type is
+      `src/scripts/_lib/evaluation_vector.ts` — `MetricVector` (`:83-86`) has
+      exactly two fields, `candidate_id` and `rows`, and no field that could
+      hold a summary number. Rows come in two kinds (`:60-79`) because two
+      different things are measured: a `PairedRow` carries a `PairedVerdict`
+      from `_lib/paired_verdict.ts` and a `CountedRow` carries an integer delta
+      with no trials behind it. Forcing the artifact delta through a paired
+      verdict would invent trials; giving an outcome metric a bare number would
+      let a caller assert a result without evidence — both shapes exist so
+      neither lie is available.
+      **The artifact-count row is inside the gate, not beside it.**
+      `buildVector` (`:97`) REFUSES a vector that omits the
+      `artifact-count-delta` row, and `promotionVerdict` (`:230`) blocks on a
+      delta above its ceiling — default `0`, a STATED conservative default
+      rather than a measured one, overridable by a caller that knows it is
+      looking at a curator `ADD`. A test asserts the row can refuse a promotion
+      the paired rows would have allowed.
+      **The verify clause is a static scanner, proved SENSITIVE before it was
+      trusted.** `findScalarCollapse`
+      (`tests/scripts/evaluation_vector.test.ts:48`) bans `weighted` / `weight`,
+      `*_score` summary names, a `score: number` field, `.reduce(`, and any
+      signature taking a `MetricVector` and returning `number`. It runs over
+      every `.ts` under `src/scripts` that mentions `MetricVector`, unioned with
+      a named core set, and both halves assert non-emptiness — a scan over
+      nothing exits green. Sensitivity was OBSERVED, not argued: a
+      `weightedTotal(v: MetricVector): number` was added to the module, the
+      scanner turned the suite red naming
+      `src/scripts/_lib/evaluation_vector.ts: ["weighted", "vector-to-number"]`,
+      and removing it restored 18/18 green. The comment stripper carries its own
+      anti-vacuity assertion, because a stripper returning `''` would make the
+      scan pass over nothing.
+- [x] **4.3 Make the verdict hierarchy explicit.** `paired_verdict` per metric
       decides; `underpowered` is not a pass; a Pareto frontier may only order
       candidates that are already non-dominated and never promotes.
       verify: a fixture where the frontier prefers a candidate whose
       `paired_verdict` is `underpowered` produces no promotion.
+      **DONE 2026-08-31, reusing `_lib/paired_verdict.ts` rather than deciding
+      anything again** — Risk 1 on this roadmap is a second verdict beside that
+      one, so `evaluation_vector.ts` imports the type and never recomputes a
+      verdict. The hierarchy is `promotionVerdict`
+      (`src/scripts/_lib/evaluation_vector.ts:230`), the ONLY promoter in the
+      module: it refuses on a regression, on an `underpowered` row, on an
+      artifact delta above the ceiling, on a vector with no paired row, and on a
+      vector where every paired row concluded `no-change` — the last because
+      `no-change` is a decided absence of improvement, not a clean sheet.
+      **`underpowered` is incomparable, not merely non-passing.** `compareRow`
+      (`:145`) ranks `pass > no-change > regression` and returns `0` against an
+      `underpowered` row in either direction: it is an absent measurement, so it
+      can neither win a row nor lose one. A test pins both directions.
+      **The fixture the verify clause asks for is real rather than rigged**
+      (`tests/scripts/evaluation_vector.test.ts:211-247`). `winner` beats
+      `plodder` on `token-cost` (pass vs no-change) and is incomparable on
+      `task-success`, so it genuinely DOMINATES and is the sole member of
+      `paretoFrontier([winner, plodder])`. Its `task-success` verdict is
+      `underpowered`, and filtering the frontier through `promotionVerdict`
+      yields `[]`. The separation is structural: `paretoFrontier` (`:205`) is
+      never consulted by `promotionVerdict`, so a frontier preference has no
+      path by which to become a promotion.
 - [ ] **4.4 Keep a pathology archive, not only a frontier.**
       `from-skipped-parent`, and it was that parent's headline contribution: a
       pure frontier loses the information about *why* a candidate exists, so
@@ -1054,12 +1107,45 @@ once.
       kill ID.
       verify: two candidates with equal vectors but different pathology cells
       are both retained, and a diversity-collapse stop (0.6) reads the archive.
-- [ ] **4.5 Minimality breaks ties.** Order per E5, and include the fifth
-      criterion the skipped parent added: simpler mechanism. Note that the two
-      parents' orders invert, so identical candidates resolve differently
-      depending on the choice — this is not a formatting detail.
+- [x] **4.5 Minimality breaks ties.** Order per E5: the FOUR criteria
+      `tokens → artifacts → scope → precedence`. The fifth criterion the skipped
+      parent added — simpler mechanism — is **OUT**. E5's recorded reasoning is
+      that by tie-break time both candidates have already survived selection
+      evaluation and every hygiene check, so there is no outcome signal left to
+      measure simplicity against, and admitting it converts a mechanical
+      decision into a reviewer's taste vote. Note that the two parents' orders
+      invert, so identical candidates resolve differently depending on the
+      choice — this is not a formatting detail.
+      **Amendment 2026-08-31 — transcription, not a decision.** This step
+      previously read *"Order per E5, and include the fifth criterion the
+      skipped parent added: simpler mechanism"*, which contradicted E5 in the
+      same sentence that cited it: E5 (decided 2026-08-30, AI council, anthropic
+      + openai, 2/2) records the four-criterion order **and** the fifth
+      criterion's rejection. The step text predated the verdict and was not
+      updated when it landed. Correcting it here transcribes the existing E5
+      decision and creates no new one; **E5 is not reopened** and its
+      `revisit-if` is untouched.
       verify: two candidates with identical vectors resolve deterministically
       under the committed order.
+      **DONE 2026-08-31.** `src/scripts/_lib/minimality_tiebreak.ts`.
+      `MINIMALITY_ORDER` (`:45`) is exactly `tokens -> artifacts -> scope ->
+      precedence` and the test pins its ARITY as well as its contents — a test
+      that only checked the four present criteria would stay green the day a
+      fifth was added, which is the specific thing E5 ruled out. `SCOPE_ORDER`
+      and `PRECEDENCE_ORDER` (`:53`, `:61`) rank narrowest and least-binding
+      first, so all four criteria are integers read off candidate metadata and
+      none is a judgment.
+      **Determinism, and the order shown to be load-bearing.** `breakTie`
+      (`:118`) walks the order and returns at the first difference; the fixture
+      resolves identically across 20 runs and with the arguments swapped. The
+      same fixture run under the INVERTED order flips the winner from `cheap` to
+      `narrow` — evidence that the order is a decision and not a formatting
+      detail, which is why it needed E5.
+      **An all-four tie returns `winner: null` and escalates.** That is the
+      honest answer and it is deterministic. `orderByMinimality` (`:155`) needs a
+      total order to sort with and falls back to the candidate id; the header and
+      a dedicated test record that this is a sort STABILISER, never a fifth
+      criterion — it never appears in a `TieBreakResult`.
 - [ ] **4.6 Select regressions from the affected neighbourhood.**
       `from-skipped-parent`: use the code graph to choose which regressions to
       run for a given candidate. The master adopted the attack "local
@@ -1068,7 +1154,7 @@ once.
       existing regressions, it does not author tasks.
       verify: a candidate touching one surface runs the regressions its
       neighbourhood names, and a fixture proves a neighbour regression is caught.
-- [ ] **4.7 Reuse the discrimination and hygiene machinery.**
+- [x] **4.7 Reuse the discrimination and hygiene machinery.**
       `eval_publication.PlantedItem` for plants, `judge_hygiene` for order-swap.
       Add the evaluator-promotion procedure the master omitted: an old and a new
       evaluator must cross-grade frozen candidate sets, and evaluator promotion
@@ -1076,6 +1162,35 @@ once.
       verify: a planted candidate the control arm also satisfies is reported as
       a discrimination deficit, not as a win; an evaluator change with no
       cross-grade is refused.
+      **DONE 2026-08-31, and nothing was reimplemented.**
+      `src/scripts/_lib/evaluator_promotion.ts` imports
+      `eval_publication.discriminationDeficit` / `PlantedItem` and
+      `judge_hygiene.auditAssertions`; what it adds is the one thing neither had
+      — the REFUSAL that makes an evaluator swap a gated event.
+      **First conjunct.** `reportPlants` (`:81`) puts any plant the control arm
+      also satisfied into `discrimination_deficits` and never into `wins`, even
+      when the treatment satisfied it too. It also STRIPS the declared
+      `requires_artifact_behaviour` flag from such a plant before handing the set
+      to `discriminationDeficit`, so declared intent cannot rescue an observed
+      failure: the test shows the declared set passing the upstream pre-run check
+      while the observed set does not.
+      **Second conjunct.** `assertEvaluatorPromotable` (`:171`) throws
+      `EvaluatorPromotionRefused` on a null cross-grade, a cross-grade over a
+      different frozen set, a cross-grade between the wrong pair of evaluators,
+      either arm having skipped part of the frozen set, an undeclared order-swap,
+      an always-pass assertion (via `judge_hygiene`), no plants at all, plants
+      that cannot discriminate, and a plant the control also satisfied. It is
+      fail-closed by construction — a one-argument signature with no option
+      object, asserted by the test, so bypassing it means deleting the call,
+      which a diff shows, rather than passing a flag, which it does not. One
+      accepting case exists so a procedure that started refusing everything would
+      not pass either.
+      **Honest boundary on the order-swap.** `judge_hygiene`'s header records
+      that blinding and the order-swap are met upstream by
+      `check_quality_regression.evaluatePair`. This module does not re-observe
+      that; it requires the cross-grade to DECLARE it (`order_swapped`) and
+      refuses when it is false. Asserted by the caller, checked here — stated
+      rather than implied.
 
 ## Phase 5 — Body signal and the proposer roles
 
@@ -1093,10 +1208,36 @@ once.
       it bounds the validity of every routing conclusion in this roadmap.
       verify: the pre-registration lands before the first measurement commit and
       names both gaps separately.
-- [ ] **5.2 Keep the live-floors park intact.** No live harness.
+- [x] **5.2 Keep the live-floors park intact.** No live harness.
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree — verified — and its council park (2/2) is not reopened here.
       verify: no step in this roadmap invokes a live routing harness.
+      **DONE 2026-08-31 — a scan that PASSES, in two halves.**
+      `tests/scripts/governed_harness_no_live_harness.test.ts`. Half A parses
+      this roadmap's step bullets and applies the live-harness pattern set
+      (the live backend class, the cached-live backend name, a route-checker
+      invocation, a live-backend command flag, a model endpoint, a council run, a
+      model client — the literals live in the test) to the code spans that carry
+      a COMMAND shape. Half B applies the
+      same set to every `.ts` under `src/` whose header declares it as belonging
+      to this roadmap — the half that keeps working after the roadmap closes.
+      Both halves assert non-emptiness first, because a gate that scans nothing
+      exits green.
+      **Citation is not invocation, and the scan knows the difference.** Step 5.1
+      cites `src/scripts/description_route_check.ts:18-30` by name, in a code
+      span, because that header is the documented statement of the
+      proxy-to-real-session gap. A scanner reading a file citation as an
+      invocation would fire on the step that exists to describe the limitation,
+      so `commandSpans` narrows to spans with a runner prefix or a flag, and both
+      polarities are pinned in the test: a planted step whose command span names
+      the route checker with a live backend flag is caught with three findings,
+      and the 5.1-shaped citation is silent. The probe string itself lives in the
+      test rather than here — writing it into a step would make this roadmap's
+      own evidence block trip its own scan, which is what happened on the first
+      attempt and is the gate working rather than a false positive.
+      **The park itself is asserted intact** — the file exists under `later/`,
+      carries `status: later`, and its 2/2 council record is present. It is not
+      reopened here: nothing in this change touches it.
 - [ ] **5.3 Split the roles: analyzer, curator, proposer.**
       `from-skipped-parent`, which states the failure directly — do not collapse
       them into one unconstrained rewrite prompt. The master has one LLM
@@ -1109,13 +1250,43 @@ once.
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
       verify: the comparison is a `paired_verdict` run, not an argument.
-- [ ] **5.5 Curator operation set per E6.** The skipped parent argues the 4-op
+- [x] **5.5 Curator operation set per E6.** The skipped parent argues the 4-op
       set is insufficient because split and retire are first-class anti-sprawl
       actions; the 7-op set is the recommendation. Candidates only, never
       promotions. Run `src/scripts/_lib/shingle_similarity.ts` as a
       deterministic pre-stage before any model judgment.
       verify: a near-duplicate candidate is caught by the similarity stage with
       zero model calls.
+      **DONE 2026-08-31.** `src/scripts/_lib/curator_ops.ts`. `CURATOR_OPS`
+      (`:48`) is E6's seven — `KEEP / ADD / MERGE / REPLACE / SPLIT / RETIRE /
+      SKIP` — and the test pins the arity as well as the membership. `OP_ARITY`
+      (`:76`) encodes the algebra argument that carried E6: `MERGE` is n->1
+      (at least two targets, one product) and `SPLIT` is 1->n (one target, at
+      least two products), which is exactly what `RETIRE + 2x ADD` cannot
+      express.
+      **Candidates only, carried by the type.** Every screened proposal carries
+      `lifecycle: 'candidate'` as a LITERAL type (`:130`), so there is no value a
+      curator can construct that names another lifecycle. Phase 7 remains gated
+      on the OPEN `merge-authority` blocker and nothing here promotes.
+      **Zero model calls, established three ways rather than asserted.**
+      (1) A static scan of the module AND its one dependency
+      (`_lib/shingle_similarity.ts`) for `fetch(`, `node:http(s)`, `node:net`,
+      `child_process`, model endpoints, model clients, API-key reads and `await`
+      — proved to FIRE on six synthetic sources first, silent on a plain one.
+      (2) A dynamic run with `fetch`, `XMLHttpRequest` and `WebSocket` replaced
+      by throwing stubs, which still returns the correct screen. (3) The result's
+      `model_calls` is the literal type `0`, and `screenNearDuplicates` (`:145`)
+      is synchronous — a synchronous function cannot await a call, so the
+      property follows from the signature rather than from the body's good
+      behaviour. The import list is asserted to be exactly
+      `['./shingle_similarity.js']`.
+      **The near-duplicate case is a re-skin, which is the shape the primitive
+      exists for** — the same prose with the framework and vendor nouns swapped
+      scores at or above the 70 % containment threshold and is rejected against
+      the entry it duplicates, while unrelated prose is admitted. The threshold
+      is a STATED default at the conservative end of `lint_originality`'s range,
+      not a measured optimum; `revisit-if` a screening run rejects a proposal a
+      curator then re-adds by hand, or admits one a human calls a duplicate.
 - [ ] **5.6 Cheap proposer models first, and track evolution ROI.**
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
@@ -1140,7 +1311,7 @@ once.
       whose thesis it is.
       verify: the three arms are measured against one another before any new
       retrieval component is written.
-- [ ] **6.2 Preserve one matcher.** `from-skipped-parent`, and the tree already
+- [x] **6.2 Preserve one matcher.** `from-skipped-parent`, and the tree already
       enforces it: `src/scripts/_lib/rule_injection.ts:1-19` is "THE single
       module both the offline model and the runtime concern read", trigger
       semantics live in `_lib/router_match.ts` as "the single implementation for
@@ -1148,6 +1319,32 @@ once.
       An experiment whose offline pricing and runtime delivery use different
       matchers measures nothing.
       verify: the parity test stays green and no second matcher is introduced.
+      **DONE 2026-08-31, and the second conjunct was UNCOVERED until now.**
+      `tests/scripts/router_match_parity.test.ts` passes 5/5, which pins the
+      matcher's BEHAVIOUR against the reference. Nothing asserted that a SECOND
+      implementation had not appeared beside it, and the parity test would have
+      stayed green on the day one did — a rival matcher in another file changes
+      none of `router_match.ts`'s outputs.
+      `tests/scripts/single_matcher_preserved.test.ts` is that second conjunct:
+      it scans every `.ts` under `src/` for DECLARATIONS (not imports, not calls)
+      of the three trigger-semantic symbols `trigger_matches`, `match_prompt`,
+      `keyword_matches_anchored`, and asserts `_lib/router_match.ts` is the only
+      file carrying them. It also asserts `_lib/rule_injection.ts` imports from
+      it rather than owning one.
+      **`_fnmatch` is deliberately NOT in the banned set**, and the exclusion is
+      load-bearing rather than lenient: it is a generic glob helper declared
+      privately in six unrelated files on this tree (`memory_lookup`,
+      `cross_repo_retrieve`, `bench_ab_clone`, `check_release_pr_shape`,
+      `check_no_external_sources`, and the templated `memory_lookup`), none of
+      which answers "which rules fire on this prompt?". Banning it would make the
+      gate red on arrival for six pre-existing files, and a gate that is red on
+      arrival is deleted within the week.
+      **Sensitivity is proved against real syntax, not only against strings.**
+      Besides the three synthetic declaration shapes and the import / call /
+      re-export negative cases, one case lifts the exclusion and asserts the
+      detector DOES find all three declarations inside `router_match.ts` itself —
+      a scanner tested only on hand-written strings can be silently wrong about
+      the syntax it has to read.
 - [ ] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
       Over the existing BM25 core. No embeddings —
       `docs/contracts/no-runtime-boundary.md:40` classifies a vector/embedding
