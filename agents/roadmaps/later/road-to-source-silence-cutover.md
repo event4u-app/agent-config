@@ -4,6 +4,7 @@ status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
+estate_growth_exempt: "Parking relocates estate rather than creating it: this change moves road-to-source-silence-cutover out of the active top level into later/ and carries its one open blocker with it, so later_roadmaps and open_blockers each rise by exactly one while active_roadmaps falls by one and no new work is planned. The budget file already names this as the parking allowance (+1 per roadmap moved from the active top level into later/ in the same change); the automatic offset did not fire because the move reaches the diff as an add plus a delete rather than a detected rename, so the growth is claimed here instead of left to a heuristic. The alternative was deleting the blocker to satisfy the count, which is the burial this ratchet exists to prevent."
 review_by: 2026-10-20
 relates: []
 # relates: the predecessor `road-to-source-silence` archived on 2026-08-29;
