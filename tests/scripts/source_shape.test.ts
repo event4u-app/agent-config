@@ -29,9 +29,24 @@ import {
 } from '../../src/scripts/_lib/source_shape.js';
 
 describe('source_shape — the three blocking fixtures from Phase 3.2', () => {
-    it('fires on a speaking `> **Source:**` header', () => {
-        const hits = shapeHits('> **Source:** the-external-thing we read in June');
+    it('fires on a `> **Source:**` header that NAMES something', () => {
+        // NARROWED 2026-08-30 (AI council, 2/2). This case used to read
+        // `the-external-thing we read in June` — descriptive prose with no
+        // identifier — and it fired, which is precisely the defect the council
+        // acted on: all 95 tracked-tree findings of this class were descriptive
+        // or internal, six of them the anonymisation notice itself, so the
+        // detector scored compliance as debt. The fixture is updated to a header
+        // that carries a readable identifier, which is what the class now means.
+        const hits = shapeHits('> **Source:** ported from somevendor/some-suite');
         expect(hits.map((h) => h.cls)).toContain('source-header');
+    });
+
+    it('does NOT fire on a `> **Source:**` header that only describes', () => {
+        // The other half of the narrowing, asserted rather than implied: an
+        // anonymised description is what `source-confidentiality` asks authors
+        // to write, and flagging it penalised the correct behaviour.
+        expect(shapeHits('> **Source:** the-external-thing we read in June')).toEqual([]);
+        expect(shapeHits('> **Source:** an external analysis session, 2026-08-18')).toEqual([]);
     });
 
     it('fires on a speaking agents/tmp quote', () => {

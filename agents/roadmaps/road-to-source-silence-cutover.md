@@ -218,14 +218,78 @@ missing keys in CI must fail, never warn."* The recipe is
 
 ## Phase 3 — The ratchet expiry, which has a date
 
-- [ ] **3.1 Lower, clear, or reaffirm the shape-debt baseline before
+- [x] **3.1 Lower, clear, or reaffirm the shape-debt baseline before
       2026-10-24.** `check_no_external_sources:shape-block` sits at 243 and goes
       stale 56 days after its `landed` date. The debt is the predecessor's
       Phase 2.1 codename rewrite on the NON-anchored occurrences — roughly 190
       quoted non-opaque inbox directory paths and 107 speaking `**Source:**`
       header values across the roadmap corpus. The anchored occurrences are
       already done; this is the corpus-wide remainder.
-      verify: on the day of the change, `check_no_external_sources` reports the block count at or below a baseline whose `landed` date is within 56 days — by a real reduction, by clearing the class, or by a `reaffirmed` block stating a real reason. A refreshed date with no reduction and no reason does not satisfy this.
+      verify: DONE — `check_no_external_sources` reports `attribution shape — block(agents/**) 148 / baseline 148`, `landed: 2026-08-30`, by a REAL reduction of 95: 243 → 148.
+
+      **The reduction is a heuristic fix, not a paydown, and the difference is
+      the whole finding.** The `source-header` class flagged the VALUE of every
+      `**Source:**` header that was not an `ENC1:` token or an opaque round id —
+      so a correctly ANONYMISED header scored exactly like a leaking one. All 95
+      were read: **not one named an external source in readable form**, and six
+      were flagging the anonymisation notice itself (`**Source:** anonymisation
+      (source-confidentiality).** External harvest sources …`). The detector was
+      reporting compliance as debt.
+
+      **AI council 2026-08-30, 2/2 seats present** (anthropic `claude-sonnet-4-5`
+      + openai `codex-default`), $0.00, subscription-authed; delegated by the
+      maintainer for the autonomous drain run. Verdict: **(a) — narrow the
+      class, do not delete it, baseline 148.** Both seats REFUSED (c), removing
+      the class: a `**Source:**` header is where policy directs authors to
+      record attribution and is therefore the highest-value place to keep
+      looking. Both refused (d), reaffirming at 243, because that would
+      characterise all 243 as established debt when 95 of them are not.
+
+      **The test that separates this from metric gaming, in the council's own
+      words:** *"whether the revised detector preserves recall for the prohibited
+      behaviour while removing findings that do not represent it"* — which is
+      why the fixtures are a condition and not a nicety.
+
+      **The operational grammar is written out**, because a seat named the exact
+      risk: *"'readable slug' is still an open question disguised as a decision …
+      without that specification, option (a) merely moves subjective
+      classification into code."* `readableIdentifierIn` flags three shapes,
+      none of which prose produces by accident — an `owner/repo` slug, a domain,
+      an `@scope/package` — with this repository's own paths, roadmap slugs, ADR
+      ids and PR references excluded first.
+
+      **The delta is audited, and the first attempt was wrong.** A full-tree
+      recount removed exactly the 95 audited `source-header` findings and ADDED
+      ZERO; 148 = 127 `tmp-quote` + 21 `repo-slug`, which is openai's stated
+      reviewer check verbatim. The first run produced **150**, on
+      `uncondensed/rules` and `installer/src` — two middle-of-path segments that
+      read like repository slugs unless you look at what surrounds them. Both
+      are pinned as fixtures.
+
+      **Evidence:** `tests/scripts/source_header_narrowing.test.ts`, 30 cases
+      over three labeled fixtures in `tests/fixtures/source-headers/` —
+      `compliant.md` (anonymised, must not flag, and asserted to be exactly what
+      the OLD detector flagged), `internal-ref.md` (repo paths, must not flag),
+      `leaking.md` (invented names covering all three identifier shapes, MUST
+      flag). The fixture names are invented on purpose: a fixture carrying a real
+      source name would itself be the leak.
+
+      **Shadow metric, a council condition:** `legacySourceHeaderHits` is kept
+      and the gate reports its raw count (107) beside the live one. It enforces
+      nothing, and the line says plainly that it is not comparable to the 95 —
+      that figure was measured after snapshot deduplication and this one is not.
+
+      **What remains is real debt and was NOT paid down here:** 127 quoted
+      speaking inbox-directory names and 21 repository slugs, 152 of them in
+      `agents/roadmaps/archive/`. Paying it down is in-place redaction under
+      ADR-250 across ~150 historical files, which this change deliberately did
+      not attempt and which the council explicitly separated from fixing a
+      defective metric.
+
+      *Revisit-if:* a readable identifier in a `**Source:**` fixture escapes
+      detection; the full-tree count is not reproducibly 148; the observed delta
+      contains anything outside the audited `source-header` set. Any of the
+      three reverts the matcher and restores 243.
 
 ## Blockers
 
@@ -353,9 +417,16 @@ missing keys in CI must fail, never warn."* The recipe is
       Each of the 21 survivors is individually justified in
       `agents/evidence/reports/source-skip-paths-ledger.md` with a MEASURED
       suppressed-hit count, and unskipped deny hits are 0.
-- [ ] AC-4 — `check_no_external_sources:shape-block` carries a `landed` date
+- [x] AC-4 — `check_no_external_sources:shape-block` carries a `landed` date
       within its 56-day window, reached by a reduction or by a `reaffirmed`
       block that states a real reason.
+      MET by 3.1, and by a REDUCTION rather than a reaffirm: 243 → **148**,
+      `landed: 2026-08-30`, expiry 2026-10-25. The 95 removed findings were each
+      read and are each a false positive of a class that flagged the presence of
+      a `**Source:**` header rather than a leaked name; the delta was recounted
+      full-tree and added zero. What remains — 127 speaking inbox-directory names
+      and 21 repository slugs — is real debt with a named paydown mechanism
+      (ADR-250 in-place redaction) that this change did not attempt.
 
 ## What this roadmap will NOT build
 

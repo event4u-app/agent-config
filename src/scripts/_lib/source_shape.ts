@@ -201,7 +201,116 @@ function fold(s: string): string {
     return s.trim().toLowerCase();
 }
 
-/** `source-header` hits on one line. */
+/**
+ * Repo-relative prefixes that make a token an INTERNAL reference.
+ *
+ * A `**Source:**` value pointing at this repository's own tree names nothing
+ * external, whatever shape it has. Listed rather than pattern-matched because
+ * the set is small, closed, and a reviewer should be able to read it.
+ */
+const INTERNAL_PATH_PREFIXES: readonly string[] = [
+    'agents/', 'docs/', 'src/', 'tests/', 'scripts/', 'internal/', 'evals/',
+    'dist/', 'provenance/', 'templates/', 'packages/', '.agent-src',
+    '.augment/', '.claude/', '.github/', 'road-to-', 'adr-', 'pr #',
+];
+
+/** Hosts a value may name openly — the same carve-out `ALLOWED_OWNERS` encodes. */
+const ALLOWED_HOSTS: readonly string[] = [
+    'example.com', 'example.org', 'example.net', 'localhost',
+    'github.com', 'anthropic.com', 'openai.com', 'nodejs.org', 'npmjs.com',
+];
+
+const BARE_SLUG_RE = /\b([A-Za-z][A-Za-z0-9-]{1,38})\/([A-Za-z][A-Za-z0-9._-]{1,99})\b/g;
+const DOMAIN_RE = /\b([a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|io|dev|ai|org|net|sh|app|co))\b/gi;
+const SCOPED_PKG_RE = /(^|\s)@([a-z0-9-]+)\/([a-z0-9._-]+)/gi;
+
+function isInternalToken(token: string): boolean {
+    const t = fold(token);
+    return INTERNAL_PATH_PREFIXES.some((prefix) => t.startsWith(prefix));
+}
+
+/**
+ * Does this `**Source:**` value carry a READABLE identifier?
+ *
+ * This is the operational grammar the narrowing rests on, and it is written out
+ * rather than left to a reviewer's judgement because a council seat named
+ * exactly that risk: *"'readable slug' is still an open question disguised as a
+ * decision … without that specification, option (a) merely moves subjective
+ * classification into code."*
+ *
+ * An identifier is one of three shapes, none of which prose produces by
+ * accident: an `owner/repo` slug, a domain name, or an `@scope/package`. A
+ * value carrying none of them names nothing a reader could look up — it is a
+ * description, and a description is what `source-confidentiality` ASKS authors
+ * to write.
+ *
+ * Internal tokens are excluded first: this repository's own paths, its roadmap
+ * slugs, ADR ids and PR references are `owner/repo`-shaped and name nothing
+ * external.
+ */
+export function readableIdentifierIn(value: string): string | null {
+    const hosts = new Set(ALLOWED_HOSTS.map(fold));
+    const owners = new Set(ALLOWED_OWNERS.map(fold));
+
+    DOMAIN_RE.lastIndex = 0;
+    let d: RegExpExecArray | null;
+    while ((d = DOMAIN_RE.exec(value)) !== null) {
+        const host = fold(d[1] as string);
+        if (!hosts.has(host) && !host.endsWith('.example.com')) return host;
+    }
+
+    SCOPED_PKG_RE.lastIndex = 0;
+    let p: RegExpExecArray | null;
+    while ((p = SCOPED_PKG_RE.exec(value)) !== null) {
+        const scope = fold(p[2] as string);
+        if (!owners.has(scope)) return `@${scope}/${p[3] as string}`;
+    }
+
+    BARE_SLUG_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = BARE_SLUG_RE.exec(value)) !== null) {
+        const whole = `${m[1] as string}/${m[2] as string}`;
+        if (isInternalToken(whole)) continue;
+        if (owners.has(fold(m[1] as string))) continue;
+        // A slug whose second half looks like a file extension is a path, not a
+        // repository: `road-to-x.md`, `results/2026-04-21T08.json`.
+        if (/\.(md|json|ts|tsx|js|mjs|yml|yaml|txt|jsonl|patch|png|svg)$/i.test(whole)) continue;
+        // A MIDDLE segment of a longer path is not an `owner/repo`, and this is
+        // the correction the first measurement forced: `.agent-src.uncondensed/
+        // rules/autonomous-execution.md` yielded `uncondensed/rules`, and
+        // `packages/installer/src/...` yielded `installer/src`. Both are two
+        // path segments that happen to sit next to each other, which is what a
+        // repository slug also looks like — the difference is entirely in what
+        // surrounds them. A separator on either side means path.
+        const before = value.slice(0, m.index);
+        const after = value.slice(m.index + whole.length);
+        if (/[/.\\]$/.test(before)) continue;
+        if (/^[/\\]/.test(after)) continue;
+        return whole;
+    }
+    return null;
+}
+
+/**
+ * `source-header` hits on one line.
+ *
+ * **NARROWED 2026-08-30 by AI-council verdict (2/2 seats present), and the
+ * reason is that the previous form measured the opposite of what it was
+ * baselined for.** It flagged the VALUE of every `**Source:**` header that was
+ * not an `ENC1:` token or an opaque round id — so a correctly anonymised header
+ * scored exactly like a leaking one. All 95 findings in the tracked tree were
+ * read: not one named an external source in readable form, and six of them were
+ * flagging the *anonymisation notice itself* (`**Source:** anonymisation
+ * (source-confidentiality). External harvest sources …`). One seat put it
+ * plainly: the detector penalised correct behaviour.
+ *
+ * The class is NARROWED, never deleted — both seats refused (c), removing it,
+ * on the grounds that a `**Source:**` header is the location policy directs
+ * authors to record attribution and is therefore the highest-value place to
+ * keep looking. What it now flags is a value carrying a readable identifier
+ * (see {@link readableIdentifierIn}); the reported `value` is that identifier
+ * rather than the whole header, so a finding names the thing that leaked.
+ */
 export function sourceHeaderHits(line: string): ShapeHit[] {
     const m = SOURCE_HEADER_RE.exec(line);
     if (!m) return [];
@@ -215,6 +324,30 @@ export function sourceHeaderHits(line: string): ShapeHit[] {
     // A header pointing at an inbox directory is judged on the directory NAME,
     // so the tmp-quote class owns it and this class stays silent — otherwise one
     // line would be counted twice and the two ratchets would move together.
+    if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
+    const identifier = readableIdentifierIn(value);
+    if (identifier === null) return [];
+    return [{ cls: 'source-header', value: identifier.slice(0, 120) }];
+}
+
+/**
+ * The PRE-narrowing `source-header` predicate, kept as a shadow metric.
+ *
+ * A council condition, and its purpose is auditability rather than enforcement:
+ * *"keep the old detector shadow-reporting until at least one subsequent
+ * corpus-changing release passes both detectors"*. It is exported so
+ * `check_no_external_sources` can report the legacy count beside the live one,
+ * and it gates nothing.
+ */
+export function legacySourceHeaderHits(line: string): ShapeHit[] {
+    const m = SOURCE_HEADER_RE.exec(line);
+    if (!m) return [];
+    const raw = (m[1] as string).trim();
+    const value = raw.replace(/^[`*_[(<"']+/, '').replace(/[`*_\])>"'.,;]+$/, '').trim();
+    if (value === '') return [];
+    if (ENC_TOKEN_RE.test(value)) return [];
+    if (REDACTION_VALUE_RE.test(value)) return [];
+    if (isOpaqueRoundId(value)) return [];
     if (/agents\/tmp(?:\.old)?\//.test(value)) return [];
     return [{ cls: 'source-header', value: value.slice(0, 120) }];
 }

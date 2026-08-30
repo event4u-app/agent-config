@@ -67,7 +67,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { DigestMatcher, digestMode, EXIT_NO_KEY, KEY_ENV, STRICT_ENV } from './_lib/source_digest.js';
-import { shapeHits as shapeHitsOf, shapePathHits, tierFor, type ShapeClass } from './_lib/source_shape.js';
+import {
+    legacySourceHeaderHits,
+    shapeHits as shapeHitsOf,
+    shapePathHits,
+    tierFor,
+    type ShapeClass,
+} from './_lib/source_shape.js';
 import {
     dedupVerdict,
     findingKey,
@@ -366,6 +372,8 @@ function main(argv: readonly string[]): number {
 
     const hits: Hit[] = [];
     const shapes: ShapeFinding[] = [];
+    /** Pre-narrowing `source-header` count. Reported, never enforced. */
+    let legacyHeaderShadow = 0;
     for (const rel of tracked) {
         if (_skipped(rel, skipGlobs)) {
             continue;
@@ -424,6 +432,15 @@ function main(argv: readonly string[]): number {
             }
             for (const h of shapeHitsOf(line)) {
                 shapes.push({ file: rel, line: idx + 1, cls: h.cls, tier, value: h.value });
+            }
+            // SHADOW METRIC, gating nothing. A council condition of the
+            // 2026-08-30 narrowing: "keep the old detector shadow-reporting
+            // until at least one subsequent corpus-changing release passes both
+            // detectors". It exists so the discontinuity from 243 to 148 stays
+            // visible and auditable rather than becoming a number nobody can
+            // reconstruct.
+            if (tier === 'block') {
+                legacyHeaderShadow += legacySourceHeaderHits(line).length;
             }
         }
     }
@@ -560,6 +577,13 @@ function main(argv: readonly string[]): number {
         process.stdout.write(
             `\nattribution shape — block(agents/**) ${String(blockShapes.length)}` +
                 ` / baseline ${String(verdict.baseline)} · warn(elsewhere) ${String(warnShapes.length)}\n`,
+        );
+        process.stdout.write(
+            `legacy source-header shadow — ${String(legacyHeaderShadow)} raw finding(s) under the` +
+                ` PRE-2026-08-30 predicate. Reported, enforces nothing, and NOT` +
+                ` comparable to the 95 audited: this count is pre-dedup, while the` +
+                ` audited delta was measured after snapshot deduplication. See the` +
+                ` check_no_external_sources:shape-block baseline note.\n`,
         );
         if (excluded.length > 0) {
             process.stdout.write(
