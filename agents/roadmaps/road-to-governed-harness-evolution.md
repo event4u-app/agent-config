@@ -233,6 +233,18 @@ once.
       count, and a guard keyed to a count breaks the moment a different
       roadmap legitimately changes it. The count is now 0 and the guard reads
       against the post-retirement state. -->
+> **ORDERING NOTE for 0.4-0.6, recorded 2026-08-30.** All three are
+> pre-registration steps whose verify clauses name a RUN: *"a run in which a
+> holdout value reaches proposer context exits non-zero"*, *"a run configured
+> past the ceiling exits non-zero before spending"*, *"a synthetic diversity
+> collapse trips the stop"*. No run harness exists — Phases 3-5 build it — so
+> each of the three can be pre-registered now and **verified only once its
+> detector has something to run against**. They are left open rather than closed
+> on the written half, because closing a step on half its verify is how a
+> detector that never got built reads as one that passed. 0.7 is closed instead:
+> its verify asks for a committed, falsifiable document and nothing more, which
+> is satisfiable today and is worth less every day it waits.
+
 - [ ] **0.4 Make the evaluator trust boundary detectable, not just declared.**
       `from-skipped-parent`, and this is the gap that mattered most: the master
       defines which fields are proposer-visible and which are evaluator-private
@@ -256,7 +268,7 @@ once.
       honest null is a success when it prevents unnecessary architecture.
       verify: each condition has a detector or is explicitly marked
       model-carried; a synthetic diversity collapse trips the stop.
-- [ ] **0.7 Define programme success and failure before the first run.**
+- [x] **0.7 Define programme success and failure before the first run.**
       `from-skipped-parent`: the master has no success-criteria section at all.
       It adopts the per-candidate metric vector and drops the per-programme
       metrics, so nothing defines when Phases 0–7 as a whole have succeeded.
