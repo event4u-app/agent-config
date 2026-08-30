@@ -1,12 +1,12 @@
 # Findings: drain-council-topology-p1b
-<!-- completion-review: v1 | reviewed: 2026-08-30 | scope: f0fddc069ce52440a024a2175f9d384c00edbf191c341a062a9ea646fa3352d7 | diff: ea5a32d2973cbfeb31503780e4acbbfd07420993 | reviewer: r2-fresh-subagent-drain-council-topology-p1b | prompt_hash: 1dddcb5dd708e220cfb1ba5f9823466a4ede8f143befe23707e9306856c40a6c -->
+<!-- completion-review: v1 | reviewed: 2026-08-30 | scope: 498279cdb7a507d8b1ecfa5158e64c39a15a10f529b682b661b4143a57423858 | diff: 2b7fc2895227bb804798ef896b00123d709011df | reviewer: r2-fresh-subagent-drain-council-topology-p1b | prompt_hash: 1dddcb5dd708e220cfb1ba5f9823466a4ede8f143befe23707e9306856c40a6c -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-council-topology-p1b"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-08-30 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: ea5a32d2973cbfeb31503780e4acbbfd07420993
-  scope_hash: f0fddc069ce52440a024a2175f9d384c00edbf191c341a062a9ea646fa3352d7
+  diff_sha: 2b7fc2895227bb804798ef896b00123d709011df
+  scope_hash: 498279cdb7a507d8b1ecfa5158e64c39a15a10f529b682b661b4143a57423858
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
   roadmap_hash: ab19aea8833664025d914c2846484747f2620f766bfbb30c20f1814d25363b47
   ac_hash: 74f91625620e0a3d46195fc92ae7c09d9087b5b4e43a8dd1db68fe362a80dc5c
