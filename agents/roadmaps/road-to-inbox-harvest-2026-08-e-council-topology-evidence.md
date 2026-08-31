@@ -1472,13 +1472,89 @@ Only now, and **not** as a new task router.
 - [ ] 8.1 Select a disputed finding, a conflicting pair, or a correct-looking
   minority claim, and ask focused rebuttal questions.
       verify: the cross-exam prompt names the exact disputed claim
-- [ ] 8.2 Reviewer budget `k`: balanced assignment approaching O(N×k) rather
+- [x] 8.2 Reviewer budget `k`: balanced assignment approaching O(N×k) rather
   than unconditional O(N²) for larger councils.
       verify: call count at N=8 is measured against both curves
-- [ ] 8.3 Preserve provider diversity in reviewer assignment where
+      **DONE 2026-08-31 — measured arithmetically, zero paid calls.** New
+      mechanism: `src/scripts/ai_council/reviewer_assignment.ts`, a seeded
+      circulant assignment (`assignReviewers`) plus `costCurves` for the
+      comparison. Tests:
+      `tests/scripts/ai_council/reviewer_assignment.test.ts` (17 tests, green).
+      **The shipped baseline, established before anything was designed.**
+      `orchestrator.ts:1509-1560` gives **every** reviewer **every** other
+      member's answer — N reviewers × (N−1) candidates. That is the
+      unconditional quadratic, and at N=8 it is **56 reviewed pairs**.
+      **The measurement at N=8, both curves side by side:**
+
+      | k | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+      |---|---|---|---|---|---|---|---|
+      | N×k (assignment realises exactly this) | 8 | 16 | 24 | 32 | 40 | 48 | 56 |
+      | N(N−1) (unconditional) | 56 | 56 | 56 | 56 | 56 | 56 | 56 |
+
+      k=3 is 24 of 56 — a 57 % reduction — and `k = N−1` reproduces the shipped
+      all-pairs behaviour **exactly**, which is what makes it a safe default and
+      what makes the row above arithmetic rather than a claim about a change
+      nobody has made. The gap widens as intended: N=16 is 48 against 240, N=32
+      is 96 against 992.
+      **The construction earns the properties without a search.** Order members
+      so provider families interleave, then let candidate `i` be reviewed by
+      positions `i+1 … i+k` (mod N): no self-review (offsets start at 1), exact
+      balance (every candidate reviewed exactly k times, every reviewer reviews
+      exactly k — asserted for every N in 2..8 × every k in 1..N−1), and a seed
+      replayable from the artefact, never `Math.random`, never `Date` — the same
+      discipline `orchestrator.ts:1533-1543` states for its own shuffle.
+      **A defect the seed test caught, recorded because it is not obvious.**
+      The family interleave originally tie-broke on family **name**. Under the
+      one-advisor-per-provider invariant every family has size 1, so every
+      comparison is a tie and the whole council sorted alphabetically —
+      discarding the seeded permutation and giving one assignment for every
+      seed. Tie-breaking on input order (stable sort over the already-permuted
+      buckets) fixes it and keeps the result a pure function of the input.
+      **HONEST SCOPE: nothing calls this yet.** It is the assignment, not a
+      wiring change; the orchestrator still does all-pairs. Wiring it changes
+      what reviewers see and belongs behind Phase 2's evidence.
+      **Sensitivity was proven, not assumed.** Sabotage — replacing the budget
+      bound `d <= effectiveK` with `d <= n - 1`, so the budget is ignored and
+      every assignment is all-pairs — turned the file RED (**4 failed / 13
+      passed**); restore → 17/17.
+- [x] 8.3 Preserve provider diversity in reviewer assignment where
   alternatives exist.
       verify: no candidate is reviewed only by same-family reviewers when a
       cross-family reviewer was available
+      **DONE 2026-08-31 — and "available" had to be defined before it could be
+      verified.** Same module and test file as 8.2.
+      **The interleave alone does NOT deliver this, which is the finding.**
+      Six members of family A and two of family B interleave to
+      `A B A B A A A A`, whose tail is all one family. So a **repair pass**
+      follows: any candidate whose reviewer set is entirely same-family is fixed
+      by a **2-swap** with another candidate — exchanging one reviewer between
+      two candidates leaves every reviewer's load and every candidate's count
+      unchanged, so balance survives the repair by construction, and the tests
+      re-assert both after it.
+      **"Where alternatives exist" means available UNDER THE BALANCE
+      CONSTRAINT, not merely "another family exists".** 6A/2B at k=1 gives eight
+      candidates and only two B-reviewer slots, so **four A candidates must be
+      reviewed within their own family and no assignment avoids it**. That bound
+      is now computable — `diversityCeiling` — and the test asserts the
+      assignment **attains** it for every N in 2..8 × every k in 1..N−1 over 2,
+      3 and 4 families, and on the 6A/2B skew for every k. `diversityCeiling`
+      is documented as an **upper** bound because reviewer capacity is shared
+      across families; it was measured tight on 7 family profiles × every k, and
+      is treated as a bound elsewhere.
+      **Vacuous in production today, and the test says so rather than hiding
+      it.** Under the one-advisor-per-provider invariant (`chairman.ts:16-18`)
+      every member is its own family, so every reviewer is cross-family by
+      construction and `diversityRepairs` is 0. The property is implemented and
+      exercised against multi-member-per-family sets that only Phase 9's advisor
+      fan-out would produce — the cheapest moment to have it is before it can be
+      violated, which is the same argument 12.4 records for its own baseline.
+      **Sensitivity was proven, not assumed.** Sabotage — short-circuiting the
+      diversity repair loop with an unconditional `continue`, so only the
+      interleave remains — turned the file RED (**3 failed / 14 passed**);
+      restore → 17/17. The suite also tests the **denial**:
+      `nonDiverseCandidates` flags a hand-built all-same-family assignment for
+      which a cross-family reviewer *was* available, so an empty result means
+      "no violation" rather than "the detector is broken".
 - [ ] 8.4 Score optional next calls by expected information gain per cost,
   deterministic and inspectable to start.
       verify: the score is reproducible from the recorded inputs
