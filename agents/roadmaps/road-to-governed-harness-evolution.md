@@ -1,11 +1,24 @@
 ---
 complexity: structural
 status: ready
-estate_growth_exempt: "Promoted draft -> ready 2026-08-30. The merge-authority blocker was scoped by the AI council on 2026-08-29 to gate Phase 7 alone; Phases 1-6 are declared legal, so executable work exists today. The growth is a status flip, not a new file - the estate gains no roadmap it did not already carry, only one collect() now counts."
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Added as a draft proposal, not as active work. Archiving is impossible (nothing has run), parking in later/ would grow the later_roadmaps floor instead of the active one, and folding it into road-to-experience-loop-broadening is the open question E2 puts to the owner — pre-merging would decide it by authoring."
 estate_growth_exempt: >
+  DE-DUPLICATED 2026-08-31 (drain run 11). This key was declared TWICE in this
+  frontmatter. YAML is last-wins, so the earlier declaration was silently dead
+  and the ratchet never read it. Both rationales are preserved below; neither is
+  strengthened, weakened, or newly claimed, and the change adds no growth of any
+  kind (active_roadmaps, later_roadmaps, open_blockers, skill_count,
+  skill_description_tokens and concern_count are all +0 in this diff).
+  .
+  FIRST RATIONALE, verbatim from the dead declaration: "Promoted draft -> ready
+  2026-08-30. The merge-authority blocker was scoped by the AI council on
+  2026-08-29 to gate Phase 7 alone; Phases 1-6 are declared legal, so executable
+  work exists today. The growth is a status flip, not a new file - the estate
+  gains no roadmap it did not already carry, only one collect() now counts."
+  .
+  SECOND RATIONALE, the one the ratchet has been reading:
   Grows open_blockers 29 -> 30, and the growth is a CONSERVATIVE reading of a
   split council rather than new work. Steps 0.4 and 0.5 were closed earlier in
   the same run; put to the council as a reversal of a recorded disposition, the
@@ -2276,12 +2289,23 @@ once.
   non-zero PROCESS exit; *"the invariant must exist before the runner"*
   establishes implementation order, not permission to mark integration
   verification complete.
-- **What to do:** take the conservative side, which is what happened here —
+- **What to do:** *(STALE AS WRITTEN, and kept rather than rewritten — see the
+  correction at the end of this field. The `Status:` field above supersedes it.)*
+  take the conservative side, which is what happened here —
   0.4 and 0.5 are `[~]`, not `[x]`, and not `[ ]` either: the guards and their
   16 tests are completed prerequisites, recorded as such, and what is pending is
   integration. Re-close each after an end-to-end test proves the real runner
   routes every relevant path through the guard and exits non-zero before any
   spend or disclosure. Nothing is rebuilt.
+  **CORRECTED 2026-08-31 (drain run 11) — a factual repair, nothing reopened.**
+  The instruction above was carried out and this field was never updated: the
+  end-to-end test it asks for exists
+  (`tests/scripts/harness_evolution_guard_call_sites.test.ts`), and 0.4 and 0.5
+  are `[x]` at `:276` and `:324`, both marked RE-CLOSED 2026-08-30. **This file
+  contains ZERO `[~]` markers**, so the sentence describes a state the tree does
+  not hold and a later reader following it would look for markers that are not
+  there. The blocker itself is `resolved`; this correction changes no marker, no
+  status and no criterion.
 - **Recommendation:** the conservative side, taken, and the reason is
   asymmetry rather than agreement with (d): under-claiming a closed step costs a
   checkbox, while over-claiming one is exactly the failure the prior run named —
@@ -2372,9 +2396,9 @@ once.
 | 3 | The corpus becomes the overfitting vehicle | implementation | If the pipeline that optimises against the trigger corpus also grew it, the holdout is compromised before the first candidate runs | Corpus work completes and the holdout is hash-frozen in 2.5, before any proposer exists in Phase 5; 2.3 adds counterexamples so selection cannot see only successes | Phase 2 — Trigger corpus: census first, coverage second |
 | 4 | Coverage as a vanity target | product | "94 → 299" is a number that can be reached by authoring low-discriminative fixtures, which raises the metric and measures nothing. One parent killed this shape by name; the master adopted it as a phase title | 2.1 requires a partitioned census with a stated exclusion criterion before any denominator is chosen, and 2.3 requires discriminative classes | Phase 2 — Trigger corpus: census first, coverage second |
 | 5 | Ambiguous credit from multi-dimension candidates | implementation | If a candidate changes routing and content together and the vector moves, no metric row can be attributed. The metric vector then looks informative and is not | **MITIGATED 2026-08-30 — the arity is in the TYPE, not in a check.** `CandidateRecord.dimension` is a scalar, so a two-dimension candidate is not expressible; the validator additionally refuses a `dimensions` key by name and an array even with one member, and `ConsolidationRecord` needs two *distinct* dimensions so it is not an escape hatch. What remains is that no metric vector exists yet to be attributed — that arrives with Phase 4 | Phase 3 — Candidate isolation and lifecycle |
-| 6 | Cost blindness turns a truncated run into a false pass | implementation | Cascade evaluation over candidates × task families × repeated trials is the dominant cost. Truncating to fit budget yields `underpowered`, which a reader treats as a pass | **PARTLY MITIGATED 2026-08-30.** 0.5 now aborts rather than truncates *at a real call site*, proven by a non-zero process exit from the CLI and by an ordering observable showing the abort precedes record parsing. 4.3 (`underpowered` a non-pass in code) and 5.6 (reduce the cost rather than cap it) are unbuilt, so the risk is reduced, not closed | Phase 0 — Constitution, reconciliation, budget, stop conditions |
+| 6 | Cost blindness turns a truncated run into a false pass | implementation | Cascade evaluation over candidates × task families × repeated trials is the dominant cost. Truncating to fit budget yields `underpowered`, which a reader treats as a pass | **PARTLY MITIGATED 2026-08-30.** 0.5 now aborts rather than truncates *at a real call site*, proven by a non-zero process exit from the CLI and by an ordering observable showing the abort precedes record parsing. 4.3 (`underpowered` a non-pass in code) and 5.6 (reduce the cost rather than cap it) are unbuilt, so the risk is reduced, not closed. **CORRECTED 2026-08-31 (drain run 11):** the "unbuilt" half is stale in both names. 4.3 is `[x]`, and 5.6 is closed on its ROI conjunct with a production caller (`buildRunReport` refuses a report whose ROI figure is absent) while staying `guarded-baseline` on its cheapest-first conjunct, which has no live subject because nothing in the tree makes a metered proposer call. **The risk itself is NOT closed by this correction** — it moves from "two mitigations unbuilt" to "one built, one half-built, and the residual is risk 12 below: the ceiling is still enforced against a declared spend rather than a measured one" | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 7 | Stopping only on spend | implementation | Six of the parents' nine stop conditions detect epistemic invalidity, which a spend cap never sees. A run can complete inside budget and be worthless | 0.6 pre-registers the validity conditions with detectors, and names the ones that stay model-carried | Phase 0 — Constitution, reconciliation, budget, stop conditions |
-| 8 | Monotonic estate growth after the gate | product | Every promotion adds; nothing reopens a promoted artefact. The gate-side `artifact-count delta` does not constrain the estate over time | 7.6 adds post-promotion re-evaluation with an exercised RETIRE path; 7.3 keeps most promotions below global scope | Phase 7 — Promotion bridge and the lifecycle after it |
+| 8 | Monotonic estate growth after the gate | product | Every promotion adds; nothing reopens a promoted artefact. The gate-side `artifact-count delta` does not constrain the estate over time | 7.6 adds post-promotion re-evaluation with an exercised RETIRE path; 7.3 keeps most promotions below global scope. **RELOCATED 2026-08-31 (drain run 11):** both named mitigations TRANSFERRED out of this file to `road-to-harness-promotion-bridge.md` (steps 7.6 and 7.3 there), so this risk is now mitigated in the receiver and not here. The risk is not closed and not re-owned — the receiver is ACTIVE and blocked on its owner-reserved `merge-authority` gate, which means this row describes a mitigation that cannot currently be exercised anywhere | Phase 7 — Promotion bridge and the lifecycle after it |
 | 9 | Search becomes the product | product | One parent warned against this and then listed a meta-evolver, a curriculum generator and a routing tree as phases. The surface doubles before a single trustworthy run exists | Those three are killed or parked below; this roadmap stops at Phase 7 and 6.1 takes the measurable core | Phase 6 — Delivery: measure the existing substrate first |
 | 10 | A declared trust boundary with no detector | implementation | Naming proposer-visible and evaluator-private fields does not prevent holdout truth reaching a proposer; nothing observes the disclosure | **MITIGATED 2026-08-30, and the gap it named was live rather than theoretical:** `parseObservations` ignored unknown keys, so a `holdoutScore` beside a subject flowed into proposer input with nothing looking at it. 0.4's per-field visibility class, disclosure log and run abort now exist AND are called — undeclared fields fall closed to `holdout`, and the abort is observed as a non-zero process exit before the proposer reads the subject | Phase 0 — Constitution, reconciliation, budget, stop conditions |
 | 11 | **RESOLVED 2026-08-30** — the call-site criterion (renumbered AC-8 → AC-11, since it collided with a pre-existing AC-8) landed on Phase 3 and was met there rather than quietly dropped. The deferral did the work the row credited it with: 0.4 and 0.5 stayed `[~]` until an end-to-end test drove the real CLI to a non-zero process exit on both halves. Kept in the register rather than deleted, because the mechanism it describes — a deferral as the enforcement, not the AC's wording — is the reusable part. *Original row:* AC-8 lands on a phase that does not exist yet, and is quietly dropped when it does | product | The call-site criterion both council seats asked for is an acceptance criterion with no phase, no step and no owner. The runner arrives in Phase 3 or later, written by whoever picks that phase up, and an AC nobody is assigned to is an AC that gets read as already-satisfied by the unit tests that closed 0.6 | The `guard-call-site-integration` blocker holds 0.4 and 0.5 at `[~]` until AC-8 is met, so the phase cannot report closed while the criterion is outstanding — the deferral is the enforcement, not the AC's wording. Both council rationales are recorded verbatim at the blocker so a later reader meets the argument rather than the conclusion | Phase 0 — Constitution, reconciliation, budget, stop conditions |
@@ -2811,6 +2835,14 @@ once.
       before the roadmap is finished has not been read: later commits on this
       branch can still falsify it, and the reading that closes it is the one
       taken at completion.
+      **SUPERSEDED 2026-08-31 (drain run 11) — this paragraph is a preserved
+      PRE-CLOSURE audit round and its `[ ]` is no longer the state.** The
+      completion reading it names as the one that closes the criterion was
+      subsequently taken and is recorded at the head of this item ("CLOSED
+      2026-08-31, read at completion rather than mid-flight"), and the marker on
+      this criterion is `[x]`. The paragraph is kept because this file preserves
+      superseded audits rather than deleting them; it is annotated so a reader
+      does not take its `[ ]` for the live marker.
       **Attribution, re-checked rather than carried.** The removing commit is
       `68463a1e` (2026-08-28), *"roadmap: complete runtime-governance-flip
       (ADR-249 ...)"*. Step 0.3 already recorded that retirement and repaired its
@@ -2835,6 +2867,15 @@ once.
       generous reading AC-3 above warns against, and the re-key is an owner
       decision rather than an audit one. What closes it is that amendment,
       recorded.
+      **SUPERSEDED 2026-08-31 (drain run 11), and it is worth being precise
+      about which criterion each sentence is about.** The `[ ]` in this
+      paragraph belongs to **AC-10a**, whose re-key it refuses to perform on
+      audit authority; AC-10a is `[-] SUPERSEDED by ADR-249` and was never met
+      and never dropped. The amendment this paragraph names as the closing
+      condition arrived as ADR-249, and its safety purpose was carried forward
+      unweakened onto **AC-10b**, which is the `[x]` criterion this item now
+      holds. Annotated rather than deleted, for the same reason as the
+      paragraph above.
 
 ## First cut — recommended start
 
