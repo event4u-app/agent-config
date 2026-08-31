@@ -1789,11 +1789,62 @@ once.
       positive pole (exactly at every ceiling does NOT abort) keeps the
       negatives from passing because the verb refuses everything.
 
-- [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
+- [x] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
       carrier named in the "What already exists" table.
-- [ ] AC-2 — Every overlapping plan in the estate carries one of the five
+      **MET 2026-08-31, and it was NOT met when this audit started — that is
+      the point of the criterion and it earned its place.** The branch that
+      closed 4.2, 4.3, 4.5, 4.6, 4.7, 5.2, 5.3, 5.5 and 6.2 shipped six modules
+      under `src/scripts/_lib/`, and three of them built a capability the matrix
+      had no row for at all: `minimality_tiebreak.ts` (4.5),
+      `evaluator_promotion.ts` (4.7) and `role_split.ts` (5.3). The audit added
+      them as `build new` rows 4-6, each naming the command that was run rather
+      than asserting absence, plus main-matrix rows 13-14 for the two
+      capabilities that do have carriers — `discovery_graph.ts` for 4.6 and
+      `shingle_similarity.ts` for 5.5. The sixth, `evaluation_vector.ts` (4.2),
+      was already covered by the existing metric-vector row.
+      **The second conjunct is measured, not assumed.** No step reimplements
+      one of the nine carriers in the "What already exists" table:
+      `evaluation_vector.ts:56` takes `paired_verdict` by `import type` and
+      never recomputes a verdict, `evaluator_promotion.ts:49-50` imports
+      `eval_publication` and `judge_hygiene`, `evolution_lab.ts:766` calls
+      `bench_ab_integrity`'s main directly rather than restating it, and
+      `tests/scripts/single_matcher_preserved.test.ts` (8/8 green) asserts
+      `router_match.ts` is still the only file declaring the three
+      trigger-semantic symbols. `lexical_index` and `lean_projection_mode` have
+      no consumer at all yet, because 6.1 and 6.3 have not started.
+      **Scope of the closure, stated so it is not read as permanent.** This is
+      measured over the capabilities built to 2026-08-31. 0.1's second half is a
+      standing obligation on Phases 1-7, so the first later step that builds
+      without a row re-opens this criterion.
+- [x] AC-2 — Every overlapping plan in the estate carries one of the five
       dispositions from 0.2, and no capability has two execution owners.
+      **MET 2026-08-31 by a full-estate sweep, which is stronger evidence than
+      the spot checks 0.2 recorded.** The 0.2 overlap grep was run over every
+      file in `agents/roadmaps/` and `agents/roadmaps/later/`. Exactly two
+      return a non-zero count: this roadmap (34) and
+      `road-to-inbox-harvest-2026-08-e-council-topology-evidence` (1). Every
+      other plan in the estate returns 0 and is therefore not an overlapping
+      plan at all. The single hit is incidental — the phrase *parse-outcome
+      vocabulary* at that file's `:582`, about a typed union for council parse
+      results, not the outcome-vocabulary reconciliation the table assigns — and
+      that file already carries a `drop` verb. So every overlapping plan carries
+      one of the five dispositions.
+      **The second conjunct is measured against what this branch actually
+      built.** None of the six new capabilities appears in another plan:
+      grepping the active and `later/` sets for `curator`, `minimality`,
+      `evaluator promotion`, `metric vector`, `regression neighbourhood` and
+      `role split` returns this roadmap plus one incidental
+      *reflector/curator split* in `later/road-to-experience-loop-owner-decisions`,
+      which is parked and is the experience loop's reflector, not this one's
+      curator.
+      **Three State values in the 0.2 table went stale and were left as
+      measured rather than quietly rewritten**, with the re-measurement recorded
+      beside the table instead: `road-to-experience-loop-broadening` is now
+      archived, `road-to-capability-native-execution` is now in `later/`, and
+      `road-to-turnaround-followups` has entered the active set — it measures 0,
+      so it needs no row. Same scope caveat as AC-1: the estate moves, and a new
+      overlapping plan re-opens this.
 - [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
@@ -1807,6 +1858,20 @@ once.
       evaluated a candidate. Closing this now would be the generous reading the
       roadmap's own § blocker text warns about — *"a detector that never got
       built reads as one that passed"*.
+      **Re-audited 2026-08-31 and still OPEN on `evaluated`, now for a sharper
+      reason than "no evaluation stage exists".** Phase 4 has since shipped the
+      evaluation machinery — `evaluation_vector.ts`, `minimality_tiebreak.ts`,
+      `evaluator_promotion.ts`, `regression_neighbourhood.ts` — and every one of
+      them is an UNWIRED library: `grep -rn` over `src/` for those module names
+      returns no reference outside the modules themselves, so there is no
+      production caller. `evolution_lab`'s seven verbs contain no evaluation
+      path either — `compare` (`:761`) calls `bench_ab_integrity`'s main and
+      `promote` (`:858`) refuses unconditionally. A candidate can therefore
+      still be materialised and destroyed but not evaluated. This is the
+      standard `blocker: guard-call-site-integration` already settled in the
+      other direction — a guard nothing calls has no coverage, and neither does
+      an evaluator. What closes it is 4.1's cascade wiring these modules into
+      `run`.
 - [x] AC-4 — A candidate changing two primary dimensions is refused by the
       schema, and "mutated" is not readable as "accepted" anywhere in the data
       model.
@@ -1827,20 +1892,122 @@ once.
 - [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
+      **Audited 2026-08-31: the second conjunct is met, the first is not, and
+      the criterion stays open on the conjunction.**
+      Second conjunct — met, with its evidence class named rather than
+      overstated. `findScalarCollapse`
+      (`tests/scripts/evaluation_vector.test.ts:48`) is green over every `.ts`
+      under `src/scripts` that mentions `MetricVector`, unioned with a named
+      core set, and it is proved to fire on seven collapsing shapes before it is
+      trusted to be silent; `MetricVector` (`evaluation_vector.ts:83-86`) has no
+      field that could hold a summary number. That is a **named-construct static
+      scan over a bounded population**, not a semantic proof that no arithmetic
+      anywhere reduces a set of metrics to one number.
+      First conjunct — NOT met. `promotionVerdict`
+      (`evaluation_vector.ts:230`) does decide per metric and does refuse an
+      `underpowered` row as a pass, reproduced at 18/18 green — but it has **no
+      caller**. `evolution_lab`'s `promote` verb (`:858`) refuses
+      unconditionally without ever consulting it, so no promotion in this tree
+      is decided by `paired_verdict`, because no promotion is decided at all.
+      Closing on the scanner alone would be closing on the met half of a
+      conjunction. What closes it is a caller: 4.1's cascade, or `promote`
+      consulting the verdict before it refuses.
 - [ ] AC-6 — The holdout partition's content hash predates the first commit of
       any proposer capability, and a run leaking a holdout value into proposer
       context exits non-zero.
+      **Audited 2026-08-31: the second conjunct is met, the first is
+      FALSIFIED — by reproduction, not by doubt.**
+      Second conjunct — met.
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` is 15/15 green
+      and drives the real CLI: a holdout value reaching proposer context exits 4
+      before any external call. That is AC-11's evidence and it holds here.
+      First conjunct — the pinned `SET-SHA256 7e091dfc...` in
+      `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` does
+      **not reproduce**. Running that file's own documented recipe on this
+      checkout yields `0667fbd9...`; two near-variants (dropping the partition
+      column, tab separators) yield two further hashes and neither is the pin.
+      The corpus is not the cause: the file set is identical to the freeze
+      commit `34318f7f` (100 files, `git ls-tree` diff empty) and every file's
+      bytes are unchanged since it. The cause is that `34318f7f` — the commit
+      that RECORDED the freeze — also edited three of the files it was freezing.
+      `markitdown`, `security-audit` and `threat-modeling` carry their pre-edit
+      hashes in the per-file table; 97 of 100 rows reproduce exactly, those
+      three do not, and the set hash inherits it. The pin was stale on arrival,
+      so there is no verifiable content hash whose age can be asserted.
+      **The ordering half is intact and is not what fails.** `34318f7f`
+      (2026-08-30 22:11:43) is a topological ancestor of `ac2501313`
+      (2026-08-31 00:44:37), which added the first proposer capability —
+      `_lib/candidate_proposer.ts` and `evolution_lab`'s `propose` verb — and
+      `git merge-base --is-ancestor` confirms it. The earlier
+      `_lib/harness_evolution_guards.ts` (2026-08-30 17:55:29) names "proposer"
+      but is the guard that REFUSES disclosure to one, not a proposer
+      capability; it was checked precisely because it is the near-miss.
+      **What closes it, recorded rather than performed** — re-pinning a frozen
+      corpus is an owner-visible correction, not the missing-row class this
+      audit was scoped to: re-pin those three per-file hashes and the
+      `SET-SHA256` to the frozen bytes, which are still recoverable because they
+      have not moved since `34318f7f`, and state the correction in the artefact.
+      The ordering claim survives that re-pin, because the bytes have not moved
+      since a commit that precedes the first proposer commit.
 - [ ] AC-7 — The three existing delivery arms have been measured against one
       another before any new retrieval component exists, and
       `router_match_parity.test.ts` is still green.
+      **Audited 2026-08-31: second conjunct met, first not met.**
+      `tests/scripts/router_match_parity.test.ts` is 5/5 green, and 6.2 added
+      `single_matcher_preserved.test.ts` (8/8) beside it. The first conjunct is
+      step 6.1, which is `[ ]`: no measurement of `eager-all` against `thin`
+      against `delivery` exists. The nearest thing on the tree was checked and
+      is not it — the price grid at `src/scripts/model_rule_injection.ts:455-462`
+      MODELS projected session cost for the three shapes for a different,
+      archived roadmap, and a cost model is not the three-arm experiment 6.1
+      names. The "before any new retrieval component exists" half is satisfied
+      only vacuously, since 6.3 has not started. What closes it is 6.1.
 - [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
+      **Audited 2026-08-31: first conjunct met, second not met.**
+      `agents/evidence/analysis/governed-harness-success-criteria.md` was
+      committed at `172b87c6` (2026-08-30 10:32:57) and no candidate run has
+      happened at all, so the criteria precede it — a real but currently
+      vacuous satisfaction, and worth naming as such. The second conjunct has no
+      subject: there is no run report anywhere in the tree, and the
+      evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
+      plus a first run whose report carries the figure.
 - [ ] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
+      **Audited 2026-08-31: not met, and not closeable from this branch.**
+      Every Phase 7 step is `[ ]` and the phase is gated on the OPEN,
+      owner-reserved `blocker: merge-authority`. Nothing in this tree is
+      promoted, so no promoted artefact can reach post-promotion re-evaluation.
+      The RETIRE half was checked separately and does not rescue it: 5.5 carries
+      `RETIRE` in E6's seven-op set and tests its arity
+      (`tests/scripts/curator_ops.test.ts:63-66`), but every screened proposal
+      there carries `lifecycle: 'candidate'` as a literal type, so that RETIRE
+      retires a candidate and never a promoted artefact — which is the direction
+      this criterion is about. What closes it is 7.6, after `merge-authority`.
 - [ ] AC-10 — The `no-runtime-daemon` claim in `README.md` and its
       `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state.
+      **Audited 2026-08-31: FALSIFIED as written — and not by this roadmap.**
+      The pre-roadmap state is `9e8344a3`, the parent of `15447f47` which added
+      this file on 2026-08-26. At `9e8344a3` the README's line 19 carried the
+      `no-runtime-daemon` claim marker; it carries no such marker today. The
+      `docs/CLAIMS.md` entry moved from `status: backed` to `status: withdrawn`
+      and gained four fields (`retires_phrasings`, `retired_by`,
+      `superseded_by`, `non_inference`). Neither is byte-identical, so the
+      criterion is false as written.
+      **Attribution was checked, not assumed.** `git log -S` names the removing
+      commit as `68463a1e` (2026-08-28), *"roadmap: complete
+      runtime-governance-flip (ADR-249 ...)"* — a different roadmap retiring the
+      claim by decision. This branch touches neither file, per
+      `git diff --stat origin/main..HEAD`. Step 0.3 already recorded the same
+      retirement and repaired its own count-keyed guard against it; AC-10 was
+      not repaired in the same pass and is the survivor of that edit.
+      **It stays `[ ]` rather than being re-keyed.** Rewriting it to "no diff
+      attributable to THIS roadmap" would close it by redefinition, which is the
+      generous reading AC-3 above warns against, and the re-key is an owner
+      decision rather than an audit one. What closes it is that amendment,
+      recorded.
 
 ## First cut — recommended start
 
