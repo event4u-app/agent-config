@@ -1543,7 +1543,7 @@ once.
 
 ## Phase 5 — Body signal and the proposer roles
 
-- [ ] **5.1 Measure the description-vs-body signal, honest null permitted.**
+- [x] **5.1 Measure the description-vs-body signal, honest null permitted.**
       `corrected-from-reproduction`: the master justified this by pointing at a
       proxy gap the tree documents as unquantified. That gap is real but it is a
       **different** gap. `src/scripts/description_route_check.ts:18-30`
@@ -1557,6 +1557,57 @@ once.
       it bounds the validity of every routing conclusion in this roadmap.
       verify: the pre-registration lands before the first measurement commit and
       names both gaps separately.
+      **DONE 2026-08-31 — the answer is `harmful`, which is neither the hoped-for
+      signal nor the permitted null, and it is the reason the bar was two-sided.**
+      Pre-registration `agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md`,
+      commit **`fe8749458`**. Measurement
+      `src/scripts/measure_routing_signal.ts` + `src/scripts/_lib/routing_corpus.ts`,
+      commit **`a86bd899c`**. `git merge-base --is-ancestor fe8749458 a86bd899c`
+      is the ordering clause, checked in the history rather than asserted: the
+      prereg commit adds no measurement module and runs nothing.
+      **Both gaps are named separately, and only one was answerable here.** Gap A
+      (proxy-to-real-session fidelity) is the one
+      `src/scripts/description_route_check.ts:18-30` documents; quantifying it
+      needs real sessions, and step 5.2 parks the live harness for this whole
+      roadmap. So it is carried as its OWN required field —
+      `proxy_to_real_fidelity: {value: null, status:
+      "unmeasured-by-construction", reason: <the 5.2 park>}` — in the verdict
+      record, so a consumer cannot take the conclusion without its bound. Gap B
+      (does the body carry signal the description does not) is the one measured.
+      **The numbers, over 82 train corpora / 775 cases / 299-skill catalogue,
+      holdout untouched** (`agents/evidence/analysis/routing-body-signal-verdict.json`,
+      written by `--write`): recall@5 64.60 % → 70.28 % (**+5.68 pp**, bar +5.0),
+      false activation@5 13.66 % → 20.88 % (**+7.22 pp**, guard +2.0), McNemar
+      exact p = 0.0371 over 102 discordant positives.
+      **The primary bar was CLEARED and the verdict is still not `signal`.** A
+      one-sided pre-registration would have shipped this. The guard fires because
+      the pre-registered order is power → guard → primary
+      (`src/scripts/measure_routing_signal.ts:175-189`), and
+      `tests/scripts/routing_signal_measurement.test.ts:142-151` pins that exact
+      combination. **SENSITIVITY, three sabotages, each red then green:**
+      (a) removing the holdout skip in `loadTrainCases` — 4 red, restored 17
+      green; (b) moving the primary check ahead of the guard in the verdict
+      function — 2 red (verdict becomes `signal`), restored 17 green;
+      (c) editing the committed verdict file to `signal` with a fabricated
+      fidelity value — 2 red, restored 17 green.
+      **An unpredicted finding, from the run rather than from the argument.** The
+      prereg predicted the guard would break, on the arithmetic that
+      `overlap` divides by the TASK`s term count so body tokens can only raise a
+      score. It did — but 40 positives were also **lost**, because monotone
+      scores do not imply monotone ranks: a positive inside the top-5 is pushed
+      out when its competitors gain more. The body arm reorders rather than
+      merely widens.
+      **Two corrections recorded, not smoothed over**
+      (`agents/evidence/analysis/routing-body-signal-result-2026-08-31.md`): the
+      first loader understood only the modern `queries[]` shape and dropped the
+      two grandfathered legacy-shaped corpora SILENTLY, reporting 80 where the
+      partition says 82 — fixed by reading both shapes, verdict unchanged in
+      both directions (80 corpora: +5.57 / +7.41, `harmful`); and a doc comment
+      ended early at the `*/` inside a `src/skills/<slug>/SKILL.md` glob, which
+      `tsc --noEmit` accepted and the runtime transform did not.
+      **What it does NOT establish:** that the body is useless to a reader, that
+      the result transfers to a length-normalised scorer, or anything about the
+      sealed holdout, which stays unspent.
 - [x] **5.2 Keep the live-floors park intact.** No live harness.
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree — verified — and its council park (2/2) is not reopened here.
@@ -2027,7 +2078,7 @@ once.
       `single_matcher_preserved` (8/8), `delivery_arm_experiment` (11/11),
       `model_rule_injection` (13/13) and `rule_inject_hook` (16/16) are green on
       this branch.
-- [ ] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
+- [x] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
       Recall-loss ceiling and token target fixed first; report precision,
       recall, false activation, context cost, benefit **conditional on**
       activation — and, `from-skipped-parent`, **set compatibility**: cases
@@ -2036,9 +2087,98 @@ once.
       artefact is closest. The corpus fixtures for it are authored in 2.3.
       verify: the ceiling is committed before the run, and the corpus contains
       at least one jointly-wrong pair.
-- [ ] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
+      **DONE 2026-08-31. Ceiling BREACHED and reported as breached; 7 jointly-wrong
+      pairs found in the corpus and 0 of them delivered together.**
+      Pre-registration `agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md`,
+      commit **`fe8749458`** — recall-loss ceiling 20.0 pp, token target 500,
+      k = 5, and the jointly-wrong definition, all fixed in a commit that adds no
+      measurement module. Measurement `src/scripts/measure_delivery_sets.ts`,
+      commit **`b7aafbb3b`**; `git merge-base --is-ancestor fe8749458 b7aafbb3b`
+      is the first half of the verify, checked in the history rather than asserted.
+      **The metric set, over 82 train corpora / 764 distinct prompts / 299-skill
+      catalogue, holdout untouched** (`agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`):
+      precision@5 82.51 % over 303 adjudicated deliveries · recall@5 64.60 % ·
+      recall loss **35.40 pp against a 20.0 pp ceiling — BREACHED** · false
+      activation@5 13.66 % · context cost 235.6 tokens/prompt against a 500 target
+      — MET · benefit unconditional 64.60 % · benefit conditional on activation
+      82.51 %. Curve: @1 44.70 · @3 57.11 · @5 64.60 · @10 73.64 · @20 80.62 %, so
+      the ceiling clears at no k ≤ 20 and the cost target is not what is failing.
+      A breach is a finding; **no narrowed delivery is promoted from this run**.
+      **The verify`s second half — 7 jointly-wrong pairs in the corpus**, over 10
+      shared prompts: `{experiment-loop, verify-repair-loop}` twice,
+      `{analysis-skill-router, forensics-report}`, the three pairs among
+      `{agent-security-review, ai-code-blindspots, security-audit}` on one prompt,
+      and `{evaluate-llm-feature, prompt-engineering-patterns}`. **0 are delivered
+      together at any k ≤ 20** (`src/scripts/measure_delivery_sets.ts:205-222`).
+      **THE PRE-REGISTRATION WAS WRONG AND IS CORRECTED BY REPORTING BOTH, NOT BY
+      REWRITING IT.** Its definition added "both members delivered in the top-k",
+      turning the corpus property this verify names into a delivery property whose
+      count is 0. Both ship: `jointly_wrong_pairs_in_corpus` = 7 and
+      `jointly_wrong_pairs_delivered_at_k` = 0, each pair carrying the smallest k
+      at which it would be jointly delivered. The count is a LOWER bound — a pair
+      is observable only where two corpora adjudicate the same prompt.
+      **The finding that bounds every number above: 78.80 % of prompts have their
+      top-5 cut decided by the ALPHABETICAL TIE-BREAK** —
+      `score(rank 5) === score(rank 6)`
+      (`src/scripts/measure_delivery_sets.ts:165-171`). So
+      0-delivered-pairs is not evidence of discrimination; at the boundary the
+      scorer does not rank at all and the alphabet happened not to co-select any
+      of the seven. Same "recalls but does not rank" pathology
+      `src/scripts/measure_lexical_ranking.ts:10-16` names for the memory store,
+      observed on the skill catalogue for the first time.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/delivery_set_compatibility.test.ts`): (a) dropping the
+      `!c.expect` polarity filter so any shared skill forms a pair — 3 red
+      including the DENIAL case, restored 11 green; (b) loosening the ceiling
+      constant 20.0 → 40.0 to turn the reported breach into a pass — 3 red,
+      restored 11 green.
+      **A second pre-registration defect, recorded:** `precision_at_k` and
+      `benefit_conditional_on_activation` were defined separately and are one
+      computation. Both are reported at the same value rather than one being
+      dropped; the pair that genuinely differs is unconditional 64.60 % against
+      conditional 82.51 %, and the 17.9 pp gap IS the delivery failure.
+- [x] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
       description-only.
       verify: the indexer's input set derives from the 5.1 verdict file.
+      **DONE 2026-08-31 — description-only, and the mechanism DERIVES it rather
+      than knowing it.** `src/scripts/_lib/routing_index_input.ts`.
+      `resolveIndexInput` opens
+      `agents/evidence/analysis/routing-body-signal-verdict.json`, reads
+      `body_signal.verdict`, and returns `['name','description','body']` on the
+      literal token `signal` (`:87`) and `['name','description']` on anything
+      else. It carries no opinion about the body — the outcome today is
+      description-only because 5.1 measured `harmful`, not because a literal
+      says so.
+      **The consumer is real, not a demo.** `measure_delivery_sets`
+      (`src/scripts/measure_delivery_sets.ts:133`) used to hardcode the
+      `description` arm; it now resolves it, and publishes
+      `index_input.{fields, verdict, reason}` in its record, so the derivation
+      is observable in `agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`
+      rather than merely asserted here.
+      **THE SABOTAGE THE STEP ASKS FOR — the verdict file was flipped and the
+      input set followed, downstream numbers included.** Verdict → `signal`:
+      input `name + description + body`, precision@5 82.51 → 77.05 %, recall@5
+      64.60 → 70.28 %, adjudicated deliveries 303 → 353. Verdict deleted: back to
+      `name + description`, reason *"no readable 5.1 verdict … fail-closed"*.
+      Verdict `signal` with `proxy_to_real_fidelity` stripped: still
+      `name + description`, reason *"carries no proxy_to_real_fidelity bound —
+      refused"*. The tree was restored and re-measured to the committed figures
+      after each.
+      **FAIL-CLOSED ONLY NARROWS.** Missing file, unparseable JSON, unknown
+      token, and a provenance-stripped record all resolve to description-only
+      (`:73`). A stale or edited record can never widen what is indexed, and the
+      measured price of widening on a `harmful` verdict is +7.22 pp of false
+      activation. The bound gate is deliberate: 5.1 ships
+      `proxy_to_real_fidelity` inside the verdict so a consumer cannot take the
+      conclusion without it, and a record that lost it is refused rather than
+      half-trusted.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/routing_index_input.test.ts`, 8 tests): (a) hardcoding the
+      resolver to description-only — which is TODAY`S CORRECT ANSWER and still
+      reds the `signal`-widens case, 1 red, restored 8 green; (b) removing the
+      fidelity-bound gate — 1 red on the stripped-record case, restored 8 green.
+      No test writes the tracked verdict file; every fixture lives in a temp
+      directory.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
