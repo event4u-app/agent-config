@@ -59,6 +59,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { collect } from './update_roadmap_progress.js';
+import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -537,6 +538,27 @@ function archive_completed(
 
     const archived: ArchiveRecord[] = [];
     for (const stats of collect(roadmap_root)) {
+        // `guarded-baseline` is INCOMPLETE by construction (council 2026-08-31,
+        // 2/2 convergent) — checked BEFORE the open-step test on purpose. A
+        // well-formed record keeps its box `[ ]` and would be skipped silently as
+        // "not complete", which is the right verdict reached for the wrong reason
+        // and invisible in a sweep that only reports what it moved; a MALFORMED
+        // one on `[x]` would otherwise archive with an annotation claiming the
+        // opposite. Both are named here instead.
+        const guarded = parseGuardedBaselines(
+            fs.readFileSync(path.join(roadmap_root, stats.rel), 'utf-8'),
+        );
+        if (guarded.length > 0) {
+            process.stderr.write(
+                `  ⚠️  ${stats.rel}: ${guarded.length} guarded-baseline step(s) — ` +
+                    'not archived. Verify against the real mechanism, then flip to ' +
+                    '`[x]`.\n',
+            );
+            for (const p of guardedBaselineProblems(guarded)) {
+                process.stderr.write(`        · ${p}\n`);
+            }
+            continue;
+        }
         if (stats.open_ !== 0) {
             continue; // not complete
         }

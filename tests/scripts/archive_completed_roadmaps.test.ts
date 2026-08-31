@@ -214,6 +214,82 @@ describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only
         ).toBe(false);
     });
 
+    // `guarded-baseline` (council 2026-08-31, 2/2 convergent). Two shapes reach
+    // the sweep and both must refuse: a well-formed record, whose box is `[]` so
+    // the open-step test would already skip it — silently, which is the half this
+    // adds — and a MALFORMED one on `[x]`, which without the check archives while
+    // its own annotation says the step is not done.
+    function guarded(glyph: string, redProof: string | null): string {
+        const lines = [
+            '# Guarded',
+            '',
+            '## Phase 12 — UX simplification',
+            `- [${glyph}] <!-- roadmap-status: guarded-baseline -->`,
+            '      **12.1** the command surface gains no topology argument',
+            '      ```yaml',
+            '      guarded_baseline:',
+            '        category: future-mechanism',
+            '        scope: src/scripts/council_cli.ts',
+            '        command: npx vitest run tests/x.test.ts',
+        ];
+        if (redProof !== null) lines.push(`        red_proof: ${redProof}`);
+        lines.push('        recheck_when: src/nope/selector.ts', '      ```', '');
+        return lines.join('\n');
+    }
+
+    it('--all refuses a roadmap carrying a guarded baseline, and names it', () => {
+        const repo = path.join(tmp, 'guarded-open');
+        initUncommitted(repo, { 'agents/roadmaps/road-to-guarded.md': guarded(' ', 'RED 2026-08-31') });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(ts.stderr, 'names the roadmap and the state').toMatch(
+            /road-to-guarded\.md.*1 guarded-baseline step\(s\)/s,
+        );
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-guarded.md'))).toBe(true);
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-guarded.md'))).toBe(
+            false,
+        );
+    });
+
+    it('--all refuses an annotation sitting on `[x]` — it would otherwise archive as complete', () => {
+        const repo = path.join(tmp, 'guarded-checked');
+        initUncommitted(repo, { 'agents/roadmaps/road-to-guarded.md': guarded('x', 'RED 2026-08-31') });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(ts.stderr).toContain('the canonical checkbox stays UNCHECKED');
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-guarded.md'))).toBe(
+            false,
+        );
+    });
+
+    it('--all reports the missing `red_proof` as the reason, not just the refusal', () => {
+        const repo = path.join(tmp, 'guarded-unproven');
+        initUncommitted(repo, { 'agents/roadmaps/road-to-guarded.md': guarded('x', null) });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.stderr).toContain('red_proof');
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-guarded.md'))).toBe(
+            false,
+        );
+    });
+
+    it('--all still archives a complete roadmap that carries no annotation', () => {
+        const repo = path.join(tmp, 'guarded-absent');
+        initUncommitted(repo, { 'agents/roadmaps/road-to-complete.md': COMPLETE });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.stderr).not.toContain('guarded-baseline');
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-complete.md'))).toBe(
+            true,
+        );
+    });
+
     // `--repo-root` exists so a caller that already resolved the project root
     // cannot have it re-derived from `git rev-parse` and land on an ANCESTOR —
     // in a monorepo sub-project that would archive the parent's roadmaps. The

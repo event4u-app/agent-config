@@ -220,6 +220,40 @@ Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.ts` 
 
 `[~]` is **not** an "in-progress" indicator. Mid-reply work-in-flight has no checkbox change until the step lands; that's a normal `[ ] → [x]` transition.
 
+#### `guarded-baseline` — a sub-state of `[ ]`, never a fifth glyph
+
+A step whose `verify:` asserts a property of a mechanism that **does not yet exist** may not close `[x]`: an executable guard proven to go RED under a named sabotage is evidence about the *guard*, not about the *absent mechanism*, and `[x]` would claim the acceptance criterion was satisfied. Such a step keeps its `[ ]` box and carries an annotation plus a structured evidence record (AI council 2026-08-31, 2/2 convergent — `anthropic/claude-sonnet-4-5` + `openai/codex-default`, option C):
+
+~~~md
+- [ ] <!-- roadmap-status: guarded-baseline -->
+      **12.1** …step text…
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism   # or absence-assertion — no other value
+        scope: <surfaces examined>
+        command: <reproducible green command>
+        red_proof: <commit, fixture, or recorded sabotage run>
+        sabotage_model: <exact violation introduced>
+        recheck_when: <mechanism / symbol / path trigger>
+        discharged_ac: <clauses actually completed>
+        pending_ac: <clauses still unexercisable>
+      ```
+~~~
+
+The two categories are the discriminator, not decoration. An **`absence-assertion`** step asserts something directly observable today ("the schema has no field capable of holding prompt text") and MAY close `[x]` once sabotage-verified. A **`future-mechanism`** step asserts a property of something that does not exist ("a probe-resolvable fixture never enters the selector") and is what this sub-state exists for. No third value is accepted, and an absent `category` is a rejection rather than a default.
+
+Tooling, all of it in `guarded_baseline.ts` and enforced by both consumers:
+
+| Behaviour | Where |
+|---|---|
+| Counted as **open**, never as done — the canonical box stays `[ ]` | `count_checkboxes` |
+| Reported **separately**: a `## 🛡️ Guarded baselines` dashboard section plus a per-step stderr line | `update_roadmap_progress` |
+| **Rejected** — exit 1, on both `--check` and a plain regen — when `red_proof` is absent, when `category` is absent or illegal, when there is no evidence block, or when the annotation sits on anything but `- [ ]` | `update_roadmap_progress` |
+| Treated as **incomplete**: archival refused and the reason named | `archive_completed_roadmaps` |
+| Marked **stale** once a path-shaped `recheck_when` trigger resolves in the tree; a bare symbol trigger is reported as not machine-checkable rather than as not-stale | `guardedBaselineStaleness` |
+
+Only verification against the real mechanism permits `[x]`. **A baseline that has not demonstrably gone RED is an ordinary open item** and must not carry the annotation at all — the sabotage-and-restore proof is the entry price, not a nice-to-have.
+
 **Dashboard regen cadence — opt-in batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` in `.agent-settings.yml` (`every_5_steps` default · `per_step` · `phase_boundary`). Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen regardless of cadence.
 
 **Blockers follow the same cadence as checkboxes.** Clearing a `## Blockers` entry (per `templates/roadmaps.md` rule 20) flips its `Status: resolved` and regenerates the dashboard in the same reply — Iron Law 1's "same response" obligation applies to blocker resolution exactly as it applies to a checkbox flip.

@@ -243,6 +243,101 @@ describe('update_roadmap_progress — intent', () => {
         expect(dashboard).toContain('**1 / 2 steps done · 50%**');
     });
 
+    // --- `guarded-baseline`: visible, counted apart, and rejectable ------
+    //
+    // Council 2026-08-31 (2/2 convergent), option C. Both seats made the tooling
+    // a CONDITION of the verdict, so what these pin is the enforcement: the
+    // separate report, the exclusion from the done count, and the two rejections
+    // that make the annotation refuse rather than decorate.
+
+    /** A guarded step, with `over` replacing individual evidence lines. */
+    function guardedBody(over: Record<string, string | undefined> = {}, glyph = ' '): string {
+        const fields: Record<string, string | undefined> = {
+            category: 'future-mechanism',
+            scope: 'src/thing.ts',
+            command: 'npx vitest run tests/x.test.ts',
+            red_proof: 'sabotage 2026-08-31 — 2 tests RED, restored GREEN',
+            sabotage_model: 'added a --topology entry to the option table',
+            recheck_when: 'src/does-not-exist-yet/selector.ts',
+            discharged_ac: 'the baseline is pinned and RED-proven',
+            pending_ac: 'the constraint once the mechanism exists',
+            ...over,
+        };
+        const lines = [
+            '# Roadmap: Guarded',
+            '',
+            '## Phase 12 — UX simplification',
+            '- [x] 12.0 done',
+            `- [${glyph}] <!-- roadmap-status: guarded-baseline -->`,
+            '      **12.1** the command surface gains no topology argument',
+            '      ```yaml',
+            '      guarded_baseline:',
+        ];
+        for (const [k, v] of Object.entries(fields)) {
+            if (v !== undefined) lines.push(`        ${k}: ${v}`);
+        }
+        lines.push('      ```', '');
+        return lines.join('\n');
+    }
+
+    it('regen: a guarded baseline is NOT counted as done and gets its own dashboard section', () => {
+        mkRoadmap('road-to-guarded.md', guardedBody());
+        const { result, dashboard } = regen();
+        expect(result.status, 'exit').toBe(0);
+        // 1 done + 1 open: the guarded step is open work, exactly like the box says.
+        expect(dashboard).toContain('**1 / 2 steps done · 50%**');
+        expect(dashboard).toContain('## 🛡️ Guarded baselines — RED-proven, not complete');
+        expect(dashboard).toContain('road-to-guarded.md');
+        // Reported separately on stderr too, so the state is not silent.
+        expect(result.stderr).toContain('1 guarded-baseline step(s)');
+        expect(result.stderr).toContain('category future-mechanism');
+    });
+
+    it('regen: no annotation anywhere → no section, no guarded output at all', () => {
+        mkRoadmap('road-to-plain.md', ['# Plain', '', '## Phase 1 — Go', '- [x] a', '- [ ] b', ''].join('\n'));
+        const { result, dashboard } = regen();
+        expect(dashboard).not.toContain('Guarded baselines');
+        expect(result.stderr).not.toContain('guarded-baseline');
+    });
+
+    it('regen: a record with no `red_proof` is REJECTED — exit 1 and the reason named', () => {
+        mkRoadmap('road-to-guarded.md', guardedBody({ red_proof: undefined }));
+        const { result } = regen();
+        expect(result.status, 'exit').toBe(1);
+        expect(result.stderr).toContain('red_proof');
+        expect(result.stderr).toContain('ordinary open item');
+    });
+
+    it('--check: an illegal `category` fails the gate', () => {
+        mkRoadmap('road-to-guarded.md', guardedBody({ category: 'pre-registration' }));
+        // Bring the dashboard up to date first, so the only failure left is the
+        // rejection rather than a stale artefact.
+        runTs(['--repo-root', root], tmp);
+        const result = runTs(['--repo-root', root, '--check'], tmp);
+        expect(result.status, 'exit').toBe(1);
+        expect(result.stderr).toContain('pre-registration');
+    });
+
+    it('--check: the annotation on a `[x]` line fails the gate', () => {
+        mkRoadmap('road-to-guarded.md', guardedBody({}, 'x'));
+        runTs(['--repo-root', root], tmp);
+        const result = runTs(['--repo-root', root, '--check'], tmp);
+        expect(result.status, 'exit').toBe(1);
+        expect(result.stderr).toContain('the canonical checkbox stays UNCHECKED');
+    });
+
+    it('regen: a `recheck_when` path that now exists marks the evidence stale', () => {
+        fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src', 'selector.ts'), '// arrived\n', 'utf-8');
+        mkRoadmap('road-to-guarded.md', guardedBody({ recheck_when: 'src/selector.ts' }));
+        const { result, dashboard } = regen();
+        // Stale is a MARK, not a rejection: the record is still well formed.
+        expect(result.status, 'exit').toBe(0);
+        expect(result.stderr).toContain('now exists');
+        expect(result.stderr).toContain('src/selector.ts');
+        expect(dashboard).toContain('| [road-to-guarded.md](roadmaps/road-to-guarded.md) | 1 | 1 | 0 |');
+    });
+
     it('regen: structured blockers — open renders with anchor + instructions, resolved is collapsed', () => {
         mkRoadmap(
             'road-to-blockers.md',
