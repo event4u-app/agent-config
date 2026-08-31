@@ -78,7 +78,21 @@ Each is blocked by a different thing, and none of them is effort:
 
 ## Phase 1 — Read the batching obligation
 
-- [~] **1.1 Re-measure mean batch size after ten further sessions.** <!-- blocked-by: batching-corpus-never-received-the-obligation --> Run
+- [~] **1.1 Re-measure mean batch size after ten further sessions.**
+      <!-- deferred-resolution: carried-to=road-to-obligation-delivery-verification -->
+      **OUTCOME 2026-08-31: MERGED — the unresolved half, its blocker, its
+      evidence threshold and its releasing condition are transferred WITHOUT
+      WEAKENING to
+      [`road-to-obligation-delivery-verification.md`](road-to-obligation-delivery-verification.md)
+      step 1.2, by AI council (anthropic + openai, 2/2 convergent, round 2,
+      2026-08-31).** The glyph stays `[~]` and not `[-]` on the mechanism, not
+      on taste: `archive_completed_roadmaps.ts` parses `[~]` items only
+      (`DEFERRED_STEP_RE`), so a `[-]` here would carry an annotation no
+      carry-integrity check could read and the destination would never be
+      verified. `[~]` here means TRANSFERRED, not unfinished business returning
+      to this roadmap — one seat argued for `[-]` on exactly that semantic
+      ground and is answered by this sentence. Archiving this roadmap does not
+      satisfy, cancel, or weaken the requirement. Run
       `./scripts-run src/scripts/probe_turnaround --limit 10 --against-baseline`
       and record the `mean_batch_size` delta against the 1.01 baseline in
       `src/config/turnaround-budget.json`, with its own corpus window beside it.
@@ -311,9 +325,24 @@ Each is blocked by a different thing, and none of them is effort:
 
 ## Blockers
 
-### blocker: batching-corpus-never-received-the-obligation
+### blocker (TRANSFERRED, no longer live here): batching-corpus-never-received-the-obligation
 
-- **Status:** open — created 2026-08-30 by the drain run that executed step 1.1.
+> **MOVED 2026-08-31 to
+> [`road-to-obligation-delivery-verification.md`](road-to-obligation-delivery-verification.md)
+> § Blockers, whole and unweakened**, by AI council (anthropic + openai, 2/2
+> convergent, round 2). It is still OPEN — at the receiver, in the active
+> estate, with the same Class, the same owner and the same `Resolved when`.
+>
+> **The `### blocker:` prefix is deliberately broken on this heading**, and this
+> note is why. `lint_roadmap_blockers` keys on that literal prefix, so leaving it
+> intact here would parse this stub as a second LIVE entry with the same id —
+> one blocker with two live owners, which is exactly what the atomic-transfer
+> requirement forbids, and `check_estate_count` would read `open_blockers +1`
+> for a blocker that merely moved. A future reader "repairing" the prefix would
+> re-create that defect. The five-field body below is retained verbatim as a
+> historical record of what was transferred, and is not a live contract.
+
+- **Status:** open AT THE RECEIVER — created 2026-08-30 by the drain run that executed step 1.1.
   **AI council 2026-08-30, anthropic + openai, 2/2 convergent: AC-1 is
   `not-met`.** The reading was taken and is recorded; what is missing is a
   corpus that was exposed to the obligation. This entry exists so the condition
@@ -361,7 +390,33 @@ Each is blocked by a different thing, and none of them is effort:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `mean_batch_size` has a second reading against a named post-change
+- [-] **AC-1 — TRANSFERRED to
+      [`road-to-obligation-delivery-verification.md`](road-to-obligation-delivery-verification.md),
+      not met and not weakened.** AI council 2026-08-31, anthropic + openai,
+      **2/2 convergent, round 2**. `[-]` here means TRANSFERRED — the criterion
+      is open in the receiver, in the ACTIVE estate, with its blocker, its
+      ten-session floor and its propagation-model requirement carried verbatim.
+      It does not mean cancelled and it does not mean satisfied.
+      **Why the receiver and not the stub the first round chose.** Both seats
+      attached the same falsifiable precondition to their round-1 Option-1
+      verdict — verify stub governance BEFORE transferring. The check was run
+      and it failed: `archive_completed_roadmaps.ts` builds its carry-destination
+      candidate list as exactly `agents/roadmaps/<slug>.md` and
+      `agents/roadmaps/later/<slug>.md`, so a carry naming `stubs/` blocks;
+      `lint_roadmap_blockers.ts:35` scans `agents/roadmaps/*.md` non-recursively,
+      so the three stub files carrying `### blocker:` headings today appear in no
+      gate; `update_roadmap_progress` reports three roadmaps and no stub; and
+      `resume_probe` reads `later/` only. Both seats then changed their answer to
+      promoting the stub into the active estate, and said so plainly.
+      **Not `later/` either**: a parallel council round the same day ruled 2/2
+      that `later/` is excluded from the dashboard and from
+      `/roadmap:process-*`, so it does not preserve active-estate membership.
+      **The receiver's active placement is a narrow, expiring exception** to the
+      Later-disposition Iron Law, with a named blocker, a measurable releasing
+      condition, `owner: council`, and a kill switch — `review_by: 2026-09-30`,
+      after which it moves to `later/` without a further council round.
+      Original criterion, kept verbatim for the record: `mean_batch_size` has a
+      second reading against a named post-change
       corpus, and the delta is recorded whichever direction it went — including
       "did not move".
       **STAYS OPEN — AI council 2026-08-30, anthropic + openai, 2/2 convergent:
