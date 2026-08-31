@@ -1862,10 +1862,62 @@ is **seating**, and it already has a carrier.
 
 ## Phase 10 — Outcome attribution and observability
 
-- [ ] 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
+- [ ] <!-- roadmap-status: guarded-baseline --> 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
   resolution, council-internal topology, initial route, escalation, stage
   outputs, stop reason, synthesis policy, cost, latency, final verdict.
       verify: a replayed run reproduces the recorded route
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/replay_route.ts CouncilRouteRecord + renderRouteSection/parseRouteSection
+        command: npx vitest run tests/scripts/ai_council/replay_route.test.ts
+        red_proof: sabotage run 2026-08-31 — 5 of 13 tests RED, 13/13 GREEN after restore
+        sabotage_model: three simultaneous edits — auditRouteRecord reporting councilInternalTopology as `populated`, withRouteSection appending a heading even for a null record, and parseRouteSection hard-coding latencyMs to 0
+        recheck_when: src/scripts/ai_council/topology_selector.ts
+        discharged_ac: ten of eleven fields are populated and the render→parse→compare round trip is exact and RED-proven
+        pending_ac: "council-internal topology" — the field is typed `null` and only `null` because no selector exists, so the record cannot describe a topology decision that is never made; and no real council run has been replayed through it
+      ```
+
+      **CANNOT CLOSE WHOLE, for one structural reason.**
+      `councilInternalTopology` is typed `null` **and only `null`**: 7.2 is open,
+      nothing in `src/` is named `topology_selector` or exports `selectTopology`,
+      so any value in that field would be invented. `auditRouteRecord` reports it
+      as `structurally-unavailable` — a third state, distinct from both
+      `populated` and `missing`, because "the tree cannot produce this" and "the
+      caller did not supply it" are different claims and collapsing them is the
+      failure the record exists to prevent.
+      **What shipped:** `src/scripts/ai_council/replay_route.ts`, carrying the
+      other ten fields the step enumerates — ladder resolution (rung, verdict,
+      reason), initial route, escalation (with `from`/`to`), stage outputs
+      (per-stage produced + calls), stop reason, synthesis policy (the 5.1
+      strategy id), cost calls, cost USD, latency, final verdict. Tests:
+      `tests/scripts/ai_council/replay_route.test.ts` (13 tests, green).
+      **The verify clause is discharged at the artefact layer.**
+      `replayReproducesRoute` renders, parses and compares under
+      `JSON.stringify`, exercised over two shapes — escalated/completed and
+      stopped/unescalated/host-synthesis. USD renders at fixed 4-decimal
+      precision so the comparison is exact rather than approximate. A `null`
+      `stopReason` round-trips as *"ran to completion"* and a `null`
+      `synthesisPolicy` as *"host synthesis"*, both distinguished from an absent
+      key. **What is NOT discharged is a real run**: no council session has been
+      replayed through this record, which is the other half of the pending
+      criterion.
+      **`replay.ts` is untouched, and that is deliberate.** It is a py2ts parity
+      port whose header pins Python-mirroring behaviour down to round-half-to-even
+      float formatting and a trailing `rstrip()`; interleaving new sections into
+      its renderer would put every one of those notes at risk for a purely
+      additive feature. `withRouteSection(body, null)` returns the body
+      **byte-identical**, and a test asserts it against a real
+      `render_decision_replay` output rather than assuming it.
+      **Sensitivity was proven, not assumed.** A three-part sabotage —
+      `auditRouteRecord` reporting `councilInternalTopology` as `populated`,
+      `withRouteSection` appending a heading even for a `null` record, and
+      `parseRouteSection` hard-coding `latencyMs` to 0 — turned the file RED
+      (**5 failed / 8 passed**); restore → 13/13. The suite also tests the
+      **denial**: a section with one corrupted cost figure must NOT round-trip,
+      and a section with no cost line must parse to `null`, so a passing
+      round trip means the fields survived rather than that the parser is
+      permissive.
 - [ ] 10.2 Attribute each useful correction to the first stage where it
   appeared.
       verify: one real run yields a per-correction stage attribution
