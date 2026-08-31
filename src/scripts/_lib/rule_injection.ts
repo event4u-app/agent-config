@@ -214,13 +214,34 @@ export function selectForInjection(
     repoRoot: string,
     matches: TierRuleMatch[],
     capBytes: number,
+    shortlist?: readonly string[] | null,
 ): SelectionResult {
     const bodyBytes = new Map<string, number>();
     for (const m of matches) {
         const body = loadRuleBody(repoRoot, m.id);
         bodyBytes.set(m.id, body === null ? 0 : bytesOf(body));
     }
-    const ranked = [...matches].sort((a, b) => b.score - a.score || a.order - b.order);
+    // STEP 6.3 — the optional lexical shortlist, as a TIE-BREAK and nothing more.
+    //
+    // Absent (the default), the cap order is exactly what it was: score, then
+    // router order. Present, it sits BETWEEN them, never above `score` — the
+    // matcher's verdict is read first and the shortlist only orders what the
+    // matcher already tied. Membership is untouched in both directions: a
+    // shortlisted id the matcher did not return is not in `matches` and so is
+    // never consulted, and no matched id is dropped for being unshortlisted
+    // (it sorts at Infinity, behind the shortlisted ones, and still competes
+    // for the cap). That is `_lib/lexical_shortlist.ts`'s "never decides
+    // alone" expressed at the one place the cap actually binds.
+    const rank = new Map<string, number>();
+    for (const [i, id] of (shortlist ?? []).entries()) {
+        if (!rank.has(id)) rank.set(id, i);
+    }
+    const ranked = [...matches].sort(
+        (a, b) =>
+            b.score - a.score ||
+            (rank.get(a.id) ?? Infinity) - (rank.get(b.id) ?? Infinity) ||
+            a.order - b.order,
+    );
     const selected: TierRuleMatch[] = [];
     const dropped: TierRuleMatch[] = [];
     let total = 0;

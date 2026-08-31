@@ -1018,7 +1018,121 @@ once.
 > outcome per case, expected-vs-observed is recorded against stable case ids at
 > that point — not before, and not as an empty file that looks like a carrier.
 
-- [ ] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+- [ ] <!-- roadmap-status: guarded-baseline -->
+      **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+      **GUARDED BASELINE 2026-08-31 — the deterministic prefix is built, wired
+      and RED-proven; the box stays `[ ]` because the twelve-stage form is not.**
+
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evaluation_cascade.ts
+        command: npx vitest run tests/scripts/evaluation_cascade.test.ts
+        red_proof: sabotage run 2026-08-31 — 2 failed / 13 passed, then 1 failed / 14 passed
+        sabotage_model: let the prefix assign `activation`; then unwire the cascade from the runner
+        recheck_when: src/scripts/_lib/evaluation_receipt.ts
+        discharged_ac: the deterministic prefix aborts on the first hard failure at zero model calls, and AC-3 and AC-5 close on its production caller
+        pending_ac: the receipt-bearing stages and one settled twelve-stage enumeration
+      ```
+
+      **AI council 2026-08-31, and it resolved to a CONVERGENT Option B — but
+      only after a tie-break that the tree answered, so the route is recorded
+      rather than the conclusion alone.** anthropic/claude-sonnet-4-5 returned
+      *"Conditional Option A"*, explicitly gated: *"Choose Option A IF AND ONLY
+      IF verification confirms Phase 1 families are failure-mode buckets, not
+      observation methods … If either verification fails: Option B."*
+      openai/codex-default returned Option B outright. Both seats present, 2/2.
+      **The condition was checked against the tree and it FAILS**, which makes
+      this a convergence and not a split: Phase 1's step 1.1 verify clause reads
+      *"a deliberately failing trigger eval is classifiable as content vs
+      activation vs adherence **from the recorded receipt alone**"* — a receipt
+      is an observation, so the families are observation-grounded and Option A's
+      own precondition is false. Both seats therefore land on B.
+      **The seat that lost the vote supplied the thing that mattered.** It was
+      anthropic that noticed nobody had verified what the families actually are:
+      *"Neither reviewer noticed we're guessing what Phase 1 families mean."*
+      That objection is what made the decision checkable instead of a preference.
+
+      **What Option B licensed, and what it refused.** Both seats agreed the
+      deterministic prefix should be built now and both refused to let it close
+      4.1. openai: *"That supports implementing the prefix — not declaring the
+      full cascade complete."*
+
+      **Built: `src/scripts/_lib/evaluation_cascade.ts`**, six stages, aborting
+      on the first hard failure —
+      `schema-validity → path-ownership → holdout-disclosure → budget →
+      near-duplicate → metric-verdict`.
+      **Every stage is free**, which is why these six are the ones that can ship
+      without receipts, and it makes *"a candidate failing the cheapest stage
+      consumes no model call"* structurally true rather than asserted:
+      `model_calls` is a literal `0` on every path, not a counter, because there
+      is no code path in the module that could increment one.
+      **No stage is SOFT**, per the earlier round's convergent finding — every
+      stage either passes or aborts, with no third warn outcome a caller could
+      ignore.
+      **The prefix may assign only `content` and `unknown`.**
+      `PREFIX_ASSIGNABLE_FAMILIES` excludes `activation` and `adherence` by
+      construction and a test pins it, because assigning either from a
+      deterministic proxy is exactly the evidence-manufacturing openai named: *"a
+      holdout leak is not evidence of an `activation` failure … that produces
+      labels, but not trustworthy classifications."* No fifth family is invented.
+
+      **Wired into the real runner** — `evolution_lab.ts` `verbRun`, which
+      previously cloned and returned. It now re-reads each record from disk and
+      runs the cascade over it, so stage 1 is a real gate at the call site
+      rather than a formality over an already-parsed object, and it reports each
+      candidate's outcome, family and `model_calls` on stdout. A run with no
+      metric rows aborts at the verdict stage rather than passing silently,
+      which is the honest outcome for a run that measured nothing.
+
+      **A defect this work found in the tree, recorded rather than smoothed
+      over.** An unowned mutation path does NOT reach a distinct path-ownership
+      stage: `parseMutations` already calls `assertMutationPathsOwned`
+      (`_lib/candidate_record.ts:434`), so it throws inside stage 1. Catching
+      that as a schema failure would file a path-ownership violation under the
+      wrong stage — and the failing stage is precisely what Phase 1's
+      classification reads, so the mis-attribution would corrupt the
+      classification rather than merely mislabel a message. The cascade now
+      attributes it to stage 2 explicitly.
+      **The consequence is that stage 2's own re-check is UNREACHABLE and
+      therefore untested, and it is labelled as such in the code instead of
+      being counted as defense in depth.** Measured: neutralising its abort left
+      **15/15 green**. It is kept because it is free and fails closed if the
+      parser ever stops enforcing ownership, but an unproven guard is written
+      down as unproven.
+
+      **Sensitivity was OBSERVED in three directions and the first probe found a
+      real gap rather than confirming the tests.** (1) Neutralising the stage-2
+      abort: **15/15 stayed green** — the finding above, and the reason stage 2
+      now carries a label instead of a claim. (2) Letting the prefix assign
+      `activation`: 2 failed / 13 passed, naming both the family-permission test
+      and the holdout-classification test. (3) Unwiring the cascade from the
+      runner: 1 failed / 14 passed on *"a run EVALUATES each candidate"*. Every
+      probe restored to 15/15 and both files restored byte-identically.
+
+      **A downstream break this work caused, and the design it forced.** Wiring
+      the cascade initially made `run` exit non-zero whenever no metrics were
+      supplied, which reddened the existing
+      *"run materialises five candidates, compare passes, clean removes exactly
+      them"* in `tests/scripts/evolution_lab.test.ts` (expected 0, got 3). The
+      test was RIGHT and the change was wrong: materialising without measuring
+      has not failed, and turning it into a failure would have changed a verb's
+      contract to make a new stage look reachable. Fixed by giving the cascade a
+      THIRD outcome — `incomplete` — which is neither a pass (there is no
+      verdict, so nothing may read one) nor an abort (nothing failed). The run
+      prints `metric-verdict NOT REACHED` and exits 0. Naming the state is what
+      keeps "no metrics" from being silently benign; the alternative was to let
+      an unmeasured candidate read as evaluated.
+
+      **What is NOT built, stated so the closure cannot be read as more than it
+      is.** The receipt-bearing stages — activation/delivery, adherence, and the
+      statistical stages — are absent, because they need an independent,
+      append-only receipt producer with version-bound attributable observations,
+      and no such producer exists. One settled twelve-stage enumeration is also
+      still missing: the prior round recorded that one seat asked twice and
+      produced two materially different enumerations, which is why the arity was
+      decided and the stage semantics were not. `recheck_when` above names the
+      receipt module whose arrival reopens this step.
       stage set is E9; if the 12-stage form is chosen, activation/delivery and
       adherence are their own stages, which is what Phase 1's exit criterion
       requires.
@@ -1126,7 +1240,102 @@ once.
       yields `[]`. The separation is structural: `paretoFrontier` (`:205`) is
       never consulted by `promotionVerdict`, so a frontier preference has no
       path by which to become a promotion.
-- [ ] **4.4 Keep a pathology archive, not only a frontier.**
+- [x] **4.4 Keep a pathology archive, not only a frontier.**
+      **DONE 2026-08-31.** `src/scripts/_lib/pathology_archive.ts`, 25 tests in
+      `tests/scripts/pathology_archive.test.ts`, plus 2 in
+      `harness_evolution_guards.test.ts` for the registration.
+
+      **Objection 2 is settled — AI council 2026-08-31, and it was a SINGLE-SEAT
+      DEGRADED round, recorded as such rather than as convergence.** Present:
+      openai/codex-default. Absent: anthropic/claude-sonnet-4-5, `exit_1`, no
+      output — the same seat-and-shape failure 4.1 already records for a long
+      multi-decision question. Under the N=3 budget the run took the best
+      available seat and did not retry.
+      Verdict **2c revised**: of the three candidate rules, 2a needs a human
+      gold standard and 2b needs a coverage metric, and neither exists, so
+      recency is the only currently supportable deterministic rule. The seat's
+      own caveat is carried into the code rather than dropped: *"recency says
+      nothing about quality and may replace a genuinely better intervention with
+      a regression"*, so history is append-only and every decision is stamped
+      with `ranking_rule_version` — representatives are RECOMPUTED when a
+      quality metric arrives, never lost.
+      **The rule is TOTAL, which is what the objection actually demanded.**
+      `replacesRetained` (`:186`) orders on
+      `attempt_sequence DESC, candidate_id ASC, attempt_id ASC`. Ordering is by
+      ingester-assigned sequence and **never** by timestamp — producer clocks
+      collide and arrive out of order, which makes a timestamp rule non-total,
+      and a tie-break that is declared but unreachable is the defect the seat
+      named in the alternative. All three tie-break levels are exercised
+      separately, and one test asserts a newer `observed_at` on a lower sequence
+      does NOT win.
+      **`WHERE` reuses the ladder** — `PATHOLOGY_WHERE` IS `LADDER_RUNGS`
+      (`_lib/activation_ladder.ts:36-43`), asserted by identity so a parallel
+      execution-stage taxonomy cannot drift into existence. `WHY` is a closed
+      8-value REASON axis whose order is its precedence order, with
+      `reason_unknown` last so it is a fallback and never a precedence winner. A
+      test asserts no `WHY` value is a ladder rung or a `<rung>_failed`, which is
+      the collapse-into-WHERE failure the seat rejected in the first draft.
+      **Objection 3 is discharged by the cell shape.** Each cell carries
+      frequency-bearing metadata from append-only attempt history —
+      `attempt_count`, `classifiable_count`, `unclassifiable_count`,
+      first/last observed sequence and time, the retained representative with
+      its `retained_ranking_key` and `retained_ranking_rule`, and the
+      schema/classification/ranking/cohort version quad. Ingest is **idempotent**
+      by `attempt_id`, because without that a retry loop silently inflates the
+      very frequency evidence the guard reads. Cells are keyed on the version
+      quad as well as on `WHERE x WHY`, so attempts recorded under a different
+      vocabulary are never summed with these.
+      **The guard consumes a versioned query, never storage internals**, as the
+      seat required: `dominanceWindow()` (`:239`) returns the version quad
+      alongside its rows and `dominanceVerdict` takes that query, so a caller
+      cannot hand it a raw array. It returns attempts rather than cells for the
+      reason the seat gave — a last-N window is not reconstructible from
+      aggregates.
+
+      **Objection 4, and the premise turned out to be FALSE — checked rather
+      than accepted.** The objection assumed the `0.6` in this step's verify
+      line already meant textual similarity, and warned that reusing it would be
+      *"a semantic change wearing a constant's clothes"*. **There is no such
+      constant.** `diversityCollapsed`
+      (`_lib/harness_evolution_guards.ts:215`) is a DISTINCT-COUNT check with
+      `minDistinct = 2` and no ratio anywhere, and the only near-duplicate
+      constant in the tree is `NEAR_DUPLICATE_THRESHOLD = 70`
+      (`_lib/curator_ops.ts:106`) — an integer percentage on a different scale.
+      So the collision the objection feared does not exist, and the number was
+      free to be given its own meaning. It is nonetheless given a **separate**
+      name rather than reused: `PATHOLOGY_DOMINANCE_THRESHOLD = 0.6`, with the
+      denominator, window and floor the objection asked for —
+      `PATHOLOGY_WINDOW_SIZE = 50` (latest N classifiable attempts) and
+      `PATHOLOGY_MIN_CLASSIFIABLE_ATTEMPTS = 20`. All three are STATED policy
+      defaults, not measured optima, and say so at the constant with a
+      `Revisit-if`.
+      **`warming-up` is a real state and explicitly NOT a pass.** Below the
+      floor the guard refuses to return `ok`, so an empty archive cannot read as
+      healthy — the same discipline `underpowered` gets in 4.3.
+
+      **Wired, not an unwired library — which is the lesson AC-3 and AC-5 are
+      still open on.** `STOP_CONDITIONS` gains `pathology-dominance`
+      (`detector: 'dominanceVerdict'`), and a test resolves that detector name
+      to a real exported function rather than trusting the string.
+      **The arity of step 0.6's stop set therefore moves 4 -> 5, and it is
+      recorded here instead of being bumped silently.** It is an ADDITION and
+      never a replacement — a second test pins both `diversity-collapse` and
+      `pathology-dominance` so neither can be dropped into the other — so it
+      STRENGTHENS 0.6's set rather than relaxing anything 0.6 decided. The two
+      catch different things: the older row asks whether this run's candidates
+      are distinct, and cannot see a search that keeps producing textually
+      different candidates which all fail the same way.
+
+      **Sensitivity was OBSERVED in four directions, and the first probe found a
+      REAL GAP in these tests rather than confirming them.** Deleting `a.why`
+      from the cell key left **23/23 green** — the "both retained" case differs
+      on both axes, so it could not tell a two-axis key from a one-axis one.
+      Two axis-isolating tests were added in response; re-probed, dropping `why`
+      reds *"the WHY axis is load-bearing"* and dropping `where` reds *"the
+      WHERE axis is load-bearing"*, one failure each. Neutralising the
+      `warming-up` floor reds *"below the minimum sample it reports warming-up,
+      which is NOT a pass"*. Every probe restored to 25/25, and the module's
+      byte-identical restore was confirmed with `git diff`.
       `from-skipped-parent`, and it was that parent's headline contribution: a
       pure frontier loses the information about *why* a candidate exists, so
       archive the best intervention per `WHERE × WHY` failure cell over closed
@@ -1334,7 +1543,7 @@ once.
 
 ## Phase 5 — Body signal and the proposer roles
 
-- [ ] **5.1 Measure the description-vs-body signal, honest null permitted.**
+- [x] **5.1 Measure the description-vs-body signal, honest null permitted.**
       `corrected-from-reproduction`: the master justified this by pointing at a
       proxy gap the tree documents as unquantified. That gap is real but it is a
       **different** gap. `src/scripts/description_route_check.ts:18-30`
@@ -1348,6 +1557,57 @@ once.
       it bounds the validity of every routing conclusion in this roadmap.
       verify: the pre-registration lands before the first measurement commit and
       names both gaps separately.
+      **DONE 2026-08-31 — the answer is `harmful`, which is neither the hoped-for
+      signal nor the permitted null, and it is the reason the bar was two-sided.**
+      Pre-registration `agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md`,
+      commit **`fe8749458`**. Measurement
+      `src/scripts/measure_routing_signal.ts` + `src/scripts/_lib/routing_corpus.ts`,
+      commit **`a86bd899c`**. `git merge-base --is-ancestor fe8749458 a86bd899c`
+      is the ordering clause, checked in the history rather than asserted: the
+      prereg commit adds no measurement module and runs nothing.
+      **Both gaps are named separately, and only one was answerable here.** Gap A
+      (proxy-to-real-session fidelity) is the one
+      `src/scripts/description_route_check.ts:18-30` documents; quantifying it
+      needs real sessions, and step 5.2 parks the live harness for this whole
+      roadmap. So it is carried as its OWN required field —
+      `proxy_to_real_fidelity: {value: null, status:
+      "unmeasured-by-construction", reason: <the 5.2 park>}` — in the verdict
+      record, so a consumer cannot take the conclusion without its bound. Gap B
+      (does the body carry signal the description does not) is the one measured.
+      **The numbers, over 82 train corpora / 775 cases / 299-skill catalogue,
+      holdout untouched** (`agents/evidence/analysis/routing-body-signal-verdict.json`,
+      written by `--write`): recall@5 64.60 % → 70.28 % (**+5.68 pp**, bar +5.0),
+      false activation@5 13.66 % → 20.88 % (**+7.22 pp**, guard +2.0), McNemar
+      exact p = 0.0371 over 102 discordant positives.
+      **The primary bar was CLEARED and the verdict is still not `signal`.** A
+      one-sided pre-registration would have shipped this. The guard fires because
+      the pre-registered order is power → guard → primary
+      (`src/scripts/measure_routing_signal.ts:175-189`), and
+      `tests/scripts/routing_signal_measurement.test.ts:142-151` pins that exact
+      combination. **SENSITIVITY, three sabotages, each red then green:**
+      (a) removing the holdout skip in `loadTrainCases` — 4 red, restored 17
+      green; (b) moving the primary check ahead of the guard in the verdict
+      function — 2 red (verdict becomes `signal`), restored 17 green;
+      (c) editing the committed verdict file to `signal` with a fabricated
+      fidelity value — 2 red, restored 17 green.
+      **An unpredicted finding, from the run rather than from the argument.** The
+      prereg predicted the guard would break, on the arithmetic that
+      `overlap` divides by the TASK`s term count so body tokens can only raise a
+      score. It did — but 40 positives were also **lost**, because monotone
+      scores do not imply monotone ranks: a positive inside the top-5 is pushed
+      out when its competitors gain more. The body arm reorders rather than
+      merely widens.
+      **Two corrections recorded, not smoothed over**
+      (`agents/evidence/analysis/routing-body-signal-result-2026-08-31.md`): the
+      first loader understood only the modern `queries[]` shape and dropped the
+      two grandfathered legacy-shaped corpora SILENTLY, reporting 80 where the
+      partition says 82 — fixed by reading both shapes, verdict unchanged in
+      both directions (80 corpora: +5.57 / +7.41, `harmful`); and a doc comment
+      ended early at the `*/` inside a `src/skills/<slug>/SKILL.md` glob, which
+      `tsc --noEmit` accepted and the runtime transform did not.
+      **What it does NOT establish:** that the body is useless to a reader, that
+      the result transfers to a length-normalised scorer, or anything about the
+      sealed holdout, which stays unspent.
 - [x] **5.2 Keep the live-floors park intact.** No live harness.
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree — verified — and its council park (2/2) is not reopened here.
@@ -1442,7 +1702,59 @@ once.
       **The judge stays optional**, as the step says: `buildSplitPipeline`
       (`:330`) returns `judge: null` when none is configured, and the three role
       prompts are produced regardless.
-- [ ] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+- [ ] <!-- roadmap-status: guarded-baseline -->
+      **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+      **GUARDED BASELINE 2026-08-31 — the comparison cannot be run because there
+      is no second arm, and the fallback clause is now ENFORCED instead of
+      merely written.**
+
+      ```yaml
+      guarded_baseline:
+        category: absence-assertion
+        scope: src/scripts/_lib/candidate_proposer.ts
+        command: npx vitest run tests/scripts/proposer_survival_bar.test.ts
+        red_proof: sabotage run 2026-08-31 — 1 failed / 3 passed, restored 4/4
+        sabotage_model: added a fetch to an API host inside the proposer module
+        recheck_when: src/scripts/_lib/llm_candidate_proposer.ts
+        discharged_ac: the deterministic path is pinned as the only proposer, so it cannot be displaced silently
+        pending_ac: the paired-verdict comparison itself, which needs a second arm
+      ```
+
+      **Why it cannot be run, stated as a fact about the tree rather than as
+      effort.** `_lib/candidate_proposer.ts` is the only proposer and is
+      deterministic by construction — its own header says *"Fixed recipes for
+      known defect classes, so the loop is validated without model quality as a
+      confound"* and *"NOT claimed: that these three recipes improve
+      anything"*. Phase 5 ships no live model harness, which step 5.2 pins with
+      its own scan. A `paired_verdict` run needs two arms and one of them does
+      not exist. Running it against nothing and publishing the result would be
+      the *"argument, not a run"* this step's verify clause forbids.
+
+      **What the guard does buy.** The step's fallback — *"Otherwise the
+      deterministic path stays"* — was a sentence anyone could contradict by
+      adding a proposer. `tests/scripts/proposer_survival_bar.test.ts` now
+      asserts no model is in the proposer loop: no transport import, no
+      subprocess spawn, no API host, no key env var, across the proposer and its
+      dependency. So the day an LLM proposer lands it cannot become the default
+      without turning this red first, which is what makes "otherwise"
+      enforceable. `recheck_when` names the module whose arrival reopens the step.
+
+      **A false positive found by running it, and removed rather than
+      suppressed.** The construct list initially carried the bare vendor names
+      `anthropic` and `openai`, and the clean tree reported **2 hits** — both in
+      `_lib/candidate_record.ts`, and neither a client: they sit inside an
+      error-message STRING naming which council seats decided something
+      (*"2026-08-29, anthropic + openai, 2/2"*). Stripping comments does not
+      remove a string literal and should not; the detector was simply wrong. A
+      vendor's name in prose is evidence about the writing, not about the code,
+      so the names were dropped and only constructs that cannot appear
+      innocently were kept. Suppressing the two files instead would have blinded
+      the scan to the exact modules it exists to watch.
+      **Sensitivity OBSERVED after the narrowing, not before:** adding a `fetch`
+      to an API host inside the proposer reds *"no model is in the proposer
+      loop"* (1 failed / 3 passed); byte-identical restore returns 4/4. Both
+      anti-vacuity assertions — a non-empty scanned set and a stripper that does
+      not empty its input — ship with it, so a scan over nothing cannot pass.
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
       verify: the comparison is a `paired_verdict` run, not an argument.
@@ -1483,13 +1795,95 @@ once.
       is a STATED default at the conservative end of `lint_originality`'s range,
       not a measured optimum; `revisit-if` a screening run rejects a proposal a
       curator then re-adds by hand, or admits one a human calls a duplicate.
-- [ ] **5.6 Cheap proposer models first, and track evolution ROI.**
+- [ ] <!-- roadmap-status: guarded-baseline --> **5.6 Cheap proposer models first, and track evolution ROI.**
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
       a hard budget cap, while dropping the only cost-*reduction* mechanism both
       parents proposed. Improvement per evolution dollar is a reported figure.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evolution_roi.ts (assertCheapestFirst, LADDER, nextTier)
+        command: npx vitest run tests/scripts/_lib/evolution_roi.test.ts
+        red_proof: sabotage run 2026-08-31 — cheapest-first comparison neutralised, 3 of 28 tests RED, 28/28 GREEN after restore
+        sabotage_model: replaced the guard condition `if (cheapest !== null && a.tier !== cheapest)` at src/scripts/_lib/evolution_roi.ts:217 with `if (false)`, so an escalation past an untried cheaper rung stops being refused
+        recheck_when: src/scripts/_lib/ladder_attempt_recorder.ts recordLadderAttempt
+        discharged_ac: the ROI half is met with a live subject — every completed run of the `run` verb emits a report and buildRunReport REFUSES one without the figure
+        pending_ac: "a cheaper model is tried before an expensive one" under a real attempt sequence — nothing in this tree makes a metered proposer call, so the ordering is policed over a population of zero
+      ```
+      **PARTLY DONE 2026-08-31, and the split is per verify-clause conjunct
+      rather than per convenience.** `src/scripts/_lib/evolution_roi.ts`.
+      **The ROI conjunct is CLOSED, with a production caller.** `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES a report whose ROI
+      figure is absent or carries an unknown kind — the same shape
+      `_lib/evaluation_vector.ts:103`'s `buildVector` uses to refuse a vector
+      that omits its artifact-count row, and refused at RUNTIME because the
+      caller who drops the row is a JSON parse or an `as` cast the compiler
+      cannot see (proved with a `delete` past the type,
+      `tests/scripts/_lib/evolution_roi.test.ts:140`). The caller is real, not a
+      unit test: `verbRun` builds the report on the ONE path a run completes on
+      (`src/scripts/evolution_lab.ts:779`) and writes it to stdout
+      (`:800`), and evaluation evidence is parsed BEFORE the first clone
+      (`:745`) so a malformed vector aborts before the run spends anything.
+      Reproduce with
+      `./scripts-run src/scripts/evolution_lab run --record REC.json --vector VEC.json --estimated-spend-cents 250`.
+      **The figure is a union, not a number, because a ratio is not always
+      defined.** `ratio` at positive spend with something evaluated,
+      `no-spend` at zero spend, `unmeasured` when no candidate carried an
+      evaluation (`:302`). Neither `Infinity` nor `NaN` can reach a report, and
+      both are pinned. `unmeasured` is the honest state of this programme today
+      and reads as a finding: `run` clones and nothing in Phase 5 evaluates,
+      because 5.2 keeps the live-floors park intact.
+      **Measured end-to-end on the real CLI, not only in the builder's unit
+      test.** `tests/scripts/evolution_lab.test.ts:409` spawns the process over
+      five real clones and asserts exactly ONE `run-report: roi:` line on its
+      stdout reading `unmeasured`; a second invocation supplying a vector with
+      one `pass` row at 250 cents prints `0.400 improved rows per dollar`. The
+      vector goes through `parseMetricVectorJson` (`:428`), which calls
+      `buildVector` and therefore INHERITS the artifact-count refusal rather
+      than re-implementing it — verified against the live CLI, which rejects a
+      vector missing that row before any clone is made.
+      **Sensitivity proved on both halves, separately.** Deleting the report
+      emission from `verbRun` turns the e2e assertion RED (`expected [] to have
+      a length of 1`), 25/26 → restored 26/26; neutralising the ROI refusal in
+      `buildRunReport` turns the negative-polarity case RED, 27/28 → restored
+      28/28.
+      **The cheapest-first conjunct has NO LIVE SUBJECT, and that is why this
+      step is `guarded-baseline` and not `[x]`.** Policing "a cheaper model is
+      tried before an expensive one" needs an attempt sequence, and no step in
+      this roadmap invokes a live routing harness — 5.2, held by
+      `tests/scripts/governed_harness_no_live_harness.test.ts` (9/9 on this
+      branch, and its half B now scans `evolution_roi.ts` too, since that module
+      names this roadmap). So what shipped is an ordering POLICY plus a guard
+      proved to fire: `LADDER` (`:101`) is cheapest-first per defect class,
+      `assertLadderWellFormed` (`:132`) refuses a ladder that skips a rung —
+      which would try an expensive tier before a cheaper one by construction —
+      and `assertCheapestFirst` (`:191`) refuses an out-of-order attempt
+      sequence. Both are exercised in both polarities.
+      **Three defect classes carry an EMPTY ladder, which is the strongest cost
+      reduction available rather than an omission.** `policy_blocked`,
+      `dependency_unavailable` and `human_rejected` license NO metered attempt
+      at all: a candidate a policy refused, one that could not find its
+      dependency, or one a human turned down is not made acceptable by a larger
+      model. `nextTier` returns `null` there and the report prints
+      `next: spend nothing`; a metered attempt against such a class is refused
+      outright. The classes are REUSED from `_lib/pathology_archive.ts:65`'s
+      closed `PATHOLOGY_WHY` vocabulary — a second defect taxonomy beside it
+      would be the drift 4.4 exists to prevent — and a test pins the ladder's
+      key set against it so a vocabulary addition cannot leave a class
+      unpriced.
+      **Tiers are vendor-neutral (`lite < medium < high`, `:86`) on purpose.**
+      Naming a model would tie a cost policy to a price list that changes
+      without this file, and would put a vendor name into a module this
+      roadmap's own live-harness scan reads.
+      **What this does NOT establish.** That the ladder's per-class assignments
+      are the right ones. They are a stated policy with a written reason each,
+      not a measurement — nothing has been run cheap-first and then expensive to
+      compare. `revisit-if`: a run records a defect class where the cheap rung
+      never resolves anything, or one where an empty ladder blocked a fix a
+      model would have made.
 
 ## Phase 6 — Delivery: measure the existing substrate first
 
@@ -1578,7 +1972,7 @@ once.
       detector DOES find all three declarations inside `router_match.ts` itself —
       a scanner tested only on hand-written strings can be silently wrong about
       the syntax it has to read.
-- [ ] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
+- [x] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
       Over the existing BM25 core. No embeddings —
       `docs/contracts/no-runtime-boundary.md:40` classifies a vector/embedding
       index as a **contract violation**, not a preference: "a vector/embedding
@@ -1586,7 +1980,105 @@ once.
       Class C". The BM25 core passes the same test. The skipped parent proposed
       the shortlist and explicitly refused it as final truth.
       verify: the shortlist feeds a later stage and never decides alone.
-- [ ] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
+      **DONE 2026-08-31.** `src/scripts/_lib/lexical_shortlist.ts`, over
+      `_lib/lexical_index.ts` — the hand-rolled BM25 core that already ships.
+      **THE CITATION IN THIS STEP HAD MOVED, and the constraint had not.**
+      `docs/contracts/no-runtime-boundary.md` was superseded on 2026-08-27 by
+      ADR-249 and is now a pointer stub whose line 40 reads
+      *"Its literal scope was Mission-Mode"* — not the classification quoted
+      above. The substance survived the move verbatim and is cited from its live
+      home instead: `docs/contracts/resident-process-governance.md:82`,
+      *"A code-graph cache passes; a vector index fails"*, under the P3
+      state-store test, with the P4 row at `:76` separately prohibiting any
+      index build requiring network or model calls. The step's quoted text is
+      left standing above rather than rewritten, because it is what the step
+      was written against; this note is the correction.
+      **The ordering dependency in "only then" is satisfied and was checked
+      rather than assumed.** 6.1 is `[x]` with
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` present,
+      and 6.2 is `[x]` with `single_matcher_preserved.test.ts` 8/8 — so the
+      three arms were measured before this retrieval component was written,
+      which is exactly what 6.1's own verify clause reserved.
+      **AC-7's ordering claim SURVIVES this step, and its wording is now
+      historical.** That criterion reads *"measured against one another before
+      any new retrieval component exists"* — a temporal claim, and 6.1's
+      measurement was committed before this component, so it holds. Its audit
+      note's phrase *"6.3 has not started"* described the tree on 2026-08-31
+      before this commit and is left standing as the record of that moment; it
+      is not a live condition and nothing here reopens AC-7.
+      **First conjunct — it feeds a later stage, MEASURED, not asserted.** The
+      later stage is the per-prompt byte cap in `selectForInjection`, which now
+      takes an optional fourth argument
+      (`src/scripts/_lib/rule_injection.ts:224`) used as a TIE-BREAK. Wired
+      through `ArmExperimentInput.shortlist`
+      (`src/scripts/_lib/delivery_arm_experiment.ts:108`) to a real CLI flag,
+      `model_rule_injection --three-arm --shortlist`
+      (`src/scripts/model_rule_injection.ts:834`, flag at `:895`) — this is not
+      an unwired library. Run over `tests/eval/routing-matrix` on this commit:
+      OFF gives `delivery` 0.990 (302/305), 1 cap-drop, mean 2,026 injected
+      tokens; ON gives 0.984 (300/305), 3 cap-drops, mean 2,016. The shortlist
+      demonstrably changes what the cap does, which is the falsifiable form of
+      "feeds a later stage" — a shortlist nothing downstream reacts to would
+      have produced two identical tables.
+      **It currently makes delivery slightly WORSE, and that is reported rather
+      than tuned away.** −2 positives at the same corpus and cap. 6.3's verify
+      clause is about the shortlist's ROLE, not its win, and the pre-registered
+      loss ceiling that would adjudicate the trade-off is step 6.4, which is
+      `[ ]`. So the flag ships default-OFF: the 6.1 baseline reproduces
+      byte-for-byte without it (1.000 / 0.000 / 0.990 at 120,743 / 18,223 /
+      18,223, mean 2,026 p90 4,144), and a test pins that the absent argument is
+      the pre-6.3 behaviour.
+      **Second conjunct — never decides alone, closed in BOTH directions by
+      construction.** A shortlist decides alone by ADDITION (delivering what the
+      matcher never fired on) or by SUBTRACTION (removing a matcher hit, which
+      is a decision dressed as a filter). `orderByShortlist` (`:155`) takes the
+      matcher's output as its input domain and returns a PERMUTATION of it;
+      `assertPermutation` (`:171`) refuses any result whose id multiset differs
+      in either direction, counting multiplicity. At the cap, the same holds
+      independently: a shortlisted id absent from `matches` is never consulted,
+      and an unshortlisted match sorts at `Infinity` — behind the shortlisted
+      ones and still competing for the cap, never removed. The near-miss false
+      context stays 0/194 with the shortlist ON, which is the empirical form of
+      "added nothing".
+      **Subordination is a comparator key ORDER, and both implementations of it
+      are pinned.** `score desc → shortlist rank → router order`. The matcher's
+      verdict is read first and the shortlist only breaks its ties. The order
+      exists twice — in `orderByShortlist` and in the cap walk — so both are
+      tested, because a second implementation of one comparator is a thing that
+      drifts.
+      **Sensitivity proved by two sabotages, and the second one found a real
+      hole in the first test set.** (A) Turning `orderByShortlist` into
+      `filter(shortlisted).sort(rank)` — the shape a shortlist naturally
+      degrades into — turned 5 of 23 cases RED with the message *"the shortlist
+      changed the matcher`s set instead of ordering it — dropped r-b … decides
+      by subtraction"*; restored 23/23.
+      (B) Making the cap walk filter to the shortlist AND rank it above the
+      matcher score passed all 23 — because every case then shortlisted EVERY
+      match, so a membership filter changed nothing. Two cases were added under
+      the still-sabotaged tree and observed RED
+      (`tests/scripts/_lib/lexical_shortlist.test.ts:182` and `:193`,
+      *"expected ['command-suggestion-policy'] to deeply equal ['architecture',
+      …(5)]"*), then the sabotage was restored and the file is 25/25. The gap is
+      recorded rather than quietly patched: a sabotage that passes is the test
+      set's finding about itself.
+      **No embeddings, established by a scan proved to fire first.** Six banned
+      construct classes — embedding call, embedding identifier, vector store,
+      cosine similarity, network, child process — are matched against
+      `lexical_shortlist.ts` AND `lexical_index.ts`, after being shown to FIRE
+      on six synthetic sources and to stay silent on plain BM25 arithmetic. The
+      scanned byte count is asserted, because a scan over nothing exits green.
+      The module's import list is pinned to exactly
+      `['./lexical_index.js', './rule_injection.js']`. The banned literals live
+      in the test rather than in the module for a mechanical reason: a scanner
+      whose banned strings sit in the file it scans matches its own declaration
+      and can never pass.
+      **No second matcher.** This module answers "which text is lexically
+      closest", never "which rules fire on this prompt" — that stays
+      `_lib/router_match.ts`. `router_match_parity` (5/5),
+      `single_matcher_preserved` (8/8), `delivery_arm_experiment` (11/11),
+      `model_rule_injection` (13/13) and `rule_inject_hook` (16/16) are green on
+      this branch.
+- [x] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
       Recall-loss ceiling and token target fixed first; report precision,
       recall, false activation, context cost, benefit **conditional on**
       activation — and, `from-skipped-parent`, **set compatibility**: cases
@@ -1595,9 +2087,98 @@ once.
       artefact is closest. The corpus fixtures for it are authored in 2.3.
       verify: the ceiling is committed before the run, and the corpus contains
       at least one jointly-wrong pair.
-- [ ] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
+      **DONE 2026-08-31. Ceiling BREACHED and reported as breached; 7 jointly-wrong
+      pairs found in the corpus and 0 of them delivered together.**
+      Pre-registration `agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md`,
+      commit **`fe8749458`** — recall-loss ceiling 20.0 pp, token target 500,
+      k = 5, and the jointly-wrong definition, all fixed in a commit that adds no
+      measurement module. Measurement `src/scripts/measure_delivery_sets.ts`,
+      commit **`b7aafbb3b`**; `git merge-base --is-ancestor fe8749458 b7aafbb3b`
+      is the first half of the verify, checked in the history rather than asserted.
+      **The metric set, over 82 train corpora / 764 distinct prompts / 299-skill
+      catalogue, holdout untouched** (`agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`):
+      precision@5 82.51 % over 303 adjudicated deliveries · recall@5 64.60 % ·
+      recall loss **35.40 pp against a 20.0 pp ceiling — BREACHED** · false
+      activation@5 13.66 % · context cost 235.6 tokens/prompt against a 500 target
+      — MET · benefit unconditional 64.60 % · benefit conditional on activation
+      82.51 %. Curve: @1 44.70 · @3 57.11 · @5 64.60 · @10 73.64 · @20 80.62 %, so
+      the ceiling clears at no k ≤ 20 and the cost target is not what is failing.
+      A breach is a finding; **no narrowed delivery is promoted from this run**.
+      **The verify`s second half — 7 jointly-wrong pairs in the corpus**, over 10
+      shared prompts: `{experiment-loop, verify-repair-loop}` twice,
+      `{analysis-skill-router, forensics-report}`, the three pairs among
+      `{agent-security-review, ai-code-blindspots, security-audit}` on one prompt,
+      and `{evaluate-llm-feature, prompt-engineering-patterns}`. **0 are delivered
+      together at any k ≤ 20** (`src/scripts/measure_delivery_sets.ts:205-222`).
+      **THE PRE-REGISTRATION WAS WRONG AND IS CORRECTED BY REPORTING BOTH, NOT BY
+      REWRITING IT.** Its definition added "both members delivered in the top-k",
+      turning the corpus property this verify names into a delivery property whose
+      count is 0. Both ship: `jointly_wrong_pairs_in_corpus` = 7 and
+      `jointly_wrong_pairs_delivered_at_k` = 0, each pair carrying the smallest k
+      at which it would be jointly delivered. The count is a LOWER bound — a pair
+      is observable only where two corpora adjudicate the same prompt.
+      **The finding that bounds every number above: 78.80 % of prompts have their
+      top-5 cut decided by the ALPHABETICAL TIE-BREAK** —
+      `score(rank 5) === score(rank 6)`
+      (`src/scripts/measure_delivery_sets.ts:165-171`). So
+      0-delivered-pairs is not evidence of discrimination; at the boundary the
+      scorer does not rank at all and the alphabet happened not to co-select any
+      of the seven. Same "recalls but does not rank" pathology
+      `src/scripts/measure_lexical_ranking.ts:10-16` names for the memory store,
+      observed on the skill catalogue for the first time.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/delivery_set_compatibility.test.ts`): (a) dropping the
+      `!c.expect` polarity filter so any shared skill forms a pair — 3 red
+      including the DENIAL case, restored 11 green; (b) loosening the ceiling
+      constant 20.0 → 40.0 to turn the reported breach into a pass — 3 red,
+      restored 11 green.
+      **A second pre-registration defect, recorded:** `precision_at_k` and
+      `benefit_conditional_on_activation` were defined separately and are one
+      computation. Both are reported at the same value rather than one being
+      dropped; the pair that genuinely differs is unconditional 64.60 % against
+      conditional 82.51 %, and the 17.9 pp gap IS the delivery failure.
+- [x] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
       description-only.
       verify: the indexer's input set derives from the 5.1 verdict file.
+      **DONE 2026-08-31 — description-only, and the mechanism DERIVES it rather
+      than knowing it.** `src/scripts/_lib/routing_index_input.ts`.
+      `resolveIndexInput` opens
+      `agents/evidence/analysis/routing-body-signal-verdict.json`, reads
+      `body_signal.verdict`, and returns `['name','description','body']` on the
+      literal token `signal` (`:87`) and `['name','description']` on anything
+      else. It carries no opinion about the body — the outcome today is
+      description-only because 5.1 measured `harmful`, not because a literal
+      says so.
+      **The consumer is real, not a demo.** `measure_delivery_sets`
+      (`src/scripts/measure_delivery_sets.ts:133`) used to hardcode the
+      `description` arm; it now resolves it, and publishes
+      `index_input.{fields, verdict, reason}` in its record, so the derivation
+      is observable in `agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`
+      rather than merely asserted here.
+      **THE SABOTAGE THE STEP ASKS FOR — the verdict file was flipped and the
+      input set followed, downstream numbers included.** Verdict → `signal`:
+      input `name + description + body`, precision@5 82.51 → 77.05 %, recall@5
+      64.60 → 70.28 %, adjudicated deliveries 303 → 353. Verdict deleted: back to
+      `name + description`, reason *"no readable 5.1 verdict … fail-closed"*.
+      Verdict `signal` with `proxy_to_real_fidelity` stripped: still
+      `name + description`, reason *"carries no proxy_to_real_fidelity bound —
+      refused"*. The tree was restored and re-measured to the committed figures
+      after each.
+      **FAIL-CLOSED ONLY NARROWS.** Missing file, unparseable JSON, unknown
+      token, and a provenance-stripped record all resolve to description-only
+      (`:73`). A stale or edited record can never widen what is indexed, and the
+      measured price of widening on a `harmful` verdict is +7.22 pp of false
+      activation. The bound gate is deliberate: 5.1 ships
+      `proxy_to_real_fidelity` inside the verdict so a consumer cannot take the
+      conclusion without it, and a record that lost it is refused rather than
+      half-trusted.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/routing_index_input.test.ts`, 8 tests): (a) hardcoding the
+      resolver to description-only — which is TODAY`S CORRECT ANSWER and still
+      reds the `signal`-widens case, 1 red, restored 8 green; (b) removing the
+      fidelity-bound gate — 1 red on the stripped-record case, restored 8 green.
+      No test writes the tracked verdict file; every fixture lives in a temp
+      directory.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
@@ -1924,9 +2505,26 @@ once.
       `road-to-turnaround-followups` has entered the active set — it measures 0,
       so it needs no row. Same scope caveat as AC-1: the estate moves, and a new
       overlapping plan re-opens this.
-- [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
+- [x] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
+      **CLOSED 2026-08-31 — the third verb is met, by the wiring the audit below
+      predicted would close it.** That audit is preserved rather than deleted,
+      because it is the record of what was missing.
+      *Evaluated* is now a real production path: `evolution_lab`'s `run` verb
+      routes every candidate through `_lib/evaluation_cascade.ts`'s six-stage
+      deterministic prefix, so the modules the audit called "an UNWIRED library"
+      have a caller. *Materialised* and *destroyed* were already met by 3.1 and
+      are re-asserted end-to-end here rather than inherited: a test spawns the
+      real CLI, runs `run` with metrics, confirms a clone directory appeared,
+      runs `clean --yes`, and asserts `git status --porcelain` is
+      byte-identical before and after and that the clone is gone.
+      *Sabotage exits non-zero* is unchanged from 3.1.
+      **Asserted through the real CLI, never in-process** — the same discipline
+      `harness_evolution_guard_call_sites.test.ts` adopted for the identical
+      reason: a unit test observing a function's return is not evidence that a
+      runner routes through it. Proved sensitive: unwiring the cascade from
+      `verbRun` reds *"a run EVALUATES each candidate and says so on stdout"*.
       **Two of its three verbs are met, and it stays OPEN on the third rather
       than being read generously.** *Materialised* and *destroyed* with no diff
       in the original tree: 3.1, five candidates, asserted by `git status
@@ -1968,9 +2566,24 @@ once.
       `accepted` was expected is the reference-implementation defect 3.4 cites.
       *"Existence is not acceptance"* asserts `isAccepted` false for all eight
       non-promoted states.
-- [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
+- [x] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
+      **CLOSED 2026-08-31 — the first conjunct now has the caller it lacked, so
+      the conjunction holds.** The audit below is preserved: it named exactly
+      what was missing and predicted exactly what would close it.
+      `promotionVerdict` (`_lib/evaluation_vector.ts:230`) is called by the
+      cascade's stage 6, which `evolution_lab`'s `run` verb executes for every
+      candidate. So a promotion in this tree IS decided by the paired verdict,
+      where before *"no promotion is decided at all"*.
+      **`underpowered` is still refused as a pass on the production path, not
+      only in the module's own tests** — a CLI run whose only paired row carries
+      `underpowered` reaches the verdict and reports a refusal.
+      **The second conjunct is unchanged, and so is its honest scope caveat**:
+      `findScalarCollapse` is a named-construct static scan over a bounded
+      population, not a semantic proof that no arithmetic anywhere reduces a set
+      of metrics to one number. Closing this criterion does not upgrade that
+      evidence class.
       **Audited 2026-08-31: the second conjunct is met, the first is not, and
       the criterion stays open on the conjunction.**
       Second conjunct — met, with its evidence class named rather than
@@ -1991,9 +2604,46 @@ once.
       Closing on the scanner alone would be closing on the met half of a
       conjunction. What closes it is a caller: 4.1's cascade, or `promote`
       consulting the verdict before it refuses.
-- [ ] AC-6 — The holdout partition's content hash predates the first commit of
+- [x] AC-6 — The holdout partition's content hash predates the first commit of
       any proposer capability, and a run leaking a holdout value into proposer
       context exits non-zero.
+      **CLOSED 2026-08-31 — the first conjunct's re-pin was PERFORMED, and a
+      guard now stands where the audit found none.** The audit below predicted
+      exactly this closure and is preserved rather than deleted, because it is
+      the record of what was falsified and why.
+      **The re-pin.** `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`
+      now publishes `SET-SHA256 0667fbd9…` in place of the stale `7e091dfc…`,
+      and the three per-file rows the freeze commit had pinned at pre-edit
+      bytes — `threat-modeling` `0cc498c5…` → `6bdb1d3b…`, `markitdown`
+      `ccaac56a…` → `663ee4c4…`, `security-audit` `8005676c…` → `27ccbdcd…`.
+      **Verified rather than asserted: 100 of 100 per-file rows and the set hash
+      now reproduce** from the artefact's own documented recipe on this tree, and
+      `git diff 34318f7f..HEAD` over the three paths is empty, so the re-pin
+      names the frozen bytes and not some later state.
+      **The ordering half was re-verified, not assumed to survive the re-pin.**
+      `git merge-base --is-ancestor 34318f7f ac2501313` returns true —
+      `34318f7f5` (2026-08-30 22:11:43) precedes `ac2501313`
+      (2026-08-31 00:44:37), which added `_lib/candidate_proposer.ts` and
+      `evolution_lab`'s `propose` verb. The near-miss was re-checked:
+      `_lib/harness_evolution_guards.ts` (2026-08-30 17:55:29) names "proposer"
+      but is the guard that REFUSES disclosure to one.
+      **What makes this durable rather than a one-off fix**, and it is the part
+      the audit could not have supplied: a stale pin is invisible to anyone who
+      re-runs the recipe and compares it to nothing.
+      `tests/scripts/trigger_corpus_holdout_pin.test.ts` recomputes the recipe
+      from the tree and asserts every published row AND the set hash reproduce,
+      with an anti-vacuity assertion so a scan over an empty corpus cannot pass.
+      **Proved SENSITIVE in both directions before it was trusted.** Appending
+      one byte to `src/skills/markitdown/evals/triggers.json` turned it red on
+      *"the published SET-SHA256 reproduces"* and *"every per-file row
+      reproduces"* (2 failed / 3 passed); restoring the byte returned 5/5.
+      Independently, falsifying the artefact's own `SET-SHA256` line turned it
+      red on one assertion (1 failed / 4 passed) and restoring returned 5/5. So
+      it fires on a corpus edit and on a pin edit, which are the two ways this
+      claim can go stale.
+      **Second conjunct unchanged and still met** —
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` 15/15, a holdout
+      value reaching proposer context exits 4 before any external call.
       **Audited 2026-08-31: the second conjunct is met, the first is
       FALSIFIED — by reproduction, not by doubt.**
       Second conjunct — met.
@@ -2058,14 +2708,38 @@ once.
 - [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
-      **Audited 2026-08-31: first conjunct met, second not met.**
+      **RE-AUDITED 2026-08-31 after 5.6 landed: still OPEN, and the reason
+      moved rather than went away.**
+      *First conjunct, unchanged:*
       `agents/evidence/analysis/governed-harness-success-criteria.md` was
       committed at `172b87c6` (2026-08-30 10:32:57) and no candidate run has
       happened at all, so the criteria precede it — a real but currently
-      vacuous satisfaction, and worth naming as such. The second conjunct has no
-      subject: there is no run report anywhere in the tree, and the
-      evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
-      plus a first run whose report carries the figure.
+      vacuous satisfaction, and still worth naming as such.
+      *Second conjunct, half-closed.* 5.6 built the missing subject: a run
+      report now exists, `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES one without the ROI
+      figure, and `evolution_lab`'s `run` verb emits it on the one path a run
+      completes on (`src/scripts/evolution_lab.ts:779`). Any report this
+      programme produces from here on carries the figure structurally rather
+      than by an author remembering to add it. That is the SHAPE half.
+      **What is still missing is the run, and it is not reachable in this
+      roadmap.** A `run` invocation today clones candidate trees and evaluates
+      nothing — its honest ROI kind is `unmeasured`, which is the report telling
+      the truth. A *candidate run* in this programme's sense evaluates
+      candidates against an eval corpus over repeated trials, which needs a
+      metered backend, which step 5.2 forbids: no step in this roadmap invokes
+      a live routing harness, and
+      `tests/scripts/governed_harness_no_live_harness.test.ts` holds it.
+      **A fixture is not the first candidate run, and none of the artefacts
+      5.6 shipped is offered as one.** The end-to-end case at
+      `tests/scripts/evolution_lab.test.ts:409` drives the real CLI over five
+      real clones and asserts the report reaches stdout; it proves the report
+      is emitted, and it evaluates no candidate. Reading it as the run would be
+      exactly the substitution this criterion exists to catch.
+      **What closes it:** a first candidate run under a metered backend, which
+      belongs to whichever roadmap lifts the live-harness park — not to this
+      one. Until then AC-8 is `[ ]` with its shape half done and its subject
+      half absent.
 - [-] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
@@ -2073,8 +2747,74 @@ once.
       carried there verbatim, with its 2026-08-31 audit note intact. `[-]`
       means TRANSFERRED, never met and never dropped: the criterion is open in
       the receiver, where 7.6 is what closes it, after `merge-authority`.
-- [ ] AC-10 — The `no-runtime-daemon` claim in `README.md` and its
-      `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state.
+- [-] AC-10a — **SUPERSEDED by ADR-249 2026-08-31.** Original criterion,
+      verbatim: *"The `no-runtime-daemon` claim in `README.md` and its
+      `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state."*
+      Byte-identity is **impossible**, and not because of anything this roadmap
+      did: a different roadmap deliberately retired the claim by governance
+      decision. `[-]` records that the criterion was superseded, never met and
+      never dropped; its safety purpose is carried forward unweakened as AC-10b
+      below.
+- [x] AC-10b — **This roadmap introduces no unsupervised background process
+      (class P2), and does not touch the claim or retirement surfaces.**
+      Carries AC-10a's purpose — *"this roadmap did not quietly acquire a runtime
+      daemon"* — re-keyed onto a boundary that still exists.
+
+      **CLOSED 2026-08-31, read at completion rather than mid-flight.** The
+      earlier note on AC-10a deliberately refused to close this on a partial
+      branch, because a tripwire read before the work is finished has not been
+      read. This is the reading taken once the roadmap reached its terminal
+      state.
+      **Surfaces untouched.** `git diff --name-only origin/main..HEAD --
+      README.md docs/CLAIMS.md` is empty, so neither the claim surface nor its
+      retirement record moved on this branch.
+      **No process of any class introduced.** The branch adds 13 files and
+      2,691 lines under `src/`, and a scan of the added lines for
+      `setInterval`, `setTimeout(`, `while (true)`, `daemon`, `.unref(`,
+      `spawn(`, `fork(`, `listen(` and `createServer` returns **nothing**. So
+      the question of whether a new process would be a supervised P1 or an
+      unsupervised P2 does not arise: there is no process.
+      **What this criterion does and does not certify.** It is a scan over the
+      lines this branch ADDED, which is the population the criterion is about —
+      *this* roadmap's contribution. It certifies nothing about processes the
+      tree already carried; `src/scripts/collector_daemon.ts` predates this work
+      and is governed by ADR-249, not by this row.
+      **AI council 2026-08-31, verdict D (split), and it is a SINGLE-SEAT
+      DEGRADED round — recorded as such, never as convergence.** Present:
+      openai/codex-default. Absent: anthropic/claude-sonnet-4-5, `exit_1` with
+      no output. That is the same seat-and-shape failure step 4.1 already
+      records for a long multi-decision question, so it is a known mode rather
+      than a new one; under the N=3 budget the run took the best available seat
+      and did not retry.
+      **Why the split rather than a re-key.** Option A — re-key to *"no diff
+      attributable to THIS roadmap"* and close on a two-file documentation diff —
+      was put to the seat and REFUTED: *"Option A's suggested `git diff --stat`
+      over two documentation files proves only that those files were untouched.
+      A daemon could be introduced entirely in source or deployment config."*
+      The tripwire would have been closed by a check that cannot see the thing
+      it guards.
+      **Why the criterion had to move at all.** `docs/contracts/no-runtime-boundary.md:25`
+      records that the absolute prohibition AC-10a guarded no longer exists:
+      background processes are **governed**, not banned — a supervised process is
+      class **P1** and permitted under four conditions, an unsupervised one is
+      class **P2** and stays prohibited. `src/scripts/collector_daemon.ts` is in
+      the tree today. So a criterion phrased as *"the no-daemon claim is
+      byte-identical"* now guards a claim the suite has withdrawn on purpose, and
+      re-keying it to the same wording would re-assert a floor ADR-249 lowered by
+      decision. AC-10b is deliberately phrased against **P2**, the half that
+      survived.
+      **Reading at this commit, and it is explicitly NOT a closure.** The branch
+      diff against `origin/main` is three files — one evidence artefact, this
+      roadmap, and one test — with zero changes under `src/` and no process of
+      any class introduced; the same diff restricted to `README.md` and
+      `docs/CLAIMS.md` is empty. AC-10b stays `[ ]` because a tripwire read
+      before the roadmap is finished has not been read: later commits on this
+      branch can still falsify it, and the reading that closes it is the one
+      taken at completion.
+      **Attribution, re-checked rather than carried.** The removing commit is
+      `68463a1e` (2026-08-28), *"roadmap: complete runtime-governance-flip
+      (ADR-249 ...)"*. Step 0.3 already recorded that retirement and repaired its
+      own count-keyed guard against it; AC-10 was the survivor of that same edit.
       **Audited 2026-08-31: FALSIFIED as written — and not by this roadmap.**
       The pre-roadmap state is `9e8344a3`, the parent of `15447f47` which added
       this file on 2026-08-26. At `9e8344a3` the README's line 19 carried the
