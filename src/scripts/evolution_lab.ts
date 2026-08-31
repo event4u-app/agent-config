@@ -63,6 +63,12 @@ import {
 } from './bench_ab_clone.js';
 import { main as integrity_main } from './bench_ab_integrity.js';
 import {
+    runCascade,
+    CHEAPEST_STAGE,
+    type CascadeResult,
+} from './_lib/evaluation_cascade.js';
+import type { MetricRow } from './_lib/evaluation_vector.js';
+import {
     type CandidateRecord,
     CandidateSchemaError,
     LIFECYCLE_SPINE,
@@ -698,7 +704,7 @@ function verbRun(argv: readonly string[]): number {
     const flags = parseFlags(
         argv,
         ['refresh'],
-        ['record', 'records', 'trials-per-candidate', 'estimated-spend-cents'],
+        ['record', 'records', 'trials-per-candidate', 'estimated-spend-cents', 'metrics'],
     );
     const files: string[] = [...(flags.values.get('record') ?? [])];
     const dir = one(flags, 'records');
@@ -734,7 +740,23 @@ function verbRun(argv: readonly string[]): number {
         }
         throw e;
     }
+    // Metric rows are OPTIONAL and their absence is not silently benign: with
+    // no rows the cascade reaches its verdict stage and aborts there, which is
+    // the honest outcome for a run that measured nothing. A caller that has
+    // measurements passes them; a caller that does not learns it has none.
+    let rows: readonly MetricRow[] | undefined;
+    const metricsFile = one(flags, 'metrics');
+    if (metricsFile !== undefined) {
+        try {
+            rows = JSON.parse(fs.readFileSync(metricsFile, 'utf-8')) as readonly MetricRow[];
+        } catch (e) {
+            return fail(`metrics file not readable at ${metricsFile} — ${(e as Error).message}`);
+        }
+    }
+
     const seen = new Set<string>();
+    const ids: string[] = [];
+    const results: CascadeResult[] = [];
     for (const f of files.sort(byteCompare)) {
         let record: CandidateRecord;
         try {
@@ -754,6 +776,66 @@ function verbRun(argv: readonly string[]): number {
             }
             return fail(`candidate ${record.id} failed — ${(e as Error).message}`);
         }
+
+        // EVALUATE. Step 4.1's deterministic prefix, wired here because a
+        // library nothing calls has no coverage — the defect AC-3 and AC-5
+        // were both open on. The record is re-read from disk rather than
+        // reusing `record`, so stage 1 is a real schema gate at this call
+        // site and not a formality over an already-parsed object.
+        let raw: unknown;
+        try {
+            raw = JSON.parse(fs.readFileSync(f, 'utf-8'));
+        } catch (e) {
+            return fail(`${f} unreadable at evaluation — ${(e as Error).message}`);
+        }
+        const result = runCascade({
+            raw,
+            plan: {
+                candidates: files.length,
+                trialsPerCandidate: intFlag(flags, 'trials-per-candidate', 1),
+                estimatedSpendCents: intFlag(flags, 'estimated-spend-cents', 0),
+            },
+            budget: loadRunBudget(),
+            peers: ids,
+            rows,
+        });
+        ids.push(record.id);
+        results.push(result);
+    }
+
+    for (const r of results) {
+        if (r.outcome === 'abort') {
+            process.stdout.write(
+                `evolution_lab:cascade · ${r.candidate_id ?? '<unparsed>'} · aborted at ` +
+                    `${r.failed_stage} · family=${r.family} · model_calls=${r.model_calls} · ${r.detail}\n`,
+            );
+        } else if (r.outcome === 'incomplete') {
+            process.stdout.write(
+                `evolution_lab:cascade · ${r.candidate_id} · passed ${r.stages_run.length} stage(s) · ` +
+                    `model_calls=${r.model_calls} · ${r.not_reached} NOT REACHED · ${r.why}\n`,
+            );
+        } else {
+            process.stdout.write(
+                `evolution_lab:cascade · ${r.candidate_id} · passed ${r.stages_run.length} stage(s) · ` +
+                    `model_calls=${r.model_calls} · verdict=${r.verdict.promote ? 'promote' : 'refuse'} · ` +
+                    `${r.verdict.why}\n`,
+            );
+        }
+    }
+
+    // A cascade abort is a run outcome, not a crash: the run did its job by
+    // refusing. The cheapest stage is named so a reader can see that a stage-1
+    // abort cost nothing.
+    const aborted = results.filter((r) => r.outcome === 'abort');
+    if (aborted.length > 0) {
+        const atCheapest = aborted.filter(
+            (r) => r.outcome === 'abort' && r.failed_stage === CHEAPEST_STAGE,
+        ).length;
+        process.stdout.write(
+            `evolution_lab:cascade · ${aborted.length} of ${results.length} aborted ` +
+                `(${atCheapest} at the cheapest stage, ${CHEAPEST_STAGE}, costing no model call)\n`,
+        );
+        return EXIT_REFUSED;
     }
     return EXIT_OK;
 }

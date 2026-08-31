@@ -1018,7 +1018,121 @@ once.
 > outcome per case, expected-vs-observed is recorded against stable case ids at
 > that point — not before, and not as an empty file that looks like a carrier.
 
-- [ ] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+- [ ] <!-- roadmap-status: guarded-baseline -->
+      **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+      **GUARDED BASELINE 2026-08-31 — the deterministic prefix is built, wired
+      and RED-proven; the box stays `[ ]` because the twelve-stage form is not.**
+
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evaluation_cascade.ts
+        command: npx vitest run tests/scripts/evaluation_cascade.test.ts
+        red_proof: sabotage run 2026-08-31 — 2 failed / 13 passed, then 1 failed / 14 passed
+        sabotage_model: let the prefix assign `activation`; then unwire the cascade from the runner
+        recheck_when: src/scripts/_lib/evaluation_receipt.ts
+        discharged_ac: the deterministic prefix aborts on the first hard failure at zero model calls, and AC-3 and AC-5 close on its production caller
+        pending_ac: the receipt-bearing stages and one settled twelve-stage enumeration
+      ```
+
+      **AI council 2026-08-31, and it resolved to a CONVERGENT Option B — but
+      only after a tie-break that the tree answered, so the route is recorded
+      rather than the conclusion alone.** anthropic/claude-sonnet-4-5 returned
+      *"Conditional Option A"*, explicitly gated: *"Choose Option A IF AND ONLY
+      IF verification confirms Phase 1 families are failure-mode buckets, not
+      observation methods … If either verification fails: Option B."*
+      openai/codex-default returned Option B outright. Both seats present, 2/2.
+      **The condition was checked against the tree and it FAILS**, which makes
+      this a convergence and not a split: Phase 1's step 1.1 verify clause reads
+      *"a deliberately failing trigger eval is classifiable as content vs
+      activation vs adherence **from the recorded receipt alone**"* — a receipt
+      is an observation, so the families are observation-grounded and Option A's
+      own precondition is false. Both seats therefore land on B.
+      **The seat that lost the vote supplied the thing that mattered.** It was
+      anthropic that noticed nobody had verified what the families actually are:
+      *"Neither reviewer noticed we're guessing what Phase 1 families mean."*
+      That objection is what made the decision checkable instead of a preference.
+
+      **What Option B licensed, and what it refused.** Both seats agreed the
+      deterministic prefix should be built now and both refused to let it close
+      4.1. openai: *"That supports implementing the prefix — not declaring the
+      full cascade complete."*
+
+      **Built: `src/scripts/_lib/evaluation_cascade.ts`**, six stages, aborting
+      on the first hard failure —
+      `schema-validity → path-ownership → holdout-disclosure → budget →
+      near-duplicate → metric-verdict`.
+      **Every stage is free**, which is why these six are the ones that can ship
+      without receipts, and it makes *"a candidate failing the cheapest stage
+      consumes no model call"* structurally true rather than asserted:
+      `model_calls` is a literal `0` on every path, not a counter, because there
+      is no code path in the module that could increment one.
+      **No stage is SOFT**, per the earlier round's convergent finding — every
+      stage either passes or aborts, with no third warn outcome a caller could
+      ignore.
+      **The prefix may assign only `content` and `unknown`.**
+      `PREFIX_ASSIGNABLE_FAMILIES` excludes `activation` and `adherence` by
+      construction and a test pins it, because assigning either from a
+      deterministic proxy is exactly the evidence-manufacturing openai named: *"a
+      holdout leak is not evidence of an `activation` failure … that produces
+      labels, but not trustworthy classifications."* No fifth family is invented.
+
+      **Wired into the real runner** — `evolution_lab.ts` `verbRun`, which
+      previously cloned and returned. It now re-reads each record from disk and
+      runs the cascade over it, so stage 1 is a real gate at the call site
+      rather than a formality over an already-parsed object, and it reports each
+      candidate's outcome, family and `model_calls` on stdout. A run with no
+      metric rows aborts at the verdict stage rather than passing silently,
+      which is the honest outcome for a run that measured nothing.
+
+      **A defect this work found in the tree, recorded rather than smoothed
+      over.** An unowned mutation path does NOT reach a distinct path-ownership
+      stage: `parseMutations` already calls `assertMutationPathsOwned`
+      (`_lib/candidate_record.ts:434`), so it throws inside stage 1. Catching
+      that as a schema failure would file a path-ownership violation under the
+      wrong stage — and the failing stage is precisely what Phase 1's
+      classification reads, so the mis-attribution would corrupt the
+      classification rather than merely mislabel a message. The cascade now
+      attributes it to stage 2 explicitly.
+      **The consequence is that stage 2's own re-check is UNREACHABLE and
+      therefore untested, and it is labelled as such in the code instead of
+      being counted as defense in depth.** Measured: neutralising its abort left
+      **15/15 green**. It is kept because it is free and fails closed if the
+      parser ever stops enforcing ownership, but an unproven guard is written
+      down as unproven.
+
+      **Sensitivity was OBSERVED in three directions and the first probe found a
+      real gap rather than confirming the tests.** (1) Neutralising the stage-2
+      abort: **15/15 stayed green** — the finding above, and the reason stage 2
+      now carries a label instead of a claim. (2) Letting the prefix assign
+      `activation`: 2 failed / 13 passed, naming both the family-permission test
+      and the holdout-classification test. (3) Unwiring the cascade from the
+      runner: 1 failed / 14 passed on *"a run EVALUATES each candidate"*. Every
+      probe restored to 15/15 and both files restored byte-identically.
+
+      **A downstream break this work caused, and the design it forced.** Wiring
+      the cascade initially made `run` exit non-zero whenever no metrics were
+      supplied, which reddened the existing
+      *"run materialises five candidates, compare passes, clean removes exactly
+      them"* in `tests/scripts/evolution_lab.test.ts` (expected 0, got 3). The
+      test was RIGHT and the change was wrong: materialising without measuring
+      has not failed, and turning it into a failure would have changed a verb's
+      contract to make a new stage look reachable. Fixed by giving the cascade a
+      THIRD outcome — `incomplete` — which is neither a pass (there is no
+      verdict, so nothing may read one) nor an abort (nothing failed). The run
+      prints `metric-verdict NOT REACHED` and exits 0. Naming the state is what
+      keeps "no metrics" from being silently benign; the alternative was to let
+      an unmeasured candidate read as evaluated.
+
+      **What is NOT built, stated so the closure cannot be read as more than it
+      is.** The receipt-bearing stages — activation/delivery, adherence, and the
+      statistical stages — are absent, because they need an independent,
+      append-only receipt producer with version-bound attributable observations,
+      and no such producer exists. One settled twelve-stage enumeration is also
+      still missing: the prior round recorded that one seat asked twice and
+      produced two materially different enumerations, which is why the arity was
+      decided and the stage semantics were not. `recheck_when` above names the
+      receipt module whose arrival reopens this step.
       stage set is E9; if the 12-stage form is chosen, activation/delivery and
       adherence are their own stages, which is what Phase 1's exit criterion
       requires.
@@ -2019,9 +2133,26 @@ once.
       `road-to-turnaround-followups` has entered the active set — it measures 0,
       so it needs no row. Same scope caveat as AC-1: the estate moves, and a new
       overlapping plan re-opens this.
-- [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
+- [x] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
+      **CLOSED 2026-08-31 — the third verb is met, by the wiring the audit below
+      predicted would close it.** That audit is preserved rather than deleted,
+      because it is the record of what was missing.
+      *Evaluated* is now a real production path: `evolution_lab`'s `run` verb
+      routes every candidate through `_lib/evaluation_cascade.ts`'s six-stage
+      deterministic prefix, so the modules the audit called "an UNWIRED library"
+      have a caller. *Materialised* and *destroyed* were already met by 3.1 and
+      are re-asserted end-to-end here rather than inherited: a test spawns the
+      real CLI, runs `run` with metrics, confirms a clone directory appeared,
+      runs `clean --yes`, and asserts `git status --porcelain` is
+      byte-identical before and after and that the clone is gone.
+      *Sabotage exits non-zero* is unchanged from 3.1.
+      **Asserted through the real CLI, never in-process** — the same discipline
+      `harness_evolution_guard_call_sites.test.ts` adopted for the identical
+      reason: a unit test observing a function's return is not evidence that a
+      runner routes through it. Proved sensitive: unwiring the cascade from
+      `verbRun` reds *"a run EVALUATES each candidate and says so on stdout"*.
       **Two of its three verbs are met, and it stays OPEN on the third rather
       than being read generously.** *Materialised* and *destroyed* with no diff
       in the original tree: 3.1, five candidates, asserted by `git status
@@ -2063,9 +2194,24 @@ once.
       `accepted` was expected is the reference-implementation defect 3.4 cites.
       *"Existence is not acceptance"* asserts `isAccepted` false for all eight
       non-promoted states.
-- [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
+- [x] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
+      **CLOSED 2026-08-31 — the first conjunct now has the caller it lacked, so
+      the conjunction holds.** The audit below is preserved: it named exactly
+      what was missing and predicted exactly what would close it.
+      `promotionVerdict` (`_lib/evaluation_vector.ts:230`) is called by the
+      cascade's stage 6, which `evolution_lab`'s `run` verb executes for every
+      candidate. So a promotion in this tree IS decided by the paired verdict,
+      where before *"no promotion is decided at all"*.
+      **`underpowered` is still refused as a pass on the production path, not
+      only in the module's own tests** — a CLI run whose only paired row carries
+      `underpowered` reaches the verdict and reports a refusal.
+      **The second conjunct is unchanged, and so is its honest scope caveat**:
+      `findScalarCollapse` is a named-construct static scan over a bounded
+      population, not a semantic proof that no arithmetic anywhere reduces a set
+      of metrics to one number. Closing this criterion does not upgrade that
+      evidence class.
       **Audited 2026-08-31: the second conjunct is met, the first is not, and
       the criterion stays open on the conjunction.**
       Second conjunct — met, with its evidence class named rather than
