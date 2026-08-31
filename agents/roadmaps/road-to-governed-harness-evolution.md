@@ -1429,7 +1429,7 @@ once.
 
 ## Phase 5 — Body signal and the proposer roles
 
-- [ ] **5.1 Measure the description-vs-body signal, honest null permitted.**
+- [x] **5.1 Measure the description-vs-body signal, honest null permitted.**
       `corrected-from-reproduction`: the master justified this by pointing at a
       proxy gap the tree documents as unquantified. That gap is real but it is a
       **different** gap. `src/scripts/description_route_check.ts:18-30`
@@ -1443,6 +1443,57 @@ once.
       it bounds the validity of every routing conclusion in this roadmap.
       verify: the pre-registration lands before the first measurement commit and
       names both gaps separately.
+      **DONE 2026-08-31 — the answer is `harmful`, which is neither the hoped-for
+      signal nor the permitted null, and it is the reason the bar was two-sided.**
+      Pre-registration `agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md`,
+      commit **`fe8749458`**. Measurement
+      `src/scripts/measure_routing_signal.ts` + `src/scripts/_lib/routing_corpus.ts`,
+      commit **`MEASUREMENT_SHA`**. `git merge-base --is-ancestor fe8749458 MEASUREMENT_SHA`
+      is the ordering clause, checked in the history rather than asserted: the
+      prereg commit adds no measurement module and runs nothing.
+      **Both gaps are named separately, and only one was answerable here.** Gap A
+      (proxy-to-real-session fidelity) is the one
+      `src/scripts/description_route_check.ts:18-30` documents; quantifying it
+      needs real sessions, and step 5.2 parks the live harness for this whole
+      roadmap. So it is carried as its OWN required field —
+      `proxy_to_real_fidelity: {value: null, status:
+      "unmeasured-by-construction", reason: <the 5.2 park>}` — in the verdict
+      record, so a consumer cannot take the conclusion without its bound. Gap B
+      (does the body carry signal the description does not) is the one measured.
+      **The numbers, over 82 train corpora / 775 cases / 299-skill catalogue,
+      holdout untouched** (`agents/evidence/analysis/routing-body-signal-verdict.json`,
+      written by `--write`): recall@5 64.60 % → 70.28 % (**+5.68 pp**, bar +5.0),
+      false activation@5 13.66 % → 20.88 % (**+7.22 pp**, guard +2.0), McNemar
+      exact p = 0.0371 over 102 discordant positives.
+      **The primary bar was CLEARED and the verdict is still not `signal`.** A
+      one-sided pre-registration would have shipped this. The guard fires because
+      the pre-registered order is power → guard → primary
+      (`src/scripts/measure_routing_signal.ts:175-189`), and
+      `tests/scripts/routing_signal_measurement.test.ts:142-151` pins that exact
+      combination. **SENSITIVITY, three sabotages, each red then green:**
+      (a) removing the holdout skip in `loadTrainCases` — 4 red, restored 17
+      green; (b) moving the primary check ahead of the guard in the verdict
+      function — 2 red (verdict becomes `signal`), restored 17 green;
+      (c) editing the committed verdict file to `signal` with a fabricated
+      fidelity value — 2 red, restored 17 green.
+      **An unpredicted finding, from the run rather than from the argument.** The
+      prereg predicted the guard would break, on the arithmetic that
+      `overlap` divides by the TASK`s term count so body tokens can only raise a
+      score. It did — but 40 positives were also **lost**, because monotone
+      scores do not imply monotone ranks: a positive inside the top-5 is pushed
+      out when its competitors gain more. The body arm reorders rather than
+      merely widens.
+      **Two corrections recorded, not smoothed over**
+      (`agents/evidence/analysis/routing-body-signal-result-2026-08-31.md`): the
+      first loader understood only the modern `queries[]` shape and dropped the
+      two grandfathered legacy-shaped corpora SILENTLY, reporting 80 where the
+      partition says 82 — fixed by reading both shapes, verdict unchanged in
+      both directions (80 corpora: +5.57 / +7.41, `harmful`); and a doc comment
+      ended early at the `*/` inside a `src/skills/<slug>/SKILL.md` glob, which
+      `tsc --noEmit` accepted and the runtime transform did not.
+      **What it does NOT establish:** that the body is useless to a reader, that
+      the result transfers to a length-normalised scorer, or anything about the
+      sealed holdout, which stays unspent.
 - [x] **5.2 Keep the live-floors park intact.** No live harness.
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree — verified — and its council park (2/2) is not reopened here.

@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "step": "5.1",
+  "roadmap": "road-to-governed-harness-evolution",
+  "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
+  "measured_at": "2026-08-31",
+  "proxy_to_real_fidelity": {
+    "value": null,
+    "status": "unmeasured-by-construction",
+    "reason": "Step 5.2 parks the live routing harness for this roadmap; a fidelity figure requires real sessions. Every routing conclusion in this file is bounded by this unmeasured quantity."
+  },
+  "body_signal": {
+    "verdict": "harmful",
+    "reason": "false activation +7.22 pp breaches the +2.0 pp guard",
+    "k": 5,
+    "delta_recall_pp": 5.685,
+    "delta_false_activation_pp": 7.216,
+    "p_value": 0.03707,
+    "discordant_positive_pairs": {
+      "gained": 62,
+      "lost": 40
+    },
+    "bars": {
+      "recall_gain_pp": 5,
+      "false_activation_guard_pp": 2,
+      "power_floor_discordant": 10,
+      "alpha": 0.05
+    },
+    "arms": {
+      "description": {
+        "positives": 387,
+        "positiveHits": 250,
+        "negatives": 388,
+        "negativeHits": 53
+      },
+      "description+body": {
+        "positives": 387,
+        "positiveHits": 272,
+        "negatives": 388,
+        "negativeHits": 81
+      }
+    },
+    "recall_pp": {
+      "description": 64.599,
+      "description+body": 70.284
+    },
+    "false_activation_pp": {
+      "description": 13.66,
+      "description+body": 20.876
+    }
+  },
+  "corpus": {
+    "partition": "train",
+    "holdout_sealed": true,
+    "train_corpora": 82,
+    "legacy_shaped_corpora": [
+      "brand-asset-generation",
+      "estimate-ticket"
+    ],
+    "cases": 775,
+    "catalogue_size": 299
+  }
+}
