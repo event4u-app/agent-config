@@ -614,3 +614,71 @@ reading it asks for from anywhere except the main checkout. `--store` was
 therefore pointed at the store the first reading measured, because a delta
 against a different corpus is not a delta. Anyone re-running this must pass it
 too, or run from the main checkout.
+
+# Exposure sweep — road-to-turnaround-followups AC-1, 2026-08-31
+
+Taken one day after R1–R5, to answer the one question the re-reading could not:
+**how many sessions could have received the batching obligation at all?** The
+re-reading measured `mean_batch_size` 1.01 → 1.01 and recorded it as a null; the
+AI council (2026-08-30, anthropic + openai, 2/2) then ruled AC-1 `not-met`
+because "post-change corpus" means a corpus **exposed** to the change, and the
+exposure was never established. This section establishes it.
+
+## R6 — Two usable sessions exist against a bar of ten
+
+The obligation landed in `af0cf0bf0` at **2026-08-30 14:38:40Z**. Sessions were
+counted by **first `"timestamp"` in the JSONL**, which is when the session
+began — not by file mtime, which is when it last wrote and is what
+`recentSessions` (`src/scripts/probe_turnaround.ts:117-133`) sorts on. The
+distinction is the whole point: an mtime-ordered window can put a session that
+*started* three days ago at the top.
+
+In this package's own store
+(`~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config/`),
+162 sessions, **3** begin after that instant:
+
+| first timestamp | session |
+|---|---|
+| 2026-08-30T16:25:33.178Z | `4fb84fae-…` |
+| 2026-08-30T20:14:41.586Z | `90ddc54d-…` |
+| 2026-08-30T23:02:43.219Z | `2469ce40-…` — **the measuring session itself** |
+
+`recentSessions` excludes the measuring session by default, so the usable count
+is **2**. The releasing condition recorded at
+`blocker: batching-corpus-never-received-the-obligation` asks for **≥ 10**.
+
+## R7 — The wider sweep does not rescue the count, and why it looked like it might
+
+Across **all 1,053 sessions in every project store on this machine**, 20 begin
+after the obligation's timestamp — 3 above, and 17 in
+`~/.claude/projects/-private-var-folders-…-T/`. That store holds 555 sessions
+and, read carelessly, would take AC-1 over its bar twice over.
+
+It does not, and the reason is structural rather than a judgement call. Those 17
+were opened: each is **11–12 JSONL rows**, and each one's first row is
+`{"type":"queue-operation","operation":"enqueue",…,"content":"# Question — …"}`
+carrying a council question body. They are **council seat transcripts** — the
+provider CLIs invoked headlessly, single-turn, to answer a council round. A
+seat answers a question in one turn and issues no tool calls at all.
+
+`mean_batch_size` is tool calls per tool-using request. A population that issues
+no tool calls cannot exhibit the behaviour the obligation is trying to change,
+so including it would not weaken the measurement — it would compute the metric
+over a population where the metric is undefined, and return a number anyway.
+That is the "poisoned evidence" failure the 2026-08-30 council named, arriving
+by a different door: not a corpus that missed the obligation, but a corpus that
+could not have responded to it.
+
+**Recorded as an exclusion with its reason, not as a filter applied silently.**
+Anyone re-running this must apply the same exclusion, and the cheap test for it
+is the first row's `type`: a session whose opening row is a `queue-operation`
+enqueue of a council question is a seat, not an agent.
+
+## What this does and does not establish
+
+- It **does** establish that the exposure half of AC-1 cannot be satisfied by
+  any action available inside this repository today. Eight further real
+  operator sessions are wall-clock, not work.
+- It **does not** establish anything new about the batching obligation's
+  effect. The null at 1.01 → 1.01 still measures the delivery channel, exactly
+  as `stubs/road-to-obligation-delivery-verification.md` records.
