@@ -1,5 +1,229 @@
 <!-- evidence-type: analysis -->
 
+# Autonomous drain run — 2026-08-31 (run 11)
+
+> **The directory is NOT empty, no roadmap archived, and NO checkbox moved.**
+> The run found **three** active roadmaps and audited all three to the same
+> conclusion: **not one of them contains an item an agent can legitimately
+> close.** What it shipped instead is the machinery three blocker conjuncts were
+> waiting on, one diagnosis that removes an arithmetic dead end, and six repairs
+> to claims the roadmaps made about themselves that the tree contradicts.
+>
+> **Net movement in closed steps: 0.** That is the headline and it is stated
+> first rather than buried, because a drain run that reports work without
+> reporting zero progress is the silent-green defect this evidence file exists
+> to prevent. The three roadmaps stand at 7/9, 46/60 and 35/77 exactly where
+> they started.
+>
+> **The seed inventory was again entirely stale** — it listed 36 roadmaps at
+> commit `c536dbd`; the live tree had 3. Recomputed before anything ran, per the
+> mandate's own instruction.
+
+## PRs — 3 opened, one per roadmap
+
+| PR | Roadmap | Census before → after | Outcome |
+|---|---|---|---|
+| [#1778](https://github.com/event4u-app/agent-config/pull/1778) | `road-to-harness-promotion-bridge` | 7/9 → 7/9 | 2 stale claims repaired; **merged** |
+| [#1779](https://github.com/event4u-app/agent-config/pull/1779) | `road-to-governed-harness-evolution` | 46/60 → 46/60 | 4 stale claims repaired; **merged** |
+| [#1780](https://github.com/event4u-app/agent-config/pull/1780) | `road-to-inbox-harvest-…-council-topology-evidence` | 35/77 → 35/77 | assembler + pre-registration + schedule; 3 of 5 blocker conjuncts discharged |
+
+**This run merged nothing.** #1778 and #1779 record as merged at 17:05Z, roughly
+two minutes after they were opened; no `gh pr merge` was issued by this run, so
+the merge came from automerge or the maintainer. Stated because a merge to a
+production trunk is a Hard-Floor action no autonomous mandate lifts, and
+claiming it would misattribute the act.
+
+## Why no roadmap could close — one reason each, all evidence-backed
+
+**`road-to-harness-promotion-bridge` — every remaining exit is owner-reserved
+and both council-decidable moves are spent.** The single open item, AC-9, needs
+a human to promote an artefact through the capability *after* the owner settles
+ADR-239 § Decision 3 (recorded `open` at `ADR-239:188`, `:10-14` and `:157`).
+Option (c) is already taken and its own `Resolved when` assigns closure to the
+owner; route 1 of the carried condition is already discharged; option (b) was
+**refused twice by the harness safety classifier before reaching any seat**, with
+the file recording *"no council round should be spent on it"*. The gate is live
+code keyed on the roadmap's own text — `promotion_capability.ts:111-125` matches
+`Status: resolved` against this file — so an option-(a)-shaped edit is a
+capability change, not a documentation change, which is why none is in the diff.
+
+**`road-to-governed-harness-evolution` — zero executable work, and three
+prerequisite modules verified absent.** 4.1 needs
+`src/scripts/_lib/evaluation_receipt.ts`; 5.4 needs
+`llm_candidate_proposer.ts`; 5.6's second conjunct needs
+`ladder_attempt_recorder.ts`. All three **do not exist**, so no `recheck_when`
+is even stale. Two of the three are additionally gated on lifting a live-harness
+park that a **closed** step's test enforces (5.2, held by
+`governed_harness_no_live_harness.test.ts`) — satisfying them inside this
+roadmap would turn a `[x]` step red. AC-8 needs a first candidate run under a
+metered backend, which the file itself assigns elsewhere.
+
+**`road-to-inbox-harvest-…-council-topology-evidence` — 23 of 42 open steps are
+gated on a 1,584-call / 20-UTC-day benchmark**, and the remainder are guarded
+baselines over populations of zero: `evaluateStop` has no production caller so
+no run has ever stopped early, and no topology selector exists so 12.1's
+constraint is policed against nothing. Closing those is the vacuous-close the
+`guarded-baseline` state exists to refuse.
+
+## Council decisions — 1 round, 2/2 convergent
+
+**Quota spent: 2 anthropic, 2 openai** (45→47, 46→48 of 50 per provider per UTC
+day). All seats subscription-transport; **nothing billed**.
+
+**`q-leakage-anonymisation-protocol` → (C) TWO ARMS, 2/2 convergent**
+(anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind chairman).
+The question: what is stripped from a response body before a leakage rater sees
+it. The fork was real and the tree settles why —
+`src/scripts/ai_council/consensus.ts:507-528` strips the **label** and applies
+`text.trim()` to the body, i.e. **no transformation at all**, so a body naming
+its own provider reaches a blind reviewer as written.
+
+Verdict: run every selected body in exactly one arm, RAW or PATTERN-STRIPPED,
+and publish both. Quoting the openai seat: *"A cannot distinguish explicit
+labels from style; B cannot characterize the deployed path."* Seven binding
+conditions, of which three bound future claims rather than the run: the second
+arm is labelled `pattern-stripped` and **never** `identifier-free`; the
+RAW−STRIPPED delta estimates the effect of **the registered transformations**,
+not label leakage in general; and both seats refused the weaker premise the
+question offered — the tree proves labels *can* pass through, not their
+*prevalence*.
+
+### Questions deliberately NOT put, and why
+
+- **The Phase-2 runner greenlight.** Both seats refused it on 2026-08-31. The
+  recorded refusal is the finding; re-asking it after the owner authorised the
+  spend would be asking a different body for permission it already declined to
+  give on a ground the authorisation only partly changes.
+- **4.1's twelve-stage enumeration.** The last round returned `REVISE` at 1/2
+  degraded and produced two materially different enumerations. The
+  non-convergence is itself why 4.1 stays open.
+- **The promotion-bridge carried condition.** Already answered, 2×B / 1×A across
+  two rounds. Re-running it for a cleaner answer is what
+  `src/rules/evaluator-independence.md` forbids by name.
+
+## Descopes — ZERO
+
+**Nothing was descoped, cancelled, re-keyed, or parked.** No `[-]` was added to
+any roadmap, no criterion was reworded, and no step was moved to `later/` or to
+`stubs/`. The mandate's § 5 terminal fallback was available and was **not
+used**: for the promotion bridge, descoping is precisely the disposition a
+recorded 2/2 council verdict refused by name, and its Resume condition forbids
+weakening a transferred criterion without the owner.
+
+One **follow-up stub** was created, and it is a new finding rather than
+descoped roadmap content:
+`agents/roadmaps/stubs/road-to-council-retention-doc-drift.md`.
+
+## What actually shipped
+
+**One diagnosis that removes an arithmetic dead end.** The leakage blocker
+quarantined over-retained bodies *"until the retention defect is diagnosed"*.
+Diagnosed: `session.save()` (`session.ts:506`) is the only caller of the
+artefact pruners (`:603-604`) and has **zero importers in all of `src/`** — the
+module's only two importers are `council_prune.ts:36` (which imports
+`_load_retention_days` and `prune_all_council_artifacts`, not `save`) and its
+own test. **No test exercises the tail either**: all six `save()` call sites
+pass `sessions_dir` *and* `retention_days: 0`. `council_prune.ts:14` documents a
+caller that does not exist. The janitor is a dry-run reporter whose
+`TTL_CONFIG` covers `responses/` **alone**.
+**Why the lift was the only viable reading, and it is arithmetic rather than
+judgement: 0 of 1,402 eligible bodies are within the 7-day TTL**, so held in
+force the quarantine excludes 100 % of the corpus and the `>= 30` floor is
+unreachable forever.
+
+**One library, one instrument, two pre-registrations.**
+`leakage_corpus.ts` (385 lines, 24/24 green, three sabotage probes RED then
+restored byte-identically at sha256 `874ff5f4…13a7`);
+`probe_council_retention.ts` (495 lines, zero mutator calls);
+`PREREG-anonymisation-and-sampling.md` (forks 2/3/4, with the detection floor
+computed up front — pooled n=60 needs 37/60 for p<0.05 at power 0.937);
+`UTC-DAY-SCHEDULE.md` (emitted from the frozen manifest, not authored).
+
+**Six repairs to claims a roadmap made about itself that the tree contradicts.**
+Two on the promotion bridge (a present-tense *"Every Phase 7 step is `[ ]`"*
+when all seven are `[x]`; a Risk-3 cell still recording `(B) NOT DISCHARGED`
+after `:170` recorded the condition discharged). Four on the governed harness (a
+**duplicate `estate_growth_exempt` YAML key** whose earlier value was silently
+dead under last-wins and which the ratchet therefore never read; a blocker field
+asserting `[~]` markers in a file with zero of them; AC-10b's body saying twice
+that it *"stays `[ ]`"* while its marker is `[x]`; two risk rows naming
+mitigations as unbuilt or as living here when they are built or transferred).
+
+## Defects the execution found, that the roadmaps did not
+
+1. **`responses/` is not flat, and the corpus is roughly double what the roadmap
+   carried.** It holds directories literally *named* `<slug>.json` containing
+   per-round debate records; a single-level walk drops them. Recursive count:
+   **1,402** eligible items against the roadmap's 716.
+2. **The roadmap's `gemini 2` counted failed calls.** Both gemini entries carry
+   a non-falsy `error`. `families` is `['anthropic','openai']`, so **uniform
+   chance is 0.50, not 1/3** — this sets the bench's baseline, so it is not a
+   cosmetic correction.
+3. **A basename-derived item id would have leaked the ground truth.** Real
+   filenames include `anthropic-design-skills-integration.json` and
+   `claude-code-distribution.json`. Caught only because a leak test was written
+   before the id scheme was fixed.
+4. **Six documentation surfaces assert an automatic prune that does not exist**,
+   including a **projected rule** (`src/rules/no-roadmap-references.md:29-30`),
+   an agent-facing context that **instructs the agent to state the falsehood to
+   the user** (`cheap-question-mechanics.md:97`), and a **shipped consumer
+   template** wrong on three counts. Plus a three-way default contradiction:
+   code `7`, rule `7`, `docs/customization.md:189` **`14`**.
+5. **The pruner is unreachable in a consumer install.** No compiled twin ships
+   in `dist/`, `scripts-run` and the Taskfiles do not ship, `tsx` is absent from
+   the install's `node_modules/.bin`, and neither pruner is an `agent-config`
+   verb. A consumer has the source on disk and no way to run it.
+6. **The obvious retention fix has a live trap in it.** `session.ts:70`'s
+   `REPO_ROOT` is file-relative while `council_cli.ts:217` resolves from the cwd.
+   From the global install, wiring `save()` up would prune the installed
+   package's own tree while artefacts accumulate in the consumer's.
+7. **A citation in this run's own first-draft diagnosis was wrong, and was
+   caught by an adversarial second pass before it reached a governed artefact.**
+   `janitor.ts:10` is a blank comment line; the sentence at `:9` is scoped to
+   `agents/tmp/` and says nothing about council artefacts. Recorded because the
+   near-miss is the reusable part: the diagnosis was routed to a reviewer whose
+   instruction was to refute it.
+8. **The corpus is live and its figures drift.** `responses/` read 798 files and
+   799 thirty seconds later; a re-run ten minutes on read 1,314 files and 121
+   days where the recorded table says 1,313 and 120. Every count is a floor, and
+   the 60 drawn bodies must be pinned by id before the arms run.
+9. **The corpus is an accidental denominator**, which this tree already says at
+   `recouncil_savings.ts:237-240`. Recognition stays interpretable because it is
+   a within-item property; a **population** claim does not. Prior art
+   acknowledged rather than presented as new.
+10. **The mandate contains an internal tension it did not price.** It
+    pre-authorises the benchmark spend *and* requires every contested decision
+    to be settled by the council. The authorised schedule leaves 3–5 calls per
+    provider per day for 20 consecutive days. **Both obligations cannot be met
+    at once**, and the tension was surfaced rather than resolved by silently
+    preferring whichever half permits progress.
+
+## Where the run stopped, and why
+
+**Not on quota** — 47/50 and 48/50 spent, 3 and 2 remaining. **Not on a wall
+either.** It stopped because all three roadmaps were audited to contain no
+agent-closable item, and the honest remainder is work only the owner or an
+absent module can unblock:
+
+- **ADR-239 § Decision 3** — owner-reserved in both directions; option (b)
+  cannot even be *put* to a council through the current harness.
+- **Three absent modules** — `evaluation_receipt.ts`,
+  `llm_candidate_proposer.ts`, `ladder_attempt_recorder.ts`.
+- **Fork 3's pattern list** — deferred deliberately, and it is what blocks day 2
+  of the leakage run. Day 1 is runnable now, and **it is not quota-bound**;
+  saying so precisely matters, because the predecessor blocker was falsified for
+  asserting a quota obstacle that had ceased to exist.
+
+**The shape worth naming.** Every repair this run made was to a sentence a
+roadmap wrote about itself and then outgrew — a present tense that went false, a
+YAML key shadowed by its own duplicate, a verdict superseded by the work it
+motivated, a quarantine whose release condition had fired unnoticed. None was
+caught by a gate, because none is gateable: they are all claims about a tree,
+made in prose, in a file the tree does not check. The one that mattered most
+cost nothing to find and would have made a measurement uninterpretable — the
+quarantine that, left standing, excluded 100 % of its own corpus.
+
+
 # Autonomous drain run — 2026-08-31 (run 10)
 
 > **The directory is NOT empty, and one roadmap of four archived.** The run found
