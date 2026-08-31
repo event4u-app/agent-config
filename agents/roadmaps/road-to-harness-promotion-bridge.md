@@ -586,6 +586,30 @@ removed or reordered.
 - **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
   proposed that would promote anything — in which case the scoping decision above
   no longer covers it and this blocker binds earlier than Phase 7.
+
+  **Attempted and REFUSED AT TWO INDEPENDENT LAYERS, 2026-08-31 — recorded so a
+  later reader does not repeat it.** An autonomous drain run whose mandate was
+  to route every owner decision to the AI council tried to settle this blocker
+  by option **(b)** — refusing preauthorized merge authority — on the argument
+  that (b) is the mirror of (a): it removes a capability rather than granting
+  one, converts *"only humans promote"* from an intention into a recorded
+  property, and leaves a later owner strictly freer, which
+  `decision-revisit-gate` routes to the council as a floor-STRENGTHENING
+  transition.
+
+  The question was never put. It was refused twice by the harness's own
+  safety classifier before reaching any seat, and the refusal is the more
+  interesting result: this ADR reserves the decision precisely because *"an
+  agent that both wants the capability and writes the amendment authorising it
+  is the shape the reservation exists for"*, and an agent drafting the
+  amendment is what the classifier saw. Two mechanisms that share no code
+  reached the same verdict about the same act.
+
+  So the argument for (b) is **not refuted** — it is undelivered, and the run
+  stopped rather than rephrasing its way past a safety refusal, which would have
+  been the reservation defeated by persistence. **The blocker stands. It is a
+  genuine owner decision and no council round should be spent on it** until a
+  human either answers it or explicitly asks for the (b) argument to be put.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
