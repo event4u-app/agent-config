@@ -1448,7 +1448,7 @@ once.
       Pre-registration `agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md`,
       commit **`fe8749458`**. Measurement
       `src/scripts/measure_routing_signal.ts` + `src/scripts/_lib/routing_corpus.ts`,
-      commit **`MEASUREMENT_SHA`**. `git merge-base --is-ancestor fe8749458 MEASUREMENT_SHA`
+      commit **`a86bd899c`**. `git merge-base --is-ancestor fe8749458 a86bd899c`
       is the ordering clause, checked in the history rather than asserted: the
       prereg commit adds no measurement module and runs nothing.
       **Both gaps are named separately, and only one was answerable here.** Gap A
