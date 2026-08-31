@@ -1199,10 +1199,61 @@ byte-pinned by tests. Any work here runs through
 
 ## Phase 5 — Synthesis-policy showdown
 
-- [ ] 5.1 One synthesis-strategy interface behind the candidates (host
+- [x] 5.1 One synthesis-strategy interface behind the candidates (host
   convener, dedicated external judge, strongest configured model, top-ranked
   member, dual synthesis + adjudication) — no user-facing mode proliferation.
       verify: the user-facing surface gains no new mode names
+      **DONE 2026-08-31 — one interface, five candidates, zero new user-facing
+      names.** New mechanism:
+      `src/scripts/ai_council/synthesis_strategy.ts` (`SYNTHESIS_STRATEGIES`,
+      `STRATEGIES`, `resolveSynthesisStrategy`, `reachableStrategies`). Tests:
+      `tests/scripts/ai_council/synthesis_strategy.test.ts` (12 tests, green).
+      **Selection is NOT reimplemented.** All five strategies delegate to
+      `select_chairman` (`chairman.ts:42`) through one shared resolver, and a
+      test asserts exactly that: the module imports `select_chairman`, and the
+      five `resolve:` entries name **one** function. A second selection path
+      would be two answers to "who chairs", and the second is the one nobody
+      updates — the defect 1A.1 forbids for the question hash. What this module
+      adds is a NAME for what the existing selection already does per
+      configuration, so Phase 5's showdown has something to compare.
+      **Four of five resolve from configuration the engine already reads**
+      (`ai_council.chairman.mode`, `.member`, `members.<name>.tier` — three keys,
+      asserted): `host` → `host_convener`, `member` → `external_judge`, `auto`
+      with tiers → `strongest_model`, `auto` without → `top_ranked_member`
+      (config order being the only ranking the engine trusts). An unknown mode
+      returns `null` rather than a guessed strategy.
+      **The fifth is declared UNREACHABLE, which is the honest part.**
+      `dual_adjudicated` cannot be selected from today's configuration —
+      reaching it needs a new input, and a new input is exactly what this step's
+      verify clause forbids. It carries `reachable: false`, a test asserts no
+      accepted mode resolves to it, and it is left unselectable rather than
+      smuggled in behind a flag.
+      **The verify clause is measured over four surfaces, not promised.** No
+      strategy id (underscore or hyphen form) appears in `council_cli.ts` or
+      `cli_help.ts`; no declared `flag:` or `choices:` value names one (the
+      scanners are asserted to have found the real tables — >10 flags, >5
+      choices — so an empty result is not an empty scan); `all_synthesis_modes()`
+      is pinned to exactly the pre-existing `['analysis', 'default', 'design',
+      'optimize', 'pr']`; and no `.md` under `src/agent-src/commands/` or
+      `src/domains/` (>100 files scanned) names one. That is 12.4's rule applied
+      to synthesis.
+      **The chairman's self-judge refusal is re-pinned here**, so a 5.1 edit
+      cannot weaken it: a member that deliberated resolves to `member: null`
+      with a `cannot self-judge` annotation.
+      **Sensitivity was proven twice, not assumed.** Sabotage A — adding
+      `{ flag: '--synthesis-strategy', choices: ['host_convener',
+      'dual_adjudicated'] }` to `council_cli.ts`'s `run` option table — turned it
+      RED (**2 failed / 10 passed**). Sabotage B — adding a `dual_adjudicated`
+      row to `_SYNTHESIS_TABLE` in `prompts.ts`, i.e. a new user-visible
+      synthesis mode — turned it RED (**1 failed / 11 passed**). Both restored
+      to 12/12. The suite also tests the **denial**: both scanners are shown to
+      extract a strategy name from constructed violating text and to stay silent
+      on a clean line.
+      **HONEST SCOPE.** This is the interface and the naming; it changes no
+      dispatch. The billable synthesis call stays in `council_cli.ts`
+      `_maybe_run_chairman` where it already lives, and 5.2 — benching
+      identity-blind against identity-visible — is gated behind
+      `blocker: phase-2-benchmark-cost`.
 - [ ] 5.2 Bench identity-blind against identity-visible synthesis explicitly,
   so vendor prestige cannot leak in accidentally.
       verify: both arms are reported side by side
