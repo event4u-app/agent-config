@@ -167,7 +167,7 @@ describe('8.3 — no candidate is reviewed only by same-family reviewers when on
     it('a single-family council reports its candidates as unrepairable rather than silently passing', () => {
         const members = skewed(4, 0);
         const r = assignReviewers(members, 2, SEED);
-        expect(r.unrepairable.sort()).toEqual(['a0', 'a1', 'a2', 'a3']);
+        expect([...r.unrepairable].sort()).toEqual(['a0', 'a1', 'a2', 'a3']);
         expect(diversityCeiling(members, 2)).toBe(0);
         // 8.3's own escape: no alternative existed, so the constraint is not violated.
         for (const m of members) expect(crossFamilyAvailable(m.name, members)).toBe(false);

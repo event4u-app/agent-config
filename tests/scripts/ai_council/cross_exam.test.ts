@@ -96,7 +96,8 @@ describe('8.1 — the prompt names the EXACT disputed claim', () => {
     });
 
     it('DENIAL — a pair prompt carrying only one side FAILS', () => {
-        const oneSided = buildCrossExamPrompt({ ...PAIR, counterClaim: undefined }, { nonce: NONCE });
+        const { counterClaim: _dropped, ...withoutCounter } = PAIR;
+        const oneSided = buildCrossExamPrompt(withoutCounter, { nonce: NONCE });
         expect(crossExamNamesClaim(oneSided, PAIR)).toBe(false);
     });
 });
