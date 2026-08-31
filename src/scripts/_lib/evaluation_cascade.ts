@@ -156,9 +156,9 @@ export interface CascadeInput {
     readonly plan: RunPlan;
     readonly budget: RunBudget;
     /** Sibling candidate texts, for the near-duplicate screen. */
-    readonly peers?: readonly string[];
+    readonly peers?: readonly string[] | undefined;
     /** Metric rows, when the caller has them. Absent means the run measured nothing. */
-    readonly rows?: readonly MetricRow[];
+    readonly rows?: readonly MetricRow[] | undefined;
     /**
      * An already-built vector, when the caller has one.
      *
@@ -167,7 +167,7 @@ export interface CascadeInput {
      * here from loose rows would give the verdict a second, less-checked path
      * to the same number.
      */
-    readonly vector?: MetricVector;
+    readonly vector?: MetricVector | undefined;
 }
 
 function abort(
