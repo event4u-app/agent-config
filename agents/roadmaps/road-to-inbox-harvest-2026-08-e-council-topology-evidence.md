@@ -2166,10 +2166,64 @@ is **seating**, and it already has a carrier.
       a guess and is machine-checkable; the symbol is not, and the report marks
       it **not machine-checkable** rather than booking it as *"not stale"* —
       absence of a check is reported as absence, never as a pass.
-- [ ] 12.2 Add a free explain mode: why task-side orchestration resolved to
+- [ ] <!-- roadmap-status: guarded-baseline --> 12.2 Add a free explain mode: why task-side orchestration resolved to
   council, which topology would run, estimated spend and calls, evidence
   source — with no paid model call to explain routing.
       verify: explain mode issues zero provider calls
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/explain_route.ts explainRoute + renderRouteExplanation
+        command: npx vitest run tests/scripts/ai_council/explain_route.test.ts
+        red_proof: sabotage run 2026-08-31 — 6 of 15 tests RED, 15/15 GREEN after restore
+        sabotage_model: three simultaneous edits — an `import { consult } from './orchestrator.js'`, TOPOLOGY_UNAVAILABLE replaced by the literal `peer_review`, and the non-billable early return deleted so a subscription seat is priced at API rates
+        recheck_when: src/scripts/ai_council/topology_selector.ts
+        discharged_ac: the zero-provider-call property is structural and RED-proven, and three of the four fields are answered
+        pending_ac: "which topology would run" — unanswerable while no selector exists, so the field carries an explicit unavailable marker rather than a value
+      ```
+
+      **CANNOT CLOSE WHOLE — one of the four fields is unanswerable.** *"Which
+      topology would run"* has no answer: 7.2 is open, no selector exists, and
+      naming a topology would be a guess dressed as an explanation. The field is
+      **present and marked** (`TOPOLOGY_UNAVAILABLE` = *"unavailable — no
+      topology selector exists (step 7.2 open)"*) rather than omitted, because a
+      field silently missing from an explanation reads as *not applicable* when
+      the truth is *not built yet*. A test asserts the rendered output names
+      none of the seven topology names.
+      **What shipped:** `src/scripts/ai_council/explain_route.ts` —
+      `explainRoute`, `estimateSpend`, `renderRouteExplanation`. Tests:
+      `tests/scripts/ai_council/explain_route.test.ts` (15 tests, green).
+      **The verify clause is discharged STRUCTURALLY, which is stronger than a
+      promise.** The module imports exactly two things —
+      `../_lib/judgment_ladder.js` (regex-only) and `./pricing.js` (arithmetic
+      over a price table) — and the test asserts that distinct import set
+      exactly, plus the absence of `clients.js`, `transport`, `orchestrator`,
+      `consult`, `fetch(` and `node:https` from the module's **code** (comments
+      stripped, since the docstring names the very words the gate forbids). Both
+      dependencies are separately asserted free of `fetch(` and `node:http(s)`.
+      There is nothing here to make a call with.
+      **Field 1 — why it resolved to council:** the full `explainLadder`
+      (`judgment_ladder.ts:499`) per-rung trail, with each rung's own status
+      (`taken` / `rejected` / `not-reached`) and the detector's own reason. It
+      explains a NON-council resolution equally well, so it is a routing
+      surface rather than a council-only one.
+      **Field 3 — estimated spend and calls:** one call per member per round,
+      priced from the table. The subscription-seat distinction `pricing.ts`
+      records finding on 2026-08-27 is preserved rather than reproduced: a
+      non-billable seat contributes **calls** and **zero dollars**, is listed by
+      name in `nonBillableMembers`, and renders with *"calls are real, spend is
+      not"* next to the zero. An unpriced model estimates $0 via pricing.ts's own
+      fallback rather than throwing.
+      **Field 4 — evidence source:** defaults to `none` and is **rendered**
+      rather than omitted, which is the same reasoning as field 2.
+      **Sensitivity was proven, not assumed.** A three-part sabotage — adding
+      `import { consult } from './orchestrator.js'`, replacing
+      `TOPOLOGY_UNAVAILABLE` with the literal `peer_review`, and deleting the
+      non-billable early return so a subscription seat is priced at API rates —
+      turned the file RED (**6 failed / 9 passed**); restore → 15/15. The suite
+      also tests the **denial**: the import scanner is shown to extract
+      `./orchestrator.js` from constructed text and to find neither it nor
+      `orchestrator` in the real module.
 - [ ] 12.3 A force-topology debug control may exist but cannot override
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
