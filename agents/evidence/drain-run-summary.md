@@ -15,8 +15,8 @@
 | PR | Roadmap | State |
 |---|---|---|
 | [#1763](https://github.com/event4u-app/agent-config/pull/1763) | `road-to-turnaround-followups` | **MERGED** 2026-08-31T01:08:37Z. 7/7 disposed, archived. CI 6 pass / 0 fail |
-| [#1764](https://github.com/event4u-app/agent-config/pull/1764) | `road-to-governed-harness-evolution` | Open. 24/59 → 33/59, AC audit, Phase 7 split out. CI 40 pass / 0 fail at push time |
-| [#1765](https://github.com/event4u-app/agent-config/pull/1765) | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | Open. 18/77 → 26/77 done + 4 null-closed. CI 33 pass / 0 fail at push time |
+| [#1764](https://github.com/event4u-app/agent-config/pull/1764) | `road-to-governed-harness-evolution` | Open. 24/59 → **34/59**, three ACs closed, Phase 7 split out. CI **40 pass / 0 fail** |
+| [#1765](https://github.com/event4u-app/agent-config/pull/1765) | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | Open. 18/77 → **26/77** done + 4 null-closed. CI **34 pass / 0 fail** |
 
 ## Council decisions (6 rounds; 4 convergent 2/2, 1 convergent 2/2 on REVISE, 1 degraded 1/2)
 
@@ -76,14 +76,19 @@ Nothing was cancelled. Every `[-]` in this run means TRANSFERRED or NULL-CLOSED 
 
 10. **A council question of this run carried its own defect, and both seats caught it.** The 4.4 brief grounded `WHERE` in "the six-rung ladder" and called the anchor obvious **without enumerating its six values**. Both seats refused to treat their own answer as more than conditional. The next attempt must paste `LADDER_RUNGS` into the brief.
 
-11. **Asked twice, one seat gave two different twelve-stage enumerations** — different names, order, and placement of the statistical stage. That is what non-convergence looks like, and it is a second independent reason 4.1 stays open.
+11. **A council seat does not always honour the inline-findings contract.** Step 1B.1 was run live: the anthropic seat's reply carried the fenced block, it PARSED (the marker `harvest_inline_findings` writes only after both the parse and the ownership check pass), and its five findings reached consensus with **zero** extraction calls. The openai seat emitted **no block at all** — prose bullets, no fence, no bracket array — so the repair path fired and consumed one extraction call. **The step therefore did NOT close**: its condition says zero extraction calls, and one is not zero. Recorded as an observation at n=1, explicitly **not** as a 1B.4 datum — no rate, no comparator, arms not started.
+
+12. **Asked twice, one seat gave two different twelve-stage enumerations** — different names, order, and placement of the statistical stage. That is what non-convergence looks like, and it is a second independent reason 4.1 stays open.
 
 ## Where the run stopped, and why
 
 **Not on quota, and not on a wall.** Council quota ended the run at roughly 20/50 per provider. Every gate this run touched is green on all three branches, and CI is green on all three.
 
 - **`road-to-turnaround-followups` — CLOSED and merged.** Its one unresolved criterion is alive in the active estate with a kill switch.
-- **`road-to-governed-harness-evolution` — 33/59.** Phases 4-6 hold 18 open steps. Two of them (4.1, 4.4) now have a recorded `REVISE` and a named prerequisite each where before they had nothing; the rest need either the receipt producer that does not exist, or the three-arm delivery measurement (6.1), which is spend-bearing.
-- **`road-to-inbox-harvest-…-council-topology-evidence` — 26/77.** Phase 2's manifest exists and prices the phase honestly; running it needs 20 days of exclusive quota. 3.3 stays blocked on a corpus that **cannot be committed** — `agents/runtime/council/` is gitignored and auto-pruned — which no quota reset touches.
+- **`road-to-governed-harness-evolution` — 34/59, three ACs closed.** **6.1 closed on a real measurement** and took **AC-7** with it: the three delivery arms were measured against one another with **zero provider calls**, because the arms differ on one observable property of the tree — is the labelled rule's body in context for this prompt. `eager-all` delivers 305/305 with 194/194 false context and 120,743 standing tokens; `thin` delivers 0/305 at 18,223; `delivery` delivers 302/305 at 18,223 standing plus a mean 2,026 injected per prompt. The three `delivery` losses are named individually rather than summarised. Sensitivity proved by a cap sweep that moves `delivery` 0.770 → 0.993 monotonically while both standing arms do not move at all.
+  Phases 4-6 hold 17 open steps. Two of them (4.1, 4.4) now carry a recorded `REVISE` and a named prerequisite each where before they had nothing; the rest need either the receipt producer that does not exist, or decisions nobody has taken.
+- **`road-to-inbox-harvest-…-council-topology-evidence` — 26/77.** Phase 2's manifest exists and prices the phase honestly; running it needs 20 days of exclusive quota. **1B.1 was run and left open** on half a verify, which is the correct outcome and is finding 11. 3.3 stays blocked on a corpus that **cannot be committed** — `agents/runtime/council/` is gitignored and auto-pruned — which no quota reset touches.
+
+**Council quota spent by this run: 27 anthropic, 27 openai**, against 50 per provider per UTC day.
 
 **The shape worth naming, because it decided three dispositions this run.** Every criterion this run could not discharge was moved into a file that a gate can actually read, and each move was verified against the mechanism rather than assumed: the carry annotation was checked against `DEFERRED_STEP_RE`, the destination against the sweep's two-path candidate list, the back-link against its `^parent_roadmap:` regex. Two council rounds were spent establishing that a `stubs/` file is prose with no governance, and one seat's kill switch is the only reason that was checked at all rather than discovered later by a silent drop.
