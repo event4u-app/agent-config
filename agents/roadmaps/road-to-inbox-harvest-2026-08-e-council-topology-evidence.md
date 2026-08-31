@@ -1206,11 +1206,54 @@ byte-pinned by tests. Any work here runs through
 - [ ] 5.2 Bench identity-blind against identity-visible synthesis explicitly,
   so vendor prestige cannot leak in accidentally.
       verify: both arms are reported side by side
-- [ ] 5.3 Majority-laundering test: seed one correct minority against several
+- [x] 5.3 Majority-laundering test: seed one correct minority against several
   plausible-but-wrong majority answers; the synthesizer must justify accepting
   or rejecting the minority.
       verify: the fixture is permanent, and a synthesizer that silently drops
       the minority fails it
+      **DONE 2026-08-31 — fixture frozen, gate shipped, drop-detection
+      RED-proven.** Fixture:
+      `internal/bench/council-synthesis/majority-laundering.json`, carrying
+      `permanent: true` (the loader **throws** on anything else), one correct
+      minority (`member-d`) against **three** plausible-but-wrong majority
+      answers, each recording its own `why_wrong` so a later reader can check
+      the plausibility rather than take it on trust. Ground truth is a property
+      of the fixture by construction: an index changes per-query cost, not query
+      count, so the N+1 is not fixed by indexing.
+      Gate: `src/scripts/ai_council/minority_retention.ts` —
+      `auditMinorityRetention` decides three text-answerable questions: does the
+      synthesis NAME the minority (an anchor phrase, matched tolerantly so
+      `eager load` catches `eager loading`), does it state a DISPOSITION, and is
+      a REASON attached to it. Accept and reject are **both** passes; the
+      failure 5.3 names is the silent drop.
+      Tests: `tests/scripts/ai_council/minority_retention.test.ts` (12 tests,
+      green). Six scripted synthesizers, **zero model calls** — a majority-only
+      laundering synthesis, an elaborate drop that discusses indexes at length
+      and never the minority, an accept-with-reason, a reject-with-reason, a
+      mention-without-disposition and a bare-disposition.
+      **Honest scope, said out loud rather than implied.** The gate decides the
+      SHAPE of the disposition, never its correctness. A synthesis that rejects
+      the correct minority with a stated reason **passes** and is wrong — that
+      is deliberate, because grading the verdict needs the benchmark, which is
+      gated behind `blocker: phase-2-benchmark-cost`. The module header says so
+      in the same words.
+      **Why a hand-written fixture is legitimate here and refused for the
+      leakage bench.** `internal/bench/council-provider-leakage/smoke-items.json`
+      is refused by its live runner because a recognition rate over hand-written
+      bodies would describe the fixture author rather than a model. Nothing is
+      being estimated about a model here: the correct answer is a property of
+      the fixture, so a synthesizer that drops it is caught deterministically.
+      The fixture states this distinction in its own
+      `why_hand_written_is_legitimate_here` field so the two cannot be conflated
+      by a later reader.
+      **Sensitivity was proven, not assumed.** Sabotage A — disabling the
+      no-anchor early return in `auditMinorityRetention` — turned it RED
+      (2 failed / 10 passed). Sabotage B — forcing both return sites to
+      `passed: true`, i.e. neutralising the gate entirely — turned it RED
+      (**5 failed / 7 passed**); restore → 12/12. The suite also tests the
+      **denial**: `anchorPresent` must NOT match an unrelated sentence, so a
+      `minority-silently-dropped` verdict means "absent" rather than "the
+      matcher is broken".
 - [ ] 5.4 Final synthesis retains unresolved disagreement, the strongest
   minority evidence, and what evidence would resolve it.
       verify: a run with real dissent renders all three
