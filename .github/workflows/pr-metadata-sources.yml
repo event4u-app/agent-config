@@ -75,19 +75,43 @@ jobs:
         shell: bash -euo pipefail {0}
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # The MERGE BASE, not `base.sha`. `base.sha` is the base branch tip
-          # recorded on the event, so once the branch merges a newer `main` every
-          # base commit between the two enters the range and other authors'
-          # commits get gated as this change's own. Over-reporting only, but it
-          # makes a red job blame the wrong commits. Falls back to `base.sha` if
-          # the merge base cannot be computed, so the range is never empty.
-          BASE="$(git merge-base "${BASE_SHA}" "${HEAD_SHA}" 2>/dev/null || echo "${BASE_SHA}")"
-          ./scripts-run src/scripts/sweep_source_surfaces --gate-metadata \
-            --branch "${HEAD_REF}" \
-            --title "${PR_TITLE}" \
-            --body-file "${RUNNER_TEMP}/pr-body.txt" \
-            --commit-range "${BASE}..${HEAD_SHA}"
+          # Branch and title are gated for EVERY author, bots included: both are
+          # short, human-editable surfaces, and a dependabot branch name carries
+          # only the package group.
+          args=(--gate-metadata --branch "${HEAD_REF}" --title "${PR_TITLE}")
+
+          # Body and commit messages are NOT gated for dependabot, and the
+          # exemption is a category correction rather than a relaxation. This
+          # gate exists to stop AUTHORED source attribution from reaching a
+          # public, effectively immutable surface. A dependabot body is
+          # machine-generated upstream provenance — release notes, a changelog,
+          # compare links, a commit list — which the rule already carves out
+          # ("Recommending / integrating a tool or registry ... Naming the tool
+          # is fine"), and its owner set changes with every bump: measured on
+          # 2026-08-31, #1766 carried 23 hits from `nodeca` alone and #1767
+          # carried 102 across four owners. Allowlisting them is the broad
+          # allowlisting `source_shape.ts` warns against in the same breath as
+          # it keeps ALLOWED_OWNERS small.
+          #
+          # The local pre-push twin (hooks/prepush_metadata_sources.sh) is
+          # deliberately NOT given this carve-out: it gates a human pushing
+          # their own branch, which is exactly the case that stays covered.
+          if [ "${PR_AUTHOR}" != "dependabot[bot]" ]; then
+            # The MERGE BASE, not `base.sha`. `base.sha` is the base branch tip
+            # recorded on the event, so once the branch merges a newer `main`
+            # every base commit between the two enters the range and other
+            # authors' commits get gated as this change's own. Over-reporting
+            # only, but it makes a red job blame the wrong commits. Falls back
+            # to `base.sha` if the merge base cannot be computed, so the range
+            # is never empty.
+            BASE="$(git merge-base "${BASE_SHA}" "${HEAD_SHA}" 2>/dev/null || echo "${BASE_SHA}")"
+            args+=(--body-file "${RUNNER_TEMP}/pr-body.txt")
+            args+=(--commit-range "${BASE}..${HEAD_SHA}")
+          fi
+
+          ./scripts-run src/scripts/sweep_source_surfaces "${args[@]}"
