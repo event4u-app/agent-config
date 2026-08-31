@@ -1991,9 +1991,46 @@ once.
       Closing on the scanner alone would be closing on the met half of a
       conjunction. What closes it is a caller: 4.1's cascade, or `promote`
       consulting the verdict before it refuses.
-- [ ] AC-6 — The holdout partition's content hash predates the first commit of
+- [x] AC-6 — The holdout partition's content hash predates the first commit of
       any proposer capability, and a run leaking a holdout value into proposer
       context exits non-zero.
+      **CLOSED 2026-08-31 — the first conjunct's re-pin was PERFORMED, and a
+      guard now stands where the audit found none.** The audit below predicted
+      exactly this closure and is preserved rather than deleted, because it is
+      the record of what was falsified and why.
+      **The re-pin.** `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`
+      now publishes `SET-SHA256 0667fbd9…` in place of the stale `7e091dfc…`,
+      and the three per-file rows the freeze commit had pinned at pre-edit
+      bytes — `threat-modeling` `0cc498c5…` → `6bdb1d3b…`, `markitdown`
+      `ccaac56a…` → `663ee4c4…`, `security-audit` `8005676c…` → `27ccbdcd…`.
+      **Verified rather than asserted: 100 of 100 per-file rows and the set hash
+      now reproduce** from the artefact's own documented recipe on this tree, and
+      `git diff 34318f7f..HEAD` over the three paths is empty, so the re-pin
+      names the frozen bytes and not some later state.
+      **The ordering half was re-verified, not assumed to survive the re-pin.**
+      `git merge-base --is-ancestor 34318f7f ac2501313` returns true —
+      `34318f7f5` (2026-08-30 22:11:43) precedes `ac2501313`
+      (2026-08-31 00:44:37), which added `_lib/candidate_proposer.ts` and
+      `evolution_lab`'s `propose` verb. The near-miss was re-checked:
+      `_lib/harness_evolution_guards.ts` (2026-08-30 17:55:29) names "proposer"
+      but is the guard that REFUSES disclosure to one.
+      **What makes this durable rather than a one-off fix**, and it is the part
+      the audit could not have supplied: a stale pin is invisible to anyone who
+      re-runs the recipe and compares it to nothing.
+      `tests/scripts/trigger_corpus_holdout_pin.test.ts` recomputes the recipe
+      from the tree and asserts every published row AND the set hash reproduce,
+      with an anti-vacuity assertion so a scan over an empty corpus cannot pass.
+      **Proved SENSITIVE in both directions before it was trusted.** Appending
+      one byte to `src/skills/markitdown/evals/triggers.json` turned it red on
+      *"the published SET-SHA256 reproduces"* and *"every per-file row
+      reproduces"* (2 failed / 3 passed); restoring the byte returned 5/5.
+      Independently, falsifying the artefact's own `SET-SHA256` line turned it
+      red on one assertion (1 failed / 4 passed) and restoring returned 5/5. So
+      it fires on a corpus edit and on a pin edit, which are the two ways this
+      claim can go stale.
+      **Second conjunct unchanged and still met** —
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` 15/15, a holdout
+      value reaching proposer context exits 4 before any external call.
       **Audited 2026-08-31: the second conjunct is met, the first is
       FALSIFIED — by reproduction, not by doubt.**
       Second conjunct — met.

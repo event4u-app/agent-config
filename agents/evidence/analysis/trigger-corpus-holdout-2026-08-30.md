@@ -43,7 +43,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  7e091dfc0b1e44aa81268dd69a4d0ab07d1ee1316d6b3120d7ccec62f9aa5da8
+SET-SHA256  0667fbd96d7d1da88368d4d587545ff03475208ab9d07ca5212975e8cdaaa4d6
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
@@ -65,6 +65,56 @@ for f in $(ls -1 src/skills/*/evals/triggers.json | sort); do
   printf '%s %s %s\n' "$s" "$(shasum -a 256 "$f" | cut -d' ' -f1)" "$p"
 done | LC_ALL=C sort | shasum -a 256
 ```
+
+## Correction 2026-08-31 — the pin was stale on arrival, and is re-pinned here
+
+```
+THE PIN WAS WRONG. THE CORPUS WAS NOT.
+RE-PINNED TO THE FROZEN BYTES, WHICH HAVE NOT MOVED SINCE THE FREEZE COMMIT.
+THE ORDERING CLAIM SURVIVES THE RE-PIN AND IS RE-VERIFIED BELOW.
+```
+
+**What was wrong.** The `SET-SHA256` published in this file's first revision,
+`7e091dfc…`, did not reproduce from this file's own documented recipe. Running
+that recipe on the tree yields `0667fbd9…`, and two near-variants — dropping the
+partition column, and tab separators — yield two further values, neither of them
+the pin. So the mismatch was not a formatting ambiguity in the recipe.
+
+**The corpus was checked before the pin was blamed, and it is intact.** The file
+set is identical to the freeze commit `34318f7f5` — 100 files, `git ls-tree`
+diff empty — and every file's bytes are unchanged since it.
+
+**The actual cause.** `34318f7f5`, the commit that RECORDED the freeze, also
+edited three of the files it was freezing. `markitdown`, `security-audit` and
+`threat-modeling` were pinned at their **pre-edit** hashes; the other 97 rows
+reproduce exactly, and the set hash inherited the three wrong rows. A hash
+computed from bytes that the same commit then replaced is stale the moment it is
+written, which is why this was never a drift and could never have been caught by
+re-running the recipe later and trusting the old number.
+
+**What was re-pinned**, to the frozen bytes as they stand at `34318f7f5` and
+today — `git diff 34318f7f..HEAD` over the three paths is empty:
+
+| Row | Was (pre-edit, stale) | Now (frozen bytes) |
+|---|---|---|
+| `SET-SHA256` | `7e091dfc…` | `0667fbd9…` |
+| `threat-modeling` | `0cc498c5…` | `6bdb1d3b…` |
+| `markitdown` | `ccaac56a…` | `663ee4c4…` |
+| `security-audit` | `8005676c…` | `27ccbdcd…` |
+
+**The ordering claim is re-verified, not assumed to survive.** AC-6 asserts the
+holdout partition's content hash predates the first commit of any proposer
+capability. `git merge-base --is-ancestor 34318f7f ac2501313` returns true:
+`34318f7f5` (2026-08-30 22:11:43) is a topological ancestor of `ac2501313`
+(2026-08-31 00:44:37), which added `src/scripts/_lib/candidate_proposer.ts` and
+`evolution_lab`'s `propose` verb. The near-miss was checked rather than waved
+past: `src/scripts/_lib/harness_evolution_guards.ts` (2026-08-30 17:55:29) names
+"proposer" but is the guard that REFUSES disclosure to one, not a proposer
+capability.
+
+Because the bytes have not moved since a commit that precedes the first proposer
+commit, the re-pin changes which number is written down and changes nothing about
+what the number certifies.
 
 ## Holdout — 18 files, sealed
 
@@ -91,7 +141,7 @@ open and which this file does not settle.
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
-| `threat-modeling` | `0cc498c5eeafe32b297f73f3bc791883b8efabc01e320e4fd83009ca45002036` |
+| `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
 ## Train — 82 files
@@ -154,7 +204,7 @@ open and which this file does not settle.
 | `license-compliance-credits` | `d2838c7b4b722351d54ae91fd226a3314752a038769093f59b505a6e29d63bdf` |
 | `llm-provider-knowledge` | `9cfb3639dd7dee51520aebf2f180ce41ae752229b76716774468f6a9598461a1` |
 | `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
-| `markitdown` | `ccaac56a2bf19ba6b404d9fc56a603502fb13bf160be3e5a2b779fc906720940` |
+| `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
 | `nda-triage` | `01e4becd20b129780d82d2889099f07a8fe4ee241b31f909d1084af427f4323d` |
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
@@ -167,7 +217,7 @@ open and which this file does not settle.
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
-| `security-audit` | `8005676c28b6199c397a524caa72d25384bfac15a9f89293203563b8e41e6ee7` |
+| `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
