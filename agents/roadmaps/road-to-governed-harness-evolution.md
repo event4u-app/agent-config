@@ -110,38 +110,21 @@ once.
 
 ## Phase 0 — Constitution, reconciliation, budget, stop conditions
 
-> **CARRIED CONDITION, placed here 2026-08-30 — the `merge-authority` council's
-> own instruction, executed late.** When the AI council scoped `merge-authority`
-> on 2026-08-29 (anthropic + openai, 2/2) it declared Phases 1–6 legal while
-> ADR-239 § Decision 3 stays open, and attached one condition it called *"an
-> addition to what the blocker proposed"*: **the non-promotion property of
-> Phases 1–6 must be MECHANICALLY ENFORCED, not merely stated** — *"a phase that
-> promises to promote nothing while nothing prevents it from promoting is the
-> same class of guarantee ADR-239 § Decision 3 is open about."* It said the
-> condition belonged in this phase's exit criteria. It was never written here;
-> found on 2026-08-30 and carried now.
+> **CARRIED CONDITION — TRANSFERRED 2026-08-31 to
+> `road-to-harness-promotion-bridge.md` § Carried blocking condition.** Placed
+> here on 2026-08-30 as the `merge-authority` council's own instruction, it
+> travels with Phase 7 on the 2026-08-31 verdict (2/2 convergent): its named
+> discharge point is *the first commit that creates a promotion path*, and that
+> commit now belongs to the receiver, so leaving the condition here would leave
+> it with no reachable discharge point.
 >
-> **It is carried UNMET, and that is the honest state.** Nothing in this tree
-> promotes anything: there is no promotion path, no candidate, and no merge
-> verb — `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returns
-> the guards, their tests and their config, and no caller. A gate written today
-> to assert "no Phase 1–6 code promotes" would scan a population of zero and
-> exit green, which is worse than no gate because it would look like the
-> mechanical enforcement the council asked for. That is the vacuous-check
-> refusal 1.4 and 2.3 both already made on this roadmap.
->
-> **What discharges it, falsifiably.** The first commit that creates a promotion
-> path — a verb, a state transition into `promoted`, or any write into `src/`
-> derived from a candidate — owes the enforcement in the same change. Concretely:
-> the 3.4 lifecycle enum's `promoted` transition and the 3.6 verb set are where
-> the population stops being empty, so the check lands there and this note is
-> what stops it being read as already-satisfied when it does.
->
-> **This does not resolve `merge-authority` and does not touch it.** ADR-239 §
-> Decision 3 — *"Preauthorized merge authority is granted or refused | owner |
-> open"*, re-verified at `ADR-239:188` on 2026-08-30 — is owner-reserved in both
-> directions, and no council verdict may perform it. Option (c) stands, Phase 7
-> stays gated, 0.8 stays `[~]`.
+> It transferred **unmet and unweakened**, with its full origin text reproduced
+> verbatim in the receiver's § Provenance. In the receiver it is encoded to
+> BLOCK rather than to sit alongside: no step there may close while it is
+> undischarged, independently of `blocker: merge-authority`. The obligation it
+> states — that the non-promotion property be MECHANICALLY ENFORCED rather than
+> merely stated, and that a check over a population of zero does not discharge
+> it — is unchanged.
 
 - [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
       of `planned capability → existing carrier in the tree → redirect / extend /
@@ -401,8 +384,13 @@ once.
       cheap cascade stages, proposer cost against solver benefit).
       verify: the criteria are committed before the first candidate run and are
       falsifiable in both directions.
-- [~] **0.8 Merge authority resolved.** Deferred: owner decision, see
-      Blockers. <!-- blocked-by: merge-authority -->
+- [-] **0.8 Merge authority resolved.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      carried there verbatim as step 0.8, still `[~]`, still deferred to the
+      owner. `[-]` means TRANSFERRED, not cancelled and not satisfied: the
+      merge-authority decision is as open as it was. The `blocked-by`
+      annotation moved with the step, because `blocker: merge-authority` moved
+      with it.
 
 ## Phase 1 — Observation and the activation ladder
 
@@ -1036,15 +1024,108 @@ once.
       requires.
       verify: a candidate failing the cheapest stage consumes no model call, and
       the stage list can produce the Phase 1 classification.
-- [ ] **4.2 Report a metric vector, never a weighted total.** Include an
+      **STAYS OPEN — AI council 2026-08-31 returned `REVISE`, not a greenlight,
+      and the round was DEGRADED at 1/2.** E9 decided the *arity* (twelve) and
+      enumerated the stages nowhere; this round asked for the enumeration and
+      got one, with the verdict *"keep E9's twelve-stage arity, but do not treat
+      the stage semantics as decided until the receipt trust boundary and
+      evidence-cost contract are explicit."*
+      **The degradation, recorded rather than implied.** The anthropic seat
+      returned `exit_1` with an empty stderr, 0 tokens and ~87 s latency on
+      **three** attempts at this question — the full two-decision form twice, and
+      the split single-decision form once. The same seat answered the other four
+      council questions of this run normally, so the failure is specific to this
+      question's shape, not to quota or availability. Under the N=3 budget the
+      run stopped retrying and took the single-seat answer, per the mandate to
+      degrade to the best available seat and record it.
+      **A second reason not to close on it, found by running it twice.** The two
+      openai passes produced two MATERIALLY DIFFERENT twelve-stage enumerations —
+      different names, different order, and a different placement of the
+      statistical stage. One seat asked twice and answering differently is
+      evidence that the design has not converged, which is what `REVISE` means
+      here rather than a formality.
+      **What the answers agree on, and it is the useful part.** No stage may be
+      SOFT — a condition whose failure does not block "actually done" is a
+      diagnostic attached to the receipt, not a cascade gate; `underpowered` is a
+      hard non-pass meaning *collect evidence*, never *reject permanently*; and
+      the first failed stage maps onto Phase 1's existing
+      `content | activation | adherence | unknown` **without** inventing a fifth
+      family. Buildable today against existing primitives: schema validity
+      (`candidate_record.ts`), the holdout / budget / diversity guards
+      (`harness_evolution_guards.ts`), the near-duplicate screen
+      (`shingle_similarity.ts`), and the paired verdict (`paired_verdict.ts`).
+      **What blocks the rest:** the ladder stages need an *independent,
+      append-only receipt producer* with version-bound, attributable
+      observations — which does not exist. A predicate being implementable is not
+      evidence that trustworthy evidence for it can be produced.
+      **Prerequisite before this step is attempted again:** the receipt contract
+      (schema + producer version, immutable run and candidate identity,
+      append-only evidence, explicit representation of missing or conflicting
+      evidence). Without it stages 6-11 are unsafe, because the candidate, the
+      evaluated agent and the mutable harness can all influence both the
+      behaviour and its receipt.
+- [x] **4.2 Report a metric vector, never a weighted total.** Include an
       `artifact-count delta` row — that is where the sprawl concern belongs,
       inside the gate where it can prevent something.
       verify: no code path computes a single scalar score.
-- [ ] **4.3 Make the verdict hierarchy explicit.** `paired_verdict` per metric
+      **DONE 2026-08-31.** The record type is
+      `src/scripts/_lib/evaluation_vector.ts` — `MetricVector` (`:83-86`) has
+      exactly two fields, `candidate_id` and `rows`, and no field that could
+      hold a summary number. Rows come in two kinds (`:60-79`) because two
+      different things are measured: a `PairedRow` carries a `PairedVerdict`
+      from `_lib/paired_verdict.ts` and a `CountedRow` carries an integer delta
+      with no trials behind it. Forcing the artifact delta through a paired
+      verdict would invent trials; giving an outcome metric a bare number would
+      let a caller assert a result without evidence — both shapes exist so
+      neither lie is available.
+      **The artifact-count row is inside the gate, not beside it.**
+      `buildVector` (`:97`) REFUSES a vector that omits the
+      `artifact-count-delta` row, and `promotionVerdict` (`:230`) blocks on a
+      delta above its ceiling — default `0`, a STATED conservative default
+      rather than a measured one, overridable by a caller that knows it is
+      looking at a curator `ADD`. A test asserts the row can refuse a promotion
+      the paired rows would have allowed.
+      **The verify clause is a static scanner, proved SENSITIVE before it was
+      trusted.** `findScalarCollapse`
+      (`tests/scripts/evaluation_vector.test.ts:48`) bans `weighted` / `weight`,
+      `*_score` summary names, a `score: number` field, `.reduce(`, and any
+      signature taking a `MetricVector` and returning `number`. It runs over
+      every `.ts` under `src/scripts` that mentions `MetricVector`, unioned with
+      a named core set, and both halves assert non-emptiness — a scan over
+      nothing exits green. Sensitivity was OBSERVED, not argued: a
+      `weightedTotal(v: MetricVector): number` was added to the module, the
+      scanner turned the suite red naming
+      `src/scripts/_lib/evaluation_vector.ts: ["weighted", "vector-to-number"]`,
+      and removing it restored 18/18 green. The comment stripper carries its own
+      anti-vacuity assertion, because a stripper returning `''` would make the
+      scan pass over nothing.
+- [x] **4.3 Make the verdict hierarchy explicit.** `paired_verdict` per metric
       decides; `underpowered` is not a pass; a Pareto frontier may only order
       candidates that are already non-dominated and never promotes.
       verify: a fixture where the frontier prefers a candidate whose
       `paired_verdict` is `underpowered` produces no promotion.
+      **DONE 2026-08-31, reusing `_lib/paired_verdict.ts` rather than deciding
+      anything again** — Risk 1 on this roadmap is a second verdict beside that
+      one, so `evaluation_vector.ts` imports the type and never recomputes a
+      verdict. The hierarchy is `promotionVerdict`
+      (`src/scripts/_lib/evaluation_vector.ts:230`), the ONLY promoter in the
+      module: it refuses on a regression, on an `underpowered` row, on an
+      artifact delta above the ceiling, on a vector with no paired row, and on a
+      vector where every paired row concluded `no-change` — the last because
+      `no-change` is a decided absence of improvement, not a clean sheet.
+      **`underpowered` is incomparable, not merely non-passing.** `compareRow`
+      (`:145`) ranks `pass > no-change > regression` and returns `0` against an
+      `underpowered` row in either direction: it is an absent measurement, so it
+      can neither win a row nor lose one. A test pins both directions.
+      **The fixture the verify clause asks for is real rather than rigged**
+      (`tests/scripts/evaluation_vector.test.ts:211-247`). `winner` beats
+      `plodder` on `token-cost` (pass vs no-change) and is incomparable on
+      `task-success`, so it genuinely DOMINATES and is the sole member of
+      `paretoFrontier([winner, plodder])`. Its `task-success` verdict is
+      `underpowered`, and filtering the frontier through `promotionVerdict`
+      yields `[]`. The separation is structural: `paretoFrontier` (`:205`) is
+      never consulted by `promotionVerdict`, so a frontier preference has no
+      path by which to become a promotion.
 - [ ] **4.4 Keep a pathology archive, not only a frontier.**
       `from-skipped-parent`, and it was that parent's headline contribution: a
       pure frontier loses the information about *why* a candidate exists, so
@@ -1054,13 +1135,85 @@ once.
       kill ID.
       verify: two candidates with equal vectors but different pathology cells
       are both retained, and a diversity-collapse stop (0.6) reads the archive.
-- [ ] **4.5 Minimality breaks ties.** Order per E5, and include the fifth
-      criterion the skipped parent added: simpler mechanism. Note that the two
-      parents' orders invert, so identical candidates resolve differently
-      depending on the choice — this is not a formatting detail.
+      **STAYS OPEN — AI council 2026-08-31, anthropic + openai, 2/2 present and
+      2/2 on `REVISE` rather than on a greenlight.** Both seats produced a
+      closed `WHERE x WHY` grid (one 6x6, one 7x6) and both refused to approve
+      it, converging on the same two objections.
+      **Objection 1, and it is a defect in the question rather than in the
+      answer.** The brief grounded `WHERE` in "the six-rung ladder" and called
+      the anchor obvious **without enumerating its six values**. Both seats
+      called that methodologically backwards — one refused to treat its own
+      `WHERE` names as more than conditional on confirmation against
+      `src/scripts/_lib/activation_ladder.ts`, warning that a parallel
+      execution-stage taxonomy must not be invented if the ladder already
+      defines different semantics. The next attempt at this step MUST paste
+      `LADDER_RUNGS` (`eligible → selected → projected → delivered → visible →
+      adhered`, `activation_ladder.ts:35-42`) into the question.
+      **Objection 2 — the architecturally prior decision this step is missing.**
+      *What makes an intervention "best" within a cell* is undefined, and both
+      seats ruled the archive cannot be built until it is: without a
+      deterministic ranking, tie-break and replacement rule, "archive the best
+      intervention per cell" names no operation. Options one seat enumerated:
+      lowest edit distance to a human gold standard (needs a gold standard),
+      highest measured failure-class coverage (needs a coverage metric), or
+      most-recent (trivial but deterministic). **Recorded here and not as a
+      `## Blockers` entry on purpose:** it has a step, an owner and a decidable
+      option set, so it is ordinary design work inside 4.4 rather than a
+      condition with nowhere to live — the shape a blocker exists for.
+      **Objection 3 — a best-per-cell archive cannot be the diversity signal.**
+      Retaining one winner per cell erases whether attempts were distributed
+      50/50 or 99.9/0.1: identical occupancy, radically different evidence of
+      search collapse. Each cell must therefore carry frequency-bearing summary
+      metadata from append-only attempt history (attempt count, classifiable
+      count, first/last observation, schema and cohort version, best retained
+      intervention and its ranking evidence), and the guard must consume a
+      versioned archive query rather than storage internals.
+      **On the `0.6` in this step's own verify line:** both seats warned it
+      cannot be carried across unexamined. If it currently means textual
+      similarity it is not a dominant-cell share, and reusing the number would
+      be a semantic change wearing a constant's clothes. It needs an explicit
+      denominator, observation window and minimum sample size, or a separately
+      named dominance threshold.
+- [x] **4.5 Minimality breaks ties.** Order per E5: the FOUR criteria
+      `tokens → artifacts → scope → precedence`. The fifth criterion the skipped
+      parent added — simpler mechanism — is **OUT**. E5's recorded reasoning is
+      that by tie-break time both candidates have already survived selection
+      evaluation and every hygiene check, so there is no outcome signal left to
+      measure simplicity against, and admitting it converts a mechanical
+      decision into a reviewer's taste vote. Note that the two parents' orders
+      invert, so identical candidates resolve differently depending on the
+      choice — this is not a formatting detail.
+      **Amendment 2026-08-31 — transcription, not a decision.** This step
+      previously read *"Order per E5, and include the fifth criterion the
+      skipped parent added: simpler mechanism"*, which contradicted E5 in the
+      same sentence that cited it: E5 (decided 2026-08-30, AI council, anthropic
+      + openai, 2/2) records the four-criterion order **and** the fifth
+      criterion's rejection. The step text predated the verdict and was not
+      updated when it landed. Correcting it here transcribes the existing E5
+      decision and creates no new one; **E5 is not reopened** and its
+      `revisit-if` is untouched.
       verify: two candidates with identical vectors resolve deterministically
       under the committed order.
-- [ ] **4.6 Select regressions from the affected neighbourhood.**
+      **DONE 2026-08-31.** `src/scripts/_lib/minimality_tiebreak.ts`.
+      `MINIMALITY_ORDER` (`:45`) is exactly `tokens -> artifacts -> scope ->
+      precedence` and the test pins its ARITY as well as its contents — a test
+      that only checked the four present criteria would stay green the day a
+      fifth was added, which is the specific thing E5 ruled out. `SCOPE_ORDER`
+      and `PRECEDENCE_ORDER` (`:53`, `:61`) rank narrowest and least-binding
+      first, so all four criteria are integers read off candidate metadata and
+      none is a judgment.
+      **Determinism, and the order shown to be load-bearing.** `breakTie`
+      (`:118`) walks the order and returns at the first difference; the fixture
+      resolves identically across 20 runs and with the arguments swapped. The
+      same fixture run under the INVERTED order flips the winner from `cheap` to
+      `narrow` — evidence that the order is a decision and not a formatting
+      detail, which is why it needed E5.
+      **An all-four tie returns `winner: null` and escalates.** That is the
+      honest answer and it is deterministic. `orderByMinimality` (`:155`) needs a
+      total order to sort with and falls back to the candidate id; the header and
+      a dedicated test record that this is a sort STABILISER, never a fifth
+      criterion — it never appears in a `TieBreakResult`.
+- [x] **4.6 Select regressions from the affected neighbourhood.**
       `from-skipped-parent`: use the code graph to choose which regressions to
       run for a given candidate. The master adopted the attack "local
       improvement, global regression" as a risk with no mechanism behind it.
@@ -1068,7 +1221,58 @@ once.
       existing regressions, it does not author tasks.
       verify: a candidate touching one surface runs the regressions its
       neighbourhood names, and a fixture proves a neighbour regression is caught.
-- [ ] **4.7 Reuse the discrimination and hygiene machinery.**
+      **DONE 2026-08-31, and the graph is NOT the one the step names — stated
+      rather than hidden.** `src/scripts/_lib/regression_neighbourhood.ts`.
+      This tree carries two graph surfaces and only one resolves:
+      `agent-config code-graph detect` answers `no code-graph source detected`,
+      because `hooks.code_graph.enabled` ships `false`
+      (`src/config/agent-settings.template.yml:1373-1374`), so the native
+      engine has no index to select against. `src/scripts/discovery_graph.ts`
+      does answer — 785 nodes and 1672 edges on this checkout — so the
+      neighbourhood is built on its `affected` BFS. The substitution changes
+      what a neighbour IS: artefact relations (`supersedes`, `routes_to`,
+      `references_adr`, pack and workspace membership) rather than symbol
+      relations. For rule / skill / guideline candidates that is the surface
+      carrying the coupling a rewrite breaks; for a `.ts` symbol candidate it is
+      the weaker one, and the module says so by REFUSING rather than by
+      degrading.
+      **The verify clause's first half.** `selectRegressions` (`:172`) walks
+      `DEFAULT_NEIGHBOURHOOD_DEPTH = 2` (`:125`, a STATED default with a
+      `revisit-if`, not a measured optimum) out from each touched surface and
+      selects every registry entry whose guards intersect the result. A
+      candidate touching one rule selects the regression guarding the skill it
+      `routes_to`, with `reason: 'neighbour'` recorded so the selection is
+      explainable from the diff.
+      **The fixture, and it is falsifiable rather than decorative**
+      (`tests/scripts/regression_neighbourhood.test.ts:111-139`). The candidate
+      edits a rule and breaks the skill it routes to; only the NEIGHBOUR
+      regression fails. `catchReport` (`:249`) is fed the FULL registry's
+      outcomes, so a failure the selection never ran lands in `missed` instead
+      of `caught` — which is what makes narrowing observable. The sibling case
+      at `:131` pins the other polarity: the same outcomes under a diff-scoped
+      selection yield `caught: []` and `missed: ['reg-neighbour']`.
+      **Sensitivity was OBSERVED, not argued.** The expansion in the MODULE was
+      broken (`affected(graph, t, depth)` to `affected(graph, t, 0)`) and the
+      suite went red 5/13, the load-bearing failure being *"catches the
+      neighbour breakage, and misses nothing"* with
+      `AssertionError: expected [] to deeply equal [ 'reg-neighbour' ]`.
+      Restoring the line returned 13/13.
+      **An unknown neighbourhood refuses, it does not read as a clean sheet**
+      (`selectionVerdict`, `:210`; test `:141`). A touched surface absent from
+      the graph would otherwise select zero regressions and report success,
+      which is the "local improvement, global regression" hole arriving through
+      the selector instead of around it. There is no option flag that relaxes
+      it. The refusal was exercised against the real graph, not only the
+      fixture: a probe naming a non-existent rule path refused, and the same
+      probe with a real path returned `verdict: null` and a neighbour-reason
+      selection.
+      **K9 is honoured structurally.** This selects; it never authors. No code
+      path constructs a `RegressionSpec`, every selected entry is the caller's
+      registry object BY REFERENCE, and the test asserts object identity
+      (`:160`) rather than an id match — an id match would also pass for a
+      synthesized spec carrying a copied id. `authored: 0` is a literal type
+      (`:113`).
+- [x] **4.7 Reuse the discrimination and hygiene machinery.**
       `eval_publication.PlantedItem` for plants, `judge_hygiene` for order-swap.
       Add the evaluator-promotion procedure the master omitted: an old and a new
       evaluator must cross-grade frozen candidate sets, and evaluator promotion
@@ -1076,6 +1280,35 @@ once.
       verify: a planted candidate the control arm also satisfies is reported as
       a discrimination deficit, not as a win; an evaluator change with no
       cross-grade is refused.
+      **DONE 2026-08-31, and nothing was reimplemented.**
+      `src/scripts/_lib/evaluator_promotion.ts` imports
+      `eval_publication.discriminationDeficit` / `PlantedItem` and
+      `judge_hygiene.auditAssertions`; what it adds is the one thing neither had
+      — the REFUSAL that makes an evaluator swap a gated event.
+      **First conjunct.** `reportPlants` (`:81`) puts any plant the control arm
+      also satisfied into `discrimination_deficits` and never into `wins`, even
+      when the treatment satisfied it too. It also STRIPS the declared
+      `requires_artifact_behaviour` flag from such a plant before handing the set
+      to `discriminationDeficit`, so declared intent cannot rescue an observed
+      failure: the test shows the declared set passing the upstream pre-run check
+      while the observed set does not.
+      **Second conjunct.** `assertEvaluatorPromotable` (`:171`) throws
+      `EvaluatorPromotionRefused` on a null cross-grade, a cross-grade over a
+      different frozen set, a cross-grade between the wrong pair of evaluators,
+      either arm having skipped part of the frozen set, an undeclared order-swap,
+      an always-pass assertion (via `judge_hygiene`), no plants at all, plants
+      that cannot discriminate, and a plant the control also satisfied. It is
+      fail-closed by construction — a one-argument signature with no option
+      object, asserted by the test, so bypassing it means deleting the call,
+      which a diff shows, rather than passing a flag, which it does not. One
+      accepting case exists so a procedure that started refusing everything would
+      not pass either.
+      **Honest boundary on the order-swap.** `judge_hygiene`'s header records
+      that blinding and the order-swap are met upstream by
+      `check_quality_regression.evaluatePair`. This module does not re-observe
+      that; it requires the cross-grade to DECLARE it (`order_swapped`) and
+      refuses when it is false. Asserted by the caller, checked here — stated
+      rather than implied.
 
 ## Phase 5 — Body signal and the proposer roles
 
@@ -1093,11 +1326,37 @@ once.
       it bounds the validity of every routing conclusion in this roadmap.
       verify: the pre-registration lands before the first measurement commit and
       names both gaps separately.
-- [ ] **5.2 Keep the live-floors park intact.** No live harness.
+- [x] **5.2 Keep the live-floors park intact.** No live harness.
       `agents/roadmaps/later/road-to-routing-assurance-live-floors.md` exists on
       this tree — verified — and its council park (2/2) is not reopened here.
       verify: no step in this roadmap invokes a live routing harness.
-- [ ] **5.3 Split the roles: analyzer, curator, proposer.**
+      **DONE 2026-08-31 — a scan that PASSES, in two halves.**
+      `tests/scripts/governed_harness_no_live_harness.test.ts`. Half A parses
+      this roadmap's step bullets and applies the live-harness pattern set
+      (the live backend class, the cached-live backend name, a route-checker
+      invocation, a live-backend command flag, a model endpoint, a council run, a
+      model client — the literals live in the test) to the code spans that carry
+      a COMMAND shape. Half B applies the
+      same set to every `.ts` under `src/` whose header declares it as belonging
+      to this roadmap — the half that keeps working after the roadmap closes.
+      Both halves assert non-emptiness first, because a gate that scans nothing
+      exits green.
+      **Citation is not invocation, and the scan knows the difference.** Step 5.1
+      cites `src/scripts/description_route_check.ts:18-30` by name, in a code
+      span, because that header is the documented statement of the
+      proxy-to-real-session gap. A scanner reading a file citation as an
+      invocation would fire on the step that exists to describe the limitation,
+      so `commandSpans` narrows to spans with a runner prefix or a flag, and both
+      polarities are pinned in the test: a planted step whose command span names
+      the route checker with a live backend flag is caught with three findings,
+      and the 5.1-shaped citation is silent. The probe string itself lives in the
+      test rather than here — writing it into a step would make this roadmap's
+      own evidence block trip its own scan, which is what happened on the first
+      attempt and is the gate working rather than a false positive.
+      **The park itself is asserted intact** — the file exists under `later/`,
+      carries `status: later`, and its 2/2 council record is present. It is not
+      reopened here: nothing in this change touches it.
+- [x] **5.3 Split the roles: analyzer, curator, proposer.**
       `from-skipped-parent`, which states the failure directly — do not collapse
       them into one unconstrained rewrite prompt. The master has one LLM
       proposer plus a one-shot compiler, so the curator role that owns lifecycle
@@ -1105,17 +1364,103 @@ once.
       only, under a frozen evaluator contract.
       verify: the three roles are separate prompts with separate input sets, and
       the judge cannot see outcome truth.
+      **DONE 2026-08-31.** `src/scripts/_lib/role_split.ts`, reusing
+      `_lib/curator_ops.ts` for the op vocabulary, `_lib/evaluator_promotion.ts`
+      for the contract gate and `_lib/judge_hygiene.ts` for the advisory rubric
+      shape — nothing here decides anything those three already decided.
+      **First conjunct — separate prompts, separate input sets, enforced at the
+      boundary.** `ROLE_INPUTS` (`:94`) declares each role's admissible input
+      kinds and `buildPrompt` (`:136`) REFUSES an input outside that set. The
+      separation is the one the step names: the analyzer never sees
+      `corpus-inventory` so it cannot pick an artifact, the curator never sees
+      `authoring-contract` so it cannot write one, the proposer never sees
+      `trigger-census` so it cannot relitigate the decision. The sets are
+      deliberately NOT disjoint — all three see `defect-observation`, because a
+      curator choosing `RETIRE` without the motivating evidence is guessing —
+      but no role receives the union, and a test pins each set as a strict
+      subset. The collapse this step exists to prevent is tested directly: a
+      supplier handing one bag of every input kind to all three roles is
+      refused (`tests/scripts/role_split.test.ts:111`), which is how three roles
+      actually become one unconstrained rewrite prompt — not by a decision, but
+      by the input set widening one field at a time.
+      **Second conjunct — the judge cannot see outcome truth, structurally, in
+      three layers that fail independently.** (1) `JudgeInput` (`:175`) has
+      three fields — a contract id, rubric question ids, artifact text — and no
+      field capable of holding a verdict, an arm label, a metric, a winner or a
+      ground-truth label. A scanner reads the DECLARED interface block and
+      matches an outcome-field vocabulary; it is proved to FIRE on a synthetic
+      interface carrying `paired_verdict` and `winning_arm` before it is trusted
+      to be silent on the real one, and the field extractor carries its own
+      anti-vacuity assertion because an extractor returning nothing would also
+      "pass" (test `:175-197`). (2) Types vanish at runtime, so
+      `buildJudgePrompt` (`:266`) refuses any key outside `JUDGE_INPUT_KEYS`
+      (`:166`) — exercised with an object cast through `as JudgeInput` carrying
+      `paired_verdict: 'treatment-won'`, which the type system cannot see and
+      the refusal does (test `:199`). A test also pins the allowlist against the
+      declared fields, so there is no third list to drift. (3) The prompt is
+      asserted to be a PURE FUNCTION of the three allowlisted values by exact
+      string equality (test `:218`) — a builder interpolating an outcome from
+      anywhere at all, not merely from its own argument, breaks that equality,
+      which layers 1 and 2 would both miss.
+      **Rubric questions only, and the answers cannot name an arm.**
+      `assertRubricOnly` (`:233`) throws on a question asking which arm won,
+      which candidate was better, or what the ground truth was — because such a
+      question makes the judge a second verdict beside `paired_verdict`, which
+      is Risk 1 on this roadmap. `JUDGE_GRADES` (`:182`) is
+      `yes / no / not-assessable`: a closed vocabulary with no value that names
+      an arm. The `judge_hygiene` shape classification rides along as ADVISORY
+      and gates nothing, exactly as that module states it must.
+      **The frozen evaluator contract is the existing one, not a second gate.**
+      The contract id travels on the prompt, `assertJudgeContractFrozen`
+      (`:292`) refuses a mismatch, and `promoteJudgeContract` (`:309`) is the
+      only way forward — it delegates to step 4.7's `assertEvaluatorPromotable`,
+      so a judge-contract change inherits the cross-grade and
+      discrimination-plant requirements rather than getting a weaker gate of its
+      own. A test shows a null cross-grade refusing the judge-contract promotion.
+      **The judge stays optional**, as the step says: `buildSplitPipeline`
+      (`:330`) returns `judge: null` when none is configured, and the three role
+      prompts are produced regardless.
 - [ ] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
       verify: the comparison is a `paired_verdict` run, not an argument.
-- [ ] **5.5 Curator operation set per E6.** The skipped parent argues the 4-op
+- [x] **5.5 Curator operation set per E6.** The skipped parent argues the 4-op
       set is insufficient because split and retire are first-class anti-sprawl
       actions; the 7-op set is the recommendation. Candidates only, never
       promotions. Run `src/scripts/_lib/shingle_similarity.ts` as a
       deterministic pre-stage before any model judgment.
       verify: a near-duplicate candidate is caught by the similarity stage with
       zero model calls.
+      **DONE 2026-08-31.** `src/scripts/_lib/curator_ops.ts`. `CURATOR_OPS`
+      (`:48`) is E6's seven — `KEEP / ADD / MERGE / REPLACE / SPLIT / RETIRE /
+      SKIP` — and the test pins the arity as well as the membership. `OP_ARITY`
+      (`:76`) encodes the algebra argument that carried E6: `MERGE` is n->1
+      (at least two targets, one product) and `SPLIT` is 1->n (one target, at
+      least two products), which is exactly what `RETIRE + 2x ADD` cannot
+      express.
+      **Candidates only, carried by the type.** Every screened proposal carries
+      `lifecycle: 'candidate'` as a LITERAL type (`:130`), so there is no value a
+      curator can construct that names another lifecycle. Phase 7 remains gated
+      on the OPEN `merge-authority` blocker and nothing here promotes.
+      **Zero model calls, established three ways rather than asserted.**
+      (1) A static scan of the module AND its one dependency
+      (`_lib/shingle_similarity.ts`) for `fetch(`, `node:http(s)`, `node:net`,
+      `child_process`, model endpoints, model clients, API-key reads and `await`
+      — proved to FIRE on six synthetic sources first, silent on a plain one.
+      (2) A dynamic run with `fetch`, `XMLHttpRequest` and `WebSocket` replaced
+      by throwing stubs, which still returns the correct screen. (3) The result's
+      `model_calls` is the literal type `0`, and `screenNearDuplicates` (`:145`)
+      is synchronous — a synchronous function cannot await a call, so the
+      property follows from the signature rather than from the body's good
+      behaviour. The import list is asserted to be exactly
+      `['./shingle_similarity.js']`.
+      **The near-duplicate case is a re-skin, which is the shape the primitive
+      exists for** — the same prose with the framework and vendor nouns swapped
+      scores at or above the 70 % containment threshold and is rejected against
+      the entry it duplicates, while unrelated prose is admitted. The threshold
+      is a STATED default at the conservative end of `lint_originality`'s range,
+      not a measured optimum; `revisit-if` a screening run rejects a proposal a
+      curator then re-adds by hand, or admits one a human calls a duplicate.
 - [ ] **5.6 Cheap proposer models first, and track evolution ROI.**
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
@@ -1126,7 +1471,7 @@ once.
 
 ## Phase 6 — Delivery: measure the existing substrate first
 
-- [ ] **6.1 Run the three-arm experiment on what already ships.**
+- [x] **6.1 Run the three-arm experiment on what already ships.**
       `corrected-from-reproduction`, and this is the strongest single finding of
       the analysis. The master's delivery phase builds a BM25 per-task subset.
       Verified on this tree:
@@ -1140,7 +1485,44 @@ once.
       whose thesis it is.
       verify: the three arms are measured against one another before any new
       retrieval component is written.
-- [ ] **6.2 Preserve one matcher.** `from-skipped-parent`, and the tree already
+      **DONE 2026-08-31, and the delivery half is what was missing.**
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` measures
+      all three arms over `tests/eval/routing-matrix` — 305 positives, 194
+      near-misses — with one matcher and zero model calls. Reproduce with
+      `./scripts-run src/scripts/model_rule_injection --three-arm`.
+      Delivery of the labelled body: `eager-all` 1.000 (305/305) at 120,743
+      standing tokens and a false-context rate of 1.000 (194/194 near-miss
+      bodies also standing); `thin` 0.000 (0/305) at 18,223; `delivery` 0.990
+      (302/305) at the same 18,223 plus a mean 2,026 injected tokens per prompt,
+      with zero near-miss deliveries. The three losses are named rather than
+      summarised: two matcher misses and one cap drop, each with its prompt.
+      **The price grid was NOT the experiment, which is why this step stayed
+      open.** `model_rule_injection.ts:454-462` already priced the same three
+      shapes; a price grid reports what a shape COSTS and never what it
+      DELIVERS. `src/scripts/_lib/delivery_arm_experiment.ts` adds the delivery
+      half and reads its cost figures from `standingCorpora`, the same function
+      the grid reads, so the two halves cannot disagree.
+      **No new retrieval component was written**, which is the ordering half of
+      the verify: 6.3 has not started, the module imports `matchTierRules` and
+      `selectForInjection` from `_lib/rule_injection.ts` and nothing else that
+      answers "which rules fire on this prompt?", and `router_match_parity`
+      (5/5) plus `single_matcher_preserved` (8/8) are green on this branch.
+      **Sensitivity proved on two independent handles, because a measurement
+      never seen move has unknown sensitivity.** Squeezing the byte cap moves
+      `delivery` monotonically — 0.770 at 1 B, 0.774 at 2,000 B, 0.990 at the
+      shipped 20,480 B, 0.993 at 200,000 B, where it meets the matcher's own
+      recall ceiling and the cap stops binding — while `eager-all` and `thin`
+      do NOT move, which is the other half of the proof. Stripping one rule's
+      triggers in an in-memory router moves that rule's positives out of the
+      injected set and into the thin standing set, so `thin` rises off 0 while
+      `eager-all` holds. Both are pinned in
+      `tests/scripts/_lib/delivery_arm_experiment.test.ts` (11/11).
+      **What it does not measure, and no spend closes it.** Whether a session
+      that RECEIVES a body behaves like one that HAD it standing is not an
+      expense declined here — ADR-202 records that instrument CLOSED, kappa
+      0.472 against a registered 0.800 floor, no third attempt licensed. The
+      artefact says so in its own § What this does NOT measure.
+- [x] **6.2 Preserve one matcher.** `from-skipped-parent`, and the tree already
       enforces it: `src/scripts/_lib/rule_injection.ts:1-19` is "THE single
       module both the offline model and the runtime concern read", trigger
       semantics live in `_lib/router_match.ts` as "the single implementation for
@@ -1148,6 +1530,32 @@ once.
       An experiment whose offline pricing and runtime delivery use different
       matchers measures nothing.
       verify: the parity test stays green and no second matcher is introduced.
+      **DONE 2026-08-31, and the second conjunct was UNCOVERED until now.**
+      `tests/scripts/router_match_parity.test.ts` passes 5/5, which pins the
+      matcher's BEHAVIOUR against the reference. Nothing asserted that a SECOND
+      implementation had not appeared beside it, and the parity test would have
+      stayed green on the day one did — a rival matcher in another file changes
+      none of `router_match.ts`'s outputs.
+      `tests/scripts/single_matcher_preserved.test.ts` is that second conjunct:
+      it scans every `.ts` under `src/` for DECLARATIONS (not imports, not calls)
+      of the three trigger-semantic symbols `trigger_matches`, `match_prompt`,
+      `keyword_matches_anchored`, and asserts `_lib/router_match.ts` is the only
+      file carrying them. It also asserts `_lib/rule_injection.ts` imports from
+      it rather than owning one.
+      **`_fnmatch` is deliberately NOT in the banned set**, and the exclusion is
+      load-bearing rather than lenient: it is a generic glob helper declared
+      privately in six unrelated files on this tree (`memory_lookup`,
+      `cross_repo_retrieve`, `bench_ab_clone`, `check_release_pr_shape`,
+      `check_no_external_sources`, and the templated `memory_lookup`), none of
+      which answers "which rules fire on this prompt?". Banning it would make the
+      gate red on arrival for six pre-existing files, and a gate that is red on
+      arrival is deleted within the week.
+      **Sensitivity is proved against real syntax, not only against strings.**
+      Besides the three synthetic declaration shapes and the import / call /
+      re-export negative cases, one case lifts the exclusion and asserts the
+      detector DOES find all three declarations inside `router_match.ts` itself —
+      a scanner tested only on hand-written strings can be silently wrong about
+      the syntax it has to read.
 - [ ] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
       Over the existing BM25 core. No embeddings —
       `docs/contracts/no-runtime-boundary.md:40` classifies a vector/embedding
@@ -1171,55 +1579,43 @@ once.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
-- [ ] **7.1 One evidence package per promotion, in the fuller form.** The master
-      adopted a 9-field package; the skipped parent's has 14, and the five extra
-      are exactly the fields that make 3.2, 4.4 and 7.3 auditable: pathology
-      cell, candidate lineage, mutation dimension, selection results, sealed
-      result, cost, scope.
-      verify: a promotion attempt with any field absent is refused.
-- [ ] **7.2 Route through the existing gate, not a second governance system.**
-      Reuse the evidence-grading vocabulary already in the tree
-      (`authority_basis`, `evidence.strength`, `reopen_policy`,
-      `protected_dimensions`).
-      verify: no new governance verb, no new approval path.
-- [ ] **7.3 Promote by scope, with a transfer gate.** `from-skipped-parent`,
-      raised to doctrine level in both parents and absent from the master's
-      promotion path: a candidate carries a scope (episode → repo → stack →
-      profile/pack → global) and moving up a level requires independent transfer
-      evidence from a second solver or host configuration. Without it, every
-      promotion goes straight to canonical and the anti-bloat doctrine has no
-      teeth. This is not what the parked curriculum generator was.
-      verify: a promotion with no scope field is refused, and a scope raise with
-      one configuration's evidence is refused.
-- [ ] **7.4 Reject semantic no-ops.** A no-op detector plus a minimum
-      material-improvement threshold. The master kept the cooldown and lineage
-      from the same attack and dropped both gates.
-      **Marker corrected 2026-08-26:** this step carried
-      `from-skipped-parent`, and it should not have. The clause is at
-      `road-to-evidence-driven-harness-evolution.md:1200-1201` — a **declared**
-      parent — and the skipped parent contains no no-op gate at all (its only
-      paraphrase mention, `:1342` "Avoid five paraphrases", is about candidate
-      diversity at generation time, which is a different mechanism). So the
-      master dropped this having read it, not having missed it. That is the
-      second misattributed marker found in this pair; see
-      `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`
-      § Marker reliability.
-      verify: a paraphrase-only candidate is refused before the cascade.
-- [ ] **7.5 Roll out by canary, never silently.** `from-skipped-parent`: opt-in
-      candidate bundles.
-      verify: no promotion changes a shipped default without an opt-in stage.
-- [ ] **7.6 A promoted artefact is not immortal.** `from-skipped-parent`, and
-      it is the only anti-monotonic-growth mechanism *after* the gate — the
-      `artifact-count delta` row guards the gate, the estate needs its own:
-      post-promotion re-evaluation with `KEEP / REVISE / MERGE / SPLIT /
-      RETIRE`. The master's promotion phase ends at the evidence package plus a
-      cooldown, so nothing reopens a promoted artefact and the lifecycle is
-      manual-only at exactly the point where growth accumulates.
-      verify: a promoted artefact reaching its review trigger produces one of the
-      five verdicts, and at least one `RETIRE` path is exercised in a fixture.
-- [ ] **7.7 Best-known-state reference on regression.** Roll back to the
-      recorded best-known state; lineage, not endless append.
-      verify: an injected regression triggers the rollback path in a fixture.
+> **TRANSFERRED 2026-08-31 to `road-to-harness-promotion-bridge.md`, on a
+> recorded AI-council verdict — 2/2 convergent, anthropic/claude-sonnet-4-5 +
+> openai/codex-default, Option 3: split at the phase boundary into a new ACTIVE
+> roadmap.** Both seats rejected `agents/roadmaps/later/` by name, because
+> `later/` is excluded from the dashboard and from `/roadmap:process-*` and
+> therefore does not preserve active-estate membership.
+>
+> **`[-]` here means TRANSFERRED. It does NOT mean cancelled, dropped, or
+> satisfied.** Every step below is still open, still unmet, and still owned —
+> by the receiver, which is ACTIVE and visible to every estate mechanism. The
+> steps, their prose and their `verify:` lines moved verbatim; nothing was
+> weakened in the move. Every reference to Phase 7, 7.3 or 7.6 elsewhere in
+> this file — the Risk Register's row 8, the open-decisions section — resolves
+> through this pointer.
+
+- [-] **7.1 One evidence package per promotion, in the fuller form.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.1 there, verbatim.
+- [-] **7.2 Route through the existing gate, not a second governance system.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.2 there, verbatim.
+- [-] **7.3 Promote by scope, with a transfer gate.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.3 there, verbatim.
+- [-] **7.4 Reject semantic no-ops.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.4 there, verbatim, including its 2026-08-26 marker correction.
+- [-] **7.5 Roll out by canary, never silently.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.5 there, verbatim.
+- [-] **7.6 A promoted artefact is not immortal.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.6 there, verbatim. It is what closes AC-9, which transferred with
+      it.
+- [-] **7.7 Best-known-state reference on regression.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.7 there, verbatim.
 
 ## Blockers
 
@@ -1332,101 +1728,28 @@ once.
 > makes it a pattern in this inbox-harvest cohort rather than one slip.
 
 
-### blocker: merge-authority
+### merge-authority — MOVED
 
-- **Status:** open — **SCOPED 2026-08-29, and it is divisible in the same shape
-  as `b-adr-088` on `road-to-capability-native-execution`. Option (c) is taken
-  and is council-decidable; options (a) and (b) are OWNER-RESERVED and were not
-  taken.** AI council 2026-08-29, anthropic + openai, **2/2 convergent**.
-
-  **Taken, council-decidable — the scoping half.** Phases 1–6 are declared legal
-  while ADR-239 § Decision 3 remains open. They build measurement and isolation
-  and promote nothing, so where merge authority lands does not touch them. Phase
-  7 stays gated on this blocker.
-
-  **Not taken, owner-reserved.** (a) **granting** preauthorized merge authority
-  weakens a human-in-the-loop promotion guarantee — the shape
-  `non-destructive-by-default` protects — and (b) refusing it settles an ADR §
-  Decision that is recorded as open. Either is a resolution of ADR-239 itself,
-  which a council may recommend and may not perform.
-
-  **The condition that makes (c) real rather than a promise, and it is an
-  addition to what the blocker proposed:** the non-promotion property of Phases
-  1–6 must be **mechanically enforced**, not merely stated. A phase that
-  promises to promote nothing while nothing prevents it from promoting is the
-  same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
-  0's exit criteria rather than left here.
-
-  **FOUND UNCARRIED 2026-08-30, and carried now.** The sentence above said the
-  condition was carried into Phase 0's exit criteria. It was not: a tree-wide
-  grep for `mechanically enforced` / `non-promotion` over this roadmap returned
-  only these lines, inside this blocker. The condition existed exactly where the
-  paragraph said it should not be left.
-
-  This is the **third instance in this cohort of the same defect shape** — a
-  criterion with no phase, no step and no owner, which Risk 11 names for AC-8
-  and which the `Resolved when` twin above records for `b-adr-088`. It is
-  recorded as a pattern rather than a slip because that is now three.
-
-  The condition is carried as a Phase 0 exit-criterion note (see the
-  **CARRIED CONDITION** block at the head of Phase 0), which is where the
-  council put it. It is carried **unmet**, with the reason it cannot be
-  discharged today stated there rather than being quietly satisfied by a check
-  that would scan nothing.
-
-  **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
-  now lives inside the field's value rather than in a heading above it.** The
-  original — *"ADR-239 § Decision 3 no longer reads as an open question and its
-  `review_trigger` no longer names the `merge-authority` blocker"* — is
-  **unsatisfiable by option (c) and by any council**, because (c) leaves §
-  Decision 3 open by construction. It bundled two things one authority cannot
-  discharge, exactly as `b-adr-088` did.
-
-  **Why the fix is a field edit and not a paragraph, 2026-08-30.** The 2026-08-29
-  amendment was written as prose here and left the original `- **Resolved
-  when:**` field standing three fields below, still stating the unsatisfiable
-  condition — two contradictory closure conditions on one blocker, with
-  `lint_roadmap_blockers` green throughout. This is the **same defect, in a
-  second roadmap**: `road-to-capability-native-execution`'s
-  `b-adr-088-external-runtime-federation` carried an identical stale twin, found
-  and fixed on 2026-08-29, and its own note predicted the recurrence by naming
-  the mechanism. The gate matches a literal label
-  (`/^-[ \t]*\*\*Resolved when:\*\*/im`, `src/scripts/lint_roadmap_blockers.ts:52`),
-  so a heading that says *"Resolved when (AMENDED …)"* satisfies nothing and the
-  contradictory line was the only thing keeping the blocker legal.
-
-  **Searched rather than assumed:** a tree-wide grep for `Resolved when` outside
-  the literal `- **Resolved when:**` field across `agents/roadmaps/**` returns
-  these two blockers and no third. Both are now fixed the same way — rename the
-  amended field to the literal label first, delete the stale one second, because
-  the other order turns the gate red in between.
-- **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
-  proposed that would promote anything — in which case the scoping decision above
-  no longer covers it and this blocker binds earlier than Phase 7.
-- **Owner:** maintainer
-- **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
-  Phase 7.
-- **What to do:** pick exactly one — (a) resolve ADR-239 § Decision 3 by
-  granting preauthorized merge authority with its scope written into that
-  record, or (b) resolve it by refusing preauthorized merge authority, making
-  "only humans promote" a property rather than an intention, or (c) declare
-  Phases 1–6 legal while it is unresolved and gate only Phase 7 on it — the
-  cheapest option and the one this roadmap is cut for. Read
-  `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:79-81`
-  and its decision table at `:188`.
-- **Resolved when:** *(AMENDED 2026-08-29 — the marker sits inside the value on
-  purpose; see the note above this field.)* the Phases 1–6 scope decision is
-  recorded above and needs nothing further. This blocker closes when the
-  **owner** settles ADR-239 § Decision 3 in either direction, at which point
-  Phase 7 becomes enterable or is redesigned.
-- **Recommendation:** (c). Phases 1–6 build measurement and isolation and
-  promote nothing, so they are unaffected by where merge authority lands; (a)
-  and (b) are owner-reserved and should not be forced by a plan that merely
-  wants to start.
-- **If you do nothing:** Phases 1–6 remain executable and Phase 7 cannot be
-  entered, because the guardrail it rests on is documented in this tree as
-  undecided. All three source proposals asserted that guardrail as a fact;
-  verified 2026-08-26, it is not one.
+> **MOVED WHOLE 2026-08-31 to `road-to-harness-promotion-bridge.md` § Blockers,
+> where it is the roadmap's single gate.** Transferred verbatim, including its
+> 2026-08-29 council scoping, its 2026-08-30 field-shape repair and its
+> `Resolved when` amendment. It is NOT resolved and NOT withdrawn: ADR-239
+> § Decision 3 is as open as it was, and it is owner-reserved in both
+> directions.
+>
+> **This heading OMITS the literal `blocker:` prefix, and the omission is
+> deliberate — read the repaired entry two headings above before assuming it is
+> the same defect.** `lint_roadmap_blockers` recognises an entry only by
+> `### blocker: <id>`, so a heading without the prefix declares nothing. That is
+> exactly what is wanted here and the opposite of what was wanted on 2026-08-29:
+> there, a real entry had lost its prefix and was invisible to the gate, which
+> was a defect; here the entry has genuinely MOVED, and keeping the prefix would
+> declare `merge-authority` in two files at once — two live owners for one
+> blocker, which the council's atomic-transfer requirement forbids and which the
+> gate confirmed by counting `open_blockers` 31 → 32 when this stub first carried
+> the prefix. The stub is kept, prefix-less, so the many references to
+> `merge-authority` elsewhere in this file land somewhere that names where the
+> entry went.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
@@ -1485,11 +1808,62 @@ once.
       positive pole (exactly at every ceiling does NOT abort) keeps the
       negatives from passing because the verb refuses everything.
 
-- [ ] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
+- [x] AC-1 — Every capability this roadmap builds has a row in the 0.1 inventory
       matrix stating why no existing carrier fits, and no step duplicates a
       carrier named in the "What already exists" table.
-- [ ] AC-2 — Every overlapping plan in the estate carries one of the five
+      **MET 2026-08-31, and it was NOT met when this audit started — that is
+      the point of the criterion and it earned its place.** The branch that
+      closed 4.2, 4.3, 4.5, 4.6, 4.7, 5.2, 5.3, 5.5 and 6.2 shipped six modules
+      under `src/scripts/_lib/`, and three of them built a capability the matrix
+      had no row for at all: `minimality_tiebreak.ts` (4.5),
+      `evaluator_promotion.ts` (4.7) and `role_split.ts` (5.3). The audit added
+      them as `build new` rows 4-6, each naming the command that was run rather
+      than asserting absence, plus main-matrix rows 13-14 for the two
+      capabilities that do have carriers — `discovery_graph.ts` for 4.6 and
+      `shingle_similarity.ts` for 5.5. The sixth, `evaluation_vector.ts` (4.2),
+      was already covered by the existing metric-vector row.
+      **The second conjunct is measured, not assumed.** No step reimplements
+      one of the nine carriers in the "What already exists" table:
+      `evaluation_vector.ts:56` takes `paired_verdict` by `import type` and
+      never recomputes a verdict, `evaluator_promotion.ts:49-50` imports
+      `eval_publication` and `judge_hygiene`, `evolution_lab.ts:766` calls
+      `bench_ab_integrity`'s main directly rather than restating it, and
+      `tests/scripts/single_matcher_preserved.test.ts` (8/8 green) asserts
+      `router_match.ts` is still the only file declaring the three
+      trigger-semantic symbols. `lexical_index` and `lean_projection_mode` have
+      no consumer at all yet, because 6.1 and 6.3 have not started.
+      **Scope of the closure, stated so it is not read as permanent.** This is
+      measured over the capabilities built to 2026-08-31. 0.1's second half is a
+      standing obligation on Phases 1-7, so the first later step that builds
+      without a row re-opens this criterion.
+- [x] AC-2 — Every overlapping plan in the estate carries one of the five
       dispositions from 0.2, and no capability has two execution owners.
+      **MET 2026-08-31 by a full-estate sweep, which is stronger evidence than
+      the spot checks 0.2 recorded.** The 0.2 overlap grep was run over every
+      file in `agents/roadmaps/` and `agents/roadmaps/later/`. Exactly two
+      return a non-zero count: this roadmap (34) and
+      `road-to-inbox-harvest-2026-08-e-council-topology-evidence` (1). Every
+      other plan in the estate returns 0 and is therefore not an overlapping
+      plan at all. The single hit is incidental — the phrase *parse-outcome
+      vocabulary* at that file's `:582`, about a typed union for council parse
+      results, not the outcome-vocabulary reconciliation the table assigns — and
+      that file already carries a `drop` verb. So every overlapping plan carries
+      one of the five dispositions.
+      **The second conjunct is measured against what this branch actually
+      built.** None of the six new capabilities appears in another plan:
+      grepping the active and `later/` sets for `curator`, `minimality`,
+      `evaluator promotion`, `metric vector`, `regression neighbourhood` and
+      `role split` returns this roadmap plus one incidental
+      *reflector/curator split* in `later/road-to-experience-loop-owner-decisions`,
+      which is parked and is the experience loop's reflector, not this one's
+      curator.
+      **Three State values in the 0.2 table went stale and were left as
+      measured rather than quietly rewritten**, with the re-measurement recorded
+      beside the table instead: `road-to-experience-loop-broadening` is now
+      archived, `road-to-capability-native-execution` is now in `later/`, and
+      `road-to-turnaround-followups` has entered the active set — it measures 0,
+      so it needs no row. Same scope caveat as AC-1: the estate moves, and a new
+      overlapping plan re-opens this.
 - [ ] AC-3 — A candidate variant of one harness dimension can be materialised,
       evaluated and destroyed without any diff in the original tree, and a
       deliberate path-ownership sabotage exits non-zero.
@@ -1503,6 +1877,20 @@ once.
       evaluated a candidate. Closing this now would be the generous reading the
       roadmap's own § blocker text warns about — *"a detector that never got
       built reads as one that passed"*.
+      **Re-audited 2026-08-31 and still OPEN on `evaluated`, now for a sharper
+      reason than "no evaluation stage exists".** Phase 4 has since shipped the
+      evaluation machinery — `evaluation_vector.ts`, `minimality_tiebreak.ts`,
+      `evaluator_promotion.ts`, `regression_neighbourhood.ts` — and every one of
+      them is an UNWIRED library: `grep -rn` over `src/` for those module names
+      returns no reference outside the modules themselves, so there is no
+      production caller. `evolution_lab`'s seven verbs contain no evaluation
+      path either — `compare` (`:761`) calls `bench_ab_integrity`'s main and
+      `promote` (`:858`) refuses unconditionally. A candidate can therefore
+      still be materialised and destroyed but not evaluated. This is the
+      standard `blocker: guard-call-site-integration` already settled in the
+      other direction — a guard nothing calls has no coverage, and neither does
+      an evaluator. What closes it is 4.1's cascade wiring these modules into
+      `run`.
 - [x] AC-4 — A candidate changing two primary dimensions is refused by the
       schema, and "mutated" is not readable as "accepted" anywhere in the data
       model.
@@ -1523,20 +1911,130 @@ once.
 - [ ] AC-5 — Promotion is decided by `paired_verdict` per metric with
       `underpowered` refused as a pass, and no code path computes a weighted
       total score.
+      **Audited 2026-08-31: the second conjunct is met, the first is not, and
+      the criterion stays open on the conjunction.**
+      Second conjunct — met, with its evidence class named rather than
+      overstated. `findScalarCollapse`
+      (`tests/scripts/evaluation_vector.test.ts:48`) is green over every `.ts`
+      under `src/scripts` that mentions `MetricVector`, unioned with a named
+      core set, and it is proved to fire on seven collapsing shapes before it is
+      trusted to be silent; `MetricVector` (`evaluation_vector.ts:83-86`) has no
+      field that could hold a summary number. That is a **named-construct static
+      scan over a bounded population**, not a semantic proof that no arithmetic
+      anywhere reduces a set of metrics to one number.
+      First conjunct — NOT met. `promotionVerdict`
+      (`evaluation_vector.ts:230`) does decide per metric and does refuse an
+      `underpowered` row as a pass, reproduced at 18/18 green — but it has **no
+      caller**. `evolution_lab`'s `promote` verb (`:858`) refuses
+      unconditionally without ever consulting it, so no promotion in this tree
+      is decided by `paired_verdict`, because no promotion is decided at all.
+      Closing on the scanner alone would be closing on the met half of a
+      conjunction. What closes it is a caller: 4.1's cascade, or `promote`
+      consulting the verdict before it refuses.
 - [ ] AC-6 — The holdout partition's content hash predates the first commit of
       any proposer capability, and a run leaking a holdout value into proposer
       context exits non-zero.
-- [ ] AC-7 — The three existing delivery arms have been measured against one
+      **Audited 2026-08-31: the second conjunct is met, the first is
+      FALSIFIED — by reproduction, not by doubt.**
+      Second conjunct — met.
+      `tests/scripts/harness_evolution_guard_call_sites.test.ts` is 15/15 green
+      and drives the real CLI: a holdout value reaching proposer context exits 4
+      before any external call. That is AC-11's evidence and it holds here.
+      First conjunct — the pinned `SET-SHA256 7e091dfc...` in
+      `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` does
+      **not reproduce**. Running that file's own documented recipe on this
+      checkout yields `0667fbd9...`; two near-variants (dropping the partition
+      column, tab separators) yield two further hashes and neither is the pin.
+      The corpus is not the cause: the file set is identical to the freeze
+      commit `34318f7f` (100 files, `git ls-tree` diff empty) and every file's
+      bytes are unchanged since it. The cause is that `34318f7f` — the commit
+      that RECORDED the freeze — also edited three of the files it was freezing.
+      `markitdown`, `security-audit` and `threat-modeling` carry their pre-edit
+      hashes in the per-file table; 97 of 100 rows reproduce exactly, those
+      three do not, and the set hash inherits it. The pin was stale on arrival,
+      so there is no verifiable content hash whose age can be asserted.
+      **The ordering half is intact and is not what fails.** `34318f7f`
+      (2026-08-30 22:11:43) is a topological ancestor of `ac2501313`
+      (2026-08-31 00:44:37), which added the first proposer capability —
+      `_lib/candidate_proposer.ts` and `evolution_lab`'s `propose` verb — and
+      `git merge-base --is-ancestor` confirms it. The earlier
+      `_lib/harness_evolution_guards.ts` (2026-08-30 17:55:29) names "proposer"
+      but is the guard that REFUSES disclosure to one, not a proposer
+      capability; it was checked precisely because it is the near-miss.
+      **What closes it, recorded rather than performed** — re-pinning a frozen
+      corpus is an owner-visible correction, not the missing-row class this
+      audit was scoped to: re-pin those three per-file hashes and the
+      `SET-SHA256` to the frozen bytes, which are still recoverable because they
+      have not moved since `34318f7f`, and state the correction in the artefact.
+      The ordering claim survives that re-pin, because the bytes have not moved
+      since a commit that precedes the first proposer commit.
+- [x] AC-7 — The three existing delivery arms have been measured against one
       another before any new retrieval component exists, and
       `router_match_parity.test.ts` is still green.
+      **CLOSED 2026-08-31: both conjuncts now met, and the first was closed by
+      6.1 exactly as the audit below predicted.**
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` measures
+      `eager-all` 1.000 (305/305) at 120,743 standing tokens, `thin` 0.000
+      (0/305) at 18,223, and `delivery` 0.990 (302/305) at 18,223 + 2,026
+      injected tokens per prompt, over one corpus with one matcher and zero
+      model calls — reproduce with `model_rule_injection --three-arm`. The
+      "before any new retrieval component exists" half is now satisfied by
+      ORDERING rather than vacuously: the measurement exists and 6.3 has not
+      started. `router_match_parity.test.ts` is 5/5 and
+      `single_matcher_preserved.test.ts` 8/8 on this branch.
+      The audit that predicted this is preserved below rather than deleted,
+      because it is the record of what was missing and why the nearest existing
+      artefact did not close it.
+      **Audited 2026-08-31: second conjunct met, first not met.**
+      `tests/scripts/router_match_parity.test.ts` is 5/5 green, and 6.2 added
+      `single_matcher_preserved.test.ts` (8/8) beside it. The first conjunct is
+      step 6.1, which is `[ ]`: no measurement of `eager-all` against `thin`
+      against `delivery` exists. The nearest thing on the tree was checked and
+      is not it — the price grid at `src/scripts/model_rule_injection.ts:455-462`
+      MODELS projected session cost for the three shapes for a different,
+      archived roadmap, and a cost model is not the three-arm experiment 6.1
+      names. The "before any new retrieval component exists" half is satisfied
+      only vacuously, since 6.3 has not started. What closes it is 6.1.
 - [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
-- [ ] AC-9 — At least one promoted artefact has been through post-promotion
+      **Audited 2026-08-31: first conjunct met, second not met.**
+      `agents/evidence/analysis/governed-harness-success-criteria.md` was
+      committed at `172b87c6` (2026-08-30 10:32:57) and no candidate run has
+      happened at all, so the criteria precede it — a real but currently
+      vacuous satisfaction, and worth naming as such. The second conjunct has no
+      subject: there is no run report anywhere in the tree, and the
+      evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
+      plus a first run whose report carries the figure.
+- [-] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      carried there verbatim, with its 2026-08-31 audit note intact. `[-]`
+      means TRANSFERRED, never met and never dropped: the criterion is open in
+      the receiver, where 7.6 is what closes it, after `merge-authority`.
 - [ ] AC-10 — The `no-runtime-daemon` claim in `README.md` and its
       `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state.
+      **Audited 2026-08-31: FALSIFIED as written — and not by this roadmap.**
+      The pre-roadmap state is `9e8344a3`, the parent of `15447f47` which added
+      this file on 2026-08-26. At `9e8344a3` the README's line 19 carried the
+      `no-runtime-daemon` claim marker; it carries no such marker today. The
+      `docs/CLAIMS.md` entry moved from `status: backed` to `status: withdrawn`
+      and gained four fields (`retires_phrasings`, `retired_by`,
+      `superseded_by`, `non_inference`). Neither is byte-identical, so the
+      criterion is false as written.
+      **Attribution was checked, not assumed.** `git log -S` names the removing
+      commit as `68463a1e` (2026-08-28), *"roadmap: complete
+      runtime-governance-flip (ADR-249 ...)"* — a different roadmap retiring the
+      claim by decision. This branch touches neither file, per
+      `git diff --stat origin/main..HEAD`. Step 0.3 already recorded the same
+      retirement and repaired its own count-keyed guard against it; AC-10 was
+      not repaired in the same pass and is the survivor of that edit.
+      **It stays `[ ]` rather than being re-keyed.** Rewriting it to "no diff
+      attributable to THIS roadmap" would close it by redefinition, which is the
+      generous reading AC-3 above warns against, and the re-key is an owner
+      decision rather than an audit one. What closes it is that amendment,
+      recorded.
 
 ## First cut — recommended start
 

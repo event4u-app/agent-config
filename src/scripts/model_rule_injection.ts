@@ -63,6 +63,12 @@ import {
     triggerlessRuleIds,
     type Router,
 } from './_lib/rule_injection.js';
+import {
+    renderArmExperiment,
+    runArmExperiment,
+    type ArmName,
+    type ArmRow,
+} from './_lib/delivery_arm_experiment.js';
 import { thin_entry } from './project_thin_rules.js';
 import { CAP_BYTES, buildInjection } from './hooks/rule_inject_hook.js';
 
@@ -802,11 +808,44 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
     return out;
 }
 
+/**
+ * Step 6.1's three-arm run, assembled from parts that already exist.
+ *
+ * The standing token figures come from `standingCorpora` — the SAME function
+ * the price grid reads — so the delivery table and the price table can never
+ * disagree about what a shape costs to stand up. `capBytes` is a parameter
+ * rather than a constant so the run can be shown sensitive to the mechanism it
+ * reports on; the default is the concern's own `CAP_BYTES`.
+ */
+export function runThreeArm(
+    corpusDir: string,
+    capBytes: number = CAP_BYTES,
+): { rows: ArmRow[]; lines: string[] } {
+    const router = loadRouter(REPO_ROOT);
+    const cases = loadCorpus(corpusDir);
+    const sc = standingCorpora(router);
+    const standing: Record<ArmName, number> = {
+        'eager-all': sc.eagerTokens,
+        thin: sc.thinTokens,
+        delivery: sc.thinTokens,
+    };
+    const rows = runArmExperiment({
+        repoRoot: REPO_ROOT,
+        router,
+        cases,
+        capBytes,
+        standing,
+        tokensOf,
+    });
+    return { rows, lines: renderArmExperiment(rows, capBytes) };
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────
 
 const USAGE = `usage: model_rule_injection [--corpus DIR] [--baseline-comparison]
                             [--honour-open-files]
                             [--selftest] [--endpoints] [--json]
+                            [--three-arm] [--cap-bytes N]
 
 Offline recall + cost model for trigger-delivered rule bodies. No metered call
 on any path.
@@ -820,6 +859,8 @@ export function main(argv: string[] | null = null): number {
     let selftest = false;
     let endpoints = false;
     let json = false;
+    let threeArm = false;
+    let capBytes = CAP_BYTES;
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i] as string;
         if (a === '--corpus') {
@@ -835,6 +876,15 @@ export function main(argv: string[] | null = null): number {
             endpoints = true;
         } else if (a === '--json') {
             json = true;
+        } else if (a === '--three-arm') {
+            threeArm = true;
+        } else if (a === '--cap-bytes') {
+            i += 1;
+            capBytes = Number.parseInt(args[i] as string, 10);
+            if (!Number.isFinite(capBytes) || capBytes < 1) {
+                process.stderr.write(`model_rule_injection: --cap-bytes needs a positive integer\n`);
+                return 2;
+            }
         } else if (a === '-h' || a === '--help') {
             process.stdout.write(USAGE);
             return 0;
@@ -842,6 +892,16 @@ export function main(argv: string[] | null = null): number {
             process.stderr.write(`model_rule_injection: unknown argument '${a}'\n${USAGE}`);
             return 2;
         }
+    }
+
+    if (threeArm) {
+        const res = runThreeArm(corpus, capBytes);
+        if (json) {
+            process.stdout.write(`${JSON.stringify(res.rows, null, 2)}\n`);
+        } else {
+            process.stdout.write(`${res.lines.join('\n')}\n`);
+        }
+        return 0;
     }
 
     if (selftest) {
