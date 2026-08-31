@@ -147,7 +147,7 @@ active-headroom consumption the Iron Law exists to prevent.
 
 ## Phase 1 — Establish that the obligation was delivered
 
-- [ ] **1.1 Answer the delivery question this roadmap was created for.** Pick
+- [-] **1.1 Answer the delivery question this roadmap was created for.** Pick
       one of the three closures in § What would close it above — a per-session
       delivery record, a documented propagation model, or a recorded decision
       that temporal-post-change suffices with its evidentiary limitation
@@ -234,7 +234,51 @@ active-headroom consumption the Iron Law exists to prevent.
       lag — **none of which exists yet**. So no boundary is nameable, and the
       four post-timestamp sessions measured below do not enter any corpus.
 
-- [ ] **1.2 Re-measure `mean_batch_size` under a documented propagation model.**
+      **CLOSED `[-]` 2026-08-31 — BLOCKED-BY-ARCHITECTURE, on a 2/2 convergent
+      AI council (anthropic/claude-sonnet-4-5 + openai/codex-default, Option B,
+      disposition D3). The criterion is TRANSFERRED, never met and never
+      dropped:** it lives on unweakened in
+      `agents/roadmaps/stubs/road-to-obligation-exposure-instrumentation.md`.
+      **What changed since the 2026-08-31 reading that left this open.** That
+      reading expected the wall clock to supply the sessions. It cannot. The
+      question put to this round was whether the measured non-delivery is an
+      *architectural* impossibility or merely an un-run installer — and the
+      answer decides whether waiting is honest. Three facts were measured first:
+      `grep -rl "CALLS WITH NO DEPENDENCY BETWEEN THEM" ~/.claude/rules ~/.claude/plugins`
+      returns **0 files**; every file in `~/.claude/rules/` carries one install
+      mtime, `2026-08-25 14:28`, five days before `af0cf0bf0`
+      (`2026-08-30 14:38:40Z`); and the installed `token-efficiency.md` DOES
+      carry an *older* obligation from the same source file (`## Size-gated
+      reads`, at its line 57), which proves the install path works and is simply
+      behind.
+      **A correction this round owes its own record.** The earlier analysis
+      grepped `Size-gated reads` — an obligation that IS installed — and
+      concluded from that mis-grep that nothing had been delivered. Its
+      conclusion survived; its reasoning did not. The heading that is actually
+      absent is `## Independent calls go in ONE block`.
+      **The council refuted the reading those facts suggested.** Both seats
+      rejected the proposal to close 1.1 by closure (2), a documented
+      propagation model, in one sentence: *installation proves availability, and
+      AC-1 requires exposure.* The obligation lives in a `type: auto` rule, which
+      enters a session's context only when its routing triggers match, so a
+      corpus defined as "sessions after the install timestamp" necessarily
+      contains sessions where the rule was installed and never projected.
+      Redefining *exposed* as *available* would lower an owner-reserved floor,
+      which both seats refused. anthropic: *"For a **model-carried** obligation
+      like the batching Iron Law, being in the tree ≠ being in the session
+      context."* openai: *"A post-install timestamp cannot identify a corpus
+      exposed to a `type: auto` rule."*
+      **Re-running the installer is legitimate and does not unblock this.** Both
+      seats agreed it would repair staleness and create a clean timestamped
+      availability boundary, and that it *"would not unblock this roadmap by
+      itself"* — so it was not run as part of this closure, and no earlier
+      session is treated as exposed.
+      **Floors not lowered, stated because both seats required it:** the
+      ten-usable-session floor and the exposure reading of *"post-change
+      corpus"* are owner-reserved and are carried into the stub verbatim. This
+      closure moves the criterion; it does not weaken it.
+
+- [-] **1.2 Re-measure `mean_batch_size` under a documented propagation model.**
       **TRANSFERRED IN from `road-to-turnaround-followups` step 1.1**, verbatim
       and unweakened, by AI council 2026-08-31 (anthropic + openai, 2/2, round
       2). Measure `mean_batch_size` across **at least 10 usable sessions**
@@ -254,6 +298,21 @@ active-headroom consumption the Iron Law exists to prevent.
       sessions under a propagation model committed by 1.1, with its corpus
       window and exclusion count recorded beside it, and the delta stated in
       whichever direction it went.
+
+      **CLOSED `[-]` 2026-08-31 — BLOCKED-BY-ARCHITECTURE, same 2/2 council,
+      same disposition D3.** Not measurable, and the reason is upstream of the
+      sample size rather than in it: no corpus can be shown to be *exposed*, so
+      the ≥ 10 usable sessions this step needs cannot be identified even in
+      principle under the current architecture. The cohort boundary this step
+      still names, `2026-08-30 14:38:40Z`, was already struck by an amendment in
+      the blocker's `Resolved when` and is retained here only as the record of
+      what was tried. The measurement obligation is carried unweakened into
+      `agents/roadmaps/stubs/road-to-obligation-exposure-instrumentation.md`.
+      **The pre-commitment is honoured, not discharged.** "If the number has not
+      moved, that is the RESULT" still stands for whoever takes the reading after
+      the stub is promoted. What this closure records is that the reading was
+      never *available*, which is a different fact from a null and is not filed
+      as one.
 
       **This step carries no `deferred-resolution` annotation, and that is
       deliberate.** It is the RECEIVER of the parent's carry, not a carry
@@ -291,13 +350,28 @@ budget headroom on a down-only ratchet), a redesign recommendation the owner can
 act on, and a cohort boundary correctly voided rather than silently reused. A
 later reader inherits an answer instead of the question.
 
-## Not archivable yet — stated so it cannot be read as an oversight
+## Archivable as of 2026-08-31 — and the earlier note is kept, not deleted
 
-`archive_completed_roadmaps.ts` refuses a roadmap with an open blocker, and this
-one has two open steps besides. That is the intended state: this roadmap exists
-to hold an open criterion in the governed estate until the wall clock supplies
-the sessions, and the `review_by` kill switch above is what stops it holding one
-forever.
+**This section previously read "Not archivable yet".** Its reasoning was sound
+and its premise was falsified, so it is corrected here rather than removed.
+
+The premise was: *"this roadmap exists to hold an open criterion in the governed
+estate until the wall clock supplies the sessions."* The 2026-08-31 council
+established that the wall clock cannot supply them — sessions accumulate, but
+none of them can be shown to have been *exposed* to a `type: auto` obligation
+without instrumentation that does not exist. Waiting therefore buys nothing, and
+a roadmap that holds a criterion no amount of time can satisfy is not preserving
+it; it is only deferring the moment someone notices.
+
+So the disposition changed from *wait* to *transfer and archive*: the criterion
+moves to `agents/roadmaps/stubs/road-to-obligation-exposure-instrumentation.md`,
+which is capability-gated and carries a named probe re-run every 30 days, and
+this roadmap archives. Both seats chose D3 over parking in `later/` for exactly
+this reason — anthropic: *"Parking in `later/` would imply time could produce
+qualifying sessions; it cannot."*
+
+The `review_by: 2026-09-30` kill switch above is thereby spent rather than
+pending: it fired early, by decision, in the direction it was pointing.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
@@ -312,7 +386,7 @@ forever.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1 — TRANSFERRED IN from `road-to-turnaround-followups`, unweakened.**
+- [-] **AC-1 — TRANSFERRED OUT 2026-08-31, unweakened.**
       Original criterion, verbatim: *"`mean_batch_size` has a second reading
       against a named post-change corpus, and the delta is recorded whichever
       direction it went — including 'did not move'."*
@@ -343,11 +417,43 @@ forever.
       recommendation — never to reformulate the criterion, which would be moving
       the goalposts.
 
+      **CLOSED `[-]` 2026-08-31 — TRANSFERRED, never met and never dropped.**
+      AI council 2026-08-31 (anthropic + openai, 2/2 convergent, Option B +
+      D3) ruled that this criterion cannot be satisfied under the current
+      architecture, and applied the exit the criterion itself names: *"the
+      honest exit is to close as BLOCKED-BY-ARCHITECTURE with a redesign
+      recommendation — never to reformulate the criterion."* The criterion, its
+      ten-session floor and its exposure reading of *"post-change corpus"* are
+      carried verbatim into
+      `agents/roadmaps/stubs/road-to-obligation-exposure-instrumentation.md`,
+      together with the two redesign mechanisms the council named: a per-session
+      projection record, or a propagation mechanism guaranteeing presence in
+      every corpus session. Neither exists; the stub's probe re-reads for both.
+      **Nothing here is reformulated.** `[-]` is the transferred glyph, the same
+      one this roadmap's own § Related uses for an inbound transfer. Reading it
+      as satisfaction would be the generous reading the parent chain has refused
+      three times.
+
 ## Blockers
 
 ### blocker: batching-corpus-never-received-the-obligation
 
-- **Status:** open — **TRANSFERRED IN 2026-08-31** from
+- **Status:** resolved — **2026-08-31, outcome state `transferred`.** AI council
+  2026-08-31 (anthropic/claude-sonnet-4-5 + openai/codex-default, **2/2
+  convergent**, Option B + disposition D3) ruled that the delivery question is
+  answered BLOCKED-BY-ARCHITECTURE and that steps 1.1, 1.2 and AC-1 close on
+  that reading. The finding in one sentence: **installation proves availability,
+  and AC-1 requires exposure** — a `type: auto` rule enters a session's context
+  only on a trigger match, so no install timestamp can name a corpus that was
+  demonstrably exposed. The criterion is carried unweakened into
+  `agents/roadmaps/stubs/road-to-obligation-exposure-instrumentation.md` with
+  both redesign mechanisms the council named; the ten-session floor and the
+  exposure reading of *"post-change corpus"* are untouched and remain
+  owner-reserved. The token is `resolved` because that is the only string
+  `lint_roadmap_blockers` reads as closed; the outcome state `transferred` lives
+  in this prose and in the stub, per the drain-run disposition framework.
+  **Original status, retained as the record of what was tried:** open —
+  **TRANSFERRED IN 2026-08-31** from
   `road-to-turnaround-followups`, unchanged in substance. Created there
   2026-08-30 by the drain run that executed its step 1.1. AI council 2026-08-30
   (anthropic + openai, 2/2) ruled AC-1 `not-met`; AI council 2026-08-31
