@@ -68,7 +68,6 @@ import {
     type CascadeResult,
 } from './_lib/evaluation_cascade.js';
 import type { MetricVector } from './_lib/evaluation_vector.js';
-import type { MetricRow } from './_lib/evaluation_vector.js';
 import {
     type CandidateRecord,
     CandidateSchemaError,
