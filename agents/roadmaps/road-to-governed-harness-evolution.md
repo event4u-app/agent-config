@@ -1578,13 +1578,95 @@ once.
       is a STATED default at the conservative end of `lint_originality`'s range,
       not a measured optimum; `revisit-if` a screening run rejects a proposal a
       curator then re-adds by hand, or admits one a human calls a duplicate.
-- [ ] **5.6 Cheap proposer models first, and track evolution ROI.**
+- [ ] <!-- roadmap-status: guarded-baseline --> **5.6 Cheap proposer models first, and track evolution ROI.**
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
       a hard budget cap, while dropping the only cost-*reduction* mechanism both
       parents proposed. Improvement per evolution dollar is a reported figure.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evolution_roi.ts (assertCheapestFirst, LADDER, nextTier)
+        command: npx vitest run tests/scripts/_lib/evolution_roi.test.ts
+        red_proof: sabotage run 2026-08-31 — cheapest-first comparison neutralised, 3 of 28 tests RED, 28/28 GREEN after restore
+        sabotage_model: replaced the guard condition `if (cheapest !== null && a.tier !== cheapest)` at src/scripts/_lib/evolution_roi.ts:217 with `if (false)`, so an escalation past an untried cheaper rung stops being refused
+        recheck_when: src/scripts/_lib/ladder_attempt_recorder.ts recordLadderAttempt
+        discharged_ac: the ROI half is met with a live subject — every completed run of the `run` verb emits a report and buildRunReport REFUSES one without the figure
+        pending_ac: "a cheaper model is tried before an expensive one" under a real attempt sequence — nothing in this tree makes a metered proposer call, so the ordering is policed over a population of zero
+      ```
+      **PARTLY DONE 2026-08-31, and the split is per verify-clause conjunct
+      rather than per convenience.** `src/scripts/_lib/evolution_roi.ts`.
+      **The ROI conjunct is CLOSED, with a production caller.** `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES a report whose ROI
+      figure is absent or carries an unknown kind — the same shape
+      `_lib/evaluation_vector.ts:103`'s `buildVector` uses to refuse a vector
+      that omits its artifact-count row, and refused at RUNTIME because the
+      caller who drops the row is a JSON parse or an `as` cast the compiler
+      cannot see (proved with a `delete` past the type,
+      `tests/scripts/_lib/evolution_roi.test.ts:140`). The caller is real, not a
+      unit test: `verbRun` builds the report on the ONE path a run completes on
+      (`src/scripts/evolution_lab.ts:779`) and writes it to stdout
+      (`:800`), and evaluation evidence is parsed BEFORE the first clone
+      (`:745`) so a malformed vector aborts before the run spends anything.
+      Reproduce with
+      `./scripts-run src/scripts/evolution_lab run --record REC.json --vector VEC.json --estimated-spend-cents 250`.
+      **The figure is a union, not a number, because a ratio is not always
+      defined.** `ratio` at positive spend with something evaluated,
+      `no-spend` at zero spend, `unmeasured` when no candidate carried an
+      evaluation (`:302`). Neither `Infinity` nor `NaN` can reach a report, and
+      both are pinned. `unmeasured` is the honest state of this programme today
+      and reads as a finding: `run` clones and nothing in Phase 5 evaluates,
+      because 5.2 keeps the live-floors park intact.
+      **Measured end-to-end on the real CLI, not only in the builder's unit
+      test.** `tests/scripts/evolution_lab.test.ts:409` spawns the process over
+      five real clones and asserts exactly ONE `run-report: roi:` line on its
+      stdout reading `unmeasured`; a second invocation supplying a vector with
+      one `pass` row at 250 cents prints `0.400 improved rows per dollar`. The
+      vector goes through `parseMetricVectorJson` (`:428`), which calls
+      `buildVector` and therefore INHERITS the artifact-count refusal rather
+      than re-implementing it — verified against the live CLI, which rejects a
+      vector missing that row before any clone is made.
+      **Sensitivity proved on both halves, separately.** Deleting the report
+      emission from `verbRun` turns the e2e assertion RED (`expected [] to have
+      a length of 1`), 25/26 → restored 26/26; neutralising the ROI refusal in
+      `buildRunReport` turns the negative-polarity case RED, 27/28 → restored
+      28/28.
+      **The cheapest-first conjunct has NO LIVE SUBJECT, and that is why this
+      step is `guarded-baseline` and not `[x]`.** Policing "a cheaper model is
+      tried before an expensive one" needs an attempt sequence, and no step in
+      this roadmap invokes a live routing harness — 5.2, held by
+      `tests/scripts/governed_harness_no_live_harness.test.ts` (9/9 on this
+      branch, and its half B now scans `evolution_roi.ts` too, since that module
+      names this roadmap). So what shipped is an ordering POLICY plus a guard
+      proved to fire: `LADDER` (`:101`) is cheapest-first per defect class,
+      `assertLadderWellFormed` (`:132`) refuses a ladder that skips a rung —
+      which would try an expensive tier before a cheaper one by construction —
+      and `assertCheapestFirst` (`:191`) refuses an out-of-order attempt
+      sequence. Both are exercised in both polarities.
+      **Three defect classes carry an EMPTY ladder, which is the strongest cost
+      reduction available rather than an omission.** `policy_blocked`,
+      `dependency_unavailable` and `human_rejected` license NO metered attempt
+      at all: a candidate a policy refused, one that could not find its
+      dependency, or one a human turned down is not made acceptable by a larger
+      model. `nextTier` returns `null` there and the report prints
+      `next: spend nothing`; a metered attempt against such a class is refused
+      outright. The classes are REUSED from `_lib/pathology_archive.ts:65`'s
+      closed `PATHOLOGY_WHY` vocabulary — a second defect taxonomy beside it
+      would be the drift 4.4 exists to prevent — and a test pins the ladder's
+      key set against it so a vocabulary addition cannot leave a class
+      unpriced.
+      **Tiers are vendor-neutral (`lite < medium < high`, `:86`) on purpose.**
+      Naming a model would tie a cost policy to a price list that changes
+      without this file, and would put a vendor name into a module this
+      roadmap's own live-harness scan reads.
+      **What this does NOT establish.** That the ladder's per-class assignments
+      are the right ones. They are a stated policy with a written reason each,
+      not a measurement — nothing has been run cheap-first and then expensive to
+      compare. `revisit-if`: a run records a defect class where the cheap rung
+      never resolves anything, or one where an empty ladder blocked a fix a
+      model would have made.
 
 ## Phase 6 — Delivery: measure the existing substrate first
 

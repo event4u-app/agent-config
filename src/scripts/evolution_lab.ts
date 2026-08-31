@@ -85,6 +85,14 @@ import {
     serialiseCandidateRecord,
 } from './_lib/candidate_proposer.js';
 import {
+    type MetricVector,
+    type RunReport,
+    buildRunReport,
+    parseMetricVectorJson,
+    renderRunReport,
+    roiFigure,
+} from './_lib/evolution_roi.js';
+import {
     BudgetExceededError,
     type DisclosureRecord,
     type FieldVisibility,
@@ -379,7 +387,7 @@ const USAGE = `usage: evolution_lab <verb> [options]
 
   inspect  [--record FILE]... [--records DIR] [--clones]
   propose  --observations FILE --out DIR [--force]
-  run      --record FILE... [--refresh]
+  run      --record FILE... [--refresh] [--vector FILE]...
            [--trials-per-candidate N] [--estimated-spend-cents N]
   compare  [--verbose]
   explain  [--record FILE [--to STATE]] [--criteria]
@@ -698,7 +706,7 @@ function verbRun(argv: readonly string[]): number {
     const flags = parseFlags(
         argv,
         ['refresh'],
-        ['record', 'records', 'trials-per-candidate', 'estimated-spend-cents'],
+        ['record', 'records', 'trials-per-candidate', 'estimated-spend-cents', 'vector'],
     );
     const files: string[] = [...(flags.values.get('record') ?? [])];
     const dir = one(flags, 'records');
@@ -734,6 +742,19 @@ function verbRun(argv: readonly string[]): number {
         }
         throw e;
     }
+    // Evaluation evidence is parsed BEFORE the first clone, for the same reason
+    // the budget guard runs before it: a malformed vector discovered after the
+    // work is a failed run that already spent, and `parseMetricVectorJson`
+    // inherits `buildVector`'s refusal of a vector missing its artifact-count
+    // row, so this is also where that refusal lands.
+    const vectors: MetricVector[] = [];
+    for (const vf of flags.values.get('vector') ?? []) {
+        try {
+            vectors.push(parseMetricVectorJson(fs.readFileSync(vf, 'utf-8'), vf));
+        } catch (e) {
+            return fail(`vector ${vf} rejected — ${(e as Error).message}`);
+        }
+    }
     const seen = new Set<string>();
     for (const f of files.sort(byteCompare)) {
         let record: CandidateRecord;
@@ -754,6 +775,30 @@ function verbRun(argv: readonly string[]): number {
             }
             return fail(`candidate ${record.id} failed — ${(e as Error).message}`);
         }
+    }
+    // STEP 5.6 — the run report, on the ONE path a run completes on.
+    //
+    // Placed after the clone loop and before the only success return, so there
+    // is no completed run without a report. Every other exit from this verb is
+    // an abort (budget) or a failure (unreadable record), and neither is a run
+    // whose ROI could be reported: nothing was cloned and nothing was spent.
+    let report: RunReport;
+    try {
+        report = buildRunReport({
+            // Deterministic and identifying: the candidate ids, in the byte
+            // order the run walked them. Two runs over the same record set
+            // produce the same id, and a run over a different set cannot
+            // borrow another run's report line.
+            run_id: `run:${[...seen].sort(byteCompare).join('+')}`,
+            candidates: files.length,
+            trials_per_candidate: intFlag(flags, 'trials-per-candidate', 1),
+            roi: roiFigure(vectors, intFlag(flags, 'estimated-spend-cents', 0)),
+        });
+    } catch (e) {
+        return fail(`run report rejected — ${(e as Error).message}`);
+    }
+    for (const line of renderRunReport(report)) {
+        process.stdout.write(`${line}\n`);
     }
     return EXIT_OK;
 }
