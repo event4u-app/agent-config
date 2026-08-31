@@ -1471,7 +1471,7 @@ once.
 
 ## Phase 6 — Delivery: measure the existing substrate first
 
-- [ ] **6.1 Run the three-arm experiment on what already ships.**
+- [x] **6.1 Run the three-arm experiment on what already ships.**
       `corrected-from-reproduction`, and this is the strongest single finding of
       the analysis. The master's delivery phase builds a BM25 per-task subset.
       Verified on this tree:
@@ -1485,6 +1485,43 @@ once.
       whose thesis it is.
       verify: the three arms are measured against one another before any new
       retrieval component is written.
+      **DONE 2026-08-31, and the delivery half is what was missing.**
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` measures
+      all three arms over `tests/eval/routing-matrix` — 305 positives, 194
+      near-misses — with one matcher and zero model calls. Reproduce with
+      `./scripts-run src/scripts/model_rule_injection --three-arm`.
+      Delivery of the labelled body: `eager-all` 1.000 (305/305) at 120,743
+      standing tokens and a false-context rate of 1.000 (194/194 near-miss
+      bodies also standing); `thin` 0.000 (0/305) at 18,223; `delivery` 0.990
+      (302/305) at the same 18,223 plus a mean 2,026 injected tokens per prompt,
+      with zero near-miss deliveries. The three losses are named rather than
+      summarised: two matcher misses and one cap drop, each with its prompt.
+      **The price grid was NOT the experiment, which is why this step stayed
+      open.** `model_rule_injection.ts:454-462` already priced the same three
+      shapes; a price grid reports what a shape COSTS and never what it
+      DELIVERS. `src/scripts/_lib/delivery_arm_experiment.ts` adds the delivery
+      half and reads its cost figures from `standingCorpora`, the same function
+      the grid reads, so the two halves cannot disagree.
+      **No new retrieval component was written**, which is the ordering half of
+      the verify: 6.3 has not started, the module imports `matchTierRules` and
+      `selectForInjection` from `_lib/rule_injection.ts` and nothing else that
+      answers "which rules fire on this prompt?", and `router_match_parity`
+      (5/5) plus `single_matcher_preserved` (8/8) are green on this branch.
+      **Sensitivity proved on two independent handles, because a measurement
+      never seen move has unknown sensitivity.** Squeezing the byte cap moves
+      `delivery` monotonically — 0.770 at 1 B, 0.774 at 2,000 B, 0.990 at the
+      shipped 20,480 B, 0.993 at 200,000 B, where it meets the matcher's own
+      recall ceiling and the cap stops binding — while `eager-all` and `thin`
+      do NOT move, which is the other half of the proof. Stripping one rule's
+      triggers in an in-memory router moves that rule's positives out of the
+      injected set and into the thin standing set, so `thin` rises off 0 while
+      `eager-all` holds. Both are pinned in
+      `tests/scripts/_lib/delivery_arm_experiment.test.ts` (11/11).
+      **What it does not measure, and no spend closes it.** Whether a session
+      that RECEIVES a body behaves like one that HAD it standing is not an
+      expense declined here — ADR-202 records that instrument CLOSED, kappa
+      0.472 against a registered 0.800 floor, no third attempt licensed. The
+      artefact says so in its own § What this does NOT measure.
 - [x] **6.2 Preserve one matcher.** `from-skipped-parent`, and the tree already
       enforces it: `src/scripts/_lib/rule_injection.ts:1-19` is "THE single
       module both the offline model and the runtime concern read", trigger
@@ -1931,9 +1968,23 @@ once.
       have not moved since `34318f7f`, and state the correction in the artefact.
       The ordering claim survives that re-pin, because the bytes have not moved
       since a commit that precedes the first proposer commit.
-- [ ] AC-7 — The three existing delivery arms have been measured against one
+- [x] AC-7 — The three existing delivery arms have been measured against one
       another before any new retrieval component exists, and
       `router_match_parity.test.ts` is still green.
+      **CLOSED 2026-08-31: both conjuncts now met, and the first was closed by
+      6.1 exactly as the audit below predicted.**
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` measures
+      `eager-all` 1.000 (305/305) at 120,743 standing tokens, `thin` 0.000
+      (0/305) at 18,223, and `delivery` 0.990 (302/305) at 18,223 + 2,026
+      injected tokens per prompt, over one corpus with one matcher and zero
+      model calls — reproduce with `model_rule_injection --three-arm`. The
+      "before any new retrieval component exists" half is now satisfied by
+      ORDERING rather than vacuously: the measurement exists and 6.3 has not
+      started. `router_match_parity.test.ts` is 5/5 and
+      `single_matcher_preserved.test.ts` 8/8 on this branch.
+      The audit that predicted this is preserved below rather than deleted,
+      because it is the record of what was missing and why the nearest existing
+      artefact did not close it.
       **Audited 2026-08-31: second conjunct met, first not met.**
       `tests/scripts/router_match_parity.test.ts` is 5/5 green, and 6.2 added
       `single_matcher_preserved.test.ts` (8/8) beside it. The first conjunct is
