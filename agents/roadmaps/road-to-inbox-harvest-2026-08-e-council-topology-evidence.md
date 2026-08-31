@@ -781,7 +781,7 @@ the blocker existed to protect.
 
 The council should not ship a topology selector before it can define "better".
 
-- [ ] 2.1 Pre-register benchmark families: architecture trade-offs, roadmap
+- [x] 2.1 Pre-register benchmark families: architecture trade-offs, roadmap
   critique, ADR reopening, requirements completeness, code review with seeded
   defects, security review with seeded true/false findings, debugging with an
   executable oracle, incident diagnosis, probe-resolvable factual controls,
@@ -789,6 +789,61 @@ The council should not ship a topology selector before it can define "better".
   misconception cases, ambiguous product decisions with a human rubric.
       verify: the family list and per-family success criteria are committed
       before any arm runs
+      **DONE 2026-08-31 — committed, and the ordering is the evidence.**
+      [`internal/bench/council-topology/PREREG-families.md`](../../internal/bench/council-topology/PREREG-families.md)
+      registers **all twelve** families with a per-family success criterion and
+      one of the three labels the resolved `blocker: maintainer-blind-ratings`
+      fixed: `gradeable-confirmatory` (6), `model-graded-exploratory` (5),
+      `human-rubric-deferred` (1). The three are never pooled, and no
+      model-graded substitute is run in place of the deferred family — that
+      substitution is what the blocker's originating rationale forbids.
+      **Every family is a quotation, none is derived.** This step enumerates
+      exactly twelve in its own prose; the pre-registration quotes each phrase
+      in the listed order and adjusted the count for nothing.
+      **The list is committed BEFORE any arm runs, which is checkable rather
+      than asserted:** the runner does not exist, both seats of the
+      2026-08-31 council declined to greenlight it, and all 352 eligible cells
+      of the manifest read `pending`. The machine-readable twin is
+      `BENCH_FAMILIES` in `src/scripts/ai_council/topology_bench_manifest.ts`,
+      guarded at arity 12 in the type layer and at module load — sabotage-
+      verified: arity 11 gave `error TS2367` (`npm run typecheck` exit 2) and
+      `expected exactly 11 pre-registered families, found 12` (vitest exit 1).
+      Shrinking the set weakens this criterion and is owner-reserved.
+      Deliberately narrow: this step buys the eligible **families**, not the
+      metric set (2.3) and not the reporting bar (2.6, already pre-registered).
+
+      **What landed beside it, and what it found.** The same council answered
+      Q2 **(iii)**: Phase 2 was not executable as written, because the roadmap
+      defined experimental *dimensions* and never the **provider-call graph** —
+      an experimental cell is not a provider call, and `50/provider/UTC-day` is
+      two ceilings, not one pool of 100. That artefact now exists:
+      [`internal/bench/council-topology/README.md`](../../internal/bench/council-topology/README.md)
+      is the new carrier (council Q1 = (a), 2/2), and `call-manifest.json` is
+      the frozen 384-cell manifest, each row carrying expected and maximum
+      calls **by provider**, its reuse source, and a completion status. Overlap
+      is stated rather than implied: exactly two arms reuse
+      `baseline-default-council`; everything else re-runs, and the ablation
+      ladder deliberately does not borrow a baseline's generation output,
+      because a rung borrowed across a UTC day carries day-as-confounder into
+      the one arm whose purpose is attribution.
+      **The number the phase was missing: minimum 1,584 calls (anthropic 814 /
+      openai 770), worst case 1,804 (924 / 880), across 20 UTC days** at one
+      item per family and N=2. That consumes both providers' entire daily quota
+      for roughly twenty consecutive days, during which no other council work
+      can proceed. **This is reported, not acted on** — cutting families,
+      deleting ablation, or calling unexecuted arms nulls would weaken 2.1 and
+      2.4, and both seats refused to approve any of them as council-decidable.
+      **`pending` cannot become a null.** `PHASE2_COMPLETE_STATUSES` admits
+      only `success`, `declared_gap` and an observed null, enforced in both
+      layers — sabotage-verified: adding `'pending'` gave
+      `topology_bench_manifest.ts(100,36): error TS2344` (typecheck exit 2) and
+      a module-load throw that stopped the test file collecting.
+      **A consequence worth stating: at N=2 this benchmark licenses no
+      promotion claim at all.** 2.6's own pre-registered floors are n >= 5 and
+      n >= 10, and N=2 clears neither, so the manifested Phase 2 produces
+      descriptive comparison only. That is 2.6 read honestly, not weakened.
+      **Steps 2.2-2.5 and 2.7 stay open.** The manifest is a precondition for
+      them, never their execution: no arm ran and no quota was spent.
 - [ ] 2.2 Mandatory baselines per eligible slice: host solo, strongest
   configured single external model, cheapest configured single external model,
   current default council path, full debate where applicable.
