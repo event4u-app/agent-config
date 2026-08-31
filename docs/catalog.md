@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **736 public artefacts** shipped by
+Consumer-facing catalog of all **737 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -657,7 +657,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (117)
+## Guidelines (118)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -692,6 +692,7 @@ are excluded.
 | guideline | [`framework-neutrality-patterns`](../docs/guidelines/agent-infra/framework-neutrality-patterns.md) | agent-infra |  |
 | guideline | [`frontier-reasoning-operating-profile`](../docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md) | agent-infra |  |
 | guideline | [`gate-authoring`](../docs/guidelines/agent-infra/gate-authoring.md) | agent-infra |  |
+| guideline | [`guarded-baseline`](../docs/guidelines/agent-infra/guarded-baseline.md) | agent-infra |  |
 | guideline | [`installed-tools-manifest`](../docs/guidelines/agent-infra/installed-tools-manifest.md) | agent-infra |  |
 | guideline | [`inversion-thinking`](../docs/guidelines/agent-infra/inversion-thinking.md) | agent-infra |  |
 | guideline | [`ios-simulator-guide`](../docs/guidelines/agent-infra/ios-simulator-guide.md) | agent-infra |  |

@@ -6,7 +6,7 @@
 > asked to drive every active roadmap to completion. It found **four**, advanced
 > **all four**, closed **one step** and archived **none** — because on a live
 > audit of all 76 open items, **exactly one** was executable in this tree. The
-> rest split into 20 needing a decision and 55 blocked on artefacts that do not
+> rest split into 20 needing a decision and 55 blocked on artifacts that do not
 > exist, on 20 UTC days of monopolised provider quota, or on an owner-reserved
 > ADR. Forcing any of them green would have been the silent-green defect the
 > mandate names as forbidden.
