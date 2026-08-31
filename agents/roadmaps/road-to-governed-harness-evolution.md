@@ -1747,7 +1747,7 @@ once.
       commit **`fe8749458`** — recall-loss ceiling 20.0 pp, token target 500,
       k = 5, and the jointly-wrong definition, all fixed in a commit that adds no
       measurement module. Measurement `src/scripts/measure_delivery_sets.ts`,
-      commit **`DELIVERY_SHA`**; `git merge-base --is-ancestor fe8749458 DELIVERY_SHA`
+      commit **`b7aafbb3b`**; `git merge-base --is-ancestor fe8749458 b7aafbb3b`
       is the first half of the verify, checked in the history rather than asserted.
       **The metric set, over 82 train corpora / 764 distinct prompts / 299-skill
       catalogue, holdout untouched** (`agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`):
