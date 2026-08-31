@@ -1,10 +1,10 @@
 ---
-complexity: bounded
+complexity: lightweight
 status: ready
 parent_roadmap: road-to-turnaround-followups
 relates:
   - slug: road-to-turnaround-followups
-    relation: successor
+    relation: extends
 execution:
   mode: phase-checkpoints
 owner: council
@@ -192,6 +192,17 @@ one has two open steps besides. That is the intended state: this roadmap exists
 to hold an open criterion in the governed estate until the wall clock supplies
 the sessions, and the `review_by` kill switch above is what stops it holding one
 forever.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The active-placement exception becomes permanent | product | An exception to the Later-disposition Iron Law with no expiry consumes active-estate headroom indefinitely, which is the exact failure that law exists to prevent. One council seat made the expiry a condition of its verdict for this reason | `review_by: 2026-09-30` is a kill switch, not a review note: if the ten-session floor is unmet by then the file MOVES to `later/` without a further council round | Why this roadmap is active, and not in `later/` or `stubs/` |
+| 2 | The temporal reading is later cited as satisfying AC-1 | product | `mean_batch_size` 1.01 → 1.01 is recorded and reads like a result. A later agent citing it without the exposure caveat records "we measured it and it did nothing" where the truth is "we could not measure it" — the poisoned-evidence failure the 2026-08-30 council named | The reading is labelled a baseline at AC-1 and in `src/config/turnaround-budget.json`; R6 and R7 of the evidence file carry the 2-of-10 count and the seat-transcript exclusion with its re-test | Acceptance Criteria |
+| 3 | The cohort boundary is wrong because delivery became effective later than install | implementation | `2026-08-30 14:38:40Z` is an install timestamp. If step 1.1 establishes that propagation only became effective afterwards, every session counted between the two dates is ineligible and a measurement built on them is void | AC-1 records the boundary as a **candidate**, not immutable, and names the verified delivery-effective timestamp as the real one. Step 1.1 runs before 1.2 by construction | Phase 1 — Establish that the obligation was delivered |
+| 4 | Council-seat transcripts re-enter the corpus | implementation | 17 post-timestamp sessions exist on the machine that are single-turn provider-CLI invocations with zero tool calls. `mean_batch_size` is undefined over them, so including them returns a number about the wrong population | The exclusion and its cheap re-test — the first JSONL row being a `queue-operation` enqueue of a council question — are recorded in R7 of `agents/evidence/analysis/agent-turnaround-2026-08-30.md`; step 1.2 requires the excluded-session count to be reported | Phase 1 — Establish that the obligation was delivered |
+| 5 | Step 1.1 concludes propagation is impossible and the criterion is quietly reformulated | product | An architectural dead end invites moving the goalposts, which both council seats classified owner-reserved and refused | AC-1 names the honest exit explicitly: close as BLOCKED-BY-ARCHITECTURE with a redesign recommendation, never reformulate | Acceptance Criteria |
 
 ## Acceptance Criteria
 
