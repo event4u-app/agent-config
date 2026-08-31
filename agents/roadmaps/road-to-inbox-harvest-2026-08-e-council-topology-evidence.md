@@ -1571,8 +1571,65 @@ is **seating**, and it already has a carrier.
       file survives the diff. The suite also tests the **denial** (two unrelated
       texts yield no pair), so a zero pair count means "nothing there" rather
       than "the detector is broken".
-- [ ] 10.6 Track early-stop savings separately from quality.
+- [ ] <!-- roadmap-status: guarded-baseline --> 10.6 Track early-stop savings separately from quality.
       verify: cost and quality are never reported as one number
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/argument_exhaustion.ts StopRender + renderStop
+        command: npx vitest run tests/scripts/ai_council/early_stop_savings_shape.test.ts
+        red_proof: sabotage run 2026-08-31 — 4 of 11 tests RED, 11/11 GREEN after restore
+        sabotage_model: three simultaneous edits — a src/scripts/ai_council/__sabotage_10_6.ts importing evaluateStop (production caller), a `qualityScore: number` field on StopRender, and renderStop's saved line rewritten to `call(s) at qualityPerCost`
+        recheck_when: evaluateStop-gains-a-production-caller
+        discharged_ac: the separation is pinned and RED-proven in the only surface that exists — StopRender carries cost fields and no quality field, and renderStop emits calls and cost as two figures with no blended term
+        pending_ac: "tracked separately" under a real early stop — no run has ever stopped early, because evaluateStop has zero production callers, so the savings figure itself is structurally 0 and nothing exercises the constraint under live reporting
+      ```
+
+      **NOT closed, and the reason is arithmetic rather than judgement.**
+      `evaluateStop` (`src/scripts/ai_council/argument_exhaustion.ts:82`) has
+      **zero production callers** — across `src/`, the module is imported by
+      nothing; its only importer in the repo is
+      `tests/scripts/argument_exhaustion.test.ts:19`. No council round can stop
+      early, so no call has ever been saved and the tracked figure would be a
+      number about nothing. Reporting `0` saved calls as a measurement is the
+      NOT-RUN-is-not-a-null failure this file records repeatedly; the state that
+      says so is `guarded-baseline`, and this is its second instance.
+
+      **What IS discharged.** The reporting surface the savings would land in
+      already exists (`StopRender` at `:113`, `renderStop` at `:121`), so its
+      shape is pinnable now — the cheapest moment, before a caller lands.
+      `tests/scripts/ai_council/early_stop_savings_shape.test.ts` (11 tests,
+      green) asserts: `StopRender` declares only `roundsCompleted`,
+      `roundsConfigured`, `savedCalls`, `savedCostUsd`, `exhaustedMembers` —
+      cost and provenance, no quality field to blend; `renderStop` emits
+      `saved: 4 call(s), $0.1234`, two figures a reader can take apart; and
+      neither the rendered text nor the module's declared identifiers contain a
+      quality term (`quality`, `score`, `grade`, `accuracy`, `correctness`,
+      `nonInferior`) or a blended metric (`qualityPerCost`, `perDollar`,
+      `costAdjusted`, …). 6.4's `STOPPED EARLY` / `NOT a full run` lines are
+      re-pinned here so a 10.6 edit cannot quietly undo them.
+
+      **The recheck is machine-enforced, not a prose reminder.** One test
+      asserts the importer set of `argument_exhaustion.ts` under `src/` is
+      **empty**. The day Phase 6 wires the predicate into a council round, that
+      test goes RED — which is exactly when this baseline stops being sufficient
+      and the separation must be re-verified against a live report. The
+      `recheck_when` field above is a bare symbol and the dashboard correctly
+      reports it as **not machine-checkable**; the test is the check.
+
+      **Sensitivity was proven, not assumed.** A three-part sabotage —
+      a temporary `src/scripts/ai_council/__sabotage_10_6.ts` importing
+      `evaluateStop`, a `qualityScore: number` field on `StopRender`, and
+      `renderStop`'s saved line rewritten to `call(s) at qualityPerCost` —
+      turned the file RED (**4 failed / 7 passed**); restoring gave 11/11. The
+      probe file was deleted in the same command and is not in the diff.
+
+      **One honest gap in the sensitivity, stated because the run showed it.**
+      The `StopRender carries only cost figures` test builds its object from a
+      hand-written literal, so adding a field to the *interface* did not turn
+      that particular test red — the source-text test caught it instead. A
+      structural-type assertion would be stronger; the pair is what shipped, and
+      the gap is named rather than left for a later reader to discover.
 
 ## Phase 11 — Learned routing as a challenger only
 
