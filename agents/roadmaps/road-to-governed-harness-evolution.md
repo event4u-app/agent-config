@@ -1651,7 +1651,59 @@ once.
       **The judge stays optional**, as the step says: `buildSplitPipeline`
       (`:330`) returns `judge: null` when none is configured, and the three role
       prompts are produced regardless.
-- [ ] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+- [ ] <!-- roadmap-status: guarded-baseline -->
+      **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+      **GUARDED BASELINE 2026-08-31 — the comparison cannot be run because there
+      is no second arm, and the fallback clause is now ENFORCED instead of
+      merely written.**
+
+      ```yaml
+      guarded_baseline:
+        category: absence-assertion
+        scope: src/scripts/_lib/candidate_proposer.ts
+        command: npx vitest run tests/scripts/proposer_survival_bar.test.ts
+        red_proof: sabotage run 2026-08-31 — 1 failed / 3 passed, restored 4/4
+        sabotage_model: added a fetch to an API host inside the proposer module
+        recheck_when: src/scripts/_lib/llm_candidate_proposer.ts
+        discharged_ac: the deterministic path is pinned as the only proposer, so it cannot be displaced silently
+        pending_ac: the paired-verdict comparison itself, which needs a second arm
+      ```
+
+      **Why it cannot be run, stated as a fact about the tree rather than as
+      effort.** `_lib/candidate_proposer.ts` is the only proposer and is
+      deterministic by construction — its own header says *"Fixed recipes for
+      known defect classes, so the loop is validated without model quality as a
+      confound"* and *"NOT claimed: that these three recipes improve
+      anything"*. Phase 5 ships no live model harness, which step 5.2 pins with
+      its own scan. A `paired_verdict` run needs two arms and one of them does
+      not exist. Running it against nothing and publishing the result would be
+      the *"argument, not a run"* this step's verify clause forbids.
+
+      **What the guard does buy.** The step's fallback — *"Otherwise the
+      deterministic path stays"* — was a sentence anyone could contradict by
+      adding a proposer. `tests/scripts/proposer_survival_bar.test.ts` now
+      asserts no model is in the proposer loop: no transport import, no
+      subprocess spawn, no API host, no key env var, across the proposer and its
+      dependency. So the day an LLM proposer lands it cannot become the default
+      without turning this red first, which is what makes "otherwise"
+      enforceable. `recheck_when` names the module whose arrival reopens the step.
+
+      **A false positive found by running it, and removed rather than
+      suppressed.** The construct list initially carried the bare vendor names
+      `anthropic` and `openai`, and the clean tree reported **2 hits** — both in
+      `_lib/candidate_record.ts`, and neither a client: they sit inside an
+      error-message STRING naming which council seats decided something
+      (*"2026-08-29, anthropic + openai, 2/2"*). Stripping comments does not
+      remove a string literal and should not; the detector was simply wrong. A
+      vendor's name in prose is evidence about the writing, not about the code,
+      so the names were dropped and only constructs that cannot appear
+      innocently were kept. Suppressing the two files instead would have blinded
+      the scan to the exact modules it exists to watch.
+      **Sensitivity OBSERVED after the narrowing, not before:** adding a `fetch`
+      to an API host inside the proposer reds *"no model is in the proposer
+      loop"* (1 failed / 3 passed); byte-identical restore returns 4/4. Both
+      anti-vacuity assertions — a non-empty scanned set and a stripper that does
+      not empty its input — ship with it, so a scan over nothing cannot pass.
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
       verify: the comparison is a `paired_verdict` run, not an argument.
