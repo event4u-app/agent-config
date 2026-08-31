@@ -1595,9 +1595,60 @@ Only now, and **not** as a new task router.
       `nonDiverseCandidates` flags a hand-built all-same-family assignment for
       which a cross-family reviewer *was* available, so an empty result means
       "no violation" rather than "the detector is broken".
-- [ ] 8.4 Score optional next calls by expected information gain per cost,
+- [x] 8.4 Score optional next calls by expected information gain per cost,
   deterministic and inspectable to start.
       verify: the score is reproducible from the recorded inputs
+      **DONE 2026-08-31 — deterministic scorer, executable reproduction, zero
+      paid calls.** New mechanism:
+      `src/scripts/ai_council/information_gain.ts` (`scoreNextCall`,
+      `recordNextCall`, `reproduceScore`, `rankByGainPerCost`,
+      `renderNextCallScore`). Tests:
+      `tests/scripts/ai_council/information_gain.test.ts` (17 tests, green).
+      **Every feature is one the tree already computes.** The six gain terms
+      read `DisagreementSignal` (`disagreement_signal.ts:134`), which 6.1
+      established as zero-cost and structural — no new similarity measure, no
+      new threshold, and no model call to decide whether to make a model call.
+      Forking a second feature set would be the defect 1A.1 forbids for the
+      question hash.
+      **The verify clause is executable.** `reproduceScore` recomputes from a
+      record's OWN inputs and compares under `JSON.stringify`; the tests assert
+      it for a plain record and for one round-tripped through JSON. Every
+      published figure is rounded to `SCORE_PRECISION = 6` and `-0` is
+      normalised to `0`, so the round trip is bit-exact rather than
+      nearly-exact.
+      **Inspectable means the total re-derives by hand.** Each term carries its
+      raw value, its weight, its direction-applied normalisation and its
+      contribution; `renderNextCallScore` prints all of them plus the weight
+      denominator, the trigger bonus, both cost divisions and the component
+      count. A test sums the printed contributions and reproduces the gain.
+      **An unavailable component is dropped from BOTH numerator and
+      denominator, never read as 0.** Reading it as 0 would turn "not measured"
+      into "measured, and it showed agreement" — the NOT-RUN-is-not-a-null
+      failure this file records elsewhere. A signal with nothing observable
+      returns `gain: null`, and a test asserts `null !== 0` against a
+      fully-agreeing signal that legitimately scores 0.
+      **HONEST SCOPE, three parts.** (a) It scores; it does not decide — 8.5 is
+      gated behind `blocker: phase-2-benchmark-cost`. (b) The weights are
+      **declared priors, not fitted values**; the module carries the
+      `revisit-if` (the Phase 2 benchmark shows a term that does not predict a
+      changed finding, or one that does and is missing). (c) `reproduceScore`
+      catches non-determinism and a tampered record; it **cannot** catch a
+      deterministic change to the scorer itself, because both sides run the same
+      code — the round-trip is a reproducibility check, not a regression pin.
+      **Sensitivity was proven, not assumed.** Three sabotages, each restored to
+      17/17: (A) removing the rounding in `roundScore` — RED, 1 failed / 16
+      passed; (B) adding a `Date.now() % 7` term to the trigger bonus — RED,
+      3 failed / 14 passed; (C) forcing `weightUsed = 1` so an unavailable term
+      is effectively read as zero — RED, 1 failed / 16 passed.
+      **A weakness the sabotage run exposed, and the fix that shipped with it.**
+      Sabotage B initially reddened only two *arithmetic* tests and left the
+      "repeated calls give byte-identical output" test **green** — five calls
+      inside one millisecond see a constant `Date.now() % 7`, so repetition
+      cannot prove purity. A source-level purity gate was added in the same
+      change (the module must contain no `Date.`, `Math.random`, `hrtime`,
+      `performance.now`, `node:fs` or `fetch(`), and it is what catches the
+      clock dependency deterministically. Both tests ship; the comment in the
+      test file records why.
 - [ ] 8.5 Stop when the next call has low expected value — call-level
   extension of argument exhaustion, only after benchmark evidence exists.
       verify: the stop is gated on the Phase 2 artifact, not on intuition
