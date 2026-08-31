@@ -56,11 +56,30 @@ function record(over: Record<string, unknown> = {}): Record<string, unknown> {
     };
 }
 
+/** A real `PairedVerdict`, not a string — `parseMetricVectorJson` refuses the shorthand. */
+function verdict(kind: string): Record<string, unknown> {
+    return {
+        kind,
+        discordant: 12,
+        wins: 11,
+        losses: 1,
+        p: 0.003,
+        magnitude_mean: 0.4,
+        at_floor: false,
+        why: `${kind} on 12 discordant trials`,
+    };
+}
+
 /** A vector that passes: one paired row plus the mandatory artifact-count row. */
-function passingRows(): MetricRow[] {
+function passingRows(kind = 'pass'): MetricRow[] {
     return [
-        { metric: 'task-success', kind: 'paired', direction: 'higher-better', verdict: 'pass' },
-        { metric: 'artifact-count-delta', kind: 'counted', delta: 0 },
+        { metric: 'task-success', kind: 'paired', direction: 'higher-better', verdict: verdict(kind) },
+        {
+            metric: 'artifact-count-delta',
+            kind: 'counted',
+            direction: 'lower-better',
+            delta: 0,
+        },
     ] as unknown as MetricRow[];
 }
 
@@ -186,11 +205,12 @@ describe('the verdict stage consults the paired verdict and nothing else', () =>
     });
 
     it('an underpowered row is refused as a pass, through the real verdict', () => {
-        const rows = [
-            { metric: 'task-success', kind: 'paired', direction: 'higher-better', verdict: 'underpowered' },
-            { metric: 'artifact-count-delta', kind: 'counted', delta: 0 },
-        ] as unknown as MetricRow[];
-        const r = runCascade({ raw: record(), plan: PLAN, budget: BUDGET, rows });
+        const r = runCascade({
+            raw: record(),
+            plan: PLAN,
+            budget: BUDGET,
+            rows: passingRows('underpowered'),
+        });
         expect(r.outcome).toBe('pass');
         if (r.outcome !== 'pass') return;
         expect(r.verdict.promote).toBe(false);
@@ -256,8 +276,8 @@ describe('the real runner routes through the cascade (AC-3 and AC-5)', () => {
         // AC-5's unmet conjunct: `promotionVerdict` had no caller anywhere.
         const f = recordFile('e2e-pass', record({ id: 'e2e-pass-a' }));
         const m = join(scratch, 'metrics.json');
-        writeFileSync(m, JSON.stringify(passingRows(), null, 2), 'utf-8');
-        const ran = lab(['run', '--record', f, '--metrics', m]);
+        writeFileSync(m, JSON.stringify({ candidate_id: 'e2e-pass-a', rows: passingRows() }, null, 2), 'utf-8');
+        const ran = lab(['run', '--record', f, '--vector', m]);
         expect(ran.stdout, ran.stderr).toContain('verdict=');
         expect(ran.stdout).toContain('model_calls=0');
         expect(ran.status).toBe(0);
@@ -285,7 +305,7 @@ describe('the real runner routes through the cascade (AC-3 and AC-5)', () => {
         //    rather than the property AC-3 states.
         const f = recordFile('e2e-cycle', record({ id: 'e2e-cycle-a' }));
         const m = join(scratch, 'metrics2.json');
-        writeFileSync(m, JSON.stringify(passingRows(), null, 2), 'utf-8');
+        writeFileSync(m, JSON.stringify({ candidate_id: 'e2e-cycle-a', rows: passingRows() }, null, 2), 'utf-8');
 
         const owned = (): string =>
             spawnSync('git', ['status', '--porcelain', '--', ...CANDIDATE_OWNED_PATHS], {
@@ -294,7 +314,7 @@ describe('the real runner routes through the cascade (AC-3 and AC-5)', () => {
             }).stdout;
 
         const before = owned();
-        lab(['run', '--record', f, '--metrics', m]);
+        lab(['run', '--record', f, '--vector', m]);
         const mine = clonesFrom('e2e-cycle-a');
         expect(mine.length).toBeGreaterThan(0);
         // Materialised, and the original tree is untouched WHILE the clone exists.

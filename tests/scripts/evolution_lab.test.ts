@@ -406,6 +406,60 @@ describe.skipIf(!HAVE_FIXTURE)('run, compare and clean over real clones', () => 
             expect(existsSync(join(CLONES, `candidate-e2e${String(i)}`))).toBe(true);
         }
 
+        // STEP 5.6 — the ROI figure reaches an operator's screen on a REAL run,
+        // not only through a unit test of the builder. This is the end-to-end
+        // half of "the ROI figure appears in every run report": the process is
+        // spawned, the report is on its stdout, and there is exactly one roi
+        // line in it. Without a `--vector`, the honest figure is `unmeasured` —
+        // this run cloned five candidates and evaluated none of them.
+        const roiLines = ran.stdout.split('\n').filter((l) => l.startsWith('run-report: roi:'));
+        expect(roiLines).toHaveLength(1);
+        expect(roiLines[0]).toContain('no candidate in this run carried an evaluation');
+        expect(ran.stdout).toContain('run-report: run:e2e0+e2e1+e2e2+e2e3+e2e4');
+        expect(ran.stdout).toContain('run-report: ladder human_rejected: (none licensed)');
+
+        // A run whose evaluation evidence IS supplied reports a real ratio.
+        // The vector goes through `parseMetricVectorJson`, which inherits
+        // `buildVector`'s refusal of a vector missing its artifact-count row.
+        const vecPath = join(scratch, 'vec-e2e0.json');
+        writeFileSync(
+            vecPath,
+            `${JSON.stringify({
+                candidate_id: 'e2e0',
+                rows: [
+                    {
+                        kind: 'counted',
+                        metric: 'artifact-count-delta',
+                        direction: 'lower-better',
+                        delta: 0,
+                    },
+                    {
+                        kind: 'paired',
+                        metric: 'activation-recall',
+                        direction: 'higher-better',
+                        verdict: {
+                            kind: 'pass',
+                            discordant: 12,
+                            wins: 11,
+                            losses: 1,
+                            p: 0.003,
+                            magnitude_mean: 0.12,
+                            at_floor: false,
+                            reason: 'treatment won 11 of 12 discordant',
+                        },
+                    },
+                ],
+            })}\n`,
+            'utf-8',
+        );
+        const withRoi = lab(
+            ['run', '--record', records[0] as string, '--vector', vecPath, '--estimated-spend-cents', '250'],
+            600_000,
+        );
+        expect(withRoi.status, withRoi.stderr).toBe(0);
+        expect(withRoi.stdout).toContain('improved=1 regressed=0 underpowered=0');
+        expect(withRoi.stdout).toContain('0.400 improved rows per dollar');
+
         const clean = lab(['compare'], 600_000);
         expect(clean.signal).toBeNull();
         expect(clean.status, clean.stderr).toBe(0);

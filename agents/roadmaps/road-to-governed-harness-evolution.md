@@ -1744,13 +1744,95 @@ once.
       is a STATED default at the conservative end of `lint_originality`'s range,
       not a measured optimum; `revisit-if` a screening run rejects a proposal a
       curator then re-adds by hand, or admits one a human calls a duplicate.
-- [ ] **5.6 Cheap proposer models first, and track evolution ROI.**
+- [ ] <!-- roadmap-status: guarded-baseline --> **5.6 Cheap proposer models first, and track evolution ROI.**
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
       a hard budget cap, while dropping the only cost-*reduction* mechanism both
       parents proposed. Improvement per evolution dollar is a reported figure.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evolution_roi.ts (assertCheapestFirst, LADDER, nextTier)
+        command: npx vitest run tests/scripts/_lib/evolution_roi.test.ts
+        red_proof: sabotage run 2026-08-31 — cheapest-first comparison neutralised, 3 of 28 tests RED, 28/28 GREEN after restore
+        sabotage_model: replaced the guard condition `if (cheapest !== null && a.tier !== cheapest)` at src/scripts/_lib/evolution_roi.ts:217 with `if (false)`, so an escalation past an untried cheaper rung stops being refused
+        recheck_when: src/scripts/_lib/ladder_attempt_recorder.ts recordLadderAttempt
+        discharged_ac: the ROI half is met with a live subject — every completed run of the `run` verb emits a report and buildRunReport REFUSES one without the figure
+        pending_ac: "a cheaper model is tried before an expensive one" under a real attempt sequence — nothing in this tree makes a metered proposer call, so the ordering is policed over a population of zero
+      ```
+      **PARTLY DONE 2026-08-31, and the split is per verify-clause conjunct
+      rather than per convenience.** `src/scripts/_lib/evolution_roi.ts`.
+      **The ROI conjunct is CLOSED, with a production caller.** `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES a report whose ROI
+      figure is absent or carries an unknown kind — the same shape
+      `_lib/evaluation_vector.ts:103`'s `buildVector` uses to refuse a vector
+      that omits its artifact-count row, and refused at RUNTIME because the
+      caller who drops the row is a JSON parse or an `as` cast the compiler
+      cannot see (proved with a `delete` past the type,
+      `tests/scripts/_lib/evolution_roi.test.ts:140`). The caller is real, not a
+      unit test: `verbRun` builds the report on the ONE path a run completes on
+      (`src/scripts/evolution_lab.ts:779`) and writes it to stdout
+      (`:800`), and evaluation evidence is parsed BEFORE the first clone
+      (`:745`) so a malformed vector aborts before the run spends anything.
+      Reproduce with
+      `./scripts-run src/scripts/evolution_lab run --record REC.json --vector VEC.json --estimated-spend-cents 250`.
+      **The figure is a union, not a number, because a ratio is not always
+      defined.** `ratio` at positive spend with something evaluated,
+      `no-spend` at zero spend, `unmeasured` when no candidate carried an
+      evaluation (`:302`). Neither `Infinity` nor `NaN` can reach a report, and
+      both are pinned. `unmeasured` is the honest state of this programme today
+      and reads as a finding: `run` clones and nothing in Phase 5 evaluates,
+      because 5.2 keeps the live-floors park intact.
+      **Measured end-to-end on the real CLI, not only in the builder's unit
+      test.** `tests/scripts/evolution_lab.test.ts:409` spawns the process over
+      five real clones and asserts exactly ONE `run-report: roi:` line on its
+      stdout reading `unmeasured`; a second invocation supplying a vector with
+      one `pass` row at 250 cents prints `0.400 improved rows per dollar`. The
+      vector goes through `parseMetricVectorJson` (`:428`), which calls
+      `buildVector` and therefore INHERITS the artifact-count refusal rather
+      than re-implementing it — verified against the live CLI, which rejects a
+      vector missing that row before any clone is made.
+      **Sensitivity proved on both halves, separately.** Deleting the report
+      emission from `verbRun` turns the e2e assertion RED (`expected [] to have
+      a length of 1`), 25/26 → restored 26/26; neutralising the ROI refusal in
+      `buildRunReport` turns the negative-polarity case RED, 27/28 → restored
+      28/28.
+      **The cheapest-first conjunct has NO LIVE SUBJECT, and that is why this
+      step is `guarded-baseline` and not `[x]`.** Policing "a cheaper model is
+      tried before an expensive one" needs an attempt sequence, and no step in
+      this roadmap invokes a live routing harness — 5.2, held by
+      `tests/scripts/governed_harness_no_live_harness.test.ts` (9/9 on this
+      branch, and its half B now scans `evolution_roi.ts` too, since that module
+      names this roadmap). So what shipped is an ordering POLICY plus a guard
+      proved to fire: `LADDER` (`:101`) is cheapest-first per defect class,
+      `assertLadderWellFormed` (`:132`) refuses a ladder that skips a rung —
+      which would try an expensive tier before a cheaper one by construction —
+      and `assertCheapestFirst` (`:191`) refuses an out-of-order attempt
+      sequence. Both are exercised in both polarities.
+      **Three defect classes carry an EMPTY ladder, which is the strongest cost
+      reduction available rather than an omission.** `policy_blocked`,
+      `dependency_unavailable` and `human_rejected` license NO metered attempt
+      at all: a candidate a policy refused, one that could not find its
+      dependency, or one a human turned down is not made acceptable by a larger
+      model. `nextTier` returns `null` there and the report prints
+      `next: spend nothing`; a metered attempt against such a class is refused
+      outright. The classes are REUSED from `_lib/pathology_archive.ts:65`'s
+      closed `PATHOLOGY_WHY` vocabulary — a second defect taxonomy beside it
+      would be the drift 4.4 exists to prevent — and a test pins the ladder's
+      key set against it so a vocabulary addition cannot leave a class
+      unpriced.
+      **Tiers are vendor-neutral (`lite < medium < high`, `:86`) on purpose.**
+      Naming a model would tie a cost policy to a price list that changes
+      without this file, and would put a vendor name into a module this
+      roadmap's own live-harness scan reads.
+      **What this does NOT establish.** That the ladder's per-class assignments
+      are the right ones. They are a stated policy with a written reason each,
+      not a measurement — nothing has been run cheap-first and then expensive to
+      compare. `revisit-if`: a run records a defect class where the cheap rung
+      never resolves anything, or one where an empty ladder blocked a fix a
+      model would have made.
 
 ## Phase 6 — Delivery: measure the existing substrate first
 
@@ -1839,7 +1921,7 @@ once.
       detector DOES find all three declarations inside `router_match.ts` itself —
       a scanner tested only on hand-written strings can be silently wrong about
       the syntax it has to read.
-- [ ] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
+- [x] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
       Over the existing BM25 core. No embeddings —
       `docs/contracts/no-runtime-boundary.md:40` classifies a vector/embedding
       index as a **contract violation**, not a preference: "a vector/embedding
@@ -1847,6 +1929,104 @@ once.
       Class C". The BM25 core passes the same test. The skipped parent proposed
       the shortlist and explicitly refused it as final truth.
       verify: the shortlist feeds a later stage and never decides alone.
+      **DONE 2026-08-31.** `src/scripts/_lib/lexical_shortlist.ts`, over
+      `_lib/lexical_index.ts` — the hand-rolled BM25 core that already ships.
+      **THE CITATION IN THIS STEP HAD MOVED, and the constraint had not.**
+      `docs/contracts/no-runtime-boundary.md` was superseded on 2026-08-27 by
+      ADR-249 and is now a pointer stub whose line 40 reads
+      *"Its literal scope was Mission-Mode"* — not the classification quoted
+      above. The substance survived the move verbatim and is cited from its live
+      home instead: `docs/contracts/resident-process-governance.md:82`,
+      *"A code-graph cache passes; a vector index fails"*, under the P3
+      state-store test, with the P4 row at `:76` separately prohibiting any
+      index build requiring network or model calls. The step's quoted text is
+      left standing above rather than rewritten, because it is what the step
+      was written against; this note is the correction.
+      **The ordering dependency in "only then" is satisfied and was checked
+      rather than assumed.** 6.1 is `[x]` with
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` present,
+      and 6.2 is `[x]` with `single_matcher_preserved.test.ts` 8/8 — so the
+      three arms were measured before this retrieval component was written,
+      which is exactly what 6.1's own verify clause reserved.
+      **AC-7's ordering claim SURVIVES this step, and its wording is now
+      historical.** That criterion reads *"measured against one another before
+      any new retrieval component exists"* — a temporal claim, and 6.1's
+      measurement was committed before this component, so it holds. Its audit
+      note's phrase *"6.3 has not started"* described the tree on 2026-08-31
+      before this commit and is left standing as the record of that moment; it
+      is not a live condition and nothing here reopens AC-7.
+      **First conjunct — it feeds a later stage, MEASURED, not asserted.** The
+      later stage is the per-prompt byte cap in `selectForInjection`, which now
+      takes an optional fourth argument
+      (`src/scripts/_lib/rule_injection.ts:224`) used as a TIE-BREAK. Wired
+      through `ArmExperimentInput.shortlist`
+      (`src/scripts/_lib/delivery_arm_experiment.ts:108`) to a real CLI flag,
+      `model_rule_injection --three-arm --shortlist`
+      (`src/scripts/model_rule_injection.ts:834`, flag at `:895`) — this is not
+      an unwired library. Run over `tests/eval/routing-matrix` on this commit:
+      OFF gives `delivery` 0.990 (302/305), 1 cap-drop, mean 2,026 injected
+      tokens; ON gives 0.984 (300/305), 3 cap-drops, mean 2,016. The shortlist
+      demonstrably changes what the cap does, which is the falsifiable form of
+      "feeds a later stage" — a shortlist nothing downstream reacts to would
+      have produced two identical tables.
+      **It currently makes delivery slightly WORSE, and that is reported rather
+      than tuned away.** −2 positives at the same corpus and cap. 6.3's verify
+      clause is about the shortlist's ROLE, not its win, and the pre-registered
+      loss ceiling that would adjudicate the trade-off is step 6.4, which is
+      `[ ]`. So the flag ships default-OFF: the 6.1 baseline reproduces
+      byte-for-byte without it (1.000 / 0.000 / 0.990 at 120,743 / 18,223 /
+      18,223, mean 2,026 p90 4,144), and a test pins that the absent argument is
+      the pre-6.3 behaviour.
+      **Second conjunct — never decides alone, closed in BOTH directions by
+      construction.** A shortlist decides alone by ADDITION (delivering what the
+      matcher never fired on) or by SUBTRACTION (removing a matcher hit, which
+      is a decision dressed as a filter). `orderByShortlist` (`:155`) takes the
+      matcher's output as its input domain and returns a PERMUTATION of it;
+      `assertPermutation` (`:171`) refuses any result whose id multiset differs
+      in either direction, counting multiplicity. At the cap, the same holds
+      independently: a shortlisted id absent from `matches` is never consulted,
+      and an unshortlisted match sorts at `Infinity` — behind the shortlisted
+      ones and still competing for the cap, never removed. The near-miss false
+      context stays 0/194 with the shortlist ON, which is the empirical form of
+      "added nothing".
+      **Subordination is a comparator key ORDER, and both implementations of it
+      are pinned.** `score desc → shortlist rank → router order`. The matcher's
+      verdict is read first and the shortlist only breaks its ties. The order
+      exists twice — in `orderByShortlist` and in the cap walk — so both are
+      tested, because a second implementation of one comparator is a thing that
+      drifts.
+      **Sensitivity proved by two sabotages, and the second one found a real
+      hole in the first test set.** (A) Turning `orderByShortlist` into
+      `filter(shortlisted).sort(rank)` — the shape a shortlist naturally
+      degrades into — turned 5 of 23 cases RED with the message *"the shortlist
+      changed the matcher`s set instead of ordering it — dropped r-b … decides
+      by subtraction"*; restored 23/23.
+      (B) Making the cap walk filter to the shortlist AND rank it above the
+      matcher score passed all 23 — because every case then shortlisted EVERY
+      match, so a membership filter changed nothing. Two cases were added under
+      the still-sabotaged tree and observed RED
+      (`tests/scripts/_lib/lexical_shortlist.test.ts:182` and `:193`,
+      *"expected ['command-suggestion-policy'] to deeply equal ['architecture',
+      …(5)]"*), then the sabotage was restored and the file is 25/25. The gap is
+      recorded rather than quietly patched: a sabotage that passes is the test
+      set's finding about itself.
+      **No embeddings, established by a scan proved to fire first.** Six banned
+      construct classes — embedding call, embedding identifier, vector store,
+      cosine similarity, network, child process — are matched against
+      `lexical_shortlist.ts` AND `lexical_index.ts`, after being shown to FIRE
+      on six synthetic sources and to stay silent on plain BM25 arithmetic. The
+      scanned byte count is asserted, because a scan over nothing exits green.
+      The module's import list is pinned to exactly
+      `['./lexical_index.js', './rule_injection.js']`. The banned literals live
+      in the test rather than in the module for a mechanical reason: a scanner
+      whose banned strings sit in the file it scans matches its own declaration
+      and can never pass.
+      **No second matcher.** This module answers "which text is lexically
+      closest", never "which rules fire on this prompt" — that stays
+      `_lib/router_match.ts`. `router_match_parity` (5/5),
+      `single_matcher_preserved` (8/8), `delivery_arm_experiment` (11/11),
+      `model_rule_injection` (13/13) and `rule_inject_hook` (16/16) are green on
+      this branch.
 - [ ] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
       Recall-loss ceiling and token target fixed first; report precision,
       recall, false activation, context cost, benefit **conditional on**
@@ -2388,14 +2568,38 @@ once.
 - [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
-      **Audited 2026-08-31: first conjunct met, second not met.**
+      **RE-AUDITED 2026-08-31 after 5.6 landed: still OPEN, and the reason
+      moved rather than went away.**
+      *First conjunct, unchanged:*
       `agents/evidence/analysis/governed-harness-success-criteria.md` was
       committed at `172b87c6` (2026-08-30 10:32:57) and no candidate run has
       happened at all, so the criteria precede it — a real but currently
-      vacuous satisfaction, and worth naming as such. The second conjunct has no
-      subject: there is no run report anywhere in the tree, and the
-      evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
-      plus a first run whose report carries the figure.
+      vacuous satisfaction, and still worth naming as such.
+      *Second conjunct, half-closed.* 5.6 built the missing subject: a run
+      report now exists, `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES one without the ROI
+      figure, and `evolution_lab`'s `run` verb emits it on the one path a run
+      completes on (`src/scripts/evolution_lab.ts:779`). Any report this
+      programme produces from here on carries the figure structurally rather
+      than by an author remembering to add it. That is the SHAPE half.
+      **What is still missing is the run, and it is not reachable in this
+      roadmap.** A `run` invocation today clones candidate trees and evaluates
+      nothing — its honest ROI kind is `unmeasured`, which is the report telling
+      the truth. A *candidate run* in this programme's sense evaluates
+      candidates against an eval corpus over repeated trials, which needs a
+      metered backend, which step 5.2 forbids: no step in this roadmap invokes
+      a live routing harness, and
+      `tests/scripts/governed_harness_no_live_harness.test.ts` holds it.
+      **A fixture is not the first candidate run, and none of the artefacts
+      5.6 shipped is offered as one.** The end-to-end case at
+      `tests/scripts/evolution_lab.test.ts:409` drives the real CLI over five
+      real clones and asserts the report reaches stdout; it proves the report
+      is emitted, and it evaluates no candidate. Reading it as the run would be
+      exactly the substitution this criterion exists to catch.
+      **What closes it:** a first candidate run under a metered backend, which
+      belongs to whichever roadmap lifts the live-harness park — not to this
+      one. Until then AC-8 is `[ ]` with its shape half done and its subject
+      half absent.
 - [-] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.

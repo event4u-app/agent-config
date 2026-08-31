@@ -159,6 +159,15 @@ export interface CascadeInput {
     readonly peers?: readonly string[];
     /** Metric rows, when the caller has them. Absent means the run measured nothing. */
     readonly rows?: readonly MetricRow[];
+    /**
+     * An already-built vector, when the caller has one.
+     *
+     * Takes precedence over `rows`. Step 5.6's run report parses vectors from
+     * `--vector` and validates them through `buildVector`, so re-deriving one
+     * here from loose rows would give the verdict a second, less-checked path
+     * to the same number.
+     */
+    readonly vector?: MetricVector;
 }
 
 function abort(
@@ -262,7 +271,7 @@ export function runCascade(input: CascadeInput): CascadeResult {
     // Stage 6 — metric vector and the promotion verdict. This is the ONLY
     // promoter consulted, and it is `_lib/evaluation_vector.ts`'s, never a
     // second verdict computed here.
-    if (input.rows === undefined || input.rows.length === 0) {
+    if (input.vector === undefined && (input.rows === undefined || input.rows.length === 0)) {
         return {
             outcome: 'incomplete',
             candidate_id: record.id,
@@ -274,10 +283,22 @@ export function runCascade(input: CascadeInput): CascadeResult {
     }
     run.push('metric-verdict');
     let vector: MetricVector;
-    try {
-        vector = buildVector(record.id, input.rows);
-    } catch (e) {
-        return abort('metric-verdict', String((e as Error).message), run, record.id);
+    if (input.vector !== undefined) {
+        if (input.vector.candidate_id !== record.id) {
+            return abort(
+                'metric-verdict',
+                `vector names candidate '${input.vector.candidate_id}', not '${record.id}'`,
+                run,
+                record.id,
+            );
+        }
+        vector = input.vector;
+    } else {
+        try {
+            vector = buildVector(record.id, input.rows as readonly MetricRow[]);
+        } catch (e) {
+            return abort('metric-verdict', String((e as Error).message), run, record.id);
+        }
     }
     const verdict = promotionVerdict(vector);
 
