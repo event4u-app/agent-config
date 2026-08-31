@@ -23,6 +23,7 @@ import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { CLONES, REPO_ROOT, TSX_BIN } from './_bench_ab.js';
+import { CANDIDATE_OWNED_PATHS } from '../../src/scripts/_lib/candidate_record.js';
 import {
     CASCADE_STAGES,
     CHEAPEST_STAGE,
@@ -264,23 +265,44 @@ describe('the real runner routes through the cascade (AC-3 and AC-5)', () => {
 
     it('materialise, evaluate and destroy leaves the original tree unchanged', () => {
         // AC-3's three verbs in one run, asserted against the real repo.
+        //
+        // TWO SCOPING DECISIONS, both learned by getting them wrong first.
+        //
+        // 1. Destruction removes THIS candidate's clone directly rather than
+        //    calling `clean --yes`, which removes EVERY candidate clone. The
+        //    first version did call it, and in the full parallel suite it
+        //    deleted the clones `bench_ab_integrity.test.ts` was mid-run
+        //    against — reddening that file and this one while both passed in
+        //    isolation. `harness_evolution_guard_call_sites.test.ts` already
+        //    records the same hazard in its own clone probe. The `clean` verb
+        //    itself is covered by `evolution_lab.test.ts`; duplicating it here
+        //    bought nothing and broke a sibling.
+        //
+        // 2. The no-diff assertion is scoped to the paths a candidate can
+        //    actually write — `CANDIDATE_OWNED_PATHS` — not to whole-repo
+        //    `git status --porcelain`. A global comparison measures every
+        //    other test running concurrently, which is watching shared state
+        //    rather than the property AC-3 states.
         const f = recordFile('e2e-cycle', record({ id: 'e2e-cycle-a' }));
         const m = join(scratch, 'metrics2.json');
         writeFileSync(m, JSON.stringify(passingRows(), null, 2), 'utf-8');
 
-        const before = spawnSync('git', ['status', '--porcelain'], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        }).stdout;
-        lab(['run', '--record', f, '--metrics', m]);
-        expect(clonesFrom('e2e-cycle-a').length).toBeGreaterThan(0);
-        lab(['clean', '--yes']);
-        const after = spawnSync('git', ['status', '--porcelain'], {
-            cwd: REPO_ROOT,
-            encoding: 'utf8',
-        }).stdout;
+        const owned = (): string =>
+            spawnSync('git', ['status', '--porcelain', '--', ...CANDIDATE_OWNED_PATHS], {
+                cwd: REPO_ROOT,
+                encoding: 'utf8',
+            }).stdout;
 
-        expect(after).toBe(before);
+        const before = owned();
+        lab(['run', '--record', f, '--metrics', m]);
+        const mine = clonesFrom('e2e-cycle-a');
+        expect(mine.length).toBeGreaterThan(0);
+        // Materialised, and the original tree is untouched WHILE the clone exists.
+        expect(owned()).toBe(before);
+
+        for (const dir of mine) rmSync(join(CLONES, dir), { recursive: true, force: true });
+
+        expect(owned()).toBe(before);
         expect(clonesFrom('e2e-cycle-a')).toEqual([]);
     });
 });
