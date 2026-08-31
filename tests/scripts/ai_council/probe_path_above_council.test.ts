@@ -39,6 +39,19 @@ interface Fixtures {
 
 const FIXTURES = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, FIXTURE_REL), 'utf8')) as Fixtures;
 
+/**
+ * Comments stripped before the symbol scan.
+ *
+ * Measured, not defensive: the first version of this tripwire scanned raw
+ * source, and `replay_route.ts` — whose docstring says *"nothing in `src/` is
+ * named `topology_selector` or exports `selectTopology`"* — tripped it. A
+ * sentence ABOUT a symbol is not a declaration of it, and a gate that cannot
+ * tell them apart reddens on its own documentation.
+ */
+function stripComments(src: string): string {
+    return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+}
+
 /** Maximally permissive inputs: nothing else may explain a non-council verdict. */
 function ladder(taskText: string): ReturnType<typeof classifyLadder> {
     return classifyLadder({
@@ -113,7 +126,7 @@ describe('the tripwire — this baseline expires when a selector lands', () => {
                     continue;
                 }
                 if (/topology[_-]?selector/i.test(e.name)) hits.push(path.relative(REPO_ROOT, abs));
-                else if (e.name.endsWith('.ts') && /\bselectTopology\b/.test(fs.readFileSync(abs, 'utf8'))) {
+                else if (e.name.endsWith('.ts') && /\bselectTopology\b/.test(stripComments(fs.readFileSync(abs, 'utf8')))) {
                     hits.push(path.relative(REPO_ROOT, abs));
                 }
             }
@@ -127,7 +140,11 @@ describe('the tripwire — this baseline expires when a selector lands', () => {
         // and the same symbol predicate both fire on constructed inputs.
         expect(/topology[_-]?selector/i.test('topology_selector.ts')).toBe(true);
         expect(/topology[_-]?selector/i.test('topologySelector.ts')).toBe(true);
-        expect(/\bselectTopology\b/.test('export function selectTopology(x: T) {')).toBe(true);
-        expect(/\bselectTopology\b/.test('export function selectChairman(x: T) {')).toBe(false);
+        expect(/\bselectTopology\b/.test(stripComments('export function selectTopology(x: T) {'))).toBe(true);
+        expect(/\bselectTopology\b/.test(stripComments('export function selectChairman(x: T) {'))).toBe(false);
+        // A sentence ABOUT the symbol is not a declaration of it — the case
+        // that actually reddened this gate on its first full-suite run.
+        expect(/\bselectTopology\b/.test(stripComments('// nothing exports selectTopology yet'))).toBe(false);
+        expect(/\bselectTopology\b/.test(stripComments('/** exports `selectTopology` */'))).toBe(false);
     });
 });

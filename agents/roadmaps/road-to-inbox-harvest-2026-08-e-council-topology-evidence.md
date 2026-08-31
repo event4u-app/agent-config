@@ -1596,6 +1596,16 @@ Only now, and **not** as a new task router.
       suite also tests the **denial**: both tripwire predicates fire on
       constructed matches and stay silent on `selectChairman`, so an empty
       result means "absent" rather than "the scanner is broken".
+      **A defect the FULL suite caught that the file-scoped run did not, fixed
+      in the same change.** The tripwire originally scanned raw source, and the
+      later-landed `replay_route.ts` — whose docstring says *"nothing in `src/`
+      is named `topology_selector` or exports `selectTopology`"* — tripped it.
+      A sentence ABOUT a symbol is not a declaration of it, and a gate that
+      cannot tell them apart reddens on its own documentation. The scan now
+      strips comments first, the denial set gained two rows pinning that
+      direction (a `//` mention and a `/** */` mention must NOT match), and the
+      sabotage was re-run afterwards to confirm the fix did not blunt it —
+      still 1 failed / 6 passed with a real `selectTopology` export present.
 - [ ] 7.4 Deterministic policy first, interpretable features only: task class,
   impact, ambiguity type, configured provider diversity, model availability,
   historical benchmark slice, artifact size, cost ceiling, prior-run freshness,
