@@ -2425,6 +2425,24 @@ is **seating**, and it already has a carrier.
 
   **No measurement has been taken and none is claimed.** The NOT RUN state the
   predecessor protected is preserved here verbatim in force.
+
+  **STILL OPEN, and materially advanced 2026-08-31 (drain run 11). Three of the
+  five `Resolved when` conjuncts are discharged; the two that remain are the
+  measurement itself.**
+  Discharged: (1) the assembler exists and refuses the synthetic fixture, with
+  sensitivity proven in three sabotage probes; (2) all three design forks are
+  recorded, one of them by a 2/2 convergent council verdict; (3) the retention
+  quarantine's conditional release fired on a diagnosis, and the diagnosis is
+  recorded with its own citation correction.
+  **Open: the run.** The bench has not been run and no recognition rate exists.
+  Day 1 (the RAW arm, 30 calls per provider) is runnable; **day 2 is blocked on
+  fork 3's deferred pattern list**, which the council's condition 1 requires be
+  version-pinned before the stripped arm runs and which this change deliberately
+  did not write. Publishing a RAW-only rate would satisfy neither conjunct 4 nor
+  the verdict's condition 5, so nothing was published.
+  **The NOT RUN state is therefore intact in exactly the form the predecessor
+  protected**, and the advance is in what is now buildable rather than in what
+  is claimed.
 - **Owner:** council — the disposition keeps both criteria alive and unweakened,
   descopes nothing, and lowers no floor, which the preservation test routes to
   the council. It does not touch the >= 30 floor or the synthetic-fixture
@@ -2435,28 +2453,221 @@ is **seating**, and it already has a carrier.
 - **What to do:** build the assembler, then settle the three design forks
   before any rater sees an item — a measurement taken with any of them open is
   not interpretable.
-  1. **Assembler.** Write a loader from `agents/runtime/council/responses/` to
-     `readonly LeakageItem[]`, which
-     `src/scripts/ai_council/provider_leakage_bench.ts:90,136` currently take as
-     an injected parameter. It MUST refuse
-     `internal/bench/council-provider-leakage/smoke-items.json` explicitly —
-     that file self-declares `"synthetic": true` and that a live runner must
-     refuse it.
-  2. **Eligibility + balanced sampling.** Document which of the 716 bodies are
-     eligible and how >= 30 are drawn without skewing the provider-family mix.
-     The skew failure is already pinned in this file: a constant guesser scores
-     above chance on an unbalanced corpus.
-  3. **Anonymisation protocol.** Define what is stripped before a rater sees a
-     body — provider names, model ids, and self-identifying phrasing at minimum.
-     Step 3.3 says *"anonymized"* and defines nothing.
-  4. **Rater budget.** Each rater x item is a paid call. 30 items x N raters
-     against a 50/provider/day cap. Either it fits one UTC day or the multi-day
-     schedule is stated up front — this is a quota constraint of a **different
-     shape** than the predecessor's and must not be confused with it.
-  5. **Retention quarantine.** The over-retained bodies (117-day mtimes against
-     a declared 7-day TTL) are excluded from eligibility until the retention
-     defect is diagnosed. See the predecessor's retention finding; the council
-     made this a precondition rather than a footnote.
+  1. **Assembler.** ~~Write a loader~~ **DONE 2026-08-31 (drain run 11) —
+     `src/scripts/ai_council/leakage_corpus.ts` (385 lines), with
+     `tests/scripts/ai_council/leakage_corpus.test.ts` at 24/24 green and
+     `npm run typecheck` clean.** `assembleLeakageCorpus` walks a response
+     directory **recursively** and returns `{ items, families, excluded,
+     census }`; every drop carries a machine-readable `ExclusionReason` rather
+     than being silently skipped.
+     **The synthetic fixture is REFUSED, not excluded** — `smoke-items.json` by
+     basename, any record carrying a truthy `synthetic` key under any name, and
+     any directory path containing `council-provider-leakage`, each throw
+     `SyntheticCorpusRefusal`. A refusal is a throw because exclude-and-continue
+     would let a live run proceed over a corpus that had quietly lost its
+     subject.
+     **Sensitivity proven in two independent runs, not asserted.** Neutralising
+     the synthetic-key refusal: **2 failed / 22 passed**; neutralising the
+     basename refusal: **1 failed / 23 passed**; neutralising the
+     `response-carried-error` exclusion: **1 failed / 23 passed**. Every restore
+     was byte-identical, sha256 `874ff5f4…13a7` before and after, returning
+     **24/24**. The synthetic-key probe was re-run independently by the
+     orchestrator and reproduced 2 failed / 22 passed → 24/24 at the same hash.
+     **Three corrections this step forced, each of which changes a decision** —
+     detail and citations in
+     [`PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md):
+     (i) `responses/` is **not flat** — it holds directories literally *named*
+     `<slug>.json` carrying per-round debate records, so a single-level walk
+     drops them and the recursive count is **1,402** eligible items, not 716;
+     (ii) the roadmap's `gemini 2` **counted failed calls** — both gemini
+     entries carry a non-falsy `error`, so `families` reads
+     `['anthropic', 'openai']` and **uniform chance is 0.50, not 1/3**;
+     (iii) a basename-derived item id would have **leaked the ground truth** —
+     real filenames include `anthropic-design-skills-integration.json` and
+     `claude-code-distribution.json`, so the id is an opaque
+     `item-<sha1(relpath)[0:12]>-<index>` and a test asserts no id contains any
+     of seven provider tokens.
+     **Deliberately NOT built: anonymisation.** The module returns RAW bodies,
+     says so in a `── What this module does NOT do ──` header section, and
+     exposes an `anonymise` seam defaulting to `IDENTITY_ANONYMISE`. Fork 3
+     below governs what may be stripped, and its pattern list does not exist
+     yet.
+  2. **Eligibility + balanced sampling.** **RECORDED 2026-08-31 (drain run 11)**
+     in [`internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
+     § Fork 2, written **before any rater saw any item** — checkable rather than
+     asserted, because `collectGuesses` and `scoreRecognition` have **zero
+     production callers** at this commit (test-only), so no rater call has been
+     made.
+     Eligibility is defined AS the assembler's output rather than described
+     beside it, so it cannot drift from what is measured. Census: **1,402**
+     eligible items, anthropic **699** / openai **703**.
+     The `>= 30` floor is read **per arm**, the stricter reading: 60 distinct
+     bodies, each arm stratified at **15 anthropic / 15 openai**, drawn
+     deterministically by sorted id under a recorded seed. Exact balance is the
+     point rather than neatness — at 15/15 the uniform baseline and
+     `chance_majority` **coincide at 0.50**, so a constant guesser gets no free
+     lift and the stricter-of-two baseline the p-value uses is unambiguous.
+     **The detection floor is computed and pre-registered**, exact one-sided
+     binomial against `p0 = 0.50`: pooled n = 60 needs **37/60 (61.7 %)** for
+     p < 0.05 (p = 0.0462), power 0.937 at a true rate of 0.70; a single rater's
+     n = 30 needs **20/30** (p = 0.0494) at power 0.730, and is therefore
+     reported as descriptive only and explicitly not promoted to a finding.
+     **A limit the design does not overcome:** two families means chance is
+     50 %, so nothing below ~62 % pooled recognition is distinguishable from
+     guessing. That is a property of the configured council having two seats.
+  3. **Anonymisation protocol.** **SETTLED BY AI COUNCIL 2026-08-31 (drain run
+     11) — Option (C), TWO ARMS, 2/2 CONVERGENT** (anthropic/claude-sonnet-4-5 +
+     openai/codex-default, 2 rounds, blind chairman). Recorded in the same
+     PREREG § Fork 3.
+     **The fork was real, and the tree settles why.** The live path strips the
+     **label** and nothing else: `src/scripts/ai_council/consensus.ts:507-528`
+     (`anonymize_responses`), reached via
+     `src/scripts/ai_council/blind_review.ts:76`, assigns a positional
+     `Response-A` label and maps it to `text.trim()`. **No transformation is
+     applied to the body**, so a body naming its own provider reaches a blind
+     reviewer exactly as written.
+     **Verdict:** run every selected body in exactly **one** arm and publish
+     both — **RAW** (live-path fidelity) and **PATTERN-STRIPPED** (isolates
+     house style, which is what 3.4 would target). Quoting the openai seat:
+     *"A cannot distinguish explicit labels from style; B cannot characterize
+     the deployed path."*
+     **Seven binding conditions:** version-pin the patterns and replacement
+     semantics before the stripped arm runs; keep a span-level transformation
+     log; same corpus, separately randomized arm presentation; **no rater sees
+     both versions of an item** (satisfied by construction — each body appears
+     in one arm only, so a second version does not exist in the run); report
+     both arms and both baselines independently; label the second arm
+     **`pattern-stripped`, NEVER `identifier-free`**; and it doubles the rater
+     calls and the schedule.
+     **The claim limit both seats insisted on, carried here because it bounds
+     what may ever be published:** the RAW − STRIPPED delta estimates the effect
+     of **the registered transformations**, not *"label leakage"* in general —
+     regexes may miss identifiers or remove stylistic material. Both seats also
+     refused the weaker premise the question offered: the tree proves labels
+     **can** pass through, not their **prevalence**.
+     **The pattern list is DEFERRED and deliberately absent.** Writing it in the
+     same change that settled the protocol would put an unreviewed floor into
+     the pre-registration under cover of the verdict, which is what condition 1
+     exists to prevent. **The stripped arm therefore cannot run**; the RAW arm
+     is unblocked by it.
+  4. **Rater budget.** **RECORDED 2026-08-31 (drain run 11)**, same PREREG
+     § Fork 4. Two raters (the configured seats) × 60 distinct bodies = 120
+     rater-item pairs = **60 calls per provider** against the 50/provider/day
+     cap → **2 UTC days**: day 1 the RAW arm, day 2 the PATTERN-STRIPPED arm.
+     Stated up front, which is what this todo asked for.
+     **Arm is confounded with day, and that is named rather than hidden** — a
+     per-day provider-side change would read as an arm effect; the mitigation at
+     this budget is to report the day beside each arm. **A one-day crossover was
+     reachable and was rejected**: it pools the `>= 30` floor across arms instead
+     of meeting it per arm, and makes the arm delta a between-rater comparison,
+     confounding rater with arm for exactly the quantity condition 5 requires be
+     reported independently. Trading a named day-confound for an unnamed
+     rater-confound plus a weakened floor is not an improvement.
+     **Day 1 is runnable now. Day 2 is blocked on fork 3's pattern list, not on
+     quota.**
+  5. **Retention quarantine.** ~~The over-retained bodies are excluded from
+     eligibility until the retention defect is diagnosed.~~ **THE DEFECT IS
+     DIAGNOSED 2026-08-31 (drain run 11), so the quarantine's own release
+     condition has fired and the quarantine LIFTS.** The clause was conditional
+     — *"until the retention defect is diagnosed"* — and this is that condition
+     being met, not a floor being lowered.
+
+     **The diagnosis: three retention carriers name this directory and NONE of
+     them is automatic.** Every pruner in the tree needs an explicit human
+     command.
+     (a) **The auto-prune path is dead code.** `session.save()`
+     (`src/scripts/ai_council/session.ts:506`) is the only function that calls
+     `prune_old_artifacts(QUESTIONS_DIR, days)` / `(RESPONSES_DIR, days)`
+     (`:603-604`). Repo-wide, exactly two files import that module:
+     `src/scripts/council_prune.ts:36`, which imports `_load_retention_days` and
+     `prune_all_council_artifacts` (`session.ts:468`) and **not `save`**, and
+     `tests/scripts/ai_council/session.test.ts:18`. There is no barrel or index
+     file in `src/scripts/ai_council/` and no dynamic, namespace, or
+     string-built import reaches it. `src/scripts/council_cli.ts` — the live
+     writer — imports the module **not at all**.
+     **Stronger than "uncalled in production": no test exercises the tail
+     either.** All six `save()` call sites pass both `sessions_dir: base` (so the
+     `if (sessions_dir === null)` branch at `:602-605` is never entered) and
+     `retention_days: 0` (which hits the `<= 0 → return []` guard at `:360` and
+     `:412`). So wiring `save()` up is an **untested change**, not a switch flip.
+     (b) **`council_prune.ts:14` documents a caller that does not exist** —
+     *"Same logic as the auto-prune that runs on every `council save()`"*.
+     (c) **The janitor is a reporter, not a reaper.** `janitor.ts:12-14` states
+     the default is a dry-run report and that deletion needs `--apply`, which
+     gates the `fs.unlinkSync` path. Its `TTL_CONFIG` declares
+     `agents/runtime/council/responses` at `ttlDays: 7` and **has no entry for
+     `questions/` or `sessions/` at all**, so even `janitor --apply` would leave
+     two of the three council directories untouched.
+
+     **A citation correction, recorded because a governed artefact must not
+     carry it wrong.** An earlier form of this diagnosis cited
+     `src/scripts/discovery_graph.ts:422`'s reference to `janitor.ts:10` as
+     *"never auto-sweeps"*. That is **wrong twice**: `janitor.ts:10` is a blank
+     comment line, and the sentence it means is at `:9` — *"NEVER auto-sweeps
+     agents/tmp/ (user inbox — user-owned, no TTL)"* — which is scoped to the
+     **user inbox** and is a statement that janitor deliberately excludes one
+     directory, not a claim about council artefacts or about janitor in general.
+     The load-bearing evidence for (c) is `:12-14` plus the `--apply` gate.
+
+     **The root-mismatch hypothesis is REFRAMED, not rejected.** This entry's
+     predecessor hypothesised that `RESPONSES_DIR` (file-relative,
+     `session.ts:70`) and `council_cli.ts:217`'s `resolve_project_root(null)`
+     (cwd-relative) diverge. It is **not** the operative cause — a root mismatch
+     would prune the *wrong* directory, and what is observed is no pruning in
+     *any* directory; in the maintainer checkout the two roots coincide. **But it
+     is a live trap in the remedy:** from the global install `session.ts`'s
+     `REPO_ROOT` resolves to the installed package, so wiring `save()` up would
+     prune the package's own tree while artefacts accumulate in the consumer's,
+     and the same defect makes `janitor --apply` sweep the wrong tree from an
+     install. Fix-blocker, not a dead hypothesis.
+
+     **The measurement, read with a read-only probe that deletes nothing**
+     (`src/scripts/probe_council_retention.ts`, 495 lines, no write/unlink/rm
+     call in the file, typecheck and lint clean). **Snapshot at
+     2026-08-31T16:55Z — these figures DRIFT and are a floor, never a total:**
+     a re-run ten minutes later read 1,314 files and 121 days, because a
+     parallel worker is writing into the directory. Reproduce with
+     `./scripts-run src/scripts/probe_council_retention --root <checkout>`
+     rather than quoting the table.
+
+     | directory | files | over TTL | attributed bodies | within TTL | oldest |
+     |---|---|---|---|---|---|
+     | `responses/` | 798 | 784 | **1,402** | **0** | 117 d |
+     | `sessions/` | 157 | 157 | 91 | 0 | 120 d |
+     | `questions/` | 358 | 346 | 2 | 0 | 117 d |
+     | **totals** | **1,313** | **1,287** | **1,495** | **0** | **120 d** |
+
+     Independently corroborated by `./scripts-run src/scripts/janitor` in its
+     default dry-run mode, which reports **784 expired** files in `responses/`
+     — the probe's figure exactly.
+
+     **Why lifting the quarantine was the only reading under which this bench
+     can ever run, and it is arithmetic rather than judgement: 0 of 1,402
+     eligible bodies are within the 7-day TTL.** Held in force, the quarantine
+     excludes **100 %** of the corpus, so the `>= 30` floor would be
+     unreachable forever and step 3.3 unclosable by construction. The `until`
+     clause is what resolves it, and the condition it names is now met.
+
+     **A limit the lift does NOT remove, and it bounds every claim this bench
+     may publish.** The corpus is what an unrun reaper left behind — this tree
+     already says so, at `src/scripts/ai_council/recouncil_savings.ts:237-240`:
+     *"ACCIDENTAL DENOMINATOR — the retained corpus is what an unrun reaper left
+     behind … Any rate over this corpus is a rate over an unknown sampling
+     frame."* Recognition is a within-item property, so the bench remains
+     interpretable; a **population** claim is not. The defensible published form
+     is *"over these 60 bodies, raters named the family at rate R against chance
+     0.50"* — never *"the council leaks R % in production"*.
+     **The corpus is also live:** `responses/` read 798 files and 799 thirty
+     seconds later, so every figure above is a snapshot and 1,402 is a floor.
+     Once the 60 bodies are drawn they must be **pinned by id** so the arms are
+     run over a fixed set.
+
+     **Not fixed, and deliberately.** Wiring an automatic prune now would delete
+     the 1,287 over-retained artefacts — the measurement subject. The fix is
+     sequenced **after** the bench run, and the assembler contains no fs
+     mutation so it cannot cause one. The false-documentation half of the defect
+     is tracked at
+     [`stubs/road-to-council-retention-doc-drift.md`](stubs/road-to-council-retention-doc-drift.md).
 - **Recommendation:** build the assembler and settle the forks; do NOT run the
   bench first. The predecessor's own reasoning still holds and is the reason
   this successor exists rather than a green light: the cost of waiting is two of
@@ -2467,13 +2678,25 @@ is **seating**, and it already has a carrier.
   behind 3.3, and nothing downstream stalls — `Blocks` above is unchanged. No
   criterion is weakened and no evidence is fabricated. The only loss is that the
   716 bodies keep accumulating unmeasured.
-- **Resolved when:** the assembler exists and refuses the synthetic fixture, the
-  three forks above are recorded, the retention quarantine is applied, and the
+- **Resolved when:** the assembler exists and refuses the synthetic fixture
+  **[DONE 2026-08-31]**, the three forks above are recorded **[DONE
+  2026-08-31]**, the retention quarantine is applied **[DONE 2026-08-31 — its
+  conditional release fired on the diagnosis recorded in todo 5]**, and the
   bench has been run over a corpus of **>= 30 real anonymised response bodies**
-  with both the recognition rate and its chance baseline published — at which
-  point 3.3 closes and 3.4 becomes decidable in whichever direction the number
-  points. **The >= 30 floor and the `smoke-items.json` prohibition are carried
-  forward unweakened**; the council named both as floors it could not move.
+  with both the recognition rate and its chance baseline published **[OPEN — no
+  arm has run]** — at which point 3.3 closes and 3.4 becomes decidable in
+  whichever direction the number points. **The >= 30 floor and the
+  `smoke-items.json` prohibition are carried forward unweakened**; the council
+  named both as floors it could not move.
+  **The >= 30 floor is now read PER ARM, which is stricter than the pooled
+  reading this sentence would also permit** — 60 bodies, 30 per arm. That is a
+  tightening and is recorded so a later reader cannot relax it back to a pooled
+  30 by citing this field.
+  **The remaining conjunct is not quota-bound today.** Day 1 needs 30 calls per
+  provider against a cap of 50; what blocks day 2 is fork 3's deferred pattern
+  list. Naming that precisely matters, because the predecessor entry was
+  falsified for asserting a quota obstacle that had ceased to exist, and the
+  same mistake in reverse would be to report this as waiting on quota.
 
 ### blocker: phase-2-benchmark-cost
 
@@ -2526,6 +2749,57 @@ is **seating**, and it already has a carrier.
   the new claim-licensing limit written down — and in either case 2.1's closing
   note is updated to point at this entry rather than carrying the condition
   alone.
+  **PARTIALLY DISCHARGED 2026-08-31 (drain run 11) — TWO of the first path's
+  three conjuncts are now met; the runner is the one that is not.**
+
+  **(a) The spend IS authorised, by the owner, in the run mandate that
+  commissioned this change.** Verbatim: *"Spend-type blockers: token/benchmark
+  spend is **pre-authorized by the maintainer** — the council decides *how*, not
+  *whether*."* That is the owner authorisation this field asks for, and it is
+  what this entry's own **Recommendation** field said to seek — *"take it to the
+  owner rather than the council"*, on the ground that *"20 days of monopolised
+  provider quota is a spend commitment above what a council decides"*. The
+  authorisation settles the *whether*. It does not make the runner exist.
+
+  **(b) The UTC-day schedule IS recorded**, at
+  [`internal/bench/council-topology/UTC-DAY-SCHEDULE.md`](../../internal/bench/council-topology/UTC-DAY-SCHEDULE.md).
+  It is **emitted, not authored**: `expandManifest()` → `partitionIntoDays()` →
+  `summariseManifest()` over the frozen spec, which is greedy and deterministic
+  in cell order, so it regenerates byte-identically. It reproduces this entry's
+  figures exactly — 384 cells, 352 eligible, 32 `not_eligible`, minimum 1,584
+  calls (anthropic 814 / openai 770), worst case 1,804 (924 / 880), 20 UTC days
+  at a cap of 50 — and adds the per-day booking table, booked at **worst case**
+  so the retry reserve is held before a cell starts. The per-day sums equal the
+  worst-case totals, which is the check that the partition loses no cell.
+
+  **(c) The runner does NOT exist**, unchanged: `topology_bench_manifest.ts`
+  `main()` only `--emit`s JSON and contains no provider dispatch. **This change
+  did not build it**, and the reason is recorded rather than left as an
+  omission: both council seats declined to greenlight the runner on 2026-08-31,
+  and while the owner's authorisation changes the *spend* premise their refusal
+  rested on, it does not by itself commission a 384-cell dispatcher. A runner
+  built inside a drain run and then left unexercised for 20 days is a
+  population-of-zero mechanism of exactly the kind this file's `guarded-baseline`
+  state exists to refuse.
+
+  **A cost the authorisation did not price, recorded because it is a genuine
+  tension in the mandate rather than a risk this entry carries.** Mean daily
+  booking is 46.2 anthropic and 44.0 openai against a cap of 50, leaving roughly
+  3-5 calls per provider per day — **not enough for a two-seat council round at
+  two rounds**, which is how this repository's recorded decisions are taken. For
+  20 consecutive UTC days no other council work can proceed. The same mandate
+  that authorises the spend also requires every contested decision to be settled
+  by the council. **Those two obligations cannot both be met during the 20
+  days.** The tension is surfaced, not resolved: resolving it is a scheduling
+  decision for whoever starts the run, and resolving it by silently preferring
+  whichever half permits progress is what this note exists to prevent.
+
+  **Nothing about what Phase 2 may claim has changed.** At `TRIALS_PER_ITEM = 2`
+  the benchmark still clears neither of 2.6's pre-registered floors (n >= 5,
+  n >= 10), so it licenses descriptive comparison only. No family was cut, no
+  ablation deleted, and no unexecuted arm was called a null — the three moves
+  both seats refused. All 352 eligible cells still read `pending`, which
+  `PHASE2_COMPLETE_STATUSES` excludes at the type layer and at module load.
 
 ### blocker: unlicensed-source-verbatim-scan
 - **Status:** resolved
