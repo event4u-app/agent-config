@@ -1451,10 +1451,64 @@ Only now, and **not** as a new task router.
   class, impact class, reason codes, estimated calls, estimated cost, latency
   band, evidence/policy source, fallback.
       verify: every field is populated on a real selection
-- [ ] 7.3 Keep the deterministic/probe path **above** council: a mechanism
+- [ ] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
   question resolvable by tree fact, schema, script or executable test never
   reaches topology selection.
       verify: a probe-resolvable fixture never enters the selector
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/judgment_ladder.ts classifyLadder rung-0-before-rung-4 precedence
+        command: npx vitest run tests/scripts/ai_council/probe_path_above_council.test.ts
+        red_proof: sabotage run 2026-08-31 — two independent sabotages, 1 of 7 tests RED each, 7/7 GREEN after both restores
+        sabotage_model: (A) moved the rung-4 detectContestedJudgment check ABOVE the rung-0 checks in classifyLadder, inverting the precedence; (B) added src/scripts/ai_council/__sabotage_selector.ts exporting selectTopology, so a selector exists
+        recheck_when: src/scripts/ai_council/topology_selector.ts selectTopology
+        discharged_ac: the fixtures are frozen and a probe-resolvable question provably never reaches the council rung, even when it also carries a contested-judgment phrase
+        pending_ac: "never enters the selector" against a real selector — 7.2 is open, no topology_selector.ts exists, so nothing exercises the constraint at the selection layer
+      ```
+
+      **NOT closed: there is no selector to keep anything out of.** 7.2 is open
+      and nothing in `src/` is named `topology_selector` or exports
+      `selectTopology`. Closing on "the selector never saw it" when no selector
+      exists would be the vacuity this file's § Prevented items exists to catch.
+      **What IS discharged is the stronger half, one layer up.**
+      `classifyLadder` (`src/scripts/_lib/judgment_ladder.ts:342`) checks rung 0
+      **before** the rung-4 council signal (`:353-361` precede `:380-383`), so a
+      probe-resolvable question never resolves to `council` at all — and a
+      question that never reaches the council rung cannot reach a
+      council-**internal** selector, whatever that selector turns out to be.
+      **Fixtures, frozen:**
+      `internal/bench/council-topology/probe-resolvable-fixtures.json`
+      (`permanent: true`) — 8 probe-resolvable questions covering all four kinds
+      the step names (tree fact, schema, script, executable test), 4 adversarial
+      questions that carry BOTH a probe signal and a real contested-judgment
+      phrase, and 4 contrast questions that genuinely resolve to rung 4.
+      Test: `tests/scripts/ai_council/probe_path_above_council.test.ts`
+      (7 tests, green), run with maximally permissive inputs (`halted: false`,
+      `subagent_spawn: true`, `agentTeams: true`) so nothing but the precedence
+      can explain a non-council verdict.
+      **Non-vacuity is tested three ways, because "never reaches council" is
+      trivially true if nothing does.** (1) Each adversarial fixture is asserted
+      to fire `detectContestedJudgment` AND still resolve to `script`. (2) The
+      contrast set is asserted to resolve to rung 4 / `council`. (3) The
+      tripwire below.
+      **The tripwire is machine-enforced, not a prose reminder.** One test scans
+      `src/` for a file named `topology[_-]?selector` or any file exporting
+      `selectTopology`, and asserts the result is **empty**. The day 7.2 lands a
+      selector it goes RED — which is exactly when this baseline expires and the
+      fixtures must be re-run against the real entry point. `recheck_when`
+      carries the same path and symbol; the dashboard reports the bare symbol as
+      **not machine-checkable**, and the test is the check.
+      **Sensitivity was proven twice, not assumed.** Sabotage A — moving the
+      rung-4 contested check above the rung-0 checks — turned it RED (1 failed /
+      6 passed), and specifically reddened the precedence assertion rather than
+      the population one. Sabotage B — adding
+      `src/scripts/ai_council/__sabotage_selector.ts` exporting `selectTopology`
+      — turned the tripwire RED (1 failed / 6 passed). Both restored to 7/7; the
+      probe file was deleted in the same command and is not in the diff. The
+      suite also tests the **denial**: both tripwire predicates fire on
+      constructed matches and stay silent on `selectChairman`, so an empty
+      result means "absent" rather than "the scanner is broken".
 - [ ] 7.4 Deterministic policy first, interpretable features only: task class,
   impact, ambiguity type, configured provider diversity, model availability,
   historical benchmark slice, artifact size, cost ceiling, prior-run freshness,
