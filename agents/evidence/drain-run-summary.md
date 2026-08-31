@@ -198,6 +198,39 @@ mitigations as unbuilt or as living here when they are built or transferred).
     at once**, and the tension was surfaced rather than resolved by silently
     preferring whichever half permits progress.
 
+## The one red CI check, and its disposition
+
+**`Node Tests (ubuntu-latest, shard 2/4)` fails on PR #1780, pre-existing and
+CI-only.** `routing_signal_measurement.test.ts:178` compares the published
+routing verdict against a fresh recompute; the published artefact records
+`catalogue_size: 299` and **CI's recompute produced 300**. Every other field in
+the corpus record reproduces.
+
+**The tree holds 299 skills by five independent counts** — `git ls-files` on the
+branch, the same on a clean `origin/main` worktree, `git ls-tree` on
+`origin/main`, `ls` on disk, and `check_estate_count`'s `skill_count 299 (floor
+299, +0)`. So 300 is one more than exists.
+
+**It does not reproduce locally in any configuration tried:** the file in
+isolation on the branch (17/17), in isolation on clean main (17/17), and in the
+**full local suite** — 20,247 passed, 1 failed, and that one failure is a
+separate, independently-known local-config artefact in
+`check_rule_projection_integrity`.
+
+**This run cannot be the cause.** The branch adds no skill, and `origin/main` did
+not move between the rebase and the run. **Why it surfaced now:** #1778 and #1779
+each ran 7 path-filtered checks and never ran the Node suite; #1780 ran 35. The
+test's last CI execution predates both.
+
+**Disposition — tracked, not fixed**, at
+`agents/roadmaps/stubs/road-to-routing-verdict-ci-only-drift.md`, with the
+hypothesis named as a hypothesis (shard-local test pollution writing a 300th
+`src/skills/*/SKILL.md`) and the obvious candidate writers checked and cleared.
+**The one edit that would turn CI green was deliberately not made:** changing the
+published `299` to `300` would close a measurement by redefinition on a figure
+that reproduces nowhere, and would destroy the only signal saying something in CI
+counts a skill that is not there.
+
 ## Where the run stopped, and why
 
 **Not on quota** — 47/50 and 48/50 spent, 3 and 2 remaining. **Not on a wall
