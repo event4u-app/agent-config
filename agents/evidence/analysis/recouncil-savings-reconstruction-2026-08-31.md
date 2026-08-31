@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Re-council savings — a corpus reconstruction, and what it cannot be
 
 **Date:** 2026-08-31 · **Roadmap:** `road-to-inbox-harvest-2026-08-e-council-topology-evidence`, step 10.5
