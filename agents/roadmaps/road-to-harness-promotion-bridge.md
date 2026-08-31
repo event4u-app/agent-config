@@ -167,6 +167,120 @@ step or AC-9: those remain gated twice, and the second gate is exactly this
 condition, which is now recorded as **undischarged on evidence** rather than as
 undecided.
 
+**DISCHARGED 2026-08-31 BY ROUTE 1 — the structural invariant is built, green,
+and proven sensitive. All three limbs are now gated.** Route 2 was not taken and
+may not be: it is owner-reserved and nothing below narrows the condition.
+
+The mechanism is the one openai's round-1 answer specified: one guarded
+capability that is unobtainable while `blocker: merge-authority` is open, plus a
+check that fails when a promotion-capable write bypasses it.
+
+- **The capability.** `src/scripts/_lib/promotion_capability.ts:166`
+  (`acquirePromotionCapability`) mints an opaque token and refuses while
+  `src/scripts/_lib/promotion_capability.ts:111` (`readMergeAuthorityStatus`)
+  reads anything but `resolved` from this file's own `### blocker:
+  merge-authority` Status field — using the same literal
+  `src/scripts/lint_roadmap_blockers.ts:193` matches, so "open" here and "open"
+  to the repository's blocker gate cannot diverge. Fail-closed on a missing
+  roadmap, a missing blocker and an unparseable status. There is no flag, no
+  environment variable and no argument that lifts it. **It creates no promotion
+  path:** it performs no filesystem write and no lifecycle transition, which is
+  what lets the enforcement land *before* the path the condition's own wording
+  requires it to precede.
+- **The invariant.** `src/scripts/lint_promotion_paths.ts`, over every `.ts`
+  file under `src/` and `tests/` — 2812 files, 16 candidate-derived modules, 66
+  filesystem-write sites at this commit.
+
+| Limb of the condition | Gated by | Where |
+|---|---|---|
+| a **verb** | `verbPromote` returns `EXIT_REFUSED` on every path | `src/scripts/evolution_lab.ts:857-888` |
+| a **state transition into `promoted`** | `assertTransition` demands a named human approver | `src/scripts/_lib/candidate_record.ts:232-248` |
+| a **verb or transition reached by a NEW path** | R1 — no approval synthesis outside a three-file allowlist, tree-wide | `src/scripts/lint_promotion_paths.ts:285` (allowlist `:148`) |
+| a **record written straight into `promoted`** | R2 — no `lifecycle: 'promoted'` / `ACCEPTED_STATE` record literal | `src/scripts/lint_promotion_paths.ts:332` (allowlist `:156`) |
+| **any write into `src/` derived from a candidate** | R3 — a candidate-derived filesystem write may not target the canonical source tree | `src/scripts/lint_promotion_paths.ts:513` + `:404` (allowlist `:159`) |
+| the **capability itself** staying shut | R0 — `acquirePromotionCapability` is CALLED and must throw while the blocker is open | `src/scripts/lint_promotion_paths.ts:609` |
+
+**Rows 3 to 5 are the repository-wide half that was missing.** Both B-seats named
+the same three bypasses — a direct `assertTransition(..., 'promoted', approver)`,
+a record carrying `lifecycle: 'promoted'` written outside `verbPromote`, and a
+candidate-derived `src/` write — and R1, R2 and R3 are those three, in that
+order. anthropic's objection was that `findApproverSynthesis` *"demonstrates the
+pattern the condition demands"* while being *"narrowly scoped to one specific
+bypass vector"* and to one file; R1 is that same detector generalised to the
+whole authored tree, with the allowlist pinned by an assertion rather than by
+convention (`tests/scripts/lint_promotion_paths.test.ts` § the allowlists cannot
+grow silently).
+
+**Risk 2 of the register is answered mechanically, not by promise.** The
+condition says *"a check over a population of zero does not discharge this
+condition"*, so the gate carries three separate `assertScanned` floors —
+`src/scripts/lint_promotion_paths.ts:172-174`, 400 files / 4 candidate-derived
+modules / 10 write sites — each exiting **2** rather than green. A collapsed
+population is a dead scope, not a clean run. Live values are 2812 / 16 / 66, so
+the population is non-empty by a wide margin and the floors have room for
+legitimate deletion.
+
+**Sensitivity was observed in both directions, on the real tree, and is recorded
+because a gate never seen red has unknown sensitivity.** A three-limb bypass
+planted in `src/scripts/evolution_lab.ts` (a three-argument `assertTransition`
+with a synthesised approver, a `lifecycle: 'promoted'` record literal, and
+`fs.writeFileSync(path.join(REPO_ROOT, 'src', 'rules', ...))` in a
+candidate-derived module) turned the gate **red, exit 1**, naming
+`evolution_lab.ts:899` R1 ×3, `:900` R2 and `:901` R3; the paired test went **3
+failed / 19 passed**. Restoring the file byte-identically (`git diff --stat`
+empty) returned the gate to **exit 0** and the test to **22/22**. Separately,
+neutralising the capability's refusal turned **R0** red with *"capability
+obtainable while the blocker is open"*, and restoring it returned exit 0 — the
+file verified byte-identical against its backup. `--self-test` adds 15 planted
+cases, 9 rejecting, all behaving.
+
+**Two defects were found by RUNNING the gate rather than by reading it, and both
+are pinned as regression cases** (`tests/scripts/lint_promotion_paths.test.ts` §
+survives the two defects the first runs produced): a substitution that rewrote
+identifiers inside string literals (`cand` within `'ac-cand-'`), which produced a
+false positive on a temp-directory removal; and an expansion that DESTROYED the
+`REPO_ROOT` token the rule keys on — because `REPO_ROOT` is itself a `const` —
+which silently dropped the R3 half of the first planted bypass. The second is the
+failure direction that matters, and it is the reason this record cites an
+observed red rather than a passing suite.
+
+**Registered on six surfaces**, so it runs rather than merely existing:
+`taskfiles/ci-fast.yml:1509-1519`, `Taskfile.yml:231`,
+`.github/workflows/rule-backstops.yml:376` (remote, not a local-only
+declaration), `src/config/gate-coverage.yml:2334` with a canary and a floor of
+1800, the manifest header recount at `src/config/gate-coverage.yml:55`, and the
+`.secret-allow` line pin re-derived from the file.
+
+**Scope this discharge does NOT claim, stated rather than implied.**
+
+1. **It does not resolve `blocker: merge-authority`,** which stays OPEN and
+   owner-reserved in both directions. The two gates were always separate and
+   still are: this one asks *what mechanically prevents promotion*, that one asks
+   *who may promote*. Phase 7 steps below are now gated once, not twice.
+2. **It is recorded by the implementing agent, not by a fresh council round.**
+   The 2026-08-31 verdict named route 1 as *"buildable, council-decidable"* and
+   stated the criterion this record answers; the daily council quota is
+   owner-held and was not spent to re-adjudicate a route the verdict itself
+   specified. That is a real independence limit and it is named here rather than
+   left for a reader to notice: the party that built the mechanism is the party
+   recording that it satisfies the criterion. **Falsifier:** a council round that
+   rules this mechanism insufficient reopens the condition, and every step closed
+   under it reverts to `[ ]`. Nothing here is written so as to make that harder.
+3. **R3's residual is bounded, not closed.** It resolves `const` bindings up to
+   three hops, so a destination assembled at runtime from a value carrying no
+   `src` literal anywhere in its chain is not detectable textually. Such a write
+   is a source-tree write, but it is a PROMOTION only when it also carries an
+   approval or a promoted record — which R1 and R2 catch independently. A
+   candidate-derived write into a *clone's* `src/` is deliberately out of scope:
+   a clone is a candidate's own sandbox, already gated by `bench_ab_integrity`'s
+   allowed-delta-path check, whose sensitivity `tests/scripts/bench_ab_candidate.test.ts:383-398`
+   proves.
+4. **openai's continuing-requirement half still binds.** The `Revisit-if`
+   paragraph above already carries it: a successful promotion branch, an
+   approver-bearing interface, an alternate promotion path or a new
+   candidate-derived `src/` write each require fresh review, and this discharge is
+   a condition on the mechanism as it stands rather than a permanent guarantee.
+
 The condition's verbatim origin block, carried out of the parent's Phase 0 on
 2026-08-30 and transferred here on 2026-08-31, is reproduced under
 § Provenance below.
