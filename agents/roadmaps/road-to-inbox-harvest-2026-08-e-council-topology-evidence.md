@@ -1336,13 +1336,26 @@ byte-pinned by tests. Any work here runs through
       `### Clashes` / `### Conflicts` (`prompts.ts:291-293`, `:320-322`) state
       both sides of a disagreement but never whether it REMAINS unresolved — and
       `PR_SYNTHESIS` explicitly defers resolution rather than recording
-      non-resolution (*"do not pick a winner here"*, `:322-323`);
+      non-resolution (*"do not pick a winner here"*, `:322`);
       `### Outliers` (`:356-364`) asks for single-reviewer findings and is
       analysis-lens only, with nothing about STRENGTH; `### Kill criteria`
       (`:305-309`) falsifies the RECOMMENDATION, not the disagreement.
-      Corroborated by absence: `unresolved`, `would resolve`,
-      `strongest minority` and `minority evidence` return **zero** hits across
-      `src/scripts/ai_council/` and `tests/scripts/ai_council/`.
+      **A correction made in the same run, recorded because the wrong version
+      of it was nearly published.** The first form of this note claimed that
+      `unresolved` / `would resolve` / `strongest minority` / `minority
+      evidence` return **zero** hits across `src/scripts/ai_council/` and
+      `tests/scripts/ai_council/`. They return **21**, and the true reading is
+      sharper than the false one. Every hit is in a DIFFERENT surface:
+      `argument_exhaustion.ts:32,72,100` treats an unresolved adversarial
+      trigger as a blocker on stopping early, `information_gain.ts:63,129,225`
+      scores it as a reason another call can still change the verdict, and
+      `confidence_gate.ts:7,176` detects unresolved alternatives in a reply. So
+      the concept of unresolved disagreement is **already modelled in this
+      tree** — it simply never reaches the synthesis contract. `prompts.ts`
+      itself carries **zero** of those four terms, and the only two matches
+      inside the four templates' line range are *"the strongest converged
+      point"* and *"the strongest consensus or must-fix line"* — which point at
+      the majority, i.e. away from what 5.4 asks for.
 
       **(ii) The verify names a RUN, and no recorded run can serve it.** The
       corpus under `agents/runtime/council/` carries no chairman synthesis at
