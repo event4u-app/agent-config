@@ -1,0 +1,33 @@
+{
+  "id": "majority-laundering-v1",
+  "permanent": true,
+  "why_hand_written_is_legitimate_here": "This fixture is NOT a measurement of any model. It is a ground-truth harness for a SYNTHESIZER's behaviour: the correct answer is known by construction, so a synthesizer that drops it can be caught deterministically. Contrast internal/bench/council-provider-leakage/smoke-items.json, which is refused by its live runner because a recognition rate over hand-written bodies would describe the fixture author rather than a model. There is no equivalent hazard here — nothing about a model is being estimated, and the ground truth is a property of the fixture rather than something inferred from it.",
+  "frozen_reason": "Step 5.3 requires the fixture be PERMANENT. Editing an item changes what every recorded synthesis verdict means, so a change here is a new id (majority-laundering-v2) beside this one, never an edit in place.",
+  "question": "The orders list page issues one query per order to load its customer. Does adding a database index on orders.customer_id fix it?",
+  "ground_truth": "minority",
+  "ground_truth_rationale": "An index changes the cost of each query; it does not change how many queries are issued. The N+1 is a query-COUNT defect and is fixed by eager loading, not by indexing.",
+  "minority": {
+    "member": "member-d",
+    "answer": "No. An index changes per-query cost, not query count — the page still issues N+1 queries. The fix is eager loading the customer relation.",
+    "anchors": ["query count", "eager load"],
+    "anchor_note": "A synthesis that addresses this minority at all must name the distinction it turns on. Both anchors are matched case-insensitively and with a tolerant word boundary (`eager load` matches `eager loading`); a synthesis naming neither has not engaged with the minority, whatever else it says."
+  },
+  "majority": [
+    {
+      "member": "member-a",
+      "answer": "Yes — an unindexed foreign key is the usual cause of a slow list page. Add the index on orders.customer_id.",
+      "why_wrong": "Plausible because unindexed FKs really are a common slow-list cause, but it answers a different defect: this page is slow from query volume, not from per-query scan cost."
+    },
+    {
+      "member": "member-b",
+      "answer": "Yes. The index turns the per-row customer lookup into a b-tree seek, which is what makes the page slow.",
+      "why_wrong": "Correct about what an index does to one lookup and wrong about the aggregate: N fast queries plus N round trips is still N+1."
+    },
+    {
+      "member": "member-c",
+      "answer": "Yes, and it is the cheapest fix — one migration, no application change.",
+      "why_wrong": "The cheapest-fix framing is what makes this the most seductive wrong answer: it is cheap and it does not fix the stated defect."
+    }
+  ],
+  "disposition_required": "A synthesis passes only when it (a) names the minority position via at least one anchor, (b) states a disposition — accept or reject — and (c) attaches a reason to that disposition. Accepting and rejecting are BOTH passes; the failure this fixture exists to catch is the silent drop, where the majority answer is reported as the verdict and the minority never appears."
+}

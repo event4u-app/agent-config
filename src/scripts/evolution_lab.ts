@@ -83,6 +83,12 @@ import {
     readCandidateRecord,
 } from './_lib/candidate_record.js';
 import {
+    PROMOTION_EVIDENCE_FIELDS,
+    PromotionEvidenceError,
+    parsePromotionEvidence,
+} from './_lib/promotion_evidence.js';
+import { assertNotSemanticNoOp, isSemanticNoOp, SemanticNoOpError } from './_lib/semantic_noop.js';
+import {
     RECIPES,
     byteCompare,
     candidateRecordFilename,
@@ -397,7 +403,7 @@ const USAGE = `usage: evolution_lab <verb> [options]
            [--trials-per-candidate N] [--estimated-spend-cents N]
   compare  [--verbose]
   explain  [--record FILE [--to STATE]] [--criteria]
-  promote  --record FILE                 (always refuses: blocker merge-authority)
+  promote  --record FILE [--evidence FILE]  (always refuses: blocker merge-authority)
   clean    [--yes]
 
 No verb starts a resident process, a timer, or a watcher.
@@ -972,9 +978,15 @@ function verbExplain(argv: readonly string[]): number {
  * There is no flag, no environment variable and no argument that turns this
  * into a promotion. `--approver` is deliberately NOT a flag: adding one is what
  * would let an unattended run name a human who never approved.
+ *
+ * `--evidence FILE` IS a flag, and it changes nothing about the refusal. It is
+ * how steps 7.1, 7.3, 7.4 and 7.5 are exercised against a refused promotion: the
+ * package is validated FIRST and its finding names the missing field, so an
+ * operator assembling one can see which field is wrong instead of only being
+ * told the blocker is open. Both paths still return {@link EXIT_REFUSED}.
  */
 function verbPromote(argv: readonly string[]): number {
-    const flags = parseFlags(argv, [], ['record']);
+    const flags = parseFlags(argv, [], ['record', 'evidence']);
     const file = one(flags, 'record');
     if (file === undefined) {
         return usageError('promote requires --record FILE');
@@ -985,6 +997,40 @@ function verbPromote(argv: readonly string[]): number {
     } catch (e) {
         return fail(`${file} rejected — ${(e as Error).message}`);
     }
+
+    // 7.1 / 7.3 / 7.4 / 7.5 — the evidence package, checked BEFORE the governance
+    // refusal so its finding names the missing field rather than being swallowed
+    // by a blocker message the operator cannot act on.
+    const evidenceFile = one(flags, 'evidence');
+    if (evidenceFile === undefined) {
+        process.stderr.write(
+            `evolution_lab: promote REFUSED for ${record.id}\n` +
+                '  evidence package: absent. A promotion carries ONE package with all ' +
+                `${String(PROMOTION_EVIDENCE_FIELDS.length)} fields ` +
+                `(${PROMOTION_EVIDENCE_FIELDS.join(', ')}); pass --evidence FILE.\n`,
+        );
+    } else {
+        try {
+            const evidence = parsePromotionEvidence(JSON.parse(fs.readFileSync(evidenceFile, 'utf-8')));
+            assertNotSemanticNoOp(
+                evidence.candidateId,
+                isSemanticNoOp(
+                    evidence.materialImprovement.baselineText,
+                    evidence.materialImprovement.candidateText,
+                    evidence.materialImprovement.deltaPercent,
+                ),
+            );
+        } catch (e) {
+            if (e instanceof PromotionEvidenceError || e instanceof SemanticNoOpError) {
+                process.stderr.write(
+                    `evolution_lab: promote REFUSED for ${record.id}\n  evidence package: ${e.message}\n`,
+                );
+            } else {
+                return fail(`${evidenceFile} unreadable — ${(e as Error).message}`);
+            }
+        }
+    }
+
     let gate = 'the lifecycle gate did not refuse, which is itself a defect';
     try {
         assertTransition(record.lifecycle, 'promoted');

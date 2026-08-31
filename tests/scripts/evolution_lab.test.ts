@@ -42,6 +42,7 @@ import {
     legalNextStates,
 } from '../../src/scripts/evolution_lab.js';
 import { CANDIDATE_RECORD_VERSION, LIFECYCLE_SPINE } from '../../src/scripts/_lib/candidate_record.js';
+import { PROMOTION_EVIDENCE_FIELDS } from '../../src/scripts/_lib/promotion_evidence.js';
 
 const LAB_TS = join(REPO_ROOT, 'src', 'scripts', 'evolution_lab.ts');
 const CLONE_TS = join(REPO_ROOT, 'src', 'scripts', 'bench_ab_clone.ts');
@@ -313,6 +314,114 @@ describe('promote', () => {
         // The positive pole: the spine still advances, so the assertion above
         // is not passing because every transition is refused.
         expect(legalNextStates('proposed')).toEqual(['diagnostic-evaluated', 'rejected']);
+    });
+});
+
+// --- § promote consumes the evidence package --------------------------------
+
+describe('promote --evidence (7.1, 7.3, 7.4, 7.5)', () => {
+    const validEvidence = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+        candidate_id: 'promo-ev',
+        pathology_cell: 'routing-miss × laravel-migration',
+        lineage: [],
+        dimension: 'routing',
+        selection: { trials: 12, wins: 9, summary: 'won 9 of 12' },
+        sealed_result: { held: true, summary: 'held' },
+        cost: { trials: 12, spend_cents: 430 },
+        scope: { level: 'repo', transfer_evidence: [] },
+        governance: {
+            authority_basis: 'evidence',
+            evidence_strength: 'E3',
+            reopen_policy: 'directional',
+            protected_dimensions: ['none'],
+        },
+        rollout: { stage: 'opt-in', bundle: 'b-7', opt_in_completed: false, changes_shipped_default: false },
+        material_improvement: {
+            baseline_text: 'Every request handler stays thin and delegates its business logic to a service or use case, because a handler that computes is a handler nobody can exercise without standing up the whole transport layer.',
+            candidate_text: 'Index every foreign key and every column a query filters or orders on, and ship that index in the same migration that ships the query needing it, because a missing index is a query that works until it does not.',
+            delta_percent: 7,
+        },
+        ...over,
+    });
+
+    function writeEvidence(name: string, doc: Record<string, unknown>): string {
+        const p = join(scratch, `${name}.evidence.json`);
+        writeFileSync(p, `${JSON.stringify(doc, null, 2)}\n`, 'utf-8');
+        return p;
+    }
+
+    it('names the absent package when --evidence is not given', () => {
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        const out = lab(['promote', '--record', rec]);
+        expect(out.status).toBe(3);
+        expect(out.stderr).toContain('evidence package: absent');
+        // The governance refusal still fires — the evidence check is additional,
+        // never a replacement for it.
+        expect(out.stderr).toContain('merge-authority');
+    });
+
+    it('refuses EVERY absent field in turn, naming it, through the real CLI', () => {
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        for (const field of PROMOTION_EVIDENCE_FIELDS) {
+            const doc = validEvidence();
+            delete doc[field];
+            const out = lab(['promote', '--record', rec, '--evidence', writeEvidence(`miss-${field}`, doc)]);
+            expect(out.status, `dropping ${field}`).toBe(3);
+            expect(out.stderr, `dropping ${field}`).toContain(`'${field}' is required`);
+        }
+    });
+
+    it('refuses a scope raise carrying one configuration\'s evidence (7.3)', () => {
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        const doc = validEvidence({
+            scope: {
+                level: 'stack',
+                raised_from: 'repo',
+                transfer_evidence: [
+                    { configuration: 'host-a', solver: 'solver-a', result: 'reproduced' },
+                    { configuration: 'host-a', solver: 'solver-a', result: 'reproduced twice' },
+                ],
+            },
+        });
+        const out = lab(['promote', '--record', rec, '--evidence', writeEvidence('raise', doc)]);
+        expect(out.status).toBe(3);
+        expect(out.stderr).toContain('SECOND solver or a SECOND host configuration');
+    });
+
+    it('refuses a shipped-default change with no completed opt-in (7.5)', () => {
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        const doc = validEvidence({
+            rollout: { stage: 'canary', bundle: 'b-7', opt_in_completed: false, changes_shipped_default: true },
+        });
+        const out = lab(['promote', '--record', rec, '--evidence', writeEvidence('rollout', doc)]);
+        expect(out.status).toBe(3);
+        expect(out.stderr).toContain('COMPLETED opt-in stage');
+    });
+
+    it('refuses a paraphrase-only candidate (7.4)', () => {
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        const base = validEvidence().material_improvement as Record<string, unknown>;
+        const doc = validEvidence({
+            material_improvement: {
+                baseline_text: base['baseline_text'],
+                candidate_text: (base['baseline_text'] as string).replace('nobody', 'no one'),
+                delta_percent: 40,
+            },
+        });
+        const out = lab(['promote', '--record', rec, '--evidence', writeEvidence('noop', doc)]);
+        expect(out.status).toBe(3);
+        expect(out.stderr).toContain('semantic no-op');
+    });
+
+    it('a COMPLETE package still refuses on the blocker, and only on it', () => {
+        // The positive pole. Without it every assertion above would pass on a
+        // verb that refuses every package for a reason unrelated to its contents.
+        const rec = writeRecord('promo-ev', { lifecycle: 'promotion-proposed' });
+        const out = lab(['promote', '--record', rec, '--evidence', writeEvidence('good', validEvidence())]);
+        expect(out.status).toBe(3);
+        expect(out.stderr).not.toContain('evidence package:');
+        expect(out.stderr).toContain('merge-authority');
+        expect(out.stderr).toContain('NAMED human approver');
     });
 });
 

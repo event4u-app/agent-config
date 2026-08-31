@@ -1,0 +1,28 @@
+{
+  "id": "probe-resolvable-v1",
+  "permanent": true,
+  "purpose": "Step 7.3 — a mechanism question resolvable by tree fact, schema, script or executable test must never reach council-internal topology selection. These fixtures are the population that must never get there, plus the adversarial and contrast cases that keep the assertion from being vacuous.",
+  "note_on_hand_written_fixtures": "These are QUESTION TEXTS fed to a deterministic regex resolver, not model output being measured. The ground truth is which rung the resolver must return, which is a property of the resolver's own contract — nothing about a model is being estimated, so the smoke-items.json prohibition (a recognition rate over hand-written bodies describes the fixture author) does not apply.",
+  "probe_resolvable": [
+    { "kind": "tree-fact", "text": "Who calls prune_all_council_artifacts in this repo?" },
+    { "kind": "tree-fact", "text": "All callers of evaluateStop, please." },
+    { "kind": "schema", "text": "Does the string NEAR_DUPLICATE_THRESHOLD exist anywhere under src/scripts?" },
+    { "kind": "schema", "text": "Search for the exact string qualityPerCost in src/." },
+    { "kind": "script", "text": "Run the lint_roadmap_blockers check and report the exit code." },
+    { "kind": "script", "text": "Regenerate the progress report." },
+    { "kind": "executable-test", "text": "Run check_condensation and tell me whether dist matches src." },
+    { "kind": "executable-test", "text": "Running the coverage report for src/scripts/ai_council." }
+  ],
+  "probe_resolvable_carrying_a_council_signal": [
+    { "text": "Who calls select_chairman? I need it for an architecture decision." },
+    { "text": "Run the lint_roadmap_blockers check before we record the ADR." },
+    { "text": "Does the string user_required exist anywhere? This is a design decision input." },
+    { "text": "Rename topology_vocabulary to topology_names as part of this architectural decision." }
+  ],
+  "genuinely_contested": [
+    { "text": "We need an architecture decision on whether synthesis stays host-side." },
+    { "text": "Record an ADR for the chairman selection policy." },
+    { "text": "Should we grant a security exception for the council transport?" },
+    { "text": "This is a release-gate escalation and needs a contested call." }
+  ]
+}

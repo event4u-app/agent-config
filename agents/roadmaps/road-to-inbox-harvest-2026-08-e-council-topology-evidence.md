@@ -1199,18 +1199,112 @@ byte-pinned by tests. Any work here runs through
 
 ## Phase 5 — Synthesis-policy showdown
 
-- [ ] 5.1 One synthesis-strategy interface behind the candidates (host
+- [x] 5.1 One synthesis-strategy interface behind the candidates (host
   convener, dedicated external judge, strongest configured model, top-ranked
   member, dual synthesis + adjudication) — no user-facing mode proliferation.
       verify: the user-facing surface gains no new mode names
+      **DONE 2026-08-31 — one interface, five candidates, zero new user-facing
+      names.** New mechanism:
+      `src/scripts/ai_council/synthesis_strategy.ts` (`SYNTHESIS_STRATEGIES`,
+      `STRATEGIES`, `resolveSynthesisStrategy`, `reachableStrategies`). Tests:
+      `tests/scripts/ai_council/synthesis_strategy.test.ts` (12 tests, green).
+      **Selection is NOT reimplemented.** All five strategies delegate to
+      `select_chairman` (`chairman.ts:42`) through one shared resolver, and a
+      test asserts exactly that: the module imports `select_chairman`, and the
+      five `resolve:` entries name **one** function. A second selection path
+      would be two answers to "who chairs", and the second is the one nobody
+      updates — the defect 1A.1 forbids for the question hash. What this module
+      adds is a NAME for what the existing selection already does per
+      configuration, so Phase 5's showdown has something to compare.
+      **Four of five resolve from configuration the engine already reads**
+      (`ai_council.chairman.mode`, `.member`, `members.<name>.tier` — three keys,
+      asserted): `host` → `host_convener`, `member` → `external_judge`, `auto`
+      with tiers → `strongest_model`, `auto` without → `top_ranked_member`
+      (config order being the only ranking the engine trusts). An unknown mode
+      returns `null` rather than a guessed strategy.
+      **The fifth is declared UNREACHABLE, which is the honest part.**
+      `dual_adjudicated` cannot be selected from today's configuration —
+      reaching it needs a new input, and a new input is exactly what this step's
+      verify clause forbids. It carries `reachable: false`, a test asserts no
+      accepted mode resolves to it, and it is left unselectable rather than
+      smuggled in behind a flag.
+      **The verify clause is measured over four surfaces, not promised.** No
+      strategy id (underscore or hyphen form) appears in `council_cli.ts` or
+      `cli_help.ts`; no declared `flag:` or `choices:` value names one (the
+      scanners are asserted to have found the real tables — >10 flags, >5
+      choices — so an empty result is not an empty scan); `all_synthesis_modes()`
+      is pinned to exactly the pre-existing `['analysis', 'default', 'design',
+      'optimize', 'pr']`; and no `.md` under `src/agent-src/commands/` or
+      `src/domains/` (>100 files scanned) names one. That is 12.4's rule applied
+      to synthesis.
+      **The chairman's self-judge refusal is re-pinned here**, so a 5.1 edit
+      cannot weaken it: a member that deliberated resolves to `member: null`
+      with a `cannot self-judge` annotation.
+      **Sensitivity was proven twice, not assumed.** Sabotage A — adding
+      `{ flag: '--synthesis-strategy', choices: ['host_convener',
+      'dual_adjudicated'] }` to `council_cli.ts`'s `run` option table — turned it
+      RED (**2 failed / 10 passed**). Sabotage B — adding a `dual_adjudicated`
+      row to `_SYNTHESIS_TABLE` in `prompts.ts`, i.e. a new user-visible
+      synthesis mode — turned it RED (**1 failed / 11 passed**). Both restored
+      to 12/12. The suite also tests the **denial**: both scanners are shown to
+      extract a strategy name from constructed violating text and to stay silent
+      on a clean line.
+      **HONEST SCOPE.** This is the interface and the naming; it changes no
+      dispatch. The billable synthesis call stays in `council_cli.ts`
+      `_maybe_run_chairman` where it already lives, and 5.2 — benching
+      identity-blind against identity-visible — is gated behind
+      `blocker: phase-2-benchmark-cost`.
 - [ ] 5.2 Bench identity-blind against identity-visible synthesis explicitly,
   so vendor prestige cannot leak in accidentally.
       verify: both arms are reported side by side
-- [ ] 5.3 Majority-laundering test: seed one correct minority against several
+- [x] 5.3 Majority-laundering test: seed one correct minority against several
   plausible-but-wrong majority answers; the synthesizer must justify accepting
   or rejecting the minority.
       verify: the fixture is permanent, and a synthesizer that silently drops
       the minority fails it
+      **DONE 2026-08-31 — fixture frozen, gate shipped, drop-detection
+      RED-proven.** Fixture:
+      `internal/bench/council-synthesis/majority-laundering.json`, carrying
+      `permanent: true` (the loader **throws** on anything else), one correct
+      minority (`member-d`) against **three** plausible-but-wrong majority
+      answers, each recording its own `why_wrong` so a later reader can check
+      the plausibility rather than take it on trust. Ground truth is a property
+      of the fixture by construction: an index changes per-query cost, not query
+      count, so the N+1 is not fixed by indexing.
+      Gate: `src/scripts/ai_council/minority_retention.ts` —
+      `auditMinorityRetention` decides three text-answerable questions: does the
+      synthesis NAME the minority (an anchor phrase, matched tolerantly so
+      `eager load` catches `eager loading`), does it state a DISPOSITION, and is
+      a REASON attached to it. Accept and reject are **both** passes; the
+      failure 5.3 names is the silent drop.
+      Tests: `tests/scripts/ai_council/minority_retention.test.ts` (12 tests,
+      green). Six scripted synthesizers, **zero model calls** — a majority-only
+      laundering synthesis, an elaborate drop that discusses indexes at length
+      and never the minority, an accept-with-reason, a reject-with-reason, a
+      mention-without-disposition and a bare-disposition.
+      **Honest scope, said out loud rather than implied.** The gate decides the
+      SHAPE of the disposition, never its correctness. A synthesis that rejects
+      the correct minority with a stated reason **passes** and is wrong — that
+      is deliberate, because grading the verdict needs the benchmark, which is
+      gated behind `blocker: phase-2-benchmark-cost`. The module header says so
+      in the same words.
+      **Why a hand-written fixture is legitimate here and refused for the
+      leakage bench.** `internal/bench/council-provider-leakage/smoke-items.json`
+      is refused by its live runner because a recognition rate over hand-written
+      bodies would describe the fixture author rather than a model. Nothing is
+      being estimated about a model here: the correct answer is a property of
+      the fixture, so a synthesizer that drops it is caught deterministically.
+      The fixture states this distinction in its own
+      `why_hand_written_is_legitimate_here` field so the two cannot be conflated
+      by a later reader.
+      **Sensitivity was proven, not assumed.** Sabotage A — disabling the
+      no-anchor early return in `auditMinorityRetention` — turned it RED
+      (2 failed / 10 passed). Sabotage B — forcing both return sites to
+      `passed: true`, i.e. neutralising the gate entirely — turned it RED
+      (**5 failed / 7 passed**); restore → 12/12. The suite also tests the
+      **denial**: `anchorPresent` must NOT match an unrelated sentence, so a
+      `minority-silently-dropped` verdict means "absent" rather than "the
+      matcher is broken".
 - [ ] 5.4 Final synthesis retains unresolved disagreement, the strongest
   minority evidence, and what evidence would resolve it.
       verify: a run with real dissent renders all three
@@ -1340,6 +1434,42 @@ allowed to stop.**
   two wrong verdicts can be equivalent.
       verify: the gate is recorded before the arms run, and the
       verdict-equivalence figure is reported as context, never as the gate
+      **HALF DONE 2026-08-31 — the gate is RECORDED; the arms have not run, so
+      the step stays open.** The verify clause has two halves and only the first
+      is dischargeable today.
+      **Half one, discharged:**
+      `internal/bench/council-early-stop-promotion-PREREG.md`, registered
+      2026-08-31. It fixes the four conditions as **conjunctive** (failing one
+      is failing the gate, whatever the other three show), declares the margins
+      and floors up front — 2 % absolute quality non-inferiority margin, 0 pp
+      minority-rescue regression ceiling, ≥ 10 % call reduction with a band
+      excluding zero, 0 pp majority-corruption increase — and inherits the
+      trial-count floors and paired non-parametric statistics from
+      `council-topology-promotion-stats-PREREG.md` rather than forking a second
+      house style.
+      **Verdict equivalence is excluded from the gate in the strongest form
+      available:** an Iron Law block saying it may never be cited as evidence
+      the gate passed, plus a *rendering* requirement — the figure appears under
+      a `Context (not gate evidence)` heading, physically separated from the
+      four conditions, carrying the sentence *"two wrong verdicts can be
+      equivalent"* next to the number. The record also states the one direction
+      in which the figure IS diagnostic (a **low** equivalence rate signals
+      something material changed), so excluding it from the gate does not turn
+      into pretending it is worthless.
+      **Half two, NOT discharged and not claimable.** "Before the arms run" is
+      satisfied trivially and honestly today: **neither arm can run.**
+      `evaluateStop` (`argument_exhaustion.ts:82`) has zero production callers,
+      so no round has ever stopped early, and `blocker: phase-2-benchmark-cost`
+      records that the benchmark runner does not exist. The step therefore
+      stays `[ ]` — the pre-registration is a precondition for the measurement,
+      never a substitute for it, and the ordering is checkable in the git
+      history rather than asserted.
+      **No test ships with this and that is deliberate.** A pre-registration is
+      a document; a test asserting a document contains its own headings would
+      pin formatting, not the property. The property that matters — that the
+      equivalence figure is never rendered as gate evidence — becomes testable
+      when a report exists to render, which is the same run that closes this
+      step.
 
 ## Phase 7 — Council-rung topology refinement
 
@@ -1408,10 +1538,74 @@ Only now, and **not** as a new task router.
   class, impact class, reason codes, estimated calls, estimated cost, latency
   band, evidence/policy source, fallback.
       verify: every field is populated on a real selection
-- [ ] 7.3 Keep the deterministic/probe path **above** council: a mechanism
+- [ ] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
   question resolvable by tree fact, schema, script or executable test never
   reaches topology selection.
       verify: a probe-resolvable fixture never enters the selector
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/judgment_ladder.ts classifyLadder rung-0-before-rung-4 precedence
+        command: npx vitest run tests/scripts/ai_council/probe_path_above_council.test.ts
+        red_proof: sabotage run 2026-08-31 — two independent sabotages, 1 of 7 tests RED each, 7/7 GREEN after both restores
+        sabotage_model: (A) moved the rung-4 detectContestedJudgment check ABOVE the rung-0 checks in classifyLadder, inverting the precedence; (B) added src/scripts/ai_council/__sabotage_selector.ts exporting selectTopology, so a selector exists
+        recheck_when: src/scripts/ai_council/topology_selector.ts selectTopology
+        discharged_ac: the fixtures are frozen and a probe-resolvable question provably never reaches the council rung, even when it also carries a contested-judgment phrase
+        pending_ac: "never enters the selector" against a real selector — 7.2 is open, no topology_selector.ts exists, so nothing exercises the constraint at the selection layer
+      ```
+
+      **NOT closed: there is no selector to keep anything out of.** 7.2 is open
+      and nothing in `src/` is named `topology_selector` or exports
+      `selectTopology`. Closing on "the selector never saw it" when no selector
+      exists would be the vacuity this file's § Prevented items exists to catch.
+      **What IS discharged is the stronger half, one layer up.**
+      `classifyLadder` (`src/scripts/_lib/judgment_ladder.ts:342`) checks rung 0
+      **before** the rung-4 council signal (`:353-361` precede `:380-383`), so a
+      probe-resolvable question never resolves to `council` at all — and a
+      question that never reaches the council rung cannot reach a
+      council-**internal** selector, whatever that selector turns out to be.
+      **Fixtures, frozen:**
+      `internal/bench/council-topology/probe-resolvable-fixtures.json`
+      (`permanent: true`) — 8 probe-resolvable questions covering all four kinds
+      the step names (tree fact, schema, script, executable test), 4 adversarial
+      questions that carry BOTH a probe signal and a real contested-judgment
+      phrase, and 4 contrast questions that genuinely resolve to rung 4.
+      Test: `tests/scripts/ai_council/probe_path_above_council.test.ts`
+      (7 tests, green), run with maximally permissive inputs (`halted: false`,
+      `subagent_spawn: true`, `agentTeams: true`) so nothing but the precedence
+      can explain a non-council verdict.
+      **Non-vacuity is tested three ways, because "never reaches council" is
+      trivially true if nothing does.** (1) Each adversarial fixture is asserted
+      to fire `detectContestedJudgment` AND still resolve to `script`. (2) The
+      contrast set is asserted to resolve to rung 4 / `council`. (3) The
+      tripwire below.
+      **The tripwire is machine-enforced, not a prose reminder.** One test scans
+      `src/` for a file named `topology[_-]?selector` or any file exporting
+      `selectTopology`, and asserts the result is **empty**. The day 7.2 lands a
+      selector it goes RED — which is exactly when this baseline expires and the
+      fixtures must be re-run against the real entry point. `recheck_when`
+      carries the same path and symbol; the dashboard reports the bare symbol as
+      **not machine-checkable**, and the test is the check.
+      **Sensitivity was proven twice, not assumed.** Sabotage A — moving the
+      rung-4 contested check above the rung-0 checks — turned it RED (1 failed /
+      6 passed), and specifically reddened the precedence assertion rather than
+      the population one. Sabotage B — adding
+      `src/scripts/ai_council/__sabotage_selector.ts` exporting `selectTopology`
+      — turned the tripwire RED (1 failed / 6 passed). Both restored to 7/7; the
+      probe file was deleted in the same command and is not in the diff. The
+      suite also tests the **denial**: both tripwire predicates fire on
+      constructed matches and stay silent on `selectChairman`, so an empty
+      result means "absent" rather than "the scanner is broken".
+      **A defect the FULL suite caught that the file-scoped run did not, fixed
+      in the same change.** The tripwire originally scanned raw source, and the
+      later-landed `replay_route.ts` — whose docstring says *"nothing in `src/`
+      is named `topology_selector` or exports `selectTopology`"* — tripped it.
+      A sentence ABOUT a symbol is not a declaration of it, and a gate that
+      cannot tell them apart reddens on its own documentation. The scan now
+      strips comments first, the denial set gained two rows pinning that
+      direction (a `//` mention and a `/** */` mention must NOT match), and the
+      sabotage was re-run afterwards to confirm the fix did not blunt it —
+      still 1 failed / 6 passed with a real `selectTopology` export present.
 - [ ] 7.4 Deterministic policy first, interpretable features only: task class,
   impact, ambiguity type, configured provider diversity, model availability,
   historical benchmark slice, artifact size, cost ceiling, prior-run freshness,
@@ -1426,19 +1620,186 @@ Only now, and **not** as a new task router.
 
 ## Phase 8 — Targeted cross-examination and scalable review
 
-- [ ] 8.1 Select a disputed finding, a conflicting pair, or a correct-looking
+- [x] 8.1 Select a disputed finding, a conflicting pair, or a correct-looking
   minority claim, and ask focused rebuttal questions.
       verify: the cross-exam prompt names the exact disputed claim
-- [ ] 8.2 Reviewer budget `k`: balanced assignment approaching O(N×k) rather
+      **DONE 2026-08-31 — "exact" is enforced at the byte level, not as a
+      similarity score.** New mechanism: `src/scripts/ai_council/cross_exam.ts`
+      (`selectCrossExamTarget`, `buildCrossExamPrompt`, `crossExamNamesClaim`).
+      Tests: `tests/scripts/ai_council/cross_exam.test.ts` (13 tests, green).
+      Composition only — nothing is dispatched, so zero paid calls.
+      **The verify clause is discharged by a substring check on the ORIGINAL
+      string.** `crossExamNamesClaim` is deliberately not a threshold: "exact"
+      that tolerates a score is not exact, and the paraphrase is the failure
+      mode — *"one reviewer questioned the index approach"* describes a dispute
+      and gives the cross-examined model nothing to rebut. Both sides of a
+      conflicting pair must be present when a pair was supplied. Tested against
+      a claim carrying markdown headings, backticks, double quotes, embedded
+      newlines and a forged `</untrusted_content id="deadbeef">` line — the
+      whole multi-line string survives unmodified.
+      **The claim is untrusted and is fenced, without being modified.** It
+      reaches the prompt through `wrapUntrustedBlocks`
+      (`src/scripts/_lib/untrusted_content.ts:155`) under a nonce, exactly as
+      `build_peer_review_user_prompt` already does (`prompts.ts:932-942`);
+      headings sit outside the fences, so a heading-shaped line inside a payload
+      is data. Fencing wraps rather than rewrites, which is what lets it coexist
+      with the verbatim obligation.
+      **Selection order is argued, not arbitrary.** `conflicting-pair` >
+      `disputed-finding` > `minority-claim`: a conflicting pair is the only kind
+      where at least one side is definitely wrong, so the rebuttal has the
+      highest information density; a lone disputed finding may resolve to "both
+      partly right"; a correct-looking minority claim is last because the
+      majority may simply be right. Ties break on claim id, so input order
+      cannot change the pick, and an empty candidate set returns `null` rather
+      than inventing a target.
+      **Neutrality is preserved:** the prompt names the neutral label
+      (`Response-A`) and the test asserts no provider or model name appears.
+      **HONEST SCOPE: nothing calls this yet** — 8.5, which would stop on
+      expected value, is gated behind `blocker: phase-2-benchmark-cost`.
+      **Sensitivity was proven, not assumed.** Sabotage — replacing the fenced
+      claim body with a paraphrase (`One reviewer disputed a claim about <first
+      20 chars>…`) — turned the file RED (**4 failed / 9 passed**); restore →
+      13/13. The suite also tests the **denial** twice: a hand-written
+      paraphrased prompt and a truncated claim both FAIL `crossExamNamesClaim`,
+      so a pass means the string is there rather than that the predicate is
+      broken.
+- [x] 8.2 Reviewer budget `k`: balanced assignment approaching O(N×k) rather
   than unconditional O(N²) for larger councils.
       verify: call count at N=8 is measured against both curves
-- [ ] 8.3 Preserve provider diversity in reviewer assignment where
+      **DONE 2026-08-31 — measured arithmetically, zero paid calls.** New
+      mechanism: `src/scripts/ai_council/reviewer_assignment.ts`, a seeded
+      circulant assignment (`assignReviewers`) plus `costCurves` for the
+      comparison. Tests:
+      `tests/scripts/ai_council/reviewer_assignment.test.ts` (17 tests, green).
+      **The shipped baseline, established before anything was designed.**
+      `orchestrator.ts:1509-1560` gives **every** reviewer **every** other
+      member's answer — N reviewers × (N−1) candidates. That is the
+      unconditional quadratic, and at N=8 it is **56 reviewed pairs**.
+      **The measurement at N=8, both curves side by side:**
+
+      | k | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+      |---|---|---|---|---|---|---|---|
+      | N×k (assignment realises exactly this) | 8 | 16 | 24 | 32 | 40 | 48 | 56 |
+      | N(N−1) (unconditional) | 56 | 56 | 56 | 56 | 56 | 56 | 56 |
+
+      k=3 is 24 of 56 — a 57 % reduction — and `k = N−1` reproduces the shipped
+      all-pairs behaviour **exactly**, which is what makes it a safe default and
+      what makes the row above arithmetic rather than a claim about a change
+      nobody has made. The gap widens as intended: N=16 is 48 against 240, N=32
+      is 96 against 992.
+      **The construction earns the properties without a search.** Order members
+      so provider families interleave, then let candidate `i` be reviewed by
+      positions `i+1 … i+k` (mod N): no self-review (offsets start at 1), exact
+      balance (every candidate reviewed exactly k times, every reviewer reviews
+      exactly k — asserted for every N in 2..8 × every k in 1..N−1), and a seed
+      replayable from the artefact, never `Math.random`, never `Date` — the same
+      discipline `orchestrator.ts:1533-1543` states for its own shuffle.
+      **A defect the seed test caught, recorded because it is not obvious.**
+      The family interleave originally tie-broke on family **name**. Under the
+      one-advisor-per-provider invariant every family has size 1, so every
+      comparison is a tie and the whole council sorted alphabetically —
+      discarding the seeded permutation and giving one assignment for every
+      seed. Tie-breaking on input order (stable sort over the already-permuted
+      buckets) fixes it and keeps the result a pure function of the input.
+      **HONEST SCOPE: nothing calls this yet.** It is the assignment, not a
+      wiring change; the orchestrator still does all-pairs. Wiring it changes
+      what reviewers see and belongs behind Phase 2's evidence.
+      **Sensitivity was proven, not assumed.** Sabotage — replacing the budget
+      bound `d <= effectiveK` with `d <= n - 1`, so the budget is ignored and
+      every assignment is all-pairs — turned the file RED (**4 failed / 13
+      passed**); restore → 17/17.
+- [x] 8.3 Preserve provider diversity in reviewer assignment where
   alternatives exist.
       verify: no candidate is reviewed only by same-family reviewers when a
       cross-family reviewer was available
-- [ ] 8.4 Score optional next calls by expected information gain per cost,
+      **DONE 2026-08-31 — and "available" had to be defined before it could be
+      verified.** Same module and test file as 8.2.
+      **The interleave alone does NOT deliver this, which is the finding.**
+      Six members of family A and two of family B interleave to
+      `A B A B A A A A`, whose tail is all one family. So a **repair pass**
+      follows: any candidate whose reviewer set is entirely same-family is fixed
+      by a **2-swap** with another candidate — exchanging one reviewer between
+      two candidates leaves every reviewer's load and every candidate's count
+      unchanged, so balance survives the repair by construction, and the tests
+      re-assert both after it.
+      **"Where alternatives exist" means available UNDER THE BALANCE
+      CONSTRAINT, not merely "another family exists".** 6A/2B at k=1 gives eight
+      candidates and only two B-reviewer slots, so **four A candidates must be
+      reviewed within their own family and no assignment avoids it**. That bound
+      is now computable — `diversityCeiling` — and the test asserts the
+      assignment **attains** it for every N in 2..8 × every k in 1..N−1 over 2,
+      3 and 4 families, and on the 6A/2B skew for every k. `diversityCeiling`
+      is documented as an **upper** bound because reviewer capacity is shared
+      across families; it was measured tight on 7 family profiles × every k, and
+      is treated as a bound elsewhere.
+      **Vacuous in production today, and the test says so rather than hiding
+      it.** Under the one-advisor-per-provider invariant (`chairman.ts:16-18`)
+      every member is its own family, so every reviewer is cross-family by
+      construction and `diversityRepairs` is 0. The property is implemented and
+      exercised against multi-member-per-family sets that only Phase 9's advisor
+      fan-out would produce — the cheapest moment to have it is before it can be
+      violated, which is the same argument 12.4 records for its own baseline.
+      **Sensitivity was proven, not assumed.** Sabotage — short-circuiting the
+      diversity repair loop with an unconditional `continue`, so only the
+      interleave remains — turned the file RED (**3 failed / 14 passed**);
+      restore → 17/17. The suite also tests the **denial**:
+      `nonDiverseCandidates` flags a hand-built all-same-family assignment for
+      which a cross-family reviewer *was* available, so an empty result means
+      "no violation" rather than "the detector is broken".
+- [x] 8.4 Score optional next calls by expected information gain per cost,
   deterministic and inspectable to start.
       verify: the score is reproducible from the recorded inputs
+      **DONE 2026-08-31 — deterministic scorer, executable reproduction, zero
+      paid calls.** New mechanism:
+      `src/scripts/ai_council/information_gain.ts` (`scoreNextCall`,
+      `recordNextCall`, `reproduceScore`, `rankByGainPerCost`,
+      `renderNextCallScore`). Tests:
+      `tests/scripts/ai_council/information_gain.test.ts` (17 tests, green).
+      **Every feature is one the tree already computes.** The six gain terms
+      read `DisagreementSignal` (`disagreement_signal.ts:134`), which 6.1
+      established as zero-cost and structural — no new similarity measure, no
+      new threshold, and no model call to decide whether to make a model call.
+      Forking a second feature set would be the defect 1A.1 forbids for the
+      question hash.
+      **The verify clause is executable.** `reproduceScore` recomputes from a
+      record's OWN inputs and compares under `JSON.stringify`; the tests assert
+      it for a plain record and for one round-tripped through JSON. Every
+      published figure is rounded to `SCORE_PRECISION = 6` and `-0` is
+      normalised to `0`, so the round trip is bit-exact rather than
+      nearly-exact.
+      **Inspectable means the total re-derives by hand.** Each term carries its
+      raw value, its weight, its direction-applied normalisation and its
+      contribution; `renderNextCallScore` prints all of them plus the weight
+      denominator, the trigger bonus, both cost divisions and the component
+      count. A test sums the printed contributions and reproduces the gain.
+      **An unavailable component is dropped from BOTH numerator and
+      denominator, never read as 0.** Reading it as 0 would turn "not measured"
+      into "measured, and it showed agreement" — the NOT-RUN-is-not-a-null
+      failure this file records elsewhere. A signal with nothing observable
+      returns `gain: null`, and a test asserts `null !== 0` against a
+      fully-agreeing signal that legitimately scores 0.
+      **HONEST SCOPE, three parts.** (a) It scores; it does not decide — 8.5 is
+      gated behind `blocker: phase-2-benchmark-cost`. (b) The weights are
+      **declared priors, not fitted values**; the module carries the
+      `revisit-if` (the Phase 2 benchmark shows a term that does not predict a
+      changed finding, or one that does and is missing). (c) `reproduceScore`
+      catches non-determinism and a tampered record; it **cannot** catch a
+      deterministic change to the scorer itself, because both sides run the same
+      code — the round-trip is a reproducibility check, not a regression pin.
+      **Sensitivity was proven, not assumed.** Three sabotages, each restored to
+      17/17: (A) removing the rounding in `roundScore` — RED, 1 failed / 16
+      passed; (B) adding a `Date.now() % 7` term to the trigger bonus — RED,
+      3 failed / 14 passed; (C) forcing `weightUsed = 1` so an unavailable term
+      is effectively read as zero — RED, 1 failed / 16 passed.
+      **A weakness the sabotage run exposed, and the fix that shipped with it.**
+      Sabotage B initially reddened only two *arithmetic* tests and left the
+      "repeated calls give byte-identical output" test **green** — five calls
+      inside one millisecond see a constant `Date.now() % 7`, so repetition
+      cannot prove purity. A source-level purity gate was added in the same
+      change (the module must contain no `Date.`, `Math.random`, `hrtime`,
+      `performance.now`, `node:fs` or `fetch(`), and it is what catches the
+      clock dependency deterministically. Both tests ship; the comment in the
+      test file records why.
 - [ ] 8.5 Stop when the next call has low expected value — call-level
   extension of argument exhaustion, only after benchmark evidence exists.
       verify: the stop is gated on the Phase 2 artifact, not on intuition
@@ -1511,10 +1872,62 @@ is **seating**, and it already has a carrier.
 
 ## Phase 10 — Outcome attribution and observability
 
-- [ ] 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
+- [ ] <!-- roadmap-status: guarded-baseline --> 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
   resolution, council-internal topology, initial route, escalation, stage
   outputs, stop reason, synthesis policy, cost, latency, final verdict.
       verify: a replayed run reproduces the recorded route
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/replay_route.ts CouncilRouteRecord + renderRouteSection/parseRouteSection
+        command: npx vitest run tests/scripts/ai_council/replay_route.test.ts
+        red_proof: sabotage run 2026-08-31 — 5 of 13 tests RED, 13/13 GREEN after restore
+        sabotage_model: three simultaneous edits — auditRouteRecord reporting councilInternalTopology as `populated`, withRouteSection appending a heading even for a null record, and parseRouteSection hard-coding latencyMs to 0
+        recheck_when: src/scripts/ai_council/topology_selector.ts
+        discharged_ac: ten of eleven fields are populated and the render→parse→compare round trip is exact and RED-proven
+        pending_ac: "council-internal topology" — the field is typed `null` and only `null` because no selector exists, so the record cannot describe a topology decision that is never made; and no real council run has been replayed through it
+      ```
+
+      **CANNOT CLOSE WHOLE, for one structural reason.**
+      `councilInternalTopology` is typed `null` **and only `null`**: 7.2 is open,
+      nothing in `src/` is named `topology_selector` or exports `selectTopology`,
+      so any value in that field would be invented. `auditRouteRecord` reports it
+      as `structurally-unavailable` — a third state, distinct from both
+      `populated` and `missing`, because "the tree cannot produce this" and "the
+      caller did not supply it" are different claims and collapsing them is the
+      failure the record exists to prevent.
+      **What shipped:** `src/scripts/ai_council/replay_route.ts`, carrying the
+      other ten fields the step enumerates — ladder resolution (rung, verdict,
+      reason), initial route, escalation (with `from`/`to`), stage outputs
+      (per-stage produced + calls), stop reason, synthesis policy (the 5.1
+      strategy id), cost calls, cost USD, latency, final verdict. Tests:
+      `tests/scripts/ai_council/replay_route.test.ts` (13 tests, green).
+      **The verify clause is discharged at the artefact layer.**
+      `replayReproducesRoute` renders, parses and compares under
+      `JSON.stringify`, exercised over two shapes — escalated/completed and
+      stopped/unescalated/host-synthesis. USD renders at fixed 4-decimal
+      precision so the comparison is exact rather than approximate. A `null`
+      `stopReason` round-trips as *"ran to completion"* and a `null`
+      `synthesisPolicy` as *"host synthesis"*, both distinguished from an absent
+      key. **What is NOT discharged is a real run**: no council session has been
+      replayed through this record, which is the other half of the pending
+      criterion.
+      **`replay.ts` is untouched, and that is deliberate.** It is a py2ts parity
+      port whose header pins Python-mirroring behaviour down to round-half-to-even
+      float formatting and a trailing `rstrip()`; interleaving new sections into
+      its renderer would put every one of those notes at risk for a purely
+      additive feature. `withRouteSection(body, null)` returns the body
+      **byte-identical**, and a test asserts it against a real
+      `render_decision_replay` output rather than assuming it.
+      **Sensitivity was proven, not assumed.** A three-part sabotage —
+      `auditRouteRecord` reporting `councilInternalTopology` as `populated`,
+      `withRouteSection` appending a heading even for a `null` record, and
+      `parseRouteSection` hard-coding `latencyMs` to 0 — turned the file RED
+      (**5 failed / 8 passed**); restore → 13/13. The suite also tests the
+      **denial**: a section with one corrupted cost figure must NOT round-trip,
+      and a section with no cost line must parse to `null`, so a passing
+      round trip means the fields survived rather than that the parser is
+      permissive.
 - [ ] 10.2 Attribute each useful correction to the first stage where it
   appeared.
       verify: one real run yields a per-correction stage attribution
@@ -1524,17 +1937,174 @@ is **seating**, and it already has a carrier.
 - [ ] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
-- [ ] 10.5 Track re-council savings: duplicates prevented, near-duplicate
+- [x] 10.5 Track re-council savings: duplicates prevented, near-duplicate
   warnings, reruns intentionally confirmed, spend saved.
       verify: the figures reconcile against the retained artifacts
-- [ ] 10.6 Track early-stop savings separately from quality.
+      **DONE 2026-08-31 — the figures reconcile, and three of the four are
+      `null` because nothing in the tree can produce them.** New mechanism:
+      `src/scripts/ai_council/recouncil_savings.ts` (offline, no provider call,
+      no writes), replaying the shipped guard's own detector over the retained
+      corpus. Full write-up with the reproduce command, the corpus caveats and
+      the pair table: `agents/evidence/analysis/recouncil-savings-reconstruction-2026-08-31.md`.
+      **Measured 2026-08-31 on the maintainer checkout** (`agents/runtime/` is
+      gitignored and machine-local, so these are not clone-reproducible; the
+      command regenerates them where the corpus exists): 355 retained `*.md`
+      questions, 355 distinct sha256, **0 exact repeats**; **2 near-duplicate
+      pairs** at the pre-registered 0.80 (`recouncil_guard.ts:50` aliasing
+      `MERGE_THRESHOLD` at `src/scripts/_lib/text_similarity.ts:19`), covering
+      4 questions; 62 response artefacts admitted as prior runs of 85 `.md`
+      candidates, of which only **45 name a question file that still resolves**
+      (43 distinct); and the guard **would have flagged 0**.
+      **The zero reconciles rather than contradicting the two pairs.**
+      `readPriorRuns` (`recouncil_guard.ts:102`) reads the responses directory
+      non-recursively, so its text-comparable reach is 43 of 355 retained
+      questions (12.1 %), and neither member of either pair has a retained
+      response artefact pointing at it. Both pairs are round-1/round-2 of one
+      deliberation sharing a ~34 KB standing-context preamble — true
+      near-duplicates by text, correct re-councils by intent, which is exactly
+      why 1A.2 makes the guard warn and never block.
+      **Three figures are `null`, not `0`, and that is the load-bearing part.**
+      `warnIfRecounciled` (`recouncil_guard.ts:267`) returns `void` and writes
+      only to an injected sink (`:273` declares it, `:289` is the only call), so
+      no warning, abandonment or confirmation is persisted anywhere. *Duplicates
+      prevented*, *reruns intentionally confirmed* and *spend saved* therefore
+      have no data behind them; `0` would assert a measured absence. **No spend
+      figure was estimated** — a dollar amount needs a prevented run, and
+      inventing one from "pairs × average price" is arithmetic worn as evidence.
+      **Second limit, printed with every figure rather than footnoted:** the
+      denominator is accidental. `SAVINGS_LIMITS` in the module carries both,
+      and `renderSavings` prints them under the table.
+      **Sensitivity was proven, not assumed.**
+      `tests/scripts/ai_council/recouncil_savings.test.ts` (15 tests, green).
+      Sabotage A — replacing the three `null` initialisers with `0` in
+      `computeSavings` — turned it RED (2 failed / 13 passed); restore → 15/15.
+      Sabotage B — deleting the `a.sha256 === b.sha256` guard in
+      `nearDuplicatePairs`, so exact repeats double-count as near duplicates —
+      turned it RED (2 failed / 13 passed); restore → 15/15. Neither sabotage
+      file survives the diff. The suite also tests the **denial** (two unrelated
+      texts yield no pair), so a zero pair count means "nothing there" rather
+      than "the detector is broken".
+- [ ] <!-- roadmap-status: guarded-baseline --> 10.6 Track early-stop savings separately from quality.
       verify: cost and quality are never reported as one number
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/argument_exhaustion.ts StopRender + renderStop
+        command: npx vitest run tests/scripts/ai_council/early_stop_savings_shape.test.ts
+        red_proof: sabotage run 2026-08-31 — 4 of 11 tests RED, 11/11 GREEN after restore
+        sabotage_model: three simultaneous edits — a src/scripts/ai_council/__sabotage_10_6.ts importing evaluateStop (production caller), a `qualityScore: number` field on StopRender, and renderStop's saved line rewritten to `call(s) at qualityPerCost`
+        recheck_when: evaluateStop-gains-a-production-caller
+        discharged_ac: the separation is pinned and RED-proven in the only surface that exists — StopRender carries cost fields and no quality field, and renderStop emits calls and cost as two figures with no blended term
+        pending_ac: "tracked separately" under a real early stop — no run has ever stopped early, because evaluateStop has zero production callers, so the savings figure itself is structurally 0 and nothing exercises the constraint under live reporting
+      ```
+
+      **NOT closed, and the reason is arithmetic rather than judgement.**
+      `evaluateStop` (`src/scripts/ai_council/argument_exhaustion.ts:82`) has
+      **zero production callers** — across `src/`, the module is imported by
+      nothing; its only importer in the repo is
+      `tests/scripts/argument_exhaustion.test.ts:19`. No council round can stop
+      early, so no call has ever been saved and the tracked figure would be a
+      number about nothing. Reporting `0` saved calls as a measurement is the
+      NOT-RUN-is-not-a-null failure this file records repeatedly; the state that
+      says so is `guarded-baseline`, and this is its second instance.
+
+      **What IS discharged.** The reporting surface the savings would land in
+      already exists (`StopRender` at `:113`, `renderStop` at `:121`), so its
+      shape is pinnable now — the cheapest moment, before a caller lands.
+      `tests/scripts/ai_council/early_stop_savings_shape.test.ts` (11 tests,
+      green) asserts: `StopRender` declares only `roundsCompleted`,
+      `roundsConfigured`, `savedCalls`, `savedCostUsd`, `exhaustedMembers` —
+      cost and provenance, no quality field to blend; `renderStop` emits
+      `saved: 4 call(s), $0.1234`, two figures a reader can take apart; and
+      neither the rendered text nor the module's declared identifiers contain a
+      quality term (`quality`, `score`, `grade`, `accuracy`, `correctness`,
+      `nonInferior`) or a blended metric (`qualityPerCost`, `perDollar`,
+      `costAdjusted`, …). 6.4's `STOPPED EARLY` / `NOT a full run` lines are
+      re-pinned here so a 10.6 edit cannot quietly undo them.
+
+      **The recheck is machine-enforced, not a prose reminder.** One test
+      asserts the importer set of `argument_exhaustion.ts` under `src/` is
+      **empty**. The day Phase 6 wires the predicate into a council round, that
+      test goes RED — which is exactly when this baseline stops being sufficient
+      and the separation must be re-verified against a live report. The
+      `recheck_when` field above is a bare symbol and the dashboard correctly
+      reports it as **not machine-checkable**; the test is the check.
+
+      **Sensitivity was proven, not assumed.** A three-part sabotage —
+      a temporary `src/scripts/ai_council/__sabotage_10_6.ts` importing
+      `evaluateStop`, a `qualityScore: number` field on `StopRender`, and
+      `renderStop`'s saved line rewritten to `call(s) at qualityPerCost` —
+      turned the file RED (**4 failed / 7 passed**); restoring gave 11/11. The
+      probe file was deleted in the same command and is not in the diff.
+
+      **One honest gap in the sensitivity, stated because the run showed it.**
+      The `StopRender carries only cost figures` test builds its object from a
+      hand-written literal, so adding a field to the *interface* did not turn
+      that particular test red — the source-text test caught it instead. A
+      structural-type assertion would be stronger; the pair is what shipped, and
+      the gap is named rather than left for a later reader to discover.
 
 ## Phase 11 — Learned routing as a challenger only
 
-- [ ] 11.1 Collect offline training rows from benchmark and dogfood evidence
+- [ ] <!-- roadmap-status: guarded-baseline --> 11.1 Collect offline training rows from benchmark and dogfood evidence
   only, without requiring raw private prompt content.
       verify: the row schema has no field capable of holding prompt text
+      ```yaml
+      guarded_baseline:
+        category: absence-assertion
+        scope: src/scripts/ai_council/routing_training_row.ts RoutingTrainingRow + ROW_FIELDS
+        command: npx vitest run tests/scripts/ai_council/routing_training_row.test.ts
+        red_proof: sabotage run 2026-08-31 — 3 of 13 tests RED, 13/13 GREEN after restore
+        sabotage_model: added `readonly promptText: string;` to the RoutingTrainingRow interface
+        recheck_when: internal/bench/council-routing/training-rows.jsonl
+        discharged_ac: the verify clause — no field of the schema can hold prompt text, proven in two layers and RED-proven
+        pending_ac: "collect" — no row has been collected, and the benchmark half of the evidence does not exist (blocker phase-2-benchmark-cost)
+      ```
+
+      **The verify clause is DISCHARGED; the step is NOT.** 11.1 has two halves
+      and only one is buildable today. *"Collect offline training rows from
+      benchmark and dogfood evidence"* cannot start: `blocker:
+      phase-2-benchmark-cost` records that
+      `src/scripts/ai_council/topology_bench_manifest.ts` `main()` only
+      `--emit`s JSON and contains no provider dispatch, so there is no benchmark
+      evidence to collect from. **No row exists and none is claimed.**
+      **What shipped is the schema, and its privacy property is structural.**
+      `src/scripts/ai_council/routing_training_row.ts` — every field is an
+      integer, a boolean, or an enum over a declared closed set. There is no
+      `payload`, `notes`, `extra`, `context`, `promptText`,
+      `Record<string, unknown>` or `unknown`-typed field. A row that **cannot**
+      hold a sentence has no scrubber to forget to run, which is the same
+      PII-exclusion-by-construction principle `domain-safety-pii` § Surface 2
+      applies to logs and `artifact-engagement-recording` applies to telemetry.
+      **Two layers, because one is not enough.** (1) `auditRowSchema` walks a
+      row against the `ROW_FIELDS` manifest and rejects any undeclared field,
+      any value outside a declared enum, and any non-integer in a numeric field;
+      `serialiseRow` **throws** rather than emitting a row that failed it.
+      (2) A source-level gate in the test greps the interface body for
+      `: string;`, `: any;`, `: unknown;`, `Record<string, …>` and an index
+      signature, plus nine free-text field names — because the manifest cannot
+      see a field somebody adds to the interface and forgets to declare.
+      A third guard closes the disguise: an enum value longer than
+      `MAX_ENUM_VALUE_LENGTH = 40` is rejected, so a "closed set" containing a
+      paragraph is caught.
+      **The enums are the tree's own, not forked copies** — `topology` is
+      identically `COUNCIL_TOPOLOGIES` (asserted by reference, not by value, so
+      a fork reds), and `IMPACT_CLASSES` mirrors `necessity.ts:545-550`.
+      `evidenceSource` admits exactly `benchmark | dogfood`, so a
+      production-transcript row is rejected by the validator rather than by
+      convention.
+      **Sensitivity was proven, not assumed.**
+      `tests/scripts/ai_council/routing_training_row.test.ts` (13 tests, green).
+      Sabotage — adding `readonly promptText: string;` to the interface —
+      turned it RED (**3 failed / 10 passed**); restore → 13/13. The suite also
+      tests the **denial** five ways (an undeclared field, an arbitrary string
+      in an enum slot, a non-integer, a missing field, and a constructed
+      interface violation the source gate must catch), so a clean pass means
+      "no free-text field" rather than "the gates are broken".
+      **`recheck_when` is a real path**
+      (`internal/bench/council-routing/training-rows.jsonl`): the day rows
+      start being written, the dashboard marks this evidence STALE and the
+      schema must be re-verified against what was actually collected.
 - [ ] 11.2 Train an offline challenger classifier; it stays shadow-only.
       verify: no runtime path can reach the model
 - [ ] 11.3 Promotion requires a material Pareto improvement in
@@ -1606,10 +2176,64 @@ is **seating**, and it already has a carrier.
       a guess and is machine-checkable; the symbol is not, and the report marks
       it **not machine-checkable** rather than booking it as *"not stale"* —
       absence of a check is reported as absence, never as a pass.
-- [ ] 12.2 Add a free explain mode: why task-side orchestration resolved to
+- [ ] <!-- roadmap-status: guarded-baseline --> 12.2 Add a free explain mode: why task-side orchestration resolved to
   council, which topology would run, estimated spend and calls, evidence
   source — with no paid model call to explain routing.
       verify: explain mode issues zero provider calls
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/ai_council/explain_route.ts explainRoute + renderRouteExplanation
+        command: npx vitest run tests/scripts/ai_council/explain_route.test.ts
+        red_proof: sabotage run 2026-08-31 — 6 of 15 tests RED, 15/15 GREEN after restore
+        sabotage_model: three simultaneous edits — an `import { consult } from './orchestrator.js'`, TOPOLOGY_UNAVAILABLE replaced by the literal `peer_review`, and the non-billable early return deleted so a subscription seat is priced at API rates
+        recheck_when: src/scripts/ai_council/topology_selector.ts
+        discharged_ac: the zero-provider-call property is structural and RED-proven, and three of the four fields are answered
+        pending_ac: "which topology would run" — unanswerable while no selector exists, so the field carries an explicit unavailable marker rather than a value
+      ```
+
+      **CANNOT CLOSE WHOLE — one of the four fields is unanswerable.** *"Which
+      topology would run"* has no answer: 7.2 is open, no selector exists, and
+      naming a topology would be a guess dressed as an explanation. The field is
+      **present and marked** (`TOPOLOGY_UNAVAILABLE` = *"unavailable — no
+      topology selector exists (step 7.2 open)"*) rather than omitted, because a
+      field silently missing from an explanation reads as *not applicable* when
+      the truth is *not built yet*. A test asserts the rendered output names
+      none of the seven topology names.
+      **What shipped:** `src/scripts/ai_council/explain_route.ts` —
+      `explainRoute`, `estimateSpend`, `renderRouteExplanation`. Tests:
+      `tests/scripts/ai_council/explain_route.test.ts` (15 tests, green).
+      **The verify clause is discharged STRUCTURALLY, which is stronger than a
+      promise.** The module imports exactly two things —
+      `../_lib/judgment_ladder.js` (regex-only) and `./pricing.js` (arithmetic
+      over a price table) — and the test asserts that distinct import set
+      exactly, plus the absence of `clients.js`, `transport`, `orchestrator`,
+      `consult`, `fetch(` and `node:https` from the module's **code** (comments
+      stripped, since the docstring names the very words the gate forbids). Both
+      dependencies are separately asserted free of `fetch(` and `node:http(s)`.
+      There is nothing here to make a call with.
+      **Field 1 — why it resolved to council:** the full `explainLadder`
+      (`judgment_ladder.ts:499`) per-rung trail, with each rung's own status
+      (`taken` / `rejected` / `not-reached`) and the detector's own reason. It
+      explains a NON-council resolution equally well, so it is a routing
+      surface rather than a council-only one.
+      **Field 3 — estimated spend and calls:** one call per member per round,
+      priced from the table. The subscription-seat distinction `pricing.ts`
+      records finding on 2026-08-27 is preserved rather than reproduced: a
+      non-billable seat contributes **calls** and **zero dollars**, is listed by
+      name in `nonBillableMembers`, and renders with *"calls are real, spend is
+      not"* next to the zero. An unpriced model estimates $0 via pricing.ts's own
+      fallback rather than throwing.
+      **Field 4 — evidence source:** defaults to `none` and is **rendered**
+      rather than omitted, which is the same reasoning as field 2.
+      **Sensitivity was proven, not assumed.** A three-part sabotage — adding
+      `import { consult } from './orchestrator.js'`, replacing
+      `TOPOLOGY_UNAVAILABLE` with the literal `peer_review`, and deleting the
+      non-billable early return so a subscription seat is priced at API rates —
+      turned the file RED (**6 failed / 9 passed**); restore → 15/15. The suite
+      also tests the **denial**: the import scanner is shown to extract
+      `./orchestrator.js` from constructed text and to find neither it nor
+      `orchestrator` in the real module.
 - [ ] 12.3 A force-topology debug control may exist but cannot override
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
@@ -1716,6 +2340,34 @@ is **seating**, and it already has a carrier.
   over-retained bodies be **quarantined from benchmark eligibility until
   retention legitimacy is established** — which the successor's `Resolved when`
   carries as a named precondition.
+
+  **AMENDED 2026-08-31 — the cause IS now established, and the hypothesis above
+  is moot.** Additive; the original text is left standing because a superseded
+  hypothesis is part of the audit trail. Established in one reference sweep, at
+  the commit that lands step 10.5:
+  (a) `prune_all_council_artifacts` (`src/scripts/ai_council/session.ts:468`)
+  has exactly **one** caller — `src/scripts/council_prune.ts:131`, behind the
+  manual `task council-prune` (`taskfiles/content.yml:384`);
+  (b) the auto-prune inside `save()` (`session.ts:604`, reached from `save()` at
+  `session.ts:506`) has **no production caller at all** — `session.ts` is
+  imported by exactly two files in the repo,
+  `src/scripts/council_prune.ts:36` (which imports `_load_retention_days` and
+  `prune_all_council_artifacts`, **not** `save`) and
+  `tests/scripts/ai_council/session.test.ts:18`, while the live writer
+  `src/scripts/council_cli.ts:224` never imports it. **This supersedes the
+  divergent-root hypothesis**: the pruner is not reached from *any* root, so
+  which root it would have resolved never arises;
+  (c) `janitor.ts:57-59` declares the same directory at `ttlDays: 7` and is
+  bound only to the manual `task janitor` / `task janitor-apply`
+  (`taskfiles/content.yml:388,392`) — no hook, no workflow, no `task ci` path.
+  **No reaper runs**, and the measurement matches: on 2026-08-31, **764 of 798**
+  files under `responses/` and **326 of 357** top-level entries under
+  `questions/` carry mtimes older than the declared 7-day TTL. The retention
+  quarantine the successor entry requires therefore stands on a settled
+  diagnosis rather than an open one; the defect itself is **diagnosed, not
+  repaired** — wiring a reaper touches the council write path and belongs in its
+  own change. Detail:
+  `agents/evidence/analysis/recouncil-savings-reconstruction-2026-08-31.md`.
 - **Owner:** council — the disposition keeps both criteria alive and unweakened
   and descopes nothing, which the preservation test routes to the council. The
   entry exists so the condition has an owner rather than living in step prose.

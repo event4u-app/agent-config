@@ -52,6 +52,15 @@
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.
 #
+# RECOUNTED 2026-08-31, on the change that adds `lint_promotion_paths` — and the
+# 2026-08-30 block above was already stale when this row landed, in BOTH numbers
+# rather than only in the one this change moves. Recomputed on this tree:
+# `count_gate_scripts()` returns **310** and `grep -c '^  - id:'` returns **81**
+# (80 before this row), so 81/310 = 26.1 %. The script count rose without any
+# recount, which is the drift the blocks below keep describing; it is recorded
+# here rather than folded into the 2026-08-30 prose, because that block is a
+# measurement of a tree that no longer exists.
+#
 # RECOUNTED ON A MERGE, 2026-08-30 — the fifth time, and the same shape as the
 # 2026-08-26 blocks below: two sides each correct for their own tree (~24 % from
 # the branch, ~25 % from main) meeting in one number. Recomputed rather than
@@ -2321,3 +2330,52 @@ gates:
       DISCRIMINATION: `--self-test`, 9 cases, 4 rejecting. The canary above
       documents the violating shape for a reader and is honestly NOT the
       discriminator, because a created file lands outside a four-name watchlist.
+
+  - id: lint_promotion_paths
+    argv: ["--quiet"]
+    min_scanned: 1800
+    corpus: "every .ts file under src/ and tests/ (2812 at baseline). The floor is 1800, not 1: this gate's failure shape is a walk that stops at a renamed root or a skip-list that grows, and a partial walk certifies exactly the coverage it did not perform."
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_promotion_bypass__.ts
+      content: |
+        import { parseCandidateRecord } from './_lib/candidate_record.js';
+        const promoted = { ...parseCandidateRecord, lifecycle: 'promoted' };
+        fs.writeFileSync(path.join(REPO_ROOT, 'src', 'rules', 'x.md'), promoted);
+    note: >
+      road-to-harness-promotion-bridge — discharge route 1 of the carried
+      blocking condition. The condition covers "a verb, a state transition into
+      `promoted`, or any write into `src/` derived from a candidate", and the AI
+      council of 2026-08-31 ruled it NOT DISCHARGED because only the first two
+      were gated. This gate inventories all three limbs across the whole
+      authored tree and fails when a promotion-capable write bypasses the single
+      guarded capability in `src/scripts/_lib/promotion_capability.ts`.
+
+      THE CAPABILITY IS UNOBTAINABLE WHILE `blocker: merge-authority` IS OPEN,
+      and R0 proves that by CALLING it rather than by reading it — a text match
+      would pass over a refusal edited into a no-op. Sensitivity of R0 was
+      observed: neutralising the refusal makes the gate red with
+      "capability obtainable while the blocker is open".
+
+      ANTI-VACUITY IS THE POINT, not a bonus. The condition's own text says a
+      check over a population of zero discharges nothing, so three floors are
+      asserted separately — 400 files, 4 candidate-derived modules, 10
+      filesystem-write sites inside them — each via `assertScanned`, each exiting
+      2 rather than green. Live values at baseline: 2812 / 16 / 66.
+
+      THE CANARY IS A GENUINE DISCRIMINATOR here: the corpus is a tree walk, so
+      a planted file is in scope and a create-only plant exercises the real red
+      path on all three limbs at once. `--self-test` adds 15 cases (9 rejecting)
+      covering the forms a single plant cannot reach — the interface-declaration
+      accepting pole, a two-argument `assertTransition`, a candidate-derived
+      write into a CLONE's `src/` (out of scope: a clone is a candidate's own
+      sandbox, already gated by `bench_ab_integrity`'s allowed-delta-path check),
+      a candidate-derived READ of `src/`, and prose in a block comment.
+
+      TWO DEFECTS WERE FOUND BY RUNNING IT, both pinned as cases: a substitution
+      that rewrote identifiers INSIDE string literals (`cand` in `'ac-cand-'`),
+      and an expansion that DESTROYED the `REPO_ROOT` token the rule keys on
+      because `REPO_ROOT` is itself a `const`. The first produced a false
+      positive on a tmpdir removal; the second silently dropped the R3 half of a
+      planted three-limb bypass, which is the failure direction that matters.
