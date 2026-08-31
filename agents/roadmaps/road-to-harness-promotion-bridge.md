@@ -283,6 +283,17 @@ removed or reordered.
   undecided. All three source proposals asserted that guardrail as a fact;
   verified 2026-08-26, it is not one.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | `[-] MERGED` in the parent is later read as cancelled or as satisfied | product | The parent now carries nine `[-]` markers for work that is open here. A reader who takes `[-]` at its usual meaning concludes Phase 7 was dropped or done, and this file's whole purpose — keeping seven specified steps and AC-9 alive — is defeated silently | Every one of the nine markers states in as many words that `[-]` means TRANSFERRED, not cancelled and not satisfied, and names this file. The `relates:` block and § Provenance make the link machine-readable from both ends | Provenance |
+| 2 | The carried non-promotion condition is discharged by a check over a population of zero | implementation | A gate written before any promotion path exists scans nothing and exits green, which is exactly why the parent left the condition UNMET rather than closing it | The condition's own text forbids it: *"A check over a population of zero does not discharge this condition"*, and its discharge point is named as the first commit that creates a promotion path | Carried blocking condition |
+| 3 | The discharge point may already have passed and nobody adjudicated it | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. Whether that DISCHARGES the condition is undecided, and an undecided condition reads as satisfied to the next reader | Recorded in this file as explicitly **not adjudicated**, and bound by the Revisit-if clause to the earlier change rather than left to drift | Carried blocking condition |
+| 4 | This roadmap sits blocked indefinitely on an owner decision | product | ADR-239 § Decision 3 has been open since 2026-08-22 with no recorded movement. An ACTIVE roadmap that never resumes consumes governed-estate headroom without producing anything | Deliberate and council-chosen: both seats ruled that active membership is what preserves the criteria, and the Resume condition routes owner REFUSAL back to the owner rather than letting this file decide its own disposition | Resume condition |
+| 5 | A Phase 1-6 step in the parent creates a promotion path before this file resumes | implementation | The `merge-authority` blocker is scoped to gate Phase 7. A parent step that promotes anything would escape that scoping, and the mechanical non-promotion condition would bind to a change nobody expected it to | The Revisit-if clause binds both the blocker and the carried condition to any such earlier change, by name | Resume condition |
+
 ## Acceptance Criteria
 
 > **AC-9 is transferred verbatim from `road-to-governed-harness-evolution` on
