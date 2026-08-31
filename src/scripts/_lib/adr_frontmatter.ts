@@ -308,6 +308,32 @@ export type EvidenceStrength = (typeof EVIDENCE_STRENGTHS)[number];
 
 export const DISCOVERY_STATES = ['complete', 'incomplete'] as const;
 export const AUTHORITY_BASES = ['evidence', 'owner_intent'] as const;
+export type AuthorityBasis = (typeof AUTHORITY_BASES)[number];
+
+/**
+ * Reopen-authority vocabulary (`adr-layout.md` § Reopen authority).
+ *
+ * Moved here from `check_adr_frontmatter.ts` on 2026-08-31 so the ADR gate and
+ * `road-to-harness-promotion-bridge` step 7.2 read ONE list. 7.2's whole
+ * requirement is "route through the existing gate, not a second governance
+ * system"; importing the validator's private constant was not available, and
+ * copying it would have created the second system the step forbids.
+ *
+ * Both fields stay OPTIONAL at the ADR reader — an absent `reopen_policy`
+ * resolves to `unclassified`, never to `owner`.
+ */
+export const REOPEN_POLICIES = ['directional', 'owner', 'unclassified'] as const;
+export type ReopenPolicy = (typeof REOPEN_POLICIES)[number];
+
+export const PROTECTED_DIMENSIONS = [
+    'purpose',
+    'security_floor',
+    'privacy_floor',
+    'external_commitment',
+    'governance',
+    'none',
+] as const;
+export type ProtectedDimension = (typeof PROTECTED_DIMENSIONS)[number];
 
 export interface AdrProvenance {
     kind: string | null;

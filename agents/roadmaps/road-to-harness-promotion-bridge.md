@@ -167,6 +167,120 @@ step or AC-9: those remain gated twice, and the second gate is exactly this
 condition, which is now recorded as **undischarged on evidence** rather than as
 undecided.
 
+**DISCHARGED 2026-08-31 BY ROUTE 1 — the structural invariant is built, green,
+and proven sensitive. All three limbs are now gated.** Route 2 was not taken and
+may not be: it is owner-reserved and nothing below narrows the condition.
+
+The mechanism is the one openai's round-1 answer specified: one guarded
+capability that is unobtainable while `blocker: merge-authority` is open, plus a
+check that fails when a promotion-capable write bypasses it.
+
+- **The capability.** `src/scripts/_lib/promotion_capability.ts:166`
+  (`acquirePromotionCapability`) mints an opaque token and refuses while
+  `src/scripts/_lib/promotion_capability.ts:111` (`readMergeAuthorityStatus`)
+  reads anything but `resolved` from this file's own `### blocker:
+  merge-authority` Status field — using the same literal
+  `src/scripts/lint_roadmap_blockers.ts:193` matches, so "open" here and "open"
+  to the repository's blocker gate cannot diverge. Fail-closed on a missing
+  roadmap, a missing blocker and an unparseable status. There is no flag, no
+  environment variable and no argument that lifts it. **It creates no promotion
+  path:** it performs no filesystem write and no lifecycle transition, which is
+  what lets the enforcement land *before* the path the condition's own wording
+  requires it to precede.
+- **The invariant.** `src/scripts/lint_promotion_paths.ts`, over every `.ts`
+  file under `src/` and `tests/` — 2812 files, 16 candidate-derived modules, 66
+  filesystem-write sites at this commit.
+
+| Limb of the condition | Gated by | Where |
+|---|---|---|
+| a **verb** | `verbPromote` returns `EXIT_REFUSED` on every path | `src/scripts/evolution_lab.ts:857-888` |
+| a **state transition into `promoted`** | `assertTransition` demands a named human approver | `src/scripts/_lib/candidate_record.ts:232-248` |
+| a **verb or transition reached by a NEW path** | R1 — no approval synthesis outside a three-file allowlist, tree-wide | `src/scripts/lint_promotion_paths.ts:285` (allowlist `:148`) |
+| a **record written straight into `promoted`** | R2 — no `lifecycle: 'promoted'` / `ACCEPTED_STATE` record literal | `src/scripts/lint_promotion_paths.ts:332` (allowlist `:156`) |
+| **any write into `src/` derived from a candidate** | R3 — a candidate-derived filesystem write may not target the canonical source tree | `src/scripts/lint_promotion_paths.ts:513` + `:404` (allowlist `:159`) |
+| the **capability itself** staying shut | R0 — `acquirePromotionCapability` is CALLED and must throw while the blocker is open | `src/scripts/lint_promotion_paths.ts:609` |
+
+**Rows 3 to 5 are the repository-wide half that was missing.** Both B-seats named
+the same three bypasses — a direct `assertTransition(..., 'promoted', approver)`,
+a record carrying `lifecycle: 'promoted'` written outside `verbPromote`, and a
+candidate-derived `src/` write — and R1, R2 and R3 are those three, in that
+order. anthropic's objection was that `findApproverSynthesis` *"demonstrates the
+pattern the condition demands"* while being *"narrowly scoped to one specific
+bypass vector"* and to one file; R1 is that same detector generalised to the
+whole authored tree, with the allowlist pinned by an assertion rather than by
+convention (`tests/scripts/lint_promotion_paths.test.ts` § the allowlists cannot
+grow silently).
+
+**Risk 2 of the register is answered mechanically, not by promise.** The
+condition says *"a check over a population of zero does not discharge this
+condition"*, so the gate carries three separate `assertScanned` floors —
+`src/scripts/lint_promotion_paths.ts:172-174`, 400 files / 4 candidate-derived
+modules / 10 write sites — each exiting **2** rather than green. A collapsed
+population is a dead scope, not a clean run. Live values are 2812 / 16 / 66, so
+the population is non-empty by a wide margin and the floors have room for
+legitimate deletion.
+
+**Sensitivity was observed in both directions, on the real tree, and is recorded
+because a gate never seen red has unknown sensitivity.** A three-limb bypass
+planted in `src/scripts/evolution_lab.ts` (a three-argument `assertTransition`
+with a synthesised approver, a `lifecycle: 'promoted'` record literal, and
+`fs.writeFileSync(path.join(REPO_ROOT, 'src', 'rules', ...))` in a
+candidate-derived module) turned the gate **red, exit 1**, naming
+`evolution_lab.ts:899` R1 ×3, `:900` R2 and `:901` R3; the paired test went **3
+failed / 19 passed**. Restoring the file byte-identically (`git diff --stat`
+empty) returned the gate to **exit 0** and the test to **22/22**. Separately,
+neutralising the capability's refusal turned **R0** red with *"capability
+obtainable while the blocker is open"*, and restoring it returned exit 0 — the
+file verified byte-identical against its backup. `--self-test` adds 15 planted
+cases, 9 rejecting, all behaving.
+
+**Two defects were found by RUNNING the gate rather than by reading it, and both
+are pinned as regression cases** (`tests/scripts/lint_promotion_paths.test.ts` §
+survives the two defects the first runs produced): a substitution that rewrote
+identifiers inside string literals (`cand` within `'ac-cand-'`), which produced a
+false positive on a temp-directory removal; and an expansion that DESTROYED the
+`REPO_ROOT` token the rule keys on — because `REPO_ROOT` is itself a `const` —
+which silently dropped the R3 half of the first planted bypass. The second is the
+failure direction that matters, and it is the reason this record cites an
+observed red rather than a passing suite.
+
+**Registered on six surfaces**, so it runs rather than merely existing:
+`taskfiles/ci-fast.yml:1509-1519`, `Taskfile.yml:231`,
+`.github/workflows/rule-backstops.yml:376` (remote, not a local-only
+declaration), `src/config/gate-coverage.yml:2334` with a canary and a floor of
+1800, the manifest header recount at `src/config/gate-coverage.yml:55`, and the
+`.secret-allow` line pin re-derived from the file.
+
+**Scope this discharge does NOT claim, stated rather than implied.**
+
+1. **It does not resolve `blocker: merge-authority`,** which stays OPEN and
+   owner-reserved in both directions. The two gates were always separate and
+   still are: this one asks *what mechanically prevents promotion*, that one asks
+   *who may promote*. Phase 7 steps below are now gated once, not twice.
+2. **It is recorded by the implementing agent, not by a fresh council round.**
+   The 2026-08-31 verdict named route 1 as *"buildable, council-decidable"* and
+   stated the criterion this record answers; the daily council quota is
+   owner-held and was not spent to re-adjudicate a route the verdict itself
+   specified. That is a real independence limit and it is named here rather than
+   left for a reader to notice: the party that built the mechanism is the party
+   recording that it satisfies the criterion. **Falsifier:** a council round that
+   rules this mechanism insufficient reopens the condition, and every step closed
+   under it reverts to `[ ]`. Nothing here is written so as to make that harder.
+3. **R3's residual is bounded, not closed.** It resolves `const` bindings up to
+   three hops, so a destination assembled at runtime from a value carrying no
+   `src` literal anywhere in its chain is not detectable textually. Such a write
+   is a source-tree write, but it is a PROMOTION only when it also carries an
+   approval or a promoted record — which R1 and R2 catch independently. A
+   candidate-derived write into a *clone's* `src/` is deliberately out of scope:
+   a clone is a candidate's own sandbox, already gated by `bench_ab_integrity`'s
+   allowed-delta-path check, whose sensitivity `tests/scripts/bench_ab_candidate.test.ts:383-398`
+   proves.
+4. **openai's continuing-requirement half still binds.** The `Revisit-if`
+   paragraph above already carries it: a successful promotion branch, an
+   approver-bearing interface, an alternate promotion path or a new
+   candidate-derived `src/` write each require fresh review, and this discharge is
+   a condition on the mechanism as it stands rather than a permanent guarantee.
+
 The condition's verbatim origin block, carried out of the parent's Phase 0 on
 2026-08-30 and transferred here on 2026-08-31, is reproduced under
 § Provenance below.
@@ -195,18 +309,82 @@ removed or reordered.
 > **verbatim** from `road-to-governed-harness-evolution` Phase 7 on 2026-08-31;
 > nothing in them was rewritten, re-scoped or re-verified in the move.
 
-- [ ] **7.1 One evidence package per promotion, in the fuller form.** The master
+> **STATUS 2026-08-31 — gate (2) is discharged, gate (1) is NOT, and the steps
+> below are closed as MECHANISM. Read this before reading a `[x]`.**
+>
+> **`blocker: merge-authority` is still OPEN and still owner-reserved.** Nothing
+> in this change touches it, and nothing below may be read as having settled it.
+>
+> **What the `[x]` marks claim, exactly.** Every one of these seven steps has a
+> `verify:` clause that is a **refusal** or a **fixture exercise** — "is refused",
+> "is refused", "no new verb", "refused before the cascade", "no promotion
+> changes X without Y", "produces one of the five verdicts … in a fixture",
+> "triggers the rollback path in a fixture". Not one of them requires a promotion
+> to succeed, and none was closed on an argument: each is closed on a test that
+> was run, and on a sensitivity probe that was watched go red and green again.
+> `verbPromote` still returns `EXIT_REFUSED` on every path, and
+> `lint_promotion_paths` proves tree-wide that nothing else promotes either.
+>
+> **What they do NOT claim.** That a promotion works. That the bridge has been
+> traversed. That `merge-authority` may now close. **AC-9 stays `[ ]`** for
+> exactly that reason, and its note says so at the criterion.
+>
+> **The owner-reserved reading, named rather than assumed.** The blocker's
+> § Blockers entry says it blocks "every promotion step in Phase 7". That was
+> written when these steps were unbuilt and their only conceivable execution was
+> a promotion. They were instead built as refusing mechanism, which the blocker's
+> own option (c) scoping does not reach — (c) gates *promotion*, and no promotion
+> occurred or can occur. If the owner judges that closing a Phase 7 step required
+> the blocker to close first, these marks revert to `[ ]` and the work stands
+> unchanged underneath them; that is an owner call and it is stated here rather
+> than settled by the agent that made the marks.
+
+- [x] **7.1 One evidence package per promotion, in the fuller form.** The master
       adopted a 9-field package; the skipped parent's has 14, and the five extra
       are exactly the fields that make 3.2, 4.4 and 7.3 auditable: pathology
       cell, candidate lineage, mutation dimension, selection results, sealed
       result, cost, scope.
       verify: a promotion attempt with any field absent is refused.
-- [ ] **7.2 Route through the existing gate, not a second governance system.**
+      **DONE 2026-08-31.** `src/scripts/_lib/promotion_evidence.ts:293`
+      (`parsePromotionEvidence`) refuses on the first absent field and names it;
+      `:215` is the field list, and `required()` refuses an ABSENT field rather
+      than defaulting it — an empty `lineage` is legal, a missing one is not.
+      All seven fields the step names are required. **The step's own arithmetic
+      does not close** — it says "the five extra" and then lists SEVEN — and the
+      conservative reading is taken rather than silently reconciled, because
+      dropping two would narrow a transferred step. The discrepancy is recorded
+      at the module header, not resolved.
+      Evidence: `tests/scripts/promotion_evidence.test.ts` iterates
+      `PROMOTION_EVIDENCE_FIELDS` and asserts each drop is refused **naming that
+      field** — a general assertion, not three crafted cases —
+      and `tests/scripts/evolution_lab.test.ts` § promote --evidence repeats the
+      whole loop through the real CLI (32 tests green, 2.1 s for that case).
+      SENSITIVITY: neutralising `required()`'s throw turns the suite 1 failed /
+      16 passed; restoring it returns 17/17, and the file was verified
+      byte-identical against its backup afterwards.
+- [x] **7.2 Route through the existing gate, not a second governance system.**
       Reuse the evidence-grading vocabulary already in the tree
       (`authority_basis`, `evidence.strength`, `reopen_policy`,
       `protected_dimensions`).
       verify: no new governance verb, no new approval path.
-- [ ] **7.3 Promote by scope, with a transfer gate.** `from-skipped-parent`,
+      **DONE 2026-08-31.** The four terms are IMPORTED, not copied:
+      `src/scripts/_lib/promotion_evidence.ts` reads `AUTHORITY_BASES`,
+      `EVIDENCE_STRENGTHS`, `REOPEN_POLICIES` and `PROTECTED_DIMENSIONS` from
+      `src/scripts/_lib/adr_frontmatter.ts:310,306,325,328`. The last two were
+      module-private constants inside `check_adr_frontmatter.ts`; they were MOVED
+      to the shared reader in this change and that gate now imports them, so the
+      ADR validator and the promotion package read ONE list. A copy would have
+      satisfied the letter and broken the point — two lists that can drift are
+      two governance systems.
+      No new verb: `VERBS` is still the seven of step 3.6, asserted in
+      `tests/scripts/promotion_evidence.test.ts` § 7.2 as a property of THIS step
+      rather than inherited from 3.6's test. No new approval path: locally, the
+      evidence module contains no `HumanApproval`, no `approver:` and no call to
+      `acquirePromotionCapability`, asserted in the same block; tree-wide, that is
+      R1 of `lint_promotion_paths`.
+      SENSITIVITY: replacing the four imports with local literal copies turns the
+      suite 2 failed / 19 passed; restoring returns 21/21.
+- [x] **7.3 Promote by scope, with a transfer gate.** `from-skipped-parent`,
       raised to doctrine level in both parents and absent from the master's
       promotion path: a candidate carries a scope (episode → repo → stack →
       profile/pack → global) and moving up a level requires independent transfer
@@ -215,7 +393,20 @@ removed or reordered.
       teeth. This is not what the parked curriculum generator was.
       verify: a promotion with no scope field is refused, and a scope raise with
       one configuration's evidence is refused.
-- [ ] **7.4 Reject semantic no-ops.** A no-op detector plus a minimum
+      **DONE 2026-08-31.** `src/scripts/_lib/promotion_evidence.ts:85`
+      (`SCOPE_LADDER`, ordered `episode -> repo -> stack -> profile-pack ->
+      global`; the ORDER is the contract, since it is the only thing that makes
+      "moving up a level" decidable) and `:124` (`assertTransferEvidence`). A
+      raise is refused unless the transfer evidence carries a SECOND solver or a
+      SECOND host configuration — evidence that shares one of each is one
+      observation written twice.
+      Both verify clauses are separate tests, and both run through the real CLI
+      as well (`tests/scripts/evolution_lab.test.ts` § promote --evidence). The
+      negative poles are pinned too: a non-raise needs no evidence, and LOWERING
+      the scope is not a raise.
+      SENSITIVITY: making the transfer gate a no-op turns the suite 1 failed / 16
+      passed; restoring returns 17/17.
+- [x] **7.4 Reject semantic no-ops.** A no-op detector plus a minimum
       material-improvement threshold. The master kept the cooldown and lineage
       from the same attack and dropped both gates.
       **Marker corrected 2026-08-26:** this step carried
@@ -229,10 +420,47 @@ removed or reordered.
       `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`
       § Marker reliability.
       verify: a paraphrase-only candidate is refused before the cascade.
-- [ ] **7.5 Roll out by canary, never silently.** `from-skipped-parent`: opt-in
+      **DONE 2026-08-31.** `src/scripts/_lib/semantic_noop.ts` — two gates,
+      because the step asks for two: `:86` (`isSemanticNoOp`, the paraphrase
+      detector, threshold `:56` pinned EQUAL to `curator_ops`'
+      `NEAR_DUPLICATE_THRESHOLD` rather than tuned separately) and `:68`
+      (`MIN_MATERIAL_IMPROVEMENT_PERCENT`, the minimum material-improvement
+      floor). Neither implies the other and a test pins that: a total rewrite
+      with no measured effect passes the first and fails the second; a one-word
+      change with a large delta fails the first and passes the second.
+      **"Before the cascade" resolves to a definite place.** There is no artefact
+      named "cascade" in this tree — the evaluation cascade is the lifecycle
+      spine — so the screen (`:158`, `screenSemanticNoOps`) is synchronous, takes
+      TEXT rather than records, reports `modelCalls: 0` as a literal type, and is
+      exercised on candidates carrying no evaluation results at all. A screen
+      that needed a trial result could not have run before the cascade, which is
+      what that test actually checks.
+      MEASURED BOUND, stated rather than discovered later: 8-word shingles mean
+      one substitution breaks eight shingles, so on a one-sentence candidate no
+      paraphrase can reach 70 % while on rule-body-sized text the same edit
+      measures 85.7 %. The detector is meaningful for the corpus it will see and
+      weak for one-liners.
+      SENSITIVITY: disabling both gates turns the suite 6 failed / 2 passed;
+      restoring returns 8/8.
+- [x] **7.5 Roll out by canary, never silently.** `from-skipped-parent`: opt-in
       candidate bundles.
       verify: no promotion changes a shipped default without an opt-in stage.
-- [ ] **7.6 A promoted artefact is not immortal.** `from-skipped-parent`, and
+      **DONE 2026-08-31 — the mechanism half, with the observation half named as
+      absent.** `src/scripts/_lib/promotion_evidence.ts:147` (`ROLLOUT_STAGES`,
+      `opt-in -> canary -> default`) and `:175` (`assertRollout`). Three
+      refusals: a package declaring a shipped-default change with no COMPLETED
+      opt-in stage; a package claiming the `default` stage without one; and a
+      completed opt-in that names no bundle, since an unnamed bundle cannot be
+      audited and an unauditable opt-in is the silent rollout this step is about.
+      **What this does NOT establish, stated in the module and repeated here:** it
+      cannot check that a package declaring `changes_shipped_default: false` is
+      telling the truth. That is only observable once a promotion path can
+      actually run and the resulting diff can be compared against the shipped
+      defaults, which `blocker: merge-authority` prevents. The mechanism is built
+      and tested; the observation is named as missing rather than implied.
+      SENSITIVITY: making the shipped-default gate a no-op turns the suite 1
+      failed / 16 passed; restoring returns 17/17.
+- [x] **7.6 A promoted artefact is not immortal.** `from-skipped-parent`, and
       it is the only anti-monotonic-growth mechanism *after* the gate — the
       `artifact-count delta` row guards the gate, the estate needs its own:
       post-promotion re-evaluation with `KEEP / REVISE / MERGE / SPLIT /
@@ -241,9 +469,43 @@ removed or reordered.
       manual-only at exactly the point where growth accumulates.
       verify: a promoted artefact reaching its review trigger produces one of the
       five verdicts, and at least one `RETIRE` path is exercised in a fixture.
-- [ ] **7.7 Best-known-state reference on regression.** Roll back to the
+      **DONE 2026-08-31.** `src/scripts/_lib/promotion_review.ts:81`
+      (`REVIEW_TRIGGERS`, precedence-ordered so two conditions firing at once
+      stay reproducible), `:145` (`reviewTriggerFor` — the piece that did not
+      exist: nothing decided a promoted artefact was due), `:160`
+      (`reviewPromoted`, exactly one of the five) and `:202` (`retirePromoted`,
+      which routes through `assertTransition(_, 'retired')`).
+      Both conjuncts are tested separately. The first runs over EVERY declared
+      trigger — and the test asserts its own case list equals `REVIEW_TRIGGERS`,
+      so adding a trigger without a case fails rather than going untested. The
+      second runs review -> RETIRE -> the lifecycle transition end to end, and
+      pins the direction AC-9 is about: a non-promoted state cannot take the
+      retirement edge.
+      **A finding, recorded rather than smoothed:** the five verdicts are NOT a
+      subset of E6's seven curator ops. `REVISE` is absent from `CURATOR_OPS`
+      (`src/scripts/_lib/curator_ops.ts:48-56`), even though that module's own
+      header argues for seven ops on the ground that a smaller set "would emit
+      verdicts it cannot execute". `REPLACE` is the nearest op and is not the
+      same thing. `POST_PROMOTION_VERDICTS` is therefore written out rather than
+      derived, and the relationship is pinned in BOTH directions by a test.
+      SENSITIVITY: making the review trigger never fire turns the suite 3 failed
+      / 12 passed; restoring returns 15/15.
+- [x] **7.7 Best-known-state reference on regression.** Roll back to the
       recorded best-known state; lineage, not endless append.
       verify: an injected regression triggers the rollback path in a fixture.
+      **DONE 2026-08-31.** `src/scripts/_lib/promotion_review.ts:267`
+      (`planRollback`) and `:246` (`lineageOf`). An injected regression against
+      the recorded best-known state returns a plan naming the state it returns
+      to, the state it leaves, and the lineage — oldest first, cycle-guarded, so
+      "lineage, not endless append" is carried by the type rather than by a
+      convention. Three negative poles keep it from degenerating into "always
+      roll back": an equal or better current state returns `null`, another
+      artefact's history is never read, and a regression with nothing recorded to
+      return to is an ERROR rather than a silent no-op — a rollback target is
+      recorded at promotion time, because after the regression the state that
+      worked is exactly what is missing.
+      SENSITIVITY: making `planRollback` always return `null` turns the suite 3
+      failed / 12 passed; restoring returns 15/15.
 
 ## Blockers
 
@@ -324,6 +586,30 @@ removed or reordered.
 - **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
   proposed that would promote anything — in which case the scoping decision above
   no longer covers it and this blocker binds earlier than Phase 7.
+
+  **Attempted and REFUSED AT TWO INDEPENDENT LAYERS, 2026-08-31 — recorded so a
+  later reader does not repeat it.** An autonomous drain run whose mandate was
+  to route every owner decision to the AI council tried to settle this blocker
+  by option **(b)** — refusing preauthorized merge authority — on the argument
+  that (b) is the mirror of (a): it removes a capability rather than granting
+  one, converts *"only humans promote"* from an intention into a recorded
+  property, and leaves a later owner strictly freer, which
+  `decision-revisit-gate` routes to the council as a floor-STRENGTHENING
+  transition.
+
+  The question was never put. It was refused twice by the harness's own
+  safety classifier before reaching any seat, and the refusal is the more
+  interesting result: this ADR reserves the decision precisely because *"an
+  agent that both wants the capability and writes the amendment authorising it
+  is the shape the reservation exists for"*, and an agent drafting the
+  amendment is what the classifier saw. Two mechanisms that share no code
+  reached the same verdict about the same act.
+
+  So the argument for (b) is **not refuted** — it is undelivered, and the run
+  stopped rather than rephrasing its way past a safety refusal, which would have
+  been the reservation defeated by persistence. **The blocker stands. It is a
+  genuine owner decision and no council round should be spent on it** until a
+  human either answers it or explicitly asks for the (b) argument to be put.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
@@ -381,6 +667,31 @@ removed or reordered.
       there carries `lifecycle: 'candidate'` as a literal type, so that RETIRE
       retires a candidate and never a promoted artefact — which is the direction
       this criterion is about. What closes it is 7.6, after `merge-authority`.
+      **RE-AUDITED 2026-08-31, after 7.6 closed: STILL NOT MET, and still not
+      closeable from this branch.** 7.6 built the missing half — a review trigger
+      that produces one of the five verdicts, and a `RETIRE` path that runs
+      review -> verdict -> `assertTransition(_, 'retired')` end to end
+      (`src/scripts/_lib/promotion_review.ts:145,160,202`;
+      `tests/scripts/promotion_review.test.ts` § at least one RETIRE path is
+      exercised). That satisfies 7.6's verify clause, which asks for a fixture.
+      It does NOT satisfy this criterion, and the difference is the whole point:
+      the criterion asks for **at least one promoted artefact** to have been
+      through post-promotion re-evaluation, and this tree contains none. The
+      fixture's artefact is a synthetic state object, not something that was
+      promoted.
+      The RETIRE half is unchanged from the 2026-08-31 audit and was re-checked:
+      `src/scripts/_lib/curator_ops.ts:120-124` still types every screened
+      proposal's `lifecycle` as the literal `'candidate'`, so E6's `RETIRE`
+      retires a **candidate** and never a **promoted artefact** — the direction
+      this criterion is about. `src/scripts/_lib/candidate_record.ts:210-219`
+      still makes `promoted -> retired` the only retirement edge, and reaching
+      `promoted` still requires the guarded capability, which is unobtainable
+      while `blocker: merge-authority` is open.
+      **What closes it:** a human promotes one artefact through the capability
+      after the owner settles ADR-239 § Decision 3, that artefact reaches a
+      review trigger, and the resulting verdict is recorded. None of those three
+      is performable from this branch, and asserting the criterion on the fixture
+      would be closing it on the thing it explicitly excludes.
 
 ## Provenance
 

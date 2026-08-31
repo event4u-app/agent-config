@@ -43,7 +43,9 @@ import {
     AGENTIC_MODES,
     DISCOVERY_STATES,
     EVIDENCE_STRENGTHS,
+    PROTECTED_DIMENSIONS,
     PROVENANCE_KINDS,
+    REOPEN_POLICIES,
     evidenceOf,
     provenanceOf,
     readAdrFrontmatter,
@@ -87,16 +89,9 @@ const REQUIRED = ['adr', 'status', 'date', 'decision'] as const;
  * the same words. This validator therefore checks the VALUE when present and
  * never requires the KEY.
  */
-const ALLOWED_REOPEN_POLICY = new Set(['directional', 'owner', 'unclassified']);
+const ALLOWED_REOPEN_POLICY = new Set<string>(REOPEN_POLICIES);
 
-const ALLOWED_PROTECTED_DIMENSIONS = new Set([
-    'purpose',
-    'security_floor',
-    'privacy_floor',
-    'external_commitment',
-    'governance',
-    'none',
-]);
+const ALLOWED_PROTECTED_DIMENSIONS = new Set<string>(PROTECTED_DIMENSIONS);
 
 /** Split an inline `[a, b]` list or a folded multi-value string into members. */
 export function split_dimensions(raw: string): string[] {
