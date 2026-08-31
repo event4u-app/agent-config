@@ -1383,6 +1383,42 @@ allowed to stop.**
   two wrong verdicts can be equivalent.
       verify: the gate is recorded before the arms run, and the
       verdict-equivalence figure is reported as context, never as the gate
+      **HALF DONE 2026-08-31 — the gate is RECORDED; the arms have not run, so
+      the step stays open.** The verify clause has two halves and only the first
+      is dischargeable today.
+      **Half one, discharged:**
+      `internal/bench/council-early-stop-promotion-PREREG.md`, registered
+      2026-08-31. It fixes the four conditions as **conjunctive** (failing one
+      is failing the gate, whatever the other three show), declares the margins
+      and floors up front — 2 % absolute quality non-inferiority margin, 0 pp
+      minority-rescue regression ceiling, ≥ 10 % call reduction with a band
+      excluding zero, 0 pp majority-corruption increase — and inherits the
+      trial-count floors and paired non-parametric statistics from
+      `council-topology-promotion-stats-PREREG.md` rather than forking a second
+      house style.
+      **Verdict equivalence is excluded from the gate in the strongest form
+      available:** an Iron Law block saying it may never be cited as evidence
+      the gate passed, plus a *rendering* requirement — the figure appears under
+      a `Context (not gate evidence)` heading, physically separated from the
+      four conditions, carrying the sentence *"two wrong verdicts can be
+      equivalent"* next to the number. The record also states the one direction
+      in which the figure IS diagnostic (a **low** equivalence rate signals
+      something material changed), so excluding it from the gate does not turn
+      into pretending it is worthless.
+      **Half two, NOT discharged and not claimable.** "Before the arms run" is
+      satisfied trivially and honestly today: **neither arm can run.**
+      `evaluateStop` (`argument_exhaustion.ts:82`) has zero production callers,
+      so no round has ever stopped early, and `blocker: phase-2-benchmark-cost`
+      records that the benchmark runner does not exist. The step therefore
+      stays `[ ]` — the pre-registration is a precondition for the measurement,
+      never a substitute for it, and the ordering is checkable in the git
+      history rather than asserted.
+      **No test ships with this and that is deliberate.** A pre-registration is
+      a document; a test asserting a document contains its own headings would
+      pin formatting, not the property. The property that matters — that the
+      equivalence figure is never rendered as gate evidence — becomes testable
+      when a report exists to render, which is the same run that closes this
+      step.
 
 ## Phase 7 — Council-rung topology refinement
 
