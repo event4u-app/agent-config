@@ -1469,9 +1469,49 @@ Only now, and **not** as a new task router.
 
 ## Phase 8 — Targeted cross-examination and scalable review
 
-- [ ] 8.1 Select a disputed finding, a conflicting pair, or a correct-looking
+- [x] 8.1 Select a disputed finding, a conflicting pair, or a correct-looking
   minority claim, and ask focused rebuttal questions.
       verify: the cross-exam prompt names the exact disputed claim
+      **DONE 2026-08-31 — "exact" is enforced at the byte level, not as a
+      similarity score.** New mechanism: `src/scripts/ai_council/cross_exam.ts`
+      (`selectCrossExamTarget`, `buildCrossExamPrompt`, `crossExamNamesClaim`).
+      Tests: `tests/scripts/ai_council/cross_exam.test.ts` (13 tests, green).
+      Composition only — nothing is dispatched, so zero paid calls.
+      **The verify clause is discharged by a substring check on the ORIGINAL
+      string.** `crossExamNamesClaim` is deliberately not a threshold: "exact"
+      that tolerates a score is not exact, and the paraphrase is the failure
+      mode — *"one reviewer questioned the index approach"* describes a dispute
+      and gives the cross-examined model nothing to rebut. Both sides of a
+      conflicting pair must be present when a pair was supplied. Tested against
+      a claim carrying markdown headings, backticks, double quotes, embedded
+      newlines and a forged `</untrusted_content id="deadbeef">` line — the
+      whole multi-line string survives unmodified.
+      **The claim is untrusted and is fenced, without being modified.** It
+      reaches the prompt through `wrapUntrustedBlocks`
+      (`src/scripts/_lib/untrusted_content.ts:155`) under a nonce, exactly as
+      `build_peer_review_user_prompt` already does (`prompts.ts:932-942`);
+      headings sit outside the fences, so a heading-shaped line inside a payload
+      is data. Fencing wraps rather than rewrites, which is what lets it coexist
+      with the verbatim obligation.
+      **Selection order is argued, not arbitrary.** `conflicting-pair` >
+      `disputed-finding` > `minority-claim`: a conflicting pair is the only kind
+      where at least one side is definitely wrong, so the rebuttal has the
+      highest information density; a lone disputed finding may resolve to "both
+      partly right"; a correct-looking minority claim is last because the
+      majority may simply be right. Ties break on claim id, so input order
+      cannot change the pick, and an empty candidate set returns `null` rather
+      than inventing a target.
+      **Neutrality is preserved:** the prompt names the neutral label
+      (`Response-A`) and the test asserts no provider or model name appears.
+      **HONEST SCOPE: nothing calls this yet** — 8.5, which would stop on
+      expected value, is gated behind `blocker: phase-2-benchmark-cost`.
+      **Sensitivity was proven, not assumed.** Sabotage — replacing the fenced
+      claim body with a paraphrase (`One reviewer disputed a claim about <first
+      20 chars>…`) — turned the file RED (**4 failed / 9 passed**); restore →
+      13/13. The suite also tests the **denial** twice: a hand-written
+      paraphrased prompt and a truncated claim both FAIL `crossExamNamesClaim`,
+      so a pass means the string is there rather than that the predicate is
+      broken.
 - [x] 8.2 Reviewer budget `k`: balanced assignment approaching O(N×k) rather
   than unconditional O(N²) for larger councils.
       verify: call count at N=8 is measured against both curves
