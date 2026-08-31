@@ -642,7 +642,7 @@ removed or reordered.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | `[-] MERGED` in the parent is later read as cancelled or as satisfied | product | The parent now carries nine `[-]` markers for work that is open here. A reader who takes `[-]` at its usual meaning concludes Phase 7 was dropped or done, and this file's whole purpose — keeping seven specified steps and AC-9 alive — is defeated silently | Every one of the nine markers states in as many words that `[-]` means TRANSFERRED, not cancelled and not satisfied, and names this file. The `relates:` block and § Provenance make the link machine-readable from both ends | Provenance |
 | 2 | The carried non-promotion condition is discharged by a check over a population of zero | implementation | A gate written before any promotion path exists scans nothing and exits green, which is exactly why the parent left the condition UNMET rather than closing it | The condition's own text forbids it: *"A check over a population of zero does not discharge this condition"*, and its discharge point is named as the first commit that creates a promotion path | Carried blocking condition |
-| 3 | ~~The discharge point may already have passed and nobody adjudicated it~~ **RETIRED 2026-08-31 — adjudicated** | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. The risk was that nobody would decide whether that discharges the condition, because *an undecided condition reads as satisfied to the next reader* | **Decided.** AI council 2026-08-31, **(B) NOT DISCHARGED**, 2×B / 1×A across two rounds, with the gap named falsifiably: the condition covers *any write into `src/` derived from a candidate* and only the verb plus the `-> promoted` transition are gated. Two discharge routes are recorded, one buildable and one owner-reserved. The condition is now undischarged **on evidence** rather than undecided | Carried blocking condition |
+| 3 | ~~The discharge point may already have passed and nobody adjudicated it~~ **RETIRED 2026-08-31 — adjudicated** | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. The risk was that nobody would decide whether that discharges the condition, because *an undecided condition reads as satisfied to the next reader* | **Decided.** AI council 2026-08-31, **(B) NOT DISCHARGED**, 2×B / 1×A across two rounds, with the gap named falsifiably: the condition covers *any write into `src/` derived from a candidate* and only the verb plus the `-> promoted` transition are gated. Two discharge routes are recorded, one buildable and one owner-reserved. The condition is now undischarged **on evidence** rather than undecided. **SUPERSEDED 2026-08-31 (drain run 11):** route 1 was subsequently BUILT, and `:170-172` records the condition **DISCHARGED BY ROUTE 1** — the guarded capability plus the bypass check, green and proven sensitive. The `(B) NOT DISCHARGED` verdict in this cell is the intermediate finding that *motivated* route 1, not the final state; leaving it unqualified made this row contradict `:170`. Route 2 remains untaken and owner-reserved | Carried blocking condition |
 | 4 | This roadmap sits blocked indefinitely on an owner decision | product | ADR-239 § Decision 3 has been open since 2026-08-22 with no recorded movement. An ACTIVE roadmap that never resumes consumes governed-estate headroom without producing anything | Deliberate and council-chosen: both seats ruled that active membership is what preserves the criteria, and the Resume condition routes owner REFUSAL back to the owner rather than letting this file decide its own disposition | Resume condition |
 | 5 | A Phase 1-6 step in the parent creates a promotion path before this file resumes | implementation | The `merge-authority` blocker is scoped to gate Phase 7. A parent step that promotes anything would escape that scoping, and the mechanical non-promotion condition would bind to a change nobody expected it to | The Revisit-if clause binds both the blocker and the carried condition to any such earlier change, by name | Resume condition |
 
@@ -658,9 +658,18 @@ removed or reordered.
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
       **Audited 2026-08-31: not met, and not closeable from this branch.**
-      Every Phase 7 step is `[ ]` and the phase is gated on the OPEN,
-      owner-reserved `blocker: merge-authority`. Nothing in this tree is
-      promoted, so no promoted artefact can reach post-promotion re-evaluation.
+      Every Phase 7 step was `[ ]` **at the moment of this first audit** and the
+      phase is gated on the OPEN, owner-reserved `blocker: merge-authority`.
+      Nothing in this tree is promoted, so no promoted artefact can reach
+      post-promotion re-evaluation.
+      **TENSE CORRECTED 2026-08-31 (drain run 11) — a factual repair, not a
+      criterion change.** The sentence asserted the present tense and is false
+      in it: the seven Phase 7 steps read `[x]` at `:342`, `:365`, `:387`,
+      `:409`, `:445`, `:463` and `:493`, closed as MECHANISM under the Phase 7
+      gate header's own reading at `:313-315`. The clause is kept in past tense
+      rather than deleted because the audit it belongs to was true when taken;
+      the RE-AUDITED block below carries the current state. **AC-9 is untouched
+      and stays `[ ]`** — nothing here closes, weakens, or re-keys it.
       The RETIRE half was checked separately and does not rescue it: 5.5 carries
       `RETIRE` in E6's seven-op set and tests its arity
       (`tests/scripts/curator_ops.test.ts:63-66`), but every screened proposal
