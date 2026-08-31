@@ -158,6 +158,82 @@ active-headroom consumption the Iron Law exists to prevent.
       in 1.2 will count — without per-session self-report, which one seat
       rejected as requiring instrumentation this repository does not have.
 
+      **ANSWERED 2026-08-31 — and the answer is (E) BLOCKED-BY-ARCHITECTURE,
+      which is the exit AC-1 names for exactly this outcome. The checkbox stays
+      `[ ]` on purpose; see § Why 1.1 is answered and still open.**
+
+      **AI council 2026-08-31, anthropic/claude-sonnet-4-5 +
+      openai/codex-default, 2/2 present.** The seats returned different letters
+      and converged on the same next action, which is why this reads as a
+      convergence rather than a split. anthropic: *"(E) BLOCKED-BY-ARCHITECTURE
+      with one deterministic gate before redesign … Before picking any closure,
+      verify in `dist/agent-src/` or run `agent-config rules:list` in a consumer
+      install."* openai: *"choose B, derive a new prospective boundary from a
+      verified propagation contract, and switch to E if deterministic delivery
+      cannot be independently established"*, dissenting that *"failure to prove
+      the invariant requires E, not a weaker propagation contract."*
+      Both made the SAME probe the deciding step. It was run.
+
+      **THE PROBE, and it is reproducible.** The obligation is the
+      `## Independent calls go in ONE block` section added to
+      `src/rules/token-efficiency.md` by `af0cf0bf0` (2026-08-30 14:38:40Z).
+
+      | Layer | Command | Result |
+      |---|---|---|
+      | the projection | `grep -c 'Independent calls go in ONE block' dist/agent-src/rules/token-efficiency.md` | **1** — present |
+      | the operator's INSTALLED tree | `grep -c 'Independent calls go in ONE block' ~/.claude/rules/token-efficiency.md` | **0** — absent |
+      | that file's mtime | `ls -l ~/.claude/rules/token-efficiency.md` | **2026-08-25 14:28** — five days BEFORE the obligation landed |
+      | its trigger set | `sed -n '1,20p' src/rules/token-efficiency.md` | `type: "auto"`, `alwaysApply: false`, triggers `keyword: "minimize tool calls"` and `phrase: "fetching logs"` |
+      | its declared cadence | same frontmatter | `obligation_frequency: "per-edit"` |
+
+      **So it is neither of anthropic's two branches.** Not *"intentionally
+      source-only"* — the projection carries it, so delivery is intended. Not
+      simply *"projection broken"* — the projection is correct. The failure is
+      **two independent things**, and only the second is architectural:
+
+      1. **The install is stale.** The operator's tree predates the obligation
+         by five days. Fixable by re-running the installer; not architectural,
+         and NOT the reason this closes as E.
+      2. **The trigger design cannot carry a per-edit obligation, and the
+         alternative is budget-blocked.** A `type: auto` rule fires on its
+         triggers; neither `"minimize tool calls"` nor `"fetching logs"` occurs
+         in an ordinary work prompt, so a rule declaring
+         `obligation_frequency: "per-edit"` reaches almost no edit. The only
+         cadence that would deliver it is `type: always`, and that is
+         **measurably unavailable**: `./scripts-run src/scripts/check_always_budget`
+         reports the extended budget at **60,252 / 60,254 chars (100.0%)** —
+         **two characters of headroom** — on a ratchet that *"may only move
+         DOWN"*, across nine rules that are the kernel, which
+         `block_kernel_rule_writes` denies agent writes to. There is no
+         reachable configuration in which this obligation is delivered per-edit.
+
+      **This is the same defect shape the tree already documents about itself.**
+      `fix-what-you-see` records in its own § Honest activation gap that it
+      shipped `auto` *"for a budget reason, not a design one"*, that keyword
+      triggers match the PROMPT, and that closing the gap needs the ext-cap
+      ratchet opened deliberately or a `post_tool_use` carrier. That is the
+      redesign recommendation this step hands forward, and it is
+      owner-reserved: opening the ratchet is a recorded maintainer decision,
+      and a kernel rule is not agent-writable.
+
+      **The redesign recommendation, per openai's own wording:** a
+      *"delivery-mechanism-written receipt — not an agent self-report"*. The
+      mechanism that projects a rule is the only party that can truthfully
+      record that it did, and per-session self-report is barred by AC-1.
+
+      **What this does NOT do.** It does not lower the ten-session floor, change
+      eligibility, count unusable sessions as zero-sized batches, or drop the
+      propagation-model requirement — all four are owner-reserved and were
+      refused by both prior councils. It does not reformulate AC-1. It does not
+      raise the reminder's frequency, which the parent pre-committed against.
+
+      **Cohort-boundary consequence.** `2026-08-30 14:38:40Z` is void as a
+      boundary: no propagation occurred at it. Per openai, the boundary is the
+      latest of the contract's effective deployment time, the obligation's
+      availability through the projection path, and the end of the guaranteed
+      lag — **none of which exists yet**. So no boundary is nameable, and the
+      four post-timestamp sessions measured below do not enter any corpus.
+
 - [ ] **1.2 Re-measure `mean_batch_size` under a documented propagation model.**
       **TRANSFERRED IN from `road-to-turnaround-followups` step 1.1**, verbatim
       and unweakened, by AI council 2026-08-31 (anthropic + openai, 2/2, round
@@ -184,6 +260,36 @@ active-headroom consumption the Iron Law exists to prevent.
       itself; the annotation lives at the parent's step 1.1, which is the end
       the sweep reads. An annotation here would name this file as its own
       destination, which `archive_completed_roadmaps.ts` refuses by design.
+
+## Why 1.1 is answered and still open
+
+The question is answered decisively and the checkbox is `[ ]`. That is not an
+oversight and it is not modesty; it is consistency with a verdict this same
+drain run recorded on a sibling roadmap hours earlier.
+
+**The step's `verify:` is unsatisfiable BY THE ANSWER, not by incompleteness.**
+It asks that the chosen closure *"answers 'was this obligation in context for
+this session?' for a session the measurement in 1.2 will count"*. The answer is
+that no closure can, because the obligation is not delivered per-edit and cannot
+be under a reachable configuration. A negative answer to a `verify:` is a
+finding, never a satisfaction of it.
+
+**And the tree now has a rule for exactly this shape.** AI council 2026-08-31
+(anthropic + openai, **2/2 convergent**) ruled on
+`road-to-inbox-harvest-2026-08-e-council-topology-evidence` that a step whose
+`verify:` asserts a property of a mechanism that does not exist may **not**
+close `[x]` — *"that overstates the evidence"* — and that a third state exists
+only once its tooling lands atomically. Closing 1.1 `[x]` here, in the same run
+that recorded that verdict there, would contradict it on the identical
+structural situation. The `guarded-baseline` annotation is deliberately NOT
+applied: this step has no RED-proven guard, and both seats were explicit that a
+baseline never seen red is an ordinary open item and not eligible.
+
+**What the step DID produce, and it is the durable part:** a reproducible probe,
+a named architectural cause with a measured number behind it (two characters of
+budget headroom on a down-only ratchet), a redesign recommendation the owner can
+act on, and a cohort boundary correctly voided rather than silently reused. A
+later reader inherits an answer instead of the question.
 
 ## Not archivable yet — stated so it cannot be read as an oversight
 
@@ -288,11 +394,41 @@ forever.
   batching obligation's effect stays unmeasured. Nothing regresses and nothing
   is silently lost.
 - **Resolved when:** `mean_batch_size` is measured across ≥ 10 usable sessions
-  initiated after the verified delivery-effective timestamp (candidate:
-  2026-08-30 14:38:40Z), where the delivery mechanism in effect at measurement
-  time is documented to propagate a config change to a running agent — and step
-  1.2 is closed citing that reading. Per-session self-report is explicitly NOT
-  the bar; a documented propagation model satisfies it.
+  initiated after the verified delivery-effective timestamp, where the delivery
+  mechanism in effect at measurement time is documented to propagate a config
+  change to a running agent — and step 1.2 is closed citing that reading.
+  Per-session self-report is explicitly NOT the bar; a documented propagation
+  model satisfies it.
+
+  **AMENDED 2026-08-31 in ONE respect, and it is a tightening, not a
+  weakening.** The candidate boundary `2026-08-30 14:38:40Z` is **struck**. Step
+  1.1's probe established that no propagation occurred at that timestamp — the
+  operator's installed rule tree still predates it by five days — so a corpus
+  built on it would be a corpus of sessions exposed to nothing, which is the
+  poisoned evidence this blocker exists to prevent. **There is currently no
+  nameable boundary at all**, and per the 2026-08-31 council the real one is the
+  latest of: the propagation contract's effective deployment time, the
+  obligation's availability through that path, and the end of its guaranteed
+  lag. None of the three exists. The ten-session floor, the eligibility rules
+  and the propagation-model requirement are **untouched**.
+
+  **A SECOND, INDEPENDENT gate now stands in front of this one, and it is
+  architectural.** Even a corrected install would not deliver the obligation
+  per-edit: the rule is `type: auto` with triggers `keyword: "minimize tool
+  calls"` and `phrase: "fetching logs"`, neither of which occurs in an ordinary
+  work prompt, while its own frontmatter declares
+  `obligation_frequency: "per-edit"`. The cadence that would deliver it is
+  `type: always`, and `./scripts-run src/scripts/check_always_budget` reports
+  **60,252 / 60,254 chars (100.0%) — two characters of headroom** on a ratchet
+  that may only move DOWN, across nine rules that are the kernel and are not
+  agent-writable. So this blocker is no longer only wall-clock-bound. Full
+  evidence and the redesign recommendation are at step 1.1.
+
+  **Measured 2026-08-31, so the wall-clock half is not speculative either:** of
+  163 sessions in the operator's transcript store, **4** have a first
+  timestamped row after 2026-08-30 14:38:40Z (all 4 with ≥ 1 `tool_use`), and
+  one of those is the measuring session. Against a floor of 10 that is 3-4, and
+  every one of them is now ineligible anyway under the struck boundary.
 
 ## Where the two council seats disagreed
 
