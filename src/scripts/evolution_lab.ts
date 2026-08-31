@@ -67,6 +67,7 @@ import {
     CHEAPEST_STAGE,
     type CascadeResult,
 } from './_lib/evaluation_cascade.js';
+import type { MetricVector } from './_lib/evaluation_vector.js';
 import type { MetricRow } from './_lib/evaluation_vector.js';
 import {
     type CandidateRecord,
@@ -97,7 +98,6 @@ import {
     serialiseCandidateRecord,
 } from './_lib/candidate_proposer.js';
 import {
-    type MetricVector,
     type RunReport,
     buildRunReport,
     parseMetricVectorJson,
@@ -836,7 +836,7 @@ function verbRun(argv: readonly string[]): number {
             process.stdout.write(
                 `evolution_lab:cascade · ${r.candidate_id} · passed ${r.stages_run.length} stage(s) · ` +
                     `model_calls=${r.model_calls} · verdict=${r.verdict.promote ? 'promote' : 'refuse'} · ` +
-                    `${r.verdict.why}\n`,
+                    `${r.verdict.reason}\n`,
             );
         }
     }
