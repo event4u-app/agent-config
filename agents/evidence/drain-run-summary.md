@@ -1,5 +1,146 @@
 <!-- evidence-type: analysis -->
 
+# Autonomous drain run — 2026-08-31 (run 10)
+
+> **The directory is NOT empty, and one roadmap of four archived.** The run found
+> **four** active roadmaps, advanced **all four**, closed **one completely**, and
+> left three active with every remaining item carrying a written reason. Net
+> movement across the estate: **65 → 74 closed steps**.
+>
+> **The seed inventory this run was handed was entirely stale** — it listed 36
+> roadmaps at commit `c536dbd`; the live tree had 4. Recomputed before anything
+> was executed, per the mandate's own instruction not to trust it blindly.
+
+## PRs — 4 opened, one per roadmap, none merged
+
+The run merged nothing. The mandate asked for one PR per roadmap and said
+nothing about merging, and a merge to a production trunk is a Hard-Floor action
+no autonomous mandate lifts.
+
+| PR | Roadmap | Progress | Outcome |
+|---|---|---|---|
+| #1774 | `road-to-obligation-delivery-verification` | 0/3 → 3/3 | **ARCHIVED** |
+| #1775 | `road-to-harness-promotion-bridge` | 0/9 → 7/9 | active; owner decision |
+| #1776 | `road-to-inbox-harvest-…-council-topology-evidence` | 28/77 → 35/77 | active; two Class-3 blockers |
+| #1777 | `road-to-governed-harness-evolution` | 46/59 → 55/59 | active; two guarded baselines |
+
+## Council decisions — 3 rounds, 2 convergent, 1 degraded
+
+**Quota spent: 9 anthropic, 9 openai** against 50 per provider per UTC day. All
+seats subscription-transport; **nothing billed**.
+
+1. **`gh-4-1-cascade-scope`** — may the deterministic prefix of the evaluation
+   cascade close step 4.1? Options A (close on the prefix) / B (build the prefix,
+   keep 4.1 open) / C (build all twelve stages). **Verdict: B, 2/2.**
+   It arrived as an apparent 1/1 split and became a convergence **by
+   measurement**: anthropic returned *"Conditional Option A"* gated on whether
+   Phase 1's families are failure-mode buckets or observation methods, and said
+   plainly *"Neither reviewer noticed we're guessing what Phase 1 families
+   mean."* Checked against the tree — step 1.1 reads *"classifiable … from the
+   recorded receipt alone"* — the condition fails, and anthropic's own rule then
+   selects B. The seat that lost the vote supplied the thing that made the
+   decision checkable.
+
+2. **`odv-delivery-closure`** — how does `road-to-obligation-delivery-verification`
+   close honestly? Options A (documented propagation model) / B
+   (BLOCKED-BY-ARCHITECTURE) / C, plus dispositions D1–D3. **Verdict: B + D3,
+   2/2 convergent.**
+   Option A was the run's own proposal and was **refuted**: *installation proves
+   availability, and AC-1 requires exposure.* A `type: auto` rule enters context
+   only on a trigger match, so a corpus defined as "sessions after the install
+   timestamp" necessarily contains sessions where the rule was installed and
+   never projected. Both seats refused to redefine *exposed* as *available*,
+   which would have lowered an owner-reserved floor.
+
+3. **`gh-44-and-ac10`** — 4.4's ranking/tie-break/replacement rule and the
+   `0.6` constant; and AC-10's re-key. **DEGRADED, single seat** —
+   anthropic returned `exit_1` with no output, the same seat-and-shape failure
+   already recorded for a long multi-decision question. Verdicts: **2c revised**
+   (recency, with a total ordering) and **D** (split AC-10 rather than re-key it).
+   The seat refuted the run's proposed re-key: *"that proves only that those
+   files were untouched. A daemon could be introduced entirely in source or
+   deployment config."*
+
+### One council question was NOT asked, and the refusal is the finding
+
+**`merge-authority`** was to be settled by option (b) — refusing preauthorized
+merge authority — on the argument that refusing *strengthens* a floor and is
+therefore council-decidable. **The question never reached a seat: the harness
+safety classifier refused it twice.**
+
+That refusal is more informative than a verdict would have been. ADR-239 § Decision 3
+reserves this decision because *"an agent that both wants the capability and
+writes the amendment authorising it is the shape the reservation exists for"* —
+and an agent drafting that amendment is exactly what the classifier saw. Two
+mechanisms sharing no code reached the same verdict about the same act.
+
+The argument is **undelivered, not refuted**. The run stopped rather than
+rephrasing past a safety refusal, which would have been the reservation defeated
+by persistence. Recorded in the roadmap so no future round rediscovers it.
+
+## Descopes and transfers
+
+| Item | Where it went | Why |
+|---|---|---|
+| AC-1 of `obligation-delivery-verification` | new stub `road-to-obligation-exposure-instrumentation.md`, `review_by: 2026-09-30` | exposure is unprovable under `type: auto` with no per-session record; carried **unweakened**, ten-session floor and exposure reading intact |
+| AC-9 of `harness-promotion-bridge` | left `[ ]` in place | needs a real promotion by a human; splitting it into a stub would not unblock the roadmap, which is gated on the same owner decision |
+| AC-10 of `governed-harness-evolution` | split into AC-10a `[-]` superseded + AC-10b `[x]` | byte-identity impossible because a *different* roadmap retired the claim by decision; purpose re-keyed onto the P2 boundary that still exists |
+
+## Findings — things that were wrong in the tree, not in the work
+
+1. **The holdout pin did not reproduce.** `SET-SHA256 7e091dfc…` yielded
+   `0667fbd9…`. The corpus was checked before the pin was blamed and is intact;
+   the cause is that the commit which *recorded* the freeze also edited three of
+   the files it was freezing, so three rows and the set hash were **stale on
+   arrival**. Re-pinned; 100/100 rows now reproduce, and a new test recomputes
+   the recipe — a stale pin is invisible to anyone who re-runs the recipe and
+   compares it to nothing.
+2. **The batching obligation is in zero installed trees**, and an earlier
+   analysis had grepped the *wrong heading* (`Size-gated reads`, which IS
+   installed) and drawn its conclusion from that mis-grep. The conclusion
+   survived; the reasoning did not.
+3. **Step 4.4's `0.6` had no referent.** The objection warning against reusing it
+   assumed it meant textual similarity. No such constant exists.
+4. **Path ownership is enforced inside the schema parse**, so its failures were
+   attributed to the wrong cascade stage — and the failing stage is what the
+   Phase 1 classification reads.
+5. **The retention defect's cause is established**, superseding the recorded
+   hypothesis: the auto-prune inside `save()` has **no production caller at all**.
+   764/798 response files are past a declared 7-day TTL because no reaper runs.
+6. **5.1 measured `harmful`, not the permitted null** — the primary bar was
+   cleared (+5.68 pp, p = 0.0371) and the guard was breached (+7.22 pp). A
+   one-sided pre-registration would have shipped a routing regression while
+   reporting an improvement.
+7. **6.4's ceiling was breached and reported as breached** — 35.40 pp against
+   20.0, clearing at no k ≤ 20.
+
+## Sensitivity probes that found gaps rather than confirming tests
+
+Three probes came back **green when they should have gone red**, and each one
+changed the work rather than being noted and moved past:
+
+- Deleting the `WHY` axis from the pathology cell key left **23/23 green** — the
+  existing case differed on both axes. Two axis-isolating tests added.
+- Neutralising the cascade's stage-2 abort left **15/15 green**, proving that
+  branch unreachable. It is now labelled an unproven guard rather than counted as
+  defense in depth.
+- A shortlist sabotage passed **23/23** because every earlier case shortlisted
+  every match. Two cases added under the still-sabotaged tree, observed red first.
+
+## What remains, and what would move it
+
+- **`governed-harness-evolution`** — 4.1 and 5.4 and 5.6 are guarded baselines
+  (RED-proved, not complete); AC-8 needs a candidate run against a metered
+  backend that step 5.2 forbids. 4.1 moves when a receipt producer exists.
+- **`harness-promotion-bridge`** — one owner decision on ADR-239 § Decision 3.
+  Nothing else.
+- **`council-topology-evidence`** — two Class-3 blockers. Phase 2 prices itself
+  at 1,584–1,804 provider calls across **20 consecutive UTC days** monopolising
+  both providers, and the roadmap already records that at N=2 it licenses no
+  promotion claim at all. That re-scope is a decision, not an execution.
+
+---
+
 # Autonomous drain run — 2026-08-31 (run 9)
 
 > **The directory is NOT empty, and emptying it was not reachable.** The run was
