@@ -1024,6 +1024,46 @@ once.
       requires.
       verify: a candidate failing the cheapest stage consumes no model call, and
       the stage list can produce the Phase 1 classification.
+      **STAYS OPEN — AI council 2026-08-31 returned `REVISE`, not a greenlight,
+      and the round was DEGRADED at 1/2.** E9 decided the *arity* (twelve) and
+      enumerated the stages nowhere; this round asked for the enumeration and
+      got one, with the verdict *"keep E9's twelve-stage arity, but do not treat
+      the stage semantics as decided until the receipt trust boundary and
+      evidence-cost contract are explicit."*
+      **The degradation, recorded rather than implied.** The anthropic seat
+      returned `exit_1` with an empty stderr, 0 tokens and ~87 s latency on
+      **three** attempts at this question — the full two-decision form twice, and
+      the split single-decision form once. The same seat answered the other four
+      council questions of this run normally, so the failure is specific to this
+      question's shape, not to quota or availability. Under the N=3 budget the
+      run stopped retrying and took the single-seat answer, per the mandate to
+      degrade to the best available seat and record it.
+      **A second reason not to close on it, found by running it twice.** The two
+      openai passes produced two MATERIALLY DIFFERENT twelve-stage enumerations —
+      different names, different order, and a different placement of the
+      statistical stage. One seat asked twice and answering differently is
+      evidence that the design has not converged, which is what `REVISE` means
+      here rather than a formality.
+      **What the answers agree on, and it is the useful part.** No stage may be
+      SOFT — a condition whose failure does not block "actually done" is a
+      diagnostic attached to the receipt, not a cascade gate; `underpowered` is a
+      hard non-pass meaning *collect evidence*, never *reject permanently*; and
+      the first failed stage maps onto Phase 1's existing
+      `content | activation | adherence | unknown` **without** inventing a fifth
+      family. Buildable today against existing primitives: schema validity
+      (`candidate_record.ts`), the holdout / budget / diversity guards
+      (`harness_evolution_guards.ts`), the near-duplicate screen
+      (`shingle_similarity.ts`), and the paired verdict (`paired_verdict.ts`).
+      **What blocks the rest:** the ladder stages need an *independent,
+      append-only receipt producer* with version-bound, attributable
+      observations — which does not exist. A predicate being implementable is not
+      evidence that trustworthy evidence for it can be produced.
+      **Prerequisite before this step is attempted again:** the receipt contract
+      (schema + producer version, immutable run and candidate identity,
+      append-only evidence, explicit representation of missing or conflicting
+      evidence). Without it stages 6-11 are unsafe, because the candidate, the
+      evaluated agent and the mutable harness can all influence both the
+      behaviour and its receipt.
 - [x] **4.2 Report a metric vector, never a weighted total.** Include an
       `artifact-count delta` row — that is where the sprawl concern belongs,
       inside the gate where it can prevent something.
@@ -1095,6 +1135,45 @@ once.
       kill ID.
       verify: two candidates with equal vectors but different pathology cells
       are both retained, and a diversity-collapse stop (0.6) reads the archive.
+      **STAYS OPEN — AI council 2026-08-31, anthropic + openai, 2/2 present and
+      2/2 on `REVISE` rather than on a greenlight.** Both seats produced a
+      closed `WHERE x WHY` grid (one 6x6, one 7x6) and both refused to approve
+      it, converging on the same two objections.
+      **Objection 1, and it is a defect in the question rather than in the
+      answer.** The brief grounded `WHERE` in "the six-rung ladder" and called
+      the anchor obvious **without enumerating its six values**. Both seats
+      called that methodologically backwards — one refused to treat its own
+      `WHERE` names as more than conditional on confirmation against
+      `src/scripts/_lib/activation_ladder.ts`, warning that a parallel
+      execution-stage taxonomy must not be invented if the ladder already
+      defines different semantics. The next attempt at this step MUST paste
+      `LADDER_RUNGS` (`eligible → selected → projected → delivered → visible →
+      adhered`, `activation_ladder.ts:35-42`) into the question.
+      **Objection 2 — the architecturally prior decision this step is missing.**
+      *What makes an intervention "best" within a cell* is undefined, and both
+      seats ruled the archive cannot be built until it is: without a
+      deterministic ranking, tie-break and replacement rule, "archive the best
+      intervention per cell" names no operation. Options one seat enumerated:
+      lowest edit distance to a human gold standard (needs a gold standard),
+      highest measured failure-class coverage (needs a coverage metric), or
+      most-recent (trivial but deterministic). **Recorded here and not as a
+      `## Blockers` entry on purpose:** it has a step, an owner and a decidable
+      option set, so it is ordinary design work inside 4.4 rather than a
+      condition with nowhere to live — the shape a blocker exists for.
+      **Objection 3 — a best-per-cell archive cannot be the diversity signal.**
+      Retaining one winner per cell erases whether attempts were distributed
+      50/50 or 99.9/0.1: identical occupancy, radically different evidence of
+      search collapse. Each cell must therefore carry frequency-bearing summary
+      metadata from append-only attempt history (attempt count, classifiable
+      count, first/last observation, schema and cohort version, best retained
+      intervention and its ranking evidence), and the guard must consume a
+      versioned archive query rather than storage internals.
+      **On the `0.6` in this step's own verify line:** both seats warned it
+      cannot be carried across unexamined. If it currently means textual
+      similarity it is not a dominant-cell share, and reusing the number would
+      be a semantic change wearing a constant's clothes. It needs an explicit
+      denominator, observation window and minimum sample size, or a separately
+      named dominance threshold.
 - [x] **4.5 Minimality breaks ties.** Order per E5: the FOUR criteria
       `tokens → artifacts → scope → precedence`. The fifth criterion the skipped
       parent added — simpler mechanism — is **OUT**. E5's recorded reasoning is
