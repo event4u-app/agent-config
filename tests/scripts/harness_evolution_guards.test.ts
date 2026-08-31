@@ -162,7 +162,20 @@ describe('0.6 — epistemic stop conditions', () => {
     it('every stop condition either names a detector or is explicitly model-carried', () => {
         // Step 0.6's verify clause. The assertion is that no condition is
         // AMBIGUOUS — a missing field would read as enforced.
-        expect(STOP_CONDITIONS.length).toBe(4);
+        //
+        // ARITY MOVED 4 -> 5 on 2026-08-31 by step 4.4, and the pin is updated
+        // rather than deleted so the next change is still visible. 4.4's verify
+        // clause requires "a diversity-collapse stop (0.6) [that] reads the
+        // archive", and the existing `diversity-collapse` row cannot be it: it
+        // is a DISTINCT-COUNT check (`minDistinct = 2`) with no ratio, so it
+        // cannot see a search that keeps producing textually different
+        // candidates which all fail the same way. `pathology-dominance` is
+        // therefore an ADDITION and never a replacement — the test below pins
+        // both ids so neither can be dropped into the other.
+        //
+        // This ADDS a stop the run must clear, so it strengthens 0.6's set; it
+        // does not relax anything 0.6 decided.
+        expect(STOP_CONDITIONS.length).toBe(5);
         for (const c of STOP_CONDITIONS) {
             expect(c.id).toMatch(/^[a-z-]+$/);
             expect(c.why.length).toBeGreaterThan(40);

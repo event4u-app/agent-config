@@ -1126,7 +1126,102 @@ once.
       yields `[]`. The separation is structural: `paretoFrontier` (`:205`) is
       never consulted by `promotionVerdict`, so a frontier preference has no
       path by which to become a promotion.
-- [ ] **4.4 Keep a pathology archive, not only a frontier.**
+- [x] **4.4 Keep a pathology archive, not only a frontier.**
+      **DONE 2026-08-31.** `src/scripts/_lib/pathology_archive.ts`, 25 tests in
+      `tests/scripts/pathology_archive.test.ts`, plus 2 in
+      `harness_evolution_guards.test.ts` for the registration.
+
+      **Objection 2 is settled — AI council 2026-08-31, and it was a SINGLE-SEAT
+      DEGRADED round, recorded as such rather than as convergence.** Present:
+      openai/codex-default. Absent: anthropic/claude-sonnet-4-5, `exit_1`, no
+      output — the same seat-and-shape failure 4.1 already records for a long
+      multi-decision question. Under the N=3 budget the run took the best
+      available seat and did not retry.
+      Verdict **2c revised**: of the three candidate rules, 2a needs a human
+      gold standard and 2b needs a coverage metric, and neither exists, so
+      recency is the only currently supportable deterministic rule. The seat's
+      own caveat is carried into the code rather than dropped: *"recency says
+      nothing about quality and may replace a genuinely better intervention with
+      a regression"*, so history is append-only and every decision is stamped
+      with `ranking_rule_version` — representatives are RECOMPUTED when a
+      quality metric arrives, never lost.
+      **The rule is TOTAL, which is what the objection actually demanded.**
+      `replacesRetained` (`:186`) orders on
+      `attempt_sequence DESC, candidate_id ASC, attempt_id ASC`. Ordering is by
+      ingester-assigned sequence and **never** by timestamp — producer clocks
+      collide and arrive out of order, which makes a timestamp rule non-total,
+      and a tie-break that is declared but unreachable is the defect the seat
+      named in the alternative. All three tie-break levels are exercised
+      separately, and one test asserts a newer `observed_at` on a lower sequence
+      does NOT win.
+      **`WHERE` reuses the ladder** — `PATHOLOGY_WHERE` IS `LADDER_RUNGS`
+      (`_lib/activation_ladder.ts:36-43`), asserted by identity so a parallel
+      execution-stage taxonomy cannot drift into existence. `WHY` is a closed
+      8-value REASON axis whose order is its precedence order, with
+      `reason_unknown` last so it is a fallback and never a precedence winner. A
+      test asserts no `WHY` value is a ladder rung or a `<rung>_failed`, which is
+      the collapse-into-WHERE failure the seat rejected in the first draft.
+      **Objection 3 is discharged by the cell shape.** Each cell carries
+      frequency-bearing metadata from append-only attempt history —
+      `attempt_count`, `classifiable_count`, `unclassifiable_count`,
+      first/last observed sequence and time, the retained representative with
+      its `retained_ranking_key` and `retained_ranking_rule`, and the
+      schema/classification/ranking/cohort version quad. Ingest is **idempotent**
+      by `attempt_id`, because without that a retry loop silently inflates the
+      very frequency evidence the guard reads. Cells are keyed on the version
+      quad as well as on `WHERE x WHY`, so attempts recorded under a different
+      vocabulary are never summed with these.
+      **The guard consumes a versioned query, never storage internals**, as the
+      seat required: `dominanceWindow()` (`:239`) returns the version quad
+      alongside its rows and `dominanceVerdict` takes that query, so a caller
+      cannot hand it a raw array. It returns attempts rather than cells for the
+      reason the seat gave — a last-N window is not reconstructible from
+      aggregates.
+
+      **Objection 4, and the premise turned out to be FALSE — checked rather
+      than accepted.** The objection assumed the `0.6` in this step's verify
+      line already meant textual similarity, and warned that reusing it would be
+      *"a semantic change wearing a constant's clothes"*. **There is no such
+      constant.** `diversityCollapsed`
+      (`_lib/harness_evolution_guards.ts:215`) is a DISTINCT-COUNT check with
+      `minDistinct = 2` and no ratio anywhere, and the only near-duplicate
+      constant in the tree is `NEAR_DUPLICATE_THRESHOLD = 70`
+      (`_lib/curator_ops.ts:106`) — an integer percentage on a different scale.
+      So the collision the objection feared does not exist, and the number was
+      free to be given its own meaning. It is nonetheless given a **separate**
+      name rather than reused: `PATHOLOGY_DOMINANCE_THRESHOLD = 0.6`, with the
+      denominator, window and floor the objection asked for —
+      `PATHOLOGY_WINDOW_SIZE = 50` (latest N classifiable attempts) and
+      `PATHOLOGY_MIN_CLASSIFIABLE_ATTEMPTS = 20`. All three are STATED policy
+      defaults, not measured optima, and say so at the constant with a
+      `Revisit-if`.
+      **`warming-up` is a real state and explicitly NOT a pass.** Below the
+      floor the guard refuses to return `ok`, so an empty archive cannot read as
+      healthy — the same discipline `underpowered` gets in 4.3.
+
+      **Wired, not an unwired library — which is the lesson AC-3 and AC-5 are
+      still open on.** `STOP_CONDITIONS` gains `pathology-dominance`
+      (`detector: 'dominanceVerdict'`), and a test resolves that detector name
+      to a real exported function rather than trusting the string.
+      **The arity of step 0.6's stop set therefore moves 4 -> 5, and it is
+      recorded here instead of being bumped silently.** It is an ADDITION and
+      never a replacement — a second test pins both `diversity-collapse` and
+      `pathology-dominance` so neither can be dropped into the other — so it
+      STRENGTHENS 0.6's set rather than relaxing anything 0.6 decided. The two
+      catch different things: the older row asks whether this run's candidates
+      are distinct, and cannot see a search that keeps producing textually
+      different candidates which all fail the same way.
+
+      **Sensitivity was OBSERVED in four directions, and the first probe found a
+      REAL GAP in these tests rather than confirming them.** Deleting `a.why`
+      from the cell key left **23/23 green** — the "both retained" case differs
+      on both axes, so it could not tell a two-axis key from a one-axis one.
+      Two axis-isolating tests were added in response; re-probed, dropping `why`
+      reds *"the WHY axis is load-bearing"* and dropping `where` reds *"the
+      WHERE axis is load-bearing"*, one failure each. Neutralising the
+      `warming-up` floor reds *"below the minimum sample it reports warming-up,
+      which is NOT a pass"*. Every probe restored to 25/25, and the module's
+      byte-identical restore was confirmed with `git diff`.
       `from-skipped-parent`, and it was that parent's headline contribution: a
       pure frontier loses the information about *why* a candidate exists, so
       archive the best intervention per `WHERE × WHY` failure cell over closed
@@ -2110,8 +2205,54 @@ once.
       carried there verbatim, with its 2026-08-31 audit note intact. `[-]`
       means TRANSFERRED, never met and never dropped: the criterion is open in
       the receiver, where 7.6 is what closes it, after `merge-authority`.
-- [ ] AC-10 — The `no-runtime-daemon` claim in `README.md` and its
-      `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state.
+- [-] AC-10a — **SUPERSEDED by ADR-249 2026-08-31.** Original criterion,
+      verbatim: *"The `no-runtime-daemon` claim in `README.md` and its
+      `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state."*
+      Byte-identity is **impossible**, and not because of anything this roadmap
+      did: a different roadmap deliberately retired the claim by governance
+      decision. `[-]` records that the criterion was superseded, never met and
+      never dropped; its safety purpose is carried forward unweakened as AC-10b
+      below.
+- [ ] AC-10b — **This roadmap introduces no unsupervised background process
+      (class P2), and does not touch the claim or retirement surfaces.**
+      Carries AC-10a's purpose — *"this roadmap did not quietly acquire a runtime
+      daemon"* — re-keyed onto a boundary that still exists.
+      **AI council 2026-08-31, verdict D (split), and it is a SINGLE-SEAT
+      DEGRADED round — recorded as such, never as convergence.** Present:
+      openai/codex-default. Absent: anthropic/claude-sonnet-4-5, `exit_1` with
+      no output. That is the same seat-and-shape failure step 4.1 already
+      records for a long multi-decision question, so it is a known mode rather
+      than a new one; under the N=3 budget the run took the best available seat
+      and did not retry.
+      **Why the split rather than a re-key.** Option A — re-key to *"no diff
+      attributable to THIS roadmap"* and close on a two-file documentation diff —
+      was put to the seat and REFUTED: *"Option A's suggested `git diff --stat`
+      over two documentation files proves only that those files were untouched.
+      A daemon could be introduced entirely in source or deployment config."*
+      The tripwire would have been closed by a check that cannot see the thing
+      it guards.
+      **Why the criterion had to move at all.** `docs/contracts/no-runtime-boundary.md:25`
+      records that the absolute prohibition AC-10a guarded no longer exists:
+      background processes are **governed**, not banned — a supervised process is
+      class **P1** and permitted under four conditions, an unsupervised one is
+      class **P2** and stays prohibited. `src/scripts/collector_daemon.ts` is in
+      the tree today. So a criterion phrased as *"the no-daemon claim is
+      byte-identical"* now guards a claim the suite has withdrawn on purpose, and
+      re-keying it to the same wording would re-assert a floor ADR-249 lowered by
+      decision. AC-10b is deliberately phrased against **P2**, the half that
+      survived.
+      **Reading at this commit, and it is explicitly NOT a closure.** The branch
+      diff against `origin/main` is three files — one evidence artefact, this
+      roadmap, and one test — with zero changes under `src/` and no process of
+      any class introduced; the same diff restricted to `README.md` and
+      `docs/CLAIMS.md` is empty. AC-10b stays `[ ]` because a tripwire read
+      before the roadmap is finished has not been read: later commits on this
+      branch can still falsify it, and the reading that closes it is the one
+      taken at completion.
+      **Attribution, re-checked rather than carried.** The removing commit is
+      `68463a1e` (2026-08-28), *"roadmap: complete runtime-governance-flip
+      (ADR-249 ...)"*. Step 0.3 already recorded that retirement and repaired its
+      own count-keyed guard against it; AC-10 was the survivor of that same edit.
       **Audited 2026-08-31: FALSIFIED as written — and not by this roadmap.**
       The pre-roadmap state is `9e8344a3`, the parent of `15447f47` which added
       this file on 2026-08-26. At `9e8344a3` the README's line 19 carried the

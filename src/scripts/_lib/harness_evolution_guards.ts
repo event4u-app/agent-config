@@ -189,6 +189,16 @@ export const STOP_CONDITIONS: readonly StopCondition[] = [
         detector: 'diversityCollapsed',
     },
     {
+        id: 'pathology-dominance',
+        // The sibling above asks whether THIS run's candidates are distinct.
+        // This asks whether the SEARCH has stopped exploring: one WHERE x WHY
+        // failure cell dominating the recent window means the proposer keeps
+        // rediscovering one pathology, which a distinct-count check cannot see
+        // because the candidates are all textually different.
+        why: 'one WHERE x WHY pathology cell dominates the recent classifiable window, so the search is rediscovering one failure mode rather than exploring',
+        detector: 'dominanceVerdict',
+    },
+    {
         id: 'cross-component-interference',
         why: 'two components changed in one run and credit cannot be assigned to either',
         // Honest null: deciding whether two changes interfere needs a causal
