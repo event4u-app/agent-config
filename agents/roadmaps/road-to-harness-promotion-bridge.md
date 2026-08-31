@@ -88,18 +88,84 @@ of whether `blocker: merge-authority` has closed. The two gates are separate:
 the blocker asks *who may promote*, the condition asks *what mechanically
 prevents promotion until they do*. Settling one does not settle the other.
 
-**An observation, recorded and deliberately NOT adjudicated.** The parent's
-steps 3.4 (candidate lifecycle enum) and 3.6 (operator verb set) closed `[x]`
-before this split, and `src/scripts/evolution_lab.ts:858-888` now carries a
-`promote` verb that returns `EXIT_REFUSED` unconditionally, printing the
-lifecycle gate's own message plus the `merge-authority` blocker. That is a
+**ADJUDICATED 2026-08-31 — NOT DISCHARGED, with the gap named. This paragraph
+used to say the question was deliberately unadjudicated; it is not any more.**
+
+The parent's steps 3.4 (candidate lifecycle enum) and 3.6 (operator verb set)
+closed `[x]` before this split, and `src/scripts/evolution_lab.ts:858-888` now
+carries a `promote` verb that returns `EXIT_REFUSED` unconditionally, printing
+the lifecycle gate's own message plus the `merge-authority` blocker. That is a
 population that is no longer zero and a refusal that is mechanical rather than
-stated. Whether it DISCHARGES the condition is a judgement the 2026-08-31
-verdict does not make and this transfer does not make either — it is routed by
-the `Revisit-if` paragraph above, which binds the condition to the earlier
-change that created the path. Recorded here so the next reader inherits the
-fact rather than rediscovering it, and so that no one reads the condition as
-already satisfied.
+stated. Whether it DISCHARGES the condition was left open by the 2026-08-31
+split verdict and by this transfer. **It was put to the council and answered.**
+
+> **AI council 2026-08-31 — `(B) NOT DISCHARGED`, 2 of 3 seat-answers across two
+> rounds.** Round 1: anthropic `exit_1` (absent), openai **(B)**. Round 2:
+> anthropic **(B)**, openai **(A)**. Tally **2×B / 1×A**. Round 1 was DEGRADED at
+> 1/2 and the retry was to reach the absent seat, not to shop for a verdict; both
+> rounds are recorded and the divergence is stated rather than smoothed.
+
+**The evidence that was put to the seats, and none of it is disputed.**
+`verbPromote` calls `assertTransition(record.lifecycle, 'promoted')` with no
+approval argument, returns `EXIT_REFUSED` on every path, and documents that
+*"`--approver` is deliberately NOT a flag"*. `tests/scripts/evolution_lab.test.ts`
+§ promote refuses covers every lifecycle state in a loop (`:281-291`, exit 3 plus
+`merge-authority` in stderr), passes `--approver Somebody` and gets no promotion
+(`:304`), denies `promoted` as a bare next state over all from-states
+(`:309-311`), and adds a source-level meta-guard `findApproverSynthesis`
+(`:232-236`). The lifecycle gate itself refuses an absent approver, an empty
+approver, and `proposed -> promoted` even with one
+(`tests/scripts/candidate_record.test.ts:232-234,263,271`).
+
+**Why that is not enough — the gap, stated falsifiably.** The condition covers
+*"a verb, a state transition into `promoted`, **or any write into `src/` derived
+from a candidate**"*. The landed enforcement gates exactly **two** of those three:
+`verbPromote`, and the `-> promoted` transition. Nothing gates the third. Both
+B-seats named the same thing: there is no repository-wide mechanism proving that
+no other caller can (i) invoke `assertTransition(..., 'promoted', approver)`
+directly, (ii) write a candidate record carrying `lifecycle: 'promoted'` without
+going through `verbPromote`, or (iii) read candidate data and derive a `src/`
+write from it. anthropic put the principle plainly: the condition demands
+enforcement that *"prevent[s] bypasses structurally rather than merely document[s]
+their absence today"*, and `findApproverSynthesis` *"demonstrates the pattern the
+condition demands"* while being *"narrowly scoped to one specific bypass vector"*.
+
+**The minority position, recorded because it shaped the outcome rather than
+losing to it.** openai's round-2 **(A)** grants discharge *"narrowly and only as a
+historical condition on the commit that introduced the promotion surface"*, and
+concedes the identical gap in its own strongest counter-argument:
+`findApproverSynthesis` *"protects one implementation pattern rather than proving
+a repository-wide invariant. It would not necessarily detect a future direct
+filesystem write, an alternate transition mechanism, or a new promotion command
+that bypasses `assertTransition`."* It also asked — and this survives regardless
+of the letter — that a discharge must never be read as a permanent guarantee, and
+that the record separate **the historical introduction condition** from **the
+continuing requirement** for fresh review whenever a successful promotion branch,
+an approver-bearing interface, an alternate promotion path, or a candidate-derived
+`src/` write is proposed. The `Revisit-if` paragraph above already carries that
+continuing half.
+
+**What would discharge it — two routes, and only one is available here.**
+
+1. **A structural invariant** (buildable, council-decidable): a mechanism that
+   inventories every lifecycle-record write site and every `src/` write site, and
+   fails when a promotion-capable write does not pass through one guarded
+   capability. openai's round-1 answer specified it further: the capability must
+   be unobtainable while `blocker: merge-authority` is open, and the check must
+   fail when a new write path bypasses the guard.
+2. **A scope clarification** narrowing the condition to the verb and the
+   transition, i.e. deleting the *"any write"* clause — **OWNER-RESERVED**, and
+   anthropic said why in as many words: it would weaken the condition. No council
+   may perform it.
+
+**What this changes, and what it explicitly does not.** It retires Risk 3 of this
+file's register — *"the discharge point may already have passed and nobody
+adjudicated it … an undecided condition reads as satisfied to the next reader"* —
+by deciding it. It does **not** resolve `blocker: merge-authority`, which stays
+OPEN and owner-reserved in both directions. It does **not** unblock any Phase 7
+step or AC-9: those remain gated twice, and the second gate is exactly this
+condition, which is now recorded as **undischarged on evidence** rather than as
+undecided.
 
 The condition's verbatim origin block, carried out of the parent's Phase 0 on
 2026-08-30 and transferred here on 2026-08-31, is reproduced under
@@ -290,7 +356,7 @@ removed or reordered.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | `[-] MERGED` in the parent is later read as cancelled or as satisfied | product | The parent now carries nine `[-]` markers for work that is open here. A reader who takes `[-]` at its usual meaning concludes Phase 7 was dropped or done, and this file's whole purpose — keeping seven specified steps and AC-9 alive — is defeated silently | Every one of the nine markers states in as many words that `[-]` means TRANSFERRED, not cancelled and not satisfied, and names this file. The `relates:` block and § Provenance make the link machine-readable from both ends | Provenance |
 | 2 | The carried non-promotion condition is discharged by a check over a population of zero | implementation | A gate written before any promotion path exists scans nothing and exits green, which is exactly why the parent left the condition UNMET rather than closing it | The condition's own text forbids it: *"A check over a population of zero does not discharge this condition"*, and its discharge point is named as the first commit that creates a promotion path | Carried blocking condition |
-| 3 | The discharge point may already have passed and nobody adjudicated it | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. Whether that DISCHARGES the condition is undecided, and an undecided condition reads as satisfied to the next reader | Recorded in this file as explicitly **not adjudicated**, and bound by the Revisit-if clause to the earlier change rather than left to drift | Carried blocking condition |
+| 3 | ~~The discharge point may already have passed and nobody adjudicated it~~ **RETIRED 2026-08-31 — adjudicated** | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. The risk was that nobody would decide whether that discharges the condition, because *an undecided condition reads as satisfied to the next reader* | **Decided.** AI council 2026-08-31, **(B) NOT DISCHARGED**, 2×B / 1×A across two rounds, with the gap named falsifiably: the condition covers *any write into `src/` derived from a candidate* and only the verb plus the `-> promoted` transition are gated. Two discharge routes are recorded, one buildable and one owner-reserved. The condition is now undischarged **on evidence** rather than undecided | Carried blocking condition |
 | 4 | This roadmap sits blocked indefinitely on an owner decision | product | ADR-239 § Decision 3 has been open since 2026-08-22 with no recorded movement. An ACTIVE roadmap that never resumes consumes governed-estate headroom without producing anything | Deliberate and council-chosen: both seats ruled that active membership is what preserves the criteria, and the Resume condition routes owner REFUSAL back to the owner rather than letting this file decide its own disposition | Resume condition |
 | 5 | A Phase 1-6 step in the parent creates a promotion path before this file resumes | implementation | The `merge-authority` blocker is scoped to gate Phase 7. A parent step that promotes anything would escape that scoping, and the mechanical non-promotion condition would bind to a change nobody expected it to | The Revisit-if clause binds both the blocker and the carried condition to any such earlier change, by name | Resume condition |
 
