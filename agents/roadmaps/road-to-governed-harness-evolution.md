@@ -110,38 +110,21 @@ once.
 
 ## Phase 0 — Constitution, reconciliation, budget, stop conditions
 
-> **CARRIED CONDITION, placed here 2026-08-30 — the `merge-authority` council's
-> own instruction, executed late.** When the AI council scoped `merge-authority`
-> on 2026-08-29 (anthropic + openai, 2/2) it declared Phases 1–6 legal while
-> ADR-239 § Decision 3 stays open, and attached one condition it called *"an
-> addition to what the blocker proposed"*: **the non-promotion property of
-> Phases 1–6 must be MECHANICALLY ENFORCED, not merely stated** — *"a phase that
-> promises to promote nothing while nothing prevents it from promoting is the
-> same class of guarantee ADR-239 § Decision 3 is open about."* It said the
-> condition belonged in this phase's exit criteria. It was never written here;
-> found on 2026-08-30 and carried now.
+> **CARRIED CONDITION — TRANSFERRED 2026-08-31 to
+> `road-to-harness-promotion-bridge.md` § Carried blocking condition.** Placed
+> here on 2026-08-30 as the `merge-authority` council's own instruction, it
+> travels with Phase 7 on the 2026-08-31 verdict (2/2 convergent): its named
+> discharge point is *the first commit that creates a promotion path*, and that
+> commit now belongs to the receiver, so leaving the condition here would leave
+> it with no reachable discharge point.
 >
-> **It is carried UNMET, and that is the honest state.** Nothing in this tree
-> promotes anything: there is no promotion path, no candidate, and no merge
-> verb — `grep -rln 'assertWithinBudget|discloseToProposer' src/ tests/` returns
-> the guards, their tests and their config, and no caller. A gate written today
-> to assert "no Phase 1–6 code promotes" would scan a population of zero and
-> exit green, which is worse than no gate because it would look like the
-> mechanical enforcement the council asked for. That is the vacuous-check
-> refusal 1.4 and 2.3 both already made on this roadmap.
->
-> **What discharges it, falsifiably.** The first commit that creates a promotion
-> path — a verb, a state transition into `promoted`, or any write into `src/`
-> derived from a candidate — owes the enforcement in the same change. Concretely:
-> the 3.4 lifecycle enum's `promoted` transition and the 3.6 verb set are where
-> the population stops being empty, so the check lands there and this note is
-> what stops it being read as already-satisfied when it does.
->
-> **This does not resolve `merge-authority` and does not touch it.** ADR-239 §
-> Decision 3 — *"Preauthorized merge authority is granted or refused | owner |
-> open"*, re-verified at `ADR-239:188` on 2026-08-30 — is owner-reserved in both
-> directions, and no council verdict may perform it. Option (c) stands, Phase 7
-> stays gated, 0.8 stays `[~]`.
+> It transferred **unmet and unweakened**, with its full origin text reproduced
+> verbatim in the receiver's § Provenance. In the receiver it is encoded to
+> BLOCK rather than to sit alongside: no step there may close while it is
+> undischarged, independently of `blocker: merge-authority`. The obligation it
+> states — that the non-promotion property be MECHANICALLY ENFORCED rather than
+> merely stated, and that a check over a population of zero does not discharge
+> it — is unchanged.
 
 - [x] **0.1 Write the inventory matrix as this phase's exit criterion.** A table
       of `planned capability → existing carrier in the tree → redirect / extend /
@@ -401,8 +384,13 @@ once.
       cheap cascade stages, proposer cost against solver benefit).
       verify: the criteria are committed before the first candidate run and are
       falsifiable in both directions.
-- [~] **0.8 Merge authority resolved.** Deferred: owner decision, see
-      Blockers. <!-- blocked-by: merge-authority -->
+- [-] **0.8 Merge authority resolved.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      carried there verbatim as step 0.8, still `[~]`, still deferred to the
+      owner. `[-]` means TRANSFERRED, not cancelled and not satisfied: the
+      merge-authority decision is as open as it was. The `blocked-by`
+      annotation moved with the step, because `blocker: merge-authority` moved
+      with it.
 
 ## Phase 1 — Observation and the activation ladder
 
@@ -1475,55 +1463,43 @@ once.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
-- [ ] **7.1 One evidence package per promotion, in the fuller form.** The master
-      adopted a 9-field package; the skipped parent's has 14, and the five extra
-      are exactly the fields that make 3.2, 4.4 and 7.3 auditable: pathology
-      cell, candidate lineage, mutation dimension, selection results, sealed
-      result, cost, scope.
-      verify: a promotion attempt with any field absent is refused.
-- [ ] **7.2 Route through the existing gate, not a second governance system.**
-      Reuse the evidence-grading vocabulary already in the tree
-      (`authority_basis`, `evidence.strength`, `reopen_policy`,
-      `protected_dimensions`).
-      verify: no new governance verb, no new approval path.
-- [ ] **7.3 Promote by scope, with a transfer gate.** `from-skipped-parent`,
-      raised to doctrine level in both parents and absent from the master's
-      promotion path: a candidate carries a scope (episode → repo → stack →
-      profile/pack → global) and moving up a level requires independent transfer
-      evidence from a second solver or host configuration. Without it, every
-      promotion goes straight to canonical and the anti-bloat doctrine has no
-      teeth. This is not what the parked curriculum generator was.
-      verify: a promotion with no scope field is refused, and a scope raise with
-      one configuration's evidence is refused.
-- [ ] **7.4 Reject semantic no-ops.** A no-op detector plus a minimum
-      material-improvement threshold. The master kept the cooldown and lineage
-      from the same attack and dropped both gates.
-      **Marker corrected 2026-08-26:** this step carried
-      `from-skipped-parent`, and it should not have. The clause is at
-      `road-to-evidence-driven-harness-evolution.md:1200-1201` — a **declared**
-      parent — and the skipped parent contains no no-op gate at all (its only
-      paraphrase mention, `:1342` "Avoid five paraphrases", is about candidate
-      diversity at generation time, which is a different mechanism). So the
-      master dropped this having read it, not having missed it. That is the
-      second misattributed marker found in this pair; see
-      `agents/evidence/analysis/skipped-parent-lineage-2026-08-26.md`
-      § Marker reliability.
-      verify: a paraphrase-only candidate is refused before the cascade.
-- [ ] **7.5 Roll out by canary, never silently.** `from-skipped-parent`: opt-in
-      candidate bundles.
-      verify: no promotion changes a shipped default without an opt-in stage.
-- [ ] **7.6 A promoted artefact is not immortal.** `from-skipped-parent`, and
-      it is the only anti-monotonic-growth mechanism *after* the gate — the
-      `artifact-count delta` row guards the gate, the estate needs its own:
-      post-promotion re-evaluation with `KEEP / REVISE / MERGE / SPLIT /
-      RETIRE`. The master's promotion phase ends at the evidence package plus a
-      cooldown, so nothing reopens a promoted artefact and the lifecycle is
-      manual-only at exactly the point where growth accumulates.
-      verify: a promoted artefact reaching its review trigger produces one of the
-      five verdicts, and at least one `RETIRE` path is exercised in a fixture.
-- [ ] **7.7 Best-known-state reference on regression.** Roll back to the
-      recorded best-known state; lineage, not endless append.
-      verify: an injected regression triggers the rollback path in a fixture.
+> **TRANSFERRED 2026-08-31 to `road-to-harness-promotion-bridge.md`, on a
+> recorded AI-council verdict — 2/2 convergent, anthropic/claude-sonnet-4-5 +
+> openai/codex-default, Option 3: split at the phase boundary into a new ACTIVE
+> roadmap.** Both seats rejected `agents/roadmaps/later/` by name, because
+> `later/` is excluded from the dashboard and from `/roadmap:process-*` and
+> therefore does not preserve active-estate membership.
+>
+> **`[-]` here means TRANSFERRED. It does NOT mean cancelled, dropped, or
+> satisfied.** Every step below is still open, still unmet, and still owned —
+> by the receiver, which is ACTIVE and visible to every estate mechanism. The
+> steps, their prose and their `verify:` lines moved verbatim; nothing was
+> weakened in the move. Every reference to Phase 7, 7.3 or 7.6 elsewhere in
+> this file — the Risk Register's row 8, the open-decisions section — resolves
+> through this pointer.
+
+- [-] **7.1 One evidence package per promotion, in the fuller form.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.1 there, verbatim.
+- [-] **7.2 Route through the existing gate, not a second governance system.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.2 there, verbatim.
+- [-] **7.3 Promote by scope, with a transfer gate.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.3 there, verbatim.
+- [-] **7.4 Reject semantic no-ops.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.4 there, verbatim, including its 2026-08-26 marker correction.
+- [-] **7.5 Roll out by canary, never silently.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.5 there, verbatim.
+- [-] **7.6 A promoted artefact is not immortal.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.6 there, verbatim. It is what closes AC-9, which transferred with
+      it.
+- [-] **7.7 Best-known-state reference on regression.**
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      step 7.7 there, verbatim.
 
 ## Blockers
 
@@ -1636,101 +1612,28 @@ once.
 > makes it a pattern in this inbox-harvest cohort rather than one slip.
 
 
-### blocker: merge-authority
+### merge-authority — MOVED
 
-- **Status:** open — **SCOPED 2026-08-29, and it is divisible in the same shape
-  as `b-adr-088` on `road-to-capability-native-execution`. Option (c) is taken
-  and is council-decidable; options (a) and (b) are OWNER-RESERVED and were not
-  taken.** AI council 2026-08-29, anthropic + openai, **2/2 convergent**.
-
-  **Taken, council-decidable — the scoping half.** Phases 1–6 are declared legal
-  while ADR-239 § Decision 3 remains open. They build measurement and isolation
-  and promote nothing, so where merge authority lands does not touch them. Phase
-  7 stays gated on this blocker.
-
-  **Not taken, owner-reserved.** (a) **granting** preauthorized merge authority
-  weakens a human-in-the-loop promotion guarantee — the shape
-  `non-destructive-by-default` protects — and (b) refusing it settles an ADR §
-  Decision that is recorded as open. Either is a resolution of ADR-239 itself,
-  which a council may recommend and may not perform.
-
-  **The condition that makes (c) real rather than a promise, and it is an
-  addition to what the blocker proposed:** the non-promotion property of Phases
-  1–6 must be **mechanically enforced**, not merely stated. A phase that
-  promises to promote nothing while nothing prevents it from promoting is the
-  same class of guarantee ADR-239 § Decision 3 is open about. Carried into Phase
-  0's exit criteria rather than left here.
-
-  **FOUND UNCARRIED 2026-08-30, and carried now.** The sentence above said the
-  condition was carried into Phase 0's exit criteria. It was not: a tree-wide
-  grep for `mechanically enforced` / `non-promotion` over this roadmap returned
-  only these lines, inside this blocker. The condition existed exactly where the
-  paragraph said it should not be left.
-
-  This is the **third instance in this cohort of the same defect shape** — a
-  criterion with no phase, no step and no owner, which Risk 11 names for AC-8
-  and which the `Resolved when` twin above records for `b-adr-088`. It is
-  recorded as a pattern rather than a slip because that is now three.
-
-  The condition is carried as a Phase 0 exit-criterion note (see the
-  **CARRIED CONDITION** block at the head of Phase 0), which is where the
-  council put it. It is carried **unmet**, with the reason it cannot be
-  discharged today stated there rather than being quietly satisfied by a check
-  that would scan nothing.
-
-  **The `Resolved when` field below was AMENDED 2026-08-29, and the amendment
-  now lives inside the field's value rather than in a heading above it.** The
-  original — *"ADR-239 § Decision 3 no longer reads as an open question and its
-  `review_trigger` no longer names the `merge-authority` blocker"* — is
-  **unsatisfiable by option (c) and by any council**, because (c) leaves §
-  Decision 3 open by construction. It bundled two things one authority cannot
-  discharge, exactly as `b-adr-088` did.
-
-  **Why the fix is a field edit and not a paragraph, 2026-08-30.** The 2026-08-29
-  amendment was written as prose here and left the original `- **Resolved
-  when:**` field standing three fields below, still stating the unsatisfiable
-  condition — two contradictory closure conditions on one blocker, with
-  `lint_roadmap_blockers` green throughout. This is the **same defect, in a
-  second roadmap**: `road-to-capability-native-execution`'s
-  `b-adr-088-external-runtime-federation` carried an identical stale twin, found
-  and fixed on 2026-08-29, and its own note predicted the recurrence by naming
-  the mechanism. The gate matches a literal label
-  (`/^-[ \t]*\*\*Resolved when:\*\*/im`, `src/scripts/lint_roadmap_blockers.ts:52`),
-  so a heading that says *"Resolved when (AMENDED …)"* satisfies nothing and the
-  contradictory line was the only thing keeping the blocker legal.
-
-  **Searched rather than assumed:** a tree-wide grep for `Resolved when` outside
-  the literal `- **Resolved when:**` field across `agents/roadmaps/**` returns
-  these two blockers and no third. Both are now fixed the same way — rename the
-  amended field to the literal label first, delete the stale one second, because
-  the other order turns the gate red in between.
-- **`revisit-if`:** ADR-239 § Decision 3 is settled, or a Phase 1–6 step is
-  proposed that would promote anything — in which case the scoping decision above
-  no longer covers it and this blocker binds earlier than Phase 7.
-- **Owner:** maintainer
-- **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
-  Phase 7.
-- **What to do:** pick exactly one — (a) resolve ADR-239 § Decision 3 by
-  granting preauthorized merge authority with its scope written into that
-  record, or (b) resolve it by refusing preauthorized merge authority, making
-  "only humans promote" a property rather than an intention, or (c) declare
-  Phases 1–6 legal while it is unresolved and gate only Phase 7 on it — the
-  cheapest option and the one this roadmap is cut for. Read
-  `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:79-81`
-  and its decision table at `:188`.
-- **Resolved when:** *(AMENDED 2026-08-29 — the marker sits inside the value on
-  purpose; see the note above this field.)* the Phases 1–6 scope decision is
-  recorded above and needs nothing further. This blocker closes when the
-  **owner** settles ADR-239 § Decision 3 in either direction, at which point
-  Phase 7 becomes enterable or is redesigned.
-- **Recommendation:** (c). Phases 1–6 build measurement and isolation and
-  promote nothing, so they are unaffected by where merge authority lands; (a)
-  and (b) are owner-reserved and should not be forced by a plan that merely
-  wants to start.
-- **If you do nothing:** Phases 1–6 remain executable and Phase 7 cannot be
-  entered, because the guardrail it rests on is documented in this tree as
-  undecided. All three source proposals asserted that guardrail as a fact;
-  verified 2026-08-26, it is not one.
+> **MOVED WHOLE 2026-08-31 to `road-to-harness-promotion-bridge.md` § Blockers,
+> where it is the roadmap's single gate.** Transferred verbatim, including its
+> 2026-08-29 council scoping, its 2026-08-30 field-shape repair and its
+> `Resolved when` amendment. It is NOT resolved and NOT withdrawn: ADR-239
+> § Decision 3 is as open as it was, and it is owner-reserved in both
+> directions.
+>
+> **This heading OMITS the literal `blocker:` prefix, and the omission is
+> deliberate — read the repaired entry two headings above before assuming it is
+> the same defect.** `lint_roadmap_blockers` recognises an entry only by
+> `### blocker: <id>`, so a heading without the prefix declares nothing. That is
+> exactly what is wanted here and the opposite of what was wanted on 2026-08-29:
+> there, a real entry had lost its prefix and was invisible to the gate, which
+> was a defect; here the entry has genuinely MOVED, and keeping the prefix would
+> declare `merge-authority` in two files at once — two live owners for one
+> blocker, which the council's atomic-transfer requirement forbids and which the
+> gate confirmed by counting `open_blockers` 31 → 32 when this stub first carried
+> the prefix. The stub is kept, prefix-less, so the many references to
+> `merge-authority` elsewhere in this file land somewhere that names where the
+> entry went.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
@@ -1973,19 +1876,13 @@ once.
       subject: there is no run report anywhere in the tree, and the
       evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
       plus a first run whose report carries the figure.
-- [ ] AC-9 — At least one promoted artefact has been through post-promotion
+- [-] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
-      **Audited 2026-08-31: not met, and not closeable from this branch.**
-      Every Phase 7 step is `[ ]` and the phase is gated on the OPEN,
-      owner-reserved `blocker: merge-authority`. Nothing in this tree is
-      promoted, so no promoted artefact can reach post-promotion re-evaluation.
-      The RETIRE half was checked separately and does not rescue it: 5.5 carries
-      `RETIRE` in E6's seven-op set and tests its arity
-      (`tests/scripts/curator_ops.test.ts:63-66`), but every screened proposal
-      there carries `lifecycle: 'candidate'` as a literal type, so that RETIRE
-      retires a candidate and never a promoted artefact — which is the direction
-      this criterion is about. What closes it is 7.6, after `merge-authority`.
+      **MERGED (outcome transferred to road-to-harness-promotion-bridge)** —
+      carried there verbatim, with its 2026-08-31 audit note intact. `[-]`
+      means TRANSFERRED, never met and never dropped: the criterion is open in
+      the receiver, where 7.6 is what closes it, after `merge-authority`.
 - [ ] AC-10 — The `no-runtime-daemon` claim in `README.md` and its
       `docs/CLAIMS.md` entry are byte-identical to their pre-roadmap state.
       **Audited 2026-08-31: FALSIFIED as written — and not by this roadmap.**
