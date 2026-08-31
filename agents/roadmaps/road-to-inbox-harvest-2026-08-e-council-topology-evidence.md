@@ -5,7 +5,7 @@ execution:
   mode: phase-checkpoints
 research_pin: "agent-config @ f16c7d9df2e1a4a6f480e734be6ed3a0138fc14d · @event4u/agent-config 14.10.0 · citations re-verified against the landing HEAD 2026-08-24"
 estate_offset_exempt: "The one-in-one-out half of the estate ratchet fires on every added agents/roadmaps/road-to-*.md regardless of status, but the only roadmaps this drain run archived carried status: draft and were therefore never counted by the ratchet in the first place, so none of them can serve as this file's offset."
-estate_growth_exempt: "open_blockers +1: this change adds one ## Blockers entry so steps 3.3 and 3.4 have an owner, a class and a Resolved when that gates --all can read, instead of a condition living only in step prose — the failure the previous drain run recorded three times in one run. It records no new work: 3.3 was already open and 3.4 was already gated behind it. The entry exists because 3.3 does NOT unblock at the quota reset — it also needs a corpus of at least 30 real anonymised response bodies that cannot be committed, and that second half is exactly what a step-prose condition loses. No offsetting disposal is claimed: this roadmap has 59 open steps and is nowhere near archival."
+estate_growth_exempt: "open_blockers +1 net, and the +1 is the Phase-2 entry alone. Two blocker edits land here and only one grows the metric. (a) RECLASSIFICATION, net 0: `leakage-bench-needs-quota-and-an-uncommittable-corpus` is resolved as FALSIFIED and replaced by `leakage-bench-needs-assembler-and-design-forks`, on an AI-council verdict of 2026-08-31 that both stated obstacles had ceased to exist — the UTC quota reset happened (26/50 and 27/50 against a cap of 50) and 716 provider-attributed response bodies exist locally, 23x the >=30 floor. One resolves, one opens. (b) GROWTH, +1: a new `phase-2-benchmark-cost` entry. It records no new work. It carries a condition that already gated 23 of this file own 46 open steps while living only in step prose at 2.1 closing note — more than every recorded blocker in this file combined — which is the exact defect this frontmatter previous claim says the 3.3/3.4 entry was created to avoid. Leaving the largest condition in the file uncarried while citing that principle is the inconsistency being repaired. No offsetting disposal is claimed: this roadmap has 46 open steps and is nowhere near archival."
 ---
 
 # Road to an evidence-routed council rung
@@ -626,8 +626,17 @@ the blocker existed to protect.
 
 - [ ] 1B.1 Require the existing findings schema as a fenced trailing block in
   the initial analysis response, replacing the second extraction call.
-      verify: a real analysis run parses inline with no second call; blocked by
-      `blocker: evidence-integrity-unparsed-dependency`
+      verify: a real analysis run parses inline with no second call.
+      **Stale-citation repaired 2026-08-31.** This line read *"blocked by
+      `blocker: evidence-integrity-unparsed-dependency`"*, and that blocker is
+      `Status: resolved` in § Blockers below — discharged by citation at the
+      execution note further down this step. A resolved blocker cited as a live
+      gate makes `gates --all` disagree with the step text, which is how a step
+      stays open for a reason nobody can look up. The **live** gate is the one
+      the execution note already states: a run in which EVERY answering seat
+      carries the contract block. The 2026-08-31 run failed on the
+      `codex-default` seat substituting prose, which is a model-compliance
+      residual, not a tree defect.
 
       **BUILT AND WIRED 2026-08-30; the step stays OPEN because its verify asks
       for a live run and the day's call quota is spent.** The honest split
@@ -896,6 +905,11 @@ The council should not ship a topology selector before it can define "better".
       descriptive comparison only. That is 2.6 read honestly, not weakened.
       **Steps 2.2-2.5 and 2.7 stay open.** The manifest is a precondition for
       them, never their execution: no arm ran and no quota was spent.
+      **Carried into § Blockers 2026-08-31 as `blocker: phase-2-benchmark-cost`.**
+      This note is no longer the only place the condition lives. It gated 23 of
+      this file's 46 open steps from a step-prose closing note — more than every
+      recorded blocker combined — and appeared in no gate. The entry does not
+      change the condition; it makes `gates --all` able to read it.
 - [ ] 2.2 Mandatory baselines per eligible slice: host solo, strongest
   configured single external model, cheapest configured single external model,
   current default council path, full debate where applicable.
@@ -1210,10 +1224,82 @@ Convergence is either genuine stability or conformity collapse. The ordering is
 the whole point: **the conformity defence gets its chance before the meter is
 allowed to stop.**
 
-- [ ] 6.1 Compute a zero-cost structural disagreement signal from
+- [x] 6.1 Compute a zero-cost structural disagreement signal from
   already-paid outputs: stance divergence, finding overlap, contradiction
   count, confidence spread, rank uncertainty, novelty / self-similarity.
       verify: no extra model call is issued; call count is unchanged
+
+      **CLOSED 2026-08-31.** `src/scripts/ai_council/disagreement_signal.ts` —
+      `computeDisagreementSignal(x: DisagreementInputs): DisagreementSignal`,
+      pure, importing only `_lib/text_similarity.js` and two type-only imports.
+      No client, no `node:fs`, no `fetch`, no subprocess.
+
+      **All six components are carried, and a missing one is a DECLARED GAP, never
+      a zero.** Each is
+      `{available: true, value, basis} | {available: false, reason}`, where
+      `basis` is the observation count — so a `0` over 40 pairs is
+      distinguishable from a `0` over one. stanceDivergence
+      (`1 − topWeight/backedWeight`) · findingOverlap (mean symmetric matched
+      share per source pair) · contradictionCount (Σ `dissent_count` over
+      **scored** findings) · confidenceSpread (normalised range of backer
+      `CONFIDENCE_FACTOR`) · rankUncertainty (share of adjacent tied
+      `consensus_strength` pairs) · selfSimilarity (mean
+      `jaccardSimilarity(prior, current)`).
+
+      **Two gaps exist precisely because the naive version fabricates a
+      confident zero.** `aggregate_scores` writes an entry for EVERY finding
+      including unscored ones with `dissent_count: 0`, so summing the map
+      wholesale reports *"0 contradictions"* for a round where no scoring
+      happened; the same inversion hits rankUncertainty, where unscored findings
+      all sit at strength 0 and read as a near-total tie. Both restrict to
+      scored entries. This is the § Prevented items shape, caught at authoring
+      time.
+
+      **No composite score, deliberately.** findingOverlap and selfSimilarity
+      rise with AGREEMENT; the other four with disagreement. Summing them adds
+      opposing axes, and weighting needs numbers no measurement in this tree
+      supplies. 8.4 wants *"deterministic and inspectable"* and 10.3 wants to
+      know WHICH of finding/stance/confidence moved — both want components, and
+      both consume this module rather than re-deriving it.
+
+      **`FINDING_MATCH_THRESHOLD = MERGE_THRESHOLD`, reused not chosen** — the
+      same pre-registration argument `recouncil_guard.ts:50` makes. It is strict
+      for prose, so overlap UNDER-estimates agreement and therefore
+      OVER-estimates disagreement: the fail-safe direction for a phase whose
+      failure mode is stopping too early. `revisit-if` recorded in the module.
+
+      **Declared limitation, stated rather than implied:** confidenceSpread sees
+      only BACKERS — `tally_stances` counts an abstention and discards its
+      confidence, and recovering it would need a second parse of the stance
+      lines, forking the one verdict this module refuses to duplicate.
+
+      **verify, discharged on two independent observables.**
+      `tests/scripts/ai_council/disagreement_signal.test.ts`, **31 tests**,
+      every expected value DERIVED from the fixture rather than from output. Call
+      count is asserted against a `Booking extends ExternalAIClient` stub AND the
+      real `record_cli_call` counter under a temp path; the baseline is asserted
+      non-vacuous first (`[1,1]` asks, `{a:1,b:1}` counts), the signal is
+      computed five times, and both observables are asserted unchanged. An
+      in-suite **SABOTAGE arm** implements the plausible wrong version — rank
+      uncertainty is high, so ask a member to break the tie — and asserts both
+      observables DO move, which is what makes the invariance assertion mean
+      something. A separate import-surface scanner rejects any
+      `clients`/`orchestrator`/`node:*`/`fetch(`/`spawn|exec` reference, with
+      `recouncil_guard.ts` as a non-vacuity CONTROL that it must flag.
+
+      **Sensitivity: 9 mutations, each seen RED and each restored** — every
+      component forced constant, the fabricated-zero variant, the dropped
+      two-observation floor, the tie test inverted, the empty-text guard removed,
+      a booked call inside compute (caught by the import scanner), and
+      `gap()` carrying `value: 0` (7 failed / 24 passed).
+      **Re-verified independently at review time, not taken on report:** the
+      `gap()`-carries-zero sabotage was re-run on this branch and reproduced
+      **7 failed / 24 passed**, restoring to **31/31**.
+
+      Fresh: `npx vitest run tests/scripts/ai_council/disagreement_signal.test.ts`
+      → 31 passed (31). `npm run typecheck` → exit 0.
+      `npx vitest run tests/scripts/ai_council tests/scripts/argument_exhaustion.test.ts`
+      → 1291 passed (1291) across 56 files.
 - [x] 6.2 Argument-exhaustion stop requires **all** of: ≥ 2 rounds completed;
   dissent repair already attempted; every present member self-near-duplicate
   versus the prior round under the existing novelty logic; no unresolved
@@ -1367,7 +1453,16 @@ is **seating**, and it already has a carrier.
   `agents/roadmaps/stubs/road-to-council-persona-fanout.md`, which carries a
   pre-registered bench gate. Do not duplicate it here.
       verify: this roadmap adds no rival implementation; the stub's own gate is
-      the promotion condition; blocked on `blocker: persona-seating-gap`
+      the promotion condition.
+      **Stale-citation repaired 2026-08-31.** This line read *"blocked on
+      `blocker: persona-seating-gap`"*, and that blocker is `Status: resolved`
+      in § Blockers below. Its resolution was *promote the existing stub, defer
+      Phase 9's persona-diversity claims, do not duplicate the stub's analysis
+      here* — so the seating gap is adjudicated, not open. The **live** gate is
+      the one that blocker's own `Recommendation` names: leave the stub parked
+      until Phase 2 produces evidence that lens diversity moves a measured
+      outcome. Phase 2 is itself gated — see `blocker: phase-2-benchmark-cost`
+      below, added in the same change for exactly this reason.
 - [x] 9.2 Never represent same-provider fan-out as external-model
   independence.
       verify: no rendered surface labels it "external council"
@@ -1478,9 +1573,39 @@ is **seating**, and it already has a carrier.
 
 ## Phase 12 — UX simplification
 
-- [ ] 12.1 Keep `/council` as the main explicit user concept; users need no
+- [ ] <!-- roadmap-status: guarded-baseline --> 12.1 Keep `/council` as the main explicit user concept; users need no
   topology vocabulary.
       verify: the command surface gains no topology argument for normal use
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/council_cli.ts (option tables) + src/scripts/ai_council/cli_help.ts
+        command: npx vitest run tests/scripts/ai_council/council_topology_surface.test.ts
+        red_proof: sabotage run 2026-08-31 — 3 of 11 tests RED, 11/11 GREEN after restore
+        sabotage_model: added `{ flag: '--topology', takesValue: true, choices: ['star', 'mesh', 'round-robin'] }` to the `run` option table in src/scripts/council_cli.ts, after `--depth`
+        recheck_when: src/scripts/ai_council/topology_selector.ts selectTopology
+        discharged_ac: the baseline is pinned and RED-proven — no declared flag, no declared option value and no code line on the council command surface names a topology today
+        pending_ac: "for normal use" once topology selection exists — nothing exercises the constraint under real selection, because there is no selection
+      ```
+
+      **FIRST INSTANCE of the `guarded-baseline` state, applied 2026-08-31 under
+      the 2/2 convergent council verdict recorded above.** The step is NOT
+      closed and does not count as done — that is the whole point of the state.
+      What it now carries is a RED-proven regression tripwire where before it
+      carried nothing, plus a machine-readable record of exactly which half of
+      its `verify:` is discharged and which half cannot be.
+
+      **Why this instance and not a different one.** The mechanism was applied to
+      exactly one real step deliberately: a validator with no instance is a gate
+      over a population of zero, which is the defect this repository names
+      repeatedly and which the council's own atomicity condition exists to
+      prevent. 12.1 was chosen because its baseline is the cheapest genuinely
+      RED-provable one in the file.
+
+      **`recheck_when` carries both a path and a symbol on purpose.** The path is
+      a guess and is machine-checkable; the symbol is not, and the report marks
+      it **not machine-checkable** rather than booking it as *"not stale"* —
+      absence of a check is reported as absence, never as a pass.
 - [ ] 12.2 Add a free explain mode: why task-side orchestration resolved to
   council, which topology would run, estimated spend and calls, evidence
   source — with no paid model call to explain routing.
@@ -1540,10 +1665,57 @@ is **seating**, and it already has a carrier.
 
 ### blocker: leakage-bench-needs-quota-and-an-uncommittable-corpus
 
-- **Status:** open — created 2026-08-30 by the drain run that executed Phase 3.
-  The bench harness for 3.3 is built and its scoring is tested; **no
-  measurement was taken**, and that is recorded as NOT RUN rather than as a
-  null, because a null is what a measurement returns.
+- **Status:** resolved 2026-08-31 — **BOTH stated obstacles were FALSIFIED by
+  measurement, and the real obstacle is a different kind of thing. Replaced by
+  `blocker: leakage-bench-needs-assembler-and-design-forks` below.** AI council
+  2026-08-31, anthropic seat (openai `exit_1`, so **1/2 — DEGRADED, not
+  convergence**; the degradation is recorded here rather than smoothed over,
+  and the verdict was taken because it is the conservative direction: it keeps
+  3.3 and 3.4 open, preserves NOT RUN, and weakens no floor).
+
+  **What the two halves actually read on 2026-08-31.**
+  (a) *Quota* — **expired.** `~/.event4u/agent-config/cli-calls.json` read
+  `{"date":"2026-08-31","counts":{"anthropic":26,"openai":27}}` against a cap of
+  50/provider/day (`src/scripts/ai_council/cli_call_budget.ts:60`). The UTC reset
+  this field predicted has happened.
+  (b) *Corpus* — **true about committing, false about assembling.** Gitignored is
+  confirmed doubly (`.gitignore:196` `/agents/runtime/`, plus `.gitignore:319-320`
+  inside the managed block), so it genuinely cannot be committed. But
+  **716 provider-attributed response bodies exist locally** (anthropic 358 ·
+  openai 356 · gemini 2), across 793 files under `responses/`, 84 session dirs
+  and 353 question files — **23x the >= 30** this field asks for, with a
+  near-even split, which is the balanced-family condition `scoreRecognition`'s
+  dual chance baseline exists to handle
+  (`src/scripts/ai_council/provider_leakage_bench.ts:122-123`).
+
+  **The real obstacle, which this entry never named:** a **corpus assembler**.
+  `collectGuesses` (`provider_leakage_bench.ts:90`) and `scoreRecognition`
+  (`:136`) both take `items: readonly LeakageItem[]` as an **injected
+  parameter**; there is no loader from `agents/runtime/council/responses/`. The
+  only items file in the tree is
+  `internal/bench/council-provider-leakage/smoke-items.json` — 6 items carrying
+  `"synthetic": true` and self-declaring that *"A live runner must refuse this
+  file"*.
+
+  **Resolved, NOT satisfied.** No measurement was taken and none is claimed.
+  716 bodies on one machine is not a measurement, and the distinction between
+  NOT RUN and a null is exactly what this field existed to protect. The
+  successor entry below carries that gate forward unweakened.
+
+  **A retention finding, recorded because it is the input being decided about.**
+  Two 7-day retention carriers name this directory (`session.ts:604`;
+  `janitor.ts:57-61`, `ttlDays: 7`), and files with mtimes **117 days old
+  survive** — declared and demonstrably not effective. The cause was NOT
+  established. A hypothesis was recorded and deliberately **not acted on**:
+  `RESPONSES_DIR` is a module constant bound to the running checkout's root
+  (`session.ts:70-73`) while `council_cli.ts:224` resolves
+  `COUNCIL_CANONICAL_DIRS` against `resolve_project_root(null)`, so runs from
+  different roots may prune a directory other than the one they write to, and
+  `prune_all_council_artifacts` has no automatic caller. The council classified
+  this as **logged maintenance work, not blocker-gated**, and required that the
+  over-retained bodies be **quarantined from benchmark eligibility until
+  retention legitimacy is established** — which the successor's `Resolved when`
+  carries as a named precondition.
 - **Owner:** council — the disposition keeps both criteria alive and unweakened
   and descopes nothing, which the preservation test routes to the council. The
   entry exists so the condition has an owner rather than living in step prose.
@@ -1564,16 +1736,144 @@ is **seating**, and it already has a carrier.
 - **If you do nothing:** Phase 3 stands at 4 of 6, 3.4 stays correctly gated,
   and nothing downstream stalls. No criterion is weakened and no evidence is
   fabricated.
-- **Resolved when:** the bench has been run over a corpus of **≥ 30 real
-  anonymised response bodies** and both the recognition rate and its chance
-  baseline are published — at which point 3.3 closes, and 3.4 becomes decidable
-  in whichever direction the number points.
-  **Two independent halves, and the quota is only the first.** (a) The daily
-  CLI cap was exhausted on this run — anthropic 50/50, openai 51/50 — and
-  resets at UTC midnight; (b) `agents/runtime/council/` is gitignored and
-  auto-pruned, so the corpus cannot be committed and must be assembled locally
-  at measurement time. **(b) survives the reset**, so this does not unblock at
-  midnight.
+- **Resolved when:** *(REWRITTEN 2026-08-31 — the original value is quoted
+  below rather than deleted, because it is the falsified text and a later reader
+  needs to see what was wrong, not just that something changed.)* **This entry
+  is resolved and its closure condition has moved** to
+  `blocker: leakage-bench-needs-assembler-and-design-forks`, which carries the
+  >= 30-body floor and the `smoke-items.json` prohibition forward unweakened.
+  Nothing further closes here.
+
+  The original read: *"the bench has been run over a corpus of >= 30 real
+  anonymised response bodies and both the recognition rate and its chance
+  baseline are published … **Two independent halves, and the quota is only the
+  first.** (a) The daily CLI cap was exhausted on this run — anthropic 50/50,
+  openai 51/50 — and resets at UTC midnight; (b) `agents/runtime/council/` is
+  gitignored and auto-pruned, so the corpus cannot be committed and must be
+  assembled locally at measurement time. **(b) survives the reset**, so this
+  does not unblock at midnight."*
+
+  Both halves are falsified above. Leaving that text standing as a live closure
+  condition is the **stale-twin defect this file has already recorded twice** —
+  a blocker carrying a closure condition nobody can satisfy while
+  `lint_roadmap_blockers` stays green throughout, because the gate matches a
+  literal label and never reads the value.
+
+### blocker: leakage-bench-needs-assembler-and-design-forks
+
+- **Status:** open — **created 2026-08-31 as the successor** to
+  `leakage-bench-needs-quota-and-an-uncommittable-corpus`, whose two stated
+  obstacles were both falsified by measurement (see that entry above). AI
+  council 2026-08-31, anthropic seat, **1/2 — DEGRADED** (openai `exit_1`).
+  The seat's own framing: the predecessor described an **availability**
+  obstacle (quota, storage) and the real one is **unbuilt functionality**, a
+  category change substantive enough that correcting the old entry in place
+  would have left a misleading audit trail — *"a blocker for X/Y when X and Y
+  weren't actually blockers"*.
+
+  **No measurement has been taken and none is claimed.** The NOT RUN state the
+  predecessor protected is preserved here verbatim in force.
+- **Owner:** council — the disposition keeps both criteria alive and unweakened,
+  descopes nothing, and lowers no floor, which the preservation test routes to
+  the council. It does not touch the >= 30 floor or the synthetic-fixture
+  prohibition, both of which the council named as floors it may not move.
+- **Class:** 3
+- **Blocks:** steps 3.3 and 3.4 only. 3.1, 3.2, 3.5 and 3.6 are closed and
+  untouched by it; no later phase depends on it. Unchanged from the predecessor.
+- **What to do:** build the assembler, then settle the three design forks
+  before any rater sees an item — a measurement taken with any of them open is
+  not interpretable.
+  1. **Assembler.** Write a loader from `agents/runtime/council/responses/` to
+     `readonly LeakageItem[]`, which
+     `src/scripts/ai_council/provider_leakage_bench.ts:90,136` currently take as
+     an injected parameter. It MUST refuse
+     `internal/bench/council-provider-leakage/smoke-items.json` explicitly —
+     that file self-declares `"synthetic": true` and that a live runner must
+     refuse it.
+  2. **Eligibility + balanced sampling.** Document which of the 716 bodies are
+     eligible and how >= 30 are drawn without skewing the provider-family mix.
+     The skew failure is already pinned in this file: a constant guesser scores
+     above chance on an unbalanced corpus.
+  3. **Anonymisation protocol.** Define what is stripped before a rater sees a
+     body — provider names, model ids, and self-identifying phrasing at minimum.
+     Step 3.3 says *"anonymized"* and defines nothing.
+  4. **Rater budget.** Each rater x item is a paid call. 30 items x N raters
+     against a 50/provider/day cap. Either it fits one UTC day or the multi-day
+     schedule is stated up front — this is a quota constraint of a **different
+     shape** than the predecessor's and must not be confused with it.
+  5. **Retention quarantine.** The over-retained bodies (117-day mtimes against
+     a declared 7-day TTL) are excluded from eligibility until the retention
+     defect is diagnosed. See the predecessor's retention finding; the council
+     made this a precondition rather than a footnote.
+- **Recommendation:** build the assembler and settle the forks; do NOT run the
+  bench first. The predecessor's own reasoning still holds and is the reason
+  this successor exists rather than a green light: the cost of waiting is two of
+  Phase 3's six steps staying unclosed, and the cost of not waiting is a
+  published recognition rate with no defensible corpus behind it — the shape
+  this roadmap's § Prevented items exists to catch.
+- **If you do nothing:** Phase 3 stands at 4 of 6, 3.4 stays correctly gated
+  behind 3.3, and nothing downstream stalls — `Blocks` above is unchanged. No
+  criterion is weakened and no evidence is fabricated. The only loss is that the
+  716 bodies keep accumulating unmeasured.
+- **Resolved when:** the assembler exists and refuses the synthetic fixture, the
+  three forks above are recorded, the retention quarantine is applied, and the
+  bench has been run over a corpus of **>= 30 real anonymised response bodies**
+  with both the recognition rate and its chance baseline published — at which
+  point 3.3 closes and 3.4 becomes decidable in whichever direction the number
+  points. **The >= 30 floor and the `smoke-items.json` prohibition are carried
+  forward unweakened**; the council named both as floors it could not move.
+
+### blocker: phase-2-benchmark-cost
+
+- **Status:** open — **created 2026-08-31. The condition is not new; carrying it
+  is.** It has gated Phase 2 since the phase was written and lived only in
+  2.1's closing note: *"**Steps 2.2-2.5 and 2.7 stay open.** The manifest is a
+  precondition for them, never their execution: no arm ran and no quota was
+  spent."*
+
+  **Why it is being carried now.** Measured 2026-08-31, this condition gates
+  **23 of this file's 46 open steps** — more than every recorded blocker in the
+  file combined — while appearing in no gate at all. This frontmatter's own
+  earlier growth claim states that the 3.3/3.4 entry was created precisely
+  because *"a condition living only in step prose"* was *"the failure the
+  previous drain run recorded three times in one run"*. The largest such
+  condition in the file was still uncarried. That inconsistency, not a new
+  discovery, is what this entry repairs.
+- **Owner:** council — the disposition preserves every gated criterion
+  unweakened and descopes nothing; it only makes an existing condition
+  machine-readable. Nothing here lowers a floor.
+- **Class:** 3
+- **Blocks:** steps 2.2, 2.3, 2.4, 2.5 and 2.7 directly, and by dependency
+  5.2, 5.5, 7.2, 7.4, 7.5, 7.6, 8.5, 9.1, 9.4, 10.4, 11.2, 11.3, 11.5 and
+  13.1-13.5. Phase 1B, and steps 5.3, 6.1, 8.2, 8.3, 10.5, 10.6 and 12.1 are
+  **not** blocked by it and are executable independently.
+- **What to do:** nothing in Phase 2 until one of these is settled.
+  (a) Build the benchmark runner —
+  `src/scripts/ai_council/topology_bench_manifest.ts` `main()` only `--emit`s
+  the JSON and contains no provider dispatch, so there is no runner to run.
+  (b) Authorise the spend — `internal/bench/council-topology/call-manifest.json`
+  records `minimum_total: 1584`, `worst_case_total: 1804` and `utc_days: 20`
+  against a 50/provider/day cap, i.e. **both providers monopolised for 20
+  consecutive UTC days**, with 384 cells at 352 `pending` / 32 `not_eligible` /
+  **0 complete**.
+  (c) Re-scope Phase 2 to a cheaper design that still licenses its claims —
+  noting that this file already records the honest limit: *"at N=2 this
+  benchmark licenses no promotion claim at all"*, because 2.6's pre-registered
+  floors are n >= 5 and n >= 10 and N=2 clears neither.
+- **Recommendation:** (c), and take it to the owner rather than the council.
+  Both council seats **declined to greenlight the runner** on 2026-08-31, and
+  20 days of monopolised provider quota is a spend commitment above what a
+  council decides. A re-scope that changes what Phase 2's results may claim
+  touches the roadmap's declared purpose, which is owner-reserved.
+- **If you do nothing:** Phase 2 stays at its manifest, the 23 dependent steps
+  stay open, and — the change this entry actually makes — `gates --all` now
+  reports the condition instead of it being discoverable only by reading 2.1's
+  closing prose. Nothing regresses; nothing is silently lost.
+- **Resolved when:** either the runner exists and the spend is authorised with
+  its UTC-day schedule recorded, or Phase 2 is re-scoped by the **owner** with
+  the new claim-licensing limit written down — and in either case 2.1's closing
+  note is updated to point at this entry rather than carrying the condition
+  alone.
 
 ### blocker: unlicensed-source-verbatim-scan
 - **Status:** resolved
@@ -1814,6 +2114,62 @@ is **seating**, and it already has a carrier.
 | 10 | Phase 9 duplicates an existing stub | implementation | The seating analysis already exists in a stub with a pre-registered gate; restating it creates two carriers that can drift | 9.1 points at the stub and forbids a rival implementation; `blocker: persona-seating-gap` makes promotion the stub's own decision | Phase 9 — Advisor composition after seating |
 
 ---
+
+## The vacuous-baseline precedent, settled 2026-08-31
+
+> **AI council 2026-08-31, anthropic/claude-sonnet-4-5 + openai/codex-default,
+> 2/2 CONVERGENT on Option C.** Recorded here rather than linked: council output
+> is gitignored and auto-pruned, so a path would rot.
+
+**The question.** Four open steps in this file (7.3, 12.1, 12.3, 11.1, plus the
+near-twin 6.5) assert properties of mechanisms that **do not exist**, so the
+property is currently unviolatable. May such a step close `[x]`? The file held
+**both precedents and no rule distinguishing them**: 2.1 and 2.6 closed on a
+pre-registration document alone, 11.4 and 12.4 closed on pinned negative
+baselines — while 0.5 explicitly **declined** a structurally identical clause on
+the ground that *"Any check for it today would pass vacuously"*.
+
+**The verdict.** A step whose `verify:` asserts a property of an absent mechanism
+may **not** close `[x]` — that overstates the evidence. It gets a new
+machine-readable state, `guarded-baseline`: the canonical checkbox stays
+`- [ ]`, carries `<!-- roadmap-status: guarded-baseline -->`, and a mandatory
+adjacent evidence block records `scope`, `command`, `red_proof`,
+`sabotage_model`, `recheck_when`, `discharged_ac`, `pending_ac` and `category`.
+
+**Tool semantics both seats specified.** `update_roadmap_progress` reports it
+separately and **excludes it from completed counts**, and rejects the annotation
+with no `red_proof`; `archive_completed_roadmaps` treats it as incomplete and
+**refuses archival**; a `recheck_when` trigger that now exists marks the evidence
+**stale**; only verification against the real mechanism permits `[x]`.
+
+**The RED proof is the discriminator, and it is not optional.** A baseline that
+has never been seen red by neutralising the property it asserts is an ordinary
+open item and is **not** eligible for the annotation. Both seats were explicit:
+sabotage sensitivity is evidence *about the test*, never *about the system*.
+
+**The category split** (anthropic's refinement, uncontested):
+*absence-assertion* — asserts something is absent and absence is observable
+today — MAY close `[x]` when sabotage-verified, because the AC is about current
+state. *future-mechanism* — asserts a property of a mechanism that does not
+exist — gets `guarded-baseline`.
+
+**Atomicity was a condition of the verdict, not a preference.** openai, verbatim:
+*"C is acceptable only if its tooling lands atomically; otherwise use ordinary
+`[ ]` with structured evidence"*, dissenting that *"an enforceable unchecked
+state is more honest than an unread third-state annotation"*. A half-wired third
+state is the outcome both seats rejected.
+
+**12.3 is excepted, by both seats, and stays plain `[ ]`.** Step 4.6 was
+cancelled and its `--confirm`-to-ceiling prohibition deliberately parked onto
+12.3 *"and it stays open"*. Closing it in any form would silently drop a
+prohibition another step was cancelled in favour of. openai added that absence
+guards *"discharge none of the five behavioral prohibitions"*.
+
+**Application, as both seats stated it:** 7.3 and 12.1 → `guarded-baseline` after
+a RED proof · 11.1's schema clause → dischargeable as an absence-assertion after
+a RED field-addition sabotage, collection clause pending, **step stays
+unchecked** · 6.5's pre-registration clause → dischargeable, arms clause pending,
+**step stays unchecked** · 12.3 → open, no annotation.
 
 ## Acceptance Criteria
 
