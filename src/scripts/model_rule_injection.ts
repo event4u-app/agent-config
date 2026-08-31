@@ -52,6 +52,7 @@ import { parse as parseYaml } from 'yaml';
 
 import { LexicalIndex } from './_lib/lexical_index.js';
 import { gpt_tokens } from './_lib/token_count.js';
+import { makePromptShortlist } from './_lib/lexical_shortlist.js';
 import {
     allTierRules,
     kernelIds,
@@ -820,6 +821,7 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
 export function runThreeArm(
     corpusDir: string,
     capBytes: number = CAP_BYTES,
+    useShortlist = false,
 ): { rows: ArmRow[]; lines: string[] } {
     const router = loadRouter(REPO_ROOT);
     const cases = loadCorpus(corpusDir);
@@ -829,6 +831,10 @@ export function runThreeArm(
         thin: sc.thinTokens,
         delivery: sc.thinTokens,
     };
+    // STEP 6.3 — the shortlist is OPT-IN and OFF by default, so the figures 6.1
+    // recorded reproduce byte-for-byte without it. It reaches the delivery arm
+    // as a tie-break under the matcher's score and can move nothing but which
+    // matched bodies survive a binding cap.
     const rows = runArmExperiment({
         repoRoot: REPO_ROOT,
         router,
@@ -836,8 +842,15 @@ export function runThreeArm(
         capBytes,
         standing,
         tokensOf,
+        shortlist: useShortlist ? makePromptShortlist(REPO_ROOT, router) : null,
     });
-    return { rows, lines: renderArmExperiment(rows, capBytes) };
+    const lines = renderArmExperiment(rows, capBytes);
+    lines.push(
+        useShortlist
+            ? 'shortlist: ON — lexical BM25 tie-break under the matcher score (step 6.3)'
+            : 'shortlist: OFF — cap order is score then router order (step 6.1 baseline)',
+    );
+    return { rows, lines };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────
@@ -845,7 +858,7 @@ export function runThreeArm(
 const USAGE = `usage: model_rule_injection [--corpus DIR] [--baseline-comparison]
                             [--honour-open-files]
                             [--selftest] [--endpoints] [--json]
-                            [--three-arm] [--cap-bytes N]
+                            [--three-arm] [--cap-bytes N] [--shortlist]
 
 Offline recall + cost model for trigger-delivered rule bodies. No metered call
 on any path.
@@ -860,6 +873,7 @@ export function main(argv: string[] | null = null): number {
     let endpoints = false;
     let json = false;
     let threeArm = false;
+    let shortlist = false;
     let capBytes = CAP_BYTES;
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i] as string;
@@ -878,6 +892,8 @@ export function main(argv: string[] | null = null): number {
             json = true;
         } else if (a === '--three-arm') {
             threeArm = true;
+        } else if (a === '--shortlist') {
+            shortlist = true;
         } else if (a === '--cap-bytes') {
             i += 1;
             capBytes = Number.parseInt(args[i] as string, 10);
@@ -895,7 +911,7 @@ export function main(argv: string[] | null = null): number {
     }
 
     if (threeArm) {
-        const res = runThreeArm(corpus, capBytes);
+        const res = runThreeArm(corpus, capBytes, shortlist);
         if (json) {
             process.stdout.write(`${JSON.stringify(res.rows, null, 2)}\n`);
         } else {

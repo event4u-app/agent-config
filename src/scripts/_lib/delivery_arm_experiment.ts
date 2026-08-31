@@ -104,6 +104,17 @@ export interface ArmExperimentInput {
     readonly standing: Readonly<Record<ArmName, number>>;
     /** Exact-BPE tokenizer, injected so this module imports none. */
     readonly tokensOf: (text: string) => number;
+    /**
+     * STEP 6.3 — optional per-prompt lexical shortlist, injected so this module
+     * builds no index of its own.
+     *
+     * Absent (the default) the delivery arm is byte-for-byte the arm 6.1
+     * measured, which is why its recorded figures stay reproducible. Present,
+     * it reaches `selectForInjection` as a TIE-BREAK under the matcher's score —
+     * it can change which matched bodies survive a binding cap and can change
+     * nothing else, so `delivered` can only move through `capDropped`.
+     */
+    readonly shortlist?: ((prompt: string) => readonly string[]) | null;
 }
 
 /**
@@ -143,7 +154,7 @@ function hasBody(repoRoot: string, id: string): boolean {
  * a different case set than another.
  */
 export function runArmExperiment(input: ArmExperimentInput): ArmRow[] {
-    const { repoRoot, router, cases, capBytes, standing, tokensOf } = input;
+    const { repoRoot, router, cases, capBytes, standing, tokensOf, shortlist } = input;
     const thinStanding = thinStandingIds(router);
 
     const delivered: Record<ArmName, number> = { 'eager-all': 0, thin: 0, delivery: 0 };
@@ -158,7 +169,12 @@ export function runArmExperiment(input: ArmExperimentInput): ArmRow[] {
         const inThin = thinStanding.has(c.rule) && inEager;
 
         const matches = matchTierRules(router, c.prompt, c.openFiles);
-        const sel = selectForInjection(repoRoot, matches, capBytes);
+        const sel = selectForInjection(
+            repoRoot,
+            matches,
+            capBytes,
+            shortlist ? shortlist(c.prompt) : null,
+        );
         const injectedIds = new Set(sel.selected.map((m) => m.id));
         const inDelivery = inThin || injectedIds.has(c.rule);
 

@@ -1755,7 +1755,7 @@ once.
       detector DOES find all three declarations inside `router_match.ts` itself —
       a scanner tested only on hand-written strings can be silently wrong about
       the syntax it has to read.
-- [ ] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
+- [x] **6.3 Only then consider a lexical shortlist, and only as a shortlist.**
       Over the existing BM25 core. No embeddings —
       `docs/contracts/no-runtime-boundary.md:40` classifies a vector/embedding
       index as a **contract violation**, not a preference: "a vector/embedding
@@ -1763,6 +1763,104 @@ once.
       Class C". The BM25 core passes the same test. The skipped parent proposed
       the shortlist and explicitly refused it as final truth.
       verify: the shortlist feeds a later stage and never decides alone.
+      **DONE 2026-08-31.** `src/scripts/_lib/lexical_shortlist.ts`, over
+      `_lib/lexical_index.ts` — the hand-rolled BM25 core that already ships.
+      **THE CITATION IN THIS STEP HAD MOVED, and the constraint had not.**
+      `docs/contracts/no-runtime-boundary.md` was superseded on 2026-08-27 by
+      ADR-249 and is now a pointer stub whose line 40 reads
+      *"Its literal scope was Mission-Mode"* — not the classification quoted
+      above. The substance survived the move verbatim and is cited from its live
+      home instead: `docs/contracts/resident-process-governance.md:82`,
+      *"A code-graph cache passes; a vector index fails"*, under the P3
+      state-store test, with the P4 row at `:76` separately prohibiting any
+      index build requiring network or model calls. The step's quoted text is
+      left standing above rather than rewritten, because it is what the step
+      was written against; this note is the correction.
+      **The ordering dependency in "only then" is satisfied and was checked
+      rather than assumed.** 6.1 is `[x]` with
+      `agents/evidence/analysis/governed-harness-three-arm-delivery.md` present,
+      and 6.2 is `[x]` with `single_matcher_preserved.test.ts` 8/8 — so the
+      three arms were measured before this retrieval component was written,
+      which is exactly what 6.1's own verify clause reserved.
+      **AC-7's ordering claim SURVIVES this step, and its wording is now
+      historical.** That criterion reads *"measured against one another before
+      any new retrieval component exists"* — a temporal claim, and 6.1's
+      measurement was committed before this component, so it holds. Its audit
+      note's phrase *"6.3 has not started"* described the tree on 2026-08-31
+      before this commit and is left standing as the record of that moment; it
+      is not a live condition and nothing here reopens AC-7.
+      **First conjunct — it feeds a later stage, MEASURED, not asserted.** The
+      later stage is the per-prompt byte cap in `selectForInjection`, which now
+      takes an optional fourth argument
+      (`src/scripts/_lib/rule_injection.ts:224`) used as a TIE-BREAK. Wired
+      through `ArmExperimentInput.shortlist`
+      (`src/scripts/_lib/delivery_arm_experiment.ts:108`) to a real CLI flag,
+      `model_rule_injection --three-arm --shortlist`
+      (`src/scripts/model_rule_injection.ts:834`, flag at `:895`) — this is not
+      an unwired library. Run over `tests/eval/routing-matrix` on this commit:
+      OFF gives `delivery` 0.990 (302/305), 1 cap-drop, mean 2,026 injected
+      tokens; ON gives 0.984 (300/305), 3 cap-drops, mean 2,016. The shortlist
+      demonstrably changes what the cap does, which is the falsifiable form of
+      "feeds a later stage" — a shortlist nothing downstream reacts to would
+      have produced two identical tables.
+      **It currently makes delivery slightly WORSE, and that is reported rather
+      than tuned away.** −2 positives at the same corpus and cap. 6.3's verify
+      clause is about the shortlist's ROLE, not its win, and the pre-registered
+      loss ceiling that would adjudicate the trade-off is step 6.4, which is
+      `[ ]`. So the flag ships default-OFF: the 6.1 baseline reproduces
+      byte-for-byte without it (1.000 / 0.000 / 0.990 at 120,743 / 18,223 /
+      18,223, mean 2,026 p90 4,144), and a test pins that the absent argument is
+      the pre-6.3 behaviour.
+      **Second conjunct — never decides alone, closed in BOTH directions by
+      construction.** A shortlist decides alone by ADDITION (delivering what the
+      matcher never fired on) or by SUBTRACTION (removing a matcher hit, which
+      is a decision dressed as a filter). `orderByShortlist` (`:155`) takes the
+      matcher's output as its input domain and returns a PERMUTATION of it;
+      `assertPermutation` (`:171`) refuses any result whose id multiset differs
+      in either direction, counting multiplicity. At the cap, the same holds
+      independently: a shortlisted id absent from `matches` is never consulted,
+      and an unshortlisted match sorts at `Infinity` — behind the shortlisted
+      ones and still competing for the cap, never removed. The near-miss false
+      context stays 0/194 with the shortlist ON, which is the empirical form of
+      "added nothing".
+      **Subordination is a comparator key ORDER, and both implementations of it
+      are pinned.** `score desc → shortlist rank → router order`. The matcher's
+      verdict is read first and the shortlist only breaks its ties. The order
+      exists twice — in `orderByShortlist` and in the cap walk — so both are
+      tested, because a second implementation of one comparator is a thing that
+      drifts.
+      **Sensitivity proved by two sabotages, and the second one found a real
+      hole in the first test set.** (A) Turning `orderByShortlist` into
+      `filter(shortlisted).sort(rank)` — the shape a shortlist naturally
+      degrades into — turned 5 of 23 cases RED with the message *"the shortlist
+      changed the matcher`s set instead of ordering it — dropped r-b … decides
+      by subtraction"*; restored 23/23.
+      (B) Making the cap walk filter to the shortlist AND rank it above the
+      matcher score passed all 23 — because every case then shortlisted EVERY
+      match, so a membership filter changed nothing. Two cases were added under
+      the still-sabotaged tree and observed RED
+      (`tests/scripts/_lib/lexical_shortlist.test.ts:182` and `:193`,
+      *"expected ['command-suggestion-policy'] to deeply equal ['architecture',
+      …(5)]"*), then the sabotage was restored and the file is 25/25. The gap is
+      recorded rather than quietly patched: a sabotage that passes is the test
+      set's finding about itself.
+      **No embeddings, established by a scan proved to fire first.** Six banned
+      construct classes — embedding call, embedding identifier, vector store,
+      cosine similarity, network, child process — are matched against
+      `lexical_shortlist.ts` AND `lexical_index.ts`, after being shown to FIRE
+      on six synthetic sources and to stay silent on plain BM25 arithmetic. The
+      scanned byte count is asserted, because a scan over nothing exits green.
+      The module's import list is pinned to exactly
+      `['./lexical_index.js', './rule_injection.js']`. The banned literals live
+      in the test rather than in the module for a mechanical reason: a scanner
+      whose banned strings sit in the file it scans matches its own declaration
+      and can never pass.
+      **No second matcher.** This module answers "which text is lexically
+      closest", never "which rules fire on this prompt" — that stays
+      `_lib/router_match.ts`. `router_match_parity` (5/5),
+      `single_matcher_preserved` (8/8), `delivery_arm_experiment` (11/11),
+      `model_rule_injection` (13/13) and `rule_inject_hook` (16/16) are green on
+      this branch.
 - [ ] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
       Recall-loss ceiling and token target fixed first; report precision,
       recall, false activation, context cost, benefit **conditional on**
