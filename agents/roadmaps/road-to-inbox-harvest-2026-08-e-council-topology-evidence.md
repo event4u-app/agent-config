@@ -1524,9 +1524,53 @@ is **seating**, and it already has a carrier.
 - [ ] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
-- [ ] 10.5 Track re-council savings: duplicates prevented, near-duplicate
+- [x] 10.5 Track re-council savings: duplicates prevented, near-duplicate
   warnings, reruns intentionally confirmed, spend saved.
       verify: the figures reconcile against the retained artifacts
+      **DONE 2026-08-31 — the figures reconcile, and three of the four are
+      `null` because nothing in the tree can produce them.** New mechanism:
+      `src/scripts/ai_council/recouncil_savings.ts` (offline, no provider call,
+      no writes), replaying the shipped guard's own detector over the retained
+      corpus. Full write-up with the reproduce command, the corpus caveats and
+      the pair table: `agents/evidence/analysis/recouncil-savings-reconstruction-2026-08-31.md`.
+      **Measured 2026-08-31 on the maintainer checkout** (`agents/runtime/` is
+      gitignored and machine-local, so these are not clone-reproducible; the
+      command regenerates them where the corpus exists): 355 retained `*.md`
+      questions, 355 distinct sha256, **0 exact repeats**; **2 near-duplicate
+      pairs** at the pre-registered 0.80 (`recouncil_guard.ts:50` aliasing
+      `MERGE_THRESHOLD` at `src/scripts/_lib/text_similarity.ts:19`), covering
+      4 questions; 62 response artefacts admitted as prior runs of 85 `.md`
+      candidates, of which only **45 name a question file that still resolves**
+      (43 distinct); and the guard **would have flagged 0**.
+      **The zero reconciles rather than contradicting the two pairs.**
+      `readPriorRuns` (`recouncil_guard.ts:102`) reads the responses directory
+      non-recursively, so its text-comparable reach is 43 of 355 retained
+      questions (12.1 %), and neither member of either pair has a retained
+      response artefact pointing at it. Both pairs are round-1/round-2 of one
+      deliberation sharing a ~34 KB standing-context preamble — true
+      near-duplicates by text, correct re-councils by intent, which is exactly
+      why 1A.2 makes the guard warn and never block.
+      **Three figures are `null`, not `0`, and that is the load-bearing part.**
+      `warnIfRecounciled` (`recouncil_guard.ts:267`) returns `void` and writes
+      only to an injected sink (`:273` declares it, `:289` is the only call), so
+      no warning, abandonment or confirmation is persisted anywhere. *Duplicates
+      prevented*, *reruns intentionally confirmed* and *spend saved* therefore
+      have no data behind them; `0` would assert a measured absence. **No spend
+      figure was estimated** — a dollar amount needs a prevented run, and
+      inventing one from "pairs × average price" is arithmetic worn as evidence.
+      **Second limit, printed with every figure rather than footnoted:** the
+      denominator is accidental. `SAVINGS_LIMITS` in the module carries both,
+      and `renderSavings` prints them under the table.
+      **Sensitivity was proven, not assumed.**
+      `tests/scripts/ai_council/recouncil_savings.test.ts` (15 tests, green).
+      Sabotage A — replacing the three `null` initialisers with `0` in
+      `computeSavings` — turned it RED (2 failed / 13 passed); restore → 15/15.
+      Sabotage B — deleting the `a.sha256 === b.sha256` guard in
+      `nearDuplicatePairs`, so exact repeats double-count as near duplicates —
+      turned it RED (2 failed / 13 passed); restore → 15/15. Neither sabotage
+      file survives the diff. The suite also tests the **denial** (two unrelated
+      texts yield no pair), so a zero pair count means "nothing there" rather
+      than "the detector is broken".
 - [ ] 10.6 Track early-stop savings separately from quality.
       verify: cost and quality are never reported as one number
 
@@ -1716,6 +1760,34 @@ is **seating**, and it already has a carrier.
   over-retained bodies be **quarantined from benchmark eligibility until
   retention legitimacy is established** — which the successor's `Resolved when`
   carries as a named precondition.
+
+  **AMENDED 2026-08-31 — the cause IS now established, and the hypothesis above
+  is moot.** Additive; the original text is left standing because a superseded
+  hypothesis is part of the audit trail. Established in one reference sweep, at
+  the commit that lands step 10.5:
+  (a) `prune_all_council_artifacts` (`src/scripts/ai_council/session.ts:468`)
+  has exactly **one** caller — `src/scripts/council_prune.ts:131`, behind the
+  manual `task council-prune` (`taskfiles/content.yml:384`);
+  (b) the auto-prune inside `save()` (`session.ts:604`, reached from `save()` at
+  `session.ts:506`) has **no production caller at all** — `session.ts` is
+  imported by exactly two files in the repo,
+  `src/scripts/council_prune.ts:36` (which imports `_load_retention_days` and
+  `prune_all_council_artifacts`, **not** `save`) and
+  `tests/scripts/ai_council/session.test.ts:18`, while the live writer
+  `src/scripts/council_cli.ts:224` never imports it. **This supersedes the
+  divergent-root hypothesis**: the pruner is not reached from *any* root, so
+  which root it would have resolved never arises;
+  (c) `janitor.ts:57-59` declares the same directory at `ttlDays: 7` and is
+  bound only to the manual `task janitor` / `task janitor-apply`
+  (`taskfiles/content.yml:388,392`) — no hook, no workflow, no `task ci` path.
+  **No reaper runs**, and the measurement matches: on 2026-08-31, **764 of 798**
+  files under `responses/` and **326 of 357** top-level entries under
+  `questions/` carry mtimes older than the declared 7-day TTL. The retention
+  quarantine the successor entry requires therefore stands on a settled
+  diagnosis rather than an open one; the defect itself is **diagnosed, not
+  repaired** — wiring a reaper touches the council write path and belongs in its
+  own change. Detail:
+  `agents/evidence/analysis/recouncil-savings-reconstruction-2026-08-31.md`.
 - **Owner:** council — the disposition keeps both criteria alive and unweakened
   and descopes nothing, which the preservation test routes to the council. The
   entry exists so the condition has an owner rather than living in step prose.
