@@ -1791,9 +1791,48 @@ once.
       computation. Both are reported at the same value rather than one being
       dropped; the pair that genuinely differs is unconditional 64.60 % against
       conditional 82.51 %, and the 17.9 pp gap IS the delivery failure.
-- [ ] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
+- [x] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
       description-only.
       verify: the indexer's input set derives from the 5.1 verdict file.
+      **DONE 2026-08-31 — description-only, and the mechanism DERIVES it rather
+      than knowing it.** `src/scripts/_lib/routing_index_input.ts`.
+      `resolveIndexInput` opens
+      `agents/evidence/analysis/routing-body-signal-verdict.json`, reads
+      `body_signal.verdict`, and returns `['name','description','body']` on the
+      literal token `signal` (`:87`) and `['name','description']` on anything
+      else. It carries no opinion about the body — the outcome today is
+      description-only because 5.1 measured `harmful`, not because a literal
+      says so.
+      **The consumer is real, not a demo.** `measure_delivery_sets`
+      (`src/scripts/measure_delivery_sets.ts:133`) used to hardcode the
+      `description` arm; it now resolves it, and publishes
+      `index_input.{fields, verdict, reason}` in its record, so the derivation
+      is observable in `agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`
+      rather than merely asserted here.
+      **THE SABOTAGE THE STEP ASKS FOR — the verdict file was flipped and the
+      input set followed, downstream numbers included.** Verdict → `signal`:
+      input `name + description + body`, precision@5 82.51 → 77.05 %, recall@5
+      64.60 → 70.28 %, adjudicated deliveries 303 → 353. Verdict deleted: back to
+      `name + description`, reason *"no readable 5.1 verdict … fail-closed"*.
+      Verdict `signal` with `proxy_to_real_fidelity` stripped: still
+      `name + description`, reason *"carries no proxy_to_real_fidelity bound —
+      refused"*. The tree was restored and re-measured to the committed figures
+      after each.
+      **FAIL-CLOSED ONLY NARROWS.** Missing file, unparseable JSON, unknown
+      token, and a provenance-stripped record all resolve to description-only
+      (`:73`). A stale or edited record can never widen what is indexed, and the
+      measured price of widening on a `harmful` verdict is +7.22 pp of false
+      activation. The bound gate is deliberate: 5.1 ships
+      `proxy_to_real_fidelity` inside the verdict so a consumer cannot take the
+      conclusion without it, and a record that lost it is refused rather than
+      half-trusted.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/routing_index_input.test.ts`, 8 tests): (a) hardcoding the
+      resolver to description-only — which is TODAY`S CORRECT ANSWER and still
+      reds the `signal`-widens case, 1 red, restored 8 green; (b) removing the
+      fidelity-bound gate — 1 red on the stripped-record case, restored 8 green.
+      No test writes the tracked verdict file; every fixture lives in a temp
+      directory.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 

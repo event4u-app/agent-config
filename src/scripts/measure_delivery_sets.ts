@@ -20,10 +20,12 @@
  * an estimate of it: a wrong pair whose members share no prompt cannot be seen
  * from this corpus at all.
  *
- * THE RANKING ARM IS THE SHIPPED ONE. `description` only — this run measures
- * what delivery costs over the substrate that exists, not over a candidate
- * index. Which fields a future index carries is step 6.5`s question and is
- * answered from the 5.1 verdict file, not here.
+ * THE RANKING ARM IS NOT CHOSEN HERE. It is resolved from the 5.1 verdict file
+ * by `_lib/routing_index_input.ts` (step 6.5): `signal` widens the index to the
+ * body, anything else — including a missing or provenance-stripped record —
+ * resolves to description-only. Today`s verdict is `harmful`, so this run
+ * measures the description index; flipping the verdict file flips what this run
+ * indexes, which is the property step 6.5`s verify asks for.
  *
  * ZERO MODEL CALLS AND ZERO SPEND: the imports are a file reader and a pure
  * scorer.
@@ -46,6 +48,7 @@ import {
     termIndex,
     topK,
 } from './_lib/routing_corpus.js';
+import { resolveIndexInput } from './_lib/routing_index_input.js';
 
 export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const PREREG_REL = 'agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md';
@@ -106,6 +109,7 @@ export interface DeliveryMeasurement {
      * any of the figures above are about discrimination at all.
      */
     readonly tieDecidedCutPp: number;
+    readonly indexInput: ReturnType<typeof resolveIndexInput>;
     readonly sharedPrompts: number;
     readonly jointlyWrongPairs: readonly JointlyWrongPair[];
     readonly jointlyWrongCandidates: readonly JointlyWrongCandidate[];
@@ -126,7 +130,8 @@ export function measureDelivery(repo = REPO, k = K): DeliveryMeasurement {
     if (catalogue.length === 0 || cases.length === 0) {
         throw new Error('measure_delivery_sets: empty catalogue or corpus — a run over nothing');
     }
-    const index = termIndex(catalogue, 'description');
+    const indexInput = resolveIndexInput(repo);
+    const index = termIndex(catalogue, indexInput.indexesBody ? 'description+body' : 'description');
     const adjudicated = adjudicationIndex(cases);
     const cost = new Map<string, number>();
     for (const e of catalogue) cost.set(e.name, `${e.name} ${e.description}`.length);
@@ -259,6 +264,7 @@ export function measureDelivery(repo = REPO, k = K): DeliveryMeasurement {
         tokenTargetMet: tokens <= TOKEN_TARGET,
         benefitUnconditionalPp: recall,
         benefitConditionalPp: precision,
+        indexInput,
         tieDecidedCutPp: pp(tieDecidedCuts, byPrompt.size),
         sharedPrompts,
         jointlyWrongPairs: jointly,
@@ -273,6 +279,12 @@ export function record(m: DeliveryMeasurement): Record<string, unknown> {
         roadmap: 'road-to-governed-harness-evolution',
         preregistration: PREREG_REL,
         k: m.k,
+        index_input: {
+            fields: m.indexInput.fields,
+            derived_from: '5.1 verdict file, via _lib/routing_index_input.ts',
+            verdict: m.indexInput.verdict,
+            reason: m.indexInput.reason,
+        },
         bars: { recall_loss_ceiling_pp: RECALL_LOSS_CEILING_PP, token_target: TOKEN_TARGET },
         metrics: {
             precision_at_k: Number(m.precisionPp.toFixed(3)),
@@ -306,6 +318,7 @@ export function render(m: DeliveryMeasurement): string {
     const curve = CURVE_KS.map((ck) => `@${ck} ${(m.recallCurvePp[ck] ?? 0).toFixed(1)}%`).join('  ');
     return [
         `measure_delivery_sets — step 6.4, k=${m.k}`,
+        `  index input ${m.indexInput.fields.join(' + ')} (${m.indexInput.reason})`,
         `  catalogue ${m.catalogueSize} · prompts ${m.prompts} · positives ${m.positives} · negatives ${m.negatives}`,
         `  precision@${m.k}             ${m.precisionPp.toFixed(2)} % over ${m.adjudicatedDeliveries} adjudicated deliveries`,
         `  recall@${m.k}                ${m.recallPp.toFixed(2)} %`,

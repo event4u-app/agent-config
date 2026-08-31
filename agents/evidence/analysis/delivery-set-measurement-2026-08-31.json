@@ -4,6 +4,15 @@
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md",
   "k": 5,
+  "index_input": {
+    "fields": [
+      "name",
+      "description"
+    ],
+    "derived_from": "5.1 verdict file, via _lib/routing_index_input.ts",
+    "verdict": "harmful",
+    "reason": "the 5.1 verdict is `harmful`, not `signal` — description-only"
+  },
   "bars": {
     "recall_loss_ceiling_pp": 20,
     "token_target": 500
