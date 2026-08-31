@@ -228,6 +228,7 @@ tasks:
       - task: lint-legal-pack
       - task: lint-provenance
       - task: lint-metric-consumers
+      - task: lint-promotion-paths
       - task: lint-harvest-provenance
       - task: check-score-contract
       - task: check-supervision-claim-atomicity

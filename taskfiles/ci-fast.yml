@@ -1506,6 +1506,18 @@ tasks:
       omission impossible, not the answer correct.
     cmd: ./scripts-run src/scripts/lint_metric_consumers {{.QUIET_FLAG}}
 
+  lint-promotion-paths:
+    silent: true
+    desc: >-
+      Promotion-path structural invariant (road-to-harness-promotion-bridge,
+      discharge route 1). Inventories every approval-synthesis site, every
+      promoted-state record write and every candidate-derived filesystem write
+      in the source and test trees, and fails when one bypasses the single
+      guarded capability in src/scripts/_lib/promotion_capability.ts — which is
+      unobtainable while blocker merge-authority is open. Fails on a collapsed
+      population rather than exiting green over nothing.
+    cmd: ./scripts-run src/scripts/lint_promotion_paths {{.QUIET_FLAG}}
+
   lint-harvest-provenance:
     silent: true
     desc: >-

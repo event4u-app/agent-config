@@ -366,6 +366,16 @@ jobs:
       - name: ADR frontmatter + review_trigger
         run: ./scripts-run src/scripts/check_adr_frontmatter
 
+      # The promotion-path structural invariant (road-to-harness-promotion-bridge,
+      # discharge route 1). Wired REMOTELY rather than declared local-only: it is
+      # the mechanism that discharges a blocking condition on an owner-reserved
+      # blocker, and a governance invariant enforced only on a developer machine
+      # is the direction gate-authoring.md names as the one that let real defects
+      # merge.
+      - name: Promotion paths pass the guarded capability
+        run: ./scripts-run src/scripts/lint_promotion_paths --quiet
+
+
       # Both of these were reachable only from `task ci`, which no workflow
       # invokes — so `adr-layout.md` claimed the coverage gate "fails under
       # task ci" while nothing ran it, and the index could go stale with no
