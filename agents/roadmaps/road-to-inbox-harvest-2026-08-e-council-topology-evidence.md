@@ -677,12 +677,64 @@ the blocker existed to protect.
 
       **What closes this step:** one analysis-lens run, post-fix, whose member
       reply carries the block and whose consensus round issues zero extraction
-      calls. It could not be made today — `~/.event4u/agent-config/cli-calls.json`
-      reads `anthropic 50 / openai 50` against the shipped
-      `DEFAULT_CLI_CALLS_PER_DAY = 50` (`ai_council/cli_call_budget.ts:60`), so
-      both seats are at the daily cap. Raising that cap to fit a measurement is
-      the one thing a guard exists to prevent, so the step waits for the counter
-      to roll rather than for the guard to move.
+      calls. On 2026-08-30 it could not be made — both seats stood at the
+      shipped `DEFAULT_CLI_CALLS_PER_DAY = 50`
+      (`ai_council/cli_call_budget.ts:60`), and raising a cap to fit a
+      measurement is the one thing a guard exists to prevent, so the step waited
+      for the counter to roll rather than for the guard to move.
+
+      **THE RUN WAS MADE ON 2026-08-31 AND IT DID NOT CLOSE THIS STEP.** Half
+      the verify held and half did not, and the split is per seat rather than
+      per mechanism. Two seats, analysis lens, `--rounds 1`, consensus and
+      inline both on via a temporary `AI_COUNCIL_CONFIG`; peer review off,
+      chairman `host`, advisors off, no stances. Four calls were predicted
+      before spending — two per seat, one deliberation and one consensus
+      scoring, zero extraction — and the per-provider counter moved
+      **anthropic 24 → 26, openai 24 → 27**. The openai seat is the
+      extra call, and it is the whole finding.
+
+      **The anthropic seat is the mechanism working end to end, cited rather
+      than asserted.** Its persisted `raw_text` — the field that exists for
+      exactly this retention — ends in a fenced JSON array of five
+      `{"id", "text"}` objects. Its `text` ends in
+      `_[inline findings block extracted: 5 item(s); the raw reply is retained
+      in the session record.]_`, which `harvest_inline_findings` writes only
+      after `parse_findings_outcome` AND `_isOwnFindingsBlock` both pass, so the
+      marker is a parse receipt and not a fence sighting. The five findings
+      recorded under `anthropic:claude-sonnet-4-5` carry the same five ids in
+      the same order — `semantic-drift-invisible`, `premature-convergence`,
+      `strip-loses-emphasis`, `quality-compliance-tradeoff`,
+      `tail-consistency-check-missing`. No extraction response exists for that
+      seat and its counter delta is 2, so there is no third call anywhere that
+      could have held one.
+
+      **The openai seat emitted no block at all, so the repair path fired and
+      the run's consensus round issued ONE extraction call.** Its reply closes
+      with a prose `Top-5 consensus` section — the same five findings, as
+      bullets — and carries no fenced block and no bracket array anywhere;
+      `raw_text` is absent, which is the honest encoding of "nothing rewrote
+      this reply". `consensus.extraction_responses` therefore holds exactly one
+      entry, `provider=openai`, and that seat's counter delta is 3. This is
+      1B.2's fallback behaving as specified — one call, no re-ask, over
+      text nothing touched — but the closure condition above says ZERO
+      extraction calls, and one is not zero.
+
+      **So the step stays open on evidence rather than on quota, and the
+      remaining unknown is now narrow.** Settled live, and not to be
+      re-established: the config chain the 2026-08-30 defect broke resolves end
+      to end (`inline_findings: true` survives file → synthesised block
+      → predicate, and reads `false` for every non-analysis lens); the
+      contract reaches the final round; the locator finds a real model's block;
+      the strip and the marker fire; and the harvested findings reach the
+      consensus round with no second call for that member. What is still
+      missing is a run in which EVERY answering seat carries the block.
+
+      **One observation is recorded for whoever runs 1B.4, AS AN OBSERVATION
+      AND NOT AS A DATUM:** the miss was a contract-compliance miss by the
+      `codex-default` seat, which substituted its own prose summary for the
+      requested array — not a locator failure and not a parser failure. One
+      run is not a rate, there is no matched comparator, and 1B.4's arms have
+      not started, so this is a shape to expect and never a numerator.
 - [x] 1B.2 Keep the repair path: absent or invalid inline block falls back to
   the existing extraction call at `prompts.ts:206`.
       verify: a corrupted inline block still yields findings, and the
