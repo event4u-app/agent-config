@@ -220,6 +220,10 @@ Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.ts` 
 
 `[~]` is **not** an "in-progress" indicator. Mid-reply work-in-flight has no checkbox change until the step lands; that's a normal `[ ] → [x]` transition.
 
+#### `guarded-baseline` — a sub-state of `[ ]`, never a fifth glyph
+
+See [`guarded-baseline`](guarded-baseline.md).
+
 **Dashboard regen cadence — opt-in batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` in `.agent-settings.yml` (`every_5_steps` default · `per_step` · `phase_boundary`). Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen regardless of cadence.
 
 **Blockers follow the same cadence as checkboxes.** Clearing a `## Blockers` entry (per `templates/roadmaps.md` rule 20) flips its `Status: resolved` and regenerates the dashboard in the same reply — Iron Law 1's "same response" obligation applies to blocker resolution exactly as it applies to a checkbox flip.

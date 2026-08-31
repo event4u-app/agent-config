@@ -1,5 +1,128 @@
 <!-- evidence-type: analysis -->
 
+# Autonomous drain run — 2026-08-31 (run 9)
+
+> **The directory is NOT empty, and emptying it was not reachable.** The run was
+> asked to drive every active roadmap to completion. It found **four**, advanced
+> **all four**, closed **one step** and archived **none** — because on a live
+> audit of all 76 open items, **exactly one** was executable in this tree. The
+> rest split into 20 needing a decision and 55 blocked on artifacts that do not
+> exist, on 20 UTC days of monopolised provider quota, or on an owner-reserved
+> ADR. Forcing any of them green would have been the silent-green defect the
+> mandate names as forbidden.
+>
+> **What the run produced instead is the honest deliverable:** one step closed
+> with independently re-verified sensitivity, one new machine-enforced roadmap
+> state settling a precedent that had been decided inconsistently four times,
+> one Class-3 blocker resolved as **falsified by measurement**, one blocker
+> carried out of step prose that was silently gating 23 steps, four false or
+> stale claims corrected, and one condition adjudicated that the tree itself
+> flagged as *"reads as satisfied to the next reader"*.
+
+## PRs — 4 opened; 3 MERGED by the maintainer, 1 open and CI-green
+
+> The run did not merge anything: the mandate asked for one PR per roadmap and
+> said nothing about merging, and a merge to a production trunk is a Hard-Floor
+> action no autonomous mandate lifts. #1769, #1770 and #1771 were merged by the
+> maintainer at 2026-08-31T08:16Z, mid-run. #1772 is open and settled **GREEN on
+> all 39 checks**.
+
+| PR | Roadmap | Progress | What it lands |
+|---|---|---|---|
+| [#1769](https://github.com/event4u-app/agent-config/pull/1769) | `road-to-obligation-delivery-verification` | 0/3 → 0/3 | Step 1.1 **answered**: (E) BLOCKED-BY-ARCHITECTURE, on a reproducible five-read probe. Cohort boundary struck |
+| [#1770](https://github.com/event4u-app/agent-config/pull/1770) | `road-to-harness-promotion-bridge` | 0/9 → 0/9 | The carried non-promotion condition **adjudicated**: NOT DISCHARGED, gap named. Risk 3 retired |
+| [#1771](https://github.com/event4u-app/agent-config/pull/1771) | `road-to-governed-harness-evolution` | 37/59 → 37/59 | Two **false** claims corrected, 4.4 Objection 1 discharged, one AC-2 candidate checked and rejected |
+| [#1772](https://github.com/event4u-app/agent-config/pull/1772) | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | 27/77 → **28/77** | Step 6.1 closed · the `guarded-baseline` state built and wired · leakage blocker falsified + successor · Phase-2 condition carried · two stale citations repaired |
+
+**CI, and the two ratchets it caught.** The first run of #1772 settled RED on 4 of 39: `check_depth_budget` (5 against a baseline of 4) and `lint_canonical_terms` (1008 against 1007), plus the Node shard asserting the same depth baseline. Both were this branch's own and both were fixed at the cause, not by moving a baseline — the guarded-baseline doc section moved to its own guideline because its host file measured **15,873 of a 16,000-char ceiling** (127 characters of headroom against a 2,762-char section), and one `artefacts` was corrected on the single line that introduced it. Four count surfaces regenerated in the same commit. Second run: **39/39 GREEN**.
+
+The push then took three rounds against a moving base — `origin/main` advanced twice mid-push and a *Update branch* press put a commit on the PR head that the checkout did not have. Each was resolved by merging in, never by forcing over.
+
+## Council decisions — 5 rounds, 8 seat-answers
+
+| # | Question | Seats | Verdict |
+|---|---|---|---|
+| 1 | Does a tested unconditional-refusal `promote` verb discharge the carried non-promotion condition? | r1 **1/2 DEGRADED** (anthropic `exit_1`) · r2 **2/2** | **(B) NOT DISCHARGED**, tally 2×B / 1×A. The condition covers *any write into `src/` derived from a candidate*; only the verb and the `-> promoted` transition are gated |
+| 2 | May a step close on a pre-registration document or a vacuous-baseline guard? | **2/2 CONVERGENT** | **(C)** — a new `guarded-baseline` state, RED proof mandatory, tooling must land atomically, 12.3 excepted, plus a category split (absence-assertion vs future-mechanism) |
+| 3 | Both halves of the leakage blocker's `Resolved when` are falsified — reclassify | **1/2 DEGRADED** (openai `exit_1`) | **Resolve as falsified + open a successor** carrying five bound preconditions. Retention defect logged as maintenance, corpus quarantined |
+| 4 | Which of three closures answers *"was this obligation in context for this session?"* | **2/2 present** | Different letters (E and B), **same next action**: run the probe. The probe fired openai's own escape condition → **(E)** |
+
+**Round 1's retry is recorded as a retry, not as shopping.** It existed to reach
+an absent seat; both rounds are published, and the A/B divergence is stated
+rather than smoothed. The verdict taken is the majority AND the conservative
+direction, which the question itself instructed to prefer.
+
+**Two rounds were DEGRADED at 1/2** (`exit_1` on a subscription CLI seat). Both
+were taken because both pointed conservatively — keeping work open, weakening no
+floor. Neither was used to close anything.
+
+## What was built
+
+**`guarded-baseline` — a third machine-readable step state** (PR #1772). The
+tree had closed four steps on vacuous baselines and refused a fifth on the same
+grounds, with no rule distinguishing them. Now: the canonical box stays `[ ]`,
+carries `<!-- roadmap-status: guarded-baseline -->` and a mandatory evidence
+block; `update_roadmap_progress` reports it separately and **excludes it from
+completed counts**; `archive_completed_roadmaps` **refuses archival**; a missing
+`red_proof`, an illegal `category`, an `[x]` glyph or a missing block are all
+**rejected with exit 1**. 9 guards, each seen RED and restored. Applied to
+**exactly one** real step (12.1) so it is not a gate over a population of zero.
+
+**Step 6.1 — zero-cost disagreement signal** (PR #1772). All six components,
+each `{available, value, basis}` or a **declared gap** — because the naive
+version reports a confident `0` contradictions for a round where no scoring
+happened. Call-count invariance asserted on two independent observables with a
+non-vacuous baseline and a live sabotage arm.
+
+## Independent verification performed at review time, not taken on report
+
+| Claim | How it was re-checked | Result |
+|---|---|---|
+| 6.1's test suite is sensitive | re-ran the `gap()`-carries-zero sabotage on the branch | **7 failed / 24 passed**, restored **31/31** |
+| The `guarded-baseline` validator rejects a missing `red_proof` | removed the field from the real 12.1 block | rejected with the exact message |
+| … an illegal `category` | set `category: wishful-thinking` | rejected, both legal values named |
+| … the annotation on `[x]` | flipped the glyph | rejected |
+| `lexical_index` has "no consumer at all" (AC-1) | grep over `src/` | **FALSE** — 8 code consumers |
+| `LADDER_RUNGS` at `activation_ladder.ts:35-42` | read the file | off by one; block spans **:36-43** |
+| The leakage corpus "cannot be assembled" | counted local response bodies | **FALSE** — 716 attributed bodies, 23× the floor |
+| The batching obligation is delivered | 5 reads across projection, install, triggers | **NOT delivered**; install predates it by 5 days |
+| A per-edit obligation could become `always` | `check_always_budget` | **60,252 / 60,254 chars — 2 chars headroom**, down-only ratchet |
+| `dist/` was hand-edited | `check_condensation` | clean — `task sync` was run properly |
+
+## Descopes — none
+
+No criterion was descoped, weakened, reformulated, or moved to a stub. Two
+blockers changed shape and both carried their floors forward unweakened; one was
+resolved as falsified and immediately replaced by a successor holding the same
+`>= 30` floor and the same synthetic-fixture prohibition.
+
+## Owner-reserved and NOT taken — the honest boundary of this run
+
+| Item | Why the council could not settle it |
+|---|---|
+| **ADR-239 § Decision 3** — preauthorized merge authority | Granting weakens a human-in-the-loop guarantee; refusing settles a recorded-open ADR Decision. Owner-reserved in both directions, and `road-to-harness-promotion-bridge` cannot progress past it |
+| **Phase 2's 1,584 calls / 20 monopolised UTC days** | Both seats declined to greenlight the runner. A spend commitment of that size, and a re-scope changing what results may claim, is above a council |
+| Narrowing the carried non-promotion condition | Deleting its *"any write"* clause would weaken it |
+| Re-keying AC-6's stale holdout hash, AC-10's withdrawn claim | Attributed to other roadmaps; re-keying is an owner decision |
+| Opening the always-budget ext-cap ratchet | A recorded maintainer decision; the nine always-rules are kernel and not agent-writable |
+
+## Why the queue could not be drained — measured, not asserted
+
+Of **76** open items across four roadmaps:
+
+- **1** executable and executed (6.1).
+- **~7** further executable at zero paid cost in council-topology (5.3, 8.2, 8.3, 10.5, 10.6, 12.1's guard) — 12.1's guard landed; the rest are real work this run did not reach.
+- **20** need a decision, four of which were settled here.
+- **55** blocked: no receipt producer, no LLM proposer, no run report, no topology selector, no benchmark runner, an uncommittable-but-assemblable corpus with no assembler, an owner-reserved ADR, and a ten-session wall clock standing at 3-4.
+
+The single highest-leverage remaining decision is recorded in PR #1772:
+**Phase 2's cost**, which gates 23 of council-topology's 46 open steps and is
+routed to the **owner**, not the council.
+
+---
+
+# Retained: run 8 and earlier
+
 # Autonomous drain run — 2026-08-31 (run 8)
 
 > **INTERIM, and the directory is not empty.** The run was asked to empty

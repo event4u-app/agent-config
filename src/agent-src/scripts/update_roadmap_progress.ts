@@ -72,6 +72,7 @@ import {
 } from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
 import { headerFragment as stubHeaderFragment } from './stubs_due.js';
+import { reportGuardedBaselines } from './guarded_baseline.js'; // third step state; contract lives there
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -1365,8 +1366,8 @@ function main(argv?: readonly string[]): number {
             return 1;
         }
     }
-    const roadmaps = collect(roadmap_root);
-    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root);
+    const roadmaps = collect(roadmap_root), guarded = reportGuardedBaselines(roadmaps, repo_root);
+    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root) + guarded.section;
     const complete = unarchived_complete(roadmaps);
     const pending = pending_iron_law_3(roadmaps);
     const gated = merge_gated_pending(roadmaps);
@@ -1398,7 +1399,7 @@ function main(argv?: readonly string[]): number {
         });
         if (r.stderr) process.stderr.write(r.stderr);
         if (r.stdout) process.stdout.write(r.stdout);
-        return r.rc;
+        return guarded.problems > 0 ? 1 : r.rc;
     }
     fs.writeFileSync(target, new_text, { encoding: 'utf-8' });
     process.stdout.write(
@@ -1434,7 +1435,7 @@ function main(argv?: readonly string[]): number {
     if (gated.length) {
         _warn_merge_gated();
     }
-    return 0;
+    return guarded.problems > 0 ? 1 : 0;
 }
 
 function _isCliEntry(): boolean {
