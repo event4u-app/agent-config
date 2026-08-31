@@ -1897,9 +1897,65 @@ is **seating**, and it already has a carrier.
 
 ## Phase 11 — Learned routing as a challenger only
 
-- [ ] 11.1 Collect offline training rows from benchmark and dogfood evidence
+- [ ] <!-- roadmap-status: guarded-baseline --> 11.1 Collect offline training rows from benchmark and dogfood evidence
   only, without requiring raw private prompt content.
       verify: the row schema has no field capable of holding prompt text
+      ```yaml
+      guarded_baseline:
+        category: absence-assertion
+        scope: src/scripts/ai_council/routing_training_row.ts RoutingTrainingRow + ROW_FIELDS
+        command: npx vitest run tests/scripts/ai_council/routing_training_row.test.ts
+        red_proof: sabotage run 2026-08-31 — 3 of 13 tests RED, 13/13 GREEN after restore
+        sabotage_model: added `readonly promptText: string;` to the RoutingTrainingRow interface
+        recheck_when: internal/bench/council-routing/training-rows.jsonl
+        discharged_ac: the verify clause — no field of the schema can hold prompt text, proven in two layers and RED-proven
+        pending_ac: "collect" — no row has been collected, and the benchmark half of the evidence does not exist (blocker phase-2-benchmark-cost)
+      ```
+
+      **The verify clause is DISCHARGED; the step is NOT.** 11.1 has two halves
+      and only one is buildable today. *"Collect offline training rows from
+      benchmark and dogfood evidence"* cannot start: `blocker:
+      phase-2-benchmark-cost` records that
+      `src/scripts/ai_council/topology_bench_manifest.ts` `main()` only
+      `--emit`s JSON and contains no provider dispatch, so there is no benchmark
+      evidence to collect from. **No row exists and none is claimed.**
+      **What shipped is the schema, and its privacy property is structural.**
+      `src/scripts/ai_council/routing_training_row.ts` — every field is an
+      integer, a boolean, or an enum over a declared closed set. There is no
+      `payload`, `notes`, `extra`, `context`, `promptText`,
+      `Record<string, unknown>` or `unknown`-typed field. A row that **cannot**
+      hold a sentence has no scrubber to forget to run, which is the same
+      PII-exclusion-by-construction principle `domain-safety-pii` § Surface 2
+      applies to logs and `artifact-engagement-recording` applies to telemetry.
+      **Two layers, because one is not enough.** (1) `auditRowSchema` walks a
+      row against the `ROW_FIELDS` manifest and rejects any undeclared field,
+      any value outside a declared enum, and any non-integer in a numeric field;
+      `serialiseRow` **throws** rather than emitting a row that failed it.
+      (2) A source-level gate in the test greps the interface body for
+      `: string;`, `: any;`, `: unknown;`, `Record<string, …>` and an index
+      signature, plus nine free-text field names — because the manifest cannot
+      see a field somebody adds to the interface and forgets to declare.
+      A third guard closes the disguise: an enum value longer than
+      `MAX_ENUM_VALUE_LENGTH = 40` is rejected, so a "closed set" containing a
+      paragraph is caught.
+      **The enums are the tree's own, not forked copies** — `topology` is
+      identically `COUNCIL_TOPOLOGIES` (asserted by reference, not by value, so
+      a fork reds), and `IMPACT_CLASSES` mirrors `necessity.ts:545-550`.
+      `evidenceSource` admits exactly `benchmark | dogfood`, so a
+      production-transcript row is rejected by the validator rather than by
+      convention.
+      **Sensitivity was proven, not assumed.**
+      `tests/scripts/ai_council/routing_training_row.test.ts` (13 tests, green).
+      Sabotage — adding `readonly promptText: string;` to the interface —
+      turned it RED (**3 failed / 10 passed**); restore → 13/13. The suite also
+      tests the **denial** five ways (an undeclared field, an arbitrary string
+      in an enum slot, a non-integer, a missing field, and a constructed
+      interface violation the source gate must catch), so a clean pass means
+      "no free-text field" rather than "the gates are broken".
+      **`recheck_when` is a real path**
+      (`internal/bench/council-routing/training-rows.jsonl`): the day rows
+      start being written, the dashboard marks this evidence STALE and the
+      schema must be re-verified against what was actually collected.
 - [ ] 11.2 Train an offline challenger classifier; it stays shadow-only.
       verify: no runtime path can reach the model
 - [ ] 11.3 Promotion requires a material Pareto improvement in
