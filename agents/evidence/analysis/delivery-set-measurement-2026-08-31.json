@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "step": "6.4",
+  "roadmap": "road-to-governed-harness-evolution",
+  "preregistration": "agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md",
+  "k": 5,
+  "bars": {
+    "recall_loss_ceiling_pp": 20,
+    "token_target": 500
+  },
+  "metrics": {
+    "precision_at_k": 82.508,
+    "recall_at_k": 64.599,
+    "recall_loss_pp": 35.401,
+    "ceiling_met": false,
+    "recall_curve_pp": {
+      "1": 44.703,
+      "3": 57.106,
+      "5": 64.599,
+      "10": 73.643,
+      "20": 80.62
+    },
+    "false_activation_at_k": 13.66,
+    "context_cost_tokens": 235.6,
+    "token_target_met": true,
+    "benefit_unconditional": 64.599,
+    "benefit_conditional_on_activation": 82.508,
+    "adjudicated_deliveries": 303,
+    "unadjudicated_deliveries": 3326,
+    "tie_decided_cut_pp": 78.796
+  },
+  "set_compatibility": {
+    "shared_prompts": 10,
+    "jointly_wrong_pairs_delivered_at_k": 0,
+    "pairs_delivered_at_k": [],
+    "jointly_wrong_pairs_in_corpus": 7,
+    "candidates": [
+      {
+        "prompt": "is this diff clean — naming, structure, conventions?",
+        "pair": [
+          "experiment-loop",
+          "verify-repair-loop"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "review my changes before I open the PR",
+        "pair": [
+          "experiment-loop",
+          "verify-repair-loop"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "run a security audit on the auth module",
+        "pair": [
+          "analysis-skill-router",
+          "forensics-report"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "threat-model this new payments endpoint before I build it",
+        "pair": [
+          "agent-security-review",
+          "ai-code-blindspots"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "threat-model this new payments endpoint before I build it",
+        "pair": [
+          "agent-security-review",
+          "security-audit"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "threat-model this new payments endpoint before I build it",
+        "pair": [
+          "ai-code-blindspots",
+          "security-audit"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "what chunk size and embedding model should I use for my RAG pipeline?",
+        "pair": [
+          "evaluate-llm-feature",
+          "prompt-engineering-patterns"
+        ],
+        "jointlyDeliveredAtK": null
+      }
+    ]
+  },
+  "corpus": {
+    "partition": "train",
+    "holdout_sealed": true,
+    "cases": 775,
+    "prompts": 764
+  }
+}

@@ -1732,7 +1732,7 @@ once.
       Class C". The BM25 core passes the same test. The skipped parent proposed
       the shortlist and explicitly refused it as final truth.
       verify: the shortlist feeds a later stage and never decides alone.
-- [ ] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
+- [x] **6.4 Pre-register the loss ceiling, and measure set compatibility.**
       Recall-loss ceiling and token target fixed first; report precision,
       recall, false activation, context cost, benefit **conditional on**
       activation — and, `from-skipped-parent`, **set compatibility**: cases
@@ -1741,6 +1741,56 @@ once.
       artefact is closest. The corpus fixtures for it are authored in 2.3.
       verify: the ceiling is committed before the run, and the corpus contains
       at least one jointly-wrong pair.
+      **DONE 2026-08-31. Ceiling BREACHED and reported as breached; 7 jointly-wrong
+      pairs found in the corpus and 0 of them delivered together.**
+      Pre-registration `agents/evidence/analysis/delivery-set-preregistration-2026-08-31.md`,
+      commit **`fe8749458`** — recall-loss ceiling 20.0 pp, token target 500,
+      k = 5, and the jointly-wrong definition, all fixed in a commit that adds no
+      measurement module. Measurement `src/scripts/measure_delivery_sets.ts`,
+      commit **`DELIVERY_SHA`**; `git merge-base --is-ancestor fe8749458 DELIVERY_SHA`
+      is the first half of the verify, checked in the history rather than asserted.
+      **The metric set, over 82 train corpora / 764 distinct prompts / 299-skill
+      catalogue, holdout untouched** (`agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`):
+      precision@5 82.51 % over 303 adjudicated deliveries · recall@5 64.60 % ·
+      recall loss **35.40 pp against a 20.0 pp ceiling — BREACHED** · false
+      activation@5 13.66 % · context cost 235.6 tokens/prompt against a 500 target
+      — MET · benefit unconditional 64.60 % · benefit conditional on activation
+      82.51 %. Curve: @1 44.70 · @3 57.11 · @5 64.60 · @10 73.64 · @20 80.62 %, so
+      the ceiling clears at no k ≤ 20 and the cost target is not what is failing.
+      A breach is a finding; **no narrowed delivery is promoted from this run**.
+      **The verify`s second half — 7 jointly-wrong pairs in the corpus**, over 10
+      shared prompts: `{experiment-loop, verify-repair-loop}` twice,
+      `{analysis-skill-router, forensics-report}`, the three pairs among
+      `{agent-security-review, ai-code-blindspots, security-audit}` on one prompt,
+      and `{evaluate-llm-feature, prompt-engineering-patterns}`. **0 are delivered
+      together at any k ≤ 20** (`src/scripts/measure_delivery_sets.ts:205-222`).
+      **THE PRE-REGISTRATION WAS WRONG AND IS CORRECTED BY REPORTING BOTH, NOT BY
+      REWRITING IT.** Its definition added "both members delivered in the top-k",
+      turning the corpus property this verify names into a delivery property whose
+      count is 0. Both ship: `jointly_wrong_pairs_in_corpus` = 7 and
+      `jointly_wrong_pairs_delivered_at_k` = 0, each pair carrying the smallest k
+      at which it would be jointly delivered. The count is a LOWER bound — a pair
+      is observable only where two corpora adjudicate the same prompt.
+      **The finding that bounds every number above: 78.80 % of prompts have their
+      top-5 cut decided by the ALPHABETICAL TIE-BREAK** —
+      `score(rank 5) === score(rank 6)`
+      (`src/scripts/measure_delivery_sets.ts:165-171`). So
+      0-delivered-pairs is not evidence of discrimination; at the boundary the
+      scorer does not rank at all and the alphabet happened not to co-select any
+      of the seven. Same "recalls but does not rank" pathology
+      `src/scripts/measure_lexical_ranking.ts:10-16` names for the memory store,
+      observed on the skill catalogue for the first time.
+      **SENSITIVITY, two sabotages, each red then green**
+      (`tests/scripts/delivery_set_compatibility.test.ts`): (a) dropping the
+      `!c.expect` polarity filter so any shared skill forms a pair — 3 red
+      including the DENIAL case, restored 11 green; (b) loosening the ceiling
+      constant 20.0 → 40.0 to turn the reported breach into a pass — 3 red,
+      restored 11 green.
+      **A second pre-registration defect, recorded:** `precision_at_k` and
+      `benefit_conditional_on_activation` were defined separately and are one
+      computation. Both are reported at the same value rather than one being
+      dropped; the pair that genuinely differs is unconditional 64.60 % against
+      conditional 82.51 %, and the 17.9 pp gap IS the delivery failure.
 - [ ] **6.5 Index the body only if 5.1 measured a signal.** Otherwise
       description-only.
       verify: the indexer's input set derives from the 5.1 verdict file.
