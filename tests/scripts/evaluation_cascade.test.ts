@@ -20,9 +20,9 @@ import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { CLONES, REPO_ROOT, TSX_BIN } from './_bench_ab.js';
+import { CLONES, REPO_ROOT, TSX_BIN, acquireClonesLock, releaseClonesLock } from './_bench_ab.js';
 import { CANDIDATE_OWNED_PATHS } from '../../src/scripts/_lib/candidate_record.js';
 import {
     CASCADE_STAGES,
@@ -37,7 +37,16 @@ import type { MetricRow } from '../../src/scripts/_lib/evaluation_vector.js';
 
 const LAB_TS = join(REPO_ROOT, 'src', 'scripts', 'evolution_lab.ts');
 const scratch = mkdtempSync(join(tmpdir(), 'ac-cascade-'));
+
+// The clones directory is SHARED across test files, and `_bench_ab.removeClones`
+// wipes the whole root. Without this lock the CLI cases below are racy by
+// construction: a sibling file can delete the tree mid-clone, and the run then
+// fails for a reason that has nothing to do with the property under test.
+// Observed twice in the full parallel suite while passing in isolation, which is
+// the signature of shared state rather than of a defect in the code.
+beforeAll(() => acquireClonesLock());
 afterAll(() => {
+    releaseClonesLock();
     rmSync(scratch, { recursive: true, force: true });
 });
 

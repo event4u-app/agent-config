@@ -2755,10 +2755,30 @@ once.
       decision. `[-]` records that the criterion was superseded, never met and
       never dropped; its safety purpose is carried forward unweakened as AC-10b
       below.
-- [ ] AC-10b — **This roadmap introduces no unsupervised background process
+- [x] AC-10b — **This roadmap introduces no unsupervised background process
       (class P2), and does not touch the claim or retirement surfaces.**
       Carries AC-10a's purpose — *"this roadmap did not quietly acquire a runtime
       daemon"* — re-keyed onto a boundary that still exists.
+
+      **CLOSED 2026-08-31, read at completion rather than mid-flight.** The
+      earlier note on AC-10a deliberately refused to close this on a partial
+      branch, because a tripwire read before the work is finished has not been
+      read. This is the reading taken once the roadmap reached its terminal
+      state.
+      **Surfaces untouched.** `git diff --name-only origin/main..HEAD --
+      README.md docs/CLAIMS.md` is empty, so neither the claim surface nor its
+      retirement record moved on this branch.
+      **No process of any class introduced.** The branch adds 13 files and
+      2,691 lines under `src/`, and a scan of the added lines for
+      `setInterval`, `setTimeout(`, `while (true)`, `daemon`, `.unref(`,
+      `spawn(`, `fork(`, `listen(` and `createServer` returns **nothing**. So
+      the question of whether a new process would be a supervised P1 or an
+      unsupervised P2 does not arise: there is no process.
+      **What this criterion does and does not certify.** It is a scan over the
+      lines this branch ADDED, which is the population the criterion is about —
+      *this* roadmap's contribution. It certifies nothing about processes the
+      tree already carried; `src/scripts/collector_daemon.ts` predates this work
+      and is governed by ADR-249, not by this row.
       **AI council 2026-08-31, verdict D (split), and it is a SINGLE-SEAT
       DEGRADED round — recorded as such, never as convergence.** Present:
       openai/codex-default. Absent: anthropic/claude-sonnet-4-5, `exit_1` with
