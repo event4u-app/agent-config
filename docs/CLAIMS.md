@@ -1056,7 +1056,10 @@ is the named exception in the claim itself.
 
   Off-tree surfaces are gated separately and are NOT covered by this pointer:
   `.github/workflows/pr-metadata-sources.yml` checks branch name, PR title, PR
-  body and the change's commit messages on `pull_request`, and
+  body and the change's commit messages on `pull_request` — with body and
+  commit messages exempt for `dependabot[bot]`, whose text is machine-generated
+  upstream provenance rather than authored attribution; branch and title stay
+  gated for every author. And
   `src/scripts/hooks/prepush_metadata_sources.sh` checks the local half before
   a push makes them public. `.github/workflows/source-surface-sweep.yml` runs
   the full five-surface census weekly so drift on the surfaces no per-PR gate
