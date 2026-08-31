@@ -200,8 +200,14 @@ mitigations as unbuilt or as living here when they are built or transferred).
 
 ## The one red CI check, and its disposition
 
-**`Node Tests (ubuntu-latest, shard 2/4)` fails on PR #1780, pre-existing and
-CI-only.** `routing_signal_measurement.test.ts:178` compares the published
+**`Node Tests (ubuntu-latest, shard 2/4)` failed on PR #1780 and then passed on
+the next run — the failure is INTERMITTENT, and CI ended GREEN at 34 pass / 0
+fail.** That word is a correction: this section's first version called it
+"pre-existing and CI-only" on a single observation, and the re-run refuted the
+"deterministic" half of that reading. The two runs differ by **two markdown
+files** — a stub and this section — neither of which any test reads. A failure
+that flips with no relevant input change is order- or parallelism-dependent,
+which makes the pollution hypothesis stronger rather than weaker. `routing_signal_measurement.test.ts:178` compares the published
 routing verdict against a fresh recompute; the published artefact records
 `catalogue_size: 299` and **CI's recompute produced 300**. Every other field in
 the corpus record reproduces.

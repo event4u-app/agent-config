@@ -3,14 +3,25 @@ complexity: lightweight
 review_by: 2026-11-30
 ---
 
-# Stub: road to a routing-signal verdict that reproduces in CI
+# Stub: road to a routing-signal verdict that reproduces every run
 
 > **Stub — not active work.** Found 2026-08-31 (drain run 11) on PR #1780, which
 > is the first branch in some time to touch `src/` and therefore the first to
-> trigger the full Node suite. The failure is **pre-existing and CI-only**. It is
-> recorded rather than fixed because the one edit that would turn it green —
-> changing the published number — would close a measurement by redefinition, on
-> a figure that does not reproduce on this machine at all.
+> trigger the full Node suite. The failure is **INTERMITTENT**, and that word is
+> a correction to this stub's first version, which called it "pre-existing and
+> CI-only" on a single observation. It is recorded rather than fixed because the
+> one edit that would turn it green — changing the published number — would
+> close a measurement by redefinition, on a figure that reproduces neither
+> locally nor on a re-run.
+>
+> **The two CI observations, and the second is why the word changed:**
+> `Node Tests (ubuntu-latest, shard 2/4)` **failed** on run `33418425604`
+> (head `41c8925a6`) and **passed** on the next run over content differing by
+> **two markdown files only** — this stub and a summary section, neither of
+> which any test reads. Same workflow, same shard, same host, same skill tree.
+> A failure that flips with no relevant input change is order- or
+> parallelism-dependent, which is a stronger form of the pollution hypothesis
+> below rather than a weaker one: it means the 300th entry appears sometimes.
 
 ## The failure
 
@@ -90,10 +101,14 @@ exists, is not among them.
 
 ## What closes this
 
-1. Reproduce it — run `tests/scripts/routing_signal_measurement.test.ts` inside
-   the same shard partition CI uses (`--shard 2/4` on the same file ordering),
-   or add a guard that fails the moment `src/skills` gains an entry the index
-   does not track.
+1. Reproduce it — and note that reproduction is now known to be **flaky**, so a
+   single green run is not evidence of absence. Run
+   `tests/scripts/routing_signal_measurement.test.ts` inside the same shard
+   partition CI uses (`--shard 2/4` on the same file ordering) repeatedly, or —
+   better, because it does not depend on catching the race — add a guard that
+   fails the moment `src/skills` gains an entry the git index does not track.
+   That guard would name the polluting test on the first occurrence instead of
+   leaving a verdict comparison to discover it downstream.
 2. Identify whether the 300th entry is test pollution or a genuine
    environment-dependence in `loadCatalogue`.
 3. Only then decide the number. If the tree really holds 299, the published
