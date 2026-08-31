@@ -1148,7 +1148,29 @@ once.
       execution-stage taxonomy must not be invented if the ladder already
       defines different semantics. The next attempt at this step MUST paste
       `LADDER_RUNGS` (`eligible → selected → projected → delivered → visible →
-      adhered`, `activation_ladder.ts:35-42`) into the question.
+      adhered`, `activation_ladder.ts:36-43` — **anchor corrected 2026-08-31**;
+      the line read `:35-42`, and the `export const LADDER_RUNGS` block actually
+      spans `:36-43`, with `export type LadderRung` on `:44`).
+
+      **OBJECTION 1 IS DISCHARGED BY THE TREE, verified 2026-08-31 — and 4.4
+      stays OPEN on Objection 2 alone.** The enumeration both seats refused to
+      treat as more than conditional is confirmed present and is exactly six
+      values, read from `src/scripts/_lib/activation_ladder.ts:36-43`:
+      `eligible`, `selected`, `projected`, `delivered`, `visible`, `adhered`.
+      So the *"defect in the question"* is repairable at zero cost — the next
+      attempt pastes the block above rather than re-deriving it — and the
+      warning attached to it is satisfied in the direction the seat wanted: the
+      ladder DOES define the semantics, so a parallel execution-stage taxonomy
+      must NOT be invented, and `WHERE` reuses these six.
+
+      **What this does and does not buy.** It removes one of the two objections
+      that were holding 4.4, and it removes the cheaper one. Objection 2 — *what
+      makes an intervention "best" within a cell* — is the architecturally prior
+      decision, is untouched by this, and remains the reason 4.4 cannot be built:
+      both seats ruled the archive cannot exist without a deterministic ranking,
+      tie-break and replacement rule. The `0.6` diversity constant's missing
+      denominator, observation window and minimum sample size are likewise
+      untouched.
       **Objection 2 — the architecturally prior decision this step is missing.**
       *What makes an intervention "best" within a cell* is undefined, and both
       seats ruled the archive cannot be built until it is: without a
@@ -1830,14 +1852,52 @@ once.
       `bench_ab_integrity`'s main directly rather than restating it, and
       `tests/scripts/single_matcher_preserved.test.ts` (8/8 green) asserts
       `router_match.ts` is still the only file declaring the three
-      trigger-semantic symbols. `lexical_index` and `lean_projection_mode` have
-      no consumer at all yet, because 6.1 and 6.3 have not started.
+      trigger-semantic symbols. ~~`lexical_index` and `lean_projection_mode` have
+      no consumer at all yet, because 6.1 and 6.3 have not started.~~
+      **CORRECTED 2026-08-31 — that sentence was FALSE, and the criterion still
+      holds.** Measured by grep over `src/` at this commit: `lexical_index` has
+      **eight** code consumers — `_lib/catalog_score.ts`,
+      `ai_council/recouncil_guard.ts`, `code_graph/query.ts`,
+      `lint_knowledge_scale.ts`, `lint_store_boundary.ts`,
+      `measure_lexical_ranking.ts`, `memory_lookup.ts`,
+      `model_rule_injection.ts` — plus `src/config/memory-twin-verdicts.yml`;
+      and `lean_projection_mode` has **five** — `_lib/activation_ladder.ts`,
+      `_lib/delivery_arm_experiment.ts`, `_lib/hook_settings.ts`,
+      `condense.ts`, `hooks/rule_inject_hook.ts` — plus
+      `src/config/gate-violation-baselines.json`.
+
+      **What the sentence should have said**, and this is why AC-1 stays `[x]`
+      rather than re-opening: neither module has a consumer **built by this
+      roadmap**. Both are pre-existing carriers with pre-existing consumers, and
+      that is exactly what the 0.1 inventory row for each records — a carrier
+      that already exists is the reason no step may duplicate it. The false
+      version inverted the evidence: it read as *"these are unused, so nothing
+      duplicates them"*, when the true statement is *"these are in active use,
+      so a step that rebuilt them would be duplicating a live carrier"*. The
+      correction strengthens the criterion's own second conjunct instead of
+      weakening it.
+
+      **Why it is struck through rather than deleted.** A later reader checking
+      AC-1 against the tree would otherwise find the grep disagreeing with the
+      criterion and have no way to tell a corrected claim from an unnoticed one.
       **Scope of the closure, stated so it is not read as permanent.** This is
       measured over the capabilities built to 2026-08-31. 0.1's second half is a
       standing obligation on Phases 1-7, so the first later step that builds
       without a row re-opens this criterion.
 - [x] AC-2 — Every overlapping plan in the estate carries one of the five
       dispositions from 0.2, and no capability has two execution owners.
+      **CHECKED 2026-08-31 and NOT re-opened — recorded so the candidate is not
+      re-derived.** `road-to-harness-promotion-bridge.md` entered the active
+      estate on 2026-08-31, i.e. after the sweep this criterion rests on, and it
+      carries no row in the 0.2 disposition table. That looks like the
+      re-opening the scope caveat below anticipates, and it is not one: AC-2's
+      subject is *overlapping* plans and *capabilities with two execution
+      owners*. The sibling is a **split-out child**, not a competitor — every
+      item it owns is marked `[-] MERGED` here with the receiving step named,
+      the `relates:` block links it from both ends, and this file references it
+      thirteen times as the transfer target. So there is exactly one execution
+      owner per capability, which is the property AC-2 tests. A row in 0.2 would
+      document a relationship that is already documented in a stronger form.
       **MET 2026-08-31 by a full-estate sweep, which is stronger evidence than
       the spot checks 0.2 recorded.** The 0.2 overlap grep was run over every
       file in `agents/roadmaps/` and `agents/roadmaps/later/`. Exactly two
