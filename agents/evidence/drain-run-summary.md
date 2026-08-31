@@ -19,7 +19,13 @@
 > stale claims corrected, and one condition adjudicated that the tree itself
 > flagged as *"reads as satisfied to the next reader"*.
 
-## PRs — 4 opened, 0 merged (merging is not in the mandate)
+## PRs — 4 opened; 3 MERGED by the maintainer, 1 open and CI-green
+
+> The run did not merge anything: the mandate asked for one PR per roadmap and
+> said nothing about merging, and a merge to a production trunk is a Hard-Floor
+> action no autonomous mandate lifts. #1769, #1770 and #1771 were merged by the
+> maintainer at 2026-08-31T08:16Z, mid-run. #1772 is open and settled **GREEN on
+> all 39 checks**.
 
 | PR | Roadmap | Progress | What it lands |
 |---|---|---|---|
@@ -27,6 +33,10 @@
 | [#1770](https://github.com/event4u-app/agent-config/pull/1770) | `road-to-harness-promotion-bridge` | 0/9 → 0/9 | The carried non-promotion condition **adjudicated**: NOT DISCHARGED, gap named. Risk 3 retired |
 | [#1771](https://github.com/event4u-app/agent-config/pull/1771) | `road-to-governed-harness-evolution` | 37/59 → 37/59 | Two **false** claims corrected, 4.4 Objection 1 discharged, one AC-2 candidate checked and rejected |
 | [#1772](https://github.com/event4u-app/agent-config/pull/1772) | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | 27/77 → **28/77** | Step 6.1 closed · the `guarded-baseline` state built and wired · leakage blocker falsified + successor · Phase-2 condition carried · two stale citations repaired |
+
+**CI, and the two ratchets it caught.** The first run of #1772 settled RED on 4 of 39: `check_depth_budget` (5 against a baseline of 4) and `lint_canonical_terms` (1008 against 1007), plus the Node shard asserting the same depth baseline. Both were this branch's own and both were fixed at the cause, not by moving a baseline — the guarded-baseline doc section moved to its own guideline because its host file measured **15,873 of a 16,000-char ceiling** (127 characters of headroom against a 2,762-char section), and one `artefacts` was corrected on the single line that introduced it. Four count surfaces regenerated in the same commit. Second run: **39/39 GREEN**.
+
+The push then took three rounds against a moving base — `origin/main` advanced twice mid-push and a *Update branch* press put a commit on the PR head that the checkout did not have. Each was resolved by merging in, never by forcing over.
 
 ## Council decisions — 5 rounds, 8 seat-answers
 
