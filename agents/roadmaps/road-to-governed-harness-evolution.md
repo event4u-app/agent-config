@@ -2272,14 +2272,38 @@ once.
 - [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
-      **Audited 2026-08-31: first conjunct met, second not met.**
+      **RE-AUDITED 2026-08-31 after 5.6 landed: still OPEN, and the reason
+      moved rather than went away.**
+      *First conjunct, unchanged:*
       `agents/evidence/analysis/governed-harness-success-criteria.md` was
       committed at `172b87c6` (2026-08-30 10:32:57) and no candidate run has
       happened at all, so the criteria precede it — a real but currently
-      vacuous satisfaction, and worth naming as such. The second conjunct has no
-      subject: there is no run report anywhere in the tree, and the
-      evolution-ROI figure is step 5.6, which is `[ ]`. What closes it is 5.6
-      plus a first run whose report carries the figure.
+      vacuous satisfaction, and still worth naming as such.
+      *Second conjunct, half-closed.* 5.6 built the missing subject: a run
+      report now exists, `buildRunReport`
+      (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES one without the ROI
+      figure, and `evolution_lab`'s `run` verb emits it on the one path a run
+      completes on (`src/scripts/evolution_lab.ts:779`). Any report this
+      programme produces from here on carries the figure structurally rather
+      than by an author remembering to add it. That is the SHAPE half.
+      **What is still missing is the run, and it is not reachable in this
+      roadmap.** A `run` invocation today clones candidate trees and evaluates
+      nothing — its honest ROI kind is `unmeasured`, which is the report telling
+      the truth. A *candidate run* in this programme's sense evaluates
+      candidates against an eval corpus over repeated trials, which needs a
+      metered backend, which step 5.2 forbids: no step in this roadmap invokes
+      a live routing harness, and
+      `tests/scripts/governed_harness_no_live_harness.test.ts` holds it.
+      **A fixture is not the first candidate run, and none of the artefacts
+      5.6 shipped is offered as one.** The end-to-end case at
+      `tests/scripts/evolution_lab.test.ts:409` drives the real CLI over five
+      real clones and asserts the report reaches stdout; it proves the report
+      is emitted, and it evaluates no candidate. Reading it as the run would be
+      exactly the substitution this criterion exists to catch.
+      **What closes it:** a first candidate run under a metered backend, which
+      belongs to whichever roadmap lifts the live-harness park — not to this
+      one. Until then AC-8 is `[ ]` with its shape half done and its subject
+      half absent.
 - [-] AC-9 — At least one promoted artefact has been through post-promotion
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
