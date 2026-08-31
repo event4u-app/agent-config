@@ -738,6 +738,19 @@ the blocker existed to protect.
       consensus round with no second call for that member. What is still
       missing is a run in which EVERY answering seat carries the block.
 
+      **NOT RE-ATTEMPTED on 2026-08-31 (drain run 12), and the reason is
+      quota rather than a change of mind.** The remaining unknown — a run in
+      which EVERY answering seat carries the block — needs four calls (two per
+      seat: deliberation plus consensus scoring) and five were available at run
+      start. Before the attempt could be made both seats went over cap
+      (`anthropic 50/50 · openai 51/50` against
+      `ai_council/cli_call_budget.ts:60`), spent by a parallel worker: this run
+      made zero provider calls and the attribution sidecar assigns all of them
+      to `unknown`. Recorded because the alternative reading — that the run was
+      declined on judgement — would be wrong, and because the known failure mode
+      is a **model-compliance** miss by one seat rather than anything this tree
+      can fix, so a retry is worth making but is not worth raising a cap for.
+
       **One observation is recorded for whoever runs 1B.4, AS AN OBSERVATION
       AND NOT AS A DATUM:** the miss was a contract-compliance miss by the
       `codex-default` seat, which substituted its own prose summary for the
@@ -1308,6 +1321,53 @@ byte-pinned by tests. Any work here runs through
 - [ ] 5.4 Final synthesis retains unresolved disagreement, the strongest
   minority evidence, and what evidence would resolve it.
       verify: a run with real dissent renders all three
+
+      **NOT CLOSABLE, and drain run 12 (2026-08-31) establishes why in two
+      independent ways rather than one — recorded so the next run does not
+      re-derive it.**
+
+      **(i) No synthesis template asks for any of the three.** Four templates
+      exist and all four are silent: `DEFAULT_SYNTHESIS` (`prompts.ts:284`),
+      `PR_SYNTHESIS` (`:315`), `ANALYSIS_SYNTHESIS` (`:342`),
+      `CREATIVE_SYNTHESIS` (`:380`), selected by `synthesis_template(mode)`
+      (`:462`) and consumed on both paths — member chairman at
+      `council_cli.ts:1410-1419`, host render at `orchestrator.ts:1749-1788`.
+      The three nearest sections are each a different thing:
+      `### Clashes` / `### Conflicts` (`prompts.ts:291-293`, `:320-322`) state
+      both sides of a disagreement but never whether it REMAINS unresolved — and
+      `PR_SYNTHESIS` explicitly defers resolution rather than recording
+      non-resolution (*"do not pick a winner here"*, `:322-323`);
+      `### Outliers` (`:356-364`) asks for single-reviewer findings and is
+      analysis-lens only, with nothing about STRENGTH; `### Kill criteria`
+      (`:305-309`) falsifies the RECOMMENDATION, not the disagreement.
+      Corroborated by absence: `unresolved`, `would resolve`,
+      `strongest minority` and `minority evidence` return **zero** hits across
+      `src/scripts/ai_council/` and `tests/scripts/ai_council/`.
+
+      **(ii) The verify names a RUN, and no recorded run can serve it.** The
+      corpus under `agents/runtime/council/` carries no chairman synthesis at
+      all — every session record predates the chairman path or ran
+      `chairman.mode: host`, so the field the step would be read against does
+      not exist in any retained artefact. `--chairman-fields` does already append
+      two mandatory trailing sections (`blind_review.ts:173-177`, wired at
+      `council_cli.ts:1411-1412` and `orchestrator.ts:1761-1765`) — but they are
+      `## Collective blind spot` and `## One-line verdict`, neither of which is
+      one of this step's three.
+
+      **The gap is content, not plumbing, and the plumbing carries a known
+      trap.** `assert_synthesis_sections` (`prompts.ts:522`) with
+      `REQUIRED_SYNTHESIS_SECTIONS` (`:501`) and `SynthesisRenderError` (`:493`)
+      is the exact architectural precedent a 5.4 checker would extend, and its
+      own docstring records why it has zero production call sites (`:511-521`):
+      with no chairman the rendered body is the literal
+      `*to be summarised by the host agent*` (`orchestrator.ts:1787`), so an
+      unconditional checker reds every templated render. A second, smaller trap:
+      the addendum uses `##` while every template section uses `###`, so a
+      checker written against one shape will not see the other.
+
+      **Nothing was built.** Adding three sections plus an auditor with no run
+      able to exercise them is the population-of-zero shape this file refuses;
+      the finding is recorded instead, and the step stays open on evidence.
 - [ ] 5.5 Revisit ADR-120 **only** on results — record keep / amend /
   supersede with the benchmark artifact pin and a revisit condition.
       verify: the ADR record cites the benchmark artifact, not this roadmap
@@ -1931,9 +1991,60 @@ is **seating**, and it already has a carrier.
 - [ ] 10.2 Attribute each useful correction to the first stage where it
   appeared.
       verify: one real run yields a per-correction stage attribution
+
+      **NOT CLOSABLE — measured 2026-08-31 (drain run 12), recorded so the next
+      run does not re-derive it.** The target vocabulary EXISTS and has no
+      producer: `StageOutput { stage, produced, calls }`
+      (`ai_council/replay_route.ts:49-54`) is carried on `CouncilRouteRecord`
+      (`:74`), and the module's only importer anywhere is its own test
+      (`tests/scripts/ai_council/replay_route.test.ts:21-22`). Nothing in
+      `council_cli.ts` or the orchestrator constructs a `CouncilRouteRecord`, so
+      the field is a declared shape with nothing to fill it — which is the same
+      structural gap 10.1's `guarded-baseline` records from the other side.
+      Separately, **nothing anywhere identifies a "useful correction" as an
+      object**: `correction` appears twice under `src/scripts/ai_council/`, once
+      in a comment (`cli_least_agency_canary.ts:33`) and once inside a prompt
+      string (`cross_exam.ts:66`); every `attribut*` hit is SPEND attribution
+      (`cli_call_budget.ts:29,63,195,239,262`), not stage attribution. The only
+      stage machinery in the tree is design-time ablation in the bench manifest
+      (`topology_bench_manifest.ts:239-240`, `:391-440`), which attributes an ARM
+      to a stage and is gated behind `blocker: phase-2-benchmark-cost`.
 - [ ] 10.3 Track paid calls that change no finding, stance, confidence,
   evidence, or final decision; emit `zero_marginal_value_call_rate`.
       verify: the rate is emitted and is non-null on a real run
+
+      **NOT CLOSABLE, and this step is stricter than its Phase-10 siblings —
+      measured 2026-08-31 (drain run 12).** The metric does not exist in any
+      form: `zero_marginal|marginal_value|marginalValue|zmv` returns **zero**
+      hits across `src/` and `tests/`; the only occurrences in the repository
+      are this step and the acceptance criterion that names it. There is no
+      emitter and no budget entry (the precedent shape being
+      `src/config/quorum-attendance-budget.json`).
+
+      **The 10.5 escape hatch is closed by this step's own verify, and that is
+      the load-bearing point.** `recouncil_savings.ts` established the accepted
+      pattern for a Phase-10 metric over the retained corpus: reconstruct what
+      is recoverable and emit `null` — never `0` — where no mechanism records the
+      fact (`RecouncilSavings.duplicates_prevented`, `reruns_confirmed`,
+      `spend_saved_usd` are all typed `null`). 10.3 says *"non-null on a real
+      run"*, so that route is unavailable here by construction.
+
+      **And the corpus could not supply a non-null numerator anyway.** A
+      zero-marginal-value rate needs a per-call before/after over findings,
+      stances, confidence or the final decision. Of 118 retained response
+      records under `agents/runtime/council/`, **0** carry a `consensus` block
+      (so no findings and no scores), 11 carry `peer_review` with no stage label
+      and no call count of its own, stances are persisted as booleans only
+      (`council_cli.ts:2770-2771`), `stance_tally.ts:14`'s `Confidence` is never
+      serialised, and **no `decision-replay.md` has ever been written** — the
+      writer is gated on `consensus !== null` (`council_cli.ts:1272-1274`). A
+      rate computed over that corpus today would have a numerator with no
+      observable events, which is the exact `null` this step forbids.
+
+      **Nothing was built.** An emitter with no producer for its inputs and no
+      run able to exercise it is a population-of-zero mechanism; the step stays
+      open on evidence rather than acquiring a shape-pin that would measure
+      nothing.
 - [ ] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
@@ -2440,6 +2551,29 @@ is **seating**, and it already has a carrier.
   version-pinned before the stripped arm runs and which this change deliberately
   did not write. Publishing a RAW-only rate would satisfy neither conjunct 4 nor
   the verdict's condition 5, so nothing was published.
+
+  **ADVANCED AGAIN 2026-08-31 (drain run 12): the pattern list exists, so day 2
+  is no longer blocked on a design decision.** Fork 3 conditions 1 and 2 are
+  both discharged by `src/scripts/ai_council/leakage_patterns.ts`
+  (version `leakage-patterns-v1-2026-08-31`, 15 rules, digest
+  `10045caaec23a1bd7…76da6`) with
+  `tests/scripts/ai_council/leakage_patterns.test.ts` at 28/28 green and five
+  sabotage arms recorded, four red and one explicitly NOT red. Detail and the
+  full sensitivity table:
+  [`PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
+  § Fork 3.
+  **What is still open is only the run, and on 2026-08-31 it was open on
+  QUOTA.** Both seats read exhausted when this was written — `anthropic 50/50 ·
+  openai 51/50` against a cap of 50
+  (`src/scripts/ai_council/cli_call_budget.ts:60`) — and the run that recorded
+  this made **zero** provider calls: the counter at
+  `~/.event4u/agent-config/cli-calls.json` read 47/48 at run start and 50/51
+  eleven minutes later, with the attribution sidecar assigning every one of them
+  to `unknown`, i.e. to a parallel worker on the same machine. **This is a
+  same-day condition, not a new obstacle**, and it is recorded here rather than
+  promoted to a blocker field precisely because the predecessor entry was
+  falsified for asserting a quota obstacle as though it were structural. The UTC
+  reset removes it.
   **The NOT RUN state is therefore intact in exactly the form the predecessor
   protected**, and the advance is in what is now buildable rather than in what
   is claimed.
@@ -2545,11 +2679,49 @@ is **seating**, and it already has a carrier.
      regexes may miss identifiers or remove stylistic material. Both seats also
      refused the weaker premise the question offered: the tree proves labels
      **can** pass through, not their **prevalence**.
-     **The pattern list is DEFERRED and deliberately absent.** Writing it in the
-     same change that settled the protocol would put an unreviewed floor into
-     the pre-registration under cover of the verdict, which is what condition 1
-     exists to prevent. **The stripped arm therefore cannot run**; the RAW arm
-     is unblocked by it.
+     ~~**The pattern list is DEFERRED and deliberately absent.**~~ **REGISTERED
+     2026-08-31 (drain run 12), in the separate change the deferral asked for.**
+     The deferral's ground was that writing the list inside the change that
+     settled the protocol would put an unreviewed floor into the
+     pre-registration under cover of the verdict; a later, separate change
+     carrying its own rationale and its own sabotage evidence is exactly the
+     shape that objection permits, and this is it.
+     **Conditions 1 and 2 are both discharged.** Condition 1 (version-pin the
+     patterns AND the replacement semantics):
+     `src/scripts/ai_council/leakage_patterns.ts`, version
+     `leakage-patterns-v1-2026-08-31`, 15 rules, one placeholder per category
+     and the SAME placeholder whatever family matched, with
+     `PATTERN_LIST_DIGEST` asserted by a test so an edit reds rather than
+     passes. Condition 2 (span-level transformation log):
+     `applyLeakagePatterns` returns per-removal spans whose offsets index the
+     ORIGINAL text, so `original.slice(start, end) === matched` — asserted,
+     because that is the property that makes a log auditable without its writer
+     — and `attachLogIds` THROWS rather than mis-attributing a log whose length
+     disagrees with the item count.
+     **Two admission rules, and the second is what keeps the arm
+     interpretable.** A token whose only role is to name a vendor or a model is
+     admitted bare; a token that is also ordinary English is admitted ONLY
+     inside an identifying frame. `meta`, `grok`, `bard`, `gemini` and `mistral`
+     are each excluded bare, with seven DENIAL tests requiring sentences like
+     *"A meta comment about the metadata table"* to come back byte-unchanged. A
+     permissive list would have deleted ordinary prose non-uniformly across
+     families, which measures the regex rather than the style.
+     **Sensitivity: five arms, four red, one NOT red and recorded as such** —
+     overlap guard 3/25 red; module-cached regex **28/28 GREEN, not red**;
+     greedy-punctuation regression 2/26 red; unbumped digest 1/27 red;
+     `identifier-free` label 3/25 red. Every restore was byte-identical at
+     sha256 `accd1a88…7339`, back to 28/28. The green arm is named in the
+     module: the `exec` loop resets `lastIndex` itself, so the per-call
+     recompile is defensive and **unproven**, not proven.
+     **A residue the design cannot remove, and it bounds the published claim.**
+     Replacement is family-invariant in TEXT and cannot be made invariant in
+     COUNT or POSITION — a family that self-identifies four times and one that
+     never does stay distinguishable by placeholder density, a signal the
+     stripping CREATES rather than removes. Equalising it would be a second
+     transformation with its own distortion, so it is not done.
+     **The stripped arm is therefore no longer blocked on a design decision.**
+     Both arms are now blocked only on quota and on the absence of any
+     production caller for `collectGuesses` / `scoreRecognition`.
   4. **Rater budget.** **RECORDED 2026-08-31 (drain run 11)**, same PREREG
      § Fork 4. Two raters (the configured seats) × 60 distinct bodies = 120
      rater-item pairs = **60 calls per provider** against the 50/provider/day
@@ -2692,11 +2864,20 @@ is **seating**, and it already has a carrier.
   reading this sentence would also permit** — 60 bodies, 30 per arm. That is a
   tightening and is recorded so a later reader cannot relax it back to a pooled
   30 by citing this field.
-  **The remaining conjunct is not quota-bound today.** Day 1 needs 30 calls per
-  provider against a cap of 50; what blocks day 2 is fork 3's deferred pattern
-  list. Naming that precisely matters, because the predecessor entry was
-  falsified for asserting a quota obstacle that had ceased to exist, and the
-  same mistake in reverse would be to report this as waiting on quota.
+  ~~**The remaining conjunct is not quota-bound today.** Day 1 needs 30 calls
+  per provider against a cap of 50; what blocks day 2 is fork 3's deferred
+  pattern list.~~ **SUPERSEDED 2026-08-31 (drain run 12): the pattern list
+  exists, so nothing here waits on a design decision any more.** Both arms now
+  wait on two things and neither is a fork: 30 calls per provider per arm
+  against a cap of 50, and the fact that `collectGuesses` and `scoreRecognition`
+  still have zero production callers, so no code path in this tree can dispatch
+  a rater call at all. Naming that precisely still matters for the reason the
+  superseded sentence gave — the predecessor entry was falsified for asserting a
+  quota obstacle that had ceased to exist — so the honest form is: **the design
+  is settled, the dispatcher is not built, and on the day this is attempted the
+  quota must be free.** On 2026-08-31 it was not: both seats read exhausted
+  (`anthropic 50/50 · openai 51/50`) at the hands of a parallel worker, with
+  this run itself making zero provider calls.
 
 ### blocker: phase-2-benchmark-cost
 
@@ -2800,6 +2981,45 @@ is **seating**, and it already has a carrier.
   ablation deleted, and no unexecuted arm was called a null — the three moves
   both seats refused. All 352 eligible cells still read `pending`, which
   `PHASE2_COMPLETE_STATUSES` excludes at the type layer and at module load.
+
+  **STILL OPEN after drain run 12 (2026-08-31), and the reason is recorded
+  rather than left as an absence: the second path could not be attempted,
+  because the deciding body was unreachable.** This entry's own
+  **Recommendation** is path (c), a re-scope, *"taken to the owner rather than
+  the council"*. The run that carried this change was mandated to route every
+  owner-class decision to the AI council in the owner's place. That routing was
+  attempted and refused **before any question was put**: at run start the
+  per-provider counter read `anthropic 47 · openai 48`, and by the time the
+  question file was ready it read `anthropic 50/50 · openai 51/50` — over the
+  cap at `src/scripts/ai_council/cli_call_budget.ts:60` — with the attribution
+  sidecar (`~/.event4u/agent-config/cli-calls.json.attribution.json`) assigning
+  all of them to `unknown`, i.e. to a parallel worker. This run made **zero**
+  provider calls; a free `council run` dry pass confirmed the refusal without
+  spending (`council:quota · anthropic 50/50 · openai 51/50`).
+
+  **What was deliberately NOT done, and why each would have been worse than
+  waiting.**
+  (a) **Building the runner unilaterally to close the first path.** Two of that
+  path's three conjuncts are already met, so a 384-cell dispatcher would have
+  discharged the condition on paper. It was refused for the reason this entry
+  already gives in its own (c) clause — a runner built inside a drain run and
+  left unexercised is a population-of-zero mechanism — and for a second reason
+  that only applies now: two council seats declined to greenlight it, and
+  overturning a recorded council refusal while the council is unreachable is not
+  a decision, it is the absence of one.
+  (b) **Re-scoping Phase 2 without the council.** The re-scope changes what the
+  phase's results may claim, which this entry classifies as owner-reserved. With
+  neither the owner nor their delegate reachable, writing a new claim-licensing
+  limit would have been an agent-authored change to a declared purpose.
+  (c) **Recording (c) as "the decision" with no deliberation behind it.** That
+  is the silent-green shape this file exists to refuse.
+
+  **The state is therefore unchanged and correctly so**: `Blocks` is unchanged,
+  all 352 eligible cells still read `pending`, nothing about what Phase 2 may
+  claim has moved, and the 23 dependent steps stay open. The only thing this
+  note adds is that the second path is now known to be *reachable* — the owner
+  authorisation exists, the deciding body simply had no quota on the day — which
+  is a different state from the one the entry described when it was written.
 
 ### blocker: unlicensed-source-verbatim-scan
 - **Status:** resolved
