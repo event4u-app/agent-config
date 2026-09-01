@@ -134,6 +134,14 @@ jobs:
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
+      # `code-comment-discipline` and the "Code comments English" clause of
+      # `language-and-tone` both had an enforcement hole rather than a weak
+      # enforcer: the kernel rule named `check_md_language`, which rejects every
+      # non-`.md` path, and the tier-2b rule named nothing at all. Diff-scoped,
+      # so a pre-existing tree does not turn red.
+      - name: code-comment-discipline (language, report and provenance comments)
+        run: ./scripts-run src/scripts/lint_code_comments --base origin/main
+
       # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
       # correction is always visible. Shipped guidance directing a silent
       # re-run or the concealment of a detected miss is a defect, not a style.
