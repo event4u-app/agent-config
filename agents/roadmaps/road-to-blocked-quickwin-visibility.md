@@ -210,13 +210,13 @@ current era alone reports 0 rather than 4.
 
 ## Phase 2 — instrument the deadlock condition
 
-- [ ] **2.1 Make the falsifier machine-readable.** It exists today only as prose
+- [x] **2.1 Make the falsifier machine-readable.** It exists today only as prose
       inside the stub it constrains, which means the party it would reopen the
       question for is the only party who can find it.
       verify: a report prints, for each stub in the new bucket, the number of
       releases published since its estate blocker opened; a test pins the
       release-placeholder case at 3 or more against a fixed tree.
-- [ ] **2.2 Record that it has fired, with the measurement rather than the
+- [x] **2.2 Record that it has fired, with the measurement rather than the
       claim.** The record names the validation date, the three released
       versions with their dates, and the per-section marker counts, so a later
       reader re-derives rather than trusts.
