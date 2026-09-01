@@ -6,8 +6,12 @@
  * `road-to-governed-evidence-production` step 1.1's PRODUCTION CALLER. The
  * producer library (`_lib/activation_receipt_producer.ts`) holds the discipline;
  * this file holds the three real observations and the write. It exists because
- * a library nothing calls has no coverage — the same defect the roadmap keeps
- * open on `assertCheapestFirst`, which polices a population of zero.
+ * a library nothing calls has no coverage — the same defect the roadmap kept
+ * open on `assertCheapestFirst`. **Corrected 2026-09-01:** that one is now half
+ * closed. `assertCheapestFirst` has two production callers in
+ * `_lib/llm_candidate_proposer.ts` (`:417`, `:446`), so it no longer polices a
+ * population of zero; what it still does not police is a SPENT population,
+ * which is what AC-3 stays open on.
  *
  * ## What it observes, and from where
  *

@@ -24,7 +24,7 @@
  * pinned first, rather than resolving an alias and calling the protocol frozen.
  *
  * `high` is reachable only through an `execution_failed` escalation
- * (`_lib/evolution_roi.ts:109`), so a run that never hits a transport error
+ * (`_lib/evolution_roi.ts:128`), so a run that never hits a transport error
  * never touches it.
  *
  * ## Nothing here has been executed
