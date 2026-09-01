@@ -247,7 +247,9 @@ could not satisfy an independence condition using the same run.
 Exactly one, and it is a carry rather than a descope:
 
 - **Phase 7 and AC-9 of harness-promotion-bridge** →
-  `agents/roadmaps/later/road-to-post-pr-promotion-workflow.md`, with all seven
+  `agents/roadmaps/later/road-to-post-pr-promotion-workflow.md` <!-- ref-ignore -->
+  (the receiver lands with #1802, so this path does not resolve from this
+  branch), with all seven
   `verify:` clauses and all five prior AC-9 audits carried **verbatim**, plus
   the Hard-Floor sentence requiring same-turn human confirmation. Enforced by
   `deferralProblems`, which refuses archival unless the receiver exists, is live
