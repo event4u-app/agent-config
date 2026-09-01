@@ -129,7 +129,6 @@ import {
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
-    tag_message_from_section,
 } from './_lib/release_material.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
@@ -144,6 +143,8 @@ import {
     AUGMENT_MARKETPLACE_JSON,
     AUGMENT_PLUGIN_JSON,
     CHANGELOG,
+    _set_changelog_reader,
+    read_changelog_text,
     CalledProcessError,
     GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
@@ -188,6 +189,8 @@ import {
     _tag_exists_local,
     _tag_exists_remote,
     _target_from_branch,
+    create_and_push_annotated_tag,
+    guard_publication,
     die,
     gh,
     git,
@@ -1179,6 +1182,7 @@ function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
 }
 
+
 function execute(
     plan: Plan,
     opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
@@ -1342,7 +1346,7 @@ function execute(
         // Derive the PR body from the CHANGELOG section step 2 just wrote —
         // the file is the single source; the in-memory plan is only its
         // author (release-truth Phase 1).
-        const section = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
+        const section = extract_changelog_section(read_changelog_text(), plan.target);
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
@@ -1388,6 +1392,7 @@ function execute(
             _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
             _step(8, total, `Tag ${plan.target} exists locally — push only`);
+            guard_publication(plan.target, 'tag push (resumed)');
             _push_tag(plan.target);
         }
     } else {
@@ -1398,15 +1403,7 @@ function execute(
         // tag replaces the previous lightweight one so tag metadata is a
         // fourth surface carrying the same single-source content.
         _step(8, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
-        const merged = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
-        if (!merged) {
-            die(
-                `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${plan.target} — ` +
-                    'refusing to tag a release whose changelog entry is missing',
-            );
-        }
-        run(['git', 'tag', '-a', plan.target, '-m', tag_message_from_section(merged!.body, plan.target)]);
-        _push_tag(plan.target);
+        create_and_push_annotated_tag(plan.target);
     }
 
     // ─── 9. GitHub Release ──────────────────────────────────────────────────
@@ -1436,6 +1433,7 @@ function execute(
             GH_RELEASE_NOTES_LIMIT,
             '`CHANGELOG.md`',
         );
+        guard_publication(plan.target, 'GitHub Release notes');
         gh(['release', 'create', plan.target, '--title', plan.target, '--notes', notes]);
 
         // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
@@ -2014,6 +2012,7 @@ export {
     // Drill seam (release_drill.ts) — the step machinery under a simulated
     // git/gh world, so orchestration bugs surface in vitest, not mid-release.
     execute,
+    _set_changelog_reader,
     _set_exec_override,
     push_release_branch,
     merge_release_pr,

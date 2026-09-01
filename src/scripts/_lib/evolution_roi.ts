@@ -41,16 +41,33 @@
  * park intact and there is no live harness to evaluate against. A report that
  * says `unmeasured` is telling the truth about a run that measured nothing.
  *
- * ## The ladder is an ORDERING POLICY, and it has no live subject
+ * ## The ladder is an ORDERING POLICY, and its subject is HALF live
  *
  * "A cheaper model is tried before an expensive one" needs an attempt sequence
- * to police, and there is none: no step in this roadmap invokes a live routing
- * harness (5.2), and `tests/scripts/governed_harness_no_live_harness.test.ts`
- * holds that. So {@link assertCheapestFirst} is a guard proved to FIRE on a
- * synthetic out-of-order sequence, standing over a mechanism that does not yet
- * exist. That is stated here rather than implied, because a guard described as
- * if it were policing real traffic is the coverage inflation this tree's own
- * records name repeatedly.
+ * to police. **CORRECTED 2026-09-01 — one exists now.** This section used to
+ * say there was none and that {@link assertCheapestFirst} stood "over a
+ * mechanism that does not yet exist"; both became false when the metered arm
+ * landed. Two production callers in `_lib/llm_candidate_proposer.ts` produce
+ * {@link LadderAttempt}s: `proposeCandidatesWithModel` calls the guard at
+ * `:417` over the attempts a walk actually made, and `plannedAttempts` at
+ * `:446` over the dry-run plan. Both are reached from `llm_propose.ts` — `:212`
+ * on `--confirm`, `:137` on the dry path, which spends nothing.
+ *
+ * What has NOT happened is a LIVE run. Every population produced so far is
+ * either the dry plan — one `lite` rung per observation on `reason_unknown`, in
+ * which no ordering decision arises at all — or a test population under a
+ * stubbed generator. So the guard stands over a real, non-empty population and
+ * has still never governed a SPENT one, which is what
+ * `road-to-governed-evidence-production` AC-3 stays open on.
+ *
+ * Both halves are stated deliberately. A guard described as if it were policing
+ * real traffic is the coverage inflation this tree's own records name
+ * repeatedly — and a guard still described as policing nothing, after it has
+ * callers, is that same inflation inverted.
+ *
+ * The live-floors park is untouched by any of this: it forbids a live
+ * **routing** harness (5.2), `tests/scripts/governed_harness_no_live_harness.test.ts`
+ * still holds that, and a metered proposer is not one.
  *
  * What IS live is the plan: {@link buildRunReport} puts the per-class ladder
  * into every report, so the cheapest untried tier for each defect class is on
@@ -184,9 +201,16 @@ export interface LadderAttempt {
  * not already spent. A repeat of an already-spent rung is allowed — retrying
  * `lite` is not an escalation — but a jump is not.
  *
- * NO LIVE SUBJECT. Nothing in this programme produces {@link LadderAttempt}s
- * today; see the header. This is a guard waiting for a harness, and its unit
- * test proves it fires rather than proving anything ran.
+ * SUBJECT EXISTS; A SPENT POPULATION DOES NOT (corrected 2026-09-01). This
+ * paragraph used to read "NO LIVE SUBJECT. Nothing in this programme produces
+ * {@link LadderAttempt}s today", and that stopped being true when the metered
+ * arm landed: `_lib/llm_candidate_proposer.ts` produces them from two
+ * production callers — `proposeCandidatesWithModel` (`:417`) and
+ * `plannedAttempts` (`:446`), both reachable from `llm_propose.ts`. No LIVE run
+ * has produced attempts yet, so the ordering this polices has not governed a
+ * spent population; see the header, and AC-3 of
+ * `road-to-governed-evidence-production`. The unit test still proves the guard
+ * FIRES rather than proving anything ran.
  */
 export function assertCheapestFirst(attempts: readonly LadderAttempt[]): void {
     const byClass = new Map<DefectClass, LadderAttempt[]>();

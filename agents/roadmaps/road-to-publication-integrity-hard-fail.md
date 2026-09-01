@@ -80,7 +80,7 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Phase 1 — flip the advisory to blocking, scoped to the target section
 
-- [ ] **1.1 Record the reversal before changing the behaviour.** The decision
+- [x] **1.1 Record the reversal before changing the behaviour.** The decision
       being reversed is stated in two places —
       `src/scripts/check_release_highlights.ts:21` ("An unrewritten derived line
       warns; it never blocks") and
@@ -93,7 +93,7 @@ That comment is addressed to the releaser and is published to every consumer.
       verify: `grep -n 'never blocks' src/scripts/check_release_highlights.ts`
       returns either nothing or a line that now states the opposite, and the
       annotation names both the date and the instructing authority.
-- [ ] **1.2 Make the existing detection blocking instead of advisory.**
+- [x] **1.2 Make the existing detection blocking instead of advisory.**
       `stale_draft_labels` at `src/scripts/_lib/release_highlights.ts:288`
       already returns exactly the offending labels, and the gate already calls
       it at `check_release_highlights.ts:205-212` and discards the result into a
@@ -104,20 +104,235 @@ That comment is addressed to the releaser and is published to every consumer.
       `DERIVED_MARKER`; the two existing advisory fixtures at lines 326 and 365
       are *updated* to the new expectation rather than deleted, so the change of
       contract is visible in the diff.
-- [ ] **1.3 Scope every read to the section under release, never repo-wide.**
+- [x] **1.3 Scope every read to the section under release, never repo-wide.**
       Eighteen historical marker lines and forty-four historical instruction
       comments exist. A repo-wide read would block every future release until
       editorial work nobody has scheduled — which is how a correctness guard
       turns into a permanent red.
       verify: a test with a marker-bearing *historical* section and a clean
       *target* section exits 0.
-- [ ] **1.4 Show the guard's sensitivity by sabotage.** Neutralise the new
+- [x] **1.4 Show the guard's sensitivity by sabotage.** Neutralise the new
       branch, watch the negative case go red, restore it. A test never seen red
       has unknown sensitivity.
       verify: the red-then-green transcript is recorded in the pull request,
       naming the line neutralised.
 
 ## Phase 2 — stop shipping the authoring instruction
+
+> **BOTH STEPS LEFT OPEN 2026-09-01 — the step's premise does not hold and the
+> design fork is not this run's to settle. Not attempted rather than
+> attempted-and-fudged.**
+>
+> **There is no `Unreleased` draft in the generator.** `render_release_head`
+> (`src/scripts/release.ts:317`) has exactly one caller,
+> `render_changelog_entry:549`, which always writes a versioned heading
+> (`:514-521`). The string `Unreleased` appears nowhere in `release.ts`,
+> `_lib/release_material.ts` or `_lib/changelog_eras.ts`; the `## [Unreleased]`
+> at `CHANGELOG.md:17` is hand-maintained and predates this pipeline. So 2.1's
+> verify half (a) — *"present in an `Unreleased` draft section and absent from a
+> released one"* — has no subject in the tree.
+>
+> **2.2 cannot land first.** If the gate reds on the instruction comment while
+> the generator still writes it into every section it cuts, every release PR is
+> red on its first run — Risk 1 of this register, exactly. The order is forced,
+> so the fork blocks both steps.
+>
+> **Two defensible designs, written up with the evidence for each** in
+> [`publication-integrity-hard-fail-execution.md`](../evidence/analysis/publication-integrity-hard-fail-execution.md)
+> § 3: (A) drop the comment from the changelog and put the reminder in the
+> release PR body, which is never published; (B) add a `draft` parameter to
+> `render_release_head`, which satisfies the verify clause word for word and
+> creates a code path no production caller would ever take. A third option —
+> stripping the comment from the merged changelog at tag time — is rejected
+> there without needing a decision.
+>
+> **Consequence for Phase 3:** `publication_blockers`
+> (`src/scripts/_lib/release_highlights.ts:328`) checks the marker only and
+> deliberately not the comment, and says so in its own docstring. **AC-2 stays
+> `[ ]`** with these steps.
+
+### PHASE 2 — DISPOSITION 2026-09-01 (drain run 14): OPTION D, WITH OPTION A's DESIGN RECORDED
+
+> **2.1, 2.2 and AC-2 stay `[ ]`. Option A is the right architecture and is NOT
+> applied here.** Everything the owner needs to approve A in one step is written
+> out below, so approving it is a read rather than a design exercise.
+
+*AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`.*
+
+**This took two attempts, and the first one does not count.** The first round ran
+**DEGRADED — 1/2 present**: one seat was unavailable and the tool itself printed
+*"this is not convergence."* The retry reached 2/2. Recorded because a reader who
+finds only the second round would otherwise assume it was clean on the first
+pass. A degraded round is not a council round.
+
+Council artefacts are gitignored and auto-pruned, so every line relied on is
+inlined here per `no-roadmap-references`; no path under
+`agents/runtime/council/` is cited.
+
+#### 1. The false premise, and the measured publication boundary
+
+**Step 2.1 rests on a lifecycle the generator does not have.** Re-verified at
+this commit, after the prose insertions above moved the line numbers once
+already:
+
+- `render_release_head` (`src/scripts/release.ts:320`) has exactly **one**
+  caller — `render_changelog_entry` (`:509`), at `:552`.
+- `render_changelog_entry` always writes a **versioned** heading (`:517-524`):
+  `## [X.Y.Z](…compare…) (date)`, or `## X.Y.Z (date)` when there is no previous
+  tag. There is no draft branch.
+- The string `Unreleased` appears **0 times** in `src/scripts/release.ts`,
+  `src/scripts/_lib/release_material.ts` and
+  `src/scripts/_lib/changelog_eras.ts`.
+- The `## [Unreleased]` at `CHANGELOG.md:17` is hand-maintained and predates
+  this pipeline — introduced by `032a244a3`.
+
+So 2.1's verify half (a), *"present in an `Unreleased` draft section and absent
+from a released one"*, has no subject in the tree.
+
+**The publication boundary, measured rather than assumed.** The first (degraded)
+round's seat asserted that `dist/CHANGELOG.md` is the npm-shipped artifact. The
+blind chairman flagged it as an uncited claim, and the claim is **false**:
+
+| Measurement | Result |
+|---|---|
+| `dist/CHANGELOG.md` exists | **no** — the path does not exist |
+| `package.json` `files` entry | the bare `"CHANGELOG.md"`, i.e. the repository root |
+| `npm pack --ignore-scripts` archive member | **`package/CHANGELOG.md`** |
+| member vs root `CHANGELOG.md` | **byte-identical** (`sha256 a30d518d…`) |
+| member size | 86.3 kB |
+| `Curated head: fill before merge` occurrences **in the shipped member** | **2** |
+
+`--ignore-scripts` is used because `prepack` runs a full build; the file list and
+the archive member names are unaffected by it. The last row is the defect at the
+publication boundary rather than inferred from it: the package on npm today
+carries the generator's authoring instruction twice.
+
+**This is the reason the acceptance test targets what it does.** A check written
+against `dist/CHANGELOG.md` would pass while the comment ships.
+
+#### 2. The rejected options, with the council's reasons
+
+- **Option B — a `draft` parameter on `render_release_head`.** Rejected 2/2, as
+  *"a fictitious draft mode"* and *"an unreachable production mode"*: no
+  production caller would ever pass `true`, so it is a code path policing a
+  population of zero, and it asserts a mode the pipeline does not have.
+- **Option C — strip the comment from the merged changelog at tag time.**
+  Rejected 2/2 as mutation at the most dangerous point in the release lifecycle.
+  This run had already rejected C on the same ground before the council saw it;
+  that the council reached it independently is worth recording, because it means
+  the rejection does not rest on one party's judgement.
+
+#### 3. The re-scope — AUTHORISED 2/2, and deliberately NOT applied
+
+The council authorised re-scoping 2.1's verify clause, because the original tests
+a lifecycle that does not exist. One seat attached the condition that matters:
+the roadmap must record that **the original criterion was invalidated by measured
+architecture** — the literal criterion is never silently marked complete. That
+condition is discharged by § 1 above.
+
+**It is not applied because the step it re-scopes cannot land until the owner
+rules on authority (§ 4).** Re-scoping a clause for a step that stays `[ ]` would
+change the contract without changing anything it governs.
+
+The re-scoped clause, written out in full so approving it is a read:
+
+> **2.1 (re-scoped, pending owner approval of Option A).** verify: a unit test on
+> `render_release_head` asserts the authoring instruction is **absent** from its
+> output; a unit test on `pr_body_from_section`
+> (`src/scripts/_lib/release_material.ts:72`) asserts the instruction is
+> **present** in the release-PR body it renders; and an acceptance test over
+> `npm pack` asserts the prohibited instruction is absent from the extracted
+> bytes of the archive member `package/CHANGELOG.md`. The original clause —
+> *"present in an `Unreleased` draft section and absent from a released one"* —
+> was invalidated by measured architecture (§ 1) and is superseded, not met.
+
+#### 4. The authority split — both positions, unparaphrased
+
+The seats agreed on the architecture and **split on who may authorise it**. In
+this repository a split is an **escalation condition**, not a tie to be broken.
+
+- **Council-decidable.** Option A strengthens a floor — it removes an instruction
+  that should never have published — is reversible within the envelope, fixes a
+  defect rather than changing a designed surface, and the release-PR body is
+  internal release tooling rather than a public commitment.
+- **Owner-reserved.** Option A changes what npm consumers receive in the root
+  `CHANGELOG.md`, where release operators receive their instructions, and the
+  semantics of PR-body/changelog equality — *"ownership questions, not just
+  technical direction"*. And, explicitly: *"If that approval is unavailable,
+  choose D temporarily rather than treating council review as ownership
+  authority."*
+
+That last sentence is the disposition. **D is taken.** Neither position is
+recorded as having conceded; the escalation is the outcome.
+
+**Both seats independently held that A is more coupled than the fork write-up
+presented**, and that is a correction to this run's own analysis rather than a
+council preference: the PR-body equality contract must be **specified first**,
+and the writer change, the PR-body adaptation, the equality handling and the
+tests form **one atomic merge unit**. So even on the permissive authority
+reading, A was not shippable in this pass.
+
+#### 5. The acceptance-test specification
+
+A suite, not one fixture. This is the most reusable part of the ruling.
+
+**Acceptance — over the real pack:**
+
+1. `npm pack` succeeds and produces a **newly created** tarball. A stale tarball
+   from an earlier run must not satisfy the test.
+2. The tarball contains exactly the expected `package/CHANGELOG.md` member.
+3. That member is non-empty and is the root changelog intended for publication.
+4. The prohibited instruction is **absent from its extracted bytes** — extracted,
+   not inferred from the file on disk.
+5. **No `dist/CHANGELOG.md` fallback can satisfy the test.** The path does not
+   exist today; a test that would pass if it did is testing the wrong artifact.
+6. Restoring the writer's leaked instruction **makes this test fail**.
+7. Pack failures, missing members, stale tarballs and extraction failures all
+   **fail closed**.
+
+**Unit:** `render_release_head` output (instruction absent);
+`pr_body_from_section` output (instruction present).
+
+**Integration:** full release-PR generation plus the equality check.
+
+**Regression:** sabotage sensitivity — the suite fails when the writer's emission
+is restored.
+
+**One seat's warning, carried because it is the kind that is ignored.** A shape
+match such as `/<!-- .* should(?: only)? be .* -->/` is **overbroad and
+under-specified**: it can reject unrelated legitimate comments while missing the
+prohibited instruction after harmless rewording or multiline formatting. The
+invariant needs a **named sentinel**, not a shape match — the same discipline
+`DERIVED_MARKER` already follows, defined once at
+`src/scripts/_lib/release_highlights.ts:64` and imported by every consumer
+including the drill fixture.
+
+#### 6. Required sequencing — one atomic unit
+
+1. Define the structured PR-only region and the equality semantics.
+2. Change the writer.
+3. Adapt the PR body.
+4. Normalise equality.
+5. Tests.
+
+`check_release_surface_equality` must exclude only a **structured PR-only
+region** — never relax equality across the whole body. Relaxing it wholesale
+would remove the release-truth Phase 1 guarantee that the PR body and the
+changelog say the same thing, which is a larger floor than the one Option A
+strengthens.
+
+#### 7. Phase 3's marker-only guard is downstream of this, and stays as built
+
+`publication_blockers` (`src/scripts/_lib/release_highlights.ts:328`) checks the
+draft marker and **not** the authoring comment. That is deliberate and it is not
+an oversight to be repaired when A lands: while the generator still writes the
+comment into every section it cuts, refusing on it would red every release on its
+first run — Risk 1 of this register. When Option A is approved and the writer
+stops emitting it, extending `publication_blockers` to the comment becomes safe
+and belongs in A's atomic unit, step 5.
 
 - [ ] **2.1 The generator must not leave its own instruction comment in a
       released section.** `src/scripts/release.ts:323` writes
@@ -138,7 +353,7 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Phase 3 — extend to the two irreversible transitions
 
-- [ ] **3.1 Guard the annotated tag and the GitHub Release body immediately
+- [x] **3.1 Guard the annotated tag and the GitHub Release body immediately
       before each fires.** Both transitions sit in `release.ts` — tag creation
       at `:1408`, Release notes at `:1435` — and both formatters live in
       `src/scripts/_lib/release_material.ts:77,82`. The guard goes at the call
@@ -148,7 +363,7 @@ That comment is addressed to the releaser and is published to every consumer.
       verify: a test asserts that no irreversible command runs after a refusal,
       and `grep -n "git.,.tag" src/scripts/release.ts` shows no `-a` creation
       site outside the guarded path.
-- [ ] **3.2 Cover the `--resume` created-but-unpushed tag path as its own
+- [x] **3.2 Cover the `--resume` created-but-unpushed tag path as its own
       case.** The recorded bypass: the changelog is read only in the
       tag-creation branch, so a resume over a tag that was created but not
       pushed skips the read entirely. A guard that only covers creation misses
@@ -210,19 +425,41 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — the release gate exits non-zero when the section under release
+> **Status 2026-09-01.** AC-1, AC-3, AC-4, AC-5 and AC-6 are met; **AC-2 stays
+> `[ ]`**, blocked by the Phase 2 fork above.
+>
+> - **AC-5 is answered NONE, with its reason**, recorded in the tree at
+>   `docs/contracts/CHANGELOG-conventions.md` § No escape hatch. The
+>   discriminating fact: the gate runs only on the release PR
+>   (`.github/workflows/release-validation.yml:266`, release-PR-gated), so the
+>   remedy is a one-line edit in a file the releaser already has open, and no
+>   state exists in which a bypass flag is cheaper than the fix it bypasses.
+>   Reopening trigger recorded with it.
+> - **AC-6 is met by its STANDING branch, not by doing the work.**
+>   `blocker: b-retro-curation-scope` is untouched and open, and its
+>   `Resolved when` already separates the mutable surfaces (CHANGELOG sections)
+>   from the immutable ones (annotated tag messages, published Release bodies
+>   for 14.9.0-14.13.0). Nothing here curated a published section; the editorial
+>   prose is owner-reserved by two prior council rulings.
+> - **AC-1's sabotage** and the two runs that came back GREEN before the fixture
+>   was repaired are in
+>   [`publication-integrity-hard-fail-execution.md`](../evidence/analysis/publication-integrity-hard-fail-execution.md)
+>   § 2.
+
+
+- [x] AC-1 — the release gate exits non-zero when the section under release
       carries `_auto-derived, rewrite before merge:_`, and the negative case has
       been shown red with the guard neutralised and green with it restored.
 - [ ] AC-2 — a CHANGELOG section cut after this change carries no
       `<!-- Curated head: fill before merge` comment, pinned by a writer test.
-- [ ] AC-3 — a marker-bearing historical section does not block a release whose
+- [x] AC-3 — a marker-bearing historical section does not block a release whose
       own section is clean, pinned by a test.
-- [ ] AC-4 — the reversal of the advisory decision is recorded at both sites
+- [x] AC-4 — the reversal of the advisory decision is recorded at both sites
       that state it, dated, with the instructing authority named.
-- [ ] AC-5 — the escape-hatch question from risk 2 is answered in the tree:
+- [x] AC-5 — the escape-hatch question from risk 2 is answered in the tree:
       either one documented flag exists whose use is printed, or the absence is
       stated with its reason.
-- [ ] AC-6 — retro-curation of the eighteen published marker lines and
+- [x] AC-6 — retro-curation of the eighteen published marker lines and
       forty-four published instruction comments is either done or standing as
       `blocker: b-retro-curation-scope` with the mutable/immutable split
       recorded. It is not silently dropped.

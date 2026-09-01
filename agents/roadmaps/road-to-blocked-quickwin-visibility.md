@@ -65,16 +65,22 @@ rather than on a reading of them.
 
 ## Phase 1 — separate a blocked quick-win from a waiting preference
 
-- [ ] **1.1 Give `stubs:due` a fourth bucket.** A stub belongs in it when all
+- [x] **1.1 Give `stubs:due` a fourth bucket.** A stub belongs in it when all
       three hold: it carries a recorded validation of its design (a council
       verdict, a measurement, or a landed prerequisite), it declares no
       capability gap, and its open blocker is an estate or budget decision
       rather than a product one. Extending the existing command is deliberate —
       a new command would be the same failure one layer up.
-      verify: `./scripts-run src/scripts/stubs_due` prints the new bucket with
-      `road-to-release-placeholder-guard` in it while its blocker is open, and
-      the OWNER count drops by exactly the number of files that moved.
-- [ ] **1.2 The three membership conditions are read from frontmatter, not from
+      verify: **RE-SCOPED 2026-09-01 (drain run 14) under DELEGATED owner
+      authority — see the disposition block below. The original clause named
+      `./scripts-run src/scripts/stubs_due`, which is not the file the CLI
+      runs.** `agent-config stubs:due --json` reports
+      `counts.blocked_quickwin >= 1` with
+      `agents/roadmaps/stubs/road-to-release-placeholder-guard.md` among the
+      members while its estate hold stands, every pre-existing `counts` key
+      survives unchanged in name, type and meaning, and no existing stub's
+      classification moves.
+- [x] **1.2 The three membership conditions are read from frontmatter, not from
       prose.** A substring match over body text is what put a validated fix and
       a preference in one bucket; repeating that mistake with three substrings
       instead of one would be worse, not better.
@@ -82,7 +88,7 @@ rather than on a reading of them.
       falls to the OWNER bucket unchanged, and a unit test pins both directions
       — a file with all three fields lands in the new bucket, a file missing one
       does not.
-- [ ] **1.3 `/analyze:inbox` may not resolve a stub-mapped survivor into a
+- [x] **1.3 `/analyze:inbox` may not resolve a stub-mapped survivor into a
       verdict line.** Its Phase 5 mapping table has no row for "the claim maps
       onto an existing stub", so a run that finds one has no prescribed output
       and writes a summary sentence instead. The round's own artefact did exactly
@@ -93,15 +99,124 @@ rather than on a reading of them.
       four things the output must contain — the stub path, its blocker slug, its
       age in days, and the recurrence count from Phase 4c.
 
+## Disposition 2026-09-01 (drain run 14) — the dispatcher defect, and what it cost this roadmap
+
+**A duplicate dispatcher definition meant this roadmap was measuring code the
+CLI does not execute.** `src/scripts/_dispatch.bash` defined `cmd_stubs_due`
+**twice** — at `:767` pointing at `src/scripts/stubs_due.ts` (211 lines) and at
+`:791` resolving `dist/agent-src/scripts/stubs_due.ts` (400 lines). In bash the
+later definition wins, so `agent-config stubs:due` ran the agent-src
+implementation and the 211-line file was reachable only through
+`./scripts-run`. Confirmed by construction and by running the live verb.
+The two are **different designs**, not copies. Exactly one duplicate `cmd_`
+existed in the dispatcher; zero others.
+
+**AI council 2026-09-01 (drain run 14)**, members `anthropic/claude-sonnet-4-5`
++ `openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Verdict **Option B**, convergent. **The first attempt
+ran DEGRADED — 1/2 present**, with the tool printing *"this is not
+convergence"*; quorum recovered on retry. Both rounds are recorded because a
+degraded round is not a council round, and a reader must not find only the clean
+one. Council artifacts are gitignored and auto-pruned, so the text is inlined
+here rather than cited by path.
+
+### The authority table, as ruled — and `delegated` is not `council-decidable`
+
+| Action | Classification | Taken |
+|---|---|---|
+| Delete `_dispatch.bash:767` | council-decidable, zero blast radius | yes |
+| Add the fourth bucket to `src/agent-src/scripts/stubs_due.ts` | council-decidable, the stated 1.1 deliverable | yes |
+| Rewrite 1.1's verify to `agent-config stubs:due --json` | **owner-reserved → delegated** | yes, **as delegated** |
+| Execute 1.2 before 1.1 | council-decidable dependency reorder | yes |
+| Adopt the 2026-08-23 validation date for 2.1 | **owner-reserved → delegated** | see Phase 2 |
+| Delete `src/scripts/stubs_due.ts` | owner-reserved, **NOT delegated** | **no** |
+| Declare agent-src the canonical layer | owner-reserved, **NOT delegated** | **no** |
+| Port or remove `headerFragment()` | owner-reserved, **NOT delegated** | **no** |
+| Change CLI output beyond adding the bucket | owner-reserved, **NOT delegated** | **no** |
+
+Both seats insisted on the distinction, in one seat's words: *"we're using
+delegated authority, not discovering they were council-decidable all along."*
+And the objection that bounds this change, carried verbatim: *"treating 'the
+currently dispatched implementation' as 'the canonical implementation' by
+implication. Runtime reachability establishes present behavior, not
+architectural ownership."* The agent-src file was extended **because it is what
+runs**, not because it won an architecture decision. That decision is open.
+
+### 1.2 executed before 1.1, and the reason is mechanical
+
+1.1's verify needs the canonical stub to appear in the bucket. Membership is
+read from three frontmatter fields that did not exist until 1.2 added them, so
+1.1 was unsatisfiable until 1.2 landed. The dependency is now written into the
+phase rather than left to be rediscovered.
+
+The three fields — `design_validated:`, `capability_gap:`, `blocker_class:` —
+are contracted in `agents/roadmaps/stubs/README.md` § The blocked-quick-win
+fields and read as frontmatter **scalars**. The values written onto
+`road-to-release-placeholder-guard.md` are that stub's **own recorded claims**,
+not this run's inference: its § Estate disposition records a 2/2 convergent
+council verdict of 2026-08-24 that *"promotion readiness remains satisfied"*
+while *"estate authorization does not"*, and its header states the work *"needs
+no capability this repository lacks"*.
+
+### The five conditions of the approval, discharged
+
+1. **JSON contract stability** — `counts` keeps `overdue`, `owner_decisions`,
+   `missing_review_by` and `total` unchanged in name, type and meaning;
+   `blocked_quickwin` is additive. Asserted by test, and observed live:
+   `{overdue: 0, owner_decisions: 12, missing_review_by: 0, blocked_quickwin: 1,
+   total: 102}`.
+2. **Dashboard unchanged** — `headerFragment()` was not modified.
+   `agents/roadmaps-progress.md` regenerated before and after the change is
+   **byte-identical** (286 lines, `diff` empty).
+3. **Sabotage sensitivity** — below.
+4. **Rollback triggers** — below.
+5. **The new property is documented** in the stub contract; the repository ships
+   no separate CLI output spec, and none was invented.
+
+### Sabotage, including one that came back green
+
+| # | Neutralised | Result |
+|---|---|---|
+| 1 | the `capability_gap !== 'none'` exclusion | **RED**, 3/13 |
+| 2a | the `blocker_class` frontmatter read, against the first fixture | **GREEN — the test was insensitive** |
+| 2b | the same, against the repaired fixture | **RED**, 1/13 |
+
+**2a is the finding, and it is the second instance of this shape in this drain
+run.** One fixture carrying all three fields in the body proves only that *one*
+of the three reads is scoped: `is_blocked_quickwin` short-circuits on
+`design_validated`, so neutralising the `blocker_class` read alone was
+undetectable. The suite now pins each field **individually** — three fixtures,
+each with one field in the body and the other two in frontmatter — and the
+identical sabotage then reds. Both restores verified byte-identical by SHA-256.
+
+### Rollback triggers, named observably
+
+Revert the bucket commit if any of these is seen: a pre-existing `counts` key
+disappears, changes type, or changes meaning · an existing stub's classification
+moves · the canonical stub stops appearing in the bucket while its estate hold
+stands · `agents/roadmaps-progress.md` renders differently beyond the bucket · a
+consumer fails on the unknown `blocked_quickwin` property.
+
+### M1 is half wrong, in the direction that strengthens this roadmap
+
+*"The stub was visible, and visibility was not the problem — classification
+was"* is true of `src/scripts/stubs_due.ts` and **false of the dispatched
+command**, where the stub appeared in no list at all. Under the command a
+maintainer actually runs, visibility **was** the problem. M2 and M3 are
+confirmed as written, with the M3 correction that 14.11.0 lives in
+`docs/archive/CHANGELOG-pre-14.12.0.md` after the era split, so grepping the
+current era alone reports 0 rather than 4.
+
 ## Phase 2 — instrument the deadlock condition
 
-- [ ] **2.1 Make the falsifier machine-readable.** It exists today only as prose
+- [x] **2.1 Make the falsifier machine-readable.** It exists today only as prose
       inside the stub it constrains, which means the party it would reopen the
       question for is the only party who can find it.
       verify: a report prints, for each stub in the new bucket, the number of
       releases published since its estate blocker opened; a test pins the
       release-placeholder case at 3 or more against a fixed tree.
-- [ ] **2.2 Record that it has fired, with the measurement rather than the
+- [x] **2.2 Record that it has fired, with the measurement rather than the
       claim.** The record names the validation date, the three released
       versions with their dates, and the per-section marker counts, so a later
       reader re-derives rather than trusts.

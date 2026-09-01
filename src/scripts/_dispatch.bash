@@ -764,10 +764,6 @@ cmd_roadmap_progress() {
 # The parked estate's front door — read-only, and deliberately so. It authors
 # nothing under `agents/roadmaps/stubs/`, which is what keeps it clear of the
 # 2026-08-21 council verdict that deleted the hand-maintained index there.
-cmd_stubs_due() {
-  exec_ts "$PACKAGE_ROOT/src/scripts/stubs_due.ts" "$@"
-}
-
 cmd_roadmap_progress_check() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"

@@ -5,6 +5,10 @@ execution:
   mode: phase-checkpoints
 owner: maintainer
 review_by: 2026-11-24
+design_validated: "AI council 2026-08-24, 2/2 convergent — promotion readiness remains satisfied (see Estate disposition)"
+capability_gap: none
+blocker_class: estate
+blocker_opened: 2026-08-23
 ---
 # Stub: a release-placeholder guard that fits the ratchet
 

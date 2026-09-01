@@ -309,6 +309,123 @@ choices a session under evaluation must not make for itself. Whoever executes
 freezes it in writing FIRST, in its own commit, before any capture. A metric
 chosen after seeing a result is a tuned metric.
 
+**PHASE 2 — DRAIN RUN 14: CAPTURE REFUSED ON VALIDITY, NOT ON COST OR
+CLASSIFIER. 2026-09-01.**
+
+*AI council 2026-09-01 (drain run 14, round 2 on Phase 2), members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
+peer-review, blind chairman, quorum 2/2 present (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Verdict **QB — do not
+capture**, convergent.* Its ratio in one line: *"the current run lacks both a
+reproducibly fixed subject and an executable path to the required comparison.
+The low cost and green guards do not cure those validity failures."*
+
+**This is NOT the same refusal as drain run 13, and the earlier framing is
+superseded on this point.** Drain 13 recorded a **harness classifier** refusal
+and called the block *"falsifiable and environment-scoped … it clears the moment
+a human runs the frozen protocol themselves, or authorises a session that may
+spend."* Drain 14 was authorised to spend and did not spend, because it found a
+different and stronger block. Measured this run: a live Anthropic key resolves in
+this environment (`~/.event4u/agent-config/anthropic.key`, read at call time by
+`load_anthropic_key`, `src/scripts/ai_council/clients.ts:369`), and the whole
+capture would cost **about two cents**. So neither cost nor the classifier is
+what stops it. What stops it is that the protocol's subject is not reproducible
+from a commit and the required comparison has no identified producer. A later
+reader must not count this as the same refusal twice.
+
+**Drain 14 made ZERO metered calls.** `--confirm` was never passed and no request
+reached any provider API. The dry path was exercised end to end and both arms
+were compared under a stubbed generator.
+
+**The four findings, with the COUNCIL's evidence grades — not the reporting
+session's.**
+
+- **F-A — the subject is not reproducible from the commit. `Confirmed`.**
+  `.claude/` is gitignored in its entirety (`.gitignore:157`; `git ls-files
+  .claude` returns 0), and the projection generator SKIPS any rule already
+  installed byte-identically at user scope. A fresh generation in a clean
+  worktree of this commit reported *"101 rule(s) skipped — byte-identical twin
+  already installed at user scope"* and produced 13 files where a stale
+  projection of the same HEAD held 15. **The narrow claim, and the council cut
+  the wider one:** this proves the run is not reproducible *from the commit
+  alone*. It does **not** prove reproduction is impossible from a captured
+  manifest plus an environment snapshot. "A number nobody can reproduce" was
+  graded overreach and is withdrawn.
+- **F-B — the trial unit is undefined, and the corpus sits exactly on the
+  discordant floor. `Confirmed`.** `decidePairedVerdict`
+  (`src/scripts/_lib/paired_verdict.ts:126`) consumes one signed delta per
+  trial and fixes the aggregation itself, so the free choices are what the
+  scalar measures and what one trial IS. The protocol says neither. At one
+  delta per candidate pair the corpus size (**5**, `max_candidates` in
+  `src/config/harness-evolution-budget.json`) equals `MIN_DISCORDANT` (**5**,
+  `_lib/paired_verdict.ts:78`), so one tie yields `underpowered`, one dissent
+  yields `no-change`, and only a 5-0 sweep can pass in either direction.
+- **F-C — no producer of a paired outcome delta has been identified.
+  `Confirmed` this run, by an end-to-end trace; it was `Inferred` when first
+  reported.** Twelve searches, recorded in
+  `agents/evidence/analysis/drain14-phase2-capture-readiness.md` § F-C. The
+  short form: the only `decidePairedVerdict` caller in `src/` is
+  `_lib/bench_ab_size_claim.ts:101`, whose population is A/B **bench** task
+  pairs (`bench_ab_v2_stats.ts:325-344`), not candidate records; the only
+  `kind: 'paired'` construction in `src/` is inside `parseRow`
+  (`_lib/evolution_roi.ts:536`), a **deserialiser**; `evolution_lab run
+  --vector` and `_lib/evaluation_cascade.ts:414-441` both take the vector as
+  **caller-supplied input**; and the only vector that has ever reached the verb
+  is a hand-authored verdict literal in a test
+  (`tests/scripts/evolution_lab.test.ts:550-560`). Nothing reads two
+  `CandidateRecord`s and emits a delta. **The claim is "no producer has been
+  identified", not "the artefact cannot be produced"** — the council refused the
+  categorical form and the refusal stands even now that the trace is done.
+- **F-D — the frozen protocol misdescribed itself. `clerical`, and repaired
+  this run.** Two halves. (1) It claimed *"The run report records `git
+  rev-parse HEAD`"*; `RunReport` (`_lib/evolution_roi.ts:353-359`) has no commit
+  field, `run_id` is built from candidate ids (`evolution_lab.ts:871`), and
+  `rev-parse` appears nowhere in the closure. The claim is **withdrawn** rather
+  than implemented — `llm_propose` writes no run report at all
+  (`buildRunReport` is reached only from `evolution_lab run`,
+  `evolution_lab.ts:866`), so the field would have described a document the
+  capture never emits, and F-A shows a recorded commit would not have been
+  sufficient anyway. What is lost is stated in the contract: the protocol now
+  claims **no** automatic provenance capture, and comparability rests on the
+  operator recording the commit AND the projection state by hand. (2) Three
+  stale line citations, repaired, plus eight more found by sweeping.
+
+**Two direct answers this run owes the file.**
+
+1. **Fixing F-A is owner-reserved by default.** Changing corpus membership or
+   selection semantics amends a frozen experimental subject. One council seat
+   allowed that a purely provenance-preserving pin of the *same* subjects
+   *might* be autonomous, but held the equivalence undemonstrated — so the
+   default binds and **no manifest was pinned this run**.
+2. **`underpowered` does not discharge AC-2.** It is a legitimate execution
+   status and it is not a directional result: it records that adjudication was
+   unavailable. A run that returns it has not produced the comparison AC-2 asks
+   for, in either direction.
+
+**What must happen before any capture means anything, in order.** No step here
+is started by this run.
+
+1. An **owner ruling on the corpus contract** — F-A's fix is owner-reserved.
+2. **Freeze the complete experimental definition as a whole**: estimand, trial
+   unit, pairing, aggregation, independence assumptions, sign convention and
+   `tieEpsilon`. The council ruled it is frozen entire or not at all, which
+   supersedes the one-slot framing above for the purpose of executing.
+3. **Prove the producer gap end to end** — done this run for the current tree
+   (F-C), and it must be re-established against whatever tree the capture runs
+   on.
+4. **Implement the producer and the provenance record.**
+5. **Repair citations and re-run the dry path from a FRESH CHECKOUT**, requiring
+   identical corpus identity. A dry run in a worktree that inherited a
+   projection is not that check.
+
+**Terminal state of drain run 14, stated as such rather than as a stall.** 2.1,
+2.2, AC-2, AC-3 and AC-4 all stay open. `metered-backend-park` is **not**
+resolved and its 2026-09-01 narrowing stands unchanged; the block recorded here
+is **downstream** of that narrowing, not a re-argument of it. Nothing was closed
+on a fixture, which is Rank 2 of this file's own Risk Register — *"Phase 2 closes
+on a fixture instead of a run"*, risk type `product` — and the paragraph above
+is what that mitigation looks like when it fires.
+
 - [ ] **2.1 An LLM proposer must beat the deterministic one to survive.**
       Transferred whole from `road-to-governed-harness-evolution` step 5.4.
       verify: the comparison is a paired_verdict run, not an argument.
@@ -374,22 +491,30 @@ chosen after seeing a result is a tuned metric.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
       **Already discharged at transfer, with a production caller:**
-      `buildRunReport` (`src/scripts/_lib/evolution_roi.ts:363`) refuses a
+      `buildRunReport` (`src/scripts/_lib/evolution_roi.ts:387`) refuses a
       report whose evolution-ROI figure is absent or carries an unknown kind,
       and `evolution_lab.ts:865` calls it on the one path a run completes on.
       Both halves RED-proven, 28/28 green.
       **What is still open is the ordering conjunct.** The guard
-      `assertCheapestFirst` (`evolution_roi.ts:191`) exists and is exercised in
+      `assertCheapestFirst` (`evolution_roi.ts:215`) exists and is exercised in
       both polarities, and it has **zero production callers** — it polices a
       population of zero, because nothing in the tree makes a metered proposer
       call. A check that scans a population of zero exits green while looking
       like coverage, which is why this is open rather than closed.
       **UPDATED 2026-09-01 — the caller now exists; the live population does
       not.** `proposeCandidatesWithModel`
-      (`src/scripts/_lib/llm_candidate_proposer.ts:369`) calls
-      `assertCheapestFirst` over the attempts the walk actually made, and
-      `plannedAttempts` (`:429`) calls it over the dry-run plan, which
-      `llm_propose` reaches with no spend. So "zero production callers" is no
+      (declared `src/scripts/_lib/llm_candidate_proposer.ts:369`, calls
+      `assertCheapestFirst` at `:417`) polices the attempts the walk actually
+      made, and `plannedAttempts` (declared `:429`, calls it at `:446`) polices
+      the dry-run plan, which `llm_propose` reaches with no spend at `:137`;
+      `:212` is the `--confirm` path.
+      **CITATION REPAIR 2026-09-01 (drain run 14) — factual, not a change of
+      verdict.** This paragraph and AC-3 both cited `:369` and `:429` as though
+      they were the call sites. They are the function DECLARATIONS; the
+      `assertCheapestFirst` calls are twenty-odd lines into each body. Nothing
+      about the half-met state changes and no checkbox moves — a reader
+      following the old numbers landed on a signature and could not see the
+      call the criterion is about. So "zero production callers" is no
       longer true. What is still true is that no LIVE run has produced attempts,
       so the ordering has not yet governed a spent population — see AC-3.
       **A defect found and closed during the build, recorded because the first
@@ -527,9 +652,12 @@ chosen after seeing a result is a tuned metric.
       ordering it polices governs a real population rather than an empty one.
       **HALF MET 2026-09-01, and left `[ ]` on the half that is not.** The
       caller exists and is on the executable path: `proposeCandidatesWithModel`
-      calls it over the attempts a run actually made, and `plannedAttempts`
-      calls it over the dry-run plan, which `llm_propose` reaches without
-      spending. The guard is also falsifiable now — an inconsistent resumed
+      (declared `src/scripts/_lib/llm_candidate_proposer.ts:369`, calling
+      `assertCheapestFirst` at `:417`) polices the attempts a run actually made,
+      and `plannedAttempts` (declared `:429`, calling it at `:446`) polices the
+      dry-run plan, which `llm_propose` reaches without spending (`:137`). Both
+      pairs are the repaired citations — see step 2.2's CITATION REPAIR note;
+      the declaration lines were previously cited as if they were the calls. The guard is also falsifiable now — an inconsistent resumed
       history is refused, and removing the call reds that case.
       **What is not met is the criterion's purpose clause.** The populations
       that exist today are the all-`lite` dry plan, in which no ordering
