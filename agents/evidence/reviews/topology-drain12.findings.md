@@ -8,12 +8,31 @@ inputs:
   diff_sha: 4ea7147722e1cedf28ff6b9c23a17e49d40c9ea8
   scope_hash: 336df461416c7468c04542b9caa8aaf0bdf36541d6d073aec9323713bd4e0d0f
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md
-  roadmap_hash: 507e4833787616161eeb045982cb89a44090a6745be141569337f7e65545c501
+  roadmap_hash: 361e8dd8012fc0b5addf6562585afa4a1b5be7119dc383c90ec5c665fbc710fa
   ac_hash: 74f91625620e0a3d46195fc92ae7c09d9087b5b4e43a8dd1db68fe362a80dc5c
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-09-01T07:58:15Z
 -->
+
+> **REBOUND 2026-09-01 to the post-fix roadmap, and the reason is recorded here
+> because a rebind is exactly how a stale review gets hidden.** The reviewer read
+> the roadmap at `roadmap_hash: 507e4833…5501` — the PRE-fix state, which is the
+> state the 15 findings below describe. Applying those fixes changed the roadmap,
+> so `roadmap_hash` is now `361e8dd8…10fa` and the manifest is rebound to it.
+>
+> **What the rebind does NOT claim:** that the reviewer saw the fixed file. It
+> did not. Every row's `Reason/Ref` names the fix commit `89ece7e34`, which
+> lands AFTER the review, so the order is legible from the artefact alone.
+>
+> **`ac_hash` did not diverge** (`74f91625…dc4c`, unchanged), which is the check
+> that matters most here: the fixes changed the roadmap's prose and glyphs and
+> left its acceptance criteria untouched, so the criteria the review was taken
+> against are the criteria still in force.
+>
+> Verified rather than asserted: `dispatch_r2_reviewer --verify-current` reported
+> `roadmap_hash` as the only divergence before this rebind.
+
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
