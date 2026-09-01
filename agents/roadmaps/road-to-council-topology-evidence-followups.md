@@ -141,5 +141,14 @@ frozen beforehand (1B.4).
 That any deferred mechanism was verified against a real population; that
 topology validation is live; that any promotion gate passed; that telemetry is
 complete; that Phase-2 equivalence was measured; or that sabotage sensitivity is
-positive runtime validation. Each stub carries the per-group forbidden-claims
-list in full, and those lists govern.
+positive runtime validation. Each stub carries a per-group forbidden-claims
+list, and those lists govern.
+
+**That sentence was not true when this file was written, and was made true on
+2026-09-01 rather than softened.** Only the Group A stub carried such a list.
+The Group B stub stated the permitted claim and no prohibitions; the Group C
+stub carried a list for one of its three internal groups. The missing lists have
+been added by transcribing the archived parent's own per-step deferral blocks —
+each of which pointed *at these stubs* for its forbidden claims, so the pointer
+previously resolved to nothing. Nothing was invented; the transcription sources
+are cited inside each new section.

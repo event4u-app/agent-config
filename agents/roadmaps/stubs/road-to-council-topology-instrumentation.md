@@ -101,6 +101,27 @@ test exists and detects the planted violation.
   comparison semantics and a real-run budget is reserved. **Do not claim** that
   marginal value is measured, or that the rate exists or is non-null.
 
+**Claims forbidden while `[~]`, for the group as a whole.** Consolidated
+2026-09-01 from the per-item clauses above and from the three deferral blocks in
+the archived parent (`5.4` at
+`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md:1638-1643`,
+`10.2` at `:2443-2449`, `10.3` at `:2487-2492`), each of which points *here* for
+its forbidden claims. Nothing below is new: this section exists because that
+pointer previously resolved to no list.
+
+- that any of the three mechanisms is built — all three are **unbuilt**;
+- that a verify clause passed, for any of them;
+- that adding prose to a template constitutes the mechanism — both seats refused
+  to license a prose-only build as *"another indefinitely parked baseline"*;
+- that a rate, an attribution, or a synthesis property was **measured** — an
+  emitter with no producer for its inputs is a population-of-zero mechanism, and
+  a rate computed over today's corpus would have a numerator with no observable
+  events, which is the exact `null` step 10.3 forbids;
+- that the absence of a signal is evidence the signal is benign.
+
+The only permitted claim is that the gap was located, its cause named in the
+tree, and its resumption trigger recorded.
+
 ## Group 3 — the inline-findings pair, and a reproduced finding
 
 - **1B.1** *Findings schema as a fenced trailing block in the initial analysis
@@ -139,6 +160,26 @@ test exists and detects the planted violation.
   frozen beforehand. **Do not claim** the >= 70 % rate, absence of an `unparsed`
   regression, finding-quality equivalence, promotion readiness, **or a null
   result.**
+
+**Claims forbidden while `[~]`, for the group as a whole.** Consolidated
+2026-09-01 from the per-item clauses above and from the two deferral blocks in
+the archived parent (`1B.1` at `:865-883`, `1B.4` at `:978-984`), which point
+*here* for their forbidden claims.
+
+- that the second extraction call is eliminated, or that inline parsing is
+  proven;
+- that the `codex-default` contract miss is a **rate** — n = 2, no matched
+  comparator, and 1B.4's arms have not started. Reproduction makes it a stable
+  seat-level property; it does not make it a frequency;
+- that a passing 1B.1 is statistical evidence for 1B.4;
+- that the >= 70 % gate passed, that there is no `unparsed` regression, or that
+  finding quality is equivalent;
+- **that the unrun gate produced a null.** An unrun gate is neither a pass nor a
+  null, and the council forbids recording it as either;
+- any compliance figure that omits the pre-registered residual: a member quoting
+  another member's well-formed findings array is indistinguishable by shape from
+  one emitting its own, so the rate is always reported **with** that residual
+  named.
 
 ## Floors the council refused to move
 

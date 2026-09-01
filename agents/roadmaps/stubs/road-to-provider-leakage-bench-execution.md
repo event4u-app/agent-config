@@ -125,6 +125,33 @@ Both seats were explicit that **arm completion does not auto-close 3.4**.
 recognition is defensible. A single rater's `n = 30` is descriptive only and is
 never promoted to a finding.
 
+## Claims forbidden while these steps are `[~]`
+
+Transcribed 2026-09-01 from the archived parent's own 3.3 and 3.4 deferral
+blocks
+(`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md:1247-1263`
+and `:1270-1296`) and its roadmap-level prohibition at `:101-104`. This stub
+previously stated only the **permitted** claim; the prohibitions were carried in
+the parent and had no home here.
+
+- that provider recognition was measured — **no measurement was taken and none
+  is claimed**;
+- that recognition is at or below chance. `normalizationGateVerdict` returns
+  `unrun` on empty data and specifically **not** `below-bar`, because
+  `below-bar` would assert that recognition had been measured and found
+  harmless — the exact false null step 3.4 exists to prevent;
+- that style normalization is cleared to land. Only both conditions recorded met
+  reaches `bar-cleared`;
+- that arm completion closes 3.4 — the four conjuncts in the section above
+  govern, and both seats were explicit that collection alone is not enough;
+- any population-rate claim from the 1,402-body corpus, which is an accidental
+  denominator left by an unrun reaper;
+- a finding from a single rater's `n = 30`, which is descriptive only.
+
+The only permitted claim is that the bench was **designed, pre-registered, and
+NOT RUN**, plus the scoped result statement in the section above should it ever
+execute.
+
 ## Floors carried forward unmoved
 
 - **`>= 30` distinct items per arm**, read per arm and not pooled.
