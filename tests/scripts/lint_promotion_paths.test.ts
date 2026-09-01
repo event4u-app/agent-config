@@ -6,7 +6,7 @@
 // with an asserted denominator, that a collapsed population fails instead of
 // exiting green, that the allowlists are exactly what the header claims, and
 // that the guarded capability is unobtainable while the blocker is open.
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -216,12 +216,18 @@ describe('R3 — candidate-derived writes into the canonical source tree', () =>
 
 // --- § R0 — the capability is unobtainable unless the blocker reads GRANTED ---
 
-/** Write a throwaway roadmap carrying just the `merge-authority` blocker body. */
+/**
+ * Write a throwaway roadmap carrying just the `merge-authority` blocker body.
+ *
+ * The `## Blockers` wrapper is not decoration: the reader is scoped to that
+ * section exactly as `lint_roadmap_blockers` is, so a bare `###` heading with no
+ * section around it is correctly invisible.
+ */
 function writeBlocker(dir: string, body: string): void {
     mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
     writeFileSync(
         join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
-        `### blocker: merge-authority\n\n${body}`,
+        `## Blockers\n\n### blocker: merge-authority\n\n${body}`,
     );
 }
 
@@ -238,7 +244,10 @@ describe('the guarded capability', () => {
         try {
             expect(readMergeAuthorityStatus(dir)).toBe('roadmap-unreadable');
             mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
-            writeFileSync(join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'), '# nothing here\n');
+            writeFileSync(
+                join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
+                '## Blockers\n\n# nothing here\n',
+            );
             expect(readMergeAuthorityStatus(dir)).toBe('blocker-absent');
             expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-08-31' }, dir))
                 .toThrow(PromotionCapabilityUnobtainableError);
@@ -300,6 +309,101 @@ describe('the guarded capability', () => {
         }
     });
 
+    // --- the three minting defects a neutral review of this change found -----
+    //
+    // All three were in the FIRST version of the grant/refuse split and all three
+    // let the capability mint against a blocker whose live `Status` is `open`.
+    // They are pinned here rather than only fixed, because each is the kind of
+    // body a maintainer writes on purpose.
+
+    it('a FENCED example of the grant syntax is not the live value', () => {
+        // The `What to do:` field exists to tell a maintainer which line to
+        // write, so a fenced example of exactly that line is the most likely
+        // content in a real blocker — and it sat above a live `Status: open`.
+        const dir = mkdtempSync(join(tmpdir(), 'promo-cap-fence-'));
+        try {
+            writeBlocker(
+                dir,
+                '- **Status:** open\n' +
+                    '- **What to do:** to grant, write exactly:\n\n' +
+                    '```markdown\n' +
+                    '- **Status:** resolved\n' +
+                    '- **Disposition:** granted\n' +
+                    '```\n',
+            );
+            expect(readMergeAuthorityStatus(dir)).toBe('open');
+            expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                .toThrow(PromotionCapabilityUnobtainableError);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('a blocker heading OUTSIDE `## Blockers`, or below `###`, is not the blocker', () => {
+        // `lint_roadmap_blockers` only sees `###` headings inside `## Blockers`.
+        // A `#### blocker: merge-authority` in a history section must not carry a
+        // status the repository's own gate cannot see.
+        const dir = mkdtempSync(join(tmpdir(), 'promo-cap-scope-'));
+        try {
+            mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
+            writeFileSync(
+                join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
+                '## History\n\n' +
+                    '#### blocker: merge-authority\n\n' +
+                    '- **Status:** resolved\n' +
+                    '- **Disposition:** granted\n\n' +
+                    '## Blockers\n\n' +
+                    '### blocker: merge-authority\n\n' +
+                    '- **Status:** open\n',
+            );
+            expect(readMergeAuthorityStatus(dir)).toBe('open');
+            expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                .toThrow(PromotionCapabilityUnobtainableError);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('`granted` must be the WHOLE value — a hedge or a template does not mint', () => {
+        // The first version anchored with `\b`, which matches before any
+        // non-word character. A half-written template line was a live grant.
+        const hedges = [
+            'granted/refused (pick one)',
+            'granted?  — unclear, ask owner',
+            'granted. NOT for unattended use',
+            'granted-NOT, this is a refusal',
+        ];
+        for (const value of hedges) {
+            const dir = mkdtempSync(join(tmpdir(), 'promo-cap-hedge-'));
+            try {
+                writeBlocker(dir, `- **Status:** resolved\n- **Disposition:** ${value}\n`);
+                expect(readMergeAuthorityStatus(dir), value).toBe('resolved-unclassified');
+                expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                    .toThrow(PromotionCapabilityUnobtainableError);
+            } finally {
+                rmSync(dir, { recursive: true, force: true });
+            }
+        }
+    });
+
+    it('the three section literals are byte-identical to the blocker gate\'s own', () => {
+        // The "cannot diverge" claim is only true while these agree. They are
+        // copied rather than imported (that module is a CLI gate with load-time
+        // side effects), so the copy is pinned instead of trusted.
+        const gate = readFileSync(join(REPO_ROOT, 'src', 'scripts', 'lint_roadmap_blockers.ts'), 'utf-8');
+        const cap = readFileSync(
+            join(REPO_ROOT, 'src', 'scripts', '_lib', 'promotion_capability.ts'),
+            'utf-8',
+        );
+        for (const name of ['FENCED_CODE_RE', 'BLOCKERS_SECTION_RE', 'NEXT_H2_RE']) {
+            const re = new RegExp(`^const ${name} = (.+);$`, 'm');
+            const inGate = re.exec(gate)?.[1];
+            const inCap = re.exec(cap)?.[1];
+            expect(inGate, `${name} missing from the blocker gate`).toBeTruthy();
+            expect(inCap, `${name} missing from the capability`).toBe(inGate);
+        }
+    });
+
     it('an OPEN blocker carrying a granted disposition still does not mint', () => {
         // Closedness and direction are read independently and BOTH must hold, so
         // a stray disposition line cannot pre-authorise an unanswered blocker.
@@ -315,7 +419,8 @@ describe('the guarded capability', () => {
     });
 
     it('blockerSection stops at the next heading', () => {
-        const md = '### blocker: a\n\n- **Status:** open\n\n### blocker: b\n\n- **Status:** resolved\n';
+        const md =
+            '## Blockers\n\n### blocker: a\n\n- **Status:** open\n\n### blocker: b\n\n- **Status:** resolved\n';
         expect(blockerSection(md, 'a')).toContain('open');
         expect(blockerSection(md, 'a')).not.toContain('resolved');
         expect(blockerSection(md, 'missing')).toBeNull();

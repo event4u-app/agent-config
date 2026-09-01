@@ -94,6 +94,7 @@ import {
     PromotionCapabilityUnobtainableError,
     REPO_SOURCE_ROOT,
     acquirePromotionCapability,
+    isRefusingStatus,
     readMergeAuthorityStatus,
 } from './_lib/promotion_capability.js';
 
@@ -612,7 +613,7 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): Evaluat
     // a blocker closed as `refused`, or closed without saying which, is a
     // refusing status here exactly like an open one.
     const status = readMergeAuthorityStatus(root);
-    if (status !== 'resolved') {
+    if (isRefusingStatus(status)) {
         let refused = false;
         try {
             acquirePromotionCapability({ approver: 'gate probe', approvedAt: '1970-01-01' }, root);
