@@ -92,6 +92,21 @@ the counter by 2, and `openai` reached **51 against a cap of 50**.
 *"a FINDING… a third booking path exists."* It belongs to no roadmap in this
 run's queue.
 
+**A pre-existing CI-only red was found and given a carrier.**
+`tests/scripts/routing_signal_measurement.test.ts` 5.1 — *"the published verdict
+reproduces from the tree"* — fails on `main` at run `33424783559` (job
+`99595610608`, 2026-08-31T18:26Z) with
+`expected { partition: 'train', ... } to deeply equal { partition: 'train', ... }`
+on the `corpus` field. Verified pre-existing rather than assumed: the identical
+assertion fails on `main` before either drain branch existed, and the same test
+is green locally at 17/17 on both branches. So the corpus a CI runner measures
+differs from the corpus a local checkout measures, and the published verdict
+matches only the latter. It is recorded as Risk 13 on
+`road-to-governed-harness-evolution` — the file that already cites both the
+verdict artefact and the test — rather than as a new roadmap, because both estate
+ratchets are at zero headroom. Not fixed: which catalogue entries differ is not
+established, and diagnosing it needs a CI-side dump of the two corpora.
+
 **Two worktrees were lost to `/private/tmp` being cleared mid-run.** Every
 commit survived in the main checkout's object database and was recovered into a
 worktree outside `/tmp`. What did not survive was uncommitted: two untracked
