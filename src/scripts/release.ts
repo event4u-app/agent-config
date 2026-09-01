@@ -126,6 +126,7 @@ import {
 } from './_lib/release_highlights.js';
 import {
     NEXT_SECTION_RE,
+    RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
@@ -272,7 +273,7 @@ const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = HEAD_LABELS;
  * (`_lib/changelog_eras.ts`, 250 lines per era), so an unbounded head would
  * quietly consume it.
  */
-export const RELEASE_HEAD_CAP_LINES = 10;
+export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
 
 /**
  * The fallback value of a head line the span does not substantiate.
@@ -289,7 +290,7 @@ export const RELEASE_HEAD_CAP_LINES = 10;
  * are now pre-filled from the span (`_derive_head_prefill`), so the tool states
  * only what it can support and `_none_` means what it says.
  */
-const HEAD_DEFAULT = '_none_';
+const HEAD_DEFAULT = RELEASE_HEAD_DEFAULT;
 
 /**
  * Pre-fill values for the curated head from the release span.
@@ -316,17 +317,24 @@ function _derive_head_prefill(prev: string | null): Record<string, string> {
 /**
  * Render the curated head. Emitted by the generator on every release so it
  * cannot be forgotten; edited by the maintainer before merge.
+ *
+ * **The authoring instruction is NOT emitted here** (2026-09-01, roadmap
+ * `road-to-publication-integrity-hard-fail` § Phase 2, Option A). This writer
+ * used to append `CURATED_HEAD_INSTRUCTION` to the head, and nothing removed
+ * it at release time — so the instruction was published, twice, in the npm
+ * artifact `package/CHANGELOG.md`. Option B (a `draft` parameter here, taken
+ * by no production caller) and Option C (stripping the comment at tag time,
+ * i.e. mutation at the most dangerous point of the lifecycle) were both
+ * rejected 2/2 by the council that authorised this.
+ *
+ * The reminder now rides in the release-PR body's PR-only region — a surface
+ * that is never published. See `pr_body_from_section` in
+ * `_lib/release_material.ts`.
  */
 export function render_release_head(
     filled: Readonly<Record<string, string>> = {},
 ): string[] {
-    const lines: string[] = [
-        '### Release highlights',
-        '',
-        '<!-- Curated head: fill before merge, keep it under ' +
-            `${RELEASE_HEAD_CAP_LINES} lines, and leave \`${HEAD_DEFAULT}\` where it is ` +
-            'genuinely the answer. The generated log below is unchanged. -->',
-    ];
+    const lines: string[] = ['### Release highlights', ''];
     for (const label of RELEASE_HEAD_SECTIONS) {
         const value = (filled[label] ?? '').trim();
         lines.push(`- **${label}:** ${value === '' ? HEAD_DEFAULT : value}`);
