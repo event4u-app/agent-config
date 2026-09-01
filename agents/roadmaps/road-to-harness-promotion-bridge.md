@@ -818,8 +818,9 @@ owner adopts 1A verbatim:
   **DISPOSITION FIELD — added 2026-09-01, and it is why a refusal is now
   representable at all.** `src/scripts/_lib/promotion_capability.ts` no longer
   treats `Status: resolved` as a grant. Closedness is still read with the same
-  literal `src/scripts/lint_roadmap_blockers.ts:48` uses, so this blocker's open
-  state cannot diverge from the repository's reading of it; the **direction** is
+  literal `src/scripts/lint_roadmap_blockers.ts:193` uses — over the same
+  fence-stripped, `## Blockers`-scoped text — so this blocker's open state cannot
+  diverge from the repository's reading of it; the **direction** is
   read separately from a `- **Disposition:**` line, and only `granted` mints.
   `refused` is a first-class closed state, and a blocker closed with neither word
   reads as `resolved-unclassified` and refuses. The change is strictly stricter
@@ -829,6 +830,33 @@ owner adopts 1A verbatim:
   (`tests/scripts/lint_promotion_paths.test.ts` § *a blocker CLOSED AS REFUSED
   does not mint* and § *a blocker closed WITHOUT a disposition fails closed*),
   and a byte-identical restore returns 25/25 green.
+
+  **HARDENED 2026-09-01 after a neutral review of this very change found three
+  ways it could still mint against a blocker whose live `Status` is `open`.** The
+  review was commissioned over the whole delta with a prompt that stated no
+  expected outcome; its prompt and verdict are committed together at
+  `agents/evidence/reviews/drain13-neutral-review.md`. All three are now fixed
+  and each is pinned by its own test, RED-proven individually.
+
+  - **A fenced EXAMPLE of the syntax was read as the live value.** The
+    `What to do:` field exists to tell a maintainer which line to write, so a
+    fenced block showing `- **Disposition:** granted` is the likeliest content in
+    a real blocker — and it minted while `Status: open` sat two lines above it.
+    `lint_roadmap_blockers.ts:137` strips fenced code before its own read and
+    this module did not, which falsified the "cannot diverge" claim rather than
+    supporting it. Both now strip.
+  - **`granted` was matched as a PREFIX.** The regex ended in `\b`, so
+    `granted/refused (pick one)` — a half-written template — and
+    `granted-NOT, this is a refusal` both minted. `granted` must now be the
+    whole value.
+  - **The heading search was unscoped.** Any `#{2,4} blocker: merge-authority`
+    anywhere in the file won, so a `####` heading in a history section could
+    carry a status the repository's own gate never sees. The search is now
+    confined to `## Blockers` and to `###`, exactly as the gate is.
+
+  The three shared literals are copied rather than imported (that module is a CLI
+  gate with load-time side effects) and a test pins the copies byte-equal, so the
+  no-divergence claim is now checked rather than asserted.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
