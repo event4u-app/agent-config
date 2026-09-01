@@ -226,9 +226,18 @@ export function guardedBaselineProblems(items: readonly GuardedBaselineItem[]): 
  *
  * HONEST SCOPE. Only a PATH trigger is machine-checkable: a token containing `/`
  * is resolved against the repo root and stale iff it exists. A bare symbol name
- * cannot be decided from a path, so it is returned as `unverifiable` rather than
- * silently reading as "not stale" — an unchecked trigger that looks checked is
- * the failure this whole state exists to avoid.
+ * cannot be decided from a path, so a record carrying ONLY symbol tokens is
+ * returned as `unverifiable` rather than silently reading as "not stale" — an
+ * unchecked trigger that looks checked is the failure this whole state exists
+ * to avoid.
+ *
+ * A record whose trigger carries AT LEAST ONE path token is decided by that
+ * path and is NOT reported as unverifiable, even when a companion symbol token
+ * sits beside it. Reporting it would be the mirror of the failure above: a
+ * checked trigger that looks unchecked. Measured 2026-09-01 — three of the four
+ * lines the dashboard printed as "not machine-checkable" carried a path token
+ * and were therefore already decidable, which is noise that trains a reader to
+ * skip the section where the one genuinely undecidable trigger also lives.
  */
 export function guardedBaselineStaleness(
     items: readonly GuardedBaselineItem[],
@@ -241,15 +250,21 @@ export function guardedBaselineStaleness(
         if (trigger === '') {
             continue;
         }
-        for (const token of trigger.split(/[\s,]+/).filter((t) => t !== '')) {
-            if (!token.includes('/')) {
-                unverifiable.push(`line ${it.line} (${it.label}): recheck_when \`${token}\``);
-            } else if (fs.existsSync(path.join(repo_root, token))) {
+        const tokens = trigger.split(/[\s,]+/).filter((t) => t !== '');
+        const paths = tokens.filter((t) => t.includes('/'));
+        for (const token of paths) {
+            if (fs.existsSync(path.join(repo_root, token))) {
                 stale.push(
                     `line ${it.line} (${it.label}): recheck_when \`${token}\` now exists — ` +
                         're-verify against the real mechanism',
                 );
             }
+        }
+        if (paths.length > 0) {
+            continue;
+        }
+        for (const token of tokens) {
+            unverifiable.push(`line ${it.line} (${it.label}): recheck_when \`${token}\``);
         }
     }
     return { stale, unverifiable };

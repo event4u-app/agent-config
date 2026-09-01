@@ -210,6 +210,29 @@ describe('guarded-baseline — staleness', () => {
         expect(s.unverifiable).toHaveLength(1);
         expect(s.unverifiable[0]).toContain('selectTopology');
     });
+
+    it('does NOT report a mixed path+symbol trigger as not machine-checkable — the path decides it', () => {
+        const s = guardedBaselineStaleness(
+            parseGuardedBaselines(
+                fixture({ recheck_when: 'src/scripts/ai_council/topology_selector.ts selectTopology' }),
+            ),
+            REPO_ROOT,
+        );
+        expect(s.stale).toEqual([]);
+        expect(s.unverifiable).toEqual([]);
+    });
+
+    it('POLARITY: the same mixed trigger goes stale once its path token exists', () => {
+        const s = guardedBaselineStaleness(
+            parseGuardedBaselines(
+                fixture({ recheck_when: 'src/scripts/council_cli.ts selectTopology' }),
+            ),
+            REPO_ROOT,
+        );
+        expect(s.stale).toHaveLength(1);
+        expect(s.stale[0]).toContain('src/scripts/council_cli.ts');
+        expect(s.unverifiable).toEqual([]);
+    });
 });
 
 describe('guarded-baseline — the estate report', () => {
