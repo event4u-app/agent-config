@@ -31,11 +31,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     _MERGE_UPDATE_ROUNDS,
+    _set_changelog_reader,
     _set_exec_override,
     execute,
     Plan,
     SystemExitError,
 } from './release.js';
+import { DERIVED_MARKER } from './_lib/release_highlights.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -92,6 +94,34 @@ interface WorldConfig {
      * removes.
      */
     changelog?: string;
+    /**
+     * Content the WORKING-TREE read returns — `read_changelog_text()`, used by
+     * step 5 (PR body) and step 8 (annotated-tag message).
+     *
+     * Added 2026-09-01 with the publication guard (roadmap § 3.1). `changelog`
+     * above only covers `git show <tag>:CHANGELOG.md`; the working tree was
+     * still the REAL file, whose `14.13.0` section carries four
+     * `_auto-derived, rewrite before merge:_` lines. A guard at the tag call
+     * site therefore refused every scenario for a reason unrelated to what the
+     * scenario tested — the same coupling `changelog` was introduced to
+     * remove, on the other read.
+     *
+     * Defaults to `defaultChangelogFixture(target)`, which is policy-valid by
+     * construction.
+     */
+    changelog_file?: string;
+    /**
+     * The tag already exists locally and was never pushed — the § 3.2 resume
+     * state, which reached `_push_tag` having read no changelog at all.
+     */
+    tag_created_unpushed?: boolean;
+    /**
+     * The tag is already on the remote, so step 8 skips entirely and step 9 —
+     * the GitHub Release body — is the FIRST irreversible transition the run
+     * reaches. The only state in which the Release guard can be exercised on
+     * its own, because a marker otherwise stops the run at step 8.
+     */
+    tag_already_remote?: boolean;
 }
 
 /**
@@ -123,6 +153,21 @@ export function defaultChangelogFixture(target: string): string {
 }
 
 /**
+ * `defaultChangelogFixture` with one head line still carrying the generator's
+ * draft marker — the exact state five released sections shipped in.
+ *
+ * Built from `DERIVED_MARKER` rather than from a literal string: a fixture
+ * that hardcodes the marker text keeps passing after the marker is renamed,
+ * which is a guard policing a population of zero.
+ */
+export function markedChangelogFixture(target: string): string {
+    return defaultChangelogFixture(target).replace(
+        '- fixture entry for the release drill',
+        `### Release highlights\n\n- **Behaviour changes:** ${DERIVED_MARKER} rule/schema diffs in abc1234.\n\n- fixture entry for the release drill`,
+    );
+}
+
+/**
  * A scriptable stand-in for every git/gh/task command execute() issues.
  * Stateful where the real world is: checkouts move HEAD, `git tag` makes the
  * tag exist, a successful merge flips the PR to MERGED and deletes the branch.
@@ -144,6 +189,8 @@ class FakeWorld {
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
     private readonly changelog: string;
+    /** Working-tree content; see `WorldConfig.changelog_file`. */
+    readonly changelog_file: string;
 
     constructor(
         readonly branch: string,
@@ -152,6 +199,9 @@ class FakeWorld {
     ) {
         this.push_rejections = cfg.push_rejections ?? 0;
         this.changelog = cfg.changelog ?? defaultChangelogFixture(target);
+        this.changelog_file = cfg.changelog_file ?? defaultChangelogFixture(target);
+        this.tag_local = (cfg.tag_created_unpushed ?? false) || (cfg.tag_already_remote ?? false);
+        this.tag_remote = cfg.tag_already_remote ?? false;
         this.behind_probes = cfg.behind_probes ?? 0;
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
@@ -325,6 +375,95 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
+    'marker-refuses-before-tag': {
+        summary:
+            'step 8: a draft marker in the merged section refuses BEFORE the annotated tag is created',
+        config: { changelog_file: markedChangelogFixture(current_version()) },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect(
+                (err ?? '').includes('refusing to publish the annotated tag'),
+                `died for the wrong reason: ${err ?? '(no error)'}`,
+                f,
+            );
+            // The load-bearing assertion, and it is about ORDER, not about the
+            // message: nothing irreversible may run after the refusal.
+            _expect(
+                !w.calls.some((c) => c.startsWith('git tag -a ')),
+                'an annotated tag was created after the refusal',
+                f,
+            );
+            _expect(!w.tag_local && !w.tag_remote, 'a tag exists after the refusal', f);
+            _expect(!w.release_created, 'a GitHub Release was created after the refusal', f);
+            return f;
+        },
+    },
+    'marker-refuses-resumed-tag-push': {
+        summary:
+            'step 8 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
+        config: {
+            tag_created_unpushed: true,
+            changelog_file: markedChangelogFixture(current_version()),
+        },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect(
+                (err ?? '').includes('refusing to publish the tag push (resumed)'),
+                `died for the wrong reason: ${err ?? '(no error)'}`,
+                f,
+            );
+            // The recorded bypass: this path read no changelog at all, so the
+            // push was the FIRST thing that happened. It must now be the thing
+            // that does not happen.
+            _expect(!w.tag_remote, 'the tag was pushed after the refusal', f);
+            _expect(
+                !w.calls.includes(`git push origin ${w.target}`),
+                'a tag push ran after the refusal',
+                f,
+            );
+            _expect(!w.release_created, 'a GitHub Release was created after the refusal', f);
+            return f;
+        },
+    },
+    'marker-refuses-github-release': {
+        summary:
+            'step 9: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
+        config: {
+            tag_already_remote: true,
+            changelog: markedChangelogFixture(current_version()),
+            changelog_file: markedChangelogFixture(current_version()),
+        },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect(
+                (err ?? '').includes('refusing to publish the GitHub Release notes'),
+                `died for the wrong reason: ${err ?? '(no error)'}`,
+                f,
+            );
+            _expect(!w.release_created, 'the GitHub Release was created after the refusal', f);
+            _expect(
+                !w.calls.some((c) => c.startsWith(`gh release create ${w.target}`)),
+                'gh release create ran after the refusal',
+                f,
+            );
+            return f;
+        },
+    },
+    'clean-section-still-publishes': {
+        summary:
+            'the guard is scoped to a real defect: a policy-valid section tags and releases as before',
+        config: {},
+        expect_success: true,
+        verify: (w, _err) => {
+            const f: string[] = [];
+            _expect(w.tag_remote, 'tag never pushed', f);
+            _expect(w.release_created, 'GitHub Release never created', f);
+            return f;
+        },
+    },
     'happy-resume': {
         summary: 'resume with everything green runs checkout → checks → merge → tag → release',
         config: {},
@@ -472,6 +611,9 @@ function run_scenario(name: string): ScenarioOutcome {
         return true;
     };
     _set_exec_override((args) => world.exec(args));
+    // The working-tree read, faked for the same reason the command layer is.
+    // Without this the drill's step 8 reads the repository's real CHANGELOG.md.
+    _set_changelog_reader(() => world.changelog_file);
     try {
         execute(plan, { wait_for_checks: true, dry_run: false, resume: true });
     } catch (err) {
@@ -482,6 +624,7 @@ function run_scenario(name: string): ScenarioOutcome {
         }
     } finally {
         _set_exec_override(null);
+        _set_changelog_reader(null);
         process.stdout.write = orig_out;
         process.stderr.write = orig_err;
     }
