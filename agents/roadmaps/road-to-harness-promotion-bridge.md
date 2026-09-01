@@ -368,6 +368,25 @@ descopeable, and the run that looked at it says so rather than moving it.**
   § Blockers → `What to do`. Nothing else. There is no intermediate state and
   no partial credit; `[~]` is the accurate mark and it stays.
 
+**RE-CONFIRMED 2026-09-01 (drain run 13) — 0.8 STAYS `[~]`, and the reason is
+now stronger rather than merely repeated.** This run put the (b) argument to the
+council and got **1A — refuse, 2/2 convergent**; it is not executing that
+verdict, and the full disclosure of why sits in § Blockers under **RE-ATTEMPTED
+2026-09-01**. Two independent reasons keep the mark where it is even if a later
+owner adopts 1A verbatim:
+
+- **The step is a transferred step, and the Resume condition's refusal branch
+  binds it.** That branch reads: do not weaken, cancel, retire, or **mark
+  complete** any transferred step or acceptance criterion, if the owner refuses
+  or otherwise does not grant the authority. So even a settled refusal does not
+  turn 0.8 `[x]` — refusal is precisely the branch that forbids it. Only a
+  **grant** would let this step close by being satisfied, and a grant is
+  unavailable per the Hard Floor.
+- **Nothing was silently made closeable.** The `Disposition` field added to the
+  blocker this run makes a refusal *recordable* without minting the promotion
+  capability. It does not make 0.8 closeable, and it is not to be read as
+  progress toward closing it.
+
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
 > **Every step below is gated twice and may not be entered on either gate
@@ -750,6 +769,94 @@ descopeable, and the run that looked at it says so rather than moving it.**
     path to being met. Recorded here because the `What to do` list below prices
     (a), (b) and (c) as if they were symmetric for this file, and for AC-9 they
     are not.
+
+  **RE-ATTEMPTED 2026-09-01 (drain run 13), AND THE ATTEMPT IS DISCLOSED AS A
+  PROCEDURAL DEFECT RATHER THAN AS A RESULT. The question for (b) WAS put to the
+  council, it returned a verdict, and this run is NOT executing it.** The
+  paragraphs above are unchanged and still govern; this one records what
+  happened so a later reader is not told a cleaner story than the true one.
+
+  - **What was put.** A drain run carrying a human maintainer's standing
+    instruction — *"every open question, decision, or blocker is answered by the
+    AI Council — never by me; the council's recorded decision substitutes for
+    user sign-off"* — put ADR-239 § Decision 3 to the council as its Question 1,
+    with the granting direction explicitly marked unavailable. AI council
+    2026-09-01, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds,
+    deep, peer-review, blind chairman, quorum **2/2 present, needed 1 —
+    concluded**, subscription transport, `billable=0`, `$0.0000`. Verdict
+    **1A — refuse preauthorized merge authority, 2/2 convergent**, both seats on
+    the ground that refusal strengthens rather than lowers the floor. The openai
+    seat added a scoping the record should keep: refusal would bind
+    **preauthorized** authority only and must not be written so as to prohibit
+    ordinary same-turn human confirmation.
+  - **Why it was put anyway, stated plainly: the lock was not evaluated before
+    the question was written.** `decision-revisit-gate` step 2 requires a lock to
+    be read before it is cited or bypassed, and this run wrote and dispatched
+    Question 1 before reaching this blocker's `revisit-if` paragraphs. That is
+    the defect. It is recorded here rather than in a summary because this is
+    where the next reader will look.
+  - **Why the verdict is NOT executed.** Two reasons, and the second is the
+    load-bearing one. First, the release condition is still not cleanly fired:
+    the paragraph above reserves (b) until *"a human either answers it or
+    explicitly asks for the (b) argument to be put"*, and a standing instruction
+    to route all blockers to the council is not the same speech act as asking for
+    **this** argument — and from inside a session the two are not
+    distinguishable from the 2026-09-01 agent-issued instruction the record
+    already refused. Second, and independently: **writing the refusal into
+    ADR-239 § Decision 3 is settling ADR-239 § Decision 3**, which is the act the
+    reservation names, in either direction. The seats' reasoning for 1A is sound
+    and is preserved above; what a council may not do is perform the amendment.
+  - **What this run did instead, and it is not nothing.** It found and fixed the
+    defect that would have made a refusal *unrecordable*. See the
+    **DISPOSITION FIELD** note below: `Status: resolved` was the only closed
+    token this repository recognises, and `readMergeAuthorityStatus` read it as a
+    GRANT — so settling this blocker in the refusing direction would have minted
+    the capability the refusal refuses. That trap is now closed, and closing it
+    is strictly floor-strengthening, which is council-decidable. The blocker
+    itself **stays `open`**.
+
+  **DISPOSITION FIELD — added 2026-09-01, and it is why a refusal is now
+  representable at all.** `src/scripts/_lib/promotion_capability.ts` no longer
+  treats `Status: resolved` as a grant. Closedness is still read with the same
+  literal `src/scripts/lint_roadmap_blockers.ts:193` uses — over the same
+  fence-stripped, `## Blockers`-scoped text — so this blocker's open state cannot
+  diverge from the repository's reading of it; the **direction** is
+  read separately from a `- **Disposition:**` line, and only `granted` mints.
+  `refused` is a first-class closed state, and a blocker closed with neither word
+  reads as `resolved-unclassified` and refuses. The change is strictly stricter
+  in every direction — a body that minted before must now say `granted` — so it
+  cannot widen the capability. RED-proven: collapsing the two disposition reads
+  back to the pre-split `return 'resolved'` fails exactly the two new pole tests
+  (`tests/scripts/lint_promotion_paths.test.ts` § *a blocker CLOSED AS REFUSED
+  does not mint* and § *a blocker closed WITHOUT a disposition fails closed*),
+  and a byte-identical restore returns 25/25 green.
+
+  **HARDENED 2026-09-01 after a neutral review of this very change found three
+  ways it could still mint against a blocker whose live `Status` is `open`.** The
+  review was commissioned over the whole delta with a prompt that stated no
+  expected outcome; its prompt and verdict are committed together at
+  `agents/evidence/reviews/drain13-neutral-review.md`. All three are now fixed
+  and each is pinned by its own test, RED-proven individually.
+
+  - **A fenced EXAMPLE of the syntax was read as the live value.** The
+    `What to do:` field exists to tell a maintainer which line to write, so a
+    fenced block showing `- **Disposition:** granted` is the likeliest content in
+    a real blocker — and it minted while `Status: open` sat two lines above it.
+    `lint_roadmap_blockers.ts:137` strips fenced code before its own read and
+    this module did not, which falsified the "cannot diverge" claim rather than
+    supporting it. Both now strip.
+  - **`granted` was matched as a PREFIX.** The regex ended in `\b`, so
+    `granted/refused (pick one)` — a half-written template — and
+    `granted-NOT, this is a refusal` both minted. `granted` must now be the
+    whole value.
+  - **The heading search was unscoped.** Any `#{2,4} blocker: merge-authority`
+    anywhere in the file won, so a `####` heading in a history section could
+    carry a status the repository's own gate never sees. The search is now
+    confined to `## Blockers` and to `###`, exactly as the gate is.
+
+  The three shared literals are copied rather than imported (that module is a CLI
+  gate with load-time side effects) and a test pins the copies byte-equal, so the
+  no-divergence claim is now checked rather than asserted.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
@@ -875,6 +982,37 @@ descopeable, and the run that looked at it says so rather than moving it.**
       either: it makes (b) permanently impossible, at which point AC-9's
       disposition becomes an owner decision in its own right rather than an
       automatic descope.
+      **FOURTH AUDIT 2026-09-01 (drain run 13) — STILL `[ ]`, and this run
+      establishes the one fact three prior audits left open: this roadmap
+      CANNOT ARCHIVE while AC-9 is unmet, and that is a property of the
+      repository rather than a judgement.** *AI council 2026-09-01
+      (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, deep,
+      peer-review, blind chairman, quorum 2/2 present, needed 1 — concluded,
+      subscription transport, `billable=0`, `$0.0000`) — Question 2: the seats
+      SPLIT, anthropic **2A** and openai **2B**, and BOTH attached the same
+      condition.* anthropic: if archive semantics conventionally imply success,
+      choose 2B instead. openai: the proposal provides no repository rule
+      showing that an active roadmap with an unmet acceptance criterion may
+      enter the archive, and that fact must be demonstrated first.
+      **The condition was then checked against the tree, and it decides the
+      split as 2B.** `src/agent-src/scripts/archive_completed_roadmaps.ts:14-16`
+      states the criterion — a roadmap that has reached `count_open == 0` and
+      `count_deferred == 0` is complete — and `:562-563` is the predicate that
+      enforces it. `count_open` comes from `count_checkboxes`
+      (`src/agent-src/scripts/update_roadmap_progress.ts:323`) over `CHECKBOX_RE`
+      (`:81`), a whole-file `/gm` regex with **no section filter**: an
+      `- [ ] AC-9` line under `## Acceptance Criteria` is counted exactly like
+      an unfinished step. There is no `terminal-incomplete` disposition in the
+      archiver and no flag that supplies one. So the archive gate is not an
+      opinion this run formed; it is a mechanism, and it refuses.
+      **Consequence, recorded as the disposition: this roadmap stays ACTIVE.**
+      It is not archived, not descoped, and not marked complete. Its executable
+      work is finished and verified; its acceptance is not, and the file remains
+      the visible carrier of that difference. Both seats also warned in Question
+      5 against exactly the framing this paragraph refuses — openai named 2A's
+      unsupported assertion that the roadmap may archive with AC-9 unmet as the
+      run's principal manufactured-closure risk, and it is declined here rather
+      than argued with.
 
 ## Provenance
 

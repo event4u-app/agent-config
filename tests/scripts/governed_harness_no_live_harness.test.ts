@@ -47,6 +47,15 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * two candidates are tried in order and a miss THROWS: a resolver that returned
  * a missing path would let half A scan nothing and exit green, which is the
  * vacuity this file's own anti-vacuity assertions exist to prevent.
+ *
+ * WHY the hardcoded path broke in the first place, kept from the parallel fix on
+ * this branch because it closes the class rather than the instance: the archiver
+ * DOES rewrite inbound references — `agents/roadmaps/<x>.md` →
+ * `agents/roadmaps/archive/<x>.md` across tracked files
+ * (`src/agent-src/scripts/archive_completed_roadmaps.ts:15-17`) — but it matches a
+ * literal path, and this one was assembled from separate `path.join` arguments,
+ * so there was no literal for it to see. Resolving active-then-archive is what
+ * removes the class; the next archival of this file cannot red the scan again.
  */
 function resolveRoadmap(): string {
     const candidates = [

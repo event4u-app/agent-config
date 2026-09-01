@@ -24,7 +24,7 @@
  * ## This module creates no promotion path
  *
  * It performs no filesystem write, no transition, and no promotion. It mints an
- * opaque token and refuses to mint one while the blocker is open. The carried
+ * opaque token, and refuses unless the blocker reads GRANTED. The carried
  * condition requires the enforcement to land *before or in* the first commit
  * that creates a promotion path; this is the enforcement, and it arrives with no
  * path attached.
@@ -47,7 +47,17 @@ const _HERE = fileURLToPath(import.meta.url);
 /** `src/scripts/_lib/` → repo root. */
 export const CAPABILITY_REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 
-/** The blocker whose open state makes this capability unobtainable. */
+/**
+ * The three literals `lint_roadmap_blockers` uses to find a blocker, copied so
+ * the two readers cannot drift: `:37`, `:38` and `:39` there. They are literals
+ * rather than an import because that module is a CLI gate with side effects at
+ * load; `tests/scripts/lint_promotion_paths.test.ts` pins them equal.
+ */
+const FENCED_CODE_RE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm;
+const BLOCKERS_SECTION_RE = /^##[ \t]+Blockers[ \t]*$/im;
+const NEXT_H2_RE = /^##[ \t]+\S/m;
+
+/** The blocker whose disposition decides whether this capability is obtainable. */
 export const MERGE_AUTHORITY_BLOCKER_ID = 'merge-authority';
 
 /** The roadmap that owns the blocker entry, repo-relative. */
@@ -66,21 +76,95 @@ export const REPO_SOURCE_ROOT = 'src';
 /**
  * Blocker states, as the roadmap gate reads them.
  *
- * `resolved` is the ONLY value that is not a refusal, and it is matched with the
- * same literal `lint_roadmap_blockers.ts:193` uses, so a blocker this repository
- * calls open and a blocker this module calls open cannot diverge.
+ * `resolved` is the ONLY value that is not a refusal. The literal that decides
+ * *closedness* is the same one `lint_roadmap_blockers.ts:193` uses, so a blocker
+ * this repository calls open and a blocker this module calls open cannot
+ * diverge — but closedness alone is no longer sufficient to mint, and the reason
+ * is a defect this module used to carry.
+ *
+ * ## Why `Status: resolved` is not, by itself, a grant
+ *
+ * `blocker: merge-authority` asks *"is preauthorized merge authority granted or
+ * refused?"*, and its own `What to do` offers BOTH directions. But `resolved` is
+ * the only closed token this repository recognises, so before this change the
+ * two directions were indistinguishable here: settling the blocker in the
+ * **refusing** direction — writing down that unattended promotion is forbidden —
+ * would have set `Status: resolved` and thereby MINTED the capability that
+ * performs unattended promotion. The refusal would have granted the thing it
+ * refused.
+ *
+ * That is the same failure ADR-239 Decision 3 names from the other side, where
+ * an authorization read out of agent-writable state *"would let the agent
+ * consent on the user's behalf — which is the thing the abort exists to prevent,
+ * reimplemented as a feature"*. Here the consent would have been synthesised out
+ * of a bookkeeping token rather than out of runtime state, which is worse: no
+ * one would have written the word "granted" anywhere.
+ *
+ * So the closed blocker must additionally carry an explicit **disposition**, and
+ * only one of its values mints. This is strictly stricter than the previous
+ * behaviour in every direction — a body that granted before and still grants
+ * must now say so — so it cannot widen the capability, only narrow it.
  */
-export type BlockerStatus = 'resolved' | 'open' | 'blocker-absent' | 'roadmap-unreadable';
+export type BlockerStatus =
+    | 'resolved'
+    | 'refused'
+    | 'resolved-unclassified'
+    | 'open'
+    | 'blocker-absent'
+    | 'roadmap-unreadable';
 
 /** Every status except `resolved`. Named so callers do not re-derive the polarity. */
 export function isRefusingStatus(s: BlockerStatus): boolean {
     return s !== 'resolved';
 }
 
-/** Extract the `### blocker: <id>` section body from a roadmap's text. */
+/**
+ * The disposition line a CLOSED `merge-authority` blocker must carry.
+ *
+ * `granted` is the only value that mints. `refused` is a first-class closed
+ * state — the blocker is answered and no longer blocks archival, and the answer
+ * is "no". Anything else, including an absent line, reads as
+ * `resolved-unclassified` and refuses.
+ */
+const DISPOSITION_GRANTED_RE = /^-[ \t]*\*\*Disposition:\*\*[ \t]*granted[ \t]*$/im;
+const DISPOSITION_REFUSED_RE = /^-[ \t]*\*\*Disposition:\*\*[ \t]*refused[ \t]*(?:$|[-—:.,(])/im;
+
+/**
+ * Blank out fenced code, preserving line count.
+ *
+ * The same transform `lint_roadmap_blockers.ts:137` applies before its own read,
+ * and applying it here is what makes the "cannot diverge" claim true rather than
+ * merely intended. Without it a fenced EXAMPLE of the syntax — which is exactly
+ * what a `What to do:` field contains, since that field's job is to tell a
+ * maintainer which line to write — is read as the live value.
+ */
+function stripFencedCode(text: string): string {
+    return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat((m.match(/\n/g) ?? []).length));
+}
+
+/**
+ * Extract the `### blocker: <id>` section body from a roadmap's text.
+ *
+ * Scoped and stripped to match `lint_roadmap_blockers` exactly: fenced code is
+ * blanked first, the search is confined to the `## Blockers` section, and only a
+ * `###` heading opens a blocker. A `#### blocker: merge-authority` under some
+ * other section is not a blocker to the linter and must not be one here either —
+ * otherwise a history note could carry a status the repository's own gate does
+ * not see.
+ */
 export function blockerSection(markdown: string, id: string): string | null {
-    const lines = markdown.split('\n');
-    const head = new RegExp(`^#{2,4}\\s+blocker:\\s*${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i');
+    const stripped = stripFencedCode(markdown);
+    const sectionMatch = BLOCKERS_SECTION_RE.exec(stripped);
+    if (sectionMatch === null) {
+        return null;
+    }
+    const sectionStart = sectionMatch.index + sectionMatch[0].length;
+    const rest = stripped.slice(sectionStart);
+    const h2 = NEXT_H2_RE.exec(rest);
+    const scoped = rest.slice(0, h2 ? h2.index : undefined);
+
+    const lines = scoped.split('\n');
+    const head = new RegExp(`^###\\s+blocker:\\s*${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i');
     let start = -1;
     for (let i = 0; i < lines.length; i += 1) {
         if (head.test(lines[i] as string)) {
@@ -93,7 +177,11 @@ export function blockerSection(markdown: string, id: string): string | null {
     }
     const out: string[] = [];
     for (let i = start; i < lines.length; i += 1) {
-        if (/^#{1,4}\s/.test(lines[i] as string)) {
+        // `#{1,6}` rather than `#{1,4}`: an h5/h6 sub-heading ends the section
+        // too. With the old bound a `##### ` line matched nothing (greedy 4 then
+        // requiring `\s`, backtracking into `#`), so everything after it bled
+        // into the body.
+        if (/^#{1,6}\s/.test(lines[i] as string)) {
             break;
         }
         out.push(lines[i] as string);
@@ -120,8 +208,20 @@ export function readMergeAuthorityStatus(repoRoot: string = CAPABILITY_REPO_ROOT
         return 'blocker-absent';
     }
     // The same literal `lint_roadmap_blockers.ts:193` matches. `resolved` is the
-    // only closed token this repository recognises.
-    return /^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body) ? 'resolved' : 'open';
+    // only closed token this repository recognises — so closedness is read with
+    // that literal and NOTHING else, and the grant/refuse direction is then read
+    // separately from the body's own `Disposition` line. See the BlockerStatus
+    // docblock for why a closed blocker is not automatically a grant.
+    if (!/^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body)) {
+        return 'open';
+    }
+    if (DISPOSITION_REFUSED_RE.test(body)) {
+        return 'refused';
+    }
+    if (DISPOSITION_GRANTED_RE.test(body)) {
+        return 'resolved';
+    }
+    return 'resolved-unclassified';
 }
 
 /** Raised when the capability cannot be minted. There is no way around it. */
@@ -137,9 +237,10 @@ export class PromotionCapabilityUnobtainableError extends Error {
 }
 
 /**
- * The token. Holding one means the blocker was resolved AND a human was named.
+ * The token. Holding one means the blocker reads GRANTED AND a human was named.
  *
- * Deliberately opaque: `blockerStatusAtGrant` is a LITERAL type, so a caller
+ * Deliberately opaque: `blockerStatusAtGrant` is a LITERAL type — its value
+ * `'resolved'` is the status enum's GRANTED member, not merely "closed" — so a caller
  * cannot construct a value of this shape with any other status, and there is no
  * exported constructor other than {@link acquirePromotionCapability}.
  */
@@ -155,9 +256,12 @@ export interface PromotionCapability {
  * Two conjuncts, both required, checked in this order so the message names the
  * governance reason first:
  *
- *   1. `blocker: merge-authority` reads `resolved` in the live roadmap. While it
- *      reads anything else — including "the roadmap is missing" — the capability
- *      is unobtainable, which is the property the council's route 1 specified.
+ *   1. `blocker: merge-authority` reads `resolved` in the live roadmap — which
+ *      now means BOTH `Status: resolved` AND `Disposition: granted`. While it
+ *      reads anything else — including "the roadmap is missing", "the blocker was
+ *      closed as refused" and "the blocker was closed without saying which" — the
+ *      capability is unobtainable, which is the property the council's route 1
+ *      specified.
  *   2. A NAMED human approver. Empty, whitespace-only and absent are refused, so
  *      the cheapest way to satisfy the gate stays "name someone".
  *
@@ -171,8 +275,9 @@ export function acquirePromotionCapability(
     if (isRefusingStatus(status)) {
         throw new PromotionCapabilityUnobtainableError(
             status,
-            'promotion into canonical agent-config is gated on an OPEN, owner-reserved blocker ' +
-                '(ADR-239 Decision 3). No flag, environment variable or argument lifts it.',
+            'promotion into canonical agent-config is gated on the owner-reserved blocker ' +
+                '(ADR-239 Decision 3), which does not read as GRANTED. No flag, environment ' +
+                'variable or argument lifts it.',
         );
     }
     if (approval.approver.trim() === '' || approval.approvedAt.trim() === '') {
