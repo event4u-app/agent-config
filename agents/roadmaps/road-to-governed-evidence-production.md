@@ -282,6 +282,46 @@ The fixture prohibition above is unchanged and is not weakened by any of this.
       proposition being verified rather than correcting it. The source step's
       `category` was corrected to `future-mechanism` in the same movement, which
       removed a closure right and granted none.
+      **SESSION A — THE BUILD HALF LANDED 2026-09-01. THE STEP STAYS `[ ]`, AND
+      that is the design rather than a shortfall.** The park's un-park procedure
+      requires the session that freezes the protocol and captures results to be
+      independent of the one that authored the arm
+      (`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:49-52`),
+      so a single session doing both is not a discharge however green it comes
+      back. This session built the arm and made **zero metered calls**.
+      **The second arm now exists**, which was the whole of what 2.1 was blocked
+      on — *"a paired verdict needs two arms and
+      `src/scripts/_lib/llm_candidate_proposer.ts` does not exist"*:
+      (a) `src/scripts/_lib/llm_candidate_proposer.ts` — the arm. Same
+      `DefectObservation` input, same `CandidateRecord` output, same id function
+      and same input ordering as the deterministic arm, so the two are
+      comparable pair-wise over one input.
+      (b) `src/scripts/_lib/llm_proposer_transport.ts` — the only file in the
+      arm's closure carrying a model endpoint. Dated model ids only; the `high`
+      tier is `null` and REFUSES, because no dated `claude-opus-4-1-*` id exists
+      in this tree and a floating alias in a frozen protocol is not frozen.
+      (c) `src/scripts/llm_propose.ts` — the entry point, dry by default.
+      `--confirm` is the only path that spends, and it has never been taken.
+      **The role constraint is structural, not intentional.** A metered call may
+      generate text and nothing else, and six separate mechanisms make the other
+      roles unavailable rather than discouraged: the port's result type carries
+      `text` and `model` only and a `NoDecisionField` compile-time assert turns
+      any scoring key into a BUILD ERROR; the port takes one request and returns
+      one result, so it cannot express a batch or a comparison; one record per
+      observation is asserted at the return; an unsatisfiable observation THROWS
+      instead of being dropped, so the output can never be a subset; output
+      order is `byteCompare` over the INPUT using the deterministic arm's own
+      comparator; and the arm imports no verdict module. One test per mechanism.
+      **Escalation is decided by a deterministic refusal, never by the model.**
+      The first attempt runs on `reason_unknown`, whose ladder is exactly
+      `['lite']`; a refusal is classified into a `PathologyWhy` from the refusal
+      itself and the walk continues on that class's cheapest untried rung. The
+      retry stops at the FIRST contract-valid generation — it never holds two
+      valid generations and no code path can express choosing between them.
+      **What has NOT happened:** no metered call, no capture, no comparison. The
+      transport's live path is unexercised; its request shape is proven by
+      `describeRequest` and a unit test over the description, and every
+      behavioral test uses a stubbed generator.
 
 - [ ] **2.2 Cheap proposer models first, and track evolution ROI.**
       Transferred whole from `road-to-governed-harness-evolution` step 5.6.
@@ -298,6 +338,26 @@ The fixture prohibition above is unchanged and is not weakened by any of this.
       population of zero, because nothing in the tree makes a metered proposer
       call. A check that scans a population of zero exits green while looking
       like coverage, which is why this is open rather than closed.
+      **UPDATED 2026-09-01 — the caller now exists; the live population does
+      not.** `proposeCandidatesWithModel`
+      (`src/scripts/_lib/llm_candidate_proposer.ts:369`) calls
+      `assertCheapestFirst` over the attempts the walk actually made, and
+      `plannedAttempts` (`:429`) calls it over the dry-run plan, which
+      `llm_propose` reaches with no spend. So "zero production callers" is no
+      longer true. What is still true is that no LIVE run has produced attempts,
+      so the ordering has not yet governed a spent population — see AC-3.
+      **A defect found and closed during the build, recorded because the first
+      version shipped an unfalsifiable guard.** The walk builds attempts from
+      `nextTier` per class, so an out-of-order list is unconstructible and the
+      guard's red was NOT producible through the caller — the same defect
+      `_lib/candidate_proposer.ts:343-347` records for an output sort it deleted
+      for exactly this reason. Found by running the sabotage: sharing one
+      spent-map across classes did not make the guard fire, it exhausted the
+      ladder early and threw elsewhere. Closed by the `priorAttempts` parameter
+      — a budget-aborted run's history is UNTRUSTED caller input validated by
+      the same guard, so an inconsistent history reds and removing the guard
+      call reds that case. Over an empty history the guard is still
+      defence-in-depth, and the module says so at the call.
 
 ## Blockers
 
@@ -419,6 +479,20 @@ The fixture prohibition above is unchanged and is not weakened by any of this.
       is recorded. Held by `metered-backend-park`.
 - [ ] AC-3 — `assertCheapestFirst` has at least one production caller, so the
       ordering it polices governs a real population rather than an empty one.
+      **HALF MET 2026-09-01, and left `[ ]` on the half that is not.** The
+      caller exists and is on the executable path: `proposeCandidatesWithModel`
+      calls it over the attempts a run actually made, and `plannedAttempts`
+      calls it over the dry-run plan, which `llm_propose` reaches without
+      spending. The guard is also falsifiable now — an inconsistent resumed
+      history is refused, and removing the call reds that case.
+      **What is not met is the criterion's purpose clause.** The populations
+      that exist today are the all-`lite` dry plan, in which no ordering
+      decision arises, and test populations under a stubbed generator. Neither
+      is a spent population, so the ordering has not yet governed one.
+      **No further code is needed to close it** — Session B's first metered run
+      produces the population, and the caller is already there to police it.
+      Checking it now would be closing on the half that was already true, which
+      is the failure this whole file was transferred to prevent.
 - [ ] AC-4 — Programme success and failure criteria were committed before the
       first candidate run, and the run report carries an evolution-ROI figure.
       Transferred whole from `road-to-governed-harness-evolution` AC-8. Its
