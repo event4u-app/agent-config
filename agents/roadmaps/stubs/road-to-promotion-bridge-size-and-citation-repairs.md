@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: stub
+review_by: 2027-03-31
 ---
 
 # Road to the promotion-bridge size split and the topology citation repairs
