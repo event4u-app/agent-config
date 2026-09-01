@@ -28,8 +28,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     BLOCKED_QUICKWIN_FIELDS,
+    CHANGELOG_ERAS,
     counts,
     is_blocked_quickwin,
+    releases_since,
     scan_dir,
 } from '../../src/agent-src/scripts/stubs_due.js';
 
@@ -145,5 +147,53 @@ describe('the existing JSON contract is additive-only', () => {
         expect(ready?.overdue).toBe(false);
         expect(ready?.owner_decisions).toBe(0);
         expect(counts(recs).total).toBe(2);
+    });
+});
+
+/**
+ * 2.1 — the falsifier is machine-readable.
+ *
+ * The council's reopening condition is a NUMBER — "validated promotions blocked
+ * across more than two releases" — and it lived only as prose inside the stub it
+ * constrains, so the party it would reopen the question for was the only party
+ * who could find it. These pin the count and the two ways it silently goes wrong.
+ */
+describe('releases since the hold began', () => {
+    const DATES = ['2026-08-31', '2026-08-25', '2026-08-24', '2026-08-23', '2026-08-23'];
+
+    it('counts strictly AFTER the validation date — three, against a fixed tree', () => {
+        // The real corpus: 14.13.0, 14.12.0, 14.11.0 land after 2026-08-23;
+        // 14.9.0 and 14.10.0 land ON it and are the same-day case below.
+        expect(releases_since('2026-08-23', DATES)).toBe(3);
+    });
+
+    it('is `> 2`, which is the condition the council actually wrote', () => {
+        expect(releases_since('2026-08-23', DATES)).toBeGreaterThan(2);
+    });
+
+    it('a same-day release does not count — it cannot have carried the blocked fix', () => {
+        expect(releases_since('2026-08-31', DATES)).toBe(0);
+    });
+
+    it('reads BOTH changelog eras — the archive is where 14.11.0 lives', () => {
+        // Not a preference: the era split moved older sections out, so a reader
+        // of CHANGELOG.md alone reports zero for anything before it and the
+        // falsifier silently never fires.
+        expect(CHANGELOG_ERAS).toContain('CHANGELOG.md');
+        expect(CHANGELOG_ERAS).toContain('docs/archive/CHANGELOG-pre-14.12.0.md');
+    });
+
+    it('a stub without `blocker_opened:` reports null, never zero', () => {
+        // Zero would read as "the falsifier has not fired". Absent is not zero.
+        write('nodate.md', ALL_THREE);
+        const r = scan_dir(base, '2026-09-01', DATES)[0];
+        expect(r?.releases_since_blocked).toBeNull();
+    });
+
+    it('a stub with the date carries the count into the record', () => {
+        write('dated.md', { ...ALL_THREE, blocker_opened: '2026-08-23' });
+        const r = scan_dir(base, '2026-09-01', DATES)[0];
+        expect(r?.releases_since_blocked).toBe(3);
+        expect(r?.blocked_quickwin).toBe(true);
     });
 });
