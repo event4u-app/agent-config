@@ -47,7 +47,7 @@ export default defineConfig({
         // machine's `LANG` and fail on another's — the exact failure that made
         // PR #1458 red on `macos-latest, shard 2/4` while green everywhere else.
         // Rationale and the deliberate narrowness live in the file itself.
-        setupFiles: ['tests/_lib/hermetic-env.ts'],
+        setupFiles: ['tests/_lib/hermetic-env.ts', 'tests/_lib/skills-dir-guard.ts'],
         // Runs ONCE, in the main process, before any worker spawns. Builds the
         // gitignored `dist/` artefacts the four e2e suites spawn, but only when
         // they are absent. On a fresh checkout those four files accounted for 31
