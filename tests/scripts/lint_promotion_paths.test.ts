@@ -9,7 +9,7 @@
 import { readFileSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { REPO_ROOT, TSX_BIN } from './_bench_ab.js';
@@ -34,11 +34,27 @@ import {
     targetsCanonicalSource,
 } from '../../src/scripts/lint_promotion_paths.js';
 import {
+    MERGE_AUTHORITY_ROADMAP,
     PromotionCapabilityUnobtainableError,
     acquirePromotionCapability,
     blockerSection,
     readMergeAuthorityStatus,
 } from '../../src/scripts/_lib/promotion_capability.js';
+
+/**
+ * The fixture path a sandboxed reader must find the blocker at.
+ *
+ * DERIVED from the module's own constant rather than spelled out. It was
+ * hardcoded as `agents/roadmaps/road-to-harness-promotion-bridge.md`, and when
+ * that roadmap closed at its PR boundary on 2026-09-01 the archival sweep
+ * rewrote the constant to `agents/roadmaps/archive/...` — at which point eight
+ * fixtures wrote a file the reader no longer looked at, and every one of them
+ * failed. Deriving it means the next move of that file cannot silently
+ * decouple the fixtures from the code they exercise.
+ */
+function blockerFixturePath(dir: string): string {
+    return join(dir, ...MERGE_AUTHORITY_ROADMAP.split('/'));
+}
 
 const GATE_TS = join(REPO_ROOT, 'src', 'scripts', 'lint_promotion_paths.ts');
 
@@ -224,11 +240,9 @@ describe('R3 — candidate-derived writes into the canonical source tree', () =>
  * section around it is correctly invisible.
  */
 function writeBlocker(dir: string, body: string): void {
-    mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
-    writeFileSync(
-        join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
-        `## Blockers\n\n### blocker: merge-authority\n\n${body}`,
-    );
+    const target = blockerFixturePath(dir);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, `## Blockers\n\n### blocker: merge-authority\n\n${body}`);
 }
 
 
@@ -250,9 +264,9 @@ describe('the guarded capability', () => {
         const dir = mkdtempSync(join(tmpdir(), 'promo-cap-'));
         try {
             expect(readMergeAuthorityStatus(dir)).toBe('roadmap-unreadable');
-            mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
+            mkdirSync(dirname(blockerFixturePath(dir)), { recursive: true });
             writeFileSync(
-                join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
+                blockerFixturePath(dir),
                 '## Blockers\n\n# nothing here\n',
             );
             expect(readMergeAuthorityStatus(dir)).toBe('blocker-absent');
@@ -352,9 +366,9 @@ describe('the guarded capability', () => {
         // status the repository's own gate cannot see.
         const dir = mkdtempSync(join(tmpdir(), 'promo-cap-scope-'));
         try {
-            mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
+            mkdirSync(dirname(blockerFixturePath(dir)), { recursive: true });
             writeFileSync(
-                join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
+                blockerFixturePath(dir),
                 '## History\n\n' +
                     '#### blocker: merge-authority\n\n' +
                     '- **Status:** resolved\n' +
