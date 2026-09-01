@@ -28,6 +28,35 @@ review_by: 2026-09-30
 > 3's ladder recorder, which enables item 4's first run."* So the items below
 > are separate criteria in one document, and are promoted **per item**.
 
+## Added 2026-09-01 — step 5.4 joins this stub, on a later council verdict
+
+`road-to-governed-harness-evolution` step 5.4 — *"An LLM proposer must beat the
+deterministic one to survive"* — was closed `[x]` on 2026-08-31 by a council
+verdict that treated it as an `absence-assertion` and re-scoped its `verify:`
+clause to the fallback branch. **A later 2-of-2 convergent council, 2026-09-01
+(landed on `main` in #1786), refuted that premise**: the `absence-assertion`
+category was *"a documentation bug rather than a closure opportunity"*, and
+using it to justify a retroactive re-scope *"changes the proposition being
+verified rather than corrects it"*. The category is now `future-mechanism` and
+the `verify:` clause stands verbatim.
+
+So the `[x]` is withdrawn and 5.4 is `[-]` TRANSFERRED here alongside 4.1, 5.6
+and AC-8. **What it needs is the same thing they need:** a second arm.
+`src/scripts/_lib/llm_candidate_proposer.ts` does not exist, so the
+`paired_verdict` comparison has nothing to compare against.
+
+**What is NOT carried, because it is genuinely discharged:** the deterministic
+path is pinned as the only proposer and cannot be displaced silently. Proven by
+sabotage — a planted provider `fetch` inside the proposer module reds 1 of 4,
+byte-identical restore (sha256 `9b209a1c…198`), 4/4 green. That guard is
+committed and runs in CI regardless of this stub.
+
+**Resume when** `src/scripts/_lib/llm_candidate_proposer.ts` lands — at which
+point the absence test turns RED and 5.4 reopens by itself.
+
+**Do not claim** that an LLM proposer was compared against the deterministic
+one, that the paired verdict was computed, or that 5.4's verify clause was met.
+
 ## The shared cause
 
 Every item here polices a property of a **metered model call**. The parent

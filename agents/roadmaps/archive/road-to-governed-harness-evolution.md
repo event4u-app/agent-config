@@ -1765,7 +1765,7 @@ once.
       **The judge stays optional**, as the step says: `buildSplitPipeline`
       (`:330`) returns `judge: null` when none is configured, and the three role
       prompts are produced regardless.
-- [x] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+- [-] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
       **CLOSED 2026-08-31 (drain run 13) on a NARROW RE-SCOPE, decided by the AI
       council — 2/2 convergent, anthropic/claude-sonnet-4-5 +
       openai/codex-default, 2 rounds, both seats present.** The council was
@@ -1786,6 +1786,40 @@ once.
       branch, where 4.1, 5.6 and AC-8 state unconditional requirements and carry
       none.
 
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/candidate_proposer.ts
+        command: npx vitest run tests/scripts/proposer_survival_bar.test.ts
+        red_proof: sabotage run 2026-08-31 — 1 failed / 3 passed, restored 4/4
+        sabotage_model: added a fetch to an API host inside the proposer module
+        recheck_when: src/scripts/_lib/llm_candidate_proposer.ts
+        discharged_ac: the deterministic path is pinned as the only proposer, so it cannot be displaced silently
+        pending_ac: the paired-verdict comparison itself, which needs a second arm
+      ```
+
+      **THIS BRANCH'S `[x]` ON 5.4 IS WITHDRAWN, 2026-09-01, and the withdrawal
+      is the application of the verdict above rather than a new decision.** This
+      branch closed 5.4 `[x]` on a council verdict of 2026-08-31 that called it
+      *"the single `absence-assertion` in the set"* and re-scoped the verify
+      clause to its fallback branch. A LATER council — 2-of-2 convergent,
+      2026-09-01, landed on `main` in #1786 and merged here — ruled on exactly
+      that premise and refuted it: the `absence-assertion` category was a
+      **documentation bug rather than a closure opportunity**, and using it to
+      justify a retroactive re-scope *"changes the proposition being verified
+      rather than corrects it"*. The earlier verdict rested on the mistaken
+      category; the later one removed it. So the box returns to `[-]`
+      TRANSFERRED alongside 4.1, 5.6 and AC-8, and the `verify:` clause stands
+      verbatim with its `paired_verdict` comparison unmet.
+
+      **What the earlier verdict established still holds and is not discarded:**
+      the deterministic path IS pinned as the only proposer and cannot be
+      displaced silently, proven by a sabotage run re-executed in this session
+      (1 failed / 3 passed under a planted provider `fetch`, byte-identical
+      restore sha256 `9b209a1c…198`, 4/4). That is the `discharged_ac` half. What
+      it never established is the paired-verdict comparison, which needs a
+      second arm that does not exist — the `pending_ac` half, and the half a
+      `[x]` would have claimed.
       **What is closed, stated narrowly so the closure cannot be read as more
       than it is.** The branch that obtains today — *"Otherwise the
       deterministic path stays"* — is closed, and it is closed because it is
@@ -1811,6 +1845,21 @@ once.
       contract. If rescoped well (explicitly noting the fallback branch, the
       unmet comparison, and the recheck trigger), it exemplifies the category's
       intended use."*
+
+      **RECATEGORISED 2026-09-01 from `absence-assertion` to
+      `future-mechanism`, on a 2-of-2 convergent AI council
+      (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, subscription
+      transport, $0.00 billed).** Both seats read the original category as a
+      **documentation bug rather than a closure opportunity**: the contract gives
+      `absence-assertion` the right to close `[x]` once sabotage-verified, and
+      this step's own `verify:` clause names a `paired_verdict` comparison, which
+      is a mechanism that does not exist. Using the mistaken category to justify
+      a retroactive re-scope of the verify clause would, in the openai seat's
+      words, change the proposition being verified rather than correct it, and in
+      the anthropic seat's, defeat the purpose of the very contract the
+      annotation belongs to. **The `verify:` clause is therefore kept verbatim
+      and the category is tightened.** The recategorisation removes a closure
+      right; it grants none.
 
       **Why it cannot be run, stated as a fact about the tree rather than as
       effort.** `_lib/candidate_proposer.ts` is the only proposer and is
