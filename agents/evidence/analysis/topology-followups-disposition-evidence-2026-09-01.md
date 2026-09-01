@@ -582,6 +582,50 @@ Two things a decider should weigh that this recommendation does not settle:
    `deferred-resolution:` annotations is a separate decision; this dossier only
    establishes that no such validator exists today.
 
+## Addendum, 2026-09-01 — what happened next, and one correction to this dossier
+
+Everything above records the tree at commit `468eeefc7` and is left standing.
+This section is appended rather than edited in, because a dated evidence
+artifact that rewrites its own findings stops being evidence.
+
+**The AI council ran in parallel with this analysis and converged 2/2 on 4A:
+the receiver stays unchanged as a draft receiver.** Both seats reached it
+independently and gave the reasons § 5 gives — deleting it breaks the carry,
+flipping to `ready` and cancelling as `[-]` cross explicit reservations, and
+directory emptiness does not outrank accurate state. Recommendation (i) is
+adopted; recommendation (v) was executed.
+
+**One finding above is wrong, and in the direction that matters — it
+undercounted.** § 2 says the `[-]`-means-deferred defect sits in "the two bench
+stubs". A tree-wide sweep for the construct found it in **three**: the
+instrumentation stub carries it too, at its line 11, which the § 2 read missed.
+Six sites across the three files, all corrected. The sweep also surfaced a
+*different* construct — `[-]` means TRANSFERRED — in the harness-promotion
+family; that one self-documents the hazard in its own risk register and is
+two-thirds archived, so it was left alone rather than swept up.
+
+Two further facts the corrections turned up, neither visible from the § 2 read:
+
+- **The stubs were wrong about the glyph as well as its meaning.** They said
+  their steps are `[-]` in the parent. All 38 carried steps are `[~]`; the
+  parent's only four `[-]` are Phase 4 items 4.2, 4.4, 4.5 and 4.6, genuinely
+  cancelled and not carried. Both errors have one root, which the parent's own
+  correction note at `:38-46` records: the deferrals were first encoded `[-]`,
+  an R2 review corrected the parent before it shipped, and the stubs were not
+  corrected with it.
+- **The forbidden-claims pointer was circular.** § 2 established that two stubs
+  lacked the lists. What it did not establish is that eight of the parent's
+  deferral blocks end by pointing *at those stubs* for exactly those lists — so
+  for five steps the pointer resolved to nothing at either end. The lists were
+  transcribed from the parent's own deferral prose and the sources cited inline.
+  The council responses JSON carries the same prohibitions in a cleaner form and
+  was deliberately **not** used as provenance: it is gitignored and auto-pruned,
+  so a citation to it would rot.
+
+**Unchanged by any of this:** every § 1 trigger verdict, the § 3 archive-impact
+result, and all six § 4 spot-checks. No checkbox, `status:` field or deferral
+state was touched. The appendix below is as originally written.
+
 ## Appendix — what was not checked
 
 | Not established | What would establish it |
