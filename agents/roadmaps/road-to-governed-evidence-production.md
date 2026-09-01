@@ -263,6 +263,52 @@ bind every step below:
 
 The fixture prohibition above is unchanged and is not weakened by any of this.
 
+**EXECUTION HALF ATTEMPTED AND REFUSED BY THE HARNESS, 2026-09-01 (drain run
+13). Recorded rather than worked around, and NOT retried.**
+
+The build half of Phase 2 landed in this branch: the metered arm
+(`src/scripts/_lib/llm_candidate_proposer.ts`), its transport
+(`src/scripts/_lib/llm_proposer_transport.ts`), the entry point
+(`src/scripts/llm_propose.ts`, dry by default) and the frozen execution protocol
+(`docs/contracts/metered-proposer-protocol.md`). **No metered call was made by
+that session — zero requests to any provider API**, which is the state the park's
+un-park procedure requires of the authoring session.
+
+The execution half was then dispatched to a **fresh, independent session** —
+which is the park's own requirement at
+`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:49-52`, *"an
+independent session (not the one that authored the corpus) freezes the execution
+protocol … BEFORE capturing any baseline"*. That dispatch was **refused by the
+host harness's safety classifier** before the session started, because it would
+have been authorised to make real paid API calls.
+
+**Why it was not retried, and this is the load-bearing part.** The identical
+shape is already on the record one roadmap over:
+`road-to-harness-promotion-bridge.md` § `blocker: merge-authority` documents an
+autonomous run whose question *"was refused twice by the harness's own safety
+classifier before reaching any seat"*, and notes that the run *"stopped rather
+than rephrasing its way past a safety refusal, which would have been the
+reservation defeated by persistence."* The same reasoning binds here. A softened
+re-prompt that got the same work past the same classifier would be persistence,
+not authorisation — and the maintainer's pre-authorisation of token spend is not
+the classifier's to be argued with by an agent.
+
+**What this changes about Phase 2's state, precisely.** The block is no longer
+governance. `metered-backend-park` is narrowed and a metered proposer is
+admitted; the arm exists, the protocol is frozen, and the independence split is
+designed rather than hypothetical. What remains is a **harness execution
+refusal**, which is falsifiable and environment-scoped: it clears the moment a
+human runs the frozen protocol themselves, or authorises a session that may
+spend. Nothing here is closed on a fixture, and 2.1's verify clause — *"the
+comparison is a paired_verdict run, not an argument"* — is carried unweakened.
+
+**One protocol slot is deliberately UNSET and must stay that way until the
+executing session closes it: the paired outcome metric and its aggregation.**
+The build session left it open because the park names aggregation among the
+choices a session under evaluation must not make for itself. Whoever executes
+freezes it in writing FIRST, in its own commit, before any capture. A metric
+chosen after seeing a result is a tuned metric.
+
 - [ ] **2.1 An LLM proposer must beat the deterministic one to survive.**
       Transferred whole from `road-to-governed-harness-evolution` step 5.4.
       verify: the comparison is a paired_verdict run, not an argument.
