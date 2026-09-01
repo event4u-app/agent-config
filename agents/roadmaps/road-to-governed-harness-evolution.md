@@ -1837,11 +1837,28 @@ once.
       cannot see (proved with a `delete` past the type,
       `tests/scripts/_lib/evolution_roi.test.ts:140`). The caller is real, not a
       unit test: `verbRun` builds the report on the ONE path a run completes on
-      (`src/scripts/evolution_lab.ts:779`) and writes it to stdout
-      (`:800`), and evaluation evidence is parsed BEFORE the first clone
-      (`:745`) so a malformed vector aborts before the run spends anything.
+      (`src/scripts/evolution_lab.ts:865`) and writes it to stdout
+      (`:878`), and evaluation evidence is parsed BEFORE the first clone
+      (`:761`) so a malformed vector aborts before the run spends anything.
       Reproduce with
       `./scripts-run src/scripts/evolution_lab run --record REC.json --vector VEC.json --estimated-spend-cents 250`.
+      **ANCHOR REPAIR 2026-08-31 (drain run 12) — five line numbers, no claim
+      touched.** The four anchors into `src/scripts/evolution_lab.ts` and
+      `tests/scripts/evolution_lab.test.ts` in this step, plus one in AC-8, were
+      written before three later commits moved them — `a4c884fa0` (merge
+      origin/main), `32203ec34` (two type errors the merge introduced) and
+      `dae43b1e8` (two unused imports). Repaired by reading the file: the report
+      is built at `:865` (was `:779`), written to stdout at `:878` (was `:800`),
+      the vector parse loop opens at `:761` (was `:745`) with
+      `parseMetricVectorJson` called at `:764` (was `:428`), and the end-to-end
+      ROI assertion is `tests/scripts/evolution_lab.test.ts:524` (was `:409`).
+      **Every underlying claim reproduces and none is weakened** — the
+      parsed-before-cloned ordering in particular still holds by construction,
+      the parse loop closing at `:768` and the first `clone_candidate` at
+      `:784`, and the source carries that same sentence as a comment at `:756`.
+      This is the *"a number written before a rebase goes false silently"*
+      failure this file repairs rather than rewrites.
+
       **The figure is a union, not a number, because a ratio is not always
       defined.** `ratio` at positive spend with something evaluated,
       `no-spend` at zero spend, `unmeasured` when no candidate carried an
@@ -1850,11 +1867,11 @@ once.
       and reads as a finding: `run` clones and nothing in Phase 5 evaluates,
       because 5.2 keeps the live-floors park intact.
       **Measured end-to-end on the real CLI, not only in the builder's unit
-      test.** `tests/scripts/evolution_lab.test.ts:409` spawns the process over
+      test.** `tests/scripts/evolution_lab.test.ts:524` spawns the process over
       five real clones and asserts exactly ONE `run-report: roi:` line on its
       stdout reading `unmeasured`; a second invocation supplying a vector with
       one `pass` row at 250 cents prints `0.400 improved rows per dollar`. The
-      vector goes through `parseMetricVectorJson` (`:428`), which calls
+      vector goes through `parseMetricVectorJson` (`:764`), which calls
       `buildVector` and therefore INHERITS the artifact-count refusal rather
       than re-implementing it — verified against the live CLI, which rejects a
       vector missing that row before any clone is made.
@@ -2743,7 +2760,7 @@ once.
       report now exists, `buildRunReport`
       (`src/scripts/_lib/evolution_roi.ts:363`) REFUSES one without the ROI
       figure, and `evolution_lab`'s `run` verb emits it on the one path a run
-      completes on (`src/scripts/evolution_lab.ts:779`). Any report this
+      completes on (`src/scripts/evolution_lab.ts:865`). Any report this
       programme produces from here on carries the figure structurally rather
       than by an author remembering to add it. That is the SHAPE half.
       **What is still missing is the run, and it is not reachable in this
@@ -2756,7 +2773,7 @@ once.
       `tests/scripts/governed_harness_no_live_harness.test.ts` holds it.
       **A fixture is not the first candidate run, and none of the artefacts
       5.6 shipped is offered as one.** The end-to-end case at
-      `tests/scripts/evolution_lab.test.ts:409` drives the real CLI over five
+      `tests/scripts/evolution_lab.test.ts:524` drives the real CLI over five
       real clones and asserts the report reaches stdout; it proves the report
       is emitted, and it evaluates no candidate. Reading it as the run would be
       exactly the substitution this criterion exists to catch.
