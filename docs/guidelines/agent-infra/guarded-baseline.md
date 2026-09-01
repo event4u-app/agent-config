@@ -34,6 +34,6 @@ Tooling, all of it in `guarded_baseline.ts` and enforced by both consumers:
 | Reported **separately**: a `## 🛡️ Guarded baselines` dashboard section plus a per-step stderr line | `update_roadmap_progress` |
 | **Rejected** — exit 1, on both `--check` and a plain regen — when `red_proof` is absent, when `category` is absent or illegal, when there is no evidence block, or when the annotation sits on anything but `- [ ]` | `update_roadmap_progress` |
 | Treated as **incomplete**: archival refused and the reason named | `archive_completed_roadmaps` |
-| Marked **stale** once a path-shaped `recheck_when` trigger resolves in the tree; a bare symbol trigger is reported as not machine-checkable rather than as not-stale | `guardedBaselineStaleness` |
+| Marked **stale** once a path-shaped `recheck_when` trigger resolves in the tree. A trigger carrying **no** path token at all is reported as not machine-checkable rather than as not-stale; a trigger carrying at least one path token is decided by that path and is **not** reported, even when a companion symbol token sits beside it — a checked trigger that looks unchecked is the mirror of the failure the report exists to prevent (measured 2026-09-01: 3 of 4 reported lines were already decidable) | `guardedBaselineStaleness` |
 
 Only verification against the real mechanism permits `[x]`. **A baseline that has not demonstrably gone RED is an ordinary open item** and must not carry the annotation at all — the sabotage-and-restore proof is the entry price, not a nice-to-have.
