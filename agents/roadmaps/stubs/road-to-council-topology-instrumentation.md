@@ -8,8 +8,21 @@ review_by: 2027-03-31
 > **Stub — not active work.** Created 2026-09-01 (drain run 12) by an AI council
 > disposition on `road-to-inbox-harvest-2026-08-e-council-topology-evidence`,
 > which closed the same day with **incomplete scope and explicit deferrals**.
-> Twelve steps are `[-]` there and point here. `[-]` means **DEFERRED, not
-> cancelled and not satisfied.**
+> Twelve steps are `[~]` there and point here. `[~]` means **DEFERRED —
+> planned, carried, and not satisfied.**
+>
+> **Glyph note — do not "restore" this.** This stub read `[-]` until 2026-09-01.
+> In this tree `[-]` means **cancelled — scope dropped, won't happen at all**
+> and is additionally owner-reserved; `[~]` means **deferred**
+> (`docs/guidelines/agent-infra/roadmap-progress-mechanics.md:218-219`,
+> `src/agent-src/scripts/update_roadmap_progress.ts:25`,
+> `src/agent-src/templates/roadmaps.md:30`,
+> `src/agent-src/contexts/execution/terminal-states.md:41`; owner-reserved at
+> `src/agent-src/scripts/archive_completed_roadmaps.ts:396`). The error came from
+> transcribing the council's **own** vocabulary — both seats wrote "DEFER `[-]`"
+> throughout their responses. The parent roadmap was corrected to `[~]` by an R2
+> review before it shipped and carries its own correction note; these stubs were
+> not corrected with it.
 >
 > **Everything already built stays built.** Every test named below is committed
 > and runs in CI regardless of the checkbox state — the council was explicit
@@ -28,7 +41,8 @@ parking — 'mechanism built, waiting for population' is a deferred state, not a
 active one."** The openai seat put the same rule as a semantics claim: `[x]`
 means the complete verify clause passed, `[ ]` means work is genuinely active
 with a committed path, `[-]` means intentionally postponed under stated
-conditions. Every step here failed the first two tests.
+conditions — **the seat's vocabulary, not this tree's**, where that sense is
+`[~]` (glyph note above). Every step here failed the first two tests.
 
 ## Group 1 — seven guarded baselines: built, red-proven, population empty
 
@@ -50,7 +64,7 @@ selection, a force-topology control, a stage-output producer, prompt storage on
 a training row — enters an integration branch or a release candidate, verify the
 guard still prevents the failure mode and close the step then.
 
-**Claims forbidden while `[-]`:** that the constraint holds for an implemented
+**Claims forbidden while `[~]`:** that the constraint holds for an implemented
 feature; that the absent feature is production-safe; that the verify clause
 passed; and — the one both seats named twice — **that sabotage sensitivity is
 positive runtime validation.** The only permitted claim is that the defensive
@@ -86,6 +100,27 @@ test exists and detects the planted violation.
   **Resume when** "useful change" and "zero marginal value" have stable
   comparison semantics and a real-run budget is reserved. **Do not claim** that
   marginal value is measured, or that the rate exists or is non-null.
+
+**Claims forbidden while `[~]`, for the group as a whole.** Consolidated
+2026-09-01 from the per-item clauses above and from the three deferral blocks in
+the archived parent (`5.4` at
+`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md:1638-1643`,
+`10.2` at `:2443-2449`, `10.3` at `:2487-2492`), each of which points *here* for
+its forbidden claims. Nothing below is new: this section exists because that
+pointer previously resolved to no list.
+
+- that any of the three mechanisms is built — all three are **unbuilt**;
+- that a verify clause passed, for any of them;
+- that adding prose to a template constitutes the mechanism — both seats refused
+  to license a prose-only build as *"another indefinitely parked baseline"*;
+- that a rate, an attribution, or a synthesis property was **measured** — an
+  emitter with no producer for its inputs is a population-of-zero mechanism, and
+  a rate computed over today's corpus would have a numerator with no observable
+  events, which is the exact `null` step 10.3 forbids;
+- that the absence of a signal is evidence the signal is benign.
+
+The only permitted claim is that the gap was located, its cause named in the
+tree, and its resumption trigger recorded.
 
 ## Group 3 — the inline-findings pair, and a reproduced finding
 
@@ -125,6 +160,26 @@ test exists and detects the planted violation.
   frozen beforehand. **Do not claim** the >= 70 % rate, absence of an `unparsed`
   regression, finding-quality equivalence, promotion readiness, **or a null
   result.**
+
+**Claims forbidden while `[~]`, for the group as a whole.** Consolidated
+2026-09-01 from the per-item clauses above and from the two deferral blocks in
+the archived parent (`1B.1` at `:865-883`, `1B.4` at `:978-984`), which point
+*here* for their forbidden claims.
+
+- that the second extraction call is eliminated, or that inline parsing is
+  proven;
+- that the `codex-default` contract miss is a **rate** — n = 2, no matched
+  comparator, and 1B.4's arms have not started. Reproduction makes it a stable
+  seat-level property; it does not make it a frequency;
+- that a passing 1B.1 is statistical evidence for 1B.4;
+- that the >= 70 % gate passed, that there is no `unparsed` regression, or that
+  finding quality is equivalent;
+- **that the unrun gate produced a null.** An unrun gate is neither a pass nor a
+  null, and the council forbids recording it as either;
+- any compliance figure that omits the pre-registered residual: a member quoting
+  another member's well-formed findings array is indistinguishable by shape from
+  one emitting its own, so the rate is always reported **with** that residual
+  named.
 
 ## Floors the council refused to move
 
