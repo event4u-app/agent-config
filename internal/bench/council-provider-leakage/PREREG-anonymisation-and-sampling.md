@@ -197,15 +197,100 @@ Both seats also refused a weaker premise the question had offered: the evidence
 in the tree proves that labels **can pass through**, not their **prevalence**.
 So the RAW arm is not a foregone conclusion and is not to be presented as one.
 
-### The pattern list — DEFERRED, and deliberately not written here
+### The pattern list — REGISTERED 2026-08-31 (drain run 12)
 
-Condition 1 requires the list to be version-pinned before the stripped arm
-runs, and this document does not supply it. Writing a pattern list in the same
-change that settles the protocol would put an unreviewed floor into the
-pre-registration under cover of the council's verdict, which is the shape the
-verdict's own condition 1 exists to prevent. It is the next artefact this bench
-needs, and until it exists the **stripped arm cannot run**. The RAW arm is
-unblocked by it.
+**Condition 1 is discharged, and so is condition 2.** The list is
+`src/scripts/ai_council/leakage_patterns.ts`, version
+`leakage-patterns-v1-2026-08-31`, 15 rules, digest
+`10045caaec23a1bd7053a629f9e8043cb6a3066b44e349ceba6890b058976da6`.
+Tests: `tests/scripts/ai_council/leakage_patterns.test.ts`, 28 green.
+
+**Why it lands as its own change, which is what the deferral asked for.** The
+previous entry here refused to write the list in the change that settled the
+protocol, because that would have put an unreviewed floor into the
+pre-registration under cover of the verdict. This is the separate change. It
+carries its own rationale per rule, its own admission rules, and its own
+sabotage evidence, none of which borrows authority from the Fork 3 verdict.
+
+**Replacement semantics, which condition 1 asks for by name.** One placeholder
+per category and the SAME placeholder whatever family matched —
+`[REDACTED-PROVIDER]`, `[REDACTED-VENDOR]`, `[REDACTED-MODEL]`,
+`[REDACTED-SELF-ID]`. Family invariance is asserted, not asserted-about: two
+tests check that two families with the same category produce byte-identical
+output and that no placeholder contains a vendor, product or model token.
+
+**Two admission rules govern what is in the list, and the second is the one
+that keeps the arm interpretable.**
+1. A token whose only role is to name a vendor or a model is admitted bare —
+   `anthropic`, `openai`, `claude`, `chatgpt`, `codex`.
+2. A token that is also ordinary English is admitted ONLY inside an identifying
+   frame. `meta`, `grok`, `bard`, `gemini` and `mistral` are each excluded bare
+   and deliberately so: stripping them unconditionally would delete ordinary
+   sentences, the deletions would not be family-uniform, and the arm would then
+   measure the regex rather than the style. Seven denial tests pin this — *"A
+   meta comment about the metadata table"*, *"The mistral wind"*, *"I did not
+   grok the migration plan"* and four more must come back byte-unchanged with an
+   empty span log.
+
+**Order is part of the pinned artefact.** Overlap resolves first-claim-wins in
+declaration order, so the order decides both what is removed and which category
+the log attributes it to. Three tiers: self-identification frames, then model
+ids, then bare vendor and product tokens. Declared the other way round,
+`product-claude` would claim `Claude` out of *"I am Claude"* and the log would
+record a `provider-name` removal where a self-identification was removed. Tests
+assert the tier boundaries by `patternId`, not by output text — two orderings
+can produce the same string and disagree about what the log says.
+
+**Condition 2, the span-level transformation log.** `applyLeakagePatterns`
+returns `{ text, spans, patternListVersion }` where each span carries
+`patternId`, `category`, `start`, `end`, `matched` and `replacement`, with
+offsets indexing the ORIGINAL text — so `original.slice(start, end) ===
+matched`, and a test asserts exactly that, because that is the property that
+makes a log auditable without its writer. `makeRecordingAnonymiser` adapts this
+to the assembler's `(text: string) => string` seam, and `attachLogIds` THROWS
+rather than mis-attributing when the log length disagrees with the item count.
+
+**Sensitivity proven in five arms, four red and one not — the one that did not
+is recorded rather than dropped.**
+
+| arm | mechanism neutralised | result |
+|---|---|---|
+| A | first-claim-wins overlap guard forced to `false` | **3 failed / 25 passed** |
+| B | per-call regex recompile replaced by a module cache | **28 passed — NOT RED** |
+| C | greedy `[\w.-]*` restored on the gemini model-id rule | **2 failed / 26 passed** |
+| D | one rationale edited without bumping the digest | **1 failed / 27 passed** |
+| E | `ARM_LABEL` set to `identifier-free` | **3 failed / 25 passed** |
+
+Every restore was byte-identical, sha256
+`accd1a880799d23e97334df9022b79183329a0fab38fc42f3cf416963bc37339` before and
+after, returning 28/28.
+
+**Arm B is a real gap and is named in the code.** Hoisting the regex into a
+module-level cache changes nothing observable today, because the `exec` loop
+always runs to `null` and resets `lastIndex` on the way out. The per-call
+recompile is defensive against a future early exit from that loop and is
+**unproven**, not proven. The test that looked like its guard has been renamed
+to say what it actually pins.
+
+**A residue this design cannot remove, and it bounds the arm's claim.**
+Replacement is family-invariant in TEXT and cannot be made family-invariant in
+COUNT or POSITION. A family that self-identifies four times and one that never
+does are distinguishable by `[REDACTED-…]` density alone — a signal the
+stripping CREATES rather than removes. Equalising marker counts across families
+would be a second transformation with its own distortion, so it is not done.
+This sits beside the claim limit both seats insisted on: the RAW − STRIPPED
+delta estimates the effect of THESE registered transformations, never label
+leakage in general.
+
+**Freeze status.** Condition 1 makes the list a floor ONCE AN ARM HAS RUN. No
+arm has run at this commit — `collectGuesses` and `scoreRecognition` still have
+zero production callers — so the list is pinned-and-amendable today and frozen
+at the first rater call. `PATTERN_LIST_DIGEST` makes that transition observable
+either way: any edit, before or after, reds a test rather than passing quietly.
+
+**What this does NOT do: it does not run the stripped arm.** The reason the
+stripped arm could not run was this list's absence, and that reason is gone. The
+run itself remains open and is unchanged by this entry.
 
 ---
 
@@ -248,5 +333,11 @@ condition 5 says must be reported independently. Trading a named day-confound
 for an unnamed rater-confound plus a weakened floor is not an improvement.
 *Revisit-if:* a third seat is configured, or the daily cap changes.
 
-**Day 1 is runnable now. Day 2 is not**, and the reason is fork 3's condition 1
-rather than quota.
+~~**Day 1 is runnable now. Day 2 is not**, and the reason is fork 3's condition 1
+rather than quota.~~
+
+**AMENDED 2026-08-31 (drain run 12): day 2's stated blocker is GONE.** Fork 3's
+condition 1 is discharged above — the pattern list exists and is version-pinned
+— so both arms are now blocked only on quota and on a runner-side caller, and
+neither arm is blocked on a design decision. Nothing about the volume, the
+schedule or the day-confound changes.
