@@ -232,6 +232,63 @@ export interface EstateBudget {
      * number here is how it gets a threshold.
      */
     one_in_one_out: { applies_above_active: number | null };
+    /**
+     * The capped provisional-promotion path — specified, and DECLINED.
+     *
+     * READ ITS NULLS THE OTHER WAY ROUND FROM THE KEY ABOVE. There `null` means
+     * UNCONDITIONAL; here `max_live: null` and `expires_after_days: null` mean
+     * NOT REGISTERED, PATH INACTIVE. The two keys sit a few lines apart in one
+     * file and their nulls mean opposite things, so a reader who transfers the
+     * sibling's semantics reads a declined path as an uncapped one.
+     */
+    provisional_promotion: ProvisionalPromotion;
+}
+
+/**
+ * The `provisional_promotion` object as the budget file carries it.
+ *
+ * `status` is optional so that a file which registered the two integers without
+ * restating a status is still readable — the integers are what activate the
+ * path, and a declination that dropped its own marker would fall to
+ * `unregistered`, which is the safe direction.
+ */
+export interface ProvisionalPromotion {
+    status?: string;
+    max_live: number | null;
+    expires_after_days: number | null;
+}
+
+/**
+ * Three states, and the reason there are three rather than two.
+ *
+ * The 2026-09-01 council that declined the path attached one obligation to the
+ * decline: the checker must distinguish an intentional declination from missing
+ * configuration. Two states cannot — `null` would read the same either way, and
+ * "nobody has written this yet" would be indistinguishable from "this was
+ * specified in full and refused on 2026-09-01".
+ */
+export type ProvisionalPromotionState = 'declined' | 'unregistered' | 'registered';
+
+/**
+ * Classify the path's state. NEVER activates it, in any state.
+ *
+ * A half-registered object — one integer, one null — throws rather than
+ * resolving to either neighbour: a cap with no expiry and an expiry with no cap
+ * are different mechanisms, and guessing which half was meant is how a bounded
+ * path becomes an unbounded one by omission.
+ */
+export function provisionalPromotionState(pp: ProvisionalPromotion): ProvisionalPromotionState {
+    const live = pp.max_live;
+    const days = pp.expires_after_days;
+    if (typeof live === 'number' && typeof days === 'number') return 'registered';
+    if ((live === null) !== (days === null)) {
+        throw new Error(
+            `${BUDGET_REL} "provisional_promotion" is half-registered ` +
+                `(max_live=${JSON.stringify(live)}, expires_after_days=${JSON.stringify(days)}). ` +
+                'Both integers activate the path; both null leave it inactive. One of each is neither.',
+        );
+    }
+    return pp.status === 'declined' ? 'declined' : 'unregistered';
 }
 
 /** One gated count that rose above the floor measured at the base ref. */
@@ -305,6 +362,15 @@ export interface EstateVerdict {
     offsets: OffsetLedger | null;
     offsetSkipReason: string | null;
     unpaid: number;
+    /**
+     * The provisional-promotion path's state, reported and never acted on.
+     *
+     * Carried in the verdict so a `--json` consumer can tell a declined path
+     * from an unwritten one without re-reading the budget file, which is the
+     * distinction the 2026-09-01 decline was conditioned on. It contributes
+     * nothing to `withinBudget` in any state: reading is not activation.
+     */
+    provisionalPromotion: ProvisionalPromotionState;
     withinBudget: boolean;
 }
 
@@ -587,6 +653,18 @@ export function evaluate(
     if (budget.one_in_one_out === undefined) {
         throw new Error(`${BUDGET_REL} carries no "one_in_one_out" object.`);
     }
+    // Same shape, same reason: an absent policy object is a could-not-run, not a
+    // pass. Here it also carries a second job — with the key required, "the path
+    // was declined on 2026-09-01" and "nobody has configured this" cannot
+    // collapse into the same reading, which is the condition the council
+    // attached to the decline.
+    if (budget.provisional_promotion === undefined) {
+        throw new Error(
+            `${BUDGET_REL} carries no "provisional_promotion" object. ` +
+                'Absent is misconfiguration, never an inactive path — a declination is recorded, not implied.',
+        );
+    }
+    const provisionalPromotion = provisionalPromotionState(budget.provisional_promotion);
 
     const counts = countEstate(repoRoot);
     const baseRef = opts.baseRef ?? resolveBaseRef(repoRoot);
@@ -790,6 +868,7 @@ export function evaluate(
         offsets,
         offsetSkipReason,
         unpaid,
+        provisionalPromotion,
         // No floor is a FAILURE, not a skip, and it is the one place this gate
         // convicts on a missing input. The other halves can report "unproven" and
         // still leave a meaningful verdict behind; the count half IS the verdict,
@@ -825,7 +904,18 @@ function selfTest(): number {
      * the baseline with no reason" is not a state a change can reach.
      */
     const budgetJson = (): string =>
-        `${JSON.stringify({ one_in_one_out: { applies_above_active: null } }, null, 4)}\n`;
+        `${JSON.stringify(
+            {
+                one_in_one_out: { applies_above_active: null },
+                // Required since the path was specified and declined: the gate
+                // refuses a budget that carries no `provisional_promotion`, so a
+                // fixture without it exits 2 on every case rather than on the one
+                // case testing that refusal.
+                provisional_promotion: { status: 'declined', max_live: null, expires_after_days: null },
+            },
+            null,
+            4,
+        )}\n`;
 
     const roadmap = (name: string, extra = ''): string =>
         `# Roadmap: ${name}\n\n## Phase 1\n\n- [ ] **1.1** s\n${extra}`;
@@ -1237,6 +1327,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } else if (verdict.offsetSkipReason !== null) {
         process.stdout.write(`  ⚠️  ${verdict.offsetSkipReason}\n`);
     }
+    // Printed unconditionally so the state is visible without `--json`. It never
+    // changes the exit code — a declined path and a registered one both leave
+    // the ratchet exactly as it was, and the allowance a registered path would
+    // grant is deliberately unwired (the owner registers the numbers; wiring
+    // what they buy is a separate, separately authorised change).
+    process.stdout.write(
+        `  ${'provisional'.padEnd(18)} ${verdict.provisionalPromotion.padStart(5)}` +
+            `${verdict.provisionalPromotion === 'declined' ? '  (specified and declined 2026-09-01 — path inactive by decision)' : ''}` +
+            `${verdict.provisionalPromotion === 'unregistered' ? '  (no numbers registered — path inactive)' : ''}` +
+            `${verdict.provisionalPromotion === 'registered' ? '  (numbers registered by the owner; this gate grants no allowance for them)' : ''}\n`,
+    );
     for (const c of verdict.claims) {
         process.stdout.write(`  ↑ growth claimed in ${c.file}: ${c.reason.slice(0, 120)}\n`);
     }
