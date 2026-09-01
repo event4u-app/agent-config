@@ -201,3 +201,102 @@ Zero is a real answer in rows 2 and 3, and is reported as one.
   transcript is recorded. This run does not open the PR. The transcript is
   § 2 above, committed to the tree, which is more durable than a PR body but is
   **not** literally what the clause says. Flagged rather than claimed.
+
+---
+
+## 7. The council on the Phase 2 fork — added 2026-09-01, recording pass
+
+> § 1–6 above were written **before** the council ruled and are unchanged. This
+> section records the ruling, the round that did not count, and the one
+> measurement that decided what the acceptance test has to target.
+
+### 7.1 The record, including the round that does not count
+
+*AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`.*
+
+**The first attempt ran DEGRADED — 1/2 present.** One seat was unavailable and
+the tool printed *"this is not convergence."* The retry reached 2/2. Recorded
+because a later reader who finds only the successful round would take it for a
+clean first pass. **A degraded round is not a council round**, and one seat
+agreeing with itself is not convergence however the output is formatted.
+
+Council artefacts are gitignored and auto-pruned; every line relied on is
+inlined, here and in the roadmap.
+
+### 7.2 Disposition D, and why not A
+
+Both seats: **Option A is the right architecture.** B rejected as *"a fictitious
+draft mode"* / *"an unreachable production mode"*; C rejected as mutation at the
+most dangerous point in the release lifecycle — the same conclusion § 3 above
+had already reached independently, which is worth noting because it means the
+rejection does not rest on one party's judgement.
+
+The seats then **split on authority**: one council-decidable (strengthens a
+floor, reversible, fixes a defect, PR body is internal tooling), one
+owner-reserved (changes what npm consumers receive, where operators receive
+instructions, and the semantics of PR-body/changelog equality — *"ownership
+questions, not just technical direction"*), with the explicit instruction *"If
+that approval is unavailable, choose D temporarily rather than treating council
+review as ownership authority."* A split is an escalation condition here, not a
+tie to break. **D taken.**
+
+Both seats also held that **A is more coupled than § 3 of this file presented**
+— the equality contract must be specified first, and writer, PR body, equality
+and tests are one atomic merge unit. That is a correction to this run's own
+analysis, not a council preference, and it means A was unshippable in this pass
+on either authority reading.
+
+Re-scoping 2.1's verify clause was **authorised 2/2** and deliberately **not
+applied**: the step it governs cannot land until the authority question is
+settled. The re-scoped clause is written out in full in the roadmap so approving
+it is a read rather than a design exercise.
+
+### 7.3 The `npm pack` measurement — verified here, not relayed
+
+The degraded round's seat asserted that `dist/CHANGELOG.md` is the npm-shipped
+artifact; the blind chairman flagged it as uncited. It is false, and this was
+measured in this worktree rather than taken from the ruling:
+
+```
+$ ls dist/CHANGELOG.md
+ls: dist/CHANGELOG.md: No such file or directory
+
+$ npm pack --ignore-scripts --pack-destination "$D"
+event4u-agent-config-14.13.0.tgz
+
+$ tar -tzf "$T" | grep -i changelog
+package/CHANGELOG.md
+
+$ tar -xzOf "$T" package/CHANGELOG.md | shasum -a 256
+a30d518d9b7e2de9f160e7a38ce10bfe8244da1a79762e948be663edcf10dc55
+$ shasum -a 256 CHANGELOG.md
+a30d518d9b7e2de9f160e7a38ce10bfe8244da1a79762e948be663edcf10dc55
+
+$ tar -xzOf "$T" package/CHANGELOG.md | grep -c 'Curated head: fill before merge'
+2
+```
+
+`--ignore-scripts` because `prepack` runs a full build; it does not change the
+file list or the member names. `package.json`'s `files` array carries the bare
+`"CHANGELOG.md"`, i.e. the repository root.
+
+**Two things follow.** A check written against `dist/CHANGELOG.md` would pass
+while the comment ships — which is why the acceptance test is specified over the
+extracted archive member. And the last line is the defect at the publication
+boundary rather than inferred from it: **the package on npm today carries the
+generator's authoring instruction twice.**
+
+**One number differs from the ruling and is not silently reconciled.** The
+coordinator's measurement recorded 88.4 kB for the member; this worktree reads
+**86.3 kB** after merging `597bf3816`. Both are the same artifact measured at
+different tree states; neither is corrected into the other.
+
+### 7.4 What this pass did NOT do
+
+No writer change, no PR-body change, no equality change, no new test — Option A
+is recorded, not implemented. 2.1, 2.2 and AC-2 stay `[ ]`. The eleven closed
+steps and the AC-5 decision are untouched; the council was asked about AC-5 and
+did not overturn it.
