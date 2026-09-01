@@ -266,6 +266,20 @@ declaration), `src/config/gate-coverage.yml:2334` with a canary and a floor of
    recording that it satisfies the criterion. **Falsifier:** a council round that
    rules this mechanism insufficient reopens the condition, and every step closed
    under it reverts to `[ ]`. Nothing here is written so as to make that harder.
+   **AMENDED 2026-09-01 — the fresh round happened, and it did not rule this
+   mechanism insufficient.** AI council 2026-09-01, anthropic/claude-sonnet-4-5
+   + openai/codex-default, 2 rounds, blind chairman, quorum concluded 2/2:
+   **2C — DISCHARGED WITH A NAMED RESIDUAL**, 2/2 convergent. The openai seat
+   put the independence point in as many words: *"this review supplies the
+   independent assessment the original record lacked."* **The falsifier below
+   is NOT retired by that** — both seats said in terms that it must be
+   retained, and it is: a later council round that rules this mechanism
+   insufficient still reopens the condition and still reverts every step closed
+   under it to `[ ]`. What changed is that the discharge is no longer recorded
+   only by the party that built it; what did not change is that it remains a
+   condition on the mechanism as it stands rather than a permanent guarantee.
+   The residual the verdict requires be written down is scope-item 3 below.
+
 3. **R3's residual is bounded, not closed.** It resolves `const` bindings up to
    three hops, so a destination assembled at runtime from a value carrying no
    `src` literal anywhere in its chain is not detectable textually. Such a write
@@ -275,6 +289,38 @@ declaration), `src/config/gate-coverage.yml:2334` with a canary and a floor of
    a clone is a candidate's own sandbox, already gated by `bench_ab_integrity`'s
    allowed-delta-path check, whose sensitivity `tests/scripts/bench_ab_candidate.test.ts:383-398`
    proves.
+
+   **QUALIFIED 2026-09-01 by the AI council, and the qualification contradicts
+   the sentence above rather than extending it.** The 2026-09-01 round
+   (anthropic + openai, 2 rounds, blind chairman, 2/2 convergent on **2C**)
+   required this residual be written into the record as a condition of the
+   discharge. It is written here, and so is the **divergence inside the
+   convergent verdict**, because smoothing it would keep the weaker reading.
+
+   - **anthropic bounded the residual the way the sentence above does:** the
+     R3-evasive write *"is a promotion **only if** it also carries approval (R1
+     catches) or a promoted record (R2 catches independently)"*.
+   - **openai refused that bounding in terms:** R1 and R2 *"reduce its
+     exploitability, but they do not make R3 structurally complete: a
+     candidate-derived source write does not cease to violate the third limb
+     merely because no approval or promoted-record literal accompanies it."*
+
+   **The stricter reading is the one carried, because it weakens nothing.** The
+   carried blocking condition's third limb is *"any write into `src/` derived
+   from a candidate"* — it is not conditioned on an approval or a promoted
+   record, so a runtime-assembled destination that R3 cannot see textually is an
+   **unenforced instance of the third limb**, not a caught one. The discharge
+   stands at 2C on both seats' votes; what does not stand is the claim that R1
+   and R2 close R3's gap. They cover a different failure and the sentence above
+   over-claimed by joining them.
+
+   **Falsifiable, so a later reader can act on it:** a candidate-derived module
+   that assembles a `src/` destination through a non-`const` chain longer than
+   three hops passes `lint_promotion_paths` today. Closing it needs a
+   non-textual mechanism — a runtime write-guard on the canonical tree, or a
+   type-level capability on the write path — and neither exists. This is a named
+   residual with no owner and no step in this roadmap; it is **not** claimed as
+   covered anywhere in this file.
 4. **openai's continuing-requirement half still binds.** The `Revisit-if`
    paragraph above already carries it: a successful promotion branch, an
    approver-bearing interface, an alternate promotion path or a new
@@ -298,6 +344,29 @@ sat on a continuation line, where `lint_roadmap_blockers`' cross-reference rule
 not see it. Here it sits on the checkbox line, so the reference to the blocker
 below is live and machine-checked instead of merely written. No word was added,
 removed or reordered.
+
+**WRITTEN DISPOSITION 2026-09-01 — 0.8 STAYS `[~]`. It is not closeable, not
+descopeable, and the run that looked at it says so rather than moving it.**
+
+*AI council 2026-09-01 (anthropic/claude-sonnet-4-5 + openai/codex-default,
+2 rounds, blind chairman, quorum concluded 2/2) — Decision 3: **3A**,
+2/2 convergent. Both seats: "Step 0.8 requires the reserved ADR-239 decision."*
+
+- **Why it cannot be `[x]`.** The step IS the owner decision. Its text —
+  *"Merge authority resolved"* — is satisfied by nothing an agent can do:
+  ADR-239 § Decision 3 is recorded `open` and owner-owned at
+  `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:188`,
+  and both of its directions are owner-reserved for different reasons. See the
+  § Blockers entry for what this run did and did not attempt.
+- **Why it cannot be `[-]`.** Descoping it is a weakening, and the Resume
+  condition at the head of this file reserves that to the owner in as many
+  words — *"do not weaken, cancel, retire, or mark complete any transferred
+  step"*. That sentence is itself the verbatim output of the 2026-08-31 council,
+  which rejected an earlier drafting precisely because it pre-authorised a
+  weakening on owner refusal.
+- **What closes it.** The owner picks one of the three options in
+  § Blockers → `What to do`. Nothing else. There is no intermediate state and
+  no partial credit; `[~]` is the accurate mark and it stays.
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
@@ -338,6 +407,37 @@ removed or reordered.
 > the blocker to close first, these marks revert to `[ ]` and the work stands
 > unchanged underneath them; that is an owner call and it is stated here rather
 > than settled by the agent that made the marks.
+>
+> **ADJUDICATED 2026-09-01 — the owner call is CONFIRMED as an owner call, so
+> the seven marks are PROVISIONAL. They are not upgraded and they are not
+> reverted.**
+>
+> *AI council 2026-09-01 (anthropic/claude-sonnet-4-5 + openai/codex-default,
+> 2 rounds, blind chairman, quorum concluded 2/2) — Decision 1: **1C —
+> OWNER-RESERVED**, 2/2 convergent.*
+>
+> The question put was whether closing a Phase 7 step under an open
+> `merge-authority` blocker is (1A) legitimate because the blocker gates
+> promotion and no promotion occurred, (1B) illegitimate because the blocker's
+> `Blocks:` field reaches the steps themselves, or (1C) an owner call no council
+> may make. **Both seats answered 1C, and both named the same reason:** this
+> gate header expressly assigns the interpretation to the owner, so answering
+> 1A or 1B would convert a live reservation into a settlement. openai: *"Choosing
+> 1A or 1B here would override that reservation. The `[x]` marks may remain
+> flagged and provisional; they are not unqualified closure."*
+>
+> Both seats also recorded that **1B is credible**, not a strawman. openai named
+> it the strongest counter-argument: *"the blocker's literal statement that it
+> blocks 'every promotion step in Phase 7' … supports reverting all seven
+> marks."* anthropic showed why the text cannot settle it: *"by consequence"*
+> reads as a causal chain, which **explains** the ambiguity and does not resolve
+> it — *"it shows why 'promotion step' can legitimately mean either 'the step
+> itself' or 'promotions performed by the step.'"*
+>
+> **So the operative status of every `[x]` in this phase is: closed on tested
+> refusing mechanism, PROVISIONAL pending an owner scope ruling, revertible to
+> `[ ]` at that ruling with the work standing unchanged underneath.** Risk 6 of
+> the register carries the misreading risk this creates.
 
 - [x] **7.1 One evidence package per promotion, in the fuller form.** The master
       adopted a 9-field package; the skipped parent's has 14, and the five extra
@@ -610,6 +710,46 @@ removed or reordered.
   been the reservation defeated by persistence. **The blocker stands. It is a
   genuine owner decision and no council round should be spent on it** until a
   human either answers it or explicitly asks for the (b) argument to be put.
+
+  **NOT RE-ATTEMPTED 2026-09-01, and the lock was evaluated before it was
+  cited.** A second autonomous drain run arrived here carrying an instruction
+  that the AI council substitutes for owner sign-off. It did not put (a) or (b),
+  and the reasoning is recorded so the refusal is checkable rather than a
+  shrug.
+
+  - **(a) was refused outright and is not a council question at any strength of
+    mandate.** Granting preauthorized merge authority lowers
+    `non-destructive-by-default`'s per-turn confirmation floor for a
+    production-branch merge. That floor is a Hard Floor: no autonomy setting,
+    no roadmap step and no standing instruction lifts it, and an instruction
+    arriving from another *agent* is not the user's consent. ADR-239 § 3 names
+    this exact shape — *"an agent that both wants the capability and writes the
+    amendment authorising it is the shape the reservation exists for."*
+  - **(b) was not put, because the lock above is LIVE and its release condition
+    has not fired.** The paragraph directly above reserves (b) until *"a human
+    either answers it or explicitly asks for the (b) argument to be put"*. The
+    instruction to route owner decisions to the council came from an
+    orchestrating agent, which is not a human answering and not a human asking.
+    Mechanism-match was run before citing the lock, as
+    `decision-revisit-gate` requires: the mechanism is identical (put the
+    floor-strengthening argument for (b) to the council), the argument is
+    identical, and no new evidence has arrived since 2026-08-31. So the lock
+    applies and re-putting it would be the persistence the record above warns
+    about, one day later.
+  - **What was put instead**, and it is a different question: the disposition of
+    this roadmap's two open items, the legitimacy of the Phase 7 marks, and the
+    sufficiency of the route-1 discharge. All three are scope and evidence
+    questions the council may answer; none of them settles ADR-239 § Decision 3,
+    and the verdict on all three (1C / 2C / 3A) left this blocker exactly where
+    it was.
+  - **A second-order note for the owner, since it changes what (b) costs.** If
+    ADR-239 § Decision 3 is settled in the **refusing** direction, step 0.8
+    closes but AC-9 does not — refusal makes a real promotion permanently
+    impossible, so AC-9's disposition becomes a separate owner decision rather
+    than an automatic consequence. Only the granting direction puts AC-9 on a
+    path to being met. Recorded here because the `What to do` list below prices
+    (a), (b) and (c) as if they were symmetric for this file, and for AC-9 they
+    are not.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
@@ -636,7 +776,7 @@ removed or reordered.
   verified 2026-08-26, it is not one.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-31 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-09-01 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -645,6 +785,8 @@ removed or reordered.
 | 3 | ~~The discharge point may already have passed and nobody adjudicated it~~ **RETIRED 2026-08-31 — adjudicated** | implementation | Parent steps 3.4 and 3.6 are `[x]`, and `src/scripts/evolution_lab.ts:858-888` carries a `promote` verb returning `EXIT_REFUSED` unconditionally — a non-empty population with a mechanical refusal. The risk was that nobody would decide whether that discharges the condition, because *an undecided condition reads as satisfied to the next reader* | **Decided.** AI council 2026-08-31, **(B) NOT DISCHARGED**, 2×B / 1×A across two rounds, with the gap named falsifiably: the condition covers *any write into `src/` derived from a candidate* and only the verb plus the `-> promoted` transition are gated. Two discharge routes are recorded, one buildable and one owner-reserved. The condition is now undischarged **on evidence** rather than undecided. **SUPERSEDED 2026-08-31 (drain run 11):** route 1 was subsequently BUILT, and `:170-172` records the condition **DISCHARGED BY ROUTE 1** — the guarded capability plus the bypass check, green and proven sensitive. The `(B) NOT DISCHARGED` verdict in this cell is the intermediate finding that *motivated* route 1, not the final state; leaving it unqualified made this row contradict `:170`. Route 2 remains untaken and owner-reserved | Carried blocking condition |
 | 4 | This roadmap sits blocked indefinitely on an owner decision | product | ADR-239 § Decision 3 has been open since 2026-08-22 with no recorded movement. An ACTIVE roadmap that never resumes consumes governed-estate headroom without producing anything | Deliberate and council-chosen: both seats ruled that active membership is what preserves the criteria, and the Resume condition routes owner REFUSAL back to the owner rather than letting this file decide its own disposition | Resume condition |
 | 5 | A Phase 1-6 step in the parent creates a promotion path before this file resumes | implementation | The `merge-authority` blocker is scoped to gate Phase 7. A parent step that promotes anything would escape that scoping, and the mechanical non-promotion condition would bind to a change nobody expected it to | The Revisit-if clause binds both the blocker and the carried condition to any such earlier change, by name | Resume condition |
+| 6 | The seven Phase 7 `[x]` marks are read as unqualified completion | product | AI council 2026-09-01 ruled **1C — OWNER-RESERVED** on whether closing a Phase 7 step under an open `merge-authority` blocker was legitimate, so all seven marks are PROVISIONAL pending an owner scope ruling and revertible to `[ ]` at it. A reader scanning checkboxes sees seven greens, concludes the promotion bridge is delivered, and misses that no promotion has occurred or can occur | The Phase 7 gate header states the provisional status, the 1C verdict and both seats' reasoning immediately above the first `[x]`, and records that the 1B reading (revert all seven) was found credible rather than dismissed. AC-9 stays `[ ]` as the standing counter-signal that the bridge is untraversed | Phase 7 — Promotion bridge and the lifecycle after it |
+| 7 | R3's runtime-assembled-destination residual is read as covered by R1 and R2 | implementation | The route-1 discharge record claimed an R3-evasive write "is a PROMOTION only when it also carries an approval or a promoted record — which R1 and R2 catch independently". The 2026-09-01 openai seat refuted that: R1 and R2 "do not make R3 structurally complete: a candidate-derived source write does not cease to violate the third limb merely because no approval or promoted-record literal accompanies it". Left unqualified, the record would show a closed gap that is open | Scope-item 3 of the discharge now carries the divergence verbatim, carries the stricter reading as operative, and states the residual falsifiably: a candidate-derived module assembling a `src/` destination through a non-`const` chain longer than three hops passes `lint_promotion_paths` today. It is named as having no owner and no step in this file rather than being claimed as covered | Carried blocking condition |
 
 ## Acceptance Criteria
 
@@ -701,6 +843,38 @@ removed or reordered.
       review trigger, and the resulting verdict is recorded. None of those three
       is performable from this branch, and asserting the criterion on the fixture
       would be closing it on the thing it explicitly excludes.
+      **WRITTEN DISPOSITION 2026-09-01 — AC-9 STAYS `[ ]`. Re-audited a third
+      time, still not met, still not closeable from this branch, and
+      deliberately not descoped.** *AI council 2026-09-01
+      (anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind
+      chairman, quorum concluded 2/2) — Decision 3: **3A**, 2/2 convergent.*
+      The three facts the audit rests on were re-checked at this commit and
+      none has moved: `src/scripts/_lib/curator_ops.ts:120-124` still types
+      every screened proposal's `lifecycle` as the literal `'candidate'`;
+      `src/scripts/_lib/candidate_record.ts:210-219` still makes
+      `promoted -> retired` the only retirement edge; and
+      `./scripts-run src/scripts/lint_promotion_paths` reports **`blocker
+      status: open`** at exit 0 over 2860 files, so the guarded capability that
+      is the only route to `promoted` is still unobtainable.
+      **Why it is not descoped.** Converting it to "specified but not
+      exercised" is the exact weakening the 2026-08-31 council rejected when it
+      wrote this file's Resume condition, and that reservation is the owner's.
+      The openai seat restated the boundary independently: AC-9 *"requires a
+      genuinely promoted artefact — not a synthetic promoted-state fixture"*,
+      and *"no non-owner disposition described here satisfies either condition
+      without weakening it."*
+      **The closing chain, stated so a later reader does not re-attempt what is
+      structurally impossible from this branch** (anthropic's wording, adopted):
+      (a) the owner resolves 0.8 by settling ADR-239 § Decision 3 in the
+      granting direction; (b) a named human performs one real promotion through
+      `acquirePromotionCapability`, which cannot happen while (a) is open;
+      (c) that promoted artefact reaches a review trigger and the resulting
+      verdict is recorded — a real artefact, not the 7.6 fixture, which is
+      already built and already does not satisfy this criterion.
+      Note that (a) resolved in the **refusing** direction does not close AC-9
+      either: it makes (b) permanently impossible, at which point AC-9's
+      disposition becomes an owner decision in its own right rather than an
+      automatic descope.
 
 ## Provenance
 
