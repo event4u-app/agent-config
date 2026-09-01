@@ -91,6 +91,39 @@ const PROJECT_TEMPLATE = path.join(
     'agent-project-settings.example.yml',
 );
 const CHANGELOG = path.join(REPO_ROOT, 'CHANGELOG.md');
+
+/**
+ * Overridable reader for the WORKING-TREE changelog.
+ *
+ * Mirrors `_set_exec_override` in `release_publication.ts`, and exists for the
+ * same reason: `execute()` reads `CHANGELOG.md` off disk at two points (the PR
+ * body and the annotated-tag message), and the release drill fakes commands
+ * but not the filesystem. Before this seam the drill's step 8 read the
+ * repository's REAL changelog — whose current section carries four
+ * `_auto-derived, rewrite before merge:_` lines at `14.13.0` — so a
+ * publication guard added at that call site refused every drill scenario for a
+ * reason that had nothing to do with what the scenario was testing.
+ *
+ * That is the failure mode the `WorldConfig.changelog` fixture already removed
+ * for `git show`, and the AI council of 2026-08-23 (2/2 convergent) chose a
+ * controlled fixture over a policy exemption when it removed it. This is the
+ * same choice applied to the other read: the drill supplies policy-valid
+ * content and exercises the real parsing and guarding path, rather than being
+ * exempted from it.
+ *
+ * `null` restores the real filesystem read. Test-only; nothing in production
+ * sets it.
+ */
+let _changelog_reader: ((file: string) => string) | null = null;
+
+function _set_changelog_reader(fn: ((file: string) => string) | null): void {
+    _changelog_reader = fn;
+}
+
+/** The working-tree changelog text, through the seam above. */
+function read_changelog_text(): string {
+    return _changelog_reader ? _changelog_reader(CHANGELOG) : fs.readFileSync(CHANGELOG, 'utf-8');
+}
 const MAIN_BRANCH = 'main';
 const REMOTE = 'origin';
 const REPO_SLUG = 'event4u-app/agent-config';
@@ -282,6 +315,8 @@ export {
     _cap_body,
     CHANGELOG,
     CalledProcessError,
+    _set_changelog_reader,
+    read_changelog_text,
     GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
     MAIN_BRANCH,

@@ -122,6 +122,7 @@ import {
     HEAD_LABELS,
     collect_span_commits,
     derive_category_hits,
+    publication_blockers,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import {
@@ -144,6 +145,8 @@ import {
     AUGMENT_MARKETPLACE_JSON,
     AUGMENT_PLUGIN_JSON,
     CHANGELOG,
+    _set_changelog_reader,
+    read_changelog_text,
     CalledProcessError,
     GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
@@ -1179,6 +1182,32 @@ function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
 }
 
+/**
+ * Refuse an irreversible publication whose section is not publishable.
+ *
+ * Called at the THREE call sites that publish, never inside a formatter:
+ * annotated-tag creation, the resumed push of a tag created but never pushed,
+ * and the GitHub Release body. A pure formatter has no notion of whether it is
+ * actually publishing, which is why an earlier attempt at that placement was
+ * refused; the call site does, and it is the one that can still stop.
+ *
+ * `die` throws before the command runs, so nothing irreversible fires after a
+ * refusal — that ordering is what `tests/scripts/release_publication_guard.test.ts`
+ * asserts against the drill's recorded command list rather than by reading this
+ * comment.
+ */
+function _refuse_unpublishable(sectionBody: string, version: string, surface: string): void {
+    const blockers = publication_blockers(sectionBody, version);
+    if (blockers.length === 0) {
+        return;
+    }
+    die(
+        `refusing to publish the ${surface} for ${version} — ` +
+            `${String(blockers.length)} publication blocker(s):\n` +
+            blockers.map((b) => `    - ${b}`).join('\n'),
+    );
+}
+
 function execute(
     plan: Plan,
     opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
@@ -1342,7 +1371,7 @@ function execute(
         // Derive the PR body from the CHANGELOG section step 2 just wrote —
         // the file is the single source; the in-memory plan is only its
         // author (release-truth Phase 1).
-        const section = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
+        const section = extract_changelog_section(read_changelog_text(), plan.target);
         if (!section) {
             die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
         }
@@ -1388,6 +1417,19 @@ function execute(
             _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
             _step(8, total, `Tag ${plan.target} exists locally — push only`);
+            // 3.2 — the recorded bypass. The changelog is read only in the
+            // CREATION branch below, so a resume over a tag that was created
+            // but never pushed reached `_push_tag` having read nothing. A
+            // guard that covers creation alone misses exactly this path, and
+            // pushing the tag is as irreversible as creating it.
+            const staged = extract_changelog_section(read_changelog_text(), plan.target);
+            if (!staged) {
+                die(
+                    `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${plan.target} — ` +
+                        'refusing to push a tag whose changelog entry is missing',
+                );
+            }
+            _refuse_unpublishable(staged!.body, plan.target, 'tag push (resumed)');
             _push_tag(plan.target);
         }
     } else {
@@ -1398,13 +1440,14 @@ function execute(
         // tag replaces the previous lightweight one so tag metadata is a
         // fourth surface carrying the same single-source content.
         _step(8, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
-        const merged = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
+        const merged = extract_changelog_section(read_changelog_text(), plan.target);
         if (!merged) {
             die(
                 `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${plan.target} — ` +
                     'refusing to tag a release whose changelog entry is missing',
             );
         }
+        _refuse_unpublishable(merged!.body, plan.target, 'annotated tag');
         run(['git', 'tag', '-a', plan.target, '-m', tag_message_from_section(merged!.body, plan.target)]);
         _push_tag(plan.target);
     }
@@ -1436,6 +1479,7 @@ function execute(
             GH_RELEASE_NOTES_LIMIT,
             '`CHANGELOG.md`',
         );
+        _refuse_unpublishable(tagged_section!.body, plan.target, 'GitHub Release notes');
         gh(['release', 'create', plan.target, '--title', plan.target, '--notes', notes]);
 
         // ─── 9b. dispatch-chain the tag-triggered workflows (--ci only) ──────
@@ -2014,6 +2058,7 @@ export {
     // Drill seam (release_drill.ts) — the step machinery under a simulated
     // git/gh world, so orchestration bugs surface in vitest, not mid-release.
     execute,
+    _set_changelog_reader,
     _set_exec_override,
     push_release_branch,
     merge_release_pr,
