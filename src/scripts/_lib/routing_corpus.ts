@@ -87,6 +87,39 @@ export function skillsDir(repoRoot: string): string {
     return path.join(repoRoot, 'src', 'skills');
 }
 
+/**
+ * Is this `src/skills/<name>` entry test scaffolding rather than a skill?
+ *
+ * A `__`-prefixed directory is scaffolding by convention, and a real skill can
+ * never be named one: `skill.schema.json` pins `name` to `^[a-z][a-z0-9-]*$`
+ * and requires it to match the parent directory, so a leading underscore fails
+ * `validate_frontmatter`. This predicate therefore cannot hide a shipped skill.
+ *
+ * WHY IT EXISTS, measured rather than assumed.
+ * `tests/scripts/lint_originality.test.ts:64` writes a re-skin fixture to
+ * `src/skills/__origtest_reskin_fixture/SKILL.md` in the REAL tree and removes
+ * it in `afterEach`, because the linter resolves its corpus from a
+ * module-level ROOT and takes no root argument. During that window any
+ * concurrently-running test file that counts the catalogue sees 300 where the
+ * commit holds 299 — which is what failed
+ * `tests/scripts/routing_signal_measurement.test.ts` on
+ * `Node Tests (ubuntu-latest, shard 2/4)` in runs 33418425604 and 33424783559,
+ * intermittently, while passing in isolation and passing on the next run over
+ * two markdown files nothing reads.
+ *
+ * Reproduced locally before this line was written: with the fixture present on
+ * disk the assertion fails `300` vs `299`, character for character the CI
+ * message; with this predicate active it passes.
+ *
+ * Excluding the prefix here rather than threading a root through the linter is
+ * the smaller change by an order of magnitude: ROOT is baked into ten
+ * module-level constants there, and refactoring a shipped gate to suit a test
+ * is a worse trade than a naming convention the tree already follows.
+ */
+export function isScaffoldingSkillDir(name: string): boolean {
+    return name.startsWith('__');
+}
+
 /** Every skill directory that carries a trigger corpus, with its partition. */
 export function corpusSkills(repoRoot: string): { skill: string; partition: Partition }[] {
     const dir = skillsDir(repoRoot);
@@ -94,6 +127,7 @@ export function corpusSkills(repoRoot: string): { skill: string; partition: Part
     return fs
         .readdirSync(dir)
         .sort()
+        .filter((skill) => !isScaffoldingSkillDir(skill))
         .filter((skill) => fs.existsSync(path.join(dir, skill, 'evals', 'triggers.json')))
         .map((skill) => ({ skill, partition: partitionOf(skill) }));
 }
@@ -205,6 +239,7 @@ export function loadCatalogue(repoRoot: string): CatalogueEntry[] {
     if (!fs.existsSync(dir)) return [];
     const out: CatalogueEntry[] = [];
     for (const skill of fs.readdirSync(dir).sort()) {
+        if (isScaffoldingSkillDir(skill)) continue;
         const file = path.join(dir, skill, 'SKILL.md');
         if (!fs.existsSync(file)) continue;
         const [block, body] = splitFrontmatter(fs.readFileSync(file, 'utf8'));
