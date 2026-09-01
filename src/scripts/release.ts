@@ -276,23 +276,6 @@ const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = HEAD_LABELS;
 export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
 
 /**
- * The fallback value of a head line the span does not substantiate.
- *
- * `_none_` and not a placeholder token: where nothing was derived it is the
- * **true** answer, and a release that genuinely changed no defaults should say
- * so rather than carry an unfilled marker.
- *
- * It is a fallback and no longer a blanket default. Writing `_none_` into
- * every field made the generator assert five things it had not checked, and
- * `check_release_highlights` rejected exactly that assertion the moment the
- * span contradicted it — which for this package is every release, because every
- * release touches `src/rules/` or `src/scripts/schemas/`. Substantiated labels
- * are now pre-filled from the span (`_derive_head_prefill`), so the tool states
- * only what it can support and `_none_` means what it says.
- */
-const HEAD_DEFAULT = RELEASE_HEAD_DEFAULT;
-
-/**
  * Pre-fill values for the curated head from the release span.
  *
  * Best-effort by design, same stance as the test-trend footer: a git failure
@@ -320,16 +303,10 @@ function _derive_head_prefill(prev: string | null): Record<string, string> {
  *
  * **The authoring instruction is NOT emitted here** (2026-09-01, roadmap
  * `road-to-publication-integrity-hard-fail` § Phase 2, Option A). This writer
- * used to append `CURATED_HEAD_INSTRUCTION` to the head, and nothing removed
- * it at release time — so the instruction was published, twice, in the npm
- * artifact `package/CHANGELOG.md`. Option B (a `draft` parameter here, taken
- * by no production caller) and Option C (stripping the comment at tag time,
- * i.e. mutation at the most dangerous point of the lifecycle) were both
- * rejected 2/2 by the council that authorised this.
- *
- * The reminder now rides in the release-PR body's PR-only region — a surface
- * that is never published. See `pr_body_from_section` in
- * `_lib/release_material.ts`.
+ * used to append `CURATED_HEAD_INSTRUCTION`, nothing removed it at release
+ * time, and it published twice in `package/CHANGELOG.md`. The reminder now
+ * rides in the release-PR body's PR-only region — never published — see
+ * `pr_body_from_section` in `_lib/release_material.ts`.
  */
 export function render_release_head(
     filled: Readonly<Record<string, string>> = {},
@@ -337,7 +314,7 @@ export function render_release_head(
     const lines: string[] = ['### Release highlights', ''];
     for (const label of RELEASE_HEAD_SECTIONS) {
         const value = (filled[label] ?? '').trim();
-        lines.push(`- **${label}:** ${value === '' ? HEAD_DEFAULT : value}`);
+        lines.push(`- **${label}:** ${value === '' ? RELEASE_HEAD_DEFAULT : value}`);
     }
     return lines;
 }

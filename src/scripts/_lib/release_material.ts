@@ -100,6 +100,22 @@ export const CURATED_HEAD_INSTRUCTION = 'Curated head: fill before merge';
  * nothing that referenced it there has to change.
  */
 export const RELEASE_HEAD_CAP_LINES = 10;
+
+/**
+ * The fallback value of a head line the span does not substantiate.
+ *
+ * `_none_` and not a placeholder token: where nothing was derived it is the
+ * **true** answer, and a release that genuinely changed no defaults should say
+ * so rather than carry an unfilled marker.
+ *
+ * It is a fallback and no longer a blanket default. Writing `_none_` into
+ * every field made the generator assert five things it had not checked, and
+ * `check_release_highlights` rejected exactly that assertion the moment the
+ * span contradicted it — which for this package is every release, because every
+ * release touches `src/rules/` or `src/scripts/schemas/`. Substantiated labels
+ * are now pre-filled from the span (`_derive_head_prefill`), so the tool states
+ * only what it can support and `_none_` means what it says.
+ */
 export const RELEASE_HEAD_DEFAULT = '_none_';
 
 export function render_curated_head_instruction(capLines: number, headDefault: string): string {
