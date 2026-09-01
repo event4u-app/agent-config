@@ -386,10 +386,18 @@ chosen after seeing a result is a tuned metric.
       like coverage, which is why this is open rather than closed.
       **UPDATED 2026-09-01 — the caller now exists; the live population does
       not.** `proposeCandidatesWithModel`
-      (`src/scripts/_lib/llm_candidate_proposer.ts:369`) calls
-      `assertCheapestFirst` over the attempts the walk actually made, and
-      `plannedAttempts` (`:429`) calls it over the dry-run plan, which
-      `llm_propose` reaches with no spend. So "zero production callers" is no
+      (declared `src/scripts/_lib/llm_candidate_proposer.ts:369`, calls
+      `assertCheapestFirst` at `:417`) polices the attempts the walk actually
+      made, and `plannedAttempts` (declared `:429`, calls it at `:446`) polices
+      the dry-run plan, which `llm_propose` reaches with no spend at `:137`;
+      `:212` is the `--confirm` path.
+      **CITATION REPAIR 2026-09-01 (drain run 14) — factual, not a change of
+      verdict.** This paragraph and AC-3 both cited `:369` and `:429` as though
+      they were the call sites. They are the function DECLARATIONS; the
+      `assertCheapestFirst` calls are twenty-odd lines into each body. Nothing
+      about the half-met state changes and no checkbox moves — a reader
+      following the old numbers landed on a signature and could not see the
+      call the criterion is about. So "zero production callers" is no
       longer true. What is still true is that no LIVE run has produced attempts,
       so the ordering has not yet governed a spent population — see AC-3.
       **A defect found and closed during the build, recorded because the first
@@ -527,9 +535,12 @@ chosen after seeing a result is a tuned metric.
       ordering it polices governs a real population rather than an empty one.
       **HALF MET 2026-09-01, and left `[ ]` on the half that is not.** The
       caller exists and is on the executable path: `proposeCandidatesWithModel`
-      calls it over the attempts a run actually made, and `plannedAttempts`
-      calls it over the dry-run plan, which `llm_propose` reaches without
-      spending. The guard is also falsifiable now — an inconsistent resumed
+      (declared `src/scripts/_lib/llm_candidate_proposer.ts:369`, calling
+      `assertCheapestFirst` at `:417`) polices the attempts a run actually made,
+      and `plannedAttempts` (declared `:429`, calling it at `:446`) polices the
+      dry-run plan, which `llm_propose` reaches without spending (`:137`). Both
+      pairs are the repaired citations — see step 2.2's CITATION REPAIR note;
+      the declaration lines were previously cited as if they were the calls. The guard is also falsifiable now — an inconsistent resumed
       history is refused, and removing the call reds that case.
       **What is not met is the criterion's purpose clause.** The populations
       that exist today are the all-`lite` dry plan, in which no ordering
