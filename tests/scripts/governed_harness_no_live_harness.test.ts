@@ -39,7 +39,31 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const ROADMAP = path.join(REPO, 'agents', 'roadmaps', 'road-to-governed-harness-evolution.md');
+/**
+ * The roadmap this scan reads, wherever it currently lives.
+ *
+ * It was `agents/roadmaps/…` when this test was written and it is
+ * `agents/roadmaps/archive/…` now: PR #1788 archived it, and CI went red on both
+ * OSes because this constant kept pointing at the active path. The archiver DOES
+ * rewrite inbound references — `agents/roadmaps/<x>.md` →
+ * `agents/roadmaps/archive/<x>.md` across tracked files
+ * (`src/agent-src/scripts/archive_completed_roadmaps.ts:15-17`) — but it matches
+ * a literal path, and this one was assembled from separate `path.join`
+ * arguments, so there was no literal for it to see.
+ *
+ * Resolving active-then-archive fixes the break and removes the whole class:
+ * the next archival of this file cannot red the scan again. The final `??` keeps
+ * the ENOENT pointing at the active path, which is the more useful message when
+ * the file is genuinely gone rather than moved.
+ *
+ * Half B is unaffected — it scans `src/**\/*.ts` headers and, as the header note
+ * above says, is the half that keeps working after the roadmap closes.
+ */
+const ROADMAP_CANDIDATES = [
+    path.join(REPO, 'agents', 'roadmaps', 'road-to-governed-harness-evolution.md'),
+    path.join(REPO, 'agents', 'roadmaps', 'archive', 'road-to-governed-harness-evolution.md'),
+];
+const ROADMAP = ROADMAP_CANDIDATES.find((p) => existsSync(p)) ?? (ROADMAP_CANDIDATES[0] as string);
 const PARK = path.join(
     REPO,
     'agents',
