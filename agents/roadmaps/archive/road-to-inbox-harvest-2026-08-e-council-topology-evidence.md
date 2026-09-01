@@ -30,9 +30,19 @@ estate_growth_exempt: "open_blockers +1 net, and the +1 is the Phase-2 entry alo
 >
 > **The three stubs that carry the deferred work**, each with resumption
 > triggers and an explicit list of claims that may not be made:
-> [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md) (Phase 2 + 23 dependents + 6.5),
-> [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md) (3.3, 3.4),
-> [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md) (the twelve instrumentation and live-run steps).
+> [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md) (Phase 2 + 23 dependents + 6.5),
+> [`stubs/road-to-provider-leakage-bench-execution.md`](../stubs/road-to-provider-leakage-bench-execution.md) (3.3, 3.4),
+> [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md) (the twelve instrumentation and live-run steps).
+>
+> **On the seven `roadmap-status: guarded-baseline` markers this close removed.**
+> The annotation is contractually legal only on an unchecked `- [ ]` line
+> (`src/agent-src/scripts/guarded_baseline.ts:188`), because it declares an
+> ACTIVE step held at a baseline. A council-deferred step is not active, so the
+> marker was dropped from the seven steps that carried it. **No evidence was
+> removed:** every `guarded_baseline:` YAML block stays in place with its
+> `red_proof`, `sabotage_model` and `recheck_when` intact, and the same
+> red-proof table is reproduced in the instrumentation stub. The marker went;
+> the proof did not.
 >
 > **Everything built stays built.** Every guard named in those stubs is
 > committed and runs in CI regardless of a checkbox — the council was explicit
@@ -109,7 +119,7 @@ vocabulary: the ladder and the Hard Floor already own those classes.
 
 ### Anonymized provenance
 
-Per [`source-confidentiality`](../../src/rules/source-confidentiality.md), the
+Per [`source-confidentiality`](../../../src/rules/source-confidentiality.md), the
 external references that seeded parts of this analysis are named
 **source-anonymously**; real links are retained as `ENC1:` tokens for
 maintainer recovery only.
@@ -153,7 +163,7 @@ called a larger risk than feature absence.
 | Multi-round debate | `ai_council/orchestrator.ts:389-393`; steel-man pass `:1036-1040` | Deleted — exists |
 | Finding-level consensus + minority retention | `ai_council/consensus.ts:22-23,43-44,157,235,267`; `ai_council/stance_tally.ts` | Deleted — exists |
 | Decision replay | `ai_council/replay.ts:1-14,210`, wired at `src/scripts/council_cli.ts:1270,1280` — re-measured 2026-08-29: those two lines are the AUTOMATIC writer, not the `replay` subcommand; the subcommand wiring is elsewhere and is recorded in the 0.1 baseline | Deleted — exists |
-| Low-impact fast path **and** its governing rule | `ai_council/low_impact.ts:1-20` + [`fast-path-marker-visibility`](../../src/rules/fast-path-marker-visibility.md) | Deleted — exists on both layers |
+| Low-impact fast path **and** its governing rule | `ai_council/low_impact.ts:1-20` + [`fast-path-marker-visibility`](../../../src/rules/fast-path-marker-visibility.md) | Deleted — exists on both layers |
 | Five thinking-style advisor personas | `src/agent-src/personas/advisors/{contrarian,executor,expansionist,first-principles,outsider}.md`; engine `ai_council/advisors.ts:1-32` | Deleted — exists (seating is the real gap, see P9) |
 | Necessity classifier, CLI transport, model-size downgrade | `ai_council/necessity.ts`; delivered by `agents/roadmaps/archive/step-1-ai-council-cli-transport.md` | Deleted — exists |
 | Quota / API-fallback / attendance integrity | `archive/road-to-council-api-fallback.md`, `archive/road-to-council-quota-accounting-truth.md`, `archive/road-to-inbox-harvest-2026-08-b-council-integrity.md` | Deleted — three archived roadmaps delivered it |
@@ -166,7 +176,7 @@ called a larger risk than feature absence.
 | # | Source claim | Correction | Basis |
 |---|---|---|---|
 | 1 | "Blind review is default-on" | Blind **chairman synthesis** is default-on; blind **peer review** is **opt-in**. The two were conflated in the originating transcript. | `council_cli.ts:3551` sets `blind_chairman: true` (re-measured 2026-08-29; the `:3557` reading below was already stale); `_peer_review_active` at `council_cli.ts:1289-1295` requires an explicit flag or `peer_review.enabled` |
-| 2 | Parallel first-round fan-out is unbuilt work | It is a **deliberately reversed decision**. Phase 4 is therefore framed as *reopening a closed decision* under [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md), and must address the interactive-overrun prompt the reversal bought and the byte-pinned dispatch-order tests. | `ai_council/orchestrator.ts:8-12` records that *"the previous parallel ThreadPoolExecutor was traded for predictable mid-flow user prompts"*; `grep -c 'Promise.all'` over that file returns **0**; the historical contract is pinned byte-for-byte by tests (`:3-6`) |
+| 2 | Parallel first-round fan-out is unbuilt work | It is a **deliberately reversed decision**. Phase 4 is therefore framed as *reopening a closed decision* under [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md), and must address the interactive-overrun prompt the reversal bought and the byte-pinned dispatch-order tests. | `ai_council/orchestrator.ts:8-12` records that *"the previous parallel ThreadPoolExecutor was traded for predictable mid-flow user prompts"*; `grep -c 'Promise.all'` over that file returns **0**; the historical contract is pinned byte-for-byte by tests (`:3-6`) |
 | 3 | Round-count bias bench carried no citation | Grafted the research citation the round-count phase rests on: **arXiv 2505.19477** (round-1 debate bias amplification). It appeared in a dissolving sibling draft and **0** times in the master, leaving Phase 2.7 an unsourced measurement request. | Sibling draft in the same inbox directory |
 | 4 | `council_cli.ts:3555` | → `council_cli.ts:3551` (-4) | Re-measured 2026-08-29 under step 0.1. The landing correction said `:3557` (+2); it drifted again, in the other direction. A line-number correction has the same shelf life as the number it corrects — this row is kept rather than rewritten so that fact stays visible. |
 | 5 | `prompts.ts:204` | → `prompts.ts:206` (+2) | Read at landing HEAD |
@@ -811,7 +821,7 @@ the blocker existed to protect.
       same miss, a different prompt on a different day, so the
       contract-compliance miss is a stable seat-level property rather than a
       one-off. It is still **not a rate** — n = 2, no matched comparator.
-      Resumption trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      Resumption trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
 - [x] 1B.2 Keep the repair path: absent or invalid inline block falls back to
   the existing extraction call at `prompts.ts:206`.
       verify: a corrupted inline block still yields findings, and the
@@ -912,7 +922,7 @@ the blocker existed to protect.
       budget is also the council's own decision mechanism — the harder of the
       two scarcity arguments. **An unrun gate is neither a pass nor a null**,
       and the council explicitly forbids recording it as either. Resumption
-      trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
 
 ## Phase 2 — Build the benchmark before automating topology
 
@@ -927,7 +937,7 @@ The council should not ship a topology selector before it can define "better".
       verify: the family list and per-family success criteria are committed
       before any arm runs
       **DONE 2026-08-31 — committed, and the ordering is the evidence.**
-      [`internal/bench/council-topology/PREREG-families.md`](../../internal/bench/council-topology/PREREG-families.md)
+      [`internal/bench/council-topology/PREREG-families.md`](../../../internal/bench/council-topology/PREREG-families.md)
       registers **all twelve** families with a per-family success criterion and
       one of the three labels the resolved `blocker: maintainer-blind-ratings`
       fixed: `gradeable-confirmatory` (6), `model-graded-exploratory` (5),
@@ -954,7 +964,7 @@ The council should not ship a topology selector before it can define "better".
       defined experimental *dimensions* and never the **provider-call graph** —
       an experimental cell is not a provider call, and `50/provider/UTC-day` is
       two ceilings, not one pool of 100. That artefact now exists:
-      [`internal/bench/council-topology/README.md`](../../internal/bench/council-topology/README.md)
+      [`internal/bench/council-topology/README.md`](../../../internal/bench/council-topology/README.md)
       is the new carrier (council Q1 = (a), 2/2), and `call-manifest.json` is
       the frozen 384-cell manifest, each row carrying expected and maximum
       calls **by provider**, its reuse source, and a completion status. Overlap
@@ -1000,7 +1010,7 @@ The council should not ship a topology selector before it can define "better".
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1020,7 +1030,7 @@ The council should not ship a topology selector before it can define "better".
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1036,7 +1046,7 @@ The council should not ship a topology selector before it can define "better".
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1052,7 +1062,7 @@ The council should not ship a topology selector before it can define "better".
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1060,7 +1070,7 @@ The council should not ship a topology selector before it can define "better".
   bands.
       verify: every promotion claim carries a trial count and a band
       **DONE 2026-08-31 — pre-registered, and the ordering is the evidence.**
-      [`internal/bench/council-topology-promotion-stats-PREREG.md`](../../internal/bench/council-topology-promotion-stats-PREREG.md)
+      [`internal/bench/council-topology-promotion-stats-PREREG.md`](../../../internal/bench/council-topology-promotion-stats-PREREG.md)
       fixes the two mandatory fields every promotion claim renders **in the
       claim itself** — `n` per arm (with the drop asymmetry when trials error
       out) and a 95 % CI, or an explicit min/median/max variance band where the
@@ -1089,7 +1099,7 @@ The council should not ship a topology selector before it can define "better".
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1182,7 +1192,7 @@ The council should not ship a topology selector before it can define "better".
       **No measurement was taken and none is claimed.** The design, the pattern
       list, the execution sequence, the four-conjunct close condition and the
       only permitted claim are carried in
-      [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md).
+      [`stubs/road-to-provider-leakage-bench-execution.md`](../stubs/road-to-provider-leakage-bench-execution.md).
       Floors unmoved: `>= 30` items per arm read per arm, the synthetic-fixture
       prohibition, and no population-rate claim from the 1,402-body corpus.
 - [-] 3.4 Hold style normalization behind the stronger gate: implement only if
@@ -1216,7 +1226,7 @@ The council should not ship a topology selector before it can define "better".
       **No measurement was taken and none is claimed.** The design, the pattern
       list, the execution sequence, the four-conjunct close condition and the
       only permitted claim are carried in
-      [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md).
+      [`stubs/road-to-provider-leakage-bench-execution.md`](../stubs/road-to-provider-leakage-bench-execution.md).
       Floors unmoved: `>= 30` items per arm read per arm, the synthetic-fixture
       prohibition, and no population-rate claim from the 1,402-body corpus.
 - [x] 3.5 Order-swap consistency: repeat sampled pairwise judgments with
@@ -1241,7 +1251,7 @@ The council should not ship a topology selector before it can define "better".
       Neutralising `first_position_rate` to a constant 0.5 reds two tests.
 - [x] 3.6 Fence peer content as untrusted data with structured boundaries or
   nonce fencing, per
-  [`untrusted-input-defense`](../../src/rules/untrusted-input-defense.md).
+  [`untrusted-input-defense`](../../../src/rules/untrusted-input-defense.md).
       verify: injection fixtures cannot alter the ranking schema or the system
       contract
       **DONE 2026-08-30, and the defect it closes was real rather than
@@ -1269,7 +1279,7 @@ members are called sequentially in input order, and *"the previous parallel
 ThreadPoolExecutor was traded for predictable mid-flow user prompts"*. There
 are **0** `Promise.all` occurrences in that file and the dispatch order is
 byte-pinned by tests. Any work here runs through
-[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md).
+[`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md).
 
 - [x] 4.1 Run the revisit gate before writing code: state the recorded
   decision, the condition it encoded (interactive mid-flow overrun prompts at
@@ -1279,7 +1289,7 @@ byte-pinned by tests. Any work here runs through
       legitimate outcome
       **DONE 2026-08-31 — verdict: keep sequential. Phase 4 closes as a
       published null.** Record:
-      [`agents/evidence/analysis/parallel-fanout-revisit-2026-08-31.md`](../evidence/analysis/parallel-fanout-revisit-2026-08-31.md).
+      [`agents/evidence/analysis/parallel-fanout-revisit-2026-08-31.md`](../../evidence/analysis/parallel-fanout-revisit-2026-08-31.md).
       It is a **transcription** of a verdict already reached, not a fresh
       decision: `blocker: parallel-fanout-reopens-a-closed-decision` below
       carries `Status: resolved` with resolution (a), AI council 2026-08-28,
@@ -1441,7 +1451,7 @@ byte-pinned by tests. Any work here runs through
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1562,7 +1572,7 @@ byte-pinned by tests. Any work here runs through
       The mechanism is UNBUILT and its verify clause additionally needs a real
       run. Both seats refused to license a prose-only build, which would
       *"create another indefinitely parked baseline"*. Resumption trigger and
-      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
 - [-] 5.5 Revisit ADR-120 **only** on results — record keep / amend /
   supersede with the benchmark artifact pin and a revisit condition.
       verify: the ADR record cites the benchmark artifact, not this roadmap
@@ -1575,7 +1585,7 @@ byte-pinned by tests. Any work here runs through
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1745,7 +1755,7 @@ allowed to stop.**
       when asked rather than left to my judgement: the verify clause is
       conjunctive and its second half depends on the round-count arms produced
       by step 2.7, which A3 deferred this morning. The recorded-gate half is
-      preserved as evidence and survives in [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      preserved as evidence and survives in [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **May be claimed:** the gate was pre-registered before execution.
       **May not be claimed:** that the gate passed, that equivalence was
       measured, or that either arm was promoted.
@@ -1826,11 +1836,11 @@ Only now, and **not** as a new task router.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
-- [-] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
+- [-] 7.3 Keep the deterministic/probe path **above** council: a mechanism
   question resolvable by tree fact, schema, script or executable test never
   reaches topology selection.
       verify: a probe-resolvable fixture never enters the selector
@@ -1907,7 +1917,7 @@ Only now, and **not** as a new task router.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
@@ -1925,7 +1935,7 @@ Only now, and **not** as a new task router.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1941,7 +1951,7 @@ Only now, and **not** as a new task router.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -1957,7 +1967,7 @@ Only now, and **not** as a new task router.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2156,7 +2166,7 @@ Only now, and **not** as a new task router.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2190,7 +2200,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2248,14 +2258,14 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 10 — Outcome attribution and observability
 
-- [-] <!-- roadmap-status: guarded-baseline --> 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
+- [-] 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
   resolution, council-internal topology, initial route, escalation, stage
   outputs, stop reason, synthesis policy, cost, latency, final verdict.
       verify: a replayed run reproduces the recorded route
@@ -2320,7 +2330,7 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
@@ -2351,7 +2361,7 @@ is **seating**, and it already has a carrier.
       The mechanism is UNBUILT and its verify clause additionally needs a real
       run. Both seats refused to license a prose-only build, which would
       *"create another indefinitely parked baseline"*. Resumption trigger and
-      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
 - [-] 10.3 Track paid calls that change no finding, stance, confidence,
   evidence, or final decision; emit `zero_marginal_value_call_rate`.
       verify: the rate is emitted and is non-null on a real run
@@ -2394,7 +2404,7 @@ is **seating**, and it already has a carrier.
       The mechanism is UNBUILT and its verify clause additionally needs a real
       run. Both seats refused to license a prose-only build, which would
       *"create another indefinitely parked baseline"*. Resumption trigger and
-      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
 - [-] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
@@ -2407,7 +2417,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2458,7 +2468,7 @@ is **seating**, and it already has a carrier.
       file survives the diff. The suite also tests the **denial** (two unrelated
       texts yield no pair), so a zero pair count means "nothing there" rather
       than "the detector is broken".
-- [-] <!-- roadmap-status: guarded-baseline --> 10.6 Track early-stop savings separately from quality.
+- [-] 10.6 Track early-stop savings separately from quality.
       verify: cost and quality are never reported as one number
       ```yaml
       guarded_baseline:
@@ -2526,14 +2536,14 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
 
 ## Phase 11 — Learned routing as a challenger only
 
-- [-] <!-- roadmap-status: guarded-baseline --> 11.1 Collect offline training rows from benchmark and dogfood evidence
+- [-] 11.1 Collect offline training rows from benchmark and dogfood evidence
   only, without requiring raw private prompt content.
       verify: the row schema has no field capable of holding prompt text
       ```yaml
@@ -2601,7 +2611,7 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
@@ -2616,7 +2626,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2632,7 +2642,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2675,14 +2685,14 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 12 — UX simplification
 
-- [-] <!-- roadmap-status: guarded-baseline --> 12.1 Keep `/council` as the main explicit user concept; users need no
+- [-] 12.1 Keep `/council` as the main explicit user concept; users need no
   topology vocabulary.
       verify: the command surface gains no topology argument for normal use
       ```yaml
@@ -2724,11 +2734,11 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
-- [-] <!-- roadmap-status: guarded-baseline --> 12.2 Add a free explain mode: why task-side orchestration resolved to
+- [-] 12.2 Add a free explain mode: why task-side orchestration resolved to
   council, which topology would run, estimated spend and calls, evidence
   source — with no paid model call to explain routing.
       verify: explain mode issues zero provider calls
@@ -2795,11 +2805,11 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
-- [-] <!-- roadmap-status: guarded-baseline --> 12.3 A force-topology debug control may exist but cannot override
+- [-] 12.3 A force-topology debug control may exist but cannot override
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
       verify: one test per prohibition
@@ -2810,7 +2820,7 @@ is **seating**, and it already has a carrier.
         command: npx vitest run tests/scripts/ai_council/force_topology_prohibitions.test.ts
         red_proof: sabotage run 2026-09-01 — 4 of 11 tests RED, 11/11 GREEN after a byte-identical restore (sha256 92a5c240…805e before and after)
         sabotage_model: planted `{ flag: '--topology', takesValue: true, choices: ['star','mesh'] }` into src/scripts/council_cli.ts, so a force-topology control exists on the surface
-        recheck_when: src/scripts/council_cli.ts gains a topology option, or any force-topology control is introduced anywhere in src/
+        recheck_when: src/scripts/council_cli.ts
         discharged_ac: one test per prohibition exists, each anchored to the live gate the prohibition names, and P0 turns the day a control appears
         pending_ac: the prohibitions themselves under a control that exists — no force-topology control is in the tree, so the overrides they forbid are unexercised
       ```
@@ -2867,7 +2877,7 @@ is **seating**, and it already has a carrier.
       state, not an active one."* **The guard is unaffected by this marker** —
       the test is committed and runs in CI regardless of the checkbox.
       Resumption trigger, forbidden claims and the red-proof table are in
-      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      [`stubs/road-to-council-topology-instrumentation.md`](../stubs/road-to-council-topology-instrumentation.md).
       **May not be claimed:** that the constraint holds for an implemented
       feature, that the verify clause passed, or that sabotage sensitivity is
       positive runtime validation.
@@ -2910,7 +2920,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2927,7 +2937,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2943,7 +2953,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2961,7 +2971,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -2976,7 +2986,7 @@ is **seating**, and it already has a carrier.
       / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
       not. The design, the frozen manifest, the missing-runner requirement and
       the resumption trigger are carried in
-      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md).
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
@@ -3115,7 +3125,7 @@ is **seating**, and it already has a carrier.
   verdict. No measurement was taken and none is claimed; the NOT RUN state both
   predecessor entries protected is preserved in force, and every floor stands.**
   Steps 3.3 and 3.4 are `[-]` and point at
-  [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md),
+  [`stubs/road-to-provider-leakage-bench-execution.md`](../stubs/road-to-provider-leakage-bench-execution.md),
   which carries the design, the pattern list, the execution sequence, the
   4-conjunct 3.4 close condition and the single claim the result may ever make.
 
@@ -3189,7 +3199,7 @@ is **seating**, and it already has a carrier.
   `tests/scripts/ai_council/leakage_patterns.test.ts` at 28/28 green and five
   sabotage arms recorded, four red and one explicitly NOT red. Detail and the
   full sensitivity table:
-  [`PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
+  [`PREREG-anonymisation-and-sampling.md`](../../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
   § Fork 3.
   **What is still open is only the run, and on 2026-08-31 it was open on
   QUOTA.** Both seats read exhausted when this was written — `anthropic 50/50 ·
@@ -3238,7 +3248,7 @@ is **seating**, and it already has a carrier.
      orchestrator and reproduced 2 failed / 22 passed → 24/24 at the same hash.
      **Three corrections this step forced, each of which changes a decision** —
      detail and citations in
-     [`PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md):
+     [`PREREG-anonymisation-and-sampling.md`](../../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md):
      (i) `responses/` is **not flat** — it holds directories literally *named*
      `<slug>.json` carrying per-round debate records, so a single-level walk
      drops them and the recursive count is **1,402** eligible items, not 716;
@@ -3256,7 +3266,7 @@ is **seating**, and it already has a carrier.
      below governs what may be stripped, and its pattern list does not exist
      yet.
   2. **Eligibility + balanced sampling.** **RECORDED 2026-08-31 (drain run 11)**
-     in [`internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md`](../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
+     in [`internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md`](../../../internal/bench/council-provider-leakage/PREREG-anonymisation-and-sampling.md)
      § Fork 2, written **before any rater saw any item** — checkable rather than
      asserted, because `collectGuesses` and `scoreRecognition` have **zero
      production callers** at this commit (test-only), so no rater call has been
@@ -3468,7 +3478,7 @@ is **seating**, and it already has a carrier.
      sequenced **after** the bench run, and the assembler contains no fs
      mutation so it cannot cause one. The false-documentation half of the defect
      is tracked at
-     [`stubs/road-to-council-retention-doc-drift.md`](stubs/road-to-council-retention-doc-drift.md).
+     [`stubs/road-to-council-retention-doc-drift.md`](../stubs/road-to-council-retention-doc-drift.md).
 - **Recommendation:** build the assembler and settle the forks; do NOT run the
   bench first. The predecessor's own reasoning still holds and is the reason
   this successor exists rather than a green light: the cost of waiting is two of
@@ -3513,7 +3523,7 @@ is **seating**, and it already has a carrier.
 - **Status:** resolved 2026-09-01 (drain run 12) — **DESCOPED by AI council
   verdict A3, convergent 2/2.** Phase 2 and its 23 dependent steps are `[-]` and
   point at
-  [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md),
+  [`stubs/road-to-council-topology-benchmark-execution.md`](../stubs/road-to-council-topology-benchmark-execution.md),
   which carries the frozen manifest, the arm spec, the missing-runner
   requirement, the 3-conjunct resumption trigger, the fresh-manifest trigger and
   the enumerated list of claims this roadmap may NOT make while the steps are
@@ -3609,7 +3619,7 @@ is **seating**, and it already has a carrier.
   authorisation settles the *whether*. It does not make the runner exist.
 
   **(b) The UTC-day schedule IS recorded**, at
-  [`internal/bench/council-topology/UTC-DAY-SCHEDULE.md`](../../internal/bench/council-topology/UTC-DAY-SCHEDULE.md).
+  [`internal/bench/council-topology/UTC-DAY-SCHEDULE.md`](../../../internal/bench/council-topology/UTC-DAY-SCHEDULE.md).
   It is **emitted, not authored**: `expandManifest()` → `partitionIntoDays()` →
   `summariseManifest()` over the frozen spec, which is greedy and deterministic
   in cell order, so it regenerates byte-identically. It reproduces this entry's
@@ -3748,7 +3758,7 @@ is **seating**, and it already has a carrier.
   ("the previous parallel ThreadPoolExecutor was traded for predictable
   mid-flow user prompts"), `grep -c 'Promise.all' src/scripts/ai_council/orchestrator.ts`
   returns `0`, and the dispatch order is pinned byte-for-byte by tests. Run
-  [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) first:
+  [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) first:
   name the mechanism, state what changed, and route it. Then pick exactly one:
   (a) keep sequential and close Phase 4 as a published null; (b) reopen with a
   concrete answer to the interactive-overrun question **and** a
@@ -4056,7 +4066,7 @@ unchecked** · 6.5's pre-registration clause → dischargeable, arms clause pend
 - No third-party transport shortcut that bypasses existing provider spend and
   quota governance.
 - No project-local council config as an authoritative enablement source
-  ([`council-availability`](../../src/rules/council-availability.md)).
+  ([`council-availability`](../../../src/rules/council-availability.md)).
 - No auto-authorization by council, and no hiding dissent for cleaner output.
 - No trigger-taxonomy work and no HTML verdict surface — both are owned
   elsewhere (§ Deferrals held elsewhere).
