@@ -48,6 +48,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 /** Extensions whose comment syntax the line classifier understands. */
@@ -313,6 +315,28 @@ export function main(argv: string[]): number {
         findings.push(...scanText(rel, text));
     }
 
+    try {
+        assertScanned({
+            gate: 'lint_code_comments',
+            scanned: candidates.length,
+            units: 'source file(s)',
+            roots: explicit.length > 0 ? explicit.slice(0, 4) : [`git diff ${base}...HEAD`],
+            allowEmpty:
+                'EMPTY_VALID: the scan root is a DIFF, and a diff with no source file in it is the ' +
+                'normal case for a docs-only or config-only change. git already answered for the ' +
+                'range: an unreadable ref yields no candidates AND no findings, which is ' +
+                'indistinguishable here from a clean docs commit, so this gate deliberately does ' +
+                'not treat zero as a dead scope. The scope failure this class exists to catch — a ' +
+                'moved source tree — cannot occur, because there is no committed path list to go ' +
+                'stale.',
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     process.stdout.write(`scanned: ${candidates.length} source file(s) against ${explicit.length > 0 ? 'an explicit path list' : base}\n`);
     if (findings.length === 0) {
         process.stdout.write('✅  lint_code_comments: no German, report-shaped or provenance comments.\n');
