@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Drain run 14 — terminal-disposition evidence for the promotion bridge and the topology receiver
 
 > **Evidence only.** This file changes no roadmap, flips no checkbox, resolves no
