@@ -87,6 +87,35 @@ Three fields, on top of the `complexity:` key the linter already expects.
 | `reviewed_at:` | no | An ISO date. The last day someone actually read the file and re-set `review_by:`. Absent means never re-read since creation. |
 | `probe:` | only when there is none | The literal `probe: none`. Present **only** on a stub that carries no promoting probe anywhere in its body — see § Naming the probe. A stub with a real probe omits this key. |
 
+### The blocked-quick-win fields — added 2026-09-01
+
+```
+A VALIDATED FIX HELD BY AN ESTATE DECISION IS NOT THE SAME OBJECT AS A
+PREFERENCE WAITING FOR A PRODUCT CALL. ONE BUCKET FOR BOTH HID A READY FIX
+FOR TEN DAYS AND THREE RELEASES.
+MEMBERSHIP IS READ FROM THESE THREE FIELDS. NEVER FROM BODY PROSE.
+ABSENCE IS NEVER MEMBERSHIP — A STUB MISSING ANY OF THE THREE FALLS THROUGH
+TO THE OWNER BUCKET, EXACTLY AS BEFORE.
+```
+
+All three must be present for a stub to appear in the **BLOCKED QUICK-WIN**
+bucket of `agent-config stubs:due`. They are read as frontmatter **scalars**, not
+matched as substrings of the body — a substring match over prose is what
+collapsed the two classes in the first place, and doing it with three substrings
+instead of one would be worse rather than better.
+
+| Field | Required | What it means |
+|---|---|---|
+| `design_validated:` | for the bucket | A citation for a recorded validation of the design — a council verdict, a measurement, or a landed prerequisite. Free text; **presence and non-emptiness** are what the bucket reads, and the text is for the human who acts on it. |
+| `capability_gap:` | for the bucket | The literal `capability_gap: none`. Any other value, or absence, keeps the stub out — the bucket is for work this repository can already do. |
+| `blocker_class:` | for the bucket | One of `estate`, `budget`, `product`. Only `estate` and `budget` qualify: those are decisions about **authorization**, which an owner can grant in one line. `product` means the work itself is undecided, which is a different wait. |
+
+**Why a fourth bucket rather than a new command.** Extending `stubs:due` is
+deliberate: a separate command would be the same invisibility one layer up, and
+the whole defect being fixed is that a maintainer read one surface and did not
+see the item. Source of truth for membership:
+`is_blocked_quickwin()` in `src/agent-src/scripts/stubs_due.ts`.
+
 ### What `review_by:` means, per shape
 
 The two classes in § The two classes have genuinely different clocks, so they
