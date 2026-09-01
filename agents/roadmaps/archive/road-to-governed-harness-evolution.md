@@ -1038,50 +1038,36 @@ once.
 > `holdout-disclosure`, `budget`, `near-duplicate`, `metric-verdict`), none of
 > which reads the frozen corpus. Both the fixture and the `failure`-axis
 > deferral above are carried into
-> [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md)
+> `stubs/road-to-metered-proposer-evaluation.md` (never landed)
 > as their own items, on the AI-council verdict recorded at 4.1. Recording them
 > as vacuous a second time is exactly the accounting this phase refused.
+>
+> **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of 2026-09-01 transferred these items to [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md), which is on the trunk and carries them open. This paragraph is kept as the drain-run-13 record, not as a live pointer.
 
 - [-] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
-      **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
-      on an AI-council verdict — 2/2 convergent,
-      anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
-      present.** `[-]` here means TRANSFERRED, exactly as Phase 7 and AC-9 use
-      it: never met, never dropped, and open and unweakened in the receiver.
-      The question put to the council was whether an item whose subject does not
-      exist may close `[x]` under a re-scope, or must transfer. Verbatim from
-      the openai seat: *"The full cascade is a future mechanism whose
-      receipt-bearing stages have no real subject, so `[x]` would breach the
-      real-mechanism verification rule."* The anthropic seat concurred and named
-      the floor it rests on: the `guarded_baseline` contract's semantic 4, *only
-      verification against the real mechanism permits `[x]`*.
-      **What transfers is the UNMET half only.** The deterministic prefix below
-      is built, wired to a production caller, and RED-proven in three
-      directions; that evidence stays here and the receiver inherits it rather
-      than re-earning it. What transfers is the receipt-bearing stages and the
-      settled twelve-stage enumeration.
-      **The retired `guarded_baseline` block, transcribed rather than deleted**
-      — the annotation is removed because it rejects any glyph but `[ ]` and
-      because a surviving annotation blocks archival unconditionally, not
-      because its content stopped being true: category `future-mechanism`,
-      scope `src/scripts/_lib/evaluation_cascade.ts`, command
-      `npx vitest run tests/scripts/evaluation_cascade.test.ts`, red_proof
-      *sabotage run 2026-08-31 — 2 failed / 13 passed, then 1 failed / 14
-      passed*, sabotage_model *let the prefix assign `activation`; then unwire
-      the cascade from the runner*, recheck_when
-      `src/scripts/_lib/evaluation_receipt.ts`, discharged_ac *the deterministic
-      prefix aborts on the first hard failure at zero model calls, and AC-3 and
-      AC-5 close on its production caller*, pending_ac *the receipt-bearing
-      stages and one settled twelve-stage enumeration*.
-      **Phase 4's carried exit criterion transfers with it, and is named here so
-      the transfer cannot drop it silently.** Step 2.3's third conjunct — *"a
-      fixture proves selection reads the whole frozen set"* — was carried into
-      this phase against "the selection stage 4.1 builds". No such stage exists:
-      the six built stages are `schema-validity`, `path-ownership`,
-      `holdout-disclosure`, `budget`, `near-duplicate` and `metric-verdict`, and
-      none of them reads the frozen corpus. It is carried into the receiver as
-      its own item, not re-recorded as vacuous a second time.
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
+      **GUARDED BASELINE 2026-08-31 — the deterministic prefix is built, wired
+      and RED-proven; the box stays `[ ]` because the twelve-stage form is not.**
+
+      ```yaml
+      guarded_baseline:
+        category: future-mechanism
+        scope: src/scripts/_lib/evaluation_cascade.ts
+        command: npx vitest run tests/scripts/evaluation_cascade.test.ts
+        red_proof: sabotage run 2026-08-31 — 2 failed / 13 passed, then 1 failed / 14 passed
+        sabotage_model: let the prefix assign `activation`; then unwire the cascade from the runner
+        recheck_when: src/scripts/_lib/evaluation_receipt.ts
+        discharged_ac: the deterministic prefix aborts on the first hard failure at zero model calls, and AC-3 and AC-5 close on its production caller
+        pending_ac: the receipt-bearing stages and one settled twelve-stage enumeration
+      ```
 
       **AI council 2026-08-31, and it resolved to a CONVERGENT Option B — but
       only after a tie-break that the tree answered, so the route is recorded
@@ -1766,25 +1752,18 @@ once.
       (`:330`) returns `judge: null` when none is configured, and the three role
       prompts are produced regardless.
 - [-] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
-      **CLOSED 2026-08-31 (drain run 13) on a NARROW RE-SCOPE, decided by the AI
-      council — 2/2 convergent, anthropic/claude-sonnet-4-5 +
-      openai/codex-default, 2 rounds, both seats present.** The council was
-      asked whether an item whose subject does not exist may ever close `[x]`,
-      and it separated this step from its three neighbours on the
-      `guarded_baseline` contract's own axis: this one was the single
-      `absence-assertion` in the set, and an `absence-assertion` "asserts
-      something directly observable today and MAY close `[x]` once
-      sabotage-verified"
-      (`src/agent-src/scripts/guarded_baseline.ts`, council 2026-08-31).
-      Verbatim from the openai seat: *"The explicit deterministic fallback is
-      directly observable and sabotage-proven, provided the rewritten criterion
-      states narrowly that only this fallback is closed and preserves
-      `paired_verdict` as mandatory before any LLM proposer can survive."*
-      The anthropic seat named the discriminator: this step states a
-      **conditional** policy — IF an LLM proposer is introduced, THEN it must
-      beat the baseline — and carries an explicit escape clause for the other
-      branch, where 4.1, 5.6 and AC-8 state unconditional requirements and carry
-      none.
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
+      **GUARDED BASELINE 2026-08-31 — the comparison cannot be run because there
+      is no second arm, and the fallback clause is now ENFORCED instead of
+      merely written.**
 
       ```yaml
       guarded_baseline:
@@ -1951,6 +1930,15 @@ once.
       not a measured optimum; `revisit-if` a screening run rejects a proposal a
       curator then re-adds by hand, or admits one a human calls a duplicate.
 - [-] **5.6 Cheap proposer models first, and track evolution ROI.**
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
       a hard budget cap, while dropping the only cost-*reduction* mechanism both
@@ -1958,7 +1946,7 @@ once.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
       **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
+      `stubs/road-to-metered-proposer-evaluation.md` (never landed),
       on the same AI-council verdict as 4.1 and AC-8 — 2/2 convergent,
       anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
       present.** `[-]` means TRANSFERRED: never met, never dropped, open and
@@ -1966,6 +1954,10 @@ once.
       exists, but cheapest-first execution cannot be verified without recorded
       model attempts; transfer must retain that unmet conjunct while preserving
       the completed ROI evidence."*
+      **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
+      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      which is on the trunk and carries it open as `Transferred whole`. Kept as
+      the drain-run-13 record, not as a live pointer.
       **BOTH conjuncts transfer together, and that coupling is the council's,
       not a convenience.** The anthropic seat: *"The ROI mechanism producing a
       figure for a run that never happened is shape without substance — same as
@@ -2914,10 +2906,23 @@ once.
       names. The "before any new retrieval component exists" half is satisfied
       only vacuously, since 6.3 has not started. What closes it is 6.1.
 - [-] AC-8 — Programme success and failure criteria from 0.7 were committed
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production` as AC-4**,
+      on the terminal-disposition AI council of the same day. The two seats
+      DIVERGED on this one item — the anthropic seat would have kept it here as a
+      permanent honest null, on the ground that AC-8 is *this* programme's
+      acceptance criterion and transferring it obscures that the programme did not
+      meet it. **The tree settles the divergence rather than the agent.** `[-]` is
+      defined in this very file as TRANSFERRED, never met and never dropped, and
+      AC-9 directly below already carries that disposition for the same reason. So
+      `[-]` records non-satisfaction rather than obscuring it, which is exactly
+      the property the anthropic objection asked for. This criterion's own closing
+      sentence, written 2026-08-31 and unedited, already named the receiver class:
+      *"a first candidate run under a metered backend, which belongs to whichever
+      roadmap lifts the live-harness park — not to this one."*
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
       **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
+      `stubs/road-to-metered-proposer-evaluation.md` (never landed),
       on the same AI-council verdict as 4.1 and 5.6 — 2/2 convergent,
       anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
       present.** `[-]` means TRANSFERRED, on the precedent AC-9 sets four rows
@@ -2927,6 +2932,10 @@ once.
       seat named the floor: *"passing a test over a population of zero … or
       satisfying a precondition without the consequent … cannot be claimed as
       verified behaviour."*
+      **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
+      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      which is on the trunk and carries it open as `Transferred whole`. Kept as
+      the drain-run-13 record, not as a live pointer.
       **The already-satisfied conjunct transfers as INHERITED EVIDENCE, not as
       unbuilt work** — the openai seat made that a condition of the transfer:
       *"transferring Item 4 must not erase the already-satisfied precommitment
