@@ -233,9 +233,16 @@ function writeBlocker(dir: string, body: string): void {
 
 
 describe('the guarded capability', () => {
-    it('reads the live blocker as open, and refuses', () => {
-        expect(readMergeAuthorityStatus(REPO_ROOT)).toBe('open');
-        expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-08-31' }, REPO_ROOT))
+    // The live blocker was OPEN until 2026-09-01, when the drain-run-15 council
+    // settled ADR-239 Decision 3 in the REFUSING direction, scoped to
+    // preauthorized authority. `refused` is a first-class CLOSED state that must
+    // still not mint — which is the whole point of splitting the disposition out
+    // of the status. Asserting the live value rather than a fixture is what makes
+    // this the proof that the settlement did not open the gate: if a later edit
+    // ever turns the tree's blocker into a grant, this line fails.
+    it('reads the live blocker as refused, and still refuses', () => {
+        expect(readMergeAuthorityStatus(REPO_ROOT)).toBe('refused');
+        expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, REPO_ROOT))
             .toThrow(PromotionCapabilityUnobtainableError);
     });
 
