@@ -12,12 +12,16 @@
  * assertion that the line reaches stdout lives in `evolution_lab.test.ts`,
  * beside the clone fixture it needs.
  *
- * The ladder half has NO live subject and this file does not pretend otherwise:
- * nothing in this programme produces a {@link LadderAttempt}, because step 5.2
- * keeps the live-floors park intact and there is no harness to make a metered
- * call. {@link assertCheapestFirst} is therefore proved to FIRE on synthetic
- * out-of-order sequences and to stay silent on in-order ones — a guard with a
- * proved polarity standing over a mechanism that does not exist yet.
+ * The ladder half HAS a subject now, and it is not a spent one (corrected
+ * 2026-09-01). This paragraph used to say "nothing in this programme produces a
+ * {@link LadderAttempt}"; `_lib/llm_candidate_proposer.ts` produces them from
+ * two production callers (`:417`, `:446`), so the "mechanism that does not
+ * exist yet" wording was false. What is still absent is a LIVE run: every
+ * population so far is the dry plan or a stub, so the ordering has not governed
+ * a spent one, and AC-3 of `road-to-governed-evidence-production` stays open on
+ * exactly that. {@link assertCheapestFirst} is proved here to FIRE on synthetic
+ * out-of-order sequences and to stay silent on in-order ones; that polarity
+ * proof is unchanged, and it was never a claim that anything ran.
  */
 import { describe, expect, it } from 'vitest';
 
@@ -209,7 +213,7 @@ describe('5.6 — the ladder is cheapest-first by construction', () => {
     });
 });
 
-describe('5.6 — assertCheapestFirst, a guard with no live subject', () => {
+describe('5.6 — assertCheapestFirst, a guard whose population is not yet a spent one', () => {
     const seq = (rows: ReadonlyArray<[string, ModelTier]>): LadderAttempt[] =>
         rows.map(([cls, tier], i) => ({
             defect_class: cls as LadderAttempt['defect_class'],
