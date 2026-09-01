@@ -210,3 +210,134 @@ delivers a *mergeable* PR unconditionally, with or without `--all`.
 - The `road-to-drain-commands` roadmap — the plan, and the `merge-authority` blocker. Named without a path: an accepted ADR is permanent and that roadmap is archived on completion (`no-roadmap-references`; `check_no_roadmap_refs` does not scan `docs/decisions/`, so the rule holds here without a gate behind it).
 - `src/scripts/hooks/block_unauthorized_git.ts` — `BLOCK_OPS`, `LEDGER_MAX_AGE_MS`.
 - `src/scripts/git_authorization_hook.ts` — `classifyAuthorization`, the human-only write path.
+
+## Settlement of § Decision 3 — 2026-09-01, negative and scoped
+
+**This section is APPENDED. § Decision 3 above is not deleted, not rewritten and
+not contradicted — it recorded that `--merge` and the `/pr:merge` merge step are
+specified and inert, gated on an owner decision. They still are. What was open
+was the decision itself; this records that it is settled, in the refusing
+direction, and exactly how far the refusal reaches.**
+
+### The settlement
+
+> **Preauthorized merge authority is REFUSED.** `--merge` and the `/pr:merge`
+> merge step remain **inert**. Merging is a post-PR manual operation that
+> requires same-turn explicit user confirmation per
+> [`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+> § Hard Floor. No flag, environment variable, autonomy setting, roadmap step,
+> standing instruction or council record makes any command merge.
+
+The decision table at § Disposition still reads *"Preauthorized merge authority
+is granted or refused | owner | **open**"*. That row is **not flipped by this
+section**, and the reason is in § What this settlement does NOT reach below: the
+table's row is the general, permanent question and it stays where it was. What
+this section settles is the *workflow-scoped* form of it — the one the
+`merge-authority` blocker actually gated.
+
+### The scoping, which is load-bearing and must not be widened
+
+**The refusal binds PREAUTHORIZED merge authority only.** It does **not**
+prohibit — and must never be read as prohibiting — an ordinary merge performed by
+a human under same-turn explicit confirmation. The owner merging their own pull
+request is unaffected by this record in every respect. A future reader who takes
+this as a blanket prohibition on merging has read it backwards: the refusal
+removes an agent capability, it does not remove a human one.
+
+Restated as the two propositions this section does and does not assert:
+
+| Proposition | Settled here |
+|---|---|
+| An agent may hold merge authority in advance of the merge turn | **refused** |
+| A human may merge under same-turn explicit confirmation | untouched — always was, still is |
+
+### The council that produced it
+
+AI council, 2026-09-01 (drain run 15). Members `anthropic/claude-sonnet-4-5` and
+`openai/codex-default`; 2 rounds; depth deep; peer-review; blind chairman; quorum
+**2/2 present** (needed 1) — concluded. Subscription transport, `billable=0`,
+`$0.0000`. The question and both seat responses are local-only and are
+deliberately **not cited by path**: council artefacts are gitignored and
+auto-pruned, so a path here would rot, and the substance is inlined instead.
+
+The question was whether the `merge-authority` blocker is resolvable at all under
+the maintainer's standing instruction for that run — *"every open question,
+decision, or blocker is answered by the AI Council — never by me; the council's
+recorded decision substitutes for user sign-off"* — with the delivery boundary
+fixed at *"one PR per roadmap"*. Three options were put: **4A** activate merge
+authority · **4B** record it terminally unresolvable and leave the roadmap open ·
+**4C** settle § Decision 3 negatively and re-scope the roadmap so it closes at the
+PR boundary.
+
+**Verdict: 4C, convergent, after one seat moved from 4B.** The load-bearing
+reasoning, quoted rather than paraphrased:
+
+> *"'Settling ADR-239 Decision 3' doesn't require activating merge authority — it
+> can be settled in the 'no' direction. The council can record: 'For this
+> workflow, merge authority remains inert; merging is a post-PR manual operation
+> requiring same-turn explicit user confirmation per `non-destructive-by-default`.'
+> That settles the decision without lowering the floor."*
+
+> *"The owner also permits council re-scoping with written rationale. A negative
+> Decision 3 plus a faithful redesign respects all three rules."*
+
+The named counter-argument, recorded because it was actively defeated rather than
+ignored: *"re-scoping could become cosmetic closure: moving Phase 7 elsewhere and
+declaring success may silently discard the roadmap's original outcome."* The
+verdict was conditioned on ten preservation obligations, and the fallback was
+explicit — *"if those obligations cannot be preserved in an enforceable tracked
+location, then 4C is unavailable and the fallback must be 4B. Merely deleting
+Phase 7 or weakening its acceptance criteria would not qualify as legitimate
+re-scoping."* All ten are discharged in the roadmap that carried the blocker and
+in its receiver; neither Phase 7 nor its acceptance criterion was deleted or
+weakened.
+
+### The prior contradicting verdict, recorded rather than smoothed
+
+**A council one day earlier reached the opposite conclusion about council
+authority, and this section does not pretend otherwise.** The drain-run-14
+council of 2026-09-01 (same two members, 2 rounds, blind chairman, quorum 2/2)
+returned **2C — the `merge-authority` blocker is TERMINALLY OWNER-RESERVED**, on
+the ground that *"an agent council cannot amend the boundary of its own
+authority"*, and specifically corrected the argument that a refusal is the safe
+direction: *"permanently declaring that only humans may promote still settles the
+same governance boundary."* Drain runs 13 and 14 both declined to write a
+refusal into this record for that reason.
+
+**What changed between them is the question, not the answer to it.** Drain 14 was
+asked whether the *authority* was council-decidable. Drain 15 was asked whether
+the *delivery boundary of a roadmap* could be re-cut so that the authority
+question stops gating it — and both drain 13 and drain 14 held in as many words
+that scope questions of exactly that shape ARE council-decidable: *"recording a
+boundary is within council authority"*, and *"the disposition of this roadmap's
+two open items … are scope and evidence questions the council may answer."*
+
+**The honest residual, stated falsifiably.** Under drain 14's 2C, writing any
+refusal into this record — including this scoped one — is the owner-reserved act.
+Under drain 15's 4C, a workflow-scoped refusal that grants nothing, removes no
+human capability and lowers no floor is a boundary record. **This section takes
+4C and states the falsifier:** if the owner rules that 2C stands and reaches a
+scoped refusal, this section is void, the `merge-authority` blocker reopens, the
+roadmap that closed under it reverts to active with its two deferred items
+restored, and nothing here is written so as to make that harder. The general
+decision-table row is deliberately left `open` so that reversal costs one edit
+rather than a reconstruction.
+
+### What this settlement does NOT reach
+
+1. **It grants nothing.** No capability is created, widened or unlocked by this
+   record. `acquirePromotionCapability` refuses on a `refused` disposition
+   exactly as it refuses on an open one, and that is proven by test rather than
+   asserted.
+2. **It does not flip the § Disposition decision table.** The general question —
+   whether preauthorized merge authority is granted or refused as a permanent
+   property of this package — stays `owner` / `open`. A future owner ruling in
+   either direction supersedes this section without having to unpick it.
+3. **It does not touch the `review_trigger`.** All three of its conditions are
+   about a *grant* appearing (an owner resolution in either direction, a second
+   `all`-style command, an agent-writable authorization store). The first has now
+   fired in the scoped sense recorded here, which is why this section exists; the
+   other two remain unfired.
+4. **It is not a merge confirmation.** No standing instruction and no council
+   record is same-turn user confirmation for any merge, and nothing in this
+   record may be cited as one.
