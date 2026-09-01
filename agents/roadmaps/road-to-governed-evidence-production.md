@@ -530,6 +530,77 @@ is what that mitigation looks like when it fires.
       call reds that case. Over an empty history the guard is still
       defence-in-depth, and the module says so at the call.
 
+
+### PHASE 2 — DISPOSITION 2026-09-01 (drain run 15): 1B, OPEN AND CORRECTLY OPEN
+
+*AI council 2026-09-01 (drain run 15, second round), members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
+peer-review, blind chairman, quorum **2/2 present** (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Council artefacts are
+gitignored and auto-pruned, so every line relied on is inlined here per
+`no-roadmap-references`.*
+
+**Verdict 1B — convergent 2/2. Phase 2 stays open, and the roadmap must not
+archive.** This run operated under a written owner instruction delegating every
+open decision to the council, so the question put was whether that delegation
+is enough to run the chain now. It is not, and the reason is specific rather
+than general.
+
+**What the delegation DOES reach, and this is new:** the council recorded that
+it *"may approve a provenance-preserving corpus contract without further owner
+sign-off"* — F-A's routing is no longer owner-reserved-by-default. The drain-14
+record said *"one council seat allowed that a purely provenance-preserving pin
+of the same subjects might be autonomous, but held the equivalence
+undemonstrated — so the default binds."* The default no longer binds; a
+manifest-plus-environment snapshot is an **admissible** way to cure F-A.
+
+**What it does NOT reach, and this is what decides 1B.** The seat that carried
+the argument put it in one sentence: *"Delegated authority can settle the
+corpus contract; it cannot satisfy an independence condition using the same
+run."* The un-park procedure's two-session split was never waived — the session
+that authors the corpus may not run the comparison — so the final step of the
+chain is unreachable by the run that would build the first four.
+*"Beginning the chain is not completing it."*
+
+The other prerequisites were re-affirmed as substantive rather than
+administrative: F-B leaves the estimand, trial unit, aggregation, independence
+assumptions, sign convention and tie handling undefined; F-C establishes that
+no candidate-pair delta producer exists; at five candidates the protocol sits
+exactly at `MIN_DISCORDANT`, so one tie prevents a directional conclusion; and
+`underpowered` explicitly does not satisfy AC-2.
+
+**The equivalence-preserving manifest, specified so the next run does not have
+to re-derive it.** Should someone cure F-A, the pin must capture: the
+repository commit and the generator implementation/version; the exact ordered
+input inventory with byte hashes and provenance; included and excluded paths;
+every user-scope rule capable of causing skip behaviour, with content hashes;
+generator configuration and the relevant non-secret environment values; the
+runtime, dependency, OS and platform facts that can affect projection; the
+expected generated-file inventory and hashes; and a reconstruction check
+proving that a clean checkout produces the identical experimental subject.
+
+**Resume condition for Phase 2**, unchanged in substance and now recorded as
+the file's own: cure F-A with a manifest of the shape above, then freeze the
+complete experimental definition (frozen entire or not at all), then implement
+the paired-delta producer for F-C, then a fresh-checkout dry re-run, then an
+independent session — not the one that authored the corpus — authorised to
+spend.
+
+**Nothing was captured, nothing was built, and no criterion moved.** Drain 15
+made zero metered calls on this file. The council's own framing of why that is
+the right outcome separates *"authority to decide, authority to implement
+preparatory work, and satisfaction of an acceptance criterion"* — and holds the
+first two while the third is unavailable *"because their required evidence does
+not exist."*
+
+**`metered-backend-park` stays open, and is NOT closed with (b).** Its
+`Resolved when` offers closure *"with (b) as the recorded disposition"*, and
+that option is not taken: the blocker was narrowed to (c) on 2026-09-01 and
+that narrowing stands. Closing it as (b) now would overwrite a settled
+narrowing with a disposition that contradicts it, in order to make a roadmap
+archive. That is the cosmetic closure the same council refused elsewhere in
+this run.
+
 ## Blockers
 
 ### blocker: metered-backend-park
@@ -648,6 +719,18 @@ is what that mitigation looks like when it fires.
 - [ ] AC-2 — A paired-verdict comparison between a metered proposer and the
       deterministic one has been run, and its result — in either direction —
       is recorded. Held by `metered-backend-park`.
+<!-- AC-3 DISPOSITION 2026-09-01 (drain run 15): stays open, as a Phase-2
+     SUCCESSOR obligation. Convergent 2/2. The reasoning, recorded because "no
+     further code is needed to close it" reads like a completion claim and is
+     not one: "'No further code is needed' establishes implementation
+     completeness, not acceptance completeness. Its purpose half expressly
+     requires one spent population, and none exists."
+     And it is explicitly NOT transferred: "Do not transfer AC-3 merely to make
+     this roadmap look cleaner. Transfer would require a named, valid
+     destination that preserves the exact obligation and its evidence
+     requirement; none is established. Keep it attached to the Phase 2 resume
+     chain." When Phase 2 completes, AC-3 is the follow-on verification it
+     triggers. -->
 - [ ] AC-3 — `assertCheapestFirst` has at least one production caller, so the
       ordering it polices governs a real population rather than an empty one.
       **HALF MET 2026-09-01, and left `[ ]` on the half that is not.** The
