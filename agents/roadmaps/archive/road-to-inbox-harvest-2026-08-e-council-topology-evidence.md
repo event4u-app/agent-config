@@ -1958,8 +1958,12 @@ Only now, and **not** as a new task router.
       `selectTopology`, and asserts the result is **empty**. The day 7.2 lands a
       selector it goes RED — which is exactly when this baseline expires and the
       fixtures must be re-run against the real entry point. `recheck_when`
-      carries the same path and symbol; the dashboard reports the bare symbol as
-      **not machine-checkable**, and the test is the check.
+      carries the same path and symbol. **Since 2026-09-01 the dashboard reports
+      no line for this record**: `guardedBaselineStaleness` decides a trigger by
+      its path token, and reporting a record that is already decidable as *"not
+      machine-checkable"* is the mirror of the failure that report exists to
+      prevent. The path token is the machine check and the tripwire test is the
+      broader one that also covers the symbol.
       **Sensitivity was proven twice, not assumed.** Sabotage A — moving the
       rung-4 contested check above the rung-0 checks — turned it RED (1 failed /
       6 passed), and specifically reddened the precedence assertion rather than
@@ -2810,9 +2814,14 @@ is **seating**, and it already has a carrier.
       RED-provable one in the file.
 
       **`recheck_when` carries both a path and a symbol on purpose.** The path is
-      a guess and is machine-checkable; the symbol is not, and the report marks
-      it **not machine-checkable** rather than booking it as *"not stale"* —
-      absence of a check is reported as absence, never as a pass.
+      a guess and is machine-checkable; the symbol is not. **Corrected
+      2026-09-01:** the report no longer marks this record *"not
+      machine-checkable"*, because its path token already decides staleness —
+      the unchecked-companion-symbol line was noise on a decidable record, and
+      that noise sat in the same section as the one genuinely undecidable trigger
+      in the estate (10.6). Absence of a check is still reported as absence,
+      never as a pass — it is now reported only where the check is genuinely
+      absent, i.e. where the trigger carries no path token at all.
 
       **`[~]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
       both seats converging — NOT cancelled and NOT satisfied.**
