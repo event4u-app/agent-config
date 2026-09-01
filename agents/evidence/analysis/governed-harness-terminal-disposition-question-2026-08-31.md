@@ -2,7 +2,30 @@
 
 # Governed harness evolution — the terminal-disposition question, asked and ANSWERED
 
-**Status: ANSWERED 2026-09-01. Verdict below; the question follows it verbatim.**
+**Status: ANSWERED AND EXECUTED 2026-09-01. Verdict below; the question
+follows it verbatim.**
+
+**What happened after the verdict, recorded here because the question body
+below still describes the pre-transfer world and would otherwise read as
+current.** The owner accepted the convergent disposition — option (e), a
+transfer to an owned receiver — and authorised its estate cost on the same
+day. All four obligations moved whole and unweakened to
+`agents/roadmaps/road-to-governed-evidence-production.md`, with every
+`verify:` clause carried verbatim and every source item marked `[-]`
+TRANSFERRED rather than `[x]`. `road-to-governed-harness-evolution` thereby
+reached 0 open, 0 deferred and 0 guarded baselines, and is now at
+`agents/roadmaps/archive/road-to-governed-harness-evolution.md`. Every path
+the question body names for that roadmap is therefore an ARCHIVE path now.
+
+**Where the executed transfer departed from the seats, in the two places it
+did.** The cheapest-first ordering obligation sits in the receiver's metered
+phase rather than its deterministic one — the anthropic seat's illustrative
+list said otherwise, but the criterion both seats named puts it there, since
+`assertCheapestFirst` polices the order of metered tier attempts. And AC-8
+travelled rather than staying as a permanent honest null: the seats diverged,
+and the source file's own definition of `[-]` (TRANSFERRED, never met and
+never dropped) plus AC-9's existing disposition settle it without the agent
+choosing a side.
 
 This was the AI-council question for the four items that remain open on
 `road-to-governed-harness-evolution`. It was committed as an artefact so the

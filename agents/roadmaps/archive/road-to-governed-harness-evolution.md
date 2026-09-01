@@ -1031,8 +1031,16 @@ once.
 > outcome per case, expected-vs-observed is recorded against stable case ids at
 > that point — not before, and not as an empty file that looks like a carrier.
 
-- [ ] <!-- roadmap-status: guarded-baseline -->
-      **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+- [-] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
       **GUARDED BASELINE 2026-08-31 — the deterministic prefix is built, wired
       and RED-proven; the box stays `[ ]` because the twelve-stage form is not.**
 
@@ -1715,8 +1723,16 @@ once.
       **The judge stays optional**, as the step says: `buildSplitPipeline`
       (`:330`) returns `judge: null` when none is configured, and the three role
       prompts are produced regardless.
-- [ ] <!-- roadmap-status: guarded-baseline -->
-      **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+- [-] **5.4 An LLM proposer must beat the deterministic one to survive.** On at
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
       **GUARDED BASELINE 2026-08-31 — the comparison cannot be run because there
       is no second arm, and the fallback clause is now ENFORCED instead of
       merely written.**
@@ -1823,7 +1839,16 @@ once.
       is a STATED default at the conservative end of `lint_originality`'s range,
       not a measured optimum; `revisit-if` a screening run rejects a proposal a
       curator then re-adds by hand, or admits one a human calls a duplicate.
-- [ ] <!-- roadmap-status: guarded-baseline --> **5.6 Cheap proposer models first, and track evolution ROI.**
+- [-] **5.6 Cheap proposer models first, and track evolution ROI.**
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
+      terminal-disposition AI council of the same day, 2 of 2 convergent. `[-]`
+      means TRANSFERRED — never met and never dropped. The obligation moved
+      verbatim and unweakened, including the `verify:` clause, and the discharged
+      half below is reproduced there as already-proven context rather than being
+      re-credited. The `guarded-baseline` annotation is removed with the move: it
+      is a state about an OPEN step's evidence, and this step is no longer open
+      here. Its evidence block is kept below as the historical record of what was
+      proven, and when.
       `from-skipped-parent`, and this one is self-undercutting in the master:
       its own cross-critique faults both parents as cost-blind and answers with
       a hard budget cap, while dropping the only cost-*reduction* mechanism both
@@ -2762,7 +2787,20 @@ once.
       archived roadmap, and a cost model is not the three-arm experiment 6.1
       names. The "before any new retrieval component exists" half is satisfied
       only vacuously, since 6.3 has not started. What closes it is 6.1.
-- [ ] AC-8 — Programme success and failure criteria from 0.7 were committed
+- [-] AC-8 — Programme success and failure criteria from 0.7 were committed
+      **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production` as AC-4**,
+      on the terminal-disposition AI council of the same day. The two seats
+      DIVERGED on this one item — the anthropic seat would have kept it here as a
+      permanent honest null, on the ground that AC-8 is *this* programme's
+      acceptance criterion and transferring it obscures that the programme did not
+      meet it. **The tree settles the divergence rather than the agent.** `[-]` is
+      defined in this very file as TRANSFERRED, never met and never dropped, and
+      AC-9 directly below already carries that disposition for the same reason. So
+      `[-]` records non-satisfaction rather than obscuring it, which is exactly
+      the property the anthropic objection asked for. This criterion's own closing
+      sentence, written 2026-08-31 and unedited, already named the receiver class:
+      *"a first candidate run under a metered backend, which belongs to whichever
+      roadmap lifts the live-harness park — not to this one."*
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
       **RE-AUDITED 2026-08-31 after 5.6 landed: still OPEN, and the reason
