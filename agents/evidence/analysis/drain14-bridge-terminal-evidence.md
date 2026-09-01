@@ -744,3 +744,149 @@ It is the narrow half, and it should be named as the narrow half.
   the 1C ruling should be revisited. Both are outside an evidence pass.
 - **The estate figures are branch-local.** `check_estate_count` compares against
   `origin/main` as fetched in this worktree; a merge on `main` moves the floors.
+
+---
+
+## 6. The council verdict, and what it changed — added 2026-09-01, after the edit pass
+
+> **§ 1–5 above were written BEFORE the council ruled and are unchanged.** This
+> section records the verdict, the mutation test the council ordered, and one
+> place where the measurement came back **worse** than the tree claimed.
+
+### 6.1 The record
+
+*AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum 2/2 present (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Verdicts **1C / 2C / 3A**, convergent 2/2 on all three.*
+
+The question and both seat responses are local-only. `agents/runtime/council/`
+is gitignored and auto-pruned, so per `no-roadmap-references` every line relied
+on is **inlined** here and in the two roadmaps, never linked by path.
+
+### 6.2 Q2 — 2C, terminally owner-reserved
+
+**Ruling.** An agent council cannot amend the boundary of its own authority; the
+reflexivity is **structural and non-bypassable**. Corroborated by
+`decision-revisit-gate`'s placement of governance self-amendment in the
+owner-reserved column, by ADR-239 § Decision 3 itself, and by the prior
+OWNER-RESERVED ruling (Decision 1, 1C).
+
+**Two downgrades, recorded because each weakens this run's own case.**
+
+1. **The harness safety-classifier refusals are corroborative at most.** Without
+   the classifier's stated reason they do not prove the constitutional boundary
+   — they are consistent with it. The roadmap's `revisit-if` note cites those
+   refusals; the disposition block added this pass says in as many words not to
+   read them as proof.
+2. **"Refusal is non-reflexive" is speculative.** Option (b) — permanently
+   declaring that only humans may promote — **still settles the same governance
+   boundary**, so it is owner-reserved on the same ground as (a). It is not the
+   safe non-reflexive direction it looks like.
+
+**No descope of 0.8 or AC-9**, for two independent reasons. The verdict:
+recording a boundary is within council authority, changing an acceptance
+criterion is owner-level. The mechanism, which is stronger and **was not
+available to the council**: `agents/roadmaps/stubs/` is not a legal carry
+destination (§ 4.3), so a descope into a stub reds the archival sweep.
+
+**No reversion of the seven Phase 7 marks — the seats DIVERGED.** One said
+revert; the other held that *"'provisional and revertible' does not mean an
+automatic reversion has already been authorized"* and graded the reversion
+**unestablished**. A divergent council carries no mandate. The marks stand, and
+the divergence is now recorded in the Phase 7 gate header so a later reader sees
+that reversion was **considered and not authorised** — a different state from
+never raised.
+
+**Terminal state.** The bridge stays **ACTIVE, blocked, 7/9, not archived**, and
+that is correct rather than a stall: archival is refused independently of AC-9
+by the open-blocker check at
+`src/agent-src/scripts/archive_completed_roadmaps.ts:591`.
+
+### 6.3 Q3 — 3A, and the mutation test
+
+**Ruling.** Leave `status: draft`; do **not** promote the guard stub — adding a
+CI gate is a governance act whose authority this run has not established. Both
+seats graded the *"deleting it reds nothing"* claim **SPECULATIVE** for want of
+command output, with escalation conditional on confirmation.
+
+**The test was run and the claim is CONFIRMED.** Isolated detached worktree at
+`b50b27281`, `node_modules` cloned so a missing-dependency false red is
+excluded, nine gates in an identical loop twice.
+
+| Gate | carrier present | carrier deleted |
+|---|---|---|
+| `check_estate_count` | exit 0 | exit 0 |
+| `check_no_roadmap_refs` | exit 0 | exit 0 |
+| `check_references` | exit 0 | exit 0 |
+| `check_roadmap_trackable` | exit 0 | exit 0 |
+| `lint_empty_roadmaps` | exit 0 | exit 0 |
+| `lint_roadmap_blockers` | exit 0 | exit 0 |
+| `lint_roadmap_complexity` | exit 0 (3 files) | exit 0 (2 files) |
+| `lint_roadmap_later_disposition` | exit 0 | exit 0 |
+| `lint_roadmap_family_cap` | exit 0 (3 scanned) | exit 0 (2 scanned) |
+
+Nine of nine green in both directions. Deleting a file carrying 38 live
+obligations reds nothing.
+
+### 6.4 The correction that runs the other way
+
+The carrier's own header predicts that deleting it *"would score as an estate
+**credit**"*. **Measured, it scores as nothing at all.** `check_estate_count`
+reports `active_roadmaps 2 (floor 2, +0)` both with the file present (main
+checkout) and with it deleted (probe worktree), because `collect()` skips every
+`status: draft` file (`src/agent-src/scripts/update_roadmap_progress.ts:755-757`)
+and the roadmap was never in the active count in either direction.
+
+```
+THIS IS WORSE THAN THE ROADMAP CLAIMED, NOT BETTER.
+A CREDIT WOULD AT LEAST HAVE BEEN A VISIBLE DELTA. THERE IS NONE.
+THE DELETION IS NOT MERELY UNPUNISHED — IT IS INVISIBLE.
+```
+
+§ 4.4 above reasoned from `classifyDiff:522-523` that a `D` on an active
+top-level roadmap scores as an offset. That reasoning is correct **and does not
+reach this file**, because `isActiveTopLevel` is applied to a path while the
+`active_roadmaps` count is computed from `collect()`, which filters on
+frontmatter. The two disagree about draft files, and the measurement is the
+authority. Recorded as a correction to § 4.4 rather than by editing it.
+
+### 6.5 Why 3C was not feasible — the census, restated as the reason
+
+§ 5.2's finding is the engineering half of the 3A verdict: 46 carries across 5
+archived files naming 6 destinations, of which two
+(`road-to-journal-host-capture-measurement`,
+`road-to-obligation-delivery-verification`) already resolve only under
+`archive/` and would fail `deferralProblems:470-477`. **Both are benign**, so
+the naive standing validator is **2-of-2 false-positive on the live corpus**.
+The guard stub's predicted *"disposition vocabulary it does not have today"* is
+therefore a measurement, not a prediction, and shipping option 1 without that
+vocabulary would ship two known-wrong findings on a fail-closed archival path.
+
+### 6.6 What was edited, and what was deliberately not
+
+| Edited | File |
+|---|---|
+| `blocker: merge-authority` — dated DISPOSITION block, `Status:` untouched, five-field contract intact | `agents/roadmaps/road-to-harness-promotion-bridge.md` |
+| New `## ADR-239 status as read on 2026-09-01` — discharges `decision-revisit-gate` step 2 | same |
+| AC-9 — FIFTH AUDIT note recording mechanical unreachability; stays `[ ]` | same |
+| Step 0.8 — disposition pointer; stays `[~]` | same |
+| Phase 7 gate header — the reversion divergence, next to the 1C block; seven `[x]` untouched | same |
+| Stale line citations — repaired, and rewritten to cite step ids instead | same |
+| New `## Unguarded-carrier gap — CONFIRMED 2026-09-01` | `agents/roadmaps/road-to-council-topology-evidence-followups.md` |
+
+**Deliberately not done:** no blocker resolved, no `Disposition:` field
+recorded, no checkbox flipped in either file, no `status:` changed, no descope,
+no reversion, no guard built, no gate added or weakened, nothing pushed.
+
+### 6.7 One honest note on the citation repair
+
+Instruction 4 named the seven marks at `:461, :484, :506, :528, :564, :582,
+:612`. Those were correct at `b50b27281` and were **made stale by this very
+edit pass** — the disposition blocks inserted above Phase 7 moved them to
+`:500, :523, :545, :567, :603, :621, :651`. Writing the pre-edit numbers into
+the file would have reproduced the exact defect the instruction asked to fix.
+The repair therefore records both measurements, names the offsets, and switches
+the citation to the **step ids 7.1–7.7**, which do not drift. The line numbers
+in that block are true at the drain-run-14 commit and at no other, and it says
+so.
