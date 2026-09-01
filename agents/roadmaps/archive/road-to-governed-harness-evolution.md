@@ -1038,13 +1038,13 @@ once.
 > `holdout-disclosure`, `budget`, `near-duplicate`, `metric-verdict`), none of
 > which reads the frozen corpus. Both the fixture and the `failure`-axis
 > deferral above are carried into
-> [`stubs/road-to-metered-proposer-evaluation.md`](stubs/road-to-metered-proposer-evaluation.md)
+> [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md)
 > as their own items, on the AI-council verdict recorded at 4.1. Recording them
 > as vacuous a second time is exactly the accounting this phase refused.
 
 - [-] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
       **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](stubs/road-to-metered-proposer-evaluation.md),
+      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
       on an AI-council verdict — 2/2 convergent,
       anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
       present.** `[-]` here means TRANSFERRED, exactly as Phase 7 and AC-9 use
@@ -1686,6 +1686,21 @@ once.
       **The park itself is asserted intact** — the file exists under `later/`,
       carries `status: later`, and its 2/2 council record is present. It is not
       reopened here: nothing in this change touches it.
+      **The guard survived this roadmap's own archival, and did not do so by
+      itself.** Closing the last box moved this file to `agents/roadmaps/archive/`
+      and half A went RED immediately — its `ROADMAP` constant was a hardcoded
+      active-tree path, so the whole file failed to collect (`Test Files 1
+      failed`, `Tests no tests`). Repaired 2026-08-31 (drain run 13) with a
+      two-candidate resolver that tries the active tree then `archive/` and
+      **throws** on a miss, because a resolver returning a missing path would
+      let half A scan nothing and exit green — the vacuity this file's own
+      anti-vacuity assertions exist to prevent. Sensitivity OBSERVED in both
+      directions: the archival itself was the first red (→ 9/9 after the
+      repair), and pointing both candidates at a non-existent filename reds it
+      again at collect time; the byte-identical restore (sha256
+      `16ee00372e1d7e7f42c58078395204e579e27ef943588ca6cd74b0d4a8441c6b` before
+      and after) returns 9/9. So the park stays watched after this roadmap
+      stopped being active, which is when nobody is looking.
 - [x] **5.3 Split the roles: analyzer, curator, proposer.**
       `from-skipped-parent`, which states the failure directly — do not collapse
       them into one unconstrained rewrite prompt. The master has one LLM
@@ -1894,7 +1909,7 @@ once.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
       **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](stubs/road-to-metered-proposer-evaluation.md),
+      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
       on the same AI-council verdict as 4.1 and AC-8 — 2/2 convergent,
       anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
       present.** `[-]` means TRANSFERRED: never met, never dropped, open and
@@ -2852,7 +2867,7 @@ once.
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
       **TRANSFERRED 2026-08-31 (drain run 13) to
-      [`stubs/road-to-metered-proposer-evaluation.md`](stubs/road-to-metered-proposer-evaluation.md),
+      [`stubs/road-to-metered-proposer-evaluation.md`](../stubs/road-to-metered-proposer-evaluation.md),
       on the same AI-council verdict as 4.1 and 5.6 — 2/2 convergent,
       anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
       present.** `[-]` means TRANSFERRED, on the precedent AC-9 sets four rows

@@ -254,7 +254,7 @@ about it, and it moved while these very corrections were being written.
 
       **Met**, and both halves are exercised on real data rather than only on
       fixtures. `missing-parent` fired on
-      `agents/roadmaps/road-to-governed-harness-evolution.md` during development
+      `agents/roadmaps/archive/road-to-governed-harness-evolution.md` during development
       — a declared parent that exists nowhere in the repository, which is 2.2's
       stated shape; `omitted-sibling` reproduces the four census rows. Both are
       pinned by tests, and the estate surface keeps `missing-parent` while

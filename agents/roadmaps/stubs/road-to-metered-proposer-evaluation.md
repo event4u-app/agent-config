@@ -7,7 +7,7 @@ review_by: 2026-09-30
 
 > **Class:** drain-run transfer. Created 2026-08-31 (drain run 13) by the
 > closure run of
-> [`road-to-governed-harness-evolution`](../road-to-governed-harness-evolution.md),
+> [`road-to-governed-harness-evolution`](../archive/road-to-governed-harness-evolution.md),
 > whose step 4.1, step 5.6 and AC-8 this file carries, together with the exit
 > criterion Phase 4 was carrying for step 2.3.
 > **Capability-gated, not demand-gated:** the scope decision is already taken
