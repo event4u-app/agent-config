@@ -9,8 +9,21 @@ review_by: 2027-03-31
 > council's verdict on
 > `road-to-inbox-harvest-2026-08-e-council-topology-evidence`,
 > `blocker: leakage-bench-needs-assembler-and-design-forks`. Steps 3.3 and 3.4
-> are `[-]` in that roadmap and point here. `[-]` means **DEFERRED, not
-> cancelled and not satisfied.**
+> are `[~]` in that roadmap and point here. `[~]` means **DEFERRED — planned,
+> carried, and not satisfied.**
+>
+> **Glyph note — do not "restore" this.** This stub read `[-]` until 2026-09-01.
+> In this tree `[-]` means **cancelled — scope dropped, won't happen at all**
+> and is additionally owner-reserved; `[~]` means **deferred**
+> (`docs/guidelines/agent-infra/roadmap-progress-mechanics.md:218-219`,
+> `src/agent-src/scripts/update_roadmap_progress.ts:25`,
+> `src/agent-src/templates/roadmaps.md:30`,
+> `src/agent-src/contexts/execution/terminal-states.md:41`; owner-reserved at
+> `src/agent-src/scripts/archive_completed_roadmaps.ts:396`). The error came from
+> transcribing the council's **own** vocabulary — both seats wrote "DEFER `[-]`"
+> throughout their responses. The parent roadmap was corrected to `[~]` by an R2
+> review before it shipped and carries its own correction note; these stubs were
+> not corrected with it.
 >
 > **No measurement has been taken and none is claimed.** The NOT RUN state the
 > two predecessor blockers protected is preserved here verbatim in force.
@@ -111,6 +124,33 @@ Both seats were explicit that **arm completion does not auto-close 3.4**.
 (`src/scripts/ai_council/recouncil_savings.ts:237-240`), so only within-item
 recognition is defensible. A single rater's `n = 30` is descriptive only and is
 never promoted to a finding.
+
+## Claims forbidden while these steps are `[~]`
+
+Transcribed 2026-09-01 from the archived parent's own 3.3 and 3.4 deferral
+blocks
+(`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-e-council-topology-evidence.md:1247-1263`
+and `:1270-1296`) and its roadmap-level prohibition at `:101-104`. This stub
+previously stated only the **permitted** claim; the prohibitions were carried in
+the parent and had no home here.
+
+- that provider recognition was measured — **no measurement was taken and none
+  is claimed**;
+- that recognition is at or below chance. `normalizationGateVerdict` returns
+  `unrun` on empty data and specifically **not** `below-bar`, because
+  `below-bar` would assert that recognition had been measured and found
+  harmless — the exact false null step 3.4 exists to prevent;
+- that style normalization is cleared to land. Only both conditions recorded met
+  reaches `bar-cleared`;
+- that arm completion closes 3.4 — the four conjuncts in the section above
+  govern, and both seats were explicit that collection alone is not enough;
+- any population-rate claim from the 1,402-body corpus, which is an accidental
+  denominator left by an unrun reaper;
+- a finding from a single rater's `n = 30`, which is descriptive only.
+
+The only permitted claim is that the bench was **designed, pre-registered, and
+NOT RUN**, plus the scoped result statement in the section above should it ever
+execute.
 
 ## Floors carried forward unmoved
 

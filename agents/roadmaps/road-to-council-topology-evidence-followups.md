@@ -17,6 +17,27 @@ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 > carried, with a resumption trigger. The detail — evidence, forbidden claims,
 > red-proof tables, execution sequences — lives in the three stubs each group
 > names, and is not duplicated here.
+>
+> **Nothing guards this file, and that is worth knowing before relying on it.**
+> The 38 obligations this file carries rest on it continuing to exist, and no
+> gate in the repository would notice if it stopped. `deferralProblems` is a
+> **one-shot** admission gate: its only production call
+> (`src/agent-src/scripts/archive_completed_roadmaps.ts:574`) sits inside a loop
+> over `collect()` (`src/agent-src/scripts/update_roadmap_progress.ts:748`),
+> which skips every `status: draft` file (`:755-757`) and everything under
+> `archive/`, `skipped/`, `stubs/` and `later/` (`:95`, `:315`). The parent is
+> already archived, so the check that created this receiver can never run
+> against the pair again. No linter reads `deferred-resolution:` or
+> `parent_roadmap:` — the one other mention under `src/` is a warning string
+> (`src/scripts/lint_roadmap_complexity.ts:259`). Neither reference gate sees
+> the inbound links. Deleting this file would red nothing and would score as an
+> estate **credit** (`src/scripts/check_estate_count.ts:490-534`).
+>
+> Full derivation, including the 43 inbound-reference census:
+> [`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
+> § 3. Closing the gap is
+> [`stubs/road-to-deferral-carry-guard.md`](stubs/road-to-deferral-carry-guard.md),
+> and it is deliberately not done here.
 
 ## Why one receiver rather than three, and the council split behind it
 
@@ -141,5 +162,14 @@ frozen beforehand (1B.4).
 That any deferred mechanism was verified against a real population; that
 topology validation is live; that any promotion gate passed; that telemetry is
 complete; that Phase-2 equivalence was measured; or that sabotage sensitivity is
-positive runtime validation. Each stub carries the per-group forbidden-claims
-list in full, and those lists govern.
+positive runtime validation. Each stub carries a per-group forbidden-claims
+list, and those lists govern.
+
+**That sentence was not true when this file was written, and was made true on
+2026-09-01 rather than softened.** Only the Group A stub carried such a list.
+The Group B stub stated the permitted claim and no prohibitions; the Group C
+stub carried a list for one of its three internal groups. The missing lists have
+been added by transcribing the archived parent's own per-step deferral blocks —
+each of which pointed *at these stubs* for its forbidden claims, so the pointer
+previously resolved to nothing. Nothing was invented; the transcription sources
+are cited inside each new section.
