@@ -38,13 +38,13 @@
  * The **pathology of a deterministic refusal**, never the model's opinion of its
  * own output. The first attempt runs on `reason_unknown`, whose ladder is
  * exactly `['lite']` — *"escalating on a reason nobody established is spending
- * on a guess"* (`_lib/evolution_roi.ts:117-119`). A refusal is then classified
+ * on a guess"* (`_lib/evolution_roi.ts:136-138`). A refusal is then classified
  * into a {@link PathologyWhy} by {@link classifyRefusal}, and the walk continues
  * on THAT class's ladder from its cheapest untried rung. A class with an empty
  * ladder stops the walk.
  *
  * Every attempt is recorded and the whole list is checked by
- * `assertCheapestFirst` (`_lib/evolution_roi.ts:191`) before this module
+ * `assertCheapestFirst` (`_lib/evolution_roi.ts:215`) before this module
  * returns — the production caller AC-3 asks for.
  *
  * ## No transport lives here
@@ -292,7 +292,7 @@ async function proposeOne(
     // Per OBSERVATION, deliberately. A new observation is a new proposal and
     // starts at the cheapest rung again; the guard allows that explicitly — a
     // repeat of an already-spent rung "is not an escalation"
-    // (`_lib/evolution_roi.ts:203`). Sharing one map across observations would
+    // (`_lib/evolution_roi.ts:201-202`). Sharing one map across observations would
     // exhaust the ladder on the second subject, which is what the first version
     // of this function did and what its test caught.
     const spentByClass = new Map<PathologyWhy, ModelTier[]>();
