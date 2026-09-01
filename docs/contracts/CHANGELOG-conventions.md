@@ -45,13 +45,55 @@ before merge. `_none_` is a legitimate value and often the true one — a
 release that changed no defaults should say so rather than carry an unfilled
 marker.
 
-### Curated-head cadence — retro-curation, not a merge precondition
+### Curated-head cadence — REVERSED 2026-09-01: a surviving marker now BLOCKS
+
+> **Read this before the history below.** Everything from *"The cadence is
+> retro-curation"* down to the measured-rate table is the record of the
+> 2026-08-11 decision and its two re-confirmations. That decision has now been
+> **reversed on maintainer instruction**, and the paragraphs are kept rather
+> than rewritten because the reversal is only legible against them.
+>
+> **What is true as of 2026-09-01.** `src/scripts/check_release_highlights.ts`
+> **exits 1** when the section under release carries `DERIVED_MARKER`, naming
+> the section and the offending labels. `src/scripts/release.ts` additionally
+> refuses at the three publication call sites — annotated-tag creation, the
+> resumed push of a tag created but never pushed, and the GitHub Release body —
+> via `publication_blockers` in `src/scripts/_lib/release_highlights.ts`.
+>
+> **Why now, rather than at either earlier re-confirmation.** The falsifier this
+> section pre-registered — *"a shipped marked line survives its next release
+> cycle uncurated"* — had already fired twice and was recorded as fired, with
+> reopening left to the maintainer. The maintainer then instructed the fix, in
+> the closing message of the 2026-09-a inbox round. Re-derived at `b50b27281`,
+> the rate at the time of reversal was **eighteen marked lines across five
+> consecutive released sections** — 14.9.0 (4), 14.10.0 (2), 14.11.0 (4),
+> 14.12.0 (4), 14.13.0 (4).
+>
+> **The guaranteed-first-run red the rejected branch feared does not follow,
+> and the reason is structural rather than optimistic.** Every read is scoped to
+> the ONE section cut for `--version`, so the eighteen already-published lines
+> are invisible to every future release. What a releaser must now do is rewrite
+> the marked lines in the section they are already authoring — which is what
+> the marker asked for and what did not happen eighteen times.
+>
+> **No escape hatch exists, deliberately.** See § No escape hatch below.
+>
+> **The durable conclusion, inlined rather than cited.** `no-roadmap-references`
+> forbids a stable artifact from pointing at a roadmap file, and a roadmap is
+> archived or deleted as its work completes — so the reversal has to stand on
+> its own here. It does: the reversing authority is the maintainer's
+> instruction, the measured basis is the eighteen lines across five sections
+> above, and the mechanism is the two code sites named above. Nothing a reader
+> needs is behind a path that will rot.
+
+### The superseded cadence, kept as the record
 
 The generator pre-fills each *substantiated* label with a marked line
 (`DERIVED_MARKER` in `src/scripts/_lib/release_highlights.ts`) carrying the real
 reason plus the citing SHAs; the maintainer rewrites it into prose. When a marked
-line survives to merge, `src/scripts/check_release_highlights.ts` warns and still
-exits 0. Whether that is a defect or the intended cadence was open until
+line survives to merge, `src/scripts/check_release_highlights.ts` **used to warn
+and still exit 0** — reversed 2026-09-01, see the block above; it now exits 1.
+Whether that is a defect or the intended cadence was open until
 2026-08-11, and one marked line reached npm and GitHub Releases in the v9.32.0
 head before it was settled. Both branches are recorded here so the decision is
 legible later (AI-council convergence 2/2, 2026-08-11, anthropic + openai).
@@ -120,8 +162,11 @@ cautious forecast the paragraph below was written as.
 mechanism is added here to make the next survivor less likely; this branch
 accepts recurrence rather than claiming a process reminder prevents it. The
 behaviour is pinned in `tests/scripts/check_release_highlights.test.ts` — a
-surviving marker warns and exits 0, verified to go red when that branch is
+surviving marker warned and exited 0, verified to go red when that branch was
 flipped — so reversing the decision stays a one-line diff a test notices.
+**That prediction held: the reversal of 2026-09-01 was one branch and the same
+fixtures, updated in place rather than deleted so the change of contract is
+visible in the diff.**
 
 **The conceded recurrence is now a measured rate, not a risk — 2026-08-13.**
 Re-confirming the decision without publishing this number would leave the
@@ -302,3 +347,40 @@ pre-X.Y.x` commit — never bundled with a feature release.
   [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) — MCP contract bounds.
 - [`../decisions/ADR-007-agent-discovery-scopes.md`](../decisions/ADR-007-agent-discovery-scopes.md) —
   install scope discovery.
+
+## No escape hatch — decided 2026-09-01, with its reason
+
+The publication guards above have **no bypass flag and no environment
+variable**, and the absence is a decision rather than an omission. The planning round that produced this change required one of two things: a
+documented escape whose use is printed, or the absence stated with its
+reason. This is the reason, kept here rather than behind a pointer because
+the plan is a transient artifact and this contract is not.
+
+**A bypass would have no legitimate use, because the remedy is always cheaper
+than the bypass.** The gate runs in exactly one place —
+`.github/workflows/release-validation.yml:266`, on a job gated to
+`startsWith(github.head_ref, 'release/')` — so it fires on the release **pull
+request**, before the merge, before the tag, and before publication. The action
+that clears it is rewriting a head line in `CHANGELOG.md` on the branch the
+releaser is already authoring. There is no state in which reaching for a flag is
+easier than editing the line the flag would let you ship.
+
+**"Emergency release" is the case a bypass is usually argued for, and it does
+not survive contact with this one.** An emergency release still cuts a section,
+still opens a release PR, and still edits `CHANGELOG.md` in that PR. The guard
+adds one line of editing to a path that is already editing that file. It does
+not add a review, a wait, an approval, or a second human.
+
+**The publish-side guards in `release.ts` refuse on a narrower condition still.**
+They read the MERGED section, which the PR gate has already passed. A refusal
+there means the merged content differs from what was validated — a desync,
+which is precisely when a release should stop rather than be waved through.
+
+**What a bypass would actually be.** A supported way to publish the defect on
+purpose. The defect shipped eighteen times without one; adding a flag would give
+the next eighteen a documented justification.
+
+**Reversible, and here is the trigger.** If a real release is ever blocked by
+these guards in a state where rewriting the section is genuinely impossible,
+that state is the evidence this decision lacks, and it reopens the question.
+Record it against this section.

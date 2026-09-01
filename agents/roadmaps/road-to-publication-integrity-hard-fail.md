@@ -80,7 +80,7 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Phase 1 — flip the advisory to blocking, scoped to the target section
 
-- [ ] **1.1 Record the reversal before changing the behaviour.** The decision
+- [x] **1.1 Record the reversal before changing the behaviour.** The decision
       being reversed is stated in two places —
       `src/scripts/check_release_highlights.ts:21` ("An unrewritten derived line
       warns; it never blocks") and
@@ -93,7 +93,7 @@ That comment is addressed to the releaser and is published to every consumer.
       verify: `grep -n 'never blocks' src/scripts/check_release_highlights.ts`
       returns either nothing or a line that now states the opposite, and the
       annotation names both the date and the instructing authority.
-- [ ] **1.2 Make the existing detection blocking instead of advisory.**
+- [x] **1.2 Make the existing detection blocking instead of advisory.**
       `stale_draft_labels` at `src/scripts/_lib/release_highlights.ts:288`
       already returns exactly the offending labels, and the gate already calls
       it at `check_release_highlights.ts:205-212` and discards the result into a
@@ -104,20 +104,53 @@ That comment is addressed to the releaser and is published to every consumer.
       `DERIVED_MARKER`; the two existing advisory fixtures at lines 326 and 365
       are *updated* to the new expectation rather than deleted, so the change of
       contract is visible in the diff.
-- [ ] **1.3 Scope every read to the section under release, never repo-wide.**
+- [x] **1.3 Scope every read to the section under release, never repo-wide.**
       Eighteen historical marker lines and forty-four historical instruction
       comments exist. A repo-wide read would block every future release until
       editorial work nobody has scheduled — which is how a correctness guard
       turns into a permanent red.
       verify: a test with a marker-bearing *historical* section and a clean
       *target* section exits 0.
-- [ ] **1.4 Show the guard's sensitivity by sabotage.** Neutralise the new
+- [x] **1.4 Show the guard's sensitivity by sabotage.** Neutralise the new
       branch, watch the negative case go red, restore it. A test never seen red
       has unknown sensitivity.
       verify: the red-then-green transcript is recorded in the pull request,
       naming the line neutralised.
 
 ## Phase 2 — stop shipping the authoring instruction
+
+> **BOTH STEPS LEFT OPEN 2026-09-01 — the step's premise does not hold and the
+> design fork is not this run's to settle. Not attempted rather than
+> attempted-and-fudged.**
+>
+> **There is no `Unreleased` draft in the generator.** `render_release_head`
+> (`src/scripts/release.ts:317`) has exactly one caller,
+> `render_changelog_entry:549`, which always writes a versioned heading
+> (`:514-521`). The string `Unreleased` appears nowhere in `release.ts`,
+> `_lib/release_material.ts` or `_lib/changelog_eras.ts`; the `## [Unreleased]`
+> at `CHANGELOG.md:17` is hand-maintained and predates this pipeline. So 2.1's
+> verify half (a) — *"present in an `Unreleased` draft section and absent from a
+> released one"* — has no subject in the tree.
+>
+> **2.2 cannot land first.** If the gate reds on the instruction comment while
+> the generator still writes it into every section it cuts, every release PR is
+> red on its first run — Risk 1 of this register, exactly. The order is forced,
+> so the fork blocks both steps.
+>
+> **Two defensible designs, written up with the evidence for each** in
+> [`publication-integrity-hard-fail-execution.md`](../evidence/analysis/publication-integrity-hard-fail-execution.md)
+> § 3: (A) drop the comment from the changelog and put the reminder in the
+> release PR body, which is never published; (B) add a `draft` parameter to
+> `render_release_head`, which satisfies the verify clause word for word and
+> creates a code path no production caller would ever take. A third option —
+> stripping the comment from the merged changelog at tag time — is rejected
+> there without needing a decision.
+>
+> **Consequence for Phase 3:** `publication_blockers`
+> (`src/scripts/_lib/release_highlights.ts:329`) checks the marker only and
+> deliberately not the comment, and says so in its own docstring. **AC-2 stays
+> `[ ]`** with these steps.
+
 
 - [ ] **2.1 The generator must not leave its own instruction comment in a
       released section.** `src/scripts/release.ts:323` writes
@@ -138,7 +171,7 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Phase 3 — extend to the two irreversible transitions
 
-- [ ] **3.1 Guard the annotated tag and the GitHub Release body immediately
+- [x] **3.1 Guard the annotated tag and the GitHub Release body immediately
       before each fires.** Both transitions sit in `release.ts` — tag creation
       at `:1408`, Release notes at `:1435` — and both formatters live in
       `src/scripts/_lib/release_material.ts:77,82`. The guard goes at the call
@@ -148,7 +181,7 @@ That comment is addressed to the releaser and is published to every consumer.
       verify: a test asserts that no irreversible command runs after a refusal,
       and `grep -n "git.,.tag" src/scripts/release.ts` shows no `-a` creation
       site outside the guarded path.
-- [ ] **3.2 Cover the `--resume` created-but-unpushed tag path as its own
+- [x] **3.2 Cover the `--resume` created-but-unpushed tag path as its own
       case.** The recorded bypass: the changelog is read only in the
       tag-creation branch, so a resume over a tag that was created but not
       pushed skips the read entirely. A guard that only covers creation misses
@@ -210,19 +243,41 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — the release gate exits non-zero when the section under release
+> **Status 2026-09-01.** AC-1, AC-3, AC-4, AC-5 and AC-6 are met; **AC-2 stays
+> `[ ]`**, blocked by the Phase 2 fork above.
+>
+> - **AC-5 is answered NONE, with its reason**, recorded in the tree at
+>   `docs/contracts/CHANGELOG-conventions.md` § No escape hatch. The
+>   discriminating fact: the gate runs only on the release PR
+>   (`.github/workflows/release-validation.yml:266`, release-PR-gated), so the
+>   remedy is a one-line edit in a file the releaser already has open, and no
+>   state exists in which a bypass flag is cheaper than the fix it bypasses.
+>   Reopening trigger recorded with it.
+> - **AC-6 is met by its STANDING branch, not by doing the work.**
+>   `blocker: b-retro-curation-scope` is untouched and open, and its
+>   `Resolved when` already separates the mutable surfaces (CHANGELOG sections)
+>   from the immutable ones (annotated tag messages, published Release bodies
+>   for 14.9.0-14.13.0). Nothing here curated a published section; the editorial
+>   prose is owner-reserved by two prior council rulings.
+> - **AC-1's sabotage** and the two runs that came back GREEN before the fixture
+>   was repaired are in
+>   [`publication-integrity-hard-fail-execution.md`](../evidence/analysis/publication-integrity-hard-fail-execution.md)
+>   § 2.
+
+
+- [x] AC-1 — the release gate exits non-zero when the section under release
       carries `_auto-derived, rewrite before merge:_`, and the negative case has
       been shown red with the guard neutralised and green with it restored.
 - [ ] AC-2 — a CHANGELOG section cut after this change carries no
       `<!-- Curated head: fill before merge` comment, pinned by a writer test.
-- [ ] AC-3 — a marker-bearing historical section does not block a release whose
+- [x] AC-3 — a marker-bearing historical section does not block a release whose
       own section is clean, pinned by a test.
-- [ ] AC-4 — the reversal of the advisory decision is recorded at both sites
+- [x] AC-4 — the reversal of the advisory decision is recorded at both sites
       that state it, dated, with the instructing authority named.
-- [ ] AC-5 — the escape-hatch question from risk 2 is answered in the tree:
+- [x] AC-5 — the escape-hatch question from risk 2 is answered in the tree:
       either one documented flag exists whose use is printed, or the absence is
       stated with its reason.
-- [ ] AC-6 — retro-curation of the eighteen published marker lines and
+- [x] AC-6 — retro-curation of the eighteen published marker lines and
       forty-four published instruction comments is either done or standing as
       `blocker: b-retro-curation-scope` with the mutable/immutable split
       recorded. It is not silently dropped.
