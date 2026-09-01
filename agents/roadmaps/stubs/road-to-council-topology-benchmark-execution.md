@@ -77,15 +77,30 @@ All of it is already in the tree; this section is the index, not a copy.
 - **The missing production-runner requirement** — the single largest unbuilt
   piece.
 - The `n >= 5` and `n >= 10` claim-licensing floors from step 2.6.
-- All 23 dependent steps and their dependency relationships, listed below.
+- All 24 deferred steps and their dependency relationships, listed below.
 - The deferral reason: **insufficient configured seats plus unavailable
   continuous capacity — NOT token cost.**
 
-## The 23 dependent steps deferred with Phase 2
+## The 24 steps deferred with Phase 2
 
 Direct: 2.2, 2.3, 2.4, 2.5, 2.7.
-By dependency: 5.2, 5.5, 7.2, 7.4, 7.5, 7.6, 8.5, 9.1, 9.4, 10.4, 11.2, 11.3,
-11.5, 13.1, 13.2, 13.3, 13.4, 13.5.
+By dependency: 5.2, 5.5, 6.5, 7.2, 7.4, 7.5, 7.6, 8.5, 9.1, 9.4, 10.4, 11.2,
+11.3, 11.5, 13.1, 13.2, 13.3, 13.4, 13.5.
+
+**The count moved from 23 to 24, and the step that moved is 6.5** — added
+2026-09-01, not removed from anywhere. This section read 23 because it was
+written from the council's Phase-2 dependency analysis, and 6.5 was disposed of
+in a **separate row** of the same verdict table. The openai seat routed it here
+explicitly and named the omission while doing so: *"DEFER to the Phase-2 stub —
+the verify clause is conjunctive; its second half depends factually on the
+deferred arms, **regardless of omission from the earlier dependency list**."*
+
+The receiver's Group A was right at 24 and this stub was wrong at 23. The
+arithmetic settles it independently of either document: the parent carries
+exactly 38 `[~]` steps, Group B takes 3.3 and 3.4, Group C takes 1B.1, 1B.4,
+5.4, 7.3, 10.1, 10.2, 10.3, 10.6, 11.1, 12.1, 12.2 and 12.3, and 38 − 2 − 12
+= 24. Only the **verification-against-the-arms** half of 6.5 is carried; its
+recorded-gate half is done and preserved in the parent.
 
 ## Resumption trigger — all three conjuncts, refined by the council
 
@@ -111,7 +126,7 @@ Enumerated by the council and binding:
 - that topology effects were benchmarked;
 - that any topology is superior to another;
 - that topology-driven promotion is supported;
-- that the 23 dependent outcomes were empirically validated;
+- that the 24 deferred outcomes were empirically validated;
 - **"we tested it at N=2"** — the design licenses no claim at N=2, so even the
   hedged form is forbidden.
 
