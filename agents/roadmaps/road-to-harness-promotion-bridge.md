@@ -387,6 +387,18 @@ owner adopts 1A verbatim:
   capability. It does not make 0.8 closeable, and it is not to be read as
   progress toward closing it.
 
+**DISPOSITION POINTER 2026-09-01 (drain run 14) — 0.8 STAYS `[~]`, on a third
+independent pass.** The AI council of 2026-09-01 (drain run 14; members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, deep,
+peer-review, blind chairman, quorum 2/2 — concluded) returned **2C: the
+`merge-authority` blocker is TERMINALLY OWNER-RESERVED**, and both seats held
+that a council may record a boundary but may not change an acceptance
+criterion or a step's scope. 0.8 is therefore neither closed nor descoped nor
+cancelled. The full disposition, its two honest downgrades, and the mechanism
+finding that makes a descope into `agents/roadmaps/stubs/` illegal are in
+§ Blockers under `### blocker: merge-authority`.
+
+
 ## Phase 7 — Promotion bridge and the lifecycle after it
 
 > **Every step below is gated twice and may not be entered on either gate
@@ -457,6 +469,33 @@ owner adopts 1A verbatim:
 > refusing mechanism, PROVISIONAL pending an owner scope ruling, revertible to
 > `[ ]` at that ruling with the work standing unchanged underneath.** Risk 6 of
 > the register carries the misreading risk this creates.
+>
+> **REVERSION CONSIDERED AND NOT AUTHORISED — 2026-09-01 (drain run 14). The
+> seven `[x]` marks are LEFT AS THEY ARE, and the seats DIVERGED. The
+> divergence is the finding.**
+>
+> *AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5`
+> + `openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+> quorum 2/2 present (needed 1) — concluded. Subscription transport,
+> `billable=0`, `$0.0000`.*
+>
+> The question put was whether the 1C ruling above, having made the seven marks
+> PROVISIONAL and revertible, should now be executed as a reversion to `[ ]`.
+> **One seat said revert.** The other declined, on the ground that
+> *"'provisional and revertible' does not mean an automatic reversion has
+> already been authorized"*, and graded the reversion **unestablished**.
+>
+> **A divergent council does not carry a mandate.** Nothing is reverted, and
+> nothing is upgraded. The operative status stated immediately above is
+> unchanged: closed on tested refusing mechanism, PROVISIONAL pending an owner
+> scope ruling, revertible to `[ ]` at that ruling with the work standing
+> unchanged underneath.
+>
+> This is recorded rather than left silent so a later reader can see that
+> reversion **was raised and was not authorised**, which is a different state
+> from never having been considered. Reverting the seven marks remains an owner
+> act, exactly as 1C says.
+
 
 - [x] **7.1 One evidence package per promotion, in the fuller form.** The master
       adopted a 9-field package; the skipped parent's has 14, and the five extra
@@ -882,6 +921,99 @@ owner adopts 1A verbatim:
   undecided. All three source proposals asserted that guardrail as a fact;
   verified 2026-08-26, it is not one.
 
+**DISPOSITION 2026-09-01 (drain run 14) — the blocker is TERMINALLY
+OWNER-RESERVED, and it stays OPEN. `Status:` is unchanged and is not to be
+read as resolved by this block.**
+
+*AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum 2/2 present (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Verdicts **1C / 2C / 3A**, convergent 2/2 on all
+three. The council question and both seat responses are local-only and are
+deliberately not cited by path: `agents/runtime/council/` is gitignored and
+auto-pruned, so per `no-roadmap-references` the text relied on is inlined
+here.*
+
+**Verdict 2C, as ruled.** An agent council cannot amend the boundary of its
+own authority. The reflexivity is **structural and non-bypassable**: any
+council answer to "may merge authority be preauthorized" is an answer about
+what agents may do, produced by agents. It is corroborated from three
+independent directions —
+[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) places
+governance self-amendment in the owner-reserved column; ADR-239 § Decision 3
+says so in its own text; and the prior OWNER-RESERVED ruling of 2026-09-01
+(Decision 1, 1C) reached the same boundary from the other side.
+
+**Two honest downgrades, recorded because they weaken this run's own case.**
+
+- **The harness safety-classifier refusals are CORROBORATIVE AT MOST, not
+  proof.** The `revisit-if` note above records that two independent mechanisms
+  refused an attempt to settle this blocker by option (b). One seat downgraded
+  what that establishes: without the classifier's stated reason, its refusal
+  does not demonstrate the constitutional boundary — it is consistent with it
+  and does not prove it. Do not cite the refusals as proof; the argument rests
+  on the reflexivity and on `decision-revisit-gate`, which stand on their own.
+- **"Refusal is non-reflexive" is SPECULATIVE, and option (b) is not the safe
+  direction it looks like.** The (b) argument recorded above — that refusing
+  merge authority removes a capability rather than granting one, and so routes
+  to the council as a floor-STRENGTHENING transition — was corrected by one
+  seat: permanently declaring that only humans may promote **still settles the
+  same governance boundary**. A permanent refusal is a decision about the
+  scope of agent authority no less than a grant is. So (b) is owner-reserved
+  on the same ground as (a), and this run does not treat it as the cheap exit.
+
+**Neither step 0.8 nor AC-9 is descoped, and the mechanism is the stronger
+reason.** Both seats held that recording a boundary is within council
+authority while changing an acceptance criterion is an owner-level decision.
+Independently of that verdict — and **not available to the council when it
+ruled** — a descope into `agents/roadmaps/stubs/` is mechanically illegal:
+`deferralProblems` accepts only `agents/roadmaps/<slug>.md` and
+`agents/roadmaps/later/<slug>.md`
+(`src/agent-src/scripts/archive_completed_roadmaps.ts:446-449`), so a stub
+receiver resolves as *"does not exist"* at `:475` and reds the archival sweep.
+
+**Terminal state, stated in as many words: this roadmap stays ACTIVE, blocked,
+7/9, and is NOT archived. That is the correct terminal state, not a stall.**
+The reason is independent of AC-9: the open-blocker check at
+`src/agent-src/scripts/archive_completed_roadmaps.ts:591` fires on
+`merge-authority` and refuses archival regardless of how the acceptance
+criteria read. A roadmap carrying an open owner decision stays visible until
+the owner makes it — which is what that check exists to guarantee.
+
+**What this block does NOT do.** It does not resolve the blocker, does not set
+`Status: resolved`, does not record a `Disposition`, does not close 0.8, does
+not close AC-9, and does not revert any Phase 7 mark. It records a boundary
+and nothing else.
+
+## ADR-239 status as read on 2026-09-01
+
+> **The lock was evaluated before it was cited**, which is
+> [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) step 2.
+> This section is that evaluation, recorded so a later reader can check it
+> rather than take it on trust.
+
+Read from `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md`
+at commit `b50b27281`:
+
+| Axis | Reading |
+|---|---|
+| `status:` | `accepted` (`:3`) |
+| `supersedes:` / `superseded_by:` | both the em-dash placeholder (`:6-7`) — **neither superseding nor superseded** |
+| Amendments | none in the file; the only inbound ADR reference is `docs/decisions/adr-evidence-sweep-2026-08.md:179,:466`, which carries it as `REVIEW-NOW (unread by this sweep)` with a first-adjudication date of 2026-09-26 — a backlog entry, not an amendment |
+| Decision table (`:185-188`) | still reads *"Preauthorized merge authority is granted or refused \| owner \| **open**"* |
+| `adr_cite_check` | **LIVE, TRIGGER INDETERMINATE** — the tool declines the semantic condition and routes it back |
+| `review_trigger` (`:10-18`) | all three conditions checked against the tree: (1) the owner has not resolved the blocker in either direction — `Status:` above still reads `open`; (2) no second command has taken `all`-style cardinality; (3) no authorization store exists under `src/scripts/hooks/`. **None has fired.** |
+| `reopen_policy` | absent → defaults to `unclassified` |
+| `authority_basis` / `evidence` / `provenance` / `protected dims` | all absent — the record is ungraded on every evidence axis |
+
+**What `unclassified` permits, and what it does not.** Council investigation
+and reversible experiments are permitted; **execution** of an owner-reserved
+transition is not. § Decision 3's own text and the decision table put the
+grant/refuse decision on the owner explicitly, so the default does not soften
+it. The lock is live, its trigger is unfired, and it is cited above on that
+basis rather than on recall.
+
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-01 | reviewer: claude/host -->
 
@@ -913,9 +1045,27 @@ owner adopts 1A verbatim:
       post-promotion re-evaluation.
       **TENSE CORRECTED 2026-08-31 (drain run 11) — a factual repair, not a
       criterion change.** The sentence asserted the present tense and is false
-      in it: the seven Phase 7 steps read `[x]` at `:342`, `:365`, `:387`,
-      `:409`, `:445`, `:463` and `:493`, closed as MECHANISM under the Phase 7
-      gate header's own reading at `:313-315`. The clause is kept in past tense
+      in it: the seven Phase 7 steps read `[x]`, closed as MECHANISM under the
+      Phase 7 gate header's own reading.
+      **LINE CITATIONS REPAIRED 2026-09-01 (drain run 14) — a factual repair,
+      not a criterion change and not a change to what any mark claims.**
+      **The repair is to stop citing them by line.** The seven marks are steps
+      **7.1 through 7.7** under `## Phase 7`, and that identifier does not
+      drift. This sentence previously cited them at `:342`, `:365`, `:387`,
+      `:409`, `:445`, `:463` and `:493` with the gate header at `:313-315`, and
+      every one of those was wrong.
+      **The measurement, kept because it shows the failure mode rather than
+      just correcting it.** At commit `b50b27281` the marks sat at `:461`,
+      `:484`, `:506`, `:528`, `:564`, `:582`, `:612` — stale by a uniform
+      **+119**. Writing *those* numbers here made them stale again in the same
+      change: the drain-run-14 disposition blocks inserted above Phase 7 moved
+      them to `:500`, `:523`, `:545`, `:567`, `:603`, `:621`, `:651`, with the
+      gate header at `:404-498`. Both offsets are uniform — no step moved
+      relative to any other and nothing was reordered.
+      **The lesson, recorded so a third repair is not needed.** A bare line
+      number into this file is a commit-bound fact that nothing checks and
+      every prose addition invalidates. The numbers above are true at the
+      drain-run-14 commit and at no other; cite the step id. The clause is kept in past tense
       rather than deleted because the audit it belongs to was true when taken;
       the RE-AUDITED block below carries the current state. **AC-9 is untouched
       and stays `[ ]`** — nothing here closes, weakens, or re-keys it.
@@ -1013,6 +1163,56 @@ owner adopts 1A verbatim:
       unsupported assertion that the roadmap may archive with AC-9 unmet as the
       run's principal manufactured-closure risk, and it is declined here rather
       than argued with.
+
+      **FIFTH AUDIT 2026-09-01 (drain run 14) — STILL `[ ]`. The four prior
+      audits established that AC-9 is not met; this one establishes the
+      stronger fact that it is MECHANICALLY UNREACHABLE, and it is a property
+      of the code rather than a judgement about it.** *AI council 2026-09-01
+      (drain run 14), members `anthropic/claude-sonnet-4-5` +
+      `openai/codex-default`, 2 rounds, depth deep, peer-review, blind
+      chairman, quorum 2/2 present (needed 1) — concluded. Subscription
+      transport, `billable=0`, `$0.0000`. Verdicts **1C / 2C / 3A**, convergent
+      2/2 on all three.*
+      **The chain of refusals, read from the code at commit `b50b27281`.**
+      `verbPromote` (`src/scripts/evolution_lab.ts:988-1052`) has exactly
+      **one** terminal return — `EXIT_REFUSED` at `:1051`; the other three are
+      a usage error (`:992`) and two IO failures (`:998`, `:1029`), and no
+      branch returns success. Underneath it, two independent gates:
+      `acquirePromotionCapability`
+      (`src/scripts/_lib/promotion_capability.ts:270-291`) throws unless the
+      blocker file reads **both** `Status: resolved` and `Disposition: granted`
+      (`:274-282`); and `assertTransition(_, 'promoted')` throws without a
+      NAMED human approver (`src/scripts/_lib/candidate_record.ts:232-248`),
+      and is called at `src/scripts/evolution_lab.ts:1036` with **no** approval
+      argument. `src/scripts/lint_promotion_paths.ts:619-629` proves tree-wide
+      that nothing else promotes either — it CALLS the capability and fails if
+      a token comes back while the blocker reads open.
+      The RETIRE half is unchanged and was re-read: `curator_ops.ts:120-124`
+      types every screened proposal's `lifecycle` as the literal `'candidate'`,
+      and `candidate_record.ts:210-218` forbids a candidate from the retirement
+      edge — `promoted` is the only legal `from`.
+      **In plain words: no artefact in this tree can hold `promoted`, so no
+      honest disposition closes AC-9.** Not "difficult", not "not yet" — there
+      is no reachable state in which the criterion's subject exists. It stays
+      `[ ]`.
+      **NOT DESCOPED, for two independent reasons, and the second is the
+      stronger one.** (1) Verdict 2C: both seats held that recording a boundary
+      is within council authority while changing an acceptance criterion is an
+      owner-level decision, so no council may descope this. (2) A mechanism
+      finding that was NOT available to the council when it ruled:
+      `agents/roadmaps/stubs/` is **not a legal carry destination**.
+      `deferralProblems` accepts exactly two directories —
+      `agents/roadmaps/<slug>.md` and `agents/roadmaps/later/<slug>.md`
+      (`src/agent-src/scripts/archive_completed_roadmaps.ts:446-449`) — and a
+      stub destination is not in the `['archive','skipped']` dead-list at
+      `:470` either, so it resolves as *"does not exist"* at `:475` and reds
+      the archival sweep. Descoping into a stub is therefore forbidden by the
+      mechanism as well as by the verdict.
+      **And archival is blocked independently of AC-9.** Even with AC-9 gone,
+      the open-blocker check at
+      `src/agent-src/scripts/archive_completed_roadmaps.ts:591` fires on
+      `merge-authority` and refuses. Closing AC-9 would not archive this file.
+
 
 ## Provenance
 

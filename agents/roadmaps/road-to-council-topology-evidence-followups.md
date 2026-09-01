@@ -173,3 +173,97 @@ been added by transcribing the archived parent's own per-step deferral blocks �
 each of which pointed *at these stubs* for its forbidden claims, so the pointer
 previously resolved to nothing. Nothing was invented; the transcription sources
 are cited inside each new section.
+
+## Unguarded-carrier gap — CONFIRMED 2026-09-01
+
+> **This section adds a measurement and changes nothing else.** No checkbox is
+> flipped, no item is added or removed, and `status:` stays `draft`. It is here
+> because the header above states the gap as a claim, and a claim that reached
+> a council as *speculative* is now a measurement — including one part that came
+> back **worse** than the header said.
+
+*AI council 2026-09-01 (drain run 14), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum 2/2 present (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Verdicts **1C / 2C / 3A**, convergent 2/2 on all three.
+The question and both seat responses are local-only and are deliberately not
+cited by path — `agents/runtime/council/` is gitignored and auto-pruned, so per
+`no-roadmap-references` the text relied on is inlined.*
+
+**Verdict 3A: this file stays `status: draft`, and the guard stub is NOT
+promoted.** Both seats held that adding a CI gate is a governance act whose
+authority this run has not established. Both also graded the header's *"deleting
+it reds nothing"* claim **SPECULATIVE** for want of command output, and made
+escalation conditional: *"if confirmed, surface to owner"*.
+
+### The mutation test the council asked for — run, and confirmed
+
+Isolated detached worktree at commit `b50b27281`, `node_modules` cloned so a
+missing-dependency false red is excluded. Nine gates run in an identical loop
+twice: once with this file present, once with it deleted.
+
+| Gate | carrier present | carrier deleted |
+|---|---|---|
+| `check_estate_count` | exit 0 | exit 0 |
+| `check_no_roadmap_refs` | exit 0 | exit 0 |
+| `check_references` | exit 0 | exit 0 |
+| `check_roadmap_trackable` | exit 0 | exit 0 |
+| `lint_empty_roadmaps` | exit 0 | exit 0 |
+| `lint_roadmap_blockers` | exit 0 | exit 0 |
+| `lint_roadmap_complexity` | exit 0 (3 files) | exit 0 (2 files) |
+| `lint_roadmap_later_disposition` | exit 0 | exit 0 |
+| `lint_roadmap_family_cap` | exit 0 (3 scanned) | exit 0 (2 scanned) |
+
+**Nine of nine green in both directions.** Deleting a file carrying 38 live
+obligations reds nothing.
+
+### A correction to this file's own header, in the stricter direction
+
+The header above predicts that deleting this file *"would score as an estate
+**credit**"*. **Measured, it scores as nothing at all.** `check_estate_count`
+reports `active_roadmaps 2 (floor 2, +0)` both with the file present and with it
+deleted. The reason is `status: draft`: `collect()` skips every draft file
+(`src/agent-src/scripts/update_roadmap_progress.ts:755-757`), so this roadmap was
+never in the active count in either direction.
+
+**That is worse than the header claimed, not better.** A credit would at least
+have been a visible delta — a number moving, something a reader or a ratchet
+could notice. There is none. The deletion is not merely unpunished; it is
+**invisible**. The header's wording is left in place above and corrected here
+rather than rewritten, so the claim and its refutation stay side by side.
+
+### Why the gap was not closed in this run
+
+Beyond verdict 3A, a census run in the same pass supplies the engineering
+reason. Across `agents/roadmaps/archive/`: **46** `deferred-resolution:
+carried-to=` annotations in **5** files, naming **6** distinct destinations. Two
+of the six already resolve **only** under `archive/` —
+`road-to-journal-host-capture-measurement` (carried from
+`archive/road-to-runtime-event-journal.md:124`) and
+`road-to-obligation-delivery-verification` (carried from
+`archive/road-to-turnaround-followups.md:82`) — and both would fail the
+destination-is-not-dead check at
+`src/agent-src/scripts/archive_completed_roadmaps.ts:470-477`.
+
+**Both are benign.** A roadmap only reaches `archive/` through
+`archive_completed` once `stats.open_ === 0` (`:562`) and its blockers are
+closed (`:591`), so each of those receivers discharged the work it received
+before being archived. So the naive standing validator — the guard stub's
+option 1 — is **2-of-2 false-positive on the live corpus at this commit**.
+
+That converts
+[`stubs/road-to-deferral-carry-guard.md`](stubs/road-to-deferral-carry-guard.md)'s
+predicted *"disposition vocabulary it does not have today"* from a prediction
+into a measurement: the vocabulary has to distinguish a receiver archived
+**after discharging** the carry from one archived **with it still open**, and
+nothing in the tree records that difference today.
+
+### Disposition
+
+**Surfaced to the owner, and deliberately not acted on.** The escalation
+condition both seats attached — *"if confirmed, surface to owner"* — is met, and
+this section is the surfacing. Nothing was built: promoting the guard stub, or
+shipping the narrower `classifyDiff` change, is a governance act on a
+fail-closed archival path, and verdict 3A withholds that authority from this
+run. The gap is real, it is now measured rather than asserted, and it remains
+open.
