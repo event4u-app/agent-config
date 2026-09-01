@@ -2626,10 +2626,65 @@ is **seating**, and it already has a carrier.
       also tests the **denial**: the import scanner is shown to extract
       `./orchestrator.js` from constructed text and to find neither it nor
       `orchestrator` in the real module.
-- [ ] 12.3 A force-topology debug control may exist but cannot override
+- [ ] <!-- roadmap-status: guarded-baseline --> 12.3 A force-topology debug control may exist but cannot override
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
       verify: one test per prohibition
+      ```yaml
+      guarded_baseline:
+        category: absence-assertion
+        scope: tests/scripts/ai_council/force_topology_prohibitions.test.ts
+        command: npx vitest run tests/scripts/ai_council/force_topology_prohibitions.test.ts
+        red_proof: sabotage run 2026-09-01 — 4 of 11 tests RED, 11/11 GREEN after a byte-identical restore (sha256 92a5c240…805e before and after)
+        sabotage_model: planted `{ flag: '--topology', takesValue: true, choices: ['star','mesh'] }` into src/scripts/council_cli.ts, so a force-topology control exists on the surface
+        recheck_when: src/scripts/council_cli.ts gains a topology option, or any force-topology control is introduced anywhere in src/
+        discharged_ac: one test per prohibition exists, each anchored to the live gate the prohibition names, and P0 turns the day a control appears
+        pending_ac: the prohibitions themselves under a control that exists — no force-topology control is in the tree, so the overrides they forbid are unexercised
+      ```
+      **GUARDED BASELINE 2026-09-01 (drain run 12) — the tests are written and
+      red-proven; the box stays `[ ]` because the population they police is
+      empty.** Grepped at this commit: `force.topology`, `forceTopology` and
+      `force_topology` return **zero** hits across `src/`, and `council_cli.ts`
+      contains the substring `topolog` **not at all**. A suite that exercised
+      such a control would be exercising nothing, and this repository's own
+      standard — carried by `road-to-harness-promotion-bridge`'s risk register —
+      is that *"a check over a population of zero does not discharge this
+      condition"*. So 12.3 takes the same disposition its sibling 12.1 already
+      has, and for the same reason.
+
+      **What the eleven tests actually assert**, one group per prohibition:
+      **P0** no force-topology control exists on the council surface, with the
+      polarity of the detector proven on a planted control and a non-vacuity
+      check on the surface files; **P1** the locked impact classes are exactly
+      `{high_impact, user_required}` (`ai_council/necessity.ts:557`) and the
+      remap refusal is two live branches in `_build_decision_resolution`
+      (`ai_council/config.ts:1217` mode-remap, `:1228` dispatch), with the
+      runtime router agreeing at `necessity.ts:908`; **P2** the `--confirm`
+      spend gate returns before any seat is contacted
+      (`council_cli.ts:2542`); **P3/P4** neither authority is parameterised by
+      anything topology-shaped, and the spend doors are pinned at **three**
+      (`council_cli.ts:2490`, `:2542`, `:3080`) so a fourth is a red rather
+      than a quiet addition; **P5** the subagent lane
+      (`_lib/orchestration_gate.ts`) never imports, names, or fabricates a
+      council seat, while membership resolves from `MemberConfig` in the
+      council config alone.
+
+      **Two false assumptions this step made were caught by its own tests
+      before they shipped, and both are recorded rather than quietly fixed.**
+      (i) A first draft asserted the lock by matching the prose at
+      `necessity.ts:553`, which names the enforcement file as `config.py` — a
+      TypeScript tree has no such file, so that assertion would have gone green
+      on a stale comment forever. It now matches the two refusal branches
+      themselves. (ii) A first draft asserted `--confirm` was a single door and
+      failed: there are three, one per spending subcommand. The count is pinned
+      rather than the singleton asserted.
+
+      **Honest scope, narrower than the step's sentence.** These are
+      naming-and-shape gates over source text plus one live import. They cannot
+      prove a future control fails to override an authority — only that no
+      control exists today and that each authority gate is still where the step
+      assumed it was. That gap is the `pending_ac` above, and it is why this is
+      a baseline and not a discharge.
 - [x] 12.4 Consumer surfaces request **capabilities** (independent external
   review, adversarial decision, architecture trade-off, minority challenge),
   never topology names; the shared council-rung policy chooses.
