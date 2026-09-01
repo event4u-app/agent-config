@@ -267,3 +267,106 @@ shipping the narrower `classifyDiff` change, is a governance act on a
 fail-closed archival path, and verdict 3A withholds that authority from this
 run. The gap is real, it is now measured rather than asserted, and it remains
 open.
+
+
+## Disposition 2026-09-01 (drain run 15) — 2b-i, and one divergence recorded rather than executed
+
+*AI council 2026-09-01 (drain run 15, second round), members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
+peer-review, blind chairman, quorum **2/2 present** (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Council artefacts are
+gitignored and auto-pruned, so every line relied on is inlined here per
+`no-roadmap-references`.*
+
+This run operated under a written owner instruction delegating every open
+decision to the council, and naming a terminal fallback: *"If a blocker
+survives execution, council decision, re-scoping and descoping … descope it
+into a stub with rationale, close the roadmap around it, ship the PR,
+continue."* Two questions were put: what to do about this carrier, and whether
+the delegation reaches the 3A no-promote finding recorded above.
+
+### The carrier — verdict 2b-i, convergent 2/2: leave it standing, claim nothing
+
+The 38 obligations are valid; their resumption predicates are false and **no
+repository work can change them**. Re-measured this run: `council:status`
+reports **2 enabled of 5** against Group A's `n >= 5` floor, and a *verified*
+20-consecutive-UTC-day capacity reservation is not an action that exists in
+this environment. Group B needs two reserved UTC-day windows because each arm
+is 30 calls per provider against a 50-per-provider-per-day cap, and a
+mid-execution break was ruled to make partial results invalid. Group C lacks
+the population or the authorised real-run conditions.
+
+**The terminal fallback was considered and does not apply, for a mechanical
+reason rather than a preference.** A stub is not a legal carry destination —
+`deferralProblems` resolves `carried-to=` only against
+`agents/roadmaps/<slug>.md` or `agents/roadmaps/later/<slug>.md`, and
+`agents/roadmaps/stubs/` resolves as *"does not exist"* and reds the archival
+sweep. `later/` was rejected by a council in this family on preservation
+grounds and the seats re-affirmed it here: *"Moving the obligations to `later/`
+would reduce their visibility and operability, violating the preservation
+rationale already recorded. Moving them to `stubs/` is mechanically invalid.
+Archiving the carrier without a sound destination would therefore be cosmetic
+closure."*
+
+The owner instruction's own *"legitimate gate closure only"* clause is what
+decides it: *"Any suggestion that the terminal-fallback instruction requires a
+false closure — its 'legitimate gate closure only' clause controls when the
+repository provides no legal stub route."*
+
+**The boundary, as the council stated it:** preserve all 38 obligations in
+place · preserve the three measurable resumption triggers · do not archive,
+cancel, promote or transfer the carrier · do not claim its work is complete.
+
+**One rejected repair, recorded so it is not re-proposed.** A new
+`status: terminal-parked-pending-capacity` was floated and refused: *"Inventing
+a new status could make the roadmap untrackable or create another governance
+bypass. The supplied facts only establish that `status: draft` works
+mechanically."* The file keeps `status: draft`.
+
+The counter-argument was heard and is not dismissed: an indefinitely retained
+0/38 draft is estate noise and weakens the meaning of *"active roadmap"*. The
+seat that raised it also answered it — *"taxonomy discomfort is weaker than
+losing tracked obligations."*
+
+### The unguarded-carrier gap — DIVERGENT, so nothing was built
+
+The § Disposition above surfaced a measured integrity defect: deleting this
+carrier is invisible to all nine gates. Drain 15 asked whether the owner's
+delegation supplies the authority that verdict 3A found absent.
+
+**The seats disagreed, and the disagreement is the outcome.**
+
+- One seat: *"The standing instruction is unusually explicit: every open
+  decision is answered by the council … The earlier 3A result identified
+  missing authority, not a permanently owner-reserved constitutional floor."*
+  It chose mechanism 1 while rejecting its naive form.
+- The other seat: *"The standing instruction authorizes closing this roadmap
+  under current rules, not creating new CI gates with repository-wide scope …
+  The unguarded-carrier gap is not a blocker to this roadmap — it is a systemic
+  governance blind spot that affects future archival decisions. Creating a new
+  CI gate is a governance act that outlives this run."*
+
+**A divergent council does not carry a mandate**, so no validator was written,
+no gate was registered, and 3A stands. The gap remains open and measured.
+
+**What the permissive seat specified is kept anyway**, because it is the design
+a future authorised run would otherwise re-derive — and because the naive form
+is already known to be wrong: implement referential integrity for carry
+annotations, not the measured naive validator · recognise every
+repository-defined legitimate destination including the benign ones under
+`archive/` · reject missing destinations and demonstrable loss of carried
+obligations · do not require receivers to be active or non-draft unless an
+existing rule independently requires it · fixtures for all six observed
+destination shapes and both archive-only cases · zero false positives across
+the current 46 annotations · prove that deleting this carrier makes the check
+fail · keep genuine unresolved references fail-closed. Mechanism 2 (charging
+the deletion in `classifyDiff`) *"should remain unapproved absent a separate
+specification and regression analysis of every `classifyDiff` consumer"*.
+
+### What this run did NOT do
+
+Nothing was checked, nothing was archived, nothing was transferred, no
+mechanism was built, and no capacity was reserved. The file is materially
+unchanged apart from this record. That is the honest terminal state of a
+carrier whose every trigger is a fact about the world rather than a fact about
+the repository.
