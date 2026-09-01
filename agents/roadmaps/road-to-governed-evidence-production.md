@@ -47,7 +47,7 @@ preference to the illustration, and the reader can see which was chosen.
 
 ## Phase 1 — Deterministic evidence, executable under the park
 
-- [ ] **1.1 Produce activation receipts from an independent, append-only
+- [x] **1.1 Produce activation receipts from an independent, append-only
       producer, so the evaluation cascade's receipt-bearing stages have a
       subject.**
       Transferred whole from `road-to-governed-harness-evolution` step 4.1 —
@@ -73,8 +73,83 @@ preference to the illustration, and the reader can see which was chosen.
       **Why this is Phase 1 and not Phase 2:** producing a receipt requires
       observing real activation, which the park does not forbid. It forbids a
       live model harness.
+      **CLOSED 2026-09-01 — the producer exists, it writes, and the exclusion is
+      gone.** Three artefacts, and each one names the gap it filled:
+      (a) `src/scripts/_lib/activation_receipt_producer.ts` — the producer.
+      `EVIDENCE_SOURCES` (`:65`) is a closed three-value set, each with a shipped
+      observer; `buildActivationReceipt` (`:115`) refuses an unadmitted source
+      and refuses an admitted source speaking about another source's rung;
+      `appendActivationLine` (`:317`) uses `appendFileSync` and nothing else;
+      `UNOBSERVED_RUNGS` (`:76`) makes the coverage gap enumerable data rather
+      than prose. It imports no evaluation module, so TB-1 holds by construction
+      rather than by care.
+      (b) `src/scripts/activation_receipt.ts` — the PRODUCTION CALLER, because a
+      library nothing calls has no coverage. It observes three rungs from three
+      real surfaces (`src/` for `eligible`, `dist/discovery/discovery-manifest.json`
+      for `selected`, a host tree for `projected`) and appends one audit-log-v1
+      line carrying an `activation` object (`:238`).
+      (c) the receipt-bearing stages in `evaluation_cascade.ts`:
+      `CascadeInput.receipt` (`:268`), the stage block (`:381`),
+      `RECEIPT_ASSIGNABLE_FAMILIES` (`:141`) and `familyForStage` made total over
+      both halves (`:187`).
+      **The first conjunct still holds and was re-checked, not assumed.**
+      `model_calls` is still the literal `0` on every path, receipt aborts
+      included.
+      **The second conjunct — the stage list can produce the Phase 1
+      classification.** `PREFIX_ASSIGNABLE_FAMILIES` (`:116`) is UNCHANGED at
+      `['content','unknown']`: widening it was never the fix, and a later edit
+      that widens it reds. What changed is that the prefix is one half of the
+      stage list instead of all of it. `runCascade` reaches each of the four
+      families, asserted one test per family, and three of the four —
+      `content`, `activation`, `unknown` — are reachable from REAL filesystem
+      observation rather than from a fixture: `activation_receipt --rule
+      commit-policy` reports `family=activation` because that rule is authored
+      and selected but not projected into `.claude/rules/`, and that is an
+      observation of the tree, not an inference about a candidate.
+      **The coverage gap, named rather than absorbed.** `adhered` has no admitted
+      evidence source, so the shipped producer cannot emit that rung and a real
+      receipt is ABSENT there — which the ladder reads as `unknown` and keeps out
+      of every denominator. The `adherence` family is therefore reachable through
+      the stage list but not yet from any shipped observer. That is a COVERAGE
+      fact about observers, not a stage-list fact, and AC-1's own wording is what
+      settles which of the two this step owed: *"the stage list can ASSIGN all
+      four Phase 1 families rather than two."* Admitting a fourth source with no
+      observer behind it would have made the gap invisible instead of closing it,
+      which is the population-of-zero failure 2.2 stays open on.
+      **A defect the tests caught before the roadmap could record it.**
+      `RECEIPT_ASSIGNABLE_FAMILIES` was first hand-written as the prefix's
+      complement, `['activation','adherence','unknown']`. That is wrong: the
+      `eligible` rung's family is `content`, so a receipt stage can assign
+      `content` too. It is derived from `LADDER` now, and the assertion that
+      caught it is kept.
+      **RED-proofs, 2026-09-01, each restored byte-identically and re-verified by
+      SHA-256** (`tests/scripts/activation_receipt_producer.test.ts`,
+      `tests/scripts/cascade_receipt_stages.test.ts`):
+      1. TB-2 — defaulted every unobserved rung to `not-reached`: **2 failed**,
+         including the real-CLI case. Restored, 21/21.
+      2. TB-3 — removed the source/rung mismatch refusal: **1 failed**. Restored.
+      3. TB-4 — `appendFileSync` to `writeFileSync`: **2 failed** (the behavioural
+         two-line case and the structural scan). Restored.
+      4. EC-1 — added `fetch('https://api.anthropic.com/...')` to the producer:
+         **1 failed**. Restored.
+      5. the wiring — disabled the receipt block in `runCascade`: **4 failed**,
+         `activation` and `adherence` both unreachable. Restored, 9/9.
+      6. the exclusion — let a PREFIX stage assign `activation`: **4 failed**,
+         two of them pre-existing assertions from step 4.1, which is the check
+         that the old guarantee is still guarded. Restored.
+      Restore verified green: 67/67 across the five touched test files,
+      `tsc -p tsconfig.scripts.json --noEmit` clean.
+      **Doc-impact.** `docs/contracts/audit-log-v1.md` said the compile-time
+      privacy floor binds "two shipped producers" and that a third would be
+      caught by nothing. There are three now and the third carries the same
+      guard, so the count, the § Producer table and the `activation` field row
+      were corrected in the same change. The guard's bluntness is recorded there
+      too: the ladder's `reason` field is a `FREE_FORM_KEYS` member, so the
+      producer's input field is `precedence_reason` and is mapped on emission —
+      widening the key list to admit one safe case would have weakened the floor
+      for all three producers.
 
-- [ ] **1.2 Settle the twelve-stage enumeration before treating the stage
+- [x] **1.2 Settle the twelve-stage enumeration before treating the stage
       semantics as decided.**
       Carried from the same step's unconverged half. An AI council round of
       2026-08-31 returned `REVISE`, degraded at 1 of 2 seats: keep the decided
@@ -85,8 +160,52 @@ preference to the illustration, and the reader can see which was chosen.
       rather than as decided.
       verify: one enumeration is committed, and a second independent pass
       reproduces it rather than proposing a different twelve.
+      **CLOSED 2026-09-01, and the enumeration is COMPUTED rather than
+      proposed.** A third proposal would have been a third answer. What settles
+      an enumeration that two proposals disagreed on is removing proposal from
+      the process: `src/scripts/_lib/cascade_stage_enumeration.ts:87` derives
+      `TWELVE_STAGES` from two committed arrays — `CASCADE_STAGES` and the
+      ladder's `RECEIPT_STAGES` (`activation_ladder.ts:58`, itself derived from
+      `LADDER_RUNGS`) — by one stated ordering rule, stable-sorted on the
+      evidence each stage needs. Nobody's judgement is in the output, and
+      changing it requires changing an array, which is a visible diff rather than
+      a differently-worded reply.
+      **The twelve**, published as a machine-checked table in
+      `docs/contracts/evaluation-cascade-stages.md`: `schema-validity`,
+      `path-ownership`, `holdout-disclosure`, `budget`, `near-duplicate`, then
+      the six receipt stages `receipt-eligible` … `receipt-adhered`, then
+      `metric-verdict`. E9's condition is met literally — activation/delivery
+      and adherence are each their own stage. The statistical stage is LAST,
+      which is where the two prior enumerations disagreed, and the reason is the
+      ordering rule rather than taste: measurement is the only evidence class
+      that requires trials to have been run.
+      **The second pass is independent in ROUTE, not in author, and that is the
+      point rather than a hedge.** A second author is a second proposal, and two
+      proposals is the state that produced the `REVISE`. Route A imports the two
+      arrays; route B (`tests/scripts/twelve_stage_enumeration.test.ts`) reads
+      the same two source FILES as text, regex-extracts the stage names, reads
+      the evidence classes from the published contract table, re-applies the
+      ordering rule itself, and never reads `TWELVE_STAGES` except for the final
+      comparison. It reproduces the committed twelve exactly.
+      **What the reproduction does NOT establish, stated so it is not read as
+      more.** Both routes read the same two arrays, so neither is evidence that
+      the arrays hold the right rungs or the right stage set. Those are E4 and
+      E9, both already decided; reopening either is a decision-revisit matter.
+      **One further check derives the ordering rule from BEHAVIOUR**, not from
+      the table: the position at which `runCascade` first reads each
+      `CascadeInput` field must rise with the evidence-class rank, so a stage
+      reordered in the body without its class being updated reds.
+      **RED-proofs, 2026-09-01, each restored byte-identically and re-verified by
+      SHA-256:**
+      7. hand-edited `TWELVE_STAGES` to a different order: **1 failed** — route B
+         never reads that constant, which is exactly the property the failure
+         mode needed. Restored.
+      8. changed one class in the contract table only: **2 failed**. Restored.
+      9. added a seventh rung in code without the table: **4 failed**. Restored.
+      10. hoisted a read of `input.receipt` above the budget stage: **1 failed**
+          on the behavioural ordering check. Restored, 6/6.
 
-- [ ] **1.3 State the receipt trust boundary and the evidence-cost contract
+- [x] **1.3 State the receipt trust boundary and the evidence-cost contract
       before the producer writes its first receipt.**
       The 2026-08-31 `REVISE` names these two as the precondition for 1.2, and
       1.1 cannot be reviewed without them: a receipt producer that is not
@@ -94,6 +213,30 @@ preference to the illustration, and the reader can see which was chosen.
       layer up.
       verify: both are written down as falsifiable claims, and 1.1's producer
       design cites them rather than restating them.
+      **CLOSED 2026-09-01. `docs/contracts/activation-receipt-trust-boundary.md`**
+      — four trust-boundary claims (TB-1 no evaluation input decides a rung
+      STATE; TB-2 an unobserved rung is absent, never negative; TB-3 every state
+      names an admitted source, and an admitted source with no shipped observer
+      is itself a refutation; TB-4 append, never rewrite) and three
+      evidence-cost claims (EC-1 zero model calls; EC-2 no receipt stage runs
+      before the free prefix; EC-3 a missing observation is never bought).
+      **Falsifiable in the literal sense the verify clause asks for:** each claim
+      states the observation that would REFUTE it, and each refuting observation
+      is one a test can make. They are not decorative — the test file asserts
+      each claim by its id and each assertion is written as the contract's own
+      refutation, so a reader checks the test against the claim rather than
+      against a paraphrase.
+      **Cited, not restated, by 1.1.** The producer's header
+      (`src/scripts/_lib/activation_receipt_producer.ts:9-30`) carries a table
+      mapping each claim id to the line of code that binds it, and the contract
+      is the only place the claims are written. Both directions were RED-proven
+      — see 1.1.
+      **TB-1 was sharpened while writing 1.1, and the sharpening is recorded
+      because it changes what the claim forbids.** The first draft forbade a rung
+      being "derived from a candidate record", which would have forbidden a
+      caller naming WHICH artefact a receipt is about. Subject and state are now
+      separated explicitly: the subject is an input and decides nothing; the
+      state is evidence and may come only from an admitted source.
 
 ## Phase 2 — Experimental evidence, blocked on the metered-backend park
 
@@ -175,9 +318,20 @@ a fixture for a run.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An activation receipt exists that was written by a producer
+- [x] AC-1 — An activation receipt exists that was written by a producer
       independent of the classifier, and the evaluation cascade's stage list can
       assign all four Phase 1 families rather than two.
+      **MET 2026-09-01 by step 1.1.** First half: `activation_receipt --rule
+      <id>` appends a real line, and the test asserts the append against the real
+      repository rather than a fixture. The ledger is local-only by contract
+      (`audit-log-v1.md` § File location — "MAY be gitignored in consumer
+      projects"), so "exists" rests on a reproducible write, not on a committed
+      artefact; a committed receipt is not a thing this contract permits. Second
+      half: `PREFIX_ASSIGNABLE_FAMILIES` stays at two and the stage list spans
+      four, asserted one test per family. The `adhered` rung has no shipped
+      observer, so the `adherence` family is reachable through the stage list and
+      not yet from real evidence — a coverage gap named in 1.1 rather than
+      counted here.
 - [ ] AC-2 — A paired-verdict comparison between a metered proposer and the
       deterministic one has been run, and its result — in either direction —
       is recorded. Held by `metered-backend-park`.
