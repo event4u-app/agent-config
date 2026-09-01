@@ -10,6 +10,42 @@ estate_growth_exempt: "open_blockers +1 net, and the +1 is the Phase-2 entry alo
 
 # Road to an evidence-routed council rung
 
+> **CLOSED 2026-09-01 (drain run 12) — with INCOMPLETE SCOPE and EXPLICIT
+> DEFERRALS, which is not the same as done.** 35 of 77 boxes are `[x]`; the
+> other 42 are `[-]` with a written rationale, a resumption trigger and a stub
+> link. The wording is the AI council's own: *"record the state as closed with
+> incomplete scope and explicit deferrals, not 'done', 'fully delivered', or
+> 'all acceptance criteria satisfied'. Closing is an administrative lifecycle
+> decision; it must not erase the distinction between completed and deferred
+> scope."*
+>
+> **Two AI council passes settled it**, both on 2026-09-01, both with members
+> anthropic (claude-sonnet-4-5) and openai (codex-default), 2 rounds, blind
+> chairman, subscription transport (`billable=0`, `$0.0000`), quorum `2/2
+> present, needed 1 — concluded`. The first closed the two Class-3 blockers
+> (**A3** for `phase-2-benchmark-cost`; **B1** for the leakage bench, whose
+> two-UTC-day precondition this run could not meet, so the **B3** fallback the
+> openai seat named was applied and recorded as such). The second dispositioned
+> the remaining twelve steps and ruled on the roadmap itself.
+>
+> **The three stubs that carry the deferred work**, each with resumption
+> triggers and an explicit list of claims that may not be made:
+> [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md) (Phase 2 + 23 dependents + 6.5),
+> [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md) (3.3, 3.4),
+> [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md) (the twelve instrumentation and live-run steps).
+>
+> **Everything built stays built.** Every guard named in those stubs is
+> committed and runs in CI regardless of a checkbox — the council was explicit
+> that the guards are defensive infrastructure, not blocked work.
+>
+> **THIS ROADMAP MAY CLAIM:** defensive infrastructure built and red-proven
+> against sabotage; schema and gate foundations established; resumption paths
+> documented with concrete triggers; the buildable-today subset completed.
+> **IT MAY NOT CLAIM:** that topology validation is live; that any promotion
+> gate passed; that telemetry is complete; that Phase-2 equivalence was
+> measured; or that any deferred mechanism was verified against a real
+> population.
+
 > **Source:** `agents/tmp.old/nxt-council/road-to-evidence-routed-council-master.md`
 
 ## Goal
@@ -624,7 +660,7 @@ the blocker feared; `ai_council/orchestrator.ts` records it per member in
 promotion gate below has a real denominator to measure against — the condition
 the blocker existed to protect.
 
-- [ ] 1B.1 Require the existing findings schema as a fenced trailing block in
+- [-] 1B.1 Require the existing findings schema as a fenced trailing block in
   the initial analysis response, replacing the second extraction call.
       verify: a real analysis run parses inline with no second call.
       **Stale-citation repaired 2026-08-31.** This line read *"blocked by
@@ -757,6 +793,25 @@ the blocker existed to protect.
       requested array — not a locator failure and not a parser failure. One
       run is not a rate, there is no matched comparator, and 1B.4's arms have
       not started, so this is a shape to expect and never a numerator.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      **The council authorised one bounded verification run with `[x]` only on
+      exact success. The run was made on 2026-09-01 and it did not close the
+      step — the 2026-08-31 failure REPRODUCED.** Two seats, analysis lens,
+      `--rounds 1`, `consensus_scoring.enabled: true` + `inline_findings: true`
+      via a temporary `AI_COUNCIL_CONFIG`. Counter: **anthropic 10 -> 12
+      (delta 2), openai 10 -> 13 (delta 3)**. The anthropic seat inlined —
+      `raw_text` retained, reply ending in `_[inline findings block extracted:
+      7 item(s); …]_`, a parse receipt rather than a fence sighting — and
+      issued zero extraction calls. `codex-default` emitted no block and no
+      `raw_text`, and `consensus.extraction_responses` holds exactly one entry,
+      `provider=openai`. The closure condition is ZERO, and one is not zero.
+      **What this adds over the previous attempt is reproduction**: same seat,
+      same miss, a different prompt on a different day, so the
+      contract-compliance miss is a stable seat-level property rather than a
+      one-off. It is still **not a rate** — n = 2, no matched comparator.
+      Resumption trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
 - [x] 1B.2 Keep the repair path: absent or invalid inline block falls back to
   the existing extraction call at `prompts.ts:206`.
       verify: a corrupted inline block still yields findings, and the
@@ -793,7 +848,7 @@ the blocker existed to protect.
       it. That is deliberate: the failure this step guards against is a future
       edit folding the contract into `ANALYSIS_MODE`, which would leak it into
       every mode's lens table and be invisible to a hardcoded list.
-- [ ] 1B.4 Promotion gate across ≥ 10 real analysis runs: ≥ 70 % inline parse
+- [-] 1B.4 Promotion gate across ≥ 10 real analysis runs: ≥ 70 % inline parse
   rate, no `unparsed` regression, no substantive finding-quality regression.
       verify: gate met, or the null result is recorded and the change reverts
       to extraction-always
@@ -850,6 +905,14 @@ the blocker existed to protect.
       same seats: matched runs over the same artefacts, or a pre-declared
       baseline window. Comparing unrelated runs lets a change in task difficulty
       pass for a change in parse rate.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Roughly 40-60 calls against a 50-per-provider-per-UTC-day cap, and that
+      budget is also the council's own decision mechanism — the harder of the
+      two scarcity arguments. **An unrun gate is neither a pass nor a null**,
+      and the council explicitly forbids recording it as either. Resumption
+      trigger and forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
 
 ## Phase 2 — Build the benchmark before automating topology
 
@@ -1430,7 +1493,7 @@ byte-pinned by tests. Any work here runs through
       **denial**: `anchorPresent` must NOT match an unrelated sentence, so a
       `minority-silently-dropped` verdict means "absent" rather than "the
       matcher is broken".
-- [ ] 5.4 Final synthesis retains unresolved disagreement, the strongest
+- [-] 5.4 Final synthesis retains unresolved disagreement, the strongest
   minority evidence, and what evidence would resolve it.
       verify: a run with real dissent renders all three
 
@@ -1493,6 +1556,13 @@ byte-pinned by tests. Any work here runs through
       **Nothing was built.** Adding three sections plus an auditor with no run
       able to exercise them is the population-of-zero shape this file refuses;
       the finding is recorded instead, and the step stays open on evidence.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      The mechanism is UNBUILT and its verify clause additionally needs a real
+      run. Both seats refused to license a prose-only build, which would
+      *"create another indefinitely parked baseline"*. Resumption trigger and
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
 - [-] 5.5 Revisit ADR-120 **only** on results — record keep / amend /
   supersede with the benchmark artifact pin and a revisit condition.
       verify: the ADR record cites the benchmark artifact, not this roadmap
@@ -1625,7 +1695,7 @@ allowed to stop.**
       The last line is the load-bearing one: the failure here is quiet, and an
       artifact that reads as though all configured rounds executed is a claim
       about deliberation depth that nobody made on purpose.
-- [ ] 6.5 Pre-registered promotion gate against a fixed-round arm: quality
+- [-] 6.5 Pre-registered promotion gate against a fixed-round arm: quality
   non-inferiority on gradeable slices, no meaningful minority-rescue
   regression, measurable call/cost reduction, no increased
   majority-corruption rate. Verdict equivalence alone is **insufficient** —
@@ -1668,6 +1738,17 @@ allowed to stop.**
       equivalence figure is never rendered as gate evidence — becomes testable
       when a report exists to render, which is the same run that closes this
       step.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      **Transitively deferred by the A3 verdict**, which the council confirmed
+      when asked rather than left to my judgement: the verify clause is
+      conjunctive and its second half depends on the round-count arms produced
+      by step 2.7, which A3 deferred this morning. The recorded-gate half is
+      preserved as evidence and survives in [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **May be claimed:** the gate was pre-registered before execution.
+      **May not be claimed:** that the gate passed, that equivalence was
+      measured, or that either arm was promoted.
 
 ## Phase 7 — Council-rung topology refinement
 
@@ -1749,7 +1830,7 @@ Only now, and **not** as a new task router.
       **Nothing here may be read as evidence:** the council forbids claiming
       that topology effects were benchmarked, that any topology is superior,
       that topology-driven promotion is supported, or "we tested it at N=2".
-- [ ] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
+- [-] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
   question resolvable by tree fact, schema, script or executable test never
   reaches topology selection.
       verify: a probe-resolvable fixture never enters the selector
@@ -1817,6 +1898,19 @@ Only now, and **not** as a new task router.
       direction (a `//` mention and a `/** */` mention must NOT match), and the
       sabotage was re-run afterwards to confirm the fix did not blunt it —
       still 1 failed / 6 passed with a real `selectTopology` export present.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
 - [-] 7.4 Deterministic policy first, interpretable features only: task class,
   impact, ambiguity type, configured provider diversity, model availability,
   historical benchmark slice, artifact size, cost ceiling, prior-run freshness,
@@ -2161,7 +2255,7 @@ is **seating**, and it already has a carrier.
 
 ## Phase 10 — Outcome attribution and observability
 
-- [ ] <!-- roadmap-status: guarded-baseline --> 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
+- [-] <!-- roadmap-status: guarded-baseline --> 10.1 Extend decision replay (`ai_council/replay.ts`) with: ladder council
   resolution, council-internal topology, initial route, escalation, stage
   outputs, stop reason, synthesis policy, cost, latency, final verdict.
       verify: a replayed run reproduces the recorded route
@@ -2217,7 +2311,20 @@ is **seating**, and it already has a carrier.
       and a section with no cost line must parse to `null`, so a passing
       round trip means the fields survived rather than that the parser is
       permissive.
-- [ ] 10.2 Attribute each useful correction to the first stage where it
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
+- [-] 10.2 Attribute each useful correction to the first stage where it
   appeared.
       verify: one real run yields a per-correction stage attribution
 
@@ -2238,7 +2345,14 @@ is **seating**, and it already has a carrier.
       stage machinery in the tree is design-time ablation in the bench manifest
       (`topology_bench_manifest.ts:239-240`, `:391-440`), which attributes an ARM
       to a stage and is gated behind `blocker: phase-2-benchmark-cost`.
-- [ ] 10.3 Track paid calls that change no finding, stance, confidence,
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      The mechanism is UNBUILT and its verify clause additionally needs a real
+      run. Both seats refused to license a prose-only build, which would
+      *"create another indefinitely parked baseline"*. Resumption trigger and
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+- [-] 10.3 Track paid calls that change no finding, stance, confidence,
   evidence, or final decision; emit `zero_marginal_value_call_rate`.
       verify: the rate is emitted and is non-null on a real run
 
@@ -2274,6 +2388,13 @@ is **seating**, and it already has a carrier.
       run able to exercise it is a population-of-zero mechanism; the step stays
       open on evidence rather than acquiring a shape-pin that would measure
       nothing.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      The mechanism is UNBUILT and its verify clause additionally needs a real
+      run. Both seats refused to license a prose-only build, which would
+      *"create another indefinitely parked baseline"*. Resumption trigger and
+      forbidden claims: [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
 - [-] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
@@ -2337,7 +2458,7 @@ is **seating**, and it already has a carrier.
       file survives the diff. The suite also tests the **denial** (two unrelated
       texts yield no pair), so a zero pair count means "nothing there" rather
       than "the detector is broken".
-- [ ] <!-- roadmap-status: guarded-baseline --> 10.6 Track early-stop savings separately from quality.
+- [-] <!-- roadmap-status: guarded-baseline --> 10.6 Track early-stop savings separately from quality.
       verify: cost and quality are never reported as one number
       ```yaml
       guarded_baseline:
@@ -2397,9 +2518,22 @@ is **seating**, and it already has a carrier.
       structural-type assertion would be stronger; the pair is what shipped, and
       the gap is named rather than left for a later reader to discover.
 
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
+
 ## Phase 11 — Learned routing as a challenger only
 
-- [ ] <!-- roadmap-status: guarded-baseline --> 11.1 Collect offline training rows from benchmark and dogfood evidence
+- [-] <!-- roadmap-status: guarded-baseline --> 11.1 Collect offline training rows from benchmark and dogfood evidence
   only, without requiring raw private prompt content.
       verify: the row schema has no field capable of holding prompt text
       ```yaml
@@ -2458,6 +2592,19 @@ is **seating**, and it already has a carrier.
       (`internal/bench/council-routing/training-rows.jsonl`): the day rows
       start being written, the dashboard marks this evidence STALE and the
       schema must be re-verified against what was actually collected.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
 - [-] 11.2 Train an offline challenger classifier; it stays shadow-only.
       verify: no runtime path can reach the model
 
@@ -2535,7 +2682,7 @@ is **seating**, and it already has a carrier.
 
 ## Phase 12 — UX simplification
 
-- [ ] <!-- roadmap-status: guarded-baseline --> 12.1 Keep `/council` as the main explicit user concept; users need no
+- [-] <!-- roadmap-status: guarded-baseline --> 12.1 Keep `/council` as the main explicit user concept; users need no
   topology vocabulary.
       verify: the command surface gains no topology argument for normal use
       ```yaml
@@ -2568,7 +2715,20 @@ is **seating**, and it already has a carrier.
       a guess and is machine-checkable; the symbol is not, and the report marks
       it **not machine-checkable** rather than booking it as *"not stale"* —
       absence of a check is reported as absence, never as a pass.
-- [ ] <!-- roadmap-status: guarded-baseline --> 12.2 Add a free explain mode: why task-side orchestration resolved to
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
+- [-] <!-- roadmap-status: guarded-baseline --> 12.2 Add a free explain mode: why task-side orchestration resolved to
   council, which topology would run, estimated spend and calls, evidence
   source — with no paid model call to explain routing.
       verify: explain mode issues zero provider calls
@@ -2626,7 +2786,20 @@ is **seating**, and it already has a carrier.
       also tests the **denial**: the import scanner is shown to extract
       `./orchestrator.js` from constructed text and to find neither it nor
       `orchestrator` in the real module.
-- [ ] <!-- roadmap-status: guarded-baseline --> 12.3 A force-topology debug control may exist but cannot override
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
+- [-] <!-- roadmap-status: guarded-baseline --> 12.3 A force-topology debug control may exist but cannot override
   user-required decisions, destructive authorization, spend authorization, the
   Hard Floor, or turn same-provider subagents into an external council.
       verify: one test per prohibition
@@ -2685,6 +2858,19 @@ is **seating**, and it already has a carrier.
       control exists today and that each authority gate is still where the step
       assumed it was. That gap is the `pending_ac` above, and it is why this is
       a baseline and not a discharge.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council disposition,
+      both seats converging — NOT cancelled and NOT satisfied.**
+      Mechanism BUILT and RED-PROVEN; the population it guards does not exist,
+      so the verify clause is unexercised. The council's floor: *"no indefinite
+      `[ ]` parking — 'mechanism built, waiting for population' is a deferred
+      state, not an active one."* **The guard is unaffected by this marker** —
+      the test is committed and runs in CI regardless of the checkbox.
+      Resumption trigger, forbidden claims and the red-proof table are in
+      [`stubs/road-to-council-topology-instrumentation.md`](stubs/road-to-council-topology-instrumentation.md).
+      **May not be claimed:** that the constraint holds for an implemented
+      feature, that the verify clause passed, or that sabotage sensitivity is
+      positive runtime validation.
 - [x] 12.4 Consumer surfaces request **capabilities** (independent external
   review, adversarial decision, architecture trade-off, minority challenge),
   never topology names; the shared council-rung policy chooses.
