@@ -86,3 +86,95 @@ export function humanAuthoredLead(text: string): string {
   }
   return kept.join("\n");
 }
+
+/** A line that is nothing but an opening tag, with the tag name captured. */
+const REGION_OPEN = /^\s*<([A-Za-z][\w-]*)>\s*$/;
+
+/**
+ * The host's own framing of an injected region — the sentence it writes ABOUT
+ * the block, not a sentence the user typed.
+ *
+ * Named literally, for the same reason `isSyntheticPrompt` names wrapper tags:
+ * this is host furniture, and furniture is identified by what it says about
+ * itself. It is deliberately NOT a language rule — the clauses describe the
+ * region's provenance and its data status, and a user who types one is quoting
+ * the host, which is exactly the case that should be dropped too.
+ */
+const REGION_NOTE =
+  /\b(content (above|below) is from|treat (it|this|that|the (content|text|above|following)) as data)\b/i;
+
+/**
+ * Remove host-injected wrapper regions — `<launch-selected-element>` and
+ * friends — leaving the text the human actually typed around them.
+ *
+ * MEASURED, from a 14.13.0 field report (2026-09-01) reproduced against this
+ * source. `DOCUMENT_HEAD` matches a bare `<tag>` line, and Claude Code PREPENDS
+ * exactly that when the user picks a DOM element in the browser pane. So
+ * `humanAuthoredLead` broke at line zero and returned `""` for every such
+ * prompt — the lead-first isolation was not degraded, it was OFF — and the
+ * whole-text fallback then scored ~4 KB of class-heavy markup plus the host's
+ * own advisory line. Four consecutive German turns pinned English, and the
+ * turn-end gate refused each one.
+ *
+ * Two things had to move, and both are visible in the reproduction:
+ *
+ *   1. A bare `<tag>` line that HAS a matching close is the START of a region
+ *      to skip, never the end of the human lead. That is this function.
+ *   2. It runs BEFORE `instructionText`. The block's indented lines arm that
+ *      filter's paste-state machine, and where no blank line separates the
+ *      block from the user's sentence, the sentence itself was deleted — the
+ *      German markers did not merely lose the count, they reached zero.
+ *
+ * Conservative by construction, in three ways. An UNBALANCED bare tag is left
+ * in place, so a pasted document opening with one still terminates the lead
+ * exactly as before. A prompt with no balanced region is returned untouched,
+ * so nothing outside this shape reclassifies. And the framing sentence is
+ * dropped LINE BY LINE against `REGION_NOTE` rather than as a paragraph: in the
+ * reported shape the advisory and the user's sentence share one unbroken run,
+ * so dropping the run would have taken the sentence with it.
+ *
+ * Not `isSyntheticPrompt`: that answers "is this whole turn machine-written",
+ * and these turns are not — a human sentence follows the block. The wrapper is
+ * removed; the turn is kept.
+ *
+ * Nested same-name regions resolve to the FIRST matching close tag. Host
+ * wrappers do not nest by name, and stopping early keeps more human text than
+ * scanning past the wrong close would.
+ */
+export function stripInjectedRegions(text: string): string {
+  const lines = text.split("\n");
+  const kept: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+    const open = REGION_OPEN.exec(line);
+    if (open === null) {
+      kept.push(line);
+      continue;
+    }
+    // The tag name comes from `[A-Za-z][\w-]*`, so it carries no regex
+    // metacharacter and needs no escaping.
+    const close = new RegExp(`^\\s*</${open[1] ?? ""}>\\s*$`);
+    let end = -1;
+    for (let j = i + 1; j < lines.length; j++) {
+      if (close.test(lines[j] ?? "")) {
+        end = j;
+        break;
+      }
+    }
+    if (end === -1) {
+      kept.push(line);
+      continue;
+    }
+    if (kept.length > 0 && REGION_NOTE.test(kept[kept.length - 1] ?? "")) {
+      kept.pop();
+    }
+    i = end;
+    while (i + 1 < lines.length && (lines[i + 1] ?? "").trim() !== "") {
+      if (!REGION_NOTE.test(lines[i + 1] ?? "")) {
+        break;
+      }
+      i++;
+    }
+  }
+  return kept.join("\n");
+}

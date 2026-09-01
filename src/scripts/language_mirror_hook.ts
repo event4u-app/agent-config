@@ -83,7 +83,11 @@ import {
   session_state_file,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
-import { humanAuthoredLead, isSyntheticPrompt } from "./_lib/prompt_shape.js";
+import {
+  humanAuthoredLead,
+  isSyntheticPrompt,
+  stripInjectedRegions,
+} from "./_lib/prompt_shape.js";
 
 const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
@@ -296,9 +300,17 @@ export function instructionText(prompt: string): string {
  * an English instruction over a German paste resolves to English by the same
  * step. The fallback is what keeps it conservative: a prompt with no document
  * marker classifies exactly as it did before.
+ *
+ * `stripInjectedRegions` runs FIRST, and the order is load-bearing rather than
+ * tidy. A host wrapper the user never typed — `<launch-selected-element>` — is
+ * a bare tag line, which `humanAuthoredLead` read as the END of the human lead;
+ * prepended, as the host prepends it, that returned an empty lead and handed the
+ * verdict to ~4 KB of injected markup. Stripping before `instructionText` also
+ * keeps the block's indented lines from arming that filter's paste state, which
+ * was deleting the user's own sentence outright.
  */
 export function classify(prompt: string): Classification {
-  const text = instructionText(prompt);
+  const text = instructionText(stripInjectedRegions(prompt));
   const lead = humanAuthoredLead(text);
   const leadVerdict = _score(lead);
   if (leadVerdict.language !== "und") {
