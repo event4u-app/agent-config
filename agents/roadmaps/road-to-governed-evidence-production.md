@@ -244,6 +244,25 @@ Every step here is held by `metered-backend-park`. None of them may be worked
 before that blocker is resolved, and none of them may be closed by substituting
 a fixture for a run.
 
+**NARROWED 2026-09-01 — the phase is enterable for a metered PROPOSER only, and
+the two-session split is part of the discharge rather than a nicety.** See
+`blocker: metered-backend-park` → **NARROWED 2026-09-01** for the council record,
+the corrected provenance of the lock, and the role constraint. Three conditions
+bind every step below:
+
+1. **Role, not label.** A metered call may **generate** candidate text. It may
+   not score, rank, filter, select between, or supply any input to the verdict
+   for the arms being compared — whatever the module is called.
+2. **Independent session.** The park's un-park procedure requires the session
+   that freezes the execution protocol and captures results to be independent of
+   the one that authored the arm. A single session doing both is not a
+   discharge, however green the run.
+3. **Protocol frozen first, in writing** — model/provider version, prompts,
+   sampling, retry policy, exclusion policy — before any capture. A protocol
+   written after a result is a tuned protocol.
+
+The fixture prohibition above is unchanged and is not weakened by any of this.
+
 - [ ] **2.1 An LLM proposer must beat the deterministic one to survive.**
       Transferred whole from `road-to-governed-harness-evolution` step 5.4.
       verify: the comparison is a paired_verdict run, not an argument.
@@ -294,6 +313,69 @@ a fixture for a run.
   the park to permit a metered *proposer* while still forbidding a metered
   *evaluator*, if the independence objection turns out to bind only the
   evaluating side.
+
+  **NARROWED 2026-09-01 (drain run 13) — option (c) TAKEN. A metered PROPOSER is
+  admitted; a metered EVALUATOR remains forbidden.** *AI council 2026-09-01
+  (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, deep,
+  peer-review, blind chairman, quorum 2/2 present, needed 1 — concluded,
+  subscription transport, `billable=0`, `$0.0000`) — Question 3: **3B, 2/2
+  convergent.***
+
+  **The lock was read before it was narrowed, and the read corrected this
+  entry's own provenance.** This blocker calls the constraint *"the 5.2
+  evaluator-independence decision of 2026-08-25"*. Step 5.2 of the archived
+  parent (`agents/roadmaps/archive/road-to-governed-harness-evolution.md:1632`)
+  in fact says only *"Keep the live-floors park intact. No live harness."* and
+  **defers** to a different file. The real lock is
+  `agents/roadmaps/later/road-to-routing-assurance-live-floors.md:20-52`, and it
+  is that file — not 5.2 — that carries the evaluator-independence reasoning. The
+  shorthand was accurate in substance and wrong about where the reasoning lives;
+  a later reader following this entry to 5.2 would have found a one-line pointer
+  and no argument.
+
+  **Two facts from the real lock decide this narrowing, and neither was
+  available from the shorthand.**
+
+  - **Authority is not owner-reserved.** The park states it outright: *"Both
+    seats: council-decidable, not owner-reserved. The parent's cut line
+    pre-authorises exactly this disposition, the move is reversible, it creates
+    no external commitment, and the preservation test passes"*
+    (`:44-47`). So a council may narrow it. This is the opposite of the
+    `merge-authority` blocker on `road-to-harness-promotion-bridge`, which is
+    owner-reserved in both directions — the two must not be reasoned about
+    together.
+  - **The objection is about evaluating what you authored, not about spending.**
+    *"Cost was explicitly not the objection — token spend was pre-authorised. The
+    objection is evaluator independence"*, sharpened by one seat to *"it's about
+    evaluating an artifact you authored"* (`:27-33`). A metered **proposer**
+    generates an arm; it decides nothing. The evaluator for 2.1 is
+    `decidePairedVerdict` (`src/scripts/_lib/paired_verdict.ts:126`), which is
+    deterministic and whose decision constants — `ALPHA` (`:51`) and
+    `MIN_DISCORDANT` (`:78`) — were committed before any arm existed and cannot
+    be tuned to a result. So the narrowing does not touch the thing the park
+    protects.
+
+  **The narrowing constrains ROLES, not provider labels** — openai's refinement,
+  adopted verbatim in substance: *"a 'proposer' that ranks, filters, or supplies
+  the controlling verdict could effectively become an evaluator and defeat the
+  independence boundary."* Admitted: a metered call that **generates** candidate
+  text. Still forbidden: a metered call that scores, ranks, filters, selects
+  between, or supplies any input to the verdict for the arms being compared —
+  whatever it is named.
+
+  **The park's own un-park procedure binds and is NOT waived.** It requires *"an
+  independent session (not the one that authored the corpus)"* to freeze the
+  execution protocol — model/provider version, prompts, sampling, retry and
+  exclusion policy — **before** capturing any baseline (`:49-52`). Applied here:
+  the session that builds the metered proposer arm may not also run the
+  comparison. Phase 2 is therefore executed as a two-session split, and a
+  single-session run of 2.1 is not a discharge of it however green it comes back.
+
+  **What this does NOT do.** It does not un-park
+  `road-to-routing-assurance-live-floors.md`, whose steps need a live *routing*
+  harness and are untouched. It does not admit a metered evaluator anywhere. It
+  does not relax `tests/scripts/governed_harness_no_live_harness.test.ts`, which
+  polices the archived parent's own tree and is not this roadmap's gate.
 - **Recommendation:** (b) until someone needs Phase 2's answer. The park does
   not rest on cost — token spend was explicitly pre-authorised when it was
   decided — it rests on evaluator independence, and nothing has changed about
