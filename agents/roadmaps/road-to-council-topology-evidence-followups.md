@@ -17,6 +17,27 @@ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 > carried, with a resumption trigger. The detail — evidence, forbidden claims,
 > red-proof tables, execution sequences — lives in the three stubs each group
 > names, and is not duplicated here.
+>
+> **Nothing guards this file, and that is worth knowing before relying on it.**
+> The 38 obligations this file carries rest on it continuing to exist, and no
+> gate in the repository would notice if it stopped. `deferralProblems` is a
+> **one-shot** admission gate: its only production call
+> (`src/agent-src/scripts/archive_completed_roadmaps.ts:574`) sits inside a loop
+> over `collect()` (`src/agent-src/scripts/update_roadmap_progress.ts:748`),
+> which skips every `status: draft` file (`:755-757`) and everything under
+> `archive/`, `skipped/`, `stubs/` and `later/` (`:95`, `:315`). The parent is
+> already archived, so the check that created this receiver can never run
+> against the pair again. No linter reads `deferred-resolution:` or
+> `parent_roadmap:` — the one other mention under `src/` is a warning string
+> (`src/scripts/lint_roadmap_complexity.ts:259`). Neither reference gate sees
+> the inbound links. Deleting this file would red nothing and would score as an
+> estate **credit** (`src/scripts/check_estate_count.ts:490-534`).
+>
+> Full derivation, including the 43 inbound-reference census:
+> [`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
+> § 3. Closing the gap is
+> [`stubs/road-to-deferral-carry-guard.md`](stubs/road-to-deferral-carry-guard.md),
+> and it is deliberately not done here.
 
 ## Why one receiver rather than three, and the council split behind it
 
