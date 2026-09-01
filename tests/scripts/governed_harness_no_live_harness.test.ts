@@ -39,7 +39,31 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const ROADMAP = path.join(REPO, 'agents', 'roadmaps', 'road-to-governed-harness-evolution.md');
+/**
+ * The roadmap, wherever it lives. It was archived on 2026-08-31 when its last
+ * box closed, and a hardcoded active-tree path turned half A red on the move —
+ * a guard that dies of its own subject being completed is a guard that stops
+ * watching exactly when the file becomes read-only and nobody is looking. The
+ * two candidates are tried in order and a miss THROWS: a resolver that returned
+ * a missing path would let half A scan nothing and exit green, which is the
+ * vacuity this file's own anti-vacuity assertions exist to prevent.
+ */
+function resolveRoadmap(): string {
+    const candidates = [
+        path.join(REPO, 'agents', 'roadmaps', 'road-to-governed-harness-evolution.md'),
+        path.join(REPO, 'agents', 'roadmaps', 'archive', 'road-to-governed-harness-evolution.md'),
+    ];
+    const hit = candidates.find((c) => existsSync(c));
+    if (hit === undefined) {
+        throw new Error(
+            `road-to-governed-harness-evolution.md is in neither the active tree nor archive/ — ` +
+                `tried:\n  ${candidates.join('\n  ')}`,
+        );
+    }
+    return hit;
+}
+
+const ROADMAP = resolveRoadmap();
 const PARK = path.join(
     REPO,
     'agents',

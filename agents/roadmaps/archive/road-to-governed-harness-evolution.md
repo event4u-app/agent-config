@@ -1030,6 +1030,19 @@ once.
 > as a vacuous mechanism. So: when this phase's cascade can produce an OBSERVED
 > outcome per case, expected-vs-observed is recorded against stable case ids at
 > that point — not before, and not as an empty file that looks like a carrier.
+>
+> **UPDATE 2026-08-31 (drain run 13): the carried exit criterion did not close
+> here, and it did not lapse either — it TRANSFERRED with 4.1.** The selection
+> stage it quantifies over was never built: 4.1 shipped a six-stage
+> deterministic prefix (`schema-validity`, `path-ownership`,
+> `holdout-disclosure`, `budget`, `near-duplicate`, `metric-verdict`), none of
+> which reads the frozen corpus. Both the fixture and the `failure`-axis
+> deferral above are carried into
+> `stubs/road-to-metered-proposer-evaluation.md` (never landed)
+> as their own items, on the AI-council verdict recorded at 4.1. Recording them
+> as vacuous a second time is exactly the accounting this phase refused.
+>
+> **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of 2026-09-01 transferred these items to [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md), which is on the trunk and carries them open. This paragraph is kept as the drain-run-13 record, not as a live pointer.
 
 - [-] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
       **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
@@ -1659,6 +1672,21 @@ once.
       **The park itself is asserted intact** — the file exists under `later/`,
       carries `status: later`, and its 2/2 council record is present. It is not
       reopened here: nothing in this change touches it.
+      **The guard survived this roadmap's own archival, and did not do so by
+      itself.** Closing the last box moved this file to `agents/roadmaps/archive/`
+      and half A went RED immediately — its `ROADMAP` constant was a hardcoded
+      active-tree path, so the whole file failed to collect (`Test Files 1
+      failed`, `Tests no tests`). Repaired 2026-08-31 (drain run 13) with a
+      two-candidate resolver that tries the active tree then `archive/` and
+      **throws** on a miss, because a resolver returning a missing path would
+      let half A scan nothing and exit green — the vacuity this file's own
+      anti-vacuity assertions exist to prevent. Sensitivity OBSERVED in both
+      directions: the archival itself was the first red (→ 9/9 after the
+      repair), and pointing both candidates at a non-existent filename reds it
+      again at collect time; the byte-identical restore (sha256
+      `16ee00372e1d7e7f42c58078395204e579e27ef943588ca6cd74b0d4a8441c6b` before
+      and after) returns 9/9. So the park stays watched after this roadmap
+      stopped being active, which is when nobody is looking.
 - [x] **5.3 Split the roles: analyzer, curator, proposer.**
       `from-skipped-parent`, which states the failure directly — do not collapse
       them into one unconstrained rewrite prompt. The master has one LLM
@@ -1749,6 +1777,54 @@ once.
         pending_ac: the paired-verdict comparison itself, which needs a second arm
       ```
 
+      **THIS BRANCH'S `[x]` ON 5.4 IS WITHDRAWN, 2026-09-01, and the withdrawal
+      is the application of the verdict above rather than a new decision.** This
+      branch closed 5.4 `[x]` on a council verdict of 2026-08-31 that called it
+      *"the single `absence-assertion` in the set"* and re-scoped the verify
+      clause to its fallback branch. A LATER council — 2-of-2 convergent,
+      2026-09-01, landed on `main` in #1786 and merged here — ruled on exactly
+      that premise and refuted it: the `absence-assertion` category was a
+      **documentation bug rather than a closure opportunity**, and using it to
+      justify a retroactive re-scope *"changes the proposition being verified
+      rather than corrects it"*. The earlier verdict rested on the mistaken
+      category; the later one removed it. So the box returns to `[-]`
+      TRANSFERRED alongside 4.1, 5.6 and AC-8, and the `verify:` clause stands
+      verbatim with its `paired_verdict` comparison unmet.
+
+      **What the earlier verdict established still holds and is not discarded:**
+      the deterministic path IS pinned as the only proposer and cannot be
+      displaced silently, proven by a sabotage run re-executed in this session
+      (1 failed / 3 passed under a planted provider `fetch`, byte-identical
+      restore sha256 `9b209a1c…198`, 4/4). That is the `discharged_ac` half. What
+      it never established is the paired-verdict comparison, which needs a
+      second arm that does not exist — the `pending_ac` half, and the half a
+      `[x]` would have claimed.
+      **What is closed, stated narrowly so the closure cannot be read as more
+      than it is.** The branch that obtains today — *"Otherwise the
+      deterministic path stays"* — is closed, and it is closed because it is
+      ENFORCED rather than merely written.
+      **What is NOT closed, and is not dropped either.** The `verify:` clause's
+      `paired_verdict` comparison is UNMET, and remains mandatory before any LLM
+      proposer may survive. Its precondition is false: there is no second arm.
+      **The carrier is the guard itself, not a promise.** The day
+      `src/scripts/_lib/llm_candidate_proposer.ts` lands, the absence test below
+      turns RED and this step reopens — that module is the recheck trigger the
+      retired `guarded_baseline` block named, transcribed here rather than
+      deleted with it. The block's other fields are transcribed with it:
+      category `absence-assertion`, scope
+      `src/scripts/_lib/candidate_proposer.ts`, command
+      `npx vitest run tests/scripts/proposer_survival_bar.test.ts`,
+      red_proof *sabotage run 2026-08-31 — 1 failed / 3 passed, restored 4/4*,
+      sabotage_model *added a fetch to an API host inside the proposer module*.
+      The annotation itself is removed because the contract rejects it on any
+      glyph but `[ ]`, and because a surviving annotation blocks archival
+      unconditionally — not because its content stopped being true.
+      **Both seats made the narrowness a CONDITION of the verdict**, so it is
+      recorded as one: anthropic — *"If rescoped poorly … it would weaken the
+      contract. If rescoped well (explicitly noting the fallback branch, the
+      unmet comparison, and the recheck trigger), it exemplifies the category's
+      intended use."*
+
       **RECATEGORISED 2026-09-01 from `absence-assertion` to
       `future-mechanism`, on a 2-of-2 convergent AI council
       (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, subscription
@@ -1799,6 +1875,20 @@ once.
       loop"* (1 failed / 3 passed); byte-identical restore returns 4/4. Both
       anti-vacuity assertions — a non-empty scanned set and a stripper that does
       not empty its input — ship with it, so a scan over nothing cannot pass.
+      **RE-PROVED INDEPENDENTLY 2026-08-31 (drain run 13) before the box was
+      flipped, because a box turned green on a previous run's recorded
+      sensitivity is a box turned green on a citation.** The same sabotage was
+      re-run from scratch: appending an `async` export whose body is a `fetch`
+      to a provider API host — the literal is deliberately not written here, so
+      this evidence block cannot trip 5.2's own scan — to
+      `src/scripts/_lib/candidate_proposer.ts` turned
+      `npx vitest run tests/scripts/proposer_survival_bar.test.ts` RED at
+      **1 failed / 3 passed**, failing on *"no model is in the proposer loop"*
+      at the `expect(hits).toEqual([])` assertion. The restore was
+      byte-identical — sha256 `9b209a1c865ca202cd3959d2a060cb666897acd0a6c6d6a1df6a714c16f2d198`
+      before and after, `git diff` on the path empty — and the suite returned
+      **4/4**. So the guard that carries this closure was observed firing in
+      the same session that closed it.
       least one pre-registered eval family, with an explicit hypothesis and a
       named falsifier per mutation. Otherwise the deterministic path stays.
       verify: the comparison is a `paired_verdict` run, not an argument.
@@ -1855,17 +1945,45 @@ once.
       parents proposed. Improvement per evolution dollar is a reported figure.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
-      ```yaml
-      guarded_baseline:
-        category: future-mechanism
-        scope: src/scripts/_lib/evolution_roi.ts (assertCheapestFirst, LADDER, nextTier)
-        command: npx vitest run tests/scripts/_lib/evolution_roi.test.ts
-        red_proof: sabotage run 2026-08-31 — cheapest-first comparison neutralised, 3 of 28 tests RED, 28/28 GREEN after restore
-        sabotage_model: replaced the guard condition `if (cheapest !== null && a.tier !== cheapest)` at src/scripts/_lib/evolution_roi.ts:217 with `if (false)`, so an escalation past an untried cheaper rung stops being refused
-        recheck_when: src/scripts/_lib/ladder_attempt_recorder.ts recordLadderAttempt
-        discharged_ac: the ROI half is met with a live subject — every completed run of the `run` verb emits a report and buildRunReport REFUSES one without the figure
-        pending_ac: "a cheaper model is tried before an expensive one" under a real attempt sequence — nothing in this tree makes a metered proposer call, so the ordering is policed over a population of zero
-      ```
+      **TRANSFERRED 2026-08-31 (drain run 13) to
+      `stubs/road-to-metered-proposer-evaluation.md` (never landed),
+      on the same AI-council verdict as 4.1 and AC-8 — 2/2 convergent,
+      anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
+      present.** `[-]` means TRANSFERRED: never met, never dropped, open and
+      unweakened in the receiver. Verbatim from the openai seat: *"ROI reporting
+      exists, but cheapest-first execution cannot be verified without recorded
+      model attempts; transfer must retain that unmet conjunct while preserving
+      the completed ROI evidence."*
+      **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
+      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      which is on the trunk and carries it open as `Transferred whole`. Kept as
+      the drain-run-13 record, not as a live pointer.
+      **BOTH conjuncts transfer together, and that coupling is the council's,
+      not a convenience.** The anthropic seat: *"The ROI mechanism producing a
+      figure for a run that never happened is shape without substance — same as
+      item 4's criteria committed without a run. Keeping both conjuncts together
+      in the transfer preserves this."* So the ROI half's closure below is
+      inherited evidence in the receiver, and the receiver is forbidden from
+      reading this transfer as *"ROI reporting remains unbuilt"* — the openai
+      seat named that misreading explicitly as a thing the transfer must not
+      suggest.
+      **The retired `guarded_baseline` block, transcribed rather than deleted:**
+      category `future-mechanism`, scope
+      `src/scripts/_lib/evolution_roi.ts (assertCheapestFirst, LADDER,
+      nextTier)`, command `npx vitest run tests/scripts/_lib/evolution_roi.test.ts`,
+      red_proof *sabotage run 2026-08-31 — cheapest-first comparison
+      neutralised, 3 of 28 tests RED, 28/28 GREEN after restore*, sabotage_model
+      *replaced the guard condition
+      `if (cheapest !== null && a.tier !== cheapest)` at
+      `src/scripts/_lib/evolution_roi.ts:217` with `if (false)`, so an escalation
+      past an untried cheaper rung stops being refused*, recheck_when
+      `src/scripts/_lib/ladder_attempt_recorder.ts recordLadderAttempt`,
+      discharged_ac *the ROI half is met with a live subject — every completed
+      run of the `run` verb emits a report and `buildRunReport` REFUSES one
+      without the figure*, pending_ac *"a cheaper model is tried before an
+      expensive one" under a real attempt sequence — nothing in this tree makes
+      a metered proposer call, so the ordering is policed over a population of
+      zero*.
       **PARTLY DONE 2026-08-31, and the split is per verify-clause conjunct
       rather than per convenience.** `src/scripts/_lib/evolution_roi.ts`.
       **The ROI conjunct is CLOSED, with a production caller.** `buildRunReport`
@@ -2803,6 +2921,25 @@ once.
       roadmap lifts the live-harness park — not to this one."*
       before the first candidate run, and the run report carries an
       evolution-ROI figure.
+      **TRANSFERRED 2026-08-31 (drain run 13) to
+      `stubs/road-to-metered-proposer-evaluation.md` (never landed),
+      on the same AI-council verdict as 4.1 and 5.6 — 2/2 convergent,
+      anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, both seats
+      present.** `[-]` means TRANSFERRED, on the precedent AC-9 sets four rows
+      below: never met, never dropped, open and unweakened in the receiver.
+      Verbatim from the openai seat: *"Precommitted criteria and report shape do
+      not constitute the actual candidate run required by AC-8."* The anthropic
+      seat named the floor: *"passing a test over a population of zero … or
+      satisfying a precondition without the consequent … cannot be claimed as
+      verified behaviour."*
+      **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
+      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      which is on the trunk and carries it open as `Transferred whole`. Kept as
+      the drain-run-13 record, not as a live pointer.
+      **The already-satisfied conjunct transfers as INHERITED EVIDENCE, not as
+      unbuilt work** — the openai seat made that a condition of the transfer:
+      *"transferring Item 4 must not erase the already-satisfied precommitment
+      conjunct."* The audit below is what the receiver inherits, unchanged.
       **RE-AUDITED 2026-08-31 after 5.6 landed: still OPEN, and the reason
       moved rather than went away.**
       *First conjunct, unchanged:*
