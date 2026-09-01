@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Drain 14 — Phase 2 metered-capture readiness
 
 Reconnaissance for `road-to-governed-evidence-production` Phase 2 (steps 2.1,
