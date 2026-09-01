@@ -26,6 +26,7 @@ import {
     DERIVED_MARKER,
     derive_category_hits,
     render_derived_head_values,
+    stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
@@ -312,25 +313,41 @@ describe('derive_categories — recorded-null forms beyond the literal marker', 
     });
 });
 
-describe('draft head cadence — the decision this fixture makes a one-line diff', () => {
+describe('draft head cadence — REVERSED 2026-09-01, the marker now refuses', () => {
     /**
      * `HEAD..HEAD` is empty by construction and needs no tag, so the span is
      * the same on a shallow CI checkout as it is locally. An empty span
      * derives no categories, which isolates the draft-marker branch: whatever
      * this asserts about the exit code is owned by that branch alone.
+     *
+     * UPDATED 2026-09-01 rather than deleted, so the change of contract is
+     * visible in the diff. These two cases previously pinned the ADVISORY
+     * behaviour — "warns and does NOT red the build". They now pin the
+     * refusal. The helper also captures stderr, because the message moved
+     * there with the exit code.
      */
-    function runOnDraftHead(): { code: number; stdout: string } {
+    function runOnDraftHead(sectionsBefore = ''): { code: number; stdout: string; stderr: string } {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'release-head-'));
         const changelog = path.join(dir, 'CHANGELOG.md');
         const head = render_release_head({
             'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
         }).join('\n');
-        fs.writeFileSync(changelog, `## [9.99.0](https://example.invalid) (2026-01-01)\n\n${head}\n`);
+        fs.writeFileSync(
+            changelog,
+            `${sectionsBefore}## [9.99.0](https://example.invalid) (2026-01-01)\n\n${head}\n`,
+        );
         let stdout = '';
-        const spy = vi
+        let stderr = '';
+        const outSpy = vi
             .spyOn(process.stdout, 'write')
             .mockImplementation((chunk: string | Uint8Array): boolean => {
                 stdout += String(chunk);
+                return true;
+            });
+        const errSpy = vi
+            .spyOn(process.stderr, 'write')
+            .mockImplementation((chunk: string | Uint8Array): boolean => {
+                stderr += String(chunk);
                 return true;
             });
         try {
@@ -344,27 +361,120 @@ describe('draft head cadence — the decision this fixture makes a one-line diff
                 '--changelog',
                 changelog,
             ]);
-            return { code, stdout };
+            return { code, stdout, stderr };
         } finally {
-            spy.mockRestore();
+            outSpy.mockRestore();
+            errSpy.mockRestore();
             fs.rmSync(dir, { recursive: true, force: true });
         }
     }
 
-    it('a surviving draft marker warns and does NOT red the build', () => {
-        const { code, stdout } = runOnDraftHead();
-        expect(code).toBe(0);
-        expect(stdout).toContain('auto-derived head line(s) not yet rewritten for 9.99.0');
-        expect(stdout).toContain('Behaviour changes');
-        expect(stdout).toContain('advisory, not blocking');
+    it('a surviving draft marker REDS the build and names the section', () => {
+        const { code, stderr } = runOnDraftHead();
+        expect(code).toBe(1);
+        expect(stderr).toContain('unrewritten auto-derived head line(s) in the 9.99.0 section');
+        expect(stderr).toContain('Behaviour changes');
+        // The old contract, pinned as gone rather than merely absent from the
+        // assertions above: a later edit that reinstates the warning wording
+        // has to delete this line to pass, which makes the revert visible.
+        expect(stderr).not.toContain('advisory, not blocking');
     });
 
-    it('the draft marker is not itself a contradiction', () => {
+    it('the draft marker refuses on its OWN mechanism, not as a _none_ contradiction', () => {
+        // Unchanged expectation, changed meaning. `highlight_contradictions`
+        // still returns nothing for a draft marker — the marker is not a
+        // `_none_` claim — and the exit code above is therefore owned by the
+        // `stale_draft_labels` branch alone. Asserting both halves keeps the
+        // two mechanisms from being conflated by a later refactor.
         const curated = {
             ...ALL_NONE,
             'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
         };
         expect(highlight_contradictions(curated, derive_categories([]))).toEqual([]);
+        expect(stale_draft_labels(curated)).toEqual(['Behaviour changes']);
+    });
+});
+
+describe('§ 1.3 — the read is scoped to the section under release', () => {
+    /**
+     * Eighteen `_auto-derived, rewrite before merge:_` lines are already
+     * published across 14.9.0-14.13.0. If the gate read the FILE rather than
+     * the SECTION, every future release would be red until an editorial pass
+     * nobody has scheduled — a correctness guard turned into a permanent red.
+     *
+     * ORDERING IS THE WHOLE FIXTURE, and this is a correction made by
+     * sabotage rather than by review. The first version of this test put the
+     * target section first, which is the newest-first order a real changelog
+     * happens to have. Neutralising the scoping — swapping
+     * `parse_curated_head(section.body)` for a read of the whole file — left
+     * it GREEN, because `parse_curated_head` takes the FIRST match of each
+     * label and the target's line was already first. The test proved nothing
+     * about scope; it proved that the target sorts first.
+     *
+     * A marker-bearing section placed BEFORE the target is the state that
+     * discriminates, and it is not hypothetical: an era split, a patch cut on
+     * an older line, or any hand edit that reorders the file produces it. With
+     * that ordering a file-wide read reds and a section-scoped read does not.
+     */
+    function runWithSections(first: string, second: string, target = '9.99.0'): number {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'release-scope-'));
+        const changelog = path.join(dir, 'CHANGELOG.md');
+        fs.writeFileSync(
+            changelog,
+            `# Changelog\n\n${first}\n\n${second}\n`,
+        );
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            return main([
+                '--version',
+                target,
+                '--from',
+                'HEAD',
+                '--to',
+                'HEAD',
+                '--changelog',
+                changelog,
+            ]);
+        } finally {
+            spy.mockRestore();
+            errSpy.mockRestore();
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }
+
+    const CLEAN_HEAD = render_release_head({
+        'Behaviour changes': 'the port branch now refuses on an unrewritten head.',
+    }).join('\n');
+    const MARKED_HEAD = render_release_head({
+        'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
+    }).join('\n');
+
+    const section = (v: string, date: string, head: string): string =>
+        `## [${v}](https://example.invalid) (${date})\n\n${head}`;
+
+    const TARGET_CLEAN = section('9.99.0', '2026-01-01', CLEAN_HEAD);
+    const TARGET_MARKED = section('9.99.0', '2026-01-01', MARKED_HEAD);
+    const OLD_MARKED = section('9.98.0', '2025-12-01', MARKED_HEAD);
+    const OLD_CLEAN = section('9.98.0', '2025-12-01', CLEAN_HEAD);
+
+    it('a marker-bearing historical section ABOVE the target does not block it', () => {
+        // The sensitive ordering. This is the case that goes red the moment
+        // the read stops being section-scoped.
+        expect(runWithSections(OLD_MARKED, TARGET_CLEAN)).toBe(0);
+    });
+
+    it('a marker-bearing historical section BELOW the target does not block it', () => {
+        // The newest-first ordering a real changelog has. Kept because it is
+        // the realistic layout — but it is NOT the sensitive one, and saying
+        // so here stops a later reader from trusting it as scope evidence.
+        expect(runWithSections(TARGET_CLEAN, OLD_MARKED)).toBe(0);
+    });
+
+    it('the same marker in the TARGET section still refuses — the scope is not a hole', () => {
+        // Without this, "exits 0" above is equally satisfied by a gate that
+        // reads nothing at all.
+        expect(runWithSections(TARGET_MARKED, OLD_CLEAN)).toBe(1);
     });
 });
 

@@ -18,7 +18,33 @@
  * `_none_` everywhere. That removes the guaranteed first-run red (9.17.0,
  * 9.18.0) without blunting this gate: a machine-written `_none_` was never the
  * failure it was built for — a HUMAN writing one was (9.13.0, 9.14.0), and that
- * still fails here. An unrewritten derived line warns; it never blocks.
+ * still fails here.
+ *
+ * ## REVERSED 2026-09-01 — an unrewritten derived line now BLOCKS
+ *
+ * This header used to end the paragraph above with *"An unrewritten derived
+ * line warns; it never blocks."* That is no longer the behaviour, and the
+ * sentence is replaced rather than deleted so the reversal is legible.
+ *
+ * **The premise was never wrong; the conclusion drawn from it was.** A derived
+ * line does carry true evidence — the deriving reason plus citing SHAs — so it
+ * is not false-if-shipped. What the advisory conclusion assumed is that
+ * "unpolished-if-unedited" would in fact get edited. Measured at `b50b27281`,
+ * it did not: `_auto-derived, rewrite before merge:_` shipped in FIVE
+ * consecutive released sections — 14.9.0 (4 lines), 14.10.0 (2), 14.11.0 (4),
+ * 14.12.0 (4), 14.13.0 (4), eighteen lines in total. A warning that has been
+ * ignored eighteen times is not a warning; it is a comment.
+ *
+ * **Instructing authority:** the maintainer, in the closing instruction of the
+ * 2026-09-a inbox round, requiring that the release-placeholder defect be taken
+ * into a roadmap and fixed. Carried into
+ * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1, which
+ * is the record of this change.
+ *
+ * **What did NOT change.** The read stays scoped to the section under release
+ * (`extract_changelog_section` below), so the eighteen historical lines cannot
+ * red a future release; a filled field is still never judged for prose quality;
+ * and the `_none_` contradiction check is untouched.
  *
  * Derivation is deliberately conservative (documented per-label below):
  * a false red makes every release annoying; a miss only returns the head to
@@ -29,7 +55,8 @@
  *       [--changelog <path>]
  *
  * `--from` defaults to the latest reachable release tag before `--to`
- * (default HEAD). Exit codes: 0 plausible · 1 contradiction · 2 usage error.
+ * (default HEAD). Exit codes: 0 plausible · 1 refusal (an unrewritten
+ * auto-derived head line, or a `_none_` contradiction) · 2 usage error.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -37,6 +64,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import {
+    DERIVED_MARKER,
     HEAD_LABELS,
     HEAD_NONE,
     type SpanCommit,
@@ -116,9 +144,17 @@ export function highlight_contradictions(
 
 /**
  * Exported so the advisory-vs-blocking decision is a fixture, not a claim.
+ *
+ * CORRECTED 2026-09-01 with the reversal. This comment used to say that
  * `stale_draft_labels` firing while the exit code stays 0 is the behaviour the
- * cadence blocker adjudicates; pinning it here makes either branch of that
- * decision a one-line diff with a test that notices.
+ * cadence blocker adjudicates. That is no longer what happens — the branch at
+ * the call site returns 1 — and the sentence is replaced rather than deleted
+ * because it was the load-bearing claim on the other side.
+ *
+ * What it got RIGHT is worth keeping: the decision was a one-line diff with a
+ * test that notices, and the reversal proved it. The two fixtures that pinned
+ * the advisory branch were updated in place, not deleted, so the change of
+ * contract reads off the diff.
  */
 export function main(argv: readonly string[]): number {
     let version: string | null = null;
@@ -199,17 +235,34 @@ export function main(argv: readonly string[]): number {
             'could contradict. Deleting the scan root is not the same state — that is the ' +
             'throwing branch, not this one.',
     });
-    // A generator-derived line that nobody rewrote is a prose gap, never a
-    // contradiction: the line's evidence is true, it is just unpolished. Warn
-    // so the omission is visible, and keep the exit code owned solely by the
-    // `_none_` check — a warning that reds the build is the guaranteed-red
-    // failure mode this whole change exists to remove.
+    // A generator-derived line that nobody rewrote REFUSES the release.
+    //
+    // REVERSED 2026-09-01. This block used to warn and return the exit code to
+    // the `_none_` check alone, on the reasoning that a derived line is true
+    // and merely unpolished. The reasoning still holds and the conclusion does
+    // not: the warning was emitted and ignored through five consecutive
+    // released sections. See this file's header for the full record and the
+    // instructing authority.
+    //
+    // SCOPE, and it is the load-bearing half (roadmap § 1.3): `curated` comes
+    // from `parse_curated_head(section.body)` above, and `section` is the ONE
+    // section `extract_changelog_section` cut for `--version`. No read here
+    // reaches another section, another era file, or `docs/archive/`. That is
+    // what keeps eighteen historical marker lines from turning this into a
+    // permanent red on every future release.
     const drafts = stale_draft_labels(curated);
     if (drafts.length > 0) {
-        process.stdout.write(
-            `⚠️  auto-derived head line(s) not yet rewritten for ${version}: ` +
-                `${drafts.join(', ')} — advisory, not blocking.\n`,
+        process.stderr.write(
+            `❌  unrewritten auto-derived head line(s) in the ${version} section: ` +
+                `${drafts.join(', ')}\n` +
+                `    Each still carries \`${DERIVED_MARKER}\` — the generator's draft, not a ` +
+                'curated claim.\n' +
+                `    Rewrite those line(s) in the ${version} section of the changelog. Only that ` +
+                'section is read;\n' +
+                '    historical sections carrying the same marker are out of scope and do not ' +
+                'block this release.\n',
         );
+        return 1;
     }
     const derived = derive_categories(span);
     const contradictions = highlight_contradictions(curated, derived);

@@ -39,11 +39,27 @@ export const HEAD_NONE = '_none_';
 /**
  * Prefix marking a head line the generator derived rather than a human wrote.
  *
- * Machine-checkable so the gate can warn when one survives to merge, and
+ * Machine-checkable so the gate can REFUSE when one survives to merge, and
  * readable so the line still says something true to anyone who ships it
  * unedited. It is not a placeholder token: the line it introduces carries real
  * evidence (the reason plus the citing SHAs), so nothing here is
  * wrong-if-shipped — only unpolished-if-unedited.
+ *
+ * **REVERSED 2026-09-01 — "only unpolished-if-unedited" no longer implies
+ * "therefore advisory".** The clause above is kept because it is TRUE, and the
+ * conclusion that used to follow from it is the part that was falsified: the
+ * gate warned, and the marker shipped anyway in five consecutive released
+ * sections (14.9.0 through 14.13.0, eighteen lines, re-derived at
+ * `b50b27281`). `check_release_highlights` now exits non-zero on a marker in
+ * the section under release, and the sibling annotation in that file's header
+ * carries the full reversal.
+ *
+ * **Instructing authority:** the maintainer's closing instruction in the
+ * 2026-09-a inbox round, carried into
+ * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1.
+ *
+ * Nothing about the marker's own shape changes here — it is still one
+ * definition, still shared with the generator that writes it.
  */
 export const DERIVED_MARKER = '_auto-derived, rewrite before merge:_';
 
@@ -279,6 +295,44 @@ export function render_derived_head_values(
         const remainder = shas.length - shown.length;
         const more = remainder > 0 ? ` +${remainder} more` : '';
         out[label] = `${DERIVED_MARKER} ${reason} in ${shown.join(', ')}${more}.`;
+    }
+    return out;
+}
+
+/**
+ * Reasons the section under release must NOT be published, in the order a
+ * reader should act on them. Empty means nothing here blocks publication.
+ *
+ * Added 2026-09-01 for roadmap § 3.1. It exists because the two IRREVERSIBLE
+ * transitions — the annotated tag and the GitHub Release body — happen inside
+ * `release.ts` after the PR gate has already passed, and nothing re-read the
+ * section between them. `check_release_highlights` guards the PR; this guards
+ * the publish.
+ *
+ * **It takes a section body, never a path and never a repository.** A guard
+ * that reads a file decides for itself what it is guarding, and the two
+ * refused earlier attempts both died there: one placed the check inside a pure
+ * formatter, which has no idea whether it is publishing, and one read the live
+ * changelog from a drill fixture. The caller cuts the section and owns the
+ * decision to publish; this function only answers whether that text is
+ * publishable.
+ *
+ * **Marker-only today, and the omission is deliberate rather than forgotten.**
+ * The generator's authoring comment (`<!-- Curated head: fill before
+ * merge…`) is the OTHER published-integrity defect and is NOT checked here:
+ * the generator still writes it into every section it cuts, so refusing on it
+ * would red every release on its first run — Risk 1 of the roadmap, reproduced
+ * exactly. Roadmap § 2.1 has to land first, and it is open on a design fork.
+ * See `agents/evidence/analysis/publication-integrity-phase2-fork.md`.
+ */
+export function publication_blockers(sectionBody: string, version: string): string[] {
+    const out: string[] = [];
+    if (sectionBody.includes(DERIVED_MARKER)) {
+        out.push(
+            `the ${version} section still carries \`${DERIVED_MARKER}\` — the generator's ` +
+                'draft head, not a curated claim. Rewrite those line(s) on ' +
+                `${'`main`'} and re-run.`,
+        );
     }
     return out;
 }
