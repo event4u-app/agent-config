@@ -120,6 +120,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-code-comments
       - task: lint-never-silent
       - task: lint-example-fences
       - task: lint-workflow-paths
