@@ -38,7 +38,7 @@
  * **Instructing authority:** the maintainer, in the closing instruction of the
  * 2026-09-a inbox round, requiring that the release-placeholder defect be taken
  * into a roadmap and fixed. Carried into
- * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1, which
+ * `agents/roadmaps/archive/road-to-publication-integrity-hard-fail.md` § Phase 1, which
  * is the record of this change.
  *
  * **What did NOT change.** The read stays scoped to the section under release

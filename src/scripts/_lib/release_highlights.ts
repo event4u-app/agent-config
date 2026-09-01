@@ -58,7 +58,7 @@ export const HEAD_NONE = '_none_';
  *
  * **Instructing authority:** the maintainer's closing instruction in the
  * 2026-09-a inbox round, carried into
- * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1.
+ * `agents/roadmaps/archive/road-to-publication-integrity-hard-fail.md` § Phase 1.
  *
  * Nothing about the marker's own shape changes here — it is still one
  * definition, still shared with the generator that writes it.
