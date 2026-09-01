@@ -16,12 +16,14 @@
  * import path changes.
  */
 import { spawnSync } from 'node:child_process';
+import { publication_blockers } from './_lib/release_highlights.js';
 import * as fs from 'node:fs';
 import process from 'node:process';
 
 import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
 import {
     extract_changelog_section,
+    tag_message_from_section,
     pr_body_from_section,
 } from './_lib/release_material.js';
 
@@ -34,6 +36,7 @@ import {
     REPO_ROOT,
     SystemExitError,
     _cap_body,
+    read_changelog_text,
 } from './release_env.js';
 
 function die(msg: string, code = 2): never {
@@ -718,3 +721,84 @@ export {
     run,
     watch_pr_checks,
 };
+
+/**
+ * Refuse an irreversible publication whose section is not publishable.
+ *
+ * Called at the THREE call sites that publish, never inside a formatter:
+ * annotated-tag creation, the resumed push of a tag created but never pushed,
+ * and the GitHub Release body. A pure formatter has no notion of whether it is
+ * actually publishing, which is why an earlier attempt at that placement was
+ * refused; the call site does, and it is the one that can still stop.
+ *
+ * **The resumed push is the bypass worth naming.** The changelog is read only
+ * in the tag-CREATION branch, so a resume over a tag that was created but never
+ * pushed reached `_push_tag` having read nothing. A guard covering creation
+ * alone misses exactly that path, and pushing a tag is as irreversible as
+ * creating it.
+ *
+ * `die` throws before the command runs, so nothing irreversible fires after a
+ * refusal — an ordering asserted against the drill's recorded command list
+ * rather than by reading this comment.
+ *
+ * Lives here rather than in `release.ts` because that file is 2000+ lines and
+ * every line above 1500 is charged by the source-size growth ratchet, while
+ * this module is far below it and already owns `die`. Behaviour unchanged.
+ */
+export function _refuse_unpublishable(sectionBody: string, version: string, surface: string): void {
+    const blockers = publication_blockers(sectionBody, version);
+    if (blockers.length === 0) {
+        return;
+    }
+    die(
+        `refusing to publish the ${surface} for ${version} — ` +
+            `${String(blockers.length)} publication blocker(s):\n` +
+            blockers.map((b) => `    - ${b}`).join('\n'),
+    );
+}
+
+/**
+ * Read the section under release and refuse if it is not publishable.
+ *
+ * One helper for all three publish sites so the read, the missing-section
+ * refusal and the blocker refusal cannot drift apart between them — the
+ * resumed-push path drifted exactly that way before this existed, reaching
+ * `_push_tag` having read nothing.
+ */
+export function guard_publication(version: string, surface: string): void {
+    const section = extract_changelog_section(read_changelog_text(), version);
+    if (!section) {
+        die(
+            `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${version} — ` +
+                `refusing to publish the ${surface}`,
+        );
+        return;
+    }
+    _refuse_unpublishable(section.body, version, surface);
+}
+
+/**
+ * Derive the tag message from the MERGED changelog, refuse if unpublishable,
+ * create the annotated tag and push it.
+ *
+ * The three steps are one function because they are one irreversible act with
+ * one precondition, and splitting them across call sites is what let the
+ * resumed-push path reach `_push_tag` having read nothing. Sequencing is
+ * load-bearing (release-truth Phase 1, council 2026-08-03): merge FIRST, pull
+ * main, THEN derive the message — tagging before the merge reads a section that
+ * does not exist yet. The annotated tag replaces the previous lightweight one so
+ * tag metadata is a fourth surface carrying the same single-source content.
+ */
+export function create_and_push_annotated_tag(version: string): void {
+    const merged = extract_changelog_section(read_changelog_text(), version);
+    if (!merged) {
+        die(
+            `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${version} — ` +
+                'refusing to tag a release whose changelog entry is missing',
+        );
+        return;
+    }
+    _refuse_unpublishable(merged.body, version, 'annotated tag');
+    run(['git', 'tag', '-a', version, '-m', tag_message_from_section(merged.body, version)]);
+    _push_tag(version);
+}
