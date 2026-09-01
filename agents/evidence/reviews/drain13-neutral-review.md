@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: original-review -->
 
 # Drain run 13 — neutral review of PR #1789 and PR #1790
 
