@@ -31,7 +31,7 @@ import {
     PREFIX_ASSIGNABLE_FAMILIES,
     familyForStage,
     runCascade,
-    type CascadeStage,
+    type StageId,
 } from '../../src/scripts/_lib/evaluation_cascade.js';
 import type { MetricRow } from '../../src/scripts/_lib/evaluation_vector.js';
 
@@ -185,7 +185,7 @@ describe('abort on the FIRST hard failure, at zero model calls', () => {
     });
 
     it('every abort reports zero model calls, on every stage', () => {
-        const seen = new Set<CascadeStage>();
+        const seen = new Set<StageId>();
         const cases: { raw: unknown; plan: typeof PLAN }[] = [
             { raw: { nope: 1 }, plan: PLAN },
             { raw: record({ mutations: [{ path: 'src/x.ts', content: 'x' }] }), plan: PLAN },

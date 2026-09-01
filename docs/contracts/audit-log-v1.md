@@ -23,6 +23,7 @@ Last refreshed: 2026-05-11.
 | Side | Responsibility | Where |
 |---|---|---|
 | **Producer** | One JSONL line per phase end, derived from the phase's [`decision-trace-v1.md`](decision-trace-v1.md) JSON and the [`memory-visibility-v1.md`](memory-visibility-v1.md) counts. | `work_engine` hook on phase boundary. |
+| **Producer** (`activation`) | One line per observed artifact, from filesystem and manifest observation only. Independent of anything that classifies the receipt — claims in [`activation-receipt-trust-boundary.md`](activation-receipt-trust-boundary.md). | `src/scripts/activation_receipt.ts`. |
 | **Consumer** | Pattern mining + human review gate. Never edits a written line; corrections are new lines with `type=supersede`. | [`extract_audit_patterns.py`](../../src/scripts/extract_audit_patterns.ts). |
 
 ## File location
@@ -84,9 +85,9 @@ Single-line. The pretty-printed reference shape:
 | `verify.claims` / `verify.first_try_passes` | int | Verify-gate counts. |
 | `rules_applied` | string[] | Stable rule ids the producer attributes to this phase. Bounded to ≤ 32; remainder dropped silently. **Not necessarily observed.** Both shipped producers write a fixed literal, so a consumer MUST call `isProducerConstantField` (`src/scripts/_lib/audit_field_provenance.ts`) before computing any per-rule rate over it. The prose here used to read "rule ids whose Iron Law fired this phase", which is false for every line either producer has ever written — the claim was deleted rather than softened, and replaced by a check, because a contract that describes a constant as an observation makes every downstream rate an artefact that looks like a finding. Found by mining the audit stream: `extract_audit_patterns --min-count 2` mints exactly one pattern, `implement:success:delegation-policy`, count 914. |
 | `outcome_semantics` | int (optional) | Which version of the `DispatchOutcome` → `outcome` mapping produced this line. `1` = unconditional (`DONE`/`DONE_WITH_CONCERNS` always `success`); `2` = contract-gated (a `code-change` dispatch claiming success with a **measured** empty diff does not resolve to `success`). **An ABSENT field means `1`** — every line written before 2026-08-30 predates the versioning and carries no marker. A reader aggregating across the cutover MUST segment on this field or normalize deliberately; inferring the semantics from a timestamp is not sufficient, because producers upgrade independently. Rationale: an enforcement gate rolls back, but a labelling change poisons historical analysis permanently, since lines here are append-only and cannot be rewritten. |
-| `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. Both shipped producers emit `ids-only`, because both carry `rules_applied`. |
+| `privacy_class` | enum | **Mandatory.** What this line declares about ITSELF: `counts-only` (counts, enums, timestamps, package-minted opaque ids) or `ids-only` (the former, plus stable artefact ids the package governs — rule ids, skill ids, task-class ids). Defined once in `src/scripts/_lib/privacy_class.ts`. A consumer deciding whether the stream is safe to aggregate, export or ship reads this field rather than re-deriving the answer from each producer's source. All three shipped producers emit `ids-only`. The two older ones carry `rules_applied`; the activation producer (`src/scripts/_lib/activation_receipt_producer.ts`) carries an artifact id, which is the same class of package-governed stable id. |
 | `skills_applied` | string[] (optional) | Stable skill ids applied this phase — the skills counterpart of `rules_applied`, absent from v1 until 2026-08-30. Ids only, never bodies. Bounded to ≤ 32; remainder dropped silently. **ABSENT and `[]` are different observations and readers MUST NOT fold them together:** the key omitted means *not recorded* (the producer had no skill observation to offer), `[]` means *recorded, and none applied*. A reader that treats a missing key as "none" cannot distinguish no signal from a negative signal, which is precisely what a per-asset report needs `unknown` for. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
-| `activation` | object (optional) | The six-rung activation ladder for one artefact, plus the precedence reason a rung was not reached. Shape and semantics in `src/scripts/_lib/activation_ladder.ts`; added 2026-08-30 by `road-to-governed-harness-evolution` 1.1/1.3. **ABSENT and a rung set to `not-reached` are different observations and readers MUST NOT fold them together** — an absent rung means *not observed* and reads `unknown`, and `ladderRate()` keeps `unknown` out of its denominator rather than counting it either way. This is the same distinction `skills_applied` above draws between an omitted key and `[]`, and it exists for the same reason: a reader that folds them cannot tell no signal from a negative signal, and every downstream rate is then inflated by exactly the capture gap. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. |
+| `activation` | object (optional) | The six-rung activation ladder for one artefact, plus the precedence reason a rung was not reached. Shape and semantics in `src/scripts/_lib/activation_ladder.ts`; added 2026-08-30 by `road-to-governed-harness-evolution` 1.1/1.3. **ABSENT and a rung set to `not-reached` are different observations and readers MUST NOT fold them together** — an absent rung means *not observed* and reads `unknown`, and `ladderRate()` keeps `unknown` out of its denominator rather than counting it either way. This is the same distinction `skills_applied` above draws between an omitted key and `[]`, and it exists for the same reason: a reader that folds them cannot tell no signal from a negative signal, and every downstream rate is then inflated by exactly the capture gap. Additive under the forward-compat rule below; `schema_version` stays `1` and no supersede lines are required. **The producer arrived 2026-09-01** (`road-to-governed-evidence-production` 1.1); until then the field was specified and never written. Its independence and cost claims are in [`activation-receipt-trust-boundary.md`](activation-receipt-trust-boundary.md), and `adhered` has no admitted observation source, so a shipped receipt is absent at that rung rather than claiming adherence either way. |
 | `persona` | string \| null | Resolved `roles.active_role` from `.agent-settings.yml` at phase start. |
 | `input_kind` | enum | One of `prompt` · `ticket` · `orchestration`. Matches `WorkState.input.kind`. |
 | `type` | enum | One of `phase` · `supersede` · `note`. `supersede` carries an extra `supersedes` field with the prior `id`. |
@@ -125,7 +126,7 @@ Lines MUST NOT contain:
 - Secrets, tokens, environment values, file contents.
 - Paths outside the package's `agents/runtime/state/` and `tests/` allowlist.
 
-**Enforcement — a compile-time guard on both producers, since 2026-08-30.**
+**Enforcement — a compile-time guard on all three producers, since 2026-08-30.**
 The floor used to be prose. The file this paragraph named for months —
 tests/contracts/test_audit_log_redaction.py, deliberately written WITHOUT
 backticks so an existence check cannot read a dead name as a live claim —
@@ -139,9 +140,17 @@ resolves to `never` for any type carrying a key from `FREE_FORM_KEYS`
 (`src/scripts/_lib/runtime_journal.ts`) — `prompt`, `body`, `file_path`,
 `stdout`, `reason`, `payload` and the rest of the set an author reaches for
 when they want to stash content. Adding such a field to
-`src/scripts/_lib/orchestration_record.ts`'s `RecordInput` or
-`src/scripts/_lib/review_skipped_record.ts`'s `ReviewSkippedInput` is a BUILD
-ERROR, not a lint warning. Both directions are checked: a negative fixture
+`src/scripts/_lib/orchestration_record.ts`'s `RecordInput`,
+`src/scripts/_lib/review_skipped_record.ts`'s `ReviewSkippedInput`, or
+`src/scripts/_lib/activation_receipt_producer.ts`'s `ActivationLineInput` is a
+BUILD ERROR, not a lint warning.
+
+The third producer is where the guard's bluntness became visible and was paid
+rather than filed off: the ladder's precedence field is called `reason`, which is
+a `FREE_FORM_KEYS` member even though the value it holds is a closed six-value
+enum. The input field is therefore named `precedence_reason` and mapped to
+`reason` on emission. Widening `FREE_FORM_KEYS` to admit the safe case would have
+weakened the guard for every producer to save one line in one of them. Both directions are checked: a negative fixture
 carrying `@ts-expect-error` asserts the guard still REJECTS, so a `NoFreeForm`
 broken into an identity type fails the build instead of passing everything.
 
@@ -154,9 +163,9 @@ reach these files; that config covers `src/cli`, `src/server`, `src/shared` and
 `src/install` only, and `src/scripts/**` is reached solely by
 `tsconfig.scripts.json`. The command that checks this floor is `npm run
 typecheck`, which runs both — a bare `tsc -p tsconfig.json` here is a gate that
-scans nothing and exits green. (2) The guard binds the two shipped producers by
-name. A THIRD producer added outside that shape is still caught by nothing, and
-the honest claim remains "privacy by construction, on two paths, guarded at
+scans nothing and exits green. (2) The guard binds the three shipped producers
+by name. A FOURTH producer added outside that shape is still caught by nothing,
+and the honest claim remains "privacy by construction, on three paths, guarded at
 compile time, unscanned elsewhere".
 
 ## Append-only invariant

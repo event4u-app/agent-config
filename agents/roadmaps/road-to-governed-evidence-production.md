@@ -149,7 +149,7 @@ preference to the illustration, and the reader can see which was chosen.
       widening the key list to admit one safe case would have weakened the floor
       for all three producers.
 
-- [x] **1.2 Settle the twelve-stage enumeration before treating the stage
+- [ ] **1.2 Settle the twelve-stage enumeration before treating the stage
       semantics as decided.**
       Carried from the same step's unconverged half. An AI council round of
       2026-08-31 returned `REVISE`, degraded at 1 of 2 seats: keep the decided
@@ -160,50 +160,6 @@ preference to the illustration, and the reader can see which was chosen.
       rather than as decided.
       verify: one enumeration is committed, and a second independent pass
       reproduces it rather than proposing a different twelve.
-      **CLOSED 2026-09-01, and the enumeration is COMPUTED rather than
-      proposed.** A third proposal would have been a third answer. What settles
-      an enumeration that two proposals disagreed on is removing proposal from
-      the process: `src/scripts/_lib/cascade_stage_enumeration.ts:87` derives
-      `TWELVE_STAGES` from two committed arrays — `CASCADE_STAGES` and the
-      ladder's `RECEIPT_STAGES` (`activation_ladder.ts:58`, itself derived from
-      `LADDER_RUNGS`) — by one stated ordering rule, stable-sorted on the
-      evidence each stage needs. Nobody's judgement is in the output, and
-      changing it requires changing an array, which is a visible diff rather than
-      a differently-worded reply.
-      **The twelve**, published as a machine-checked table in
-      `docs/contracts/evaluation-cascade-stages.md`: `schema-validity`,
-      `path-ownership`, `holdout-disclosure`, `budget`, `near-duplicate`, then
-      the six receipt stages `receipt-eligible` … `receipt-adhered`, then
-      `metric-verdict`. E9's condition is met literally — activation/delivery
-      and adherence are each their own stage. The statistical stage is LAST,
-      which is where the two prior enumerations disagreed, and the reason is the
-      ordering rule rather than taste: measurement is the only evidence class
-      that requires trials to have been run.
-      **The second pass is independent in ROUTE, not in author, and that is the
-      point rather than a hedge.** A second author is a second proposal, and two
-      proposals is the state that produced the `REVISE`. Route A imports the two
-      arrays; route B (`tests/scripts/twelve_stage_enumeration.test.ts`) reads
-      the same two source FILES as text, regex-extracts the stage names, reads
-      the evidence classes from the published contract table, re-applies the
-      ordering rule itself, and never reads `TWELVE_STAGES` except for the final
-      comparison. It reproduces the committed twelve exactly.
-      **What the reproduction does NOT establish, stated so it is not read as
-      more.** Both routes read the same two arrays, so neither is evidence that
-      the arrays hold the right rungs or the right stage set. Those are E4 and
-      E9, both already decided; reopening either is a decision-revisit matter.
-      **One further check derives the ordering rule from BEHAVIOUR**, not from
-      the table: the position at which `runCascade` first reads each
-      `CascadeInput` field must rise with the evidence-class rank, so a stage
-      reordered in the body without its class being updated reds.
-      **RED-proofs, 2026-09-01, each restored byte-identically and re-verified by
-      SHA-256:**
-      7. hand-edited `TWELVE_STAGES` to a different order: **1 failed** — route B
-         never reads that constant, which is exactly the property the failure
-         mode needed. Restored.
-      8. changed one class in the contract table only: **2 failed**. Restored.
-      9. added a seventh rung in code without the table: **4 failed**. Restored.
-      10. hoisted a read of `input.receipt` above the budget stage: **1 failed**
-          on the behavioural ordering check. Restored, 6/6.
 
 - [x] **1.3 State the receipt trust boundary and the evidence-cost contract
       before the producer writes its first receipt.**
