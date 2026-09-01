@@ -606,8 +606,11 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): Evaluat
         else ledger?.complete(rel);
     }
 
-    // R0 — the capability must be unobtainable while the blocker is open. Called,
-    // not read: a text match would pass over a refusal edited into a no-op.
+    // R0 — the capability must be unobtainable unless the blocker reads GRANTED.
+    // Called, not read: a text match would pass over a refusal edited into a
+    // no-op. `resolved` now means `Status: resolved` AND `Disposition: granted`;
+    // a blocker closed as `refused`, or closed without saying which, is a
+    // refusing status here exactly like an open one.
     const status = readMergeAuthorityStatus(root);
     if (status !== 'resolved') {
         let refused = false;
@@ -621,7 +624,7 @@ export function evaluate(root: string = REPO_ROOT, ledger?: GateLedger): Evaluat
                 rule: 'R0',
                 file: 'src/scripts/_lib/promotion_capability.ts',
                 line: 1,
-                what: 'capability obtainable while the blocker is open',
+                what: 'capability obtainable while the blocker does not read granted',
                 text: `blocker status ${status}, yet acquirePromotionCapability() returned a token`,
             });
         }

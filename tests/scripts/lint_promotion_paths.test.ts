@@ -214,7 +214,17 @@ describe('R3 — candidate-derived writes into the canonical source tree', () =>
     });
 });
 
-// --- § R0 — the capability is unobtainable while the blocker is open ---------
+// --- § R0 — the capability is unobtainable unless the blocker reads GRANTED ---
+
+/** Write a throwaway roadmap carrying just the `merge-authority` blocker body. */
+function writeBlocker(dir: string, body: string): void {
+    mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
+    writeFileSync(
+        join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
+        `### blocker: merge-authority\n\n${body}`,
+    );
+}
+
 
 describe('the guarded capability', () => {
     it('reads the live blocker as open, and refuses', () => {
@@ -237,21 +247,68 @@ describe('the guarded capability', () => {
         }
     });
 
-    it('still demands a NAMED human once the blocker reads resolved', () => {
+    it('still demands a NAMED human once the blocker reads resolved AND granted', () => {
         // The positive pole: without it, every assertion above would pass on a
         // function that refuses unconditionally and could never be satisfied.
         const dir = mkdtempSync(join(tmpdir(), 'promo-cap-ok-'));
         try {
-            mkdirSync(join(dir, 'agents', 'roadmaps'), { recursive: true });
-            writeFileSync(
-                join(dir, 'agents', 'roadmaps', 'road-to-harness-promotion-bridge.md'),
-                '### blocker: merge-authority\n\n- **Status:** resolved — settled by the owner\n',
-            );
+            writeBlocker(dir, '- **Status:** resolved — settled by the owner\n- **Disposition:** granted\n');
             expect(readMergeAuthorityStatus(dir)).toBe('resolved');
             expect(() => acquirePromotionCapability({ approver: '   ', approvedAt: '2026-08-31' }, dir))
                 .toThrow(/NAMED human approver/);
             const cap = acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-08-31' }, dir);
             expect(cap.blockerStatusAtGrant).toBe('resolved');
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    // --- the grant/refuse split ---------------------------------------------
+    //
+    // `resolved` is the only closed token this repository recognises, so before
+    // this split a REFUSAL of preauthorized merge authority — the direction the
+    // AI council of 2026-09-01 chose 2/2 — could only be recorded by writing
+    // `Status: resolved`, which minted the capability the refusal refuses. These
+    // three cases pin the two poles and the ambiguous middle. Delete the
+    // `Disposition` reads in `promotion_capability.ts` and the first two fail.
+
+    it('a blocker CLOSED AS REFUSED does not mint — the refusal is not a grant', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'promo-cap-refused-'));
+        try {
+            writeBlocker(
+                dir,
+                '- **Status:** resolved — settled 2026-09-01\n' +
+                    '- **Disposition:** refused — preauthorized merge authority is NOT granted\n',
+            );
+            expect(readMergeAuthorityStatus(dir)).toBe('refused');
+            expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                .toThrow(PromotionCapabilityUnobtainableError);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('a blocker closed WITHOUT a disposition fails closed rather than granting', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'promo-cap-unclassified-'));
+        try {
+            writeBlocker(dir, '- **Status:** resolved — settled by the owner\n');
+            expect(readMergeAuthorityStatus(dir)).toBe('resolved-unclassified');
+            expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                .toThrow(PromotionCapabilityUnobtainableError);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('an OPEN blocker carrying a granted disposition still does not mint', () => {
+        // Closedness and direction are read independently and BOTH must hold, so
+        // a stray disposition line cannot pre-authorise an unanswered blocker.
+        const dir = mkdtempSync(join(tmpdir(), 'promo-cap-open-grant-'));
+        try {
+            writeBlocker(dir, '- **Status:** open\n- **Disposition:** granted\n');
+            expect(readMergeAuthorityStatus(dir)).toBe('open');
+            expect(() => acquirePromotionCapability({ approver: 'A Human', approvedAt: '2026-09-01' }, dir))
+                .toThrow(PromotionCapabilityUnobtainableError);
         } finally {
             rmSync(dir, { recursive: true, force: true });
         }
