@@ -8,11 +8,24 @@ review_by: 2027-03-31
 > **Stub — not active work.** Created 2026-09-01 (drain run 12) by the AI
 > council's **Option A3** verdict on
 > `road-to-inbox-harvest-2026-08-e-council-topology-evidence`,
-> `blocker: phase-2-benchmark-cost`. Phase 2 and its 23 dependent steps are
-> `[-]` in that roadmap and point here. `[-]` means **DEFERRED, not cancelled
+> `blocker: phase-2-benchmark-cost`. Phase 2 and its dependent steps are `[~]`
+> in that roadmap and point here. `[~]` means **DEFERRED — planned, carried,
 > and not satisfied.** Nothing was descoped for cost — token spend was
 > pre-authorised. It was descoped because the design needs capacity this
 > environment does not have.
+>
+> **Glyph note — do not "restore" this.** This stub read `[-]` until 2026-09-01.
+> In this tree `[-]` means **cancelled — scope dropped, won't happen at all**
+> and is additionally owner-reserved; `[~]` means **deferred**
+> (`docs/guidelines/agent-infra/roadmap-progress-mechanics.md:218-219`,
+> `src/agent-src/scripts/update_roadmap_progress.ts:25`,
+> `src/agent-src/templates/roadmaps.md:30`,
+> `src/agent-src/contexts/execution/terminal-states.md:41`; owner-reserved at
+> `src/agent-src/scripts/archive_completed_roadmaps.ts:396`). The error came from
+> transcribing the council's **own** vocabulary — both seats wrote "DEFER `[-]`"
+> throughout their responses. The parent roadmap was corrected to `[~]` by an R2
+> review before it shipped and carries its own correction note; these stubs were
+> not corrected with it.
 
 ## The council verdict this stub exists to carry
 
@@ -91,7 +104,7 @@ configuration change before resumption, **the frozen manifest is invalidated
 and a fresh pre-registration cycle is required.** A manifest generated against
 one configuration does not describe a benchmark run under another.
 
-## Claims the parent roadmap may NOT make while these steps are `[-]`
+## Claims the parent roadmap may NOT make while these steps are `[~]`
 
 Enumerated by the council and binding:
 

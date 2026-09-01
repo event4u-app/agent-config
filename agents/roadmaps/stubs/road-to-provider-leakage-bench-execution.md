@@ -9,8 +9,21 @@ review_by: 2027-03-31
 > council's verdict on
 > `road-to-inbox-harvest-2026-08-e-council-topology-evidence`,
 > `blocker: leakage-bench-needs-assembler-and-design-forks`. Steps 3.3 and 3.4
-> are `[-]` in that roadmap and point here. `[-]` means **DEFERRED, not
-> cancelled and not satisfied.**
+> are `[~]` in that roadmap and point here. `[~]` means **DEFERRED — planned,
+> carried, and not satisfied.**
+>
+> **Glyph note — do not "restore" this.** This stub read `[-]` until 2026-09-01.
+> In this tree `[-]` means **cancelled — scope dropped, won't happen at all**
+> and is additionally owner-reserved; `[~]` means **deferred**
+> (`docs/guidelines/agent-infra/roadmap-progress-mechanics.md:218-219`,
+> `src/agent-src/scripts/update_roadmap_progress.ts:25`,
+> `src/agent-src/templates/roadmaps.md:30`,
+> `src/agent-src/contexts/execution/terminal-states.md:41`; owner-reserved at
+> `src/agent-src/scripts/archive_completed_roadmaps.ts:396`). The error came from
+> transcribing the council's **own** vocabulary — both seats wrote "DEFER `[-]`"
+> throughout their responses. The parent roadmap was corrected to `[~]` by an R2
+> review before it shipped and carries its own correction note; these stubs were
+> not corrected with it.
 >
 > **No measurement has been taken and none is claimed.** The NOT RUN state the
 > two predecessor blockers protected is preserved here verbatim in force.

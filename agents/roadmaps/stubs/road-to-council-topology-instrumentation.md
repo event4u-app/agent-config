@@ -8,8 +8,21 @@ review_by: 2027-03-31
 > **Stub — not active work.** Created 2026-09-01 (drain run 12) by an AI council
 > disposition on `road-to-inbox-harvest-2026-08-e-council-topology-evidence`,
 > which closed the same day with **incomplete scope and explicit deferrals**.
-> Twelve steps are `[-]` there and point here. `[-]` means **DEFERRED, not
-> cancelled and not satisfied.**
+> Twelve steps are `[~]` there and point here. `[~]` means **DEFERRED —
+> planned, carried, and not satisfied.**
+>
+> **Glyph note — do not "restore" this.** This stub read `[-]` until 2026-09-01.
+> In this tree `[-]` means **cancelled — scope dropped, won't happen at all**
+> and is additionally owner-reserved; `[~]` means **deferred**
+> (`docs/guidelines/agent-infra/roadmap-progress-mechanics.md:218-219`,
+> `src/agent-src/scripts/update_roadmap_progress.ts:25`,
+> `src/agent-src/templates/roadmaps.md:30`,
+> `src/agent-src/contexts/execution/terminal-states.md:41`; owner-reserved at
+> `src/agent-src/scripts/archive_completed_roadmaps.ts:396`). The error came from
+> transcribing the council's **own** vocabulary — both seats wrote "DEFER `[-]`"
+> throughout their responses. The parent roadmap was corrected to `[~]` by an R2
+> review before it shipped and carries its own correction note; these stubs were
+> not corrected with it.
 >
 > **Everything already built stays built.** Every test named below is committed
 > and runs in CI regardless of the checkbox state — the council was explicit
@@ -28,7 +41,8 @@ parking — 'mechanism built, waiting for population' is a deferred state, not a
 active one."** The openai seat put the same rule as a semantics claim: `[x]`
 means the complete verify clause passed, `[ ]` means work is genuinely active
 with a committed path, `[-]` means intentionally postponed under stated
-conditions. Every step here failed the first two tests.
+conditions — **the seat's vocabulary, not this tree's**, where that sense is
+`[~]` (glyph note above). Every step here failed the first two tests.
 
 ## Group 1 — seven guarded baselines: built, red-proven, population empty
 
@@ -50,7 +64,7 @@ selection, a force-topology control, a stage-output producer, prompt storage on
 a training row — enters an integration branch or a release candidate, verify the
 guard still prevents the failure mode and close the step then.
 
-**Claims forbidden while `[-]`:** that the constraint holds for an implemented
+**Claims forbidden while `[~]`:** that the constraint holds for an implemented
 feature; that the absent feature is production-safe; that the verify clause
 passed; and — the one both seats named twice — **that sabotage sensitivity is
 positive runtime validation.** The only permitted claim is that the defensive
