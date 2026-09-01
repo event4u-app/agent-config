@@ -196,10 +196,53 @@ the arm did not get to choose which artifacts it is judged on:
 `routeTo` target that no rule can derive from the file, and inventing one would
 be the session under evaluation choosing an input.
 
-**The commit pin is load-bearing.** `.claude/` is a generated projection, so the
-same rule over a different checkout can yield a different set. The run report
-records `git rev-parse HEAD`, and a comparison is only comparable against the
-same commit.
+**The commit pin is load-bearing, and NOTHING CAPTURES IT.** `.claude/` is a
+generated projection, so the same rule over a different checkout can yield a
+different set.
+
+**CORRECTED 2026-09-01 — the claim this paragraph used to make is withdrawn.**
+It read *"The run report records `git rev-parse HEAD`, and a comparison is only
+comparable against the same commit."* The second clause is true and stays. The
+first was false when it was written and is false now: `RunReport`
+(`_lib/evolution_roi.ts:329-335`) has `run_id`, `candidates`,
+`trials_per_candidate`, `roi` and `ladder` and no commit field; `run_id` is
+built from candidate ids (`evolution_lab.ts:871`); and `rev-parse` appears
+nowhere in `evolution_lab.ts`, `llm_propose.ts`, `_lib/evolution_roi.ts` or
+`_lib/llm_candidate_proposer.ts`.
+
+**Withdrawn rather than implemented, and the reason is not effort.** Adding a
+commit field to `RunReport` would not make the sentence true for the arm this
+protocol governs: `llm_propose` writes **no run report at all** — it writes
+candidate records and prints attempts, and `buildRunReport` is reached only from
+`evolution_lab run` (`evolution_lab.ts:866`). The capture path therefore has no
+report for a commit to sit in, so the field would produce a second true-sounding
+claim about a document the capture never emits.
+
+And a recorded commit would not be sufficient even where it landed. `.claude/`
+is gitignored in its entirety (`.gitignore:157`, `git ls-files .claude` → 0), and
+the projection generator SKIPS any rule already installed byte-identically at
+user scope, so the corpus this section enumerates is a function of the
+operator's user-global layer as well as of the commit. Measured 2026-09-01: a
+fresh generation in a clean worktree of the capture commit reported *"101 rule(s)
+skipped — byte-identical twin already installed at user scope"* and produced 13
+files where a stale projection of the same HEAD held 15. An automatic HEAD line
+would have made that corpus look pinned while it was not, which is worse than no
+line at all.
+
+**What is lost by withdrawing.** This protocol now claims **no automatic
+provenance capture whatsoever**. Comparability rests entirely on the operator
+recording, by hand and alongside the results, BOTH the commit the capture ran
+from AND the state of the `.claude/` projection it enumerated — at minimum the
+sorted filenames of the five subjects, because the commit alone does not
+determine them. A capture that records neither is not re-runnable and its result
+is not comparable to any other run, and this document no longer implies
+otherwise.
+
+**What would close it properly** is provenance emitted by the capture path
+itself — the commit plus the enumerated subject list, written by `llm_propose`
+next to the records. That is a change to the frozen mechanism and therefore
+belongs to whoever freezes the remaining slot, not to a repair of a false
+sentence.
 
 ### Number of pairs
 
