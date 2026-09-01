@@ -35,7 +35,7 @@ document; it ships an enumeration RULE
 4. class per file: `over-broad-activation` when the file contains a line
    beginning `## `, otherwise `unbacked-enforcement-claim`.
 
-### FINDING 1a — the corpus is not reproducible from a commit
+### FINDING 1a (F-A) — the corpus is not reproducible from the COMMIT ALONE
 
 `.claude/` is **gitignored in its entirety** (`.gitignore:157` pins
 `/.claude/rules/`), and `git ls-files .claude` returns 0 files. A fresh worktree
@@ -64,6 +64,15 @@ commit pin is **not sufficient**, for two separate reasons:
 **Consequence for the capture.** The observations document must be produced by a
 recorded procedure that pins BOTH the commit AND the projection state, or the
 comparison is not re-runnable. Nothing in the tree does this today.
+
+**DOWNGRADED 2026-09-01 by the council, and the narrowing is load-bearing.** An
+earlier framing of this finding said the run produces *"a number nobody can
+reproduce"*. That is overreach and is withdrawn. What is Confirmed is narrower:
+the run is not reproducible **from the commit alone**. It is NOT established that
+reproduction is impossible from a captured manifest plus an environment
+snapshot — nobody has tried, and the council declined to grade an untried
+mechanism as impossible. Fixing this is owner-reserved by default (corpus
+contract), so no manifest was pinned this run.
 
 ### The document this session produced (from the stated rule, fresh projection)
 
@@ -147,6 +156,22 @@ committed table — `claude-haiku-4-5` at $1.00/MTok in, $5.00/MTok out,
 | `.claude/rules/augment-edit-discipline.md` | `unbacked-enforcement-claim` | 275 | 141 |
 | **total** | | **3,234** | **2,504** |
 
+**The arithmetic, shown rather than asserted** (the council graded the figures
+`inferred` when neither the table location nor the sum was given). Price source:
+`src/scripts/ai_council/_default_prices.ts:29`, the row
+`['anthropic', 'claude-haiku-4-5', 1.0, 5.0]` — dollars per million tokens, input
+then output, `LAST_UPDATED = '2026-05-14'` (`:16`). Token counts are the arm's own
+`estimateTokens` (`_lib/llm_proposer_transport.ts:109-111`), which is
+`Math.ceil(text.length / 4)` — a character proxy, not a tokenizer.
+
+```
+likely = 3234/1e6 * 1.00  +  2504/1e6 * 5.00
+       = 0.003234         +  0.012520          = $0.015754  -> $0.0158
+worst  = 3234/1e6 * 1.00  +  40960/1e6 * 5.00
+       = 0.003234         +  0.204800          = $0.208034  -> $0.2080
+where 40960 = 5 calls x MAX_TOKENS 8192 (_lib/llm_proposer_transport.ts:64)
+```
+
 - **Likely cost: $0.0158** — 3,234 in + 2,504 out (a full-body rewrite per call).
 - **Absolute worst case: $0.2080** — 3,234 in + 5 × `MAX_TOKENS` (8192) out
   (`llm_proposer_transport.ts:64`). Unreachable in practice; the subject bodies
@@ -179,7 +204,7 @@ propose: wrote /tmp/dr14/deterministic/con-bb51c1cce67f.json
 propose: 5 candidate(s)
 ```
 
-### Drop-in comparability — verified, with one operational caveat
+### Drop-in comparability — OBSERVED under a stub in this run, with a caveat
 
 Both arms write through the same two functions: `candidateRecordFilename` and
 `serialiseCandidateRecord` (`candidate_proposer.ts:400`, `:395`), called from
@@ -189,7 +214,47 @@ with the same comparator (`byteCompare`, `candidate_proposer.ts:290`) at
 build the id with the same `candidateId` and take `dimension` from `RECIPES`,
 never from the model (`llm_candidate_proposer.ts:328-337`).
 
-Verified by running the metered arm against a **stub** generator (zero spend):
+**The command, so the word is not doing the work.** A throwaway probe under
+`node_modules/.bin/tsx` imports both arms, parses `/tmp/dr14/observations.json`
+through `parseObservations`, and calls `proposeCandidatesWithModel` with two
+stub generators — one echoing `RECIPES[cls].rewrite(read(subject), '')`, one
+appending a marker comment — then compares `serialiseCandidateRecord` output
+against `proposeCandidates` over the same input. Nothing is sent.
+
+Output of that run, verbatim:
+
+```
+deterministic records: 5 | metered records: 5
+filenames det : act-ca6e7ddb23f7.json act-d2ac06be9cf2.json act-58069c3c3910.json act-628dda0a3784.json con-bb51c1cce67f.json
+filenames met : act-ca6e7ddb23f7.json act-d2ac06be9cf2.json act-58069c3c3910.json act-628dda0a3784.json con-bb51c1cce67f.json
+record ORDER identical: true
+BYTES identical (echo stub): true
+attempts: [{"defect_class":"reason_unknown","tier":"lite","sequence":1}, … x5]
+
+filenames met2: act-d4fee76891a6.json act-c9218ab7ebcd.json act-f9cddb25cf5e.json act-6fc3387e0019.json con-b4f67d4cc2b6.json
+same key set as det: true
+dimensions from RECIPE: true
+all lifecycle proposed: true
+one record per observation: true
+```
+
+Digests, `sha256`: probe output
+`9c23e72965e5f25726bf0e579c000ceb769eb712257cbe761c0a1adde5714d79`; observations
+document `4079965fbc97f167434cb37fec1d774100d6de437fcf8e9e6f9fb7b5052dbbe3`;
+concatenated deterministic records
+`5c1babdb2c28ba882e6f79d161862852fb59635bf203fe35a6fed1de0b41fef3`.
+
+**What the digests do and do not pin — the honest limit.** They pin THIS run's
+artefacts. Neither the probe nor the observations document is committed, and the
+observations document is derived from a gitignored projection, so the digest
+inherits F-A: another machine can re-run the same procedure and get a different
+observations document, hence different digests. The word in the heading is
+therefore **observed**, not **proven**. What is genuinely established is a code
+property, independent of the corpus: both arms call the same
+`candidateRecordFilename`, `serialiseCandidateRecord`, `byteCompare` and
+`candidateId`, at the line numbers cited above.
+
+Observed by running the metered arm against a **stub** generator (zero spend):
 
 - with a stub returning exactly the deterministic recipe's output, the two arms
   produce **byte-identical** record files with **identical filenames in
@@ -428,10 +493,11 @@ Ordered by what blocks what. Items 1–3 are decisions; 4 is code; 5 is the run.
    corpora.
 3. **Decide whether the protocol's HEAD claim is repaired or withdrawn**
    (Finding 3c).
-4. **Build the delta producer** (Finding 3b). Nothing turns two candidate records
-   into deltas, and `evolution_lab run` expects vectors as an input file. AC-2
-   cannot be met by running `llm_propose --confirm` alone: that produces
-   candidates, not a verdict.
+4. **Build the delta producer** (Finding 3b / F-C, Confirmed — see § 7). No
+   producer has been identified that turns two candidate records into deltas,
+   and `evolution_lab run` expects vectors as an input file. So running
+   `llm_propose --confirm` alone would not produce the comparison AC-2 asks
+   for: it produces candidates, not a verdict.
 5. **Run the capture.** ~$0.02, worst case ~$0.21, against a $5.00 ceiling. The
    credential the transport reads at call time
    (`~/.event4u/agent-config/anthropic.key`, via `load_anthropic_key`,
@@ -456,3 +522,251 @@ objection — token spend was pre-authorised"*,
 - **The observations document is not committed** and the corpus is not pinned;
   the five subjects above are this machine's projection on 2026-09-01, not a
   reproducible corpus.
+
+---
+
+# Addendum — council round 2, the repair pass, and the F-C trace
+
+Added 2026-09-01, same drain run, after the reconnaissance above was committed.
+**Still zero metered calls: `--confirm` was never passed and the `--confirm`
+path stays untaken permanently for this drain.**
+
+## 7. Council round 2 — QB, do not capture
+
+*AI council 2026-09-01 (drain run 14, round 2 on Phase 2), members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
+peer-review, blind chairman, quorum 2/2 present (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Verdict **QB**, convergent.*
+Council artefacts are gitignored and auto-pruned, so the text is inlined and no
+path under `agents/runtime/council/` is cited.
+
+Ratio, one line: *"the current run lacks both a reproducibly fixed subject and
+an executable path to the required comparison. The low cost and green guards do
+not cure those validity failures."*
+
+### The four framings it graded, and what changed in this document
+
+| # | Framing put to the council | Grade | What this document now says |
+|---|---|---|---|
+| 1 | *"a number nobody can reproduce"* | **overreach — refused** | § 1 F-A now claims only "not reproducible **from the commit alone**", and says explicitly that reproduction from a captured manifest plus an environment snapshot is untried, not impossible. |
+| 2 | *"AC-2's artefact cannot be produced"* | **Inferred, too categorical** | Narrowed everywhere to **"no producer has been identified"**, and then Confirmed by the trace in § 8 — which still does not license the categorical form. |
+| 3 | *"comparability-proven"* | **unsupported — no command cited** | § 2 now carries the probe description, its verbatim output, three `sha256` digests, and a paragraph on what the digests do NOT pin. The heading says **observed**, not proven. |
+| 4 | the cost figures | **inferred — no table, no arithmetic** | § 2 now shows the price-table row with its file:line and `LAST_UPDATED`, and the two sums line by line. |
+
+One further unsupported claim, now cited: fixture-substitution **is** ranked #2
+in this roadmap's Risk Register — `road-to-governed-evidence-production.md`
+§ Risk Register, Rank 2, *"Phase 2 closes on a fixture instead of a run"*, risk
+type `product`.
+
+### The two direct rulings
+
+1. **Fixing F-A is owner-reserved by default.** Changing corpus membership or
+   selection semantics amends a frozen experimental subject. One seat allowed a
+   purely provenance-preserving pin of the *same* subjects *might* be
+   autonomous, but held the equivalence undemonstrated. **No manifest was
+   pinned.**
+2. **`underpowered` does not discharge AC-2.** A legitimate execution status,
+   not a directional result: it records that adjudication was unavailable.
+
+### Not done, deliberately
+
+No capture, not even diagnostic. The metric and the trial unit were **not**
+frozen — the council ruled the experimental definition must be frozen as a whole
+(estimand, trial unit, pairing, aggregation, independence assumptions, sign
+convention, `tieEpsilon`) and that is not this run's work. The corpus contract
+was not touched. AC-2, AC-3, AC-4 not closed; 2.1 and 2.2 not flipped.
+`metered-backend-park` not resolved; its narrowing stands and this run's block is
+downstream of it.
+
+## 8. F-C — the end-to-end trace. VERDICT: CONFIRMED, no producer identified
+
+The council graded F-C `Inferred` because the first report described
+`evolution_lab run` as consuming vectors without showing that no producer exists
+elsewhere. This is the search record it asked for. **A confirmed absence needs a
+search record, not a description**, so every command is given.
+
+**The acceptance criterion** — AC-2,
+`road-to-governed-evidence-production.md` § Acceptance Criteria: *"A
+paired-verdict comparison between a metered proposer and the deterministic one
+has been run, and its result — in either direction — is recorded."*
+
+**The input consumer** — `evolution_lab run --vector FILE`
+(`src/scripts/evolution_lab.ts:402`), which parses each file through
+`parseMetricVectorJson` (`_lib/evolution_roi.ts:452`) into `buildVector`
+(`_lib/evaluation_vector.ts:103`).
+
+**The candidate records** — `proposeCandidates`
+(`_lib/candidate_proposer.ts:361`) and `proposeCandidatesWithModel`
+(`_lib/llm_candidate_proposer.ts:369`). Both emit `CandidateRecord`, whose fields
+are `kind`, `version`, `id`, `dimension`, `lifecycle`, `mutations` — **no outcome
+field of any kind**.
+
+**The gap, stated precisely:** nothing reads two `CandidateRecord`s and emits a
+signed delta, a `PairedVerdict`, or a `MetricVector`.
+
+### The searches
+
+| # | Command | Result |
+|---|---|---|
+| S1 | `grep -rn --include='*.ts' "decidePairedVerdict(" src` | exactly one caller: `_lib/bench_ab_size_claim.ts:101` |
+| S2 | `grep -rn --include='*.ts' "kind: 'paired'" src` | 2 hits: the type declaration `_lib/evaluation_vector.ts:65`, and `_lib/evolution_roi.ts:536` |
+| S3 | `grep -rn --include='*.ts' "kind: 'counted'" src` | 2 hits: `_lib/evaluation_vector.ts:72`, `_lib/evolution_roi.ts:500` |
+| S4 | `grep -rn --include='*.ts' "candidate_id" src` | 30 hits across 9 files; none builds a metric vector — see the exclusions below |
+| S5 | `grep -rn -- "--vector" src tests docs` | declared at `evolution_lab.ts:402`; supplied only by tests |
+| S6 | `grep -rln --include='*.ts' "evaluation_vector" src tests` | 5 src files, all consumers or parsers |
+| S7 | `grep -rln --include='*.ts' "paired_verdict" src tests` | 6 src files; 4 mention it only in comments |
+| S8 | `sed -n '550,566p' tests/scripts/evolution_lab.test.ts` | the only vector ever fed to the verb is a **hand-authored verdict literal** |
+| S9 | `sed -n '410,445p' src/scripts/_lib/evaluation_cascade.ts` | takes `input.vector` **or** `input.rows` — both caller-supplied |
+| S10 | `grep -rln --exclude-dir={src,tests,node_modules,.git} "evaluation_vector\|decidePairedVerdict\|artifact-count-delta" .` | 6 files, all prose: two roadmaps, three contracts, this report |
+| S11 | `sed -n '325,345p' src/scripts/bench_ab_v2_stats.ts` | the one live verdict's population is **A/B bench task pairs**, not candidate records |
+| S12 | `grep -n "paired_verdict\|evaluation_vector"` over the four other importers | `paired_stats.ts`, `role_split.ts`, `harness_evolution_guards.ts`, `pathology_archive.ts` — comments only |
+
+### Every adapter checked, and why each is not the producer
+
+| Module | What it does | Why not a producer |
+|---|---|---|
+| `_lib/bench_ab_size_claim.ts:96-105` | the tree's ONLY `decidePairedVerdict` call; builds `deltas` as a ±1 direction vector | its input is `PairedContinuous` from the A/B bench report pipeline (`bench_ab_v2_stats.ts:325-344` — added lines and cognitive complexity per benchmark task pair). Different population; it never sees a `CandidateRecord`. |
+| `_lib/evolution_roi.ts:480-543` (`parseRow`) | the only `kind:'paired'` / `kind:'counted'` construction in `src/` | a **deserialiser**. It re-shapes and validates JSON read off disk; it computes nothing. |
+| `_lib/evaluation_cascade.ts:414-441` | stage 12, the promotion verdict | consumes `input.vector` or `input.rows`; both arrive from the caller. |
+| `_lib/regression_neighbourhood.ts:194` | builds a `NeighbourhoodReport` keyed by `candidate_id` | selects regression specs from a registry. No deltas, no verdict, `authored: 0` by construction. |
+| `_lib/minimality_tiebreak.ts` | breaks ties on tokens/artifacts | a tiebreak over already-decided candidates; emits a winner id, not a delta. |
+| `_lib/pathology_archive.ts` | retains one representative failure per class | says outright (`:12-15`) it is not a second verdict and never calls `promotionVerdict`. |
+| `_lib/promotion_evidence.ts`, `_lib/evaluator_promotion.ts` | parse and check promotion evidence | validators over supplied evidence. |
+| `_lib/paired_stats.ts`, `_lib/role_split.ts`, `_lib/harness_evolution_guards.ts` | stats primitives, role split, budget/disclosure guards | reference `paired_verdict` in prose only. |
+
+**Verdict: CONFIRMED — no producer identified.** Stated as the council requires:
+this is an absence established by a recorded search over this tree at this
+commit, not a proof that the artefact cannot be produced. Building one is
+straightforward and is item 4 of the ordered list in § 6; if a later reader finds
+a producer this trace missed, that is the better outcome and this section is
+where the correction belongs.
+
+## 9. The repair pass — what changed, and the two sweeps
+
+Four defects reported in § 1-5 as "reported not fixed" were repaired, on the
+grounds that each is wrong at this commit whatever the council decides.
+
+### F-D1 — the false provenance claim: WITHDRAWN, not implemented
+
+`docs/contracts/metered-proposer-protocol.md` § The defect-observation corpus
+claimed *"The run report records `git rev-parse HEAD`"*.
+
+**Option taken: withdraw.** Three reasons, in the order they decided it:
+
+1. Adding a commit field to `RunReport` would not make the sentence true for the
+   arm this protocol governs. `llm_propose` writes **no run report at all**;
+   `buildRunReport` is reached only from `evolution_lab run`
+   (`evolution_lab.ts:866`). The field would describe a document the capture
+   never emits — a second true-sounding claim replacing the first.
+2. A recorded commit would not be sufficient where it did land, because of F-A.
+   An automatic HEAD line would have made the corpus look pinned while it was
+   not, which is worse than no line.
+3. Emitting real provenance from `llm_propose` — commit plus the enumerated
+   subject list — is a change to the frozen mechanism, and per the council the
+   experimental definition is frozen as a whole. That belongs to whoever freezes
+   it, not to a repair of a false sentence.
+
+**What is lost, stated in the contract itself:** the protocol now claims no
+automatic provenance capture whatsoever. Comparability rests entirely on the
+operator recording, by hand and alongside the results, both the commit and the
+`.claude/` projection state — at minimum the five sorted subject filenames,
+because the commit alone does not determine them.
+
+### F-D2 — the citation sweep. Found 3 of 7 stale; then my own repair broke 11 more
+
+**Sweep A, the protocol document.** Extracted every `file:line` citation with
+`grep -o` rather than fixing only the three already noticed. **7 citations
+existed; 3 were stale; 3 fixed; 4 already correct** (`evolution_roi.ts:191`,
+`paired_verdict.ts:51`, `:78`, `evaluation_vector.ts:62`). The document's
+non-line-numbered factual claims were checked in the same pass and **all hold**:
+`ANTHROPIC_URL`, `ANTHROPIC_VERSION`, both dated model ids and the null `high`
+tier, `MAX_TOKENS` 8192, `TEMPERATURE` 0, the 256 KiB body ceiling
+(`MAX_BODY_BYTES`, `_lib/llm_candidate_proposer.ts:204`), `max_candidates` 5 and
+`max_trials_per_candidate` 20.
+
+**Sweep B, the tree, and it caught a defect Sweep A could not.** Grepping
+`evolution_roi\.ts:[0-9]` across the tree showed the same three stale citations
+**recurring in code** — `_lib/llm_candidate_proposer.ts:41` and `:295`, and
+`_lib/llm_proposer_transport.ts:27`. Fixing only the protocol would have left
+the identical defect in two shipped modules.
+
+**And then the repair created the drift it was fixing.** Correcting the comments
+in § 9's next item added lines to `evolution_roi.ts`, which shifted its own line
+numbers and silently falsified **every** citation into it. **11 live citations
+repaired** across four files: the frozen protocol (5), the active roadmap (2),
+`_lib/llm_candidate_proposer.ts` (3), `_lib/llm_proposer_transport.ts` (1).
+
+| anchor | old | new |
+|---|---|---|
+| `execution_failed` ladder | `:109` → `:111` | `:128` |
+| `reason_unknown` + comment | `:117-119` → `:119-121` | `:136-138` |
+| "retrying `lite` is not an escalation" | `:203` → `:184-185` | `:201-202` |
+| `assertCheapestFirst` declaration | `:191` | `:215` |
+| `RunReport` interface | `:329-335` | `:353-359` |
+| `buildRunReport` | `:363` | `:387` |
+
+**Deliberately NOT repaired — historical records.** The archived parent roadmap
+(`agents/roadmaps/archive/road-to-governed-harness-evolution.md`, 3 citations)
+and two prior analysis documents also cite shifted lines. An `analysis` artefact
+*"asserts what was true when it was written and is never re-bound"*
+(`docs/contracts/evidence-artifact-types.md:59`), so re-binding them would be
+the error, not the fix.
+
+**The structural finding this exposes, recorded rather than fixed.** A citation
+by line number into a file is falsified by any prose edit to that file, silently,
+with no gate that notices. This pass produced 11 such falsifications from four
+comment edits. That is a maintenance hazard in the citation convention itself,
+not a defect in any one document, and it is out of scope here — but a reader
+touching `evolution_roi.ts` should expect to re-sweep.
+
+### F-D3 — five comments denying a state the code has
+
+`assertCheapestFirst` gained two production callers when the metered arm landed.
+**The construct was grepped across the tree rather than assumed to be the two
+already reported. 5 sites matched, all corrected:**
+
+| site | was |
+|---|---|
+| `src/scripts/_lib/evolution_roi.ts` header | "The ladder is an ORDERING POLICY, and it has no live subject" |
+| `src/scripts/_lib/evolution_roi.ts` guard docstring | "NO LIVE SUBJECT. Nothing in this programme produces LadderAttempts today" |
+| `src/scripts/activation_receipt.ts` | "which polices a population of zero" |
+| `tests/scripts/_lib/evolution_roi.test.ts` file docstring | "nothing in this programme produces a LadderAttempt" |
+| `tests/scripts/_lib/evolution_roi.test.ts` describe name | "a guard with no live subject" |
+
+Each now states the **half**-met position and not more: callers exist and are on
+an executable path; no LIVE run has produced a spent population, so the ordering
+has not yet governed one, which is what AC-3 stays open on.
+
+**11 further tree matches were read and EXCLUDED**, with the reason: they
+describe different machinery and are true of it —
+`lint_promotion_paths.ts:42`/`:739`, `_lib/candidate_record.ts:178`,
+`_lib/activation_receipt_producer.ts:32`, `src/config/gate-coverage.yml:2362`,
+`docs/contracts/activation-receipt-trust-boundary.md:99`,
+`_lib/tier_budget_routing.ts:15`, `ai_council/leakage_patterns.ts:48`,
+`_lib/collector_supervision.ts:654`, `_lib/capture_rate.ts:37`,
+`hooks/skill_route_hook.ts:8`.
+
+### F-D4 — the roadmap's declaration-vs-call citations
+
+Step 2.2 and AC-3 cited `llm_candidate_proposer.ts:369` and `:429` as though
+they were the call sites. They are the function **declarations**; the
+`assertCheapestFirst` calls are at `:417` and `:446`. Both sites now name
+declaration and call, plus the entry points that reach them
+(`llm_propose.ts:137` dry, `:212` `--confirm`). **Factual repair only — AC-3
+stays `[ ]` and its verdict text is untouched.**
+
+## 10. Honest nulls, restated after the addendum
+
+- **No metered call was made, in either pass.** The transport's live path
+  remains unexercised.
+- **No verdict was computed over real candidates.** The `n = 5` table in § 3 is
+  the real `decidePairedVerdict` over synthetic delta vectors; it measures
+  nothing about either arm.
+- **The metric slot is still UNSET**, and per the council it must be frozen as a
+  whole rather than slot by slot.
+- **The corpus contract is untouched and no manifest was pinned** — owner-reserved.
+- **Whether the metered arm beats the deterministic one is unknown**, and
+  nothing in this document is evidence in either direction.
+- **F-C is a Confirmed absence over this tree, not an impossibility proof.**
+- **The comparability result is `observed` under a stub in this run**, and its
+  digests pin uncommitted artefacts derived from a gitignored projection.
