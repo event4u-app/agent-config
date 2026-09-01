@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Governed-evidence Phase 1 and 2 — open questions
 
 Written by the session that executed `road-to-governed-evidence-production`
