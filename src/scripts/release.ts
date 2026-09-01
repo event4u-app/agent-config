@@ -129,7 +129,6 @@ import {
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
-    tag_message_from_section,
 } from './_lib/release_material.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
