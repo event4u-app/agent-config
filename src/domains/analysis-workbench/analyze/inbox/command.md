@@ -487,6 +487,7 @@ The question is never "what does the file say" but **"what does it become here"*
 | reference material read on demand | a `guideline` or `context` |
 | a measured finding | a `decision-record`/ADR, not a rule |
 | a defect claim | a roadmap item, once verified |
+| a claim that maps onto an existing stub | **not a fresh artefact — a stub-blocked finding, see below** |
 | a consolidation omitting a parent | **not an artifact — a discharge, see below** |
 
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
@@ -510,6 +511,41 @@ sentence (discharge 3) rather than a re-run.
 A `ghost:` reading — a declared parent with no matching file — has the same three
 discharges plus a fourth that is really a correction: fix the name. A lineage
 naming a plan nobody can open is the cheaper half of the same defect.
+
+**A survivor that maps onto an existing stub is never resolved into a verdict
+line.** When a verified claim lands on something `agents/roadmaps/stubs/` already
+holds, the mapping is neither "a defect claim → a roadmap item" nor "nothing to
+do": the plan exists, and something is holding it. Before this row the table had
+no entry for that state, so a run that found one had no prescribed output and
+wrote a summary sentence instead. The round that produced this row closed exactly
+so — *"Not a neglected guard: the cost of an unmade owner decision. On the owner's
+desk."* That sentence is accurate, and it is why nine feedback rounds on one guard
+produced no executable item: it names a state and hands nobody anything to do.
+
+The run's output MUST carry all four of these, per stub matched. Three of them
+are the difference between a finding and a shrug, and the fourth is already
+computed upstream:
+
+1. **The stub path** — `agents/roadmaps/stubs/<slug>.md`, so a reader opens it
+   instead of searching for it.
+2. **Its blocker slug** — the `### blocker: <slug>` holding it, named. Where the
+   hold is recorded outside any blocker section, say so in those words and name
+   the section; "waiting on a decision" with nothing named is the verdict line
+   again, one word longer.
+3. **Its age in days** — days since the file first appeared under
+   `agents/roadmaps/stubs/`, from
+   `git log --diff-filter=A --format=%ad --date=short -- <path> | tail -1`. A
+   stub parked eleven days and one parked two hundred are different findings and
+   a reader cannot tell them apart from the path.
+4. **The recurrence count from Phase 4c** — how many earlier rounds raised the
+   same subject. A first arrival and a ninth are different findings, 4c has
+   already counted it, and dropping it here is what let one subject arrive nine
+   times as if each were new.
+
+Missing any of the four leaves the survivor undischarged. This row does not
+decide what happens to the stub — promotion is the estate's question and this
+command does not answer it — it only forbids resolving the survivor into prose
+that names no artefact.
 
 Three hard defaults, from this repo's own scar tissue:
 

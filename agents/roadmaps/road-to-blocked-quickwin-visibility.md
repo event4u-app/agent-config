@@ -82,7 +82,7 @@ rather than on a reading of them.
       falls to the OWNER bucket unchanged, and a unit test pins both directions
       — a file with all three fields lands in the new bucket, a file missing one
       does not.
-- [ ] **1.3 `/analyze:inbox` may not resolve a stub-mapped survivor into a
+- [x] **1.3 `/analyze:inbox` may not resolve a stub-mapped survivor into a
       verdict line.** Its Phase 5 mapping table has no row for "the claim maps
       onto an existing stub", so a run that finds one has no prescribed output
       and writes a summary sentence instead. The round's own artefact did exactly
