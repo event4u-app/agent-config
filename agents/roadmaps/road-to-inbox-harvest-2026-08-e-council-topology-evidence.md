@@ -923,24 +923,76 @@ The council should not ship a topology selector before it can define "better".
       this file's 46 open steps from a step-prose closing note — more than every
       recorded blocker combined — and appeared in no gate. The entry does not
       change the condition; it makes `gates --all` able to read it.
-- [ ] 2.2 Mandatory baselines per eligible slice: host solo, strongest
+- [-] 2.2 Mandatory baselines per eligible slice: host solo, strongest
   configured single external model, cheapest configured single external model,
   current default council path, full debate where applicable.
       verify: no result claims "council improves quality" without a strong
       single-model baseline in the same table
-- [ ] 2.3 Emit the full metric set: deterministic correctness where possible,
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 2.3 Emit the full metric set: deterministic correctness where possible,
   executable test result where possible, rubric quality, cost, latency, calls,
   tokens, parse/gradeability rate, rerun variance, disagreement entropy,
   minority rescue, majority corruption, synthesis delta,
   zero-marginal-value-call rate.
       verify: one run produces every column, or the missing column is recorded
       as a declared gap rather than silently absent
-- [ ] 2.4 Stage ablation: generation only; + ranking; + peer critique;
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 2.4 Stage ablation: generation only; + ranking; + peer critique;
   + synthesis; full pipeline.
       verify: an improvement can be attributed to a named stage
-- [ ] 2.5 Separate model quality from topology quality — same topology across
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 2.5 Separate model quality from topology quality — same topology across
   model sets, and same model set across topologies.
       verify: both axes appear in the result table
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [x] 2.6 No promotion from N=1: confidence intervals or explicit variance
   bands.
       verify: every promotion claim carries a trial count and a band
@@ -959,12 +1011,25 @@ The council should not ship a topology selector before it can define "better".
       stated defaults with their own `revisit-if`, and are admissibility only —
       clearing a floor with a band spanning zero is a null, and publishing it as
       one is the correct outcome.
-- [ ] 2.7 Round-count bias arm: rounds 1 vs 2, verdict flips, dissent
+- [-] 2.7 Round-count bias arm: rounds 1 vs 2, verdict flips, dissent
   retention, correctness where gradeable, confidence-vs-correctness, cost
   delta. Grounded in **arXiv 2505.19477** (round-1 debate bias amplification) —
   the citation the source draft omitted.
       verify: the arm reports a result **or** a null; a null is a valid
       published outcome and closes the step
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 3 — Independence and judge-bias hardening
 
@@ -1015,7 +1080,7 @@ The council should not ship a topology selector before it can define "better".
       this step's whole point made executable: if removing the instruction
       changes nothing, the instruction was not the protection. Neutralising
       `src !== scorer` reds 22 tests.
-- [ ] 3.3 Provider-recognition leakage bench: ask reviewers and judges to guess
+- [-] 3.3 Provider-recognition leakage bench: ask reviewers and judges to guess
   the provider family from anonymized answers; measure recognition against
   chance. **Measurement first** — not a justification for rewriting anything.
       verify: recognition rate and chance baseline are both published
@@ -1040,7 +1105,24 @@ The council should not ship a topology selector before it can define "better".
       share a provider, a constant guesser scores 50 % against a uniform chance
       of 25 % and would read as leakage while recognising nothing. A test pins
       that case.
-- [ ] 3.4 Hold style normalization behind the stronger gate: implement only if
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) — NOT cancelled, NOT satisfied,
+      and NOT RUN.** The AI council's recorded verdict was B1 (build the runner,
+      execute both arms) with a hard precondition both seats attached: both arms
+      in one coherent session across two UTC days. Each arm is 30 calls per
+      provider and the cap is 50 per provider per UTC day
+      (`src/scripts/ai_council/cli_call_budget.ts:60`), so the arms cannot share
+      a day and this run cannot guarantee a session across the boundary. The
+      openai seat named the fallback for exactly that state — *"choose B3
+      immediately rather than recording an execution commitment the run cannot
+      fulfill"* — so B3 is applied under the verdict, not against it.
+      **No measurement was taken and none is claimed.** The design, the pattern
+      list, the execution sequence, the four-conjunct close condition and the
+      only permitted claim are carried in
+      [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md).
+      Floors unmoved: `>= 30` items per arm read per arm, the synthetic-fixture
+      prohibition, and no population-rate claim from the 1,402-body corpus.
+- [-] 3.4 Hold style normalization behind the stronger gate: implement only if
   this tree's own leakage bench shows materially above-chance recognition
   **and** that recognition correlates with judgment distortion.
       verify: no normalization code lands until both conditions are recorded
@@ -1057,6 +1139,23 @@ The council should not ship a topology selector before it can define "better".
       conditions recorded met reaches `bar-cleared`.
       Neutralising the no-data branch from `'unrun'` to `'below-bar'` reds two
       tests. This step stays open behind 3.3.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) — NOT cancelled, NOT satisfied,
+      and NOT RUN.** The AI council's recorded verdict was B1 (build the runner,
+      execute both arms) with a hard precondition both seats attached: both arms
+      in one coherent session across two UTC days. Each arm is 30 calls per
+      provider and the cap is 50 per provider per UTC day
+      (`src/scripts/ai_council/cli_call_budget.ts:60`), so the arms cannot share
+      a day and this run cannot guarantee a session across the boundary. The
+      openai seat named the fallback for exactly that state — *"choose B3
+      immediately rather than recording an execution commitment the run cannot
+      fulfill"* — so B3 is applied under the verdict, not against it.
+      **No measurement was taken and none is claimed.** The design, the pattern
+      list, the execution sequence, the four-conjunct close condition and the
+      only permitted claim are carried in
+      [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md).
+      Floors unmoved: `>= 30` items per arm read per arm, the synthetic-fixture
+      prohibition, and no population-rate claim from the 1,402-body corpus.
 - [x] 3.5 Order-swap consistency: repeat sampled pairwise judgments with
   candidate order reversed; emit a per-judge position-consistency metric.
       verify: the metric exists per judge and is reported with the verdict
@@ -1267,9 +1366,22 @@ byte-pinned by tests. Any work here runs through
       `_maybe_run_chairman` where it already lives, and 5.2 — benching
       identity-blind against identity-visible — is gated behind
       `blocker: phase-2-benchmark-cost`.
-- [ ] 5.2 Bench identity-blind against identity-visible synthesis explicitly,
+- [-] 5.2 Bench identity-blind against identity-visible synthesis explicitly,
   so vendor prestige cannot leak in accidentally.
       verify: both arms are reported side by side
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [x] 5.3 Majority-laundering test: seed one correct minority against several
   plausible-but-wrong majority answers; the synthesizer must justify accepting
   or rejecting the minority.
@@ -1381,9 +1493,22 @@ byte-pinned by tests. Any work here runs through
       **Nothing was built.** Adding three sections plus an auditor with no run
       able to exercise them is the population-of-zero shape this file refuses;
       the finding is recorded instead, and the step stays open on evidence.
-- [ ] 5.5 Revisit ADR-120 **only** on results — record keep / amend /
+- [-] 5.5 Revisit ADR-120 **only** on results — record keep / amend /
   supersede with the benchmark artifact pin and a revisit condition.
       verify: the ADR record cites the benchmark artifact, not this roadmap
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 6 — Adaptive depth with anti-conformity before the meter
 
@@ -1607,10 +1732,23 @@ Only now, and **not** as a new task router.
       `tests/scripts/ai_council/topology_vocabulary.test.ts` (20 tests) pins
       the runtime layer and asserts the five type assertions are still present,
       so deleting them is caught, but a vitest run never type-checks.
-- [ ] 7.2 The selector returns an explainable record: topology, council task
+- [-] 7.2 The selector returns an explainable record: topology, council task
   class, impact class, reason codes, estimated calls, estimated cost, latency
   band, evidence/policy source, fallback.
       verify: every field is populated on a real selection
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [ ] <!-- roadmap-status: guarded-baseline --> 7.3 Keep the deterministic/probe path **above** council: a mechanism
   question resolvable by tree fact, schema, script or executable test never
   reaches topology selection.
@@ -1679,17 +1817,56 @@ Only now, and **not** as a new task router.
       direction (a `//` mention and a `/** */` mention must NOT match), and the
       sabotage was re-run afterwards to confirm the fix did not blunt it —
       still 1 failed / 6 passed with a real `selectTopology` export present.
-- [ ] 7.4 Deterministic policy first, interpretable features only: task class,
+- [-] 7.4 Deterministic policy first, interpretable features only: task class,
   impact, ambiguity type, configured provider diversity, model availability,
   historical benchmark slice, artifact size, cost ceiling, prior-run freshness,
   initial disagreement.
       verify: the policy is readable end-to-end without executing it
-- [ ] 7.5 Shadow mode first: compute the proposed topology, execute current
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 7.5 Shadow mode first: compute the proposed topology, execute current
   behaviour, record the counterfactual route.
       verify: shadow runs change no observable behaviour
-- [ ] 7.6 Promote per task slice on benchmark evidence only — no global claim
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 7.6 Promote per task slice on benchmark evidence only — no global claim
   that debate is better.
       verify: each promotion names its slice and its evidence artifact
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 8 — Targeted cross-examination and scalable review
 
@@ -1873,16 +2050,29 @@ Only now, and **not** as a new task router.
       `performance.now`, `node:fs` or `fetch(`), and it is what catches the
       clock dependency deterministically. Both tests ship; the comment in the
       test file records why.
-- [ ] 8.5 Stop when the next call has low expected value — call-level
+- [-] 8.5 Stop when the next call has low expected value — call-level
   extension of argument exhaustion, only after benchmark evidence exists.
       verify: the stop is gated on the Phase 2 artifact, not on intuition
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 9 — Advisor composition after seating
 
 The five personas exist and are shipped (see § Prevented items). The real gap
 is **seating**, and it already has a carrier.
 
-- [ ] 9.1 Add the same-provider host-subagent fan-out lane **only** as a
+- [-] 9.1 Add the same-provider host-subagent fan-out lane **only** as a
   benchmark arm inside the existing stub
   `agents/roadmaps/stubs/road-to-council-persona-fanout.md`, which carries a
   pre-registered bench gate. Do not duplicate it here.
@@ -1897,6 +2087,19 @@ is **seating**, and it already has a carrier.
       until Phase 2 produces evidence that lens diversity moves a measured
       outcome. Phase 2 is itself gated — see `blocker: phase-2-benchmark-cost`
       below, added in the same change for exactly this reason.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [x] 9.2 Never represent same-provider fan-out as external-model
   independence.
       verify: no rendered surface labels it "external council"
@@ -1938,10 +2141,23 @@ is **seating**, and it already has a carrier.
       constraint stays live for the rest of the phase — seating is still
       unsolved (9.1 is blocked on `blocker: persona-seating-gap`), which is
       precisely the condition under which "no further personas" binds.
-- [ ] 9.4 After seating is solved, benchmark governed bundles (architecture /
+- [-] 9.4 After seating is solved, benchmark governed bundles (architecture /
   code review / roadmap / product) chosen from tracked persona definitions
   only, with persona and provider assignment counterbalanced.
       verify: a "persona won" result cannot be explained by "provider won"
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 10 — Outcome attribution and observability
 
@@ -2058,9 +2274,22 @@ is **seating**, and it already has a carrier.
       run able to exercise it is a population-of-zero mechanism; the step stays
       open on evidence rather than acquiring a shape-pin that would measure
       nothing.
-- [ ] 10.4 Compute route regret offline against the cheapest topology with an
+- [-] 10.4 Compute route regret offline against the cheapest topology with an
   equivalent-quality outcome.
       verify: the comparison runs offline and never influences a live route
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [x] 10.5 Track re-council savings: duplicates prevented, near-duplicate
   warnings, reruns intentionally confirmed, spend saved.
       verify: the figures reconcile against the retained artifacts
@@ -2229,11 +2458,37 @@ is **seating**, and it already has a carrier.
       (`internal/bench/council-routing/training-rows.jsonl`): the day rows
       start being written, the dashboard marks this evidence STALE and the
       schema must be re-verified against what was actually collected.
-- [ ] 11.2 Train an offline challenger classifier; it stays shadow-only.
+- [-] 11.2 Train an offline challenger classifier; it stays shadow-only.
       verify: no runtime path can reach the model
-- [ ] 11.3 Promotion requires a material Pareto improvement in
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 11.3 Promotion requires a material Pareto improvement in
   quality/cost/latency plus acceptable stability.
       verify: the comparison against the deterministic policy is published
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 - [x] 11.4 Keep the deterministic fallback permanently — no daemon, cloud
   router or learned model becomes necessary for basic council operation.
       verify: the suite runs green with the model artifact deleted
@@ -2261,9 +2516,22 @@ is **seating**, and it already has a carrier.
       "permanently"; no test can. What it does is make the violation visible on
       the day Phase 11.2 lands a loader on a runtime path — which is the trip
       this step wants.
-- [ ] 11.5 Relevant model-generation changes mark affected routing evidence
+- [-] 11.5 Relevant model-generation changes mark affected routing evidence
   stale.
       verify: a simulated model-generation bump invalidates the right slices
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ## Phase 12 — UX simplification
 
@@ -2389,23 +2657,88 @@ is **seating**, and it already has a carrier.
 
 ## Phase 13 — Rollout and promotion gates
 
-- [ ] 13.1 Shadow: no behaviour change; record proposed topology and
+- [-] 13.1 Shadow: no behaviour change; record proposed topology and
   counterfactual evidence.
       verify: behaviour diff against the pre-phase baseline is empty
-- [ ] 13.2 Advisory: permit cheaper depth reductions only where
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 13.2 Advisory: permit cheaper depth reductions only where
   non-inferiority is demonstrated; no auto-escalation into more expensive
   topology yet.
       verify: no run costs more than today's default under advisory mode
-- [ ] 13.3 Adaptive: enable escalation and early stop on slices that pass
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 13.3 Adaptive: enable escalation and early stop on slices that pass
   holdout gates.
       verify: each enabled slice names its holdout artifact
-- [ ] 13.4 Default-on per slice only, on: quality non-inferiority or
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 13.4 Default-on per slice only, on: quality non-inferiority or
   improvement, acceptable cost/latency, stable parse/gradeability, no material
   minority-rescue regression, judge-bias metrics within threshold, no weakening
   of user or spend boundaries.
       verify: all six conditions are recorded per slice before the flip
-- [ ] 13.5 Re-evaluate on model-generation changes — evidence is not timeless.
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
+- [-] 13.5 Re-evaluate on model-generation changes — evidence is not timeless.
       verify: a stale-evidence slice blocks its own default-on state
+
+      **`[-]` DEFERRED 2026-09-01 (drain run 12) by AI council verdict A3,
+      convergent 2/2 — NOT cancelled and NOT satisfied.** This step is gated on
+      `blocker: phase-2-benchmark-cost`, whose frozen schedule needs 20
+      consecutive UTC days of exclusive capacity across the only two configured
+      seats and, at `N=2`, clears neither of step 2.6's pre-registered `n >= 5`
+      / `n >= 10` floors. Spend was pre-authorised; capacity and wall-clock were
+      not. The design, the frozen manifest, the missing-runner requirement and
+      the resumption trigger are carried in
+      [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md).
+      **Nothing here may be read as evidence:** the council forbids claiming
+      that topology effects were benchmarked, that any topology is superior,
+      that topology-driven promotion is supported, or "we tested it at N=2".
 
 ---
 
@@ -2537,7 +2870,49 @@ is **seating**, and it already has a carrier.
 
 ### blocker: leakage-bench-needs-assembler-and-design-forks
 
-- **Status:** open — **created 2026-08-31 as the successor** to
+- **Status:** resolved 2026-09-01 (drain run 12) — **DESCOPED by AI council
+  verdict. No measurement was taken and none is claimed; the NOT RUN state both
+  predecessor entries protected is preserved in force, and every floor stands.**
+  Steps 3.3 and 3.4 are `[-]` and point at
+  [`stubs/road-to-provider-leakage-bench-execution.md`](stubs/road-to-provider-leakage-bench-execution.md),
+  which carries the design, the pattern list, the execution sequence, the
+  4-conjunct 3.4 close condition and the single claim the result may ever make.
+
+  **The council verdict was B1, and the disposition applied is B3 under the
+  council's own named fallback — this is not an override.** AI council
+  2026-09-01, members anthropic (claude-sonnet-4-5) and openai (codex-default),
+  2 rounds, blind chairman, subscription transport (`billable=0`, `$0.0000`),
+  quorum `2/2 present, needed 1 — concluded`. Both seats chose B1 — build the
+  runner, execute both arms — and both attached the same hard precondition:
+  anthropic, *"both arms in one coherent session, or neither"*, with partial
+  results declared INVALID on mid-execution degradation; openai, *"if the
+  autonomous drain cannot remain active across two future UTC boundaries, B1 is
+  not a real terminal disposition. In that case, choose B3 immediately rather
+  than recording an execution commitment the run cannot fulfill."*
+
+  **The precondition fails on arithmetic, not judgement.** Each arm is 30 calls
+  per provider; both arms is 60 against a hard cap of 50 per provider per UTC
+  day (`src/scripts/ai_council/cli_call_budget.ts:60`), so the arms cannot share
+  a day, and consecutive days require one coherent session across a UTC
+  boundary that this run cannot guarantee. B3 is therefore the disposition the
+  council pre-authorised for exactly this state.
+
+  **One fact in the entry below had gone stale and is corrected here rather
+  than left to mislead.** The `What to do` field says fork 3's pattern list is
+  *"DEFERRED and deliberately absent"* and that *"the stripped arm therefore
+  cannot run"*. Both clauses are now false: `src/scripts/ai_council/leakage_patterns.ts`
+  exists (453 lines), is version-pinned `leakage-patterns-v1-2026-08-31`,
+  carries `PATTERN_LIST_DIGEST`, pins `ARM_LABEL = 'pattern-stripped'` and
+  asserts the labels condition 6 forbids. Both arms are design-complete. What
+  remains unbuilt is the **runner**: `collectGuesses`
+  (`src/scripts/ai_council/provider_leakage_bench.ts:90`) and `scoreRecognition`
+  (`:136`) have zero production callers outside
+  `tests/scripts/ai_council/provider_leakage_bench.test.ts`.
+
+  The historical record below is kept unedited, because it is what was true
+  when it was written.
+
+  **Superseded status line:** open — **created 2026-08-31 as the successor** to
   `leakage-bench-needs-quota-and-an-uncommittable-corpus`, whose two stated
   obstacles were both falsified by measurement (see that entry above). AI
   council 2026-08-31, anthropic seat, **1/2 — DEGRADED** (openai `exit_1`).
@@ -2894,7 +3269,44 @@ is **seating**, and it already has a carrier.
 
 ### blocker: phase-2-benchmark-cost
 
-- **Status:** open — **created 2026-08-31. The condition is not new; carrying it
+- **Status:** resolved 2026-09-01 (drain run 12) — **DESCOPED by AI council
+  verdict A3, convergent 2/2.** Phase 2 and its 23 dependent steps are `[-]` and
+  point at
+  [`stubs/road-to-council-topology-benchmark-execution.md`](stubs/road-to-council-topology-benchmark-execution.md),
+  which carries the frozen manifest, the arm spec, the missing-runner
+  requirement, the 3-conjunct resumption trigger, the fresh-manifest trigger and
+  the enumerated list of claims this roadmap may NOT make while the steps are
+  `[-]`.
+
+  AI council 2026-09-01, members anthropic (claude-sonnet-4-5) and openai
+  (codex-default), 2 rounds, blind chairman, subscription transport
+  (`billable=0`, `$0.0000`), quorum `2/2 present, needed 1 — concluded`. Both
+  seats reached A3 independently with no dissent recorded on it. Their shared
+  reasoning: the benchmark is executable procedurally and not in a way that can
+  license a claim — 1,584-1,804 calls over 20 UTC days at `N=2` cannot satisfy
+  the pre-registered `n >= 5` / `n >= 10` floors, which is the limit this file
+  had already recorded about itself.
+
+  **Nothing was descoped for cost.** Token spend is pre-authorised by the
+  maintainer. What is unavailable is 20 consecutive UTC days of exclusive
+  capacity across the only two configured seats — a wall-clock and capacity
+  constraint that authorising spend does not remove. `day_batches` in
+  `internal/bench/council-topology/call-manifest.json` books 46-50 calls per
+  provider on each of days 1-19 and 15 on day 20; the same two seats are this
+  repository's decision mechanism.
+
+  **The runner remains the largest unbuilt piece**, unchanged and verified at
+  this commit: `src/scripts/ai_council/topology_bench_manifest.ts:822` handles
+  only `--emit` and contains no provider dispatch. Cell state is 352 `pending` /
+  32 `not_eligible` / **0 complete**.
+
+  **The `n >= 5` and `n >= 10` floors are carried forward unmoved.** The council
+  was asked whether it wished to move them and declined.
+
+  The historical record below is kept unedited, because it is what was true when
+  it was written.
+
+  **Superseded status line:** open — **created 2026-08-31. The condition is not new; carrying it
   is.** It has gated Phase 2 since the phase was written and lived only in
   2.1's closing note: *"**Steps 2.2-2.5 and 2.7 stay open.** The manifest is a
   precondition for them, never their execution: no arm ran and no quota was
