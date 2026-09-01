@@ -87,6 +87,7 @@ import {
     PromotionEvidenceError,
     parsePromotionEvidence,
 } from './_lib/promotion_evidence.js';
+import { MERGE_AUTHORITY_ROADMAP } from './_lib/promotion_capability.js';
 import { assertNotSemanticNoOp, isSemanticNoOp, SemanticNoOpError } from './_lib/semantic_noop.js';
 import {
     RECIPES,
@@ -1039,7 +1040,7 @@ function verbPromote(argv: readonly string[]): number {
     process.stderr.write(
         `evolution_lab: promote REFUSED for ${record.id}\n` +
             `  lifecycle gate: ${gate}\n` +
-            '  blocker: merge-authority is OPEN on road-to-governed-harness-evolution.\n' +
+            `  blocker: merge-authority is OPEN on ${path.basename(MERGE_AUTHORITY_ROADMAP, '.md')}.\n` +
             '    Phases 1-6 are legal because they promote nothing (AI council 2026-08-29,\n' +
             '    anthropic + openai, 2/2). Phase 7 stays gated: granting merge authority\n' +
             '    weakens a human-in-the-loop guarantee and refusing it settles ADR-239\n' +
