@@ -251,3 +251,151 @@ roadmap's own text reserved to the owner, an evidence record born stale, and two
 over-claims about what the council had said. All fixed, each with a commit ref.
 That review is the reason this summary can be read as evidence rather than as a
 report about itself.
+
+---
+
+# Drain run 13 — 2026-09-01
+
+A second autonomous drain run, on the tree the run above left behind. Same
+standing instruction: every open question, decision or blocker goes to the AI
+council rather than to the maintainer, and the council's recorded decision
+substitutes for owner sign-off.
+
+## Scope
+
+Recomputed from the tree, not from the seed queue — the seed named 36 roadmaps
+and **three** were active at `origin/main` @ `468eeefc7`. Two of the three are
+the ones run 12 left open; the third, `road-to-governed-evidence-production`, is
+the receiver run 12's successor created.
+
+**The active directory is NOT empty at the end of this run, and that is the
+recorded outcome rather than a shortfall.** All three files remain, each for a
+reason that is written down and falsifiable.
+
+## Pull requests
+
+| PR | Roadmap | Outcome | State |
+|---|---|---|---|
+| [#1789](https://github.com/event4u-app/agent-config/pull/1789) | `road-to-harness-promotion-bridge` | defect fixed + hardened; dispositions recorded; roadmap stays active | open |
+| [#1790](https://github.com/event4u-app/agent-config/pull/1790) | `road-to-council-topology-evidence-followups` | triggers verified, 4 faithfulness repairs; deliberately not drained | **merged** |
+| [#1791](https://github.com/event4u-app/agent-config/pull/1791) | `road-to-governed-evidence-production` | Phase 1 closed; Phase 2 unblocked, arm built, execution refused | open |
+
+`#1785` (a run-12 leftover for an already-archived roadmap) was merged by a human
+during this run. It was not touched by this run and is out of its scope.
+
+## Council decisions — one session, five questions
+
+AI council 2026-09-01: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+2 rounds, deep, peer-review, blind chairman, quorum **2/2 present, needed 1 —
+concluded**, subscription transport, `billable=0`, **`$0.0000`**.
+
+| Q | Question | Verdict | Executed? |
+|---|---|---|---|
+| 1 | ADR-239 § Decision 3 / `blocker: merge-authority` | **1A refuse, 2/2** | **NO** — see below |
+| 2 | AC-9's disposition | **SPLIT 2A/2B**, both on one shared condition | resolved as **2B** from the tree |
+| 3 | `blocker: metered-backend-park` | **3B narrow to a proposer, 2/2** | **YES** |
+| 4 | the topology receiver's disposition | **4A leave as draft receiver, 2/2** | **YES** |
+| 5 | is the delegation manufacturing closure? | **YES**, one risk named | risk declined |
+
+**Q1's verdict was obtained and deliberately not executed, and the run discloses
+its own procedural defect for having asked.** The tree carries a live lock
+reserving that argument until *"a human either answers it or explicitly asks for
+the (b) argument to be put"*, and the question was written and dispatched before
+that lock was read — a `decision-revisit-gate` step-2 miss. Independently of the
+lock, writing the refusal into ADR-239 **is** settling ADR-239, which the
+reservation names in either direction. Disclosed in
+`road-to-harness-promotion-bridge.md` § Blockers, where the next reader looks.
+
+**Q2's split was resolved by a fact, not by picking a side.** Both seats
+conditioned their answer on the same question — does this repository admit an
+archive with an unmet acceptance criterion? It does not:
+`archive_completed_roadmaps.ts:14-16,562-563` gates on `count_open == 0`, counted
+by a whole-file `/gm` regex with no section filter, so `- [ ] AC-9` counts like
+an unfinished step. There is no `terminal-incomplete` disposition and no flag
+that supplies one.
+
+**Q3 was taken only after reading the actual lock, which corrected the
+blocker's own provenance.** The blocker cited *"the 5.2 evaluator-independence
+decision"*; step 5.2 only defers, and the reasoning lives in
+`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:20-52`. Two facts
+there decide it: the park states its own authority as *"council-decidable, not
+owner-reserved"* (`:44-47`), and its objection is *"evaluating an artifact you
+authored"*, explicitly not cost (`:27-33`).
+
+## Descopes
+
+**None.** Nothing was descoped, cancelled, weakened, or marked complete on any of
+the three roadmaps in this run.
+
+## Terminal blocks, and what clears each
+
+| Item | Block | Clears when |
+|---|---|---|
+| `road-to-harness-promotion-bridge` 0.8, AC-9 | owner-reserved: ADR-239 § Decision 3 | the owner settles it; a **grant** is additionally barred by the `non-destructive-by-default` Hard Floor, which no standing instruction lifts |
+| `road-to-governed-evidence-production` 2.1, 2.2, AC-2, AC-3, AC-4 | host execution refusal on a session authorised to make paid API calls | a human runs the frozen protocol, or authorises a spending session |
+| `road-to-council-topology-evidence-followups`, all 38 | capacity that does not exist: `n >= 5` eligible seats (2 of a schema universe of exactly 5 are enabled), and reservation windows the tree cannot represent | the capacity exists **and** a human flips `status: draft` |
+
+The middle row is the one that moved. Phase 2 was held by a governance lock; it
+is now held by an environment-scoped refusal, which is falsifiable and cheap to
+clear. The run did **not** retry that refusal — the same shape is on record one
+roadmap over, where a run *"stopped rather than rephrasing its way past a safety
+refusal, which would have been the reservation defeated by persistence."*
+
+## What the run actually shipped
+
+- **A real security defect and its hardening.** `Status: resolved` was the only
+  closed token this repository recognises and the promotion capability read it as
+  a **grant** — so recording a *refusal* of preauthorized merge authority would
+  have minted the capability that performs unattended promotion. A neutral review
+  then found **three further ways** the fixed version still minted against a
+  blocker whose live status was `open` (a fenced example read as the live value,
+  `granted` matched as a prefix so a half-written template minted, and an
+  unscoped heading search). All four fixed, each pinned by its own test, each
+  RED-proven individually.
+- **Phase 1 of the governed-evidence receiver, closed on real evidence** — an
+  independent append-only activation-receipt producer that imports no evaluation
+  module (so its trust boundary holds by construction), a falsifiable trust
+  boundary and evidence-cost contract, and a twelve-stage enumeration that is
+  *computed* from committed arrays and reproduced by a second route.
+- **A metered proposer arm whose role constraint is structural** — six forbidden
+  roles each made unavailable by the type or the shape rather than by intention;
+  a scoring key is a build error.
+- **28 RED proofs across the run**, every one restored byte-identically. Three of
+  them found real defects instead of confirming health: an unfalsifiable
+  `assertCheapestFirst` guard, a vacuous test stub that made an ordering
+  assertion meaningless, and a hand-written family list that was the wrong
+  complement.
+- **A pre-existing red on `main`, diagnosed and swept.** PR #1788 archived a
+  roadmap without updating a test's hardcoded path, failing collection and taking
+  Node Tests shard 4/4 down on both OSes. Defect-pattern sweep: 8 candidate
+  sites, 1 real defect. Fixed independently on `main` via #1785 with a stricter
+  resolver; that version was taken.
+
+## Honest nulls
+
+- **No metered model call was made by any session in this run.** Zero requests to
+  any provider API, including no wiring probe — that would itself be a capture by
+  the park's own reasoning. The metered transport's live path is unexercised.
+- **No measurement was taken for any of the 38 topology items and none is
+  claimed.** Zero of them turned out to be already satisfied.
+- **`adherence` is reachable through the evaluation cascade's stage list but from
+  no shipped observer**, because no evidence source is admitted for it. Named in
+  the step rather than papered over.
+- **No tree-wide scan covers the new metered arm**; containment is asserted
+  locally over three paths. Recorded as an open question.
+- **The two prior councils' rulings were not overturned.** Where this run
+  disagreed with a recorded lock it said so and left the lock standing.
+
+## Open questions left for a human
+
+1. ADR-239 § Decision 3 — grant or refuse preauthorized merge authority. The
+   council's reasoning for refusal is recorded and unexecuted.
+2. Whether to run the frozen metered-proposer protocol, and who freezes its one
+   deliberately-unset slot (the paired outcome metric and its aggregation).
+3. Whether `road-to-council-topology-evidence-followups` should be flipped to
+   `ready` — its header reserves that to a human.
+4. Whether the ungated 1000-line structural roadmap cap should get a gate.
+   `road-to-harness-promotion-bridge` crossed it silently in this run.
+5. Whether the unguarded-removal exposure on the topology receiver — 38
+   obligations resting on a file no gate protects — warrants a standing
+   validator.

@@ -44,6 +44,26 @@ export const LADDER_RUNGS = [
 export type LadderRung = (typeof LADDER_RUNGS)[number];
 
 /**
+ * The receipt-bearing cascade stage that reads each rung, in ladder order.
+ *
+ * Derived from {@link LADDER_RUNGS} rather than written out, so a rung cannot
+ * exist without its stage and the two orders cannot drift. Named here rather
+ * than in the cascade because the RUNGS are this module's, and a second module
+ * spelling `receipt-<rung>` would be a second source of truth for the same
+ * enum.
+ *
+ * The cascade consumes these; nothing here imports the cascade. That direction
+ * is the one `docs/contracts/activation-receipt-trust-boundary.md` TB-1 fixes.
+ */
+export const RECEIPT_STAGES = LADDER_RUNGS.map((r) => `receipt-${r}` as const);
+export type ReceiptStage = (typeof RECEIPT_STAGES)[number];
+
+/** The rung a receipt-bearing stage reads. Total over {@link ReceiptStage}. */
+export function rungForReceiptStage(stage: ReceiptStage): LadderRung {
+    return stage.slice('receipt-'.length) as LadderRung;
+}
+
+/**
  * Which failure family a stall at each rung belongs to.
  *
  * This is what step 1.1's exit criterion asks for: a deliberately failing
@@ -171,10 +191,34 @@ export function rungState(receipt: ActivationReceipt, rung: LadderRung): RungSta
  * and the caller gets `null`.
  */
 export function classifyFailure(receipt: ActivationReceipt): FailureFamily | null {
-    for (const spec of LADDER) {
+    return firstStall(receipt)?.family ?? null;
+}
+
+/** Where a receipt stopped climbing, and the family that stall belongs to. */
+export interface LadderStall {
+    /** The rung the walk stopped at. */
+    readonly rung: LadderRung;
+    /** The receipt-bearing cascade stage that reads {@link rung}. */
+    readonly stage: ReceiptStage;
+    /** `unknown` when the rung was never observed; the rung's family otherwise. */
+    readonly family: FailureFamily;
+}
+
+/**
+ * The first rung a receipt did not reach, with its stage and its family.
+ *
+ * {@link classifyFailure} is a projection of this, and delegates to it rather
+ * than walking the ladder a second time. Two walks of the same ladder applying
+ * the same short-circuit rule is two places to change it — and the cascade needs
+ * the STAGE as well as the family, which is the only reason this exists
+ * separately at all.
+ */
+export function firstStall(receipt: ActivationReceipt): LadderStall | null {
+    for (const [i, spec] of LADDER.entries()) {
         const state = rungState(receipt, spec.rung);
-        if (state === 'unknown') return 'unknown';
-        if (state === 'not-reached') return spec.family;
+        const stage = RECEIPT_STAGES[i] as ReceiptStage;
+        if (state === 'unknown') return { rung: spec.rung, stage, family: 'unknown' };
+        if (state === 'not-reached') return { rung: spec.rung, stage, family: spec.family };
     }
     return null;
 }

@@ -117,4 +117,38 @@ describe('the deterministic path stays until a comparison is run', () => {
     it('the construct list is non-empty, so the scan above can actually fail', () => {
         expect(MODEL_IN_THE_LOOP.length).toBeGreaterThan(5);
     });
+
+    // ADDED 2026-09-01, road-to-governed-evidence-production 2.1, when the
+    // second arm arrived. STRENGTHENING, not relaxing: nothing above changed.
+    //
+    // `PROPOSER_CHAIN` is an explicit two-element allowlist, so the metered arm
+    // (`_lib/llm_candidate_proposer.ts`) is already outside this scan BY PATH —
+    // not because anyone anticipated it, but because the list names files
+    // rather than globbing a directory. That accidental exclusion is fine for
+    // the metered arm, which is a different arm, and useless for the property
+    // this file actually claims: "the deterministic path stays" is falsified
+    // the moment the deterministic path can REACH the metered one, and the
+    // scan above reads only these two files' own bodies, so it would not see
+    // that edge.
+    //
+    // Hence the direction check. The metered arm may import the deterministic
+    // one — it reuses its comparator, its recipes and its id function on
+    // purpose, so the two arms are comparable. The reverse edge is what makes
+    // the absence-assertion decay, and it is now a red rather than a silence.
+    it('the deterministic chain does not reach the metered arm', () => {
+        const raw = PROPOSER_CHAIN.map((rel) => ({
+            rel,
+            body: readFileSync(path.join(REPO, rel), 'utf8'),
+        }));
+        for (const b of raw) {
+            expect(b.body, `${b.rel} imports the metered arm`).not.toMatch(
+                /llm_candidate_proposer|llm_proposer_transport/,
+            );
+        }
+        // Anti-vacuity: the metered arm exists, so this is a real edge that
+        // could be created rather than a check against a file nobody has.
+        expect(
+            readFileSync(path.join(REPO, 'src/scripts/_lib/llm_candidate_proposer.ts'), 'utf8'),
+        ).toMatch(/candidate_proposer\.js/);
+    });
 });

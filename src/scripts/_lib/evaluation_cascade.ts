@@ -30,6 +30,10 @@
  * | 5 | near-duplicate screen  | zero model calls | `content` |
  * | 6 | metric vector + verdict| zero model calls | `unknown` |
  *
+ * (Numbered as the prefix. In the full twelve-stage enumeration the receipt
+ * stages take slots 6-11 and the verdict is slot 12 — see
+ * `_lib/cascade_stage_enumeration.ts`.)
+ *
  * **Every stage here is free.** That is not an accident of the current stage
  * set — it is why these six are the ones that can ship without receipts, and it
  * makes the step's "a candidate failing the cheapest stage consumes no model
@@ -44,9 +48,30 @@
  * `content | activation | adherence | unknown` are Phase 1's, and no fifth is
  * invented. This prefix assigns `content` and `unknown` only. It NEVER assigns
  * `activation` or `adherence`, because those are the receipt-bearing families
- * and nothing here has a receipt. `unknown` is the honest family for a stage
- * that establishes a candidate is unusable without establishing why in
+ * and nothing in the prefix has a receipt. `unknown` is the honest family for a
+ * stage that establishes a candidate is unusable without establishing why in
  * behavioural terms — it is a real classification, not a fallback.
+ *
+ * ## AMENDED 2026-09-01 — the prefix is no longer the whole stage list
+ *
+ * `road-to-governed-evidence-production` step 1.1 built the missing piece: an
+ * independent, append-only receipt producer
+ * (`_lib/activation_receipt_producer.ts`). So `runCascade` now accepts an
+ * optional {@link CascadeInput.receipt} and, when one is supplied, runs the six
+ * receipt-bearing stages between the peer screen and the measurement stage.
+ *
+ * **`PREFIX_ASSIGNABLE_FAMILIES` was NOT widened, and that is the point.** The
+ * exclusion is a property of the deterministic prefix and stays exactly as
+ * strict as it was: no prefix stage may assign `activation` or `adherence`. What
+ * changed is that the prefix is one half of the stage list rather than all of
+ * it. The other half's permitted families are
+ * {@link RECEIPT_ASSIGNABLE_FAMILIES}, and a receipt stage reaches them only
+ * from a receipt — never from any property of the candidate.
+ *
+ * The trust boundary and the evidence-cost claims this rests on are stated in
+ * `docs/contracts/activation-receipt-trust-boundary.md` and cited, not restated,
+ * here: TB-1 fixes the import direction (this module imports the ladder; the
+ * ladder imports nothing from here), and EC-2 fixes the stage placement.
  */
 
 import {
@@ -70,6 +95,13 @@ import {
     type MetricVector,
     type PromotionVerdict,
 } from './evaluation_vector.js';
+import {
+    LADDER,
+    RECEIPT_STAGES,
+    firstStall,
+    type ActivationReceipt,
+    type ReceiptStage,
+} from './activation_ladder.js';
 
 /** Phase 1's families. No fifth is invented here. */
 export const FAILURE_FAMILIES = ['content', 'activation', 'adherence', 'unknown'] as const;
@@ -83,6 +115,33 @@ export type FailureFamily = (typeof FAILURE_FAMILIES)[number];
  */
 export const PREFIX_ASSIGNABLE_FAMILIES: readonly FailureFamily[] = ['content', 'unknown'];
 
+/**
+ * The families the RECEIPT-BEARING stages may assign.
+ *
+ * **DERIVED from {@link LADDER}, not written out** — and the first hand-written
+ * version of this constant was WRONG, which is why it is derived now. It read
+ * `['activation','adherence','unknown']` on the assumption that the receipt half
+ * was the complement of the prefix half. It is not: the `eligible` rung's family
+ * is `content`, so a receipt stage can legitimately assign `content` too, and
+ * the test asserting stage-versus-permission agreement caught it on its first
+ * run. A permission table maintained by hand beside the table it describes is a
+ * second source of truth for the same fact.
+ *
+ * `unknown` is added because a receipt stage reaches it by a route the ladder's
+ * own family column does not carry: a rung that was never observed. That is a
+ * property of the WALK ({@link firstStall} short-circuits on `unknown`), not of
+ * any rung, so it cannot be derived from `LADDER` and is named here instead.
+ *
+ * **What did NOT change is the constant that matters.**
+ * {@link PREFIX_ASSIGNABLE_FAMILIES} is untouched: no deterministic stage may
+ * assign `activation` or `adherence`. The fix for step 4.1's open conjunct was
+ * never to widen that exclusion — it was to stop the prefix being the whole
+ * stage list.
+ */
+export const RECEIPT_ASSIGNABLE_FAMILIES: readonly FailureFamily[] = [
+    ...new Set<FailureFamily>([...LADDER.map((s) => s.family), 'unknown']),
+];
+
 export const CASCADE_STAGES = [
     'schema-validity',
     'path-ownership',
@@ -92,6 +151,18 @@ export const CASCADE_STAGES = [
     'metric-verdict',
 ] as const;
 export type CascadeStage = (typeof CASCADE_STAGES)[number];
+
+/**
+ * Any stage the cascade can run — a deterministic prefix stage, or one of the
+ * six receipt-bearing stages contributed by the activation ladder.
+ *
+ * The two sets are kept as separate types rather than merged into one enum
+ * because their ASSIGNABLE FAMILIES differ, and that difference is the whole
+ * trust boundary: a prefix stage may never assign `activation` or `adherence`,
+ * and a receipt stage may never assign `content`. One flat enum would make both
+ * halves look interchangeable at every call site.
+ */
+export type StageId = CascadeStage | ReceiptStage;
 
 /** The cheapest stage. Its failure must cost nothing. */
 export const CHEAPEST_STAGE: CascadeStage = 'schema-validity';
@@ -105,14 +176,29 @@ const STAGE_FAMILY: Readonly<Record<CascadeStage, FailureFamily>> = {
     'metric-verdict': 'unknown',
 };
 
-export function familyForStage(stage: CascadeStage): FailureFamily {
-    return STAGE_FAMILY[stage];
+/**
+ * The family a stall AT this stage belongs to. Total over {@link StageId}.
+ *
+ * The prefix half is this module's table; the receipt half is read from
+ * {@link LADDER}, which owns the rung→family mapping. Copying six rows into
+ * `STAGE_FAMILY` would be a second place to change when a rung's family changes,
+ * and the two would disagree silently.
+ */
+export function familyForStage(stage: StageId): FailureFamily {
+    const prefix = STAGE_FAMILY[stage as CascadeStage];
+    if (prefix !== undefined) return prefix;
+    const i = RECEIPT_STAGES.indexOf(stage as ReceiptStage);
+    // Unreachable through the public API: `StageId` is the union of the two
+    // sets, so a stage that is in neither table cannot be constructed without a
+    // cast. `unknown` is the honest fallback rather than a throw — a classifier
+    // that crashes on an unrecognised stage turns a labelling gap into a lost run.
+    return i >= 0 ? (LADDER[i] as { family: FailureFamily }).family : 'unknown';
 }
 
 export interface CascadePass {
     readonly outcome: 'pass';
     readonly candidate_id: string;
-    readonly stages_run: readonly CascadeStage[];
+    readonly stages_run: readonly StageId[];
     readonly model_calls: 0;
     readonly verdict: PromotionVerdict;
 }
@@ -121,10 +207,10 @@ export interface CascadeAbort {
     readonly outcome: 'abort';
     readonly candidate_id: string | null;
     /** The FIRST failing stage. The cascade does not continue past it. */
-    readonly failed_stage: CascadeStage;
+    readonly failed_stage: StageId;
     readonly family: FailureFamily;
     readonly detail: string;
-    readonly stages_run: readonly CascadeStage[];
+    readonly stages_run: readonly StageId[];
     readonly model_calls: 0;
 }
 
@@ -142,7 +228,7 @@ export interface CascadeAbort {
 export interface CascadeIncomplete {
     readonly outcome: 'incomplete';
     readonly candidate_id: string;
-    readonly stages_run: readonly CascadeStage[];
+    readonly stages_run: readonly StageId[];
     readonly model_calls: 0;
     readonly not_reached: CascadeStage;
     readonly why: string;
@@ -168,12 +254,24 @@ export interface CascadeInput {
      * to the same number.
      */
     readonly vector?: MetricVector | undefined;
+    /**
+     * An activation receipt for the artefact this candidate produces, when one
+     * was observed.
+     *
+     * ABSENT means no receipt was produced, which is not the same as a receipt
+     * whose rungs are unknown: with no receipt the six receipt-bearing stages do
+     * not run at all, and `stages_run` says so. Only
+     * `_lib/activation_receipt_producer.ts` mints these — the cascade consumes a
+     * receipt and never derives one, which is the direction
+     * `docs/contracts/activation-receipt-trust-boundary.md` TB-1 fixes.
+     */
+    readonly receipt?: ActivationReceipt | undefined;
 }
 
 function abort(
-    stage: CascadeStage,
+    stage: StageId,
     detail: string,
-    run: CascadeStage[],
+    run: StageId[],
     candidate_id: string | null,
 ): CascadeAbort {
     return {
@@ -196,7 +294,7 @@ function abort(
  * literal cannot: there is no code path in this module that could increment one.
  */
 export function runCascade(input: CascadeInput): CascadeResult {
-    const run: CascadeStage[] = [];
+    const run: StageId[] = [];
 
     // Stage 1 — schema validity. The cheapest, and the one whose failure must
     // cost nothing: it runs before any other stage touches the record.
@@ -268,7 +366,49 @@ export function runCascade(input: CascadeInput): CascadeResult {
         return abort('near-duplicate', 'candidate set collapsed to duplicates', run, record.id);
     }
 
-    // Stage 6 — metric vector and the promotion verdict. This is the ONLY
+    // Stages 6-11 — the RECEIPT-BEARING stages, one per ladder rung.
+    //
+    // Placed here, and the placement is the evidence-cost contract's EC-2: after
+    // every record-only, plan-only and peer-only stage, and before the
+    // measurement stage whose evidence is the most expensive to obtain. Reading
+    // a receipt is cheap but not precondition-free — how far an artefact climbed
+    // says nothing useful about a candidate that is not even well-formed.
+    //
+    // NO RECEIPT MEANS NO STAGES RUN. Not "six stages that returned unknown":
+    // the ladder already distinguishes absent from negative, and running a stage
+    // over evidence that does not exist would put six entries in `stages_run`
+    // that observed nothing. `stages_run` is what a reader counts coverage from.
+    if (input.receipt !== undefined) {
+        const stall = firstStall(input.receipt);
+        if (stall !== null) {
+            // Every stage up to the stall ran; the stall's own stage ran and is
+            // where the walk stopped. Abort-on-first, same rule as the prefix.
+            const upTo = LADDER.findIndex((s) => s.rung === stall.rung);
+            for (let i = 0; i <= upTo; i += 1) run.push(RECEIPT_STAGES[i] as ReceiptStage);
+            if (stall.family !== 'unknown') {
+                // A rung that was OBSERVED not to be reached. This is the only
+                // path on which the cascade assigns `activation` or `adherence`,
+                // and it assigns it from the receipt rather than from any
+                // property of the candidate.
+                return abort(
+                    stall.stage,
+                    `activation stalled at rung '${stall.rung}'` +
+                        (input.receipt.reason !== undefined ? ` (${input.receipt.reason})` : ''),
+                    run,
+                    record.id,
+                );
+            }
+            // An UNOBSERVED rung is not a failure. The cascade has learned
+            // nothing about activation and says so by not aborting — folding
+            // `unknown` into a refusal would turn every capture gap into a
+            // rejected candidate, which is the inflation `ladderRate` keeps out
+            // of its own denominator for exactly the same reason.
+        } else {
+            for (const s of RECEIPT_STAGES) run.push(s);
+        }
+    }
+
+    // Stage 12 — metric vector and the promotion verdict. This is the ONLY
     // promoter consulted, and it is `_lib/evaluation_vector.ts`'s, never a
     // second verdict computed here.
     if (input.vector === undefined && (input.rows === undefined || input.rows.length === 0)) {
