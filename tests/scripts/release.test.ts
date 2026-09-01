@@ -880,11 +880,17 @@ describe('render_release_head', () => {
         expect(head.join('\n')).toContain('- **Known limitations:** _none_');
     });
 
-    it('fits the operator-facing cap; the HTML comment does not count', () => {
+    it('fits the operator-facing cap and emits NO HTML comment', () => {
+        // UPDATED 2026-09-01 (roadmap § Phase 2, Option A). This test used to
+        // assert the opposite of its second line — that the writer DOES emit
+        // an HTML comment, excluded from the cap. That comment was the
+        // generator's authoring instruction, and nothing removed it before
+        // publication, so it shipped in the npm artifact. The writer now emits
+        // none and the reminder rides in the release-PR body instead; the cap
+        // assertion is unchanged and still the point of this test.
         const head = render_release_head();
         expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
-        expect(head.some((l) => l.trimStart().startsWith('<!--'))).toBe(true);
-        expect(release_head_line_count(head)).toBeLessThan(head.length);
+        expect(head.some((l) => l.trimStart().startsWith('<!--'))).toBe(false);
     });
 
     it('is emitted on every release, so it cannot be forgotten', () => {
