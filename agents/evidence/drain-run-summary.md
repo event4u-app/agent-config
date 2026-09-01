@@ -399,3 +399,110 @@ refusal, which would have been the reservation defeated by persistence."*
 5. Whether the unguarded-removal exposure on the topology receiver — 38
    obligations resting on a file no gate protects — warrants a standing
    validator.
+
+## The five open questions, put to the council — 2026-09-01
+
+The maintainer asked for the five above to be put to the AI council, and for
+whatever could not be settled there to come back to them individually.
+
+AI council 2026-09-01: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+2 rounds, deep, peer-review, blind chairman, quorum **2/2 present, needed 1 —
+concluded**, subscription transport, `billable=0`, **`$0.0000`**.
+
+**Both seats were asked to classify each question as council-decidable or
+owner-reserved BEFORE choosing a letter, and told not to pick a letter for a
+question they judged reserved.** Both complied, and both refused a binding
+answer on the same two.
+
+| # | Question | Classification | Verdict |
+|---|---|---|---|
+| 1 | ADR-239 § Decision 3 | **OWNER-RESERVED, 2/2** | no letter; both *recommend* 1A |
+| 2a | who freezes the unset paired metric | council-decidable, 2/2 | any genuinely independent session, in its own commit, before any capture |
+| 2b | authorising the paid execution run | **OWNER / HOST-RESERVED, 2/2** | no letter |
+| 3 | the topology receiver's status | council-decidable, 2/2 | **3A** — leave `draft`, unchanged |
+| 4 | the ungated 1000-line structural cap | council-decidable, 2/2 | **4E** — gate at 1000 with a file-specific, downward-only legacy exception |
+| 5 | a standing deferral-carry validator | council-decidable, 2/2 | **5A**, staged and identity-based |
+| 6 | is the framing loaded? | — | **YES** — Q1, Q4, Q5 and Q2 named |
+
+### Q1 — why both seats refused to answer their own recommendation
+
+Both recommend refusing preauthorized merge authority and both decline to record
+it. The openai seat put the reasoning most compactly: the question's own standing
+context *"already resolves the supposed tension"* — amending an ADR that reserves
+its decision to the owner **is** the reserved act, in either direction — and
+*"whether refusal strengthens the floor does not transfer decision authority."*
+The anthropic seat added a fact the earlier council could not have had: the
+2026-09-01 verdict of **1A, 2/2** was reached *before* the `Disposition:` fix, so
+those seats were *"reasoning about a different state of the tree than exists
+now"* — a world in which recording a refusal would have accidentally granted. The
+old verdict therefore cannot simply be adopted, even by someone who agrees with
+it.
+
+**The decision package for the owner**, as both seats framed it: refusal is now
+representable without accidentally granting; it binds **preauthorization only**
+and leaves ordinary same-turn human confirmation intact; it makes AC-9
+permanently unmeetable as written, so AC-9 needs its own truthful disposition
+rather than being left as a nominal criterion; and leaving the question open
+preserves a possibility the Hard Floor appears to make unavailable anyway.
+
+### Q2 — one question that was really two
+
+The metric freeze is *"a bounded experimental-design choice"* and any independent
+session may make it, provided it is committed before capture and specifies ties,
+exclusions, missing pairs, aggregation, and the relationship to the acceptance
+criterion.
+
+The paid execution is not. Both seats rejected the idea that pre-authorised spend
+covers it: *"prior budget approval does not prove that a particular execution
+environment may initiate them"*, and the host refusal is *"a safety mechanism
+asserting itself, not a settings tweak."* Continued refusal is to be escalated as
+a platform limitation, **never retried through reformulation**.
+
+### Q4 — why not a plain ratchet
+
+Both seats rejected a ratchet baselined at the current 1065 lines, on the ground
+that it *"risks normalizing that as an acceptable size"* and could become a
+reusable general cap. The agreed shape: enforce 1000 for every new or currently
+compliant structural roadmap; give the single oversized file a file-specific
+legacy baseline that may only move down; remove the exception automatically at
+1000. And do not split Phase 7 unless the split is proven semantics-neutral or
+the owner approves — the Resume condition reserves operations on transferred
+steps.
+
+### Q5 — the option as written was judged insufficient
+
+Both seats said build it; the openai seat added that the option as offered is
+*"insufficiently precise"* and should rest on machine-readable identity rather
+than prose similarity — one resolvable receiver per archived `carried-to=`,
+stable identifiers per carried obligation, exactly-once presence, an allowed
+receiver lifecycle state, explicit resolution records for removed obligations,
+and rejection of duplicate IDs and circular carry chains. Staged if stable IDs do
+not exist yet: gate receiver existence first, then identity and coverage. The
+anthropic seat added the stopping condition nobody had specified — validate while
+obligations remain open, stop once the receiver itself archives.
+
+### Q6 — the framing was loaded, and the specifics are recorded
+
+Named by both seats: **Q1** established at length why refusal is safe, presented
+leaving it open mainly as blockage, and presented council authority as genuinely
+unsettled *after* stating the rule that settles it. **Q4** called the gate
+*"cheap"* without discussing maintenance cost or whether line count is a sound
+complexity proxy. **Q5** described silent deletion vividly while giving the
+opposing case only an unsupported likelihood claim. **Q2** collapsed budget
+authorization, host permission, metric authority and execution authority into one
+choice.
+
+This is recorded rather than corrected, for the same reason the review prompt
+elsewhere in this run was: a framing edited after it was answered is not the
+framing that was answered. It does not make the outcomes wrong; it means this
+document, not the question, is where facts and advocacy get separated.
+
+### What is now settled, and what still is not
+
+**Settled by the council and actionable without the owner:** the topology
+receiver stays `draft` (3A — no change, already the state); the structural cap
+gets a gate in the 4E shape; the deferral validator gets built in the staged 5A
+shape; and an independent session may freeze the paired metric.
+
+**Still open, and returned to the maintainer one at a time:** ADR-239 § Decision
+3, and the authorisation of a paid execution run.
