@@ -374,12 +374,12 @@ chosen after seeing a result is a tuned metric.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
       **Already discharged at transfer, with a production caller:**
-      `buildRunReport` (`src/scripts/_lib/evolution_roi.ts:363`) refuses a
+      `buildRunReport` (`src/scripts/_lib/evolution_roi.ts:387`) refuses a
       report whose evolution-ROI figure is absent or carries an unknown kind,
       and `evolution_lab.ts:865` calls it on the one path a run completes on.
       Both halves RED-proven, 28/28 green.
       **What is still open is the ordering conjunct.** The guard
-      `assertCheapestFirst` (`evolution_roi.ts:191`) exists and is exercised in
+      `assertCheapestFirst` (`evolution_roi.ts:215`) exists and is exercised in
       both polarities, and it has **zero production callers** — it polices a
       population of zero, because nothing in the tree makes a metered proposer
       call. A check that scans a population of zero exits green while looking

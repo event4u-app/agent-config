@@ -82,7 +82,7 @@ model is a floating alias is not frozen: the alias moves and a later run answers
 a different question. No dated `claude-opus-4-1-*` id exists anywhere in this
 tree, so `modelForTier('high')` throws with a message naming what must be pinned
 first. `high` is reachable only through an `execution_failed` escalation
-(`_lib/evolution_roi.ts:111`), so a run with no transport error never touches it.
+(`_lib/evolution_roi.ts:128`), so a run with no transport error never touches it.
 
 ### Sampling
 
@@ -121,7 +121,7 @@ rather than a selection policy:
 
 1. The first attempt runs on class `reason_unknown`, whose ladder is exactly
    `['lite']` — *"escalating on a reason nobody established is spending on a
-   guess"* (`_lib/evolution_roi.ts:119-121`).
+   guess"* (`_lib/evolution_roi.ts:136-138`).
 2. A refused generation is classified into a `PathologyWhy` by
    `classifyRefusal`, deterministically and from the refusal itself — never from
    the model's opinion of its own output.
@@ -135,9 +135,9 @@ rather than a selection policy:
 
 Per-observation spend is per observation: a new subject starts at the cheapest
 rung again, which the ordering guard allows explicitly — *"retrying `lite` is
-not an escalation"* (`_lib/evolution_roi.ts:184-185`).
+not an escalation"* (`_lib/evolution_roi.ts:201-202`).
 
-`assertCheapestFirst` (`_lib/evolution_roi.ts:191`) validates the whole attempt
+`assertCheapestFirst` (`_lib/evolution_roi.ts:215`) validates the whole attempt
 list before the arm returns.
 
 ### Exclusion policy
@@ -204,7 +204,7 @@ different set.
 It read *"The run report records `git rev-parse HEAD`, and a comparison is only
 comparable against the same commit."* The second clause is true and stays. The
 first was false when it was written and is false now: `RunReport`
-(`_lib/evolution_roi.ts:329-335`) has `run_id`, `candidates`,
+(`_lib/evolution_roi.ts:353-359`) has `run_id`, `candidates`,
 `trials_per_candidate`, `roi` and `ladder` and no commit field; `run_id` is
 built from candidate ids (`evolution_lab.ts:871`); and `rev-parse` appears
 nowhere in `evolution_lab.ts`, `llm_propose.ts`, `_lib/evolution_roi.ts` or
