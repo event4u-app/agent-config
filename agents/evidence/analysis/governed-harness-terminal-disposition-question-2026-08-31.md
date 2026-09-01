@@ -1,29 +1,91 @@
 <!-- evidence-type: analysis -->
 
-# Governed harness evolution — the terminal-disposition question, asked and pending
+# Governed harness evolution — the terminal-disposition question, asked and ANSWERED
 
-**Status: PENDING. No verdict exists and none is implied by this file.**
+**Status: ANSWERED 2026-09-01. Verdict below; the question follows it verbatim.**
 
-This is the AI-council question for the four items that remain open on
-`road-to-governed-harness-evolution`. It is committed as an artefact so the
-next run does not have to re-derive it, and so the framing it was asked under
-is auditable rather than reconstructed.
+This was the AI-council question for the four items that remain open on
+`road-to-governed-harness-evolution`. It was committed as an artefact so the
+next run would not have to re-derive it, and so the framing it was asked under
+is auditable rather than reconstructed. It has now been run **unchanged**, and
+the verdict is recorded here rather than in a council response path — those live
+under `agents/runtime/council/`, which is gitignored and auto-pruned, so citing
+one from a durable artefact is a build failure.
 
-**Why there is no verdict.** Both configured seats share one user-global daily
-CLI-call counter, and it was exhausted for the UTC day the question was
-prepared: `~/.event4u/agent-config/cli-calls.json` read `anthropic 50/50` and
-`openai 51/50`. The counter is date-keyed and resets at 00:00 UTC. The metered
-API rung was deliberately not used: the operator's configuration carries
-`api_on_quota: off`, and nobody cleared the billable rung for this run.
+**One caveat on the question body below.** Every `file:line` in it was read at
+commit `52e0287af`. Line anchors in this repository have gone stale before;
+re-read them before relying on them. The question was run unchanged, so the
+verdict was formed against those anchors as they stood.
 
-**How to use it.** Run it unchanged. Changing the framing changes what the
-answer means, and the option set below was written to state the facts and the
-constraints without naming a preferred outcome — see
-`src/skills/ai-council/SKILL.md` § Neutrality guidelines.
+**Why it sat pending for a day.** Both configured seats share one user-global
+daily CLI-call counter and it was exhausted for the UTC day the question was
+prepared — `anthropic 50/50`, `openai 51/50`. The counter is date-keyed and
+resets at 00:00 UTC; on 2026-09-01 it read `6/50` on both seats. The metered API
+rung was never used, in either run: `api_on_quota: off`.
 
-**One caveat on the evidence inside.** Every `file:line` in the question was
-read at commit `52e0287af`. Line anchors in this repository have gone stale
-before; re-read them before relying on them.
+## The verdict — 2 of 2 convergent, on the load-bearing question
+
+Run 2026-09-01. Members: `anthropic/claude-sonnet-4-5` and
+`openai/codex-default`, both subscription transport, **$0.00 billed**, quorum
+2/2 present after the run.
+
+**Convergent — none of the four items is closeable on its existing evidence.**
+Both seats reject closure, and both reject the two routes that would have
+produced one:
+
+1. **No retroactive re-scoping of a `verify:` clause.** The openai seat: editing
+   the clause to match what was built "changes the proposition being verified"
+   rather than correcting it. The anthropic seat, on the same point: the clause
+   was committed before the implementation, and rewriting it turns a
+   pre-committed success criterion into an editable account.
+2. **No closing a conjunction on its met half.** Both seats read a parent `[x]`
+   over a transferred-away conjunct as a record that implies the conjunction
+   passed. Obligations transfer *whole*; the parent may become `[-]` once a
+   receiver genuinely owns it, never `[x]`.
+
+**Convergent — step 5.4's `category: absence-assertion` is a documentation bug,
+not a closure opportunity.** Its `verify:` names a `paired_verdict` comparison,
+which is a mechanism that does not exist, while `absence-assertion` carries the
+right to close `[x]` once sabotage-verified. Both seats prescribe the same fix:
+**recategorise to `future-mechanism` and keep the `verify:` clause verbatim.**
+Applied in this change — the recategorisation removes a closure right and grants
+none.
+
+**Convergent — the disposition is option (e), a transfer to a genuinely owned
+receiver, and it is not executable yet.** Both seats condition the transfer on a
+receiver that has an accountable owner, an accepted scope, and the two written
+estate exemptions that a new active file requires while both ratchets sit at
+zero headroom. The openai seat states the consequence plainly: *"until that
+receiver exists, leave them open."* Neither existing sibling qualifies —
+`later/road-to-routing-assurance-live-floors` is the source of the 5.2
+constraint but is scoped to routing assurance, `road-to-harness-promotion-bridge`
+is scoped to the promotion bridge, and `later/` was already rejected as a
+destination by the 2026-08-31 council because it leaves the active estate.
+
+**Divergent — the shape of the receiver, and the treatment of AC-8.** The
+anthropic seat proposes one new roadmap with two phases split on the trust
+boundary (deterministic receipt production, executable under 5.2; metered
+paired evaluation, blocked by it) and would leave AC-8 in place as a permanent
+honest null, on the ground that AC-8 is *this* programme's acceptance criterion
+and transferring it obscures that the programme did not meet it. The openai seat
+would transfer all four intact and leave them open until the receiver exists,
+and warns that "these obligations need a home" is by itself not enough to spend
+an estate exemption. The two are compatible in direction and differ on whether
+AC-8 travels.
+
+## What therefore remains owner-reserved, and is not decided here
+
+Creating the receiver is not an agent decision: it consumes two estate-exemption
+keys against ratchets at zero headroom and it requires an accountable owner,
+which is exactly the thing an agent cannot supply for itself. Under the
+owner-reserved table in `decision-revisit-gate`, that is the owner's call. The
+four items therefore stay `[ ]` with their `guarded-baseline` annotations, and
+the roadmap stays unarchived by design rather than by oversight.
+
+**What would show this record to be wrong:** the 5.2 evaluator-independence
+decision being reopened and a metered backend admitted (which would make items
+2–4 executable in place); or a receiver arriving with an owner, at which point
+the transfer is executable exactly as both seats describe it.
 
 ---
 

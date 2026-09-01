@@ -1723,7 +1723,7 @@ once.
 
       ```yaml
       guarded_baseline:
-        category: absence-assertion
+        category: future-mechanism
         scope: src/scripts/_lib/candidate_proposer.ts
         command: npx vitest run tests/scripts/proposer_survival_bar.test.ts
         red_proof: sabotage run 2026-08-31 — 1 failed / 3 passed, restored 4/4
@@ -1732,6 +1732,21 @@ once.
         discharged_ac: the deterministic path is pinned as the only proposer, so it cannot be displaced silently
         pending_ac: the paired-verdict comparison itself, which needs a second arm
       ```
+
+      **RECATEGORISED 2026-09-01 from `absence-assertion` to
+      `future-mechanism`, on a 2-of-2 convergent AI council
+      (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, subscription
+      transport, $0.00 billed).** Both seats read the original category as a
+      **documentation bug rather than a closure opportunity**: the contract gives
+      `absence-assertion` the right to close `[x]` once sabotage-verified, and
+      this step's own `verify:` clause names a `paired_verdict` comparison, which
+      is a mechanism that does not exist. Using the mistaken category to justify
+      a retroactive re-scope of the verify clause would, in the openai seat's
+      words, change the proposition being verified rather than correct it, and in
+      the anthropic seat's, defeat the purpose of the very contract the
+      annotation belongs to. **The `verify:` clause is therefore kept verbatim
+      and the category is tightened.** The recategorisation removes a closure
+      right; it grants none.
 
       **Why it cannot be run, stated as a fact about the tree rather than as
       effort.** `_lib/candidate_proposer.ts` is the only proposer and is
