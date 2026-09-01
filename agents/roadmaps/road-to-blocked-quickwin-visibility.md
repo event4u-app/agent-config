@@ -118,7 +118,7 @@ quorum **2/2 present** (needed 1) — concluded. Subscription transport,
 ran DEGRADED — 1/2 present**, with the tool printing *"this is not
 convergence"*; quorum recovered on retry. Both rounds are recorded because a
 degraded round is not a council round, and a reader must not find only the clean
-one. Council artefacts are gitignored and auto-pruned, so the text is inlined
+one. Council artifacts are gitignored and auto-pruned, so the text is inlined
 here rather than cited by path.
 
 ### The authority table, as ruled — and `delegated` is not `council-decidable`

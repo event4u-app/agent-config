@@ -487,7 +487,7 @@ The question is never "what does the file say" but **"what does it become here"*
 | reference material read on demand | a `guideline` or `context` |
 | a measured finding | a `decision-record`/ADR, not a rule |
 | a defect claim | a roadmap item, once verified |
-| a claim that maps onto an existing stub | **not a fresh artefact — a stub-blocked finding, see below** |
+| a claim that maps onto an existing stub | **not a fresh artifact — a stub-blocked finding, see below** |
 | a consolidation omitting a parent | **not an artifact — a discharge, see below** |
 
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
@@ -545,7 +545,7 @@ computed upstream:
 Missing any of the four leaves the survivor undischarged. This row does not
 decide what happens to the stub — promotion is the estate's question and this
 command does not answer it — it only forbids resolving the survivor into prose
-that names no artefact.
+that names no artifact.
 
 Three hard defaults, from this repo's own scar tissue:
 
