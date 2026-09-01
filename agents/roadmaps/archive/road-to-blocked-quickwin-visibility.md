@@ -225,7 +225,7 @@ current era alone reports 0 rather than 4.
 
 ## Phase 3 — specify the capped provisional-promotion path
 
-- [ ] **3.1 Write the specification against all five conditions of the
+- [x] **3.1 Write the specification against all five conditions of the
       2026-08-24 rule, one by one.** The rule permits an autonomous estate
       exemption only if an authorized rule allows it, that rule supplies
       objective eligibility criteria, repository evidence proves them satisfied,
@@ -238,18 +238,108 @@ current era alone reports 0 rather than 4.
       pick arises.
       verify: the specification exists with each of the five conditions answered
       in its own sentence, and `check_estate_count` reads the key it defines.
-- [ ] **3.2 Leave N, M and the activation unset.** They are the owner's to
+      **Satisfied 2026-09-01 (drain run 15).** The five sentences are the five
+      keys under `provisional_promotion.five_conditions` in
+      `src/config/estate-count-budget.json` — a structured field rather than a
+      prose section, because the verify's second half requires the gate to read
+      the key the specification defines, and a specification living in one file
+      while the key lived in another would let the two drift silently. The gate
+      reads it at `src/scripts/check_estate_count.ts:661-667`, classifies it at
+      `:280`, and types it at `:244`.
+- [x] **3.2 Leave N, M and the activation unset.** They are the owner's to
       register, and a specification that ships with its own numbers filled in is
       the self-certification the 2026-08-24 verdict refused.
       verify: `src/config/estate-count-budget.json` carries the two keys as
       `null` with the owner named, and the gate treats `null` as "not
       registered, path inactive" rather than as "unbounded".
+      **Satisfied 2026-09-01, and strengthened by the 3b verdict below:** the
+      keys are `null` **and** the object carries a dated declination, so the
+      checker distinguishes three states rather than two — `declined`,
+      `unregistered`, and absent, which throws. Reading is not activation in any
+      of them.
+
+### Disposition 2026-09-01 (drain run 15) — the path is specified and DECLINED
+
+**Verdict 3b, convergent 2/2, endorsed by the blind chairman as the anchor
+reasoning of the session.** AI council 2026-09-01, members
+`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
+peer-review, blind chairman, quorum **2/2 present** (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Council artefacts are gitignored
+and auto-pruned, so the substance is inlined here rather than cited by path.
+
+**The question.** Does the owner's standing instruction for this run — which
+states that *"the council's recorded decision substitutes for user sign-off"* —
+reach the `b-provisional-promotion-authorization` blocker, whose options are
+(a) register the path with two integers, (b) decline it and state what happens
+instead, (c) register it with `max_live: 1` as a bounded trial?
+
+**The reasoning, in the seats' own load-bearing sentences.** *"Options (a) and
+(c) constitute governance self-amendment — the council extending the agent's own
+write authority over a recorded estate floor. `decision-revisit-gate` explicitly
+reserves this and explicitly states no delegation overrides it."* · *"`max_live:
+1` limits magnitude, not the legal character of the authority change."* · And
+the counter-argument, recorded rather than won by omission: *"The strongest
+counter-argument is that the owner's instruction is unusually broad and could be
+read as the owner personally choosing the council as decision-maker. That general
+language nevertheless loses to the narrower rule expressly covering delegation
+and self-amendment."*
+
+**A decline is not a nothing.** Three things changed that would not have changed
+by leaving the blocker open. The declination is dated and reasoned in the file
+the gate reads. The fallback is stated precisely — *each future falsifier
+occurrence remains blocked until explicit owner authorization for that
+occurrence* — which is the behaviour that already obtained, now recorded as a
+decision rather than left as a gap. And the checker can tell an intentional
+declination from missing configuration, which two states could not.
+
+**What was NOT added, deliberately:** neither integer, no expiry, and no nominal
+"trial" path. `check_estate_count` grants no allowance in any of its three
+states, and wiring what a `registered` state would buy is a separate change
+needing the owner's authorization — a gate that started granting headroom the
+moment someone typed a number would be the self-certification the 2026-08-24
+verdict refused, arriving one commit later. Pinned by the test named
+`READING IS NOT ACTIVATION — a registered path buys no headroom`.
+
+**Sabotage, both directions of the distinction the decline rests on.**
+Neutralising the `status === 'declined'` read reds 1 of 43; neutralising the
+absent-key refusal reds 1 of 43. Both restores verified byte-identical by
+SHA-256 (`28a45deb021fe29c7797b510f81094c508d65e8558e01d9619335173c628ea7c`).
+
+### One inconsistency inside this roadmap's own blocker, corrected
+
+The blocker's "reproduce" line named `./scripts-run src/scripts/stubs_due` —
+the 211-line twin the CLI does not execute and which has **no**
+`blocked_quickwin` bucket, so a reader following it would have reproduced the
+absence of the very condition the blocker is about. It now names
+`agent-config stubs:due`, the dispatched implementation.
+
+**An install-currency qualifier that belongs beside every `agent-config
+stubs:due` claim in this file.** `resolve_script` resolves against the
+dispatcher's own `PACKAGE_ROOT`, so a **globally installed** `agent-config`
+runs the globally installed package. Measured 2026-09-01: the global install is
+`@event4u/agent-config@14.13.0`, cut 2026-08-31, before the bucket landed — it
+reports no `blocked_quickwin` key at all. The repo-local entry
+(`./agent-config`, a symlink to `src/scripts/agent-config`) resolves
+`PACKAGE_ROOT` to the checkout and runs this tree's `dist/agent-src/`. That is
+install currency, not a defect in the change, and it is why every verification
+in this file is run through `./agent-config`.
 
 ## Blockers
 
 ### blocker: b-provisional-promotion-authorization
 
-- **Status:** open
+- **Status:** resolved 2026-09-01 (drain run 15) — DECLINED by AI council
+  verdict 3b, convergent 2/2. Option (b) of the three below: the path is
+  specified in full and the numbers are not registered, because registering
+  either integer — `max_live: 1` included — is governance self-amendment, which
+  `decision-revisit-gate` reserves to the owner and over which no delegation
+  carries. The mechanism that closes it: `provisional_promotion` in
+  `src/config/estate-count-budget.json` carries the five conditions answered one
+  sentence each, `status: declined` with its date and reasoning, and both
+  numbers `null`; `check_estate_count` reads the key, distinguishes `declined`
+  from `unregistered` from absent-and-therefore-a-refusal, and grants no
+  allowance in any state. Reasoning and sabotage evidence: § Disposition
+  2026-09-01 (drain run 15).
 - **Owner:** maintainer
 - **Blocks:** activation of Phase 3 only. Phases 1 and 2 are visibility and
   instrumentation, change no authority, and land independently of this answer.
@@ -265,8 +355,11 @@ current era alone reports 0 rather than 4.
   named as a decision rather than as a gap. (c) Register it with
   `max_live: 1` as a bounded trial and a review date, which is the smallest
   version that can be falsified. Reproduce the condition behind the choice with
-  `./scripts-run src/scripts/stubs_due` and the release counts in
-  § The measurement.
+  `agent-config stubs:due` — **not** `./scripts-run src/scripts/stubs_due`,
+  which is the twin implementation the CLI does not execute and which carries no
+  `blocked_quickwin` bucket at all, so following it reproduces the absence of
+  the condition rather than the condition — and the release counts in
+  § The measurement. **Answered (b) on 2026-09-01.**
 - **Recommendation:** (c) — register `max_live: 1` with a review date. It is
   the smallest version of the mechanism that can be falsified: one live
   provisional promotion cannot turn the ratchet into paperwork, and if the
@@ -299,20 +392,53 @@ current era alone reports 0 rather than 4.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a stub whose only blocker is an estate or budget decision, whose
+- [x] AC-1 — a stub whose only blocker is an estate or budget decision, whose
       design is recorded as validated, and which declares no capability gap, is
       reported in its own class and no longer inside the 25-file OWNER bucket.
-- [ ] AC-2 — membership in that class is decided by frontmatter fields, pinned in
+      **Re-derived 2026-09-01** on this branch: `./agent-config stubs:due --json`
+      reports `{"overdue":0,"owner_decisions":12,"missing_review_by":0,
+      "blocked_quickwin":1,"total":102}` with
+      `agents/roadmaps/stubs/road-to-release-placeholder-guard.md` the sole
+      member. The four pre-existing `counts` keys all survive. Run through the
+      repo-local `./agent-config`, per the install-currency qualifier above.
+- [x] AC-2 — membership in that class is decided by frontmatter fields, pinned in
       both directions by tests, never by a substring match over body prose.
-- [ ] AC-3 — `/analyze:inbox` cannot resolve a survivor that maps onto an
+      **Re-derived 2026-09-01:** `npx vitest run
+      tests/scripts/stubs_due_quickwin.test.ts` → 19 passed. Each of the three
+      scalars is pinned individually — `tests/scripts/stubs_due_quickwin.test.ts:74`
+      loops the missing-field direction and `:112` loops the field-in-body-prose
+      direction, one case per field, which is what makes a single-field sabotage
+      detectable at all.
+- [x] AC-3 — `/analyze:inbox` cannot resolve a survivor that maps onto an
       existing stub without naming the stub, its blocker, its age and its
       recurrence count in the run's output.
-- [ ] AC-4 — the estate council's deadlock falsifier is machine-readable, and
+      **Re-derived 2026-09-01** by reading
+      `src/domains/analysis-workbench/analyze/inbox/command.md`: the mapping row
+      is at `:490`, the four-item obligation at `:525-543` (stub path `:529`,
+      blocker slug `:531`, age in days `:535`, Phase-4c recurrence count `:540`),
+      and `:545` states that missing any of the four leaves the survivor
+      undischarged.
+- [x] AC-4 — the estate council's deadlock falsifier is machine-readable, and
       its firing for the release-placeholder case is recorded with dates,
       versions and counts that a reader can re-derive.
-- [ ] AC-5 — the capped provisional-promotion path is specified against each of
+      **Re-derived 2026-09-01:** `release_dates()` at
+      `src/agent-src/scripts/stubs_due.ts:250` and `releases_since()` at `:273`;
+      the live record reports `releases_since_blocked: 3` against
+      `blocker_opened: 2026-08-23`. The evidence file's own two-era changelog
+      command re-runs and returns exactly its recorded three lines — 14.13.0
+      (2026-08-31), 14.12.0 (2026-08-25), 14.11.0 (2026-08-24).
+- [x] AC-5 — the capped provisional-promotion path is specified against each of
       the five conditions in its own sentence, with N, M and activation
       unregistered and owner-reserved.
+      **Verdict 3b does not break this criterion — it is the reading under which
+      it is satisfiable at all.** AC-5 requires N, M and the activation to remain
+      *unregistered*, so the two options that would have registered them —
+      (a) two integers, (c) `max_live: 1` as a bounded trial — are the two that
+      would have contradicted it. Declining keeps both `null` while the five
+      sentences and the mechanism land in full, which is exactly what this
+      criterion asks for. Re-derive: `jq '.provisional_promotion
+      | {status, max_live, expires_after_days, n: (.five_conditions | length)}'
+      src/config/estate-count-budget.json` → `declined`, `null`, `null`, `5`.
 
 ## Explicitly NOT in this roadmap
 

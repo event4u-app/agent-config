@@ -92,8 +92,15 @@ function roadmap(
  * counts. A fixture that wants a different floor changes the TREE at the base
  * commit, which is the whole point of the change under test.
  */
-function budget(above: number | null = null): string {
-    return `${JSON.stringify({ schema_version: 2, one_in_one_out: { applies_above_active: above } }, null, 4)}\n`;
+function budget(
+    above: number | null = null,
+    provisional: Record<string, unknown> | null = { status: 'declined', max_live: null, expires_after_days: null },
+): string {
+    const doc: Record<string, unknown> = { schema_version: 2, one_in_one_out: { applies_above_active: above } };
+    // Passing `null` OMITS the key, which is the misconfiguration case — the one
+    // an intentional declination must never be mistaken for.
+    if (provisional !== null) doc['provisional_promotion'] = provisional;
+    return `${JSON.stringify(doc, null, 4)}\n`;
 }
 
 const CLAIM = 'fixture — a real sentence, so the claim counts';
@@ -227,6 +234,78 @@ describe('check_estate_count — the ratchet direction', () => {
     });
 });
 
+/**
+ * The provisional-promotion path, specified 2026-09-01 and DECLINED the same
+ * day by a 2/2 convergent council on governance-self-amendment grounds.
+ *
+ * The condition the council attached to the decline is the whole reason these
+ * tests exist: the checker must be able to tell an intentional declination from
+ * missing configuration. Two states cannot do that, so there are three, and each
+ * is pinned here — plus the two directions that would quietly undo the decline,
+ * a half-registered object resolving to a neighbour and a registered one buying
+ * headroom.
+ */
+describe('check_estate_count — the provisional-promotion path', () => {
+    it('reports `declined` and grants nothing — the recorded state, on the real shape', () => {
+        // No commit: `initRepo` already committed the base and branched, so the
+        // live tree equals the floor and the only thing under test is the line.
+        const repo = initRepo(2);
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(0);
+        expect(res.stdout).toContain('declined');
+        expect(res.stdout).toContain('path inactive by decision');
+    });
+
+    it('exits 2 when the key is ABSENT — misconfiguration is never a declination', () => {
+        // The distinction the decline was conditioned on. Absent must not read
+        // as "inactive": that would make an unwritten config and a refused path
+        // the same reading, which is exactly what the council asked to prevent.
+        const repo = initRepo(2);
+        write(repo, 'src/config/estate-count-budget.json', budget(null, null));
+        commitAll(repo, 'drop the provisional key');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('provisional_promotion');
+    });
+
+    it('distinguishes `unregistered` from `declined` — silence is not a decision', () => {
+        const repo = initRepo(2);
+        write(repo, 'src/config/estate-count-budget.json', budget(null, { max_live: null, expires_after_days: null }));
+        commitAll(repo, 'no status marker');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(0);
+        expect(res.stdout).toContain('unregistered');
+        expect(res.stdout).not.toContain('path inactive by decision');
+    });
+
+    it('exits 2 on a half-registered object rather than guessing which half was meant', () => {
+        // A cap with no expiry and an expiry with no cap are different
+        // mechanisms; resolving either to a neighbour is how a bounded path
+        // becomes an unbounded one by omission.
+        const repo = initRepo(2);
+        write(repo, 'src/config/estate-count-budget.json', budget(null, { max_live: 1, expires_after_days: null }));
+        commitAll(repo, 'half-register');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('half-registered');
+    });
+
+    it('READING IS NOT ACTIVATION — a registered path buys no headroom', () => {
+        // The load-bearing negative. If registering two integers granted an
+        // allowance, the self-certification the 2026-08-24 verdict refused would
+        // arrive one commit later, wearing the owner's numbers.
+        const repo = initRepo(2);
+        write(repo, 'src/config/estate-count-budget.json', budget(null, { max_live: 5, expires_after_days: 30 }));
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('new'));
+        commitAll(repo, 'register the path and add a roadmap');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.stdout).toContain('registered');
+        // Still red: the addition is unoffset and unexempt, exactly as it would
+        // be with the path declined.
+        expect(res.status).toBe(1);
+    });
+});
+
 describe('check_estate_count — the floor', () => {
     it('FAILS when no base ref resolves — a shrink-only gate with no floor passes everything', () => {
         // The class that replaces the old bare-raise refusal: with nothing stored,
@@ -263,7 +342,11 @@ describe('check_estate_count — the floor', () => {
         // the fixture tries the old bypass: touch nothing but the config.
         const repo = initRepo(3);
         write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New'));
-        write(repo, 'src/config/estate-count-budget.json', `${JSON.stringify({ schema_version: 2, baseline: { active_roadmaps: 99 }, one_in_one_out: { applies_above_active: null } }, null, 4)}\n`);
+        // Built from the helper so the file keeps every key the gate now
+        // requires; the only thing this case adds is the stored number the old
+        // bypass used to lean on.
+        const edited = { ...(JSON.parse(budget()) as Record<string, unknown>), baseline: { active_roadmaps: 99 } };
+        write(repo, 'src/config/estate-count-budget.json', `${JSON.stringify(edited, null, 4)}\n`);
         commitAll(repo, 'add a roadmap and type a big number');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, res.stdout).toBe(1);
