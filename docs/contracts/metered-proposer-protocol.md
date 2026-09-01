@@ -82,7 +82,7 @@ model is a floating alias is not frozen: the alias moves and a later run answers
 a different question. No dated `claude-opus-4-1-*` id exists anywhere in this
 tree, so `modelForTier('high')` throws with a message naming what must be pinned
 first. `high` is reachable only through an `execution_failed` escalation
-(`_lib/evolution_roi.ts:109`), so a run with no transport error never touches it.
+(`_lib/evolution_roi.ts:111`), so a run with no transport error never touches it.
 
 ### Sampling
 
@@ -121,7 +121,7 @@ rather than a selection policy:
 
 1. The first attempt runs on class `reason_unknown`, whose ladder is exactly
    `['lite']` — *"escalating on a reason nobody established is spending on a
-   guess"* (`_lib/evolution_roi.ts:117-119`).
+   guess"* (`_lib/evolution_roi.ts:119-121`).
 2. A refused generation is classified into a `PathologyWhy` by
    `classifyRefusal`, deterministically and from the refusal itself — never from
    the model's opinion of its own output.
@@ -135,7 +135,7 @@ rather than a selection policy:
 
 Per-observation spend is per observation: a new subject starts at the cheapest
 rung again, which the ordering guard allows explicitly — *"retrying `lite` is
-not an escalation"* (`_lib/evolution_roi.ts:203`).
+not an escalation"* (`_lib/evolution_roi.ts:184-185`).
 
 `assertCheapestFirst` (`_lib/evolution_roi.ts:191`) validates the whole attempt
 list before the arm returns.
