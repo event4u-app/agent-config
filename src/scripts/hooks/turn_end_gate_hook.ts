@@ -579,11 +579,19 @@ export function readLanguagePin(workspaceRoot: string, session_id: string): Verd
  * WHAT IS ACTUALLY CLASSIFIED, stated accurately because R2 finding 9 caught
  * this file claiming otherwise in three places. `visibleProse` strips code,
  * quotes, tables, URLs and paths from the whole reply — but `classify` then
- * applies `instructionText` (which drops output-shaped lines and their
+ * applies `stripInjectedRegions` (which removes balanced host wrapper regions
+ * such as `<launch-selected-element>`, plus the host's advisory sentence beside
+ * them), then `instructionText` (which drops output-shaped lines and their
  * followers) and `humanAuthoredLead`, and RETURNS ON THE LEAD ALONE when the
  * lead is determined. So in the common case the verdict comes from the reply's
  * opening chunk, not from all of it, and indented prose is discarded before
  * scoring.
+ *
+ * The region strip reaches this path too, and its effect here is small by
+ * construction: `visibleProse` has already removed fenced code, so a balanced
+ * bare-tag pair surviving into the scorer is prose the reply wrote around a tag
+ * rather than markup. Named rather than omitted, because enumerating the
+ * scoring surface accurately is this comment's entire job.
  *
  * That is deliberately left as-is rather than swapped for a full-text scorer:
  * sharing one classifier with `language_mirror_hook` is what stops the pin and
