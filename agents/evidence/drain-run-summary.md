@@ -209,7 +209,7 @@ n = 2, no matched comparator.
 | `stubs/road-to-council-topology-benchmark-execution.md` | Phase 2, its 23 dependents, 6.5 |
 | `stubs/road-to-provider-leakage-bench-execution.md` | 3.3, 3.4 |
 | `stubs/road-to-council-topology-instrumentation.md` | the 12 instrumentation and live-run steps |
-| `stubs/road-to-metered-proposer-evaluation.md` | 4.1, 5.4, 5.6, AC-8 from the governed-harness roadmap |
+| `stubs/road-to-metered-proposer-evaluation.md` — **never landed**; superseded 2026-09-01 by `road-to-governed-evidence-production` | 4.1, 5.4, 5.6, AC-8 from the governed-harness roadmap |
 | `road-to-council-topology-evidence-followups.md` (draft) | the live receiver the archival guard verifies |
 
 Every stub carries a resumption trigger and an explicit forbidden-claims list.
