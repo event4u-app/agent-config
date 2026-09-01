@@ -66,6 +66,48 @@ export interface StubRecord {
     owner_decisions: number;
     overdue: boolean;
     days_overdue: number | null;
+    /** Frontmatter `design_validated:` — a citation, or null when absent. */
+    design_validated: string | null;
+    /** Frontmatter `capability_gap:` — `none` means the stub declares no gap. */
+    capability_gap: string | null;
+    /** Frontmatter `blocker_class:` — `estate` | `budget` | `product`. */
+    blocker_class: string | null;
+    /** Frontmatter `blocker_opened:` — ISO date the hold began, or null. */
+    blocker_opened: string | null;
+    /** Releases published since `blocker_opened`, or null when it is absent. */
+    releases_since_blocked: number | null;
+    /** All three membership conditions hold. See {@link BLOCKED_QUICKWIN_FIELDS}. */
+    blocked_quickwin: boolean;
+}
+
+/**
+ * The three frontmatter keys that decide fourth-bucket membership.
+ *
+ * Read as SCALARS, never as substrings of the body. A substring match over
+ * prose is what put a validated fix and a waiting preference into one bucket
+ * in the first place; doing it with three substrings instead of one would be
+ * worse, not better. A stub missing any of the three is not a member and falls
+ * through to the OWNER bucket exactly as before — absence is never a member.
+ */
+export const BLOCKED_QUICKWIN_FIELDS = ['design_validated', 'capability_gap', 'blocker_class'] as const;
+
+/** Blocker classes that make a stub a BLOCKED QUICK-WIN rather than a product wait. */
+export const QUICKWIN_BLOCKER_CLASSES = ['estate', 'budget'] as const;
+
+/**
+ * All three conditions, read from frontmatter only.
+ *
+ * A recorded design validation, an explicit `capability_gap: none`, and an open
+ * blocker that is an estate or budget decision rather than a product one.
+ */
+export function is_blocked_quickwin(
+    design_validated: string | null,
+    capability_gap: string | null,
+    blocker_class: string | null,
+): boolean {
+    if (design_validated === null || design_validated === '') return false;
+    if (capability_gap !== 'none') return false;
+    return (QUICKWIN_BLOCKER_CLASSES as readonly string[]).includes(blocker_class ?? '');
 }
 
 function _isDir(p: string): boolean {
@@ -188,7 +230,48 @@ function _parseIso(s: string): Date | null {
 
 /** Read every stub and classify it. `today` is injectable so tests are stable. */
 export function scan(root: string, today: string): StubRecord[] {
-    return scan_dir(path.join(root, STUB_DIR), today);
+    return scan_dir(path.join(root, STUB_DIR), today, release_dates(root));
+}
+
+/**
+ * Changelog files that carry released sections, newest era first.
+ *
+ * BOTH are read, and that is the whole point of the pair. The era split moved
+ * older releases into the archive, so a count taken over the current file alone
+ * silently reports zero for anything before the split — measured: 14.11.0 lives
+ * only in the archive, and grepping `CHANGELOG.md` for it returns nothing.
+ */
+export const CHANGELOG_ERAS = ['CHANGELOG.md', 'docs/archive/CHANGELOG-pre-14.12.0.md'] as const;
+
+/** `## [x.y.z](…) (YYYY-MM-DD)` — a released section heading with its date. */
+const RELEASE_HEADING = /^## \[\d+\.\d+\.\d+\][^\n]*\((\d{4}-\d{2}-\d{2})\)\s*$/gm;
+
+/** Every released section's date across both eras, unsorted. */
+export function release_dates(root: string): string[] {
+    const out: string[] = [];
+    for (const rel of CHANGELOG_ERAS) {
+        let text: string;
+        try {
+            text = fs.readFileSync(path.join(root, rel), 'utf8');
+        } catch {
+            continue;
+        }
+        for (const m of text.matchAll(RELEASE_HEADING)) {
+            if (m[1] !== undefined) out.push(m[1]);
+        }
+    }
+    return out;
+}
+
+/**
+ * Releases published strictly AFTER the day the hold began.
+ *
+ * Strictly after, because a release cut on the same day cannot have carried a
+ * fix the hold was blocking — counting it would inflate the figure the
+ * council's falsifier is read against.
+ */
+export function releases_since(opened: string, dates: readonly string[]): number {
+    return dates.filter((d) => d > opened).length;
 }
 
 /**
@@ -198,7 +281,11 @@ export function scan(root: string, today: string): StubRecord[] {
  * immediately re-join — a fragile round trip past exactly the directory both
  * callers care about.
  */
-export function scan_dir(base: string, today: string): StubRecord[] {
+export function scan_dir(
+    base: string,
+    today: string,
+    releaseDates: readonly string[] = [],
+): StubRecord[] {
     if (!_isDir(base)) return [];
     const now = _parseIso(today);
     const out: StubRecord[] = [];
@@ -222,6 +309,10 @@ export function scan_dir(base: string, today: string): StubRecord[] {
         const review_by = _scalar(front, 'review_by');
         const reviewed_at = _scalar(front, 'reviewed_at');
         const probeVal = _scalar(front, 'probe');
+        const design_validated = _scalar(front, 'design_validated');
+        const capability_gap = _scalar(front, 'capability_gap');
+        const blocker_class = _scalar(front, 'blocker_class');
+        const blocker_opened = _scalar(front, 'blocker_opened');
         const shape: StubShape = text.includes(TRANSFER_MARKER) ? 'transfer' : 'orgmode';
         let overdue = false;
         let days_overdue: number | null = null;
@@ -242,6 +333,13 @@ export function scan_dir(base: string, today: string): StubRecord[] {
             owner_decisions: count_owner_decisions(text),
             overdue,
             days_overdue,
+            design_validated,
+            capability_gap,
+            blocker_class,
+            blocker_opened,
+            releases_since_blocked:
+                blocker_opened === null ? null : releases_since(blocker_opened, releaseDates),
+            blocked_quickwin: is_blocked_quickwin(design_validated, capability_gap, blocker_class),
         });
     }
     return out;
@@ -251,6 +349,8 @@ export interface Counts {
     overdue: number;
     owner_decisions: number;
     missing_review_by: number;
+    /** ADDITIVE 2026-09-01. Existing keys are unchanged in name, type and meaning. */
+    blocked_quickwin: number;
     total: number;
 }
 
@@ -259,6 +359,7 @@ export function counts(records: StubRecord[]): Counts {
         overdue: records.filter((r) => r.overdue).length,
         owner_decisions: records.reduce((s, r) => s + r.owner_decisions, 0),
         missing_review_by: records.filter((r) => r.review_by === null).length,
+        blocked_quickwin: records.filter((r) => r.blocked_quickwin).length,
         total: records.length,
     };
 }
@@ -325,6 +426,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stdout.write(':\n');
         for (const r of withDecisions) {
             process.stdout.write(`      ${r.file}  (${r.owner_decisions})\n`);
+        }
+    }
+
+    const quickwins = records.filter((r) => r.blocked_quickwin);
+    if (quickwins.length > 0) {
+        process.stdout.write(
+            `\n  🔓  ${quickwins.length} BLOCKED QUICK-WIN(S) — design validated, no capability gap,\n` +
+                '      held by an estate or budget decision rather than a product one:\n',
+        );
+        for (const r of quickwins) {
+            const since =
+                r.releases_since_blocked === null
+                    ? 'no `blocker_opened:`'
+                    : `${String(r.releases_since_blocked)} release(s) since ${r.blocker_opened}`;
+            process.stdout.write(`      ${r.file}  (${r.blocker_class}, ${since})\n`);
         }
     }
 

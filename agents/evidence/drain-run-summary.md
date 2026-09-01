@@ -1,508 +1,152 @@
 <!-- evidence-type: analysis -->
 
-# Drain run summary — 2026-08-31 / 2026-09-01
+# Drain run 14 — summary
 
-Machine-readable close-out for the autonomous roadmap-drain run. Written last,
-as the final commit of the final PR of the run.
+2026-09-01. Autonomous drain over `agents/roadmaps/`. Every decision that would
+normally have gone to the owner went to the AI council instead; the maintainer
+pre-authorised token spend and delegated would-ask-the-user decisions for this
+run. **Zero user round-trips. Zero metered API calls.**
 
-## Scope correction taken at the start
+## The headline, because it is not what the seed expected
 
-The run was seeded with a 36-roadmap queue verified at commit `c536dbd`. That
-table was stale by 33 entries: the live inventory at `origin/main` @ `db6051f83`
-held **three** active roadmaps, not 36. The queue was recomputed from the tree
-rather than trusted, per the run's own § 1.2.
+The run's seed listed **36 active roadmaps**. The live tree carried **three** —
+the other 33 were archived by earlier drain runs, and the seed was stale before
+the first command. Two more landed mid-run from a parallel session, so the run
+worked **five** roadmaps in total.
+
+**Not one of the five could be driven to 100 % honestly, and that is the
+finding rather than a shortfall.** Four are held by owner-reserved decisions the
+council explicitly refused to make on the owner's behalf; the fifth is held by
+evidence that does not exist yet. Every hold is now *recorded, measured and
+citable* where it used to be prose, an assumption, or nothing at all.
 
 ## Pull requests
 
-| PR | Roadmap | Outcome | State |
+| PR | Roadmap | State | Outcome |
 |---|---|---|---|
-| #1781 | `road-to-governed-harness-evolution` | advance | open, 6/6 checks green, not merged |
-| #1782 | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | advance | open, not merged |
-| — | `road-to-harness-promotion-bridge` | untouched, terminal-blocked | no PR, by design |
-
-Neither roadmap reached 100%, neither was archived, and no checkbox was moved in
-either. That is the accurate outcome, not a shortfall against a reachable one:
-every remaining item in both files fails its own `verify:` clause, and each
-clause is a conjunction whose unmet conjunct needs a capability that does not
-exist in the tree.
+| [#1794](https://github.com/event4u-app/agent-config/pull/1794) | `road-to-harness-promotion-bridge` + `road-to-council-topology-evidence-followups` | **merged** | 7/9. `merge-authority` recorded terminally owner-reserved; the unguarded-carrier gap measured and confirmed |
+| [#1795](https://github.com/event4u-app/agent-config/pull/1795) | `road-to-governed-evidence-production` | **merged** | 4/9. Metered capture refused on validity; six factual defects repaired |
+| [#1796](https://github.com/event4u-app/agent-config/pull/1796) | `road-to-publication-integrity-hard-fail` | open | 11/14. A discarded detection now refuses; Phase 2 escalated on an authority split |
+| [#1799](https://github.com/event4u-app/agent-config/pull/1799) | `road-to-blocked-quickwin-visibility` | open | 5/12. Fourth `stubs:due` bucket, dispatcher defect fixed, deadlock falsifier made machine-readable |
 
 ## Council decisions
 
-**None. Zero council rounds were run, and the reason is a refusal, not an
-omission.**
+Six rounds. **Two ran DEGRADED at 1/2 and were re-run rather than acted on** —
+the tool prints *"this is not convergence"*, and a single seat authorising a
+verify-clause rewrite is thin evidence for a decision that binds. Both retries
+reached 2/2. All rounds: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+2 rounds each, depth deep, peer-review, blind chairman, subscription transport,
+`billable=0`, **$0.0000 total**.
 
-Two independent causes, in the order they were hit:
-
-1. **Quota.** Both configured seats share one user-global, date-keyed CLI-call
-   counter. It was exhausted for the 2026-08-31 UTC day at `anthropic 50/50`,
-   `openai 51/50`. The metered rung was not used and the counter was not reset —
-   it is shared with parallel runs, so the 50 could not be attributed between
-   real and polluted calls, and removing a shared guard on a guess is wrong.
-2. **Classifier refusal.** After the 00:00 UTC reset restored both seats to
-   `available`, the council invocation itself was refused by the host's safety
-   classifier. Two earlier attempts to authorise the billable rung for subagents
-   were refused by the same classifier.
-
-**No refusal was rephrased, retried, or routed around.** This tree already
-records why: the `merge-authority` blocker on `road-to-harness-promotion-bridge`
-documents a prior drain run refused at two independent layers and names
-persistence past a safety refusal as *"the reservation defeated by
-persistence."* The same standard was applied here.
-
-Consequence: every question this run was supposed to route to the council is
-**deferred, not answered**. One is committed as a tracked artefact
-(`agents/evidence/analysis/governed-harness-terminal-disposition-question-2026-08-31.md`)
-so the framing is auditable and the next run does not re-derive it.
-
-## Descopes
-
-**None.** No step was descoped, re-scoped, weakened, cancelled, or closed on a
-met half. Descoping was the run's own § 5 fallback and it was not exercised,
-because in the one case it applied it is explicitly forbidden — see below.
-
-## Terminal-blocked, with the lock verified live
-
-`road-to-harness-promotion-bridge` was left untouched. Its two open items —
-step 0.8 and AC-9 — gate on `blocker: merge-authority`, i.e. ADR-239
-§ Decision 3. Four independent locks, all verified at the current commit rather
-than taken from the roadmap's prose:
-
-- `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md:10-19` —
-  the record's own `review_trigger` names the blocker as the reopen condition.
-- `:79-90` — § Decision 3 is written as an open question; three independent
-  reviews reached that verdict, none of them the plan's author.
-- `road-to-harness-promotion-bridge.md:60-64` — the Resume condition, the exact
-  text both council seats converged on: on owner refusal, *do not resume
-  execution and do not weaken, cancel, retire, or mark complete any transferred
-  step or acceptance criterion*. This forecloses the § 5 descope path directly.
-- `:17-40` — a 2/2 convergent council on 2026-08-31 rejected `agents/roadmaps/later/`
-  **by name**, because parking there leaves the active estate.
-- `:600-612` — a prior drain run with an identical mandate attempted exactly the
-  option this run would have attempted, was refused, and recorded *"no council
-  round should be spent on it"* until a human answers.
-
-Same mechanism, no new evidence: the lock stands and was not relitigated.
-
-## Defect findings, out of scope and not chased
-
-**The CLI quota counter mis-books.** A council run reporting
-`members=2 (billable=0)` — both seats skipped, zero provider calls — still moved
-the counter by 2, and `openai` reached **51 against a cap of 50**.
-`src/scripts/ai_council/cli_call_budget.ts:34-37` names this exact pattern as
-*"a FINDING… a third booking path exists."* It belongs to no roadmap in this
-run's queue.
-
-**A pre-existing CI-only red was found and given a carrier.**
-`tests/scripts/routing_signal_measurement.test.ts` 5.1 — *"the published verdict
-reproduces from the tree"* — fails on `main` at run `33424783559` (job
-`99595610608`, 2026-08-31T18:26Z) with
-`expected { partition: 'train', ... } to deeply equal { partition: 'train', ... }`
-on the `corpus` field. Verified pre-existing rather than assumed: the identical
-assertion fails on `main` before either drain branch existed, and the same test
-is green locally at 17/17 on both branches. So the corpus a CI runner measures
-differs from the corpus a local checkout measures, and the published verdict
-matches only the latter. It is recorded as Risk 13 on
-`road-to-governed-harness-evolution` — the file that already cites both the
-verdict artefact and the test — rather than as a new roadmap, because both estate
-ratchets are at zero headroom. Not fixed: which catalogue entries differ is not
-established, and diagnosing it needs a CI-side dump of the two corpora.
-
-**Two worktrees were lost to `/private/tmp` being cleared mid-run.** Every
-commit survived in the main checkout's object database and was recovered into a
-worktree outside `/tmp`. What did not survive was uncommitted: two untracked
-review artefacts on the topology branch. Worktrees for long-running work do not
-belong under `/private/tmp` on this platform.
-
-## Honest close
-
-The run did not empty the roadmap directory and did not reach its § 5 terminal
-condition either. It stopped short of both for one reason that is worth stating
-without softening: **the mechanism the mandate designated as the substitute for
-every user decision — the AI council — was not reachable from this session.**
-A drain run whose decision procedure is unavailable cannot close roadmaps whose
-remaining work is decisions. What it can do, and did, is land the executable
-work, verify the non-executable work as non-executable with provenance, and
-leave the questions framed and committed rather than answered badly.
-
----
-
-# Drain run 12 — 2026-09-01
-
-A second autonomous drain run, on the state drain run 11 left behind. Written
-last, as the final commit of the final PR of the run.
-
-## What was different from run 11, in one line
-
-**The council was reachable.** Run 11's honest close names an unreachable AI
-council as the single reason it could not resolve roadmaps whose remaining work
-was decisions. The cause was a per-worktree gitignored probe file
-(`agents/runtime/state/council-probes.json`); seeding it into each worktree
-before the first call made all three passes work. Four council runs, `2/2
-present` on every one, `$0.0000` — all seats subscription-authed.
-
-## Starting state, recomputed rather than trusted
-
-Three active roadmaps at `origin/main` @ `db6051f83`, three open blockers. The
-run's seeded 36-roadmap queue was stale by 33 entries for the second run in a
-row.
-
-## Pull requests
-
-| PR | Roadmap | Outcome |
-|---|---|---|
-| #1784 | `road-to-harness-promotion-bridge` | **merged.** Roadmap deliberately NOT closed — both open items are owner-reserved |
-| #1785 | `road-to-governed-harness-evolution` | open. Closed and archived at 46 `[x]` / 14 `[-]`; one `[x]` withdrawn mid-run (below) |
-| #1787 | `road-to-inbox-harvest-2026-08-e-council-topology-evidence` | open. Closed and archived at 35 `[x]` / 38 `[~]` / 4 `[-]` |
-
-`#1782` (run 11's carry-over) merged during this run. `#1783` and `#1786` are
-sibling fixes from a parallel session, merged and folded in here.
-
-## Council decisions — four passes, all `2/2 present`, all `$0.0000`
-
-Members throughout: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
-2 rounds, blind chairman, subscription transport.
-
-| # | Question | Verdict |
-|---|---|---|
-| 1 | `phase-2-benchmark-cost` — run / re-scope / descope the 20-UTC-day, 1,584-call benchmark | **A3 descope**, convergent. At `N=2` it clears neither pre-registered floor, so the spend buys a number nobody may act on |
-| 1 | `leakage-bench-needs-assembler-and-design-forks` — build the runner and run both arms, or descope | **B1 with a precondition**; the precondition (two guaranteed UTC-day windows in one coherent session) fails, so the **B3** fallback the openai seat named was applied |
-| 2 | disposition of the remaining 13 steps, and the roadmap itself | 7 guarded baselines, 3 unbuilt mechanisms, 1B.4 and 6.5 → `[~]`; 1B.1 → one bounded run authorised; **close the roadmap** with incomplete scope and explicit deferrals |
-| 3 | was A3 the council's to decide, given the blocker's own owner-routing? | **1B, convergent** — A3 stands but is **provisional and owner-ratifiable**, deadline **2026-09-08**, with a written reversal path |
-| 3 | one receiver or three for the 38 deferred items? | **SPLIT** — anthropic three, openai one. One was taken because each seat attached a condition rather than an absolute, and per-group sections satisfy both |
-| — | (drain run 12 sibling, PR #1786) 5.4's `guarded_baseline` category | **`absence-assertion` → `future-mechanism`**, convergent. Removes a closure right; grants none |
-
-## Two things this run got wrong and fixed with evidence
-
-**1. The deferral glyph.** 38 steps described everywhere as deferred-with-triggers
-were first encoded `[-]`, which in this tree means **cancelled** and is
-owner-reserved (`archive_completed_roadmaps.ts:396`). `count_deferred` stayed 0,
-**Iron Law 3 never fired**, `deferralProblems` never validated the receivers, and
-the roadmap archived through a guard that should have stopped it. Found by the
-independent R2 reviewer, not by the implementing session. All 38 are now `[~]`
-with `deferred-resolution: carried-to=` annotations pointing at a draft roadmap
-carrying the `parent_roadmap:` back-link. The guard was then proven live rather
-than assumed: **0** problems as shipped, **1** for any single annotation removed
-(probed at three positions), **38** for a nonexistent destination.
-
-**2. A closure resting on a refuted premise.** PR #1785 closed step 5.4 `[x]` on
-a 2026-08-31 verdict treating it as an `absence-assertion`. A later 2/2 council
-(#1786) ruled that category a *"documentation bug rather than a closure
-opportunity"*. The `[x]` is withdrawn and 5.4 is carried with the rest. The
-sabotage-proven half — the deterministic path is pinned as the only proposer —
-is kept and is not what the `[x]` was claiming.
-
-## The one measurement this run made
-
-**1B.1's authorised verification run, and it did not close the step.** Two seats,
-analysis lens, `--rounds 1`, inline findings on. Counter: **anthropic 10 → 12**
-(inlined, parse receipt present, zero extraction calls), **openai 10 → 13** (no
-block, no `raw_text`, one extraction response). The closure condition is zero and
-one is not zero. What it adds over the 2026-08-31 attempt is **reproduction** —
-same seat, same miss, different prompt, different day — so the `codex-default`
-contract-compliance miss is a stable seat-level property. It is **not a rate**:
-n = 2, no matched comparator.
-
-## Descopes — four stubs and one draft receiver
-
-| Destination | Carries |
-|---|---|
-| `stubs/road-to-council-topology-benchmark-execution.md` | Phase 2, its 23 dependents, 6.5 |
-| `stubs/road-to-provider-leakage-bench-execution.md` | 3.3, 3.4 |
-| `stubs/road-to-council-topology-instrumentation.md` | the 12 instrumentation and live-run steps |
-| `stubs/road-to-metered-proposer-evaluation.md` — **never landed**; superseded 2026-09-01 by `road-to-governed-evidence-production` | 4.1, 5.4, 5.6, AC-8 from the governed-harness roadmap |
-| `road-to-council-topology-evidence-followups.md` (draft) | the live receiver the archival guard verifies |
-
-Every stub carries a resumption trigger and an explicit forbidden-claims list.
-No work was deleted; every frozen manifest, arm spec and pre-registration stays
-in the tree.
-
-## The § 5 terminal case — one blocker no council could settle
-
-`blocker: merge-authority` on `road-to-harness-promotion-bridge` is **still
-open**, and this is the run's designated terminal fallback firing exactly once.
-The agent working it declined to substitute a council verdict for the owner on
-two grounds it recorded in-tree: granting preauthorized merge authority would
-lower the `non-destructive-by-default` Hard Floor for a production-branch merge,
-which no delegation from one agent to another can authorise; and the refusal
-direction is held by a live in-tree lock reserving it until a human asks. It
-mechanism-matched before citing the lock. That roadmap stays ACTIVE and unclosed,
-with both open items given written dispositions rather than descoped — because
-descoping either is the exact weakening its own council-authored Resume condition
-reserves to the owner.
-
-**Worth the owner's attention:** only the GRANTING direction puts AC-9 on a path
-to being met. A refusal makes it permanently unmeetable and turns its disposition
-into a separate owner decision.
-
-## Honest close
-
-Two of three roadmaps closed and archived; one stopped on a genuine owner
-reservation. The roadmap directory is not empty and the run did not force it to
-be. Three claims this run does **not** make: that the deferred work was done,
-that the deferred work was dropped, or that a council verdict is an owner
-signature. The A3 disposition is explicitly provisional to **2026-09-08**, and if
-the owner declines it the reversal path is written at the blocker and needs no
-argument re-run.
-
-**What an independent reviewer caught that the implementing session did not:**
-one critical defect, four high, seven medium, three low — including a glyph
-choice that silently disabled two archival guards, a governance routing the
-roadmap's own text reserved to the owner, an evidence record born stale, and two
-over-claims about what the council had said. All fixed, each with a commit ref.
-That review is the reason this summary can be read as evidence rather than as a
-report about itself.
-
----
-
-# Drain run 13 — 2026-09-01
-
-A second autonomous drain run, on the tree the run above left behind. Same
-standing instruction: every open question, decision or blocker goes to the AI
-council rather than to the maintainer, and the council's recorded decision
-substitutes for owner sign-off.
-
-## Scope
-
-Recomputed from the tree, not from the seed queue — the seed named 36 roadmaps
-and **three** were active at `origin/main` @ `468eeefc7`. Two of the three are
-the ones run 12 left open; the third, `road-to-governed-evidence-production`, is
-the receiver run 12's successor created.
-
-**The active directory is NOT empty at the end of this run, and that is the
-recorded outcome rather than a shortfall.** All three files remain, each for a
-reason that is written down and falsifiable.
-
-## Pull requests
-
-| PR | Roadmap | Outcome | State |
+| # | Question | Verdict | Quorum |
 |---|---|---|---|
-| [#1789](https://github.com/event4u-app/agent-config/pull/1789) | `road-to-harness-promotion-bridge` | defect fixed + hardened; dispositions recorded; roadmap stays active | open |
-| [#1790](https://github.com/event4u-app/agent-config/pull/1790) | `road-to-council-topology-evidence-followups` | triggers verified, 4 faithfulness repairs; deliberately not drained | **merged** |
-| [#1791](https://github.com/event4u-app/agent-config/pull/1791) | `road-to-governed-evidence-production` | Phase 1 closed; Phase 2 unblocked, arm built, execution refused | open |
+| 1 | Is this session the park's "independent session"? | **1C** — yes for capture, metric must be frozen outside it | 2/2 |
+| 2 | Disposition of `blocker: merge-authority` | **2C** — terminally owner-reserved | 2/2 |
+| 3 | Disposition of the draft receiver | **3A** — leave draft, do not promote the guard | 2/2 |
+| 4 | May the metered capture proceed? | **QB** — no; the subject is not reproducible and the comparison has no producer | 2/2 |
+| 5 | Phase 2 fork (`Unreleased` premise false) | Option **A** on architecture, **split on authority → D** | 2/2 (after a 1/2 retry) |
+| 6 | Duplicate dispatcher definition | Option **B**, with a nine-row authority table | 2/2 (after a 1/2 retry) |
 
-`#1785` (a run-12 leftover for an already-archived roadmap) was merged by a human
-during this run. It was not touched by this run and is out of its scope.
+**The two rulings that shaped the whole run:**
 
-## Council decisions — one session, five questions
+- *"An agent council cannot amend the boundary of its own authority."* The
+  reflexivity is structural, so `merge-authority` was recorded as terminally
+  owner-reserved rather than decided.
+- *"If that approval is unavailable, choose D temporarily rather than treating
+  council review as ownership authority."* A **split on authority is an
+  escalation condition, not a tie to break** — that sentence is why Phase 2 of
+  the publication roadmap stayed open with its design fully recorded instead of
+  being implemented under a favourable reading.
 
-AI council 2026-09-01: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
-2 rounds, deep, peer-review, blind chairman, quorum **2/2 present, needed 1 —
-concluded**, subscription transport, `billable=0`, **`$0.0000`**.
+And one distinction both seats insisted on, preserved in every write-up:
+**delegated is not council-decidable.** *"We're using delegated authority, not
+discovering they were council-decidable all along."*
 
-| Q | Question | Verdict | Executed? |
-|---|---|---|---|
-| 1 | ADR-239 § Decision 3 / `blocker: merge-authority` | **1A refuse, 2/2** | **NO** — see below |
-| 2 | AC-9's disposition | **SPLIT 2A/2B**, both on one shared condition | resolved as **2B** from the tree |
-| 3 | `blocker: metered-backend-park` | **3B narrow to a proposer, 2/2** | **YES** |
-| 4 | the topology receiver's disposition | **4A leave as draft receiver, 2/2** | **YES** |
-| 5 | is the delegation manufacturing closure? | **YES**, one risk named | risk declined |
+## What was measured that had only been asserted
 
-**Q1's verdict was obtained and deliberately not executed, and the run discloses
-its own procedural defect for having asked.** The tree carries a live lock
-reserving that argument until *"a human either answers it or explicitly asks for
-the (b) argument to be put"*, and the question was written and dispatched before
-that lock was read — a `decision-revisit-gate` step-2 miss. Independently of the
-lock, writing the refusal into ADR-239 **is** settling ADR-239, which the
-reservation names in either direction. Disclosed in
-`road-to-harness-promotion-bridge.md` § Blockers, where the next reader looks.
+- **The unguarded carrier — CONFIRMED.** Deleting a file holding **38 deferred
+  obligations** reds **zero of nine gates**. And one correction in the stricter
+  direction: the roadmap predicted an estate *credit*; measured, there is **no
+  delta at all** — `status: draft` is skipped by `collect()`, so it was never
+  counted in either direction. Worse than claimed, not better.
+- **The publication defect is live.** `npm pack` ships the **repo-root**
+  `CHANGELOG.md` as `package/CHANGELOG.md`; `dist/CHANGELOG.md` does not exist,
+  so a check written against it would pass while shipping the comment. The
+  shipped member carries the prohibited instruction **twice right now**
+  (`:418`, `:652`).
+- **The deadlock falsifier has fired.** Three releases after the 2026-08-23
+  validation date, four marker lines each, every figure reproducible by a quoted
+  command.
+- **A dispatcher defect nobody had seen.** `cmd_stubs_due` was defined **twice**;
+  bash takes the later, so the roadmap was measuring code the CLI does not run,
+  and its own canonical example appeared in **no list at all**.
 
-**Q2's split was resolved by a fact, not by picking a side.** Both seats
-conditioned their answer on the same question — does this repository admit an
-archive with an unmet acceptance criterion? It does not:
-`archive_completed_roadmaps.ts:14-16,562-563` gates on `count_open == 0`, counted
-by a whole-file `/gm` regex with no section filter, so `- [ ] AC-9` counts like
-an unfinished step. There is no `terminal-incomplete` disposition and no flag
-that supplies one.
+## What was refused, and why it was not worked around
 
-**Q3 was taken only after reading the actual lock, which corrected the
-blocker's own provenance.** The blocker cited *"the 5.2 evaluator-independence
-decision"*; step 5.2 only defers, and the reasoning lives in
-`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:20-52`. Two facts
-there decide it: the park states its own authority as *"council-decidable, not
-owner-reserved"* (`:44-47`), and its objection is *"evaluating an artifact you
-authored"*, explicitly not cost (`:27-33`).
+- **The metered capture.** A live key resolves and the run would have cost ~2
+  cents against a $5 ceiling — so neither cost nor the safety classifier is the
+  block. The corpus is not reproducible from a commit (`.claude/` is gitignored;
+  15 rules in one tree, 13 in a fresh generation at the same HEAD), and no delta
+  producer exists. Spending to produce a number nobody can reproduce, then
+  closing AC-2 on it, is the fixture substitution the roadmap's own risk register
+  ranks #2.
+- **`underpowered` as a discharge.** Ruled explicitly: it records that
+  adjudication was unavailable, not a directional result. AC-2 stays open.
+- **Descoping into a stub.** Refused twice over — by the council, and
+  independently by the mechanism: `deferralProblems` accepts only
+  `agents/roadmaps/` and `agents/roadmaps/later/`, so a stub resolves as *"does
+  not exist"* and reds the archival sweep. **No obligation was descoped in this
+  run.** Nothing was dropped to make a roadmap close.
 
-## Descopes
+## Three tests that came back green under sabotage
 
-**None.** Nothing was descoped, cancelled, weakened, or marked complete on any of
-the three roadmaps in this run.
+Every guard added this run was neutralised and watched fail before being trusted.
+**Three did not fail on the first attempt**, and each is recorded where it
+happened:
 
-## Terminal blocks, and what clears each
+1. A section-scoping test passed with the scoping removed — the fixture put the
+   target section first, so it proved the target sorts first, not that the read
+   is scoped.
+2. A frontmatter test passed with the frontmatter read removed — the predicate
+   short-circuits on an earlier field, so neutralising one read alone was
+   undetectable. Fixed by pinning each field individually.
+3. The bucket initially selected a population of **zero** and printed nothing —
+   the precise failure this roadmap exists to prevent, caught before it shipped.
 
-| Item | Block | Clears when |
-|---|---|---|
-| `road-to-harness-promotion-bridge` 0.8, AC-9 | owner-reserved: ADR-239 § Decision 3 | the owner settles it; a **grant** is additionally barred by the `non-destructive-by-default` Hard Floor, which no standing instruction lifts |
-| `road-to-governed-evidence-production` 2.1, 2.2, AC-2, AC-3, AC-4 | host execution refusal on a session authorised to make paid API calls | a human runs the frozen protocol, or authorises a spending session |
-| `road-to-council-topology-evidence-followups`, all 38 | capacity that does not exist: `n >= 5` eligible seats (2 of a schema universe of exactly 5 are enabled), and reservation windows the tree cannot represent | the capacity exists **and** a human flips `status: draft` |
+Two of the three are the *same shape* in different files. A test never seen red
+has unknown sensitivity, and three of this run's would have shipped as coverage.
 
-The middle row is the one that moved. Phase 2 was held by a governance lock; it
-is now held by an environment-scoped refusal, which is falsifiable and cheap to
-clear. The run did **not** retry that refusal — the same shape is on record one
-roadmap over, where a run *"stopped rather than rephrasing its way past a safety
-refusal, which would have been the reservation defeated by persistence."*
+## Corrections to my own work, recorded rather than quietly fixed
 
-## What the run actually shipped
+- **`git checkout --` on an uncommitted file destroyed an implementation** while
+  undoing a sabotage probe. Reapplied from the patch; later probes used `cp`
+  backups with SHA-256-verified restores.
+- **A citation repair falsified its own citations** — inserted prose moved the
+  line numbers being cited. Switched to step ids, with both measurements recorded.
+- **A marker count was measured as 1 where the roadmap said 4.** The roadmap was
+  right; the measurement counted the wrong construct. Both constructs are real
+  defects and they are different ones.
+- **A refactor for the size ratchet broke 13 tests** by importing a symbol from
+  the wrong module, and orphaned an import. Both fixed in the same change.
+- **Four framings were graded speculative by the council** and downgraded in the
+  text rather than dropped, including one of mine that overstated what a finding
+  proved.
 
-- **A real security defect and its hardening.** `Status: resolved` was the only
-  closed token this repository recognises and the promotion capability read it as
-  a **grant** — so recording a *refusal* of preauthorized merge authority would
-  have minted the capability that performs unattended promotion. A neutral review
-  then found **three further ways** the fixed version still minted against a
-  blocker whose live status was `open` (a fenced example read as the live value,
-  `granted` matched as a prefix so a half-written template minted, and an
-  unscoped heading search). All four fixed, each pinned by its own test, each
-  RED-proven individually.
-- **Phase 1 of the governed-evidence receiver, closed on real evidence** — an
-  independent append-only activation-receipt producer that imports no evaluation
-  module (so its trust boundary holds by construction), a falsifiable trust
-  boundary and evidence-cost contract, and a twelve-stage enumeration that is
-  *computed* from committed arrays and reproduced by a second route.
-- **A metered proposer arm whose role constraint is structural** — six forbidden
-  roles each made unavailable by the type or the shape rather than by intention;
-  a scoring key is a build error.
-- **28 RED proofs across the run**, every one restored byte-identically. Three of
-  them found real defects instead of confirming health: an unfalsifiable
-  `assertCheapestFirst` guard, a vacuous test stub that made an ordering
-  assertion meaningless, and a hand-written family list that was the wrong
-  complement.
-- **A pre-existing red on `main`, diagnosed and swept.** PR #1788 archived a
-  roadmap without updating a test's hardcoded path, failing collection and taking
-  Node Tests shard 4/4 down on both OSes. Defect-pattern sweep: 8 candidate
-  sites, 1 real defect. Fixed independently on `main` via #1785 with a stricter
-  resolver; that version was taken.
+## Honest state at the end
 
-## Honest nulls
+Two PRs merged, two open and green-pending. **Four roadmaps remain active and
+none is stalled by this run**: each carries a recorded, citable reason it cannot
+advance, and three of the four need exactly one owner decision to move.
 
-- **No metered model call was made by any session in this run.** Zero requests to
-  any provider API, including no wiring probe — that would itself be a capture by
-  the park's own reasoning. The metered transport's live path is unexercised.
-- **No measurement was taken for any of the 38 topology items and none is
-  claimed.** Zero of them turned out to be already satisfied.
-- **`adherence` is reachable through the evaluation cascade's stage list but from
-  no shipped observer**, because no evidence source is admitted for it. Named in
-  the step rather than papered over.
-- **No tree-wide scan covers the new metered arm**; containment is asserted
-  locally over three paths. Recorded as an open question.
-- **The two prior councils' rulings were not overturned.** Where this run
-  disagreed with a recorded lock it said so and left the lock standing.
+- `road-to-harness-promotion-bridge` — needs ADR-239 § Decision 3 settled.
+- `road-to-governed-evidence-production` — needs an owner ruling on the corpus
+  contract, then a delta producer built.
+- `road-to-publication-integrity-hard-fail` — needs the Option A authority
+  question answered; the design and its full acceptance suite are written out so
+  approving it is a read, not a design exercise.
+- `road-to-blocked-quickwin-visibility` — Phase 3's cap, activation and numbers
+  are explicitly the owner's to set.
 
-## Open questions left for a human
-
-1. ADR-239 § Decision 3 — grant or refuse preauthorized merge authority. The
-   council's reasoning for refusal is recorded and unexecuted.
-2. Whether to run the frozen metered-proposer protocol, and who freezes its one
-   deliberately-unset slot (the paired outcome metric and its aggregation).
-3. Whether `road-to-council-topology-evidence-followups` should be flipped to
-   `ready` — its header reserves that to a human.
-4. Whether the ungated 1000-line structural roadmap cap should get a gate.
-   `road-to-harness-promotion-bridge` crossed it silently in this run.
-5. Whether the unguarded-removal exposure on the topology receiver — 38
-   obligations resting on a file no gate protects — warrants a standing
-   validator.
-
-## The five open questions, put to the council — 2026-09-01
-
-The maintainer asked for the five above to be put to the AI council, and for
-whatever could not be settled there to come back to them individually.
-
-AI council 2026-09-01: `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
-2 rounds, deep, peer-review, blind chairman, quorum **2/2 present, needed 1 —
-concluded**, subscription transport, `billable=0`, **`$0.0000`**.
-
-**Both seats were asked to classify each question as council-decidable or
-owner-reserved BEFORE choosing a letter, and told not to pick a letter for a
-question they judged reserved.** Both complied, and both refused a binding
-answer on the same two.
-
-| # | Question | Classification | Verdict |
-|---|---|---|---|
-| 1 | ADR-239 § Decision 3 | **OWNER-RESERVED, 2/2** | no letter; both *recommend* 1A |
-| 2a | who freezes the unset paired metric | council-decidable, 2/2 | any genuinely independent session, in its own commit, before any capture |
-| 2b | authorising the paid execution run | **OWNER / HOST-RESERVED, 2/2** | no letter |
-| 3 | the topology receiver's status | council-decidable, 2/2 | **3A** — leave `draft`, unchanged |
-| 4 | the ungated 1000-line structural cap | council-decidable, 2/2 | **4E** — gate at 1000 with a file-specific, downward-only legacy exception |
-| 5 | a standing deferral-carry validator | council-decidable, 2/2 | **5A**, staged and identity-based |
-| 6 | is the framing loaded? | — | **YES** — Q1, Q4, Q5 and Q2 named |
-
-### Q1 — why both seats refused to answer their own recommendation
-
-Both recommend refusing preauthorized merge authority and both decline to record
-it. The openai seat put the reasoning most compactly: the question's own standing
-context *"already resolves the supposed tension"* — amending an ADR that reserves
-its decision to the owner **is** the reserved act, in either direction — and
-*"whether refusal strengthens the floor does not transfer decision authority."*
-The anthropic seat added a fact the earlier council could not have had: the
-2026-09-01 verdict of **1A, 2/2** was reached *before* the `Disposition:` fix, so
-those seats were *"reasoning about a different state of the tree than exists
-now"* — a world in which recording a refusal would have accidentally granted. The
-old verdict therefore cannot simply be adopted, even by someone who agrees with
-it.
-
-**The decision package for the owner**, as both seats framed it: refusal is now
-representable without accidentally granting; it binds **preauthorization only**
-and leaves ordinary same-turn human confirmation intact; it makes AC-9
-permanently unmeetable as written, so AC-9 needs its own truthful disposition
-rather than being left as a nominal criterion; and leaving the question open
-preserves a possibility the Hard Floor appears to make unavailable anyway.
-
-### Q2 — one question that was really two
-
-The metric freeze is *"a bounded experimental-design choice"* and any independent
-session may make it, provided it is committed before capture and specifies ties,
-exclusions, missing pairs, aggregation, and the relationship to the acceptance
-criterion.
-
-The paid execution is not. Both seats rejected the idea that pre-authorised spend
-covers it: *"prior budget approval does not prove that a particular execution
-environment may initiate them"*, and the host refusal is *"a safety mechanism
-asserting itself, not a settings tweak."* Continued refusal is to be escalated as
-a platform limitation, **never retried through reformulation**.
-
-### Q4 — why not a plain ratchet
-
-Both seats rejected a ratchet baselined at the current 1065 lines, on the ground
-that it *"risks normalizing that as an acceptable size"* and could become a
-reusable general cap. The agreed shape: enforce 1000 for every new or currently
-compliant structural roadmap; give the single oversized file a file-specific
-legacy baseline that may only move down; remove the exception automatically at
-1000. And do not split Phase 7 unless the split is proven semantics-neutral or
-the owner approves — the Resume condition reserves operations on transferred
-steps.
-
-### Q5 — the option as written was judged insufficient
-
-Both seats said build it; the openai seat added that the option as offered is
-*"insufficiently precise"* and should rest on machine-readable identity rather
-than prose similarity — one resolvable receiver per archived `carried-to=`,
-stable identifiers per carried obligation, exactly-once presence, an allowed
-receiver lifecycle state, explicit resolution records for removed obligations,
-and rejection of duplicate IDs and circular carry chains. Staged if stable IDs do
-not exist yet: gate receiver existence first, then identity and coverage. The
-anthropic seat added the stopping condition nobody had specified — validate while
-obligations remain open, stop once the receiver itself archives.
-
-### Q6 — the framing was loaded, and the specifics are recorded
-
-Named by both seats: **Q1** established at length why refusal is safe, presented
-leaving it open mainly as blockage, and presented council authority as genuinely
-unsettled *after* stating the rule that settles it. **Q4** called the gate
-*"cheap"* without discussing maintenance cost or whether line count is a sound
-complexity proxy. **Q5** described silent deletion vividly while giving the
-opposing case only an unsupported likelihood claim. **Q2** collapsed budget
-authorization, host permission, metric authority and execution authority into one
-choice.
-
-This is recorded rather than corrected, for the same reason the review prompt
-elsewhere in this run was: a framing edited after it was answered is not the
-framing that was answered. It does not make the outcomes wrong; it means this
-document, not the question, is where facts and advocacy get separated.
-
-### What is now settled, and what still is not
-
-**Settled by the council and actionable without the owner:** the topology
-receiver stays `draft` (3A — no change, already the state); the structural cap
-gets a gate in the 4E shape; the deferral validator gets built in the staged 5A
-shape; and an independent session may freeze the paired metric.
-
-**Still open, and returned to the maintainer one at a time:** ADR-239 § Decision
-3, and the authorisation of a paid execution run.
+Nothing was promoted. No estate hold was lifted. No baseline was raised — the one
+baseline that moved was **lowered** to the exact tree total after an extraction
+paid its own way. No gate was skipped, weakened, or bypassed.
