@@ -22,7 +22,11 @@ import {
     type CandidateRecord,
     type MutationDimension,
 } from '../../src/scripts/_lib/candidate_record.js';
-import { ARTIFACT_COUNT_METRIC } from '../../src/scripts/_lib/evaluation_vector.js';
+import {
+    ARTIFACT_COUNT_METRIC,
+    artifactCountRow,
+    promotionVerdict,
+} from '../../src/scripts/_lib/evaluation_vector.js';
 import { MIN_DISCORDANT } from '../../src/scripts/_lib/paired_verdict.js';
 
 function rec(
@@ -60,6 +64,34 @@ describe('pairingKey', () => {
 });
 
 describe('pairCandidates', () => {
+    it('gives both arms of a pair the same mutation-path set, which is why no path count can differ', () => {
+        // The regression pin for the constant-zero artifact row: the key folds
+        // the sorted path list, so a pair can only ever hold two records over
+        // the same paths, and any count taken over them differs by exactly 0.
+        // A future author tempted to derive the artifact delta from the pairs
+        // has to delete this assertion first.
+        const [pair] = pairCandidates(
+            [rec('c', 'content', SUBJECT_A, 'one')],
+            [rec('t', 'content', SUBJECT_A, 'two')],
+        );
+        const paths = (r: CandidateRecord) => r.mutations.map((m) => m.path).sort();
+        expect(paths(pair?.control as CandidateRecord)).toEqual(paths(pair?.treatment as CandidateRecord));
+        expect(() =>
+            pairCandidates(
+                [rec('c', 'content', SUBJECT_A, 'one')],
+                [
+                    {
+                        ...rec('t', 'content', SUBJECT_A, 'two'),
+                        mutations: [
+                            { path: SUBJECT_A, content: 'two' },
+                            { path: SUBJECT_B, content: 'extra' },
+                        ],
+                    },
+                ],
+            ),
+        ).toThrow(PairingError);
+    });
+
     it('refuses an unmatched control record rather than dropping it', () => {
         expect(() =>
             pairCandidates([rec('c', 'content', SUBJECT_A, 'x')], []),
@@ -144,16 +176,19 @@ describe('compareArms', () => {
     });
 
     it('pools trials across pairs, which is what lifts the sample off the discordant floor', () => {
-        const trials = (n: number, delta: number) =>
+        // Trial ids are unique across the whole comparison, per TrialOutcome:
+        // pooling makes every pair's deltas one sample, so an id reused on
+        // another pair is one measurement contributing twice to it.
+        const trials = (tag: string, n: number, delta: number) =>
             Array.from({ length: n }, (_, i) => ({
-                trial_id: `t${String(i)}`,
+                trial_id: `${tag}-t${String(i)}`,
                 control: 0,
                 treatment: delta,
             }));
         const result = compareArms({
             control,
             treatment,
-            outcomes: { [keyA]: trials(3, 1), [keyB]: trials(3, 1) },
+            outcomes: { [keyA]: trials('a', 3, 1), [keyB]: trials('b', 3, 1) },
             direction: 'higher-better',
         });
         expect(result.pairs).toHaveLength(2);
@@ -177,6 +212,35 @@ describe('compareArms', () => {
         expect(result.identical_pairs).toEqual([keyA, keyB]);
     });
 
+    it('refuses an outcomes key that matches no pair, not only a pair with no outcomes', () => {
+        expect(() =>
+            compareArms({
+                control,
+                treatment,
+                outcomes: {
+                    [keyA]: [{ trial_id: 'a', control: 0, treatment: 1 }],
+                    [keyB]: [{ trial_id: 'b', control: 0, treatment: 1 }],
+                    'content .claude/rules/typo.md': [{ trial_id: 'c', control: 0, treatment: 1 }],
+                },
+                direction: 'higher-better',
+            }),
+        ).toThrow(PairingError);
+    });
+
+    it('refuses one trial id reused across two pairs, which the per-pair check cannot see', () => {
+        expect(() =>
+            compareArms({
+                control,
+                treatment,
+                outcomes: {
+                    [keyA]: [{ trial_id: 'shared', control: 0, treatment: 1 }],
+                    [keyB]: [{ trial_id: 'shared', control: 0, treatment: 1 }],
+                },
+                direction: 'higher-better',
+            }),
+        ).toThrow(PairingError);
+    });
+
     it('treats a delta inside the tie epsilon as a tie, matching the A/B report', () => {
         const result = compareArms({
             control: [control[0] as CandidateRecord],
@@ -191,21 +255,54 @@ describe('compareArms', () => {
 });
 
 describe('comparisonVector', () => {
-    it('always carries the artifact-count row, because the vector builder refuses one without it', () => {
-        const control = [rec('c1', 'content', SUBJECT_A, 'c')];
-        const treatment = [rec('t1', 'content', SUBJECT_A, 't')];
-        const comparison = compareArms({
+    const control = [rec('c1', 'content', SUBJECT_A, 'c')];
+    const treatment = [rec('t1', 'content', SUBJECT_A, 't')];
+
+    function passing() {
+        return compareArms({
             control,
             treatment,
             outcomes: {
-                [pairingKey(control[0] as CandidateRecord)]: [
-                    { trial_id: 'a', control: 0, treatment: 1 },
-                ],
+                [pairingKey(control[0] as CandidateRecord)]: Array.from({ length: 6 }, (_, i) => ({
+                    trial_id: `t${String(i)}`,
+                    control: 0,
+                    treatment: 1,
+                })),
             },
             direction: 'higher-better',
         });
-        const vector = comparisonVector('cmp-1', 'route-recall', 'higher-better', comparison);
+    }
+
+    it('always carries the artifact-count row, because the vector builder refuses one without it', () => {
+        const vector = comparisonVector('cmp-1', 'route-recall', 'higher-better', passing(), 0);
         expect(vector.rows.map((r) => r.metric)).toContain(ARTIFACT_COUNT_METRIC);
         expect(vector.rows.filter((r) => r.kind === 'paired')).toHaveLength(1);
+    });
+
+    it('carries the delta it was GIVEN, which is the assertion a constant-zero row survives', () => {
+        for (const delta of [-2, 0, 1, 7]) {
+            const row = artifactCountRow(
+                comparisonVector('cmp-1', 'route-recall', 'higher-better', passing(), delta),
+            );
+            expect(row?.delta).toBe(delta);
+        }
+    });
+
+    it('makes the ceiling branch reachable: a positive delta blocks a vector that otherwise passes', () => {
+        const comparison = passing();
+        expect(comparison.verdict.kind).toBe('pass');
+        const clean = promotionVerdict(comparisonVector('cmp-ok', 'route-recall', 'higher-better', comparison, 0));
+        expect(clean.promote).toBe(true);
+        const grown = promotionVerdict(comparisonVector('cmp-grow', 'route-recall', 'higher-better', comparison, 1));
+        expect(grown.promote).toBe(false);
+        expect(grown.blocking).toContain(ARTIFACT_COUNT_METRIC);
+    });
+
+    it('refuses a fractional or non-finite delta rather than rounding it into a ceiling comparison', () => {
+        for (const bad of [0.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+            expect(() =>
+                comparisonVector('cmp-1', 'route-recall', 'higher-better', passing(), bad),
+            ).toThrow(PairingError);
+        }
     });
 });

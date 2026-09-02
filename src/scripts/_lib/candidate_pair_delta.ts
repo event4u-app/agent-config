@@ -20,7 +20,10 @@
  * {@link decidePairedVerdict}. What is NOT here is the outcome scalar itself.
  * {@link TrialOutcome} is supplied by a caller, because choosing what a trial
  * MEASURES is the one decision in this experiment that could favour an arm, and
- * a module that invented one would be answering it in the wrong place.
+ * a module that invented one would be answering it in the wrong place. The
+ * artifact-count delta is supplied on the same terms and for a sharper reason:
+ * the pairing makes every pair-derived path count differ by exactly 0, so a
+ * derivation here would report a constant and call it a measurement.
  *
  * The honest consequence, stated rather than left to be discovered: this
  * producer has no live population today. No shipped evaluator emits a
@@ -157,6 +160,19 @@ export function pairCandidates(
  * denominator that decides a verdict.
  */
 export interface TrialOutcome {
+    /**
+     * Unique across the WHOLE comparison, not merely within its pair.
+     *
+     * Stated rather than left implicit, because the two readings differ in what
+     * they refuse and the ambiguity was the defect. `pairedDeltas` refuses a
+     * repeat within one call and cannot see across pairs; {@link compareArms}
+     * pools every pair's deltas into ONE sample, and the denominator of that
+     * sample is what the sign test adjudicates. A caller that derives the
+     * outcomes map wrongly — the realistic shape being the same measurement
+     * array reached under two keys — then contributes one set of deltas twice.
+     * Under a pair-scoped reading that is undetectable; under this one it is a
+     * refusal, and the cost is that a caller names its trials per pair.
+     */
     readonly trial_id: string;
     readonly control: number;
     readonly treatment: number;
@@ -233,7 +249,19 @@ export interface ComparisonInput {
  */
 export function compareArms(input: ComparisonInput): PairComparison {
     const pairs = pairCandidates(input.control, input.treatment);
+    const keys = new Set(pairs.map((p) => p.key));
+    for (const k of Object.keys(input.outcomes)) {
+        if (!keys.has(k)) {
+            throw new PairingError(
+                `outcomes carry key '${k}', which matches no pair: the key is a formatted string ` +
+                    'the caller derives rather than receives, so an unmatched one is a mis-derived ' +
+                    'or stale measurement set, and pooling only the keys that happened to match ' +
+                    'is the same silently smaller denominator the opposite refusal names',
+            );
+        }
+    }
     const deltas: number[] = [];
+    const seenTrials = new Set<string>();
     for (const p of pairs) {
         const trials = input.outcomes[p.key];
         if (trials === undefined || trials.length === 0) {
@@ -241,6 +269,16 @@ export function compareArms(input: ComparisonInput): PairComparison {
                 `pair '${p.key}' has no trials: a pair present in the arms and absent from the ` +
                     'measurements silently shrinks the denominator',
             );
+        }
+        for (const t of trials) {
+            if (seenTrials.has(t.trial_id)) {
+                throw new PairingError(
+                    `trial id '${t.trial_id}' appears on more than one pair: the refusal in ` +
+                        'pairedDeltas is scoped to one pair and cannot see a reuse across pairs, ' +
+                        'and one trial counted twice inflates the discordant count either way',
+                );
+            }
+            seenTrials.add(t.trial_id);
         }
         deltas.push(...pairedDeltas(trials, input.direction));
     }
@@ -253,42 +291,58 @@ export function compareArms(input: ComparisonInput): PairComparison {
 }
 
 /**
- * Module-level on purpose, not for reuse.
- *
- * Inlined as an arrow inside {@link comparisonVector} it put a `): number`
- * immediately after that function's `: MetricVector` return annotation, which
- * is the shape the no-scalar-collapse scanner in
- * `tests/scripts/evaluation_vector.test.ts` matches. The scanner is right to be
- * blunt there, so the code moves rather than the pattern.
- */
-function distinctMutationPaths(records: readonly CandidateRecord[]): number {
-    return new Set(records.flatMap((r) => r.mutations.map((m) => m.path))).size;
-}
-
-/**
  * The comparison as a metric vector the evaluation cascade can consume.
  *
- * The artifact-count row is not optional and is not this function's to omit:
- * the vector builder refuses a vector without it, so a comparison that reached
- * the promotion verdict without a measured artifact delta is unconstructible.
- * The delta counted here is the treatment arm's distinct mutated paths minus
- * the control arm's, which is a fact about the records rather than an outcome.
+ * The artifact-count row is not optional: {@link buildVector} refuses a vector
+ * without it, so a candidate cannot reach the promotion verdict without its
+ * artifact delta having been measured. The delta is SUPPLIED here rather than
+ * derived, and the reason is the same one that keeps {@link TrialOutcome} out
+ * of this module.
+ *
+ * Why this module cannot derive it. {@link pairingKey} folds the sorted mutation-path list into the key and
+ * {@link pairCandidates} forms a pair only on an exact key match, so control
+ * and treatment of every pair carry identical path multisets by construction.
+ * Any count taken over those paths therefore differs by exactly 0 for every
+ * pair and every candidate — not usually, but always. A row filled that way
+ * satisfies the builder's SHAPE check while making the ceiling branch in
+ * `promotionVerdict` unreachable, which defeats the invariant the shape
+ * check exists to carry: the vector would be refused for omitting the row and
+ * accepted for carrying a constant.
+ *
+ * The quantity the gate actually names is baseline-relative growth — how many
+ * artifacts the candidate ADDS to the tree it is a variant of. That is a fact
+ * about the candidate against an unmutated baseline, and this module sees
+ * neither the baseline nor the filesystem. So the caller that knows which
+ * mutated paths are new files passes the count, and a caller that has not
+ * measured it has nothing to pass.
+ *
+ * @param artifactDelta signed count of artifacts the candidate adds against
+ *   its baseline. Must be a finite integer; a fractional or non-finite value is
+ *   refused rather than rounded, because a rounded ceiling comparison is a
+ *   verdict on a number nobody measured.
+ * @throws {PairingError} when `artifactDelta` is not a finite integer.
  */
 export function comparisonVector(
     candidate_id: string,
     metric: string,
     direction: MetricDirection,
     comparison: PairComparison,
+    artifactDelta: number,
 ): MetricVector {
+    if (!Number.isInteger(artifactDelta)) {
+        throw new PairingError(
+            `artifact delta ${String(artifactDelta)} is not a finite integer: the artifact-count ` +
+                'row is a count of artifacts, and a gate that compared a fraction against its ' +
+                'ceiling would be adjudicating a quantity the run never observed',
+        );
+    }
     const rows: MetricRow[] = [
         { kind: 'paired', metric, direction, verdict: comparison.verdict },
         {
             kind: 'counted',
             metric: ARTIFACT_COUNT_METRIC,
             direction: 'lower-better',
-            delta:
-                distinctMutationPaths(comparison.pairs.map((p) => p.treatment)) -
-                distinctMutationPaths(comparison.pairs.map((p) => p.control)),
+            delta: artifactDelta,
         },
     ];
     return buildVector(candidate_id, rows);
