@@ -20,6 +20,14 @@ estate_growth_exempt: "Covers the growth the offset half does not, and it is TWO
 
 ## Goal
 
+> **Status at archival (2026-09-02): agent-executable scope complete; kernel
+> defect unresolved.** Phase 1 shipped and is verified. Phase 2 and AC-3 are
+> `[~]` and carried to
+> `agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md` by AI
+> council verdict 2A — see § Blockers. The false `enforced_by` claim in
+> `language-and-tone` still stands; nothing here should be read as having cured
+> it.
+
 The comment-discipline enforcement is complete rather than shipped: the new
 gate proves it DISCRIMINATES by its own self-test rather than only by external
 fixtures, and the kernel rule that names a `.md`-only validator for a
@@ -41,7 +49,7 @@ source-file clause either names a real one or says plainly that it does not.
 
 ## Phase 2 — the kernel rule's enforcer claim
 
-- [ ] **2.1 Decide what `language-and-tone`'s `enforced_by` should say.** It
+- [~] **2.1 Decide what `language-and-tone`'s `enforced_by` should say.** It
       names `validator:src/scripts/check_md_language.ts` for a rule whose "Code
       comments English" clause governs source files, and that validator rejects
       every path that is not `.md` (`check_md_language.ts:175`). Two honest
@@ -52,35 +60,93 @@ source-file clause either names a real one or says plainly that it does not.
       verify: the frontmatter names an enforcer that can read a source file, or
       the rule body carries the honest-coverage sentence. `grep -n
       "enforced_by" -A3 src/rules/language-and-tone.md` shows which.
+      <!-- deferred-resolution: carried-to=road-to-language-and-tone-enforcer-claim -->
 
 ## Blockers
 
 ### blocker: b-kernel-rule-edit
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Blocks:** Phase 2 only. Phase 1 is an ordinary gate change and lands
-  independently.
-- **What to do:** pick one of two.
-  (a) Add `- "validator:src/scripts/lint_code_comments.ts"` to the
-  `enforced_by` list in `src/rules/language-and-tone.md` — the accurate entry,
-  since that gate reads source files and refuses on the diff.
-  (b) Leave the list and add one sentence to the rule body saying the code
-  clause is model-carried on hosts where the gate does not run, which is the
-  honest-coverage shape `security-sensitive-stop` and `active-remediation`
-  already use for their own obligations.
-- **Recommendation:** (a). The gate exists, it is CI-wired and locally
-  reachable, and the entry would then describe something true. (b) is a
-  fallback if the maintainer wants no kernel edit at all in this window.
-- **If you do nothing:** the gate keeps working and the kernel rule keeps
-  claiming coverage it does not have. That is the state that made this defect
-  invisible for as long as it was: a frontmatter entry a reader trusts, naming
-  a validator that cannot see the surface.
-- **Resolved when:** `src/rules/language-and-tone.md` either names an enforcer
-  that reads source files, or says in its body that the clause is
-  model-carried. `language-and-tone` is a kernel rule, so the edit takes the
-  slow-rollout path in `scope-control` § Kernel-rule edits — own PR, 24 h
-  between merges — which is why this is a blocker rather than a step.
+- **Blocks:** nothing in this roadmap. Phase 1 landed independently, as the
+  blocker's own `Blocks` field predicted.
+- **What to do:** nothing here. The obligation moved, unclosed, to
+  `agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md`, which
+  carries the same blocker at `Status: open` with both curing steps specified to
+  the character. `open_blockers` spans the active tree AND `later/`
+  (`check_estate_count.ts:470`), so the count is preserved by the move and
+  nothing is laundered.
+- **Resolved when:** resolved here on 2026-09-02 as *carried, not cured* — the
+  defect stands and is recorded on the receiver. Resolution mechanism: AI
+  council verdict 2A, inlined below.
+
+### DISPOSITION 2026-09-02 (drain run 16): 2A — carried to `later/`, not cured
+
+*AI council 2026-09-02, members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
+every line relied on is inlined here per `no-roadmap-references`.*
+
+**The question put.** This blocker's `Resolved when` offers exactly two paths,
+(a) an `enforced_by` addition and (b) a rule-body sentence, and **both are writes
+to `src/rules/language-and-tone.md`** — a kernel rule.
+`src/scripts/hooks/block_kernel_rule_writes.ts` denies every agent write to a
+kernel rule at the Write/Edit surface (`:105-124`) and at the Bash surface
+(`:126-205`: redirection, in-place `sed`, `tee`, `truncate`, `rm`, `mv`/`cp`
+destination). Its header names the sole legitimate bypass as a human-owned
+exception registry, and circumventing the guard by an unrecognised write verb
+was explicitly not contemplated. So the blocker as written is discharge-proof
+for any agent, in any session.
+
+**Verdict 2A — convergent 2/2.** Move Phase 2, this blocker and AC-3 to a
+parked receiver with the rationale recorded, and archive the roadmap once
+Phase 1 is complete. *"An active execution roadmap should represent executable
+work. Keeping an impossible agent-owned completion condition open indefinitely
+makes the estate misleading rather than safer."* The archival wording both seats
+asked for is used verbatim in the Goal-status line: **agent-executable scope
+complete; kernel defect unresolved.**
+
+**2C was refused, and the test that refuses it is worth keeping.** One seat
+proposed restating AC-3 so it could be met without a kernel write. Both then
+held that a non-kernel note is honest only if a deterministic, mandatory reader
+path (i) surfaces the qualification whenever the rule is consumed, (ii) prevents
+tooling and agents from reading `check_md_language.ts` as source-comment
+enforcement, and (iii) is protected by a gate. One seat sharpened the bar
+further: it is honest *"only if it changes the reader's action. A coverage-gap
+note that nobody is required to consult before claiming enforcement is
+documentation, not a control."* No such path exists, so 2C would have been
+bookkeeping. **2B was refused** for converting a real defect into undead work.
+
+**2D exists, is better, and is unavailable to this run.** Both seats named a
+missing option: *"an authorized maintainer performs the kernel edit through the
+documented human-owned exception mechanism."* That is the substantively correct
+outcome. It requires a human act outside any agent session, so this run cannot
+take it — and the receiver's Phase 1 is written so that taking it later costs
+minutes.
+
+**The mechanism deviates from the council's word and matches its intent, and the
+deviation is recorded rather than smoothed.** Both seats said *stub*. A stub is
+**not a valid `[~]` receiver**: `deferralProblems`
+(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) resolves a
+`carried-to=` destination only against `agents/roadmaps/<slug>.md` or
+`agents/roadmaps/later/<slug>.md`, and fail-closes on `stubs/`. It also requires
+a literal `parent_roadmap:` back-link, verified from both ends. `later/` is the
+tree's own mechanism for real, specified, not-now work, it is excluded from the
+dashboard and from `/roadmap:process-*`, and it keeps the blocker inside
+`open_blockers`. Every property the seats asked a stub to have — precise edit,
+named human owner, legitimate authorization path, objective resumption trigger —
+the receiver has; a `stubs/` file would additionally have failed the gate.
+
+**One correction to a claim this roadmap made about itself.** AC-2 asked that
+the gate leave `gate-coverage.yml`'s registered-non-adopter set. The count is
+**24 either side of the change**, because that population is rows that are
+`enforced` **and** `min_scanned >= 1`, and `lint_code_comments` carries
+`min_scanned: 0` by design — its corpus is a diff. So the criterion was already
+satisfied by population exclusion before any work happened. It now holds for the
+reason it names: the gate carries the `--self-test` marker the ratchet reads
+(18 cases, 9 rejecting, sensitivity probed). Recorded here and on the AC line so
+an unchanged number is not later read as a missed drain.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-02 | reviewer: claude/host -->
@@ -103,10 +169,11 @@ source-file clause either names a real one or says plainly that it does not.
       design. The gate now adopts on the marker the ratchet reads rather than
       passing on a population exclusion, so the criterion holds for the reason
       it names.
-- [ ] AC-3 — `language-and-tone` either names an enforcer that can read a source
+- [~] AC-3 — `language-and-tone` either names an enforcer that can read a source
       file, or states that its code clause is model-carried. The current
       middle state — an entry naming a validator that rejects every source
       path — does not survive this roadmap.
+      <!-- deferred-resolution: carried-to=road-to-language-and-tone-enforcer-claim -->
 
 ## Explicitly NOT in this roadmap
 
