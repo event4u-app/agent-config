@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Phase 2 preparatory work — what was built, and the one finding that stopped the freeze
 
 **Date:** 2026-09-02 · **Branch:** `drain/r16-governed-evidence` · **Base:** `56c333855`
@@ -207,6 +209,32 @@ itself: no ordering decision arises in the dry plan, so the ordering guard has
 nothing to govern until a run spends.
 
 The worktree was removed afterwards.
+
+## 4b. Two environment traps a fresh-checkout runner will hit
+
+Both are pre-existing and neither is caused by this change. Recorded because the
+resume chain mandates a fresh checkout, so the next runner meets them.
+
+**`activation_receipt_producer.test.ts` reds in a fresh worktree.** One case
+(*"a real un-projected rule stalls at projected"*) reads
+`dist/discovery/discovery-manifest.json`, which is gitignored and is a
+RELEASE-time artefact that neither `task sync` nor `task generate-tools`
+produces. Absent, the `selected` rung is unobservable, so the receipt stalls one
+rung earlier (`stalled at receipt-selected · family=unknown`) and the assertion
+fails. Cured by `./scripts-run src/scripts/build_discovery_manifest --write`
+(note the `--write`; without it the manifest goes to stdout and the file is
+never created). 21/21 after that.
+
+**The no-scalar-collapse scanner fires on adjacency, not only on a collapse.**
+`findScalarCollapse`'s `vector-to-number` pattern is
+`/:\s*(readonly\s+)?MetricVector(\[\])?[^)]*\)\s*:\s*number\b/`, and
+`[^)]*` crosses newlines and statements. A helper arrow returning `number`
+declared inside a function whose return annotation is `: MetricVector` matches,
+even though nothing collapses a vector. It fired on the new producer and the
+code was moved rather than the pattern loosened — the scanner is right to be
+blunt on this subject, and a suppression here would be the gate weakening this
+tree keeps finding. The reason is recorded at the helper so a later refactor
+does not inline it back.
 
 ## 5. AC-3 — honest null, and locked
 

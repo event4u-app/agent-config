@@ -253,6 +253,19 @@ export function compareArms(input: ComparisonInput): PairComparison {
 }
 
 /**
+ * Module-level on purpose, not for reuse.
+ *
+ * Inlined as an arrow inside {@link comparisonVector} it put a `): number`
+ * immediately after that function's `: MetricVector` return annotation, which
+ * is the shape the no-scalar-collapse scanner in
+ * `tests/scripts/evaluation_vector.test.ts` matches. The scanner is right to be
+ * blunt there, so the code moves rather than the pattern.
+ */
+function distinctMutationPaths(records: readonly CandidateRecord[]): number {
+    return new Set(records.flatMap((r) => r.mutations.map((m) => m.path))).size;
+}
+
+/**
  * The comparison as a metric vector the evaluation cascade can consume.
  *
  * The artifact-count row is not optional and is not this function's to omit:
@@ -267,8 +280,6 @@ export function comparisonVector(
     direction: MetricDirection,
     comparison: PairComparison,
 ): MetricVector {
-    const distinct = (rs: readonly CandidateRecord[]): number =>
-        new Set(rs.flatMap((r) => r.mutations.map((m) => m.path))).size;
     const rows: MetricRow[] = [
         { kind: 'paired', metric, direction, verdict: comparison.verdict },
         {
@@ -276,8 +287,8 @@ export function comparisonVector(
             metric: ARTIFACT_COUNT_METRIC,
             direction: 'lower-better',
             delta:
-                distinct(comparison.pairs.map((p) => p.treatment)) -
-                distinct(comparison.pairs.map((p) => p.control)),
+                distinctMutationPaths(comparison.pairs.map((p) => p.treatment)) -
+                distinctMutationPaths(comparison.pairs.map((p) => p.control)),
         },
     ];
     return buildVector(candidate_id, rows);
