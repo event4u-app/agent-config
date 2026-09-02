@@ -24,6 +24,29 @@ describe('de-comment — must fire', () => {
             .toContain('de-comment');
     });
 
+    it('flags a block-comment continuation carrying no leading star', () => {
+        // The case this gate MISSED on its first day, in a consumer repository:
+        // a `/* … */` block whose continuation lines are indented prose with no
+        // comment punctuation of their own. The opening line alone fell under
+        // the two-word threshold, and lines 2 and 3 were never classified at
+        // all, so a three-line German comment survived a clean run.
+        const src = [
+            '  /* Hausform mit Objekt-`message`: derselbe Aufbau, anderer Schluessel.',
+            '     `BaseException::render()` dekodiert eine JSON-Zeichenkette und legt das',
+            '     Ergebnis unter `message` ab — bei Feldfehlern ist das ein Objekt. */',
+            '  if (isRecord(payload.message)) {',
+        ].join('\n');
+        expect(scanText('f.ts', src).filter((f) => f.cls === 'de-comment').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('flags a JSX comment, which opens with a brace rather than a slash', () => {
+        // Second blind spot found the same way as the first: `{/* … */}` does
+        // not start with a comment token, so the whole JSX comment family was
+        // invisible — in a frontend where most comments are JSX comments.
+        expect(classes('        {/* Der Titel traegt die Aktion, nicht die Zeile. */}\n'))
+            .toContain('de-comment');
+    });
+
     it('flags a German line whose only umlaut sits in ordinary prose', () => {
         expect(classes('// Die Schriftstufen der kompakten Datenoberfläche\n'))
             .toContain('de-comment');
@@ -59,6 +82,25 @@ describe('de-comment — must NOT fire', () => {
             ' */',
         ].join('\n');
         expect(classes(src)).not.toContain('de-comment');
+    });
+
+    it('stays silent on English code AFTER a block comment closes', () => {
+        // The other half of the block-state fix: the state must be released on
+        // the closing delimiter, or every line of the file after the first
+        // block comment is scanned as comment prose.
+        const src = [
+            '/* An English header.',
+             '   Its continuation, also English. */',
+            'const der = 1; const und = 2; const nicht = 3;',
+        ].join('\n');
+        expect(scanText('f.ts', src)).toEqual([]);
+    });
+
+    it('stays silent on English prose introducing a German quotation', () => {
+        // The direction case the quote trim exists for: the German is inside
+        // the quotation, the sentence around it is English.
+        expect(classes('// cannot tell "Fertig." from "Fertig ist der Fix noch nicht"\n'))
+            .not.toContain('de-comment');
     });
 
     it('stays silent on plain English prose', () => {
