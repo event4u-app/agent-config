@@ -2418,3 +2418,26 @@ gates:
 
       SENSITIVITY WAS OBSERVED, not assumed: neutralising the German predicate
       turns 4 of the 22 cases red and restoring it turns them green.
+
+      THE GATE ALSO CARRIES ITS OWN `--self-test` (18 cases, 9 rejecting),
+      which drives the real binary rather than the imported classifier — argv
+      parsing, scan-scope assertion and exit codes included — so the gate
+      answers for its own discrimination in a consumer checkout where the test
+      suite is not installed. It is ONE table, not a second corpus: the cases
+      live in `COMMENT_CASES`, exported by the gate, and the vitest file
+      enumerates the same export against `scanText` while the self-test
+      enumerates it against the CLI. A second table over one classifier would
+      drift, and the copy nobody runs locally drifts first. Floors are set at
+      16/8 against a real 18/9, so deleting a case to reach green fails and a
+      deliberate shrink shows up as a floor edit in the diff. Sensitivity
+      re-observed on the self-test the same way: neutralising the German
+      predicate turns exactly 4 of the 9 rejecting cases red (the three
+      German-comment shapes and the reasonless escape) while the report and
+      provenance cases stay green, and restoring it returns 18/18.
+
+      NOTE ON THE ADOPTION RATCHET, stated because the number does not move:
+      `gate-self-test:registered-non-adopters` counts manifest rows that are
+      `enforced` AND carry `min_scanned >= 1`. This row's floor is 0 for the
+      reason the corpus field gives, so it was never in that population and
+      the count stays at 24 either side of this change. The self-test is
+      therefore adopted on its merits rather than to clear a ratchet.
