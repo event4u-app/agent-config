@@ -342,9 +342,10 @@ evaluator the pre-registered budget names:
   frontmatter, and `appendHonestEnforcement` appends at the end. So even on a
   matching path the routing condition would be unchanged.
 - Every trial would therefore tie, `discordant` would be 0 against a derived
-  floor of 5, and `decidePairedVerdict` would return `underpowered` — which the
-  roadmap's own record rules does not satisfy the acceptance criterion. Freezing a
-  metric known in advance to return a non-answer is worse than leaving it unset.
+  floor of 5, and `decidePairedVerdict` would return `underpowered` — and the
+  roadmap's own record rules that `underpowered` does not satisfy the acceptance
+  criterion: it records that adjudication was unavailable. Freezing a metric
+  known in advance to return a non-answer is worse than leaving it unset.
 
 The one committed evaluator a rule-body mutation **could** move is the A/B
 bench (`bench_ab_clone --candidate-record` materialises a candidate into a
