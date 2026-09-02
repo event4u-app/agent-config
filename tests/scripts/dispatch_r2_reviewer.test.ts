@@ -1177,10 +1177,24 @@ describe('extractAcceptanceCriteria — over the REAL active tree, not a fixture
         // Deliberately not a count: a count would need updating on every roadmap
         // added, and would then be edited rather than read. The invariant is
         // "declares ⇒ extracts", which holds at any population size.
-        const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+        // WIDENED 2026-09-02 to include `later/`, and the reason is the same rot
+        // the floor history below records, arriving one step further on: the
+        // active top level is now a SINGLE roadmap and it is a `status: carrier`
+        // that declares no criteria, so `declaring > 0` failed against a real
+        // tree with nothing wrong in it. Parked roadmaps are real roadmaps with
+        // real criteria shapes, and they were invisible here. Measured at this
+        // commit: top level 1 scanned / 0 declaring; `later/` 79 scanned / 55
+        // declaring / 0 blind. So this widens the corpus from at most two files
+        // to 55 declaring ones — a strictly stronger assertion, not a relaxed
+        // one, and one that cannot be starved again by the estate draining.
+        const roots = [
+            path.join(REPO_ROOT, 'agents', 'roadmaps'),
+            path.join(REPO_ROOT, 'agents', 'roadmaps', 'later'),
+        ];
         const blind: string[] = [];
         let declaring = 0;
         let scanned = 0;
+        for (const dir of roots)
         for (const name of fs.readdirSync(dir)) {
             if (!name.endsWith('.md')) continue;
             scanned += 1;
