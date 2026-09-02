@@ -12,7 +12,7 @@
         "brand-consistency": 133,
         "broken-access-control": 743,
         "cli-output-handling": 83,
-        "code-comment-discipline": 864,
+        "code-comment-discipline": 750,
         "commit-conventions": 136,
         "context-hygiene": 2470,
         "copilot-routing": 128,
@@ -129,8 +129,8 @@
             "date": "2026-09-02",
             "rule": "code-comment-discipline",
             "from": 692,
-            "to": 864,
-            "reason": "A new Iron Law block plus the two sentences that make it decidable: evidence goes in the roadmap that demanded it and never in a second copy in the source, a comment naming a roadmap path or a phase-and-step is that copy, the provenance of a value is not a WHY, and a roadmap cannot license a comment this rule forbids. That is obligation surface \u2014 it decides what an author may write \u2014 and preservation-guard forbids condensing an Iron Law block further. The measured case behind it (509 German comment lines and 21 report- or provenance-shaped comments across 41 of 45 changed source files in a consumer repository, including a 101-line colour-analysis report inside a CSS file), the reason the rule's own keyword triggers miss the write, and the two enforcers were all moved to the pointer target the rule already names, code-clarity.md. That move took the growth from +546 to +172; the residue is the law itself, which cannot live in a guideline because a rule whose Iron Law is elsewhere is a rule nobody reads."
+            "to": 750,
+            "reason": "Three Iron Law lines folded into the rule's existing block: a comment naming where the code came from is evidence in the wrong place, provenance is not a WHY, and a roadmap cannot license a comment this rule forbids. That is obligation surface \u2014 it decides what an author may write \u2014 and preservation-guard forbids condensing an Iron Law further. Everything explanatory went to the pointer target the rule already names: the measured case (509 German comment lines and 21 report- or provenance-shaped comments across 41 of 45 changed source files in a consumer repository, including a 101-line colour-analysis report inside a CSS file), the reason the rule's own keyword triggers miss the write, and the two enforcers. Three condensations took the growth from +546 to +58: move to the guideline, then fold into the existing Iron Law block rather than open a second section. The ceiling is set at the measured body rather than above it \u2014 headroom nobody has a use for is the spendable-surplus failure this file's own comment names."
         }
     ]
 }
