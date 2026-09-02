@@ -1,6 +1,131 @@
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-02 -->
 
-# Autonomous roadmap drain — run 16, 2026-09-02
+# Autonomous roadmap drain — run 17, 2026-09-02
+
+The only report the maintainer asked to read. Every claim below was produced by a
+command in this run, not carried from a prior session. **Zero metered calls to
+any generation API; every council seat ran on subscription transport,
+`billable=0`, `$0.0000` total.**
+
+## The instruction, and where it did not match the tree
+
+The brief seeded **36 active roadmaps** at commit `c536dbd` and said to recompute
+before use. Recomputed at `6641d4719`, the live inventory was **2** — the seed
+list was stale by roughly thirty archivals. It was discarded and the queue
+rebuilt from the tree, which is what the brief instructs.
+
+The user's own narrowing governed the run: *resolve the blocker and work the last
+open roadmap through completely.*
+
+| # | Roadmap | Progress at start | Complexity | Outcome |
+|---|---|---|---|---|
+| 1 | `road-to-governed-evidence-production` | 4/9 (44%) | structural | Blocker resolved with (b); Phase 2 given a terminal disposition; **parked to `agents/roadmaps/later/`** by council verdict G3. Not archived — see below. |
+| 2 | `road-to-council-topology-evidence-followups` | 0/38 | structural | Untouched by design. `status: carrier`; 38 deferred steps in archived roadmaps resolve to it, and `lint_carrier_integrity`'s broken-destination class reds at zero tolerance if it moves. |
+
+## Why the roadmap is parked and not archived, in one paragraph
+
+Archival requires zero open items. The five that remain — steps `2.1`, `2.2` and
+criteria `AC-2`, `AC-3`, `AC-4` — could only be closed by converting them to
+`[-]` cancelled, and the checkbox vocabulary has **no glyph for "waived"**. A
+council ruled 2/2 that the owner's delegation does **not** reach that
+owner-reserved conversion: *"a governance rule does not become optional because
+a linter cannot detect its violation."* So every criterion keeps its `[ ]` and
+stays alive in the estate, the dispositions are recorded in prose, and the file
+parks whole — which is what `src/rules/roadmap-progress-sync.md:120-125` makes
+mandatory for a roadmap whose open work cannot proceed now but will resume.
+
+## Pull requests
+
+| PR | Title | Roadmap | State |
+|---|---|---|---|
+| (see the PR body of this branch) | `roadmap: park governed-evidence-production to later/, resolve metered-backend-park with (b)` | `road-to-governed-evidence-production` | open, one known-red gate escalated below |
+
+Two commits: the evidence analysis, then the roadmap disposition and park.
+
+## Council decisions
+
+| # | Question | Verdict | Recorded in |
+|---|---|---|---|
+| 1 | Does verdict 2A survive four new findings, and what is Phase 2's terminal disposition? | **D2**, 2/2 convergent — 2A refuted in its operative form; AC-2 waived on demonstrated design infeasibility; AC-3/AC-4 close as dependent, unsatisfied dispositions; no fifth option; do not read "cheap" into AC-2 retroactively | roadmap § Phase 2 terminal disposition |
+| 2 | By which glyph and which authority does D2 get written down? | **G3**, 2/2 convergent — park to `later/`; the delegation does **not** reach the owner-reserved `[-]`; all five items stay `[ ]`; blocker closes with (b) | roadmap § Phase 2 mechanism |
+| 3 | One coverage floor now reds on a corpus that shrank by design — lower it? | **SPLIT 1-1**, which is an escalation condition and not a verdict. Both seats agree F1 (lower to 1) is technically right; they disagree on whether the delegation reaches it | evidence analysis § One consequence is UNRESOLVED |
+
+The two prior transport failures on question 3 (`exit_1`, `os_error: ENOBUFS`,
+0/2 present) are recorded as failures, not refusals; the third attempt answered.
+
+## The one item that reaches the owner
+
+**Lower `check_requirements_trace`'s `min_scanned` from 2 to 1 — or say no.**
+
+Parking the roadmap takes `agents/roadmaps/` top level from two files to one (the
+carrier, which cannot be removed). That reds `check_requirements_trace`'s floor,
+and `check_gate_coverage` runs in remote CI
+(`.github/workflows/consistency.yml:359`), so **this PR carries one red gate**.
+Every other gate in the battery is green.
+
+The floor's own note predicts this red and calls it *"the gate firing on the
+drain WORKING"*; it has been lowered twice already for the same reason. Its
+`Revisit-if` anticipates the estate stabilising **above** 2 and it stabilised
+**below** 2 — a gap in the clause. The council split on authority, so the floor
+was left alone. The narrow proposal, in the restrictive seat's own terms:
+
+1. Approve lowering the floor to 1.
+2. Record that 1 derives from the carrier invariant and its 38 dependent
+   references — not from today's file count.
+3. Record the coupling: if carrier-integrity enforcement changes, revisit.
+4. Amend the `Revisit-if` clause to cover stabilisation at any structurally
+   justified minimum, including below 2.
+
+## Descopes
+
+**None.** Nothing was dropped, cancelled, or transferred. That is the point of
+the G3 mechanism: five open criteria are preserved in place with a resume
+condition rather than closed to make a directory look empty.
+
+## Corrections this run made to its own findings
+
+Recorded because two of them were caught by verification rather than by care.
+
+| Claim as first drafted | Corrected to | Caught by |
+|---|---|---|
+| "v1 excludes the candidate surface by explicit comment" | v1 **layers** the four owned paths into `with`/`with-rdp` clones and spawns with `cwd: cloneRoot`; what blocks a candidate clone is `reset_clone`'s variant allowlist, which does not accept `candidate` | independent verification pass |
+| "`assertWithinBudget` aborts an over-budget bench sweep" | It has **no** `bench_ab_*` caller, and every committed caller passes an estimated spend of 0 — the ceiling enforces nothing on that path. The decisive fact is that no approved powered plan fits it | independent verification pass |
+| "none of the five corpus rules is reachable from a fixture task" | Four are path-unreachable; `augment-edit-discipline` carries `path_prefix: "src/"` and the fixture has `src/cli.ts`. The categorical form is withdrawn; an effect-size judgement survives, marked weaker than the structural legs | council peer review flagged it `needs-verification` |
+
+## An adjacent defect surfaced and NOT fixed
+
+`clone_candidate` joins `record.id` straight into a path
+(`bench_ab_clone.ts:332`) and `id` is validated only as a non-empty string, so an
+id carrying `..` or a separator would land a candidate clone outside `CLONES`
+where the integrity checker (direct children only) does not look. Nothing
+executes there. Surfaced rather than patched, because this change is a roadmap
+disposition and not a code fix.
+
+## Honest limits of this report
+
+- **The floor red is real and unresolved.** It is not a local artefact and it is
+  not waived; it is escalated.
+- **One council seat could not verify the citations** it reasoned over, and said
+  so — its verdict rests on the quoted provisions being accurate. The citations
+  are what a later reader checks, not something to inherit.
+- **The peer-review half of the first council round was 1 of 2.** The anthropic
+  peer-review returned a refusal, having been shown one response where the
+  round's structure implies two. Both primary rounds were 2/2.
+- **The corpus-identity leg rests on one host's projection.** `.claude/` is
+  gitignored and generated; `subject_digest=860eaf2dee7f35df` reproduced
+  byte-identically against the drain-16 capture on this machine, and that is the
+  strength of the claim.
+- **`task ci` was not run.** It chains 292 tasks, runs `test` twice, and writes
+  build output. The 19-gate battery plus `check_gate_coverage`, `check_estate_count`
+  and the archive-index check were run instead, and each result above is an
+  observed exit code.
+
+---
+
+# Prior run — autonomous roadmap drain, run 16, 2026-09-02
+
+> Preserved in full below and unedited. Run 17 is the current record and sits
+> above it in this same file.
 
 The only report the maintainer asked to read. Every claim below was produced by a
 command in this run, not carried from a prior session.
