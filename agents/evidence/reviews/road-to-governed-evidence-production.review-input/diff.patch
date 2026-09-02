@@ -1,0 +1,2306 @@
+diff --git a/agents/evidence/analysis/drain16-phase2-preparatory-work.md b/agents/evidence/analysis/drain16-phase2-preparatory-work.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0f479bdb99112799ef38e850e4efc1a71fb4a7af
+--- /dev/null
++++ b/agents/evidence/analysis/drain16-phase2-preparatory-work.md
+@@ -0,0 +1,260 @@
++<!-- evidence-type: analysis -->
++
++# Phase 2 preparatory work — what was built, and the one finding that stopped the freeze
++
++**Date:** 2026-09-02 · **Branch:** `drain/r16-governed-evidence` · **Base:** `56c333855`
++**Scope:** the preparatory half of the drain-15 1B resume chain for
++`road-to-governed-evidence-production`.
++
++**Metered calls made: zero.** No request reached any provider API. No baseline
++was captured, no comparison was run, and no acceptance criterion was marked
++satisfied. `--confirm` was never passed to `llm_propose`.
++
++## What the drain-15 disposition authorised, and what it withheld
++
++The disposition separates *authority to decide*, *authority to implement
++preparatory work*, and *satisfaction of an acceptance criterion*, holding the
++first two while the third stays unavailable. The chain it recorded, in order:
++
++1. cure F-A with an equivalence-preserving manifest;
++2. freeze the complete experimental definition, entire or not at all;
++3. implement the paired-delta producer for F-C;
++4. a fresh-checkout dry re-run;
++5. an independent session — not the one that authored the corpus — authorised to spend.
++
++Steps 1, 3 and 4 are done. **Step 2 is an honest null**, and § 3 below is the
++reason. Step 5 is not this session's to take.
++
++## 1. F-A — cured, and the earlier record's mechanism was wrong
++
++`src/scripts/_lib/corpus_manifest.ts` plus the CLI
++`src/scripts/corpus_manifest.ts` capture every field the disposition enumerated;
++the shape and the equivalence contract are in
++`docs/contracts/corpus-manifest-v1.md`. `subject_digest` folds the enumeration
++rule and the ordered subject inventory with hashes, and deliberately nothing
++else, so a node upgrade cannot report a subject change.
++
++**Reproduced on the real tree.** A fresh `task sync && task generate-tools` at
++`56c333855` produced **13** files in `.claude/rules/` and logged **101 rules
++skipped** — the drain-14 measurement, reproduced rather than cited.
++
++**The correction.** Drain 14 attributed those skips to byte-identical
++user-scope twins, quoting the generator's own log line. Probed directly:
++
++```
++names 119  skip 0            # dedupableRules over dist/agent-src/rules
++twin exists false            # e.g. source-of-truth.md
++```
++
++`dedupableRules` accounts for **zero** of the 101 skips, because
++`projection.scope_dedup` appears on no settings layer this repository carries
++and therefore defaults off (`condense.ts:445-459`). The live mechanism is
++`partitionRulesForDir` (`ruleLayerPartition.ts:91`): with the partition active
++and this host's **global** layer verified to carry the *names* that would be
++withheld, the project projection narrows to the package-only set.
++`hostLayerCarries` (`globalRuleLayers.ts:176-197`) decides on **name presence
++only**, never content.
++
++F-A's conclusion is unaffected — the corpus is a function of the operator's
++home directory and not of the commit. What was wrong is the named mechanism,
++and a reader following it to `dedupableRules` would have found a function
++returning an empty set. The manifest captures **both**: the byte-identity twin
++table and the partition decision with the global layer's name inventory and
++`layer_digest`.
++
++Live capture, `56c333855` plus this branch's uncommitted work:
++
++```
++subject_digest=860eaf2dee7f35df · 5 subject(s) · 13 produced · 0 user-scope skip(s)
++partition_active: True · tool_id: claude-code · layer_dir: .claude/rules
++carries: True · reason: carries · missing: 0 · package_only_count: 15
++layer_inventory: 104 · layer_digest: 17e96e89c6a51fbd
++scope_dedup: absent:default-off
++```
++
++## 2. F-C — the producer exists
++
++`src/scripts/_lib/candidate_pair_delta.ts` closes the gap the drain-14 trace
++established: *"nothing reads two `CandidateRecord`s and emits a signed delta, a
++`PairedVerdict`, or a `MetricVector`."*
++
++Every property of the comparison's **shape** is derived from constants committed
++before either arm existed, and none of it is a choice made here:
++
++| Slot | Derived from |
++|---|---|
++| sign convention (positive favours treatment) | `PairedInput.deltas`, `paired_verdict.ts:110` |
++| direction handling | `MetricDirection`, `evaluation_vector.ts:59` |
++| `tieEpsilon` = 1e-9 | the value the A/B report's own direction counts use, `bench_ab_v2_stats.ts:326-327` |
++| aggregation, alpha, discordant floor | `decidePairedVerdict`, `ALPHA` (`:51`), `deriveMinDiscordant` (`:72`) |
++| pairing key | `(dimension, sorted mutation paths)` — the observation identity, reconstructed from the record, since an id hashes mutated bytes and so differs across arms by construction |
++
++**Pooling answers F-B's floor half.** At one delta per candidate pair the trial
++count equals the corpus size (5), which is exactly `MIN_DISCORDANT`, so one tie
++makes a pass arithmetically unreachable before the run starts. `compareArms`
++pools per-trial deltas across pairs, so the count is the number of **trials**.
++The independence assumption that buys it is stated at the function rather than
++assumed away.
++
++**What it refuses**, each with a test: an unmatched record on either arm (half a
++pair is no result), two records for one observation, zero trials, a duplicate
++trial id, a non-finite outcome, and a pair present in the arms but absent from
++the measurements. Identical arms are **flagged, not thrown** — every trial then
++ties, and a reader seeing `underpowered` without the flag would look for the
++cause in the measurement.
++
++**The honest disclosure it carries in its own header:** it has no live
++population. No shipped evaluator emits a `TrialOutcome` for a candidate over the
++frozen corpus, so every test supplies its own. That is the same disclosure AC-3
++makes about `assertCheapestFirst`, and it is made in the same terms.
++
++## 3. F-B — NOT frozen. The finding, stated as a refutation
++
++**Claim:** the experimental definition cannot be frozen by derivation over the
++currently frozen corpus, because the corpus's admitted mutations cannot move the
++one cheap evaluator the pre-registered budget names.
++
++**Three independent legs, each falsifiable:**
++
++1. **Path.** The corpus is `.claude/rules/*.md`
++   (`metered-proposer-protocol.md` § The defect-observation corpus).
++   `description_route_check`'s catalogue is loaded from `dist/agent-src/skills`
++   and `dist/agent-src/rules` (`description_route_check.ts:386-410`). A mutation
++   to a corpus member never reaches the catalogue. *Refuted by:* a catalogue
++   loader that reads `.claude/`.
++2. **Surface.** The catalogue is `name + description` only —
++   `catalogueHash` maps each entry to `` `${c.name} ${c.description}` ``
++   (`:81-84`), and the description is extracted from frontmatter (`:395`). Both
++   admitted recipes preserve frontmatter byte-identically: `keepLeadingBand`
++   cuts at the first `## ` heading (`candidate_proposer.ts:126-140`) and
++   `appendHonestEnforcement` appends at the end (`:159-164`). *Refuted by:* a
++   recipe that rewrites frontmatter.
++3. **Arithmetic.** With every trial a tie, `discordant` is 0 against a floor of
++   5, so `decidePairedVerdict` returns `underpowered` — which drain 14 already
++   ruled *"does not discharge AC-2 … it records that adjudication was
++   unavailable."* *Refuted by:* a metric on which the arms differ.
++
++**The one evaluator that could move.** `bench_ab_clone --candidate-record`
++(`bench_ab_clone.ts:449`) materialises a candidate into a clone outside the
++repository, and the A/B bench measures per-task outcomes over it
++(`bench_ab_v2_stats.ts:315-345`), which is the population the tree's only live
++`decidePairedVerdict` caller already uses. It is an **agent-run** harness, so
++its cost is far above the two-cent estimate drain 14 computed for the proposal
++half alone.
++
++**Why this session did not choose it.** Both available exits amend the frozen
++experimental subject rather than deriving from it: selecting the bench as the
++outcome surface fixes aggregation for the arms being compared, and changing the
++corpus so a cheap evaluator applies changes corpus membership. Drain 15 widened
++the delegation to a **provenance-preserving pin of the same subjects**; a
++rules-to-skills corpus change is not provenance-preserving, and drain 14's
++routing for corpus membership stands. A protocol frozen against a metric known
++in advance to return a non-answer would be a tuned protocol with the tuning
++pointing at nothing.
++
++**What closes it:** a ruling on which of the two amendments is taken. That is a
++decision, not a build, and it is the first thing the next run on this file
++should put to a council.
++
++## 4. Fresh-checkout dry re-run — passed, and the refusal path passed first
++
++A detached worktree at `ac0cfd223` with nothing but `node_modules` symlinked.
++Four observations, in order.
++
++**(a) A fresh checkout has no corpus at all.** `.claude/rules` does not exist,
++which is F-A in one line.
++
++**(b) `capture` refuses rather than pinning nothing** — exit **1**:
++
++```
++corpus_manifest: capture refused - .claude/rules does not exist in <fresh> - the
++corpus is a generated projection, so a capture before generation would pin an
++empty subject and read as a successful pin of nothing
++```
++
++**(c) Generation reproduces the same corpus.** `task sync && task
++generate-tools` produced **13** files and logged **101 rules skipped**, the same
++numbers as the working tree.
++
++**(d) The reconstruction check passes.** `verify --manifest` against the pin
++captured in the working tree:
++
++```
++corpus_manifest: SUBJECT EQUIVALENT - digest=860eaf2dee7f35df
++real exit code: 0
++```
++
++Zero differences printed, explanatory ones included. The clean-checkout
++requirement the resume chain names — *"requiring identical corpus identity. A
++dry run in a worktree that inherited a projection is not that check"* — is met
++literally: the projection was generated in that checkout, not inherited.
++
++**(e) The dry proposal path runs end to end there.** Observations built from the
++protocol's own enumeration rule (byte-sorted first five, class assigned by the
++presence of a `## ` heading), which yields one
++`unbacked-enforcement-claim` and four `over-broad-activation`:
++
++```
++llm_propose: DRY RUN - nothing sent, nothing spent.
++llm_propose: tier lite -> claude-haiku-4-5-20251001
++llm_propose: tier medium -> claude-sonnet-4-5-20250929
++llm_propose: tier high -> UNPINNED (refused until a dated id is pinned)
++llm_propose: planned attempt 1..5 - class=reason_unknown - tier=lite
++llm_propose: ~275 input tokens for this one call
++llm_propose: re-run with --confirm to spend.
++```
++
++All five planned attempts are `lite`, which is the same fact AC-3 records about
++itself: no ordering decision arises in the dry plan, so the ordering guard has
++nothing to govern until a run spends.
++
++The worktree was removed afterwards.
++
++## 4b. Two environment traps a fresh-checkout runner will hit
++
++Both are pre-existing and neither is caused by this change. Recorded because the
++resume chain mandates a fresh checkout, so the next runner meets them.
++
++**`activation_receipt_producer.test.ts` reds in a fresh worktree.** One case
++(*"a real un-projected rule stalls at projected"*) reads
++`dist/discovery/discovery-manifest.json`, which is gitignored and is a
++RELEASE-time artefact that neither `task sync` nor `task generate-tools`
++produces. Absent, the `selected` rung is unobservable, so the receipt stalls one
++rung earlier (`stalled at receipt-selected · family=unknown`) and the assertion
++fails. Cured by `./scripts-run src/scripts/build_discovery_manifest --write`
++(note the `--write`; without it the manifest goes to stdout and the file is
++never created). 21/21 after that.
++
++**The no-scalar-collapse scanner fires on adjacency, not only on a collapse.**
++`findScalarCollapse`'s `vector-to-number` pattern is
++`/:\s*(readonly\s+)?MetricVector(\[\])?[^)]*\)\s*:\s*number\b/`, and
++`[^)]*` crosses newlines and statements. A helper arrow returning `number`
++declared inside a function whose return annotation is `: MetricVector` matches,
++even though nothing collapses a vector. It fired on the new producer and the
++code was moved rather than the pattern loosened — the scanner is right to be
++blunt on this subject, and a suppression here would be the gate weakening this
++tree keeps finding. The reason is recorded at the helper so a later refactor
++does not inline it back.
++
++## 5. AC-3 — honest null, and locked
++
++AC-3's caller half was already met on 2026-09-01. Its purpose half needs one
++**spent** population, and the drain-15 disposition is explicit that *"'No
++further code is needed' establishes implementation completeness, not acceptance
++completeness"*, and that AC-3 is to stay attached to the Phase 2 resume chain
++rather than transferred. Nothing this session built produces a spent population,
++so the box stays `[ ]`. Checking it would be closing on the half that was
++already true.
++
++## 6. What is now the next decision
++
++One question, and it is owner- or council-routed rather than buildable:
++
++> Phase 2's frozen corpus (`.claude/rules/*.md`, activation and content recipes)
++> cannot move the pre-registered cheap evaluator. Which amendment is taken —
++> (a) adopt the A/B bench as the outcome surface and accept its cost, or
++> (b) re-cut the corpus onto a surface a cheap evaluator measures, accepting
++> that corpus membership is amended and the pin re-captured?
++
++Until it is answered, steps 2 and 5 of the resume chain are both blocked, and
++2.1, 2.2, AC-2, AC-3 and AC-4 all stay open.
+diff --git a/agents/roadmaps/road-to-governed-evidence-production.md b/agents/roadmaps/road-to-governed-evidence-production.md
+index fdb8773c5522ed6ed201d146e67b5d5310319b2c..31415aba05611e51a3955e4793b9dc60d6a2485a 100644
+--- a/agents/roadmaps/road-to-governed-evidence-production.md
++++ b/agents/roadmaps/road-to-governed-evidence-production.md
+@@ -485,6 +485,17 @@ is what that mitigation looks like when it fires.
+       transport's live path is unexercised; its request shape is proven by
+       `describeRequest` and a unit test over the description, and every
+       behavioral test uses a stubbed generator.
++      **UPDATED 2026-09-02 (drain run 16) — two of the three remaining
++      prerequisites are now built, and the third is a decision.** The
++      experimental subject is pinnable and its reconstruction was verified from
++      a fresh checkout (`corpus_manifest`, digest `860eaf2dee7f35df`), and the
++      paired-delta producer exists (`_lib/candidate_pair_delta.ts`), so the
++      verify clause's *"paired_verdict run"* now has both a pinned subject and a
++      producer. What is still missing is the outcome metric, and it is missing
++      for a reason rather than for want of effort: the frozen corpus's admitted
++      mutations cannot move the pre-registered cheap evaluator. See the
++      **PREPARATORY WORK 2026-09-02** block above. The verify clause is still
++      carried verbatim and still not re-scoped.
+ 
+ - [ ] **2.2 Cheap proposer models first, and track evolution ROI.**
+       Transferred whole from `road-to-governed-harness-evolution` step 5.6.
+@@ -601,6 +612,233 @@ narrowing with a disposition that contradicts it, in order to make a roadmap
+ archive. That is the cosmetic closure the same council refused elsewhere in
+ this run.
+ 
++### PHASE 2 — PREPARATORY WORK 2026-09-02 (drain run 16): CHAIN STEPS 1, 3 AND 4 DONE; STEP 2 IS AN HONEST NULL
++
++*No council was run and none was needed: this run implemented the preparatory
++work the drain-15 1B disposition had already authorised, and made no decision
++the disposition reserved. **Zero metered calls. `--confirm` was never passed to
++`llm_propose` and no request reached any provider API.** Full evidence, with the
++search records and every file:line citation, in
++`agents/evidence/analysis/drain16-phase2-preparatory-work.md`.*
++
++**Nothing was captured, no comparison was run, and no acceptance criterion
++moved.** 2.1, 2.2, AC-2, AC-3 and AC-4 all stay open, and
++`metered-backend-park` stays open with its 2026-09-01 narrowing to (c)
++unchanged — it is **not** closed with (b).
++
++**Chain step 1 — F-A is CURED, and the drain-14 record's named mechanism was
++wrong.** `src/scripts/_lib/corpus_manifest.ts` and the CLI
++`src/scripts/corpus_manifest.ts` capture every field the drain-15 disposition
++enumerated; the shape and the equivalence contract are
++`docs/contracts/corpus-manifest-v1.md`. `capture` writes the pin, `verify`
++re-captures and exits **3** when the SUBJECT differs, reporting every difference
++rather than the first. There is deliberately no `update` verb: a pin that can be
++refreshed in place is a pin that silently follows the tree.
++`subject_digest` folds the enumeration rule and the ordered subject inventory
++with hashes and deliberately nothing else, so a node upgrade cannot report a
++subject change; the enumeration rule is inside it because the same five files
++selected by a different rule is a different experiment.
++
++**The correction, recorded because acting on the old mechanism leads nowhere.**
++Drain 14 read the generator's *"101 rule(s) skipped — byte-identical twin
++already installed at user scope"* as evidence of the byte-identity dedup.
++Probed directly on this branch: `dedupableRules` over the 119 projected rules
++returns a skip set of **zero**, because `projection.scope_dedup` appears on no
++settings layer this repository carries and therefore defaults off
++(`condense.ts:445-459`). The live mechanism is `partitionRulesForDir`
++(`src/install/ruleLayerPartition.ts:91`), which withholds a rule when this
++host's **global** layer is verified to carry its NAME —
++`hostLayerCarries` (`src/install/globalRuleLayers.ts:176-197`) reads names, never
++content. **F-A's conclusion is unaffected**: the corpus is still a function of
++the operator's home directory rather than of the commit. What was wrong is the
++mechanism the reasoning named, and a later reader following it to
++`dedupableRules` would have found a function returning an empty set. The manifest
++therefore captures BOTH tables — the byte-identity twins and the partition
++decision with the global layer's name inventory and its digest.
++
++**Chain step 3 — F-C's producer EXISTS.**
++`src/scripts/_lib/candidate_pair_delta.ts` closes the gap drain 14's trace
++established: nothing read two `CandidateRecord`s and emitted a signed delta, a
++`PairedVerdict`, or a `MetricVector`. Every property of the comparison's SHAPE
++is derived from constants committed before either arm existed — the sign
++convention from `PairedInput.deltas` (`_lib/paired_verdict.ts:110`), the
++direction handling from `MetricDirection`, `tieEpsilon` = 1e-9 from the value
++the A/B report's own direction counts already use
++(`bench_ab_v2_stats.ts:326-327`), and the aggregation, `ALPHA` and the discordant
++floor from `decidePairedVerdict`. The pairing key is reconstructed from the
++record as `(dimension, sorted mutation paths)`, because a candidate id hashes
++mutated bytes and so differs across arms by construction.
++**Pooling answers F-B's floor half:** at one delta per pair the trial count
++equals the corpus size (5), exactly `MIN_DISCORDANT`, so one tie makes a pass
++arithmetically unreachable before the run starts; `compareArms` pools per-trial
++deltas across pairs, and the independence assumption that buys it is stated at
++the function rather than assumed away.
++**What it does NOT do, in its own header:** it has no live population. No shipped
++evaluator emits a `TrialOutcome` for a candidate over the frozen corpus, so
++every test supplies its own — the same disclosure AC-3 makes about
++`assertCheapestFirst`, made in the same terms rather than quietly omitted.
++
++**Chain step 4 — the fresh-checkout dry re-run PASSED, and the refusal path
++passed first.** A detached worktree at `ac0cfd223` with nothing but
++`node_modules` symlinked. It had no `.claude/rules` at all, which is F-A in one
++line. `capture` there **refused with exit 1** rather than pinning an empty
++subject. After `task sync && task generate-tools` it produced **13** files and
++logged **101 skipped** — the same numbers as the working tree — and
++`verify --manifest` against the working tree's pin returned **SUBJECT
++EQUIVALENT, digest `860eaf2dee7f35df`, exit 0, with zero differences printed**.
++The chain's *"a dry run in a worktree that inherited a projection is not that
++check"* is met literally: the projection was generated in that checkout.
++`llm_propose` then ran the dry path there end to end over observations built
++from the protocol's own enumeration rule — five planned attempts, all `lite`,
++`high` refused as UNPINNED, ~275 input tokens estimated, nothing sent.
++
++**Chain step 2 — F-B is NOT FROZEN, and the reason is a newly established fact
++rather than reluctance.** The definition cannot be frozen by derivation over the
++currently frozen corpus, because the corpus's admitted mutations cannot move the
++one cheap evaluator the pre-registered budget names. Three independent legs,
++each stated with what would refute it:
++
++1. **Path.** The corpus is `.claude/rules/*.md`;
++   `description_route_check`'s catalogue is loaded from `dist/agent-src/skills`
++   and `dist/agent-src/rules` (`src/scripts/description_route_check.ts:386-410`).
++   A mutation to a corpus member never reaches the catalogue. *Refuted by* a
++   catalogue loader that reads `.claude/`.
++2. **Surface.** That catalogue is `name + description` only — `catalogueHash`
++   maps each entry to `name` plus `description` (`:81-84`), read from frontmatter
++   (`:395`). Both admitted recipes preserve frontmatter byte-identically:
++   `keepLeadingBand` cuts at the first `## ` heading
++   (`_lib/candidate_proposer.ts:126-140`), `appendHonestEnforcement` appends at
++   the end (`:159-164`). *Refuted by* a recipe that rewrites frontmatter.
++3. **Arithmetic.** Every trial ties, so `discordant` is 0 against a floor of 5
++   and `decidePairedVerdict` returns `underpowered` — which this file's own
++   drain-14 record already rules does not discharge AC-2. *Refuted by* a metric
++   on which the arms differ.
++
++Freezing a metric known **in advance** to return a non-answer would be a tuned
++protocol with the tuning pointing at nothing, and would burn the one-shot
++freeze the council ruled is entire or not at all.
++
++**The one committed evaluator a rule-body mutation COULD move** is the A/B
++bench: `bench_ab_clone --candidate-record` (`src/scripts/bench_ab_clone.ts:449`)
++materialises a candidate into a clone outside the repository, and
++`bench_ab_v2_stats.ts:315-345` measures per-task outcomes over it — the same
++population the tree's only live `decidePairedVerdict` caller uses. It is an
++**agent-run** harness, so its cost is far above the two-cent estimate drain 14
++computed for the proposal half alone. That figure covered the proposal only and
++must not be read as the cost of the comparison.
++
++**Why this run did not pick between them.** Both exits AMEND the frozen
++experimental subject rather than deriving from it: adopting the bench fixes
++aggregation for the arms being compared, and re-cutting the corpus changes
++corpus membership. Drain 15 widened the delegation to a *provenance-preserving
++pin of the same subjects* — a rules-to-skills corpus change is not
++provenance-preserving, and drain 14's routing for corpus membership stands.
++
++**The next decision, and it is a decision rather than a build.** Phase 2's
++frozen corpus cannot move the pre-registered cheap evaluator. Which amendment
++is taken — (a) adopt the A/B bench as the outcome surface and accept its cost,
++or (b) re-cut the corpus onto a surface a cheap evaluator measures, accepting
++that corpus membership is amended and the pin re-captured? Until that is
++answered, chain steps 2 and 5 are both blocked.
++
++**Sensitivity of the new guards, RED-proven 2026-09-02, each restored
++byte-identically and re-verified by SHA-256:**
++1. removed the enumeration rule from `subjectDigest`: **1 failed**. Restored.
++2. removed the unmatched-treatment refusal in `pairCandidates`: **1 failed**.
++   Restored.
++3. removed the lower-better sign reversal in `pairedDeltas`: **1 failed**.
++   Restored.
++Restore verified green: **37/37** across the two new test files,
++`npm run typecheck` clean.
++
++### PHASE 2 — DISPOSITION 2026-09-02 (drain run 16): 2A, OWNER-RESERVED, AND THE FREEZE ORDERING CORRECTED
++
++*AI council 2026-09-02, members `anthropic/claude-sonnet-4-5` +
++`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
++quorum **2/2 present** (needed 1) — concluded. Subscription transport,
++`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
++every line relied on is inlined here per `no-roadmap-references`.*
++
++**What this run did, and did not do.** It executed the preparatory half of the
++resume condition and made **zero metered calls**. F-A is cured: the
++equivalence-preserving manifest exists, and a fresh detached checkout
++reconstructed the subject to `SUBJECT EQUIVALENT`, zero differences. F-C's
++producer exists. The fresh-checkout dry re-run passed, refusing correctly when
++`.claude/rules` was absent and reproducing drain-14's 13-files / 101-skips
++figures once generated. **No checkbox moved and no acceptance criterion was
++claimed.**
++
++**F-B was NOT frozen, and the reason is a new falsifiable finding rather than
++reluctance.** The frozen corpus is `.claude/rules/*.md`; the pre-registered
++cheap evaluator `description_route_check` loads its catalogue from
++`dist/agent-src/` (`:386-410`), that catalogue is `name + description` only
++(`catalogueHash`, `:81-84`), and both admitted mutation recipes preserve
++frontmatter byte-identically (`candidate_proposer.ts:126-140`, `:159-164`). So
++every trial ties, `discordant` is 0 against a floor of 5, and the outcome is
++`underpowered` — which this file already rules does not discharge AC-2.
++Freezing a metric known in advance to return a non-answer would burn the
++one-shot "entire or not at all" freeze.
++
++**Verdict 2A — convergent 2/2, and CONDITIONAL.** Adopt the agent-run A/B bench
++(`bench_ab_clone.ts:449`) as the outcome surface: it is the one evaluator a
++rule-body mutation can move. 2B was refused because re-cutting the corpus onto a
++cheap evaluator's surface *"changes the question from 'Are rule bodies stable?'
++to 'Are rule frontmatters stable?'"*. **2C was refused, and the refusal is the
++sharpest line in the round:** *"That makes `discordant = 0` an invariant of the
++apparatus, not evidence that the mutations have no effect. Calling this an
++'honest null' would conflate 'no detectable effect under a capable test' with
++'the test cannot observe the intervention.'"* If 2A later proves unaffordable,
++the closure to record is **design infeasibility and owner waiver of AC-2**, not
++an experimental null.
++
++The conditions attached: demonstrated treatment reachability, controlled
++pairing, and an approved power and stopping policy, all before adoption.
++
++**2A IS OWNER-RESERVED. Both seats, unprompted, and this is the operative
++finding of the round.** The drain-15 delegation permitted a provenance-preserving
++pin of the **same subjects**; 2A *"materially changes the pre-registered
++measurement apparatus, trial budget, and evidentiary meaning."* One seat added a
++distinction worth keeping: 2A amends the **outcome surface / estimand** while
++retaining the same corpus subjects, which strengthens it against 2B without
++bringing it inside the delegation. The owner must additionally decide whether
++AC-2's notion of a cheap evaluator is itself part of the criterion — if it is,
++2A needs an explicit **AC amendment**, not merely a protocol amendment.
++
++**The freeze-ordering tension is resolved AGAINST drain 15, and this roadmap's
++own resume condition is corrected accordingly.** The implementing session
++recorded the conflict rather than deciding it: the un-park procedure
++(`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:49-52`) puts the
++protocol freeze in the *independent* session before any baseline capture, while
++the drain-15 chain placed it in preparatory work. The council held the stricter
++rule binds: *"Prior execution does not cure a compromised independence
++safeguard. A later record supersedes an earlier rule only if it explicitly
++resolves or replaces the conflicting requirement — not merely because it is
++later and 'convergent.'"* One seat offered a reconciliation the other did not
++dispute: subject **capture** (F-A) may be preparatory; protocol **freeze** may
++not.
++
++**The corrected sequence, replacing the drain-15 ordering for this file:**
++
++1. The owner approves 2A and any AC or budget amendment it implies.
++2. Preparatory work produces a complete *candidate* protocol — done, and it is
++   a candidate rather than a freeze.
++3. An independent session reviews and freezes that protocol.
++4. Any baseline captured before that freeze is discarded for evidentiary
++   purposes. The F-A manifest and its reconstruction check survive as
++   provenance; they are not the frozen baseline.
++5. A fresh baseline is captured after the operative freeze.
++6. The paired trial runs under the frozen protocol.
++
++**One caveat both seats stated and neither resolved.** One seat noted it could
++not verify the three legs of the F-B finding from its own workspace and made its
++verdict conditional on them; the other treated them as sound if the cited
++implementation holds. The legs are cited to file and line above so the next
++reader checks rather than inherits them.
++
++**Nothing was captured, no criterion moved, and `metered-backend-park` stays
++open with its (c) narrowing.** It is not closed with (b), for the reason drain
++15 gave and this round did not disturb.
++
+ ## Blockers
+ 
+ ### blocker: metered-backend-park
+@@ -751,6 +989,12 @@ this run.
+       produces the population, and the caller is already there to police it.
+       Checking it now would be closing on the half that was already true, which
+       is the failure this whole file was transferred to prevent.
++      **RE-CONFIRMED 2026-09-02 (drain run 16) by running the dry path from a
++      fresh checkout over the real corpus:** all five planned attempts came back
++      `tier=lite`, so no ordering decision arose and the population is still not
++      a spent one. That is the observation the criterion's purpose clause asks
++      about, made rather than assumed, and it leaves the box exactly where it
++      was.
+ - [ ] AC-4 — Programme success and failure criteria were committed before the
+       first candidate run, and the run report carries an evolution-ROI figure.
+       Transferred whole from `road-to-governed-harness-evolution` AC-8. Its
+diff --git a/docs/contracts/corpus-manifest-v1.md b/docs/contracts/corpus-manifest-v1.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..41d08469a2987a7f734c18b19c071f9ecc3952c1
+--- /dev/null
++++ b/docs/contracts/corpus-manifest-v1.md
+@@ -0,0 +1,132 @@
++---
++stability: beta
++keep-beta-until: 2026-11-30
++roadmap_ref: road-to-governed-evidence-production.md
++---
++
++# Corpus manifest v1 — the equivalence-preserving subject pin
++
++**Purpose.** Make the metered-proposer experiment's subject reproducible from a
++recorded artefact, so two captures can be shown to have measured the same thing.
++It exists because a recorded commit demonstrably does not pin that subject.
++
++**Producer.** `./scripts-run src/scripts/corpus_manifest capture --out FILE`
++**Checker.** `./scripts-run src/scripts/corpus_manifest verify --manifest FILE`
++**Library.** `src/scripts/_lib/corpus_manifest.ts`
++
++## Why a commit is not enough — measured, not argued
++
++The experiment enumerates its corpus from `.claude/rules/`, and three facts
++about that directory make a commit insufficient:
++
++1. It is **gitignored in its entirety** (`.gitignore:157`; `git ls-files
++   .claude` returns 0), so its contents are in no commit.
++2. It is a **generated projection**, so its contents depend on the generator's
++   bytes and configuration as well as on the source it reads.
++3. The generator **withholds** rules on evidence read from the operator's home
++   directory. Measured on a freshly generated tree at
++   `56c333855`: the generator reported **101 rules skipped** and produced **13
++   files**, while a stale projection of the same HEAD held 15.
++
++## The skip mechanism is the per-host partition, not byte-identity
++
++This is a correction to the shorthand the earlier record used. The generator's
++own log line reads *"N rule(s) skipped — byte-identical twin already installed
++at user scope"*, and that message attributes **all** skips to the byte-identity
++dedup (`dedupableRules`). On the tree measured above the byte-identity
++comparison accounts for **zero** of them, because `projection.scope_dedup` is
++absent from every settings layer this repository carries and therefore off.
++
++The live mechanism is `partitionRulesForDir` (ADR-236): when the partition is
++active and this host's **global** rule layer is verified to carry the *names*
++that would be withheld, the project projection is narrowed to the package-only
++set. `hostLayerCarries` decides on **name presence**, never on content.
++
++Consequence for this contract: the field a commit cannot supply is the global
++layer's **name inventory**. A manifest that pinned only byte-identical twins
++would have recorded zero explanation for every skip that actually happened.
++
++## What the manifest records
++
++| Group | Fields |
++|---|---|
++| Commit and generator | `commit`, `tree_dirty`, `package_version`, `generator[]` (path + sha256 of `condense.ts`, `ruleLayerPartition.ts`, `claudePathsPlan.ts`) |
++| The subject | `enumeration_rule`, `included[]` (ordered: path, sha256, bytes, projection-source provenance and its hash), `excluded[]` with the reason |
++| The projection decision | `projection.partition_active`, `tool_id`, `layer_dir`, `carries`, `reason`, `missing[]`, `package_only_count`, `layer_inventory[]` (name + sha256), `layer_digest` |
++| The byte-identity dedup | `user_scope[]` (home-relative path, sha256, `causes_skip`) |
++| Configuration and runtime | `generator_config` (a closed allowlist of non-secret keys plus the resolved `projection.scope_dedup`), `runtime` (node, platform, arch) |
++| What was produced | `produced[]` (every `*.md` in the corpus directory, with hashes) |
++| The comparison key | `subject_digest` |
++
++## The equivalence contract
++
++```
++TWO CAPTURES DESCRIBE THE SAME EXPERIMENTAL SUBJECT IFF THEIR
++`subject_digest` AND `enumeration_rule` MATCH. NOTHING WEAKER COUNTS.
++```
++
++`subject_digest` folds the **enumeration rule** and the **ordered subject
++inventory with hashes**, and deliberately nothing else. The commit, the runtime,
++the platform and the global-layer inventory are **explanations** of a
++difference and are kept out of the value that detects one — a digest that moved
++when the node version moved would report a subject change on every upgrade, and
++a reader would stop believing it.
++
++The enumeration rule is inside the digest on purpose: the same five files
++selected by a different rule is a different experiment, and a digest blind to
++that would let the selection semantics be amended without the pin noticing.
++
++## `verify` and its exit codes
++
++| Exit | Meaning |
++|---|---|
++| 0 | The subject is equivalent. Explanatory differences may still be printed, and are. |
++| 1 | An error — unreadable manifest, missing corpus directory. |
++| 2 | Usage. |
++| 3 | **The subject differs.** A comparison captured against this manifest is not comparable to one captured here. |
++
++`verify` reports **every** difference rather than the first. A check that
++reveals its findings one per cycle trains the reader to believe the last one was
++the last one.
++
++There is deliberately **no `update` verb**. A pin that can be refreshed in place
++is a pin that silently follows the tree, which is the property it exists not to
++have.
++
++## Privacy
++
++User-scope and global-layer paths are recorded **home-relative**, so no account
++name is captured; only file hashes are stored, never content. The environment
++capture is a **closed allowlist** of non-secret keys rather than a filtered
++dump, because a filter is a list of what somebody remembered to exclude. `HOME`
++is deliberately absent even though it decides the projection — its value is an
++account name, and the decision evidence is carried by the hash tables instead.
++`tests/scripts/corpus_manifest.test.ts` asserts a captured manifest contains no
++occurrence of the home path.
++
++## What this does NOT do
++
++- It is **not wired into the capture path**. `llm_propose` still writes no
++  provenance, so an operator runs `capture` alongside a run by hand. Emitting
++  provenance from inside the arm is a change to the frozen mechanism and belongs
++  to whoever freezes the remaining protocol slot.
++- It does **not** make the corpus reproducible; it makes non-reproduction
++  **detectable and explained**. Reproducing the subject in a clean checkout
++  requires regenerating there, which is what `verify` is run after.
++- It does **not** decide what the experiment measures. That is the unfrozen
++  slot, and it is unfrozen for a reason recorded in the roadmap.
++- `package_only_count` is counted over the whole projection source, which is a
++  superset of what the generator classifies (it filters by workspace scope and
++  manual type first). Measured: 15 here against 13 files produced. `produced` is
++  the authoritative inventory.
++
++## Cross-references
++
++- The protocol this pins the subject for:
++  [`metered-proposer-protocol.md`](metered-proposer-protocol.md).
++- The partition predicates it reads:
++  [`ruleLayerPartition.ts`](../../src/install/ruleLayerPartition.ts),
++  [`globalRuleLayers.ts`](../../src/install/globalRuleLayers.ts),
++  [`partitionEligibility.ts`](../../src/install/partitionEligibility.ts).
++- The pre-registered corpus size: `src/config/harness-evolution-budget.json`
++  (`max_candidates`), read rather than restated.
+diff --git a/docs/contracts/metered-proposer-protocol.md b/docs/contracts/metered-proposer-protocol.md
+index 4f61c5cca80f14583e937372b131b034e269b8e9..b465893b89bc9c90a385c57928b333573f0bec73 100644
+--- a/docs/contracts/metered-proposer-protocol.md
++++ b/docs/contracts/metered-proposer-protocol.md
+@@ -244,6 +244,32 @@ next to the records. That is a change to the frozen mechanism and therefore
+ belongs to whoever freezes the remaining slot, not to a repair of a false
+ sentence.
+ 
++**AMENDED 2026-09-02 — the by-hand recording now has a tool, and the frozen
++mechanism is unchanged.** `./scripts-run src/scripts/corpus_manifest capture
++--out FILE` records the commit, the ordered subject inventory with hashes, the
++projection decision (including the global rule layer's name inventory, which is
++the field a commit cannot supply), the generator's own hashes, the
++configuration and the runtime; `verify --manifest FILE` re-captures and exits 3
++when the SUBJECT differs. Shape and the equivalence contract:
++[`corpus-manifest-v1.md`](corpus-manifest-v1.md).
++
++It is deliberately **not wired into `llm_propose`**, so the paragraph above
++still holds in full: this protocol still claims no automatic provenance
++capture, and an operator runs `capture` alongside a run. What changed is that
++the by-hand step is now one command whose output is machine-comparable, rather
++than a sorted filename list written into a note.
++
++**One correction the tool surfaced, recorded because the earlier evidence
++mis-attributed a cause.** The 101-skip measurement above was read as
++byte-identity dedup. It is not: `projection.scope_dedup` is absent on every
++settings layer this repository carries and therefore off, and the byte-identity
++comparison accounts for **zero** of those skips. The live mechanism is the
++per-host rule partition, which withholds on the global layer carrying a rule's
++NAME. F-A's conclusion is unaffected — the corpus is still a function of the
++operator's home directory and not of the commit — but the mechanism named in
++the reasoning was wrong, and a later reader following it to `dedupableRules`
++would have found a function returning an empty set.
++
+ ### Number of pairs
+ 
+ **5** — one pair per corpus member, each pair being (deterministic candidate,
+@@ -300,6 +326,32 @@ Deriving a metric here would have been inventing a derivation, which is the
+ failure this repository already recorded once for a stage enumeration: a third
+ proposal is a third answer.
+ 
++**STILL UNSET 2026-09-02, and a later session established that it cannot be
++closed by derivation over this corpus.** A separate attempt to freeze the whole
++experimental definition looked for an outcome scalar already committed in this
++tree and found that the two admitted recipes cannot move the one cheap
++evaluator the pre-registered budget names:
++
++- The budget's own First cut names `description_route_check` as the evaluation
++  surface. That checker's catalogue is `name + description`
++  (`catalogueHash`, `description_route_check.ts:81-84`), loaded from
++  `dist/agent-src/` (`:386-410`) — not from `.claude/`, which is where this
++  corpus lives. A mutation to a corpus member never reaches the catalogue.
++- Both admitted recipes preserve the frontmatter byte-identically:
++  `keepLeadingBand` cuts at the first `## ` heading, which is after the
++  frontmatter, and `appendHonestEnforcement` appends at the end. So even on a
++  matching path the routing condition would be unchanged.
++- Every trial would therefore tie, `discordant` would be 0 against a derived
++  floor of 5, and `decidePairedVerdict` would return `underpowered` — which the
++  roadmap's own record rules does not satisfy the acceptance criterion. Freezing a
++  metric known in advance to return a non-answer is worse than leaving it unset.
++
++The one committed evaluator a rule-body mutation **could** move is the A/B
++bench (`bench_ab_clone --candidate-record` materialises a candidate into a
++clone), and that is an agent-run harness far above the proposal half's cost
++estimate. Choosing it, or changing the corpus so a cheap evaluator applies, is
++an amendment to the frozen subject rather than a derivation from it.
++
+ ## Not yet run
+ 
+ As of the commit that adds this document, **no metered call has been made
+diff --git a/src/scripts/_lib/candidate_pair_delta.ts b/src/scripts/_lib/candidate_pair_delta.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ebb24817acbe0ed7608f0800b57c3137335614a4
+--- /dev/null
++++ b/src/scripts/_lib/candidate_pair_delta.ts
+@@ -0,0 +1,295 @@
++/**
++ * The missing seam: two candidate records over one observation, and one signed
++ * delta per trial.
++ *
++ * A recorded search over this tree established that nothing read two
++ * {@link CandidateRecord}s and emitted a delta, a {@link PairedVerdict} or a
++ * {@link MetricVector}. The only live `decidePairedVerdict` caller runs over
++ * benchmark task pairs, the only paired-row construction is a deserialiser, and
++ * the evaluation cascade takes its vector from the caller. So the comparison a
++ * two-arm proposer experiment needs had no producer at all: the verdict
++ * function existed and nothing could feed it from candidates.
++ *
++ * This module is that producer, and it is deliberately the only thing it is.
++ *
++ * Everything about the SHAPE of the comparison is derived from constants
++ * committed before either arm existed: the sign convention from
++ * {@link PairedInput}'s own contract, the direction handling from
++ * {@link MetricDirection}, the tie epsilon from the value the A/B report
++ * already uses, the aggregation and the significance bar from
++ * {@link decidePairedVerdict}. What is NOT here is the outcome scalar itself.
++ * {@link TrialOutcome} is supplied by a caller, because choosing what a trial
++ * MEASURES is the one decision in this experiment that could favour an arm, and
++ * a module that invented one would be answering it in the wrong place.
++ *
++ * The honest consequence, stated rather than left to be discovered: this
++ * producer has no live population today. No shipped evaluator emits a
++ * {@link TrialOutcome} for a candidate over the frozen corpus, so every test
++ * here supplies its own. A producer with no population is exactly as honest as
++ * a guard with no caller, and the same disclosure applies.
++ */
++
++import type { CandidateRecord } from './candidate_record.js';
++import {
++    ARTIFACT_COUNT_METRIC,
++    buildVector,
++    type MetricDirection,
++    type MetricRow,
++    type MetricVector,
++} from './evaluation_vector.js';
++import { decidePairedVerdict, type PairedVerdict } from './paired_verdict.js';
++
++/**
++ * Deltas within this of zero are ties.
++ *
++ * NOT chosen here: it is the value the A/B report's own direction counts
++ * already use, and its reason is recorded there, that two definitions of a tie
++ * in one report is how the numbers start disagreeing. Restating that value
++ * rather than picking a fresh one keeps a candidate comparison and a bench
++ * comparison answering to the same notion of no difference.
++ */
++export const TIE_EPSILON = 1e-9;
++
++export class PairingError extends Error {
++    constructor(message: string) {
++        super(message);
++        this.name = 'PairingError';
++    }
++}
++
++/**
++ * The pairing key, derived from the record alone.
++ *
++ * A record carries no observation field, so the key is reconstructed from what
++ * it does carry: the mutation dimension and the sorted mutation paths. That is
++ * exactly the observation identity for this experiment, because each fixed
++ * recipe owns one dimension and each observation names one subject. Keying on
++ * the candidate id would pair nothing, since an id hashes the mutated bytes, so
++ * two arms that produced different text have different ids by construction,
++ * which is the whole reason there is something to compare.
++ */
++export function pairingKey(record: CandidateRecord): string {
++    const paths = record.mutations.map((m) => m.path).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
++    return `${record.dimension} ${paths.join(' ')}`;
++}
++
++export interface CandidatePair {
++    readonly key: string;
++    readonly control: CandidateRecord;
++    readonly treatment: CandidateRecord;
++    /**
++     * The arms produced byte-identical mutations.
++     *
++     * Not an error and not silently dropped. It means every trial on this pair
++     * is a structural tie, so the pair contributes to the trial count and to no
++     * discordant count, and a reader who sees `underpowered` without this flag
++     * would look for the cause in the measurement rather than in the arms.
++     */
++    readonly identical_arms: boolean;
++}
++
++function serialiseMutations(r: CandidateRecord): string {
++    return [...r.mutations]
++        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
++        .map((m) => `${m.path} ${m.content}`)
++        .join('');
++}
++
++/**
++ * Pair two arms' record sets, refusing every shape where half a pair exists.
++ *
++ * An unmatched record on either side is refused rather than dropped. Dropping
++ * it would make the trial count depend on which observations each arm happened
++ * to satisfy, and a comparison whose denominator is chosen by one of the arms
++ * is not a paired comparison.
++ */
++export function pairCandidates(
++    control: readonly CandidateRecord[],
++    treatment: readonly CandidateRecord[],
++): CandidatePair[] {
++    const byKey = new Map<string, CandidateRecord>();
++    for (const r of treatment) {
++        const k = pairingKey(r);
++        if (byKey.has(k)) {
++            throw new PairingError(
++                `treatment arm emitted two records for '${k}': one observation is one candidate ` +
++                    'per arm, and a second would make the pairing pick a winner before any trial ran',
++            );
++        }
++        byKey.set(k, r);
++    }
++    const out: CandidatePair[] = [];
++    const seen = new Set<string>();
++    for (const c of control) {
++        const k = pairingKey(c);
++        if (seen.has(k)) {
++            throw new PairingError(`control arm emitted two records for '${k}'`);
++        }
++        seen.add(k);
++        const t = byKey.get(k);
++        if (t === undefined) {
++            throw new PairingError(
++                `no treatment record for '${k}': half a pair is no result, not a partial one`,
++            );
++        }
++        out.push({
++            key: k,
++            control: c,
++            treatment: t,
++            identical_arms: serialiseMutations(c) === serialiseMutations(t),
++        });
++    }
++    for (const k of byKey.keys()) {
++        if (!seen.has(k)) {
++            throw new PairingError(
++                `no control record for '${k}': the treatment arm ran an observation the control did not`,
++            );
++        }
++    }
++    return out;
++}
++
++/**
++ * One measured trial: the same scalar, on both arms, under the same conditions.
++ *
++ * Both values are required. An absent arm is refused rather than imputed,
++ * because imputing it would put a number the run did not observe into a
++ * denominator that decides a verdict.
++ */
++export interface TrialOutcome {
++    readonly trial_id: string;
++    readonly control: number;
++    readonly treatment: number;
++}
++
++/**
++ * The signed deltas for one pair. Positive favours the TREATMENT, always.
++ *
++ * The convention is not this module's to set: the verdict's own input contract
++ * states one signed delta per trial with positive favouring the treatment, so
++ * the direction handling here is a translation of {@link MetricDirection} into
++ * that fixed convention rather than a second convention beside it. For a
++ * lower-better metric the subtraction is reversed, so a caller never has to
++ * remember which endpoint it is looking at.
++ */
++export function pairedDeltas(
++    outcomes: readonly TrialOutcome[],
++    direction: MetricDirection,
++): number[] {
++    if (outcomes.length === 0) {
++        throw new PairingError(
++            'no trials: a verdict over zero trials is a fabricated result, not an empty one',
++        );
++    }
++    const ids = new Set<string>();
++    for (const o of outcomes) {
++        if (ids.has(o.trial_id)) {
++            throw new PairingError(
++                `duplicate trial id '${o.trial_id}': one trial counted twice inflates the discordant count`,
++            );
++        }
++        ids.add(o.trial_id);
++        if (!Number.isFinite(o.control) || !Number.isFinite(o.treatment)) {
++            throw new PairingError(
++                `trial '${o.trial_id}' carries a non-finite outcome: an unmeasured trial is absent, never zero`,
++            );
++        }
++    }
++    return outcomes.map((o) =>
++        direction === 'higher-better' ? o.treatment - o.control : o.control - o.treatment,
++    );
++}
++
++export interface PairComparison {
++    readonly pairs: readonly CandidatePair[];
++    readonly trials: number;
++    readonly verdict: PairedVerdict;
++    /** Pairs whose arms produced identical bytes, so every one of their trials tied. */
++    readonly identical_pairs: readonly string[];
++}
++
++export interface ComparisonInput {
++    readonly control: readonly CandidateRecord[];
++    readonly treatment: readonly CandidateRecord[];
++    /** Trials keyed by pairing key. Every pair must carry at least one. */
++    readonly outcomes: Readonly<Record<string, readonly TrialOutcome[]>>;
++    readonly direction: MetricDirection;
++}
++
++/**
++ * The comparison, pooled across pairs.
++ *
++ * Pooling is what raises the experiment off the discordant floor: with one
++ * delta per pair the trial count equals the corpus size, which sits exactly on
++ * the derived floor, so a single dissent makes a pass arithmetically
++ * unreachable before the run starts. Pooling per-trial deltas across pairs
++ * makes the count the number of TRIALS rather than the number of pairs.
++ *
++ * The assumption that buys it is stated rather than assumed away: the exact
++ * sign test treats each delta as an independent draw, and trials on the same
++ * pair share a subject. A caller that cannot defend that independence should
++ * pass one aggregate delta per pair and accept the smaller sample, which this
++ * function supports by simply being given fewer trials.
++ */
++export function compareArms(input: ComparisonInput): PairComparison {
++    const pairs = pairCandidates(input.control, input.treatment);
++    const deltas: number[] = [];
++    for (const p of pairs) {
++        const trials = input.outcomes[p.key];
++        if (trials === undefined || trials.length === 0) {
++            throw new PairingError(
++                `pair '${p.key}' has no trials: a pair present in the arms and absent from the ` +
++                    'measurements silently shrinks the denominator',
++            );
++        }
++        deltas.push(...pairedDeltas(trials, input.direction));
++    }
++    return {
++        pairs,
++        trials: deltas.length,
++        verdict: decidePairedVerdict({ deltas, tieEpsilon: TIE_EPSILON }),
++        identical_pairs: pairs.filter((p) => p.identical_arms).map((p) => p.key),
++    };
++}
++
++/**
++ * Module-level on purpose, not for reuse.
++ *
++ * Inlined as an arrow inside {@link comparisonVector} it put a `): number`
++ * immediately after that function's `: MetricVector` return annotation, which
++ * is the shape the no-scalar-collapse scanner in
++ * `tests/scripts/evaluation_vector.test.ts` matches. The scanner is right to be
++ * blunt there, so the code moves rather than the pattern.
++ */
++function distinctMutationPaths(records: readonly CandidateRecord[]): number {
++    return new Set(records.flatMap((r) => r.mutations.map((m) => m.path))).size;
++}
++
++/**
++ * The comparison as a metric vector the evaluation cascade can consume.
++ *
++ * The artifact-count row is not optional and is not this function's to omit:
++ * the vector builder refuses a vector without it, so a comparison that reached
++ * the promotion verdict without a measured artifact delta is unconstructible.
++ * The delta counted here is the treatment arm's distinct mutated paths minus
++ * the control arm's, which is a fact about the records rather than an outcome.
++ */
++export function comparisonVector(
++    candidate_id: string,
++    metric: string,
++    direction: MetricDirection,
++    comparison: PairComparison,
++): MetricVector {
++    const rows: MetricRow[] = [
++        { kind: 'paired', metric, direction, verdict: comparison.verdict },
++        {
++            kind: 'counted',
++            metric: ARTIFACT_COUNT_METRIC,
++            direction: 'lower-better',
++            delta:
++                distinctMutationPaths(comparison.pairs.map((p) => p.treatment)) -
++                distinctMutationPaths(comparison.pairs.map((p) => p.control)),
++        },
++    ];
++    return buildVector(candidate_id, rows);
++}
+diff --git a/src/scripts/_lib/corpus_manifest.ts b/src/scripts/_lib/corpus_manifest.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1405db2b0f87bf221c6378ac3303cf870492da2a
+--- /dev/null
++++ b/src/scripts/_lib/corpus_manifest.ts
+@@ -0,0 +1,563 @@
++/**
++ * The equivalence-preserving pin for the metered-proposer experiment's subject.
++ *
++ * The experiment enumerates its corpus from `.claude/rules/`, which is a
++ * GENERATED projection and is gitignored in its entirety. Two consequences,
++ * both measured rather than argued: the same commit yields a different corpus
++ * on two machines, and the generator SKIPS any rule already installed
++ * byte-identically at user scope, so the corpus is a function of the operator's
++ * home directory as well as of the commit. A recorded commit therefore does not
++ * pin the subject, and a comparison against a subject nobody can reconstruct is
++ * not comparable to anything.
++ *
++ * What this module pins instead is the whole of what decides the projection:
++ * the commit, the generator's own bytes, the ordered subject inventory with
++ * hashes and provenance, the included and excluded paths, every user-scope file
++ * capable of causing a skip, the generator configuration and the non-secret
++ * environment values it reads, the runtime and platform facts, and the produced
++ * file inventory. {@link subjectDigest} folds the subject half into one value,
++ * so two runs are comparable exactly when that value matches.
++ *
++ * The manifest is a CAPTURE, never a plan. It records the tree as it stands;
++ * whether a clean checkout reproduces it is the question {@link diffManifests}
++ * answers, and answering it requires actually regenerating in that checkout. A
++ * module that predicted the projection instead of reading it would be asserting
++ * the very equivalence it exists to test.
++ *
++ * PRIVACY. User-scope paths are recorded home-relative, so no account name
++ * leaves the machine, and only file hashes are stored — never content. The
++ * environment capture is a closed allowlist of non-secret keys rather than a
++ * filtered dump, because a filter is a list of what somebody remembered to
++ * exclude.
++ */
++
++import { createHash } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { spawnSync } from 'node:child_process';
++
++import {
++    globalRuleLayerNames,
++    globalRuleLayerPath,
++    hostLayerCarries,
++    toolIdForProjectRuleDir,
++} from '../../install/globalRuleLayers.js';
++import { isExclusivelyPackageOnly, partitionActive } from '../../install/partitionEligibility.js';
++import { dedupableRules } from '../../install/ruleLayerPartition.js';
++
++export const CORPUS_MANIFEST_VERSION = 'corpus-manifest-v1';
++
++/** The tool directory the experiment's corpus is enumerated from. */
++export const CORPUS_TOOL_DIR = '.claude/rules';
++
++/** Where a projected rule's bytes come from, and what the dedup compares against. */
++export const PROJECTION_SOURCE_DIR = path.join('dist', 'agent-src', 'rules');
++
++/**
++ * The files whose bytes decide the projection, so a manifest can say WHICH
++ * generator produced it. Hashing the generator is the difference between "the
++ * corpus differs" and "the corpus differs because the generator changed".
++ */
++export const GENERATOR_MODULES: readonly string[] = [
++    path.join('src', 'scripts', 'condense.ts'),
++    path.join('src', 'install', 'ruleLayerPartition.ts'),
++    path.join('src', 'install', 'claudePathsPlan.ts'),
++];
++
++/**
++ * Non-secret environment keys the projection actually reads.
++ *
++ * A closed list, and `HOME` is deliberately absent: it decides the dedup, but
++ * its VALUE is an account name. The dedup evidence is carried by the
++ * user-scope hash table instead, which says what was found without saying who
++ * owns it.
++ */
++export const CAPTURED_ENV_KEYS: readonly string[] = [
++    'AGENT_CONFIG_DEV_MODE',
++    'AGENT_CONFIG_SCOPE',
++    'AGENT_CONFIG_PROJECTION_MODE',
++];
++
++export class CorpusManifestError extends Error {
++    constructor(message: string) {
++        super(message);
++        this.name = 'CorpusManifestError';
++    }
++}
++
++export interface SubjectEntry {
++    /** Repo-relative path of the projected file the experiment mutates. */
++    readonly path: string;
++    readonly sha256: string;
++    readonly bytes: number;
++    /** The projection source this file was emitted from, repo-relative. */
++    readonly provenance: string;
++    /** Hash of that source, or `null` when it is absent from this tree. */
++    readonly provenance_sha256: string | null;
++}
++
++export interface ExcludedEntry {
++    readonly path: string;
++    readonly why: string;
++}
++
++export interface UserScopeTwin {
++    /** Home-relative, never absolute: the account name is not evidence. */
++    readonly path: string;
++    readonly sha256: string;
++    /** True when this twin is byte-identical to the source and therefore skips. */
++    readonly causes_skip: boolean;
++}
++
++/**
++ * The evidence that decides which rules reach the corpus directory at all.
++ *
++ * This block exists because the byte-identity table below accounts for NONE of
++ * the skips actually observed. Measured on a freshly generated tree: the
++ * generator reported 101 rules skipped and the byte-identity comparison
++ * returned zero, because `projection.scope_dedup` is absent on every layer this
++ * repository carries and therefore off. The real mechanism is the per-host rule
++ * partition, which withholds a rule when this host's GLOBAL layer is verified
++ * to carry its NAME. So the field a recorded commit cannot supply is the global
++ * layer's name inventory, and a manifest that pinned only byte-identical twins
++ * would have missed every skip that happened.
++ */
++export interface ProjectionDecision {
++    /** Whether the per-host partition is active at all, read from the lockfile. */
++    readonly partition_active: boolean;
++    readonly tool_id: string | null;
++    /** The global layer directory, home-relative; `null` when this host has none. */
++    readonly layer_dir: string | null;
++    readonly carries: boolean;
++    readonly reason: string;
++    /** Names the partition would withhold that the global layer does not carry. */
++    readonly missing: readonly string[];
++    /**
++     * Rules classified exclusively package-only, and therefore never withheld.
++     *
++     * Counted over every rule in the projection source, which is a SUPERSET of
++     * what the generator classifies: the generator filters by workspace scope
++     * and by manual type first. So this number is an explanatory input and is
++     * not the produced count. Measured on one tree: 15 here against 13 files
++     * actually produced. `produced` is the authoritative inventory.
++     */
++    readonly package_only_count: number;
++    /** The global layer inventory, with hashes: names decide, hashes explain. */
++    readonly layer_inventory: readonly { readonly name: string; readonly sha256: string | null }[];
++    /** Folds the inventory into one comparable value. */
++    readonly layer_digest: string;
++}
++
++export interface CorpusManifest {
++    readonly version: typeof CORPUS_MANIFEST_VERSION;
++    readonly commit: string | null;
++    /** True when the working tree carries uncommitted changes at capture time. */
++    readonly tree_dirty: boolean;
++    readonly package_version: string | null;
++    readonly generator: readonly { readonly path: string; readonly sha256: string | null }[];
++    /** The enumeration rule this manifest was captured under, by id. */
++    readonly enumeration_rule: string;
++    readonly included: readonly SubjectEntry[];
++    readonly excluded: readonly ExcludedEntry[];
++    readonly user_scope: readonly UserScopeTwin[];
++    readonly projection: ProjectionDecision;
++    readonly generator_config: Readonly<Record<string, string | null>>;
++    readonly runtime: {
++        readonly node: string;
++        readonly platform: string;
++        readonly arch: string;
++    };
++    /** Every file the projection produced in the corpus directory, with hashes. */
++    readonly produced: readonly { readonly path: string; readonly sha256: string }[];
++    /** Folds the subject half into one comparable value. */
++    readonly subject_digest: string;
++}
++
++export function sha256OfFile(abs: string): string | null {
++    try {
++        return createHash('sha256').update(fs.readFileSync(abs)).digest('hex');
++    } catch {
++        return null;
++    }
++}
++
++function sha256OfString(s: string): string {
++    return createHash('sha256').update(s, 'utf-8').digest('hex');
++}
++
++/** Byte-wise, locale-independent order. Never `localeCompare`. */
++function byteCompare(a: string, b: string): number {
++    return a < b ? -1 : a > b ? 1 : 0;
++}
++
++function git(root: string, args: readonly string[]): string | null {
++    const r = spawnSync('git', [...args], { cwd: root, encoding: 'utf-8' });
++    if (r.status !== 0 || typeof r.stdout !== 'string') return null;
++    return r.stdout.trim();
++}
++
++/**
++ * The corpus enumeration, executable rather than prose.
++ *
++ * Until now the rule lived only in the protocol document, so nothing could
++ * check that a capture had followed it. The four clauses are: every `*.md`
++ * directly under the corpus directory, sorted byte-wise by filename, the first
++ * `limit` of them, and the rest recorded as excluded with the reason. Reading
++ * the directory here rather than predicting it is deliberate: what the
++ * experiment mutates is what is on disk.
++ */
++export function enumerateCorpus(
++    repoRoot: string,
++    limit: number,
++): { included: string[]; excluded: ExcludedEntry[] } {
++    const dir = path.join(repoRoot, CORPUS_TOOL_DIR);
++    let names: string[];
++    try {
++        names = fs
++            .readdirSync(dir, { withFileTypes: true })
++            .filter((d) => d.isFile() || d.isSymbolicLink())
++            .map((d) => d.name)
++            .filter((n) => n.endsWith('.md'));
++    } catch {
++        throw new CorpusManifestError(
++            `${CORPUS_TOOL_DIR} does not exist in ${repoRoot} — the corpus is a generated ` +
++                'projection, so a capture before generation would pin an empty subject and ' +
++                'read as a successful pin of nothing',
++        );
++    }
++    names.sort(byteCompare);
++    const included = names.slice(0, limit);
++    const excluded = names.slice(limit).map((n) => ({
++        path: path.posix.join(CORPUS_TOOL_DIR, n),
++        why: `beyond the first ${String(limit)} in byte order`,
++    }));
++    return { included: included.map((n) => path.posix.join(CORPUS_TOOL_DIR, n)), excluded };
++}
++
++/**
++ * Every user-scope file that can suppress a rule at project scope, with hashes.
++ *
++ * This is the field a recorded commit cannot supply and the one that made the
++ * subject irreproducible. `causes_skip` replays the generator's own comparison
++ * — byte-identity against the projection source — rather than re-implementing
++ * a judgement about it, so a manifest and a generation cannot disagree about
++ * what a skip is.
++ */
++export function captureUserScope(repoRoot: string, userHome: string): UserScopeTwin[] {
++    const sourceDir = path.join(repoRoot, PROJECTION_SOURCE_DIR);
++    let names: string[] = [];
++    try {
++        names = fs
++            .readdirSync(sourceDir)
++            .filter((n) => n.endsWith('.md'))
++            .sort(byteCompare);
++    } catch {
++        return [];
++    }
++    const skip = dedupableRules({
++        toolDir: CORPUS_TOOL_DIR,
++        rules: names,
++        userHome,
++        rulesSource: sourceDir,
++    });
++    const out: UserScopeTwin[] = [];
++    for (const n of names) {
++        const rel = path.posix.join('.claude', 'rules', n);
++        const hash = sha256OfFile(path.join(userHome, '.claude', 'rules', n));
++        if (hash === null) continue;
++        out.push({ path: rel, sha256: hash, causes_skip: skip.has(n) });
++    }
++    return out;
++}
++
++/**
++ * Capture the partition evidence, reading the same predicates the generator
++ * reads rather than a re-implementation of them.
++ *
++ * `hostLayerCarries` decides on NAME presence, not on content, so the names are
++ * what pin the corpus and the hashes are recorded alongside only to explain a
++ * difference. Recording the hashes without the names would have been the wrong
++ * half: two layers holding the same names with different bytes produce the same
++ * corpus.
++ */
++export function captureProjectionDecision(repoRoot: string, userHome: string): ProjectionDecision {
++    const sourceDir = path.join(repoRoot, PROJECTION_SOURCE_DIR);
++    let names: string[] = [];
++    try {
++        names = fs
++            .readdirSync(sourceDir)
++            .filter((n) => n.endsWith('.md'))
++            .sort(byteCompare);
++    } catch {
++        names = [];
++    }
++    const toolId = toolIdForProjectRuleDir(CORPUS_TOOL_DIR);
++    const packageOnly = names.filter((n) => isExclusivelyPackageOnly(path.join(sourceDir, n)));
++    const keep = new Set(packageOnly);
++    const withheld = names.filter((n) => !keep.has(n));
++    const verdict =
++        toolId === null
++            ? { carries: false, layerPath: null, missing: withheld, reason: 'no-layer-for-host' }
++            : hostLayerCarries(toolId, withheld, userHome);
++    const layerNames = toolId === null ? null : globalRuleLayerNames(toolId, userHome);
++    const layerPath = toolId === null ? null : globalRuleLayerPath(toolId, userHome);
++    const inventory = (layerNames ?? [])
++        .slice()
++        .sort(byteCompare)
++        .map((n) => ({
++            name: n,
++            sha256: layerPath === null ? null : sha256OfFile(path.join(layerPath, n)),
++        }));
++    return {
++        partition_active: partitionActive(repoRoot),
++        tool_id: toolId,
++        layer_dir: layerPath === null ? null : homeRelative(layerPath, userHome),
++        carries: verdict.carries,
++        reason: verdict.reason,
++        missing: [...verdict.missing].sort(byteCompare),
++        package_only_count: packageOnly.length,
++        layer_inventory: inventory,
++        layer_digest: sha256OfString(inventory.map((e) => `${e.name} ${String(e.sha256)}`).join('\n')),
++    };
++}
++
++/**
++ * A path with the home prefix replaced, so no account name is captured.
++ *
++ * Falls back to the basename rather than to the absolute path when the prefix
++ * does not match: a fallback that leaked the full path would defeat the whole
++ * point on exactly the machines where the home layout is unusual.
++ */
++export function homeRelative(abs: string, userHome: string): string {
++    const rel = path.relative(userHome, abs);
++    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
++        return path.basename(abs);
++    }
++    return rel.split(path.sep).join('/');
++}
++
++/**
++ * The one value two runs compare on.
++ *
++ * Folds the ordered subject inventory and the enumeration rule, and nothing
++ * else. The commit, the runtime and the user-scope table are all EXPLANATIONS
++ * of a difference and must not be inside the value that detects one — a digest
++ * that changed when the node version changed would report a subject change on
++ * every upgrade, and a reader would stop believing it.
++ */
++export function subjectDigest(
++    enumerationRule: string,
++    included: readonly SubjectEntry[],
++): string {
++    const body = [enumerationRule, ...included.map((e) => `${e.path} ${e.sha256}`)].join('\n');
++    return sha256OfString(body);
++}
++
++export interface CaptureOptions {
++    readonly repoRoot: string;
++    readonly userHome: string;
++    readonly limit: number;
++    readonly enumerationRule: string;
++    readonly env?: Readonly<Record<string, string | undefined>> | undefined;
++}
++
++export function captureManifest(opts: CaptureOptions): CorpusManifest {
++    const { repoRoot, userHome, limit, enumerationRule } = opts;
++    const env = opts.env ?? process.env;
++    const { included: paths, excluded } = enumerateCorpus(repoRoot, limit);
++
++    const included: SubjectEntry[] = paths.map((rel) => {
++        const abs = path.join(repoRoot, rel);
++        const hash = sha256OfFile(abs);
++        if (hash === null) {
++            throw new CorpusManifestError(`corpus member '${rel}' vanished between listing and read`);
++        }
++        const base = path.basename(rel);
++        const provenance = path.posix.join('dist', 'agent-src', 'rules', base);
++        return {
++            path: rel,
++            sha256: hash,
++            bytes: fs.statSync(abs).size,
++            provenance,
++            provenance_sha256: sha256OfFile(path.join(repoRoot, provenance)),
++        };
++    });
++
++    let produced: { path: string; sha256: string }[] = [];
++    try {
++        produced = fs
++            .readdirSync(path.join(repoRoot, CORPUS_TOOL_DIR))
++            .filter((n) => n.endsWith('.md'))
++            .sort(byteCompare)
++            .map((n) => ({
++                path: path.posix.join(CORPUS_TOOL_DIR, n),
++                sha256: sha256OfFile(path.join(repoRoot, CORPUS_TOOL_DIR, n)) ?? '',
++            }));
++    } catch {
++        produced = [];
++    }
++
++    const generatorConfig: Record<string, string | null> = {};
++    for (const k of CAPTURED_ENV_KEYS) {
++        generatorConfig[k] = env[k] ?? null;
++    }
++    generatorConfig['projection.scope_dedup'] = readScopeDedup(repoRoot);
++
++    let packageVersion: string | null = null;
++    try {
++        const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf-8')) as {
++            version?: unknown;
++        };
++        packageVersion = typeof pkg.version === 'string' ? pkg.version : null;
++    } catch {
++        packageVersion = null;
++    }
++
++    const status = git(repoRoot, ['status', '--porcelain']);
++
++    return {
++        version: CORPUS_MANIFEST_VERSION,
++        commit: git(repoRoot, ['rev-parse', 'HEAD']),
++        tree_dirty: status === null ? true : status !== '',
++        package_version: packageVersion,
++        generator: GENERATOR_MODULES.map((rel) => ({
++            path: rel,
++            sha256: sha256OfFile(path.join(repoRoot, rel)),
++        })),
++        enumeration_rule: enumerationRule,
++        included,
++        excluded,
++        user_scope: captureUserScope(repoRoot, userHome),
++        projection: captureProjectionDecision(repoRoot, userHome),
++        generator_config: generatorConfig,
++        runtime: { node: process.version, platform: os.platform(), arch: os.arch() },
++        produced,
++        subject_digest: subjectDigest(enumerationRule, included),
++    };
++}
++
++/**
++ * The generator setting that decides whether user-scope dedup runs at all.
++ *
++ * Read as raw text rather than through the settings resolver, because a
++ * manifest must record what the file SAID at capture time; a resolver applies a
++ * cascade whose upper layers are not in this repository and would silently
++ * substitute one machine's answer for another's.
++ */
++export function readScopeDedup(repoRoot: string): string | null {
++    for (const rel of ['.agent-settings.yml', path.join('src', 'config', 'agent-settings.template.yml')]) {
++        let text: string;
++        try {
++            text = fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
++        } catch {
++            continue;
++        }
++        const m = /^\s*scope_dedup:\s*(\S+)/m.exec(text);
++        if (m) return `${rel}:${m[1] as string}`;
++    }
++    // Not `null`: absent is a value here, and the reader has to be able to tell
++    // it from a read that failed. Absent means the byte-identity dedup is off,
++    // which is what makes the partition the only live skip mechanism.
++    return 'absent:default-off';
++}
++
++export interface ManifestDifference {
++    readonly field: string;
++    readonly expected: string;
++    readonly actual: string;
++}
++
++/**
++ * The reconstruction check, and it reports EVERY difference rather than the
++ * first.
++ *
++ * Stopping at the first mismatch would let an operator fix one hash, re-run,
++ * and meet the next one — a check that reveals its findings one per cycle
++ * trains the reader to believe the last one was the last one. The subject
++ * differences are listed first because they are the ones that invalidate a
++ * comparison; the rest explain why they happened.
++ */
++export function diffManifests(expected: CorpusManifest, actual: CorpusManifest): ManifestDifference[] {
++    const out: ManifestDifference[] = [];
++    const push = (field: string, e: unknown, a: unknown): void => {
++        if (String(e) !== String(a)) out.push({ field, expected: String(e), actual: String(a) });
++    };
++
++    push('subject_digest', expected.subject_digest, actual.subject_digest);
++    push('enumeration_rule', expected.enumeration_rule, actual.enumeration_rule);
++    push('included.length', expected.included.length, actual.included.length);
++
++    const actualByPath = new Map(actual.included.map((e) => [e.path, e]));
++    for (const e of expected.included) {
++        const a = actualByPath.get(e.path);
++        if (a === undefined) {
++            out.push({ field: `included:${e.path}`, expected: e.sha256, actual: 'ABSENT' });
++            continue;
++        }
++        push(`included:${e.path}`, e.sha256, a.sha256);
++    }
++    const expectedPaths = new Set(expected.included.map((e) => e.path));
++    for (const a of actual.included) {
++        if (!expectedPaths.has(a.path)) {
++            out.push({ field: `included:${a.path}`, expected: 'ABSENT', actual: a.sha256 });
++        }
++    }
++
++    push('commit', expected.commit, actual.commit);
++    push('produced.length', expected.produced.length, actual.produced.length);
++    for (const g of expected.generator) {
++        const a = actual.generator.find((x) => x.path === g.path);
++        // `NO-ROW` rather than a nullish fallback: a generator module absent
++        // from the tree hashes to `null`, and folding the two states together
++        // reported a difference between two captures that had both recorded the
++        // same absence. The states are three, not two, and the third is common.
++        push(`generator:${g.path}`, g.sha256, a === undefined ? 'NO-ROW' : a.sha256);
++    }
++    const expectedSkips = expected.user_scope.filter((t) => t.causes_skip).map((t) => t.path).sort(byteCompare);
++    const actualSkips = actual.user_scope.filter((t) => t.causes_skip).map((t) => t.path).sort(byteCompare);
++    push('user_scope.skipping', expectedSkips.join(','), actualSkips.join(','));
++    // The partition half, which is where the observed skips actually came from.
++    // Diffed by digest rather than by name list because the inventory runs to
++    // three figures and a diff nobody reads is a diff that does not exist.
++    push('projection.partition_active', expected.projection.partition_active, actual.projection.partition_active);
++    push('projection.carries', expected.projection.carries, actual.projection.carries);
++    push('projection.reason', expected.projection.reason, actual.projection.reason);
++    push('projection.layer_digest', expected.projection.layer_digest, actual.projection.layer_digest);
++    push(
++        'projection.layer_names',
++        expected.projection.layer_inventory.map((e) => e.name).join(','),
++        actual.projection.layer_inventory.map((e) => e.name).join(','),
++    );
++    return out;
++}
++
++/** Two manifests describe the same experimental subject. Nothing weaker. */
++export function subjectsEquivalent(expected: CorpusManifest, actual: CorpusManifest): boolean {
++    return (
++        expected.subject_digest === actual.subject_digest &&
++        expected.enumeration_rule === actual.enumeration_rule
++    );
++}
++
++export function serialiseManifest(m: CorpusManifest): string {
++    return `${JSON.stringify(m, null, 2)}\n`;
++}
++
++export function parseManifest(raw: unknown): CorpusManifest {
++    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
++        throw new CorpusManifestError('a manifest must be a JSON object');
++    }
++    const o = raw as Record<string, unknown>;
++    if (o['version'] !== CORPUS_MANIFEST_VERSION) {
++        throw new CorpusManifestError(
++            `manifest version ${JSON.stringify(o['version'])} is not ${CORPUS_MANIFEST_VERSION} — ` +
++                'a manifest of another shape cannot be compared field-for-field, and comparing it ' +
++                'partially would report equivalence from the fields that happened to survive',
++        );
++    }
++    if (typeof o['subject_digest'] !== 'string' || !Array.isArray(o['included'])) {
++        throw new CorpusManifestError('manifest is missing subject_digest or included');
++    }
++    return raw as CorpusManifest;
++}
+diff --git a/src/scripts/corpus_manifest.ts b/src/scripts/corpus_manifest.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e9ec8266122605c3c35c99646be77090b04f26da
+--- /dev/null
++++ b/src/scripts/corpus_manifest.ts
+@@ -0,0 +1,219 @@
++#!/usr/bin/env tsx
++/**
++ * `corpus_manifest` — pin the metered-proposer experiment's subject, and check
++ * that a fresh checkout reproduces it.
++ *
++ * Two verbs and no third. `capture` writes the pin from the tree as it stands;
++ * `verify` re-captures and reports every difference against a pin on disk.
++ * There is deliberately no `update` verb: a pin that can be refreshed in place
++ * is a pin that silently follows the tree, which is the property it exists not
++ * to have.
++ *
++ * `verify` exits 3 when the SUBJECT differs and 0 when only the explanatory
++ * fields do. That split is the whole point of the exit code — a different
++ * runtime version is a fact worth printing and is not a reason to refuse a
++ * comparison, while a different subject means the two runs measured different
++ * things and no amount of green elsewhere repairs it.
++ *
++ * Nothing here spends: it reads files and shells out to `git` for the commit.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import process from 'node:process';
++import { fileURLToPath } from 'node:url';
++
++import {
++    type CorpusManifest,
++    captureManifest,
++    diffManifests,
++    parseManifest,
++    serialiseManifest,
++    subjectsEquivalent,
++} from './_lib/corpus_manifest.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++export const EXIT_OK = 0;
++export const EXIT_ERROR = 1;
++export const EXIT_USAGE = 2;
++/** The subject differs. Distinct from a plain error so a runner can branch. */
++export const EXIT_SUBJECT_DIFFERS = 3;
++
++/**
++ * The enumeration rule this manifest pins under, as an ID rather than prose.
++ *
++ * It is part of the digest, so changing the rule changes the subject even when
++ * every file hash is unchanged. That is correct: a corpus of the same five
++ * files selected by a different rule is a different experiment, and a digest
++ * that could not see the difference would let the selection semantics be
++ * amended without the pin noticing.
++ */
++export const ENUMERATION_RULE_ID = 'claude-rules-md-bytesorted-first-N/v1';
++
++const USAGE = `usage: corpus_manifest capture --out FILE [--limit N]
++       corpus_manifest verify --manifest FILE [--limit N]
++
++  capture   write the subject pin from the tree as it stands
++  verify    re-capture and report every difference against FILE
++
++  --limit N  corpus size; defaults to max_candidates from the pre-registered
++             budget, which is the ceiling the run guard aborts on
++
++Exit: 0 ok  ·  1 error  ·  2 usage  ·  3 the SUBJECT differs
++`;
++
++/**
++ * The corpus size, read from the pre-registered budget rather than defaulted.
++ *
++ * Hardcoding five here would put a second copy of a pre-registered number in a
++ * file nobody would think to check when the budget changed, and the two would
++ * disagree in the direction that matters: a manifest pinning more subjects than
++ * the run guard admits describes an experiment that cannot be run.
++ */
++export function defaultLimit(repoRoot: string = REPO_ROOT): number {
++    const raw = JSON.parse(
++        fs.readFileSync(path.join(repoRoot, 'src', 'config', 'harness-evolution-budget.json'), 'utf-8'),
++    ) as { budget?: { max_candidates?: unknown } };
++    const n = raw.budget?.max_candidates;
++    if (typeof n !== 'number' || !Number.isInteger(n) || n <= 0) {
++        throw new Error('max_candidates missing or not a positive integer in the pre-registered budget');
++    }
++    return n;
++}
++
++interface Parsed {
++    verb?: string;
++    out?: string;
++    manifest?: string;
++    limit?: number;
++}
++
++export function parseArgs(argv: readonly string[]): Parsed | string {
++    const p: Parsed = {};
++    for (let i = 0; i < argv.length; i += 1) {
++        const a = argv[i] as string;
++        if (!a.startsWith('--') && p.verb === undefined) {
++            p.verb = a;
++            continue;
++        }
++        const v = argv[i + 1];
++        if (v === undefined || v.startsWith('--')) return `${a} requires a value`;
++        i += 1;
++        if (a === '--out') p.out = v;
++        else if (a === '--manifest') p.manifest = v;
++        else if (a === '--limit') {
++            const n = Number(v);
++            if (!Number.isInteger(n) || n <= 0) return '--limit must be a positive integer';
++            p.limit = n;
++        } else return `unknown option '${a}'`;
++    }
++    return p;
++}
++
++function capture(limit: number): CorpusManifest {
++    return captureManifest({
++        repoRoot: REPO_ROOT,
++        userHome: process.env['HOME'] ?? os.homedir(),
++        limit,
++        enumerationRule: ENUMERATION_RULE_ID,
++    });
++}
++
++export function main(argv?: string[]): number {
++    const args = argv ?? process.argv.slice(2);
++    if (args.length === 0 || args.includes('-h') || args.includes('--help')) {
++        process.stdout.write(USAGE);
++        return args.length === 0 ? EXIT_USAGE : EXIT_OK;
++    }
++    const parsed = parseArgs(args);
++    if (typeof parsed === 'string') {
++        process.stderr.write(`corpus_manifest: error: ${parsed}\n${USAGE}`);
++        return EXIT_USAGE;
++    }
++
++    let limit: number;
++    try {
++        limit = parsed.limit ?? defaultLimit();
++    } catch (e) {
++        process.stderr.write(`corpus_manifest: ${(e as Error).message}\n`);
++        return EXIT_ERROR;
++    }
++
++    if (parsed.verb === 'capture') {
++        if (parsed.out === undefined) {
++            process.stderr.write(`corpus_manifest: error: capture requires --out FILE\n${USAGE}`);
++            return EXIT_USAGE;
++        }
++        let m: CorpusManifest;
++        try {
++            m = capture(limit);
++        } catch (e) {
++            process.stderr.write(`corpus_manifest: capture refused — ${(e as Error).message}\n`);
++            return EXIT_ERROR;
++        }
++        fs.mkdirSync(path.dirname(path.resolve(parsed.out)), { recursive: true });
++        fs.writeFileSync(parsed.out, serialiseManifest(m), 'utf-8');
++        process.stdout.write(
++            `corpus_manifest: wrote ${parsed.out} · subject_digest=${m.subject_digest.slice(0, 16)} · ` +
++                `${String(m.included.length)} subject(s) · ${String(m.produced.length)} produced · ` +
++                `${String(m.user_scope.filter((t) => t.causes_skip).length)} user-scope skip(s)\n`,
++        );
++        if (m.tree_dirty) {
++            process.stdout.write(
++                'corpus_manifest: WARNING the working tree is dirty, so the recorded commit does not ' +
++                    'describe the bytes that were hashed\n',
++            );
++        }
++        return EXIT_OK;
++    }
++
++    if (parsed.verb === 'verify') {
++        if (parsed.manifest === undefined) {
++            process.stderr.write(`corpus_manifest: error: verify requires --manifest FILE\n${USAGE}`);
++            return EXIT_USAGE;
++        }
++        let expected: CorpusManifest;
++        let actual: CorpusManifest;
++        try {
++            expected = parseManifest(JSON.parse(fs.readFileSync(parsed.manifest, 'utf-8')));
++            actual = capture(expected.included.length === 0 ? limit : expected.included.length);
++        } catch (e) {
++            process.stderr.write(`corpus_manifest: verify refused — ${(e as Error).message}\n`);
++            return EXIT_ERROR;
++        }
++        const diffs = diffManifests(expected, actual);
++        for (const d of diffs) {
++            process.stdout.write(`corpus_manifest: DIFF ${d.field}: expected ${d.expected}, got ${d.actual}\n`);
++        }
++        if (subjectsEquivalent(expected, actual)) {
++            process.stdout.write(
++                `corpus_manifest: SUBJECT EQUIVALENT · digest=${actual.subject_digest.slice(0, 16)}` +
++                    (diffs.length > 0 ? ` · ${String(diffs.length)} explanatory difference(s) above\n` : '\n'),
++            );
++            return EXIT_OK;
++        }
++        process.stdout.write(
++            'corpus_manifest: SUBJECT DIFFERS — a comparison captured against this manifest is not ' +
++                'comparable to one captured here\n',
++        );
++        return EXIT_SUBJECT_DIFFERS;
++    }
++
++    process.stderr.write(`corpus_manifest: error: unknown verb ${JSON.stringify(parsed.verb)}\n${USAGE}`);
++    return EXIT_USAGE;
++}
++
++function _isCliEntry(): boolean {
++    try {
++        if (process.argv[1] === undefined) return false;
++        return fs.realpathSync(_HERE) === fs.realpathSync(path.resolve(process.argv[1]));
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/tests/scripts/candidate_pair_delta.test.ts b/tests/scripts/candidate_pair_delta.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..de9ae4767bad00ffc02c65d3d12012997cf9a349
+--- /dev/null
++++ b/tests/scripts/candidate_pair_delta.test.ts
+@@ -0,0 +1,211 @@
++/**
++ * The paired-delta producer: pairing, sign convention, ties, and every refusal.
++ *
++ * Written as refutations rather than confirmations. Each case names the wrong
++ * behaviour it would catch, because a producer whose failure mode is a silently
++ * smaller denominator cannot be checked by asserting that the happy path
++ * returns a number.
++ */
++import { describe, expect, it } from 'vitest';
++
++import {
++    PairingError,
++    TIE_EPSILON,
++    compareArms,
++    comparisonVector,
++    pairCandidates,
++    pairedDeltas,
++    pairingKey,
++} from '../../src/scripts/_lib/candidate_pair_delta.js';
++import {
++    CANDIDATE_RECORD_VERSION,
++    type CandidateRecord,
++    type MutationDimension,
++} from '../../src/scripts/_lib/candidate_record.js';
++import { ARTIFACT_COUNT_METRIC } from '../../src/scripts/_lib/evaluation_vector.js';
++import { MIN_DISCORDANT } from '../../src/scripts/_lib/paired_verdict.js';
++
++function rec(
++    id: string,
++    dimension: MutationDimension,
++    path: string,
++    content: string,
++): CandidateRecord {
++    return {
++        kind: 'candidate',
++        version: CANDIDATE_RECORD_VERSION,
++        id,
++        dimension,
++        lifecycle: 'proposed',
++        mutations: [{ path, content }],
++    };
++}
++
++const SUBJECT_A = '.claude/rules/a.md';
++const SUBJECT_B = '.claude/rules/b.md';
++
++describe('pairingKey', () => {
++    it('is independent of the candidate id, which is the only way two arms pair at all', () => {
++        const control = rec('con-1111', 'content', SUBJECT_A, 'control body');
++        const treatment = rec('con-2222', 'content', SUBJECT_A, 'treatment body');
++        expect(control.id).not.toBe(treatment.id);
++        expect(pairingKey(control)).toBe(pairingKey(treatment));
++    });
++
++    it('separates two observations on the same subject but different dimensions', () => {
++        expect(pairingKey(rec('a', 'content', SUBJECT_A, 'x'))).not.toBe(
++            pairingKey(rec('a', 'activation', SUBJECT_A, 'x')),
++        );
++    });
++});
++
++describe('pairCandidates', () => {
++    it('refuses an unmatched control record rather than dropping it', () => {
++        expect(() =>
++            pairCandidates([rec('c', 'content', SUBJECT_A, 'x')], []),
++        ).toThrow(PairingError);
++    });
++
++    it('refuses an unmatched treatment record rather than dropping it', () => {
++        expect(() =>
++            pairCandidates([], [rec('t', 'content', SUBJECT_A, 'x')]),
++        ).toThrow(PairingError);
++    });
++
++    it('refuses two records for one observation on either arm', () => {
++        const a = rec('a', 'content', SUBJECT_A, 'x');
++        const b = rec('b', 'content', SUBJECT_A, 'y');
++        expect(() => pairCandidates([a], [a, b])).toThrow(PairingError);
++        expect(() => pairCandidates([a, b], [a])).toThrow(PairingError);
++    });
++
++    it('flags identical arms instead of throwing, because every trial then ties', () => {
++        const same = rec('s', 'content', SUBJECT_A, 'identical');
++        const [pair] = pairCandidates([same], [same]);
++        expect(pair?.identical_arms).toBe(true);
++    });
++
++    it('does not flag arms whose bytes differ', () => {
++        const [pair] = pairCandidates(
++            [rec('c', 'content', SUBJECT_A, 'one')],
++            [rec('t', 'content', SUBJECT_A, 'two')],
++        );
++        expect(pair?.identical_arms).toBe(false);
++    });
++});
++
++describe('pairedDeltas', () => {
++    it('makes positive favour the treatment for a higher-better metric', () => {
++        expect(pairedDeltas([{ trial_id: 't', control: 1, treatment: 3 }], 'higher-better')).toEqual([2]);
++    });
++
++    it('reverses the subtraction for a lower-better metric, so positive still favours the treatment', () => {
++        expect(pairedDeltas([{ trial_id: 't', control: 3, treatment: 1 }], 'lower-better')).toEqual([2]);
++    });
++
++    it('refuses zero trials rather than returning an empty verdict', () => {
++        expect(() => pairedDeltas([], 'higher-better')).toThrow(PairingError);
++    });
++
++    it('refuses a duplicate trial id, which would inflate the discordant count', () => {
++        expect(() =>
++            pairedDeltas(
++                [
++                    { trial_id: 't', control: 1, treatment: 2 },
++                    { trial_id: 't', control: 1, treatment: 2 },
++                ],
++                'higher-better',
++            ),
++        ).toThrow(PairingError);
++    });
++
++    it('refuses a non-finite outcome rather than reading it as zero', () => {
++        expect(() =>
++            pairedDeltas([{ trial_id: 't', control: Number.NaN, treatment: 1 }], 'higher-better'),
++        ).toThrow(PairingError);
++    });
++});
++
++describe('compareArms', () => {
++    const control = [rec('c1', 'content', SUBJECT_A, 'c'), rec('c2', 'content', SUBJECT_B, 'c')];
++    const treatment = [rec('t1', 'content', SUBJECT_A, 't'), rec('t2', 'content', SUBJECT_B, 't')];
++    const keyA = pairingKey(control[0] as CandidateRecord);
++    const keyB = pairingKey(control[1] as CandidateRecord);
++
++    it('refuses a pair with no trials rather than shrinking the denominator', () => {
++        expect(() =>
++            compareArms({
++                control,
++                treatment,
++                outcomes: { [keyA]: [{ trial_id: 'x', control: 0, treatment: 1 }] },
++                direction: 'higher-better',
++            }),
++        ).toThrow(PairingError);
++    });
++
++    it('pools trials across pairs, which is what lifts the sample off the discordant floor', () => {
++        const trials = (n: number, delta: number) =>
++            Array.from({ length: n }, (_, i) => ({
++                trial_id: `t${String(i)}`,
++                control: 0,
++                treatment: delta,
++            }));
++        const result = compareArms({
++            control,
++            treatment,
++            outcomes: { [keyA]: trials(3, 1), [keyB]: trials(3, 1) },
++            direction: 'higher-better',
++        });
++        expect(result.pairs).toHaveLength(2);
++        expect(result.trials).toBe(6);
++        expect(result.trials).toBeGreaterThan(MIN_DISCORDANT);
++        expect(result.verdict.kind).toBe('pass');
++    });
++
++    it('returns underpowered when both arms are identical, and names the pairs that caused it', () => {
++        const same = [rec('s1', 'content', SUBJECT_A, 'same'), rec('s2', 'content', SUBJECT_B, 'same')];
++        const result = compareArms({
++            control: same,
++            treatment: same,
++            outcomes: {
++                [keyA]: [{ trial_id: 'a', control: 1, treatment: 1 }],
++                [keyB]: [{ trial_id: 'b', control: 1, treatment: 1 }],
++            },
++            direction: 'higher-better',
++        });
++        expect(result.verdict.kind).toBe('underpowered');
++        expect(result.identical_pairs).toEqual([keyA, keyB]);
++    });
++
++    it('treats a delta inside the tie epsilon as a tie, matching the A/B report', () => {
++        const result = compareArms({
++            control: [control[0] as CandidateRecord],
++            treatment: [treatment[0] as CandidateRecord],
++            outcomes: {
++                [keyA]: [{ trial_id: 'a', control: 0, treatment: TIE_EPSILON / 2 }],
++            },
++            direction: 'higher-better',
++        });
++        expect(result.verdict.discordant).toBe(0);
++    });
++});
++
++describe('comparisonVector', () => {
++    it('always carries the artifact-count row, because the vector builder refuses one without it', () => {
++        const control = [rec('c1', 'content', SUBJECT_A, 'c')];
++        const treatment = [rec('t1', 'content', SUBJECT_A, 't')];
++        const comparison = compareArms({
++            control,
++            treatment,
++            outcomes: {
++                [pairingKey(control[0] as CandidateRecord)]: [
++                    { trial_id: 'a', control: 0, treatment: 1 },
++                ],
++            },
++            direction: 'higher-better',
++        });
++        const vector = comparisonVector('cmp-1', 'route-recall', 'higher-better', comparison);
++        expect(vector.rows.map((r) => r.metric)).toContain(ARTIFACT_COUNT_METRIC);
++        expect(vector.rows.filter((r) => r.kind === 'paired')).toHaveLength(1);
++    });
++});
+diff --git a/tests/scripts/corpus_manifest.test.ts b/tests/scripts/corpus_manifest.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1be546d22d6ab942c28beac6cc0f144fd4c1903d
+--- /dev/null
++++ b/tests/scripts/corpus_manifest.test.ts
+@@ -0,0 +1,245 @@
++/**
++ * The corpus manifest: what it pins, what it deliberately leaves out of the
++ * digest, and the two ways a subject can differ.
++ *
++ * The interesting assertions are the negative ones. A digest that moved when
++ * the node version moved would report a subject change on every upgrade and a
++ * reader would stop believing it, so the explanatory fields are asserted to be
++ * OUTSIDE the digest as firmly as the subject fields are asserted to be inside
++ * it. Every fixture is a temporary tree; nothing here reads or writes the
++ * repository it runs in.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++import {
++    CorpusManifestError,
++    captureManifest,
++    captureProjectionDecision,
++    captureUserScope,
++    diffManifests,
++    enumerateCorpus,
++    parseManifest,
++    serialiseManifest,
++    subjectDigest,
++    subjectsEquivalent,
++} from '../../src/scripts/_lib/corpus_manifest.js';
++
++const RULE = 'test-rule/v1';
++const made: string[] = [];
++
++function tmp(prefix: string): string {
++    const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
++    made.push(d);
++    return d;
++}
++
++/** A tree with a projected corpus directory and the projection source it came from. */
++function fixture(files: Readonly<Record<string, string>>, source: Readonly<Record<string, string>> = {}): string {
++    const root = tmp('corpus-manifest-');
++    const rules = path.join(root, '.claude', 'rules');
++    fs.mkdirSync(rules, { recursive: true });
++    for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(rules, name), body);
++    const src = path.join(root, 'dist', 'agent-src', 'rules');
++    fs.mkdirSync(src, { recursive: true });
++    for (const [name, body] of Object.entries(source)) fs.writeFileSync(path.join(src, name), body);
++    return root;
++}
++
++function home(files: Readonly<Record<string, string>>): string {
++    const h = tmp('corpus-home-');
++    const d = path.join(h, '.claude', 'rules');
++    fs.mkdirSync(d, { recursive: true });
++    for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(d, name), body);
++    return h;
++}
++
++afterEach(() => {
++    while (made.length > 0) {
++        const d = made.pop() as string;
++        fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++describe('enumerateCorpus', () => {
++    it('takes the first N in byte order and records the rest as excluded', () => {
++        const root = fixture({ 'c.md': 'c', 'a.md': 'a', 'b.md': 'b' });
++        const { included, excluded } = enumerateCorpus(root, 2);
++        expect(included).toEqual(['.claude/rules/a.md', '.claude/rules/b.md']);
++        expect(excluded.map((e) => e.path)).toEqual(['.claude/rules/c.md']);
++    });
++
++    it('ignores files that are not markdown, because the rule says every *.md', () => {
++        const root = fixture({ 'a.md': 'a', 'README.txt': 'x' });
++        expect(enumerateCorpus(root, 5).included).toEqual(['.claude/rules/a.md']);
++    });
++
++    it('refuses a tree with no corpus directory rather than pinning an empty subject', () => {
++        const root = tmp('corpus-empty-');
++        expect(() => enumerateCorpus(root, 5)).toThrow(CorpusManifestError);
++    });
++});
++
++describe('subjectDigest', () => {
++    const entry = (p: string, sha: string) => ({
++        path: p,
++        sha256: sha,
++        bytes: 1,
++        provenance: 'dist/agent-src/rules/x.md',
++        provenance_sha256: null,
++    });
++
++    it('changes when the bytes of a subject change', () => {
++        expect(subjectDigest(RULE, [entry('a', 'aaa')])).not.toBe(subjectDigest(RULE, [entry('a', 'bbb')]));
++    });
++
++    it('changes when the enumeration rule changes, even with identical files', () => {
++        expect(subjectDigest(RULE, [entry('a', 'aaa')])).not.toBe(
++            subjectDigest('other-rule/v1', [entry('a', 'aaa')]),
++        );
++    });
++
++    it('changes when the corpus order changes, because order decides which N are taken', () => {
++        const a = entry('a', 'aaa');
++        const b = entry('b', 'bbb');
++        expect(subjectDigest(RULE, [a, b])).not.toBe(subjectDigest(RULE, [b, a]));
++    });
++});
++
++describe('captureUserScope', () => {
++    it('marks a byte-identical twin as causing a skip, replaying the generator comparison', () => {
++        const root = fixture({ 'a.md': 'projected' }, { 'a.md': 'source bytes' });
++        const h = home({ 'a.md': 'source bytes' });
++        const twins = captureUserScope(root, h);
++        expect(twins).toHaveLength(1);
++        expect(twins[0]?.causes_skip).toBe(true);
++    });
++
++    it('records a differing twin without marking it as a skip', () => {
++        const root = fixture({ 'a.md': 'projected' }, { 'a.md': 'source bytes' });
++        const h = home({ 'a.md': 'stale bytes' });
++        expect(captureUserScope(root, h)[0]?.causes_skip).toBe(false);
++    });
++
++    it('leaks no account name anywhere in a captured manifest, twin or global layer', () => {
++        const root = fixture({ 'a.md': 'p' }, { 'a.md': 's' });
++        const h = home({ 'a.md': 's' });
++        const captured = captureUserScope(root, h);
++        expect(captured[0]?.path).toBe('.claude/rules/a.md');
++        const m = captureManifest({
++            repoRoot: root,
++            userHome: h,
++            limit: 1,
++            enumerationRule: RULE,
++            env: {},
++        });
++        expect(serialiseManifest(m)).not.toContain(h);
++    });
++
++    it('records the partition evidence, which is where the observed skips come from', () => {
++        const root = fixture({ 'a.md': 'p' }, { 'a.md': 's' });
++        const m = captureProjectionDecision(root, home({ 'a.md': 's' }));
++        expect(m.tool_id).toBe('claude-code');
++        expect(typeof m.layer_digest).toBe('string');
++        expect(m.layer_digest.length).toBeGreaterThan(0);
++    });
++
++    it('gives a different layer digest when the global layer holds different names', () => {
++        const root = fixture({ 'a.md': 'p' }, { 'a.md': 's' });
++        const one = captureProjectionDecision(root, home({ 'a.md': 's' }));
++        const two = captureProjectionDecision(root, home({ 'a.md': 's', 'b.md': 's' }));
++        expect(one.layer_digest).not.toBe(two.layer_digest);
++    });
++
++});
++
++describe('captureManifest and diffManifests', () => {
++    const opts = (repoRoot: string, userHome: string) => ({
++        repoRoot,
++        userHome,
++        limit: 2,
++        enumerationRule: RULE,
++        env: {} as Record<string, string | undefined>,
++    });
++
++    it('captures the corpus, the excluded remainder and the produced inventory', () => {
++        const root = fixture({ 'a.md': 'a', 'b.md': 'b', 'c.md': 'c' });
++        const m = captureManifest(opts(root, home({})));
++        expect(m.included.map((e) => e.path)).toEqual(['.claude/rules/a.md', '.claude/rules/b.md']);
++        expect(m.excluded).toHaveLength(1);
++        expect(m.produced).toHaveLength(3);
++    });
++
++    it('reports an equivalent subject when only an explanatory field differs', () => {
++        const root = fixture({ 'a.md': 'a', 'b.md': 'b' });
++        const first = captureManifest(opts(root, home({})));
++        const second = { ...first, runtime: { node: 'v99.0.0', platform: 'aix', arch: 'ppc' } };
++        expect(subjectsEquivalent(first, second)).toBe(true);
++        expect(diffManifests(first, second)).toEqual([]);
++    });
++
++    it('reports a differing subject when one corpus file changed, and names that file', () => {
++        const root = fixture({ 'a.md': 'a', 'b.md': 'b' });
++        const before = captureManifest(opts(root, home({})));
++        fs.writeFileSync(path.join(root, '.claude', 'rules', 'a.md'), 'a changed');
++        const after = captureManifest(opts(root, home({})));
++        expect(subjectsEquivalent(before, after)).toBe(false);
++        expect(diffManifests(before, after).map((d) => d.field)).toContain('included:.claude/rules/a.md');
++    });
++
++    it('reports a differing subject when a new file sorts into the corpus and displaces one', () => {
++        const root = fixture({ 'b.md': 'b', 'c.md': 'c' });
++        const before = captureManifest(opts(root, home({})));
++        fs.writeFileSync(path.join(root, '.claude', 'rules', 'a.md'), 'a');
++        const after = captureManifest(opts(root, home({})));
++        expect(subjectsEquivalent(before, after)).toBe(false);
++        const fields = diffManifests(before, after).map((d) => d.field);
++        expect(fields).toContain('included:.claude/rules/a.md');
++        expect(fields).toContain('included:.claude/rules/c.md');
++    });
++
++    it('reports every difference rather than stopping at the first', () => {
++        const root = fixture({ 'a.md': 'a', 'b.md': 'b' });
++        const before = captureManifest(opts(root, home({})));
++        fs.writeFileSync(path.join(root, '.claude', 'rules', 'a.md'), 'a2');
++        fs.writeFileSync(path.join(root, '.claude', 'rules', 'b.md'), 'b2');
++        const after = captureManifest(opts(root, home({})));
++        const fields = diffManifests(before, after).map((d) => d.field);
++        expect(fields).toContain('included:.claude/rules/a.md');
++        expect(fields).toContain('included:.claude/rules/b.md');
++    });
++
++    it('surfaces a user-scope skip change, which a recorded commit cannot explain', () => {
++        const root = fixture({ 'a.md': 'a', 'b.md': 'b' }, { 'a.md': 'source' });
++        const before = captureManifest(opts(root, home({})));
++        const after = captureManifest(opts(root, home({ 'a.md': 'source' })));
++        expect(diffManifests(before, after).map((d) => d.field)).toContain('user_scope.skipping');
++    });
++});
++
++describe('parseManifest', () => {
++    it('refuses a manifest of another version rather than comparing the fields that survived', () => {
++        expect(() => parseManifest({ version: 'corpus-manifest-v0', included: [], subject_digest: 'x' })).toThrow(
++            CorpusManifestError,
++        );
++    });
++
++    it('refuses a non-object', () => {
++        expect(() => parseManifest([])).toThrow(CorpusManifestError);
++    });
++
++    it('round-trips a captured manifest', () => {
++        const root = fixture({ 'a.md': 'a' });
++        const m = captureManifest({
++            repoRoot: root,
++            userHome: home({}),
++            limit: 1,
++            enumerationRule: RULE,
++            env: {},
++        });
++        expect(parseManifest(JSON.parse(serialiseManifest(m))).subject_digest).toBe(m.subject_digest);
++    });
++});
