@@ -488,6 +488,7 @@ export function main(argv: string[]): number {
         reportScanned({
             gate: 'lint_carrier_integrity',
             scanned,
+            units: 'archived roadmap(s)',
             roots: DEAD_DIRS.map((d) => `agents/roadmaps/${d}`),
             allowEmpty: 'a checkout with no archived roadmaps has no carry to break',
         });
