@@ -12,7 +12,7 @@
  * `archive_completed_roadmaps` can consume it the same way Python does. snake_case
  * is kept on the public surface.
  *
- * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,
+ * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * `template.md`, `README.md`, `open-questions*.md`), counts checkbox states per
  * phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
  * `roadmaps/` folder to keep it clean) with:
@@ -1319,7 +1319,7 @@ function _parseArgs(argv: readonly string[]): Args {
 }
 
 /**
- * When the default cwd carries no `agents/roadmaps/`, fall back to the git
+ * When the default cwd carries no `agents/roadmaps/`, fall back to the git  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * toplevel — hook and IDE invocations often run from a subdirectory, and a
  * cwd-only resolution silently skipped the dashboard there. An explicit
  * `--repo-root` always wins; a cwd that has the directory is used as-is

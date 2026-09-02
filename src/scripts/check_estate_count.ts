@@ -47,7 +47,7 @@
  * or merges one in the same change — or the added file carries an explicit
  * `estate_offset_exempt:` reason in its frontmatter, which costs a visible line
  * in the diff of the very commit that claims it. This half is diff-scoped: it
- * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no
+ * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * roadmap it legitimately finds nothing to weigh.
  *
  * THE THREE WAYS THE ESTATE MAY LEGITIMATELY GROW
@@ -65,7 +65,7 @@
  *    estate rather than creating it, so it needs no authorisation; what the
  *    allowance does NOT cover is a `later/` file appearing from nowhere.
  * 3. **Anything else** — `estate_growth_exempt: <reason>` added, in this change,
- *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical
+ *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  *    case is a blocker discovered while doing the work: `open_blockers` rises,
  *    nothing was archived, and the reason belongs next to the blocker.
  *
@@ -117,7 +117,7 @@
  * which one lied.
  *
  * The same function measures the BASE side, over a scratch copy of the base
- * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a
+ * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * second implementation would let the two sides disagree about one tree, which
  * is the failure this section already argues against, one level up.
  *
@@ -506,7 +506,7 @@ export function skillTokensExact(root: string): boolean {
     return measureSkillEstate(root).skill_description_tokens !== null;
 }
 
-/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */
+/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
 function isActiveTopLevel(rel: string): boolean {
     const norm = rel.split(path.sep).join('/');
     if (!norm.startsWith('agents/roadmaps/') || !norm.endsWith('.md')) {
@@ -1322,7 +1322,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and
+    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
     // every count is 0, which is trivially under any baseline — exit 2 (could
     // not run), never 1, which would assert the estate actually grew.
     try {

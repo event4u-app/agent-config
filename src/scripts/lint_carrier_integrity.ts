@@ -273,16 +273,7 @@ function _writeFixture(dir: string, rel: string, body: string): void {
     fs.writeFileSync(full, body, 'utf-8');
 }
 
-const PARENT_WITH_CARRY = `---
-complexity: bounded
----
-# Parent
-
-## Phase 1 — a phase
-
-- [~] **1.1 A carried step.**
-      <!-- deferred-resolution: carried-to=road-to-receiver -->
-`;
+const PARENT_WITH_CARRY = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A carried step.**\n      <!-- deferred-resolution: carried-to=road-to-receiver -->\n';
 
 function _receiver(backlink: string): string {
     return `---

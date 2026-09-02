@@ -15,7 +15,7 @@
  * (Python-only); these pure regex/parse helpers are replicated here
  * byte-for-byte from that module. Keep in lock-step with it.
  *
- * Every non-draft file under `agents/roadmaps/` (excluding `archive/`,
+ * Every non-draft file under `agents/roadmaps/` (excluding `archive/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * `skipped/`, template/README/open-questions) MUST:
  *   1. Be parseable by the dashboard's `PHASE_RE` (>= one `## Phase <id>`).
  *   2. Have at least one trackable checkbox under every parsed phase.

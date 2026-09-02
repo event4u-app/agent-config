@@ -21,26 +21,9 @@ function plant(rel: string, body: string): void {
     fs.writeFileSync(full, body, 'utf-8');
 }
 
-const PARENT = `---
-complexity: bounded
----
-# Parent
+const PARENT = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A carried step.**\n      <!-- deferred-resolution: carried-to=road-to-receiver -->\n';
 
-## Phase 1 — a phase
-
-- [~] **1.1 A carried step.**
-      <!-- deferred-resolution: carried-to=road-to-receiver -->
-`;
-
-const BARE_PARENT = `---
-complexity: bounded
----
-# Parent
-
-## Phase 1 — a phase
-
-- [~] **1.1 A step nobody said where to send.**
-`;
+const BARE_PARENT = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A step nobody said where to send.**\n';
 
 beforeEach(() => {
     dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'carrier-unit-'));
