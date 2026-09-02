@@ -438,9 +438,9 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Release highlights
 
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 448f31f.
+- **Behaviour changes:** `lint_code_comments` becomes a blocking source gate — comment discipline was claimed by two rules and enforced by neither, and it now reds the build on the authored tree (448f31f; the blind spots its first real corpus exposed are closed in 6edf1ad). Authoring-side only: no rule, skill, or command was removed or renamed in this span.
 - **Default changes + migration:** _none_
-- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 6edf1ad, 27f3233, 9411964, 0c7fce0, ecf05c4, 32203ec +5 more.
+- **Security and correctness:** No security-scoped fix in this span. One correctness fix reaches shipped behaviour — the language-pin carrier now skips host-injected wrapper regions instead of ending the human lead on them (27f3233). The other ten repair gates, fixtures, locks, typing and pinned evidence in the evolution harness and its records (6edf1ad, 9411964, 0c7fce0, ecf05c4, 32203ec, 01de2a3, f87eb79, 04a5a0b, 25647d0, 92549c4).
 - **Honest nulls:** _none_
 - **Known limitations:** _none_
 
