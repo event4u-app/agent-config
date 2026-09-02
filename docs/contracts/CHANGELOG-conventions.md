@@ -76,6 +76,44 @@ marker.
 > the marked lines in the section they are already authoring — which is what
 > the marker asked for and what did not happen eighteen times.
 >
+> **FALSIFIED ON THE NEXT RELEASE — 2026-09-02, and the paragraph above is kept
+> so the correction is legible.** The scoping half is true and did its job; the
+> conclusion drawn from it was not. `release.ts` writes the draft head in step 2
+> and pushes in step 4, and nothing between them asked for the rewrite — so
+> 14.14.0 pushed a branch, opened PR #1812, waited on `Curated highlights
+> plausible against the span`, and died on a check that could not pass. This is
+> Risk 1 of the reversing plan's own register, materialised on the first
+> release after the flip, with its stated mitigation ("the releaser edits prose
+> before merge") never invoked by anything.
+>
+> **The repair is a FOURTH guard site, and its placement is the whole point.**
+> `guard_release_branch_push` in `src/scripts/release_publication.ts` reads the
+> same `publication_blockers` at the branch push — the first thing in the
+> pipeline that leaves the machine. A run whose head is still the generator's
+> draft now stops with no remote state at all: no branch on the remote, no pull
+> request, no CI minutes, no half-open release. The refusal names the version,
+> the file, the heading to edit, and `task release -- --resume`; and
+> `check_release_highlights` now prints the SUBJECT behind each cited SHA
+> alongside its verdict, so writing the real claim does not start with eleven
+> `git show` lookups. Nothing about the blocking condition changed — only the
+> moment it is enforced, and how much a releaser has to reconstruct to satisfy
+> it. Pinned by the drill scenario `marker-refuses-before-branch-push` (which
+> asserts no push, no PR, no check-watch after the refusal) and by the
+> section-scope near-misses in
+> `tests/scripts/release_push_failure_masking.test.ts`.
+>
+> **What this does NOT fix, stated rather than left to the next reader.** A
+> release still halts once whenever any label is substantiated, and every
+> release of this package substantiates at least one. That is the cadence the
+> flip chose; it is now a local halt with the evidence in hand instead of a red
+> PR, which is a different cost, not zero cost. The unattended path
+> (`.github/workflows/release.yml`, `--ci --yes`, ADR-113) therefore cannot
+> complete a release whose head is uncurated — it refuses before the push
+> instead of dying at the check, which is strictly better and still not
+> unattended. Whether the generator should emit a publishable derived claim
+> instead of a rewrite-me draft is an open maintainer question, not something
+> this repair decided.
+>
 > **No escape hatch exists, deliberately.** See § No escape hatch below.
 >
 > **The durable conclusion, inlined rather than cited.** `no-roadmap-references`
@@ -357,13 +395,16 @@ reason. This is the reason, kept here rather than behind a pointer because
 the plan is a transient artifact and this contract is not.
 
 **A bypass would have no legitimate use, because the remedy is always cheaper
-than the bypass.** The gate runs in exactly one place —
+than the bypass.** The CI gate runs in one place —
 `.github/workflows/release-validation.yml:266`, on a job gated to
 `startsWith(github.head_ref, 'release/')` — so it fires on the release **pull
-request**, before the merge, before the tag, and before publication. The action
-that clears it is rewriting a head line in `CHANGELOG.md` on the branch the
-releaser is already authoring. There is no state in which reaching for a flag is
-easier than editing the line the flag would let you ship.
+request**, before the merge, before the tag, and before publication. Since
+2026-09-02 the same condition is also read locally at the branch push
+(`guard_release_branch_push`), which is earlier still: the refusal arrives
+before any remote state exists. Either way the action that clears it is
+rewriting a head line in `CHANGELOG.md` on the branch the releaser is already
+authoring. There is no state in which reaching for a flag is easier than
+editing the line the flag would let you ship.
 
 **"Emergency release" is the case a bypass is usually argued for, and it does
 not survive contact with this one.** An emergency release still cuts a section,

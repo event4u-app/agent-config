@@ -422,7 +422,65 @@ export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
     return /(non-fast-forward|fetch first|behind its remote counterpart)/i.test(text);
 }
 
+/**
+ * Refuse the FIRST remote state of a release whose section is not publishable.
+ *
+ * The fourth guard site, and the one the other three structurally cannot cover.
+ * They sit at the irreversible transitions — annotated tag, resumed tag push,
+ * GitHub Release body — and every one of them is DOWNSTREAM of `gh pr create`
+ * and of `gh pr checks --watch`. `check_release_highlights` refuses the same
+ * section from the other side, on the release PR, so a run whose head is still
+ * the generator's draft pushed a branch, opened a PR, burned CI, waited on a
+ * check that could not pass, and died there — leaving a half-open release to
+ * clean up by hand.
+ *
+ * That is not a hypothetical: it is PR #1812 (14.14.0, 2026-09-02), and the
+ * 2026-09-01 flip's own risk register pre-registered it as Risk 1 — *"the flip
+ * reds the next release PR on its first run"*. Its stated mitigation was that
+ * the releaser edits prose before merge; nothing in the pipeline asked, so
+ * nothing did.
+ *
+ * The branch push is the first thing in the pipeline that leaves the machine,
+ * so a refusal here costs one local edit and no remote state at all: no branch
+ * on the remote, no pull request, no CI minutes, no tag. It sits at the push
+ * CALL SITE rather than in a formatter for the reason the publication guards
+ * already state — a formatter has no notion of whether it is publishing, and
+ * the call site is the one that can still stop. Deriving the version from
+ * `release/X.Y.Z` mirrors what `release-validation.yml` already does with
+ * `head_ref`.
+ *
+ * Two states pass unguarded, deliberately: a branch that is not
+ * `release/X.Y.Z` (nothing about a release to read), and a version with no
+ * changelog section (the missing-section refusal belongs to the publication
+ * sites, which need a section to publish; refusing here would break every
+ * non-release push through this helper).
+ */
+export function guard_release_branch_push(branch: string): void {
+    const prefix = 'release/';
+    if (!branch.startsWith(prefix)) {
+        return;
+    }
+    const version = branch.slice(prefix.length);
+    const section = extract_changelog_section(read_changelog_text(), version);
+    if (!section) {
+        return;
+    }
+    const blockers = publication_blockers(section.body, version, `\`${branch}\``);
+    if (blockers.length === 0) {
+        return;
+    }
+    die(
+        `refusing to push ${branch} — the ${version} changelog section is not publishable ` +
+            `(${String(blockers.length)} blocker(s)):\n` +
+            blockers.map((b) => `    - ${b}`).join('\n') +
+            `\n    Nothing has left this machine: no branch on ${REMOTE}, no pull request, no tag.\n` +
+            '    Curate the `### Release highlights` head in CHANGELOG.md under ' +
+            `\`## [${version}]\`, then re-run \`task release -- --resume\`.`,
+    );
+}
+
 function push_release_branch(branch: string): void {
+    guard_release_branch_push(branch);
     const first = run(['git', 'push', '-u', REMOTE, branch], { check: false, capture: true });
     if (first.returncode === 0) {
         process.stdout.write(first.stdout);

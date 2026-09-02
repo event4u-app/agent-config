@@ -331,14 +331,23 @@ export function render_derived_head_values(
  * `CURATED_HEAD_INSTRUCTION` is a named sentinel imported from the module that
  * defines it — never a shape match over comment prose, which would reject
  * unrelated legitimate comments and miss this one after a reword.
+ *
+ * `where` names the branch the remedy edit belongs on, because the same
+ * blockers are now read at a FOURTH site that is not on `main`:
+ * `guard_release_branch_push` refuses the release branch's first push, where
+ * the file to edit is on `release/X.Y.Z`. One definition of the blockers with a
+ * parameterised remedy beats a second copy of the message that drifts.
  */
-export function publication_blockers(sectionBody: string, version: string): string[] {
+export function publication_blockers(
+    sectionBody: string,
+    version: string,
+    where = '`main`',
+): string[] {
     const out: string[] = [];
     if (sectionBody.includes(DERIVED_MARKER)) {
         out.push(
             `the ${version} section still carries \`${DERIVED_MARKER}\` — the generator's ` +
-                'draft head, not a curated claim. Rewrite those line(s) on ' +
-                `${'`main`'} and re-run.`,
+                `draft head, not a curated claim. Rewrite those line(s) on ${where} and re-run.`,
         );
     }
     if (sectionBody.includes(CURATED_HEAD_INSTRUCTION)) {

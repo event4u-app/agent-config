@@ -122,6 +122,20 @@ interface WorldConfig {
      * its own, because a marker otherwise stops the run at step 8.
      */
     tag_already_remote?: boolean;
+    /**
+     * The release PR is ALREADY merged when the run starts — the real
+     * resume-after-merge state, in which steps 1 through 7 skip and step 8 is
+     * the first step that does work.
+     *
+     * Added 2026-09-02 with `guard_release_branch_push`. Before that guard, a
+     * marker scenario could start from scratch and still reach step 8, because
+     * nothing between the changelog write and the tag looked at the section.
+     * The push guard now stops such a run at step 4 — correctly, and that is
+     * the point of it — which makes this knob the only way left to exercise
+     * the tag and Release guards on their own. It is not a bypass: the state
+     * it fakes is one every resumed release actually passes through.
+     */
+    pr_already_merged?: boolean;
 }
 
 /**
@@ -206,6 +220,7 @@ class FakeWorld {
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
         this.checks_fail = cfg.checks_fail ?? false;
+        this.pr_merged = cfg.pr_already_merged ?? false;
     }
 
     exec(args: readonly string[]): ExecResult {
@@ -375,10 +390,49 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
+    'marker-refuses-before-branch-push': {
+        summary:
+            'step 4: a draft marker refuses the branch push — the first remote state — so no PR is ever opened',
+        config: { changelog_file: markedChangelogFixture(current_version()) },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect(
+                (err ?? '').includes(`refusing to push ${w.branch}`),
+                `died for the wrong reason: ${err ?? '(no error)'}`,
+                f,
+            );
+            // The load-bearing assertions are about what did NOT happen. Each
+            // one is a remote side effect the 14.14.0 run actually produced
+            // before this guard existed: a pushed branch, an open PR, and a
+            // check watch on a check that could not pass.
+            _expect(
+                !w.calls.includes(`git push -u origin ${w.branch}`),
+                'the branch was pushed after the refusal',
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.startsWith('gh pr create')),
+                'a pull request was opened after the refusal',
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.includes('--watch')),
+                'CI was waited on after the refusal',
+                f,
+            );
+            _expect(!w.tag_local && !w.tag_remote, 'a tag exists after the refusal', f);
+            _expect(!w.release_created, 'a GitHub Release was created after the refusal', f);
+            return f;
+        },
+    },
     'marker-refuses-before-tag': {
         summary:
             'step 8: a draft marker in the merged section refuses BEFORE the annotated tag is created',
-        config: { changelog_file: markedChangelogFixture(current_version()) },
+        config: {
+            pr_already_merged: true,
+            changelog_file: markedChangelogFixture(current_version()),
+        },
         expect_success: false,
         verify: (w, err) => {
             const f: string[] = [];
@@ -403,6 +457,7 @@ const SCENARIOS: Record<string, Scenario> = {
         summary:
             'step 8 (§ 3.2): a tag created but never pushed is NOT pushed when its section carries the marker',
         config: {
+            pr_already_merged: true,
             tag_created_unpushed: true,
             changelog_file: markedChangelogFixture(current_version()),
         },
@@ -431,6 +486,7 @@ const SCENARIOS: Record<string, Scenario> = {
         summary:
             'step 9: with the tag already pushed, a marker in the TAGGED section refuses before the Release is created',
         config: {
+            pr_already_merged: true,
             tag_already_remote: true,
             changelog: markedChangelogFixture(current_version()),
             changelog_file: markedChangelogFixture(current_version()),
