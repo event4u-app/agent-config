@@ -1,12 +1,12 @@
 # Findings: road-to-comment-enforcement-completion
-<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: 0a4bbff4c575d757d0335ebc8098151cba4428f89754e54ff1803fd5611fca1e | diff: 2eb6a95a4ded1856c69d7925a855712ace0388e0 | reviewer: r2-fresh-subagent-road-to-comment-enforcement-completion | prompt_hash: 260e0c75df4826c44d031c8b4fb815b0a7bfb3b415353eb159db37f11a8eb4be -->
+<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: 1e7151ebc77f20924e401f048ef3a819672901d8c9deedf815007d24a9528f82 | diff: ba7907c4a8076cb47bd13c24c7b8685d0c23fb17 | reviewer: r2-fresh-subagent-road-to-comment-enforcement-completion | prompt_hash: 260e0c75df4826c44d031c8b4fb815b0a7bfb3b415353eb159db37f11a8eb4be -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-comment-enforcement-completion"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-02 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 2eb6a95a4ded1856c69d7925a855712ace0388e0
-  scope_hash: 0a4bbff4c575d757d0335ebc8098151cba4428f89754e54ff1803fd5611fca1e
+  diff_sha: ba7907c4a8076cb47bd13c24c7b8685d0c23fb17
+  scope_hash: 1e7151ebc77f20924e401f048ef3a819672901d8c9deedf815007d24a9528f82
   roadmap: agents/roadmaps/archive/road-to-comment-enforcement-completion.md
   roadmap_hash: 6d138cc10ee93378365e489d48644496b8951702ee4ef3e255210fffe1d7d62f
   ac_hash: 46eed0b548b676a3f830933b2a94a571275f8ffeeea055f14db2506aeb0654cf
