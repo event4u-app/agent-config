@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { partitionActive } from '../install/partitionEligibility.js';
 import {
     type CorpusManifest,
     captureManifest,
@@ -53,13 +54,15 @@ export const EXIT_SUBJECT_DIFFERS = 3;
 export const ENUMERATION_RULE_ID = 'claude-rules-md-bytesorted-first-N/v1';
 
 const USAGE = `usage: corpus_manifest capture --out FILE [--limit N]
-       corpus_manifest verify --manifest FILE [--limit N]
+       corpus_manifest verify --manifest FILE
 
   capture   write the subject pin from the tree as it stands
   verify    re-capture and report every difference against FILE
 
-  --limit N  corpus size; defaults to max_candidates from the pre-registered
-             budget, which is the ceiling the run guard aborts on
+  --limit N  corpus size, on CAPTURE only; defaults to max_candidates from the
+             pre-registered budget, which is the ceiling the run guard aborts
+             on. verify re-captures at the size its own manifest pinned, so it
+             REFUSES --limit rather than accepting a flag it cannot honour
 
 Exit: 0 ok  ·  1 error  ·  2 usage  ·  3 the SUBJECT differs
 `;
@@ -109,15 +112,33 @@ export function parseArgs(argv: readonly string[]): Parsed | string {
             p.limit = n;
         } else return `unknown option '${a}'`;
     }
+    if (p.verb === 'verify' && p.limit !== undefined) {
+        return (
+            'verify does not take --limit: it re-captures at the size its own manifest pinned, ' +
+            'because a re-capture at another corpus size is a comparison against another subject. ' +
+            'Accepting the flag and then using the pinned size reported green on a run that had ' +
+            'not honoured it'
+        );
+    }
     return p;
 }
 
+/**
+ * One real capture over the real tree.
+ *
+ * This is the one caller for which the process globals `partitionActive` reads
+ * — the host layer under the running user's home, and the install lockfile —
+ * ARE this run's own host, so it is the one caller that passes the predicate.
+ * Everywhere else the field stays `null` rather than recording some other
+ * machine's state under this tree's name.
+ */
 function capture(limit: number): CorpusManifest {
     return captureManifest({
         repoRoot: REPO_ROOT,
         userHome: process.env['HOME'] ?? os.homedir(),
         limit,
         enumerationRule: ENUMERATION_RULE_ID,
+        partitionActive,
     });
 }
 
@@ -133,14 +154,6 @@ export function main(argv?: string[]): number {
         return EXIT_USAGE;
     }
 
-    let limit: number;
-    try {
-        limit = parsed.limit ?? defaultLimit();
-    } catch (e) {
-        process.stderr.write(`corpus_manifest: ${(e as Error).message}\n`);
-        return EXIT_ERROR;
-    }
-
     if (parsed.verb === 'capture') {
         if (parsed.out === undefined) {
             process.stderr.write(`corpus_manifest: error: capture requires --out FILE\n${USAGE}`);
@@ -148,7 +161,7 @@ export function main(argv?: string[]): number {
         }
         let m: CorpusManifest;
         try {
-            m = capture(limit);
+            m = capture(parsed.limit ?? defaultLimit());
         } catch (e) {
             process.stderr.write(`corpus_manifest: capture refused — ${(e as Error).message}\n`);
             return EXIT_ERROR;
@@ -158,7 +171,9 @@ export function main(argv?: string[]): number {
         process.stdout.write(
             `corpus_manifest: wrote ${parsed.out} · subject_digest=${m.subject_digest.slice(0, 16)} · ` +
                 `${String(m.included.length)} subject(s) · ${String(m.produced.length)} produced · ` +
-                `${String(m.user_scope.filter((t) => t.causes_skip).length)} user-scope skip(s)\n`,
+                `${String(m.user_scope.filter((t) => t.byte_identical).length)} byte-identical ` +
+                `twin(s), ${String(m.user_scope.filter((t) => t.causes_skip).length)} of them ` +
+                `causing a skip under ${String(m.generator_config['projection.scope_dedup'])}\n`,
         );
         if (m.tree_dirty) {
             process.stdout.write(
@@ -178,7 +193,7 @@ export function main(argv?: string[]): number {
         let actual: CorpusManifest;
         try {
             expected = parseManifest(JSON.parse(fs.readFileSync(parsed.manifest, 'utf-8')));
-            actual = capture(expected.included.length === 0 ? limit : expected.included.length);
+            actual = capture(expected.included.length);
         } catch (e) {
             process.stderr.write(`corpus_manifest: verify refused — ${(e as Error).message}\n`);
             return EXIT_ERROR;
@@ -189,7 +204,8 @@ export function main(argv?: string[]): number {
         }
         if (subjectsEquivalent(expected, actual)) {
             process.stdout.write(
-                `corpus_manifest: SUBJECT EQUIVALENT · digest=${actual.subject_digest.slice(0, 16)}` +
+                `corpus_manifest: SUBJECT EQUIVALENT · ${String(actual.included.length)} subject(s) · ` +
+                `digest=${actual.subject_digest.slice(0, 16)}` +
                     (diffs.length > 0 ? ` · ${String(diffs.length)} explanatory difference(s) above\n` : '\n'),
             );
             return EXIT_OK;

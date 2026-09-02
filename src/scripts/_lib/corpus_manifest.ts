@@ -43,7 +43,7 @@ import {
     hostLayerCarries,
     toolIdForProjectRuleDir,
 } from '../../install/globalRuleLayers.js';
-import { isExclusivelyPackageOnly, partitionActive } from '../../install/partitionEligibility.js';
+import { isExclusivelyPackageOnly } from '../../install/partitionEligibility.js';
 import { dedupableRules } from '../../install/ruleLayerPartition.js';
 
 export const CORPUS_MANIFEST_VERSION = 'corpus-manifest-v1';
@@ -106,7 +106,19 @@ export interface UserScopeTwin {
     /** Home-relative, never absolute: the account name is not evidence. */
     readonly path: string;
     readonly sha256: string;
-    /** True when this twin is byte-identical to the source and therefore skips. */
+    /** The raw comparison: this twin is byte-identical to the projection source. */
+    readonly byte_identical: boolean;
+    /**
+     * Byte-identical AND the generator's byte-identity dedup is switched on.
+     *
+     * The two are separate fields because they answer separate questions and
+     * folding them recorded a skip that did not happen. The generator calls
+     * `dedupableRules` only when `projection.scope_dedup` resolves true; that
+     * setting is absent on every layer this repository carries, so on this tree
+     * a byte-identical twin causes nothing. A manifest that asserted otherwise
+     * would re-introduce the very mis-attribution the projection block below
+     * was written to correct.
+     */
     readonly causes_skip: boolean;
 }
 
@@ -124,8 +136,21 @@ export interface UserScopeTwin {
  * would have missed every skip that happened.
  */
 export interface ProjectionDecision {
-    /** Whether the per-host partition is active at all, read from the lockfile. */
-    readonly partition_active: boolean;
+    /**
+     * Whether the per-host partition is active, or `null` when not captured.
+     *
+     * `null` is the default and is the honest value for a capture that cannot
+     * establish it. Every other field in this struct is a function of the
+     * `(repoRoot, userHome)` pair the capture was given; this one is not.
+     * `partitionActive` resolves through `resolvePartitionVerdict`, which reads
+     * the host layer at `os.homedir()` and the install lockfile at its own
+     * fixed location — ignoring `userHome` entirely — and memoises the answer
+     * for the life of the process. So a capture over a temporary tree that
+     * called it would record the operator's machine, and a second capture in
+     * one process would reuse the first verdict. A caller for which those
+     * globals ARE the run's own host supplies the predicate; nobody else does.
+     */
+    readonly partition_active: boolean | null;
     readonly tool_id: string | null;
     /** The global layer directory, home-relative; `null` when this host has none. */
     readonly layer_dir: string | null;
@@ -161,6 +186,8 @@ export interface CorpusManifest {
     readonly included: readonly SubjectEntry[];
     readonly excluded: readonly ExcludedEntry[];
     readonly user_scope: readonly UserScopeTwin[];
+    /** Which rule population the user-scope table was built over. */
+    readonly user_scope_population: UserScopePopulation;
     readonly projection: ProjectionDecision;
     readonly generator_config: Readonly<Record<string, string | null>>;
     readonly runtime: {
@@ -226,6 +253,16 @@ export function enumerateCorpus(
                 'read as a successful pin of nothing',
         );
     }
+    if (names.length === 0) {
+        throw new CorpusManifestError(
+            `${CORPUS_TOOL_DIR} exists in ${repoRoot} but holds no *.md file — the corpus is a ` +
+                'generated projection, so an existing-but-empty directory pins an empty subject ' +
+                'exactly as an absent one does. Two empty pins share a digest and compare ' +
+                'SUBJECT EQUIVALENT, which certifies two runs that measured nothing as having ' +
+                'measured the same thing. The directory survives a generation that emitted zero ' +
+                'files and an operator clearing its contents, so this is the reachable half',
+        );
+    }
     names.sort(byteCompare);
     const included = names.slice(0, limit);
     const excluded = names.slice(limit).map((n) => ({
@@ -236,26 +273,62 @@ export function enumerateCorpus(
 }
 
 /**
+ * Which rule population a user-scope table was built over.
+ *
+ * `projection-source-superset` is the default and is a SUPERSET of what the
+ * generator considers: the generator filters the same directory by workspace
+ * scope, pack scope, ADR-004 manual type and the compile-disabled toggle before
+ * it looks for twins. Replicating those four filters here would be the
+ * re-implementation this module refuses everywhere else, so the population is
+ * recorded rather than silently narrowed, and a caller holding the generator's
+ * own list passes it and gets `caller-supplied`.
+ */
+export type UserScopePopulation = 'projection-source-superset' | 'caller-supplied';
+
+export interface UserScopeOptions {
+    /**
+     * Whether the generator's byte-identity dedup runs at all.
+     *
+     * Required rather than defaulted. A default here is the defect: the twin
+     * table is evidence about a mechanism that is switched off on this tree,
+     * and a capture that did not read the switch cannot say whether a twin
+     * skips anything.
+     */
+    readonly dedupEnabled: boolean;
+    /** The generator's own candidate rule basenames, when the caller has them. */
+    readonly ruleNames?: readonly string[] | undefined;
+}
+
+/**
  * Every user-scope file that can suppress a rule at project scope, with hashes.
  *
  * This is the field a recorded commit cannot supply and the one that made the
- * subject irreproducible. `causes_skip` replays the generator's own comparison
- * — byte-identity against the projection source — rather than re-implementing
- * a judgement about it, so a manifest and a generation cannot disagree about
- * what a skip is.
+ * subject irreproducible. `byte_identical` replays the generator's own
+ * comparison — byte-identity against the projection source — rather than
+ * re-implementing a judgement about it. `causes_skip` is that fact conjoined
+ * with whether the generator runs the comparison at all, so a manifest and a
+ * generation cannot disagree about what a skip is.
  */
-export function captureUserScope(repoRoot: string, userHome: string): UserScopeTwin[] {
+export function captureUserScope(
+    repoRoot: string,
+    userHome: string,
+    opts: UserScopeOptions,
+): UserScopeTwin[] {
     const sourceDir = path.join(repoRoot, PROJECTION_SOURCE_DIR);
     let names: string[] = [];
-    try {
-        names = fs
-            .readdirSync(sourceDir)
-            .filter((n) => n.endsWith('.md'))
-            .sort(byteCompare);
-    } catch {
-        return [];
+    if (opts.ruleNames === undefined) {
+        try {
+            names = fs
+                .readdirSync(sourceDir)
+                .filter((n) => n.endsWith('.md'))
+                .sort(byteCompare);
+        } catch {
+            return [];
+        }
+    } else {
+        names = [...opts.ruleNames].sort(byteCompare);
     }
-    const skip = dedupableRules({
+    const identical = dedupableRules({
         toolDir: CORPUS_TOOL_DIR,
         rules: names,
         userHome,
@@ -266,7 +339,13 @@ export function captureUserScope(repoRoot: string, userHome: string): UserScopeT
         const rel = path.posix.join('.claude', 'rules', n);
         const hash = sha256OfFile(path.join(userHome, '.claude', 'rules', n));
         if (hash === null) continue;
-        out.push({ path: rel, sha256: hash, causes_skip: skip.has(n) });
+        const same = identical.has(n);
+        out.push({
+            path: rel,
+            sha256: hash,
+            byte_identical: same,
+            causes_skip: same && opts.dedupEnabled,
+        });
     }
     return out;
 }
@@ -281,7 +360,19 @@ export function captureUserScope(repoRoot: string, userHome: string): UserScopeT
  * half: two layers holding the same names with different bytes produce the same
  * corpus.
  */
-export function captureProjectionDecision(repoRoot: string, userHome: string): ProjectionDecision {
+export interface ProjectionDecisionOptions {
+    /**
+     * The host partition verdict, supplied by a caller for which the process
+     * globals it reads are this run's own host. Omitted → `null`.
+     */
+    readonly partitionActive?: ((repoRoot: string) => boolean) | undefined;
+}
+
+export function captureProjectionDecision(
+    repoRoot: string,
+    userHome: string,
+    opts: ProjectionDecisionOptions = {},
+): ProjectionDecision {
     const sourceDir = path.join(repoRoot, PROJECTION_SOURCE_DIR);
     let names: string[] = [];
     try {
@@ -310,7 +401,7 @@ export function captureProjectionDecision(repoRoot: string, userHome: string): P
             sha256: layerPath === null ? null : sha256OfFile(path.join(layerPath, n)),
         }));
     return {
-        partition_active: partitionActive(repoRoot),
+        partition_active: opts.partitionActive === undefined ? null : opts.partitionActive(repoRoot),
         tool_id: toolId,
         layer_dir: layerPath === null ? null : homeRelative(layerPath, userHome),
         carries: verdict.carries,
@@ -360,6 +451,10 @@ export interface CaptureOptions {
     readonly limit: number;
     readonly enumerationRule: string;
     readonly env?: Readonly<Record<string, string | undefined>> | undefined;
+    /** See {@link ProjectionDecisionOptions.partitionActive}. Omitted → `null`. */
+    readonly partitionActive?: ((repoRoot: string) => boolean) | undefined;
+    /** See {@link UserScopeOptions.ruleNames}. Omitted → the projection-source superset. */
+    readonly ruleNames?: readonly string[] | undefined;
 }
 
 export function captureManifest(opts: CaptureOptions): CorpusManifest {
@@ -402,7 +497,8 @@ export function captureManifest(opts: CaptureOptions): CorpusManifest {
     for (const k of CAPTURED_ENV_KEYS) {
         generatorConfig[k] = env[k] ?? null;
     }
-    generatorConfig['projection.scope_dedup'] = readScopeDedup(repoRoot);
+    const scopeDedup = readScopeDedup(repoRoot);
+    generatorConfig['projection.scope_dedup'] = scopeDedup;
 
     let packageVersion: string | null = null;
     try {
@@ -428,8 +524,15 @@ export function captureManifest(opts: CaptureOptions): CorpusManifest {
         enumeration_rule: enumerationRule,
         included,
         excluded,
-        user_scope: captureUserScope(repoRoot, userHome),
-        projection: captureProjectionDecision(repoRoot, userHome),
+        user_scope: captureUserScope(repoRoot, userHome, {
+            dedupEnabled: scopeDedupEnabled(scopeDedup),
+            ruleNames: opts.ruleNames,
+        }),
+        user_scope_population:
+            opts.ruleNames === undefined ? 'projection-source-superset' : 'caller-supplied',
+        projection: captureProjectionDecision(repoRoot, userHome, {
+            partitionActive: opts.partitionActive,
+        }),
         generator_config: generatorConfig,
         runtime: { node: process.version, platform: os.platform(), arch: os.arch() },
         produced,
@@ -460,6 +563,20 @@ export function readScopeDedup(repoRoot: string): string | null {
     // it from a read that failed. Absent means the byte-identity dedup is off,
     // which is what makes the partition the only live skip mechanism.
     return 'absent:default-off';
+}
+
+/**
+ * Does the recorded `projection.scope_dedup` value switch the dedup ON?
+ *
+ * Reads the value half of what {@link readScopeDedup} recorded, using the same
+ * truthy set the generator's own reader uses, so the manifest's `causes_skip`
+ * and the generator's behaviour cannot disagree. `absent:default-off` is false,
+ * which is the whole reason the field exists as a string in the first place.
+ */
+export function scopeDedupEnabled(recorded: string | null): boolean {
+    if (recorded === null) return false;
+    const value = recorded.slice(recorded.lastIndexOf(':') + 1).trim().toLowerCase();
+    return ['true', 'yes', 'on', '1'].includes(value);
 }
 
 export interface ManifestDifference {
@@ -514,9 +631,28 @@ export function diffManifests(expected: CorpusManifest, actual: CorpusManifest):
         // same absence. The states are three, not two, and the third is common.
         push(`generator:${g.path}`, g.sha256, a === undefined ? 'NO-ROW' : a.sha256);
     }
-    const expectedSkips = expected.user_scope.filter((t) => t.causes_skip).map((t) => t.path).sort(byteCompare);
-    const actualSkips = actual.user_scope.filter((t) => t.causes_skip).map((t) => t.path).sort(byteCompare);
-    push('user_scope.skipping', expectedSkips.join(','), actualSkips.join(','));
+    const skipping = (m: CorpusManifest): string =>
+        m.user_scope.filter((t) => t.causes_skip).map((t) => t.path).sort(byteCompare).join(',');
+    const identical = (m: CorpusManifest): string =>
+        m.user_scope.filter((t) => t.byte_identical).map((t) => t.path).sort(byteCompare).join(',');
+    push('user_scope.skipping', skipping(expected), skipping(actual));
+    // Both halves of the skip verdict, because `skipping` alone cannot tell a
+    // tree with no twins from a tree whose twins are switched off — the two
+    // states differ in what a later generation would do. The configuration keys
+    // are the other half and were outside the comparison entirely, so the one
+    // field that disambiguates a mis-attributed skip was unchecked.
+    push('user_scope.byte_identical', identical(expected), identical(actual));
+    push('user_scope_population', expected.user_scope_population, actual.user_scope_population);
+    for (const k of [...new Set([
+        ...Object.keys(expected.generator_config),
+        ...Object.keys(actual.generator_config),
+    ])].sort(byteCompare)) {
+        push(
+            `generator_config:${k}`,
+            k in expected.generator_config ? expected.generator_config[k] : 'NO-KEY',
+            k in actual.generator_config ? actual.generator_config[k] : 'NO-KEY',
+        );
+    }
     // The partition half, which is where the observed skips actually came from.
     // Diffed by digest rather than by name list because the inventory runs to
     // three figures and a diff nobody reads is a diff that does not exist.
@@ -558,6 +694,33 @@ export function parseManifest(raw: unknown): CorpusManifest {
     }
     if (typeof o['subject_digest'] !== 'string' || !Array.isArray(o['included'])) {
         throw new CorpusManifestError('manifest is missing subject_digest or included');
+    }
+    const rule = o['enumeration_rule'];
+    if (typeof rule !== 'string' || rule === '') {
+        throw new CorpusManifestError(
+            'manifest is missing enumeration_rule, which is inside the digest and decides which ' +
+                'subjects the rule selected — a pin without it cannot be recomputed',
+        );
+    }
+    const included = o['included'] as readonly SubjectEntry[];
+    if (included.length === 0) {
+        throw new CorpusManifestError(
+            'manifest pins an empty subject: two empty pins share a digest and compare equivalent, ' +
+                'so accepting one would let a verification certify that nothing was measured twice',
+        );
+    }
+    // The pin adjudicates against its own stored digest, so a manifest whose
+    // digest and body disagree — hand-edited, truncated, or emitted by a future
+    // bug — would be judged on a value its `included` list does not support,
+    // while the per-path rows printed beside the verdict described a different
+    // subject. Recomputing is one call to the function that wrote it.
+    const recomputed = subjectDigest(rule, included);
+    if (recomputed !== o['subject_digest']) {
+        throw new CorpusManifestError(
+            `manifest subject_digest ${o['subject_digest']} does not match the digest of its own ` +
+                `enumeration rule and included list (${recomputed}) — the two disagree, so neither ` +
+                'can be used to decide whether another capture measured the same subject',
+        );
     }
     return raw as CorpusManifest;
 }
