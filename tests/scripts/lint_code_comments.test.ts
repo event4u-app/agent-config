@@ -1,7 +1,14 @@
 /**
  * Polarity fixtures for `lint_code_comments`.
  *
- * Both directions, in one file, because a pattern gate is only as good as the
+ * The corpus itself is NOT here. It is `COMMENT_CASES`, exported by the gate,
+ * and `--self-test` enumerates the same table against the real binary. Two
+ * tables over one classifier drift, and the one nobody runs locally drifts
+ * first — so this file asserts the exact class set the pure classifier
+ * reports, and the self-test asserts the exit code the CLI returns, over
+ * identical input.
+ *
+ * Both directions are pinned, because a pattern gate is only as good as the
  * near-miss it stays silent on: the MUST-FIRE half is what the rule asks for,
  * and the MUST-NOT-FIRE half is the whole reason this gate can be turned on
  * in a repository whose own module docstrings are long, cite evidence and
@@ -9,110 +16,39 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { fileIsExempt, isScannable, scanText } from '../../src/scripts/lint_code_comments.js';
+import {
+    COMMENT_CASES,
+    fileIsExempt,
+    isScannable,
+    scanText,
+} from '../../src/scripts/lint_code_comments.js';
 
-const classes = (src: string): string[] => scanText('f.ts', src).map((f) => f.cls);
-
-describe('de-comment — must fire', () => {
-    it('flags a German comment line carrying two function words', () => {
-        expect(classes('// Hier stehen nur die Werte, die Bedeutung tragen\nconst a = 1;\n'))
-            .toContain('de-comment');
+describe('classifier fixture table', () => {
+    it.each(COMMENT_CASES.map((c) => [c.name, c] as const))('%s', (_name, testCase) => {
+        const actual = scanText('f.ts', testCase.source)
+            .map((f) => f.cls)
+            .sort();
+        expect(actual).toEqual([...testCase.flags].sort());
     });
 
-    it('flags transliterated German with no umlaut at all', () => {
-        expect(classes('/* uebersetzt aus dem Prototyp, jeder Wert ist hier belegt */\n'))
-            .toContain('de-comment');
+    it('pins both polarities, so a truncated table fails here too', () => {
+        const firing = COMMENT_CASES.filter((c) => c.flags.length > 0);
+        const silent = COMMENT_CASES.filter((c) => c.flags.length === 0);
+        expect(firing.length).toBeGreaterThanOrEqual(8);
+        expect(silent.length).toBeGreaterThanOrEqual(8);
     });
 
-    it('flags a German line whose only umlaut sits in ordinary prose', () => {
-        expect(classes('// Die Schriftstufen der kompakten Datenoberfläche\n'))
-            .toContain('de-comment');
-    });
-});
-
-describe('de-comment — must NOT fire', () => {
-    it('stays silent on an English comment quoting a non-ASCII sample value', () => {
-        expect(classes('/** so a `café@exämple.com` email or a `/Users/möchte/f` path masks */\n'))
-            .not.toContain('de-comment');
-    });
-
-    it('stays silent on an English comment carrying an umlauted proper name', () => {
-        expect(classes('/** Robertson–Spärck-Jones IDF, floored at 0 so terms never subtract. */\n'))
-            .not.toContain('de-comment');
-    });
-
-    it('stays silent on an umlauted step label in English prose', () => {
-        expect(classes('// ── Ü2 — orthogonal stance assignment per seat ──\n').filter((c) => c === 'de-comment'))
-            .toEqual([]);
-    });
-
-    it('stays silent on a German user quotation used as data, single line', () => {
-        expect(classes('// the phrase "nicht releasen. Warum nicht?" names no fault\n'))
-            .not.toContain('de-comment');
-    });
-
-    it('stays silent on a German user quotation spanning two comment lines', () => {
-        const src = [
-            '/**',
-            ' *   "Kein Council konfiguriert (keine `.agent-settings.yml`) — ich nutze',
-            ' *    Subagenten-Fächer mit gegnerischen Linsen als Ersatz"',
-            ' */',
-        ].join('\n');
-        expect(classes(src)).not.toContain('de-comment');
-    });
-
-    it('stays silent on plain English prose', () => {
-        expect(classes('// The cap is a stated default, not a measured optimum.\n')).toEqual([]);
+    it('covers every class the gate can report', () => {
+        const covered = new Set(COMMENT_CASES.flatMap((c) => c.flags));
+        expect([...covered].sort()).toEqual([
+            'de-comment',
+            'provenance-comment',
+            'report-comment',
+        ]);
     });
 });
 
-describe('report-comment', () => {
-    it('fires on a markdown table inside a comment', () => {
-        expect(classes(' * | Prototype | Role | here |\n')).toContain('report-comment');
-    });
-
-    it('fires on a box-drawing rule', () => {
-        expect(classes(' * ─────────────────────────────\n')).toContain('report-comment');
-    });
-
-    it('fires on a revisit-if clause', () => {
-        expect(classes(' * Revisit-if: someone holds the new surface next to the sidebar.\n'))
-            .toContain('report-comment');
-    });
-
-    it('does not fire on a short dash rule that is not a report', () => {
-        expect(classes('// --- setup ---\n')).not.toContain('report-comment');
-    });
-});
-
-describe('provenance-comment', () => {
-    it('fires on a roadmap citation', () => {
-        expect(classes('// see agents/roadmaps/todos-task-module-frontend.md\n'))
-            .toContain('provenance-comment');
-    });
-
-    it('fires on a phase-and-step citation', () => {
-        expect(classes('// Roadmap todos-task-module, Phase 1, Schritt 1.\n'))
-            .toContain('provenance-comment');
-    });
-
-    it('does not fire on a plain code reference', () => {
-        expect(classes('// see src/lib/token.ts for the parser\n'))
-            .not.toContain('provenance-comment');
-    });
-});
-
-describe('escapes', () => {
-    it('honours a per-line escape carrying a reason', () => {
-        expect(classes('// Hier stehen die Werte  code-comment-allow de-comment -- quoted spec text\n'))
-            .not.toContain('de-comment');
-    });
-
-    it('refuses a bare escape with no reason', () => {
-        expect(classes('// Hier stehen die Werte  code-comment-allow de-comment\n'))
-            .toContain('de-comment');
-    });
-
+describe('file-level exemption', () => {
     it('treats a generated-file header as exempt', () => {
         expect(fileIsExempt('// Generated by wrangler. DO NOT EDIT.\n')).toBe(true);
     });
