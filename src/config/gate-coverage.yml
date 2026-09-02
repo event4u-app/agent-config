@@ -2435,4 +2435,39 @@ gates:
       the consumer repository that prompted the gate: 530.
 
       SENSITIVITY WAS OBSERVED, not assumed: neutralising the German predicate
-      turns 4 of the 22 cases red and restoring it turns them green.
+      turns 4 of the 20 table cases red and restoring it turns them green. (The
+      earlier wording said "4 of the 22" and described the inline vitest corpus
+      that the fixture-table refactor replaced; a completion review caught the
+      stale denominator.)
+
+      THE GATE ALSO CARRIES ITS OWN `--self-test` (20 cases, 11 rejecting),
+      which drives the real binary rather than the imported classifier — argv
+      parsing, scan-scope assertion and exit codes included. It does NOT reach a
+      consumer checkout, and the earlier claim that it did was withdrawn after a
+      completion review: `runGateCli` spawns `<repoRoot>/node_modules/.bin/tsx`
+      and both `tsx` and `vitest` are devDependencies, `dist/scripts/` carries no
+      compiled twin, and `scripts-run` is not in `files[]` — so where the suite
+      is absent the self-test cannot run either, and where it runs the suite is
+      present. What it buys is real and narrower: it exercises the CLI half that
+      the vitest file cannot reach, and CI runs the gate only in diff mode,
+      which exits 0 on an empty diff. It is ONE table, not a second corpus: the cases
+      live in `COMMENT_CASES`, exported by the gate, and the vitest file
+      enumerates the same export against `scanText` while the self-test
+      enumerates it against the CLI. A second table over one classifier would
+      drift, and the copy nobody runs locally drifts first. Floors are set at
+      16/8 against a real 20/11, so deleting a case to reach green fails and a
+      deliberate shrink shows up as a floor edit in the diff. Sensitivity
+      re-observed on the self-test the same way: neutralising the German
+      predicate turns exactly 4 of the 11 rejecting cases red (the three
+      German-comment shapes and the reasonless escape) while the report and
+      provenance cases stay green, and restoring it returns 20/20. The block-comment
+      continuation and JSX cases arrived with the two blind spots fixed on
+      `origin/main` and were folded into the same table on merge, so both surfaces
+      cover them rather than the vitest file alone.
+
+      NOTE ON THE ADOPTION RATCHET, stated because the number does not move:
+      `gate-self-test:registered-non-adopters` counts manifest rows that are
+      `enforced` AND carry `min_scanned >= 1`. This row's floor is 0 for the
+      reason the corpus field gives, so it was never in that population and
+      the count stays at 24 either side of this change. The self-test is
+      therefore adopted on its merits rather than to clear a ratchet.

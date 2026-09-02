@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -7,7 +9,7 @@ estate_growth_exempt: "Grows open_blockers 29 -> 30 and nothing else. Measured w
 ---
 # Road to governed evidence production
 
-> **Source:** the terminal-disposition AI council of 2026-09-01, 2 of 2
+> **Source:** [REDACTED:src-conf]
 > convergent (`anthropic/claude-sonnet-4-5` + `openai/codex-default`,
 > subscription transport, nothing billed), recorded in full at
 > `agents/evidence/analysis/governed-harness-terminal-disposition-question-2026-08-31.md`.

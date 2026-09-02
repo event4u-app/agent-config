@@ -1,0 +1,853 @@
+diff --git a/agents/roadmaps/archive/road-to-comment-enforcement-completion.md b/agents/roadmaps/archive/road-to-comment-enforcement-completion.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3720f7ea9471e799baa45f05982c69772f8e35be
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-comment-enforcement-completion.md
+@@ -0,0 +1,185 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++relates:
++  - slug: road-to-publication-integrity-hard-fail
++    relation: extends
++    note: >
++      Same shape as its sibling: a rule that claimed an enforcer it did not
++      have. That one was the release head, this one is source comments.
++estate_offset_exempt: "Adds one active roadmap with no offsetting disposal, and none is available: the active roadmaps all carry open steps, and the 2026-08-24 estate council refused to pick among them because no mechanical evidence identifies the least valuable one. The authorization is the maintainer instruction that produced this work — harden the package so the comment defect cannot recur, in a worktree, with a PR at the end. The file exists because that instruction's remainder is real and must not be carried in prose: a self-test for the new gate, and the kernel-rule frontmatter that still names an enforcer which cannot see a source file."
++estate_growth_exempt: "Covers the growth the offset half does not, and it is TWO metrics rather than one. concern_count 55 -> 56: `comment-discipline` is the write-time half of the same obligation, and its admission row in agents/decisions/concern-admissions.jsonl answers all five questions including why extending `edit-shape` was refused — that concern fires once per session by design, and the measured failure was 41 files each carrying the defect. active_roadmaps +1: this file. Both are the cost of closing a defect measured at 509 German comment lines and 21 report- or provenance-shaped comments across 41 of 45 changed source files, on two rules that between them named a `.md`-only validator and no validator at all."
++---
++# Road to comment-enforcement completion
++
++> **Source:** the maintainer instruction of 2026-09-02 and the change it
++> produced (`lint_code_comments`, the `comment-discipline` concern). Every
++> number here is re-derived against the tree, not carried from that session.
++
++## Goal
++
++> **Status at archival (2026-09-02): agent-executable scope complete; kernel
++> defect unresolved.** Phase 1 shipped and is verified. Phase 2 and AC-3 are
++> `[~]` and carried to
++> `agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md` by AI
++> council verdict 2A — see § Blockers. The false `enforced_by` claim in
++> `language-and-tone` still stands; nothing here should be read as having cured
++> it.
++
++The comment-discipline enforcement is complete rather than shipped: the new
++gate proves it DISCRIMINATES by its own self-test rather than only by external
++fixtures, and the kernel rule that names a `.md`-only validator for a
++source-file clause either names a real one or says plainly that it does not.
++
++## Phase 1 — the gate proves its own discrimination
++
++- [x] **1.1 Give `lint_code_comments` a `--self-test`.** `gate-coverage.yml`'s
++      own ratchet says a newly registered gate must adopt or exempt, and the
++      distinction it draws is real: an enforced `scanned:` floor proves a gate
++      read something, only a self-test proves the reading changes the verdict.
++      The cases exist already as vitest fixtures — the work is exposing them
++      through `_lib/gate_self_test.ts` so the gate answers for itself in a
++      consumer checkout where the test suite is not installed.
++      verify: `./scripts-run src/scripts/lint_code_comments --self-test` exits
++      0 and reports at least 8 cases with at least 4 rejecting, and
++      `check_gate_coverage`'s `gate-self-test:registered-non-adopters` count
++      does not include it.
++
++## Phase 2 — the kernel rule's enforcer claim
++
++- [~] **2.1 Decide what `language-and-tone`'s `enforced_by` should say.** It
++      names `validator:src/scripts/check_md_language.ts` for a rule whose "Code
++      comments English" clause governs source files, and that validator rejects
++      every path that is not `.md` (`check_md_language.ts:175`). Two honest
++      outcomes: add `validator:src/scripts/lint_code_comments.ts` beside it, or
++      state in the rule that the code clause is model-carried. Either is
++      correct; the current state — an `enforced_by` entry that structurally
++      cannot see the surface — is the one that is not.
++      verify: the frontmatter names an enforcer that can read a source file, or
++      the rule body carries the honest-coverage sentence. `grep -n
++      "enforced_by" -A3 src/rules/language-and-tone.md` shows which.
++      <!-- deferred-resolution: carried-to=road-to-language-and-tone-enforcer-claim -->
++
++## Blockers
++
++### blocker: b-kernel-rule-edit
++
++- **Status:** resolved
++- **Owner:** maintainer
++- **Blocks:** nothing in this roadmap. Phase 1 landed independently, as the
++  blocker's own `Blocks` field predicted.
++- **What to do:** nothing here. The obligation moved, unclosed, to
++  `agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md`, which
++  carries the same blocker at `Status: open` with both curing steps specified to
++  the character. `open_blockers` spans the active tree AND `later/`
++  (`check_estate_count.ts:470`), so the count is preserved by the move and
++  nothing is laundered.
++- **Resolved when:** resolved here on 2026-09-02 as *carried, not cured* — the
++  defect stands and is recorded on the receiver. Resolution mechanism: AI
++  council verdict 2A, inlined below.
++
++### DISPOSITION 2026-09-02 (drain run 16): 2A — carried to `later/`, not cured
++
++*AI council 2026-09-02, members `anthropic/claude-sonnet-4-5` +
++`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
++quorum **2/2 present** (needed 1) — concluded. Subscription transport,
++`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
++every line relied on is inlined here per `no-roadmap-references`.*
++
++**The question put.** This blocker's `Resolved when` offers exactly two paths,
++(a) an `enforced_by` addition and (b) a rule-body sentence, and **both are writes
++to `src/rules/language-and-tone.md`** — a kernel rule.
++`src/scripts/hooks/block_kernel_rule_writes.ts` denies every agent write to a
++kernel rule at the Write/Edit surface (`:105-124`) and at the Bash surface
++(`:126-205`: redirection, in-place `sed`, `tee`, `truncate`, `rm`, `mv`/`cp`
++destination). Its header names the sole legitimate bypass as a human-owned
++exception registry, and circumventing the guard by an unrecognised write verb
++was explicitly not contemplated. So the blocker as written is discharge-proof
++for any agent, in any session.
++
++**Verdict 2A — convergent 2/2.** Move Phase 2, this blocker and AC-3 to a
++parked receiver with the rationale recorded, and archive the roadmap once
++Phase 1 is complete. *"An active execution roadmap should represent executable
++work. Keeping an impossible agent-owned completion condition open indefinitely
++makes the estate misleading rather than safer."* The archival wording both seats
++asked for is used verbatim in the Goal-status line: **agent-executable scope
++complete; kernel defect unresolved.**
++
++**2C was refused, and the test that refuses it is worth keeping.** One seat
++proposed restating AC-3 so it could be met without a kernel write. Both then
++held that a non-kernel note is honest only if a deterministic, mandatory reader
++path (i) surfaces the qualification whenever the rule is consumed, (ii) prevents
++tooling and agents from reading `check_md_language.ts` as source-comment
++enforcement, and (iii) is protected by a gate. One seat sharpened the bar
++further: it is honest *"only if it changes the reader's action. A coverage-gap
++note that nobody is required to consult before claiming enforcement is
++documentation, not a control."* No such path exists, so 2C would have been
++bookkeeping. **2B was refused** for converting a real defect into undead work.
++
++**2D exists, is better, and is unavailable to this run.** Both seats named a
++missing option: *"an authorized maintainer performs the kernel edit through the
++documented human-owned exception mechanism."* That is the substantively correct
++outcome. It requires a human act outside any agent session, so this run cannot
++take it — and the receiver's Phase 1 is written so that taking it later costs
++minutes.
++
++**The mechanism deviates from the council's word and matches its intent, and the
++deviation is recorded rather than smoothed.** Both seats said *stub*. A stub is
++**not a valid `[~]` receiver**: `deferralProblems`
++(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) resolves a
++`carried-to=` destination only against `agents/roadmaps/<slug>.md` or
++`agents/roadmaps/later/<slug>.md`, and fail-closes on `stubs/`. It also requires
++a literal `parent_roadmap:` back-link, verified from both ends. `later/` is the
++tree's own mechanism for real, specified, not-now work, it is excluded from the
++dashboard and from `/roadmap:process-*`, and it keeps the blocker inside
++`open_blockers`. Every property the seats asked a stub to have — precise edit,
++named human owner, legitimate authorization path, objective resumption trigger —
++the receiver has; a `stubs/` file would additionally have failed the gate.
++
++**One correction to a claim this roadmap made about itself.** AC-2 asked that
++the gate leave `gate-coverage.yml`'s registered-non-adopter set. The count is
++**24 either side of the change**, because that population is rows that are
++`enforced` **and** `min_scanned >= 1`, and `lint_code_comments` carries
++`min_scanned: 0` by design — its corpus is a diff. So the criterion was already
++satisfied by population exclusion before any work happened. It now holds for the
++reason it names: the gate carries the `--self-test` marker the ratchet reads
++(18 cases, 9 rejecting, sensitivity probed). Recorded here and on the AC line so
++an unchanged number is not later read as a missed drain.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-02 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The self-test duplicates the vitest fixtures and drifts from them | implementation | Two corpora over one classifier drift, and the one nobody runs locally drifts first — the memory-twin failure this repository already recorded. | Both read the same exported classifier: the self-test enumerates the same fixture table; the self-test enumerates the fixture table rather than restating it, so a case added in one place appears in both. | Phase 1 — the gate proves its own discrimination |
++| 2 | The kernel edit is deferred indefinitely and the false claim stands | product | A blocker with an owner and no date is how a known-wrong frontmatter entry survives a year. | The blocker names both outcomes and recommends one, and option (b) needs no kernel edit at all — so there is a path that closes it without the slow-rollout window. | Phase 2 — the kernel rule's enforcer claim |
++
++## Acceptance Criteria
++
++- [x] AC-1 — `lint_code_comments --self-test` exists, exits 0, and its rejecting
++      cases go red when the German predicate is neutralised.
++- [x] AC-2 — the gate is no longer counted among `gate-coverage.yml`'s
++      registered non-adopters. Measured 2026-09-02:
++      `list_self_test_non_adopters()` returns 24 names and `lint_code_comments`
++      is not among them. Honest reading of that number — it was not among them
++      before this change either, because the population is rows that are
++      `enforced` AND carry `min_scanned >= 1`, and this row's floor is 0 by
++      design. The gate now adopts on the marker the ratchet reads rather than
++      passing on a population exclusion, so the criterion holds for the reason
++      it names.
++- [~] AC-3 — `language-and-tone` either names an enforcer that can read a source
++      file, or states that its code clause is model-carried. The current
++      middle state — an entry naming a validator that rejects every source
++      path — does not survive this roadmap.
++      <!-- deferred-resolution: carried-to=road-to-language-and-tone-enforcer-claim -->
++
++## Explicitly NOT in this roadmap
++
++- **Widening the three comment classes.** They are keyed on structure
++  deliberately; a class that judges whether a comment is useful is one nobody
++  can predict.
++- **Cleaning existing comments anywhere.** Both carriers are forward-only by
++  construction: the gate reads the diff, the concern reads the text as it is
++  written. There is no baseline to work down.
+diff --git a/agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md b/agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..52d7b6a095d42f5586363d460198e1ddf9e7ce6b
+--- /dev/null
++++ b/agents/roadmaps/later/road-to-language-and-tone-enforcer-claim.md
+@@ -0,0 +1,142 @@
++---
++complexity: lightweight
++status: later
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++parent_roadmap: road-to-comment-enforcement-completion
++review_by: 2027-03-31
++estate_growth_exempt: "later_roadmaps grows by one and nothing offsets it, because the thing being preserved is a defect record that no other surface can hold. The parent road-to-comment-enforcement-completion archives in the same change with its agent-executable scope complete; its one remaining criterion is a write to src/rules/language-and-tone.md, which block_kernel_rule_writes.ts refuses to every agent at both the Write/Edit surface (:105-124) and the Bash surface (:126-205). The alternative to this file is marking the item [-], which is owner-reserved and pinned to mean the scope is dropped -- and the scope is not dropped, it is waiting for a human with the one authorization the guard names. Growth here is preservation of a known-false frontmatter claim, not accumulation."
++estate_offset_exempt: "Not a new plan. This is the kernel-edit REMAINDER of road-to-comment-enforcement-completion, parked under agents/roadmaps/later/ by AI council verdict 2A (2026-09-02, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, deep, peer-review, blind chairman, 2/2 present needed 1, subscription transport, billable=0, $0.0000). later/ is excluded from the dashboard and from /roadmap:process-*, so it adds no active roadmap. The blocker travels with it rather than being closed: open_blockers spans the active tree AND later/ (check_estate_count.ts:470), so the count is preserved and nothing is laundered by the move."
++---
++# Road to the language-and-tone enforcer claim
++
++> **Parked on a human action, not on effort.** Every step below is one small
++> edit that is fully specified. None of them is reachable by an agent in any
++> session, on any host, under any autonomy setting. See § Why this is parked.
++
++## The defect, stated so a later reader does not have to re-derive it
++
++`src/rules/language-and-tone.md` carries an `enforced_by` frontmatter list that
++names `validator:src/scripts/check_md_language.ts`. The rule's "Code comments
++English" clause governs **source files**. `check_md_language.ts` rejects every
++path that is not `.md` (`check_md_language.ts:175`), so the entry names a
++validator that structurally cannot see the surface the clause is about.
++
++A gate that can see it now exists: `src/scripts/lint_code_comments.ts` reads the
++diff, classifies `de-comment` / `report-comment` / `provenance-comment`, is
++CI-wired, and since 2026-09-02 carries its own `--self-test` (18 cases, 9
++rejecting). So the frontmatter is curable by naming something true rather than
++by building anything.
++
++**What the false claim costs is measured, not hypothetical.** The parent roadmap
++records the defect it hid: 509 German comment lines and 21 report- or
++provenance-shaped comments across 41 of 45 changed source files, on two rules
++that between them named a `.md`-only validator and no validator at all. A
++frontmatter entry a reader trusts is why that was invisible for as long as it
++was.
++
++## Why this is parked
++
++`language-and-tone` is one of the nine kernel rules
++(`docs/contracts/kernel-membership.md` § 4).
++`src/scripts/hooks/block_kernel_rule_writes.ts` denies every agent write to a
++kernel rule:
++
++- **Write/Edit surface** (`:105-124`) — any path whose basename is a kernel rule
++  filename under a `rules/` segment, in `src/` and in every projection.
++- **Bash surface** (`:126-205`) — redirection into the path, in-place `sed`,
++  `tee`, `truncate`, `rm`, and `mv`/`cp` whose destination it is. Added after a
++  spike measured that a tool-name-keyed guard let `sed -i` through.
++
++Its header states the sole legitimate bypass: *"the human-owned exception
++registry the deny message points to."* `fail_closed: true`, `severity: blocking`
++in `src/scripts/hook_manifest.yaml:184-189`.
++
++Reads stay allowed — a kernel rule is immutable, not secret — so an agent can
++diagnose this defect precisely, as this file does, and cannot cure it.
++
++## Phase 1 — name something true, or say plainly that nothing does
++
++Either step closes the defect. They are alternatives, not a sequence.
++
++- [ ] **1.1 Add the accurate `enforced_by` entry.** Add
++      `- "validator:src/scripts/lint_code_comments.ts"` to the `enforced_by`
++      list in `src/rules/language-and-tone.md`, beside the existing
++      `check_md_language.ts` entry. The `.md` entry stays correct for the
++      rule's markdown clauses; this one covers the source clause.
++      verify: `grep -n "enforced_by" -A4 src/rules/language-and-tone.md` shows
++      both entries, `task sync && task generate-tools` is clean, and
++      `./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline`
++      lands in the same PR.
++- [ ] **1.2 Or state the honest-coverage sentence.** If no kernel edit to the
++      frontmatter is wanted, add one sentence to the rule body saying the code
++      clause is model-carried on hosts where the gate does not run — the shape
++      `security-sensitive-stop` and `active-remediation` already use for their
++      own obligations.
++      verify: the sentence is present, and
++      `./scripts-run src/scripts/check_safety_floor_untouched` passes or the
++      addition is accepted as a substantive kernel edit in its own PR.
++
++## Phase 2 — the process gap the blocker exposed
++
++- [ ] **2.1 Decide whether kernel rules need a light human-approval path for
++      non-controversial technical corrections.** Both council seats raised this
++      unprompted: the guard is working as designed, and there is no defined
++      escalation for a legitimate one-line correction, so such work strands in
++      an active roadmap indefinitely. This step is a decision, not an
++      implementation, and its outcome may well be "no — the friction is the
++      point."
++      verify: a recorded decision exists, either in an ADR or in
++      `docs/contracts/kernel-membership.md`, naming whether such a path exists
++      and what it is.
++
++## Blockers
++
++### blocker: b-kernel-rule-edit
++
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** Phase 1 (1.1, 1.2) and AC-1. Phase 2 is a decision and is not
++  blocked by the guard.
++- **What to do:** perform one of 1.1 or 1.2 as a human, or authorize the edit
++  through the exception registry named in
++  `src/scripts/hooks/block_kernel_rule_writes.ts`. The edit takes the
++  slow-rollout path in `scope-control` § Kernel-rule edits — own PR, at least
++  24 h between kernel-rule merges — and needs
++  `check_kernel_prefix_stability --update-baseline` in the same PR, because any
++  byte change to a kernel body reds that gate.
++- **Recommendation:** 1.1. The gate exists, it is CI-wired and locally
++  reachable, and the entry would then describe something true. 1.2 is the
++  fallback if no kernel edit is wanted in the window.
++- **If you do nothing:** the gate keeps working and the kernel rule keeps
++  claiming coverage it does not have. That is the state that made the original
++  comment defect invisible.
++- **Resolved when:** `src/rules/language-and-tone.md` either names an enforcer
++  that reads source files, or says in its body that the clause is
++  model-carried.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-02 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Parking makes the false claim permanent | product | A `later/` file with an owner and no date is how a known-wrong frontmatter entry survives a year, which is the exact failure the parent roadmap's own risk register named. | `review_by: 2027-03-31` is a real date the stub-due sweep reads, the blocker is preserved in `open_blockers` rather than closed, and both curing steps are specified to the character so the work is minutes rather than a project. | Phase 1 |
++| 2 | A later run reads the park as a licence to bypass the guard | implementation | An agent that finds a fully specified kernel edit blocked by a hook is one unrecognised write verb away from performing it, and the guard deliberately does not understand arbitrary shell. | § Why this is parked states the bypass is human-owned and that circumvention is not contemplated; the guard's own header says recognising every write verb would make it a shell sandbox, which is the failure mode its council named. | § Why this is parked |
++
++## Acceptance Criteria
++
++- [ ] AC-1 — `src/rules/language-and-tone.md` either names an enforcer that can
++      read a source file, or states that its code clause is model-carried. The
++      middle state — an entry naming a validator that rejects every source
++      path — does not survive this roadmap.
++- [ ] AC-2 — whether a human-approval path for kernel corrections should exist
++      is recorded as a decision, in either direction.
++
++## Explicitly NOT in this roadmap
++
++- **Weakening, removing, or working around `block_kernel_rule_writes`.** The
++  guard is the reason an agent cannot quietly loosen its own floor. This file
++  exists because the guard held.
++- **Widening the three comment classes**, or cleaning existing comments. Both
++  carried over from the parent's own exclusions and are unchanged.
+diff --git a/agents/roadmaps/road-to-comment-enforcement-completion.md b/agents/roadmaps/road-to-comment-enforcement-completion.md
+deleted file mode 100644
+index 396ba8db5c064747d6b43eb2a4ec6e1fd834950d..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-comment-enforcement-completion.md
++++ /dev/null
+@@ -1,111 +0,0 @@
+----
+-complexity: structural
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-relates:
+-  - slug: road-to-publication-integrity-hard-fail
+-    relation: extends
+-    note: >
+-      Same shape as its sibling: a rule that claimed an enforcer it did not
+-      have. That one was the release head, this one is source comments.
+-estate_offset_exempt: "Adds one active roadmap with no offsetting disposal, and none is available: the active roadmaps all carry open steps, and the 2026-08-24 estate council refused to pick among them because no mechanical evidence identifies the least valuable one. The authorization is the maintainer instruction that produced this work — harden the package so the comment defect cannot recur, in a worktree, with a PR at the end. The file exists because that instruction's remainder is real and must not be carried in prose: a self-test for the new gate, and the kernel-rule frontmatter that still names an enforcer which cannot see a source file."
+-estate_growth_exempt: "Covers the growth the offset half does not, and it is TWO metrics rather than one. concern_count 55 -> 56: `comment-discipline` is the write-time half of the same obligation, and its admission row in agents/decisions/concern-admissions.jsonl answers all five questions including why extending `edit-shape` was refused — that concern fires once per session by design, and the measured failure was 41 files each carrying the defect. active_roadmaps +1: this file. Both are the cost of closing a defect measured at 509 German comment lines and 21 report- or provenance-shaped comments across 41 of 45 changed source files, on two rules that between them named a `.md`-only validator and no validator at all."
+----
+-# Road to comment-enforcement completion
+-
+-> **Source:** the maintainer instruction of 2026-09-02 and the change it
+-> produced (`lint_code_comments`, the `comment-discipline` concern). Every
+-> number here is re-derived against the tree, not carried from that session.
+-
+-## Goal
+-
+-The comment-discipline enforcement is complete rather than shipped: the new
+-gate proves it DISCRIMINATES by its own self-test rather than only by external
+-fixtures, and the kernel rule that names a `.md`-only validator for a
+-source-file clause either names a real one or says plainly that it does not.
+-
+-## Phase 1 — the gate proves its own discrimination
+-
+-- [ ] **1.1 Give `lint_code_comments` a `--self-test`.** `gate-coverage.yml`'s
+-      own ratchet says a newly registered gate must adopt or exempt, and the
+-      distinction it draws is real: an enforced `scanned:` floor proves a gate
+-      read something, only a self-test proves the reading changes the verdict.
+-      The cases exist already as vitest fixtures — the work is exposing them
+-      through `_lib/gate_self_test.ts` so the gate answers for itself in a
+-      consumer checkout where the test suite is not installed.
+-      verify: `./scripts-run src/scripts/lint_code_comments --self-test` exits
+-      0 and reports at least 8 cases with at least 4 rejecting, and
+-      `check_gate_coverage`'s `gate-self-test:registered-non-adopters` count
+-      does not include it.
+-
+-## Phase 2 — the kernel rule's enforcer claim
+-
+-- [ ] **2.1 Decide what `language-and-tone`'s `enforced_by` should say.** It
+-      names `validator:src/scripts/check_md_language.ts` for a rule whose "Code
+-      comments English" clause governs source files, and that validator rejects
+-      every path that is not `.md` (`check_md_language.ts:175`). Two honest
+-      outcomes: add `validator:src/scripts/lint_code_comments.ts` beside it, or
+-      state in the rule that the code clause is model-carried. Either is
+-      correct; the current state — an `enforced_by` entry that structurally
+-      cannot see the surface — is the one that is not.
+-      verify: the frontmatter names an enforcer that can read a source file, or
+-      the rule body carries the honest-coverage sentence. `grep -n
+-      "enforced_by" -A3 src/rules/language-and-tone.md` shows which.
+-
+-## Blockers
+-
+-### blocker: b-kernel-rule-edit
+-
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** Phase 2 only. Phase 1 is an ordinary gate change and lands
+-  independently.
+-- **What to do:** pick one of two.
+-  (a) Add `- "validator:src/scripts/lint_code_comments.ts"` to the
+-  `enforced_by` list in `src/rules/language-and-tone.md` — the accurate entry,
+-  since that gate reads source files and refuses on the diff.
+-  (b) Leave the list and add one sentence to the rule body saying the code
+-  clause is model-carried on hosts where the gate does not run, which is the
+-  honest-coverage shape `security-sensitive-stop` and `active-remediation`
+-  already use for their own obligations.
+-- **Recommendation:** (a). The gate exists, it is CI-wired and locally
+-  reachable, and the entry would then describe something true. (b) is a
+-  fallback if the maintainer wants no kernel edit at all in this window.
+-- **If you do nothing:** the gate keeps working and the kernel rule keeps
+-  claiming coverage it does not have. That is the state that made this defect
+-  invisible for as long as it was: a frontmatter entry a reader trusts, naming
+-  a validator that cannot see the surface.
+-- **Resolved when:** `src/rules/language-and-tone.md` either names an enforcer
+-  that reads source files, or says in its body that the clause is
+-  model-carried. `language-and-tone` is a kernel rule, so the edit takes the
+-  slow-rollout path in `scope-control` § Kernel-rule edits — own PR, 24 h
+-  between merges — which is why this is a blocker rather than a step.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-09-02 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The self-test duplicates the vitest fixtures and drifts from them | implementation | Two corpora over one classifier drift, and the one nobody runs locally drifts first — the memory-twin failure this repository already recorded. | Both read the same exported classifier: the self-test enumerates the same fixture table; the self-test enumerates the fixture table rather than restating it, so a case added in one place appears in both. | Phase 1 — the gate proves its own discrimination |
+-| 2 | The kernel edit is deferred indefinitely and the false claim stands | product | A blocker with an owner and no date is how a known-wrong frontmatter entry survives a year. | The blocker names both outcomes and recommends one, and option (b) needs no kernel edit at all — so there is a path that closes it without the slow-rollout window. | Phase 2 — the kernel rule's enforcer claim |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — `lint_code_comments --self-test` exists, exits 0, and its rejecting
+-      cases go red when the German predicate is neutralised.
+-- [ ] AC-2 — the gate is no longer counted among `gate-coverage.yml`'s
+-      registered non-adopters.
+-- [ ] AC-3 — `language-and-tone` either names an enforcer that can read a source
+-      file, or states that its code clause is model-carried. The current
+-      middle state — an entry naming a validator that rejects every source
+-      path — does not survive this roadmap.
+-
+-## Explicitly NOT in this roadmap
+-
+-- **Widening the three comment classes.** They are keyed on structure
+-  deliberately; a class that judges whether a comment is useful is one nobody
+-  can predict.
+-- **Cleaning existing comments anywhere.** Both carriers are forward-only by
+-  construction: the gate reads the diff, the concern reads the text as it is
+-  written. There is no baseline to work down.
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 8616bb0895876851bf2c002cbe969520fdeeb74e..affb21a77a258f516b4a18a52eb3b8b428b3e9bc 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -2418,3 +2418,26 @@ gates:
+ 
+       SENSITIVITY WAS OBSERVED, not assumed: neutralising the German predicate
+       turns 4 of the 22 cases red and restoring it turns them green.
++
++      THE GATE ALSO CARRIES ITS OWN `--self-test` (18 cases, 9 rejecting),
++      which drives the real binary rather than the imported classifier — argv
++      parsing, scan-scope assertion and exit codes included — so the gate
++      answers for its own discrimination in a consumer checkout where the test
++      suite is not installed. It is ONE table, not a second corpus: the cases
++      live in `COMMENT_CASES`, exported by the gate, and the vitest file
++      enumerates the same export against `scanText` while the self-test
++      enumerates it against the CLI. A second table over one classifier would
++      drift, and the copy nobody runs locally drifts first. Floors are set at
++      16/8 against a real 18/9, so deleting a case to reach green fails and a
++      deliberate shrink shows up as a floor edit in the diff. Sensitivity
++      re-observed on the self-test the same way: neutralising the German
++      predicate turns exactly 4 of the 9 rejecting cases red (the three
++      German-comment shapes and the reasonless escape) while the report and
++      provenance cases stay green, and restoring it returns 18/18.
++
++      NOTE ON THE ADOPTION RATCHET, stated because the number does not move:
++      `gate-self-test:registered-non-adopters` counts manifest rows that are
++      `enforced` AND carry `min_scanned >= 1`. This row's floor is 0 for the
++      reason the corpus field gives, so it was never in that population and
++      the count stays at 24 either side of this change. The self-test is
++      therefore adopted on its merits rather than to clear a ratchet.
+diff --git a/src/scripts/lint_code_comments.ts b/src/scripts/lint_code_comments.ts
+index c347b026796ce7df3ebcbe8c461aff83c1a98778..98447ac0a50c7bd82c814c38d6c7156c2f57de82 100644
+--- a/src/scripts/lint_code_comments.ts
++++ b/src/scripts/lint_code_comments.ts
+@@ -41,13 +41,21 @@
+  * `--paths` and `--root` exist for auditing a tree the gate does not own.
+  *
+  * Exit codes: 0 clean · 2 findings · 1 usage or internal error.
++ *
++ * `--self-test` drives this binary over {@link COMMENT_CASES}, the one fixture
++ * table the vitest suite also enumerates. A gate that reports a `scanned:`
++ * count has proven it read something; only a case that must REJECT proves the
++ * reading changes the verdict, and only a shared table keeps the two corpora
++ * from drifting apart.
+  */
+ import { spawnSync } from 'node:child_process';
+ import * as fs from 'node:fs';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import process from 'node:process';
+ import { fileURLToPath } from 'node:url';
+ 
++import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+ import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+ 
+ const _HERE = fileURLToPath(import.meta.url);
+@@ -277,12 +285,175 @@ function changedFiles(root: string, base: string): string[] {
+     return [...new Set([...tracked, ...untracked, ...dirty])].filter((f) => f.trim().length > 0);
+ }
+ 
++/** One fixture: a file body and the classes the gate must report on it. */
++export interface CommentCase {
++    /** Printed by both consumers, so it reads as the assertion it makes. */
++    name: string;
++    /**
++     * The whole file body, written verbatim.
++     *
++     * Single-line literals with `\n` escapes rather than a template literal:
++     * a template whose lines began with a comment marker would be scanned as
++     * comments of THIS file, and the fixtures are deliberately violating.
++     */
++    source: string;
++    /** Classes the classifier must report. Empty means the gate stays silent. */
++    flags: readonly FindingClass[];
++}
++
++/**
++ * The polarity corpus, exported because two callers must read the SAME one.
++ *
++ * `tests/scripts/lint_code_comments.test.ts` enumerates it against
++ * {@link scanText} and asserts the exact class set; `--self-test` enumerates it
++ * against the real binary and asserts the exit code. A second table would be a
++ * second definition of what this gate catches, and the one nobody runs locally
++ * is the one that drifts.
++ *
++ * The silent half is the load-bearing half. A language heuristic is only usable
++ * once its near-misses are pinned, and these are the shapes this repository's
++ * own source actually contains: an umlauted proper name, a non-ASCII sample
++ * value inside a code span, an umlauted step label, and a German user
++ * quotation spanning two comment lines.
++ */
++export const COMMENT_CASES: readonly CommentCase[] = [
++    {
++        name: 'a German comment line carrying two function words is flagged',
++        source: '// Hier stehen nur die Werte, die Bedeutung tragen\nconst a = 1;\n',
++        flags: ['de-comment'],
++    },
++    {
++        name: 'transliterated German with no umlaut at all is flagged',
++        source: '/* uebersetzt aus dem Prototyp, jeder Wert ist hier belegt */\n',
++        flags: ['de-comment'],
++    },
++    {
++        name: 'a German line whose only umlaut sits in ordinary prose is flagged',
++        source: '// Die Schriftstufen der kompakten Datenoberfläche\n',
++        flags: ['de-comment'],
++    },
++    {
++        name: 'an English comment quoting a non-ASCII sample value stays silent',
++        source: '/** so a `café@exämple.com` email or a `/Users/möchte/f` path masks */\n',
++        flags: [],
++    },
++    {
++        name: 'an English comment carrying an umlauted proper name stays silent',
++        source: '/** Robertson–Spärck-Jones IDF, floored at 0 so terms never subtract. */\n',
++        flags: [],
++    },
++    {
++        name: 'an umlauted step label in English prose stays silent',
++        source: '// ── Ü2 — orthogonal stance assignment per seat ──\n',
++        flags: [],
++    },
++    {
++        name: 'a single-line German user quotation used as data stays silent',
++        source: '// the phrase "nicht releasen. Warum nicht?" names no fault\n',
++        flags: [],
++    },
++    {
++        name: 'a German user quotation spanning two comment lines stays silent',
++        source:
++            '/**\n *   "Kein Council konfiguriert (keine `.agent-settings.yml`) — ich nutze\n' +
++            ' *    Subagenten-Fächer mit gegnerischen Linsen als Ersatz"\n */\n',
++        flags: [],
++    },
++    {
++        name: 'plain English prose stays silent',
++        source: '// The cap is a stated default, not a measured optimum.\n',
++        flags: [],
++    },
++    {
++        name: 'a markdown table inside a comment is flagged',
++        source: ' * | Prototype | Role | here |\n',
++        flags: ['report-comment'],
++    },
++    {
++        name: 'a box-drawing rule is flagged',
++        source: ' * ─────────────────────────────\n',
++        flags: ['report-comment'],
++    },
++    {
++        name: 'a revisit clause is flagged',
++        source: ' * Revisit-if: someone holds the new surface next to the sidebar.\n',
++        flags: ['report-comment'],
++    },
++    {
++        name: 'a short dash rule that is not a report stays silent',
++        source: '// --- setup ---\n',
++        flags: [],
++    },
++    {
++        name: 'a roadmap citation is flagged',
++        source: '// see agents/roadmaps/todos-task-module-frontend.md\n',
++        flags: ['provenance-comment'],
++    },
++    {
++        name: 'a phase-and-step citation is flagged',
++        source: '// Roadmap todos-task-module, Phase 1, Schritt 1.\n',
++        flags: ['provenance-comment'],
++    },
++    {
++        name: 'a plain code reference stays silent',
++        source: '// see src/lib/token.ts for the parser\n',
++        flags: [],
++    },
++    {
++        name: 'a per-line escape carrying a reason suppresses the class',
++        source: '// Hier stehen die Werte  code-comment-allow de-comment -- quoted spec text\n',
++        flags: [],
++    },
++    {
++        name: 'a bare escape with no reason suppresses nothing',
++        source: '// Hier stehen die Werte  code-comment-allow de-comment\n',
++        flags: ['de-comment'],
++    },
++];
++
++/**
++ * Drive the real binary over every fixture.
++ *
++ * Shells out rather than calling {@link scanText} in-process, because the
++ * thing a contributor runs is the CLI — its argv parsing, its scan-scope
++ * assertion and its exit codes included. The vitest suite covers the pure
++ * classifier; this covers the binary that ships.
++ *
++ * The floors are set just under the table's real size, so deleting a case to
++ * reach green fails instead, and any deliberate shrink shows up as a floor
++ * edit a reviewer reads in the diff.
++ */
++export function selfTest(): number {
++    const repoRoot = path.resolve(path.dirname(_HERE), '..', '..');
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lcc-selftest-'));
++    const exercise = (testCase: CommentCase, index: number): number => {
++        const file = path.join(dir, `case-${String(index)}.ts`);
++        fs.writeFileSync(file, testCase.source, 'utf-8');
++        return runGateCli(repoRoot, 'src/scripts/lint_code_comments.ts', ['--paths', file], dir);
++    };
++    try {
++        return runSelfTest({
++            gate: 'lint_code_comments',
++            minCases: 16,
++            minRejectCases: 8,
++            cases: COMMENT_CASES.map((testCase, index) => ({
++                name: testCase.name,
++                expect: testCase.flags.length > 0 ? ('reject' as const) : ('accept' as const),
++                run: () => exercise(testCase, index),
++            })),
++        });
++    } finally {
++        fs.rmSync(dir, { recursive: true, force: true });
++    }
++}
++
+ const HELP = `usage: lint_code_comments [--base <ref>] [--root <dir>] [--paths <f> …] [--report]
+ 
+   --base <ref>   diff against this ref (default: origin/main)
+   --root <dir>   run against another checkout (default: this repository)
+   --paths        scan exactly these files, ignoring the diff
+   --report       print every finding grouped by file and exit 0
++  --self-test    drive this binary over its own fixture table and exit 0 on pass
+ 
+ Classes: de-comment · report-comment · provenance-comment
+ Escape:  code-comment-allow <class|*> -- <reason>   (per line)
+@@ -290,6 +461,7 @@ Escape:  code-comment-allow <class|*> -- <reason>   (per line)
+ `;
+ 
+ export function main(argv: string[]): number {
++    if (argv.includes('--self-test')) return selfTest();
+     let base = 'origin/main';
+     let root = path.resolve(path.dirname(_HERE), '..', '..');
+     let reportOnly = false;
+diff --git a/tests/scripts/lint_code_comments.test.ts b/tests/scripts/lint_code_comments.test.ts
+index 980f0f6fbc27d45156c129a46d1dc4f30e357941..cba7d0f0f64005047c88fec96d78002284fc5230 100644
+--- a/tests/scripts/lint_code_comments.test.ts
++++ b/tests/scripts/lint_code_comments.test.ts
+@@ -1,7 +1,14 @@
+ /**
+  * Polarity fixtures for `lint_code_comments`.
+  *
+- * Both directions, in one file, because a pattern gate is only as good as the
++ * The corpus itself is NOT here. It is `COMMENT_CASES`, exported by the gate,
++ * and `--self-test` enumerates the same table against the real binary. Two
++ * tables over one classifier drift, and the one nobody runs locally drifts
++ * first — so this file asserts the exact class set the pure classifier
++ * reports, and the self-test asserts the exit code the CLI returns, over
++ * identical input.
++ *
++ * Both directions are pinned, because a pattern gate is only as good as the
+  * near-miss it stays silent on: the MUST-FIRE half is what the rule asks for,
+  * and the MUST-NOT-FIRE half is the whole reason this gate can be turned on
+  * in a repository whose own module docstrings are long, cite evidence and
+@@ -9,110 +16,39 @@
+  */
+ import { describe, expect, it } from 'vitest';
+ 
+-import { fileIsExempt, isScannable, scanText } from '../../src/scripts/lint_code_comments.js';
+-
+-const classes = (src: string): string[] => scanText('f.ts', src).map((f) => f.cls);
+-
+-describe('de-comment — must fire', () => {
+-    it('flags a German comment line carrying two function words', () => {
+-        expect(classes('// Hier stehen nur die Werte, die Bedeutung tragen\nconst a = 1;\n'))
+-            .toContain('de-comment');
+-    });
+-
+-    it('flags transliterated German with no umlaut at all', () => {
+-        expect(classes('/* uebersetzt aus dem Prototyp, jeder Wert ist hier belegt */\n'))
+-            .toContain('de-comment');
+-    });
+-
+-    it('flags a German line whose only umlaut sits in ordinary prose', () => {
+-        expect(classes('// Die Schriftstufen der kompakten Datenoberfläche\n'))
+-            .toContain('de-comment');
+-    });
+-});
+-
+-describe('de-comment — must NOT fire', () => {
+-    it('stays silent on an English comment quoting a non-ASCII sample value', () => {
+-        expect(classes('/** so a `café@exämple.com` email or a `/Users/möchte/f` path masks */\n'))
+-            .not.toContain('de-comment');
+-    });
++import {
++    COMMENT_CASES,
++    fileIsExempt,
++    isScannable,
++    scanText,
++} from '../../src/scripts/lint_code_comments.js';
+ 
+-    it('stays silent on an English comment carrying an umlauted proper name', () => {
+-        expect(classes('/** Robertson–Spärck-Jones IDF, floored at 0 so terms never subtract. */\n'))
+-            .not.toContain('de-comment');
++describe('classifier fixture table', () => {
++    it.each(COMMENT_CASES.map((c) => [c.name, c] as const))('%s', (_name, testCase) => {
++        const actual = scanText('f.ts', testCase.source)
++            .map((f) => f.cls)
++            .sort();
++        expect(actual).toEqual([...testCase.flags].sort());
+     });
+ 
+-    it('stays silent on an umlauted step label in English prose', () => {
+-        expect(classes('// ── Ü2 — orthogonal stance assignment per seat ──\n').filter((c) => c === 'de-comment'))
+-            .toEqual([]);
++    it('pins both polarities, so a truncated table fails here too', () => {
++        const firing = COMMENT_CASES.filter((c) => c.flags.length > 0);
++        const silent = COMMENT_CASES.filter((c) => c.flags.length === 0);
++        expect(firing.length).toBeGreaterThanOrEqual(8);
++        expect(silent.length).toBeGreaterThanOrEqual(8);
+     });
+ 
+-    it('stays silent on a German user quotation used as data, single line', () => {
+-        expect(classes('// the phrase "nicht releasen. Warum nicht?" names no fault\n'))
+-            .not.toContain('de-comment');
+-    });
+-
+-    it('stays silent on a German user quotation spanning two comment lines', () => {
+-        const src = [
+-            '/**',
+-            ' *   "Kein Council konfiguriert (keine `.agent-settings.yml`) — ich nutze',
+-            ' *    Subagenten-Fächer mit gegnerischen Linsen als Ersatz"',
+-            ' */',
+-        ].join('\n');
+-        expect(classes(src)).not.toContain('de-comment');
+-    });
+-
+-    it('stays silent on plain English prose', () => {
+-        expect(classes('// The cap is a stated default, not a measured optimum.\n')).toEqual([]);
++    it('covers every class the gate can report', () => {
++        const covered = new Set(COMMENT_CASES.flatMap((c) => c.flags));
++        expect([...covered].sort()).toEqual([
++            'de-comment',
++            'provenance-comment',
++            'report-comment',
++        ]);
+     });
+ });
+ 
+-describe('report-comment', () => {
+-    it('fires on a markdown table inside a comment', () => {
+-        expect(classes(' * | Prototype | Role | here |\n')).toContain('report-comment');
+-    });
+-
+-    it('fires on a box-drawing rule', () => {
+-        expect(classes(' * ─────────────────────────────\n')).toContain('report-comment');
+-    });
+-
+-    it('fires on a revisit-if clause', () => {
+-        expect(classes(' * Revisit-if: someone holds the new surface next to the sidebar.\n'))
+-            .toContain('report-comment');
+-    });
+-
+-    it('does not fire on a short dash rule that is not a report', () => {
+-        expect(classes('// --- setup ---\n')).not.toContain('report-comment');
+-    });
+-});
+-
+-describe('provenance-comment', () => {
+-    it('fires on a roadmap citation', () => {
+-        expect(classes('// see agents/roadmaps/todos-task-module-frontend.md\n'))
+-            .toContain('provenance-comment');
+-    });
+-
+-    it('fires on a phase-and-step citation', () => {
+-        expect(classes('// Roadmap todos-task-module, Phase 1, Schritt 1.\n'))
+-            .toContain('provenance-comment');
+-    });
+-
+-    it('does not fire on a plain code reference', () => {
+-        expect(classes('// see src/lib/token.ts for the parser\n'))
+-            .not.toContain('provenance-comment');
+-    });
+-});
+-
+-describe('escapes', () => {
+-    it('honours a per-line escape carrying a reason', () => {
+-        expect(classes('// Hier stehen die Werte  code-comment-allow de-comment -- quoted spec text\n'))
+-            .not.toContain('de-comment');
+-    });
+-
+-    it('refuses a bare escape with no reason', () => {
+-        expect(classes('// Hier stehen die Werte  code-comment-allow de-comment\n'))
+-            .toContain('de-comment');
+-    });
+-
++describe('file-level exemption', () => {
+     it('treats a generated-file header as exempt', () => {
+         expect(fileIsExempt('// Generated by wrangler. DO NOT EDIT.\n')).toBe(true);
+     });

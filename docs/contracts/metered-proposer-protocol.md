@@ -244,6 +244,32 @@ next to the records. That is a change to the frozen mechanism and therefore
 belongs to whoever freezes the remaining slot, not to a repair of a false
 sentence.
 
+**AMENDED 2026-09-02 — the by-hand recording now has a tool, and the frozen
+mechanism is unchanged.** `./scripts-run src/scripts/corpus_manifest capture
+--out FILE` records the commit, the ordered subject inventory with hashes, the
+projection decision (including the global rule layer's name inventory, which is
+the field a commit cannot supply), the generator's own hashes, the
+configuration and the runtime; `verify --manifest FILE` re-captures and exits 3
+when the SUBJECT differs. Shape and the equivalence contract:
+[`corpus-manifest-v1.md`](corpus-manifest-v1.md).
+
+It is deliberately **not wired into `llm_propose`**, so the paragraph above
+still holds in full: this protocol still claims no automatic provenance
+capture, and an operator runs `capture` alongside a run. What changed is that
+the by-hand step is now one command whose output is machine-comparable, rather
+than a sorted filename list written into a note.
+
+**One correction the tool surfaced, recorded because the earlier evidence
+mis-attributed a cause.** The 101-skip measurement above was read as
+byte-identity dedup. It is not: `projection.scope_dedup` is absent on every
+settings layer this repository carries and therefore off, and the byte-identity
+comparison accounts for **zero** of those skips. The live mechanism is the
+per-host rule partition, which withholds on the global layer carrying a rule's
+NAME. F-A's conclusion is unaffected — the corpus is still a function of the
+operator's home directory and not of the commit — but the mechanism named in
+the reasoning was wrong, and a later reader following it to `dedupableRules`
+would have found a function returning an empty set.
+
 ### Number of pairs
 
 **5** — one pair per corpus member, each pair being (deterministic candidate,
@@ -299,6 +325,33 @@ What is already committed and constrains that choice:
 Deriving a metric here would have been inventing a derivation, which is the
 failure this repository already recorded once for a stage enumeration: a third
 proposal is a third answer.
+
+**STILL UNSET 2026-09-02, and a later session established that it cannot be
+closed by derivation over this corpus.** A separate attempt to freeze the whole
+experimental definition looked for an outcome scalar already committed in this
+tree and found that the two admitted recipes cannot move the one cheap
+evaluator the pre-registered budget names:
+
+- The budget's own First cut names `description_route_check` as the evaluation
+  surface. That checker's catalogue is `name + description`
+  (`catalogueHash`, `description_route_check.ts:81-84`), loaded from
+  `dist/agent-src/` (`:386-410`) — not from `.claude/`, which is where this
+  corpus lives. A mutation to a corpus member never reaches the catalogue.
+- Both admitted recipes preserve the frontmatter byte-identically:
+  `keepLeadingBand` cuts at the first `## ` heading, which is after the
+  frontmatter, and `appendHonestEnforcement` appends at the end. So even on a
+  matching path the routing condition would be unchanged.
+- Every trial would therefore tie, `discordant` would be 0 against a derived
+  floor of 5, and `decidePairedVerdict` would return `underpowered` — and the
+  roadmap's own record rules that `underpowered` does not satisfy the acceptance
+  criterion: it records that adjudication was unavailable. Freezing a metric
+  known in advance to return a non-answer is worse than leaving it unset.
+
+The one committed evaluator a rule-body mutation **could** move is the A/B
+bench (`bench_ab_clone --candidate-record` materialises a candidate into a
+clone), and that is an agent-run harness far above the proposal half's cost
+estimate. Choosing it, or changing the corpus so a cheap evaluator applies, is
+an amendment to the frozen subject rather than a derivation from it.
 
 ## Not yet run
 

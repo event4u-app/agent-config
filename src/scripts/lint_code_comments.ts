@@ -54,13 +54,21 @@
  * gate to verify with alone.
  *
  * Exit codes: 0 clean · 2 findings · 1 usage or internal error.
+ *
+ * `--self-test` drives this binary over {@link COMMENT_CASES}, the one fixture
+ * table the vitest suite also enumerates. A gate that reports a `scanned:`
+ * count has proven it read something; only a case that must REJECT proves the
+ * reading changes the verdict, and only a shared table keeps the two corpora
+ * from drifting apart.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -345,12 +353,189 @@ function changedFiles(root: string, base: string): string[] {
     return [...new Set([...tracked, ...untracked, ...dirty])].filter((f) => f.trim().length > 0);
 }
 
+/** One fixture: a file body and the classes the gate must report on it. */
+export interface CommentCase {
+    /** Printed by both consumers, so it reads as the assertion it makes. */
+    name: string;
+    /**
+     * The whole file body, written verbatim.
+     *
+     * Single-line literals with `\n` escapes rather than a template literal:
+     * a template whose lines began with a comment marker would be scanned as
+     * comments of THIS file, and the fixtures are deliberately violating.
+     */
+    source: string;
+    /** Classes the classifier must report. Empty means the gate stays silent. */
+    flags: readonly FindingClass[];
+}
+
+/**
+ * The polarity corpus, exported because two callers must read the SAME one.
+ *
+ * `tests/scripts/lint_code_comments.test.ts` enumerates it against
+ * {@link scanText} and asserts the exact class set; `--self-test` enumerates it
+ * against the real binary and asserts the exit code. A second table would be a
+ * second definition of what this gate catches, and the one nobody runs locally
+ * is the one that drifts.
+ *
+ * The silent half is the load-bearing half. A language heuristic is only usable
+ * once its near-misses are pinned, and these are the shapes this repository's
+ * own source actually contains: an umlauted proper name, a non-ASCII sample
+ * value inside a code span, an umlauted step label, and a German user
+ * quotation spanning two comment lines.
+ */
+export const COMMENT_CASES: readonly CommentCase[] = [
+    {
+        name: 'a block-comment continuation carrying no leading star is flagged',
+        source:
+            '  /* Hausform mit Objekt-`message`: derselbe Aufbau, anderer Schluessel.\n' +
+            '     `BaseException::render()` dekodiert eine JSON-Zeichenkette und legt das\n' +
+            '     Ergebnis unter `message` ab, bei Feldfehlern ist das ein Objekt. */\n' +
+            '  if (isRecord(payload.message)) {\n',
+        flags: ['de-comment'],
+    },
+    {
+        name: 'a JSX comment, which opens with a brace rather than a slash, is flagged',
+        source: '        {/* Der Titel traegt die Aktion, nicht die Zeile. */}\n',
+        flags: ['de-comment'],
+    },
+    {
+        name: 'a German comment line carrying two function words is flagged',
+        source: '// Hier stehen nur die Werte, die Bedeutung tragen\nconst a = 1;\n',
+        flags: ['de-comment'],
+    },
+    {
+        name: 'transliterated German with no umlaut at all is flagged',
+        source: '/* uebersetzt aus dem Prototyp, jeder Wert ist hier belegt */\n',
+        flags: ['de-comment'],
+    },
+    {
+        name: 'a German line whose only umlaut sits in ordinary prose is flagged',
+        source: '// Die Schriftstufen der kompakten Datenoberfläche\n',
+        flags: ['de-comment'],
+    },
+    {
+        name: 'an English comment quoting a non-ASCII sample value stays silent',
+        source: '/** so a `café@exämple.com` email or a `/Users/möchte/f` path masks */\n',
+        flags: [],
+    },
+    {
+        name: 'an English comment carrying an umlauted proper name stays silent',
+        source: '/** Robertson–Spärck-Jones IDF, floored at 0 so terms never subtract. */\n',
+        flags: [],
+    },
+    {
+        name: 'an umlauted step label in English prose stays silent',
+        source: '// ── Ü2 — orthogonal stance assignment per seat ──\n',
+        flags: [],
+    },
+    {
+        name: 'a single-line German user quotation used as data stays silent',
+        source: '// the phrase "nicht releasen. Warum nicht?" names no fault\n',
+        flags: [],
+    },
+    {
+        name: 'a German user quotation spanning two comment lines stays silent',
+        source:
+            '/**\n *   "Kein Council konfiguriert (keine `.agent-settings.yml`) — ich nutze\n' +
+            ' *    Subagenten-Fächer mit gegnerischen Linsen als Ersatz"\n */\n',
+        flags: [],
+    },
+    {
+        name: 'plain English prose stays silent',
+        source: '// The cap is a stated default, not a measured optimum.\n',
+        flags: [],
+    },
+    {
+        name: 'a markdown table inside a comment is flagged',
+        source: ' * | Prototype | Role | here |\n',
+        flags: ['report-comment'],
+    },
+    {
+        name: 'a box-drawing rule is flagged',
+        source: ' * ─────────────────────────────\n',
+        flags: ['report-comment'],
+    },
+    {
+        name: 'a revisit clause is flagged',
+        source: ' * Revisit-if: someone holds the new surface next to the sidebar.\n',
+        flags: ['report-comment'],
+    },
+    {
+        name: 'a short dash rule that is not a report stays silent',
+        source: '// --- setup ---\n',
+        flags: [],
+    },
+    {
+        name: 'a roadmap citation is flagged',
+        source: '// see agents/roadmaps/todos-task-module-frontend.md\n',
+        flags: ['provenance-comment'],
+    },
+    {
+        name: 'a phase-and-step citation is flagged',
+        source: '// Roadmap todos-task-module, Phase 1, Schritt 1.\n',
+        flags: ['provenance-comment'],
+    },
+    {
+        name: 'a plain code reference stays silent',
+        source: '// see src/lib/token.ts for the parser\n',
+        flags: [],
+    },
+    {
+        name: 'a per-line escape carrying a reason suppresses the class',
+        source: '// Hier stehen die Werte  code-comment-allow de-comment -- quoted spec text\n',
+        flags: [],
+    },
+    {
+        name: 'a bare escape with no reason suppresses nothing',
+        source: '// Hier stehen die Werte  code-comment-allow de-comment\n',
+        flags: ['de-comment'],
+    },
+];
+
+/**
+ * Drive the real binary over every fixture.
+ *
+ * Shells out rather than calling {@link scanText} in-process, because the
+ * thing a contributor runs is the CLI — its argv parsing, its scan-scope
+ * assertion and its exit codes included. The vitest suite covers the pure
+ * classifier; this covers the binary that ships.
+ *
+ * The floors are set just under the table's real size, so deleting a case to
+ * reach green fails instead, and any deliberate shrink shows up as a floor
+ * edit a reviewer reads in the diff.
+ */
+export function selfTest(): number {
+    const repoRoot = path.resolve(path.dirname(_HERE), '..', '..');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lcc-selftest-'));
+    const exercise = (testCase: CommentCase, index: number): number => {
+        const file = path.join(dir, `case-${String(index)}.ts`);
+        fs.writeFileSync(file, testCase.source, 'utf-8');
+        return runGateCli(repoRoot, 'src/scripts/lint_code_comments.ts', ['--paths', file], dir);
+    };
+    try {
+        return runSelfTest({
+            gate: 'lint_code_comments',
+            minCases: 16,
+            minRejectCases: 8,
+            cases: COMMENT_CASES.map((testCase, index) => ({
+                name: testCase.name,
+                expect: testCase.flags.length > 0 ? ('reject' as const) : ('accept' as const),
+                run: () => exercise(testCase, index),
+            })),
+        });
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+    }
+}
+
 const HELP = `usage: lint_code_comments [--base <ref>] [--root <dir>] [--paths <f> …] [--report]
 
   --base <ref>   diff against this ref (default: origin/main)
   --root <dir>   run against another checkout (default: this repository)
   --paths        scan exactly these files, ignoring the diff
   --report       print every finding grouped by file and exit 0
+  --self-test    drive this binary over its own fixture table and exit 0 on pass
 
 Classes: de-comment · report-comment · provenance-comment
 Escape:  code-comment-allow <class|*> -- <reason>   (per line)
@@ -358,6 +543,21 @@ Escape:  code-comment-allow <class|*> -- <reason>   (per line)
 `;
 
 export function main(argv: string[]): number {
+    // `--help` wins, and the recursion guard is not decoration: `runGateCli`
+    // sets GATE_SELF_TEST_CHILD precisely so a child cannot re-enter the suite.
+    // Latent today because the child's argv is `--paths <file>`, but any later
+    // change that forwards the parent's argv would recurse 18-way per level.
+    if (argv.includes('--help') || argv.includes('-h')) {
+        process.stdout.write(HELP);
+        return 0;
+    }
+    if (argv.includes('--self-test')) {
+        if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
+            process.stderr.write('lint_code_comments: refusing to nest --self-test inside a self-test child\n');
+            return 2;
+        }
+        return selfTest();
+    }
     let base = 'origin/main';
     let root = path.resolve(path.dirname(_HERE), '..', '..');
     let reportOnly = false;
