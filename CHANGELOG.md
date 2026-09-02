@@ -434,6 +434,122 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.15.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.14.0](https://github.com/event4u-app/agent-config/compare/14.13.0...14.14.0) (2026-09-02)
+
+### Release highlights
+
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 448f31f.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 6edf1ad, 27f3233, 9411964, 0c7fce0, ecf05c4, 32203ec +5 more.
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** enforce comment discipline in source, where two rules claimed it and neither could (#1806) ([448f31f](https://github.com/event4u-app/agent-config/commit/448f31ff8b3ef3752283d877bd68975dc6eaca1d))
+* **council:** read-only retention probe for council artefacts ([1ac4a53](https://github.com/event4u-app/agent-config/commit/1ac4a53f118d190fa38bb1f282f225412ddb614d))
+* **council:** corpus assembler for the provider-leakage bench ([f287afd](https://github.com/event4u-app/agent-config/commit/f287afd6c4ecc11eaec7cbb57a72cac58dffaad8))
+* **harness:** lexical shortlist over the BM25 core, as a tie-break the matcher outranks ([ef9d74b](https://github.com/event4u-app/agent-config/commit/ef9d74b6669537e5425b4dcc42fbeaf79fd94004))
+* **harness:** derive the index input set from the 5.1 verdict, closes 6.5 ([dce00d9](https://github.com/event4u-app/agent-config/commit/dce00d9a972062b4f5666ba7160d849303734e87))
+* **harness:** measure delivery sets and set compatibility, closes 6.4 ([b7aafbb](https://github.com/event4u-app/agent-config/commit/b7aafbb3b3fe8b32d9a0d5fe6d22d6c8aefe4a4d))
+* **harness:** run report with a mandatory evolution-ROI figure, and a cheapest-first model ladder ([83f1006](https://github.com/event4u-app/agent-config/commit/83f1006fedab78f364ddf8a11e39f36081bab3d4))
+* **harness:** measure the description-vs-body routing signal, closes 5.1 ([a86bd89](https://github.com/event4u-app/agent-config/commit/a86bd899c5b32b8cee00e78e144695a0deac69bb))
+* **harness:** deterministic evaluation cascade, wired into the runner ([211477d](https://github.com/event4u-app/agent-config/commit/211477d38819432ae4c4783ffddb122ff705da50))
+* **harness:** pathology archive per WHERE x WHY cell, closes 4.4 ([c0fdd42](https://github.com/event4u-app/agent-config/commit/c0fdd42b1172c4f0664f906f920d1210c9174845))
+* **council:** free explain mode for routing, with the unanswerable field marked ([07a717a](https://github.com/event4u-app/agent-config/commit/07a717afe8f259ed21564c1d67764da46922d045))
+* **council:** route record for decision replay, with the one field that cannot exist ([f0954ed](https://github.com/event4u-app/agent-config/commit/f0954eddad2c024bafe0808fc38924f0a4e8caaa))
+* **harness:** the promotion bridge mechanism — steps 7.1 through 7.7 ([ad0962f](https://github.com/event4u-app/agent-config/commit/ad0962f2e546fd87d77a1ad37cc570f6c6f1fbd7))
+* **council:** one synthesis-strategy interface behind the five candidates ([b1e6001](https://github.com/event4u-app/agent-config/commit/b1e6001ac4a3d62e4a50c3d1b0100354cdbd0ffa))
+* **council:** routing training-row schema with no free-text field ([8004341](https://github.com/event4u-app/agent-config/commit/8004341005335575f0eac5cb8ad4e43e7b5fa8cc))
+* **council:** deterministic expected-information-gain-per-cost scoring ([8af7598](https://github.com/event4u-app/agent-config/commit/8af759869268d7e9682e4a04bc74500b72bcc90c))
+* **council:** targeted cross-examination that quotes the claim verbatim ([de4bada](https://github.com/event4u-app/agent-config/commit/de4bada83e2ba266b8b15b30ac85c5dc5d602b5c))
+* **gates:** lint_promotion_paths — the promotion-path structural invariant ([13999df](https://github.com/event4u-app/agent-config/commit/13999df0e46a3f754c9e9b1b709e1a5b1ddb4146))
+* **council:** reviewer budget k with a balance-feasible diversity floor ([6afb3ae](https://github.com/event4u-app/agent-config/commit/6afb3ae24f791e5e65ab5370c27fd59455ee3b0f))
+* **council:** freeze the majority-laundering fixture and its retention gate ([045fb8d](https://github.com/event4u-app/agent-config/commit/045fb8dea1b0176572fe7a05bc0d6db2dcd78071))
+* **council:** reconstruct re-council savings offline and settle the retention cause ([44bc2e4](https://github.com/event4u-app/agent-config/commit/44bc2e4071f15791f8a518d91c794aa177b79a65))
+
+### Bug Fixes
+
+* **gates:** close two blind spots lint_code_comments had on its first real corpus (#1807) ([6edf1ad](https://github.com/event4u-app/agent-config/commit/6edf1add75881f9db6a9ff293a956722c8026503))
+* **language-pin:** skip host-injected wrapper regions instead of ending the human lead on them (#1800) ([27f3233](https://github.com/event4u-app/agent-config/commit/27f323304be26c3514ad66f78852c6c207d31fb9))
+* **guarded-baseline:** resolve what the blockers actually permit, and record why the rest cannot close (#1786) ([9411964](https://github.com/event4u-app/agent-config/commit/9411964fb85c92777b8138494ab0042747ea3671))
+* **tests:** stop a test fixture from shifting the skill-catalogue count ([0c7fce0](https://github.com/event4u-app/agent-config/commit/0c7fce0d292c015e49c05f12421431bea89cac6c))
+* **roadmap:** repair five stale line anchors in the governed harness ([52e0287](https://github.com/event4u-app/agent-config/commit/52e0287af36dd0be566a426284629c4877a308e0))
+* **roadmap:** record three discharged conjuncts and the retention diagnosis ([869d76a](https://github.com/event4u-app/agent-config/commit/869d76a14a205bcc8a2359d7ff47eb6c24deddaa))
+* **roadmap:** repair four stale claims in the governed harness ([94f17a3](https://github.com/event4u-app/agent-config/commit/94f17a33b65e6981c9809ce639062011ee1ae929))
+* **roadmap:** repair two stale claims in the promotion bridge ([c96aa53](https://github.com/event4u-app/agent-config/commit/c96aa53de58050daeca6e9624e8288cff89562d3))
+* **harness:** widen the cascade's optional inputs for exactOptionalPropertyTypes ([ecf05c4](https://github.com/event4u-app/agent-config/commit/ecf05c4c6cf5ea10d31428a2d946a9b15451c985))
+* **harness:** repair two type errors the branch merge introduced ([32203ec](https://github.com/event4u-app/agent-config/commit/32203ec34a28effdee62f23fc035c160261d2850))
+* **test:** take the shared clones lock, and close AC-10b at completion ([01de2a3](https://github.com/event4u-app/agent-config/commit/01de2a3ddac14dc1027702e1575105a3d8ccf373))
+* **test:** scope the cascade end-to-end case so it stops breaking siblings ([f87eb79](https://github.com/event4u-app/agent-config/commit/f87eb7936d141650544c998e1bcecc35f83c8e51))
+* **evidence:** declare the type on the re-council savings analysis ([7280750](https://github.com/event4u-app/agent-config/commit/7280750fad20fd990de57c6aa4bf5ed5b238dcf8))
+* **test:** satisfy exactOptionalPropertyTypes and readonly-array typing ([04a5a0b](https://github.com/event4u-app/agent-config/commit/04a5a0b35d5aaab3f3ee6eabc798fcb541fdce03))
+* **test:** the 7.3 tripwire reddened on its own documentation ([25647d0](https://github.com/event4u-app/agent-config/commit/25647d0249c1d4a8eb2a5ba91e4bc964e7cb3000))
+* **evidence:** re-pin the trigger-corpus holdout hashes and guard them ([92549c4](https://github.com/event4u-app/agent-config/commit/92549c4a9983724fc47fbb5467de325ada98a28c))
+
+### Documentation
+
+* **evidence:** record the council round on drain run 13's five open questions (#1792) ([b92b74e](https://github.com/event4u-app/agent-config/commit/b92b74efe7cb541df0371e15d7782b82ab3849cc))
+* **evidence:** commit the pending terminal-disposition council question ([e8c17f9](https://github.com/event4u-app/agent-config/commit/e8c17f9ebed1af047494c7f6ba31b23d1875f4a5))
+* correct the red-check record — the failure is intermittent, CI is green ([95a435c](https://github.com/event4u-app/agent-config/commit/95a435cfa4acc19e63a2c76844cc72e34cdef3ed))
+* **evidence:** record the CI-only red check in the run-11 summary ([df02075](https://github.com/event4u-app/agent-config/commit/df02075f63e9f6431012bccbb7ac7ca0eeba7507))
+* track the CI-only routing-verdict drift found by this branch ([d088d81](https://github.com/event4u-app/agent-config/commit/d088d81a11515683eb8e74cc503570eca9390915))
+* **evidence:** drain run 11 summary — three PRs, one council verdict, zero descopes ([41c8925](https://github.com/event4u-app/agent-config/commit/41c8925a6d204da29fcc8602ef33dbcd222bbe37))
+* **bench:** pre-register the leakage protocol and emit the Phase-2 schedule ([bde70ef](https://github.com/event4u-app/agent-config/commit/bde70efec38a240ab05e51802510894151f76a0c))
+* **evidence:** drain run 10 summary — PRs, council decisions, descopes ([18af540](https://github.com/event4u-app/agent-config/commit/18af5407551588abe5878c761f555523f03d2820))
+* **roadmap:** pin the 6.4 measurement commit SHA beside the prereg SHA ([e595917](https://github.com/event4u-app/agent-config/commit/e59591765f681ae5a1f22b1746cf426a3f1ec668))
+* **roadmap:** re-audit AC-8 after 5.6 — shape half closed, subject half unreachable here ([41f1d4c](https://github.com/event4u-app/agent-config/commit/41f1d4cfcab5b67266fe3497016e0dda956280bc))
+* **roadmap:** pin the 5.1 measurement commit SHA beside the prereg SHA ([4e9eb72](https://github.com/event4u-app/agent-config/commit/4e9eb7278fa648e7507f2eaa2c97e07a7609663d))
+* **evidence:** pre-register the routing-signal and delivery-set measurements ([fe87494](https://github.com/event4u-app/agent-config/commit/fe874945812138f1f28455f4a0540b41766b8012))
+* **council:** pre-register the early-stop promotion gate before either arm runs ([4f4ca01](https://github.com/event4u-app/agent-config/commit/4f4ca014a546dec9720684ce03a18ae62cb555a1))
+
+### Refactoring
+
+* **adr:** move the reopen-authority vocabulary into the shared reader ([cb81e2d](https://github.com/event4u-app/agent-config/commit/cb81e2dd1abf926c8e969d74b051e60479231fa9))
+
+### Tests
+
+* **harness:** pin the proposer survival bar, 5.4 as an absence assertion ([4cb3c4c](https://github.com/event4u-app/agent-config/commit/4cb3c4c37eb6f5416bfc84f305949277c9c9ce16))
+* **council:** pin the probe-above-council precedence as a guarded baseline ([b635f4e](https://github.com/event4u-app/agent-config/commit/b635f4efca1fedb516fcd20690114627fccdb962))
+* **council:** pin the early-stop cost/quality separation as a guarded baseline ([0b4b922](https://github.com/event4u-app/agent-config/commit/0b4b92205bd80dfcca995873de8b6ad9499fe1b7))
+
+### Chores
+
+* **deps-dev:** bump @cloudflare/workers-types from 5.20260819.1 to 5.20260829.1 in /deploy/telemetry-worker in the telemetry-worker group (#1797) ([de6708b](https://github.com/event4u-app/agent-config/commit/de6708b3625aaca778d58db995183255270b0b00))
+* **deps:** bump the site group in /site with 4 updates (#1798) ([044d141](https://github.com/event4u-app/agent-config/commit/044d141404b6a717beffc1c58ea6ae4dd271753f))
+
+### Other
+
+* complete the deferral-carry guard, and give a carrier a status that costs something (#1810) ([6641d47](https://github.com/event4u-app/agent-config/commit/6641d471993726174dde2f9d14734be8098a01fd))
+* **governed-evidence:** cure F-A and F-C, and record 2A as owner-reserved (#1809) ([4ea82c2](https://github.com/event4u-app/agent-config/commit/4ea82c2f3239d4b36240108cbaf68ac2fecc5e1f))
+* complete comment-enforcement-completion (#1808) ([183f9af](https://github.com/event4u-app/agent-config/commit/183f9afafa515f3619e9057b7cd9b6771b212ebe))
+* complete harness-promotion-bridge (#1802) ([56c3338](https://github.com/event4u-app/agent-config/commit/56c3338557b634670f9098c913e6b907bac5809c))
+* complete publication-integrity-hard-fail (#1801) ([f7fc5a1](https://github.com/event4u-app/agent-config/commit/f7fc5a135e7b8e38a6ce35f3be956ec449364bb9))
+* complete blocked-quickwin-visibility (#1803) ([ef30b1f](https://github.com/event4u-app/agent-config/commit/ef30b1f3e80a03032e8ba29d272cdd97d8a6cdc8))
+* **governed-evidence:** record the drain-15 1B disposition (#1804) ([7a3fe86](https://github.com/event4u-app/agent-config/commit/7a3fe8646f436449df98adbcb9e88c81763561af))
+* **council-topology:** record the carrier's terminal disposition (#1805) ([31b2db2](https://github.com/event4u-app/agent-config/commit/31b2db292c8c3ce158220692d860695af7af85f9))
+* **publication-integrity:** make the discarded detection refuse, and escalate the Phase 2 authority split (#1796) ([23391ae](https://github.com/event4u-app/agent-config/commit/23391aec24d4f7d47d71d1c4aeb86be46e81023c))
+* **blocked-quickwin:** give stubs:due a fourth bucket, and delete the dispatcher definition that hid it (#1799) ([94000b3](https://github.com/event4u-app/agent-config/commit/94000b3bb5026fd78e788939d5cfd0b4e7ed00a6))
+* **governed-evidence:** refuse the metered capture on validity, and repair six defects found proving it (#1795) ([1f6961d](https://github.com/event4u-app/agent-config/commit/1f6961da96128f7b04c9c572226c120fd59a6a2b))
+* record the terminal owner-reserved disposition, and measure the unguarded carrier (#1794) ([597bf38](https://github.com/event4u-app/agent-config/commit/597bf3816d3c6212bce349b443b9b569b1967ae6))
+* fix the release-head placeholder defect, and surface the quick-win the estate ratchet was holding (#1793) ([03d61a1](https://github.com/event4u-app/agent-config/commit/03d61a1161109d6704d8c9f9e528b2fe75f45511))
+* **harness-bridge:** make a merge-authority refusal recordable, and record drain-13's dispositions (#1789) ([b50b272](https://github.com/event4u-app/agent-config/commit/b50b272817513325d30a2500039a379e9cd5a336))
+* **governed-evidence:** close Phase 1, narrow the metered park, build Phase 2's arm and record its execution refusal (#1791) ([1e4b97b](https://github.com/event4u-app/agent-config/commit/1e4b97b286ddc4ebe6853ff588ed90efedea8661))
+* **topology:** verify every deferral trigger, repair what the receiver mis-states, and record why it is not drained (#1790) ([35e1a3d](https://github.com/event4u-app/agent-config/commit/35e1a3d089f744d9dc1a2b477c80501acdc62626))
+* complete road-to-governed-harness-evolution (#1785) ([0a567e9](https://github.com/event4u-app/agent-config/commit/0a567e949e7936c438d8d06db2e3b273d3f89ca7))
+* close road-to-inbox-harvest-2026-08-e-council-topology-evidence (#1787) ([468eeef](https://github.com/event4u-app/agent-config/commit/468eeefc7f45af21414bf2e42de769249a84a31d))
+* transfer the four governed-harness obligations to an owned receiver, and archive the source (#1788) ([50457b8](https://github.com/event4u-app/agent-config/commit/50457b898e65b2c92e4a0c6df066ff80da8ba9da))
+* complete road-to-harness-promotion-bridge (#1784) ([7259c40](https://github.com/event4u-app/agent-config/commit/7259c407f46036bf88bcb2edbf8dbe9d76897cd4))
+* advance road-to-inbox-harvest-2026-08-e-council-topology-evidence (#1782) ([8a9b97a](https://github.com/event4u-app/agent-config/commit/8a9b97af5485d8f96e268503ff1528051e0ef90b))
+* drop two imports the merge left unused ([dae43b1](https://github.com/event4u-app/agent-config/commit/dae43b1e8785ee8ceebee6f60bc2dac0dc361b70))
+* record that the merge-authority council route was refused, twice ([ba41097](https://github.com/event4u-app/agent-config/commit/ba41097eb4b15e584fcf3a0388eb771badcda638))
+* harness-promotion-bridge 0/9 -> 7/9 — Phase 7 closed as mechanism, AC-9 re-audited and still open ([0040258](https://github.com/event4u-app/agent-config/commit/004025839a1528511544e5fb1ef219eb385d9ac4))
+* harness-promotion-bridge — the carried condition is discharged by route 1 ([4a1e2f9](https://github.com/event4u-app/agent-config/commit/4a1e2f9163cd4e7253994f80a407dc2b9a6642a0))
+* archive obligation-delivery-verification, all items disposed ([6d4dea9](https://github.com/event4u-app/agent-config/commit/6d4dea906e171fa96a9bb7e73ff2ddb3076b01ec))
+* obligation-delivery closes BLOCKED-BY-ARCHITECTURE, criterion transferred not dropped ([991d4aa](https://github.com/event4u-app/agent-config/commit/991d4aa60eb5492a29bed58e5591adce82c22fd0))
+
+Tests: 20561 (+674 since 14.13.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
