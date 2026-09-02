@@ -48,7 +48,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -316,7 +316,7 @@ export function main(argv: string[]): number {
     }
 
     try {
-        assertScanned({
+        reportScanned({
             gate: 'lint_code_comments',
             scanned: candidates.length,
             units: 'source file(s)',
@@ -337,7 +337,7 @@ export function main(argv: string[]): number {
         }
         throw e;
     }
-    process.stdout.write(`scanned: ${candidates.length} source file(s) against ${explicit.length > 0 ? 'an explicit path list' : base}\n`);
+    process.stdout.write(`  against ${explicit.length > 0 ? 'an explicit path list' : base}\n`);
     if (findings.length === 0) {
         process.stdout.write('✅  lint_code_comments: no German, report-shaped or provenance comments.\n');
         return 0;
