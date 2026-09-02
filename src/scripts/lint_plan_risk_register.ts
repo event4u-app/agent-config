@@ -10,8 +10,9 @@
  * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * (top level only — `archive/`, `skipped/`, `later/`, `stubs/` excluded, as
  * are `template.md` and `dashboard*`). `status: draft` and `status: carrier`
- * frontmatter exempt a file (reported as `draft-exempt`, still counted as
- * scanned).
+ * frontmatter exempt a file, each reported under its own name (`draft-exempt`
+ * / `carrier-exempt`) and still counted as scanned — one label for two states
+ * made the gate's own output name a state it had not acted on.
  *
  * Checks per ready file:
  *   1. `## Risk Register` section exists — missing = fail unless the
@@ -327,27 +328,37 @@ export function validateTable(
     return { headerFound, rowCount, violations };
 }
 
+/** A frontmatter status that exempts the file, or `null` when none does. */
+export type ExemptingStatus = 'draft' | 'carrier';
+
 /**
- * `status: draft` — and `status: carrier` — in the frontmatter exempt a file.
+ * Which frontmatter status exempts this file, per contract § 1.
+ *
+ * `draft` and `carrier` both exempt, and WHICH one is returned rather than a
+ * bare boolean: the previous predicate answered "is this exempt" and the gate
+ * then printed `draft-exempt` for a carrier, so its own output named a state it
+ * had not acted on.
  *
  * A carrier is not a plan. It holds obligations deferred out of an archived
  * parent, each with an unmet resumption trigger, so a plan risk register for it
  * would be manufactured rather than reported. Same category reason that exempts
  * it from `check_roadmap_trackable`'s `## Phase` requirement.
  */
-export function hasDraftStatus(text: string): boolean {
+export function exemptingStatus(text: string): ExemptingStatus | null {
     const lines = _splitLines(text);
-    if ((lines[0] ?? '').trim() !== '---') return false;
+    if ((lines[0] ?? '').trim() !== '---') return null;
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i] as string;
-        if (line.trim() === '---') return false;
-        if (/^status:\s*(?:draft|carrier)\s*$/.test(line)) return true;
+        if (line.trim() === '---') return null;
+        const m = /^status:\s*(draft|carrier)\s*$/.exec(line);
+        if (m !== null) return m[1] as ExemptingStatus;
     }
-    return false;
+    return null;
 }
 
 export interface ContentResult {
-    draftExempt: boolean;
+    /** The status that exempted the file, or `null` when it was checked. */
+    exempt: ExemptingStatus | null;
     registerMissing: boolean;
     /** Parsed `reviewed:` date when the marker is valid; null otherwise. */
     reviewed: string | null;
@@ -357,13 +368,14 @@ export interface ContentResult {
 /** Pure content-level Gate-R1 check (no git — grandfather/staleness live in checkFile). */
 export function checkContent(file: string, text: string): ContentResult {
     const result: ContentResult = {
-        draftExempt: false,
+        exempt: null,
         registerMissing: false,
         reviewed: null,
         violations: [],
     };
-    if (hasDraftStatus(text)) {
-        result.draftExempt = true;
+    const exempt = exemptingStatus(text);
+    if (exempt !== null) {
+        result.exempt = exempt;
         return result;
     }
     const lines = _linesOutsideFences(text);
@@ -580,7 +592,7 @@ function _blobAt(absPath: string, sha: string): string | null {
     return _git(root, ['show', `${sha}:${rel}`]);
 }
 
-export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
+export type FileStatus = 'ok' | 'draft-exempt' | 'carrier-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
     file: string;
@@ -592,8 +604,8 @@ export interface FileResult {
 export function checkFile(absPath: string): FileResult {
     const text = fs.readFileSync(absPath, 'utf-8');
     const content = checkContent(absPath, text);
-    if (content.draftExempt) {
-        return { file: absPath, status: 'draft-exempt', violations: [] };
+    if (content.exempt !== null) {
+        return { file: absPath, status: `${content.exempt}-exempt`, violations: [] };
     }
     if (content.registerMissing) {
         // Grandfather clause (contract § 1): exempt while feature-equal with
@@ -867,8 +879,8 @@ export function main(argv?: readonly string[]): number {
         for (const p of targets) {
             const result = checkFile(p);
             scanned += 1;
-            if (result.status === 'draft-exempt') {
-                statusLines.push(`  draft-exempt: ${p}`);
+            if (result.status === 'draft-exempt' || result.status === 'carrier-exempt') {
+                statusLines.push(`  ${result.status}: ${p}`);
             } else if (result.status === 'grandfathered') {
                 statusLines.push(`  grandfathered: ${p}`);
             }

@@ -1,6 +1,7 @@
 // Tests for src/scripts/lint_plan_risk_register.ts (Gate R1, plan-governance
 // Phase 4). Synthetic fixtures only — inline strings + tmpdir files/repos,
-// never the tracked agents/roadmaps/ corpus. The substantial-change FP/FN
+// never the tracked agents/roadmaps/ corpus. code-comment-allow provenance-comment -- names the corpus these fixtures avoid
+// The substantial-change FP/FN
 // fixtures are the regression contract for the § 3 heuristic
 // (docs/contracts/plan-review-gates.md).
 import { execFileSync } from 'node:child_process';
@@ -57,7 +58,7 @@ function kinds(violations: readonly mod.Violation[]): string[] {
 describe('lint_plan_risk_register — checkContent', () => {
     it('valid register passes', () => {
         const res = mod.checkContent('plan.md', VALID_PLAN);
-        expect(res.draftExempt).toBe(false);
+        expect(res.exempt).toBeNull();
         expect(res.registerMissing).toBe(false);
         expect(res.reviewed).toBe('2026-08-04');
         expect(res.violations).toEqual([]);
@@ -74,8 +75,21 @@ describe('lint_plan_risk_register — checkContent', () => {
     it('status: draft frontmatter is exempt', () => {
         const draft = `---\ncomplexity: simple\nstatus: draft\n---\n\n${BASE_PLAN}`;
         const res = mod.checkContent('plan.md', draft);
-        expect(res.draftExempt).toBe(true);
+        expect(res.exempt).toBe('draft');
         expect(res.violations).toEqual([]);
+    });
+
+    it('status: carrier is exempt too, and is NOT reported as draft', () => {
+        const carrier = `---\ncomplexity: simple\nstatus: carrier\n---\n\n${BASE_PLAN}`;
+        const res = mod.checkContent('plan.md', carrier);
+        expect(res.exempt).toBe('carrier');
+        expect(res.violations).toEqual([]);
+    });
+
+    it('reads the exempting status from the frontmatter only', () => {
+        expect(mod.exemptingStatus(`---\nstatus: ready\n---\nstatus: carrier\n`)).toBeNull();
+        expect(mod.exemptingStatus(`---\nstatus: carrier\n---\n`)).toBe('carrier');
+        expect(mod.exemptingStatus(BASE_PLAN)).toBeNull();
     });
 
     it('missing section is reported as registerMissing', () => {
