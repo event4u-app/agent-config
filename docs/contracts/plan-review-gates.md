@@ -42,7 +42,7 @@ did not act on:
 | `carrier` | `carrier-exempt` | not a plan at all — it holds obligations deferred out of an archived parent, each with an unmet resumption trigger, so a plan risk register for it would be manufactured rather than reported |
 
 `carrier` was added on 2026-09-02, when that status shipped, and this table is
-where it becomes contract rather than validator behaviour: the validator had
+where it becomes contract rather than validator behavior: the validator had
 been exempting it against a § 1 that named only `draft`, which this file's own
 header defines as a validator bug. The category reason is the one that also
 exempts a carrier from `check_roadmap_trackable`'s `## Phase` requirement, and
