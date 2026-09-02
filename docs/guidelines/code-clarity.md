@@ -315,51 +315,23 @@ Behavioral baseline: `tests/code-comments/eval-fixtures.md`
 `ccd-untouched-preservation`, `ccd-explicit-teaching-override`); the decidable
 criteria are proven by `tests/scripts/code_comment_fixtures.test.ts`.
 
-### Evidence belongs where it was asked for — the measured case
+### Evidence belongs in the roadmap that asked for it
 
-The rule's Iron Law on this is short; the evidence behind it is here.
-
-Measured 2026-09-02 in a consumer repository: **509 German comment lines** plus
+Measured 2026-09-02 in a consumer repository: **509 German comment lines** and
 **21 report- or provenance-shaped comments** across **41 of 45** changed source
-files, the worst being a 101-line colour-analysis report — dE2000 table, WCAG
-comparison, mapping table, reopen clause — inside a CSS file whose first two
-lines cited the roadmap and the prototype the values came from.
+files, the worst a 101-line colour-analysis report inside a CSS file. The cause
+was a roadmap requiring proof for every checked step: the run read that as
+*evidence should be documented* and wrote the measurements into the source too,
+where the roadmap already carried them.
 
-The cause was a roadmap that required proof for every checked step and said in
-as many words that the proof goes in its own evidence block. The run read that
-as *evidence should be documented* and wrote the measurements into the source
-as well. The numbers were correct and the roadmap already carried them.
+The provenance of a value is not a WHY, and a roadmap cannot license a comment
+the rule forbids.
 
-Two things follow, and the second is the one that gets skipped:
-
-- **The provenance of a value is not a WHY.** *Why this threshold and not the
-  obvious one* is a constraint the code cannot show. *Which document this value
-  was translated from* is bookkeeping, and it goes stale the first time either
-  side moves.
-- **A roadmap cannot license a comment the rule forbids.** An instruction to
-  document evidence is an instruction about the roadmap's own evidence block.
-  Where the two appear to conflict, the rule wins and the roadmap step is the
-  thing to fix.
-
-### Why the rule carries two enforcers
-
-`code-comment-discipline` is `type: auto` on keywords like `comment`,
-`refactor` and `implement`, and those match the PROMPT. A run that writes
-forty-five files because the user asked for a feature matches none of them, so
-the rule does not load at exactly the moment it governs — the activation gap
-`fix-what-you-see` states for itself.
-
-`language-and-tone` had a sharper version of the same hole: its "Code comments
-English" clause named `check_md_language` as enforcer, and that validator
-rejects every path that is not `.md` (`check_md_language.ts:175`). The clause
-carried an `enforced_by` entry that structurally cannot see a source file.
-
-Hence the two carriers, neither of which reads the prompt:
-`src/scripts/lint_code_comments.ts` refuses at the gate on the diff, and the
-`comment-discipline` `post_tool_use` concern reports on the text as it is
-written. Neither replaces the discipline — an advisory nudge can be ignored and
-a gate only sees what the diff carries — but both fire where a keyword trigger
-cannot reach.
+Two enforcers carry this because neither rule could fire on a write:
+`code-comment-discipline` matches prompt keywords, and `language-and-tone`'s
+English-comment clause named a `.md`-only validator. `lint_code_comments`
+refuses on the diff; the `comment-discipline` concern reports on the text as
+written. Neither replaces the discipline.
 
 ## See also
 
