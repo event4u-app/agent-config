@@ -47,7 +47,7 @@ files rather than to close them.
 |---|---|---|
 | [#1808](https://github.com/event4u-app/agent-config/pull/1808) | roadmap: complete comment-enforcement-completion | MERGED 2026-09-02T05:35:43Z |
 | [#1809](https://github.com/event4u-app/agent-config/pull/1809) | roadmap(governed-evidence): cure F-A and F-C, and record 2A as owner-reserved | MERGED 2026-09-02T06:05:03Z |
-| this PR | roadmap: complete the deferral-carry guard | open at the time of writing |
+| [#1810](https://github.com/event4u-app/agent-config/pull/1810) | roadmap: complete the deferral-carry guard, and give a carrier a status that costs something | open, CI **SETTLED GREEN — 45 checks** |
 
 **Nothing was merged by this run.** A production-branch merge is a Hard Floor in
 `non-destructive-by-default`, which no mandate, autonomy setting or council
@@ -130,6 +130,32 @@ ships.
 - `lint_code_comments --self-test` — 20 cases, 11 rejecting, sensitivity
   observed rather than assumed.
 
+## What CI caught that no local gate did
+
+PR #1810 went red twice, and both are worth recording because the local
+preflight passed each time.
+
+**`check_source_size_budget`, +96 lines.** Two files crossed the 1,500-line
+ceiling — `check_estate_count` 1412 → 1581 and `update_roadmap_progress`
+1500 → 1515, the second having had exactly zero headroom. That gate's own
+doctrine is that an oversized file is **split**, not granted a higher baseline,
+so the excess was paid down to the baseline rather than the number moved: a
+shared `_lib/carrier_status.ts` for a predicate that had two implementations and
+five callers, a companion module for the three new self-test cases, and
+`is_draft` → `is_unscheduled` over `{draft, carrier}` so one honest predicate
+replaces a second predicate plus an `||` at each call site. **No comment was
+deleted to buy a line** — the two long fixture rationales moved into the shared
+module and are pointed at from the cases.
+
+**`check_secret_leak`, one high-confidence finding.** The PEM canary pin in
+`.secret-allow` drifted 525 → 543, because registering the new gate put a row
+with its own canary recipe above it. Fifth drift of that pin, fifth time from
+the same cause. Re-pinned from a fresh `grep -n`, not offset from the old
+number, with the body re-read before moving it.
+
+Both were fixed on the branch. Neither was in the local preflight, which is the
+gap worth carrying forward rather than the two fixes.
+
 ## Honest limits of this report
 
 Three gates were red locally and are not this run's: `check_gate_completeness`
@@ -140,3 +166,9 @@ Each was proven pre-existing by measurement rather than argued.
 
 Two roadmaps remain active and both are correctly active. The estate is not
 empty, and the reason is recorded above rather than worked around.
+
+One ordering note, because the brief asked for this file as the final commit:
+it is the last **content** commit. The commit after it touches only
+`agents/evidence/reviews/…findings.md`, which the review-scope diff excludes by
+construction — the re-bind the completion-review contract requires, and the one
+commit that cannot change what this summary describes.
