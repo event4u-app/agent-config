@@ -751,6 +751,94 @@ byte-identically and re-verified by SHA-256:**
 Restore verified green: **37/37** across the two new test files,
 `npm run typecheck` clean.
 
+### PHASE 2 — DISPOSITION 2026-09-02 (drain run 16): 2A, OWNER-RESERVED, AND THE FREEZE ORDERING CORRECTED
+
+*AI council 2026-09-02, members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
+every line relied on is inlined here per `no-roadmap-references`.*
+
+**What this run did, and did not do.** It executed the preparatory half of the
+resume condition and made **zero metered calls**. F-A is cured: the
+equivalence-preserving manifest exists, and a fresh detached checkout
+reconstructed the subject to `SUBJECT EQUIVALENT`, zero differences. F-C's
+producer exists. The fresh-checkout dry re-run passed, refusing correctly when
+`.claude/rules` was absent and reproducing drain-14's 13-files / 101-skips
+figures once generated. **No checkbox moved and no acceptance criterion was
+claimed.**
+
+**F-B was NOT frozen, and the reason is a new falsifiable finding rather than
+reluctance.** The frozen corpus is `.claude/rules/*.md`; the pre-registered
+cheap evaluator `description_route_check` loads its catalogue from
+`dist/agent-src/` (`:386-410`), that catalogue is `name + description` only
+(`catalogueHash`, `:81-84`), and both admitted mutation recipes preserve
+frontmatter byte-identically (`candidate_proposer.ts:126-140`, `:159-164`). So
+every trial ties, `discordant` is 0 against a floor of 5, and the outcome is
+`underpowered` — which this file already rules does not discharge AC-2.
+Freezing a metric known in advance to return a non-answer would burn the
+one-shot "entire or not at all" freeze.
+
+**Verdict 2A — convergent 2/2, and CONDITIONAL.** Adopt the agent-run A/B bench
+(`bench_ab_clone.ts:449`) as the outcome surface: it is the one evaluator a
+rule-body mutation can move. 2B was refused because re-cutting the corpus onto a
+cheap evaluator's surface *"changes the question from 'Are rule bodies stable?'
+to 'Are rule frontmatters stable?'"*. **2C was refused, and the refusal is the
+sharpest line in the round:** *"That makes `discordant = 0` an invariant of the
+apparatus, not evidence that the mutations have no effect. Calling this an
+'honest null' would conflate 'no detectable effect under a capable test' with
+'the test cannot observe the intervention.'"* If 2A later proves unaffordable,
+the closure to record is **design infeasibility and owner waiver of AC-2**, not
+an experimental null.
+
+The conditions attached: demonstrated treatment reachability, controlled
+pairing, and an approved power and stopping policy, all before adoption.
+
+**2A IS OWNER-RESERVED. Both seats, unprompted, and this is the operative
+finding of the round.** The drain-15 delegation permitted a provenance-preserving
+pin of the **same subjects**; 2A *"materially changes the pre-registered
+measurement apparatus, trial budget, and evidentiary meaning."* One seat added a
+distinction worth keeping: 2A amends the **outcome surface / estimand** while
+retaining the same corpus subjects, which strengthens it against 2B without
+bringing it inside the delegation. The owner must additionally decide whether
+AC-2's notion of a cheap evaluator is itself part of the criterion — if it is,
+2A needs an explicit **AC amendment**, not merely a protocol amendment.
+
+**The freeze-ordering tension is resolved AGAINST drain 15, and this roadmap's
+own resume condition is corrected accordingly.** The implementing session
+recorded the conflict rather than deciding it: the un-park procedure
+(`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:49-52`) puts the
+protocol freeze in the *independent* session before any baseline capture, while
+the drain-15 chain placed it in preparatory work. The council held the stricter
+rule binds: *"Prior execution does not cure a compromised independence
+safeguard. A later record supersedes an earlier rule only if it explicitly
+resolves or replaces the conflicting requirement — not merely because it is
+later and 'convergent.'"* One seat offered a reconciliation the other did not
+dispute: subject **capture** (F-A) may be preparatory; protocol **freeze** may
+not.
+
+**The corrected sequence, replacing the drain-15 ordering for this file:**
+
+1. The owner approves 2A and any AC or budget amendment it implies.
+2. Preparatory work produces a complete *candidate* protocol — done, and it is
+   a candidate rather than a freeze.
+3. An independent session reviews and freezes that protocol.
+4. Any baseline captured before that freeze is discarded for evidentiary
+   purposes. The F-A manifest and its reconstruction check survive as
+   provenance; they are not the frozen baseline.
+5. A fresh baseline is captured after the operative freeze.
+6. The paired trial runs under the frozen protocol.
+
+**One caveat both seats stated and neither resolved.** One seat noted it could
+not verify the three legs of the F-B finding from its own workspace and made its
+verdict conditional on them; the other treated them as sound if the cited
+implementation holds. The legs are cited to file and line above so the next
+reader checks rather than inherits them.
+
+**Nothing was captured, no criterion moved, and `metered-backend-park` stays
+open with its (c) narrowing.** It is not closed with (b), for the reason drain
+15 gave and this round did not disturb.
+
 ## Blockers
 
 ### blocker: metered-backend-park
