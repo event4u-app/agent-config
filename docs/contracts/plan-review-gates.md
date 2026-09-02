@@ -31,9 +31,24 @@ the pre-push hook is defence-in-depth, the agent-side step is advisory.
 
 ## 1. Gate R1 — Risk Register grammar (`risk-review: v1`)
 
-A **ready** (non-draft) plan file under a roadmaps directory MUST contain a
-`## Risk Register` section. `status: draft` frontmatter exempts the file
-until it flips to ready.
+A **ready** plan file under a roadmaps directory MUST contain a
+`## Risk Register` section. Two frontmatter statuses exempt it, and the
+validator reports each under its own name so its output never names a state it
+did not act on:
+
+| `status:` | Reported as | Exempt because |
+|---|---|---|
+| `draft` | `draft-exempt` | not yet a plan — the exemption lifts when it flips to ready |
+| `carrier` | `carrier-exempt` | not a plan at all — it holds obligations deferred out of an archived parent, each with an unmet resumption trigger, so a plan risk register for it would be manufactured rather than reported |
+
+`carrier` was added on 2026-09-02, when that status shipped, and this table is
+where it becomes contract rather than validator behavior: the validator had
+been exempting it against a § 1 that named only `draft`, which this file's own
+header defines as a validator bug. The category reason is the one that also
+exempts a carrier from `check_roadmap_trackable`'s `## Phase` requirement, and
+the exemption is not free — `lint_carrier_integrity` requires every live
+carrier to be named by some archived parent's `deferred-resolution:
+carried-to=` annotation, so the status cannot be worn to collect exclusions.
 
 **Enforced corpus — narrower than the obligation (R2 round-3 finding 9).**
 The validator's corpus is the **top level of `agents/roadmaps/` only**.

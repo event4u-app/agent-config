@@ -36,7 +36,13 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { classifyDiff, exemptionReason, growthClaims } from '../../src/scripts/check_estate_count.js';
+import {
+    classifyDiff,
+    countEstate,
+    exemptionReason,
+    growthClaims,
+    isCarrierText,
+} from '../../src/scripts/check_estate_count.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_estate_count.ts');
@@ -202,7 +208,7 @@ describe('check_estate_count — the ratchet direction', () => {
     });
 
     it('exits 2, never 1, when the roadmap root is empty — a dead scope is not a pass', () => {
-        // The failure this guards: move agents/roadmaps/ and every count is 0,
+        // The failure this guards: move agents/roadmaps/ and every count is 0, code-comment-allow provenance-comment -- the scan root under test
         // which is trivially under any floor. Exit 1 would assert the estate
         // grew; exit 2 says the gate could not run.
         const repo = initRepo(1);
@@ -774,5 +780,86 @@ describe('check_estate_count — the skill estate', () => {
         );
         commitAll(repo, 'add a skill with a claim');
         expect(run(repo, ['--base', 'main']).status).toBe(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The `status: carrier` term, which had no unit coverage at all when it landed.
+// ---------------------------------------------------------------------------
+
+/** A carrier, as its frontmatter declares it. */
+const CARRIER_TEXT = '---\nstatus: carrier\n---\n# Roadmap: c\n\n## Phase 1\n\n- [~] **1.1** s\n';
+
+describe('isCarrierText reads the frontmatter, and only the frontmatter', () => {
+    it('accepts the declaration and rejects every near-miss', () => {
+        expect(isCarrierText(CARRIER_TEXT)).toBe(true);
+        expect(isCarrierText('---\ncomplexity: bounded\nstatus: carrier\n---\n# c\n')).toBe(true);
+        expect(isCarrierText(null)).toBe(false);
+        expect(isCarrierText(roadmap('plain'))).toBe(false);
+        expect(isCarrierText('---\nstatus: ready\n---\n# c\n')).toBe(false);
+        // A body mention is documentation, never a declaration.
+        expect(isCarrierText('---\nstatus: ready\n---\n# c\n\nstatus: carrier\n')).toBe(false);
+        // No frontmatter block at all.
+        expect(isCarrierText('status: carrier\n# c\n')).toBe(false);
+    });
+});
+
+describe('classifyDiff scores a carrier removal at zero credit', () => {
+    const nameStatus = (status: string, file: string): string => `${status}\t${file}`;
+    const none = (): null => null;
+
+    it('gives no offset for a deleted carrier, and one for a deleted ordinary roadmap', () => {
+        const deleted = nameStatus('D', 'agents/roadmaps/road-to-x.md');
+        const asCarrier = classifyDiff(deleted, none, () => CARRIER_TEXT);
+        expect(asCarrier.offsets).toEqual([]);
+        const asOrdinary = classifyDiff(deleted, none, () => roadmap('x'));
+        expect(asOrdinary.offsets).toEqual(['agents/roadmaps/road-to-x.md']);
+    });
+
+    it('gives no offset for a carrier ARCHIVED by rename, and one for an ordinary roadmap', () => {
+        const moved = 'R100\tagents/roadmaps/road-to-x.md\tagents/roadmaps/archive/road-to-x.md';
+        expect(classifyDiff(moved, none, () => CARRIER_TEXT).offsets).toEqual([]);
+        expect(classifyDiff(moved, none, () => roadmap('x')).offsets).toEqual([
+            'agents/roadmaps/road-to-x.md',
+        ]);
+    });
+
+    it('defaults to the pre-carrier scoring when the caller supplies no base reader', () => {
+        // The documented default of `readBase`: a caller that cannot produce a
+        // pre-image keeps the old answer rather than silently getting a new one.
+        const deleted = nameStatus('D', 'agents/roadmaps/road-to-x.md');
+        expect(classifyDiff(deleted, none).offsets).toEqual(['agents/roadmaps/road-to-x.md']);
+    });
+});
+
+describe('countEstate counts a carrier as the estate it is', () => {
+    it('is unchanged by a status flip in either direction', () => {
+        const repo = initRepo(3);
+        const before = countEstate(repo).active_roadmaps;
+        write(repo, 'agents/roadmaps/road-to-2.md', CARRIER_TEXT);
+        expect(countEstate(repo).active_roadmaps).toBe(before);
+        write(repo, 'agents/roadmaps/road-to-2.md', roadmap('R2'));
+        expect(countEstate(repo).active_roadmaps).toBe(before);
+    });
+
+    it('counts an added carrier as growth rather than as free estate', () => {
+        const repo = initRepo(3);
+        const before = countEstate(repo).active_roadmaps;
+        write(repo, 'agents/roadmaps/road-to-fresh-carrier.md', CARRIER_TEXT);
+        expect(countEstate(repo).active_roadmaps).toBe(before + 1);
+    });
+
+    it('leaves a parked carrier out of open_blockers, exactly as it leaves a draft out', () => {
+        const repo = initRepo(1);
+        const before = countEstate(repo).open_blockers;
+        const withBlocker = roadmap('P', { blockers: 2 });
+        write(repo, 'agents/roadmaps/later/parked-carrier.md', withBlocker);
+        expect(countEstate(repo).open_blockers).toBe(before + 2);
+        write(
+            repo,
+            'agents/roadmaps/later/parked-carrier.md',
+            `---\nstatus: carrier\n---\n\n${withBlocker}`,
+        );
+        expect(countEstate(repo).open_blockers).toBe(before);
     });
 });

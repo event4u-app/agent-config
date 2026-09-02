@@ -12,7 +12,7 @@
  * `archive_completed_roadmaps` can consume it the same way Python does. snake_case
  * is kept on the public surface.
  *
- * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,
+ * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * `template.md`, `README.md`, `open-questions*.md`), counts checkbox states per
  * phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
  * `roadmaps/` folder to keep it clean) with:
@@ -96,7 +96,7 @@ const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs'
 
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---[ \t\n\r\f\v]*\n/;
-const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
+const UNSCHEDULED_VALUES: ReadonlySet<string> = new Set(['draft', 'carrier']);
 
 const MERGE_GATED_RE = /merge-gated/i;
 // PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)
@@ -289,8 +289,8 @@ function _stripQuotes(s: string): string {
     return out;
 }
 
-function is_draft(fm: Record<string, string>): boolean {
-    return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
+function is_unscheduled(fm: Record<string, string>): boolean {
+    return UNSCHEDULED_VALUES.has((fm['status'] ?? '').toLowerCase());
 }
 
 /**
@@ -752,7 +752,7 @@ function collect(roadmap_root: string): RoadmapStats[] {
             continue;
         }
         const text = fs.readFileSync(p, { encoding: 'utf-8' });
-        if (is_draft(parse_frontmatter(text))) {
+        if (is_unscheduled(parse_frontmatter(text))) {
             continue;
         }
         const stats = parse_roadmap(p, roadmap_root);
@@ -820,7 +820,7 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
         } catch {
             continue;
         }
-        if (is_draft(parse_frontmatter(text))) {
+        if (is_unscheduled(parse_frontmatter(text))) {
             continue;
         }
         const cell = resume_cell(text);
@@ -1305,7 +1305,7 @@ function _parseArgs(argv: readonly string[]): Args {
 }
 
 /**
- * When the default cwd carries no `agents/roadmaps/`, fall back to the git
+ * When the default cwd carries no `agents/roadmaps/`, fall back to the git  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * toplevel — hook and IDE invocations often run from a subdirectory, and a
  * cwd-only resolution silently skipped the dashboard there. An explicit
  * `--repo-root` always wins; a cwd that has the directory is used as-is
@@ -1479,7 +1479,7 @@ export {
     TITLE_RE,
     FRONTMATTER_RE,
     parse_frontmatter,
-    is_draft,
+    is_unscheduled,
     is_roadmap_candidate,
     count_checkboxes,
     parse_blockers,

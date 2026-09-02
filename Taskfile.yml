@@ -121,6 +121,7 @@ tasks:
       - task: lint-override-kernel-guard
       - task: lint-output-slop
       - task: lint-code-comments
+      - task: lint-carrier-integrity
       - task: lint-never-silent
       - task: lint-example-fences
       - task: lint-workflow-paths

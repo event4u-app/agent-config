@@ -47,7 +47,7 @@
  * or merges one in the same change — or the added file carries an explicit
  * `estate_offset_exempt:` reason in its frontmatter, which costs a visible line
  * in the diff of the very commit that claims it. This half is diff-scoped: it
- * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no
+ * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * roadmap it legitimately finds nothing to weigh.
  *
  * THE THREE WAYS THE ESTATE MAY LEGITIMATELY GROW
@@ -65,7 +65,7 @@
  *    estate rather than creating it, so it needs no authorisation; what the
  *    allowance does NOT cover is a `later/` file appearing from nowhere.
  * 3. **Anything else** — `estate_growth_exempt: <reason>` added, in this change,
- *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical
+ *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  *    case is a blocker discovered while doing the work: `open_blockers` rises,
  *    nothing was archived, and the reason belongs next to the blocker.
  *
@@ -117,7 +117,7 @@
  * which one lied.
  *
  * The same function measures the BASE side, over a scratch copy of the base
- * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a
+ * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * second implementation would let the two sides disagree about one tree, which
  * is the failure this section already argues against, one level up.
  *
@@ -143,7 +143,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     collect,
-    is_draft as isDraft,
+    is_unscheduled as isUnscheduled,
     is_roadmap_candidate as isRoadmapCandidate,
     parse_frontmatter as parseFrontmatter,
     parse_roadmap as parseRoadmap,
@@ -155,6 +155,8 @@ import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { countDeclaredCarriers, declaresCarrier } from './_lib/carrier_status.js';
+import { carrierEstateCases } from './_lib/estate_carrier_cases.js';
 
 const GATE = 'check_estate_count';
 const BUDGET_REL = path.join('src', 'config', 'estate-count-budget.json');
@@ -436,7 +438,39 @@ function countIn(roadmapRoot: string, sub: string): number {
     }
 }
 
-/** Non-draft roadmaps parked in `later/`, parsed for their blockers. */
+/**
+ * Top-level roadmaps `collect()` drops for declaring `status: carrier`, added
+ * back so that FLIPPING a status is count-neutral.
+ *
+ * Measured before this: flipping one file to `carrier` moved `active_roadmaps
+ * 3 → 2` and the gate printed "estate within its ratchet", because a count
+ * below the floor is a drawdown and free. The floor is measured at the base
+ * ref, so once such a flip merges the lowered number becomes the next floor —
+ * the file cannot be flipped back without paying, and any roadmap can be
+ * laundered out of the count by adding one word.
+ *
+ * A reclassification is not a disposal, so the metric counts the file on both
+ * sides. Same argument `open_blockers` makes below for spanning `later/`.
+ * Deleting a carrier is still a shrink and still earns no offset
+ * (`classifyDiff`); adding one is growth that takes the claim path.
+ *
+ * This is therefore the one roadmap metric that does NOT equal the dashboard
+ * header, stated here rather than left to be tripped over.
+ */
+function countActiveCarriers(roadmapRoot: string): number {
+    return countDeclaredCarriers(roadmapRoot, isRoadmapCandidate, fs, path.join);
+}
+
+/**
+ * Roadmaps parked in `later/` whose blockers count, parsed for them.
+ *
+ * Skips a draft AND a carrier, which is the same pair `collect()` skips on the
+ * active side. It used to skip only the draft, so parking a carrier moved its
+ * blockers INTO the gated count while the identical file at the top level kept
+ * them out — a ratchet verdict that moved on a relocation, for no stated
+ * reason. Three of the four status readers learned `carrier` when the status
+ * shipped; this is the fourth.
+ */
 function laterRoadmaps(roadmapRoot: string): Array<{ open_blockers: readonly unknown[] }> {
     const dir = path.join(roadmapRoot, 'later');
     let names: string[];
@@ -452,7 +486,7 @@ function laterRoadmaps(roadmapRoot: string): Array<{ open_blockers: readonly unk
         // `collect()` cannot be reused here: it filters through the same
         // path-based predicate and would reject its own root.
         const text = fs.readFileSync(abs, 'utf-8');
-        if (isDraft(parseFrontmatter(text))) continue;
+        if (isUnscheduled(parseFrontmatter(text))) continue;
         const stats = parseRoadmap(abs, dir);
         if (stats !== null) out.push(stats as unknown as { open_blockers: readonly unknown[] });
     }
@@ -462,8 +496,11 @@ function laterRoadmaps(roadmapRoot: string): Array<{ open_blockers: readonly unk
 /**
  * Count the estate, three ways.
  *
- * `active_roadmaps` comes from `collect()` so it cannot disagree with the
- * dashboard. `later_roadmaps` is a directory listing because parked files are
+ * `active_roadmaps` is `collect()` PLUS the top-level carriers `collect()`
+ * drops, so the parser is shared with the dashboard while a status flip stays
+ * count-neutral — see `countActiveCarriers` for why that beats parity here, and
+ * for the one number on this gate that the dashboard header does not print.
+ * `later_roadmaps` is a directory listing because parked files are
  * outside that corpus by design — filtered through the same `is_roadmap_candidate`
  * predicate as the active side, so `later/README.md` is not a roadmap here either.
  *
@@ -487,7 +524,7 @@ export function countEstate(repoRoot: string): EstateCounts {
         rows.reduce((n, r) => n + r.open_blockers.length, 0);
     const skills = measureSkillEstate(repoRoot);
     return {
-        active_roadmaps: stats.length,
+        active_roadmaps: stats.length + countActiveCarriers(roadmapRoot),
         later_roadmaps: countIn(roadmapRoot, 'later'),
         open_blockers: openOf(stats) + openOf(laterRoadmaps(roadmapRoot)),
         skill_count: skills.skill_count,
@@ -506,7 +543,7 @@ export function skillTokensExact(root: string): boolean {
     return measureSkillEstate(root).skill_description_tokens !== null;
 }
 
-/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */
+/** `agents/roadmaps/<name>.md` — the active top level. code-comment-allow provenance-comment -- operand, not provenance */
 function isActiveTopLevel(rel: string): boolean {
     const norm = rel.split(path.sep).join('/');
     if (!norm.startsWith('agents/roadmaps/') || !norm.endsWith('.md')) {
@@ -553,6 +590,9 @@ export function exemptionReason(text: string): string | null {
     return reason === '' ? null : reason;
 }
 
+/** Re-export; `_lib/carrier_status.ts` holds the one implementation. */
+export const isCarrierText = declaresCarrier;
+
 /**
  * Classify the change's effect on the active roadmap tree.
  *
@@ -561,7 +601,17 @@ export function exemptionReason(text: string): string | null {
  * `later/road-to-x.md` → `road-to-x.md` is an un-parking and counts as an
  * addition. A top-level-to-top-level rename is neither.
  */
-export function classifyDiff(nameStatus: string, readFile: (rel: string) => string | null): OffsetLedger {
+export function classifyDiff(
+    nameStatus: string,
+    readFile: (rel: string) => string | null,
+    /**
+     * The file's content at the BASE ref, for paths this change removed — a
+     * deleted carrier cannot be read from the working tree and its status
+     * decides whether the deletion earns an offset. Defaults to null, which
+     * reproduces the previous scoring for any caller without a pre-image.
+     */
+    readBase: (rel: string) => string | null = () => null,
+): OffsetLedger {
     const added: string[] = [];
     const offsets: string[] = [];
     const exempt: Array<{ file: string; reason: string }> = [];
@@ -574,8 +624,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
             const from = cols[1] ?? '';
             const to = cols[2] ?? '';
             if (isActiveTopLevel(from) && isDisposed(to)) {
-                offsets.push(from);
-                if (isParked(to)) parked.push(to);
+                if (!isCarrierText(readBase(from))) {
+                    offsets.push(from);
+                    if (isParked(to)) parked.push(to);
+                }
             } else if (isDisposed(from) && isActiveTopLevel(to)) {
                 added.push(to);
             }
@@ -586,7 +638,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
         if (status === 'A') {
             added.push(file);
         } else if (status === 'D') {
-            offsets.push(file);
+            // A carrier's removal is never an offset. See `readBase`.
+            if (!isCarrierText(readBase(file))) {
+                offsets.push(file);
+            }
         }
     }
     for (const file of added) {
@@ -777,13 +832,20 @@ export function evaluate(
         if (!diff.ok) {
             offsetSkipReason = `git diff against ${baseRef} failed — one-in-one-out not evaluated`;
         } else {
-            offsets = classifyDiff(diff.stdout, (rel) => {
-                try {
-                    return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
-                } catch {
-                    return null;
-                }
-            });
+            offsets = classifyDiff(
+                diff.stdout,
+                (rel) => {
+                    try {
+                        return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
+                    } catch {
+                        return null;
+                    }
+                },
+                (rel) => {
+                    const show = git(['show', `${baseRef}:${rel}`], repoRoot);
+                    return show.ok ? show.stdout : null;
+                },
+            );
         }
         const patch = git(
             ['diff', '--unified=0', '--find-renames', `${baseRef}...HEAD`, '--', ROADMAPS_REL],
@@ -879,7 +941,7 @@ export function evaluate(
 }
 
 /** Floors for `--self-test`, declared here so a truncation is a visible diff. */
-const SELF_TEST_MIN_CASES = 12;
+const SELF_TEST_MIN_CASES = 13;
 const SELF_TEST_MIN_REJECT = 8;
 
 /**
@@ -919,6 +981,16 @@ function selfTest(): number {
 
     const roadmap = (name: string, extra = ''): string =>
         `# Roadmap: ${name}\n\n## Phase 1\n\n- [ ] **1.1** s\n${extra}`;
+
+    /** A `status: carrier` roadmap — counted as estate, and never an offset. */
+    const CARRIER = `---\nstatus: carrier\n---\n# Roadmap: carrier\n\n## Phase 1\n\n- [~] **1.1** s\n`;
+
+    /**
+     * A `status: draft` roadmap — invisible to `collect()`, so adding one cannot
+     * move `active_roadmaps`. That is what makes it the fixture for a case that
+     * must be decided by the offset scoring and by nothing else.
+     */
+    const DRAFT = `---\nstatus: draft\n---\n# Roadmap: draft\n\n## Phase 1\n\n- [ ] **1.1** s\n`;
 
     /** An open blocker — no `Status: resolved` prefix, so it counts as open. */
     const BLOCKER = '\n## Blockers\n\n### Blocker: fixture\n\n- **Status:** open\n';
@@ -1125,6 +1197,14 @@ function selfTest(): number {
                     after: (dir) => write(dir, 'agents/roadmaps/later/road-to-parked.md', roadmap('P')),
                 }),
         },
+        ...carrierEstateCases({
+            fixture,
+            write,
+            remove: (dir, rel) => fs.rmSync(path.join(dir, rel)),
+            roadmap,
+            CARRIER,
+            DRAFT,
+        }),
         {
             name: 'a new open blocker with no claim → reject',
             expect: 'reject',
@@ -1250,7 +1330,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and
+    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
     // every count is 0, which is trivially under any baseline — exit 2 (could
     // not run), never 1, which would assert the estate actually grew.
     try {

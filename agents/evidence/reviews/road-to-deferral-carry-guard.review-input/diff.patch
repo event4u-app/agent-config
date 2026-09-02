@@ -1,0 +1,1735 @@
+diff --git a/.github/workflows/rule-backstops.yml b/.github/workflows/rule-backstops.yml
+index 8e70839375cdb9d9fbf9690cf003af037ea9b679..f014fc84a9d3ba0ab29d80ee3fb9e45db9f631e6 100644
+--- a/.github/workflows/rule-backstops.yml
++++ b/.github/workflows/rule-backstops.yml
+@@ -142,6 +142,13 @@ jobs:
+       - name: code-comment-discipline (language, report and provenance comments)
+         run: ./scripts-run src/scripts/lint_code_comments --base origin/main
+ 
++      # A `[~]` carried to a follow-up is validated once, when the parent is
++      # archived, by a sweep that then never sees the pair again — so the
++      # receiver could be deleted afterwards with nothing going red. This walks
++      # from the archived side, where the record survives.
++      - name: carrier-integrity (deferral carries out of archived roadmaps)
++        run: ./scripts-run src/scripts/lint_carrier_integrity
++
+       # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
+       # correction is always visible. Shipped guidance directing a silent
+       # re-run or the concealment of a detected miss is a defect, not a style.
+diff --git a/Taskfile.yml b/Taskfile.yml
+index 32aad46402d5a45f9726a3924f9376234922ed7d..a56474703daae0ab2ad40c5f4f4a2740290727ac 100644
+--- a/Taskfile.yml
++++ b/Taskfile.yml
+@@ -121,6 +121,7 @@ tasks:
+       - task: lint-override-kernel-guard
+       - task: lint-output-slop
+       - task: lint-code-comments
++      - task: lint-carrier-integrity
+       - task: lint-never-silent
+       - task: lint-example-fences
+       - task: lint-workflow-paths
+diff --git a/agents/roadmaps/archive/road-to-deferral-carry-guard.md b/agents/roadmaps/archive/road-to-deferral-carry-guard.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7683c88e2e4c33bfffb5af53b7ede29446a40698
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-deferral-carry-guard.md
+@@ -0,0 +1,251 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++review_by: 2027-03-31
++relates:
++  - slug: road-to-council-topology-evidence-followups
++    relation: extends
++    note: >
++      That file is the worked instance: 38 obligations carried out of an
++      archived parent, resting on a receiver no gate protects. This roadmap
++      builds the protection and reclassifies it last.
++estate_offset_exempt: "Not a new plan. This is the former stubs/ entry of the same name, promoted in place -- the same file, moved out of stubs/ -- and it archives in this same change once its phases close, so the active count returns to where it started. Promotion is authorised by AI council verdict 3Q (2026-09-02, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, deep, peer-review, blind chairman, 2/2 present needed 1, subscription transport, billable=0, $0.0000), which held that the carrier -- not the receiver -- is the thing to complete and archive, and that leaving the carrier mechanically unprotected is an integrity defect rather than optional hygiene."
++estate_growth_exempt: "active_roadmaps 2 -> 3 for the length of this change and back to 2 at its end, because the promoted file archives in the same PR. The receiver it protects is status: carrier and excluded from the active count by construction, so the net estate is unchanged. The growth is the cost of closing a defect the tree can state precisely: deleting a live deferral receiver reds nothing today and scores as an estate CREDIT (check_estate_count.ts:490-534), while 38 obligations rest on that file continuing to exist."
++---
++# Road to guarding a deferral carry after the parent is archived
++
++> **Promoted from `stubs/` on 2026-09-02** by AI council verdict 3Q. The stub
++> text below is preserved verbatim from § The gap onward — it is the evidence
++> this roadmap acts on, and rewriting it would lose the derivation. What changed
++> is the frontmatter and the phases; § Why it is not built here is superseded by
++> § Why it is built now.
++
++## Why it is built now
++
++The stub's own reason for deferring was that *"the run that found this was
++deciding one file's disposition, not extending the archival gate."* A later run
++put the disposition to the council with the estate instruction in view, and both
++seats refused to leave the carrier as found.
++
++**The council's convergent core**, verdict 3Q, 2/2, 2026-09-02 (members
++`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth deep,
++peer-review, blind chairman, quorum 2/2 present needed 1 — concluded;
++subscription transport, `billable=0`, `$0.0000`; council artefacts are
++gitignored and auto-pruned, so every line relied on is inlined here per
++`no-roadmap-references`):
++
++- The invariant belongs to the obligations, not to a pathname: *"A live deferred
++  obligation must always have a validated carrier, and it may disappear from
++  that carrier only through resolution or an explicit, validated transfer."*
++- Position P — migrate the 38 obligations out of the roadmap estate — was
++  refused because *"any Position P destination satisfying that invariant would
++  effectively recreate Position Q under another name"*, and because the
++  migration target is a semantic decision an autonomous run may not make.
++- Plain 3A was refused: *"recognizing the file socially as a carrier does not
++  protect it mechanically."*
++- Protections ship BEFORE the reclassification. One seat's objection to the
++  other's ordering is adopted: *"Reclassifying the file before the status
++  parser, accounting rules, and guards recognize `carrier` may produce an
++  invalid or unprotected intermediate state."*
++- The full transition vocabulary — rename, re-parent, split, onward carry —
++  stays deferred, and unsupported transitions must **fail closed** with a
++  diagnostic rather than be inferred.
++
++**One design choice diverges from both seats and is better than either.** Seat 2
++required *"a durable registry, baseline comparison, or equivalent tombstone
++mechanism"* because *"a validator that only scans surviving carriers has nothing
++left to inspect"* once a whole file is deleted. That objection is correct and the
++remedy is not a registry. **The archived parent is already the durable record.**
++It carries `<!-- deferred-resolution: carried-to=<slug> -->` for every deferred
++item, it lives under `archive/` where nothing rewrites it, and it names the
++destination by slug. A validator that starts from the archived parents rather
++than from the surviving carriers detects whole-file deletion on its first pass,
++with no new baseline file to maintain and no second suppression surface. It also
++reuses `deferralProblems` rather than reimplementing its checks, which is the
++memory-twin drift the parent roadmap of the receiver already warned about.
++
++## Phase 1 — a standing carry validator
++
++- [x] **1.1 Add `lint_carrier_integrity`.** Walk every roadmap under
++      `agents/roadmaps/archive/` and `agents/roadmaps/skipped/`, parse each for
++      `deferred-resolution:` annotations, and call the EXISTING
++      `deferralProblems` export
++      (`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) with the
++      source's basename slug, so destination resolution, the dead-destination
++      refusal, the self-reference refusal and the `parent_roadmap:` back-link
++      are all checked by one implementation rather than two. Report `scanned:`
++      via `reportScanned` on both the green and the red path.
++      verify: `./scripts-run src/scripts/lint_carrier_integrity` exits 0 on the
++      clean tree and prints a non-zero `scanned:` count.
++- [x] **1.2 Prove it discriminates, in both directions.** A `--self-test`
++      through `_lib/gate_self_test.ts` with at least one rejecting case per
++      failure mode the walk can see: destination missing, destination under
++      `archive/`, back-link absent, back-link naming a different parent. Plus
++      the polarity that must stay silent: a well-formed carry.
++      verify: `./scripts-run src/scripts/lint_carrier_integrity --self-test`
++      exits 0, reports at least 5 cases with at least 4 rejecting, and
++      `check_gate_coverage`'s `gate-self-test:registered-non-adopters` count
++      does not grow.
++- [x] **1.3 Register it everywhere a gate has to be registered.** Six surfaces,
++      in the order they bite: `src/config/gate-coverage.yml` row with a
++      CI-identical `argv` and a `min_scanned` floor below the live count; that
++      file's header prose numbers; the gate-script population figure the
++      coverage test bounds; `taskfiles/ci-fast.yml` plus the `Taskfile.yml`
++      `ci:` list, which `check_ci_local_parity` derives from both sides; a
++      workflow step with the same argv; and the ledger ratchet, via
++      `_lib/gate_ledger.ts` or an explicit `// ledger-exempt:` marker.
++      verify: `./scripts-run src/scripts/check_gate_coverage` green,
++      `./scripts-run src/scripts/check_ci_local_parity` green, and
++      `./scripts-run src/scripts/check_gate_coverage --canary` fires on the new
++      row rather than reporting it verified-empty.
++
++## Phase 2 — the `carrier` status, and the accounting that must know it
++
++- [x] **2.1 Teach the status vocabulary one new value.** Add `carrier` beside
++      `draft` in the enumerations that decide whether a roadmap is schedulable
++      work: `update_roadmap_progress.ts:99` (`DRAFT_VALUES`, which gates
++      `collect()` and therefore the dashboard and `/roadmap:process-*`) and
++      `check_roadmap_trackable.ts:51`. A carrier has no `## Phase` headings by
++      construction, so trackability must exclude it exactly as it excludes a
++      draft — this is the objection the stub's own rejected option 3 raised, and
++      it is answered by a new status rather than by promoting the receiver to
++      `ready`.
++      verify: `./scripts-run src/agent-src/scripts/update_roadmap_progress` does
++      not list the carrier, and `./scripts-run src/scripts/check_roadmap_trackable`
++      is green with it present.
++- [x] **2.2 Stop the estate paying for the deletion.** `classifyDiff`
++      (`src/scripts/check_estate_count.ts:490-534`) scores removing a roadmap as
++      an offset. A `status: carrier` file must score as neither an offset nor an
++      active-count member: deleting it earns zero credit, so the only signal
++      left is Phase 1's red.
++      verify: a fixture case in the gate's own test table where deleting a
++      carrier scores 0 credit, and `./scripts-run src/scripts/check_estate_count`
++      green on this branch.
++
++## Phase 3 — reclassify the receiver, last
++
++- [x] **3.1 Flip `road-to-council-topology-evidence-followups` to
++      `status: carrier`.** Only after Phases 1 and 2 are green, per the council's
++      ordering. Update its § Unguarded-carrier gap to state what now guards it
++      and what still does not.
++      verify: the frontmatter reads `status: carrier`, Phase 1's gate is green,
++      and the dashboard does not list it.
++- [x] **3.2 Record what stays deferred.** A stub for the transition vocabulary —
++      rename, re-parent, split, onward carry, partial resolution,
++      carrier-to-carrier transfer — stating that unsupported transitions fail
++      closed today and that the vocabulary arrives when a second carrier
++      justifies it.
++      verify: the stub exists under `agents/roadmaps/stubs/`, and
++      `./scripts-run src/scripts/lint_roadmap_complexity` is green.
++
++## The gap
++
++A `[~]` step carried to a follow-up roadmap is validated **once**, at the moment
++the parent is archived, and never again.
++
++`deferralProblems`
++(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) checks the carry from
++both ends — annotation well-formed, destination exists, destination not dead,
++`parent_roadmap:` back-link present. It has exactly **one** production call site
++(`:574`), inside a loop over `collect()`
++(`src/agent-src/scripts/update_roadmap_progress.ts:748`), and that loop skips
++every `status: draft` file (`:755-757`) and everything under `archive/`,
++`skipped/`, `stubs/` and `later/` (`:95`, `:315`).
++
++So once the parent is archived, the check that created the receiver can never
++see the pair again. Nothing else reads the annotation: `deferred-resolution`
++appears in only two files under `src/`, and the second
++(`src/scripts/lint_roadmap_complexity.ts:259`) is a warning string, not a
++validator. `parent_roadmap:` has no reader outside
++`archive_completed_roadmaps.ts`.
++
++Neither reference gate closes it. `check_no_roadmap_refs`
++(`src/scripts/check_no_roadmap_refs.ts`) forbids a *stable artifact* from citing
++a roadmap and does not scan `agents/roadmaps/` or `agents/evidence/` at all;
++`check_references` (`src/scripts/check_references.ts`) skips
++`agents/roadmaps/archive` and matches only paths whose first segment is in a
++fixed allowlist, which `stubs/` is not.
++
++**Net:** deleting a live receiver reds nothing, and `check_estate_count`
++(`classifyDiff`, `:490-534`) scores the deletion as an **offset** — a credit.
++
++## The worked instance
++
++`road-to-council-topology-evidence-followups` carries 38 obligations from a
++parent that is already in `archive/`. Every one of the parent's 38 `[~]` steps
++names it, and no gate stands between the receiver and its own removal.
++
++## What would close it
++
++One of these, in rough order of cost:
++
++1. **A standing carry validator.** Walk every roadmap under `archive/` for
++   `deferred-resolution: carried-to=<slug>`, assert the destination still
++   resolves and still back-links. Diff-scoped so it costs nothing on most runs.
++   The hard part is not the walk — it is that a receiver may legitimately be
++   renamed, re-parented, or itself carried onward, so the check needs a
++   disposition vocabulary it does not have today.
++2. **Charge the deletion.** Teach `classifyDiff` that removing a roadmap which
++   is some archived roadmap's `carried-to` destination is not an offset.
++   Narrower, and it catches deletion but not silent emptying.
++3. **Make the receiver non-draft.** Rejected for this instance: it reds
++   `check_roadmap_trackable` (no `## Phase` heading) and the `relates:` ratchet,
++   and it would claim the work is scheduled when every resumption trigger is
++   unmet.
++
++## Why it was not built at the time (superseded by § Why it is built now)
++
++The run that found this was deciding one file's disposition, not extending the
++archival gate. Option 1 changes a fail-closed gate that every archival passes
++through, which is a change that deserves its own review rather than riding along
++with a documentation correction.
++
++## Evidence
++
++[`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
++§ 3 — the full derivation, the 43 inbound-reference census, and the gate-by-gate
++read. Its appendix names what was not checked.
++
++## Blockers
++
++No blockers. Every step is an ordinary source change in `src/`, reachable by an
++agent. The one thing this roadmap deliberately does NOT touch is any of the nine
++kernel rules, so `block_kernel_rule_writes` never applies.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-02 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The new status becomes a laundering channel | product | `status: carrier` buys exclusion from the active count and from the drain. A roadmap that is really open work could wear it to disappear from the dashboard, which is the opposite of what the council asked for. | The exclusion is not free: a carrier is only reachable as a `carried-to=` destination of an archived parent, and Phase 1's gate reds if no archived parent names it. A file that calls itself a carrier without an archived parent pointing at it gains exclusion and gains a red at the same time. | Phase 2 — the `carrier` status |
++| 2 | The validator walks the archive on every run and costs real time | implementation | `agents/roadmaps/archive/` holds 651 roadmaps. A naive full-text parse of all of them on every gate run is a per-commit cost paid by every contributor for a corpus that changes rarely. | Read only the frontmatter and the annotation lines rather than parsing whole files, and report the `scanned:` count so the cost is visible in the ledger rather than hidden. Phase 1.1's verify clause requires a non-zero count, so a cheap implementation that reads nothing is not accepted either. | Phase 1 — a standing carry validator |
++
++## Acceptance Criteria
++
++- [x] AC-1 — deleting `agents/roadmaps/road-to-council-topology-evidence-followups.md`
++      makes a gate RED. Proven by the deletion, the red, and the restore — not by
++      reading the code.
++- [x] AC-2 — removing the `parent_roadmap:` back-link from that file, or
++      renaming it, makes the same gate red.
++- [x] AC-3 — the carrier does not appear on `agents/roadmaps-progress.md` and is
++      not offered by `/roadmap:process-*`, while `check_roadmap_trackable` stays
++      green with it present.
++- [x] AC-4 — deleting a `status: carrier` roadmap scores zero estate credit,
++      asserted in `check_estate_count`'s own case table.
++- [x] AC-5 — the transition vocabulary that stays out of scope is recorded in a
++      stub, and unsupported transitions fail closed today rather than being
++      inferred.
++
++## Explicitly NOT in this roadmap
++
++- **The transition vocabulary.** Rename, re-parent, split, onward carry, partial
++  resolution and carrier-to-carrier transfer all fail closed and stay deferred
++  to the Phase 3.2 stub. Both council seats agreed a deliberately immobile
++  first version is the right shape.
++- **Migrating the 38 obligations anywhere.** Position P was refused; the
++  obligations stay where they are.
++- **Automated resumption-trigger monitoring.** Named by one seat as out of the
++  minimum shippable set.
+diff --git a/agents/roadmaps/road-to-council-topology-evidence-followups.md b/agents/roadmaps/road-to-council-topology-evidence-followups.md
+index 367b759e1b65f8df62aa7cba4571415ae2e7748e..7b796fe790f62ba60d6a293aa2f63d3ff05913c2 100644
+--- a/agents/roadmaps/road-to-council-topology-evidence-followups.md
++++ b/agents/roadmaps/road-to-council-topology-evidence-followups.md
+@@ -1,6 +1,6 @@
+ ---
+ complexity: structural
+-status: draft
++status: carrier
+ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
+ ---
+ 
+@@ -157,6 +157,85 @@ frozen beforehand (1B.4).
+ - [ ] 12.2 A free explain mode
+ - [ ] 12.3 A force-topology control cannot override the five named authorities
+ 
++## Unguarded-carrier gap — CLOSED 2026-09-02, and drain 14's verdict reversed on the record
++
++> **This section changes `status:` and nothing else about the obligations.** All
++> 38 items stay exactly where they are, with the same triggers and the same
++> `[~]`. What changed is that three mechanisms now stand between this file and
++> its own removal, and `status: draft` became `status: carrier`.
++
++*AI council 2026-09-02 (drain run 16), members `anthropic/claude-sonnet-4-5` +
++`openai/codex-default`, 2 rounds each over two rounds of questions, depth deep,
++peer-review, blind chairman, quorum 2/2 present (needed 1) — concluded.
++Subscription transport, `billable=0`, `$0.0000`. Council artefacts are
++gitignored and auto-pruned, so every line relied on is inlined here per
++`no-roadmap-references`.*
++
++**Drain 14's verdict 3A is reversed, and the reversal is recorded rather than
++quietly overwritten.** That verdict — *"this file stays `status: draft`, and the
++guard stub is NOT promoted"* — rested on two grounds, and the drain-14 record
++names both. The first was authority: *"adding a CI gate is a governance act
++whose authority this run has not established."* The second was evidence: both
++seats graded the header's *"deleting it reds nothing"* claim **SPECULATIVE** for
++want of command output, and made escalation **conditional** — *"if confirmed,
++surface to owner"*.
++
++**The condition was met by the same run that recorded it.** The mutation test
++the council asked for was run on 2026-09-01 and confirmed the claim. So the
++lock's own escalation trigger had fired before this round opened; drain 16 did
++not overrule a standing verdict, it satisfied the condition that verdict
++attached.
++
++**Verdict 3Q, convergent 2/2.** Both seats refused plain 3A on the second
++asking, in terms that answer drain 14's evidence ground directly: *"recognizing
++the file socially as a carrier does not protect it mechanically."* The invariant
++they named belongs to the obligations rather than to this pathname: *"A live
++deferred obligation must always have a validated carrier, and it may disappear
++from that carrier only through resolution or an explicit, validated transfer."*
++
++**Position P — migrate the 38 obligations out of the roadmap estate — was
++refused.** *"Any Position P destination satisfying that invariant would
++effectively recreate Position Q under another name."* It was additionally
++refused as undecidable by an autonomous run, since the migration target is a
++semantic choice.
++
++**One design point diverges from both seats and the divergence is the better
++answer.** One seat required *"a durable registry, baseline comparison, or
++equivalent tombstone mechanism"*, on the correct ground that *"a validator that
++only scans surviving carriers has nothing left to inspect"* once a whole file is
++deleted. The remedy taken is not a registry: the **archived parent already is
++the durable record**. It carries `<!-- deferred-resolution: carried-to=<slug> -->`
++for every deferred item, it lives where nothing rewrites it, and it names this
++file by slug. `lint_carrier_integrity` walks from that side, so deletion is
++caught on the first pass with no baseline file to maintain and no second
++suppression surface.
++
++**What now stands between this file and its removal.**
++
++1. `src/scripts/lint_carrier_integrity.ts` — walks every roadmap under
++   `archive/` and `skipped/` and hard-fails at zero on a `broken-destination`.
++   Deleting this file produces 38 of them. Renaming it, re-parenting it,
++   moving it to `skipped/`, or archiving it while it declares `status: carrier`
++   each red the same way.
++2. `check_estate_count.classifyDiff` — removing a `status: carrier` roadmap no
++   longer scores an offset, so the estate credit that made deletion profitable
++   is gone. Asserted in that gate's own case table, together with the control
++   proving an ordinary deletion still offsets.
++3. `status: carrier` in `update_roadmap_progress` and
++   `check_roadmap_trackable` — this file is skipped where a draft is, so it
++   stays off the dashboard and out of `/roadmap:process-*` without claiming to
++   be scheduled work, and its lack of `## Phase` headings is no longer a
++   trackability failure.
++
++**What still does not guard it, stated because the header above was written to
++be honest about exactly this.** No mechanism monitors the 38 resumption
++triggers, so an item whose trigger fires stays `[~]` until a human looks. The
++transition vocabulary — rename, re-parent, split, onward carry, partial
++resolution, carrier-to-carrier transfer — does not exist; every one of those
++transitions fails closed today, which both seats asked for as a deliberately
++immobile first version. `agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md`
++records it.
++
+ ## What this file may NOT be read as claiming
+ 
+ That any deferred mechanism was verified against a real population; that
+diff --git a/agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md b/agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..600523262786fba5953ab6cb1905fae3fdd8ed49
+--- /dev/null
++++ b/agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md
+@@ -0,0 +1,66 @@
++---
++complexity: bounded
++review_by: 2027-06-30
++---
++
++# Stub: road to a transition vocabulary for deferral carriers
++
++> **Stub — not active work.** Created 2026-09-02, when the carrier lifecycle
++> state shipped. Both council seats asked for a deliberately immobile first
++> version, so every transition below **fails closed today**. This records what
++> the vocabulary would have to express, and why building it now would be
++> premature.
++
++## What fails closed today, and where
++
++`src/scripts/lint_carrier_integrity.ts` walks from the archived parent and
++resolves its `carried-to=` destination. Every transition that moves or re-points
++a carrier therefore breaks that resolution and reds, with no way to say it was
++deliberate:
++
++| Transition | How it reds today |
++|---|---|
++| Rename the carrier | destination no longer resolves — reported as a deletion |
++| Re-parent it | the `parent_roadmap:` back-link no longer names the archived source |
++| Archive it while it holds live obligations | refused by the `status: carrier` archival check |
++| Move it to `skipped/` | refused — skipping is not fulfilment |
++| Carry its items onward to a second carrier | the original parent's link breaks when the intermediate goes |
++| Resolve one item and remove it | invisible: nothing compares the item count to a previous reading |
++| Split it across two receivers | no annotation expresses one source, two destinations |
++
++The first five are the right behaviour for an immobile version: they refuse
++rather than infer. The last two are the honest gaps — a partial resolution and a
++split are both legitimate acts with no way to declare them.
++
++## What a vocabulary would have to carry
++
++1. **A stable carrier identity independent of its path.** One seat asked for
++   this and it was deliberately not built: the roadmap system uses paths as
++   identifiers everywhere, and a separate id scheme for carriers alone is a
++   framework for one instance. It becomes worth it when a rename must be
++   expressible as a rename rather than as a deletion plus an addition.
++2. **An atomic transfer between two carrier identities**, so an onward carry is
++   one declared act rather than a broken link plus a new one.
++3. **A per-item resolution record**, so removing an item from a carrier is
++   distinguishable from losing it. Today only whole-file loss is detectable.
++4. **A split declaration** — one source, two destinations, each carrying a named
++   subset.
++
++## Why it is not built now
++
++There is exactly **one** carrier in the tree. A vocabulary designed against a
++single instance encodes that instance's shape, and every one of the four items
++above is a guess about a transition nobody has needed yet. The council's own
++framing: a new lifecycle state is *"complex infrastructure for what may be a
++single edge case"*, and the version that shipped is the narrow one both seats
++could agree on.
++
++**Resumption trigger:** a second carrier appears, OR any of the five refusing
++transitions above is genuinely needed and is currently being worked around.
++
++## See also
++
++- `src/scripts/lint_carrier_integrity.ts` — the standing validator whose
++  refusals this vocabulary would replace with declarations.
++- `agents/roadmaps/road-to-council-topology-evidence-followups.md` — the one
++  carrier, and § Unguarded-carrier gap for what does and does not guard it.
+diff --git a/agents/roadmaps/stubs/road-to-deferral-carry-guard.md b/agents/roadmaps/stubs/road-to-deferral-carry-guard.md
+deleted file mode 100644
+index aa331a7f21730c2ad46e2f05a1d197870d634b24..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/stubs/road-to-deferral-carry-guard.md
++++ /dev/null
+@@ -1,80 +0,0 @@
+----
+-complexity: bounded
+-review_by: 2027-03-31
+----
+-
+-# Stub: road to guarding a deferral carry after the parent is archived
+-
+-> **Stub — not active work.** Created 2026-09-01. Records a gap found while
+-> deciding the disposition of
+-> `road-to-council-topology-evidence-followups`. The gap is real, it is
+-> currently harmless, and building the guard is deliberately **out of scope**
+-> for the run that found it.
+-
+-## The gap
+-
+-A `[~]` step carried to a follow-up roadmap is validated **once**, at the moment
+-the parent is archived, and never again.
+-
+-`deferralProblems`
+-(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) checks the carry from
+-both ends — annotation well-formed, destination exists, destination not dead,
+-`parent_roadmap:` back-link present. It has exactly **one** production call site
+-(`:574`), inside a loop over `collect()`
+-(`src/agent-src/scripts/update_roadmap_progress.ts:748`), and that loop skips
+-every `status: draft` file (`:755-757`) and everything under `archive/`,
+-`skipped/`, `stubs/` and `later/` (`:95`, `:315`).
+-
+-So once the parent is archived, the check that created the receiver can never
+-see the pair again. Nothing else reads the annotation: `deferred-resolution`
+-appears in only two files under `src/`, and the second
+-(`src/scripts/lint_roadmap_complexity.ts:259`) is a warning string, not a
+-validator. `parent_roadmap:` has no reader outside
+-`archive_completed_roadmaps.ts`.
+-
+-Neither reference gate closes it. `check_no_roadmap_refs`
+-(`src/scripts/check_no_roadmap_refs.ts`) forbids a *stable artifact* from citing
+-a roadmap and does not scan `agents/roadmaps/` or `agents/evidence/` at all;
+-`check_references` (`src/scripts/check_references.ts`) skips
+-`agents/roadmaps/archive` and matches only paths whose first segment is in a
+-fixed allowlist, which `stubs/` is not.
+-
+-**Net:** deleting a live receiver reds nothing, and `check_estate_count`
+-(`classifyDiff`, `:490-534`) scores the deletion as an **offset** — a credit.
+-
+-## The worked instance
+-
+-`road-to-council-topology-evidence-followups` carries 38 obligations from a
+-parent that is already in `archive/`. Every one of the parent's 38 `[~]` steps
+-names it, and no gate stands between the receiver and its own removal.
+-
+-## What would close it
+-
+-One of these, in rough order of cost:
+-
+-1. **A standing carry validator.** Walk every roadmap under `archive/` for
+-   `deferred-resolution: carried-to=<slug>`, assert the destination still
+-   resolves and still back-links. Diff-scoped so it costs nothing on most runs.
+-   The hard part is not the walk — it is that a receiver may legitimately be
+-   renamed, re-parented, or itself carried onward, so the check needs a
+-   disposition vocabulary it does not have today.
+-2. **Charge the deletion.** Teach `classifyDiff` that removing a roadmap which
+-   is some archived roadmap's `carried-to` destination is not an offset.
+-   Narrower, and it catches deletion but not silent emptying.
+-3. **Make the receiver non-draft.** Rejected for this instance: it reds
+-   `check_roadmap_trackable` (no `## Phase` heading) and the `relates:` ratchet,
+-   and it would claim the work is scheduled when every resumption trigger is
+-   unmet.
+-
+-## Why it is not built here
+-
+-The run that found this was deciding one file's disposition, not extending the
+-archival gate. Option 1 changes a fail-closed gate that every archival passes
+-through, which is a change that deserves its own review rather than riding along
+-with a documentation correction.
+-
+-## Evidence
+-
+-[`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
+-§ 3 — the full derivation, the 43 inbound-reference census, and the gate-by-gate
+-read. Its appendix names what was not checked.
+diff --git a/dist/agent-src/scripts/update_roadmap_progress.ts b/dist/agent-src/scripts/update_roadmap_progress.ts
+index cc40dbf01d53260295f08efa304a68d92447b53d..a6275950f2ed4d5db3605af60f12e66496bc6a84 100644
+--- a/dist/agent-src/scripts/update_roadmap_progress.ts
++++ b/dist/agent-src/scripts/update_roadmap_progress.ts
+@@ -12,7 +12,7 @@
+  * `archive_completed_roadmaps` can consume it the same way Python does. snake_case
+  * is kept on the public surface.
+  *
+- * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,
++ * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * `template.md`, `README.md`, `open-questions*.md`), counts checkbox states per
+  * phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
+  * `roadmaps/` folder to keep it clean) with:
+@@ -97,6 +97,15 @@ const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs'
+ // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
+ const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---[ \t\n\r\f\v]*\n/;
+ const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
++/**
++ * A carrier holds obligations deferred out of an archived parent. It is not
++ * schedulable work — every item in it has an unmet resumption trigger — and it
++ * has no `## Phase` headings by construction, so it is skipped exactly where a
++ * draft is. It differs from a draft in what protects it: a draft may be deleted
++ * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
++ * its receiver.
++ */
++const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
+ 
+ const MERGE_GATED_RE = /merge-gated/i;
+ // PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)
+@@ -293,6 +302,11 @@ function is_draft(fm: Record<string, string>): boolean {
+     return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
+ }
+ 
++/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
++function is_carrier(fm: Record<string, string>): boolean {
++    return CARRIER_VALUES.has((fm['status'] ?? '').toLowerCase());
++}
++
+ /**
+  * The NAME half of the candidate test. Split out because the parked inventory
+  * reads `later/` on purpose and `is_roadmap_candidate` rejects any path carrying
+@@ -752,7 +766,7 @@ function collect(roadmap_root: string): RoadmapStats[] {
+             continue;
+         }
+         const text = fs.readFileSync(p, { encoding: 'utf-8' });
+-        if (is_draft(parse_frontmatter(text))) {
++        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+             continue;
+         }
+         const stats = parse_roadmap(p, roadmap_root);
+@@ -820,7 +834,7 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
+         } catch {
+             continue;
+         }
+-        if (is_draft(parse_frontmatter(text))) {
++        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+             continue;
+         }
+         const cell = resume_cell(text);
+@@ -1305,7 +1319,7 @@ function _parseArgs(argv: readonly string[]): Args {
+ }
+ 
+ /**
+- * When the default cwd carries no `agents/roadmaps/`, fall back to the git
++ * When the default cwd carries no `agents/roadmaps/`, fall back to the git  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * toplevel — hook and IDE invocations often run from a subdirectory, and a
+  * cwd-only resolution silently skipped the dashboard there. An explicit
+  * `--repo-root` always wins; a cwd that has the directory is used as-is
+@@ -1480,6 +1494,7 @@ export {
+     FRONTMATTER_RE,
+     parse_frontmatter,
+     is_draft,
++    is_carrier,
+     is_roadmap_candidate,
+     count_checkboxes,
+     parse_blockers,
+diff --git a/src/agent-src/scripts/update_roadmap_progress.ts b/src/agent-src/scripts/update_roadmap_progress.ts
+index cc40dbf01d53260295f08efa304a68d92447b53d..a6275950f2ed4d5db3605af60f12e66496bc6a84 100644
+--- a/src/agent-src/scripts/update_roadmap_progress.ts
++++ b/src/agent-src/scripts/update_roadmap_progress.ts
+@@ -12,7 +12,7 @@
+  * `archive_completed_roadmaps` can consume it the same way Python does. snake_case
+  * is kept on the public surface.
+  *
+- * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,
++ * Scans every roadmap under `agents/roadmaps/` (excluding `archive/`, `skipped/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * `template.md`, `README.md`, `open-questions*.md`), counts checkbox states per
+  * phase, and writes a dashboard at `agents/roadmaps-progress.md` (outside the
+  * `roadmaps/` folder to keep it clean) with:
+@@ -97,6 +97,15 @@ const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs'
+ // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
+ const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---[ \t\n\r\f\v]*\n/;
+ const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
++/**
++ * A carrier holds obligations deferred out of an archived parent. It is not
++ * schedulable work — every item in it has an unmet resumption trigger — and it
++ * has no `## Phase` headings by construction, so it is skipped exactly where a
++ * draft is. It differs from a draft in what protects it: a draft may be deleted
++ * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
++ * its receiver.
++ */
++const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
+ 
+ const MERGE_GATED_RE = /merge-gated/i;
+ // PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)
+@@ -293,6 +302,11 @@ function is_draft(fm: Record<string, string>): boolean {
+     return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
+ }
+ 
++/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
++function is_carrier(fm: Record<string, string>): boolean {
++    return CARRIER_VALUES.has((fm['status'] ?? '').toLowerCase());
++}
++
+ /**
+  * The NAME half of the candidate test. Split out because the parked inventory
+  * reads `later/` on purpose and `is_roadmap_candidate` rejects any path carrying
+@@ -752,7 +766,7 @@ function collect(roadmap_root: string): RoadmapStats[] {
+             continue;
+         }
+         const text = fs.readFileSync(p, { encoding: 'utf-8' });
+-        if (is_draft(parse_frontmatter(text))) {
++        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+             continue;
+         }
+         const stats = parse_roadmap(p, roadmap_root);
+@@ -820,7 +834,7 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
+         } catch {
+             continue;
+         }
+-        if (is_draft(parse_frontmatter(text))) {
++        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+             continue;
+         }
+         const cell = resume_cell(text);
+@@ -1305,7 +1319,7 @@ function _parseArgs(argv: readonly string[]): Args {
+ }
+ 
+ /**
+- * When the default cwd carries no `agents/roadmaps/`, fall back to the git
++ * When the default cwd carries no `agents/roadmaps/`, fall back to the git  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * toplevel — hook and IDE invocations often run from a subdirectory, and a
+  * cwd-only resolution silently skipped the dashboard there. An explicit
+  * `--repo-root` always wins; a cwd that has the directory is used as-is
+@@ -1480,6 +1494,7 @@ export {
+     FRONTMATTER_RE,
+     parse_frontmatter,
+     is_draft,
++    is_carrier,
+     is_roadmap_candidate,
+     count_checkboxes,
+     parse_blockers,
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 8616bb0895876851bf2c002cbe969520fdeeb74e..67385ee23611722635711d6170de9b0491e66b11 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -400,6 +400,24 @@ gates:
+     corpus: "every agents/roadmaps/*.md, counted as FILES rather than as declarations. THE FLOOR WAS RETIRED ON 2026-08-30 AND REPLACED WITH AN ENUMERATION ASSERTION IN THE LINTER ITSELF (AI council, anthropic + openai, convergent on option b). It sat at 5 over a population under deliberate drawdown to ZERO, so it went red the day the drain succeeded — 6 active roadmaps to 4 in one afternoon — and the only available move was lowering the number again, a treadmill ending at a floor of 0, which is no floor. What guards the scope now is `lint_consolidation_lineage` refusing outright when a declared root is missing, is not a directory, or cannot be enumerated; that check lives in the PRODUCTION linter rather than here on purpose, because an independent existsSync in this gate would observe a directory without proving the linter enumerated it. Honest limit, named rather than implied: it catches a missing or renamed root, not a glob narrowed to match nothing, not enumeration in the wrong working directory, and not roadmaps moved into nested directories the walk no longer traverses. Today none of them carries a `consolidates:` field, so the finding count is legitimately zero while the scanned count is not — that split is the point: a declaration-count floor would be a zero-check wearing a ratchet's name, and would go green the moment the scan root moved. The floor sits at 5 rather than near the present 12 because the active estate is under deliberate drawdown (one-in-one-out plus an explicit drain), so a falling count is expected work rather than a collapse; below 5 the estate would be smaller than any point in its recorded history. NO CANARY, deliberately: the council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in REPORT mode, so it exits 0 on findings by design and a planted violation could not turn it red. Its ability to go red is proven instead by `--self-test`, which the same decision required: six declaration spellings must parse identically, all four finding types must fire, and a complete folder must stay silent."
+     status: enforced
+     no_canary_reason: "A report-mode gate cannot be turned red by a planted file. The council decision that admitted this gate (2026-08-27, 2/2 convergent, E1=b/E2=report) fixed it in report mode deliberately: the four measured failures come from a high-noise drafting context and do not establish precision on the tracked estate, so blocking is earned by tracked-scope evidence rather than assumed. A canary here would either be planted and ignored (proving nothing) or force `--strict` into CI, which would decide E2 by wiring instead of by evidence. The negative control is `--self-test` instead, required by the same decision and stronger than a single planted file: six declaration spellings must parse to an identical parent set, all four finding types must fire, and a complete folder must stay silent — the third arm being what stops a checker that returned every code unconditionally from passing the second. Revisit together with E2: when the tracked half is promoted to blocking, it owes a canary."
++  - id: lint_carrier_integrity
++    argv: []
++    min_scanned: 600
++    corpus: "every roadmap file under agents/roadmaps/archive/ and agents/roadmaps/skipped/ — 656 at the time of writing, and the count only rises because archival is one-way. The floor sits at 600 rather than near 656 because a reading below it means the walk lost a directory, not that roadmaps were un-archived. The walk direction is the design: a `[~]` carry is validated once, when the parent is archived, by a sweep that then never looks at the pair again, so the receiver can be deleted afterwards with nothing going red. Starting from the archived parent — which names its destination by slug and which nothing rewrites — makes whole-file deletion detectable on the first pass, with no registry to maintain. TWO CLASSES, and the split decides the tier: `broken-destination` (deleted, renamed, re-parented, skipped, or archived with open steps) is a HARD failure at zero with no baseline, because every member had a recorded home and lost it; `unannotated` (a bare `[~]` with no annotation at all) is ratcheted at 243 in gate-violation-baselines.json, all of it predating the annotation contract by up to three months."
++    status: enforced
++    canary:
++      class: contract-violation
++      path: agents/roadmaps/archive/zz-canary-carrier-integrity.md
++      content: |
++        ---
++        complexity: bounded
++        ---
++        # Canary planted by check_gate_coverage --canary; never ships.
++
++        ## Phase 1 — a phase
++
++        - [~] **1.1 A step carried to a receiver that does not exist.**
++              <!-- deferred-resolution: carried-to=road-to-zz-canary-receiver-that-does-not-exist -->
+   - id: lint_skill_trigger_corpus
+     argv: []
+     min_scanned: 70
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 9df01b0b342a5e2a5358e3b4b1b62da9815cc4a0..94ccf879e59700b0c65f3d8e8774367457c479f6 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -83,6 +83,11 @@
+       "landed": "2026-08-30",
+       "falsifier": "./scripts-run src/scripts/check_no_external_sources  # the 'attribution shape' line names the current block count; the gate fails when it RISES above this entry",
+       "note": "Lowered 243 -> 148 on 2026-08-30 by road-to-source-silence-cutover step 3.1. AI COUNCIL 2026-08-30, 2/2 seats present (anthropic + openai), option (a): NARROW the `source-header` class, do not delete it, and lower the baseline to the new measured total. REASON THE OLD NUMBER WAS WRONG, not merely high: the class flagged the VALUE of every `**Source:**` header that was not an ENC1 token or an opaque round id, so a correctly ANONYMISED header scored exactly like a leaking one. All 95 findings were read; not one named an external source in readable form, and six were flagging the anonymisation notice itself. One seat: the detector penalised correct behaviour. WHAT CHANGED: `sourceHeaderHits` now flags only a value carrying a readable identifier - an owner/repo slug, a domain, or an @scope/package - per the operational grammar in `readableIdentifierIn`, written out because a seat warned that 'readable slug' left unspecified 'merely moves subjective classification into code'. Both seats REFUSED option (c), deleting the class: a `**Source:**` header is where policy tells authors to record attribution and is therefore the highest-value place to keep looking. THE DELTA IS AUDITED: 148 = 127 tmp-quote + 21 repo-slug, and a full-tree recount removed exactly the 95 audited source-header findings and ADDED ZERO. The first run produced 150, on two middle-of-path segments (`uncondensed/rules`, `installer/src`) that read like slugs; both are pinned as fixtures. EVIDENCE: `tests/scripts/source_header_narrowing.test.ts` over three labeled fixtures under `tests/fixtures/source-headers/` - compliant (must not flag), internal-ref (must not flag), leaking (MUST flag, all three identifier shapes). The pre-narrowing predicate is kept as `legacySourceHeaderHits` and shadow-reported by the gate; it enforces nothing. ROLLBACK, as specified: revert the matcher and restore 243 if a readable identifier in a `**Source:**` fixture escapes detection, if the full-tree count is not reproducibly 148, or if the delta contains anything outside the audited source-header set. WHAT REMAINS IS REAL DEBT: 127 quoted speaking inbox-directory names and 21 repository slugs, 152 of them in `agents/roadmaps/archive/`. Paying it down is in-place redaction under ADR-250, which this change deliberately did not attempt. EXPIRY: 56 days from `landed`, i.e. 2026-10-25. HONEST LIMIT, added on the completion review that measured it: the narrowed `source-header` class now contributes ZERO of the 148 in-tree findings — 148 is 127 tmp-quote + 21 repo-slug — so IN THIS TREE it is operationally indistinguishable from option (c), deleting it, which both council seats refused. What separates them is the fixture corpus and nothing else, and the same review found the first corpus unrepresentative: it missed the most natural citation shape there is, a FILE inside an external repository (`somevendor/some-suite/skills/foo.md`), because the matcher judged a slug by the characters either side of it rather than by the whole token. The corpus now covers that shape in both directions, and the grammar tokenises. Nothing will notice if the class silently stops firing on real content — only the fixtures will, which is why they are the deliverable rather than a nicety."
++    },
++    "lint_carrier_integrity": {
++      "count": 243,
++      "landed": "2026-09-02",
++      "note": "243 pre-contract usages of `[~]` in archived roadmaps that carry no `deferred-resolution:` annotation. The annotation contract was settled by council on 2026-08-27; every file in this population predates it, the oldest by months (agents/roadmaps/archive/step-99-north-star-restructure.md:92 is 2026-05 and uses the glyph to mean 'partially green, not a regression'). They are NOT repaired: rewriting an archived roadmap's step semantics retroactively invents an intent nobody recorded, and the honest alternative glyph `[-]` is owner-reserved (archive_completed_roadmaps.ts:396). Shrink-only from here, one owner decision at a time. This ratchet covers ONLY the unannotated class; the broken-destination class -- a receiver deleted, renamed, re-parented, skipped, or archived with open steps -- is a hard failure at zero with no baseline, because deleting agents/roadmaps/road-to-council-topology-evidence-followups.md produces 38 of those and must red immediately rather than nudge a count."
+     }
+   },
+   "retired": {
+diff --git a/src/scripts/check_estate_count.ts b/src/scripts/check_estate_count.ts
+index 33e8140286ef40f66a94f506e6545f58e7e930b2..42d3dc05a6486f4fcef93640e924ba086e24fbc1 100644
+--- a/src/scripts/check_estate_count.ts
++++ b/src/scripts/check_estate_count.ts
+@@ -47,7 +47,7 @@
+  * or merges one in the same change — or the added file carries an explicit
+  * `estate_offset_exempt:` reason in its frontmatter, which costs a visible line
+  * in the diff of the very commit that claims it. This half is diff-scoped: it
+- * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no
++ * reads `<base>...HEAD` over `agents/roadmaps/`, so on a branch that adds no  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * roadmap it legitimately finds nothing to weigh.
+  *
+  * THE THREE WAYS THE ESTATE MAY LEGITIMATELY GROW
+@@ -65,7 +65,7 @@
+  *    estate rather than creating it, so it needs no authorisation; what the
+  *    allowance does NOT cover is a `later/` file appearing from nowhere.
+  * 3. **Anything else** — `estate_growth_exempt: <reason>` added, in this change,
+- *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical
++ *    to the frontmatter of any roadmap under `agents/roadmaps/`. The canonical  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  *    case is a blocker discovered while doing the work: `open_blockers` rises,
+  *    nothing was archived, and the reason belongs next to the blocker.
+  *
+@@ -117,7 +117,7 @@
+  * which one lied.
+  *
+  * The same function measures the BASE side, over a scratch copy of the base
+- * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a
++ * ref's `agents/roadmaps/` (`_lib/base_tree.ts`). Re-deriving the floor with a  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * second implementation would let the two sides disagree about one tree, which
+  * is the failure this section already argues against, one level up.
+  *
+@@ -506,7 +506,7 @@ export function skillTokensExact(root: string): boolean {
+     return measureSkillEstate(root).skill_description_tokens !== null;
+ }
+ 
+-/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */
++/** `agents/roadmaps/<name>.md` — the active top level. code-comment-allow provenance-comment -- operand, not provenance */
+ function isActiveTopLevel(rel: string): boolean {
+     const norm = rel.split(path.sep).join('/');
+     if (!norm.startsWith('agents/roadmaps/') || !norm.endsWith('.md')) {
+@@ -553,6 +553,14 @@ export function exemptionReason(text: string): string | null {
+     return reason === '' ? null : reason;
+ }
+ 
++/** True when `text` is a roadmap whose frontmatter declares `status: carrier`. */
++export function isCarrierText(text: string | null): boolean {
++    if (text === null) return false;
++    const fm = /^---\n([\s\S]*?)\n---/.exec(text);
++    if (fm === null) return false;
++    return /^status:[ \t]*carrier[ \t]*$/m.test(fm[1] ?? '');
++}
++
+ /**
+  * Classify the change's effect on the active roadmap tree.
+  *
+@@ -561,7 +569,22 @@ export function exemptionReason(text: string): string | null {
+  * `later/road-to-x.md` → `road-to-x.md` is an un-parking and counts as an
+  * addition. A top-level-to-top-level rename is neither.
+  */
+-export function classifyDiff(nameStatus: string, readFile: (rel: string) => string | null): OffsetLedger {
++export function classifyDiff(
++    nameStatus: string,
++    readFile: (rel: string) => string | null,
++    /**
++     * The file's content at the BASE ref, for paths this change removed.
++     *
++     * Needed because a deleted carrier cannot be read from the working tree,
++     * and its status is the whole question: deleting a roadmap normally earns an
++     * offset, and a carrier holds obligations lifted out of an already-archived
++     * parent, so paying a credit for removing one rewards the loss. Defaults to
++     * returning null, which reproduces the previous behaviour exactly — a caller
++     * that cannot supply a pre-image keeps the old scoring rather than silently
++     * getting a different answer.
++     */
++    readBase: (rel: string) => string | null = () => null,
++): OffsetLedger {
+     const added: string[] = [];
+     const offsets: string[] = [];
+     const exempt: Array<{ file: string; reason: string }> = [];
+@@ -574,8 +597,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
+             const from = cols[1] ?? '';
+             const to = cols[2] ?? '';
+             if (isActiveTopLevel(from) && isDisposed(to)) {
+-                offsets.push(from);
+-                if (isParked(to)) parked.push(to);
++                if (!isCarrierText(readBase(from))) {
++                    offsets.push(from);
++                    if (isParked(to)) parked.push(to);
++                }
+             } else if (isDisposed(from) && isActiveTopLevel(to)) {
+                 added.push(to);
+             }
+@@ -586,7 +611,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
+         if (status === 'A') {
+             added.push(file);
+         } else if (status === 'D') {
+-            offsets.push(file);
++            // A carrier's removal is never an offset. See `readBase`.
++            if (!isCarrierText(readBase(file))) {
++                offsets.push(file);
++            }
+         }
+     }
+     for (const file of added) {
+@@ -777,13 +805,20 @@ export function evaluate(
+         if (!diff.ok) {
+             offsetSkipReason = `git diff against ${baseRef} failed — one-in-one-out not evaluated`;
+         } else {
+-            offsets = classifyDiff(diff.stdout, (rel) => {
+-                try {
+-                    return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
+-                } catch {
+-                    return null;
+-                }
+-            });
++            offsets = classifyDiff(
++                diff.stdout,
++                (rel) => {
++                    try {
++                        return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
++                    } catch {
++                        return null;
++                    }
++                },
++                (rel) => {
++                    const show = git(['show', `${baseRef}:${rel}`], repoRoot);
++                    return show.ok ? show.stdout : null;
++                },
++            );
+         }
+         const patch = git(
+             ['diff', '--unified=0', '--find-renames', `${baseRef}...HEAD`, '--', ROADMAPS_REL],
+@@ -920,6 +955,9 @@ function selfTest(): number {
+     const roadmap = (name: string, extra = ''): string =>
+         `# Roadmap: ${name}\n\n## Phase 1\n\n- [ ] **1.1** s\n${extra}`;
+ 
++    /** A `status: carrier` roadmap — excluded from the active count and never an offset. */
++    const CARRIER = `---\nstatus: carrier\n---\n# Roadmap: carrier\n\n## Phase 1\n\n- [~] **1.1** s\n`;
++
+     /** An open blocker — no `Status: resolved` prefix, so it counts as open. */
+     const BLOCKER = '\n## Blockers\n\n### Blocker: fixture\n\n- **Status:** open\n';
+ 
+@@ -1125,6 +1163,40 @@ function selfTest(): number {
+                     after: (dir) => write(dir, 'agents/roadmaps/later/road-to-parked.md', roadmap('P')),
+                 }),
+         },
++        {
++            // A carrier holds obligations lifted out of an already-archived
++            // parent. Paying an offset for removing one rewards the loss, so the
++            // deletion buys nothing and the added roadmap stays unpaid.
++            name: 'deleting a carrier does not offset a new roadmap → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    base: 'main',
++                    before: (dir) =>
++                        write(dir, 'agents/roadmaps/road-to-carrier.md', CARRIER),
++                    after: (dir) => {
++                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-carrier.md'));
++                        write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N'));
++                    },
++                }),
++        },
++        {
++            // The control, and it is the half that proves the case above tests
++            // the carrier status rather than the deletion: an ordinary roadmap
++            // deleted in the same shape still offsets, so the gate accepts.
++            name: 'deleting an ordinary roadmap still offsets a new one → accept',
++            expect: 'accept',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    base: 'main',
++                    after: (dir) => {
++                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-2.md'));
++                        write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N'));
++                    },
++                }),
++        },
+         {
+             name: 'a new open blocker with no claim → reject',
+             expect: 'reject',
+@@ -1250,7 +1322,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+         return 2;
+     }
+ 
+-    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and
++    // A ratchet over an empty estate always passes. Move `agents/roadmaps/` and  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+     // every count is 0, which is trivially under any baseline — exit 2 (could
+     // not run), never 1, which would assert the estate actually grew.
+     try {
+diff --git a/src/scripts/check_roadmap_trackable.ts b/src/scripts/check_roadmap_trackable.ts
+index dde685bcb867b69f63349dc2a13171a602155c33..987d153e6017ae3588e2ec7e8ab4bf3571e6c190 100644
+--- a/src/scripts/check_roadmap_trackable.ts
++++ b/src/scripts/check_roadmap_trackable.ts
+@@ -15,7 +15,7 @@
+  * (Python-only); these pure regex/parse helpers are replicated here
+  * byte-for-byte from that module. Keep in lock-step with it.
+  *
+- * Every non-draft file under `agents/roadmaps/` (excluding `archive/`,
++ * Every non-draft file under `agents/roadmaps/` (excluding `archive/`,  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * `skipped/`, template/README/open-questions) MUST:
+  *   1. Be parseable by the dashboard's `PHASE_RE` (>= one `## Phase <id>`).
+  *   2. Have at least one trackable checkbox under every parsed phase.
+@@ -49,6 +49,15 @@ const PHASE_RE =
+ // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
+ const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\s*\n/;
+ const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
++/**
++ * A carrier holds obligations deferred out of an archived parent. It is not
++ * schedulable work — every item in it has an unmet resumption trigger — and it
++ * has no `## Phase` headings by construction, so it is skipped exactly where a
++ * draft is. It differs from a draft in what protects it: a draft may be deleted
++ * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
++ * its receiver.
++ */
++const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
+ 
+ const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
+     'template.md',
+@@ -92,6 +101,11 @@ function is_draft(fm: Map<string, string>): boolean {
+     return DRAFT_VALUES.has((fm.get('status') ?? '').toLowerCase());
+ }
+ 
++/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
++function is_carrier(fm: Map<string, string>): boolean {
++    return CARRIER_VALUES.has((fm.get('status') ?? '').toLowerCase());
++}
++
+ /** Mirror update_roadmap_progress.is_roadmap_candidate (POSIX path parts). */
+ function is_roadmap_candidate(p: string): boolean {
+     const name = path.basename(p);
+@@ -168,7 +182,7 @@ function find_active_roadmaps(root: string): string[] {
+             continue;
+         }
+         const text = fs.readFileSync(p, 'utf-8');
+-        if (is_draft(parse_frontmatter(text))) {
++        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+             continue;
+         }
+         out.push(p);
+@@ -345,6 +359,7 @@ export {
+     CHECKBOX_RE,
+     PHASE_RE,
+     is_draft,
++    is_carrier,
+     is_roadmap_candidate,
+     parse_frontmatter,
+     find_active_roadmaps,
+diff --git a/src/scripts/lint_carrier_integrity.ts b/src/scripts/lint_carrier_integrity.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d48c4092e29690811b2d940c9ddbd267141973d
+--- /dev/null
++++ b/src/scripts/lint_carrier_integrity.ts
+@@ -0,0 +1,557 @@
++#!/usr/bin/env tsx
++/**
++ * Standing validator for deferral carries whose parent is already archived.
++ *
++ * A `[~]` step carried to a follow-up roadmap is checked once, at the moment
++ * the parent is archived, and never again. The check that performs it runs
++ * inside a sweep over active roadmaps, so once the parent moves under
++ * `archive/` neither end of the pair is ever looked at together again. The
++ * receiver can then be deleted, renamed, or stripped of its back-link and
++ * nothing goes red.
++ *
++ * This gate closes that by walking from the ARCHIVED side. An archived roadmap
++ * is a durable record: nothing rewrites it, and it names its destination by
++ * slug. So the expected set of live receivers is derivable at any time without
++ * a registry to maintain, and whole-file deletion is detected on the first
++ * pass — which a validator enumerating only the surviving receivers cannot do.
++ *
++ * Annotation parsing is delegated to `parseDeferredItems`, the same function the
++ * archival sweep uses, so the syntax has one implementation and cannot drift.
++ * The RESOLUTION POLICY is deliberately not shared, and the reason is temporal
++ * rather than accidental. At archival time a destination under `archive/` is a
++ * refusal: carrying an item into an already-dead roadmap loses it on arrival.
++ * Afterwards, a destination that completed its own work and archived is the
++ * SUCCESS case, not a loss. Sharing that branch would red two carries in this
++ * repository whose receivers did exactly what they were asked to do — measured,
++ * not predicted: both were reported on the first run against real data.
++ *
++ * So the standing policy is: the destination must still exist somewhere (a
++ * missing file is the deletion this gate is for), it must still back-link, and
++ * if it is archived it must carry no OPEN steps. An archived roadmap with open
++ * steps was moved by hand and its obligations are stranded. A destination under
++ * `skipped/` is red in either policy — skipping is not fulfilment.
++ *
++ * Unsupported transitions fail closed rather than being inferred. A rename
++ * breaks destination resolution. A re-parent breaks the back-link. An onward
++ * carry that removes the intermediate breaks the original parent's link. All
++ * three are red here, deliberately, until a disposition vocabulary exists to
++ * express them.
++ *
++ * Exit codes: 0 = every carry resolves, 1 = at least one does not.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { parseDeferredItems } from '../agent-src/scripts/archive_completed_roadmaps.js';
++import { checkRatchet } from './_lib/gate_baseline.js';
++import { GateLedger } from './_lib/gate_ledger.js';
++import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const _DEFAULT_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Directories holding roadmaps that can no longer be re-checked by the sweep. */
++const DEAD_DIRS: readonly string[] = ['archive', 'skipped'];
++
++/**
++ * Cheap pre-filter. It must match a BARE `[~]` too, not only the annotation:
++ * a deferred step with no annotation at all is the loss case, and filtering on
++ * the annotation alone made the gate blind to exactly the shape it exists for.
++ * Its own self-test caught that, which is the difference between a `scanned:`
++ * floor and a proof that the reading changes the verdict.
++ */
++const CARRY_CANDIDATE_RE = /deferred-resolution:|^[ \t]*-[ \t]*\[~\]/m;
++
++const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
++    'README.md',
++    'INDEX.md',
++    'template.md',
++    'progress.md',
++]);
++
++/**
++ * Two classes, and the split is the whole design.
++ *
++ * `unannotated` — a `[~]` step with no `deferred-resolution:` comment at all.
++ * Every one of the 243 in this repository predates the annotation contract,
++ * which was settled by council three months after the newest of them. It is
++ * real debt, it is shrink-only, and it is not what this gate was built for.
++ *
++ * `broken-destination` — an annotation that named a receiver which no longer
++ * holds up its end: deleted, renamed, re-parented, skipped, or archived with
++ * open steps. This class is a hard failure at zero, because every member of it
++ * is an obligation that had a recorded home and lost it. Deleting a live
++ * receiver produces this class, not the other one.
++ */
++export type CarrierProblemClass = 'unannotated' | 'broken-destination';
++
++export interface CarrierProblem {
++    /** Repo-relative path of the archived roadmap whose carry is broken. */
++    source: string;
++    cls: CarrierProblemClass;
++    detail: string;
++}
++
++/** Roadmap files under the dead directories, sorted for stable output. */
++export function deadRoadmaps(root: string): string[] {
++    const out: string[] = [];
++    for (const dir of DEAD_DIRS) {
++        const abs = path.join(root, 'agents', 'roadmaps', dir);
++        let entries: string[];
++        try {
++            entries = fs.readdirSync(abs);
++        } catch {
++            continue;
++        }
++        for (const name of entries.sort()) {
++            if (!name.endsWith('.md') || EXCLUDE_NAMES.has(name)) {
++                continue;
++            }
++            const full = path.join(abs, name);
++            if (!fs.statSync(full).isFile()) {
++                continue;
++            }
++            out.push(path.posix.join('agents/roadmaps', dir, name));
++        }
++    }
++    return out;
++}
++
++/** Escape a slug for literal use inside a RegExp. */
++function _escapeRe(v: string): string {
++    return v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++/** True when `text` declares `parent_roadmap: <slug>` or a `relates:` row naming it. */
++function _linksBackTo(text: string, slug: string): boolean {
++    if (new RegExp(`^parent_roadmap:[ \t]*${_escapeRe(slug)}[ \t]*$`, 'm').test(text)) {
++        return true;
++    }
++    return new RegExp(`^[ \t]*-[ \t]+slug:[ \t]*${_escapeRe(slug)}[ \t]*$`, 'm').test(text);
++}
++
++/** Where a destination slug resolves, and under which directory. */
++function _locate(root: string, slug: string): { file: string; dir: 'active' | 'later' | 'archive' | 'skipped' } | null {
++    const candidates: ReadonlyArray<readonly [string, 'active' | 'later' | 'archive' | 'skipped']> = [
++        [path.join(root, 'agents', 'roadmaps', `${slug}.md`), 'active'],
++        [path.join(root, 'agents', 'roadmaps', 'later', `${slug}.md`), 'later'],
++        [path.join(root, 'agents', 'roadmaps', 'archive', `${slug}.md`), 'archive'],
++        [path.join(root, 'agents', 'roadmaps', 'skipped', `${slug}.md`), 'skipped'],
++    ];
++    for (const [file, dir] of candidates) {
++        if (fs.existsSync(file)) {
++            return { file, dir };
++        }
++    }
++    return null;
++}
++
++const OPEN_STEP_RE = /^[ \t]*-[ \t]*\[[ ][ \t]*\][ \t]/m;
++const CARRIER_STATUS_RE = /^status:[ \t]*carrier[ \t]*$/m;
++
++/**
++ * The standing carry policy for one archived roadmap. See the module header for
++ * why this is not `deferralProblems`.
++ */
++export function carryProblems(
++    root: string,
++    sourceSlug: string,
++    text: string,
++): Array<{ cls: CarrierProblemClass; detail: string }> {
++    const problems: Array<{ cls: CarrierProblemClass; detail: string }> = [];
++    for (const item of parseDeferredItems(text)) {
++        const label = item.text === '' ? '(unnamed step)' : item.text;
++        if (item.kind === null || item.destination === null) {
++            problems.push({
++                cls: 'unannotated',
++                detail:
++                    `deferred step ${JSON.stringify(label)} carries no ` +
++                    '`<!-- deferred-resolution: carried-to=<slug> -->` annotation, so nothing records where it went',
++            });
++            continue;
++        }
++        if (item.destination === sourceSlug) {
++            problems.push({
++                cls: 'broken-destination',
++                detail: `deferred step ${JSON.stringify(label)} names its OWN roadmap as the destination`,
++            });
++            continue;
++        }
++        const found = _locate(root, item.destination);
++        if (found === null) {
++            problems.push({
++                cls: 'broken-destination',
++                detail: `deferred step ${JSON.stringify(label)} names destination \`${item.destination}\`, ` +
++                    'which no longer exists anywhere under `agents/roadmaps/` — the receiver was deleted ' +
++                    'and the obligation went with it',
++            });
++            continue;
++        }
++        if (found.dir === 'skipped') {
++            problems.push({
++                cls: 'broken-destination',
++                detail: `destination \`${item.destination}\` is under \`skipped/\` — skipping a receiver is not ` +
++                    'fulfilling the carry',
++            });
++            continue;
++        }
++        const destText = fs.readFileSync(found.file, 'utf-8');
++        // A carrier exists to stay live. Archiving one is the terminal-archival
++        // transition that has no vocabulary yet, and it strands every item the
++        // carrier itself holds — none of which is an OPEN step, so the check
++        // below would not see it.
++        if (found.dir === 'archive' && CARRIER_STATUS_RE.test(destText)) {
++            problems.push({
++                cls: 'broken-destination',
++                detail:
++                    `destination \`${item.destination}\` is a \`status: carrier\` roadmap that has been ` +
++                    'archived — a carrier holds obligations whose triggers are unmet, so archiving it ' +
++                    'strands them. Terminal archival of a live carrier is not expressible yet and fails closed.',
++            });
++            continue;
++        }
++        if (found.dir === 'archive' && OPEN_STEP_RE.test(destText)) {
++            problems.push({
++                cls: 'broken-destination',
++                detail: `destination \`${item.destination}\` is archived but still has OPEN steps — it was moved ` +
++                    'by hand rather than completed, so the carried obligation is stranded',
++            });
++            continue;
++        }
++        if (!_linksBackTo(destText, sourceSlug)) {
++            problems.push({
++                cls: 'broken-destination',
++                detail: `destination \`${item.destination}\` carries no \`parent_roadmap: ${sourceSlug}\` ` +
++                    'back-link and no `relates:` row naming it — the link must verify from both ends',
++            });
++        }
++    }
++    return problems;
++}
++
++/**
++ * Validate every carry annotation in the dead directories.
++ *
++ * @returns the problems found, and how many roadmap files were read.
++ */
++export function auditCarries(root: string): { problems: CarrierProblem[]; scanned: number } {
++    const problems: CarrierProblem[] = [];
++    let scanned = 0;
++    for (const rel of deadRoadmaps(root)) {
++        let text: string;
++        try {
++            text = fs.readFileSync(path.join(root, rel), 'utf-8');
++        } catch {
++            continue;
++        }
++        scanned += 1;
++        if (!CARRY_CANDIDATE_RE.test(text)) {
++            continue;
++        }
++        const sourceSlug = path.basename(rel).replace(/\.md$/, '');
++        for (const found of carryProblems(root, sourceSlug, text)) {
++            problems.push({ source: rel, ...found });
++        }
++    }
++    return { problems, scanned };
++}
++
++const USAGE = `usage: lint_carrier_integrity [--root <dir>] [--self-test] [--quiet]
++
++  --root <dir>   audit another checkout (default: this repository)
++  --self-test    run the built-in discrimination suite and exit
++  --quiet        suppress the green summary line
++`;
++
++function _writeFixture(dir: string, rel: string, body: string): void {
++    const full = path.join(dir, rel);
++    fs.mkdirSync(path.dirname(full), { recursive: true });
++    fs.writeFileSync(full, body, 'utf-8');
++}
++
++const PARENT_WITH_CARRY = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A carried step.**\n      <!-- deferred-resolution: carried-to=road-to-receiver -->\n';
++
++function _receiver(backlink: string): string {
++    return `---
++complexity: bounded
++${backlink}
++---
++# Receiver
++
++Body.
++`;
++}
++
++/** A receiver that declares itself a carrier — used only where that is the point. */
++function _carrierReceiver(backlink: string): string {
++    return _receiver(backlink).replace('---\n# Receiver', 'status: carrier\n---\n# Receiver');
++}
++
++/**
++ * Each case builds a throwaway tree, runs the real CLI against it with
++ * `--root`, and asserts the exit code. Shelling out rather than calling
++ * `auditCarries` directly keeps argv parsing and the exit-code mapping inside
++ * what is proven.
++ *
++ * Every case here is a `broken-destination` case, because that is the class
++ * this CLI hard-fails on. The `unannotated` class cannot be proven by exit code
++ * at all: it is ratcheted against a baseline of 243, so one planted fixture
++ * finding sits far below the floor and correctly exits 0. Its detection is
++ * proven instead by a unit test over `carryProblems`, which asserts the class
++ * directly, plus by the 243 it reports against the real tree on every run.
++ */
++export function selfTestCases(root: string): SelfTestCase[] {
++    const build = (name: string, plant: (dir: string) => void): (() => number) => {
++        return () => {
++            const dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), name));
++            try {
++                plant(dir);
++                return runGateCli(
++                    root,
++                    'src/scripts/lint_carrier_integrity.ts',
++                    ['--root', dir, '--quiet'],
++                    root,
++                );
++            } finally {
++                fs.rmSync(dir, { recursive: true, force: true });
++            }
++        };
++    };
++    const parent = (dir: string): void =>
++        _writeFixture(dir, 'agents/roadmaps/archive/road-to-parent.md', PARENT_WITH_CARRY);
++    return [
++        {
++            name: 'a live receiver with a back-link is accepted',
++            expect: 'accept',
++            run: build('carrier-ok-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/road-to-receiver.md',
++                    _receiver('parent_roadmap: road-to-parent'),
++                );
++            }),
++        },
++        {
++            name: 'a receiver parked under later/ is equally live and is accepted',
++            expect: 'accept',
++            run: build('carrier-later-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/later/road-to-receiver.md',
++                    _receiver('parent_roadmap: road-to-parent'),
++                );
++            }),
++        },
++        {
++            name: 'a receiver that completed its work and archived is accepted — fulfilment, not loss',
++            expect: 'accept',
++            run: build('carrier-done-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/archive/road-to-receiver.md',
++                    `${_receiver('parent_roadmap: road-to-parent')}\n- [x] **1.1 Done.**\n`,
++                );
++            }),
++        },
++        {
++            name: 'a back-link supplied as a relates: row instead of parent_roadmap is accepted',
++            expect: 'accept',
++            run: build('carrier-relates-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/road-to-receiver.md',
++                    _receiver('relates:\n  - slug: road-to-parent\n    relation: extends'),
++                );
++            }),
++        },
++        {
++            name: 'a receiver that is itself a carrier and has been archived is rejected',
++            expect: 'reject',
++            run: build('carrier-archived-carrier-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/archive/road-to-receiver.md',
++                    _carrierReceiver('parent_roadmap: road-to-parent'),
++                );
++            }),
++        },
++        {
++            name: 'the receiver deleted entirely is rejected',
++            expect: 'reject',
++            run: build('carrier-deleted-', parent),
++        },
++        {
++            name: 'a receiver archived while still carrying OPEN steps is rejected — stranded, not completed',
++            expect: 'reject',
++            run: build('carrier-stranded-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/archive/road-to-receiver.md',
++                    `${_receiver('parent_roadmap: road-to-parent')}\n- [ ] **1.1 Still open.**\n`,
++                );
++            }),
++        },
++        {
++            name: 'a receiver under skipped/ is rejected — skipping is not fulfilling',
++            expect: 'reject',
++            run: build('carrier-skipped-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/skipped/road-to-receiver.md',
++                    _receiver('parent_roadmap: road-to-parent'),
++                );
++            }),
++        },
++        {
++            name: 'the back-link removed is rejected — the link must verify from both ends',
++            expect: 'reject',
++            run: build('carrier-nolink-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/road-to-receiver.md',
++                    _receiver('owner: maintainer'),
++                );
++            }),
++        },
++        {
++            name: 'a back-link naming a different parent is rejected',
++            expect: 'reject',
++            run: build('carrier-reparent-', (dir) => {
++                parent(dir);
++                _writeFixture(
++                    dir,
++                    'agents/roadmaps/road-to-receiver.md',
++                    _receiver('parent_roadmap: road-to-someone-else'),
++                );
++            }),
++        },
++    ];
++}
++
++export function main(argv: string[]): number {
++    let root = _DEFAULT_ROOT;
++    let quiet = false;
++    for (let i = 0; i < argv.length; i += 1) {
++        const arg = argv[i] as string;
++        if (arg === '-h' || arg === '--help') {
++            process.stdout.write(USAGE);
++            return 0;
++        } else if (arg === '--quiet') {
++            quiet = true;
++        } else if (arg === '--root') {
++            const next = argv[i + 1];
++            if (next === undefined) {
++                process.stderr.write('lint_carrier_integrity: --root needs a directory\n');
++                return 2;
++            }
++            root = path.resolve(next);
++            i += 1;
++        } else if (arg === '--self-test') {
++            return runSelfTest({
++                gate: 'lint_carrier_integrity',
++                cases: selfTestCases(_DEFAULT_ROOT),
++                minCases: 10,
++                minRejectCases: 6,
++            });
++        } else {
++            process.stderr.write(`lint_carrier_integrity: unknown argument ${JSON.stringify(arg)}\n`);
++            process.stderr.write(USAGE);
++            return 2;
++        }
++    }
++
++    const ledger = new GateLedger('lint_carrier_integrity');
++    const walked = deadRoadmaps(root);
++    ledger.plan(walked);
++    const { problems, scanned } = auditCarries(root);
++    const failed = new Set(problems.map((p) => p.source));
++    for (const rel of walked) {
++        if (failed.has(rel)) {
++            ledger.fail(rel, problems.find((p) => p.source === rel)?.detail ?? 'broken carry');
++        } else {
++            ledger.complete(rel);
++        }
++    }
++    try {
++        reportScanned({
++            gate: 'lint_carrier_integrity',
++            scanned,
++            units: 'archived roadmap(s)',
++            roots: DEAD_DIRS.map((d) => `agents/roadmaps/${d}`),
++            allowEmpty: 'a checkout with no archived roadmaps has no carry to break',
++        });
++    } catch (e) {
++        if (e instanceof DeadScopeError) {
++            process.stderr.write(`${e.message}\n`);
++            ledger.report();
++            return 1;
++        }
++        throw e;
++    }
++
++    const broken = problems.filter((p) => p.cls === 'broken-destination');
++    const unannotated = problems.filter((p) => p.cls === 'unannotated');
++
++    // Hard failure, at zero, no baseline. Every member of this class is an
++    // obligation that had a recorded destination and lost it.
++    if (broken.length > 0) {
++        process.stderr.write(
++            `\n❌  ${String(broken.length)} broken deferral carr${broken.length === 1 ? 'y' : 'ies'}. ` +
++                'An archived roadmap named a receiver that no longer holds up its end, so the ' +
++                'obligations it carried have no live destination.\n\n',
++        );
++        for (const p of broken) {
++            process.stderr.write(`  ❌ ${p.source}\n     ${p.detail}\n`);
++        }
++        process.stderr.write(
++            '\n    Restore the receiver, restore its `parent_roadmap:` back-link, or move the\n' +
++                '    carried items back to open in the archived parent. A rename or a re-parent is\n' +
++                '    not expressible yet and fails closed on purpose.\n',
++        );
++        ledger.report();
++        return 1;
++    }
++
++    const verdict = checkRatchet({
++        gate: 'lint_carrier_integrity',
++        actual: unannotated.length,
++        repoRoot: _DEFAULT_ROOT,
++    });
++    if (!verdict.ok) {
++        process.stderr.write(`\n❌  ${verdict.message}\n\n`);
++        for (const p of unannotated.slice(0, 20)) {
++            process.stderr.write(`  ❌ ${p.source}\n     ${p.detail}\n`);
++        }
++        if (unannotated.length > 20) {
++            process.stderr.write(`  … and ${String(unannotated.length - 20)} more.\n`);
++        }
++        ledger.report();
++        return 1;
++    }
++
++    if (!quiet) {
++        process.stdout.write(`✅  ${verdict.message}\n`);
++        process.stdout.write(
++            `✅  lint_carrier_integrity: ${String(scanned)} dead roadmap(s) scanned, ` +
++                'every annotated carry resolves.\n',
++        );
++    }
++    ledger.report();
++    return 0;
++}
++
++if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/src/scripts/lint_plan_risk_register.ts b/src/scripts/lint_plan_risk_register.ts
+index 43bf7b0e25ddd6f087d449257a679a52ba2e188c..1fc45a878b21e4affcfe3022271ac3e409ca54cd 100644
+--- a/src/scripts/lint_plan_risk_register.ts
++++ b/src/scripts/lint_plan_risk_register.ts
+@@ -7,10 +7,11 @@
+  * and § 6 (exit-code contract). A divergence from that contract is a
+  * validator bug, never a contract reinterpretation.
+  *
+- * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`
++ * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+  * (top level only — `archive/`, `skipped/`, `later/`, `stubs/` excluded, as
+- * are `template.md` and `dashboard*`). `status: draft` frontmatter exempts a
+- * file (reported as `draft-exempt`, still counted as scanned).
++ * are `template.md` and `dashboard*`). `status: draft` and `status: carrier`
++ * frontmatter exempt a file (reported as `draft-exempt`, still counted as
++ * scanned).
+  *
+  * Checks per ready file:
+  *   1. `## Risk Register` section exists — missing = fail unless the
+@@ -229,7 +230,7 @@ function _isSeparatorRow(line: string): boolean {
+ }
+ 
+ /**
+- * § 1.2 — validate the risk table rows found in `bodyLines` (section body
++ * § 1.2 — validate the risk table rows found in `bodyLines` (section body  code-comment-allow report-comment -- a section marker in this gate's own numbered spec, not an analysis report
+  * after the marker). `startLine` is the 1-based document line of the first
+  * body line, used for violation line numbers. Returns violations; the caller
+  * decides emptiness handling.
+@@ -326,14 +327,21 @@ export function validateTable(
+     return { headerFound, rowCount, violations };
+ }
+ 
+-/** `status: draft` in the YAML frontmatter block exempts a file. */
++/**
++ * `status: draft` — and `status: carrier` — in the frontmatter exempt a file.
++ *
++ * A carrier is not a plan. It holds obligations deferred out of an archived
++ * parent, each with an unmet resumption trigger, so a plan risk register for it
++ * would be manufactured rather than reported. Same category reason that exempts
++ * it from `check_roadmap_trackable`'s `## Phase` requirement.
++ */
+ export function hasDraftStatus(text: string): boolean {
+     const lines = _splitLines(text);
+     if ((lines[0] ?? '').trim() !== '---') return false;
+     for (let i = 1; i < lines.length; i++) {
+         const line = lines[i] as string;
+         if (line.trim() === '---') return false;
+-        if (/^status:\s*draft\s*$/.test(line)) return true;
++        if (/^status:\s*(?:draft|carrier)\s*$/.test(line)) return true;
+     }
+     return false;
+ }
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index a9dd67c1fe98e060279737decbb883c4957546f2..01cd5e5b569033a603ff7a7a3ac8c3c987f6bf71 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -762,6 +762,11 @@ tasks:
+     desc: "Fail on comments in changed source that carry a non-English language, an analysis-report structure, or the provenance of the code — the carrier `code-comment-discipline` never had, and the one the `Code comments English` clause of `language-and-tone` names a `.md`-only validator for. Diff-scoped against origin/main"
+     cmd: ./scripts-run src/scripts/lint_code_comments --base origin/main
+ 
++  lint-carrier-integrity:
++    silent: true
++    desc: "Fail when a deferral carried out of an archived roadmap has lost its receiver — deleted, renamed, re-parented, skipped, or archived with open steps. Walks from the archived parent, which is the durable record, because the archival sweep validates a carry exactly once and never sees the pair again"
++    cmd: ./scripts-run src/scripts/lint_carrier_integrity
++
+   lint-never-silent:
+     silent: true
+     desc: "No shipped rule, skill, or command may direct a silent re-run or the concealment of a detected miss — the hidden attempt→critic→re-attempt mechanism is falsified (ADR-106 gate, TERMINAL null) and correction is always visible. Prose that describes or forbids the mechanism stays legal (road-to-rule-delivery-integrity P4.4)"
+diff --git a/tests/scripts/lint_carrier_integrity.test.ts b/tests/scripts/lint_carrier_integrity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..211aa9aa24b1ddc70233a0fbca7122102a644a53
+--- /dev/null
++++ b/tests/scripts/lint_carrier_integrity.test.ts
+@@ -0,0 +1,108 @@
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    auditCarries,
++    carryProblems,
++    deadRoadmaps,
++    selfTestCases,
++} from '../../src/scripts/lint_carrier_integrity.js';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++
++let dir: string;
++
++function plant(rel: string, body: string): void {
++    const full = path.join(dir, rel);
++    fs.mkdirSync(path.dirname(full), { recursive: true });
++    fs.writeFileSync(full, body, 'utf-8');
++}
++
++const PARENT = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A carried step.**\n      <!-- deferred-resolution: carried-to=road-to-receiver -->\n';
++
++const BARE_PARENT = '---\ncomplexity: bounded\n---\n# Parent\n\n## Phase 1 - a phase\n\n- [~] **1.1 A step nobody said where to send.**\n';
++
++beforeEach(() => {
++    dir = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'carrier-unit-'));
++});
++
++afterEach(() => {
++    fs.rmSync(dir, { recursive: true, force: true });
++});
++
++describe('carryProblems classes', () => {
++    it('classes a missing annotation as unannotated, not as a broken destination', () => {
++        const found = carryProblems(dir, 'road-to-parent', BARE_PARENT);
++        expect(found).toHaveLength(1);
++        expect(found[0]!.cls).toBe('unannotated');
++    });
++
++    it('classes a deleted receiver as broken-destination', () => {
++        const found = carryProblems(dir, 'road-to-parent', PARENT);
++        expect(found).toHaveLength(1);
++        expect(found[0]!.cls).toBe('broken-destination');
++        expect(found[0]!.detail).toContain('no longer exists');
++    });
++
++    it('accepts a live receiver that back-links', () => {
++        plant(
++            'agents/roadmaps/road-to-receiver.md',
++            '---\ncomplexity: bounded\nparent_roadmap: road-to-parent\n---\n# R\n',
++        );
++        expect(carryProblems(dir, 'road-to-parent', PARENT)).toEqual([]);
++    });
++
++    it('accepts a receiver that completed and archived, and rejects one archived with open steps', () => {
++        const head = '---\ncomplexity: bounded\nparent_roadmap: road-to-parent\n---\n# R\n';
++        plant('agents/roadmaps/archive/road-to-receiver.md', `${head}- [x] **1.1 Done.**\n`);
++        expect(carryProblems(dir, 'road-to-parent', PARENT)).toEqual([]);
++
++        plant('agents/roadmaps/archive/road-to-receiver.md', `${head}- [ ] **1.1 Open.**\n`);
++        const stranded = carryProblems(dir, 'road-to-parent', PARENT);
++        expect(stranded).toHaveLength(1);
++        expect(stranded[0]!.cls).toBe('broken-destination');
++        expect(stranded[0]!.detail).toContain('stranded');
++    });
++
++    it('refuses a roadmap naming itself as the destination', () => {
++        const selfRef = PARENT.replace('carried-to=road-to-receiver', 'carried-to=road-to-parent');
++        const found = carryProblems(dir, 'road-to-parent', selfRef);
++        expect(found).toHaveLength(1);
++        expect(found[0]!.detail).toContain('OWN roadmap');
++    });
++});
++
++describe('auditCarries walk', () => {
++    it('reads the dead directories only, and reports what it read', () => {
++        plant('agents/roadmaps/archive/road-to-parent.md', PARENT);
++        plant('agents/roadmaps/road-to-active.md', PARENT);
++        const { problems, scanned } = auditCarries(dir);
++        expect(scanned).toBe(1);
++        expect(problems.map((p) => p.source)).toEqual(['agents/roadmaps/archive/road-to-parent.md']);
++    });
++
++    it('skips INDEX and README rather than parsing them as roadmaps', () => {
++        plant('agents/roadmaps/archive/INDEX.md', '- [~] a row\n');
++        plant('agents/roadmaps/archive/README.md', '- [~] a row\n');
++        expect(deadRoadmaps(dir)).toEqual([]);
++        expect(auditCarries(dir).scanned).toBe(0);
++    });
++
++    it('finds an unannotated step even though the annotation marker is absent from the file', () => {
++        plant('agents/roadmaps/archive/road-to-parent.md', BARE_PARENT);
++        const { problems } = auditCarries(dir);
++        expect(problems).toHaveLength(1);
++        expect(problems[0]!.cls).toBe('unannotated');
++    });
++});
++
++describe('the self-test suite itself', () => {
++    it('declares only broken-destination cases, in both polarities', () => {
++        const cases = selfTestCases(REPO_ROOT);
++        expect(cases.filter((c) => c.expect === 'reject').length).toBeGreaterThanOrEqual(5);
++        expect(cases.filter((c) => c.expect === 'accept').length).toBeGreaterThanOrEqual(4);
++    });
++});

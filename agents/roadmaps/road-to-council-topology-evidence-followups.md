@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: draft
+status: carrier
 parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 ---
 
@@ -156,6 +156,85 @@ frozen beforehand (1B.4).
 - [ ] 12.1 `/council` stays the user concept
 - [ ] 12.2 A free explain mode
 - [ ] 12.3 A force-topology control cannot override the five named authorities
+
+## Unguarded-carrier gap — CLOSED 2026-09-02, and drain 14's verdict reversed on the record
+
+> **This section changes `status:` and nothing else about the obligations.** All
+> 38 items stay exactly where they are, with the same triggers and the same
+> `[~]`. What changed is that three mechanisms now stand between this file and
+> its own removal, and `status: draft` became `status: carrier`.
+
+*AI council 2026-09-02 (drain run 16), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds each over two rounds of questions, depth deep,
+peer-review, blind chairman, quorum 2/2 present (needed 1) — concluded.
+Subscription transport, `billable=0`, `$0.0000`. Council artefacts are
+gitignored and auto-pruned, so every line relied on is inlined here per
+`no-roadmap-references`.*
+
+**Drain 14's verdict 3A is reversed, and the reversal is recorded rather than
+quietly overwritten.** That verdict — *"this file stays `status: draft`, and the
+guard stub is NOT promoted"* — rested on two grounds, and the drain-14 record
+names both. The first was authority: *"adding a CI gate is a governance act
+whose authority this run has not established."* The second was evidence: both
+seats graded the header's *"deleting it reds nothing"* claim **SPECULATIVE** for
+want of command output, and made escalation **conditional** — *"if confirmed,
+surface to owner"*.
+
+**The condition was met by the same run that recorded it.** The mutation test
+the council asked for was run on 2026-09-01 and confirmed the claim. So the
+lock's own escalation trigger had fired before this round opened; drain 16 did
+not overrule a standing verdict, it satisfied the condition that verdict
+attached.
+
+**Verdict 3Q, convergent 2/2.** Both seats refused plain 3A on the second
+asking, in terms that answer drain 14's evidence ground directly: *"recognizing
+the file socially as a carrier does not protect it mechanically."* The invariant
+they named belongs to the obligations rather than to this pathname: *"A live
+deferred obligation must always have a validated carrier, and it may disappear
+from that carrier only through resolution or an explicit, validated transfer."*
+
+**Position P — migrate the 38 obligations out of the roadmap estate — was
+refused.** *"Any Position P destination satisfying that invariant would
+effectively recreate Position Q under another name."* It was additionally
+refused as undecidable by an autonomous run, since the migration target is a
+semantic choice.
+
+**One design point diverges from both seats and the divergence is the better
+answer.** One seat required *"a durable registry, baseline comparison, or
+equivalent tombstone mechanism"*, on the correct ground that *"a validator that
+only scans surviving carriers has nothing left to inspect"* once a whole file is
+deleted. The remedy taken is not a registry: the **archived parent already is
+the durable record**. It carries `<!-- deferred-resolution: carried-to=<slug> -->`
+for every deferred item, it lives where nothing rewrites it, and it names this
+file by slug. `lint_carrier_integrity` walks from that side, so deletion is
+caught on the first pass with no baseline file to maintain and no second
+suppression surface.
+
+**What now stands between this file and its removal.**
+
+1. `src/scripts/lint_carrier_integrity.ts` — walks every roadmap under
+   `archive/` and `skipped/` and hard-fails at zero on a `broken-destination`.
+   Deleting this file produces 38 of them. Renaming it, re-parenting it,
+   moving it to `skipped/`, or archiving it while it declares `status: carrier`
+   each red the same way.
+2. `check_estate_count.classifyDiff` — removing a `status: carrier` roadmap no
+   longer scores an offset, so the estate credit that made deletion profitable
+   is gone. Asserted in that gate's own case table, together with the control
+   proving an ordinary deletion still offsets.
+3. `status: carrier` in `update_roadmap_progress` and
+   `check_roadmap_trackable` — this file is skipped where a draft is, so it
+   stays off the dashboard and out of `/roadmap:process-*` without claiming to
+   be scheduled work, and its lack of `## Phase` headings is no longer a
+   trackability failure.
+
+**What still does not guard it, stated because the header above was written to
+be honest about exactly this.** No mechanism monitors the 38 resumption
+triggers, so an item whose trigger fires stays `[~]` until a human looks. The
+transition vocabulary — rename, re-parent, split, onward carry, partial
+resolution, carrier-to-carrier transfer — does not exist; every one of those
+transitions fails closed today, which both seats asked for as a deliberately
+immobile first version. `agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md`
+records it.
 
 ## What this file may NOT be read as claiming
 

@@ -12,8 +12,8 @@
  * `urp.collect()` completion criterion, and exit code 0. snake_case kept.
  *
  * A roadmap that has reached `count_open == 0` and `count_deferred == 0` is
- * **complete**. This sweep moves it to `agents/roadmaps/archive/`, rewrites
- * inbound references (`agents/roadmaps/<x>.md` → `agents/roadmaps/archive/<x>.md`)
+ * **complete**. This sweep moves it to `agents/roadmaps/archive/`, rewrites code-comment-allow provenance-comment -- the sweep's own operand
+ * inbound references (`agents/roadmaps/<x>.md` → `agents/roadmaps/archive/<x>.md`) code-comment-allow provenance-comment -- the rewrite this sweep performs
  * across tracked files so links never break, and regenerates the dashboard.
  *
  * It replaces the old **merge-gate** (keep one item open + a manual post-merge
@@ -136,7 +136,7 @@ function _branch_touched_paths(root: string, base: string): Set<string> | null {
  *
  * Two classes, and the second is why this predicate exists at all:
  *
- * - `agents/evidence/**` — a committed record of what was true, or of what a
+ * - `agents/evidence/**` — a committed record of what was true, or of what a code-comment-allow provenance-comment -- the predicate's operand set
  *   reviewer was shown, at one point in time. Retroactively editing it makes it
  *   claim something that did not happen, which is the failure
  *   `evaluator-independence` exists to prevent ("the prompt ships with the
@@ -146,7 +146,7 @@ function _branch_touched_paths(root: string, base: string): Set<string> | null {
  *   AND makes `git apply` target a path the diff never created.
  *
  * Measured 2026-08-11: archiving one roadmap rewrote four frozen artifacts
- * under `agents/evidence/reviews/`, including the `diff.patch` headers of a
+ * under `agents/evidence/reviews/`, including the `diff.patch` headers of a code-comment-allow provenance-comment -- names what the predicate protects
  * recorded review input. Nothing caught it — the sweep reported it as
  * "4 ref(s) migrated", which reads like success.
  */
@@ -346,7 +346,7 @@ function _escapeRe(v: string): string {
  * bare `- <name>` item inside the `relates:` block, which is a declaration the
  * author made deliberately. A mention anywhere else in the file does not count.
  */
-function _relatesTo(text: string, slug: string): boolean {
+export function _relatesTo(text: string, slug: string): boolean {
     const lines = text.split('\n');
     const start = lines.findIndex((l) => /^relates:/.test(l));
     if (start === -1) return false;
@@ -654,7 +654,7 @@ function _regen_dashboard(root: string, dry_run: boolean): void {
 /**
  * Rebuild the archive index after a move, when the builder is present.
  *
- * The sweep is the one operation that changes what `agents/roadmaps/archive/`
+ * The sweep is the one operation that changes what `agents/roadmaps/archive/` code-comment-allow provenance-comment -- the directory this function writes
  * contains, so it is the one operation that can leave the generated index
  * stale — and the drift gate on that index runs in the same PR the sweep runs
  * in. Regenerating here keeps the two from disagreeing by construction rather
