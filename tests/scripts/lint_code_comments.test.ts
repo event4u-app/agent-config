@@ -27,10 +27,13 @@ import {
 
 describe('classifier fixture table', () => {
     it.each(COMMENT_CASES.map((c) => [c.name, c] as const))('%s', (_name, testCase) => {
-        const actual = scanText('f.ts', testCase.source)
-            .map((f) => f.cls)
-            .sort();
-        expect(actual).toEqual([...testCase.flags].sort());
+        // The DISTINCT class set, not the finding count. A multi-line fixture
+        // reports one finding per offending line, and `flags` declares which
+        // classes fire rather than how many times — a count assertion would
+        // make the table brittle against a scanner that legitimately
+        // classifies a continuation line the opener already covered.
+        const actual = [...new Set(scanText('f.ts', testCase.source).map((f) => f.cls))].sort();
+        expect(actual).toEqual([...new Set(testCase.flags)].sort());
     });
 
     it('pins both polarities, so a truncated table fails here too', () => {
