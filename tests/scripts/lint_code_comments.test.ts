@@ -117,7 +117,7 @@ describe('lint_code_comments — the CLI self-test actually runs somewhere', () 
     });
 });
 
-// ── Diff scoping: the gate answers for the lines the diff wrote ─────────────
+// Diff scoping: the gate answers for the lines the diff wrote.
 //
 // `.github/workflows/rule-backstops.yml` describes this gate as "diff-scoped,
 // so a pre-existing tree does not turn red". Selecting the FILE set from the
