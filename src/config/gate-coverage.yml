@@ -2402,12 +2402,19 @@ gates:
     argv: ["--base", "origin/main"]
     min_scanned: 0
     corpus: >
-      the source files a change touches, measured against the base ref — a DIFF,
+      the source LINES a change adds, measured against the base ref — a DIFF,
       not a tree walk. The floor is 0 deliberately: a docs-only or config-only
       change legitimately carries no source file, and a floor above 0 would red
       exactly those commits. The scan-scope failure this class exists to catch
       cannot occur here, because there is no committed path list that can go
       stale — the root is `git diff`, and git answers for its own range.
+
+      LINES, not files, since 2026-09-02. Selecting the file set from the diff
+      while scanning each file whole made every edit to an old file carry that
+      file's whole comment history: PR #1813 added no flagged comment and was
+      refused on eleven legacy lines in four files it had touched for unrelated
+      reasons. An untracked file still counts whole — every line in it is new,
+      which is also what keeps the canary below a genuine discriminator.
     status: enforced
     canary:
       class: contract-violation

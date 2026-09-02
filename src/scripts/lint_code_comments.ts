@@ -353,6 +353,107 @@ function changedFiles(root: string, base: string): string[] {
     return [...new Set([...tracked, ...untracked, ...dirty])].filter((f) => f.trim().length > 0);
 }
 
+/**
+ * Line numbers this diff ADDED, per file. `'all'` for an untracked file, whose
+ * every line is new.
+ *
+ * The gate is described in `.github/workflows/rule-backstops.yml` as
+ * *"diff-scoped, so a pre-existing tree does not turn red"*, and selecting the
+ * FILE set from the diff while scanning each file WHOLE only delivers that for
+ * files nobody touches. Measured 2026-09-02 on PR #1813, which added no
+ * flagged comment at all and was refused on eleven legacy lines — four
+ * provenance paths and seven box rules — in four files it edited for unrelated
+ * reasons. A gate that reds on debt in any file you open makes every edit to an
+ * old file carry an unbounded comment sweep, and the escape it offers per line
+ * turns into exactly the allowlist growth `autonomous-execution` forbids.
+ *
+ * Teeth are unchanged where they belong: a comment the diff writes is scanned
+ * on the line it writes. The explicit-path mode (`--files`) stays whole-file,
+ * because a caller naming a path is asking for that file, not for a diff.
+ *
+ * Parsed from `--unified=0` hunk headers rather than from a patch body: the
+ * header carries the post-image start and count directly, so no line of added
+ * content has to be counted by hand.
+ */
+export function addedLineMap(root: string, base: string): Map<string, Set<number> | 'all'> {
+    const out = new Map<string, Set<number> | 'all'>();
+    const u = spawnSync('git', ['ls-files', '--others', '--exclude-standard'], {
+        cwd: root, encoding: 'utf-8',
+    });
+    if (u.status === 0) {
+        for (const f of u.stdout.split('\n')) {
+            if (f.trim()) out.set(f.trim(), 'all');
+        }
+    }
+    for (const argv of [
+        ['diff', '--unified=0', '--diff-filter=ACMR', `${base}...HEAD`],
+        ['diff', '--unified=0', '--diff-filter=ACMR'],
+    ]) {
+        const r = spawnSync('git', argv, { cwd: root, encoding: 'utf-8' });
+        if (r.status !== 0) continue;
+        mergeAddedLines(out, parseAddedLines(r.stdout));
+    }
+    return out;
+}
+
+/**
+ * Added line numbers per file, from a `git diff --unified=0` patch.
+ *
+ * Split out from the git call so the parse is testable without a repository
+ * whose diff the test would have to manufacture. A `@@` header with no count
+ * means one line — `@@ -4 +4 @@` — and a `+++ /dev/null` header is a deletion,
+ * which adds nothing.
+ */
+export function parseAddedLines(diffText: string): Map<string, Set<number>> {
+    const out = new Map<string, Set<number>>();
+    let file: string | null = null;
+    for (const line of diffText.split('\n')) {
+        if (line.startsWith('+++ ')) {
+            const p = line.slice(4).trim();
+            file = p === '/dev/null' ? null : p.replace(/^b\//, '');
+            continue;
+        }
+        if (!file || !line.startsWith('@@')) continue;
+        const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
+        if (!m) continue;
+        const start = Number.parseInt(m[1] as string, 10);
+        const count = m[2] === undefined ? 1 : Number.parseInt(m[2], 10);
+        const set = out.get(file) ?? new Set<number>();
+        for (let n = start; n < start + count; n += 1) set.add(n);
+        out.set(file, set);
+    }
+    return out;
+}
+
+/** Fold one parsed patch into the accumulator; `'all'` always wins. */
+function mergeAddedLines(
+    into: Map<string, Set<number> | 'all'>,
+    from: Map<string, Set<number>>,
+): void {
+    for (const [file, lines] of from) {
+        const prev = into.get(file);
+        if (prev === 'all') continue;
+        const set = prev ?? new Set<number>();
+        for (const n of lines) set.add(n);
+        into.set(file, set);
+    }
+}
+
+/**
+ * Findings the diff is answerable for: those sitting on a line it added.
+ *
+ * `'all'` (an untracked file) keeps everything, `undefined` (a file the diff
+ * did not touch) keeps nothing — the two ends of the same rule.
+ */
+export function findingsOnAddedLines(
+    findings: readonly CommentFinding[],
+    lines: Set<number> | 'all' | undefined,
+): CommentFinding[] {
+    if (lines === undefined) return [];
+    if (lines === 'all') return [...findings];
+    return findings.filter((f) => lines.has(f.line));
+}
+
 /** One fixture: a file body and the classes the gate must report on it. */
 export interface CommentCase {
     /** Printed by both consumers, so it reads as the assertion it makes. */
@@ -575,12 +676,16 @@ export function main(argv: string[]): number {
     if (!base && explicit.length === 0) { process.stderr.write('--base needs a ref\n'); return 1; }
 
     const candidates = (explicit.length > 0 ? explicit : changedFiles(root, base)).filter(isScannable);
+    // Whole file when a caller named the path; only the lines the diff added
+    // when the scope IS the diff — see `addedLineMap` for the measured reason.
+    const added = explicit.length > 0 ? null : addedLineMap(root, base);
     const findings: CommentFinding[] = [];
     for (const rel of candidates) {
         const abs = path.isAbsolute(rel) ? rel : path.join(root, rel);
         let text: string;
         try { text = fs.readFileSync(abs, 'utf-8'); } catch { continue; }
-        findings.push(...scanText(rel, text));
+        const all = scanText(rel, text);
+        findings.push(...(added ? findingsOnAddedLines(all, added.get(rel)) : all));
     }
 
     try {
