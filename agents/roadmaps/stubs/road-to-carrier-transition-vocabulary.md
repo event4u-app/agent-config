@@ -22,7 +22,7 @@ deliberate:
 |---|---|
 | Rename the carrier | destination no longer resolves — reported as a deletion |
 | Re-parent it | the `parent_roadmap:` back-link no longer names the archived source |
-| Archive it while it holds live obligations | refused by the `status: carrier` archival check |
+| Archive it while it holds live obligations | refused by `lint_carrier_integrity`'s destination-side branch, which reds when an archived parent's `carried-to=` destination is itself an archived carrier. There is no `status: carrier` archival check, and the earlier wording named one: `archive_completed` iterates `collect()`, `collect()` skips carriers, so the archival sweep never considers a carrier and nothing in it refuses one. The refusal holds because the same gate requires every live carrier to be named by an archived parent, so a carrier with no parent to red on cannot exist in the first place |
 | Move it to `skipped/` | refused — skipping is not fulfilment |
 | Carry its items onward to a second carrier | the original parent's link breaks when the intermediate goes |
 | Resolve one item and remove it | invisible: nothing compares the item count to a previous reading |
