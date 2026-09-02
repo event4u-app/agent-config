@@ -37,6 +37,17 @@
  * three are red here, deliberately, until a disposition vocabulary exists to
  * express them.
  *
+ * A SECOND ENUMERATION runs beside the first, over the live carriers rather
+ * than over the archived parents, and it exists because the walk direction that
+ * makes whole-file deletion detectable also makes a self-declared carrier
+ * invisible. `status: carrier` buys exclusion from the active count, from
+ * trackability and from the plan risk register; enumerating only archived
+ * parents means a file nobody carried anything to wears the status for free.
+ * So every live carrier must be named by some dead roadmap's `carried-to=`
+ * annotation, and one that is not is a hard failure like any other lost
+ * obligation — the status is legitimate for a receiver of a real carry, and for
+ * nothing else.
+ *
  * Exit codes: 0 = every carry resolves, 1 = at least one does not.
  */
 
@@ -45,7 +56,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { parseDeferredItems } from '../agent-src/scripts/archive_completed_roadmaps.js';
+import {
+    parseDeferredItems,
+    _relatesTo as relatesTo,
+    type DeferredItem,
+} from '../agent-src/scripts/archive_completed_roadmaps.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
@@ -64,7 +79,7 @@ const DEAD_DIRS: readonly string[] = ['archive', 'skipped'];
  * Its own self-test caught that, which is the difference between a `scanned:`
  * floor and a proof that the reading changes the verdict.
  */
-const CARRY_CANDIDATE_RE = /deferred-resolution:|^[ \t]*-[ \t]*\[~\]/m;
+const CARRY_CANDIDATE_RE = /deferred-resolution:|^[ \t]*[-*][ \t]*\[~\]/m;
 
 const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
     'README.md',
@@ -126,12 +141,40 @@ function _escapeRe(v: string): string {
     return v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** True when `text` declares `parent_roadmap: <slug>` or a `relates:` row naming it. */
+/**
+ * The frontmatter block's body, or `''` when the file opens without one.
+ *
+ * Every structural test below reads this rather than the whole file. A roadmap
+ * body legitimately quotes roadmap syntax — that is what the stub recording the
+ * deferred transition vocabulary does — so a whole-file regex answers a question
+ * about documentation as if it were a question about declarations.
+ */
+export function frontmatter(text: string): string {
+    const m = /^---\n([\s\S]*?)\n---/.exec(text);
+    return m === null ? '' : (m[1] ?? '');
+}
+
+/**
+ * True when `text` DECLARES `parent_roadmap: <slug>` or a `relates:` row naming
+ * it, in its frontmatter.
+ *
+ * Frontmatter-scoped, and the scope is the check. The first version matched
+ * `- slug: <parent>` anywhere in the file, which re-opened the defect a prior
+ * review closed in `deferralProblems`: a mention in prose, in an example, or
+ * inside a fenced block is not a declaration, and a back-link that prose can
+ * satisfy proves nothing about either end of the pair. The `relates:` walk is
+ * imported from the archival sweep rather than re-implemented, for the same
+ * one-implementation reason the annotation parser is.
+ */
 function _linksBackTo(text: string, slug: string): boolean {
-    if (new RegExp(`^parent_roadmap:[ \t]*${_escapeRe(slug)}[ \t]*$`, 'm').test(text)) {
+    const fm = frontmatter(text);
+    if (fm === '') {
+        return false;
+    }
+    if (new RegExp(`^parent_roadmap:[ \t]*${_escapeRe(slug)}[ \t]*$`, 'm').test(fm)) {
         return true;
     }
-    return new RegExp(`^[ \t]*-[ \t]+slug:[ \t]*${_escapeRe(slug)}[ \t]*$`, 'm').test(text);
+    return relatesTo(fm, slug);
 }
 
 /** Where a destination slug resolves, and under which directory. */
@@ -150,8 +193,39 @@ function _locate(root: string, slug: string): { file: string; dir: 'active' | 'l
     return null;
 }
 
-const OPEN_STEP_RE = /^[ \t]*-[ \t]*\[[ ][ \t]*\][ \t]/m;
+/** An OPEN checkbox on one line — `-` or `*`, matching the canonical grammar. */
+const OPEN_STEP_RE = /^[ \t]*[-*][ \t]*\[[ ][ \t]*\][ \t]/;
+/** A fenced block's delimiter, in either of the two fence styles in use here. */
+const FENCE_RE = /^[ \t]*(?:```|~~~)/;
 const CARRIER_STATUS_RE = /^status:[ \t]*carrier[ \t]*$/m;
+
+/**
+ * True when an OPEN step appears OUTSIDE every fenced block.
+ *
+ * Fence-aware because this branch hard-fails at zero with no baseline, and a
+ * roadmap that documents step syntax inside a fenced block is not a roadmap
+ * with an open step. Measured before the fix: a fenced `markdown` example
+ * containing one `- [ ]` line reddened CI with a diagnostic naming the wrong
+ * cause and offering remediation that did not apply.
+ */
+export function hasOpenStep(text: string): boolean {
+    let inFence = false;
+    for (const line of text.split('\n')) {
+        if (FENCE_RE.test(line)) {
+            inFence = !inFence;
+            continue;
+        }
+        if (!inFence && OPEN_STEP_RE.test(line)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** True when the frontmatter — not the body — declares `status: carrier`. */
+export function declaresCarrier(text: string): boolean {
+    return CARRIER_STATUS_RE.test(frontmatter(text));
+}
 
 /**
  * The standing carry policy for one archived roadmap. See the module header for
@@ -162,8 +236,23 @@ export function carryProblems(
     sourceSlug: string,
     text: string,
 ): Array<{ cls: CarrierProblemClass; detail: string }> {
+    return carryProblemsFor(root, sourceSlug, parseDeferredItems(text));
+}
+
+/**
+ * The same policy over an ALREADY-PARSED item list.
+ *
+ * Split out so the walk parses each candidate once and reuses the result for
+ * both this check and the destination census the live-carrier enumeration
+ * needs, rather than parsing the same file twice per run.
+ */
+export function carryProblemsFor(
+    root: string,
+    sourceSlug: string,
+    items: readonly DeferredItem[],
+): Array<{ cls: CarrierProblemClass; detail: string }> {
     const problems: Array<{ cls: CarrierProblemClass; detail: string }> = [];
-    for (const item of parseDeferredItems(text)) {
+    for (const item of items) {
         const label = item.text === '' ? '(unnamed step)' : item.text;
         if (item.kind === null || item.destination === null) {
             problems.push({
@@ -204,7 +293,7 @@ export function carryProblems(
         // transition that has no vocabulary yet, and it strands every item the
         // carrier itself holds — none of which is an OPEN step, so the check
         // below would not see it.
-        if (found.dir === 'archive' && CARRIER_STATUS_RE.test(destText)) {
+        if (found.dir === 'archive' && declaresCarrier(destText)) {
             problems.push({
                 cls: 'broken-destination',
                 detail:
@@ -214,7 +303,7 @@ export function carryProblems(
             });
             continue;
         }
-        if (found.dir === 'archive' && OPEN_STEP_RE.test(destText)) {
+        if (found.dir === 'archive' && hasOpenStep(destText)) {
             problems.push({
                 cls: 'broken-destination',
                 detail: `destination \`${item.destination}\` is archived but still has OPEN steps — it was moved ` +
@@ -233,15 +322,68 @@ export function carryProblems(
     return problems;
 }
 
+/** The live locations a carrier may occupy — both are live per `_locate`. */
+const LIVE_SUBDIRS: readonly string[] = ['', 'later'];
+
 /**
- * Validate every carry annotation in the dead directories.
+ * Every roadmap that DECLARES `status: carrier` and is still live.
  *
- * @returns the problems found, and how many roadmap files were read.
+ * The enumeration the walk-from-the-archive direction cannot produce. Sorted,
+ * repo-relative, and `later/` is included because `_locate` treats a parked
+ * receiver as live — a carrier parked there is equally excluded from the active
+ * count, so it needs the same justification.
  */
-export function auditCarries(root: string): { problems: CarrierProblem[]; scanned: number } {
+export function liveCarriers(root: string): string[] {
+    const out: string[] = [];
+    for (const sub of LIVE_SUBDIRS) {
+        const abs = path.join(root, 'agents', 'roadmaps', sub);
+        let entries: string[];
+        try {
+            entries = fs.readdirSync(abs);
+        } catch {
+            continue;
+        }
+        for (const name of entries.sort()) {
+            if (!name.endsWith('.md') || EXCLUDE_NAMES.has(name)) {
+                continue;
+            }
+            const full = path.join(abs, name);
+            let text: string;
+            try {
+                if (!fs.statSync(full).isFile()) {
+                    continue;
+                }
+                text = fs.readFileSync(full, 'utf-8');
+            } catch {
+                continue;
+            }
+            if (declaresCarrier(text)) {
+                out.push(path.posix.join('agents/roadmaps', sub, name));
+            }
+        }
+    }
+    return out;
+}
+
+/**
+ * Validate every carry annotation in the dead directories, then every live
+ * carrier against the destinations those annotations actually name.
+ *
+ * @param walked the dead-roadmap list, when the caller already has it. The walk
+ * `statSync`s every file in the archive, so taking it as a parameter is what
+ * stops the run doing that twice — once for the ledger's plan and once here.
+ * @returns the problems found, how many dead roadmaps were read, and how many
+ * live carriers were checked.
+ */
+export function auditCarries(
+    root: string,
+    walked: readonly string[] = deadRoadmaps(root),
+): { problems: CarrierProblem[]; scanned: number; carriers: string[] } {
     const problems: CarrierProblem[] = [];
     let scanned = 0;
-    for (const rel of deadRoadmaps(root)) {
+    /** Every slug some dead roadmap named with `carried-to=`. */
+    const carriedTo = new Set<string>();
+    for (const rel of walked) {
         let text: string;
         try {
             text = fs.readFileSync(path.join(root, rel), 'utf-8');
@@ -252,12 +394,37 @@ export function auditCarries(root: string): { problems: CarrierProblem[]; scanne
         if (!CARRY_CANDIDATE_RE.test(text)) {
             continue;
         }
+        const items = parseDeferredItems(text);
+        for (const item of items) {
+            if (item.kind === 'carried-to' && item.destination !== null) {
+                carriedTo.add(item.destination);
+            }
+        }
         const sourceSlug = path.basename(rel).replace(/\.md$/, '');
-        for (const found of carryProblems(root, sourceSlug, text)) {
+        for (const found of carryProblemsFor(root, sourceSlug, items)) {
             problems.push({ source: rel, ...found });
         }
     }
-    return { problems, scanned };
+    const carriers = liveCarriers(root);
+    for (const rel of carriers) {
+        const slug = path.basename(rel).replace(/\.md$/, '');
+        if (carriedTo.has(slug)) {
+            continue;
+        }
+        problems.push({
+            source: rel,
+            cls: 'broken-destination',
+            detail:
+                'declares `status: carrier`, but no roadmap under `agents/roadmaps/archive/` or ' +
+                '`agents/roadmaps/skipped/` names it with a `<!-- deferred-resolution: ' +
+                `carried-to=${slug} -->\` annotation. That status is only legitimate for the ` +
+                'RECEIVER of a real carry: it buys exclusion from the active roadmap count, from ' +
+                '`check_roadmap_trackable` and from the plan risk register, so a file no archived ' +
+                'parent carried anything to would take all three exclusions for nothing. Either ' +
+                'record the carry in the parent that deferred the work, or drop `status: carrier`.',
+        });
+    }
+    return { problems, scanned, carriers };
 }
 
 const USAGE = `usage: lint_carrier_integrity [--root <dir>] [--self-test] [--quiet]
@@ -285,6 +452,15 @@ ${backlink}
 Body.
 `;
 }
+
+/**
+ * A body that DOCUMENTS roadmap syntax inside a fence. Both structural tests
+ * used to match it, so this fixture is the one that fails in two ways at once.
+ */
+const FENCED_SYNTAX_DOC = 'Syntax this file documents rather than declares:\n\n```markdown\n---\nstatus: carrier\n---\n- [ ] **1.1 An example open step.**\n```\n';
+
+/** A back-link that exists only in the body — a mention, never a declaration. */
+const FENCED_BODY_BACKLINK = 'What a back-link looks like, quoted:\n\n```yaml\nparent_roadmap: road-to-parent\nrelates:\n  - slug: road-to-parent\n    relation: extends\n```\n';
 
 /** A receiver that declares itself a carrier — used only where that is the point. */
 function _carrierReceiver(backlink: string): string {
@@ -369,6 +545,88 @@ export function selfTestCases(root: string): SelfTestCase[] {
                     dir,
                     'agents/roadmaps/road-to-receiver.md',
                     _receiver('relates:\n  - slug: road-to-parent\n    relation: extends'),
+                );
+            }),
+        },
+        {
+            name: 'a live carrier an archived parent actually names is accepted',
+            expect: 'accept',
+            run: build('carrier-named-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/road-to-receiver.md',
+                    _carrierReceiver('parent_roadmap: road-to-parent'),
+                );
+            }),
+        },
+        {
+            name: 'an archived receiver that only documents roadmap syntax in a fence is accepted',
+            expect: 'accept',
+            run: build('carrier-fenced-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/archive/road-to-receiver.md',
+                    `${_receiver('parent_roadmap: road-to-parent')}\n${FENCED_SYNTAX_DOC}`,
+                );
+            }),
+        },
+        {
+            name: 'a live carrier no archived parent names is rejected — the status is not free',
+            expect: 'reject',
+            run: build('carrier-orphan-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/road-to-receiver.md',
+                    _receiver('parent_roadmap: road-to-parent'),
+                );
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/road-to-self-declared.md',
+                    _carrierReceiver('owner: maintainer'),
+                );
+            }),
+        },
+        {
+            name: 'an orphan carrier parked under later/ is rejected too',
+            expect: 'reject',
+            run: build('carrier-orphan-later-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/road-to-receiver.md',
+                    _receiver('parent_roadmap: road-to-parent'),
+                );
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/later/road-to-self-declared.md',
+                    _carrierReceiver('owner: maintainer'),
+                );
+            }),
+        },
+        {
+            name: 'an archived receiver with an asterisk-bulleted OPEN step is rejected',
+            expect: 'reject',
+            run: build('carrier-asterisk-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/archive/road-to-receiver.md',
+                    `${_receiver('parent_roadmap: road-to-parent')}\n* [ ] **1.1 Still open.**\n`,
+                );
+            }),
+        },
+        {
+            name: 'a back-link that only appears in the body, not the frontmatter, is rejected',
+            expect: 'reject',
+            run: build('carrier-bodylink-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/road-to-receiver.md',
+                    `${_receiver('owner: maintainer')}\n${FENCED_BODY_BACKLINK}`,
                 );
             }),
         },
@@ -462,8 +720,8 @@ export function main(argv: string[]): number {
             return runSelfTest({
                 gate: 'lint_carrier_integrity',
                 cases: selfTestCases(_DEFAULT_ROOT),
-                minCases: 10,
-                minRejectCases: 6,
+                minCases: 16,
+                minRejectCases: 10,
             });
         } else {
             process.stderr.write(`lint_carrier_integrity: unknown argument ${JSON.stringify(arg)}\n`);
@@ -474,10 +732,13 @@ export function main(argv: string[]): number {
 
     const ledger = new GateLedger('lint_carrier_integrity');
     const walked = deadRoadmaps(root);
-    ledger.plan(walked);
-    const { problems, scanned } = auditCarries(root);
+    // Walked ONCE and handed to the audit. The two enumerations used to each
+    // call `deadRoadmaps`, so a run cost two readdirs and two `statSync` per
+    // archived file for one reading.
+    const { problems, scanned, carriers } = auditCarries(root, walked);
+    ledger.plan([...walked, ...carriers]);
     const failed = new Set(problems.map((p) => p.source));
-    for (const rel of walked) {
+    for (const rel of [...walked, ...carriers]) {
         if (failed.has(rel)) {
             ledger.fail(rel, problems.find((p) => p.source === rel)?.detail ?? 'broken carry');
         } else {
@@ -518,7 +779,9 @@ export function main(argv: string[]): number {
         process.stderr.write(
             '\n    Restore the receiver, restore its `parent_roadmap:` back-link, or move the\n' +
                 '    carried items back to open in the archived parent. A rename or a re-parent is\n' +
-                '    not expressible yet and fails closed on purpose.\n',
+                '    not expressible yet and fails closed on purpose.\n' +
+                '    A file listed for declaring `status: carrier` needs neither: record the carry\n' +
+                '    in the archived parent, or drop the status and let the file be ordinary estate.\n',
         );
         ledger.report();
         return 1;
@@ -545,7 +808,7 @@ export function main(argv: string[]): number {
         process.stdout.write(`✅  ${verdict.message}\n`);
         process.stdout.write(
             `✅  lint_carrier_integrity: ${String(scanned)} dead roadmap(s) scanned, ` +
-                'every annotated carry resolves.\n',
+                `${String(carriers.length)} live carrier(s) justified, every annotated carry resolves.\n`,
         );
     }
     ledger.report();
