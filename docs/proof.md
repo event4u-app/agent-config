@@ -302,13 +302,14 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 15 blocking (12.5%) · 10 observer · 0 local-only · 82 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 120 rules · 16 blocking (13.3%) · 10 observer · 0 local-only · 81 undeclared (no `enforced_by` yet).
 
 `denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
 | `active-remediation` | none | `instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one` |
+| `code-comment-discipline` | validator | `validator:src/scripts/lint_code_comments.ts`<br>`hook:comment-discipline` |
 | `code-provenance` | none | `instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
 | `council-availability` | none | `instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only` |
@@ -347,7 +348,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (82) carry no row — an honest gap beats a false claim.
+Undeclared rules (81) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 97 ledger entries · 59 backed · 31 unbacked inventory · 7 resolved-null.
 

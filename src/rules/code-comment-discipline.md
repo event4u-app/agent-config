@@ -22,6 +22,9 @@ collision_ok:
   "implement": "fresh implementation is where over-commenting lands"
 # obligation: line 5
 obligation_frequency: "per-edit"
+enforced_by:
+  - "validator:src/scripts/lint_code_comments.ts"
+  - "hook:comment-discipline"
 ---
 
 # Code Comment Discipline
@@ -37,6 +40,9 @@ NO DOCBLOCK THAT ONLY MIRRORS THE NATIVE SIGNATURE.
 DOCBLOCKS EARN THEIR PLACE ONLY WITH MACHINE-RELEVANT PRECISION
 (GENERICS, ARRAY SHAPES, NON-TRIVIAL UNIONS) OR GENUINE WHY-CONTEXT.
 WHEN IN DOUBT: NO COMMENT. SHORTER IS BETTER. NONE IS OFTEN BEST.
+A COMMENT NAMING WHERE THE CODE CAME FROM — A ROADMAP PATH, A PHASE AND STEP,
+A PROTOTYPE — IS EVIDENCE IN THE WRONG PLACE. PROVENANCE IS NOT A WHY.
+A ROADMAP CANNOT LICENSE A COMMENT THIS RULE FORBIDS.
 ```
 
 ## What a comment is FOR

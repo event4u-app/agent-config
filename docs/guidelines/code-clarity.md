@@ -315,6 +315,24 @@ Behavioral baseline: `tests/code-comments/eval-fixtures.md`
 `ccd-untouched-preservation`, `ccd-explicit-teaching-override`); the decidable
 criteria are proven by `tests/scripts/code_comment_fixtures.test.ts`.
 
+### Evidence belongs in the roadmap that asked for it
+
+Measured 2026-09-02 in a consumer repository: **509 German comment lines** and
+**21 report- or provenance-shaped comments** across **41 of 45** changed source
+files, the worst a 101-line colour-analysis report inside a CSS file. The cause
+was a roadmap requiring proof for every checked step: the run read that as
+*evidence should be documented* and wrote the measurements into the source too,
+where the roadmap already carried them.
+
+The provenance of a value is not a WHY, and a roadmap cannot license a comment
+the rule forbids.
+
+Two enforcers carry this because neither rule could fire on a write:
+`code-comment-discipline` matches prompt keywords, and `language-and-tone`'s
+English-comment clause named a `.md`-only validator. `lint_code_comments`
+refuses on the diff; the `comment-discipline` concern reports on the text as
+written. Neither replaces the discipline.
+
 ## See also
 
 - Language-specific anchors that link to this guideline:

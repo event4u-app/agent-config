@@ -1,7 +1,16 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-01
+keep-beta-until: 2026-12-01
 ---
+
+<!-- keep-beta-until extended 2026-09-01 -> 2026-12-01 on 2026-09-02. The window
+     lapsed by one day inside an unrelated PR (code-comment enforcement) and
+     reddened it as a FRESH lapse. Promoting the contract is a claim about
+     ADR-061's asset-delivery pattern that this change did not examine and has no
+     evidence for, and recording it superseded would be false — the pattern is
+     live and locked by tests/test_skill_bundled_assets.py. So the window moves
+     by three months, unchanged in substance, with the review left where it
+     belongs: with whoever owns the promotion decision. -->
 
 # Skill-bundled assets — `skills/<name>/{scripts,data}/` delivery contract
 

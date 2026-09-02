@@ -757,6 +757,11 @@ tasks:
     desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
     cmd: ./scripts-run src/scripts/lint_output_slop
 
+  lint-code-comments:
+    silent: true
+    desc: "Fail on comments in changed source that carry a non-English language, an analysis-report structure, or the provenance of the code — the carrier `code-comment-discipline` never had, and the one the `Code comments English` clause of `language-and-tone` names a `.md`-only validator for. Diff-scoped against origin/main"
+    cmd: ./scripts-run src/scripts/lint_code_comments --base origin/main
+
   lint-never-silent:
     silent: true
     desc: "No shipped rule, skill, or command may direct a silent re-run or the concealment of a detected miss — the hidden attempt→critic→re-attempt mechanism is falsified (ADR-106 gate, TERMINAL null) and correction is always visible. Prose that describes or forbids the mechanism stays legal (road-to-rule-delivery-integrity P4.4)"

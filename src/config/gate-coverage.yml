@@ -2379,3 +2379,42 @@ gates:
       because `REPO_ROOT` is itself a `const`. The first produced a false
       positive on a tmpdir removal; the second silently dropped the R3 half of a
       planted three-limb bypass, which is the failure direction that matters.
+
+  - id: lint_code_comments
+    argv: ["--base", "origin/main"]
+    min_scanned: 0
+    corpus: >
+      the source files a change touches, measured against the base ref — a DIFF,
+      not a tree walk. The floor is 0 deliberately: a docs-only or config-only
+      change legitimately carries no source file, and a floor above 0 would red
+      exactly those commits. The scan-scope failure this class exists to catch
+      cannot occur here, because there is no committed path list that can go
+      stale — the root is `git diff`, and git answers for its own range.
+    status: enforced
+    canary:
+      class: contract-violation
+      path: src/scripts/__canary_comment_discipline__.ts
+      content: |
+        // Hier stehen nur die Werte, die Bedeutung tragen und nicht mehr.
+        export const canary = 1;
+    note: >
+      The carrier `code-comment-discipline` never had, and the one the "Code
+      comments English" clause of `language-and-tone` claimed via a `.md`-only
+      validator (`check_md_language.ts:175` rejects every other path).
+
+      THE CANARY IS A GENUINE DISCRIMINATOR: the corpus is a diff, a newly
+      created file is in it by construction, and the planted content trips the
+      `de-comment` class on two function words with no umlaut — the
+      transliterated form the real incident was written in, not the easy case.
+
+      DISCRIMINATION IS ALSO PINNED BY FIXTURE, in both directions, because a
+      language heuristic is only usable if its near-misses are known:
+      `tests/scripts/lint_code_comments.test.ts` asserts silence on an umlauted
+      proper name, a non-ASCII sample value inside a code span, a `Ü2` step
+      label, and a German user quotation spanning two comment lines — the four
+      shapes this repository's own hooks actually contain. Measured over 402
+      source files here: zero findings. Measured over the 45 changed files of
+      the consumer repository that prompted the gate: 530.
+
+      SENSITIVITY WAS OBSERVED, not assumed: neutralising the German predicate
+      turns 4 of the 22 cases red and restoring it turns them green.
