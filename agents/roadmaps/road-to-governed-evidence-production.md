@@ -485,6 +485,17 @@ is what that mitigation looks like when it fires.
       transport's live path is unexercised; its request shape is proven by
       `describeRequest` and a unit test over the description, and every
       behavioral test uses a stubbed generator.
+      **UPDATED 2026-09-02 (drain run 16) — two of the three remaining
+      prerequisites are now built, and the third is a decision.** The
+      experimental subject is pinnable and its reconstruction was verified from
+      a fresh checkout (`corpus_manifest`, digest `860eaf2dee7f35df`), and the
+      paired-delta producer exists (`_lib/candidate_pair_delta.ts`), so the
+      verify clause's *"paired_verdict run"* now has both a pinned subject and a
+      producer. What is still missing is the outcome metric, and it is missing
+      for a reason rather than for want of effort: the frozen corpus's admitted
+      mutations cannot move the pre-registered cheap evaluator. See the
+      **PREPARATORY WORK 2026-09-02** block above. The verify clause is still
+      carried verbatim and still not re-scoped.
 
 - [ ] **2.2 Cheap proposer models first, and track evolution ROI.**
       Transferred whole from `road-to-governed-harness-evolution` step 5.6.
@@ -600,6 +611,145 @@ that narrowing stands. Closing it as (b) now would overwrite a settled
 narrowing with a disposition that contradicts it, in order to make a roadmap
 archive. That is the cosmetic closure the same council refused elsewhere in
 this run.
+
+### PHASE 2 — PREPARATORY WORK 2026-09-02 (drain run 16): CHAIN STEPS 1, 3 AND 4 DONE; STEP 2 IS AN HONEST NULL
+
+*No council was run and none was needed: this run implemented the preparatory
+work the drain-15 1B disposition had already authorised, and made no decision
+the disposition reserved. **Zero metered calls. `--confirm` was never passed to
+`llm_propose` and no request reached any provider API.** Full evidence, with the
+search records and every file:line citation, in
+`agents/evidence/analysis/drain16-phase2-preparatory-work.md`.*
+
+**Nothing was captured, no comparison was run, and no acceptance criterion
+moved.** 2.1, 2.2, AC-2, AC-3 and AC-4 all stay open, and
+`metered-backend-park` stays open with its 2026-09-01 narrowing to (c)
+unchanged — it is **not** closed with (b).
+
+**Chain step 1 — F-A is CURED, and the drain-14 record's named mechanism was
+wrong.** `src/scripts/_lib/corpus_manifest.ts` and the CLI
+`src/scripts/corpus_manifest.ts` capture every field the drain-15 disposition
+enumerated; the shape and the equivalence contract are
+`docs/contracts/corpus-manifest-v1.md`. `capture` writes the pin, `verify`
+re-captures and exits **3** when the SUBJECT differs, reporting every difference
+rather than the first. There is deliberately no `update` verb: a pin that can be
+refreshed in place is a pin that silently follows the tree.
+`subject_digest` folds the enumeration rule and the ordered subject inventory
+with hashes and deliberately nothing else, so a node upgrade cannot report a
+subject change; the enumeration rule is inside it because the same five files
+selected by a different rule is a different experiment.
+
+**The correction, recorded because acting on the old mechanism leads nowhere.**
+Drain 14 read the generator's *"101 rule(s) skipped — byte-identical twin
+already installed at user scope"* as evidence of the byte-identity dedup.
+Probed directly on this branch: `dedupableRules` over the 119 projected rules
+returns a skip set of **zero**, because `projection.scope_dedup` appears on no
+settings layer this repository carries and therefore defaults off
+(`condense.ts:445-459`). The live mechanism is `partitionRulesForDir`
+(`src/install/ruleLayerPartition.ts:91`), which withholds a rule when this
+host's **global** layer is verified to carry its NAME —
+`hostLayerCarries` (`src/install/globalRuleLayers.ts:176-197`) reads names, never
+content. **F-A's conclusion is unaffected**: the corpus is still a function of
+the operator's home directory rather than of the commit. What was wrong is the
+mechanism the reasoning named, and a later reader following it to
+`dedupableRules` would have found a function returning an empty set. The manifest
+therefore captures BOTH tables — the byte-identity twins and the partition
+decision with the global layer's name inventory and its digest.
+
+**Chain step 3 — F-C's producer EXISTS.**
+`src/scripts/_lib/candidate_pair_delta.ts` closes the gap drain 14's trace
+established: nothing read two `CandidateRecord`s and emitted a signed delta, a
+`PairedVerdict`, or a `MetricVector`. Every property of the comparison's SHAPE
+is derived from constants committed before either arm existed — the sign
+convention from `PairedInput.deltas` (`_lib/paired_verdict.ts:110`), the
+direction handling from `MetricDirection`, `tieEpsilon` = 1e-9 from the value
+the A/B report's own direction counts already use
+(`bench_ab_v2_stats.ts:326-327`), and the aggregation, `ALPHA` and the discordant
+floor from `decidePairedVerdict`. The pairing key is reconstructed from the
+record as `(dimension, sorted mutation paths)`, because a candidate id hashes
+mutated bytes and so differs across arms by construction.
+**Pooling answers F-B's floor half:** at one delta per pair the trial count
+equals the corpus size (5), exactly `MIN_DISCORDANT`, so one tie makes a pass
+arithmetically unreachable before the run starts; `compareArms` pools per-trial
+deltas across pairs, and the independence assumption that buys it is stated at
+the function rather than assumed away.
+**What it does NOT do, in its own header:** it has no live population. No shipped
+evaluator emits a `TrialOutcome` for a candidate over the frozen corpus, so
+every test supplies its own — the same disclosure AC-3 makes about
+`assertCheapestFirst`, made in the same terms rather than quietly omitted.
+
+**Chain step 4 — the fresh-checkout dry re-run PASSED, and the refusal path
+passed first.** A detached worktree at `ac0cfd223` with nothing but
+`node_modules` symlinked. It had no `.claude/rules` at all, which is F-A in one
+line. `capture` there **refused with exit 1** rather than pinning an empty
+subject. After `task sync && task generate-tools` it produced **13** files and
+logged **101 skipped** — the same numbers as the working tree — and
+`verify --manifest` against the working tree's pin returned **SUBJECT
+EQUIVALENT, digest `860eaf2dee7f35df`, exit 0, with zero differences printed**.
+The chain's *"a dry run in a worktree that inherited a projection is not that
+check"* is met literally: the projection was generated in that checkout.
+`llm_propose` then ran the dry path there end to end over observations built
+from the protocol's own enumeration rule — five planned attempts, all `lite`,
+`high` refused as UNPINNED, ~275 input tokens estimated, nothing sent.
+
+**Chain step 2 — F-B is NOT FROZEN, and the reason is a newly established fact
+rather than reluctance.** The definition cannot be frozen by derivation over the
+currently frozen corpus, because the corpus's admitted mutations cannot move the
+one cheap evaluator the pre-registered budget names. Three independent legs,
+each stated with what would refute it:
+
+1. **Path.** The corpus is `.claude/rules/*.md`;
+   `description_route_check`'s catalogue is loaded from `dist/agent-src/skills`
+   and `dist/agent-src/rules` (`src/scripts/description_route_check.ts:386-410`).
+   A mutation to a corpus member never reaches the catalogue. *Refuted by* a
+   catalogue loader that reads `.claude/`.
+2. **Surface.** That catalogue is `name + description` only — `catalogueHash`
+   maps each entry to `name` plus `description` (`:81-84`), read from frontmatter
+   (`:395`). Both admitted recipes preserve frontmatter byte-identically:
+   `keepLeadingBand` cuts at the first `## ` heading
+   (`_lib/candidate_proposer.ts:126-140`), `appendHonestEnforcement` appends at
+   the end (`:159-164`). *Refuted by* a recipe that rewrites frontmatter.
+3. **Arithmetic.** Every trial ties, so `discordant` is 0 against a floor of 5
+   and `decidePairedVerdict` returns `underpowered` — which this file's own
+   drain-14 record already rules does not discharge AC-2. *Refuted by* a metric
+   on which the arms differ.
+
+Freezing a metric known **in advance** to return a non-answer would be a tuned
+protocol with the tuning pointing at nothing, and would burn the one-shot
+freeze the council ruled is entire or not at all.
+
+**The one committed evaluator a rule-body mutation COULD move** is the A/B
+bench: `bench_ab_clone --candidate-record` (`src/scripts/bench_ab_clone.ts:449`)
+materialises a candidate into a clone outside the repository, and
+`bench_ab_v2_stats.ts:315-345` measures per-task outcomes over it — the same
+population the tree's only live `decidePairedVerdict` caller uses. It is an
+**agent-run** harness, so its cost is far above the two-cent estimate drain 14
+computed for the proposal half alone. That figure covered the proposal only and
+must not be read as the cost of the comparison.
+
+**Why this run did not pick between them.** Both exits AMEND the frozen
+experimental subject rather than deriving from it: adopting the bench fixes
+aggregation for the arms being compared, and re-cutting the corpus changes
+corpus membership. Drain 15 widened the delegation to a *provenance-preserving
+pin of the same subjects* — a rules-to-skills corpus change is not
+provenance-preserving, and drain 14's routing for corpus membership stands.
+
+**The next decision, and it is a decision rather than a build.** Phase 2's
+frozen corpus cannot move the pre-registered cheap evaluator. Which amendment
+is taken — (a) adopt the A/B bench as the outcome surface and accept its cost,
+or (b) re-cut the corpus onto a surface a cheap evaluator measures, accepting
+that corpus membership is amended and the pin re-captured? Until that is
+answered, chain steps 2 and 5 are both blocked.
+
+**Sensitivity of the new guards, RED-proven 2026-09-02, each restored
+byte-identically and re-verified by SHA-256:**
+1. removed the enumeration rule from `subjectDigest`: **1 failed**. Restored.
+2. removed the unmatched-treatment refusal in `pairCandidates`: **1 failed**.
+   Restored.
+3. removed the lower-better sign reversal in `pairedDeltas`: **1 failed**.
+   Restored.
+Restore verified green: **37/37** across the two new test files,
+`npm run typecheck` clean.
 
 ## Blockers
 
@@ -751,6 +901,12 @@ this run.
       produces the population, and the caller is already there to police it.
       Checking it now would be closing on the half that was already true, which
       is the failure this whole file was transferred to prevent.
+      **RE-CONFIRMED 2026-09-02 (drain run 16) by running the dry path from a
+      fresh checkout over the real corpus:** all five planned attempts came back
+      `tier=lite`, so no ordering decision arose and the population is still not
+      a spent one. That is the observation the criterion's purpose clause asks
+      about, made rather than assumed, and it leaves the box exactly where it
+      was.
 - [ ] AC-4 — Programme success and failure criteria were committed before the
       first candidate run, and the run report carries an evolution-ROI figure.
       Transferred whole from `road-to-governed-harness-evolution` AC-8. Its
