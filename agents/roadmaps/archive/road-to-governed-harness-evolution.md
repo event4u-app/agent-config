@@ -1042,7 +1042,7 @@ once.
 > as their own items, on the AI-council verdict recorded at 4.1. Recording them
 > as vacuous a second time is exactly the accounting this phase refused.
 >
-> **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of 2026-09-01 transferred these items to [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md), which is on the trunk and carries them open. This paragraph is kept as the drain-run-13 record, not as a live pointer.
+> **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of 2026-09-01 transferred these items to [`road-to-governed-evidence-production`](../later/road-to-governed-evidence-production.md), which is on the trunk and carries them open. This paragraph is kept as the drain-run-13 record, not as a live pointer.
 
 - [-] **4.1 Cascade cheap to expensive, abort on the first hard failure.** The
       **TRANSFERRED 2026-09-01 to `road-to-governed-evidence-production`**, on the
@@ -1955,7 +1955,7 @@ once.
       model attempts; transfer must retain that unmet conjunct while preserving
       the completed ROI evidence."*
       **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
-      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      [`road-to-governed-evidence-production`](../later/road-to-governed-evidence-production.md),
       which is on the trunk and carries it open as `Transferred whole`. Kept as
       the drain-run-13 record, not as a live pointer.
       **BOTH conjuncts transfer together, and that coupling is the council's,
@@ -2933,7 +2933,7 @@ once.
       satisfying a precondition without the consequent … cannot be claimed as
       verified behaviour."*
       **SUPERSEDED 2026-09-01.** The receiver named above never reached `main`. The terminal-disposition council of the same day transferred this item to
-      [`road-to-governed-evidence-production`](../road-to-governed-evidence-production.md),
+      [`road-to-governed-evidence-production`](../later/road-to-governed-evidence-production.md),
       which is on the trunk and carries it open as `Transferred whole`. Kept as
       the drain-run-13 record, not as a live pointer.
       **The already-satisfied conjunct transfers as INHERITED EVIDENCE, not as

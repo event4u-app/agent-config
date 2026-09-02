@@ -290,3 +290,70 @@ only) would not find it. Nothing executes there, so it does not weaken leg 1 —
 but the mutation-path allowlist that guards the *contents* of a candidate clone
 has no counterpart guarding *where the clone lands*. Surfaced rather than
 patched, per `active-remediation`'s note-and-ask tier.
+
+## One consequence of the park is UNRESOLVED and is escalated to the owner, not decided
+
+Parking the roadmap takes `agents/roadmaps/` top level from two files to one — the
+`status: carrier` roadmap, which cannot be removed. That reds one CI gate:
+
+```
+❌ check_requirements_trace: scanned 1, floor 2 — a gate inspecting this little cannot certify the corpus
+❌ check_gate_coverage: 1 gate(s) failed the coverage floor.
+```
+
+`check_gate_coverage` runs in remote CI (`.github/workflows/consistency.yml:359`),
+so this is a real red on the PR and not a local-only artefact. It was green
+before the park at zero margin (scanned 2 == floor 2).
+
+**The floor's own note in `src/config/gate-coverage.yml` predicts this red** and
+calls it *"the gate firing on the drain WORKING"*; it has already been lowered
+twice for exactly this reason (15 → 10 → 2, both on 2026-08-23). Its `Revisit-if`
+anticipates the estate stabilising **above** 2 and forbids re-deriving the floor
+**from the live count**. The estate stabilised **below** 2, which the clause does
+not cover — a gap, recorded rather than read through.
+
+**A third AI council of this run was asked and SPLIT 1-1 on authority, which is
+an escalation condition rather than a verdict.** *2026-09-02, same two members,
+1 round, standard depth, blind chairman, quorum 2/2 present — concluded,
+subscription transport, `billable=0`, `$0.0000`. Two prior transport failures on
+the same question (`exit_1`, `os_error: ENOBUFS`) returned 0/2 and are recorded
+as failures rather than as refusals; the third attempt answered.*
+
+- Both seats agree the technically correct move is **F1 — lower `min_scanned` to
+  1**: the only signal this floor exists to catch is a moved or broken scan root,
+  which reports **0**, and 0 < 1 preserves it intact. One seat accepted the
+  derivation of 1 as an *invariant* rather than a live reading, because the sole
+  remaining file is a carrier whose deletion `lint_carrier_integrity` reds on at
+  zero tolerance with 38 broken destinations.
+- They disagree on **who may do it.** One seat: within the delegation, "barely",
+  because a coverage floor on a listing gate is threshold maintenance rather than
+  removal of a protection — while explicitly flagging that the asymmetry is real
+  and that a reading under which all floor adjustments are owner-reserved should
+  stop. The other seat: **F5, owner-reserved, stop** — *"Reducing that floor
+  weakens the gate's sole enforced threshold, regardless of whether the change is
+  called recalibration"*, and this run's own earlier ruling already held that the
+  delegation does not reach decisions that weaken a recorded floor.
+
+**So the floor was NOT lowered.** A split council resolves to the conservative
+side, and the restrictive seat's reasoning is the one that protects the owner:
+an agent that lowers a check because a council was one vote short of forbidding
+it is doing the thing the boundary exists to prevent. The three alternatives were
+refused for reasons both seats supplied — F2 (unpark) reverses a 2/2 verdict of
+this run and leaves a blocked roadmap in the active tree against an Iron Law; F3
+(redefine the corpus) changes what the gate certifies rather than its threshold;
+F4 (ship red without escalating) is knowingly shipping a red nobody was asked
+about.
+
+**What the owner is being asked for, in the restrictive seat's own terms** —
+this is a narrow, four-line proposal and nothing broader:
+
+1. Approve F1 and lower `check_requirements_trace`'s `min_scanned` from 2 to 1.
+2. Record that 1 derives from the independently enforced carrier invariant and
+   its 38 dependent references, not from today's file count.
+3. Record the coupling: if carrier-integrity enforcement changes, that derivation
+   must be revisited.
+4. Amend the `Revisit-if` clause to cover stabilisation at any structurally
+   justified minimum, including below 2.
+
+Until that is answered the PR carries one red gate, and it is named here and in
+the PR body rather than left for CI to announce.

@@ -1,9 +1,10 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "Grows open_blockers 29 -> 30 and nothing else. Measured with check_estate_count on this change, not predicted: active_roadmaps 3 (floor 3, +0), later_roadmaps 75 (floor 75, +0), skill_count 299 (+0), skill_description_tokens 11455 (+0), concern_count 55 (+0). The active count is at its floor because this change archives road-to-governed-harness-evolution in the same commit — one in, one out, so no offset is claimed and none is needed. The single new blocker is metered-backend-park, and it is a blocker that ALREADY EXISTED as an unnamed constraint: the 5.2 evaluator-independence park of the archived roadmap held four obligations without ever appearing in the blocker count, so the +1 makes a standing constraint countable rather than adding a new one. The alternative is to write Phase 2 with no blocker, which would leave two steps looking workable while a recorded council decision forbids them - a silent block instead of a counted one."
+estate_offset_exempt: "Not a new plan. This is the SAME roadmap moved from the active tree into agents/roadmaps/later/ by AI council verdict G3 (2/2, 2026-09-02) under the owner's delegation for this autonomous drain run, because every open item is gated on a candidate-aware runner that does not exist and a budget amendment that is not authorised — the Active-vs-Later test in src/skills/roadmap-management/references/archival.md:18. active_roadmaps falls by one and later_roadmaps rises by one, so the total plan count is unchanged; the work is preserved rather than created, and no acceptance criterion is dropped. Parking is the disposition src/rules/roadmap-progress-sync.md:120-125 makes mandatory for this shape, and the council ruled the owner-reserved [-] conversion is NOT reached by the delegation, so preserving the open glyphs is the only route that keeps every criterion alive in the estate."
+estate_growth_exempt: "AMENDED 2026-09-02 (drain run 17), and the current claim comes first. This change grows later_roadmaps 77 -> 78 and nothing else; measured with check_estate_count on this change rather than predicted: active_roadmaps 1 (floor 2, -1), open_blockers 29 (floor 30, -1), skill_count 299 (+0), skill_description_tokens 11455 (+0), concern_count 56 (+0). The +1 in later/ is the SAME roadmap that left the active tree in the same change, so the total plan count is unchanged and two other axes draw down. It is parked rather than archived because an AI council ruled 2/2 (2026-09-02, G3) that the owner-reserved [-] conversion is not reached by the owner's delegation for this autonomous run, so archival would have required dropping five open items the delegation does not authorise dropping. Parking is what src/rules/roadmap-progress-sync.md:120-125 makes mandatory for a roadmap whose open work cannot proceed now but will resume, and every acceptance criterion stays alive in the estate instead of being cancelled. The alternative was leaving a blocked roadmap in the active tree, which that same Iron Law forbids. ORIGINAL CLAIM, kept as the creation record: grows open_blockers 29 -> 30 and nothing else. Measured with check_estate_count on this change, not predicted: active_roadmaps 3 (floor 3, +0), later_roadmaps 75 (floor 75, +0), skill_count 299 (+0), skill_description_tokens 11455 (+0), concern_count 55 (+0). The active count is at its floor because this change archives road-to-governed-harness-evolution in the same commit — one in, one out, so no offset is claimed and none is needed. The single new blocker is metered-backend-park, and it is a blocker that ALREADY EXISTED as an unnamed constraint: the 5.2 evaluator-independence park of the archived roadmap held four obligations without ever appearing in the blocker count, so the +1 makes a standing constraint countable rather than adding a new one. The alternative is to write Phase 2 with no blocker, which would leave two steps looking workable while a recorded council decision forbids them - a silent block instead of a counted one."
 ---
 # Road to governed evidence production
 
@@ -17,6 +18,33 @@ estate_growth_exempt: "Grows open_blockers 29 -> 30 and nothing else. Measured w
 > conjunction may close on its met half, and the disposition is a transfer to a
 > receiver with an accountable owner. **This file is that receiver.** The owner
 > accepted it and authorised the estate cost on 2026-09-01.
+
+## Blocked until — the resume condition
+
+**Parked 2026-09-02 (drain run 17) by AI council verdict G3, 2/2 convergent,
+under the owner's delegation for this autonomous run.** Phase 1 is complete
+(3/3, AC-1 met). Phase 2 has open work that cannot proceed now and is preserved
+here rather than dropped: every criterion keeps its `[ ]`, and the council ruled
+explicitly that the delegation does **not** reach the owner-reserved `[-]`
+conversion, so nothing here has been cancelled.
+
+> **Resume when** a candidate-aware runner can execute tasks representative of
+> the intended population, produce freshly measured costs within an approved
+> funding bound, and preserve the required evaluator-independence split — then
+> pre-register and run a new experiment against AC-2's original proposition.
+
+Why each clause is there, so a later reader does not treat the first as
+sufficient: a runner that exists but measures a workspace the treatment cannot
+reach repeats the defect this run found (§ Phase 2 mechanism, leg 1); costs must
+be **measured** because the only figure this file carries is an extrapolation;
+and the independence split is the park's own un-park requirement
+(`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:49-52`), which
+a build does not discharge.
+
+**What archival would require instead**, if someone wants this file closed
+rather than parked: direct, rule-specific owner authorisation to write `[-]` on
+the five named open items, or a first-class waiver glyph in the checkbox
+vocabulary. Neither exists today.
 
 ## Goal
 
@@ -427,6 +455,12 @@ on a fixture instead of a run"*, risk type `product` — and the paragraph above
 is what that mitigation looks like when it fires.
 
 - [ ] **2.1 An LLM proposer must beat the deterministic one to survive.**
+      **PARKED 2026-09-02 (drain run 17), still `[ ]`, and deliberately so.** AI
+      council G3, 2/2: the outcome surface the 2026-09-02 round adopted does not
+      measure candidates, and the delegation does not reach the owner-reserved
+      `[-]` conversion, so this stays open and alive rather than cancelled. The
+      verify clause is carried verbatim for the fourth time and still not
+      re-scoped. See § Phase 2 mechanism and § Blocked until.
       Transferred whole from `road-to-governed-harness-evolution` step 5.4.
       verify: the comparison is a paired_verdict run, not an argument.
       **Already discharged at transfer:** the step's written fallback —
@@ -498,6 +532,10 @@ is what that mitigation looks like when it fires.
       carried verbatim and still not re-scoped.
 
 - [ ] **2.2 Cheap proposer models first, and track evolution ROI.**
+      **PARKED 2026-09-02 (drain run 17), still `[ ]`.** Same disposition as 2.1.
+      The ordering conjunct's population is still unspent — re-confirmed by
+      running the dry path, five planned attempts all `tier=lite`, so no ordering
+      decision arose.
       Transferred whole from `road-to-governed-harness-evolution` step 5.6.
       verify: the ROI figure appears in every run report, and a cheaper model is
       tried before an expensive one on each defect class.
@@ -839,10 +877,260 @@ reader checks rather than inherits them.
 open with its (c) narrowing.** It is not closed with (b), for the reason drain
 15 gave and this round did not disturb.
 
+### PHASE 2 — TERMINAL DISPOSITION 2026-09-02 (drain run 17): D2, DESIGN INFEASIBILITY, AND VERDICT 2A REFUTED
+
+*AI council 2026-09-02, members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
+every line relied on is inlined here per `no-roadmap-references`.*
+
+**The owner delegated this decision, and that is why a council took it.** The
+maintainer instructed this autonomous drain run that *"anything that would
+normally end in 'ask the user' … is instead put to the AI Council. The council's
+recorded decision substitutes for user sign-off and is documented as such"*, with
+token spend pre-authorised. This is the same delegation shape the park itself was
+decided under (`agents/roadmaps/later/road-to-routing-assurance-live-floors.md:20-21`).
+Recorded explicitly so a later reader can tell a delegated decision from agent
+overreach.
+
+**Zero metered calls. `--confirm` was never passed to `llm_propose` and no
+request reached any provider API.** Full evidence, with every file:line
+citation, in `agents/evidence/analysis/drain17-phase2-candidate-surface-finding.md`.
+
+**VERDICT 2A IS REFUTED IN ITS OPERATIVE FORM — 2/2 convergent.** The 2026-09-02
+round adopted the agent-run A/B bench as the outcome surface on the premise that
+it is *"the one evaluator a rule-body mutation can move"*. That premise was a
+possibility claim in the protocol itself — `metered-proposer-protocol.md:350-352`
+says **could** — and the adopting round read it as an existing capability. Four
+findings, each confirmed by reading code, falsify the operative reading.
+
+**Leg 1 — the cited surface is a materialiser, not an evaluator.**
+`bench_ab_clone.ts:449` is the `--candidate-record` argument parser. The script
+copies a fixture, layers the four package surfaces and writes the mutations,
+emitting a directory at `clones/candidate-<id>` (`:319`, `:344`,
+`CANDIDATE_PREFIX` `:84`). Its only consumers in `src/` are
+`bench_ab_integrity.ts` — a byte-wise escape checker (`CANDIDATE_PREFIX` `:65`) —
+and `evolution_lab.ts`, which imports `bench_ab_clone` and `bench_ab_integrity`
+(`:58-64`) and **no runner at all**; after cloning it runs the deterministic
+`evaluation_cascade` over metric vectors the operator supplies as JSON. Nothing
+sets a session's `cwd` to a candidate clone.
+
+**Leg 2 — a candidate clone is unreachable from either runner, and the reason is
+a variant allowlist rather than a surface exclusion.** The mutation surface is
+`CANDIDATE_OWNED_PATHS = ['.claude', '.augment', 'AGENTS.md', 'CLAUDE.md']`
+(`_lib/candidate_record.ts:262`), enforced three times, refusal text: *"A
+candidate that writes a task-target file is not a harness variant — it is a
+different experiment, and the paired verdict would attribute its effect to the
+harness."*
+
+**An earlier draft of this leg said v1 "excludes that surface by explicit
+comment". That was wrong and an independent verification pass caught it.** v1
+LAYERS those four paths into the clone for `with`, `with-rdp` and `candidate`
+(`bench_ab_clone.ts:220-234`) and spawns with `cwd: cloneRoot`
+(`bench_ab_task_runner.ts:277-278`) — that presence-versus-absence IS the v1
+variable. The `:822-823` comment describes one v1 code path that uses the
+`without` clone for every arm with sysprompt injection, not the runner as a
+whole. What actually blocks a candidate clone is that `reset_clone` accepts only
+`['with','without','with-rdp','both','all']` (`:898`) — **`candidate` is not an
+accepted variant**, and no flag points the runner at an arbitrary directory.
+
+v2 does exclude the surface, deliberately and for a recorded reason:
+`reset_fixture` copies a `fixtures-v2/<task>` tree under `os.tmpdir()`
+(`_lib/bench_ab_workspace.ts:45`, `:103-120`), none of the 33 fixtures carries
+any of the four paths, and the `CRITICAL (2026-06-15)` note at
+`bench_ab_v2_run.ts:81-88` records why — a clone inside the repository let the
+`vanilla` arm inherit the package by walking up from `cwd` (150k tokens in-repo
+against 24k in `/tmp`), invalidating every prior null. Treatment therefore rides
+the arm axis: `ARMS` (`:160-172`) has eleven members and no `candidate`, and an
+`ArmSpec` carries `setting_sources` and `inject` with no field that can name a
+candidate record.
+
+**Leg 3 — the one cheap, body-sensitive, candidate-surface evaluator has zero
+overlap with the frozen corpus.** Track A (`bench_ab_tracka_run.ts`) greps
+`expected_keywords` inside an `expected_target` path *inside the target clone*,
+with no model call. Its 32 cases name 14 distinct `.claude/rules/*.md` targets.
+The frozen corpus — reproduced independently this run, `subject_digest`
+`860eaf2dee7f35df`, byte-identical to drain 16's — is the first five byte-wise of
+the 13 projected rules: `augment-edit-discipline`, `domain-adoption-policy`,
+`framework-neutrality-in-generic-skills`, `low-impact-corpus-privacy-floor`,
+`no-roadmap-references`. **Intersection: empty.** `preservation-guard` is the
+only Track A rule target this projection produces at all and it sorts 7th; the
+other 13 are withheld by the per-host partition because the global layer carries
+their names.
+
+**Leg 4 — the expensive alternative has no approved powered plan under the
+pre-registered ceiling, and the ceiling itself turns out to enforce nothing on
+that path.** Each bench trial is a real `claude --print` session
+(`bench_ab_task_runner.ts:249` builds the command, `:277` spawns it). Measured on
+the dry path: `34 tasks × 2 arms × 1 seeds = 68 runs`. A paired design at 5
+pairs × 5-to-20 trials × 2 arms × 34 tasks is on the order of **1,700-6,800
+live sessions**.
+
+**Two things this leg deliberately does NOT claim.** The `$47-$190` an
+extrapolation from one recorded 180-run sweep yields is an order of magnitude and
+nothing more — one council seat was explicit about that, and it is not the
+decisive fact. And an earlier draft said `assertWithinBudget` **aborts** such a
+sweep; independent verification refuted it. The guard does throw rather than
+truncate (`_lib/harness_evolution_guards.ts:140-150`, spend branch `:148`) and
+the ceiling is `max_spend_cents: 500`, but its complete `src/` caller set is
+`evolution_lab.ts:666`, `evolution_lab.ts:749`, `_lib/evaluation_cascade.ts:355`
+and `llm_propose.ts:128` — **no `bench_ab_*` runner calls it** — and every
+committed caller passes an estimated spend of 0 or an operator flag defaulting to
+0 (`:656-664`, `:747`, `llm_propose.ts:123-128`). So the spend branch is
+unreachable today and would not have stopped an over-budget bench sweep. What is
+decisive is what the council named: **no approved, powered plan fits the current
+ceiling.**
+
+**A fifth observation, recorded at the strength it actually has after peer review
+asked for it to be checked.** Peer review marked the corpus/fixture relevance
+claim `needs-verification`, and reading it narrowed it. Four of the five corpus
+rules carry `path_prefix` triggers no fixture path can match; the fifth,
+`augment-edit-discipline`, carries `path_prefix: "src/"` and the fixture has
+`src/cli.ts`. So the categorical "unreachable" form is **withdrawn**. What
+survives is that this rule's content — keep this package's files
+project-agnostic, sync artefact counts — has no bearing on a debugging task in a
+seven-file TypeScript demo. That is a judgement about effect size, refutable by a
+measured non-tie, and it is **explicitly weaker than legs 1-3**, which are
+structural facts about committed code. It is not a fifth blocker of the same kind.
+
+**What the legs establish, and what they do NOT — stated because one seat
+narrowed the other on exactly this.** They establish **missing implementation, a
+population mismatch, and an unapproved estimated cost**. They do **not**
+establish logical impossibility. A candidate-aware runner over relevant tasks
+with freshly measured costs could be a valid experiment. That is a separately
+pre-registered future project with its own protocol, budget, power policy and
+independence split — it is not a continuation of this Phase 2, and "adopt the
+bench as a goal to build toward" is expressly refused as a reading of 2A.
+
+**Why the alternatives were refused.**
+- **D1 (execute)** would authorise a substantially new experiment rather than
+  finish the frozen one: a new arm revises the boundary leg 2 records.
+- **D3 (transfer)** has no receiver expressly accepting the exact obligation, its
+  evidence requirement, funding responsibility and independence constraint.
+  `status: carrier` alone is not that, and this file's own AC-3 disposition
+  already refused a transfer *"merely to make this roadmap look cleaner"*.
+- **D4 (keep open)** has no bounded resolution event and would realise Rank 3 of
+  this file's own Risk Register — the parking lot whose existence reads as the
+  problem being handled.
+
+**Reopen conditions, recorded so this is a lock with a key rather than a wall.**
+Any one of: a committed controlled runner that consumes candidate clones,
+exercises the frozen rules and fits an approved powered budget; authoritative
+AC-2 text establishing that a descriptive proposer-output comparison suffices; or
+a named receiver expressly accepting the unchanged obligation, evidence standard,
+funding responsibility and independence split.
+
+**One degradation in the council run itself, recorded rather than smoothed.** The
+peer-review pass on the anthropic seat returned a refusal — it was shown one
+response where the round's structure implies two, and declined to rank a single
+response against absent peers. The openai peer-review pass completed and is what
+supplied the `needs-verification` flag acted on above. So the peer-review half of
+this round is **1 of 2**, not 2 of 2; the primary round is 2/2. One line of that
+completed pass is also **not applicable and is not acted on**: it asked whether
+the closure affects confidence in a read-only `@production-validator` "30-second"
+wedge, which is not a surface this repository ships.
+
+### PHASE 2 — MECHANISM 2026-09-02 (drain run 17): G3, PARKED TO `later/`, AND THE DELEGATION DOES NOT REACH `[-]`
+
+*Second AI council of the same run, 2026-09-02, same two members, 2 rounds,
+depth deep, peer-review, blind chairman, quorum **2/2 present** (needed 1) —
+concluded. Subscription transport, `billable=0`, `$0.0000`. **Verdict G3,
+2/2 convergent**, one seat stating roughly 83:17 over the alternative.*
+
+**Why a second round at all.** D2 settled the substance and left a mechanism
+problem the first round did not touch: **there is no glyph for "waived"**. The
+checkbox vocabulary is closed at four — `[x]` done, `[ ]` open, `[~]` deferred,
+`[-]` cancelled (`update_roadmap_progress.ts:81`, `:25-30`) — and
+`src/agent-src/contexts/execution/terminal-states.md:43-59` records that three
+terminal states have no glyph, deliberately, so that a closing report "can say
+the word the glyph cannot". Archival additionally refuses on any open step
+(`archive_completed_roadmaps.ts:562-564`) and on any open blocker (`:583-599`).
+So "waive AC-2 and archive" is not a thing the ledger can express.
+
+**THE DELEGATION DOES NOT REACH `[-]`, and this is the operative finding of the
+round.** Converting an item to `[-]` routes to **user**
+(`src/rules/roadmap-progress-sync.md:83`), under an Iron Law that reads
+*"ANYTHING THAT DROPS, WEAKENS, OR PERMANENTLY ACCEPTS THE LOSS OF IT REACHES
+THE USER — ALWAYS, AND NO MANDATE LIFTS THAT … THE COUNCIL ADVISES ON HOW AND
+WHEN; THE OWNER DECIDES WHETHER"* (`:65-71`). Both seats read the specific
+reservation as controlling the general delegation: *"The autonomous-drain
+instruction is itself a mandate. Reading it as categorically different merely
+because it is run-specific would neutralize the explicit anti-override
+language."* And on the enforcement gap: *"a governance rule does not become
+optional because a linter cannot detect its violation"* — no gate reads a `[-]`
+and checks who wrote it, and that is a reason for restraint rather than a licence.
+
+**So the five items keep their glyphs. `2.1`, `2.2`, `AC-2`, `AC-3` and `AC-4`
+all stay `[ ]`.** The substantive dispositions live in prose, where the
+vocabulary cannot misrepresent them:
+
+- **AC-2 — waived for this run on demonstrated design infeasibility.** Not met,
+  not dropped. The word "cheap" is deliberately **not** inserted into AC-2's
+  proposition; cheapness is feasibility rationale, not part of the criterion.
+- **AC-3 and AC-4 — dependent, unsatisfied dispositions.** Their subject halves
+  need the comparison run. They are deliberately not labelled "waived": their
+  wording differs from AC-2's and flattening the three into one label would erase
+  a distinction both rounds drew on purpose.
+
+**The reconciliation with the blocker's own option (b), stated because the two
+look contradictory and one seat pressed exactly there.** D2 governs the
+**substantive conclusion** — AC-2 is waived for this run. Option (b) governs the
+**repository state** — Phase 2 remains open, because no authorised glyph can
+encode that waiver for archival. A reader who finds "AC-2 waived" beside an open
+`[ ]` is not looking at an inconsistency; they are looking at the exact gap
+between a decision and a ledger that cannot represent it.
+
+**What this file therefore does: it parks, whole.**
+`src/rules/roadmap-progress-sync.md:120-125` is an Iron Law — *"A ROADMAP WHOSE
+OPEN WORK CANNOT PROCEED NOW (GATED ON AN EXTERNAL TRIGGER OR A DECISION) BUT
+WILL RESUME → MOVE IT TO agents/roadmaps/later/. NEVER LEAVE A
+BLOCKED-FOR-LATER ROADMAP IN THE ACTIVE TREE."* The Active-vs-Later test
+(`src/skills/roadmap-management/references/archival.md:18`) asks whether the
+agent can make progress here now, autonomously; every open item needs a
+candidate-aware runner that does not exist and a budget amendment that is not
+authorised, so the answer is no and the file is not active. Open `[ ]` items stay
+open — the roadmap is parked, not cancelled, and every criterion stays alive in
+the estate, which is what makes this the council-decidable route where `[-]` is
+not.
+
+**The prior round's D4 refusal is not overridden — it is distinguished, and one
+seat named the contradiction.** D4 was *"keep Phase 2 open in the active tree"*,
+which the Iron Law above forbids. G3 is a different act: it removes the file from
+the active tree while preserving every item. That seat also observed that D4's
+stated reason — "no bounded resolution event" — sits badly beside the same
+round's finding that this is *missing implementation, not impossibility*: if the
+work is buildable-when-tooling-exists, that tooling's existence **is** a bounded
+event. The tension is recorded rather than smoothed.
+
+**Resume condition**, in the fuller of the two forms offered, because the shorter
+one ("a candidate-aware runner is built") is a necessary condition and not a
+sufficient one:
+
+> **Resume when** a candidate-aware runner can execute tasks representative of
+> the intended population, produce freshly measured costs within an approved
+> funding bound, and preserve the required evaluator-independence split — then
+> pre-register and run a new experiment against AC-2's original proposition.
+
+**What archival would require, named so nobody has to re-derive it.** Either
+direct, rule-specific owner authorisation to write `[-]` on these five named
+items, or a first-class waiver mechanism in the glyph vocabulary. Neither exists
+today, and the agent did not manufacture one.
+
+**Two honest limits on this round.** The openai seat recorded that it could not
+verify the cited files from its own workspace and that its verdict therefore
+rests on the quoted provisions being accurate — so the citations above are the
+thing a later reader checks, not something to inherit. And the peer-review pass
+of the first round was **1 of 2**: the anthropic peer-review returned a refusal,
+having been shown one response where the round's structure implies two. The
+primary rounds were 2/2 both times.
+
 ## Blockers
 
 ### blocker: metered-backend-park
-- **Status:** open
+- **Status:** resolved 2026-09-02 — closed with **option (b)** as the recorded
+  disposition (drain run 17; AI council 2/2, G3 mechanism round). The park itself
+  is NOT lifted and its 2026-09-01 narrowing to (c) stands unchanged.
 - **Owner:** maintainer
 - **Blocks:** Phase 2 (2.1, 2.2) and AC-2
 - **What to do:** pick exactly one — (a) resolve the 5.2 evaluator-independence
@@ -916,6 +1204,40 @@ open with its (c) narrowing.** It is not closed with (b), for the reason drain
   harness and are untouched. It does not admit a metered evaluator anywhere. It
   does not relax `tests/scripts/governed_harness_no_live_harness.test.ts`, which
   polices the archived parent's own tree and is not this roadmap's gate.
+  **RESOLVED 2026-09-02 (drain run 17) — closed with (b) as the recorded
+  disposition, which is the second discharge this entry's own `Resolved when`
+  clause names.** *AI council 2026-09-02 (`anthropic/claude-sonnet-4-5` +
+  `openai/codex-default`, 2 rounds, deep, peer-review, blind chairman, quorum
+  2/2 present, needed 1 — concluded, subscription transport, `billable=0`,
+  `$0.0000`) — verdict **D2**, 2/2 convergent.* Taken under the owner's
+  delegation of every would-ask-the-user decision to the council for this
+  autonomous run.
+
+  **The park is NOT lifted and NOT re-argued.** Its 2026-09-01 narrowing to (c)
+  stands exactly as written: a metered proposer is admitted, a metered evaluator
+  is forbidden, and the two-session independence split binds any future attempt.
+  What closes is this file's **disposition** of the obligation, not the
+  constraint — and the block that actually stopped Phase 2 is **downstream** of
+  the park rather than the park itself.
+
+  **What stopped it, in one line each — full record in
+  `agents/evidence/analysis/drain17-phase2-candidate-surface-finding.md` and in
+  the Phase 2 terminal disposition above.** The outcome surface the 2026-09-02
+  round adopted does not measure candidates (`bench_ab_clone` is a materialiser;
+  its only consumers are an escape checker and `evolution_lab`, which imports no
+  runner). The candidate surface and both runners' measured workspaces are
+  disjoint by construction (`_lib/candidate_record.ts:262` against
+  `bench_ab_task_runner.ts:822-823` and `_lib/bench_ab_workspace.ts:103-120`).
+  The one cheap body-sensitive evaluator on the candidate surface has an empty
+  intersection with the frozen corpus. And no approved powered plan fits
+  `max_spend_cents: 500`, which `assertWithinBudget` aborts on
+  (`_lib/harness_evolution_guards.ts:147-149`).
+
+  **This is missing implementation, a population mismatch and an unapproved
+  cost — NOT logical impossibility.** A candidate-aware runner over relevant
+  tasks, freshly costed, could be a valid experiment; it would be a separately
+  pre-registered project with its own protocol, budget, power policy and
+  independence split, not a continuation of this Phase 2.
 - **Recommendation:** (b) until someone needs Phase 2's answer. The park does
   not rest on cost — token spend was explicitly pre-authorised when it was
   decided — it rests on evaluator independence, and nothing has changed about
@@ -934,10 +1256,10 @@ open with its (c) narrowing.** It is not closed with (b), for the reason drain
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A receipt producer that observes the thing it reports on | implementation | 1.1's producer is written against the same module that classifies the failure, so the receipt inherits the proxy problem the cascade's `PREFIX_ASSIGNABLE_FAMILIES` exclusion exists to prevent — one layer up, where it is harder to see | 1.3 requires the trust boundary to be written as a falsifiable claim BEFORE the producer is designed, and 1.1 must cite it rather than restate it | Phase 1 — Deterministic evidence, executable under the park |
-| 2 | Phase 2 closes on a fixture instead of a run | product | A paired-verdict harness is built, exercised over recorded fixtures, and 2.1 is closed on it — the substitution the source roadmap caught twice, arriving here with the obligation | The Phase 2 preamble forbids closing on a fixture, and 2.1's verify clause is carried verbatim so the word `run` cannot quietly become `case` | Phase 2 — Experimental evidence, blocked on the metered-backend park |
-| 3 | This file becomes a parking lot | product | Four obligations arrive, nothing is worked, and the file's existence reads as the problem being handled — the artificial-owner failure both seats warned about | **Mitigation re-reviewed 2026-09-02 (drain run 15): the original one is SPENT.** It read "Phase 1 is executable on the day of transfer", and Phase 1 is now closed 3/3, so it no longer distinguishes a worked file from a parked one. What replaces it: the drain-15 1B disposition records the ordered resume chain and the manifest shape explicitly, so the next reader inherits a specified next step rather than a mood, and AC-3 is annotated as a Phase-2 successor rather than left to look independently closeable | Phase 1 — Deterministic evidence, executable under the park |
+| 2 | Phase 2 closes on a fixture instead of a run | product | A paired-verdict harness is built, exercised over recorded fixtures, and 2.1 is closed on it — the substitution the source roadmap caught twice, arriving here with the obligation | The Phase 2 preamble forbids closing on a fixture, and 2.1's verify clause is carried verbatim so the word `run` cannot quietly become `case`. **Held on closure 2026-09-02 (drain run 17): nothing was closed on a fixture.** The terminal disposition closes Phase 2 on *design infeasibility* — four findings about committed apparatus — and 2.1's `verify:` clause was never re-scoped. A reader checking whether this risk fired should look for a recorded paired_verdict run; there is none, and none is claimed | Phase 2 — Experimental evidence, blocked on the metered-backend park |
+| 3 | This file becomes a parking lot | product | Four obligations arrive, nothing is worked, and the file's existence reads as the problem being handled — the artificial-owner failure both seats warned about | **Mitigation re-reviewed 2026-09-02 (drain run 15): the original one is SPENT.** It read "Phase 1 is executable on the day of transfer", and Phase 1 is now closed 3/3, so it no longer distinguishes a worked file from a parked one. What replaces it: the drain-15 1B disposition records the ordered resume chain and the manifest shape explicitly, so the next reader inherits a specified next step rather than a mood, and AC-3 is annotated as a Phase-2 successor rather than left to look independently closeable. **Discharged on closure 2026-09-02 (drain run 17).** The file no longer rests in the active tree with obligations unworked: Phase 1 is closed 3/3, Phase 2 carries a terminal disposition with a named resume condition, and the file is parked to `later/` per the Iron Law that forbids leaving a blocked-for-later roadmap active. The failure this risk describes is a roadmap that *stays*; this one leaves | Phase 1 — Deterministic evidence, executable under the park |
 | 4 | The transferred evidence is re-credited | implementation | A later reader takes the discharged-at-transfer paragraphs as this roadmap's own work and counts the same sabotage proof twice | Every discharged half names the source step and the date it was proven, and no transferred step carries a `guarded-baseline` annotation of its own — the guards belong to the source file's record | Phase 2 — Experimental evidence, blocked on the metered-backend park |
-| 5 | 1B is read as a refusal rather than as a pending chain | product | The drain-15 disposition says Phase 2 stays open. A later reader takes that as "this was decided against" and stops, when what it records is that four of five chain steps are now specified and only the independent spending session is missing | The disposition names the chain in order, specifies the manifest that cures F-A, and states in its own words that "beginning the chain is not completing it" — so the open state is a queue position, not a verdict on the work | Phase 2 — Experimental evidence, blocked on the metered-backend park |
+| 5 | 1B is read as a refusal rather than as a pending chain | product | The drain-15 disposition says Phase 2 stays open. A later reader takes that as "this was decided against" and stops, when what it records is that four of five chain steps are now specified and only the independent spending session is missing | The disposition names the chain in order, specifies the manifest that cures F-A, and states in its own words that "beginning the chain is not completing it" — so the open state is a queue position, not a verdict on the work. **SUPERSEDED on closure 2026-09-02 (drain run 17).** It is no longer a queue position: the drain-17 disposition is terminal, states in its own words that the findings establish missing implementation rather than impossibility, and names the resume condition. The risk of misreading an open state as a verdict cannot fire on a state that IS a verdict — what a reader must not misread now is the reverse, and the disposition says so | Phase 2 — Experimental evidence, blocked on the metered-backend park |
 
 ## Acceptance Criteria
 
@@ -958,6 +1280,15 @@ open with its (c) narrowing.** It is not closed with (b), for the reason drain
 - [ ] AC-2 — A paired-verdict comparison between a metered proposer and the
       deterministic one has been run, and its result — in either direction —
       is recorded. Held by `metered-backend-park`.
+      **WAIVED FOR THIS RUN 2026-09-02 (drain run 17) ON DEMONSTRATED DESIGN
+      INFEASIBILITY — and the box stays `[ ]` because no glyph can say that.**
+      AI council D2 then G3, 2/2 on both. Not met, and not dropped: the delegation
+      does not reach the owner-reserved `[-]` conversion, so the criterion stays
+      alive in the estate and the file parks instead of archiving. The word
+      "cheap" is deliberately NOT read into this criterion's proposition —
+      cheapness is feasibility rationale, not part of what AC-2 asks. Reasons and
+      their exact strength: § Phase 2 terminal disposition (legs 1-4, two of them
+      corrected by independent verification).
 <!-- AC-3 DISPOSITION 2026-09-01 (drain run 15): stays open, as a Phase-2
      SUCCESSOR obligation. Convergent 2/2. The reasoning, recorded because "no
      further code is needed to close it" reads like a completion claim and is
@@ -995,9 +1326,16 @@ open with its (c) narrowing.** It is not closed with (b), for the reason drain
       a spent one. That is the observation the criterion's purpose clause asks
       about, made rather than assumed, and it leaves the box exactly where it
       was.
+      **DEPENDENT, UNSATISFIED DISPOSITION 2026-09-02 (drain run 17).**
+      Deliberately NOT labelled "waived": its wording differs from AC-2's, and
+      both council rounds drew that distinction on purpose. Its subject half needs
+      the comparison run, which is now parked with a resume condition.
 - [ ] AC-4 — Programme success and failure criteria were committed before the
       first candidate run, and the run report carries an evolution-ROI figure.
       Transferred whole from `road-to-governed-harness-evolution` AC-8. Its
       shape half is met — `buildRunReport` refuses a report without the figure —
       and its subject half needs the run, which needs the park lifted. `[-]` on
       the source means TRANSFERRED, never met and never dropped.
+      **DEPENDENT, UNSATISFIED DISPOSITION 2026-09-02 (drain run 17)**, on the
+      same terms as AC-3 — the shape half is met, the subject half needs the run,
+      and the run is parked rather than abandoned.
