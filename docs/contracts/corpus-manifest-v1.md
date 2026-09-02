@@ -7,7 +7,7 @@ roadmap_ref: road-to-governed-evidence-production.md
 # Corpus manifest v1 — the equivalence-preserving subject pin
 
 **Purpose.** Make the metered-proposer experiment's subject reproducible from a
-recorded artefact, so two captures can be shown to have measured the same thing.
+recorded artifact, so two captures can be shown to have measured the same thing.
 It exists because a recorded commit demonstrably does not pin that subject.
 
 **Producer.** `./scripts-run src/scripts/corpus_manifest capture --out FILE`
