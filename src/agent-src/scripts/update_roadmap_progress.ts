@@ -96,16 +96,7 @@ const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs'
 
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---[ \t\n\r\f\v]*\n/;
-const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
-/**
- * A carrier holds obligations deferred out of an archived parent. It is not
- * schedulable work — every item in it has an unmet resumption trigger — and it
- * has no `## Phase` headings by construction, so it is skipped exactly where a
- * draft is. It differs from a draft in what protects it: a draft may be deleted
- * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
- * its receiver.
- */
-const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
+const UNSCHEDULED_VALUES: ReadonlySet<string> = new Set(['draft', 'carrier']);
 
 const MERGE_GATED_RE = /merge-gated/i;
 // PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)
@@ -298,13 +289,8 @@ function _stripQuotes(s: string): string {
     return out;
 }
 
-function is_draft(fm: Record<string, string>): boolean {
-    return DRAFT_VALUES.has((fm['status'] ?? '').toLowerCase());
-}
-
-/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
-function is_carrier(fm: Record<string, string>): boolean {
-    return CARRIER_VALUES.has((fm['status'] ?? '').toLowerCase());
+function is_unscheduled(fm: Record<string, string>): boolean {
+    return UNSCHEDULED_VALUES.has((fm['status'] ?? '').toLowerCase());
 }
 
 /**
@@ -766,7 +752,7 @@ function collect(roadmap_root: string): RoadmapStats[] {
             continue;
         }
         const text = fs.readFileSync(p, { encoding: 'utf-8' });
-        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+        if (is_unscheduled(parse_frontmatter(text))) {
             continue;
         }
         const stats = parse_roadmap(p, roadmap_root);
@@ -834,7 +820,7 @@ function collect_parked(roadmap_root: string): ParkedRoadmap[] {
         } catch {
             continue;
         }
-        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+        if (is_unscheduled(parse_frontmatter(text))) {
             continue;
         }
         const cell = resume_cell(text);
@@ -1493,8 +1479,7 @@ export {
     TITLE_RE,
     FRONTMATTER_RE,
     parse_frontmatter,
-    is_draft,
-    is_carrier,
+    is_unscheduled,
     is_roadmap_candidate,
     count_checkboxes,
     parse_blockers,

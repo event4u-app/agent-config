@@ -143,7 +143,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     collect,
-    is_draft as isDraft,
+    is_unscheduled as isUnscheduled,
     is_roadmap_candidate as isRoadmapCandidate,
     parse_frontmatter as parseFrontmatter,
     parse_roadmap as parseRoadmap,
@@ -155,6 +155,8 @@ import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { countDeclaredCarriers, declaresCarrier } from './_lib/carrier_status.js';
+import { carrierEstateCases } from './_lib/estate_carrier_cases.js';
 
 const GATE = 'check_estate_count';
 const BUDGET_REL = path.join('src', 'config', 'estate-count-budget.json');
@@ -437,48 +439,26 @@ function countIn(roadmapRoot: string, sub: string): number {
 }
 
 /**
- * Top-level roadmaps `collect()` drops for declaring `status: carrier`.
+ * Top-level roadmaps `collect()` drops for declaring `status: carrier`, added
+ * back so that FLIPPING a status is count-neutral.
  *
- * Added back into `active_roadmaps` so that FLIPPING a roadmap's status is
- * count-neutral. Measured before this: flipping one file to `carrier` moved
- * `active_roadmaps 3 → 2` and the gate printed "estate within its ratchet",
- * because a count below the floor is a drawdown and free. The floor is measured
- * at the base ref, so once such a flip merges, the next change's floor is the
- * lowered number — the file cannot be flipped back without paying, and any
- * roadmap can be laundered out of the count by adding one word.
+ * Measured before this: flipping one file to `carrier` moved `active_roadmaps
+ * 3 → 2` and the gate printed "estate within its ratchet", because a count
+ * below the floor is a drawdown and free. The floor is measured at the base
+ * ref, so once such a flip merges the lowered number becomes the next floor —
+ * the file cannot be flipped back without paying, and any roadmap can be
+ * laundered out of the count by adding one word.
  *
  * A reclassification is not a disposal, so the metric counts the file on both
- * sides and the flip changes nothing. This is the argument `open_blockers`
- * already makes below for spanning `later/`: parking relocates estate rather
- * than removing it, and a metric that falls on a relocation prints "free
- * tightening" over a burial. Both directions are deliberate — deleting a
- * carrier is still a shrink and still earns no offset (`classifyDiff`), and
- * ADDING one is growth that takes the claim path like any other new roadmap.
+ * sides. Same argument `open_blockers` makes below for spanning `later/`.
+ * Deleting a carrier is still a shrink and still earns no offset
+ * (`classifyDiff`); adding one is growth that takes the claim path.
  *
- * It is therefore the one roadmap metric that does NOT equal the dashboard
- * header, and the divergence is stated here rather than left to be tripped
- * over. `collect()` is still the parser; only the carrier subtraction is
- * undone. Drafts stay excluded on both sides — pre-existing, untouched here.
+ * This is therefore the one roadmap metric that does NOT equal the dashboard
+ * header, stated here rather than left to be tripped over.
  */
 function countActiveCarriers(roadmapRoot: string): number {
-    let names: string[];
-    try {
-        names = fs.readdirSync(roadmapRoot);
-    } catch {
-        return 0;
-    }
-    let n = 0;
-    for (const name of names) {
-        if (!name.endsWith('.md') || !isRoadmapCandidate(name)) continue;
-        const abs = path.join(roadmapRoot, name);
-        try {
-            if (!fs.statSync(abs).isFile()) continue;
-            if (isCarrierText(fs.readFileSync(abs, 'utf-8'))) n += 1;
-        } catch {
-            continue;
-        }
-    }
-    return n;
+    return countDeclaredCarriers(roadmapRoot, isRoadmapCandidate, fs, path.join);
 }
 
 /**
@@ -506,7 +486,7 @@ function laterRoadmaps(roadmapRoot: string): Array<{ open_blockers: readonly unk
         // `collect()` cannot be reused here: it filters through the same
         // path-based predicate and would reject its own root.
         const text = fs.readFileSync(abs, 'utf-8');
-        if (isDraft(parseFrontmatter(text)) || isCarrierText(text)) continue;
+        if (isUnscheduled(parseFrontmatter(text))) continue;
         const stats = parseRoadmap(abs, dir);
         if (stats !== null) out.push(stats as unknown as { open_blockers: readonly unknown[] });
     }
@@ -610,13 +590,8 @@ export function exemptionReason(text: string): string | null {
     return reason === '' ? null : reason;
 }
 
-/** True when `text` is a roadmap whose frontmatter declares `status: carrier`. */
-export function isCarrierText(text: string | null): boolean {
-    if (text === null) return false;
-    const fm = /^---\n([\s\S]*?)\n---/.exec(text);
-    if (fm === null) return false;
-    return /^status:[ \t]*carrier[ \t]*$/m.test(fm[1] ?? '');
-}
+/** Re-export; `_lib/carrier_status.ts` holds the one implementation. */
+export const isCarrierText = declaresCarrier;
 
 /**
  * Classify the change's effect on the active roadmap tree.
@@ -630,15 +605,10 @@ export function classifyDiff(
     nameStatus: string,
     readFile: (rel: string) => string | null,
     /**
-     * The file's content at the BASE ref, for paths this change removed.
-     *
-     * Needed because a deleted carrier cannot be read from the working tree,
-     * and its status is the whole question: deleting a roadmap normally earns an
-     * offset, and a carrier holds obligations lifted out of an already-archived
-     * parent, so paying a credit for removing one rewards the loss. Defaults to
-     * returning null, which reproduces the previous behaviour exactly — a caller
-     * that cannot supply a pre-image keeps the old scoring rather than silently
-     * getting a different answer.
+     * The file's content at the BASE ref, for paths this change removed — a
+     * deleted carrier cannot be read from the working tree and its status
+     * decides whether the deletion earns an offset. Defaults to null, which
+     * reproduces the previous scoring for any caller without a pre-image.
      */
     readBase: (rel: string) => string | null = () => null,
 ): OffsetLedger {
@@ -1227,73 +1197,14 @@ function selfTest(): number {
                     after: (dir) => write(dir, 'agents/roadmaps/later/road-to-parked.md', roadmap('P')),
                 }),
         },
-        {
-            // A carrier holds obligations lifted out of an already-archived
-            // parent. Paying an offset for removing one rewards the loss, so the
-            // deletion buys nothing and the addition stays unpaid.
-            //
-            // The ADDITION IS A DRAFT, and that is the whole design of the
-            // fixture. With an ordinary addition the growth half and the unpaid
-            // half coincide (growth iff n > a; unpaid > 0 iff n > a), so the case
-            // rejected on two independent grounds and stayed red with the carrier
-            // branch reverted — it asserted nothing about the feature it named.
-            // A draft is invisible to `collect()`, so the count half cannot move
-            // and only the offset scoring decides the verdict.
-            name: 'deleting a carrier does not offset a new draft → reject',
-            expect: 'reject',
-            run: () =>
-                fixture({
-                    roadmaps: 3,
-                    base: 'main',
-                    before: (dir) =>
-                        write(dir, 'agents/roadmaps/road-to-carrier.md', CARRIER),
-                    after: (dir) => {
-                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-carrier.md'));
-                        write(dir, 'agents/roadmaps/road-to-new.md', DRAFT);
-                    },
-                }),
-        },
-        {
-            // The control, and it is the half that proves the case above tests
-            // the carrier status rather than the deletion: the same shape with an
-            // ordinary roadmap deleted still offsets, so the gate accepts. Only
-            // the deleted file's status differs between the two.
-            name: 'deleting an ordinary roadmap still offsets a new draft → accept',
-            expect: 'accept',
-            run: () =>
-                fixture({
-                    roadmaps: 3,
-                    base: 'main',
-                    before: (dir) =>
-                        write(dir, 'agents/roadmaps/road-to-spare.md', roadmap('S')),
-                    after: (dir) => {
-                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-spare.md'));
-                        write(dir, 'agents/roadmaps/road-to-new.md', DRAFT);
-                    },
-                }),
-        },
-        {
-            // The count half of the same status, and the reason
-            // `countActiveCarriers` exists: a reclassification is not a disposal,
-            // in EITHER direction. The flip TO carrier cannot be asserted by exit
-            // code — it lowers the count, a count below the floor is a drawdown,
-            // and a drawdown is free whichever way carriers are counted. Its
-            // consequence can be: with carriers uncounted the flip lowers the
-            // floor, so flipping the same file BACK reads as growth and has to be
-            // paid for. This fixture is that state — the carrier is already in the
-            // base tree — and it rejects with the carrier term removed from the
-            // count. `check_estate_count.test.ts` asserts the neutrality of the
-            // forward flip directly, where a count is readable.
-            name: 'flipping a carrier back to an ordinary roadmap costs nothing → accept',
-            expect: 'accept',
-            run: () =>
-                fixture({
-                    roadmaps: 3,
-                    base: 'main',
-                    before: (dir) => write(dir, 'agents/roadmaps/road-to-2.md', CARRIER),
-                    after: (dir) => write(dir, 'agents/roadmaps/road-to-2.md', roadmap('R2')),
-                }),
-        },
+        ...carrierEstateCases({
+            fixture,
+            write,
+            remove: (dir, rel) => fs.rmSync(path.join(dir, rel)),
+            roadmap,
+            CARRIER,
+            DRAFT,
+        }),
         {
             name: 'a new open blocker with no claim → reject',
             expect: 'reject',
