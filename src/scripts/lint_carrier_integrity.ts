@@ -47,6 +47,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parseDeferredItems } from '../agent-src/scripts/archive_completed_roadmaps.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
@@ -150,6 +151,7 @@ function _locate(root: string, slug: string): { file: string; dir: 'active' | 'l
 }
 
 const OPEN_STEP_RE = /^[ \t]*-[ \t]*\[[ ][ \t]*\][ \t]/m;
+const CARRIER_STATUS_RE = /^status:[ \t]*carrier[ \t]*$/m;
 
 /**
  * The standing carry policy for one archived roadmap. See the module header for
@@ -198,6 +200,20 @@ export function carryProblems(
             continue;
         }
         const destText = fs.readFileSync(found.file, 'utf-8');
+        // A carrier exists to stay live. Archiving one is the terminal-archival
+        // transition that has no vocabulary yet, and it strands every item the
+        // carrier itself holds — none of which is an OPEN step, so the check
+        // below would not see it.
+        if (found.dir === 'archive' && CARRIER_STATUS_RE.test(destText)) {
+            problems.push({
+                cls: 'broken-destination',
+                detail:
+                    `destination \`${item.destination}\` is a \`status: carrier\` roadmap that has been ` +
+                    'archived — a carrier holds obligations whose triggers are unmet, so archiving it ' +
+                    'strands them. Terminal archival of a live carrier is not expressible yet and fails closed.',
+            });
+            continue;
+        }
         if (found.dir === 'archive' && OPEN_STEP_RE.test(destText)) {
             problems.push({
                 cls: 'broken-destination',
@@ -271,13 +287,17 @@ complexity: bounded
 function _receiver(backlink: string): string {
     return `---
 complexity: bounded
-status: carrier
 ${backlink}
 ---
 # Receiver
 
 Body.
 `;
+}
+
+/** A receiver that declares itself a carrier — used only where that is the point. */
+function _carrierReceiver(backlink: string): string {
+    return _receiver(backlink).replace('---\n# Receiver', 'status: carrier\n---\n# Receiver');
 }
 
 /**
@@ -362,6 +382,18 @@ export function selfTestCases(root: string): SelfTestCase[] {
             }),
         },
         {
+            name: 'a receiver that is itself a carrier and has been archived is rejected',
+            expect: 'reject',
+            run: build('carrier-archived-carrier-', (dir) => {
+                parent(dir);
+                _writeFixture(
+                    dir,
+                    'agents/roadmaps/archive/road-to-receiver.md',
+                    _carrierReceiver('parent_roadmap: road-to-parent'),
+                );
+            }),
+        },
+        {
             name: 'the receiver deleted entirely is rejected',
             expect: 'reject',
             run: build('carrier-deleted-', parent),
@@ -439,8 +471,8 @@ export function main(argv: string[]): number {
             return runSelfTest({
                 gate: 'lint_carrier_integrity',
                 cases: selfTestCases(_DEFAULT_ROOT),
-                minCases: 9,
-                minRejectCases: 5,
+                minCases: 10,
+                minRejectCases: 6,
             });
         } else {
             process.stderr.write(`lint_carrier_integrity: unknown argument ${JSON.stringify(arg)}\n`);
@@ -449,7 +481,18 @@ export function main(argv: string[]): number {
         }
     }
 
+    const ledger = new GateLedger('lint_carrier_integrity');
+    const walked = deadRoadmaps(root);
+    ledger.plan(walked);
     const { problems, scanned } = auditCarries(root);
+    const failed = new Set(problems.map((p) => p.source));
+    for (const rel of walked) {
+        if (failed.has(rel)) {
+            ledger.fail(rel, problems.find((p) => p.source === rel)?.detail ?? 'broken carry');
+        } else {
+            ledger.complete(rel);
+        }
+    }
     try {
         reportScanned({
             gate: 'lint_carrier_integrity',
@@ -460,6 +503,7 @@ export function main(argv: string[]): number {
     } catch (e) {
         if (e instanceof DeadScopeError) {
             process.stderr.write(`${e.message}\n`);
+            ledger.report();
             return 1;
         }
         throw e;
@@ -484,6 +528,7 @@ export function main(argv: string[]): number {
                 '    carried items back to open in the archived parent. A rename or a re-parent is\n' +
                 '    not expressible yet and fails closed on purpose.\n',
         );
+        ledger.report();
         return 1;
     }
 
@@ -500,6 +545,7 @@ export function main(argv: string[]): number {
         if (unannotated.length > 20) {
             process.stderr.write(`  … and ${String(unannotated.length - 20)} more.\n`);
         }
+        ledger.report();
         return 1;
     }
 
@@ -510,6 +556,7 @@ export function main(argv: string[]): number {
                 'every annotated carry resolves.\n',
         );
     }
+    ledger.report();
     return 0;
 }
 

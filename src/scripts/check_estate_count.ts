@@ -553,6 +553,14 @@ export function exemptionReason(text: string): string | null {
     return reason === '' ? null : reason;
 }
 
+/** True when `text` is a roadmap whose frontmatter declares `status: carrier`. */
+export function isCarrierText(text: string | null): boolean {
+    if (text === null) return false;
+    const fm = /^---\n([\s\S]*?)\n---/.exec(text);
+    if (fm === null) return false;
+    return /^status:[ \t]*carrier[ \t]*$/m.test(fm[1] ?? '');
+}
+
 /**
  * Classify the change's effect on the active roadmap tree.
  *
@@ -561,7 +569,22 @@ export function exemptionReason(text: string): string | null {
  * `later/road-to-x.md` → `road-to-x.md` is an un-parking and counts as an
  * addition. A top-level-to-top-level rename is neither.
  */
-export function classifyDiff(nameStatus: string, readFile: (rel: string) => string | null): OffsetLedger {
+export function classifyDiff(
+    nameStatus: string,
+    readFile: (rel: string) => string | null,
+    /**
+     * The file's content at the BASE ref, for paths this change removed.
+     *
+     * Needed because a deleted carrier cannot be read from the working tree,
+     * and its status is the whole question: deleting a roadmap normally earns an
+     * offset, and a carrier holds obligations lifted out of an already-archived
+     * parent, so paying a credit for removing one rewards the loss. Defaults to
+     * returning null, which reproduces the previous behaviour exactly — a caller
+     * that cannot supply a pre-image keeps the old scoring rather than silently
+     * getting a different answer.
+     */
+    readBase: (rel: string) => string | null = () => null,
+): OffsetLedger {
     const added: string[] = [];
     const offsets: string[] = [];
     const exempt: Array<{ file: string; reason: string }> = [];
@@ -574,8 +597,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
             const from = cols[1] ?? '';
             const to = cols[2] ?? '';
             if (isActiveTopLevel(from) && isDisposed(to)) {
-                offsets.push(from);
-                if (isParked(to)) parked.push(to);
+                if (!isCarrierText(readBase(from))) {
+                    offsets.push(from);
+                    if (isParked(to)) parked.push(to);
+                }
             } else if (isDisposed(from) && isActiveTopLevel(to)) {
                 added.push(to);
             }
@@ -586,7 +611,10 @@ export function classifyDiff(nameStatus: string, readFile: (rel: string) => stri
         if (status === 'A') {
             added.push(file);
         } else if (status === 'D') {
-            offsets.push(file);
+            // A carrier's removal is never an offset. See `readBase`.
+            if (!isCarrierText(readBase(file))) {
+                offsets.push(file);
+            }
         }
     }
     for (const file of added) {
@@ -777,13 +805,20 @@ export function evaluate(
         if (!diff.ok) {
             offsetSkipReason = `git diff against ${baseRef} failed — one-in-one-out not evaluated`;
         } else {
-            offsets = classifyDiff(diff.stdout, (rel) => {
-                try {
-                    return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
-                } catch {
-                    return null;
-                }
-            });
+            offsets = classifyDiff(
+                diff.stdout,
+                (rel) => {
+                    try {
+                        return fs.readFileSync(path.join(repoRoot, rel), 'utf-8');
+                    } catch {
+                        return null;
+                    }
+                },
+                (rel) => {
+                    const show = git(['show', `${baseRef}:${rel}`], repoRoot);
+                    return show.ok ? show.stdout : null;
+                },
+            );
         }
         const patch = git(
             ['diff', '--unified=0', '--find-renames', `${baseRef}...HEAD`, '--', ROADMAPS_REL],
@@ -919,6 +954,9 @@ function selfTest(): number {
 
     const roadmap = (name: string, extra = ''): string =>
         `# Roadmap: ${name}\n\n## Phase 1\n\n- [ ] **1.1** s\n${extra}`;
+
+    /** A `status: carrier` roadmap — excluded from the active count and never an offset. */
+    const CARRIER = `---\nstatus: carrier\n---\n# Roadmap: carrier\n\n## Phase 1\n\n- [~] **1.1** s\n`;
 
     /** An open blocker — no `Status: resolved` prefix, so it counts as open. */
     const BLOCKER = '\n## Blockers\n\n### Blocker: fixture\n\n- **Status:** open\n';
@@ -1123,6 +1161,40 @@ function selfTest(): number {
                     roadmaps: 3,
                     base: 'main',
                     after: (dir) => write(dir, 'agents/roadmaps/later/road-to-parked.md', roadmap('P')),
+                }),
+        },
+        {
+            // A carrier holds obligations lifted out of an already-archived
+            // parent. Paying an offset for removing one rewards the loss, so the
+            // deletion buys nothing and the added roadmap stays unpaid.
+            name: 'deleting a carrier does not offset a new roadmap → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, 'agents/roadmaps/road-to-carrier.md', CARRIER),
+                    after: (dir) => {
+                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-carrier.md'));
+                        write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N'));
+                    },
+                }),
+        },
+        {
+            // The control, and it is the half that proves the case above tests
+            // the carrier status rather than the deletion: an ordinary roadmap
+            // deleted in the same shape still offsets, so the gate accepts.
+            name: 'deleting an ordinary roadmap still offsets a new one → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 3,
+                    base: 'main',
+                    after: (dir) => {
+                        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-2.md'));
+                        write(dir, 'agents/roadmaps/road-to-new.md', roadmap('N'));
+                    },
                 }),
         },
         {

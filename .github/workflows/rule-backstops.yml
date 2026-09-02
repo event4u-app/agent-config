@@ -142,6 +142,13 @@ jobs:
       - name: code-comment-discipline (language, report and provenance comments)
         run: ./scripts-run src/scripts/lint_code_comments --base origin/main
 
+      # A `[~]` carried to a follow-up is validated once, when the parent is
+      # archived, by a sweep that then never sees the pair again — so the
+      # receiver could be deleted afterwards with nothing going red. This walks
+      # from the archived side, where the record survives.
+      - name: carrier-integrity (deferral carries out of archived roadmaps)
+        run: ./scripts-run src/scripts/lint_carrier_integrity
+
       # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
       # correction is always visible. Shipped guidance directing a silent
       # re-run or the concealment of a detected miss is a defect, not a style.

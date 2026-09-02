@@ -49,6 +49,15 @@ const PHASE_RE =
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\s*\n/;
 const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
+/**
+ * A carrier holds obligations deferred out of an archived parent. It is not
+ * schedulable work — every item in it has an unmet resumption trigger — and it
+ * has no `## Phase` headings by construction, so it is skipped exactly where a
+ * draft is. It differs from a draft in what protects it: a draft may be deleted
+ * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
+ * its receiver.
+ */
+const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
 
 const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
     'template.md',
@@ -90,6 +99,11 @@ function _stripQuotes(value: string): string {
 /** Mirror update_roadmap_progress.is_draft. */
 function is_draft(fm: Map<string, string>): boolean {
     return DRAFT_VALUES.has((fm.get('status') ?? '').toLowerCase());
+}
+
+/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
+function is_carrier(fm: Map<string, string>): boolean {
+    return CARRIER_VALUES.has((fm.get('status') ?? '').toLowerCase());
 }
 
 /** Mirror update_roadmap_progress.is_roadmap_candidate (POSIX path parts). */
@@ -168,7 +182,7 @@ function find_active_roadmaps(root: string): string[] {
             continue;
         }
         const text = fs.readFileSync(p, 'utf-8');
-        if (is_draft(parse_frontmatter(text))) {
+        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
             continue;
         }
         out.push(p);
@@ -345,6 +359,7 @@ export {
     CHECKBOX_RE,
     PHASE_RE,
     is_draft,
+    is_carrier,
     is_roadmap_candidate,
     parse_frontmatter,
     find_active_roadmaps,
