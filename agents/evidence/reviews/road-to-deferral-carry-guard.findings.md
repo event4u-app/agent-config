@@ -1,12 +1,12 @@
 # Findings: road-to-deferral-carry-guard
-<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: 7f769919b02c5204c801cd2222edfebf3cf7141c87d6b33657703053fdea0f24 | diff: 7e0aa018d4fafe22a0419f9968508ace74c45ac9 | reviewer: r2-fresh-subagent-road-to-deferral-carry-guard | prompt_hash: d8e58609ae90f5c97f72278154591e6ae014060a5126a2c5e3a0ae22a8572ecb -->
+<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: f2d4abe92af7d6db1ddb171e91634ae466a68ad8c30f548b3c17f6f27a3a748e | diff: 72a00e3573f965d9503ecd4cf05818addc5c8008 | reviewer: r2-fresh-subagent-road-to-deferral-carry-guard | prompt_hash: d8e58609ae90f5c97f72278154591e6ae014060a5126a2c5e3a0ae22a8572ecb -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-deferral-carry-guard"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-02 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 7e0aa018d4fafe22a0419f9968508ace74c45ac9
-  scope_hash: 7f769919b02c5204c801cd2222edfebf3cf7141c87d6b33657703053fdea0f24
+  diff_sha: 72a00e3573f965d9503ecd4cf05818addc5c8008
+  scope_hash: f2d4abe92af7d6db1ddb171e91634ae466a68ad8c30f548b3c17f6f27a3a748e
   roadmap: agents/roadmaps/archive/road-to-deferral-carry-guard.md
   roadmap_hash: 4a58eecfeb45b136dc56d89445acd24f984a02ee70ad2e5d14708c5da8b7c7a3
   ac_hash: dbcc8e1af9cae92ff6bc354ed981f99c836cf2004705c3ecf730ce9ac05a347a
