@@ -14,6 +14,8 @@
  * in a repository whose own module docstrings are long, cite evidence and
  * quote German user speech as data.
  */
+import { execFileSync } from 'node:child_process';
+import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -67,5 +69,45 @@ describe('scope', () => {
     it('skips declarations, vendored and generated trees', () => {
         for (const f of ['a.d.ts', 'node_modules/x/a.ts', 'dist/a.ts', 'vendor/a.php', 'a.md'])
             expect(isScannable(f)).toBe(false);
+    });
+});
+
+describe('lint_code_comments — the CLI self-test actually runs somewhere', () => {
+    it('drives the real binary and reports both floors as met', () => {
+        // Finding 1 of the completion review: CI runs this gate only in diff
+        // mode, which exits 0 on an empty diff, so nothing exercised the
+        // `--self-test` dispatch, the tmpdir/`--paths` wiring, or the exit-code
+        // mapping. A regression in that half shipped green.
+        let code = 0;
+        let stdout = '';
+        try {
+            stdout = execFileSync('./scripts-run', ['src/scripts/lint_code_comments', '--self-test'], {
+                cwd: path.resolve(__dirname, '..', '..'),
+                encoding: 'utf-8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+            });
+        } catch (e) {
+            const err = e as { status?: number; stdout?: string };
+            code = err.status ?? 1;
+            stdout = err.stdout ?? '';
+        }
+        expect(code).toBe(0);
+        expect(stdout).toContain('case(s) behaved');
+        expect(COMMENT_CASES.filter((c) => c.flags.length > 0).length).toBeGreaterThanOrEqual(8);
+    });
+
+    it('refuses to nest inside a self-test child', () => {
+        let code = 0;
+        try {
+            execFileSync('./scripts-run', ['src/scripts/lint_code_comments', '--self-test'], {
+                cwd: path.resolve(__dirname, '..', '..'),
+                encoding: 'utf-8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: { ...process.env, GATE_SELF_TEST_CHILD: '1' },
+            });
+        } catch (e) {
+            code = (e as { status?: number }).status ?? 1;
+        }
+        expect(code).toBe(2);
     });
 });

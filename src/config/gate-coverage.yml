@@ -2417,13 +2417,22 @@ gates:
       the consumer repository that prompted the gate: 530.
 
       SENSITIVITY WAS OBSERVED, not assumed: neutralising the German predicate
-      turns 4 of the 22 cases red and restoring it turns them green.
+      turns 4 of the 18 table cases red and restoring it turns them green. (The
+      earlier wording said "4 of the 22" and described the inline vitest corpus
+      that the fixture-table refactor replaced; a completion review caught the
+      stale denominator.)
 
       THE GATE ALSO CARRIES ITS OWN `--self-test` (18 cases, 9 rejecting),
       which drives the real binary rather than the imported classifier — argv
-      parsing, scan-scope assertion and exit codes included — so the gate
-      answers for its own discrimination in a consumer checkout where the test
-      suite is not installed. It is ONE table, not a second corpus: the cases
+      parsing, scan-scope assertion and exit codes included. It does NOT reach a
+      consumer checkout, and the earlier claim that it did was withdrawn after a
+      completion review: `runGateCli` spawns `<repoRoot>/node_modules/.bin/tsx`
+      and both `tsx` and `vitest` are devDependencies, `dist/scripts/` carries no
+      compiled twin, and `scripts-run` is not in `files[]` — so where the suite
+      is absent the self-test cannot run either, and where it runs the suite is
+      present. What it buys is real and narrower: it exercises the CLI half that
+      the vitest file cannot reach, and CI runs the gate only in diff mode,
+      which exits 0 on an empty diff. It is ONE table, not a second corpus: the cases
       live in `COMMENT_CASES`, exported by the gate, and the vitest file
       enumerates the same export against `scanText` while the self-test
       enumerates it against the CLI. A second table over one classifier would

@@ -461,7 +461,21 @@ Escape:  code-comment-allow <class|*> -- <reason>   (per line)
 `;
 
 export function main(argv: string[]): number {
-    if (argv.includes('--self-test')) return selfTest();
+    // `--help` wins, and the recursion guard is not decoration: `runGateCli`
+    // sets GATE_SELF_TEST_CHILD precisely so a child cannot re-enter the suite.
+    // Latent today because the child's argv is `--paths <file>`, but any later
+    // change that forwards the parent's argv would recurse 18-way per level.
+    if (argv.includes('--help') || argv.includes('-h')) {
+        process.stdout.write(HELP);
+        return 0;
+    }
+    if (argv.includes('--self-test')) {
+        if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
+            process.stderr.write('lint_code_comments: refusing to nest --self-test inside a self-test child\n');
+            return 2;
+        }
+        return selfTest();
+    }
     let base = 'origin/main';
     let root = path.resolve(path.dirname(_HERE), '..', '..');
     let reportOnly = false;
