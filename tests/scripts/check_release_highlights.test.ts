@@ -29,6 +29,7 @@ import {
     stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
+import { CURATED_HEAD_INSTRUCTION_COMMENT } from '../../src/scripts/_lib/release_material.js';
 
 const SHA = 'a'.repeat(40);
 
@@ -475,6 +476,30 @@ describe('§ 1.3 — the read is scoped to the section under release', () => {
         // Without this, "exits 0" above is equally satisfied by a gate that
         // reads nothing at all.
         expect(runWithSections(TARGET_MARKED, OLD_CLEAN)).toBe(1);
+    });
+
+    // ── roadmap § 2.2 — the leaked AUTHORING INSTRUCTION, a different
+    // mechanism from the marker above: an unpolished claim vs. a reminder to
+    // the releaser that was never release content. It needs its own fixture
+    // rather than riding on the marker check.
+    const INSTRUCTED_HEAD = [
+        '### Release highlights',
+        '',
+        CURATED_HEAD_INSTRUCTION_COMMENT,
+        '- **Behaviour changes:** the writer no longer emits its own instruction.',
+    ].join('\n');
+    const TARGET_INSTRUCTED = section('9.99.0', '2026-01-01', INSTRUCTED_HEAD);
+    const OLD_INSTRUCTED = section('9.98.0', '2025-12-01', INSTRUCTED_HEAD);
+
+    it('an instruction comment in the TARGET section refuses the release', () => {
+        expect(runWithSections(TARGET_INSTRUCTED, OLD_CLEAN)).toBe(1);
+    });
+
+    it('an instruction comment in a HISTORICAL section does not block the release', () => {
+        // Risk 1 of the roadmap, pinned: five released sections carry this
+        // comment today. A gate that read them would be permanently red.
+        expect(runWithSections(OLD_INSTRUCTED, TARGET_CLEAN)).toBe(0);
+        expect(runWithSections(TARGET_CLEAN, OLD_INSTRUCTED)).toBe(0);
     });
 });
 

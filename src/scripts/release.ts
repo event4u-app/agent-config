@@ -126,6 +126,7 @@ import {
 } from './_lib/release_highlights.js';
 import {
     NEXT_SECTION_RE,
+    RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
@@ -272,24 +273,7 @@ const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = HEAD_LABELS;
  * (`_lib/changelog_eras.ts`, 250 lines per era), so an unbounded head would
  * quietly consume it.
  */
-export const RELEASE_HEAD_CAP_LINES = 10;
-
-/**
- * The fallback value of a head line the span does not substantiate.
- *
- * `_none_` and not a placeholder token: where nothing was derived it is the
- * **true** answer, and a release that genuinely changed no defaults should say
- * so rather than carry an unfilled marker.
- *
- * It is a fallback and no longer a blanket default. Writing `_none_` into
- * every field made the generator assert five things it had not checked, and
- * `check_release_highlights` rejected exactly that assertion the moment the
- * span contradicted it — which for this package is every release, because every
- * release touches `src/rules/` or `src/scripts/schemas/`. Substantiated labels
- * are now pre-filled from the span (`_derive_head_prefill`), so the tool states
- * only what it can support and `_none_` means what it says.
- */
-const HEAD_DEFAULT = '_none_';
+export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
 
 /**
  * Pre-fill values for the curated head from the release span.
@@ -316,20 +300,21 @@ function _derive_head_prefill(prev: string | null): Record<string, string> {
 /**
  * Render the curated head. Emitted by the generator on every release so it
  * cannot be forgotten; edited by the maintainer before merge.
+ *
+ * **The authoring instruction is NOT emitted here** (2026-09-01, roadmap
+ * `road-to-publication-integrity-hard-fail` § Phase 2, Option A). This writer
+ * used to append `CURATED_HEAD_INSTRUCTION`, nothing removed it at release
+ * time, and it published twice in `package/CHANGELOG.md`. The reminder now
+ * rides in the release-PR body's PR-only region — never published — see
+ * `pr_body_from_section` in `_lib/release_material.ts`.
  */
 export function render_release_head(
     filled: Readonly<Record<string, string>> = {},
 ): string[] {
-    const lines: string[] = [
-        '### Release highlights',
-        '',
-        '<!-- Curated head: fill before merge, keep it under ' +
-            `${RELEASE_HEAD_CAP_LINES} lines, and leave \`${HEAD_DEFAULT}\` where it is ` +
-            'genuinely the answer. The generated log below is unchanged. -->',
-    ];
+    const lines: string[] = ['### Release highlights', ''];
     for (const label of RELEASE_HEAD_SECTIONS) {
         const value = (filled[label] ?? '').trim();
-        lines.push(`- **${label}:** ${value === '' ? HEAD_DEFAULT : value}`);
+        lines.push(`- **${label}:** ${value === '' ? RELEASE_HEAD_DEFAULT : value}`);
     }
     return lines;
 }

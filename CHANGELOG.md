@@ -14,6 +14,20 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > (`tests/lib/changelog_eras.test.ts`) forces an era split before the
 > current era grows past 250 lines.
 
+> **Retro-curation disposition, 2026-09-01** — roadmap
+> `road-to-publication-integrity-hard-fail`, blocker `b-retro-curation-scope`,
+> option (c). The `### Release highlights` heads of 14.9.0 through 14.13.0 were
+> written by the release generator and published without the editorial pass they
+> ask for. Two things were repaired: the generator's own authoring instruction,
+> which was never release content, is deleted from this file, and the writer no
+> longer emits it. The generator-derived head lines below are **preserved as
+> published** and deliberately not paraphrased — rewriting a derived claim is
+> editorial judgement two prior councils reserved, and a paraphrase of the
+> generator's own reason would be truthfully documented uselessness.
+> [`docs/archive/`](docs/archive/) is left untouched as historical record. The
+> annotated tag messages and the published GitHub Release bodies for 14.9.0
+> through 14.13.0 are **immutable** and cannot be repaired at all.
+
 ## [Unreleased]
 
 ### Changed
@@ -411,11 +425,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.13.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+
 ## [14.13.0](https://github.com/event4u-app/agent-config/compare/14.12.0...14.13.0) (2026-08-31)
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
 - **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 9acdc14, af0cf0b, e9f4b31, 6a5670b, 30a75c6, 7cb1d1d +6 more.
 - **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 728d147.
 - **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 2219e00, eb4550e, e9f4b31, 60e9582, c3b0123, 2170de4 +19 more.
@@ -649,7 +663,6 @@ Tests: 19887 (+2222 since 14.12.0)
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
 - **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 952e94b, cb5446e.
 - **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 10a4b2c.
 - **Security and correctness:** _auto-derived, rewrite before merge:_ security-scoped commits or fixes to executable surface in 1081512, 12f7477, b0e82fd, ca4adaa, 9de9ed4, 6e839d4 +2 more.
