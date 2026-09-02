@@ -7,10 +7,11 @@
  * and § 6 (exit-code contract). A divergence from that contract is a
  * validator bug, never a contract reinterpretation.
  *
- * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`
+ * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * (top level only — `archive/`, `skipped/`, `later/`, `stubs/` excluded, as
- * are `template.md` and `dashboard*`). `status: draft` frontmatter exempts a
- * file (reported as `draft-exempt`, still counted as scanned).
+ * are `template.md` and `dashboard*`). `status: draft` and `status: carrier`
+ * frontmatter exempt a file (reported as `draft-exempt`, still counted as
+ * scanned).
  *
  * Checks per ready file:
  *   1. `## Risk Register` section exists — missing = fail unless the
@@ -229,7 +230,7 @@ function _isSeparatorRow(line: string): boolean {
 }
 
 /**
- * § 1.2 — validate the risk table rows found in `bodyLines` (section body
+ * § 1.2 — validate the risk table rows found in `bodyLines` (section body  code-comment-allow report-comment -- a section marker in this gate's own numbered spec, not an analysis report
  * after the marker). `startLine` is the 1-based document line of the first
  * body line, used for violation line numbers. Returns violations; the caller
  * decides emptiness handling.
@@ -326,14 +327,21 @@ export function validateTable(
     return { headerFound, rowCount, violations };
 }
 
-/** `status: draft` in the YAML frontmatter block exempts a file. */
+/**
+ * `status: draft` — and `status: carrier` — in the frontmatter exempt a file.
+ *
+ * A carrier is not a plan. It holds obligations deferred out of an archived
+ * parent, each with an unmet resumption trigger, so a plan risk register for it
+ * would be manufactured rather than reported. Same category reason that exempts
+ * it from `check_roadmap_trackable`'s `## Phase` requirement.
+ */
 export function hasDraftStatus(text: string): boolean {
     const lines = _splitLines(text);
     if ((lines[0] ?? '').trim() !== '---') return false;
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i] as string;
         if (line.trim() === '---') return false;
-        if (/^status:\s*draft\s*$/.test(line)) return true;
+        if (/^status:\s*(?:draft|carrier)\s*$/.test(line)) return true;
     }
     return false;
 }

@@ -506,7 +506,7 @@ export function skillTokensExact(root: string): boolean {
     return measureSkillEstate(root).skill_description_tokens !== null;
 }
 
-/** `agents/roadmaps/<name>.md` — the active top level, never a subdirectory. */  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
+/** `agents/roadmaps/<name>.md` — the active top level. code-comment-allow provenance-comment -- operand, not provenance */
 function isActiveTopLevel(rel: string): boolean {
     const norm = rel.split(path.sep).join('/');
     if (!norm.startsWith('agents/roadmaps/') || !norm.endsWith('.md')) {

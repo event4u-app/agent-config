@@ -1,5 +1,5 @@
 ---
-complexity: bounded
+complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
@@ -7,12 +7,12 @@ owner: maintainer
 review_by: 2027-03-31
 relates:
   - slug: road-to-council-topology-evidence-followups
-    relation: guards
+    relation: extends
     note: >
       That file is the worked instance: 38 obligations carried out of an
       archived parent, resting on a receiver no gate protects. This roadmap
       builds the protection and reclassifies it last.
-estate_offset_exempt: "Not a new plan. This is agents/roadmaps/stubs/road-to-deferral-carry-guard.md promoted in place -- the same file, moved out of stubs/ -- and it archives in this same change once its phases close, so the active count returns to where it started. Promotion is authorised by AI council verdict 3Q (2026-09-02, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, deep, peer-review, blind chairman, 2/2 present needed 1, subscription transport, billable=0, $0.0000), which held that the carrier -- not the receiver -- is the thing to complete and archive, and that leaving the carrier mechanically unprotected is an integrity defect rather than optional hygiene."
+estate_offset_exempt: "Not a new plan. This is the former stubs/ entry of the same name, promoted in place -- the same file, moved out of stubs/ -- and it archives in this same change once its phases close, so the active count returns to where it started. Promotion is authorised by AI council verdict 3Q (2026-09-02, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, deep, peer-review, blind chairman, 2/2 present needed 1, subscription transport, billable=0, $0.0000), which held that the carrier -- not the receiver -- is the thing to complete and archive, and that leaving the carrier mechanically unprotected is an integrity defect rather than optional hygiene."
 estate_growth_exempt: "active_roadmaps 2 -> 3 for the length of this change and back to 2 at its end, because the promoted file archives in the same PR. The receiver it protects is status: carrier and excluded from the active count by construction, so the net estate is unchanged. The growth is the cost of closing a defect the tree can state precisely: deleting a live deferral receiver reds nothing today and scores as an estate CREDIT (check_estate_count.ts:490-534), while 38 obligations rest on that file continuing to exist."
 ---
 # Road to guarding a deferral carry after the parent is archived
@@ -69,7 +69,7 @@ memory-twin drift the parent roadmap of the receiver already warned about.
 
 ## Phase 1 — a standing carry validator
 
-- [ ] **1.1 Add `lint_carrier_integrity`.** Walk every roadmap under
+- [x] **1.1 Add `lint_carrier_integrity`.** Walk every roadmap under
       `agents/roadmaps/archive/` and `agents/roadmaps/skipped/`, parse each for
       `deferred-resolution:` annotations, and call the EXISTING
       `deferralProblems` export
@@ -80,7 +80,7 @@ memory-twin drift the parent roadmap of the receiver already warned about.
       via `reportScanned` on both the green and the red path.
       verify: `./scripts-run src/scripts/lint_carrier_integrity` exits 0 on the
       clean tree and prints a non-zero `scanned:` count.
-- [ ] **1.2 Prove it discriminates, in both directions.** A `--self-test`
+- [x] **1.2 Prove it discriminates, in both directions.** A `--self-test`
       through `_lib/gate_self_test.ts` with at least one rejecting case per
       failure mode the walk can see: destination missing, destination under
       `archive/`, back-link absent, back-link naming a different parent. Plus
@@ -89,7 +89,7 @@ memory-twin drift the parent roadmap of the receiver already warned about.
       exits 0, reports at least 5 cases with at least 4 rejecting, and
       `check_gate_coverage`'s `gate-self-test:registered-non-adopters` count
       does not grow.
-- [ ] **1.3 Register it everywhere a gate has to be registered.** Six surfaces,
+- [x] **1.3 Register it everywhere a gate has to be registered.** Six surfaces,
       in the order they bite: `src/config/gate-coverage.yml` row with a
       CI-identical `argv` and a `min_scanned` floor below the live count; that
       file's header prose numbers; the gate-script population figure the
@@ -104,7 +104,7 @@ memory-twin drift the parent roadmap of the receiver already warned about.
 
 ## Phase 2 — the `carrier` status, and the accounting that must know it
 
-- [ ] **2.1 Teach the status vocabulary one new value.** Add `carrier` beside
+- [x] **2.1 Teach the status vocabulary one new value.** Add `carrier` beside
       `draft` in the enumerations that decide whether a roadmap is schedulable
       work: `update_roadmap_progress.ts:99` (`DRAFT_VALUES`, which gates
       `collect()` and therefore the dashboard and `/roadmap:process-*`) and
@@ -116,7 +116,7 @@ memory-twin drift the parent roadmap of the receiver already warned about.
       verify: `./scripts-run src/agent-src/scripts/update_roadmap_progress` does
       not list the carrier, and `./scripts-run src/scripts/check_roadmap_trackable`
       is green with it present.
-- [ ] **2.2 Stop the estate paying for the deletion.** `classifyDiff`
+- [x] **2.2 Stop the estate paying for the deletion.** `classifyDiff`
       (`src/scripts/check_estate_count.ts:490-534`) scores removing a roadmap as
       an offset. A `status: carrier` file must score as neither an offset nor an
       active-count member: deleting it earns zero credit, so the only signal
@@ -127,13 +127,13 @@ memory-twin drift the parent roadmap of the receiver already warned about.
 
 ## Phase 3 — reclassify the receiver, last
 
-- [ ] **3.1 Flip `road-to-council-topology-evidence-followups` to
+- [x] **3.1 Flip `road-to-council-topology-evidence-followups` to
       `status: carrier`.** Only after Phases 1 and 2 are green, per the council's
       ordering. Update its § Unguarded-carrier gap to state what now guards it
       and what still does not.
       verify: the frontmatter reads `status: carrier`, Phase 1's gate is green,
       and the dashboard does not list it.
-- [ ] **3.2 Record what stays deferred.** A stub for the transition vocabulary —
+- [x] **3.2 Record what stays deferred.** A stub for the transition vocabulary —
       rename, re-parent, split, onward carry, partial resolution,
       carrier-to-carrier transfer — stating that unsupported transitions fail
       closed today and that the vocabulary arrives when a second carrier
@@ -225,17 +225,17 @@ kernel rules, so `block_kernel_rule_writes` never applies.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — deleting `agents/roadmaps/road-to-council-topology-evidence-followups.md`
+- [x] AC-1 — deleting `agents/roadmaps/road-to-council-topology-evidence-followups.md`
       makes a gate RED. Proven by the deletion, the red, and the restore — not by
       reading the code.
-- [ ] AC-2 — removing the `parent_roadmap:` back-link from that file, or
+- [x] AC-2 — removing the `parent_roadmap:` back-link from that file, or
       renaming it, makes the same gate red.
-- [ ] AC-3 — the carrier does not appear on `agents/roadmaps-progress.md` and is
+- [x] AC-3 — the carrier does not appear on `agents/roadmaps-progress.md` and is
       not offered by `/roadmap:process-*`, while `check_roadmap_trackable` stays
       green with it present.
-- [ ] AC-4 — deleting a `status: carrier` roadmap scores zero estate credit,
+- [x] AC-4 — deleting a `status: carrier` roadmap scores zero estate credit,
       asserted in `check_estate_count`'s own case table.
-- [ ] AC-5 — the transition vocabulary that stays out of scope is recorded in a
+- [x] AC-5 — the transition vocabulary that stays out of scope is recorded in a
       stub, and unsupported transitions fail closed today rather than being
       inferred.
 
