@@ -60,8 +60,32 @@ const NEXT_H2_RE = /^##[ \t]+\S/m;
 /** The blocker whose disposition decides whether this capability is obtainable. */
 export const MERGE_AUTHORITY_BLOCKER_ID = 'merge-authority';
 
-/** The roadmap that owns the blocker entry, repo-relative. */
-export const MERGE_AUTHORITY_ROADMAP = 'agents/roadmaps/road-to-harness-promotion-bridge.md';
+/**
+ * The roadmap that owns the blocker entry, repo-relative.
+ *
+ * **It is in `archive/` since 2026-09-01, and that is correct rather than
+ * stale.** The roadmap closed at its PR boundary once `blocker: merge-authority`
+ * was settled — `Status: resolved`, `Disposition: refused` — and the archival
+ * sweep rewrote this constant itself, since it rewrites inbound
+ * `agents/roadmaps/<x>.md` references when it moves a file. An archived roadmap
+ * is a permanent tracked record, so the settled decision stays readable.
+ *
+ * **Nothing about the refusal weakened in the move.** `refused` is not
+ * `resolved`, so `isRefusingStatus` is true and the capability is unobtainable
+ * exactly as it was while the blocker read `open`. And if this path ever stops
+ * resolving, `readMergeAuthorityStatus` returns `roadmap-unreadable`, which is
+ * also refusing — every failure mode of this pointer fails closed.
+ *
+ * **What a future GRANT would need, named rather than left to be discovered.**
+ * Flipping the disposition would mean editing an archived roadmap, which is a
+ * poor home for a live authority record. The grant path is an owner ruling in
+ * `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md`
+ * § Decision 3, and wiring this reader to that record instead of to a roadmap is
+ * the change that should accompany it. It is deliberately NOT made here: it
+ * would be a redesign of the guarded capability on a change whose whole point is
+ * that the capability does not move.
+ */
+export const MERGE_AUTHORITY_ROADMAP = 'agents/roadmaps/archive/road-to-harness-promotion-bridge.md';
 
 /**
  * The source tree a candidate may never be written into.

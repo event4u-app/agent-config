@@ -25,6 +25,8 @@
  */
 import { spawnSync } from 'node:child_process';
 
+import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
+
 /** The five curated labels, in the order an operator reads them. */
 export const HEAD_LABELS: readonly string[] = [
     'Behaviour changes',
@@ -56,7 +58,7 @@ export const HEAD_NONE = '_none_';
  *
  * **Instructing authority:** the maintainer's closing instruction in the
  * 2026-09-a inbox round, carried into
- * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1.
+ * `agents/roadmaps/archive/road-to-publication-integrity-hard-fail.md` § Phase 1.
  *
  * Nothing about the marker's own shape changes here — it is still one
  * definition, still shared with the generator that writes it.
@@ -317,13 +319,18 @@ export function render_derived_head_values(
  * decision to publish; this function only answers whether that text is
  * publishable.
  *
- * **Marker-only today, and the omission is deliberate rather than forgotten.**
- * The generator's authoring comment (`<!-- Curated head: fill before
- * merge…`) is the OTHER published-integrity defect and is NOT checked here:
- * the generator still writes it into every section it cuts, so refusing on it
- * would red every release on its first run — Risk 1 of the roadmap, reproduced
- * exactly. Roadmap § 2.1 has to land first, and it is open on a design fork.
- * See `agents/evidence/analysis/publication-integrity-phase2-fork.md`.
+ * **Two markers since 2026-09-01, and the second one had to wait for a writer
+ * change.** This function used to check `DERIVED_MARKER` only, and said so:
+ * the generator still wrote its authoring comment into every section it cut,
+ * so refusing on that comment would have redded every release on its first run
+ * — Risk 1 of the roadmap, reproduced exactly. Roadmap § Phase 2 Option A
+ * removed the emission (`render_release_head` in `release.ts`), which is what
+ * makes refusing on it safe. The order was forced and it is the reason the
+ * check arrives second rather than late.
+ *
+ * `CURATED_HEAD_INSTRUCTION` is a named sentinel imported from the module that
+ * defines it — never a shape match over comment prose, which would reject
+ * unrelated legitimate comments and miss this one after a reword.
  */
 export function publication_blockers(sectionBody: string, version: string): string[] {
     const out: string[] = [];
@@ -332,6 +339,14 @@ export function publication_blockers(sectionBody: string, version: string): stri
             `the ${version} section still carries \`${DERIVED_MARKER}\` — the generator's ` +
                 'draft head, not a curated claim. Rewrite those line(s) on ' +
                 `${'`main`'} and re-run.`,
+        );
+    }
+    if (sectionBody.includes(CURATED_HEAD_INSTRUCTION)) {
+        out.push(
+            `the ${version} section still carries the authoring instruction ` +
+                `(\`${CURATED_HEAD_INSTRUCTION}\`) — a reminder to the releaser, not ` +
+                'release content, and `CHANGELOG.md` is published to npm. Delete that ' +
+                'comment line from the section and re-run.',
         );
     }
     return out;

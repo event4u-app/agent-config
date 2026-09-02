@@ -38,7 +38,7 @@
  * **Instructing authority:** the maintainer, in the closing instruction of the
  * 2026-09-a inbox round, requiring that the release-placeholder defect be taken
  * into a roadmap and fixed. Carried into
- * `agents/roadmaps/road-to-publication-integrity-hard-fail.md` § Phase 1, which
+ * `agents/roadmaps/archive/road-to-publication-integrity-hard-fail.md` § Phase 1, which
  * is the record of this change.
  *
  * **What did NOT change.** The read stays scoped to the section under release
@@ -74,7 +74,10 @@ import {
     previous_release_tag,
     stale_draft_labels,
 } from './_lib/release_highlights.js';
-import { extract_changelog_section } from './_lib/release_material.js';
+import {
+    CURATED_HEAD_INSTRUCTION,
+    extract_changelog_section,
+} from './_lib/release_material.js';
 import { assertScanned, assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -206,6 +209,33 @@ export function main(argv: readonly string[]): number {
     if (!section) {
         process.stderr.write(`CHANGELOG carries no section for ${version}\n`);
         return 2;
+    }
+    // A LEAKED AUTHORING INSTRUCTION REFUSES THE RELEASE (roadmap § 2.2).
+    //
+    // A different mechanism from the marker check below: that one catches an
+    // unpolished claim, this one catches a reminder to the releaser that was
+    // never meant to be release content at all. `CHANGELOG.md` is the bare
+    // entry in `package.json` `files`, so a comment surviving here is
+    // published to npm — it did, twice, before Option A stopped the writer
+    // emitting it.
+    //
+    // SAME SCOPE as the marker check, and for the same reason: `section` is
+    // the ONE section `extract_changelog_section` cut for `--version`. A
+    // historical section carrying the identical comment is not read here and
+    // does not block this release. Detection is the named sentinel, never a
+    // shape match over comment prose.
+    if (section.body.includes(CURATED_HEAD_INSTRUCTION)) {
+        process.stderr.write(
+            `❌  the ${version} section still carries the generator's authoring instruction ` +
+                `(\`${CURATED_HEAD_INSTRUCTION}\`).\n` +
+                '    It is a reminder to the releaser, not release content, and CHANGELOG.md ' +
+                'is published to npm.\n' +
+                `    Delete that comment line from the ${version} section. Only that section is ` +
+                'read; historical\n' +
+                '    sections carrying the same comment are out of scope and do not block this ' +
+                'release.\n',
+        );
+        return 1;
     }
     const curated = parse_curated_head(section.body);
     if (!curated) {

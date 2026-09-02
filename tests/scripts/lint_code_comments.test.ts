@@ -24,6 +24,7 @@ describe('de-comment — must fire', () => {
             .toContain('de-comment');
     });
 
+<<<<<<< HEAD
     it('flags a block-comment continuation carrying no leading star', () => {
         // The case this gate MISSED on its first day, in a consumer repository:
         // a `/* … */` block whose continuation lines are indented prose with no
@@ -47,6 +48,8 @@ describe('de-comment — must fire', () => {
             .toContain('de-comment');
     });
 
+=======
+>>>>>>> origin/main
     it('flags a German line whose only umlaut sits in ordinary prose', () => {
         expect(classes('// Die Schriftstufen der kompakten Datenoberfläche\n'))
             .toContain('de-comment');
@@ -84,6 +87,7 @@ describe('de-comment — must NOT fire', () => {
         expect(classes(src)).not.toContain('de-comment');
     });
 
+<<<<<<< HEAD
     it('stays silent on English code AFTER a block comment closes', () => {
         // The other half of the block-state fix: the state must be released on
         // the closing delimiter, or every line of the file after the first
@@ -103,6 +107,8 @@ describe('de-comment — must NOT fire', () => {
             .not.toContain('de-comment');
     });
 
+=======
+>>>>>>> origin/main
     it('stays silent on plain English prose', () => {
         expect(classes('// The cap is a stated default, not a measured optimum.\n')).toEqual([]);
     });

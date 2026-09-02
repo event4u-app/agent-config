@@ -87,7 +87,7 @@ import {
     PromotionEvidenceError,
     parsePromotionEvidence,
 } from './_lib/promotion_evidence.js';
-import { MERGE_AUTHORITY_ROADMAP } from './_lib/promotion_capability.js';
+import { MERGE_AUTHORITY_ROADMAP, readMergeAuthorityStatus } from './_lib/promotion_capability.js';
 import { assertNotSemanticNoOp, isSemanticNoOp, SemanticNoOpError } from './_lib/semantic_noop.js';
 import {
     RECIPES,
@@ -1037,14 +1037,23 @@ function verbPromote(argv: readonly string[]): number {
     } catch (e) {
         gate = (e as Error).message;
     }
+    // READ the status, never assert it. This line said `is OPEN` as a literal,
+    // and on 2026-09-01 the blocker closed as `refused` — at which point the
+    // refusal was still correct and its stated reason was not. Reading keeps the
+    // two from diverging again, and every value the reader can return is a
+    // refusing one, so no branch here can print a grant.
+    const blockerStatus = readMergeAuthorityStatus();
     process.stderr.write(
         `evolution_lab: promote REFUSED for ${record.id}\n` +
             `  lifecycle gate: ${gate}\n` +
-            `  blocker: merge-authority is OPEN on ${path.basename(MERGE_AUTHORITY_ROADMAP, '.md')}.\n` +
+            `  blocker: merge-authority reads ${blockerStatus.toUpperCase()} on ` +
+            `${path.basename(MERGE_AUTHORITY_ROADMAP, '.md')}.\n` +
             '    Phases 1-6 are legal because they promote nothing (AI council 2026-08-29,\n' +
-            '    anthropic + openai, 2/2). Phase 7 stays gated: granting merge authority\n' +
-            '    weakens a human-in-the-loop guarantee and refusing it settles ADR-239\n' +
-            '    Decision 3, and both are owner-reserved.\n' +
+            '    anthropic + openai, 2/2). Phase 7 was gated on this blocker; on 2026-09-01\n' +
+            '    the AI council settled ADR-239 Decision 3 in the REFUSING direction, scoped\n' +
+            '    to PREAUTHORIZED authority, and the blocker closed as `refused`. Only\n' +
+            '    `Status: resolved` AND `Disposition: granted` mint the capability, so a\n' +
+            '    refusal keeps this verb shut exactly as an open blocker did.\n' +
             '  Promotion into canonical agent-config remains a named human act performed\n' +
             '  outside this tool. This verb will not perform it.\n',
     );

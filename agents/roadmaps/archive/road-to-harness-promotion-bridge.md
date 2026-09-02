@@ -55,6 +55,123 @@ and at least one RETIRE path has been exercised.
 
 None of it may start while the gate below is open.
 
+**AMENDED 2026-09-01 (drain run 15) — the goal above is the goal of the WORK,
+and the work moved. This roadmap's own completion claim is now narrower and is
+stated in § Disposition 2026-09-01 immediately below: it ends at a created,
+validated, merge-ready pull request. The sentence above is kept unedited
+because it is what this file promised while it carried Phase 7, and the
+difference between that promise and what this file delivered is exactly what a
+later reader needs to see.**
+
+## Disposition 2026-09-01 (drain run 15) — closed at the PR boundary
+
+**This roadmap is CLOSED. Its delivery boundary is a created, validated,
+merge-ready pull request, and it claims nothing beyond that. The post-PR half —
+Phase 7's execution, AC-9, and the merge half of step 0.8 — is carried whole
+into [`road-to-post-pr-promotion-workflow`](later/road-to-post-pr-promotion-workflow.md),
+a separately named manual workflow under `agents/roadmaps/later/` that no
+roadmap automation and no autonomy setting can reach.**
+
+*AI council 2026-09-01 (drain run 15), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. The question and both seat responses are local-only and
+are deliberately not cited by path — `agents/runtime/council/` is gitignored and
+auto-pruned, so per `no-roadmap-references` the text relied on is inlined here.*
+
+**The question and the options.** Whether `blocker: merge-authority` is
+resolvable at all under the maintainer's standing instruction — *"every open
+question, decision, or blocker is answered by the AI Council — never by me; the
+council's recorded decision substitutes for user sign-off"* — with the delivery
+boundary fixed at *"one PR per roadmap"*. Options: **4A** activate merge
+authority · **4B** record it terminally unresolvable and leave this roadmap open
+· **4C** settle ADR-239 § Decision 3 **negatively** and re-scope so the roadmap
+closes at the PR boundary.
+
+**Verdict: 4C, convergent, after one seat moved from 4B.** The load-bearing
+reasoning, quoted:
+
+> *"'Settling ADR-239 Decision 3' doesn't require activating merge authority —
+> it can be settled in the 'no' direction. The council can record: 'For this
+> workflow, merge authority remains inert; merging is a post-PR manual operation
+> requiring same-turn explicit user confirmation per
+> `non-destructive-by-default`.' That settles the decision without lowering the
+> floor."*
+
+> *"The owner also permits council re-scoping with written rationale. A negative
+> Decision 3 plus a faithful redesign respects all three rules."*
+
+**The counter-argument, actively defeated rather than ignored.** *"Re-scoping
+could become cosmetic closure: moving Phase 7 elsewhere and declaring success
+may silently discard the roadmap's original outcome. That would violate
+'legitimate gate closure'."* The verdict made ten preservation obligations a
+**condition** of 4C, with an explicit fallback: *"if those obligations cannot be
+preserved in an enforceable tracked location, then 4C is unavailable and the
+fallback must be 4B. Merely deleting Phase 7 or weakening its acceptance
+criteria would not qualify as legitimate re-scoping."*
+
+### The ten preservation conditions, and where each is discharged
+
+| # | Condition | Discharged |
+|---|---|---|
+| 1 | `--merge` and the `/pr:merge` merge step remain inert | Untouched by this change — no file under `src/domains/git/pr/merge/` or `src/domains/roadmap/` was edited. ADR-239 § Settlement restates the inertness rather than lifting it |
+| 2 | No standing instruction and no council record is represented anywhere as same-turn merge confirmation | Stated negatively in three places: ADR-239 § Settlement § What this settlement does NOT reach item 4; the receiver's § The Hard Floor on this file; and the `Disposition` field of `### blocker: merge-authority` |
+| 3 | The completion claim ends at a created, validated, merge-ready PR | This section's opening paragraph, and the amendment to § Goal above. No artefact in this change claims more |
+| 4 | Phase 7 becomes a separately named post-PR workflow awaiting explicit user confirmation | `agents/roadmaps/later/road-to-post-pr-promotion-workflow.md` — separately named, and in `later/`, which `collect()` excludes and `/roadmap:process-*` therefore never sees |
+| 5 | Prerequisites, validation, rollback expectations, acceptance criteria and ownership stay recorded | Receiver §§ Prerequisites (5 items, incl. the route-1 discharge and its named residual), Rollback expectations (5 items), Ownership (3 items), Phase 7 with all seven `verify:` clauses verbatim, and AC-9 with all five prior audits verbatim |
+| 6 | A traceable handoff from the closed roadmap to the deferred workflow | `<!-- deferred-resolution: carried-to=road-to-post-pr-promotion-workflow -->` on 0.8 and on AC-9 here; `parent_roadmap: road-to-harness-promotion-bridge` plus a `relates:` row there. **Machine-checked in both directions** — `deferralProblems` refuses this roadmap's archival unless the receiver exists, is live, and carries the back-link |
+| 7 | 0.8 is rewritten as a PR-boundary handoff, never falsely marked as an executed merge | § Phase 0, **RE-SCOPED 2026-09-01 (drain run 15)** — stays `[~]`, with three independent reasons why `[x]` would be false and why `[-]` is unavailable |
+| 8 | No artefact claims the production branch was merged | No merge was performed and none is claimed. `git log --first-parent origin/main` is unchanged by this branch; the deliverable is one pull request |
+| 9 | The re-scoped Phase 7 states the Hard-Floor sentence, is unreachable by roadmap automation or any autonomy setting, and surfaces as a discrete manual step | Receiver § The Hard Floor on this file — the sentence verbatim, plus the four restatements (no automation, no autonomy setting, discrete manual steps, no record is confirmation). Unreachability is mechanical, not conventional: `later/` is excluded from `collect()` |
+| 10 | The ADR-239 § Decision 3 settlement is recorded in the ADR itself | `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md` § Settlement of § Decision 3 — appended, not a rewrite, with the scoping caveat, the council metadata, the prior contradicting verdict and the falsifier |
+
+**The fallback was NOT taken.** All ten are preserved in tracked files, six of
+them enforced by a mechanism rather than by prose (conditions 4, 6 and 9 by
+`deferralProblems` and `collect()`; conditions 1 and 2 by `lint_promotion_paths`
+R0 and `acquirePromotionCapability`, which still refuse; condition 10 by the ADR
+gates). 4B remained available throughout and was not needed.
+
+### The prior contradicting verdict, recorded rather than smoothed
+
+**The drain-run-14 council of 2026-09-01 reached the opposite conclusion about
+council authority, and this section does not pretend otherwise.** It returned
+**2C — the `merge-authority` blocker is TERMINALLY OWNER-RESERVED**, on the
+ground that *"an agent council cannot amend the boundary of its own authority"*,
+and specifically corrected the argument that refusal is the safe direction:
+*"permanently declaring that only humans may promote still settles the same
+governance boundary."*
+
+**What changed between the two rounds is the question, not the answer to it.**
+Drain 14 was asked whether the **authority** was council-decidable. Drain 15 was
+asked whether the **delivery boundary of this roadmap** could be re-cut so the
+authority question stops gating it — and drain 13 and drain 14 both held, in as
+many words, that scope questions of exactly that shape ARE council-decidable:
+*"recording a boundary is within council authority"*, and *"the disposition of
+this roadmap's two open items … are scope and evidence questions the council may
+answer."*
+
+**The residual, stated falsifiably so a later reader can act on it.** Under
+drain 14's 2C, writing **any** refusal into ADR-239 — including the scoped one —
+is the owner-reserved act, and this change performed it. Under drain 15's 4C, a
+workflow-scoped refusal that grants nothing, removes no human capability and
+lowers no floor is a boundary record. **This run took 4C and states the
+falsifier:** if the owner rules that 2C stands and reaches a scoped refusal,
+ADR-239 § Settlement is void, `blocker: merge-authority` reopens, this roadmap
+returns to the active tree with 0.8 and AC-9 restored, and nothing in this
+change is written so as to make that harder — the ADR's general decision-table
+row is deliberately left `open`, so the reversal costs one edit rather than a
+reconstruction.
+
+### What this disposition does NOT do
+
+It does not grant merge authority. It does not perform a merge. It does not
+close 0.8, which stays `[~]`. It does not close, descope or weaken AC-9, which
+stays `[~]` and transfers whole. It does not revert and does not upgrade the
+seven Phase 7 `[x]` marks, which travel to the receiver carrying their
+PROVISIONAL status intact. And it does not touch the named R3 residual of the
+carried blocking condition, which remains unowned and is not claimed as covered
+anywhere.
+
 ## Resume condition
 
 > **Resume when:** ADR-239 § Decision 3 is settled by the owner in a way that
@@ -333,7 +450,7 @@ The condition's verbatim origin block, carried out of the parent's Phase 0 on
 
 ## Phase 0 — Merge authority (carried from the parent)
 
-- [~] **0.8 Merge authority resolved.** Deferred: owner decision, see Blockers. <!-- blocked-by: merge-authority -->
+- [~] **0.8 Merge authority resolved.** Deferred: owner decision, see Blockers. <!-- deferred-resolution: carried-to=road-to-post-pr-promotion-workflow -->
 
 **Transferred from `road-to-governed-harness-evolution` Phase 0 on 2026-08-31,
 still `[~]`, still deferred, still owned by the maintainer.** The words are
@@ -397,6 +514,50 @@ criterion or a step's scope. 0.8 is therefore neither closed nor descoped nor
 cancelled. The full disposition, its two honest downgrades, and the mechanism
 finding that makes a descope into `agents/roadmaps/stubs/` illegal are in
 § Blockers under `### blocker: merge-authority`.
+
+**RE-SCOPED 2026-09-01 (drain run 15) — 0.8 IS NOW A PR-BOUNDARY HANDOFF. It
+stays `[~]`. It is NOT marked complete, and no artefact in this change claims a
+merge occurred.**
+
+*AI council 2026-09-01 (drain run 15), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Verdict **4C**, convergent, after one seat moved from
+4B. The question and both seat responses are local-only and are deliberately
+not cited by path — council artefacts are gitignored and auto-pruned — so the
+substance is inlined here and in ADR-239 § Settlement.*
+
+**What 0.8 now says, in one sentence.** This roadmap's delivery ends at a
+**created, validated, merge-ready pull request**; the merge itself is a
+post-PR manual operation that requires same-turn explicit user confirmation per
+[`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+Hard Floor, and it lives in
+[`road-to-post-pr-promotion-workflow`](later/road-to-post-pr-promotion-workflow.md)
+under `agents/roadmaps/later/`, where no roadmap automation and no autonomy
+setting can reach it.
+
+**Why it is still `[~]` and not `[x]`.** Three independent reasons, any one of
+which is sufficient:
+
+1. **The step's text is not satisfied.** *"Merge authority resolved"* is
+   satisfied by a **grant**; what happened is a scoped **refusal**, and the
+   Resume condition at the head of this file binds the refusal branch in as
+   many words — *"do not weaken, cancel, retire, or mark complete any
+   transferred step or acceptance criterion"*.
+2. **Marking a transferred step complete is forbidden even on a settled
+   refusal.** The 2026-08-31 council wrote that Resume condition precisely to
+   forbid a pre-authorised closure on refusal, and the 2026-09-01 (drain run
+   14) council reaffirmed that a council may record a boundary but may not
+   change a step's scope.
+3. **`[x]` would be false.** No merge authority was granted, no merge occurred,
+   and no production branch was merged. A green box here would assert all
+   three.
+
+**Why it is not `[-]`.** `[-]` means CANCELLED and is owner-reserved. Nothing
+here is cancelled: the post-PR half is carried whole into the receiver named
+above, with its prerequisites, validation, rollback expectations, acceptance
+criterion and ownership intact, and the carry is machine-checked in both
+directions by `deferralProblems`.
 
 
 ## Phase 7 — Promotion bridge and the lifecycle after it
@@ -496,6 +657,22 @@ finding that makes a descope into `agents/roadmaps/stubs/` illegal are in
 > from never having been considered. Reverting the seven marks remains an owner
 > act, exactly as 1C says.
 
+
+> **TRANSFERRED 2026-09-01 (drain run 15) — the seven steps below travel to
+> [`road-to-post-pr-promotion-workflow`](later/road-to-post-pr-promotion-workflow.md)
+> CARRYING THEIR PROVISIONAL STATUS INTACT.** They are reproduced there verbatim,
+> together with this gate header, so the reading above governs them in their new
+> home exactly as it governs them here. They are **not** upgraded to unqualified
+> closure and they are **not** reverted: the drain-14 council that was asked
+> whether the 1C ruling should now be executed as a reversion **diverged**, and a
+> divergent council carries no mandate. Reverting them remains an owner act.
+>
+> **They stay `[x]` in THIS file as well, and the reason is that they are true
+> here.** Each is closed on a refusal or a fixture exercise that was run and
+> watched go red and green again; none required a promotion to succeed. What is
+> provisional is the *scope* reading — whether closing a Phase 7 step under the
+> then-open blocker was legitimate — and that reading is the owner's, unchanged
+> by the re-scope.
 
 - [x] **7.1 One evidence package per promotion, in the fuller form.** The master
       adopted a 9-field package; the skipped parent's has 14, and the five extra
@@ -675,7 +852,12 @@ finding that makes a descope into `agents/roadmaps/stubs/` illegal are in
 
 ### blocker: merge-authority
 
-- **Status:** open — **SCOPED 2026-08-29, and it is divisible in the same shape
+- **Status:** resolved — **SETTLED 2026-09-01 (drain run 15) IN THE REFUSING
+  DIRECTION, SCOPED TO PREAUTHORIZED AUTHORITY. See the `Disposition` field
+  below and ADR-239 § Settlement. The 2026-08-29 scoping that follows is kept
+  verbatim as the history it is; it is not the live status.**
+
+  **SCOPED 2026-08-29, and it is divisible in the same shape
   as `b-adr-088` on `road-to-capability-native-execution`. Option (c) is taken
   and is council-decidable; options (a) and (b) are OWNER-RESERVED and were not
   taken.** AI council 2026-08-29, anthropic + openai, **2/2 convergent**.
@@ -896,6 +1078,21 @@ finding that makes a descope into `agents/roadmaps/stubs/` illegal are in
   The three shared literals are copied rather than imported (that module is a CLI
   gate with load-time side effects) and a test pins the copies byte-equal, so the
   no-divergence claim is now checked rather than asserted.
+- **Disposition:** refused — preauthorized merge authority is REFUSED, and the
+  refusal binds **preauthorized** authority only. `--merge` and the `/pr:merge`
+  merge step stay **inert**; merging is a post-PR manual operation requiring
+  same-turn explicit user confirmation per
+  [`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md)
+  Hard Floor. Nothing here prohibits an ordinary merge performed by a human
+  under that confirmation — the refusal removes an **agent** capability, never a
+  human one. `refused` is a first-class closed state that does **not** mint the
+  promotion capability: `acquirePromotionCapability` refuses on it exactly as it
+  refuses on an open blocker, because `isRefusingStatus` is `!== 'resolved'` and
+  only `Status: resolved` **and** `Disposition: granted` together mint. Recorded
+  by AI council 2026-09-01 (drain run 15), `anthropic/claude-sonnet-4-5` +
+  `openai/codex-default`, 2 rounds, deep, peer-review, blind chairman, quorum
+  2/2 present (needed 1) — concluded, subscription transport, `billable=0`,
+  `$0.0000`, verdict **4C** convergent.
 - **Owner:** maintainer
 - **Blocks:** Phase 0 step 0.8, and by consequence every promotion step in
   Phase 7.
@@ -1035,7 +1232,7 @@ basis rather than on recall.
 > or weakened. It is the only acceptance criterion this split moves; AC-1 to
 > AC-8, AC-10 and AC-11 stay with the parent and were not touched.
 
-- [ ] AC-9 — At least one promoted artefact has been through post-promotion
+- [~] AC-9 — At least one promoted artefact has been through post-promotion <!-- deferred-resolution: carried-to=road-to-post-pr-promotion-workflow -->
       re-evaluation and at least one RETIRE path has been exercised, so the
       lifecycle is shown to close in both directions.
       **Audited 2026-08-31: not met, and not closeable from this branch.**
@@ -1213,6 +1410,38 @@ basis rather than on recall.
       `src/agent-src/scripts/archive_completed_roadmaps.ts:591` fires on
       `merge-authority` and refuses. Closing AC-9 would not archive this file.
 
+      **SIXTH AUDIT 2026-09-01 (drain run 15) — AC-9 IS CARRIED, NOT CLOSED,
+      NOT DESCOPED, NOT WEAKENED AND NOT DELETED.** The five audits above
+      established that AC-9 is not met and then that it is MECHANICALLY
+      UNREACHABLE — no artefact in this tree can hold `promoted`. This run does
+      not re-audit those facts; they are unchanged and were re-read at this
+      commit (`lint_promotion_paths` reports **`blocker status: refused`** at
+      exit 0 over 2874 files, so the guarded capability that is the only route
+      to `promoted` is still unobtainable). It records the disposition the fifth
+      audit said would be needed.
+      *AI council 2026-09-01 (drain run 15), members
+      `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, depth
+      deep, peer-review, blind chairman, quorum 2/2 present (needed 1) —
+      concluded. Subscription transport, `billable=0`, `$0.0000`. Verdict
+      **4C**, convergent.*
+      **The asymmetry this file records twice is honoured rather than
+      contradicted.** A refusing settlement of ADR-239 § Decision 3 does **not**
+      close AC-9: it makes step (b) of the closing chain permanently impossible
+      while the refusal stands, *"at which point AC-9's disposition becomes an
+      owner decision in its own right rather than an automatic descope."* So
+      the criterion does not close here. What changed is only its **carrier**:
+      it transfers whole, with all five audits and its three-link closing
+      chain, into
+      [`road-to-post-pr-promotion-workflow`](later/road-to-post-pr-promotion-workflow.md),
+      the post-PR manual workflow that could execute it, and the owner decision
+      it now awaits sits there with it.
+      **What was explicitly NOT done, because the 2026-08-31 council reserved
+      each of them to the owner:** converting it to "specified but not
+      exercised"; re-keying it to the 7.6 fixture, which is already built and
+      already does not satisfy it; deleting it; or marking it `[-]`, which means
+      CANCELLED. The `[~]` is a carry and is machine-checked in both directions
+      — `deferralProblems` refuses this roadmap's archival unless the receiver
+      exists, is live, and carries a `parent_roadmap:` back-link.
 
 ## Provenance
 

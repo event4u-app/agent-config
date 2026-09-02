@@ -153,6 +153,13 @@ That comment is addressed to the releaser and is published to every consumer.
 
 ### PHASE 2 — DISPOSITION 2026-09-01 (drain run 14): OPTION D, WITH OPTION A's DESIGN RECORDED
 
+> **SUPERSEDED 2026-09-01 by drain run 15 — see § PHASE 2 — EXECUTED below.**
+> Everything in this block stands as written and is the reason the execution
+> was a read rather than a design exercise. Only its *disposition* changed, and
+> it changed on the condition this block itself names: D was taken **because
+> owner approval was unavailable**, and the owner then supplied a written
+> standing instruction delegating that approval to the council.
+
 > **2.1, 2.2 and AC-2 stay `[ ]`. Option A is the right architecture and is NOT
 > applied here.** Everything the owner needs to approve A in one step is written
 > out below, so approving it is a read rather than a design exercise.
@@ -334,22 +341,110 @@ first run — Risk 1 of this register. When Option A is approved and the writer
 stops emitting it, extending `publication_blockers` to the comment becomes safe
 and belongs in A's atomic unit, step 5.
 
-- [ ] **2.1 The generator must not leave its own instruction comment in a
-      released section.** `src/scripts/release.ts:323` writes
+- [x] **2.1 The generator must not leave its own instruction comment in a
+      released section.** `render_release_head` wrote
       `<!-- Curated head: fill before merge, keep it under 10 lines… -->` into
-      the section it creates, and nothing removes it at release time. It is
-      correct in the `Unreleased` draft and wrong the moment the section is cut.
-      verify: a unit test on the writer asserts the comment is present in an
-      `Unreleased` draft section and absent from a released one; and
-      `grep -c 'Curated head: fill before merge' CHANGELOG.md` reads 0 for every
-      section cut after this change.
-- [ ] **2.2 The gate reds on a shipped instruction comment in the target
+      the section it creates, and nothing removed it at release time. **Done
+      2026-09-01 (drain run 15), Option A:** the writer emits no comment, and
+      the reminder moved into the release-PR body's delimited PR-only region —
+      a surface that is never published.
+      verify **(re-scoped; the original clause was invalidated by measured
+      architecture and is superseded, NOT met — see § PHASE 2 — EXECUTED)**: a
+      unit test on `render_release_head` asserts the authoring instruction is
+      **absent** from its output; a unit test on `pr_body_from_section`
+      (`src/scripts/_lib/release_material.ts`) asserts the instruction is
+      **present** in the release-PR body it renders; and an acceptance test over
+      `npm pack` asserts the prohibited instruction is absent from the extracted
+      bytes of the archive member `package/CHANGELOG.md`. All three live in
+      `tests/scripts/release_material.test.ts` and pass; the acceptance test was
+      observed RED against the real package before the changelog was curated.
+      `grep -c 'Curated head: fill before merge' CHANGELOG.md` now reads 0.
+- [x] **2.2 The gate reds on a shipped instruction comment in the target
       section.** This is a different mechanism from 1.2 — a leaked instruction,
       not an unpolished claim — so it needs its own fixture rather than riding
-      on the marker check.
+      on the marker check. **Done 2026-09-01 (drain run 15):** the check lives
+      in `check_release_highlights.main` on the ONE section
+      `extract_changelog_section` cut for `--version`, and detects the named
+      sentinel rather than a comment shape. `publication_blockers` carries the
+      same check for the two irreversible transitions, which is safe only now
+      that the writer has stopped emitting — Risk 1 of this register, and the
+      reason the order was forced.
       verify: a negative fixture whose target section contains the literal
       comment exits 1, and a fixture whose *historical* section contains it
-      exits 0.
+      exits 0. Both in `tests/scripts/check_release_highlights.test.ts`
+      § 1.3; neutralising the check turned the first red and restoring it
+      turned it green.
+
+
+### PHASE 2 — EXECUTED 2026-09-01 (drain run 15): OPTION A, UNDER A DELEGATED APPROVAL
+
+*AI council 2026-09-01 (drain run 15), members `anthropic/claude-sonnet-4-5` +
+`openai/codex-default`, 2 rounds, depth deep, peer-review, blind chairman,
+quorum **2/2 present** (needed 1) — concluded. Subscription transport,
+`billable=0`, `$0.0000`. Council artefacts are gitignored and auto-pruned, so
+every line relied on is inlined here per `no-roadmap-references`.*
+
+**Verdict 1A — the delegation reaches it, convergent 2/2.**
+
+The condition was in the drain-14 record all along, and it was a conditional,
+not a refusal: *"If that approval is unavailable, choose D temporarily rather
+than treating council review as ownership authority."* The owner's standing
+instruction for this run states that *"the council's recorded decision
+substitutes for user sign-off"*. Approval is no longer unavailable, so the
+branch the earlier council attached D to is no longer the live branch. Both
+seats reached 1A independently; one added the discriminator that decides it:
+*"Option A neither lowers a safety floor nor expands agent authority; it
+removes inappropriate publication content."*
+
+**What was NOT re-argued.** The architecture was already 2/2 in drain run 14
+and is not reopened here: Option B (a `draft` parameter creating a production
+mode no caller takes) and Option C (stripping the comment at tag time) stay
+rejected on their original grounds. This run changed the *authority* answer
+only.
+
+**The authorisation conditions, and where each is discharged:**
+
+| Condition | Discharged at |
+|---|---|
+| the prohibited instruction is a **named exported sentinel**, never a shape match | `CURATED_HEAD_INSTRUCTION` in `src/scripts/_lib/release_material.ts`, imported by both gates |
+| the PR-only region is **explicitly delimited** | `PR_ONLY_START` / `PR_ONLY_END`, same module |
+| `strip_pr_wrapper` excludes **exactly** that region | `strip_pr_only_regions`, delimiter-bounded; an unterminated region is left standing so it surfaces as divergence |
+| equality is **not relaxed generally** | test *"equality is NOT relaxed: a difference outside the region still reds"* in `tests/scripts/release_material.test.ts` |
+| writer, PR body, comparison and tests ship as **one atomic unit** | this branch, one PR |
+| the acceptance test runs over **extracted bytes** of a **freshly created** tarball, with no `dist/CHANGELOG.md` fallback | *"acceptance over npm pack"* in the same test file |
+| **sabotage sensitivity observed**, not asserted | recorded below |
+
+**Sensitivity, observed in both directions on this branch.** Neutralising the
+instruction check in `check_release_highlights.ts` and in `publication_blockers`
+turned 3 specs red; restoring them turned them green. Re-adding the writer's
+emission turned 2 further specs red. The acceptance test was **written before
+the changelog was curated and observed RED against the real package** — the
+extracted member carried the instruction twice at that moment — and went green
+only after the two comment lines were deleted. A guard never seen red has
+unknown sensitivity; these were seen red first.
+
+**2.1's verify clause is superseded, not met.** The original clause tested a
+lifecycle the generator does not have — drain run 14 measured that `Unreleased`
+appears 0 times in `release.ts`, `_lib/release_material.ts` and
+`_lib/changelog_eras.ts`, and that `render_release_head` has exactly one caller
+which always writes a versioned heading. The re-scoped clause the drain-14
+council authorised verbatim is the one recorded on the step below. The literal
+original criterion is **not** silently marked complete, which was the condition
+one seat attached to authorising the re-scope.
+
+**One relocation, named because it is the only line in this diff not obviously
+about the defect.** `RELEASE_HEAD_CAP_LINES` and the `_none_` default moved
+from `release.ts` into `_lib/release_material.ts`, which has **zero imports**
+by design — the equality gate, the drill fixtures and the unit tests all reach
+it, so a dependency there is a dependency in all three. `release.ts` re-exports
+`RELEASE_HEAD_CAP_LINES` under its original name, so no referencing site
+changed.
+
+**One downstream test changed its assertion, and it asserted the defect.**
+`tests/scripts/release.test.ts` § *"fits the operator-facing cap"* required
+`head.some(l => l.startsWith('<!--'))` to be **true** — i.e. it pinned that the
+writer emits the instruction. It now requires `false`. The cap half of that
+test is untouched.
 
 ## Phase 3 — extend to the two irreversible transitions
 
@@ -375,7 +470,36 @@ and belongs in A's atomic unit, step 5.
 
 ### blocker: b-retro-curation-scope
 
-- **Status:** open
+- **Status:** resolved 2026-09-01 (drain run 15) — **option (c) recorded and
+  executed** under the owner's standing delegation, by AI council verdict 2c,
+  convergent 2/2 (`anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+  2 rounds, deep, peer-review, blind chairman, quorum 2/2 present, needed 1;
+  subscription transport, `billable=0`, `$0.0000`).
+
+  **The mutable/immutable split, which `Resolved when` requires as a separate
+  record:**
+
+  | Surface | Class | Disposition |
+  |---|---|---|
+  | the 2 authoring-instruction comments in `CHANGELOG.md` (14.12.0, 14.13.0) | mutable | **deleted** — machine-written, never release content; `grep -c` now reads 0 |
+  | the 8 `_auto-derived, rewrite before merge:_` head lines in `CHANGELOG.md` | mutable | **preserved as published**, with a dated note above `## [Unreleased]` stating they were generator-derived and are deliberately not paraphrased |
+  | the 42 occurrences in `docs/archive/CHANGELOG-pre-*.md` | mutable | **untouched** — archives are historical record, which is what option (c) says |
+  | annotated tag messages for 14.9.0–14.13.0 | **immutable** | unrepairable; recorded as such |
+  | published GitHub Release bodies for 14.9.0–14.13.0 | **immutable** | unrepairable; recorded as such |
+
+  **Why the eight marker lines were NOT rewritten, although (c) permits
+  curating the current era.** The council authorised bounded editorial
+  execution and bounded it in the same breath: *"Do not paraphrase the
+  generator's derivation explanation merely to eliminate a marker"*, and *"if
+  release evidence cannot support useful prose, preserve that individual item
+  as unresolved rather than inventing copy."* The blind chairman narrowed
+  further — mechanical deletion where the evidence is unambiguous, editorial
+  judgement escalated. Deleting a machine-written instruction comment is
+  unambiguous; rewriting eight derived claims about five past releases is the
+  *"truthfully documented uselessness"* two prior councils reserved. So the
+  mechanical half was executed and the editorial half was recorded as a
+  deliberate preservation, which is what the note in `CHANGELOG.md` says in the
+  published surface itself rather than only here.
 - **Owner:** maintainer
 - **Blocks:** nothing in Phases 1–3. They are forward-only by construction, per
   § 1.3, which scopes every read to the section under release. This blocker gates
@@ -425,8 +549,11 @@ and belongs in A's atomic unit, step 5.
 
 ## Acceptance Criteria
 
-> **Status 2026-09-01.** AC-1, AC-3, AC-4, AC-5 and AC-6 are met; **AC-2 stays
-> `[ ]`**, blocked by the Phase 2 fork above.
+> **Status 2026-09-01 (drain run 15).** All six are met. AC-2 was the last
+> open one and is met by Option A; the earlier line below said it stayed `[ ]`
+> blocked by the Phase 2 fork, and that fork was resolved by a delegated
+> approval rather than by the fork moving. AC-6 changed from met-by-STANDING to
+> met-by-execution when `b-retro-curation-scope` was resolved as option (c).
 >
 > - **AC-5 is answered NONE, with its reason**, recorded in the tree at
 >   `docs/contracts/CHANGELOG-conventions.md` § No escape hatch. The
@@ -435,12 +562,18 @@ and belongs in A's atomic unit, step 5.
 >   remedy is a one-line edit in a file the releaser already has open, and no
 >   state exists in which a bypass flag is cheaper than the fix it bypasses.
 >   Reopening trigger recorded with it.
-> - **AC-6 is met by its STANDING branch, not by doing the work.**
->   `blocker: b-retro-curation-scope` is untouched and open, and its
->   `Resolved when` already separates the mutable surfaces (CHANGELOG sections)
->   from the immutable ones (annotated tag messages, published Release bodies
->   for 14.9.0-14.13.0). Nothing here curated a published section; the editorial
->   prose is owner-reserved by two prior council rulings.
+> - **AC-6 was met by its STANDING branch on 2026-09-01 and is now met by
+>   EXECUTION.** The line below is kept as written because it records the state
+>   the drain-14 run left: the blocker was open, nothing had curated a published
+>   section, and the editorial prose was owner-reserved by two prior council
+>   rulings. Drain run 15 resolved the blocker as option (c) under a delegated
+>   approval, deleted the two instruction comments from the published changelog,
+>   and recorded the mutable/immutable split in the blocker entry.
+>   *(superseded)* `blocker: b-retro-curation-scope` is untouched and open, and
+>   its `Resolved when` already separates the mutable surfaces (CHANGELOG
+>   sections) from the immutable ones (annotated tag messages, published Release
+>   bodies for 14.9.0-14.13.0). Nothing here curated a published section; the
+>   editorial prose is owner-reserved by two prior council rulings.
 > - **AC-1's sabotage** and the two runs that came back GREEN before the fixture
 >   was repaired are in
 >   [`publication-integrity-hard-fail-execution.md`](../evidence/analysis/publication-integrity-hard-fail-execution.md)
@@ -450,8 +583,12 @@ and belongs in A's atomic unit, step 5.
 - [x] AC-1 — the release gate exits non-zero when the section under release
       carries `_auto-derived, rewrite before merge:_`, and the negative case has
       been shown red with the guard neutralised and green with it restored.
-- [ ] AC-2 — a CHANGELOG section cut after this change carries no
+- [x] AC-2 — a CHANGELOG section cut after this change carries no
       `<!-- Curated head: fill before merge` comment, pinned by a writer test.
+      Met 2026-09-01 (drain run 15) by Option A: the writer test, the PR-body
+      test and the `npm pack` acceptance test all pass, and the two comments
+      already published in the current era were deleted under blocker
+      `b-retro-curation-scope` option (c).
 - [x] AC-3 — a marker-bearing historical section does not block a release whose
       own section is clean, pinned by a test.
 - [x] AC-4 — the reversal of the advisory decision is recorded at both sites

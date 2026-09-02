@@ -150,3 +150,179 @@ advance, and three of the four need exactly one owner decision to move.
 Nothing was promoted. No estate hold was lifted. No baseline was raised — the one
 baseline that moved was **lowered** to the exact tree total after an extraction
 paid its own way. No gate was skipped, weakened, or bypassed.
+
+---
+
+# Drain run 15 — summary
+
+2026-09-01/02. A second autonomous pass over `agents/roadmaps/`, on the five
+roadmaps drain 14 left standing. Same delegation: every decision that would
+otherwise have gone to the owner went to the AI council, whose *"recorded
+decision substitutes for user sign-off"*. Delivery boundary: one PR per
+roadmap, no merges. **Zero user round-trips. Zero metered API calls. $0.0000.**
+
+**Drain 14's finding does not repeat.** It reported that none of five roadmaps
+could be driven to 100 % honestly, because four were held by owner-reserved
+decisions the council refused to make on the owner's behalf. Drain 15 put those
+same decisions to the council against a **new fact** — the owner's written
+delegation for this run — and three of the four moved. The fourth did not, and
+the reason it did not is the most useful thing here.
+
+## Inventory at start
+
+Recomputed live at `23391aec2`; the run's seed table was stale by 31 files.
+
+| Roadmap | Progress | Outcome |
+|---|---|---|
+| publication-integrity-hard-fail | 11/14 | **completed + archived** |
+| harness-promotion-bridge | 7/9 | **closed at the PR boundary + archived** |
+| governed-evidence-production | 4/9 | left open, correctly open |
+| blocked-quickwin-visibility | 5/12 | **completed + archived** |
+| council-topology-evidence-followups | 0/38 | left standing, no closure claim |
+
+## Pull requests
+
+| PR | Roadmap | Final state |
+|---|---|---|
+| [#1801](https://github.com/event4u-app/agent-config/pull/1801) | publication-integrity-hard-fail | 14/14, 6/6 ACs, blocker resolved, archived |
+| [#1802](https://github.com/event4u-app/agent-config/pull/1802) | harness-promotion-bridge | 7 `[x]` + 2 `[~]`, blocker resolved as refused, archived |
+| [#1803](https://github.com/event4u-app/agent-config/pull/1803) | blocked-quickwin-visibility | 12/12, blocker declined and recorded, archived |
+| [#1804](https://github.com/event4u-app/agent-config/pull/1804) | governed-evidence-production | 4/9, disposition + resume chain recorded |
+| [#1805](https://github.com/event4u-app/agent-config/pull/1805) | council-topology-evidence-followups | 0/38, disposition recorded |
+
+All five settled green (53, 45, 35, 6 and 6 checks). #1803, #1804 and #1805 were
+merged by the maintainer during the run.
+
+## Council decisions
+
+Two sessions, both `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+2 rounds, depth deep, peer-review, blind chairman, quorum **2/2 present**
+(needed 1), concluded, subscription transport, `billable=0`. Every verdict is
+inlined in the roadmap or ADR it governs; no path under
+`agents/runtime/council/` is cited anywhere in the tree.
+
+### Session 1 — four owner-reserved blockers
+
+| Q | Subject | Verdict | Convergence |
+|---|---|---|---|
+| 1 | Phase 2 authority split, publication-integrity | **1A** — the delegation reaches it; implement Option A | 2/2 |
+| 2 | `b-retro-curation-scope` | **2c** — curate the current era, bounded editorial execution | 2/2 |
+| 3 | `b-provisional-promotion-authorization` | **3b** — decline the path | 2/2 |
+| 4 | `merge-authority` | **4C** — settle ADR-239 § Decision 3 negatively, re-scope to the PR boundary | convergent after one seat moved from 4B |
+
+Q1 turned on a conditional the *earlier* council had written itself: *"If that
+approval is unavailable, choose D temporarily rather than treating council
+review as ownership authority."* The delegation supplied the approval, so the
+branch D hung on was no longer live. That is the shape of three of this run's
+four movements — not a reversal of a decision, but the arrival of the condition
+the decision named.
+
+Q3 went the other way, and it is the run's clearest limit: *"Options (a) and (c)
+constitute governance self-amendment — the council extending the agent's own
+write authority over a recorded estate floor. `decision-revisit-gate`
+explicitly reserves this and explicitly states no delegation overrides it."*
+And on the tempting reading of the owner's instruction: *"That general language
+nevertheless loses to the narrower rule expressly covering delegation and
+self-amendment."* A broad delegation does not beat a narrow rule that names
+delegation.
+
+### Session 2 — two terminal-state questions
+
+| Q | Subject | Verdict | Convergence |
+|---|---|---|---|
+| 1 | Phase 2, governed-evidence-production | **1B** — open and correctly open | 2/2 |
+| 1b | AC-3 | stays open as a Phase-2 successor obligation; **not** transferred | 2/2 |
+| 2a | the unguarded-carrier gap | **DIVERGENT** — no mandate, nothing built | split |
+| 2b | the 38-item carrier | **2b-i** — leave it standing, claim nothing | 2/2 |
+
+Session 2's Q1 records the distinction the whole run turns on, in the council's
+words: the delegation separates *"authority to decide, authority to implement
+preparatory work, and satisfaction of an acceptance criterion"* — and supplies
+the first two while the third stays unavailable *"because their required
+evidence does not exist."* Delegated authority settled the corpus contract; it
+could not satisfy an independence condition using the same run.
+
+## Descopes and carries
+
+Exactly one, and it is a carry rather than a descope:
+
+- **Phase 7 and AC-9 of harness-promotion-bridge** →
+  `agents/roadmaps/later/road-to-post-pr-promotion-workflow.md` <!-- ref-ignore -->
+  (the receiver lands with #1802, so this path does not resolve from this
+  branch), with all seven
+  `verify:` clauses and all five prior AC-9 audits carried **verbatim**, plus
+  the Hard-Floor sentence requiring same-turn human confirmation. Enforced by
+  `deferralProblems`, which refuses archival unless the receiver exists, is live
+  and carries the back-link. The seven provisional Phase 7 marks travelled with
+  their provisional status intact, because a drain-14 council had **diverged**
+  on reverting them and a divergent council carries no mandate.
+
+**No stub was used as a carry destination, because none may be.** The run's own
+terminal-fallback instruction names a stub descope; checked against the tree, it
+is mechanically illegal — the archival sweep resolves `carried-to=` only against
+`agents/roadmaps/` and `agents/roadmaps/later/`, and `agents/roadmaps/stubs/`
+resolves as *"does not exist"* and reds the sweep. The council named the
+governing clause: *"its 'legitimate gate closure only' clause controls when the
+repository provides no legal stub route."*
+
+## What was deliberately not done
+
+- **`b-provisional-promotion-authorization` was declined, not registered.** No
+  integer, no expiry, no bounded trial — `max_live: 1` *"limits magnitude, not
+  the legal character of the authority change."*
+- **The eight `_auto-derived` head lines in `CHANGELOG.md` were not rewritten.**
+  The council authorised editorial execution and bounded it in the same breath;
+  rewriting a derived claim about a past release is the *"truthfully documented
+  uselessness"* two prior councils reserved. Preserved with a dated note in the
+  published surface itself.
+- **`metered-backend-park` was not closed with its option (b).** That exit was
+  available and would have let the roadmap archive. It contradicts a narrowing
+  settled the day before, and taking it to make a file archive is cosmetic
+  closure.
+- **No carrier-integrity validator was written.** The seats split on whether a
+  repository-wide CI gate falls inside a per-run delegation. The permissive
+  seat's specification is recorded anyway, because the naive form is already
+  measured 2-of-2 false-positive and a future authorised run should not
+  re-derive that.
+- **No merge, and no merge capability.** ADR-239 § Decision 3 was settled in the
+  **refusing** direction, workflow-scoped: the refusal binds *preauthorized*
+  authority only and does not touch a human merging under same-turn
+  confirmation. The Hard Floor was never approached.
+- **Zero metered proposer calls.** The `governed-evidence` capture would have
+  cost about two cents against a live key. Cost was never the blocker.
+
+## Honest nulls
+
+- Two roadmaps did not close, and neither carries a completion claim.
+- `council-topology-evidence-followups` is gated on facts about the world rather
+  than about the repository: **2** configured council seats against an `n >= 5`
+  floor, and a verified 20-consecutive-UTC-day capacity reservation that is not
+  an action available in this environment. No repository work moves it.
+- The unguarded-carrier gap remains open and measured: deleting that carrier is
+  invisible to all nine roadmap gates, and scores as nothing at all rather than
+  as an estate credit, because the counter skips draft files.
+- **#1802 carries its own falsifier.** A drain-14 council had ruled the same
+  boundary *terminally* owner-reserved. That contradiction was recorded rather
+  than smoothed: if the owner upholds it, the ADR settlement is void, the
+  blocker reopens, and the roadmap returns to the active tree with both items
+  restored.
+- The promotion capability still reads a *roadmap* while the authority now lives
+  in an *ADR*. Rewiring it is the right change and was not made — it is scope
+  creep on a change whose point is that the capability does not move. Named in
+  the docblock.
+
+## Verification
+
+Every PR ran the roadmap gate battery locally before push, plus `task
+preflight` and the touched suites. **No gate was skipped, weakened, or
+baselined upward.** The one ratchet this run tripped —
+`check_source_size_budget`, 8 over — was paid down to 15 under by moving a
+doc block out of a file that is past its cap into one that is not, and the
+baseline was **lowered** accordingly.
+
+Guards added by this run were observed **red** before green: neutralising the
+two publication guards turned 3 specs red, restoring the writer's emission
+turned 2 more red, and the `npm pack` acceptance test was written before the
+changelog was curated and observed red against the real published artifact —
+the extracted npm member carried the prohibited instruction twice at that
+moment.

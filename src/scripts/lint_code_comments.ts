@@ -40,6 +40,7 @@
  * Scope is the DIFF by default, so a pre-existing tree does not turn red.
  * `--paths` and `--root` exist for auditing a tree the gate does not own.
  *
+<<<<<<< HEAD
  * STATED RECALL LIMIT, found by running the gate against its own first output
  * rather than by reasoning about it. A straight `"` left unpaired on a line is
  * ambiguous — it opens a quotation that continues, or closes one that began
@@ -53,6 +54,8 @@
  * before the tree was called clean. A gate that has been wrong once is not a
  * gate to verify with alone.
  *
+=======
+>>>>>>> origin/main
  * Exit codes: 0 clean · 2 findings · 1 usage or internal error.
  */
 import { spawnSync } from 'node:child_process';
@@ -91,6 +94,7 @@ const GENERATED_MARKERS = [
  * added later. The cost of the approximation is a false positive on a string
  * that begins a line with `//` or `*`, which the escape marker answers.
  */
+<<<<<<< HEAD
 const COMMENT_LINE = /^\s*(\{\s*)?(\/\/|\/\*|\*(?!\/)|\*\/|#(?!!)|--)/;
 
 /**
@@ -117,6 +121,9 @@ function opensBlock(line: string): boolean {
 function closesBlock(line: string): boolean {
     return line.includes('*/');
 }
+=======
+const COMMENT_LINE = /^\s*(\/\/|\/\*|\*(?!\/)|\*\/|#(?!!)|--)/;
+>>>>>>> origin/main
 
 /** German-specific characters. `ß` and the umlauts appear in no English word. */
 const DE_CHARS = /[äöüßÄÖÜ]/;
@@ -148,10 +155,13 @@ const DE_WORDS = new RegExp(
         'steht', 'stehen', 'haben', 'kann', 'koennen', 'muss', 'muessen',
         'soll', 'sollte', 'gibt', 'geht', 'macht', 'zeigt', 'liegt',
         'deshalb', 'deswegen', 'trotzdem', 'bereits', 'immer', 'niemals',
+<<<<<<< HEAD
         'derselbe', 'dieselbe', 'dasselbe', 'denselben', 'demselben', 'derselben',
         'andere', 'anderer', 'anderen', 'anderem', 'anderes',
         'unter', 'ueber', 'zwischen', 'wegen', 'statt', 'ausser', 'seit',
         'eigene', 'eigenen', 'eigener', 'jeweils', 'genau', 'etwa', 'sowohl',
+=======
+>>>>>>> origin/main
         'warum', 'wieso', 'welche', 'welcher', 'wobei', 'sowie',
     ].join('|') + ')\\b',
     'gi',
@@ -199,11 +209,14 @@ export function fileIsExempt(text: string): boolean {
     return /code-comment-allow-file\s*--\s*\S/.test(text.slice(0, 2000));
 }
 
+<<<<<<< HEAD
 /** Distinct German function words in a fragment. */
 function germanWordCount(s: string): number {
     return new Set((s.match(DE_WORDS) ?? []).map((h) => h.toLowerCase())).size;
 }
 
+=======
+>>>>>>> origin/main
 /** Strip the comment punctuation so a signal is matched against prose. */
 function commentProse(line: string): string {
     return line.replace(/^\s*(\/\/+|\/\*+|\*+\/?|#+|--)/, ' ');
@@ -226,6 +239,7 @@ function prosePlain(line: string): string {
         .replace(/[\u201c\u201e][^\u201c\u201d\u201e]*[\u201d\u201c]/g, ' ')
         .replace(/[\u2018\u201a][^\u2018\u2019\u201a]*[\u2019\u2018]/g, ' ')
         .replace(/\u00bb[^\u00ab\u00bb]*\u00ab/g, ' ')
+<<<<<<< HEAD
         // Whatever follows the last unpaired TYPOGRAPHIC opener continues as a
         // quotation on the next line, so it is quoted data too.
         //
@@ -247,6 +261,12 @@ function prosePlain(line: string): string {
         .replace(/"[^"]*$/, (m, offset: number, whole: string) =>
             germanWordCount(whole.slice(0, offset)) >= 2 ? m : ' ',
         );
+=======
+        // Whatever follows the last UNPAIRED quote mark opens a quotation that
+        // continues on the next line, so it is quoted data too. Pairs are gone
+        // by now; an odd mark left over is an opening one.
+        .replace(/[\u201c\u201e"][^\u201c\u201d\u201e"]*$/, ' ');
+>>>>>>> origin/main
 }
 
 /**
@@ -265,6 +285,7 @@ export function scanText(file: string, text: string): CommentFinding[] {
     // and without it the six multi-line user quotations in this repository's
     // own hooks are false positives.
     let inQuote = false;
+<<<<<<< HEAD
     let inBlock = false;
 
     for (let i = 0; i < lines.length; i++) {
@@ -273,6 +294,12 @@ export function scanText(file: string, text: string): CommentFinding[] {
         if (inBlock && closesBlock(raw)) inBlock = false;
         else if (!inBlock && opensBlock(raw)) inBlock = true;
         if (!isComment) { inQuote = false; continue; }
+=======
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i] ?? '';
+        if (!COMMENT_LINE.test(raw)) { inQuote = false; continue; }
+>>>>>>> origin/main
         const prose = commentProse(raw);
         const opensBefore = inQuote;
         const marks = (commentProse(raw).match(/[\u201c\u201d\u201e"]/g) ?? []).length;
