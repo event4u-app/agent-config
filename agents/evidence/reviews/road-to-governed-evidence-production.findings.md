@@ -1,12 +1,12 @@
 # Findings: road-to-governed-evidence-production
-<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: 90a10f5fe0ebfb2841ffdb85d7694ca53554c2a5b4db3f08d5f809a547a21824 | diff: 78d2f2ebe6601ffcf3843499ae9fd9bfa4927b83 | reviewer: r2-fresh-subagent-road-to-governed-evidence-production | prompt_hash: 86006587b2489632dacd68a3a248f7bb1c403a45a6161e6136969e6bd68d80db -->
+<!-- completion-review: v1 | reviewed: 2026-09-02 | scope: 3a1bca5949ded6f758c74d651ec86687f6de1a47ef0093d36087798d2b16c8c7 | diff: 4bbbcb67c11b9527e53e8f1ec683064ea5e6c65d | reviewer: r2-fresh-subagent-road-to-governed-evidence-production | prompt_hash: 86006587b2489632dacd68a3a248f7bb1c403a45a6161e6136969e6bd68d80db -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-road-to-governed-evidence-production"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-02 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 78d2f2ebe6601ffcf3843499ae9fd9bfa4927b83
-  scope_hash: 90a10f5fe0ebfb2841ffdb85d7694ca53554c2a5b4db3f08d5f809a547a21824
+  diff_sha: 4bbbcb67c11b9527e53e8f1ec683064ea5e6c65d
+  scope_hash: 3a1bca5949ded6f758c74d651ec86687f6de1a47ef0093d36087798d2b16c8c7
   roadmap: agents/roadmaps/road-to-governed-evidence-production.md
   roadmap_hash: 7fbb5c4fe6e43ef975754fbf184e41fe00a03d22a37390a4502281353c12cbde
   ac_hash: 12be74a0757549057f43220e2303ac14f6185b864429738de565002226893c34
