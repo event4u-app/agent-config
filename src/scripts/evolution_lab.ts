@@ -89,6 +89,8 @@ import {
 } from './_lib/promotion_evidence.js';
 import { MERGE_AUTHORITY_ROADMAP, readMergeAuthorityStatus } from './_lib/promotion_capability.js';
 import { assertNotSemanticNoOp, isSemanticNoOp, SemanticNoOpError } from './_lib/semantic_noop.js';
+import { buildRunSpec } from './_lib/experiment_binding.js';
+import { ExperimentDriftError, assertUnchanged, freeze } from './_lib/experiment_freeze.js';
 import {
     RECIPES,
     byteCompare,
@@ -635,6 +637,15 @@ function guardAbort(e: unknown): number | undefined {
         );
         return EXIT_GUARD_ABORT;
     }
+    if (e instanceof ExperimentDriftError) {
+        process.stderr.write(
+            `evolution_lab: ABORTED on experiment drift (moved: ${e.changed.join(', ')})\n` +
+                `  ${e.message}\n` +
+                '  The run cloned one record set and would have scored another. Nothing is\n' +
+                '  reported: an ROI figure over a set that moved mid-run is not a comparison.\n',
+        );
+        return EXIT_GUARD_ABORT;
+    }
     if (e instanceof BudgetConfigError) {
         process.stderr.write(`evolution_lab: ABORTED — ${(e as Error).message}\n`);
         return EXIT_GUARD_ABORT;
@@ -767,10 +778,38 @@ function verbRun(argv: readonly string[]): number {
             return fail(`vector ${vf} rejected — ${(e as Error).message}`);
         }
     }
+    // The experiment binding. Frozen HERE, before the first clone, and asserted
+    // again after the loop. The window it closes is real and specific: the loop
+    // below clones from `record`, then RE-READS the same file from disk to
+    // evaluate it, so a record rewritten in between produces a run that cloned
+    // one thing and scored another. Every guard already in this verb fires
+    // before the run starts and never looks again.
+    const ordered = [...files].sort(byteCompare);
+    const readRecord = (f: string): string => {
+        try {
+            return fs.readFileSync(f, 'utf-8');
+        } catch {
+            // Unreadable is a STATE of the record set here, not a reason to
+            // fail: the loop below already reports the specific file with its
+            // own message, and a freeze that pre-empted it would replace a
+            // precise diagnostic with a vaguer one. The marker still moves the
+            // digest, so a record that appears or vanishes mid-run is drift.
+            return '\u0000<unreadable>';
+        }
+    };
+    let frozenSpec;
+    let frozenDigest: string;
+    try {
+        frozenSpec = buildRunSpec(ordered, readRecord);
+        frozenDigest = freeze(frozenSpec);
+    } catch (e) {
+        return fail(`experiment spec could not be built — ${(e as Error).message}`);
+    }
+
     const seen = new Set<string>();
     const ids: string[] = [];
     const results: CascadeResult[] = [];
-    for (const f of files.sort(byteCompare)) {
+    for (const f of ordered) {
         let record: CandidateRecord;
         try {
             record = loadRecord(f);
@@ -819,6 +858,19 @@ function verbRun(argv: readonly string[]): number {
         });
         ids.push(record.id);
         results.push(result);
+    }
+
+    // Assert BEFORE the verdicts are rendered, and before the cascade-abort
+    // return below: a drifted run has no verdict worth printing, whichever way
+    // the cascade came out.
+    try {
+        assertUnchanged(frozenDigest, frozenSpec, buildRunSpec(ordered, readRecord));
+    } catch (e) {
+        const aborted = guardAbort(e);
+        if (aborted !== undefined) {
+            return aborted;
+        }
+        throw e;
     }
 
     for (const r of results) {

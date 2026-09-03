@@ -173,7 +173,7 @@ import type { DatabaseSync } from 'node:sqlite';
 
 import { current_branch, git_common_dir, git_dir } from './git_common_dir.js';
 import type { TerminalState } from './outcome_envelope.js';
-import { RUN_TERMINAL_STATES } from './outcome_vocabularies.js';
+import { readRunTerminalState, RUN_TERMINAL_STATES } from './outcome_vocabularies.js';
 import {
     isSqliteAvailableSync,
     loadSqliteSync,
@@ -303,7 +303,7 @@ export const CONSUMPTION_STATES = ['consumed', 'partially-consumed', 'rejected-w
 export type Consumption = (typeof CONSUMPTION_STATES)[number];
 
 /**
- * The six terminal states as a runtime array.
+ * The run terminal states as a runtime array.
  *
  * Re-export of `RUN_TERMINAL_STATES` from `outcome_vocabularies.ts`. It used to
  * be a second literal list here, guarded by two type-level assertions that
@@ -316,6 +316,12 @@ export type Consumption = (typeof CONSUMPTION_STATES)[number];
  *
  * The name is kept because it is exported and pinned by
  * `tests/scripts/runtime_journal.test.ts:205,207`.
+ *
+ * Growing this list does NOT move {@link JOURNAL_SCHEMA_VERSION}: that covers
+ * tables and columns and a mismatch discards the store, while a widened value
+ * domain changes neither. The domain carries its own version in the registry
+ * (`RUN_TERMINAL_VOCABULARY_VERSION`), and the read path tolerates a value it
+ * does not know rather than trusting the column — see `toEvent`.
  */
 export const TERMINAL_STATES = RUN_TERMINAL_STATES;
 
@@ -1019,7 +1025,7 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
         !(TERMINAL_STATES as readonly string[]).includes(input.terminal_state)
     ) {
         throw new JournalContractError(
-            `terminal_state ${JSON.stringify(input.terminal_state)} is not one of the six.`,
+            `terminal_state ${JSON.stringify(input.terminal_state)} is not in the run vocabulary.`,
         );
     }
     if (
@@ -1105,7 +1111,8 @@ function toEvent(r: Record<string, unknown>): JournalEvent {
         worktree_id: String(r['worktree_id']),
         at: String(r['at']),
         capability: String(r['capability']),
-        terminal_state: (r['terminal_state'] as TerminalState | null) ?? null,
+        // Tolerant, not a cast: a value this build cannot place reads as null.
+        terminal_state: readRunTerminalState(r['terminal_state']),
         return_ref: (r['return_ref'] as string | null) ?? null,
         verification_ref: (r['verification_ref'] as string | null) ?? null,
         consumption: (r['consumption'] as Consumption | null) ?? null,

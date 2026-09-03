@@ -36,11 +36,14 @@ describe('the detector — a non-success return with no acknowledgment', () => {
         expect(isIgnoredBlocker(fixtureReturn(state))).toBe(true);
     });
 
-    it('all four NON_SUCCESS_STATES are covered by this file, not just blocked', () => {
-        // Guards the test itself: if a seventh state joins the non-success set,
-        // this fails rather than the suite silently covering three of five.
+    it('every NON_SUCCESS_STATE is covered by this file, not just blocked', () => {
+        // Guards the test itself: a new non-success state must be ENUMERATED
+        // here, so the suite cannot silently cover four of five. It fired as
+        // designed when `premise-invalidated` landed
+        // (`road-to-wired-instruments` 2.3) — the list below is the updated
+        // answer, not a widened assertion.
         expect(NON_SUCCESS.sort()).toEqual(
-            ['approval-required', 'blocked', 'exhausted', 'stagnated'],
+            ['approval-required', 'blocked', 'exhausted', 'premise-invalidated', 'stagnated'],
         );
     });
 });

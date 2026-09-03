@@ -25,6 +25,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
     CROSS_DOMAIN_MAPPINGS,
+    downgradeRunTerminalState,
+    readRunTerminalState,
+    RUN_TERMINAL_STATE_DOWNGRADE,
+    RUN_TERMINAL_STATE_SINCE,
+    RUN_TERMINAL_VOCABULARY_VERSION,
     isPhaseOutcome,
     isRunTerminalState,
     PHASE_OUTCOMES,
@@ -223,5 +228,64 @@ describe('the registry itself', () => {
         expect(isPhaseOutcome('sucess')).toBe(false);
         expect(isRunTerminalState('skipped')).toBe(false);
         expect(isPhaseOutcome(undefined)).toBe(false);
+    });
+});
+
+/**
+ * The prerequisites the AI council attached to extending the run vocabulary
+ * (2026-09-03, unanimous option (a)): a versioned value domain, tolerance for a
+ * value a reader does not know, and a declared downgrade for a consumer that
+ * cannot represent one. Asserted here rather than described, because every one
+ * of them is a claim about behaviour on data written by a DIFFERENT build than
+ * the one reading it, which is exactly the claim prose cannot keep.
+ */
+describe('run vocabulary — versioning, tolerance, downgrade', () => {
+    it('every member declares the version it appeared in, and none is missing', () => {
+        for (const state of RUN_TERMINAL_STATES) {
+            expect(RUN_TERMINAL_STATE_SINCE[state], `no \`since\` for ${state}`).toBeGreaterThan(0);
+        }
+        expect(Object.keys(RUN_TERMINAL_STATE_SINCE).sort()).toEqual([...RUN_TERMINAL_STATES].sort());
+    });
+
+    // The generalised obligation, not a row about one value: any member added
+    // after v1 is a member some shipped consumer cannot represent, so it owes a
+    // declared target. An eighth value cannot ship undowngradable.
+    it('every post-v1 member has a declared downgrade to a v1 member', () => {
+        for (const state of RUN_TERMINAL_STATES) {
+            if ((RUN_TERMINAL_STATE_SINCE[state] ?? 1) === 1) continue;
+            const target = RUN_TERMINAL_STATE_DOWNGRADE[state];
+            expect(target, `${state} was added after v1 and declares no downgrade`).toBeDefined();
+            expect(RUN_TERMINAL_STATE_SINCE[target as never]).toBe(1);
+        }
+    });
+
+    it('a v1 consumer reports the declared downgrade, and a current one the value itself', () => {
+        expect(downgradeRunTerminalState('premise-invalidated', 1)).toBe('blocked');
+        expect(downgradeRunTerminalState('premise-invalidated', RUN_TERMINAL_VOCABULARY_VERSION)).toBe(
+            'premise-invalidated',
+        );
+        // A v1 member is never rewritten by a downgrade.
+        expect(downgradeRunTerminalState('exhausted', 1)).toBe('exhausted');
+    });
+
+    it('an unrecognised value downgrades to null rather than to a fabricated state', () => {
+        // The distinction that matters: `blocked` is what a reader reports for a
+        // value it knows is NEWER. A value it cannot place at all is an absence,
+        // and reporting `blocked` there would manufacture a measurement.
+        expect(downgradeRunTerminalState('teleported', 1)).toBeNull();
+        expect(downgradeRunTerminalState('', 1)).toBeNull();
+    });
+
+    it('the tolerant read never throws and never invents', () => {
+        for (const v of RUN_TERMINAL_STATES) expect(readRunTerminalState(v)).toBe(v);
+        for (const v of [null, undefined, '', 'teleported', 42, {}, []]) {
+            expect(readRunTerminalState(v)).toBeNull();
+        }
+    });
+
+    it('the version is an integer that moved when the vocabulary grew', () => {
+        expect(Number.isInteger(RUN_TERMINAL_VOCABULARY_VERSION)).toBe(true);
+        const newest = Math.max(...Object.values(RUN_TERMINAL_STATE_SINCE));
+        expect(RUN_TERMINAL_VOCABULARY_VERSION).toBe(newest);
     });
 });

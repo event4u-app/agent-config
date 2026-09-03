@@ -49,6 +49,7 @@ import { fileURLToPath } from 'node:url';
 import { gitEnv } from './_lib/git_env.js';
 import { read_live_records, register_dir } from './_lib/session_register.js';
 import { other_worktree_branches_detailed } from './sessions_cli.js';
+import { recordContextObservation } from './_lib/context_observation.js';
 
 /** One open pull request, with the file set it changes. */
 export interface PullRequestInfo {
@@ -746,6 +747,20 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         roadmap: at('--roadmap'),
         ...(ownedFile !== null ? { ownedPaths: readOwnedPathsFile(ownedFile) } : {}),
     });
+    // `road-to-wired-instruments` 2.1 — this probe is the only thing in the tree
+    // that can OBSERVE the world (it costs a `gh` call), so it records what it
+    // saw where a Stop-path concern can read it without spawning anything. The
+    // continuation ladder's premise rung is the consumer; the resume checkpoint
+    // is the other.
+    //
+    // Only a LIVE reading is recorded. Offline, `contextFingerprint` still
+    // returns a digest — over a null base and an empty PR list — and that digest
+    // is a statement about the network, not about the repository. Recording it
+    // would make every offline probe look like a moved premise, which is a false
+    // halt manufactured out of a dropped connection.
+    if (ctx.network === 'live') {
+        recordContextObservation(root, ctx.roadmap ?? '', ctx.fingerprint);
+    }
     if (argv.includes('--fingerprint')) {
         // Just the digest, for the loop's phase-boundary comparison and for the
         // resume checkpoint's `context_fingerprint` (§ 5.6 — same value).

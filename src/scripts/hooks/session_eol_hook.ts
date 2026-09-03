@@ -54,6 +54,7 @@ import {
     scanEolSlice,
     type EolCounters,
 } from '../_lib/session_eol.js';
+import { readContextObservation } from '../_lib/context_observation.js';
 import { buildCheckpoint, writeCheckpoint } from '../_lib/run_checkpoint.js';
 import { read_claimed_slug } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
@@ -381,7 +382,17 @@ export function main(): number {
         try {
             const slug = read_claimed_slug(workspaceRoot, checkpointRunId);
             if (slug !== null) {
-                const cp = buildCheckpoint(workspaceRoot, eolSessionKey(checkpointRunId), slug);
+                // `road-to-wired-instruments` 2.1. The fingerprint was never
+                // passed here, so `context_fingerprint` was null in every
+                // checkpoint this package has ever written and the resume-time
+                // drift check it exists for could not fire. The value comes from
+                // the newest recorded probe rather than from a fresh one: this is
+                // the Stop path, and the probe costs a `gh` call. Absent stays
+                // absent, which reads as "not known" and never as "unchanged".
+                const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
+                const cp = buildCheckpoint(workspaceRoot, eolSessionKey(checkpointRunId), slug, {
+                    ...(observed !== null ? { contextFingerprint: observed } : {}),
+                });
                 if (cp !== null) writeCheckpoint(workspaceRoot, cp);
             }
         } catch {

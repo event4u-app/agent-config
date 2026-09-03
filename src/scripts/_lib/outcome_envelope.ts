@@ -23,7 +23,7 @@
 import type { RunTerminalState } from './outcome_vocabularies.js';
 
 /**
- * The six terminal states. Contract: `contexts/execution/terminal-states.md`.
+ * The run terminal states. Contract: `contexts/execution/terminal-states.md`.
  *
  * Alias of the registry's `RunTerminalState`. This module stays the public
  * surface — `runtime_journal.test.ts:212` pins the import path and `:215`
@@ -39,6 +39,11 @@ export const NON_SUCCESS_STATES: ReadonlySet<TerminalState> = new Set([
     'approval-required',
     'exhausted',
     'stagnated',
+    // A run that stopped because its plan premise moved owes the reader the
+    // same thing every other non-success state owes: what to do next. Here that
+    // is always "re-probe and re-plan", and leaving it out of this set would let
+    // an envelope report a halted run with no next action at all.
+    'premise-invalidated',
 ]);
 
 /**
