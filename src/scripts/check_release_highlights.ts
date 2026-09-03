@@ -280,6 +280,7 @@ export function main(argv: readonly string[]): number {
     // reaches another section, another era file, or `docs/archive/`. That is
     // what keeps eighteen historical marker lines from turning this into a
     // permanent red on every future release.
+    const derived = derive_categories(span);
     const drafts = stale_draft_labels(curated);
     if (drafts.length > 0) {
         process.stderr.write(
@@ -292,9 +293,24 @@ export function main(argv: readonly string[]): number {
                 '    historical sections carrying the same marker are out of scope and do not ' +
                 'block this release.\n',
         );
+        // The evidence, not just the verdict. The draft line cites SHAs and a
+        // deriving reason; what a releaser needs in order to write the real
+        // claim is the SUBJECT behind each SHA, and looking eleven of them up
+        // by hand is the friction that made this refusal cheaper to ignore
+        // than to satisfy across five releases. The `_none_` branch below has
+        // printed its evidence since it was built; this one now matches it.
+        for (const label of drafts) {
+            const hits = derived[label] ?? [];
+            if (hits.length === 0) {
+                continue;
+            }
+            process.stderr.write(`    - **${label}:** derived from\n`);
+            for (const e of hits) {
+                process.stderr.write(`        ${e}\n`);
+            }
+        }
         return 1;
     }
-    const derived = derive_categories(span);
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);

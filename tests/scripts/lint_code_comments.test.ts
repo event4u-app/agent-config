@@ -21,7 +21,9 @@ import { describe, expect, it } from 'vitest';
 import {
     COMMENT_CASES,
     fileIsExempt,
+    findingsOnAddedLines,
     isScannable,
+    parseAddedLines,
     scanText,
 } from '../../src/scripts/lint_code_comments.js';
 
@@ -113,4 +115,63 @@ describe('lint_code_comments — the CLI self-test actually runs somewhere', () 
         }
         expect(code).toBe(2);
     });
+});
+
+// Diff scoping: the gate answers for the lines the diff wrote.
+//
+// `.github/workflows/rule-backstops.yml` describes this gate as "diff-scoped,
+// so a pre-existing tree does not turn red". Selecting the FILE set from the
+// diff while scanning each file whole delivered that only for files nobody
+// touched: measured 2026-09-02 on PR #1813, which added no flagged comment and
+// was refused on eleven legacy lines in four files it had edited for unrelated
+// reasons. Both halves are pinned here — a finding on an added line survives,
+// a finding on an untouched line does not, and a file outside the diff
+// contributes nothing at all.
+describe('diff scoping — findings are filtered to the lines the diff added', () => {
+  it('reads added line numbers and counts out of --unified=0 hunk headers', () => {
+    const patch = [
+      'diff --git a/src/a.ts b/src/a.ts',
+      '--- a/src/a.ts',
+      '+++ b/src/a.ts',
+      '@@ -10,0 +11,3 @@',
+      '+// one',
+      '+// two',
+      '+// three',
+      '@@ -40 +43 @@',
+      '-// old',
+      '+// new',
+    ].join('\n');
+    const map = parseAddedLines(patch);
+    expect([...(map.get('src/a.ts') ?? [])].sort((x, y) => x - y)).toEqual([11, 12, 13, 43]);
+  });
+
+  it('treats a header with no count as exactly one line', () => {
+    const map = parseAddedLines(['+++ b/x.ts', '@@ -4 +4 @@', '+// x'].join('\n'));
+    expect([...(map.get('x.ts') ?? [])]).toEqual([4]);
+  });
+
+  it('adds nothing for a deletion, whose post-image is /dev/null', () => {
+    const map = parseAddedLines(['+++ /dev/null', '@@ -1,5 +0,0 @@'].join('\n'));
+    expect(map.size).toBe(0);
+  });
+
+  it('keeps a finding the diff put on an added line', () => {
+    const f = [{ cls: 'de-comment', file: 'a.ts', line: 12, signal: 'x', snippet: 's' }] as const;
+    expect(findingsOnAddedLines(f, new Set([12]))).toHaveLength(1);
+  });
+
+  it('drops a finding on a line the diff never touched — the #1813 case', () => {
+    const f = [{ cls: 'report-comment', file: 'a.ts', line: 230, signal: 'box-rule', snippet: 's' }] as const;
+    expect(findingsOnAddedLines(f, new Set([12, 13]))).toEqual([]);
+  });
+
+  it('keeps everything in an untracked file, whose every line is new', () => {
+    const f = [{ cls: 'de-comment', file: 'new.ts', line: 900, signal: 'x', snippet: 's' }] as const;
+    expect(findingsOnAddedLines(f, 'all')).toHaveLength(1);
+  });
+
+  it('keeps nothing for a file the diff did not touch at all', () => {
+    const f = [{ cls: 'de-comment', file: 'other.ts', line: 1, signal: 'x', snippet: 's' }] as const;
+    expect(findingsOnAddedLines(f, undefined)).toEqual([]);
+  });
 });
