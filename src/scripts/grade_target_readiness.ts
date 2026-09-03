@@ -7,7 +7,7 @@
  * written in a command's markdown cannot be asserted by anything. So the
  * detection is here and the command invokes it; the command keeps the narrative.
  *
- * THE ANTI-VANITY RULE IS STRUCTURAL, NOT A STYLE NOTE. Ten dimensions are
+ * THE ANTI-VANITY RULE IS STRUCTURAL, NOT A STYLE NOTE. Thirteen dimensions are
  * graded 0 Absent / 1 Present / 2 Enforced-in-CI / 3 Independent-and-diff-scoped,
  * and the verdict is `min` over the FOUR knockout dimensions, reported as
  * `L<n> — bound by <dimension>`. **No aggregate number is ever emitted** — no
@@ -113,6 +113,66 @@ function _ciText(root: string): string {
     return out;
 }
 
+/* -- bounded text corpus, for the Phase 4 dimensions ----------------------- */
+
+/** Directories a target scan must never descend into: cost with no signal. */
+const _SKIP_DIRS = new Set([
+    'node_modules', '.git', 'vendor', 'dist', 'build', 'out', 'coverage',
+    '.next', '.nuxt', '.venv', 'venv', '__pycache__', 'target', '.terraform',
+]);
+/** Extensions that can carry a DNS record, a policy doc or an ops runbook. */
+const _CORPUS_RE = /\.(tf|tfvars|hcl|ya?ml|json|txt|zone|dns|ini|conf|cfg|toml|md|env|example|sh)$/i;
+const _CORPUS_MAX_FILES = 2000;
+const _CORPUS_MAX_BYTES = 256 * 1024;
+
+/**
+ * Read a bounded slice of the target's text, once, for the dimensions that
+ * cannot be answered by a root-level `_exists` probe.
+ *
+ * Three dimensions need to see INSIDE files — a DMARC policy is a string in a
+ * zone file or a Terraform record, not a filename — and the existing probes are
+ * all filename-shaped. The walk is capped in three directions (skip list, file
+ * count, per-file bytes) because an unbounded read of an arbitrary target repo
+ * is a cost this grader has no way to predict.
+ *
+ * Returns the concatenated text AND the relative paths, because a dimension that
+ * says WHERE it saw something is auditable and one that only says "somewhere in
+ * the tree" is not.
+ */
+export function _textCorpus(root: string): { text: string; paths: string[] } {
+    const paths: string[] = [];
+    let text = '';
+    const walk = (dir: string, rel: string): void => {
+        if (paths.length >= _CORPUS_MAX_FILES) return;
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+            if (paths.length >= _CORPUS_MAX_FILES) return;
+            const abs = path.join(dir, e.name);
+            const r = rel === '' ? e.name : `${rel}/${e.name}`;
+            if (e.isDirectory()) {
+                if (_SKIP_DIRS.has(e.name)) continue;
+                walk(abs, r);
+                continue;
+            }
+            if (!_CORPUS_RE.test(e.name)) continue;
+            try {
+                if (fs.statSync(abs).size > _CORPUS_MAX_BYTES) continue;
+                text += `${fs.readFileSync(abs, 'utf-8')}\n`;
+            } catch {
+                continue;
+            }
+            paths.push(r);
+        }
+    };
+    walk(root, '');
+    return { text, paths };
+}
+
 /**
  * Is this a Python-primary target?
  *
@@ -125,7 +185,7 @@ export function isPythonTarget(root: string): boolean {
     return py && !other;
 }
 
-// ── the ten dimensions ─────────────────────────────────────────────────────
+// ── the thirteen dimensions ──
 
 /**
  * Grade one dimension. `ci` decides 1 → 2: a thing that exists is `Present`; a
@@ -147,6 +207,113 @@ function _ciBlocks(ci: string, ...needles: string[]): boolean {
     // successor roadmap's problem; stated rather than silently approximated.
     const allSoft = /continue-on-error:\s*true/.test(ci) && !/continue-on-error:\s*false/.test(ci);
     return !allSoft;
+}
+
+/* -- Phase 4 dimension ladders --------------------------------------------- */
+
+interface Scored {
+    grade: Grade;
+    evidence: string;
+}
+
+/** A runbook, a restore procedure, or a rollback path — and whether CI runs it. */
+function _recovery(corpus: { text: string; paths: string[] }, ci: string): Scored {
+    const namedFile = corpus.paths.some((p) => /(^|\/)(runbook|runbooks|disaster-recovery|dr)([./-]|$)/i.test(p));
+    const procedure = /\b(restore from backup|disaster recovery|rollback plan|pg_restore|pg_dump|restic|velero|RPO|RTO)\b/i.test(corpus.text);
+    const present = namedFile || procedure;
+    const enforced = _ciBlocks(ci, 'restore', 'rollback', 'disaster-recovery', 'backup');
+    // A DRILL is what separates a documented procedure from a proven one. It is
+    // the only honest route to 3 here, because "independent" for recovery means
+    // the restore was actually exercised rather than described.
+    const drill = /\b(restore (drill|test|rehearsal)|recovery drill|game ?day)\b/i.test(corpus.text);
+    const seen: string[] = [
+        ...(namedFile ? ['a runbook or DR document'] : []),
+        ...(procedure ? ['a restore/rollback procedure in the text'] : []),
+        ...(enforced ? ['a blocking CI step naming restore/rollback/backup'] : []),
+        ...(drill ? ['a restore drill'] : []),
+    ];
+    return {
+        grade: _graded(present, enforced, drill),
+        evidence: seen.length > 0 ? seen.join('; ') : 'no runbook, restore procedure or rollback path found',
+    };
+}
+
+/**
+ * SPF, DKIM and DMARC — and the rung that must not be fudged (4.2).
+ *
+ *   0 Absent   — no SPF, DKIM or DMARC RECORD anywhere. Prose about DMARC is
+ *                not a DMARC record; the signal is the record shape.
+ *   1 Present  — SPF and/or DKIM published, OR a DMARC record with `p=none`.
+ *                `p=none` is a MONITORING policy: it requests aggregate reports
+ *                and instructs receivers to take no action on a failing message.
+ *                A domain publishing it is measuring the problem, not preventing
+ *                it, so it is capped here however much else sits alongside it.
+ *   2 Enforced — DMARC `p=quarantine` or `p=reject`, with SPF or DKIM to align
+ *                against. An enforcing policy with nothing to align is a policy
+ *                over no signal, and stays at 1.
+ *   3 Top      — `p=reject` with BOTH SPF and DKIM and an `rua=` reporting
+ *                address, so the enforcement can be observed rather than assumed.
+ */
+function _mailAuthenticity(corpus: { text: string }): Scored {
+    const t = corpus.text;
+    const spf = /v=spf1\b/i.test(t);
+    const dkim = /v=DKIM1\b/i.test(t);
+    const dmarc = /v=DMARC1\b/i.test(t);
+    const policy = /v=DMARC1[^"'\n]*?\bp\s*=\s*(none|quarantine|reject)\b/i.exec(t)?.[1]?.toLowerCase();
+    const rua = /v=DMARC1[^"'\n]*?\brua\s*=/i.test(t);
+    const aligned = spf || dkim;
+    const parts = [
+        spf ? 'SPF published' : 'no SPF record',
+        dkim ? 'DKIM published' : 'no DKIM record',
+        dmarc ? `DMARC published (p=${policy ?? 'unset'})` : 'no DMARC record',
+    ];
+    if (!spf && !dkim && !dmarc) {
+        return { grade: 0, evidence: 'no SPF, DKIM or DMARC record found in the tree' };
+    }
+    if (policy === 'none') {
+        return {
+            grade: 1,
+            evidence:
+                `${parts.join('; ')} — capped at Present: p=none is a monitoring policy and is NOT protection, ` +
+                'because receivers are told to take no action on a message that fails. A domain publishing it ' +
+                'scores below one that enforces.',
+        };
+    }
+    if (policy === 'quarantine' || policy === 'reject') {
+        if (!aligned) {
+            return {
+                grade: 1,
+                evidence: `${parts.join('; ')} — an enforcing policy with neither SPF nor DKIM to align against protects nothing yet`,
+            };
+        }
+        if (policy === 'reject' && spf && dkim && rua) {
+            return { grade: 3, evidence: `${parts.join('; ')} — enforcing, both mechanisms aligned, and reporting to an rua address` };
+        }
+        return { grade: 2, evidence: `${parts.join('; ')} — an enforcing DMARC policy with an aligned mechanism` };
+    }
+    return { grade: 1, evidence: `${parts.join('; ')} — a mail-authenticity record exists, with no enforcing DMARC policy above it` };
+}
+
+/** A privacy notice, a retention rule, a consent mechanism, a deletion path. */
+function _privacyObligations(corpus: { text: string; paths: string[] }, ci: string): Scored {
+    const notice =
+        corpus.paths.some((p) => /(privacy|datenschutz|\bdpa\b|data-processing)/i.test(p)) ||
+        /\b(privacy (policy|notice)|Datenschutzerkl)/i.test(corpus.text);
+    const retention = /\b(retention (policy|period|schedule)|data retention|storage limitation)\b/i.test(corpus.text);
+    const consent = /\b(cookie consent|consent (banner|manager|mode)|cookiebot|usercentrics|klaro|borlabs)\b/i.test(corpus.text);
+    const erasure = /\b(right to erasure|data subject request|DSAR|DSR|account deletion|delete my data)\b/i.test(corpus.text);
+    const enforced = _ciBlocks(ci, 'privacy', 'gdpr', 'retention', 'consent', 'dsar');
+    const seen: string[] = [
+        ...(notice ? ['a privacy notice or DPA'] : []),
+        ...(retention ? ['a retention rule'] : []),
+        ...(consent ? ['a consent mechanism'] : []),
+        ...(erasure ? ['an erasure / data-subject-request path'] : []),
+        ...(enforced ? ['a blocking CI step naming a privacy obligation'] : []),
+    ];
+    return {
+        grade: _graded(notice || retention || consent || erasure, enforced),
+        evidence: seen.length > 0 ? seen.join('; ') : 'no privacy notice, retention rule, consent mechanism or erasure path found',
+    };
 }
 
 export function grade(root: string): Matrix {
@@ -310,6 +477,41 @@ export function grade(root: string): Matrix {
         evidence: 'out of scope by design (see the roadmap exclusion table)',
     });
 
+    // 11. operational recovery — NON-KNOCKOUT
+    //
+    // New dimensions are never knockouts. A knockout added today would re-bind
+    // every existing verdict at L0 on the day it shipped, which changes what the
+    // level MEANS while looking like a change to what it measures.
+    const corpus = _textCorpus(root);
+    const recovery = _recovery(corpus, ci);
+    dims.push({
+        id: 'operational-recovery',
+        label: 'operational recovery',
+        knockout: false,
+        grade: recovery.grade,
+        evidence: recovery.evidence,
+    });
+
+    // 12. mail authenticity — NON-KNOCKOUT, own ladder (4.2)
+    const mail = _mailAuthenticity(corpus);
+    dims.push({
+        id: 'mail-authenticity',
+        label: 'mail authenticity',
+        knockout: false,
+        grade: mail.grade,
+        evidence: mail.evidence,
+    });
+
+    // 13. privacy obligations — NON-KNOCKOUT
+    const privacy = _privacyObligations(corpus, ci);
+    dims.push({
+        id: 'privacy-obligations',
+        label: 'privacy obligations',
+        knockout: false,
+        grade: privacy.grade,
+        evidence: privacy.evidence,
+    });
+
     // ── the verdict: min over knockouts, undetectable binds at L0 ──────────
     const knockouts = dims.filter((d) => d.knockout);
     const undetectable = knockouts.find((d) => d.grade === null);
@@ -438,6 +640,23 @@ export function selfTest(): number {
             run: () => {
                 const out = renderMatrix(grade(mk({ 'package.json': '{}', '.github/workflows/ci.yml': BLOCKING_CI })));
                 return /%|\/100/.test(out) ? 1 : 0;
+            },
+        },
+        {
+            name: 'DMARC p=none scores strictly below p=quarantine — monitoring is not protection',
+            expect: 'accept',
+            run: () => {
+                const g = (zone: string): number => {
+                    const d = grade(mk({
+                        'dns/zone.txt': zone,
+                        'dns/spf.txt': '@ IN TXT "v=spf1 include:_spf.example.net -all"\n',
+                        'dns/dkim.txt': 'sel._domainkey IN TXT "v=DKIM1; k=rsa; p=MIIB"\n',
+                    }));
+                    return d.dimensions.find((x) => x.id === 'mail-authenticity')?.grade ?? -1;
+                };
+                const none = g('_dmarc IN TXT "v=DMARC1; p=none; rua=mailto:d@example.com"\n');
+                const quarantine = g('_dmarc IN TXT "v=DMARC1; p=quarantine; rua=mailto:d@example.com"\n');
+                return none === 1 && quarantine === 2 ? 0 : 1;
             },
         },
         {

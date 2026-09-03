@@ -52,6 +52,14 @@
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.
 #
+# RECOUNTED 2026-09-03, on the change that adds `check_agent_artifact_location`.
+# Recomputed on this tree rather than incremented: `count_gate_scripts()` returns
+# **313** and `grep -c '^  - id:'` returns **84** (83 before this row), so
+# 84/313 = 26.8 %. The script count rose by three since the 2026-08-31 block
+# below without any recount in between — the same drift every block here keeps
+# describing, and the reason this one is a new block rather than an edit to that
+# one: that block measured a tree that no longer exists.
+
 # RECOUNTED 2026-08-31, on the change that adds `lint_promotion_paths` — and the
 # 2026-08-30 block above was already stale when this row landed, in BOTH numbers
 # rather than only in the one this change moves. Recomputed on this tree:
@@ -2478,3 +2486,48 @@ gates:
       reason the corpus field gives, so it was never in that population and
       the count stays at 24 either side of this change. The self-test is
       therefore adopted on its merits rather than to clear a ratchet.
+
+  - id: check_agent_artifact_location
+    argv: []
+    min_scanned: 3000
+    corpus: >
+      every `.md` file the whole-tree walk VISITS, not the roadmap-shaped ones it
+      matches. Zero matches is the normal clean state — the repository is
+      expected to have no misplaced roadmap — so only the unfiltered walk can
+      tell "nothing misplaced" from "nothing read", which is the exact
+      distinction this manifest exists to enforce.
+
+      The floor is 3,000 against a real 3,866 on the tree carrying this row.
+      Set well below the true corpus because `docs/archive/` and the roadmap
+      archive legitimately grow and shrink, and far above a collapse: the failure
+      mode this guards is the walk root moving, which would take the count to
+      single digits rather than to 3,000.
+
+      The walk skips `.git`, `node_modules`, `dist/` and the per-tool projection
+      trees (`.claude/`, `.cursor/`, `.augment/`, `.clinerules/`, `.agents/`).
+      Those are generated copies, so a finding there is a finding about `src/`
+      reported twice — excluded from the corpus deliberately, which is why the
+      count is 3,866 rather than the full tree's markdown population.
+
+      SELF-TEST ADOPTED. `--self-test` runs 5 cases, 2 rejecting, against the
+      real CLI over throwaway trees: a roadmap-shaped file under
+      `docs/roadmaps/` and one at the tree root must RED; the byte-identical
+      file under `agents/roadmaps/` and under `agents/roadmaps/later/` must stay
+      GREEN, and so must prose that carries frontmatter and a checkbox but no
+      `## Phase` heading. Both polarities, which is what the originating
+      roadmap's step 1.1 required in as many words: "Both directions, or the
+      detector's polarity is untested."
+    canary:
+      class: contract-violation
+      path: docs/roadmaps/zz-canary-artifact-location.md
+      content: |
+        ---
+        complexity: lightweight
+        status: ready
+        ---
+        # Canary planted by check_gate_coverage --canary; never ships.
+
+        ## Phase 1 - the planted phase
+
+        - [ ] **1.1 A planted step.** Carries all three shape signals so the
+              gate must report it from a directory that is not the roadmap root.

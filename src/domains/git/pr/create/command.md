@@ -149,10 +149,25 @@ than less: the gate can now read the PR's real `baseRefName` from the forge, so
 a stacked or release-line PR is measured against the branch it will actually
 merge into instead of against the repo default.
 
+**The whole SEQUENCE is executable now, not just this step.** All six steps —
+fetch, integrate the base set, regenerate, verify, re-check freshness, then hand
+the push back to you — sit behind one runner, and a dry mode prints each step
+with its outcome without touching the tree. In this package that runner is the
+`push-ready` target in `taskfiles/dev.yml`; a consumer project wires the same
+six steps behind whatever its own task runner is, with steps 3 and 4 being its
+own generator and verify commands. The pre-push hook refuses and points at the
+runner; the hook never merges, because a merge inside `pre-push` rewrites the
+tree at the moment you believe your work is finished.
+
 **The resolution is executable now, not just described.**
 `./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
 (so a stacked or release-line PR is measured against what it actually merges
-into), fetches, and merges it in when the branch is behind. On a conflict it
+into), fetches, and merges it in when the branch is behind. The base is a
+**set**: when the PR targets something other than the default branch, whether
+the default branch joins the set is a per-target policy read from the *target's
+own commit*, never from this branch — see `src/scripts/_lib/branch_convergence.ts`.
+A non-default target with no policy entry is refused, not guessed. The default
+is merged first, so a conflict surfaces against the broader base first. On a conflict it
 STOPS and splits the conflicted paths into generated, remeasured and authored —
 the first has one correct resolution (regenerate), the second's is to re-run the
 measurement on the merged tree (a ratchet baseline, where picking a side is how
