@@ -50,11 +50,20 @@ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 > archived, so that check can never run against this pair again. The standing
 > validator is what closed the gap, not a change to the one-shot one.
 >
-> Two claims are NOT re-verified here and are left as they stand: whether
-> deletion still scores as an estate **credit**
-> (`src/scripts/check_estate_count.ts:490-534`), and the reference-gate reach.
-> Deletion is a hard failure now regardless of how the estate would score it, so
-> the credit question no longer decides anything.
+> Two claims were NOT re-verified when this was written. **One of them is now
+> measured, 2026-09-03, and it moved in the stricter direction:** deleting this
+> file scores as a **shrink of one**, not as a credit and not as nothing.
+> `check_estate_count` reports `active_roadmaps 4 (floor 4, +0)` with the file
+> present and `3 (floor 4, -1)` with it moved aside — probed by moving the file
+> out and back with a byte-identical restore. The mechanism is
+> `countActiveCarriers` (`src/scripts/check_estate_count.ts:460`), added into
+> `active_roadmaps` at `:527` precisely so that flipping a status is
+> count-neutral and a roadmap cannot be laundered out of the count by adding one
+> word. A carrier's removal still earns no offset (`classifyDiff`), so the
+> deletion is visible and unrewarded. The reference-gate reach is still not
+> re-verified. Deletion is a hard failure now regardless of the score, so this
+> changes no disposition — it removes the one thing the earlier text called worse
+> than a credit, which was invisibility.
 >
 > Full derivation, including the 43 inbound-reference census:
 > [`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
@@ -259,6 +268,20 @@ transitions fails closed today, which both seats asked for as a deliberately
 immobile first version. `agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md`
 records it.
 
+## Where the governing Blockers and Acceptance Criteria live
+
+This file carries **no `## Blockers` section and no `## Acceptance Criteria`
+section**, and that is deliberate rather than an omission — it is a receiver,
+not a schedulable roadmap. Both surfaces belong to the archived parent
+`road-to-inbox-harvest-2026-08-e-council-topology-evidence`: nine blocker
+entries, all `Status: resolved` (which is why that roadmap could archive at
+all), and 29 numbered acceptance criteria. Each of the 38 obligations below is
+measured against those, not against anything in this file.
+
+Stated here because the absence is otherwise indistinguishable from an artefact
+that forgot to write them, and a reader concluding the obligations carry no
+acceptance criteria would conclude the opposite of the truth.
+
 ## What this file may NOT be read as claiming
 
 That any deferred mechanism was verified against a real population; that
@@ -333,6 +356,23 @@ have been a visible delta — a number moving, something a reader or a ratchet
 could notice. There is none. The deletion is not merely unpunished; it is
 **invisible**. The header's wording is left in place above and corrected here
 rather than rewritten, so the claim and its refutation stay side by side.
+
+**Re-measured 2026-09-03 — the invisibility is closed, and this paragraph is
+appended rather than rewritten for the same reason the paragraph above was.**
+`check_estate_count` now reports `active_roadmaps 4 (floor 4 at origin/main, +0)`
+with this file present and `3 (floor 4, -1)` with it moved aside. Probed by
+moving the file out, running the gate, and moving it back to a byte-identical
+copy; the working tree was clean before and after.
+
+The mechanism is `countActiveCarriers` (`src/scripts/check_estate_count.ts:460`),
+whose result is added into `active_roadmaps` at `:527`. Its own docblock states
+the defect it closes, and it is this one: *"flipping one file to `carrier` moved
+`active_roadmaps 3 → 2` and the gate printed 'estate within its ratchet'
+… any roadmap can be laundered out of the count by adding one word."* So the
+`status: draft`-then-`carrier` invisibility this section measured on 2026-09-01
+was a real hole and is now plugged from the other side. Deleting this file is a
+**visible** shrink of one — and still earns no offset, because `classifyDiff`
+grants none for a carrier's removal, which is the half that has not changed.
 
 ### Why the gap was not closed in this run
 

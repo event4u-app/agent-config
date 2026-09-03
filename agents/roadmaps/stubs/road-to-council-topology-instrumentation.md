@@ -57,7 +57,7 @@ The guard is falsifiable today; the thing it guards does not exist.
 | 11.1 | `tests/scripts/ai_council/routing_training_row.test.ts` | 3 of 13 RED |
 | 12.1 | `tests/scripts/ai_council/council_topology_surface.test.ts` | 3 of 11 RED |
 | 12.2 | `tests/scripts/ai_council/explain_route.test.ts` | 6 of 15 RED |
-| 12.3 | `tests/scripts/ai_council/force_topology_prohibitions.test.ts` | 4 of 11 RED, byte-identical restore |
+| 12.3 | `tests/scripts/ai_council/force_topology_prohibitions.test.ts` | 3 of 13 and 1 of 13 RED across two sabotages, byte-identical restore (sha256-pinned) |
 
 **Resumption trigger, per step:** when the population it guards — topology
 selection, a force-topology control, a stage-output producer, prompt storage on
@@ -73,10 +73,22 @@ test exists and detects the planted violation.
 ## Group 2 — three steps whose mechanism is unbuilt
 
 - **5.4** *Final synthesis retains unresolved disagreement, the strongest
-  minority evidence, and what evidence would resolve it.* No synthesis template
-  asks for any of the three: `DEFAULT_SYNTHESIS`
-  (`src/scripts/ai_council/prompts.ts:284`) and its three siblings are all
-  silent. The openai seat refined the framing and it is worth keeping: the
+  minority evidence, and what evidence would resolve it.* **Corrected
+  2026-09-03: the templates are not silent, and the remaining gap is one element
+  of the three, not all three.** Measured over
+  `src/scripts/ai_council/prompts.ts`: element 1, unresolved disagreement, is
+  asked for by all four templates — `### Clashes` in `DEFAULT_SYNTHESIS`
+  (`:291`, "State both sides with a one-line reviewer-label citation per side"),
+  `### Conflicts` in `PR_SYNTHESIS` (`:320`), `### Outliers` in
+  `ANALYSIS_SYNTHESIS` (`:356`), and the mandated convergence / divergence
+  synthesis in `CREATIVE_SYNTHESIS` (`:380`). Element 2, retaining the strongest
+  minority evidence, is asked for by one — `### Outliers`, "Keep them — they are
+  signal for a future deeper analysis pass" (`:356-358`). Element 3, what
+  evidence would resolve the disagreement, appears in **none**: a grep for that
+  clause across the file returns zero, and `### Kill criteria` (`:305`, `:332`,
+  `:366`, `:384`) falsifies the *recommendation*, not the disagreement. So 5.4's
+  remaining scope is ONE element in four templates. The openai seat refined the
+  framing and it is worth keeping: the
   population here is **not** empty — dissent exists today. What is absent is an
   explicit synthesis contract and a qualifying validation run. Both seats
   refused to license building it as prose-only: *"merely adding prose to four
@@ -88,8 +100,11 @@ test exists and detects the planted violation.
 - **10.2** *Attribute each useful correction to the first stage where it
   appeared.* The vocabulary exists with **no producer**: `StageOutput {stage,
   produced, calls}` (`src/scripts/ai_council/replay_route.ts:49-54`) is carried
-  on `CouncilRouteRecord` (`:74`), and the module's only importer anywhere is
-  its own test.
+  on `CouncilRouteRecord` (`:74`), and its only importers anywhere are two test
+  files — `tests/scripts/ai_council/replay_route.test.ts` and
+  `tests/scripts/ai_council/probe_path_above_council.test.ts`. **Zero production
+  importers**, which is the load-bearing half; the count was corrected 2026-09-03
+  from "its own test" alone.
   **Resume when** production code emits stage records and a real correction
   crosses observable stages. **Do not claim** per-correction attribution or
   operational use of `CouncilRouteRecord`.
