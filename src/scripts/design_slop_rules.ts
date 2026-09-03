@@ -214,20 +214,30 @@ export const SLOP_RULES: SlopRule[] = [
     catalogId: "V1",
     severity: "P1",
     engines: ["css"],
-    description: "Colored side-stripe border (border-left/right > 1px) — the #1 AI-UI signature",
+    description:
+      "Colored accent border > 1px — a side stripe, a four-sided colored border, or a gradient border-image (V1)",
     message:
-      "Side-stripe accent border reads as scaffold-default. Remove it, or declare an intentional stripe in DESIGN.md (V1).",
-    gated: (ctx) => ctx.has("side stripe", "side-stripe", "stripe accent", "accent border"),
+      "Colored accent border reads as scaffold-default. Remove it, or declare an intentional accent border in DESIGN.md (V1).",
+    gated: (ctx) =>
+      ctx.has("side stripe", "side-stripe", "stripe accent", "accent border", "card border"),
     detect: ({ content }) =>
       cssBlocks(content)
-        // a side-stripe is a left/right border with a width > 1px and a color;
         // exclude semantic blockquote/quote selectors (legitimate left rule)
         .filter((b) => !/blockquote|\bquote\b|<q>/i.test(b.selector))
-        .filter((b) =>
-          /border-(?:left|right)\s*:\s*(?:[2-9]|\d{2,})px\s+\w+\s+(?:#|rgb|hsl|oklch|var\(|[a-z])/i.test(
-            b.body,
-          ),
-        )
+        .filter((b) => {
+          // A colored value, but never a placeholder one: `transparent` and
+          // `currentColor` at > 1px are the layout-reservation and
+          // inherit-the-text-color idioms, not an accent decision.
+          const COLOR = "(?!transparent|currentcolor|inherit|initial|unset)(?:#|rgb|hsl|oklch|var\\(|[a-z])";
+          const WIDTH = "(?:[2-9]|\\d{2,})px";
+          // (a) the original side stripe: border-left / border-right
+          const stripe = new RegExp(`border-(?:left|right)\\s*:\\s*${WIDTH}\\s+\\w+\\s+${COLOR}`, "i");
+          // (b) the current form: a fully colored border on all four sides
+          const foursided = new RegExp(`border\\s*:\\s*${WIDTH}\\s+\\w+\\s+${COLOR}`, "i");
+          // (c) a gradient border, which carries no width token at all
+          const gradient = /border-image\s*:[^;]*(?:linear|conic|radial)-gradient/i;
+          return stripe.test(b.body) || foursided.test(b.body) || gradient.test(b.body);
+        })
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
   },
   {
