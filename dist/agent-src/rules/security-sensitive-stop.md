@@ -15,6 +15,10 @@ triggers:
   - keyword: "webhook"
   - keyword: "oauth"
   - keyword: "signing key"
+  - keyword: "file upload"
+  - keyword: "ssrf"
+  - keyword: "api resource"
+  - keyword: "endpoint"
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
@@ -26,6 +30,7 @@ enforced_by:
   - "instruction-only: threat-model-before-you-edit is a pre-edit reasoning step only the model observes"
 collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
+  "endpoint": "the threat pass runs BEFORE the edit the endpoint rules govern — public endpoints and data exposure are rows of this rule's own table"
 # obligation: line 36
 obligation_frequency: "per-edit"
 evidence:

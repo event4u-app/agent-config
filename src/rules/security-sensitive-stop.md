@@ -15,6 +15,11 @@ triggers:
   - keyword: "webhook"
   - keyword: "oauth"
   - keyword: "signing key"
+  - keyword: "file upload"
+  - keyword: "ssrf"
+  - keyword: "api resource"
+  - keyword: "public endpoint"
+  - keyword: "status endpoint"
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
