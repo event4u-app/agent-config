@@ -434,6 +434,36 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.15.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.15.0](https://github.com/event4u-app/agent-config/compare/14.14.1...14.15.0) (2026-09-03)
+
+### Release highlights
+
+- **Behaviour changes:** stage-2 impact scan, so a refused merge can be answered in four words (5a3b7c5).
+- **Default changes + migration:** _none_
+- **Security and correctness:** make the derived head publishable, so a release stops halting by construction (e6f6744); ask for the curated head before the release commit, not after (e31f07a).
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **authz:** stage-2 impact scan, so a refused merge can be answered in four words ([5a3b7c5](https://github.com/event4u-app/agent-config/commit/5a3b7c5064b2e92523781530cbfe6ef09bd26f35))
+* **authz:** classify the 17 destructive operations the guard could not see ([a1327b2](https://github.com/event4u-app/agent-config/commit/a1327b2767751d4ce6e680af1b8f9732faf97b88))
+* **authz:** target-bound merge grants that outlive the clock ([c286570](https://github.com/event4u-app/agent-config/commit/c286570d1e9a421a51571bb27e3a2945a54e8f8c))
+
+### Bug Fixes
+
+* **docs:** cite the head label as code, not bold — the ratchet counts bold ([3f78ead](https://github.com/event4u-app/agent-config/commit/3f78ead4fd9023ed189ccd15aac2659397072ca8))
+* **release:** make the derived head publishable, so a release stops halting by construction ([e6f6744](https://github.com/event4u-app/agent-config/commit/e6f67444c0c11873f6231fd007b70b404f9e883a))
+* **ci:** drop code-comment-discipline from the rule-enforcement baseline ([731924a](https://github.com/event4u-app/agent-config/commit/731924ae778191bafefb3bbcfcb92c2acf76b558))
+* **release:** ask for the curated head before the release commit, not after ([e31f07a](https://github.com/event4u-app/agent-config/commit/e31f07ab8bb4b25e048f1b4c78ffa32b27fd59f5))
+
+### Documentation
+
+* **adr:** ADR-252 evidence section, and the census it moves ([19e99a4](https://github.com/event4u-app/agent-config/commit/19e99a4febfc6e9f8d092ecafc8c8e23c8f1699e))
+* **adr:** ADR-252 supersedes ADR-251 — specificity replaces recency, for merge only ([ef930e0](https://github.com/event4u-app/agent-config/commit/ef930e01d450a4b78730f545a4f04eab1812eccb))
+
+Tests: 20922 (+146 since 14.14.1)
+
 ## [14.14.1](https://github.com/event4u-app/agent-config/compare/14.14.0...14.14.1) (2026-09-03)
 
 ### Release highlights
