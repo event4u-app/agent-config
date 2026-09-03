@@ -17,6 +17,10 @@ import { NON_SUCCESS_STATES } from '../../src/scripts/_lib/outcome_envelope.js';
 import type { TerminalState } from '../../src/scripts/_lib/outcome_envelope.js';
 import { repeatedFailureRate } from '../../src/scripts/_lib/repeated_failure.js';
 import {
+    RUN_TERMINAL_STATES,
+    RUN_TERMINAL_VOCABULARY_VERSION,
+} from '../../src/scripts/_lib/outcome_vocabularies.js';
+import {
     BOUNDARY_RULE_VERSION,
     CONSUMPTION_STATES,
     createHold,
@@ -35,6 +39,7 @@ import {
     pruneExpired,
     readRetention,
     RECONSTRUCTION_NULLABLE_FIELDS,
+    readAllEvents,
     RECORDED_EVENTS,
     reconstructEpisode,
     recordEvent,
@@ -206,7 +211,13 @@ describe('spine fields (2.1)', () => {
         for (const s of NON_SUCCESS_STATES) {
             expect(TERMINAL_STATES).toContain(s);
         }
-        expect(TERMINAL_STATES).toHaveLength(6);
+        // Bound to the REGISTRY, not to a literal count. The literal `6` here was
+        // the arity of the day, and it made a legitimate vocabulary extension
+        // look like a fork of the very list this test exists to keep singular —
+        // which is the opposite of what it is for. Identity is the assertion:
+        // this export IS `RUN_TERMINAL_STATES`, whatever length that has.
+        expect(TERMINAL_STATES).toBe(RUN_TERMINAL_STATES);
+        expect(TERMINAL_STATES).toHaveLength(RUN_TERMINAL_STATES.length);
     });
 
     it('the module imports the state type and never redeclares it as a literal union', () => {
@@ -743,5 +754,68 @@ describe.runIf(sqliteOk)('amendment (3.1)', () => {
 
     it('the rate is null, never zero, when nothing was classifiable', () => {
         expect(repeatedFailureRate([]).rate).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The value domain of `terminal_state` — road-to-wired-instruments Phase 2.3
+// ---------------------------------------------------------------------------
+
+describe('terminal_state — a widened value domain, read tolerantly', () => {
+    it.skipIf(!sqliteOk)('the seventh state is accepted on write and round-trips', () => {
+        recordEvent(h, {
+            event: 'session_start',
+            session_id: 's-pi',
+            capability: 'run-continuation',
+            terminal_state: 'premise-invalidated',
+        });
+        const rows = readAllEvents(h);
+        expect(rows.at(-1)?.terminal_state).toBe('premise-invalidated');
+    });
+
+    it.skipIf(!sqliteOk)('a value outside the vocabulary is still refused at the WRITE boundary', () => {
+        // Tolerance belongs on the read side only. A writer emitting a value
+        // this build does not know is a bug in the writer, and accepting it
+        // would put the corruption INTO the store rather than keep it out.
+        expect(() =>
+            recordEvent(h, {
+                event: 'session_start',
+                session_id: 's-bad',
+                capability: 'run-continuation',
+                terminal_state: 'teleported' as never,
+            }),
+        ).toThrow(JournalContractError);
+    });
+
+    it.skipIf(!sqliteOk)('a row written by a NEWER vocabulary reads as not-recorded, never as a crash', () => {
+        // The forward-compatibility case, planted the only way it can be: the
+        // write guard refuses it, so the row goes in under the guard. This is
+        // what an older build meets when a newer one has written to the store.
+        recordEvent(h, {
+            event: 'session_start',
+            session_id: 's-future',
+            capability: 'run-continuation',
+        });
+        h.db.exec("UPDATE journal_event SET terminal_state = 'from-the-future' WHERE session_id = 's-future'");
+
+        const rows = readAllEvents(h).filter((e) => e.session_id === 's-future');
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.terminal_state).toBeNull();
+
+        // And the metric downstream of it counts the episode as unclassified
+        // rather than mis-classifying it or throwing.
+        const ep = reconstructEpisode(h, rows[0]!.episode_id);
+        expect(ep).not.toBeNull();
+        const rate = repeatedFailureRate([ep!]);
+        expect(rate.unknown).toBe(1);
+        expect(rate.failed).toBe(0);
+    });
+
+    it('the value domain is versioned separately from the table schema', () => {
+        // `JOURNAL_SCHEMA_VERSION` covers tables and columns and does not move
+        // when the value domain of one column widens — so the domain carries its
+        // own number in the registry.
+        expect(RUN_TERMINAL_VOCABULARY_VERSION).toBeGreaterThanOrEqual(2);
+        expect(TERMINAL_STATES).toContain('premise-invalidated');
     });
 });

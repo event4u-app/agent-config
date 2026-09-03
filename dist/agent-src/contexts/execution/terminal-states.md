@@ -10,7 +10,7 @@ identically to a win: a loop that hit its iteration cap, a gate that could not
 run, an approval that never came — each ending with a summary that says the work
 is done.
 
-## The six states
+## The seven states
 
 | state | what it means | what it is NOT |
 |---|---|---|
@@ -20,6 +20,23 @@ is done.
 | `approval-required` | The work is ready and the next action crosses a gate the agent may not cross alone. | Not `blocked`: nothing is missing, and the run produced a deliverable. |
 | `exhausted` | A declared budget ran out — iterations, tokens, spend, wall-clock. | **Never** `success`, whatever partial progress exists. The cap firing IS the outcome. |
 | `stagnated` | The budget has not run out and progress has stopped: the same failure signature is repeating. | Not `exhausted`. Stagnation is detected by a NO-PROGRESS signal, not by a counter. |
+| `premise-invalidated` | The plan premise moved: the situational-awareness fingerprint the run engaged under (`origin/main` plus every open PR head) was re-observed and differs. | Not `exhausted` — the budget is untouched. Not `stagnated` — progress may have been fine. Not `blocked` — nothing is missing; what the run knew went stale. |
+
+**Why `premise-invalidated` is not `blocked` with a reason field.** Added
+2026-09-03 (AI council, unanimous) when the continuation ladder needed a word for
+a run whose base ref and open-PR set had moved under it. Reusing `blocked` keeps
+the arity at six and loses two things that are not decorative: the ability to
+COUNT premise invalidation separately from a missing precondition, and
+type-enforced exhaustive handling in the consumers that switch on the state. The
+remedies differ as sharply as `exhausted` and `stagnated` do — `blocked` says
+obtain the missing thing, `premise-invalidated` says re-probe and re-plan against
+the world as it now is.
+
+A consumer that cannot represent it reports `blocked`, which is the DECLARED
+downgrade in `_lib/outcome_vocabularies.ts` and not an ad-hoc substitution. The
+value domain is versioned (`RUN_TERMINAL_VOCABULARY_VERSION`, v2), and a reader
+meeting an unrecognised persisted value reports it as not-recorded rather than
+crashing or guessing.
 
 **Why `exhausted` and `stagnated` are separate**, when both stop a loop: they
 have different remedies and different next actions. `exhausted` says *the work
@@ -40,8 +57,8 @@ budget-exhausted stop indistinguishable from a completed one in a dashboard.
 | `[~]` | deferred | `blocked` or `approval-required`, undistinguished |
 | `[-]` | cancelled | *(a decision, not a run outcome)* |
 
-**Three states have no glyph, and they are exactly the ones a validation budget
-and a hard-blocker class produce:**
+**Four states have no glyph, and they are exactly the ones a validation budget,
+a hard-blocker class and a drift detector produce:**
 
 1. **`exhausted`** — the run stopped at its cap with the step still open. The
    glyph stays `[ ]`, which is identical to *never attempted*. A reader cannot
@@ -51,6 +68,8 @@ and a hard-blocker class produce:**
 3. **`approval-required`** — collapses into `[~]` alongside `blocked`, so a
    roadmap cannot show that the work is FINISHED and waiting on a human, versus
    not startable at all.
+4. **`premise-invalidated`** — same `[ ]` again, and the reader cannot see that
+   the step was not attempted because the plan it belonged to went stale.
 
 **This is recorded rather than fixed.** Adding glyphs would change a format that
 `update_roadmap_progress`, `check_roadmap_trackable`, `lint_empty_roadmaps` and
@@ -75,11 +94,13 @@ applies unchanged.
 
 ## Reporting contract
 
-A closing report names the state **by one of the six words above**, and where the
+A closing report names the state **by one of the seven words above**, and where the
 state is not `success` it names what would change it:
 
 - `exhausted` — the budget that ran out, its value, and what was achieved inside it.
 - `stagnated` — the repeating failure signature, and the attempts it survived.
+- `premise-invalidated` — which fingerprint was claimed, which was observed, and
+  that the next act is a re-probe rather than another iteration.
 - `blocked` — the missing thing, by name.
 - `approval-required` — the exact action awaiting approval.
 - `clean-no-op` — what was scanned, so "nothing to do" is distinguishable from
