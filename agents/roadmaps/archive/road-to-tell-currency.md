@@ -168,7 +168,7 @@ status-table row so the parity gate stays green.
 
 ## Phase 4 — What the tree itself emits
 
-- [ ] **4.1 Check the remaining own-estate tell after the icon default is
+- [x] **4.1 Check the remaining own-estate tell after the icon default is
       removed.** `road-to-declared-coverage-truth` Phase 3 removes the Lucide
       default from `iconography`. Re-run the same question across the other apply
       skills — `react-shadcn-ui`, `tailwind-engineer`, `blade-ui`,
@@ -176,6 +176,31 @@ status-table row so the parity gate stays green.
       an agent as a default that the catalog then flags.
       verify: the sweep is recorded with per-skill findings, and each finding is
       either fixed or stated as intentional with a reason.
+      **Recorded in `agents/evidence/analysis/tell-currency-corpus-audit-2026-09-03.md`,
+      and the council widened the scope 2/2.** The four named skills are three
+      clean and one gap: `react-shadcn-ui` and `tailwind-engineer` already forbid
+      their ecosystem default with a catalog citation, `fe-design` correctly owns
+      none, and `blade-ui` cites four ids of which none is a Laravel default
+      while delegating the concrete bans to a skill that bans Tailwind's. So the
+      step's literal scope was satisfiable with no edit, which is why
+      `design-intelligence` was added: it is the one place in the tree that
+      recommends three of the four tells this roadmap added, with copy-paste
+      code.
+      **Three findings fixed here.** The sharpest was
+      `data/ux-guidelines.csv:9`, whose column literally named `Code Example
+      Good` carried `transition-all duration-200` — M4's exact defect, M4 being
+      `backed`, and invisible to it twice over (`.csv` has no engine, and the
+      detector matches `transition: all`, not the Tailwind class). Plus two
+      stale catalog id ranges in `react-shadcn-ui` and `fe-design` that made
+      `V8`, `L9` and `L10` unreachable, and a register-scoping overclaim
+      ("every entry … register-scoped" — only T7 and T8 are, measured).
+      **41 further prescriptive collisions carried to a named receiver**, not
+      stated as intentional, because for most of them that would be false —
+      they are defects. Fourteen rows were checked and are NOT defects and are
+      recorded as such, and nine catalog ids have no corpus recommendation at
+      all. Two of the sweep's own gaps closed by accident: it reported
+      pointer-spotlight and grain-over-gradient as uncatalogued, and this
+      roadmap added M7 and V9.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-03 | reviewer: claude/host -->
@@ -213,5 +238,10 @@ status-table row so the parity gate stays green.
       `backed`, so its prose cannot move without its rule, and the rule needs a
       position-based adjacency heuristic that the registry's own
       dependency-free, no-DOM design has a standing precedent against.
-- [ ] AC-4 — The apply-skill sweep of 4.1 is recorded, and every default it
+- [x] AC-4 — The apply-skill sweep of 4.1 is recorded, and every default it
       finds is either removed or stated as intentional with a reason.
+      Met, with the third disposition used where neither of the two applies:
+      3 fixed, 14 measured as not-defects with the reason, 41 carried to
+      `agents/roadmaps/later/road-to-grounding-corpus-catalog-parity.md` with a
+      per-cluster step and a resume condition. "Stated as intentional" would
+      have been false for the 41, so a named receiver is what they got.
