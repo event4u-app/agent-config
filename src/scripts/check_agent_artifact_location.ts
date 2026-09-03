@@ -4,23 +4,19 @@
  *
  * WHAT IT PROTECTS, AND WHAT IT DOES NOT.
  * ---------------------------------------
- * This gate protects THIS repository. The failure it was written for happened
- * somewhere else: in a consumer monorepo, a roadmap was written to
- * `apps/<app>/docs/roadmaps/` instead of `agents/roadmaps/`, and nothing
- * noticed — because every mechanism that governs a roadmap is keyed on the path
- * it was not written to. `roadmap-progress-sync` triggers on
- * `path_prefix: agents/roadmaps/`; `check_roadmap_trackable` roots at
- * `ROADMAP_ROOT = 'agents/roadmaps'`; `check_estate_count` reads the same
- * corpus; `lint_agents_layout` scans inside `agents/` only. The artefact escaped
- * every rule that concerned it, silently.
+ * This gate protects THIS repository, and only this one. A consumer repository
+ * never runs this repository's CI, so a gate scoped here protects the tree
+ * where the error is LEAST likely to occur — the observed failure was in a
+ * consumer project. That is not a reason to skip it, since the same mistake is
+ * possible here, but it IS a reason to write the limit down: a gate whose reach
+ * is not stated gets cited as broader than it is.
  *
- * A consumer repository never runs this repository's CI, so a gate scoped here
- * protects the tree where the error is LEAST likely to occur. That is not a
- * reason to skip it — the same mistake is possible here — but it IS a reason to
- * write the limit down, because a gate whose reach is not stated gets cited as
- * broader than it is. The outward-facing half is `agent-config doctor`, which
- * already knows the consumer shape; carrying a finding there is Phase 2 of the
- * originating roadmap, not this file.
+ * The outward-facing half is `agent-config doctor --strict`, which already
+ * knows the consumer shape and can now return a non-zero exit.
+ *
+ * The constraint the detection rests on: every other mechanism that governs a
+ * roadmap is keyed on the roadmap root, so a file placed outside it is governed
+ * by nothing. This gate is the one that is keyed on the complement.
  *
  * WHY THE NAME TEST ALONE IS NOT THE DETECTOR.
  * -------------------------------------------

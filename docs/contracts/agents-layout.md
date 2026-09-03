@@ -24,7 +24,7 @@ keep-beta-until: 2026-08-17
    projects would commit their inbox without the managed block entry.
 4. **The reader decides the directory: `docs/` is product documentation for
    humans, `agents/` is agent working material.** A roadmap, an evidence report,
-   a decision-in-progress and a session artefact are agent working material
+   a decision-in-progress and a session artifact are agent working material
    whoever wrote them, and they belong under `agents/` in every repository this
    package is installed into.
 
@@ -34,9 +34,9 @@ keep-beta-until: 2026-08-17
    monorepo a frontend roadmap was written to `apps/<app>/docs/roadmaps/`
    because `agents/` was not there to be seen, and nothing noticed — every
    mechanism that governs a roadmap is keyed on the path it was not written to.
-   The absence of the directory is the *state before the first artefact*, not a
-   signal about where artefacts go.
-5. **An artefact has no authority over its own location.** A location note
+   The absence of the directory is the *state before the first artifact*, not a
+   signal about where artifacts go.
+5. **An artifact has no authority over its own location.** A location note
    inside a file — "this lives under `docs/roadmaps/`", a path in a header, a
    sentence naming its own directory — is a **prior session's intent**, to be
    checked against this contract. Where the two diverge, the divergence is the
@@ -46,7 +46,7 @@ keep-beta-until: 2026-08-17
    mechanism reads this clause, and the postmortem that produced it is right
    that it would not have stopped the run it describes: that agent read a
    location note, acted on it, and then defended the result. It is carried
-   anyway because it generalises past location — an artefact's self-description
+   anyway because it generalises past location — an artifact's self-description
    is evidence about what someone once intended, never authority over what is
    true now — and because a rule nobody wrote down cannot be cited by the next
    reviewer either.

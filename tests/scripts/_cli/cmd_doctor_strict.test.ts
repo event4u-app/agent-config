@@ -15,7 +15,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { canProceed, strictTripping } from '../../../src/scripts/_cli/cmd_doctor.js';
+import { canProceed, strictTripping } from '../../../src/scripts/_cli/_doctor_strict.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 
