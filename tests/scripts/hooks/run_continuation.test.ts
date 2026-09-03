@@ -40,6 +40,8 @@ import {
     scanOpenSteps,
     stateRelPath,
     type RunState,
+    parseHaltStamp,
+    terminalStateFor,
 } from '../../../src/scripts/hooks/run_continuation_hook.js';
 import {
     deriveSessionKey,
@@ -188,6 +190,84 @@ describe('ladder — both directions pinned', () => {
         expect(ladder(stalled, 2, Date.now(), 0)).toBe('engage');
         // Fewer than STALL_WINDOW readings can never read as a stall.
         expect(ladder(base({ iterations: 2, history: [3, 3] }), 3, Date.now(), 0)).toBe('engage');
+    });
+});
+
+describe('ladder — the premise rung (road-to-wired-instruments 2.1 / 2.2)', () => {
+    const base = (over: Partial<RunState> = {}): RunState => ({
+        started_at: new Date().toISOString(),
+        iterations: 0,
+        last_turn: -1,
+        history: [],
+        ...over,
+    });
+
+    it('a disagreeing fingerprint halts under its OWN word', () => {
+        expect(ladder(base(), 5, Date.now(), 0, undefined, null, true)).toBe(
+            'halt-premise-invalidated',
+        );
+    });
+
+    // 2.2's whole point: the two are different findings, and before this rung a
+    // run whose plan went stale ground on until the counter ended it as
+    // `exhausted` — a budget word, whose remedy (raise the budget) is wrong here.
+    it('it fires BEFORE the iteration cap, so a stale plan is never reported as exhausted', () => {
+        const capped = base({ iterations: MAX_ITERATIONS });
+        expect(ladder(capped, 5, Date.now(), 0, undefined, null, false)).toBe(
+            'halt-max-iterations',
+        );
+        expect(ladder(capped, 5, Date.now(), 0, undefined, null, true)).toBe(
+            'halt-premise-invalidated',
+        );
+    });
+
+    it('and before the wall clock and the stall rungs, for the same reason', () => {
+        const old = new Date(Date.now() - WALL_CLOCK_CAP_MS - 1000).toISOString();
+        expect(ladder(base({ started_at: old, iterations: 1 }), 3, Date.now(), 0, undefined, null, true)).toBe(
+            'halt-premise-invalidated',
+        );
+        expect(ladder(base({ iterations: 4, history: [3, 3, 3] }), 3, Date.now(), 0, undefined, null, true)).toBe(
+            'halt-premise-invalidated',
+        );
+    });
+
+    // The negative half Risk 1 asks for. A rung that fires on ordinary base
+    // movement would halt every long run and be switched off within a day, so
+    // "no observed disagreement" must be indistinguishable from the old ladder.
+    it('an agreeing or unknown premise leaves every other verdict untouched', () => {
+        expect(ladder(base(), 5, Date.now(), 0, undefined, null, false)).toBe('engage');
+        expect(ladder(base(), 5, Date.now(), 0)).toBe('engage');
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false)).toBe('complete');
+    });
+
+    // Finished work cannot be un-finished by a stale premise: `complete` and
+    // `blocked` are decided from the roadmap and sit ABOVE this rung.
+    it('a completed or blocked scope outranks it', () => {
+        expect(ladder(base(), 0, Date.now(), 0, undefined, null, true)).toBe('complete');
+        expect(ladder(base(), 0, Date.now(), 1, undefined, null, true)).toBe('blocked');
+    });
+
+    it('an unobtainable dependency still outranks it — a missing thing is nameable', () => {
+        expect(
+            ladder(base(), 5, Date.now(), 0, undefined, { kind: 'credential', evidence: 'x' }, true),
+        ).toBe('halt-dependency-unavailable');
+    });
+
+    it('it IS a halt: stamped, terminal, and in HALT_ACTIONS', () => {
+        expect(HALT_ACTIONS).toContain('halt-premise-invalidated');
+        expect(ladder(base({ halted: 'halt-premise-invalidated' }), 5, Date.now(), 0)).toBe(
+            'halt-premise-invalidated',
+        );
+    });
+
+    it('every rung maps onto a run terminal state, and this one onto its own', () => {
+        expect(terminalStateFor('halt-premise-invalidated')).toBe('premise-invalidated');
+        expect(terminalStateFor('halt-max-iterations')).toBe('exhausted');
+        expect(terminalStateFor('halt-stall')).toBe('stagnated');
+        expect(terminalStateFor('halt-dependency-unavailable')).toBe('blocked');
+        expect(terminalStateFor('complete')).toBe('success');
+        // The one action that is not terminal.
+        expect(terminalStateFor('engage')).toBeNull();
     });
 });
 
@@ -566,5 +646,26 @@ describe('run_continuation — the dependency-halt WIRING, not only the rung', (
         const recovered = Array.from({ length: 400 }, (_, i) => `step ${i} ok`);
         fs.writeFileSync(t, [stale, ...recovered].join('\n'), 'utf8');
         expect(readUnavailableDependency(t)).toBeNull();
+    });
+});
+
+describe('parseHaltStamp — the ladder vocabulary is a persisted domain too', () => {
+    it('accepts every known halt rung', () => {
+        for (const a of HALT_ACTIONS) expect(parseHaltStamp(a)).toBe(a);
+    });
+
+    it('PRESERVES an unknown halt rung from a newer build', () => {
+        // The forward-compatibility case. Dropping it downgrades a deliberate
+        // halt to no halt, and the older binary then re-engages a run that was
+        // ended — fail-open in the one direction a budget must not fail open.
+        expect(parseHaltStamp('halt-from-a-future-version')).toBe('halt-from-a-future-version');
+    });
+
+    it('drops anything that is not a halt stamp at all', () => {
+        // `engage` / `complete` / `blocked` are verdicts, not stamps: accepting
+        // one here would immortalise a state file the terminal branches delete.
+        for (const v of ['engage', 'complete', 'blocked', '', 'haltish', null, undefined, 7, {}]) {
+            expect(parseHaltStamp(v)).toBeNull();
+        }
     });
 });
