@@ -29,7 +29,7 @@ import {
     classifyDiff,
     describeImpact,
     type MergeImpact,
-} from '../../src/scripts/hooks/merge_impact.ts';
+} from '../../src/scripts/hooks/merge_impact.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
