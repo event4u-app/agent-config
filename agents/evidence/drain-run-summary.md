@@ -522,79 +522,25 @@ commit that cannot change what this summary describes.
 
 ---
 
-# Autonomous roadmap drain — run 18, 2026-09-03
+## Run 18, continued — the half that happened after a context reset
 
-Recorded after a context reset mid-run, so the run has two halves: the six
-completion PRs below were opened between 04:01 and 05:27 UTC, and the second
-half re-derived the inventory from the tree, verified each PR's closure claims
-from the pushed refs, and cleared the one gate that had gone red under all six.
+The record above was written from inside run 18 and is the authoritative account
+of its first half: the recomputed queue, the council decisions standing in for
+each maintainer signature, the parked carrier, and the shared `npm audit` defect
+that #1822 fixed. This section adds only what happened after it, and contradicts
+none of it. Same run, same instruction, one context reset in the middle.
 
-## The instruction, and where it did not match the tree
+### The six PRs were red after #1822, and #1822 is why
 
-The brief seeded **36 active roadmaps** at commit `c536dbd` and said to
-recompute before use. Recomputed at `54f024250`, the live inventory was **7** —
-the seed list was stale by roughly thirty archivals, the same way it was stale
-for run 17. It was discarded and the queue rebuilt from the tree.
+#1822 cleared the audit advisories **on `main`**. The six completion PRs were
+opened before it merged, so every one of them stayed `BEHIND` and kept failing
+`Static Checks (ESLint · typecheck · prepack)` at its `npm audit (runtime deps,
+high+)` step (`.github/workflows/tests.yml:443-447`) — the fix existed and had
+not reached them. Merging `main` into each makes `npm audit --omit=dev
+--audit-level=high` print `found 0 vulnerabilities`, verified in each worktree
+before its push rather than inferred from #1822 having merged.
 
-All seven sat at 0/N on `main`, so the brief's ≥10 %-first rule selected nobody
-and the whole queue fell to the complexity-ascending branch:
-
-| # | Roadmap | On `main` | Complexity | Outcome |
-|---|---|---|---|---|
-| 1 | `road-to-self-description-truth` | 0/13 | lightweight | PR #1817 — 13/13, archived |
-| 2 | `road-to-governed-skill-scouting` | 0/13 | lightweight | PR #1815 — 12/13 + one `[~]` carry, archived |
-| 3 | `road-to-artifact-location-and-doctor-reach` | 0/14 | lightweight | PR #1819 — 14/14, archived |
-| 4 | `road-to-cascading-base-integration` | 0/14 | lightweight | PR #1821 — 14/14, archived |
-| 5 | `road-to-ship-control-coverage` | 0/14 | lightweight | PR #1816 — 14/14, archived |
-| 6 | `road-to-wired-instruments` | 0/15 | lightweight | PR #1818 — 15/15, archived |
-| 7 | `road-to-council-topology-evidence-followups` | 0/38 | structural | Untouched by a standing lock — see below |
-
-The 0/N readings are a property of `main`, not of the work: each roadmap is
-complete and archived on its own branch, and `main` cannot see that until the PR
-merges.
-
-## Pull requests
-
-| PR | Branch | Head pushed this run |
-|---|---|---|
-| #1815 | `drain/governed-skill-scouting` | `7e3fe731c` |
-| #1816 | `drain/ship-control-coverage` | `db7482ce8` |
-| #1817 | `drain/self-description-truth` | `05307d68d` |
-| #1818 | `drain/wired-instruments` | `15441336c` |
-| #1819 | `drain/artifact-location` | `f05617b1c` |
-| #1821 | `drain/cascading-base` | `366d9eeb2` |
-
-`git merge-base --is-ancestor origin/main origin/drain/<branch>` returns 0 for
-all six, so every PR carries current `main` rather than merely claiming to.
-
-## Blockers — seven, all Class 3, all council-resolved
-
-`agent-config gates --all --json` on `main` reports **7 open blockers, 0
-`needsYou`**, every one `class: 3` and `owner: maintainer` with an A/B option
-set. Read back from the pushed refs, all seven carry `Status: resolved` in their
-archived roadmaps: `governed-skill-scouting` 2/2, and 1/1 each for
-`ship-control-coverage`, `wired-instruments`, `artifact-location`,
-`cascading-base` and `self-description-truth`. The council session standing in
-for each maintainer signature is recorded in that PR's own body, with members,
-round count and transport, rather than restated here.
-
-The one unchecked box in the six is `road-to-governed-skill-scouting` 4.1, a
-`[~]` deferral carrying
-`<!-- deferred-resolution: carried-to=road-to-skill-ecosystem-capability-queue -->`
-against a receiver the same branch creates under `later/`. `[~]` is deferred,
-never cancelled, and the archival sweep validates the carry from both ends —
-so 12/13 is a closed roadmap, not a 92 %-finished one.
-
-## What this run actually had to fix
-
-All six PRs were `BEHIND` `main` and red on exactly one job — `Static Checks
-(ESLint · typecheck · prepack)`, at its `npm audit (runtime deps, high+)` step
-(`.github/workflows/tests.yml:443-447`). That failure was not theirs: #1822 had
-already cleared the three runtime advisories on `main`. Merging `main` in makes
-`npm audit --omit=dev --audit-level=high` print `found 0 vulnerabilities`, which
-was verified in each worktree before its push rather than inferred from #1822.
-
-Two things about the push path are worth carrying forward:
+Two facts about the push path, recorded because they each cost a refused push:
 
 - The **remote branch head was ahead of the local worktree on all six** — a
   GitHub *Update branch* press. The pre-push preflight refuses a push whose PR
@@ -602,102 +548,37 @@ Two things about the push path are worth carrying forward:
   the local branch`), so `git merge origin/<branch>` is a mandatory step before
   `git merge origin/main`, not a no-op. Nothing was force-pushed.
 - Each preflight emitted an **advisory** `missing-artifact` completion-review
-  violation, non-blocking and left alone as out of scope for a merge-only
-  change: 2 code paths of 7 changed files on #1815, 6 of 17 on #1816, 3 of 12 on
-  #1817, 25 of 38 on #1818. #1818's 25 is large enough to be worth a real
-  completion-review artifact before that one merges; that is a flag, not a
-  finding, and no gate blocks on it today.
+  violation and was left alone as out of scope for a merge-only change: 2 code
+  paths of 7 changed files on #1815, 6 of 17 on #1816, 3 of 12 on #1817, 25 of
+  38 on #1818, 6 of 14 on #1819, 5 of 12 on #1821. #1818's 25 is large enough to
+  deserve a real completion-review artifact before that one merges. No gate
+  blocks on it today; this is a flag, not a finding.
 
-## Roadmap 7 — the lock held, and the council was deliberately not re-run
-
-`road-to-council-topology-evidence-followups` is `status: carrier`: it exists so
-the 38 `[~]` items deferred out of an archived parent have a live destination
-that `deferralProblems` can verify, and `lint_carrier_integrity` reds with
-`❌ 38 broken deferral carries` if it moves. Its own § Disposition records a
-2-round, 2/2-quorum council verdict on this exact question under a **materially
-identical** owner instruction, twice — drain runs 15 and 16 — with the boundary:
-*preserve all 38 obligations in place · preserve the three measurable resumption
-triggers · do not archive, cancel, promote or transfer the carrier · do not claim
-its work is complete.*
-
-Re-asking a council that has already ruled twice on the same mechanism under the
-same instruction is verdict shopping, so it was not re-asked. The one thing a new
-run can add is a live trigger reading, and both triggers were re-measured rather
-than assumed: Phase 2 needs `n >= 5` independent eligible seats and
-`agent-config council:status` reports **2 enabled of 5** (anthropic, openai);
-Phase 3 needs a two-day 30-calls-per-provider reservation that does not exist.
-Neither moved. No item was checked, nothing archived, promoted or transferred,
-and no third disposition section was added — a third identical record is estate
-noise, not evidence.
-
-## One finding, recorded rather than built
-
-This is the **third consecutive run** to spend reasoning deciding that the
-carrier is out of scope, and the cause is mechanical: the brief builds its queue
-from `agents/roadmaps/*.md` directly, while `status: carrier` is precisely the
-marker that keeps a file off the dashboard and out of the estate count. A queue
-derived from the tree cannot see a status whose whole job is to be invisible to
-the dashboard.
-
-Nothing was built for it. The permissive half of a **divergent** council in this
-same family already ruled that a standing drain instruction *"authorizes closing
-this roadmap under current rules, not creating new CI gates with repository-wide
-scope"*, and a divergent council carries no mandate. The finding is the
-deliverable.
-
-## Honest limits of this report
-
-- **CI is claimed green for exactly one PR, and pending for five.** `ci_settle`
-  returned `SETTLED GREEN — 38 check(s)` for #1815 at head `7e3fe731c`, and that
-  verdict was **invalidated by the security fix that followed** — a green run on
-  a superseded commit is not a green PR, so it is not counted. #1819 is settled
-  green at `f05617b1c`: 43 `SUCCESS`, 1 `SKIPPED`, nothing pending. The other
-  five were re-triggered by the triage pushes and were still in flight; across
-  every poll of all six, **zero checks ever read `FAILURE`**. A pending check is
-  not a passing check, and `ci_settle` returned `DID NOT SETTLE within 9 min —
-  no verdict is claimed` on #1816, #1817 and #1818, which is an expired wait on
-  queued macOS shards rather than a result.
-- **Heads at the close of this run**, so a later reader can tell which commit any
-  claim above describes: #1815 `1fd2204a2` · #1816 `73e8dcad9` ·
-  #1818 `002596eec` · #1819 `f05617b1c` · #1821 `4a6544c96`. #1817 is the PR
-  carrying this file, so its head is the commit that records this line — a sha
-  no commit can quote for itself, named as what it is rather than pinned to a
-  value that goes stale on the next push.
-- **No PR was merged.** Merging to a production trunk is a Hard-Floor action that
-  no standing instruction lifts, and the brief asked for PRs, not merges.
-- **`main`'s own red gates were not re-audited this run.** Run 17 named three
-  (`check_gate_completeness`, `check_roadmap_trackable:relates`, four dead
-  `check_gate_coverage --canary` rows); whether they still stand was not
-  measured here and is not asserted either way.
-- **Zero metered spend in the second half of this run.** No council call was made
-  after the context reset; the council sessions the PR bodies cite belong to the
-  first half and record their own `billable=0` transport.
-
-## Ten blocking-severity bot findings, triaged rather than waved through
+### Ten blocking-severity bot findings, triaged rather than waved through
 
 The dogfooded adversarial-review gate reported **1–3 findings of blocking
-severity on every one of the six PRs**, all currently advisory ("WOULD block
-merge under an enforced gate"). They sit on code and prose these branches newly
+severity on every one of the six PRs**, all advisory today ("WOULD block merge
+under an enforced gate"). They sit on code and prose these branches newly
 introduce, so each was triaged individually. **Six were real, four were false
 positives, and both verdicts carry the evidence that decided them.**
 
-### Security findings — 3 real, 3 false positives
+#### Security — 3 real, 3 false positives
 
 | PR | id | Verdict | What decided it |
 |---|---|---|---|
 | #1815 | `4e407b92dae4` high | real, fixed | Reproduced pre-fix: `--candidate '../../../../.github/workflows'` ran through, and the scan-scope line asserted a root it was not scanning. The name reached `path.join(qroot, name)` unchecked. |
-| #1815 | `5af816352604` high | real, narrowed; residual recorded | `intake` lstats the candidate, then `candidateText` re-walked and read on extension alone — a post-intake symlink was followed out of quarantine. |
+| #1815 | `5af816352604` high | real, narrowed; residual recorded | `intake` lstats the candidate, then the read path re-walked it on extension alone — a post-intake symlink was followed out of quarantine. |
 | #1815 | `7001a7a5357b` **critical** | false positive | `grep -rn "skill.scout" .github/` → exit 1, zero matches. The only surface is `taskfiles/dev.yml:138`, hand-run; and `scout-egress-authority` + `scout-invocation-surface` were both council-resolved **(a)** — no network, in-repo only. The trifecta's ingestion leg does not exist. |
-| #1819 | `412040920bb4` **critical** | false positive | The cited file is not in the diff at all — `git diff --name-only origin/main...HEAD \| grep adversarial-review` → exit 1, byte-identical to `main`. It also forbids subset reporting twice itself (`:66`, `:161`), and `renderReview` maps over every parsed finding. |
-| #1821 | `b64b04412839` **critical** | false positive as framed; one real premise pinned | The framing is inverted: the gitignore deviation is what *keeps* the boundary, because a SHA-pinned read of a gitignored `.agent-settings.yml` returns nothing in every consumer, so reading it at all would be the bypass. What was genuinely unguarded is the deviation's *premise* — nothing asserted `.branch-convergence.yml` stays trackable. Three guards now pin it with git's own matcher. |
-| #1821 | `8cba49fc38ed` high | false positive | `grep -rn "sync_pr_branch\|branch_convergence" .github/` → exit 1. The surfaces are `task push-ready` and the `/pr:create` doc, both under the maintainer's own credentials; and the tree carries **zero** `pull_request_target` workflows, so a fork PR is token-capped read-only. |
+| #1819 | `412040920bb4` **critical** | false positive | The cited file is not in the diff at all — `git diff --name-only origin/main...HEAD \| grep adversarial-review` → exit 1, byte-identical to `main`. It also forbids subset reporting twice itself, and the renderer maps over every parsed finding. |
+| #1821 | `b64b04412839` **critical** | false positive as framed; one real premise pinned | The framing is inverted: the gitignore deviation is what *keeps* the boundary, because a SHA-pinned read of a gitignored `.agent-settings.yml` returns nothing in every consumer, so reading it at all would be the bypass. Genuinely unguarded was the deviation's *premise* — nothing asserted `.branch-convergence.yml` stays trackable. Three guards now pin it with git's own matcher. |
+| #1821 | `8cba49fc38ed` high | false positive | `grep -rn "sync_pr_branch\|branch_convergence" .github/` → exit 1. The surfaces run under the maintainer's own credentials, and the tree carries **zero** `pull_request_target` workflows, so a fork PR is token-capped read-only. |
 
 The #1815 fix is a **refusal, not a normalisation**, and its containment
-assertion lands *before* `reportScanned` so the scan-scope line can never record
-a traversed root. The TOCTOU residual — a regular file swapped for a *different*
+assertion lands *before* the scan-scope report so that line can never record a
+traversed root. The TOCTOU residual — a regular file swapped for a *different*
 regular file inside the read pass — needs an fd-based open with `fstat` and is
-recorded in `docs/contracts/skill-scout-quarantine.md`, the file the resolved
-blocker already names as where intake guarantees live, rather than implied away.
+recorded on that branch in the quarantine contract the resolved blocker already
+names, rather than implied away.
 
 **Red before green was proven for every new guard, each red only for its own
 reason.** #1815: both guards removed exactly as shipped → the CLI-confinement
@@ -707,31 +588,31 @@ in the managed block reds guard 2, a `node:fs` import reds guard 3; probes
 reverted → 31 pass. A guard whose test was never seen red has unknown
 sensitivity, so this is measured rather than asserted.
 
-### Claim findings — 4 real, 0 false positives
+#### Claims — 4 real, 0 false positives
 
 | PR | id | Verdict | What decided it |
 |---|---|---|---|
 | #1816 | `2cef2e24285c` high | real, repaired | The roadmap said the citation "went stale for roughly sixteen months". `git log -S "TMG" -- src/config/web-launch-readiness.json` dates the add at `627f1a23c` (2026-08-25) against DDG § 5 in force since 2024-05-14: it was **27 months** out of date *on the day it was written*, and shipped for nine days. Sixteen matches neither reading. |
 | #1817 | `4bda21863ba8` high | real, repaired | A genuine second instance of this roadmap's own subject. `claim: no-runtime-daemon` pointed at `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` — never two links, but one bold inline phrase split by its own comma, removed at `68463a1e0` one day *after* the entry was withdrawn. Silent because `check_claims.ts:542` reads `if (entry.status !== 'backed') continue`. |
 | #1818 | `fa4542cbf57d` high | real, repaired | `ls -d src/skills/*/ \| wc -l` → 299 and `check_estate_count` → `skill_count 299 (floor 299)`, while the rule's `:34` says *"that install projected 297 skills"* — one host's denominator from a dated measurement, not a live self-count. Exactly one of the two cited sites was stale. |
-| #1818 | `a7e8732a5371` **critical** | real, repaired; the step is still right | The roadmap said a step's premise was half wrong yet left the box checked, and nothing said why that was still sound. The wrong half made the step *bigger*, not moot: both verify conditions discharge at head (`grep -c context_fingerprint … → 6` against a `> 0` requirement, and the halt test returns `halt-premise-invalidated`). `[x]` stands, now with the reason stated. |
+| #1818 | `a7e8732a5371` **critical** | real, repaired; the step is still right | The roadmap said a step's premise was half wrong yet left the box checked, and nothing said why that was still sound. The wrong half made the step *bigger*, not moot: both verify conditions discharge at head (`grep -c context_fingerprint … → 6` against a `> 0` requirement, and the halt test returns `halt-premise-invalidated`). `[x]` stands, now with the reason stated, and `[-]` was not used. |
 
 Two things about the claim half are worth carrying forward. #1816's repair came
 from a **defect-pattern sweep, not a single-site fix**: the same unanchored
-number appeared at **six** sites, five of which are now anchored, with the sixth
-— a quoted council verdict — left verbatim beside a dated correction, because
-the seats were repeating the roadmap's own number and their decision does not
-rest on it. And #1817's blast radius was **measured rather than assumed**: of
-the ledger's 8 closed entries, 1 of the 5 path-shaped pointers dangled, so the
-guard was not widened — extending it would reach three `resolved-null` entries
-whose `evidence:` carries pre-registration prose.
+number appeared at **six** sites, five now anchored, the sixth — a quoted council
+verdict — left verbatim beside a dated correction, because the seats were
+repeating the roadmap's own number and their decision does not rest on it. And
+#1817's blast radius was **measured rather than assumed**: of the ledger's 8
+closed entries, 1 of the 5 path-shaped pointers dangled, so the guard was not
+widened — extending it would reach three `resolved-null` entries whose
+`evidence:` carries pre-registration prose.
 
 One honest limit on #1817's own acceptance criterion: `check_claims` exit 0 does
 **not** validate the replacement wording, because `README.md:30` is unmarkered
-prose — exit 0 only proves the retired needle is gone. The criterion is
-qualified accordingly rather than read as stronger than it is.
+prose — exit 0 only proves the retired needle is gone. The criterion is qualified
+accordingly rather than read as stronger than it is.
 
-### Advisory findings deliberately left alone
+#### Advisory findings deliberately left alone
 
 Out of the blocking scope this pass set, and named so they are not mistaken for
 cleared: on #1821, `f8df6af3ba7e` (`remoteSha` is trusted not to lie) and
@@ -747,5 +628,57 @@ lines)"** and recommend a full `/council:pr` pass, noting it is spend-bearing an
 gated by blocker `self-review-gate-cost`. It was not run, and the reason is
 sequencing rather than cost: every one of the six diffs was still moving while
 the triage landed, and a council verdict on a superseded head is worth less than
-no verdict. This is recorded as an open recommendation for whoever merges, not as
-a step silently dropped.
+no verdict. Recorded as an open recommendation for whoever merges, not as a step
+silently dropped.
+
+### Honest limits of this half
+
+- **Three PRs merged from outside this session** while the triage ran — #1816,
+  #1819 and #1821, all at 08:33 UTC, plus the #1820 carrier disposition and this
+  file's own #1823. Nothing here merged them; the merges are named because a
+  reader comparing PR states to this text would otherwise think it stale.
+- **CI is claimed green only where `ci_settle` said so, at the head it said it
+  about.** #1815 `SETTLED GREEN — 38 check(s)` and #1821 `SETTLED GREEN — 42
+  check(s)`, #1816 `SETTLED GREEN — 34 check(s)`, #1818 `SETTLED GREEN — 49
+  check(s)`. Two of those greens were then **withdrawn rather than carried**,
+  because the commit they were measured at no longer exists as head: #1815's
+  first green at `7e3fe731c` was superseded by its security fix, and #1815 and
+  #1818 both took a further merge commit afterwards (below). A green run on a
+  superseded commit is not a green PR.
+- **The three merges from outside broke two of the branches, and that is the
+  last thing this run fixed.** With #1816, #1819 and #1821 on `main`, #1815 and
+  #1818 went `CONFLICTING`. #1815's only conflict was mechanical — the branch
+  added `dev:skill-scout` where `main` added `push-ready` at the same spot in
+  `taskfiles/dev.yml`; both kept, `task --list` parses 491 tasks. #1818 carried
+  the same plus a **ratchet** collision: it and `drain/artifact-location` each
+  lowered `check_source_size_budget` from the *same* 18,230 base, to 18,226
+  (net −4) and 18,209 (net −21). Either side alone is wrong in a different
+  direction — `main`'s discards the −4 #1818 earned, and #1818's *raises* the
+  baseline against `main` and weakens the gate. The committed value is neither:
+  **18,205**, the gate's own output on the merged tree. A local reading is
+  admissible for this gate specifically, and the discriminator is recorded in
+  the entry itself, because the same file records a 165 → 164 lowering on the
+  `ci-parity:local-only` entry that was **reverted** for depending on how the
+  environment resolves the projection surface — whereas this gate walks only
+  `SOURCE_ROOTS = ['src']` (`check_source_size_budget.ts:88`) and `git status
+  -uall -- src/` reported zero untracked files, so a clean CI checkout of the
+  same commit measures the same number. If CI reads otherwise, CI's number is
+  the correct one.
+- **#1817's own first push of this record went red, and the cause was this
+  file.** Its triage section cited the skill-scout quarantine contract by full
+  path under `docs/contracts/`. That file exists on #1815's branch and on no
+  other, so `check_references` reported one broken reference pointing at this
+  very summary, and `demo-commands-still-pass` failed for the same single reason
+  via `task check-refs`. Both now name the contract without writing a path this
+  tree does not carry - including this sentence, which reintroduced the identical
+  break on the first attempt at describing it. Green afterwards:
+  `check_references` 1828 scanned, no broken references, and the demo script's
+  full trust surface passes.
+- **No PR was merged by this session.** Merging to a production trunk is a
+  Hard-Floor action no standing instruction lifts, and the brief asked for PRs.
+- **`main`'s own red gates were not re-audited here.** One was measured in
+  passing and is not this run's: `lint_roadmap_complexity` fails on sibling
+  roadmaps whose `relates:` rows are byte-identical to `main`.
+- **No metered spend in this half.** No council call was made after the context
+  reset; the sessions the PR bodies cite belong to the first half and record
+  their own `billable=0` transport.
