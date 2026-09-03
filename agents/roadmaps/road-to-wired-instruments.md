@@ -125,13 +125,13 @@ does not exist.
 
 > **Phase 2 landed 2026-09-03, and it found a second dead instrument on the way
 > in.** The rung is `halt-premise-invalidated` in
-> `src/scripts/_lib/continuation_ladder.ts:143`, and it reports the run terminal
-> state `premise-invalidated` through `terminalStateFor` at `:106`.
+> `src/scripts/_lib/continuation_ladder.ts:148`, and it reports the run terminal
+> state `premise-invalidated` through `terminalStateFor` at `:103`.
 >
 > **The premise this step was written on was half wrong, and the half that was
 > wrong is the important one.** The Context table says `context_fingerprint` is
 > "written by `run_checkpoint.ts`" and merely not read by the ladder. It is
-> written by nothing: `session_eol_hook.ts:384` was the only production caller of
+> written by nothing: `session_eol_hook.ts:384` at `origin/main` was the only production caller of
 > `buildCheckpoint`, it passed no options, and the field is therefore `null` in
 > every checkpoint this package has ever written. Consuming it in the ladder
 > would have wired one instrument to another instrument that was itself wired to
@@ -139,7 +139,7 @@ does not exist.
 > built the missing producer first.
 >
 > **The producer** is `src/scripts/_lib/context_observation.ts`, written by
-> `roadmap_context.ts:769` — the one thing in the tree that can actually OBSERVE
+> `roadmap_context.ts:762` — the one thing in the tree that can actually OBSERVE
 > the world, because the fingerprint costs a `gh` call. It records to a single
 > repository-wide file, not a per-roadmap one: `contextFingerprint(base_sha,
 > open_prs)` takes no roadmap argument, so keying it per roadmap would key a
@@ -148,10 +148,10 @@ does not exist.
 > digest is a statement about the network, and recording it would make every
 > dropped connection look like a moved premise.
 >
-> **The two consumers** are now both real: `session_eol_hook.ts:384` passes the
+> **The two consumers** are now both real: `session_eol_hook.ts:393` passes the
 > observation into the checkpoint, so `context_fingerprint` stops being
 > structurally null; and `run_continuation_hook.ts:1386` compares the fingerprint
-> the run ENGAGED under (recorded once, at `:1463`) against the newest
+> the run ENGAGED under (recorded once, at `:1464`) against the newest
 > observation, and feeds the verdict to the ladder.
 >
 > **Risk 1 is answered by construction, not by tuning.** The rung cannot fire on
@@ -395,7 +395,7 @@ does not exist.
   1. **Exhaustive-consumer inventory — BUILT, and it found the two persisted
      domains.** Every consumer of `RUN_TERMINAL_STATES` / `TerminalState`, from
      `grep -rn` over `src` and `tests`:
-     · `_lib/repeated_failure.ts:30-49` — throws at module load on any
+     · `_lib/repeated_failure.ts:30-66` — throws at module load on any
        unclassified state, so the new value had to be classified (it is
        EXCLUDED, beside `approval-required`: a premise invalidation is the drift
        detector working, and its base rate is set by other people's pushes, so
