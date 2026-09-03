@@ -26,6 +26,24 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # Pre-push hook: mirror the CI "Sync + Generate Tools Consistency" gate LOCALLY
 # so derived-output drift is caught BEFORE push, not in remote CI.
 #
+# THIS HOOK REFUSES. IT NEVER MERGES, AND NO ONE MAY "IMPROVE" IT INTO ONE.
+# A merge inside pre-push rewrites the working tree at the exact moment the
+# contributor believes their work is finished: one rejected push silently
+# becomes an unreviewed commit, and a conflict lands them mid-merge with no
+# warning and no way back to the state they typed `git push` from. Detection
+# belongs here; resolution belongs to a step run with the result in front of
+# you. When this hook refuses for staleness, the thing that fixes it is
+#
+#     task push-ready          # fetch -> integrate the base SET -> regenerate
+#                              # -> verify -> re-check freshness -> push
+#     task push-ready DRY=1    # the same six steps, read-only
+#
+# The base is a SET: a branch targeting a release line or a stacked parent may
+# also have to integrate the default branch, per the branch-convergence policy
+# read at the TARGET commit (src/scripts/_lib/branch_convergence.ts). The
+# default is merged FIRST, so a conflict surfaces against the broader base
+# where it is cheapest to abandon.
+#
 # History: the remote "Consistency" check failed in a large share of PRs because
 # the old hook only verified dist sync + the COMMAND count — it missed
 # guideline/skill/rule count drift and the generate-tools / router / corpus
