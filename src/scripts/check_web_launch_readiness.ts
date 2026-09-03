@@ -21,14 +21,16 @@
  * (`claim:web-launch-readiness-finds-more`, status `unbacked`). Absent the
  * opt-in, this exits 0 and says why rather than auditing.
  *
- * Exit codes: 0 = no critical/high finding (or not enabled) · 1 = a blocking
- * finding · 2 = usage or a dead scan scope.
+ * Exit codes: 0 = no critical/high finding and nothing left undecided (or not
+ * enabled) · 1 = a blocking finding, OR an applicable check the instrument could
+ * not decide · 2 = usage or a dead scan scope.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const HERE = fileURLToPath(import.meta.url);
@@ -56,6 +58,10 @@ export interface CheckDef {
     why: string;
     remediation: string;
     verification: string;
+    /** Statute + where it can be read. Required once the row asserts a legal basis. */
+    authority?: string;
+    /** ISO date the citation must be re-read by. A lapsed date FAILS the loader. */
+    review_by?: string;
 }
 
 export interface Finding {
@@ -72,6 +78,22 @@ export interface Skipped {
     check: string;
     tier: Tier;
     /** The SITE TYPE, verbatim — 2.3 requires the type to be the stated reason. */
+    reason: string;
+}
+
+/**
+ * An applicable check the instrument could not decide.
+ *
+ * NOT a finding (nothing was established) and NOT a pass (nothing was cleared).
+ * The third state exists because a detector that guesses on an undecidable input
+ * is worse than one that abstains — and because a pass this checker did not earn
+ * is exactly the silent-green defect its own header names.
+ */
+export interface Undecided {
+    check: string;
+    tier: Tier;
+    /** `file:line` the instrument stopped at, so the reader can look at it. */
+    location: string;
     reason: string;
 }
 
@@ -93,6 +115,8 @@ export interface Report {
     passed: string[];
     /** Applicable checks with no implementation yet — never counted as passed. */
     unimplemented: string[];
+    /** Applicable, implemented, and undecidable on THIS input. Never a pass. */
+    unknown: Undecided[];
     /** Tiers the region axis raised. Empty on `unspecified`, by construction. */
     escalated: Escalated[];
     scanned_files: number;
@@ -103,6 +127,137 @@ export interface Escalation {
     region: Region;
     to: Tier;
     why: string;
+    /** Same contract as `CheckDef` — an escalation row is a legal claim too. */
+    authority?: string;
+    review_by?: string;
+}
+
+/* -- 2.1/2.2: a legal claim carries its own authority and expiry ------------ */
+
+/**
+ * A statute reference: a named instrument, or a numbered article/section.
+ *
+ * The list is deliberately short and abbreviation-shaped. A broader "any legal
+ * word" match would fire on `regulatory exposure` and turn every jurisdictional
+ * sentence into a citation the gate then demands a source for — which is how a
+ * scoped gate becomes a blanket one nobody can satisfy. The numbered-provision
+ * arm (`Art. 13`, `§ 5`) catches an instrument the list does not name yet.
+ */
+export const STATUTE_RE =
+    /\b(TMG|DDG|TTDSG|TDDDG|DSGVO|GDPR|BDSG|RDG|UWG|BGB|HGB|StGB|CCPA|CPRA|HIPAA|ePrivacy|DSA|DMA|BFSG|EAA)\b|(?:\bArt\.|\bArticle\b|§)\s*\d/;
+
+/** A config row that may assert a legal basis: a check, or a region escalation. */
+export interface LegalRow {
+    kind: 'check' | 'escalation';
+    id: string;
+    why: string;
+    authority?: string;
+    review_by?: string;
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Today, as an ISO date, through the repository's one sanctioned clock seam.
+ *
+ * NOT `new Date()`: a lapsed-date verdict read off the wall clock is a verdict
+ * that greens on Monday and reds on Friday from the same tree, which is the
+ * defect `lint_deterministic_time` exists to keep out of a gate. `asOf()`
+ * resolves `--as-of`, `AC_AS_OF`, the commit date under CI, and only then the
+ * wall clock — with its own non-reproducibility warning attached.
+ */
+export function asOfToday(): string {
+    return asOf().toISOString().slice(0, 10);
+}
+
+/** Every row of the config that could carry a legal claim, in report order. */
+export function legalRowsOf(doc: {
+    checks?: CheckDef[];
+    regions?: { escalations?: Escalation[] };
+}): LegalRow[] {
+    const rows: LegalRow[] = [];
+    for (const c of doc.checks ?? []) {
+        rows.push({
+            kind: 'check',
+            id: c.id,
+            why: c.why ?? '',
+            ...(c.authority === undefined ? {} : { authority: c.authority }),
+            ...(c.review_by === undefined ? {} : { review_by: c.review_by }),
+        });
+    }
+    for (const e of doc.regions?.escalations ?? []) {
+        rows.push({
+            kind: 'escalation',
+            id: `${e.check}@${e.region}`,
+            why: e.why ?? '',
+            ...(e.authority === undefined ? {} : { authority: e.authority }),
+            ...(e.review_by === undefined ? {} : { review_by: e.review_by }),
+        });
+    }
+    return rows;
+}
+
+/**
+ * The legal-row contract, as a list of violations (empty = clean).
+ *
+ * Three obligations, and the third is the one that makes the other two more
+ * than decoration:
+ *
+ *   1. a row whose `why` NAMES a statute must carry `authority` and `review_by`;
+ *   2. `authority` and `review_by` travel together — a citation with no expiry
+ *      is the comment this contract exists to replace, and an expiry with no
+ *      citation dates nothing. This half is what keeps the contract intact when
+ *      the statute moves OUT of the prose and INTO `authority`;
+ *   3. a `review_by` on or after `asOf` is live; anything earlier is LAPSED and
+ *      is a violation rather than a warning. A date nothing reads is a comment,
+ *      and this repository already documents a warning ignored eighteen times.
+ *
+ * A row that asserts no legal basis is not policed. The gate is scoped, not
+ * blanket: demanding a citation from `A framework default error page loses the
+ * visitor` would make the contract unsatisfiable and therefore ignorable.
+ */
+export function legalRowViolations(rows: readonly LegalRow[], asOf: string): string[] {
+    const out: string[] = [];
+    for (const r of rows) {
+        const namesStatute = STATUTE_RE.test(r.why);
+        const hasAuthority = (r.authority ?? '').trim().length > 0;
+        const hasDate = (r.review_by ?? '').trim().length > 0;
+        const where = `${r.kind} "${r.id}"`;
+        // One violation per MISSING FIELD, never one per rule that noticed it.
+        // Dropping `authority` from a statute row trips both obligation 1 and
+        // obligation 2, and reporting it twice would make the count a property
+        // of the rule set rather than of the config.
+        const isLegal = namesStatute || hasAuthority || hasDate;
+        if (isLegal && !hasAuthority) {
+            out.push(
+                `${where}: carries no \`authority\` — ` +
+                    (namesStatute
+                        ? 'its `why` names a statute, and a citation with no source is a comment rather than a claim anyone can re-check.'
+                        : 'a `review_by` with no citation dates nothing.'),
+            );
+        }
+        if (isLegal && !hasDate) {
+            out.push(
+                `${where}: carries no \`review_by\` — ` +
+                    (namesStatute
+                        ? 'its `why` names a statute, and the citation has no date by which it must be re-read.'
+                        : 'an undated citation cannot go stale visibly.'),
+            );
+        }
+        if (!hasDate) continue;
+        const date = (r.review_by ?? '').trim();
+        if (!ISO_DATE_RE.test(date) || Number.isNaN(Date.parse(date))) {
+            out.push(`${where}: \`review_by\` is "${date}", which is not an ISO YYYY-MM-DD date.`);
+            continue;
+        }
+        if (date < asOf) {
+            out.push(
+                `${where}: \`review_by\` lapsed on ${date} (as of ${asOf}) — re-read the citation, ` +
+                    'then move the date. Overdue is a finding, not a silent pass.',
+            );
+        }
+    }
+    return out;
 }
 
 export function loadConfig(root = REPO_ROOT): {
@@ -142,6 +297,15 @@ export function loadConfig(root = REPO_ROOT): {
             'check_web_launch_readiness',
             `${CONFIG_REL} carries no region axis — a DE site would silently get the ` +
                 'situational tier for a legally owed page.',
+        );
+    }
+    const legal = legalRowViolations(legalRowsOf(doc), asOfToday());
+    if (legal.length > 0) {
+        // A gate that audited a site while shipping an unbacked legal claim of
+        // its own would be auditing from a position it has not earned.
+        throw new DeadScopeError(
+            'check_web_launch_readiness',
+            `${CONFIG_REL} ships a legal claim the row cannot back:\n  - ${legal.join('\n  - ')}`,
         );
     }
     return { checks, siteTypes, regions, escalations };
@@ -479,17 +643,44 @@ const requiredLegalPages: Impl = (files) => {
 };
 
 /**
- * Analytics loads only behind consent.
+ * Analytics loads only behind consent — INCLUDING the load order (3.1).
  *
- * The finding is analytics present with NO consent mechanism anywhere in the
- * build — never "analytics present", which would flag every site that does
- * consent correctly. The gate cannot see the wiring order, and says so in the
- * evidence rather than implying it checked.
+ * The row's own `verification` field asks for the runtime assertion: *"Load the
+ * page with consent declined and assert no request to the analytics origin."*
+ * A static reader cannot load a page. The strongest assertion it CAN make is
+ * source order within one document, so that is what it makes — and where even
+ * that is undecidable it returns `unknown` (3.2) rather than a pass.
+ *
+ * What the ordering pass covers, stated so the message can say it: the position
+ * of the measurement tag relative to the gate script INSIDE one file. What it
+ * does not cover: runtime order, deferred or dynamic imports, order established
+ * by a bundler across files, and anything a minifier put on one line — each of
+ * which produces an `unknown`, never a silent pass.
  */
 const ANALYTICS_RE = /(googletagmanager\.com|google-analytics\.com|gtag\(|plausible\.io|matomo|segment\.com|hotjar)/i;
 const CONSENT_RE = /(consent|cookiebanner|cookie-banner|cookieconsent|klaro|usercentrics|borlabs|osano)/i;
-const analyticsAndConsent: Impl = (files) => {
+
+/**
+ * A line that can actually LOAD something, as opposed to prose about loading.
+ *
+ * `consent-order-bad` says the word *consent* in its `<meta description>` and
+ * still fires: a sentence describing a gate is not a gate, and a positional
+ * detector that counted it would report a correctly ordered page while the tag
+ * fires first. Applied to markup only — every line of a `.js` file is code.
+ */
+const EXECUTABLE_LINE_RE = /<script\b|\bsrc\s*=|\bimport\b|\brequire\s*\(|\.js\b/i;
+
+/** Past this, a line is a bundler artefact and its internal order is not source order. */
+const MINIFIED_LINE_CHARS = 400;
+
+interface ConsentOrder {
+    hits: Located[];
+    undecided: Located[];
+}
+
+function analyseConsentOrder(files: readonly SourceFile[]): ConsentOrder {
     const hits: Located[] = [];
+    const undecided: Located[] = [];
     // Prose is excluded from BOTH sides, and the fixture is why: a `.md` file
     // in the build tree describing the consent banner matched CONSENT_RE, so
     // the check reported a pass on a fixture seeded to fire it. Documentation
@@ -497,21 +688,92 @@ const analyticsAndConsent: Impl = (files) => {
     // runs the other way, so an analytics name mentioned in a README must not
     // count as analytics either.
     const code = files.filter((f) => !/\.md$/i.test(f.base));
-    const anyConsent = code.some((f) => CONSENT_RE.test(f.text));
-    if (anyConsent) return hits;
+    const loadable = (f: SourceFile, line: string): boolean => !isPage(f) || EXECUTABLE_LINE_RE.test(line);
+    const firstLoad = (f: SourceFile, re: RegExp): number =>
+        f.lines.findIndex((l) => re.test(l) && loadable(f, l));
+    const anyConsent = code.some((f) => firstLoad(f, CONSENT_RE) >= 0);
+
     for (const f of code) {
-        f.lines.forEach((line, i) => {
-            if (!ANALYTICS_RE.test(line)) return;
+        const a = firstLoad(f, ANALYTICS_RE);
+        if (a < 0) continue;
+        if (!anyConsent) {
+            // Unchanged from the pre-3.1 behaviour, and still the sharpest
+            // finding available: nothing in the build can gate the tag.
+            f.lines.forEach((line, i) => {
+                if (!ANALYTICS_RE.test(line) || !loadable(f, line)) return;
+                hits.push({
+                    file: f.rel,
+                    line: i + 1,
+                    text:
+                        `${line.trim().slice(0, 120)} — analytics is loaded here and no consent mechanism ` +
+                        'was found anywhere in the build, so nothing can gate it. Source order was not the ' +
+                        'question: there is no gate to be ordered against.',
+                });
+            });
+            continue;
+        }
+        const c = firstLoad(f, CONSENT_RE);
+        const aLine = f.lines[a] ?? '';
+        if (c < 0) {
+            undecided.push({
+                file: f.rel,
+                line: a + 1,
+                text:
+                    'analytics is loaded here and the consent mechanism lives in another file. Which of ' +
+                    'the two the browser runs first is decided by the bundler and the page, not by source ' +
+                    'order across files, and a static read cannot establish it.',
+            });
+            continue;
+        }
+        if (c === a) {
+            undecided.push({
+                file: f.rel,
+                line: a + 1,
+                text:
+                    'the analytics tag and the consent gate are on the SAME line, so line order cannot ' +
+                    'separate them. Ordering is undecidable on this input.',
+            });
+            continue;
+        }
+        if (aLine.length > MINIFIED_LINE_CHARS) {
+            undecided.push({
+                file: f.rel,
+                line: a + 1,
+                text:
+                    `this line is ${String(aLine.length)} characters, i.e. minified — the order inside a ` +
+                    'bundler artefact is not the source order this pass reads.',
+            });
+            continue;
+        }
+        if (a < c) {
             hits.push({
                 file: f.rel,
-                line: i + 1,
+                line: a + 1,
                 text:
-                    `${line.trim().slice(0, 120)} — analytics present and no consent mechanism ` +
-                    'found anywhere in the build. Load order is NOT checked here.',
+                    `${aLine.trim().slice(0, 120)} — the analytics tag is at line ${String(a + 1)}, ` +
+                    `ABOVE the consent gate at line ${String(c + 1)} of the same file, so it is reached ` +
+                    'before consent can be recorded. Source order inside this file is what was checked; ' +
+                    'runtime order, dynamic imports and cross-file bundler order were not.',
             });
-        });
+        }
     }
-    return hits;
+    return { hits, undecided };
+}
+
+const analyticsAndConsent: Impl = (files) => analyseConsentOrder(files).hits;
+
+/**
+ * Checks that can report `unknown`, and the probe that decides when they do.
+ *
+ * A separate table rather than a widened `Impl` signature: the invariant that an
+ * EMPTY `Located[]` means "applied and found nothing" is what keeps the
+ * silent-green defect out of `IMPLS`, and folding a third state into that return
+ * type would put the invariant back in play for all eight implementations.
+ */
+type Undecide = (files: readonly SourceFile[]) => Located[];
+
+export const UNDECIDABLE: Readonly<Record<string, Undecide>> = {
+    'analytics-and-consent-wiring': (files) => analyseConsentOrder(files).undecided,
 };
 
 /** First line containing `needle`, 1-indexed; 1 when absent (an absence has no line). */
@@ -560,6 +822,7 @@ export function audit(
     const skipped: Skipped[] = [];
     const passed: string[] = [];
     const unimplemented: string[] = [];
+    const unknown: Undecided[] = [];
     const escalated: Escalated[] = [];
     // ONE walk for every check. Eight walkers over the same bytes is eight
     // times the IO and eight chances to disagree about what counts as a file.
@@ -586,7 +849,11 @@ export function audit(
             impl === undefined
                 ? scanIndexability(buildDir).hits
                 : impl(files);
-        if (hits.length === 0) {
+        const undecided = UNDECIDABLE[c.id]?.(files) ?? [];
+        for (const u of undecided) {
+            unknown.push({ check: c.id, tier, location: `${u.file}:${String(u.line)}`, reason: u.text });
+        }
+        if (hits.length === 0 && undecided.length === 0) {
             passed.push(c.id);
             continue;
         }
@@ -609,6 +876,7 @@ export function audit(
         skipped,
         passed,
         unimplemented,
+        unknown,
         escalated,
         scanned_files: files.length,
     };
@@ -635,6 +903,15 @@ export function render(r: Report): string {
             out.push(`    evidence:     ${x.evidence}`);
             out.push(`    remediation:  ${x.remediation}`);
             out.push(`    verification: ${x.verification}`);
+        }
+    }
+    if (r.unknown.length > 0) {
+        // Printed with the findings rather than with the passes, because an
+        // undecided check is an open question about the site — not a clearance.
+        out.push('', `UNDECIDED — applicable, audited, and not decidable from this build (${String(r.unknown.length)})`);
+        for (const u of r.unknown) {
+            out.push(`  ${u.location}  ${u.check}`);
+            out.push(`    unknown: ${u.reason}`);
         }
     }
     if (r.passed.length > 0) out.push('', `PASSED: ${r.passed.join(', ')}`);
@@ -697,7 +974,11 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         process.stdout.write(`${render(r)}\n`);
     }
     const blocking = r.findings.filter((f) => f.tier === 'critical' || f.tier === 'high');
-    return blocking.length > 0 ? 1 : 0;
+    // An UNDECIDED applicable check exits non-zero whatever its tier. Exiting 0
+    // would report the run as clean on a question the instrument never answered,
+    // which is the same silent-green failure as counting an unimplemented check
+    // as passed — the tier axis grades findings, and this is not one.
+    return blocking.length > 0 || r.unknown.length > 0 ? 1 : 0;
 }
 
 if (path.resolve(process.argv[1] ?? '') === path.resolve(HERE)) {

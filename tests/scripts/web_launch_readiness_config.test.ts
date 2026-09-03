@@ -14,6 +14,8 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { STATUTE_RE, legalRowViolations, legalRowsOf } from '../../src/scripts/check_web_launch_readiness';
+
 const REPO = path.resolve(__dirname, '..', '..');
 const REL = 'src/config/web-launch-readiness.json';
 
@@ -25,6 +27,8 @@ interface Check {
     why: string;
     remediation: string;
     verification: string;
+    authority?: string;
+    review_by?: string;
 }
 interface Config {
     schema_version: number;
@@ -35,6 +39,7 @@ interface Config {
     tiers: { values: string[] };
     checks: Check[];
     not_in_scope: { items: string[] };
+    regions: { escalations: { check: string; region: string; why: string; authority?: string; review_by?: string }[] };
 }
 
 const cfg = JSON.parse(fs.readFileSync(path.join(REPO, REL), 'utf8')) as Config;
@@ -138,5 +143,34 @@ describe('scope limits are registered, not left to analogy', () => {
 
     it('stays under the 50-check ceiling step 0.3 sets', () => {
         expect(cfg.checks.length).toBeLessThan(50);
+    });
+});
+
+describe('a legal claim carries its own authority and expiry (2.1)', () => {
+    // The schema half of the contract. The behavioural half — a LAPSED date
+    // failing the loader — is proven in check_web_launch_readiness.test.ts,
+    // where the date is moved into the past and moved back.
+    const rows = legalRowsOf(cfg as never);
+
+    it('at least one row asserts a legal basis, or this contract polices nothing', () => {
+        expect(rows.filter((r) => STATUTE_RE.test(r.why)).length).toBeGreaterThan(0);
+    });
+
+    it('every row whose why names a statute carries authority AND review_by', () => {
+        for (const r of rows) {
+            if (!STATUTE_RE.test(r.why)) continue;
+            expect(r.authority?.trim().length, `${r.kind} ${r.id}.authority`).toBeGreaterThan(20);
+            expect(r.review_by, `${r.kind} ${r.id}.review_by`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        }
+    });
+
+    it('the shipped config has no live violation of the contract', () => {
+        expect(legalRowViolations(rows, cfg.registered_at)).toEqual([]);
+    });
+
+    it('a row with neither field is left alone — the gate is scoped, not blanket', () => {
+        // Most checks assert no legal basis and owe no citation. If this were
+        // ever false, the contract would be unsatisfiable and get ignored.
+        expect(rows.filter((r) => r.authority === undefined).length).toBeGreaterThan(0);
     });
 });
