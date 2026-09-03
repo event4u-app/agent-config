@@ -303,6 +303,35 @@ function set_marketplace_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
 }
 
+/**
+ * Mirror of Python `str.splitlines()` — split on CR/LF/CRLF and drop a single
+ * trailing empty element.
+ *
+ * Lives here rather than in `release.ts` because that file is 2000+ lines and
+ * every line above 1500 is charged by `check_source_size_budget`, while this
+ * module is a third of the cap. Behaviour unchanged; it is a pure text helper
+ * beside the other pure text helpers in this module.
+ *
+ * Known duplication, recorded rather than fixed here: `adoption_report.ts:106`
+ * and `readme_linter.ts:418` carry their own copies. Collapsing all three onto
+ * one definition touches three modules and is not this change's subject.
+ */
+function _splitlines(text: string): string[] {
+    if (text === '') {
+        return [];
+    }
+    const parts = text.split(/\r\n|\r|\n/);
+    if (parts.length > 0 && parts[parts.length - 1] === '') {
+        parts.pop();
+    }
+    return parts;
+}
+
+/** Mirror of Python `str.rstrip()` (trailing whitespace). */
+function _rstrip(text: string): string {
+    return text.replace(/\s+$/u, '');
+}
+
 export {
     ArgparseExit,
     commaGroup,
@@ -330,4 +359,6 @@ export {
     REPO_ROOT,
     REPO_SLUG,
     SystemExitError,
+    _rstrip,
+    _splitlines,
 };

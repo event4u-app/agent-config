@@ -16,7 +16,7 @@
  * import path changes.
  */
 import { spawnSync } from 'node:child_process';
-import { publication_blockers } from './_lib/release_highlights.js';
+import { DERIVED_MARKER, publication_blockers } from './_lib/release_highlights.js';
 import * as fs from 'node:fs';
 import process from 'node:process';
 
@@ -476,6 +476,72 @@ export function guard_release_branch_push(branch: string): void {
             `\n    Nothing has left this machine: no branch on ${REMOTE}, no pull request, no tag.\n` +
             '    Curate the `### Release highlights` head in CHANGELOG.md under ' +
             `\`## [${version}]\`, then re-run \`task release -- --resume\`.`,
+    );
+}
+
+/**
+ * Ask for the curation BEFORE the pipeline commits anything — the fifth guard
+ * site, and the one that closes the gap the other four only narrowed.
+ *
+ * `guard_release_branch_push` already refuses before any REMOTE state exists,
+ * which is why 14.14.1 cost nothing but a re-run. What it cannot do is refuse
+ * before LOCAL state exists: by the time the push is attempted, step 2 has
+ * bumped six files and regenerated the derived trees and step 3 has committed
+ * all of it as `release: X.Y.Z`. The operator then edits prose on top of a
+ * commit that already claims to be the release and continues with `--resume`.
+ *
+ * The sentence this fixes is in that guard's own docstring: the 2026-09-01
+ * flip's risk register named *"the releaser edits prose before merge"* as the
+ * mitigation, and *"nothing in the pipeline asked, so nothing did"*. Refusing
+ * is not asking. This is the ask, placed where the answer is cheapest: the
+ * changelog section has just been written, nothing is committed, and the fix is
+ * an edit to a file already open in the working tree.
+ *
+ * It names the labels rather than only the marker, because the operator's next
+ * action is to rewrite specific lines and hunting for them in a 30-line section
+ * is the friction that made the refusal feel like a failure rather than a step.
+ *
+ * Deliberately silent when the section does not exist — same reasoning as the
+ * push guard: a missing section is the publication sites' refusal to make, not
+ * this one's.
+ *
+ * `prMerged` is a parameter rather than a check at the call site, and it is
+ * load-bearing in both directions. On the merged path steps 2 and 3 do not run,
+ * so there is no pre-commit moment to ask about; firing anyway PREEMPTS the
+ * step-8 and step-9 guards, whose whole subject is the merged section. That is
+ * measured, not anticipated — the unconditional form red three `release_drill`
+ * scenarios that exist to pin exactly those later refusals. It lives here
+ * rather than in an `if` at the call site because `release.ts` is 2000+ lines
+ * and every line above 1500 is charged by the growth ratchet, while this module
+ * is far below it.
+ */
+export function guard_release_curation(version: string, prMerged = false): void {
+    if (prMerged) {
+        return;
+    }
+    const section = extract_changelog_section(read_changelog_text(), version);
+    if (!section) {
+        return;
+    }
+    const blockers = publication_blockers(section.body, version, `\`release/${version}\``);
+    if (blockers.length === 0) {
+        return;
+    }
+    const marked = section.body
+        .split('\n')
+        .filter((l) => l.includes(DERIVED_MARKER))
+        .map((l) => `      ${l.trim()}`);
+    die(
+        `the ${version} release highlights are still the generator's draft ` +
+            `(${String(blockers.length)} blocker(s)):\n` +
+            blockers.map((b) => `    - ${b}`).join('\n') +
+            (marked.length > 0
+                ? `\n    Lines to rewrite in \`CHANGELOG.md\` under \`## [${version}]\`:\n` +
+                  marked.join('\n')
+                : '') +
+            '\n    Stopped BEFORE committing — no release commit, no branch on ' +
+            `${REMOTE}, no pull request, no tag. Curate the ` +
+            '`### Release highlights` head, then re-run `task release`.',
     );
 }
 

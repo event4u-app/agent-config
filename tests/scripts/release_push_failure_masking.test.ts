@@ -50,7 +50,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { DERIVED_MARKER } from '../../src/scripts/_lib/release_highlights.js';
 import { _is_non_fast_forward, _set_changelog_reader } from '../../src/scripts/release.js';
-import { guard_release_branch_push } from '../../src/scripts/release_publication.js';
+import {
+  guard_release_branch_push,
+  guard_release_curation,
+} from '../../src/scripts/release_publication.js';
 
 describe('_is_non_fast_forward — only the moved-ref case takes the retry path', () => {
   it('recognises the classic non-fast-forward rejection', () => {
@@ -200,5 +203,101 @@ describe('guard_release_branch_push — refuses before any remote state, and onl
     // exist. A repo-wide read here would refuse every future release push.
     _set_changelog_reader(() => MARKED);
     expect(() => guard_release_branch_push('release/1.2.3')).not.toThrow();
+  });
+});
+
+// The fifth guard site. `guard_release_branch_push` refuses before any REMOTE
+// state exists; it cannot refuse before LOCAL state exists, because by the time
+// a push is attempted step 2 has bumped six files and regenerated the derived
+// trees and step 3 has committed all of it as `release: X.Y.Z`. Measured on
+// 14.14.1 (2026-09-03): the run died at step 4/10 having already produced
+// `136cea960 release: 14.14.1`, so the operator curated prose on top of a
+// commit that already claimed to be the release.
+//
+// The sentence being closed is in the push guard's own docstring — the flip's
+// risk register named "the releaser edits prose before merge" as the mitigation
+// and "nothing in the pipeline asked, so nothing did". Refusing is not asking.
+//
+// Pinned in both directions for the same reason as its sibling: a guard on the
+// only path to a release must refuse the draft AND stay silent on everything
+// else, or every release stops on a state that is already correct.
+describe('guard_release_curation — asks before the release commit exists', () => {
+  const MARKED_HEAD = [
+    '# Changelog',
+    '',
+    '## [9.9.9]',
+    '',
+    '### Release highlights',
+    '',
+    `- **Behaviour changes:** ${DERIVED_MARKER} rule/schema diffs in abc1234.`,
+    `- **Security and correctness:** ${DERIVED_MARKER} fixes to executable surface in def5678.`,
+    '- **Honest nulls:** _none_',
+    '',
+    '## [0.0.0]',
+    '',
+    '- earlier release',
+    '',
+  ].join('\n');
+
+  const CURATED_HEAD = MARKED_HEAD.split('\n')
+    .map((l) =>
+      l.includes(DERIVED_MARKER)
+        ? '- **Behaviour changes:** the comment gate now blocks in source (abc1234).'
+        : l,
+    )
+    .join('\n');
+
+  afterEach(() => {
+    _set_changelog_reader(null);
+  });
+
+  it('refuses while the head is still the generator draft', () => {
+    _set_changelog_reader(() => MARKED_HEAD);
+    expect(() => guard_release_curation('9.9.9')).toThrow();
+  });
+
+  it('names every marked line, so the operator does not hunt for them', () => {
+    // The point of a pre-commit ask over a pre-push refusal is that the next
+    // action is an edit. A message that says "a marker is present" without
+    // saying WHERE is the friction that made the refusal read as a failure.
+    // `die` writes the operator-facing text to stderr and then throws a bare
+    // SystemExitError, so the thrown value carries none of it. Asserting on the
+    // exception would pass against an empty message — the failure this catches
+    // is a guard that stops the release and says nothing useful.
+    _set_changelog_reader(() => MARKED_HEAD);
+    const written: string[] = [];
+    const original = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+      written.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+    try {
+      expect(() => guard_release_curation('9.9.9')).toThrow();
+    } finally {
+      process.stderr.write = original;
+    }
+    const msg = written.join('');
+    expect(msg).toContain('Behaviour changes');
+    expect(msg).toContain('Security and correctness');
+    expect(msg).toContain('Stopped BEFORE committing');
+  });
+
+  it('passes a curated head straight through', () => {
+    _set_changelog_reader(() => CURATED_HEAD);
+    expect(() => guard_release_curation('9.9.9')).not.toThrow();
+  });
+
+  it('is scoped to the version under release — a marked OTHER section is not its business', () => {
+    // Eighteen historical marker lines exist in this repo's own changelog. A
+    // whole-file read here would stop every future release before step 3.
+    _set_changelog_reader(() => MARKED_HEAD);
+    expect(() => guard_release_curation('1.2.3')).not.toThrow();
+  });
+
+  it('stays silent when the version has no section at all', () => {
+    // Same division of labour as the push guard: a missing section is the
+    // publication sites' refusal to make, not this one's.
+    _set_changelog_reader(() => '# Changelog\n');
+    expect(() => guard_release_curation('9.9.9')).not.toThrow();
   });
 });

@@ -390,22 +390,41 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
-    'marker-refuses-before-branch-push': {
+    'marker-refuses-before-commit': {
         summary:
-            'step 4: a draft marker refuses the branch push — the first remote state — so no PR is ever opened',
+            'step 3: a draft marker refuses BEFORE the release commit — no local release state, and therefore no remote state either',
         config: { changelog_file: markedChangelogFixture(current_version()) },
         expect_success: false,
         verify: (w, err) => {
             const f: string[] = [];
             _expect(
-                (err ?? '').includes(`refusing to push ${w.branch}`),
+                (err ?? '').includes('release highlights are still the generator'),
                 `died for the wrong reason: ${err ?? '(no error)'}`,
                 f,
             );
-            // The load-bearing assertions are about what did NOT happen. Each
-            // one is a remote side effect the 14.14.0 run actually produced
-            // before this guard existed: a pushed branch, an open PR, and a
-            // check watch on a check that could not pass.
+            _expect(
+                !w.calls.some((c) => c.startsWith('git commit')),
+                'a release commit was made after the refusal',
+                f,
+            );
+            // RENAMED from `marker-refuses-before-branch-push` when
+            // `guard_release_curation` moved the refusal one step earlier.
+            // Every negative assertion below is UNCHANGED and still
+            // load-bearing — each is a remote side effect the 14.14.0 run
+            // actually produced: a pushed branch, an open PR, a check watch on
+            // a check that could not pass. They now hold more strongly, since
+            // the run stops before the commit rather than after it, and the
+            // no-commit assertion above is the property that is new.
+            //
+            // What this scenario no longer reaches, said plainly rather than
+            // left for a reader to infer: `guard_release_branch_push`. On the
+            // non-merged path it is now unreachable in ONE run, because a
+            // section marked at step 4 was already marked at step 3. It stays
+            // as defence-in-depth for a section that changes BETWEEN the two —
+            // a hand edit mid-run, or a resume over an altered changelog — and
+            // its own behaviour stays pinned by the unit tests in
+            // `tests/scripts/release_push_failure_masking.test.ts`, which is
+            // where that coverage moved to rather than being dropped.
             _expect(
                 !w.calls.includes(`git push -u origin ${w.branch}`),
                 'the branch was pushed after the refusal',
