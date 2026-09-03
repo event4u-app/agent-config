@@ -212,7 +212,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite
 - status: withdrawn
 - last_verified: 2026-07-04
-- retires_phrasings: zero runtime daemon
+- retires_phrasings: zero runtime daemon | no background daemon
 - retired_by: ADR-249
 - superseded_by: resident-process-permitted-under-governance
 - non_inference: WITHDRAWN BY DECISION, 2026-08-27, not by a failed measurement. The property was true on 2026-07-04 when it was last verified and the evidence pointer still resolves; the package decided to stop having it. ADR-249 permits a supervised resident process in core under four governance conditions, superseding ADR-124's Class-B row and ADR-109's no-daemon clause. Read this entry as "we no longer claim this", never as "we tried to show this and could not" -- the ledger's other closure, resolved-null, is the one that means the latter. The successor is deliberately unbacked rather than backed: it records a POLICY, and no supervised process has shipped for a property claim to be about.

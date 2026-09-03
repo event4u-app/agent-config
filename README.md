@@ -27,7 +27,7 @@ It is both deep **and** disciplined — and honest about what it deliberately is
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
 
-**What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no background daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift, and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
+**What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no mandatory or always-on daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift, and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
 > **Where this comes from (honest provenance).** The skills, rules and personas
 > are distilled from real production work on TypeScript and PHP codebases. The
