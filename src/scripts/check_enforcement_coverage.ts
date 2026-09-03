@@ -629,6 +629,26 @@ export interface Summary {
     /** Rules with no `obligation_frequency` to join — the nine kernel rules. */
     frequency_unclassified: number;
     /**
+     * The three classes that make `undeclared` readable.
+     *
+     * WHY THEY SHIP IN THE ARTEFACT. `undeclared` is the number reviewers quote,
+     * and quoted bare it reads as a backlog of rules somebody forgot to wire.
+     * Most of it is nothing of the kind. `kernel_denied` rules cannot carry an
+     * `enforced_by` field at all — `block_kernel_rule_writes` refuses the write
+     * with no agent-accessible override, so their absence is structural.
+     * `observer` rules have a carrier that fires and cannot block by design.
+     * `carrier_less` rules have no machine carrier of any kind.
+     *
+     * A reader subtracting these from `undeclared` gets the population where
+     * wiring is actually the missing thing — and, more usefully, sees at a glance
+     * that the observer set (10) is the reachable one: a floor set against the
+     * full `undeclared` would stall in its second release and be ignored, which
+     * is the failure `check_release_highlights.ts` already documents for its own
+     * warning.
+     */
+    kernel_denied: number;
+    carrier_less: number;
+    /**
      * The denominator every figure above is taken over, WITH its frame. See
      * {@link denominator_frames} for why the frame ships even when the two
      * populations agree.
@@ -652,6 +672,14 @@ export function summarise(rows: RuleCoverage[]): Summary {
         blocking_pct: rows.length === 0 ? 0 : Math.round((blocking / rows.length) * 1000) / 10,
         frequency_gap: count((r) => r.frequency_verdict === 'gap'),
         frequency_unclassified: count((r) => r.frequency_verdict === 'unclassified'),
+        kernel_denied: count(
+            (r) => KERNEL_RULE_ID_SET.has(r.id) && r.frequency_verdict === 'unclassified',
+        ),
+        carrier_less: count(
+            (r) =>
+                r.declared.length > 0 &&
+                r.declared.every((d) => d.startsWith('observer:maintainer-review')),
+        ),
         frames: denominator_frames(rows.length),
     };
 }
@@ -779,7 +807,13 @@ function main(argv: string[]): number {
                         'blocking and in that bucket at once. Coverage is a ratchet: --check fails ' +
                         'when blocking falls, or unwired / local_only / missing / frequency_gap ' +
                         'rises. Regenerate intentionally with --write-baseline when the change is ' +
-                        'the point.',
+                        'the point. READ `undeclared` WITH ITS THREE CLASSES, never bare: ' +
+                        '`kernel_denied` cannot carry an enforced_by field at all ' +
+                        '(block_kernel_rule_writes refuses the write, no agent-accessible ' +
+                        'override), `observer` has a carrier that fires and cannot block by ' +
+                        'design, and `carrier_less` has no machine carrier of any kind. The ' +
+                        'reachable population is the observer set, not `undeclared` — a floor ' +
+                        'set against the full number would stall in its second release.',
                     summary,
                 },
                 null,
@@ -810,6 +844,11 @@ function main(argv: string[]): number {
     lines.push(
         `  frequency: ${summary.frequency_gap} gap · ${summary.frequency_unclassified} unclassified ` +
             `(kernel — block_kernel_rule_writes denies the field)`,
+    );
+    lines.push(
+        `  undeclared ${summary.undeclared} splits: ${summary.kernel_denied} kernel-denied · ` +
+            `${summary.observer} observer · ${summary.carrier_less} carrier-less — ` +
+            `the observer set is the reachable population`,
     );
     // The denominator is published WITH its frame, and it is the only sanctioned
     // source for that number: `check_enforcement_denominator` reds when a

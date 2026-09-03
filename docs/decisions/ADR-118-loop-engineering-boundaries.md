@@ -40,12 +40,24 @@ An inventory identified 8 places where a measure exists but no adjust-step is
 wired. The question this ADR settles: which of those loops to close, and which
 loop-shaped proposals to reject so they are not relitigated per hype cycle.
 
-Constraint frame: single maintainer, token-frugality canon, no runtime daemon
-(ADR-088 / no-runtime-boundary), human gates on anything irreversible. Under
+Constraint frame: single maintainer, token-frugality canon, no mandatory or
+always-on daemon (ADR-088 / no-runtime-boundary as narrowed by ADR-249, which
+permits a supervised resident process in core under four governance
+conditions), human gates on anything irreversible. Under
 these constraints, when human review + `git revert` is cheaper than designing,
 maintaining, and debugging a closed loop, the loop is net-negative
 infrastructure — false positives consume the binding resource (maintainer
 attention), not compute.
+
+> **Why this line was corrected by hand (2026-09-03).** It read "no runtime
+> daemon" as an unqualified absolute after ADR-249 had already narrowed the
+> property to "no *mandatory* or *always-on* daemon". Nothing caught it, and
+> nothing could: `check_claims.ts` scans markered claims on five publish
+> surfaces, and unmarkered ADR prose is outside that frame by design
+> (`src/scripts/check_claims.ts:13`). An ADR asserting a retired absolute is
+> therefore a manual fix by construction — worth stating here, because the
+> absence of a gate is exactly what let the sentence survive the decision that
+> falsified it.
 
 ## Decision
 

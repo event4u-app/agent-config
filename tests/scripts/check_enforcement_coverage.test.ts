@@ -15,8 +15,11 @@ import {
     resolve_one,
     strip_comments,
     strongest,
+    summarise,
     type Resolution,
+    type RuleCoverage,
 } from '../../src/scripts/check_enforcement_coverage.js';
+import { KERNEL_RULE_ID_SET } from '../../src/scripts/_lib/kernel_rules.js';
 
 const ctx = (over: Partial<Parameters<typeof resolve_one>[1]> = {}) => ({
     hooks: new Map([
@@ -188,5 +191,80 @@ describe('parse_hook_manifest', () => {
     it('stops at the end of the concerns block', () => {
         // `claude` lives under platforms: — it is not a concern and must not leak in.
         expect(parse_hook_manifest(text).has('claude')).toBe(false);
+    });
+});
+
+/**
+ * The three classes that make `undeclared` readable (road-to-self-description-truth
+ * P3.2).
+ *
+ * `undeclared` is the number reviewers quote, and quoted bare it reads as a
+ * backlog somebody forgot to wire. Most of it is not that. These cases pin each
+ * class to a row shape that produces it, and — the load-bearing half — pin the
+ * NEGATIVE direction: a kernel rule that DID classify is not kernel-denied, and
+ * a row with a real machine carrier is not carrier-less. Without those two, the
+ * counters would pass while counting the wrong population.
+ */
+describe('summarise — the undeclared split', () => {
+    const KERNEL_ID = [...KERNEL_RULE_ID_SET][0] as string;
+
+    const mkRow = (over: Partial<RuleCoverage>): RuleCoverage =>
+        ({
+            id: 'some-rule',
+            tier: '2',
+            type: 'auto',
+            declared: [],
+            resolutions: [],
+            effective: 'missing',
+            notes: [],
+            obligation_frequency: null,
+            carrier_frequency: null,
+            frequency_verdict: 'unclassified',
+            gap_platforms: [],
+            ...over,
+        }) as RuleCoverage;
+
+    it('counts a kernel rule with no frequency as kernel-denied', () => {
+        const s = summarise([mkRow({ id: KERNEL_ID, frequency_verdict: 'unclassified' })]);
+        expect(s.kernel_denied).toBe(1);
+    });
+
+    it('does NOT count a kernel rule that did classify', () => {
+        const s = summarise([mkRow({ id: KERNEL_ID, frequency_verdict: 'covered' })]);
+        expect(s.kernel_denied).toBe(0);
+    });
+
+    it('does NOT count a non-kernel rule with no frequency', () => {
+        const s = summarise([mkRow({ id: 'not-a-kernel-rule', frequency_verdict: 'unclassified' })]);
+        expect(s.kernel_denied).toBe(0);
+    });
+
+    it('counts a maintainer-review-only row as carrier-less', () => {
+        const s = summarise([mkRow({ declared: ['observer:maintainer-review'] })]);
+        expect(s.carrier_less).toBe(1);
+    });
+
+    it('does NOT count a row that also declares a machine carrier', () => {
+        const s = summarise([
+            mkRow({ declared: ['observer:maintainer-review', 'hook:some-hook'] }),
+        ]);
+        expect(s.carrier_less).toBe(0);
+    });
+
+    it('does NOT count an undeclared row as carrier-less', () => {
+        expect(summarise([mkRow({ declared: [] })]).carrier_less).toBe(0);
+    });
+
+    it('a reader can derive the reachable population from the artefact alone', () => {
+        const s = summarise([
+            mkRow({ id: KERNEL_ID }),
+            mkRow({ id: 'obs-1', declared: ['hook:h'], effective: 'observer' }),
+            mkRow({ id: 'obs-2', declared: ['hook:h'], effective: 'observer' }),
+            mkRow({ id: 'cl-1', declared: ['observer:maintainer-review'] }),
+        ]);
+        // Every field the derivation needs is on the artefact, so the reader
+        // never has to run the gate to separate structural from unwired.
+        expect(s.kernel_denied + s.observer + s.carrier_less).toBe(4);
+        expect(s.observer).toBe(2);
     });
 });

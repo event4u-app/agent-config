@@ -42,8 +42,13 @@
  * measurement runs first.
  *
  * Usage:
- *   ./scripts-run src/scripts/hooks_doctor [--host <name>] [--format text|json]
- *     [--root <path>] [--limit <n>]
+ *   ./agent-config hooks:effect [--host <name>] [--format text|json]
+ *     [--root <path>] [--limit <n>] [--help]
+ *   ./scripts-run src/scripts/hook_effect_doctor  (same flags, in this checkout)
+ *
+ * `--help` prints the two verdict vocabularies FROM THE MODULE THAT DEFINES
+ * THEM. A help text that restated them by hand would be a fifth hand-typed copy
+ * of a closed set, which is the drift class this repository gates elsewhere.
  */
 import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
@@ -51,7 +56,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { buildHostReport, type ConcernProbe, type HostReport } from './_lib/hook_effect_probe.js';
+import {
+    HOST_VERDICTS,
+    PROBE_STATES,
+    buildHostReport,
+    type ConcernProbe,
+    type HostReport,
+} from './_lib/hook_effect_probe.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -230,6 +241,34 @@ export function renderText(r: HostReport): string {
     return out.join('\n') + '\n';
 }
 
+/**
+ * The synopsis, both closed vocabularies, and the scope line.
+ *
+ * Rendered from `PROBE_STATES` and `HOST_VERDICTS` rather than restated, so the
+ * help can never describe a vocabulary the probe no longer has.
+ */
+export function renderHelp(): string {
+    return [
+        'agent-config hooks:effect — does a bound concern actually FIRE on this host?',
+        '',
+        'Usage: agent-config hooks:effect [--host <name>] [--format text|json]',
+        '                                 [--root <path>] [--limit <n>] [--help]',
+        '',
+        'Not hooks:doctor. That one reads the MANIFEST — which concerns are declared,',
+        'their posture, whether their scripts and trampolines exist. This one dispatches',
+        'each eligible concern against a scratch root and reports what was observed.',
+        '',
+        `per-concern states:  ${PROBE_STATES.join(' · ')}`,
+        `host verdicts:       ${HOST_VERDICTS.join(' · ')}`,
+        '',
+        '`unknown` is never rendered as `effective`: a concern that wrote in the sandbox,',
+        'or that could not be dispatched at all, is reported as unestablished — never as a',
+        'working configuration.',
+        '',
+        'Exits 0 on every verdict. An `inert` host is information, not a build failure.',
+    ].join('\n') + '\n';
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     let host = 'claude';
     let format: 'text' | 'json' = 'text';
@@ -237,6 +276,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     let limit = 200;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
+        if (a === '--help' || a === '-h') {
+            process.stdout.write(renderHelp());
+            return 0;
+        }
         if (a === '--host') host = argv[++i] ?? host;
         else if (a === '--format') format = (argv[++i] as 'text' | 'json') ?? format;
         else if (a === '--root') root = path.resolve(argv[++i] ?? root);
@@ -246,7 +289,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     try {
         report = buildReport(root, host, limit);
     } catch (err) {
-        process.stderr.write(`❌  hooks_doctor: ${(err as Error).message}\n`);
+        process.stderr.write(`❌  hooks:effect: ${(err as Error).message}\n`);
         return 2;
     }
     process.stdout.write(format === 'json' ? JSON.stringify(report, null, 2) + '\n' : renderText(report));

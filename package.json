@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "mcpName": "io.github.event4u-app/agent-config",
-    "version": "14.14.0",
+    "version": "14.14.1",
     "description": "Governed skills, rules and commands for AI coding tools (Claude Code, Cursor, Windsurf, Copilot) — every claim machine-checked, including the counts in these badges.",
     "license": "MIT",
     "private": false,

@@ -434,6 +434,39 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.15.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.14.1](https://github.com/event4u-app/agent-config/compare/14.14.0...14.14.1) (2026-09-03)
+
+### Release highlights
+
+- **Behaviour changes:** four new read-only surfaces, all additive — `agent-config hooks:effect`, which dispatches each bound concern against a scratch root and reports whether it actually fired rather than whether the manifest binds it (b0a03a7); `doctor --strict`, carrying the failing exit as a separate mode so `doctor` itself keeps its always-zero exit and no existing caller changes (517afcb, the `doctor-exit-contract` choice); and the `dev:skill-scout` and `push-ready` Taskfile targets (576ff4f, 6735abf). No public artefact was removed in this span.
+- **Default changes + migration:** _none_
+- **Security and correctness:** `skill_scout` confines a human-supplied candidate name to a single path segment and asserts resolved-path containment BEFORE it reports a scan scope, so a traversing name is refused rather than normalised and the scan-scope line can never record a root it did not scan; it also re-checks file type and size at read time, closing a post-intake symlink that was followed out of the quarantine directory (576ff4f). Three runtime advisories that were failing the `npm audit --omit=dev --audit-level=high` gate are cleared (54f0242).
+- **Honest nulls:** the deferred council-topology carrier's two resumption triggers were re-measured live and neither had moved — Phase 2 needs five independent eligible council seats and `council:status` reports two of five; Phase 3 needs a two-day spend reservation that does not exist. The carrier stays parked with all 38 obligations in place, and no third disposition record was written (1fe6fa0).
+- **Known limitations:** the README daemon-claim repair is verified only one way. `check_claims` exiting 0 proves the retired phrasing is gone; it does NOT validate the replacement wording, because `README.md:30` is unmarkered prose (e200ba2). And `check_source_size_budget`'s excess is still five figures — this span lowered it 18,245 → 18,205 by moving prose and helpers under the 1500-line cap, not by removing debt.
+
+### Bug Fixes
+
+* **deps:** clear the three runtime advisories failing the audit gate (#1822) ([54f0242](https://github.com/event4u-app/agent-config/commit/54f024250c67781e34e6242450fdf97d9165bfee))
+* **release:** refuse an uncurated head before the first remote state (#1813) ([2b3d2b3](https://github.com/event4u-app/agent-config/commit/2b3d2b3474e6520ef696466aff583a76381f002c))
+
+### Documentation
+
+* **evidence:** record drain run 18 (#1823) ([76ed568](https://github.com/event4u-app/agent-config/commit/76ed5684367667000ed5b1bd2bc5af13bdef8943))
+
+### Other
+
+* complete road-to-wired-instruments (#1818) ([b0a03a7](https://github.com/event4u-app/agent-config/commit/b0a03a7af314cb231f4385005f7d73e8a6ca5dd4))
+* complete road-to-self-description-truth (#1817) ([e200ba2](https://github.com/event4u-app/agent-config/commit/e200ba2f97590d2686bd9a292cf54025fb47cee2))
+* complete road-to-governed-skill-scouting (#1815) ([576ff4f](https://github.com/event4u-app/agent-config/commit/576ff4fcc2568e7619ff489ddcf301f32f30da9f))
+* complete road-to-ship-control-coverage (#1816) ([5a0ca3a](https://github.com/event4u-app/agent-config/commit/5a0ca3a16fb8f0ab54df734de885abee8c8fedff))
+* complete road-to-artifact-location-and-doctor-reach (#1819) ([517afcb](https://github.com/event4u-app/agent-config/commit/517afcb524d201ad08b5d820638d84b2b3cdeb7b))
+* complete road-to-cascading-base-integration (#1821) ([6735abf](https://github.com/event4u-app/agent-config/commit/6735abf3f789bd2d1549aa02937189ba9fe2b952))
+* **topology:** repair three claims that went false, and record why the carrier stays parked (#1820) ([1fe6fa0](https://github.com/event4u-app/agent-config/commit/1fe6fa0fb3facfa7e735b68ee92e04616fbb3843))
+* six survivors of the 2026-09-b inbox round (#1814) ([0415101](https://github.com/event4u-app/agent-config/commit/04151017860e0066e20832bdee49221e047ee33e))
+* park governed-evidence-production to later/, and resolve metered-backend-park with (b) (#1811) ([c6b4f64](https://github.com/event4u-app/agent-config/commit/c6b4f640736c78554d7ce03f27257f44368ef1ae))
+
+Tests: 20776 (+215 since 14.14.0)
+
 ## [14.14.0](https://github.com/event4u-app/agent-config/compare/14.13.0...14.14.0) (2026-09-02)
 
 ### Release highlights

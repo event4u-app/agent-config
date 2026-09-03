@@ -20,10 +20,14 @@
  *   - `check_command_count_messaging.ts` keeps the command-specific
  *     active-vs-shim split checks.
  *
- * Scope: flagship surfaces only (SURFACES below). Dated census / analysis
- * snapshots (SKILL_CENSUS, skills-taxonomy, positioning-evidence, …) carry
- * point-in-time counts by design and are deliberately out of scope — the
- * gate's charter is the surfaces a fresh reader treats as current.
+ * Scope: flagship surfaces (SURFACES below) PLUS every governed rule under
+ * `src/rules/` (RULE_SURFACE_DIR). Rules were the largest hole this gate had:
+ * they are the most-delivered surface this package ships — a wrong self-count
+ * there reaches every consumer session — and the list below named sixteen doc
+ * paths and no rule path. Dated census / analysis snapshots (SKILL_CENSUS,
+ * skills-taxonomy, positioning-evidence, …) carry point-in-time counts by
+ * design and are deliberately out of scope — the gate's charter is the surfaces
+ * a fresh reader treats as current.
  *
  * Exit codes: 0 clean · 1 drift or internal inconsistency.
  */
@@ -65,6 +69,41 @@ export const SURFACES: readonly string[] = [
     // stale LOCAL artefact into a red gate, while CI passed because the file is
     // absent there. A gate must judge repo content, not untracked local state.
 ];
+
+/**
+ * Governed rules, enumerated rather than listed.
+ *
+ * A hand-maintained list of 120 rule paths would go stale on the first rule
+ * added, which is the drift class this gate exists to catch — so the rule
+ * surface is a directory, walked at run time.
+ */
+export const RULE_SURFACE_DIR = 'src/rules';
+
+export function rule_surfaces(root: string = ROOT): string[] {
+    const dir = path.join(root, RULE_SURFACE_DIR);
+    if (!fs.existsSync(dir)) {
+        return [];
+    }
+    return fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith('.md'))
+        .sort()
+        .map((f) => `${RULE_SURFACE_DIR}/${f}`);
+}
+
+/**
+ * A count that belongs to a dated measurement, not to this package's live
+ * totals.
+ *
+ * The gate's charter already excludes point-in-time snapshots; until now it
+ * could only express that by leaving a whole FILE out. A rule may carry a dated
+ * host measurement inside a paragraph of live prose, and neither excluding the
+ * rule nor rewriting the measurement to today's total is correct — the second
+ * falsifies recorded evidence. The marker is per line, and it is a claim a
+ * reviewer can falsify: the line must name the date or the artefact the figure
+ * was measured against.
+ */
+export const DATED_MEASUREMENT_MARKER = '<!-- count: dated -->';
 
 /** kind → canonical-count resolver. "governed rules" is the canonical total
  * phrasing for rules; bare "N rules" is NOT matched (too many legitimate
@@ -108,6 +147,9 @@ export function scan_text(
     for (const [kind, pattern] of KIND_PATTERNS) {
         for (let i = 0; i < lines.length; i++) {
             const re = new RegExp(pattern.source, pattern.flags);
+            if (lines[i]!.includes(DATED_MEASUREMENT_MARKER)) {
+                continue;
+            }
             for (const m of lines[i]!.matchAll(re)) {
                 const found = Number.parseInt(m[2]!, 10);
                 (seen[kind] ??= new Set()).add(found);
@@ -219,6 +261,15 @@ export interface CoverageGap {
  *
  * A position counts as anchored when some `TARGETS` pattern for the same
  * file, bound to a compatible kind, matches the same line.
+ *
+ * `src/rules/**` is scanned for VALUE drift but is deliberately excluded from
+ * this pass, and the reason is mechanical rather than stylistic: satisfying it
+ * would require `update_counts` to become a writer into `src/rules/`, where the
+ * kernel rules live behind `block_kernel_rule_writes`. A generator that must
+ * never touch part of its own target directory is a generator waiting to be
+ * disarmed by a path move. So a stale count in a rule fails on value and a human
+ * fixes it — the coverage claim this pass makes stays true of the surfaces it
+ * actually covers, instead of being widened into a claim it cannot keep.
  */
 export function anchor_coverage_gaps(root: string = ROOT): CoverageGap[] {
     const anchorsByFile = new Map<string, ReadonlyArray<[string, string]>>();
@@ -254,6 +305,16 @@ export function anchor_coverage_gaps(root: string = ROOT): CoverageGap[] {
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const QUIET = argv.includes('--quiet');
+    // Enumerated, not listed. An empty walk means the rule tree moved and this
+    // gate is watching nothing — a dead scope, never a clean run.
+    const rules = rule_surfaces();
+    if (rules.length === 0) {
+        process.stderr.write(
+            `❌  check_artefact_count_messaging: ${RULE_SURFACE_DIR}/ resolved to no .md file — ` +
+                'the rule surface moved and this gate would pass by blindness.\n',
+        );
+        return 1;
+    }
     // This gate walks no tree — it guards a hand-maintained surface list, and
     // every missing entry is skipped with a warning so nothing hard-breaks on a
     // doc rename. That tolerance is also the failure mode: a repo-wide docs
@@ -262,7 +323,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     try {
         assertWatchlistResolves({
             gate: 'check_artefact_count_messaging',
-            candidates: [...SURFACES, ...STRUCTURED_SURFACES.map((s) => s.file)],
+            candidates: [...SURFACES, ...STRUCTURED_SURFACES.map((s) => s.file), ...rules],
             repoRoot: ROOT,
         });
     } catch (exc) {
@@ -285,7 +346,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     const allFindings: Finding[] = [];
     const global_seen: Record<string, Set<number>> = {};
-    for (const rel of SURFACES) {
+    for (const rel of [...SURFACES, ...rules]) {
         const p = path.join(ROOT, rel);
         if (!fs.existsSync(p)) {
             process.stderr.write(`  ⚠️  surface missing (skipped): ${rel}\n`);
@@ -347,8 +408,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             process.stdout.write(`    internal inconsistency — ${line}\n`);
         }
         process.stdout.write(
-            '\nFix: run `./scripts-run src/scripts/update_counts` — every checked position\n' +
-                'is anchored, so the generator can write it. Never hand-type a count.\n',
+            '\nFix: on a flagship surface, run `./scripts-run src/scripts/update_counts` —\n' +
+                'every anchored position is generator-written, so never hand-type one there.\n' +
+                `Under ${RULE_SURFACE_DIR}/ the generator does not write (the kernel rules live\n` +
+                'there behind block_kernel_rule_writes), so a rule count is a hand edit: correct\n' +
+                'the number, or — if the figure is a dated measurement rather than a live\n' +
+                `self-count — mark that line \`${DATED_MEASUREMENT_MARKER}\` and say what it was\n` +
+                'measured against.\n',
         );
     }
 

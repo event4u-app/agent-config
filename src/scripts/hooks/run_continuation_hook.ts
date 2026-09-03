@@ -64,6 +64,13 @@
  *                                inert mechanism that says nothing is
  *                                indistinguishable from a healthy idle run,
  *                                which is the failure this file exists over)
+ *   plan premise moved         → allow  (event: halt-premise-invalidated, ONCE per
+ *                                run. Engaged-under fingerprint and newest
+ *                                observation both known and differing. Before the
+ *                                counter rungs: iterating against a stale plan
+ *                                does not make it current, and capping out would
+ *                                report `exhausted`, a budget word, for staleness.
+ *                                Never fires on traffic the run did not observe)
  *   quality-gate refusal       → defer            (event: deferred-quality-gate)
  *   duplicate stop fire        → repeat the BLOCK, no count (event: none —
  *                                an allow here would END the reply the block
@@ -173,8 +180,35 @@ import {
     readUnavailableDependency,
     stallSignal,
     type StallLevel,
-    type UnavailableDependency,
 } from '../_lib/loop_guards.js';
+import { premiseMoved, readContextObservation } from '../_lib/context_observation.js';
+import { RUN_TERMINAL_VOCABULARY_VERSION } from '../_lib/outcome_vocabularies.js';
+import {
+    HALT_ACTIONS,
+    ladder,
+    MAX_ITERATIONS,
+    parseHaltStamp,
+    STALL_WINDOW,
+    terminalStateFor,
+    WALL_CLOCK_CAP_MS,
+    type LadderAction,
+} from '../_lib/continuation_ladder.js';
+
+/**
+ * DECLARED in `_lib/continuation_ladder.ts`, re-exported here: one declaration,
+ * two import paths, no second copy to drift. That module's header says why the
+ * move happened (`road-to-wired-instruments` Phase 2).
+ */
+export {
+    HALT_ACTIONS,
+    ladder,
+    MAX_ITERATIONS,
+    parseHaltStamp,
+    STALL_WINDOW,
+    terminalStateFor,
+    WALL_CLOCK_CAP_MS,
+    type LadderAction,
+};
 
 /** Re-exported so a test can assert the IDENTITY, not two matching literals. */
 export { TRANSCRIPT_READ_MAX_BYTES };
@@ -197,11 +231,6 @@ export const EVENTS_RELPATH = path.join(
     'run-continuation.jsonl',
 );
 const STATE_DIR_REL = path.join('agents', 'runtime', 'state');
-
-/** Ladder defaults. Phase 1.1 pre-registers all three for revisit, not tuning. */
-export const MAX_ITERATIONS = 25;
-export const WALL_CLOCK_CAP_MS = 4 * 60 * 60 * 1000;
-export const STALL_WINDOW = 3;
 
 /**
  * How many consecutive absent-roadmap fires confirm the absence.
@@ -285,6 +314,14 @@ export interface RunState {
      * cannot finish") named these rungs as its mitigation.
      */
     halted?: LadderAction;
+    /**
+     * The fingerprint this run ENGAGED under — its plan premise, recorded once on
+     * the first engagement from `_lib/context_observation` and then left alone.
+     * Refreshing it every fire would make both sides of the premise comparison
+     * equal by construction and the rung unreachable. Absent means the run never
+     * observed one, which is never a disagreement (`premiseMoved`).
+     */
+    context_fingerprint?: string;
 }
 
 /**
@@ -346,34 +383,6 @@ export interface ScanResult {
     blocked: number;
     next: NextStep | null;
 }
-
-export type LadderAction =
-    | 'engage'
-    | 'complete'
-    | 'blocked'
-    | 'halt-max-iterations'
-    | 'halt-wall-clock'
-    | 'halt-stall'
-    | 'halt-dependency-unavailable';
-
-/** The terminal rungs — the set `RunState.halted` may hold. */
-/**
- * `halt-roadmap-absent` is deliberately NOT in this union and not in
- * `LadderAction`. It is an event name the caller emits directly when the claimed
- * roadmap is unreadable from the authoritative tree, and it CLEARS the state
- * rather than stamping `halted` — widening the union would let `parseRecord`
- * accept it as a `halted` value, which would mean a run whose budget was cleared
- * also carried a halt stamp. The two are mutually exclusive by construction.
- */
-export const HALT_ACTIONS: readonly LadderAction[] = [
-    'halt-max-iterations',
-    'halt-wall-clock',
-    'halt-stall',
-    // Phase 5.4. Checked BEFORE the counter rungs: a dependency the run cannot
-    // obtain is not something more iterations close, so consuming the budget
-    // against it is the waste the rung exists to stop.
-    'halt-dependency-unavailable',
-];
 
 /**
  * Frontmatter `execution.mode`, or null. Line-oriented on purpose: the
@@ -478,50 +487,6 @@ export function extractVerify(stepText: string): string | null {
     const backticked = /`?verify:`?\s*`([^`]+)`/.exec(stepText);
     if (backticked !== null) return (backticked[1] as string).trim() || null;
     return null;
-}
-
-/**
- * The termination ladder, pure. `state` is the record BEFORE this stop;
- * `openCount` is the scan of the claimed roadmap as it stands now.
- */
-export function ladder(
-    state: RunState,
-    openCount: number,
-    nowMs: number,
-    // No default: `= 0` would silently restore the complete-instead-of-blocked
-    // behaviour for any caller that omitted it.
-    blockedCount: number,
-    caps: { maxIterations: number; wallClockMs: number; stallWindow: number } = {
-        maxIterations: MAX_ITERATIONS,
-        wallClockMs: WALL_CLOCK_CAP_MS,
-        stallWindow: STALL_WINDOW,
-    },
-    // Phase 5.4. `null` when nothing unobtainable was detected. Optional so every
-    // existing caller and test keeps its meaning unchanged.
-    unavailable: UnavailableDependency | null = null,
-): LadderAction {
-    // A halt is terminal for this run id. Checked BEFORE `complete` so a
-    // halted run whose roadmap later reads zero-open does not report a
-    // completion it never reached.
-    if (state.halted) return state.halted;
-    // `scanOpenSteps` EXCLUDES `blocked-by:` steps from `openCount`, so zero-open
-    // with blocked steps left is exhaustion of runnable work, not completion —
-    // ADR-235's own terminal outcome, and never a sixth halt.
-    if (openCount === 0) return blockedCount > 0 ? 'blocked' : 'complete';
-    // BEFORE the counter rungs, deliberately: a missing credential, an absent
-    // binary or an exhausted quota is not closed by iterating, so spending the
-    // budget on it converts a nameable blocker into an anonymous cap-out.
-    if (unavailable !== null) return 'halt-dependency-unavailable';
-    if (state.iterations >= caps.maxIterations) return 'halt-max-iterations';
-    const started = Date.parse(state.started_at);
-    if (Number.isFinite(started) && nowMs - started >= caps.wallClockMs) {
-        return 'halt-wall-clock';
-    }
-    const tail = state.history.slice(-caps.stallWindow);
-    if (tail.length >= caps.stallWindow && tail.every((n) => n === openCount)) {
-        return 'halt-stall';
-    }
-    return 'engage';
 }
 
 /**
@@ -686,16 +651,17 @@ function readState(file: string): RunState | null {
         if (o['inert_reported'] === true) {
             rec.inert_reported = true;
         }
-        // Validated against the halt set rather than accepted as any string:
-        // an unrecognised value would be returned verbatim by `ladder` and
-        // become an action no branch below handles.
-        const halted = o['halted'];
-        if (
-            typeof halted === 'string' &&
-            (HALT_ACTIONS as readonly string[]).includes(halted)
-        ) {
-            rec.halted = halted as LadderAction;
+        // Round-tripped for the same reason `history_source` is: dropped, the
+        // premise would be re-recorded every fire from the newest observation, so
+        // the two sides could never differ and the rung would be dead code.
+        if (typeof o['context_fingerprint'] === 'string' && o['context_fingerprint'] !== '') {
+            rec.context_fingerprint = o['context_fingerprint'];
         }
+        // Tolerant, not permissive — see `parseHaltStamp` for what it accepts
+        // beyond the halt set and why dropping a newer build's stamp was the
+        // wrong failure direction for a budget.
+        const halted = parseHaltStamp(o['halted']);
+        if (halted !== null) rec.halted = halted;
         return rec;
     } catch {
         return null;
@@ -1412,7 +1378,21 @@ export function main(): number {
     // differently. One producer, one definition.
     state.stall = stallSignal(state.history, STALL_WINDOW).level;
 
-    const action = ladder(state, scan.open, Date.now(), scan.blocked, undefined, unavailable);
+    // 2.1 — repository drift, from the newest observation `roadmap:context`
+    // recorded. No probe here: the fingerprint costs a `gh` call and this is the
+    // Stop path. An unknown on either side is never a halt.
+    const observed = readContextObservation(workspaceRoot)?.fingerprint ?? null;
+    const premiseInvalidated = premiseMoved(state.context_fingerprint, observed);
+
+    const action = ladder(
+        state,
+        scan.open,
+        Date.now(),
+        scan.blocked,
+        undefined,
+        unavailable,
+        premiseInvalidated,
+    );
 
     if (action !== 'engage') {
         // A run that is ALREADY stamped emits nothing further — round 6 finding 6.
@@ -1436,6 +1416,12 @@ export function main(): number {
                 iterations: state.iterations,
                 open: scan.open,
                 blocked: scan.blocked,
+                // A ledger line is a persisted shape carrying a `RunTerminalState`,
+                // so it names the vocabulary version it was written against: a
+                // reader meeting an unknown value can then tell a newer writer
+                // from a corrupt row.
+                terminal_state: terminalStateFor(action),
+                terminal_vocabulary_version: RUN_TERMINAL_VOCABULARY_VERSION,
                 at: new Date().toISOString(),
                 ...roots,
             });
@@ -1472,6 +1458,10 @@ export function main(): number {
 
     state.iterations += 1;
     state.last_turn = turnOrdinal;
+    // Recorded ONCE — the premise this run engaged under. See the field's docblock.
+    if (state.context_fingerprint === undefined && observed !== null) {
+        state.context_fingerprint = observed;
+    }
     state.history.push(scan.open);
     state.last_engaged_at = new Date().toISOString();
     if (!writeState(stateFile, state)) {

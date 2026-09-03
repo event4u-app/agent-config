@@ -39,9 +39,26 @@ export const SUCCESS_TERMINALS: ReadonlySet<RunTerminalState> = new Set([
     'clean-no-op',
 ]);
 
+/**
+ * Neither a failure nor a success for this metric, and each excluded for its own
+ * reason rather than by omission.
+ *
+ * `approval-required` is the safety floor working; counting a floor doing its
+ * job as a failure would make the metric fall every time governance fires.
+ *
+ * `premise-invalidated` is the same shape one layer out: the run stopped because
+ * the world it planned against moved, which is the drift detector working, not
+ * the work failing. It is also the state whose base rate is set by OTHER people's
+ * pushes rather than by this run's quality — `origin/main` moves constantly — so
+ * counting it as a failure would make the repeated-failure rate track repository
+ * traffic. That is the concrete form of this roadmap's Risk 1, arriving through
+ * the metric instead of through the ladder.
+ */
+const EXCLUDED: ReadonlySet<RunTerminalState> = new Set(['approval-required', 'premise-invalidated']);
+
 // Every terminal state is classified or deliberately excluded -- silence about
 // one is how a metric quietly changes meaning when the vocabulary grows.
-const CLASSIFIED = new Set<string>([...FAILURE_TERMINALS, ...SUCCESS_TERMINALS, 'approval-required']);
+const CLASSIFIED = new Set<string>([...FAILURE_TERMINALS, ...SUCCESS_TERMINALS, ...EXCLUDED]);
 const _unclassified = RUN_TERMINAL_STATES.filter((t) => !CLASSIFIED.has(t));
 if (_unclassified.length > 0) {
     throw new Error(
@@ -86,7 +103,7 @@ export function repeatedFailureRate(
         // `ep.terminal_state` is already the AMENDED verdict: reconstructEpisode
         // drops superseded rows and takes the LAST effective terminal state.
         const t = ep.terminal_state;
-        if (t === null || !CLASSIFIED.has(t) || t === 'approval-required') {
+        if (t === null || !CLASSIFIED.has(t) || EXCLUDED.has(t)) {
             unknown += 1;
             continue;
         }

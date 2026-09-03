@@ -46,6 +46,8 @@ import {
 } from '../../src/scripts/hooks/run_continuation_hook.js';
 import { claim_file, roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
 import { EVENTS_RELPATH } from '../../src/scripts/hooks/run_continuation_hook.js';
+import { CONTEXT_OBSERVATION_REL } from '../../src/scripts/_lib/context_observation.js';
+import { RUN_TERMINAL_VOCABULARY_VERSION } from '../../src/scripts/_lib/outcome_vocabularies.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
@@ -1297,5 +1299,64 @@ describe('run-continuation — driven through the live dispatcher', () => {
         );
         expect(r.status ?? -1).not.toBe(-1);
         expect(events(root)).toEqual([]);
+    });
+});
+
+describe('run-continuation — the premise rung, through the live dispatcher', () => {
+    // The reachability half. `ladder()` gains a `premiseInvalidated` parameter,
+    // and a parameter nothing ever passes as `true` is a rung wired to nothing —
+    // which is the defect class `road-to-wired-instruments` exists over,
+    // reproduced inside its own fix. Only driving `main()` over a real
+    // observation file can tell a live rung from a dead one.
+    const writeObservation = (root: string, fingerprint: string): void => {
+        const f = path.join(root, CONTEXT_OBSERVATION_REL);
+        fs.mkdirSync(path.dirname(f), { recursive: true });
+        fs.writeFileSync(
+            f,
+            JSON.stringify({ schema_version: 1, roadmap: SLUG, fingerprint, at: new Date().toISOString() }),
+            'utf-8',
+        );
+    };
+
+    it('an observation that MOVED after the run engaged halts it under the premise rung', () => {
+        const root = writeWorkspace();
+        writeObservation(root, 'fp-at-engage');
+        // Fire 1 engages and records `fp-at-engage` as this run's premise.
+        expect(dispatchStop(root, writeTranscript(3)).code).toBe(2);
+        expect(events(root).filter((e) => e['event'] === 'engage').length).toBe(1);
+
+        // The run re-probes and the world has moved.
+        writeObservation(root, 'fp-after-a-peer-pushed');
+        const second = dispatchStop(root, writeTranscript(4));
+        expect(second.code).toBe(0);
+
+        const halts = events(root).filter((e) => e['event'] === 'halt-premise-invalidated');
+        expect(halts.length).toBe(1);
+        // The crossing into the run vocabulary rides on the line, with the
+        // version of the value domain it was written against.
+        expect(halts[0]?.['terminal_state']).toBe('premise-invalidated');
+        expect(halts[0]?.['terminal_vocabulary_version']).toBe(RUN_TERMINAL_VOCABULARY_VERSION);
+        // NOT the counter rung: that is the whole point of 2.2.
+        expect(events(root).filter((e) => e['event'] === 'halt-max-iterations').length).toBe(0);
+    });
+
+    it('an UNCHANGED observation across the same two fires never halts', () => {
+        // Risk 1's negative case at the wiring level. A rung that fires whenever
+        // an observation merely EXISTS would halt every autonomous run on its
+        // second turn, and the positive case above cannot tell the two apart.
+        const root = writeWorkspace();
+        writeObservation(root, 'fp-steady');
+        expect(dispatchStop(root, writeTranscript(3)).code).toBe(2);
+        expect(dispatchStop(root, writeTranscript(4)).code).toBe(2);
+        expect(events(root).filter((e) => e['event'] === 'halt-premise-invalidated').length).toBe(0);
+        expect(events(root).filter((e) => e['event'] === 'engage').length).toBe(2);
+    });
+
+    it('no observation at all leaves the run exactly as it was before the rung existed', () => {
+        const root = writeWorkspace();
+        expect(dispatchStop(root, writeTranscript(3)).code).toBe(2);
+        expect(dispatchStop(root, writeTranscript(4)).code).toBe(2);
+        expect(events(root).filter((e) => e['event'] === 'halt-premise-invalidated').length).toBe(0);
+        expect(events(root).filter((e) => e['event'] === 'engage').length).toBe(2);
     });
 });

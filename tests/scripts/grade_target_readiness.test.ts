@@ -69,9 +69,9 @@ describe('grade_target_readiness — 1.1 detection: presence detected, absence n
         expect(f.get('static-analysis')?.grade).toBe(2);
     });
 
-    it('all ten dimensions are always reported, present or not', () => {
+    it('all thirteen dimensions are always reported, present or not', () => {
         for (const root of [full, ciAbsent, python]) {
-            expect(grade(root).dimensions).toHaveLength(10);
+            expect(grade(root).dimensions).toHaveLength(13);
         }
     });
 });
@@ -386,5 +386,127 @@ describe('grade_target_readiness — 1.3 evidence binding', () => {
                 }
             }
         }
+    });
+});
+
+/**
+ * The three dimensions added by `road-to-ship-control-coverage` Phase 4.
+ *
+ * All three are NON-KNOCKOUT on purpose: they are new, no target has prior data
+ * on them, and a new knockout would re-bind every existing verdict at L0 on the
+ * day it shipped — a change to what the level MEANS, disguised as a change to
+ * what it measures.
+ */
+describe('grade_target_readiness — Phase 4 dimensions', () => {
+    const ids = (root: string): string[] => grade(root).dimensions.map((d) => d.id);
+    const dim = (root: string, id: string) => grade(root).dimensions.find((d) => d.id === id);
+
+    it('the grader emits thirteen dimension ids, and the three new ones are among them', () => {
+        for (const root of [full, ciAbsent, python]) {
+            expect(ids(root)).toHaveLength(13);
+            for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
+                expect(ids(root), `${root} is missing ${id}`).toContain(id);
+            }
+        }
+    });
+
+    it('none of the three is a knockout — the level must not be re-bound by a new dimension', () => {
+        for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
+            expect(dim(full, id)?.knockout, id).toBe(false);
+        }
+        expect(grade(full).dimensions.filter((d) => d.knockout)).toHaveLength(4);
+    });
+
+    it('a bare target scores all three at 0 Absent, never null', () => {
+        // `null` is "this tool cannot tell" and these three ARE tellable from a
+        // repository scan. Reporting them as undetectable would be a flattering
+        // 0 wearing an honest label.
+        const bare = _target({ 'README.md': '#\n' });
+        for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
+            expect(dim(bare, id)?.grade, id).toBe(0);
+        }
+    });
+
+    it('every one of the three carries a non-empty evidence string in every fixture', () => {
+        for (const root of [full, ciAbsent, python]) {
+            for (const id of ['operational-recovery', 'mail-authenticity', 'privacy-obligations']) {
+                expect(dim(root, id)?.evidence.trim().length, `${root} ${id}`).toBeGreaterThan(0);
+            }
+        }
+    });
+
+    it('operational-recovery reads a runbook as Present and a blocking restore job as Enforced', () => {
+        const doc = _target({ 'docs/runbooks/restore.md': '# Restore from backup\n\nRPO 24h, RTO 4h.\n' });
+        expect(dim(doc, 'operational-recovery')?.grade).toBe(1);
+        const ci = _target({
+            'docs/runbooks/restore.md': '# Restore from backup\n',
+            '.github/workflows/dr.yml': 'jobs:\n  dr:\n    steps:\n      - run: ./scripts/restore-from-backup.sh\n',
+        });
+        expect(dim(ci, 'operational-recovery')?.grade).toBe(2);
+    });
+
+    it('privacy-obligations reads a privacy notice as Present, and 0 when there is none', () => {
+        expect(dim(_target({ 'docs/privacy-policy.md': '# Privacy notice\n' }), 'privacy-obligations')?.grade).toBe(1);
+        expect(dim(_target({ 'README.md': '#\n' }), 'privacy-obligations')?.grade).toBe(0);
+    });
+});
+
+/**
+ * 4.2 — the one rung that must not be fudged.
+ *
+ * `p=none` is a MONITORING policy: it asks receivers for aggregate reports and
+ * instructs them to take no action on a failing message. A domain publishing it
+ * is measuring the problem, not preventing it, and a ladder that scored it level
+ * with `p=quarantine` would hand an operator an enforcement token they have not
+ * earned.
+ */
+describe('grade_target_readiness — the mail-authenticity ladder', () => {
+    const mail = (dmarc: string, extra: Record<string, string> = {}): number | null => {
+        const root = _target({ 'dns/example.com.zone': dmarc, ...extra });
+        return grade(root).dimensions.find((d) => d.id === 'mail-authenticity')?.grade ?? null;
+    };
+    const NONE = '_dmarc IN TXT "v=DMARC1; p=none; rua=mailto:dmarc@example.com"\n';
+    const QUARANTINE = '_dmarc IN TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"\n';
+    const REJECT = '_dmarc IN TXT "v=DMARC1; p=reject; rua=mailto:dmarc@example.com"\n';
+    const SPF_DKIM = {
+        'dns/spf.txt': '@ IN TXT "v=spf1 include:_spf.example.net -all"\n',
+        'dns/dkim.txt': 'sel._domainkey IN TXT "v=DKIM1; k=rsa; p=MIIB"\n',
+    };
+
+    it('p=none scores STRICTLY LOWER than p=quarantine', () => {
+        const none = mail(NONE, SPF_DKIM);
+        const quarantine = mail(QUARANTINE, SPF_DKIM);
+        expect(none).not.toBeNull();
+        expect(quarantine).not.toBeNull();
+        expect(none!).toBeLessThan(quarantine!);
+    });
+
+    it('p=none is capped at 1 Present even with SPF and DKIM alongside it', () => {
+        expect(mail(NONE, SPF_DKIM)).toBe(1);
+    });
+
+    it('and the ladder SAYS WHY in its own text, rather than only in a table somewhere', () => {
+        const root = _target({ 'dns/example.com.zone': NONE, ...SPF_DKIM });
+        const d = grade(root).dimensions.find((x) => x.id === 'mail-authenticity');
+        expect(d?.evidence.toLowerCase()).toContain('monitoring');
+        expect(d?.evidence.toLowerCase()).toContain('not protection');
+    });
+
+    it('p=reject with SPF and DKIM and a reporting address reaches the top rung', () => {
+        expect(mail(REJECT, SPF_DKIM)).toBe(3);
+    });
+
+    it('SPF alone is Present, and no mail artefact at all is Absent', () => {
+        expect(grade(_target({ 'dns/spf.txt': SPF_DKIM['dns/spf.txt'] })).dimensions
+            .find((d) => d.id === 'mail-authenticity')?.grade).toBe(1);
+        expect(grade(_target({ 'README.md': '#\n' })).dimensions
+            .find((d) => d.id === 'mail-authenticity')?.grade).toBe(0);
+    });
+
+    it('a DMARC record mentioned only in prose about DMARC does not score as one', () => {
+        // The near-miss: a README explaining what DMARC is must not read as a
+        // published policy. The signal is the record shape, not the word.
+        const root = _target({ 'README.md': '# Mail\n\nWe should think about DMARC and SPF one day.\n' });
+        expect(grade(root).dimensions.find((d) => d.id === 'mail-authenticity')?.grade).toBe(0);
     });
 });

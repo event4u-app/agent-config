@@ -3049,6 +3049,8 @@ function _run_no_manifest(
         }
         return fail_check ? 1 : 0;
     }
+    const sx = strictExit(opts, checks, false); // no manifest: keep the 2, never soften to 1
+    if (sx !== null) return bridge_present ? sx : 2;
     if (opts.ci && bridge_present) {
         // Same fold as the manifest path: check failures are red under --ci.
         return fail_check ? 1 : 0;
@@ -3077,6 +3079,8 @@ function _emit_json(
     }
     if (checks !== null) {
         payload['checks'] = checks;
+        const drift = missing.length + modified.length + foreign.length + tag_drift.length;
+        attachProceedFields(payload, drift > 0, checks);
         // The detection section rides along whenever checks ran, so the agent /
         // GUI contract carries the full provider → transport → billing table
         // and not just the one-line check row.
@@ -3117,48 +3121,16 @@ function _emit_detection_text(project_root: string, checks: Dict[]): void {
     print('');
 }
 
-function _emit_text(
-    project_root: string,
-    missing: Dict[],
-    modified: Dict[],
-    foreign: Dict[],
-    tag_drift: Dict[],
-): void {
-    const total = missing.length + modified.length + foreign.length + tag_drift.length;
-    if (total === 0) {
-        print(`✅  doctor: manifest matches filesystem under ${project_root}`);
-        return;
-    }
-    print(`⚠️   doctor: ${total} drift item(s) under ${project_root}`);
-    const groups: ReadonlyArray<[string, Dict[]]> = [
-        ['missing', missing],
-        ['modified', modified],
-        ['foreign', foreign],
-        ['tag-drift', tag_drift],
-    ];
-    for (const [label, items] of groups) {
-        if (items.length === 0) {
-            continue;
-        }
-        print(`\n  ${label} (${items.length}):`);
-        for (const it of items) {
-            const tool = (it['tool'] as string) || '?';
-            print(`    · [${tool}] ${it['path']}`);
-            if (label === 'tag-drift') {
-                const found = (it['found'] as string) || '(missing)';
-                const expected = 'expected' in it ? it['expected'] : PACKAGE_TAG_ID;
-                print(`        expected: ${expected}`);
-                print(`        found:    ${found}`);
-            }
-            print(`        fix: ${it['fix']}`);
-        }
-    }
-}
+
+// `--strict` lives in `_doctor_strict.ts`; the drift renderer in `_doctor_emit.ts`.
+import { STRICT_DEFAULTS, STRICT_STORE_TRUE, STRICT_USAGE, STRICT_VALUE_FLAGS, attachProceedFields, strictExit, validateStrictLevelOr } from './_doctor_strict.js';
+import { _emit_text } from './_doctor_emit.js';
 
 interface Options {
     project: string | null;
     json: boolean;
     ci: boolean;
+    strict: boolean; strict_level: string; // see `_doctor_strict.ts`
     check: string | null;
     trace_root: boolean;
     context: boolean;
@@ -3173,18 +3145,21 @@ const PROG = 'agent-config doctor';
 // terminal width; golden tests assert the `usage:` token + exit code only.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
+    STRICT_USAGE +
     '                           [--trace-root] [--context] [--anatomy]\n' +
     '                           [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
     '--ci': 'ci',
+    ...STRICT_STORE_TRUE,
     '--trace-root': 'trace_root',
     '--context': 'context',
     '--anatomy': 'anatomy',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
+    ...STRICT_VALUE_FLAGS,
     '--project': 'project',
     '--check': 'check',
     '--repair': 'repair',
@@ -3201,6 +3176,7 @@ function _parse(argv: string[]): Options {
         project: null,
         json: false,
         ci: false,
+        ...STRICT_DEFAULTS,
         check: null,
         trace_root: false,
         context: false,
@@ -3430,6 +3406,7 @@ function _run_repair(opts: Options): number {
 
 function main(argv: string[] | null = null): number {
     const opts = _parse(argv !== null ? Array.from(argv) : process.argv.slice(2));
+    validateStrictLevelOr(opts.strict_level, _argError);
     if (opts.ci) {
         // `--ci` = machine-readable consumer-CI contract: JSON payload on
         // stdout, zero interactive output, and check failures fold into the
@@ -3502,6 +3479,8 @@ function main(argv: string[] | null = null): number {
         // · 2 unresolvable environment (handled above via ProjectRootError).
         return drift_present || fail_check ? 1 : 0;
     }
+    const strict = strictExit(opts, checks, drift_present);
+    if (strict !== null) return strict;
     return drift_present ? 1 : 0;
 }
 

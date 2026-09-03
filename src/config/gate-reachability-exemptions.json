@@ -16,6 +16,7 @@
         "mcp:glama-drift-check": "Queries an external registry — network-dependent and flaky by construction. Would run against a recorded snapshot instead of a live query.",
         "migration-verify": "Verifies a physical move during a migration; there is no migration in flight. Would run during one.",
         "value": "Renders a dashboard; the render is the product, not a check. Nothing would make it a gate.",
+        "push-ready": "NOT A GATE — a developer-invoked helper that MUTATES the tree: it merges the base set in, regenerates derived files, and hands the push back to the contributor. It is gate-shaped only because step 5 calls `check_branch_freshness`, which IS wired to CI on its own. Wiring this target would make CI perform merges, which is the exact thing `road-to-cascading-base-integration` 2.2 forbids the pre-push hook from doing one layer down. Nothing would make it a gate; the checks inside it are wired separately.",
         "value:lint": "Lints that dashboard, which is generated and regenerated on demand. Would run if the dashboard became a committed artefact a drift could break."
     }
 }

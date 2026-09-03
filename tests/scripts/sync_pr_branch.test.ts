@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, resolveBase } from '../../src/scripts/sync_pr_branch.js';
+import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport } from "../../src/scripts/sync_pr_branch.js";
 
 describe('generated vs authored', () => {
     it('recognises the generated artefacts a merge routinely conflicts on', () => {
@@ -236,25 +236,17 @@ describe('the conflict report names a per-class resolution', () => {
     });
 });
 
-describe('base resolution', () => {
-    it('an explicit --base wins over any probe', () => {
-        const r = resolveBase(process.cwd(), 'origin/release/9.9.9');
-        expect(r.base).toBe('origin/release/9.9.9');
-        expect(r.how).toMatch(/--base/);
-    });
-
-    it('a blank --base is not an override', () => {
-        // Otherwise `--base ""` would pin the base to the empty string and every
-        // rev-list against it would read as "already current".
-        const r = resolveBase(process.cwd(), '   ');
-        expect(r.base).not.toBe('   ');
-    });
-
-    it('names HOW the base was resolved, so a wrong base is visible', () => {
-        const r = resolveBase(process.cwd(), null);
-        expect(r.how.length).toBeGreaterThan(0);
-    });
-});
+/**
+ * Base resolution moved to `branch_convergence.test.ts`.
+ *
+ * `resolveBase` returns an integration SET now, and its inputs are injected git
+ * answers rather than the live repository — the three cases that lived here
+ * (`--base` wins, a blank `--base` is not an override, every entry names HOW it
+ * was resolved) are covered there under step 1.2, alongside the twelve council
+ * fixtures they are now inseparable from. Calling the new signature against the
+ * live clone would need a network `ls-remote`, which is exactly what the
+ * injected form exists to avoid.
+ */
 
 describe('CLI', () => {
     it('refuses a value-taking flag with no value', () => {

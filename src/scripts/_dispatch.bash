@@ -290,6 +290,12 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              last dispatcher feedback per concern, missing trampolines.
                              Wraps hooks:status. Read-only.
                              Flags: --format json|table, --strict (CI), --project-root <path>
+  hooks:effect               Does a bound concern actually FIRE on this host? Dispatches
+                             each eligible concern against a scratch root and reports the
+                             observed state. Not hooks:doctor: that reads the manifest,
+                             this reads what happened. Read-only.
+                             Flags: --host <name>, --format text|json, --root <path>,
+                             --limit <n>, --help (prints both verdict vocabularies)
   routing:doctor             Live routing diagnosis: per-gate ACTIVE/INACTIVE with the
                              concern's own reason (read-only probes), session_start chain,
                              router + projection freshness, host bridge status.
@@ -976,6 +982,10 @@ cmd_hooks_doctor() {
   exec_hook "src/scripts/hooks_doctor" "$@"
 }
 
+cmd_hooks_effect() {
+  exec_hook "src/scripts/hook_effect_doctor" "$@"
+}
+
 cmd_routing_doctor() {
   exec_hook "src/scripts/routing_doctor" "$@"
 }
@@ -1533,6 +1543,7 @@ main() {
     dispatch:hook)           cmd_dispatch_hook "$@" ;;
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
+    hooks:effect)            cmd_hooks_effect "$@" ;;
     routing:doctor)          cmd_routing_doctor "$@" ;;
     workspace:doctor)        cmd_workspace_doctor "$@" ;;
     route:explain)           cmd_route_explain "$@" ;;
