@@ -1,4 +1,7 @@
 <!-- evidence-type: analysis -->
-# Completion review — inbox-2026-09-a roadmaps
+# Completion review — inbox-2026-09-b roadmaps
 
-**Skipped:** no code surface for this completion — the 2026-09-a inbox round added six roadmap files and one stub under agents/roadmaps/ and changed no executable path, scope 7993c3acc9e22e0c5944ad63554be8f5775702b7456f8877fa58ec840065d913, declared 2026-09-03
+> Filename kept at its original slug: the review contract requires an in-place re-bind of a moved
+> scope, never a rename, so only the scope hash and the round id in the prose changed.
+
+**Skipped:** no code surface for this completion — the 2026-09-b inbox round added six roadmap files and one stub under the roadmap directory and changed no executable path, scope ff1cc59d899291886758171c87fceacdde242e523765868ba4e9ac1faaed54b4, declared 2026-09-03
