@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Bootstrap shim for the event4u agent-config suite. This plugin ships ONLY the dispatcher hooks plus one install-pointer skill — ALL content (skills, rules, commands) is installed via `npx -y @event4u/agent-config init`, which writes the file projection AND registers the same hooks in ~/.claude/settings.json. DEPRECATED as a content channel; kept so the marketplace listing stays discoverable and existing installs keep working hooks.",
-    "version": "14.14.0",
+    "version": "14.14.1",
     "keywords": [
       "agent-config",
       "skills",
