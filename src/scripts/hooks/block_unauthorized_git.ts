@@ -61,12 +61,16 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readHookStdin } from "./hook_stdin.js";
+import { analyseMergeImpact, describeImpact } from "./merge_impact.js";
 import { atomic_write_json } from "./state_io.js";
 import {
+  consumeGrantTarget,
   ledgerFileFor,
   pendingFileFor,
+  readGrants,
   STATE_FILE,
   type GitOp,
+  type MergeGrant,
 } from "../git_authorization_hook.js";
 
 const EXIT_ALLOW = 0;
@@ -95,6 +99,31 @@ export const BLOCK_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   // Enabling auto-merge commits the outcome to a condition the agent does not
   // control, so it is blocked on the same terms as the merge it schedules.
   "pr-merge-auto",
+
+  // ── Added 2026-09-03. Every one is already never-autonomous in the
+  // `non-destructive-by-default` prose; the measurement that drove it is in the
+  // `GitOp` union's own note — 17 of 25 borderline operations classified as
+  // NOTHING, including three worse than anything the guard already caught.
+  /** The undo that is more destructive than the act: lockfiles break. */
+  "unpublish",
+  /** Metadata only, and every install on earth starts warning. */
+  "deprecate",
+  /** Replaces bytes consumers already hold a checksum for. */
+  "release-asset",
+  /** Deletes the guard rather than the data — everything after is unguarded. */
+  "protection",
+  /** No data lost; the gate that protects everything downstream is off. */
+  "workflow-toggle",
+  /** Reach outside the repository, and mostly one-way. */
+  "repo-lifecycle",
+  /** No code moves, and an armed auto-merge is released. */
+  "review-approve",
+  /** Discards commits that landed after the last fetch, on a shared ref. */
+  "force-push",
+  /** Destroys uncommitted work belonging to a session this one cannot see. */
+  "worktree-remove",
+  /** `-x` is the flag that takes `.env` and local certificates. */
+  "clean-ignored",
 ]);
 
 /** Recoverable operations — warned without a this-turn authorization. */
@@ -103,6 +132,22 @@ export const WARN_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   "push",
   "pr-create",
   "branch",
+
+  // ── Added 2026-09-03, deliberately at warn rather than block.
+  //
+  // Each is destructive in some reading, and each is also routine enough that
+  // blocking it would be the friction that gets the whole guard routed around —
+  // the failure mode this estate has already recorded twice. `reset-hard` is the
+  // sharpest case and stays here for a decidable reason: the Hard Floor's
+  // qualifier is "past unpushed work", and the command text cannot say whether
+  // the work was pushed.
+  "tag-force",
+  "rebase",
+  "reset-hard",
+  "clean",
+  "stash-drop",
+  "branch-delete",
+  "close",
 ]);
 
 /**
@@ -191,6 +236,74 @@ const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     op: "pr-create",
     re: new RegExp(`${P}gh\\s+pr\\s+create\\b|${ghApiWrite("\\/pulls\\b").source}`, "i"),
   },
+  // ── Added 2026-09-03. Placement inside this table is as load-bearing as the
+  // patterns: the loop takes the MOST SEVERE match per segment, but within one
+  // op the first pattern wins, so anything more specific than a plain `git push`
+  // has to sit above it.
+
+  // `npm unpublish` is NOT reached by the publish pattern — `\bpublish\b` needs
+  // a word boundary that `unpublish` does not provide between `n` and `p`. That
+  // is why it classified as nothing for as long as it did.
+  { op: "unpublish", re: new RegExp(`${P}(npm|pnpm|yarn)\\s+${G}unpublish\\b`, "i") },
+  { op: "deprecate", re: new RegExp(`${P}(npm|pnpm|yarn)\\s+${G}deprecate\\b`, "i") },
+  {
+    op: "release-asset",
+    re: new RegExp(`${P}gh\\s+release\\s+(upload|edit|delete)\\b`, "i"),
+  },
+  {
+    op: "protection",
+    re: new RegExp(
+      `${P}gh\\s+api\\b(?=[^\\n]*(?:protection|rulesets?)\\b)(?=[^\\n]*(?:-X|--method)\\s+(?:DELETE|PUT|PATCH|POST)\\b)|${P}gh\\s+ruleset\\s+delete\\b`,
+      "i",
+    ),
+  },
+  {
+    op: "workflow-toggle",
+    re: new RegExp(`${P}gh\\s+workflow\\s+(disable|enable)\\b`, "i"),
+  },
+  {
+    op: "repo-lifecycle",
+    re: new RegExp(
+      `${P}gh\\s+repo\\s+(archive|delete|unarchive)\\b|${P}gh\\s+repo\\s+edit\\b(?=[^\\n]*--visibility\\b)`,
+      "i",
+    ),
+  },
+  {
+    op: "review-approve",
+    re: new RegExp(`${P}gh\\s+pr\\s+review\\b(?=[^\\n]*--approve\\b)`, "i"),
+  },
+  // Above `push`, and both spellings: `--force` and `--force-with-lease`. The
+  // "safe force" is in the same class here because what it is safe against is a
+  // stale local view, not a collaborator who pushed after your fetch.
+  {
+    op: "force-push",
+    re: new RegExp(`${P}git\\s+${G}push\\b[^\\n;|&]*(--force\\b|--force-with-lease\\b|\\s-f\\b)`, "i"),
+  },
+  {
+    op: "worktree-remove",
+    re: new RegExp(`${P}git\\s+worktree\\s+remove\\b[^\\n;|&]*(--force\\b|\\s-f\\b)`, "i"),
+  },
+  // `-x` (or `-X`) anywhere in the flag cluster is what reaches ignored files.
+  {
+    op: "clean-ignored",
+    re: new RegExp(`${P}git\\s+clean\\b[^\\n;|&]*-[A-Za-z]*x`, "i"),
+  },
+  { op: "tag-force", re: new RegExp(`${P}git\\s+tag\\b[^\\n;|&]*(-f\\b|--force\\b)`, "i") },
+  { op: "rebase", re: new RegExp(`${P}git\\s+${G}rebase\\b`, "i") },
+  { op: "reset-hard", re: new RegExp(`${P}git\\s+${G}reset\\b[^\\n;|&]*--hard\\b`, "i") },
+  { op: "clean", re: new RegExp(`${P}git\\s+clean\\b`, "i") },
+  { op: "stash-drop", re: new RegExp(`${P}git\\s+stash\\s+(drop|clear)\\b`, "i") },
+  // Remote deletion and the local `-D` are one op: both remove a ref, and the
+  // remote form additionally closes any open PR pointing at it.
+  {
+    op: "branch-delete",
+    re: new RegExp(
+      `${P}git\\s+branch\\b[^\\n;|&]*(-D\\b|--delete\\b)|${P}git\\s+${G}push\\b[^\\n;|&]*(--delete\\b|\\s:\\S)`,
+      "i",
+    ),
+  },
+  { op: "close", re: new RegExp(`${P}gh\\s+(pr|issue)\\s+close\\b`, "i") },
+
   { op: "push", re: new RegExp(`${P}git\\s+${G}push\\b`, "i") },
   { op: "commit", re: new RegExp(`${P}git\\s+${G}commit\\b`, "i") },
   { op: "branch", re: new RegExp(`${P}git\\s+${G}(checkout\\s+-b|switch\\s+-c)\\b`, "i") },
@@ -504,6 +617,55 @@ export function commandOp(command: string): GitOp | null {
 }
 
 /**
+ * The pull request a merge command acts on, or `null` when the command does not
+ * say.
+ *
+ * `gh pr merge` with no number merges whatever the current branch's PR is — the
+ * command text identifies no object, so no grant can match it and the
+ * clock-bound path applies unchanged. That is the fail-closed direction: an
+ * unnamed target never consumes a grant minted for a named one.
+ */
+export function mergeTargetOf(command: string): number | null {
+  const gh = /\bgh\s+pr\s+merge\s+(?:-{1,2}\S+\s+)*?(\d{1,7})\b/i.exec(command);
+  if (gh) {
+    return Number.parseInt(gh[1] as string, 10);
+  }
+  // The same operation by its REST spelling. `commandOp` already classifies
+  // `gh api -X PUT repos/o/r/pulls/1499/merge` as `pr-merge`, so a reader that
+  // missed it here would silently fall back to the clock.
+  const api = /\/pulls\/(\d{1,7})\/merge\b/i.exec(command);
+  return api ? Number.parseInt(api[1] as string, 10) : null;
+}
+
+/**
+ * Does a standing grant cover this exact merge?
+ *
+ * Three conditions, all necessary: the grant is for this op, the command named
+ * a target, and that target sits in the grant's frozen set unspent.
+ *
+ * No clock is consulted here, and that is the whole of ADR-252. `authorized`
+ * answers "did the user name this operation recently"; a grant answers "did the
+ * user name this operation AND this pull request". The second question does not
+ * decay with time, because the object it names cannot drift into a different
+ * object — a force-push changes the SHA, but the grant is spent on first use, so
+ * a merge that already happened can never be replayed against a moved head.
+ */
+export function grantCovers(
+  grants: MergeGrant[],
+  op: GitOp,
+  target: number | null,
+): MergeGrant | null {
+  if (op !== "pr-merge" || target === null) {
+    return null;
+  }
+  return (
+    grants.find(
+      (g) => g.op === "pr-merge" && g.targets.includes(target) && !g.consumed.includes(target),
+    ) ?? null
+  );
+}
+
+/**
  * A ledger older than this is not "this turn" under any reading.
  *
  * **Widening this constant for a long run is forbidden practice.** On
@@ -558,7 +720,15 @@ function _loadLedger(
   consumer_root: string,
   session_id: string,
   now: number,
-): { authorized: Set<GitOp>; present: boolean } {
+): { authorized: Set<GitOp>; present: boolean; grants: MergeGrant[] } {
+  // Grants are read on their OWN path, and the separation is load-bearing.
+  // `_readLedgerFile` below discards the entire ledger once `detected_at` is
+  // older than `LEDGER_MAX_AGE_MS`, so folding grants into its return value
+  // would let the clock silently kill them too — the change would ship, look
+  // correct, and do nothing after thirty minutes, with no test going red.
+  // `readGrants` performs the session check and no age check, which is exactly
+  // the contract: object identity, not recency (ADR-252).
+  const grants = readGrants(consumer_root, session_id);
   // This session's own ledger first; the flat legacy file only as a fallback,
   // so a ledger written by an older build still counts. Reading the flat file
   // FIRST was the defect: any concurrent session in the repo overwrites it, and
@@ -570,10 +740,10 @@ function _loadLedger(
   for (const rel of candidates) {
     const found = _readLedgerFile(path.join(consumer_root, rel), session_id, now);
     if (found !== null) {
-      return found;
+      return { ...found, grants };
     }
   }
-  return { authorized: new Set<GitOp>(), present: false };
+  return { authorized: new Set<GitOp>(), present: false, grants };
 }
 
 /**
@@ -622,11 +792,21 @@ export interface Decision {
    * `git_authorization_hook.PENDING_FILE` for why that record exists at all.
    */
   blockedOp?: GitOp;
+  /**
+   * The grant target this decision spent, when a standing grant is what allowed
+   * it.
+   *
+   * `decide` stays pure; `run` turns this into the ledger write that marks the
+   * target used. Single use is the property that keeps a grant from being a
+   * standing licence: the user authorized merging PR #1499, once.
+   */
+  consumedTarget?: number;
 }
 
 export function decide(
   command: string | null,
-  ledger: { authorized: Set<GitOp>; present: boolean },
+  ledger: { authorized: Set<GitOp>; present: boolean; grants?: MergeGrant[] },
+  impact?: string,
 ): Decision {
   if (command === null) {
     return { exit: EXIT_ALLOW, stdout: "", stderr: "" };
@@ -636,13 +816,30 @@ export function decide(
     return { exit: EXIT_ALLOW, stdout: "", stderr: "" };
   }
 
+  // A standing grant is the SECOND way an operation can be authorized, and it
+  // is strictly narrower than the first rather than an escape from it. Only
+  // `pr-merge` can hold one, the command must name its pull request, and that
+  // number must sit unspent in a set the user's own sentence froze. An unnamed
+  // target matches nothing and a spent target matches nothing, so every path
+  // that is not exactly "the user named this PR and it has not been merged yet"
+  // falls through to the clock-bound decision below unchanged (ADR-252).
+  const target = mergeTargetOf(command);
+  if (grantCovers(ledger.grants ?? [], op, target) && target !== null) {
+    return { exit: EXIT_ALLOW, stdout: "", stderr: "", consumedTarget: target };
+  }
+
   const shown = command.length > 120 ? `${command.slice(0, 117)}…` : command;
 
   if (BLOCK_OPS.has(op)) {
+    // STAGE 2. The refusal stands either way — what the scan changes is whether
+    // the user has to go read the diff to answer it. `impact` is injected by
+    // `run`, never computed here, so `decide` stays pure and testable without a
+    // repository.
+    const scan = op === "pr-merge" && target !== null && impact ? ` ${impact}` : "";
     const reason =
       `Blocked: \`${op}\` with no authorization in this turn's prompt. ` +
       `This operation is irreversible and non-destructive-by-default already declares it ` +
-      `never-autonomous. Command: ${shown}. ` +
+      `never-autonomous. Command: ${shown}.${scan} ` +
       `Ask the user, in one numbered-options block, and run it only after they answer this turn.`;
     return { exit: EXIT_BLOCK, stdout: "", stderr: `${reason}\n`, blockedOp: op };
   }
@@ -675,10 +872,42 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     }
   }
   const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
-  const decision = decide(
-    extractCommand(envelope),
-    _loadLedger(options.consumer_root, session_id, Date.now()),
-  );
+  const command = extractCommand(envelope);
+  const ledger = _loadLedger(options.consumer_root, session_id, Date.now());
+
+  // STAGE 2 runs only on the path where it can change something: a merge that is
+  // ABOUT to be refused. Not on an allowed merge (nothing to tell the user), not
+  // on an op whose target the command does not name, and never on publish or
+  // release — a scan costs a diff read, and spending one where it cannot change
+  // the outcome is latency in the user's critical path for nothing.
+  let impact: string | undefined;
+  const stage1 = command === null ? null : commandOp(command);
+  const stage2Target = command === null ? null : mergeTargetOf(command);
+  if (
+    stage1 === "pr-merge" &&
+    stage2Target !== null &&
+    !ledger.authorized.has("pr-merge") &&
+    !grantCovers(ledger.grants ?? [], "pr-merge", stage2Target)
+  ) {
+    try {
+      impact = describeImpact(
+        stage2Target,
+        analyseMergeImpact(stage2Target, { cwd: options.consumer_root }),
+      );
+    } catch {
+      // The scan is an enrichment, never a gate. A refusal without it is the
+      // pre-stage-2 message, which is still correct.
+    }
+  }
+
+  const decision = decide(command, ledger, impact);
+  if (decision.consumedTarget !== undefined) {
+    // Spend the target at the moment the merge is actually let through, never
+    // when the grant was minted. A grant the run never reached stays whole, and
+    // a pull request that merged can never be replayed — which is what makes a
+    // force-push back to an already-merged head harmless here.
+    consumeGrantTarget(options.consumer_root, session_id, decision.consumedTarget);
+  }
   if (decision.blockedOp) {
     // Record WHAT was refused, so the user's answer to the question this
     // refusal just told the agent to ask can authorize that one operation.

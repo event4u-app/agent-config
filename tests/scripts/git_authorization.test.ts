@@ -87,8 +87,24 @@ describe("classifyAuthorization — prose", () => {
   });
 
   it("does NOT unlock publish or merge on a broad release-ish instruction alone", () => {
-    const { authorized } = classifyAuthorization("Ich kann immer noch nicht releasen. Fixe das endlich.");
-    // "releasen" authorizes `release`; it must not silently carry publish/merge.
+    // Baseline corrected 2026-09-03, and the fixture is why it needed
+    // correcting. It reads "Ich kann immer noch NICHT releasen" — a complaint
+    // that releasing is broken, not an instruction to release. The assertion
+    // used to require `release` in the output, so the test was pinning the
+    // negation leak in place while its own comment described the sentence as an
+    // authorization. `negatedBefore` now refuses it, which is the whole point.
+    const { authorized } = classifyAuthorization(
+      "Ich kann immer noch nicht releasen. Fixe das endlich.",
+    );
+    expect(authorized).not.toContain("release");
+    expect(authorized).not.toContain("publish");
+    expect(authorized).not.toContain("pr-merge");
+  });
+
+  it("a positive release instruction still unlocks release, and nothing adjacent", () => {
+    // The half the fixture above was meant to be testing, restored as its own
+    // case so the corrected baseline does not quietly drop the coverage.
+    const { authorized } = classifyAuthorization("Release 9.20.0 sauber.");
     expect(authorized).toContain("release");
     expect(authorized).not.toContain("publish");
     expect(authorized).not.toContain("pr-merge");
