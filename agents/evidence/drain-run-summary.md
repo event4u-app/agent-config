@@ -647,10 +647,19 @@ deliverable.
 
 ## Honest limits of this report
 
-- **CI is not claimed green.** Every push cleared the audit gate locally and all
-  six PRs read `UNSTABLE` with zero `FAILURE` at the time of writing, but runs
-  were still in flight and `ci_settle` returned `DID NOT SETTLE within 9 min —
-  no verdict is claimed` on #1817. A pending check is not a passing check.
+- **CI is claimed green for exactly one PR, and pending for five.** `ci_settle`
+  returned `SETTLED GREEN — 38 check(s)` for #1815 at head `7e3fe731c`, and that
+  verdict was **invalidated by the security fix that followed** — a green run on
+  a superseded commit is not a green PR, so it is not counted. #1819 is settled
+  green at `f05617b1c`: 43 `SUCCESS`, 1 `SKIPPED`, nothing pending. The other
+  five were re-triggered by the triage pushes and were still in flight; across
+  every poll of all six, **zero checks ever read `FAILURE`**. A pending check is
+  not a passing check, and `ci_settle` returned `DID NOT SETTLE within 9 min —
+  no verdict is claimed` on #1816, #1817 and #1818, which is an expired wait on
+  queued macOS shards rather than a result.
+- **Heads at the close of this run**, so a later reader can tell which commit any
+  claim above describes: #1815 `1fd2204a2` · #1816 `73e8dcad9` ·
+  #1817 `5c89ce3f5` · #1818 `002596eec` · #1819 `f05617b1c` · #1821 `4a6544c96`.
 - **No PR was merged.** Merging to a production trunk is a Hard-Floor action that
   no standing instruction lifts, and the brief asked for PRs, not merges.
 - **`main`'s own red gates were not re-audited this run.** Run 17 named three
@@ -660,3 +669,80 @@ deliverable.
 - **Zero metered spend in the second half of this run.** No council call was made
   after the context reset; the council sessions the PR bodies cite belong to the
   first half and record their own `billable=0` transport.
+
+## Ten blocking-severity bot findings, triaged rather than waved through
+
+The dogfooded adversarial-review gate reported **1–3 findings of blocking
+severity on every one of the six PRs**, all currently advisory ("WOULD block
+merge under an enforced gate"). They sit on code and prose these branches newly
+introduce, so each was triaged individually. **Six were real, four were false
+positives, and both verdicts carry the evidence that decided them.**
+
+### Security findings — 3 real, 3 false positives
+
+| PR | id | Verdict | What decided it |
+|---|---|---|---|
+| #1815 | `4e407b92dae4` high | real, fixed | Reproduced pre-fix: `--candidate '../../../../.github/workflows'` ran through, and the scan-scope line asserted a root it was not scanning. The name reached `path.join(qroot, name)` unchecked. |
+| #1815 | `5af816352604` high | real, narrowed; residual recorded | `intake` lstats the candidate, then `candidateText` re-walked and read on extension alone — a post-intake symlink was followed out of quarantine. |
+| #1815 | `7001a7a5357b` **critical** | false positive | `grep -rn "skill.scout" .github/` → exit 1, zero matches. The only surface is `taskfiles/dev.yml:138`, hand-run; and `scout-egress-authority` + `scout-invocation-surface` were both council-resolved **(a)** — no network, in-repo only. The trifecta's ingestion leg does not exist. |
+| #1819 | `412040920bb4` **critical** | false positive | The cited file is not in the diff at all — `git diff --name-only origin/main...HEAD \| grep adversarial-review` → exit 1, byte-identical to `main`. It also forbids subset reporting twice itself (`:66`, `:161`), and `renderReview` maps over every parsed finding. |
+| #1821 | `b64b04412839` **critical** | false positive as framed; one real premise pinned | The framing is inverted: the gitignore deviation is what *keeps* the boundary, because a SHA-pinned read of a gitignored `.agent-settings.yml` returns nothing in every consumer, so reading it at all would be the bypass. What was genuinely unguarded is the deviation's *premise* — nothing asserted `.branch-convergence.yml` stays trackable. Three guards now pin it with git's own matcher. |
+| #1821 | `8cba49fc38ed` high | false positive | `grep -rn "sync_pr_branch\|branch_convergence" .github/` → exit 1. The surfaces are `task push-ready` and the `/pr:create` doc, both under the maintainer's own credentials; and the tree carries **zero** `pull_request_target` workflows, so a fork PR is token-capped read-only. |
+
+The #1815 fix is a **refusal, not a normalisation**, and its containment
+assertion lands *before* `reportScanned` so the scan-scope line can never record
+a traversed root. The TOCTOU residual — a regular file swapped for a *different*
+regular file inside the read pass — needs an fd-based open with `fstat` and is
+recorded in `docs/contracts/skill-scout-quarantine.md`, the file the resolved
+blocker already names as where intake guarantees live, rather than implied away.
+
+**Red before green was proven for every new guard, each red only for its own
+reason.** #1815: both guards removed exactly as shipped → the CLI-confinement
+test and both read-time tests go red (3 failed / 38 passed); restored → 41 pass.
+#1821: `.branch-convergence.yml` in `.gitignore` reds guard 1, `.branch-*.yml`
+in the managed block reds guard 2, a `node:fs` import reds guard 3; probes
+reverted → 31 pass. A guard whose test was never seen red has unknown
+sensitivity, so this is measured rather than asserted.
+
+### Claim findings — 4 real, 0 false positives
+
+| PR | id | Verdict | What decided it |
+|---|---|---|---|
+| #1816 | `2cef2e24285c` high | real, repaired | The roadmap said the citation "went stale for roughly sixteen months". `git log -S "TMG" -- src/config/web-launch-readiness.json` dates the add at `627f1a23c` (2026-08-25) against DDG § 5 in force since 2024-05-14: it was **27 months** out of date *on the day it was written*, and shipped for nine days. Sixteen matches neither reading. |
+| #1817 | `4bda21863ba8` high | real, repaired | A genuine second instance of this roadmap's own subject. `claim: no-runtime-daemon` pointed at `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` — never two links, but one bold inline phrase split by its own comma, removed at `68463a1e0` one day *after* the entry was withdrawn. Silent because `check_claims.ts:542` reads `if (entry.status !== 'backed') continue`. |
+| #1818 | `fa4542cbf57d` high | real, repaired | `ls -d src/skills/*/ \| wc -l` → 299 and `check_estate_count` → `skill_count 299 (floor 299)`, while the rule's `:34` says *"that install projected 297 skills"* — one host's denominator from a dated measurement, not a live self-count. Exactly one of the two cited sites was stale. |
+| #1818 | `a7e8732a5371` **critical** | real, repaired; the step is still right | The roadmap said a step's premise was half wrong yet left the box checked, and nothing said why that was still sound. The wrong half made the step *bigger*, not moot: both verify conditions discharge at head (`grep -c context_fingerprint … → 6` against a `> 0` requirement, and the halt test returns `halt-premise-invalidated`). `[x]` stands, now with the reason stated. |
+
+Two things about the claim half are worth carrying forward. #1816's repair came
+from a **defect-pattern sweep, not a single-site fix**: the same unanchored
+number appeared at **six** sites, five of which are now anchored, with the sixth
+— a quoted council verdict — left verbatim beside a dated correction, because
+the seats were repeating the roadmap's own number and their decision does not
+rest on it. And #1817's blast radius was **measured rather than assumed**: of
+the ledger's 8 closed entries, 1 of the 5 path-shaped pointers dangled, so the
+guard was not widened — extending it would reach three `resolved-null` entries
+whose `evidence:` carries pre-registration prose.
+
+One honest limit on #1817's own acceptance criterion: `check_claims` exit 0 does
+**not** validate the replacement wording, because `README.md:30` is unmarkered
+prose — exit 0 only proves the retired needle is gone. The criterion is
+qualified accordingly rather than read as stronger than it is.
+
+### Advisory findings deliberately left alone
+
+Out of the blocking scope this pass set, and named so they are not mistaken for
+cleared: on #1821, `f8df6af3ba7e` (`remoteSha` is trusted not to lie) and
+`1ef902de4363` (the `enabled: false` kill switch surfaces as BYPASSED but writes
+no audit trail) both look substantive rather than probabilistic noise. On #1818,
+`696d10672065` and `5a45d7252b56` sit inside the Phase 2/4 notes the claim
+repairs just rewrote, so they may read differently against the new text.
+
+### The council escalation that was recommended and not taken
+
+All six bot comments carry **"Escalation warranted — large diff (≥ 400 changed
+lines)"** and recommend a full `/council:pr` pass, noting it is spend-bearing and
+gated by blocker `self-review-gate-cost`. It was not run, and the reason is
+sequencing rather than cost: every one of the six diffs was still moving while
+the triage landed, and a council verdict on a superseded head is worth less than
+no verdict. This is recorded as an open recommendation for whoever merges, not as
+a step silently dropped.
