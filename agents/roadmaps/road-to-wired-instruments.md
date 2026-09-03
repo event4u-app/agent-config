@@ -7,12 +7,12 @@ relates:
   - stubs/road-to-runtime-orchestration-substrate
   - later/road-to-experience-loop-owner-decisions
   - archive/road-to-delivered-cost-truth
-estate_growth_exempt: This diff adds six roadmaps and the seven blockers they carry, taking active_roadmaps 1 to 7 and open_blockers 29 to 36. The growth is the point of the change: the 2026-09-a inbox round produced six survivors that each needed a decision recorded as a blocker rather than an assumption made silently. Claimed once, for this change only.
-estate_offset_exempt: Added by the 2026-09-a inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
+estate_growth_exempt: This diff adds six roadmaps and the seven blockers they carry, taking active_roadmaps 1 to 7 and open_blockers 29 to 36. The growth is the point of the change: the 2026-09-b inbox round produced six survivors that each needed a decision recorded as a blocker rather than an assumption made silently. Claimed once, for this change only.
+estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to wired instruments
 
-> **Source:** `agents/tmp.old/inbox-2026-09-a/s09/` and `.../s11/`, two
+> **Source:** `agents/tmp.old/inbox-2026-09-b/s09/` and `.../s11/`, two
 > independently drafted reviews that converged on a finding neither of them
 > names. Every claim below was re-verified against `c6b4f6407` by the run that
 > wrote this file, not carried over from the drafts.

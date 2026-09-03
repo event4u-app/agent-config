@@ -6,11 +6,11 @@ execution:
 relates:
   - later/road-to-skill-ecosystem-capability-queue
   - later/road-to-skill-ecosystem-security-and-conformance
-estate_offset_exempt: Added by the 2026-09-a inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
+estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to governed skill scouting
 
-> **Source:** `agents/tmp.old/inbox-2026-09-a/s08/` — the only unit in that round
+> **Source:** `agents/tmp.old/inbox-2026-09-b/s08/` — the only unit in that round
 > carrying the maintainer's own words rather than a reviewer's. Verified against
 > `c6b4f6407` by the run that wrote this file.
 

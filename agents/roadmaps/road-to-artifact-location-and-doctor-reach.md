@@ -6,11 +6,11 @@ execution:
 relates:
   - archive/road-to-agents-dir-and-gitignore-hygiene
   - stubs/road-to-agents-layout-memory-quarantine
-estate_offset_exempt: Added by the 2026-09-a inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
+estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to artifact location and doctor reach
 
-> **Source:** `agents/tmp.old/inbox-2026-09-a/s14/` (a postmortem of a real
+> **Source:** `agents/tmp.old/inbox-2026-09-b/s14/` (a postmortem of a real
 > misplacement, self-authored by the agent that made it), plus the `doctor`
 > findings from `.../s01/` and `.../s07/`. Verified against `c6b4f6407` by the
 > run that wrote this file.

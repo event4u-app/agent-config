@@ -7,11 +7,11 @@ relates:
   - later/road-to-merge-surface-zero
   - stubs/road-to-merge-confirmation-doctrine
   - archive/road-to-merge-hotspot-drawdown
-estate_offset_exempt: Added by the 2026-09-a inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
+estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to cascading base integration
 
-> **Source:** `agents/tmp.old/inbox-2026-09-a/s10/`. Of that round's fourteen
+> **Source:** `agents/tmp.old/inbox-2026-09-b/s10/`. Of that round's fourteen
 > units it was the one whose author read the existing tree before proposing:
 > all four of its inventory claims verified as already-shipped, and the gap it
 > found sits exactly where the request went past what exists. Re-verified

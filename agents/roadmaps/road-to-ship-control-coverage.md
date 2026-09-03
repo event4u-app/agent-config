@@ -6,11 +6,11 @@ execution:
 relates:
   - later/road-to-web-launch-readiness-benchmark
   - archive/road-to-web-launch-readiness
-estate_offset_exempt: Added by the 2026-09-a inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
+estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to ship-control coverage
 
-> **Source:** `agents/tmp.old/inbox-2026-09-a/s02/`, a ten-item web-security
+> **Source:** `agents/tmp.old/inbox-2026-09-b/s02/`, a ten-item web-security
 > control list run through three self-critique loops. Its architecture argument
 > was already this repo's doctrine; its file:line defect claims survived
 > re-verification against `c6b4f6407` almost intact, which is why the defects

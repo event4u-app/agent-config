@@ -5,8 +5,8 @@ review_by: 2026-12-03
 
 # Stub: road to host-primitive lowering
 
-> **Stub — not active work.** Transferred here by the 2026-09-a inbox round from
-> `agents/tmp.old/inbox-2026-09-a/s04/` and `.../s12/`. It is a stub rather than
+> **Stub — not active work.** Transferred here by the 2026-09-b inbox round from
+> `agents/tmp.old/inbox-2026-09-b/s04/` and `.../s12/`. It is a stub rather than
 > a ready roadmap because its first step is a per-skill judgement across 31
 > files with no automated discriminator, and because a wrong lowering silently
 > narrows what a skill may do.
