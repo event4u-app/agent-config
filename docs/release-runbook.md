@@ -187,6 +187,23 @@ doing it, so a crash localises to a step.
 `release.ts` is **idempotent under `--resume`**: it probes existing state
 (branch, commit, PR, tag, GitHub Release) and skips completed steps.
 
+**Step 1 no longer needs the flag just to reuse a branch (since 2026-09-03).**
+An existing `release/X.Y.Z` is checked out whether or not `--resume` was
+passed, and if it is behind `origin/main` the default branch is merged in
+right there. Both arms used to be gated on `resume`, so a plain re-run over an
+existing branch fell through to `git checkout -b` and died with exit 128 — the
+exact state the curated-head guard leaves behind, while its own message says to
+re-run `task release`. A branch cut from an older `main` also used to survive
+until the pre-push preflight reported `branch is BEHIND origin/main`, six steps
+after the cheapest moment to fix it. A NEW branch is now cut from current
+`origin/main` rather than from whatever the local ref happened to be, which is
+the same defect from its third side. Pinned by the drill scenarios
+`plain-run-reuses-an-existing-branch` and `stale-branch-merges-main-at-step-1`.
+
+`--resume` is still the right flag when a run left a COMMIT, a PR, a tag or a
+Release behind: those skips are what it is for. It is no longer the difference
+between a re-run working and crashing.
+
 - Re-run `release.yml` via **workflow_dispatch** with `resume: true`, or locally
   `task release -- --resume`.
 - Firing the `release` label path twice is a clean no-op (the `--ci`

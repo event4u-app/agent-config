@@ -38,6 +38,58 @@ import {
     SystemExitError,
 } from './release.js';
 import { DERIVED_MARKER } from './_lib/release_highlights.js';
+import {
+    AUGMENT_MARKETPLACE_JSON,
+    AUGMENT_PLUGIN_JSON,
+    CHANGELOG,
+    MARKETPLACE_JSON,
+    PACKAGE_JSON,
+    PACKAGE_LOCK_JSON,
+    PROJECT_TEMPLATE,
+} from './release_env.js';
+
+/**
+ * The files step 2 mutates on disk, snapshotted around every scenario.
+ *
+ * The FakeWorld intercepts COMMANDS, not `fs` writes, and step 2's bump is
+ * seven direct writes. Every scenario before 2026-09-03 passed `--resume` with
+ * `package.json` already at the target, so step 2 short-circuited and nothing
+ * was ever written — the drill looked side-effect-free because no scenario had
+ * reached the writing arm. The first `resume: false` scenario appended twelve
+ * `## 14.15.0` headings to the REAL `CHANGELOG.md`.
+ *
+ * Snapshot-and-restore rather than a writer seam: a seam means threading an
+ * injection point through seven call sites in `release.ts`, which sits past the
+ * 1500-line cap where every line is charged. This is contained to the runner
+ * and covers any future scenario without further thought.
+ */
+const _MUTATED_BY_STEP_2: readonly string[] = [
+    CHANGELOG,
+    PACKAGE_JSON,
+    PACKAGE_LOCK_JSON,
+    MARKETPLACE_JSON,
+    AUGMENT_PLUGIN_JSON,
+    AUGMENT_MARKETPLACE_JSON,
+    PROJECT_TEMPLATE,
+];
+
+function _snapshot_step_2_files(): Map<string, string> {
+    const snap = new Map<string, string>();
+    for (const f of _MUTATED_BY_STEP_2) {
+        if (fs.existsSync(f)) {
+            snap.set(f, fs.readFileSync(f, 'utf-8'));
+        }
+    }
+    return snap;
+}
+
+function _restore_step_2_files(snap: ReadonlyMap<string, string>): void {
+    for (const [f, content] of snap) {
+        if (fs.readFileSync(f, 'utf-8') !== content) {
+            fs.writeFileSync(f, content);
+        }
+    }
+}
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -64,6 +116,27 @@ interface WorldConfig {
     push_rejections?: number;
     /** mergeStateStatus reports BEHIND this many probes in a row (9.16.0). */
     behind_probes?: number;
+    /**
+     * Commits the release branch is behind `origin/main` at step 1.
+     *
+     * Distinct from `behind_probes`, which fakes the PR's own
+     * `mergeStateStatus` at step 6. This one fakes `git rev-list --count
+     * HEAD..origin/main`, the probe `integrate_main_if_behind` uses — the
+     * defect it covers surfaced at the PUSH, six steps before that PR ever
+     * existed.
+     */
+    branch_behind_main?: number;
+    /**
+     * Whether `execute()` is invoked with `--resume`. Defaults to TRUE so every
+     * pre-existing scenario keeps the shape it was written against.
+     *
+     * Configurable since 2026-09-03 because the drill could not otherwise
+     * reach the defect: branch reuse used to be gated on `resume`, so a plain
+     * `task release` over an existing branch died at `git checkout -b` with
+     * exit 128 — and every scenario here passed `resume: true`, which is
+     * exactly the arm that worked.
+     */
+    resume?: boolean;
     /** `gh pr merge` fails once with the not-up-to-date error (the race). */
     merge_races_once?: boolean;
     /** `gh pr merge` fails hard with an unrelated error (must surface). */
@@ -199,6 +272,7 @@ class FakeWorld {
 
     private push_rejections: number;
     private behind_probes: number;
+    private branch_behind_main: number;
     private merge_races_once: boolean;
     private merge_fails_hard: boolean;
     private checks_fail: boolean;
@@ -217,6 +291,7 @@ class FakeWorld {
         this.tag_local = (cfg.tag_created_unpushed ?? false) || (cfg.tag_already_remote ?? false);
         this.tag_remote = cfg.tag_already_remote ?? false;
         this.behind_probes = cfg.behind_probes ?? 0;
+        this.branch_behind_main = cfg.branch_behind_main ?? 0;
         this.merge_races_once = cfg.merge_races_once ?? false;
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
         this.checks_fail = cfg.checks_fail ?? false;
@@ -233,6 +308,15 @@ class FakeWorld {
         }
         if (args[0] === 'git' && args[1] === 'checkout') {
             this.head = args[2] === '-b' ? (args[3] as string) : (args[2] as string);
+            return OK;
+        }
+        if (cmd === 'git rev-list --count HEAD..origin/main') {
+            return { ...OK, stdout: `${String(this.branch_behind_main)}\n` };
+        }
+        if (cmd === 'git merge origin/main --no-edit') {
+            // A real merge closes the gap, so a second probe reads 0. Without
+            // this the scenario could not tell one merge from a loop.
+            this.branch_behind_main = 0;
             return OK;
         }
         if (cmd === `git rev-parse --verify --quiet refs/heads/${this.branch}`) {
@@ -345,6 +429,15 @@ class FakeWorld {
             // live body before deciding whether to edit.
             return { ...OK, stdout: this.pr_body };
         }
+        if (args[0] === 'gh' && args[1] === 'pr' && args[2] === 'create') {
+            // Only reachable on the NON-resume path: a resumed run refreshes an
+            // existing PR body instead (step 5's other arm), which is why every
+            // scenario before 2026-09-03 could leave this unscripted.
+            const bodyIdx = args.indexOf('--body');
+            this.pr_body = bodyIdx >= 0 ? String(args[bodyIdx + 1] ?? '') : '';
+            this.branch_exists_remote = true;
+            return { ...OK, stdout: `https://github.com/event4u-app/agent-config/pull/999\n` };
+        }
         if (args[0] === 'gh' && args[1] === 'pr' && args[2] === 'edit' && args[3] === this.branch) {
             const bodyIdx = args.indexOf('--body');
             this.pr_body = bodyIdx >= 0 ? String(args[bodyIdx + 1] ?? '') : this.pr_body;
@@ -390,6 +483,64 @@ function _count(world: FakeWorld, needle: string): number {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
+    'plain-run-reuses-an-existing-branch': {
+        summary:
+            'step 1: a PLAIN run (no --resume) over an existing release branch checks it out instead of dying at `git checkout -b`',
+        // The defect, measured on 14.15.0: branch reuse read
+        // `resume && _branch_exists_local(branch)`, so without --resume the
+        // run fell through to the create arm and died with exit 128. That is
+        // precisely the state `guard_release_curation` leaves behind — it stops
+        // BEFORE the commit, on a branch step 1 already created — while its own
+        // message says to re-run `task release`. The code refused the remedy its
+        // own message prescribed.
+        config: { resume: false },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            _expect(
+                w.calls.includes(`git checkout ${w.branch}`),
+                'the existing branch was not checked out',
+                f,
+            );
+            _expect(
+                !w.calls.includes(`git checkout -b ${w.branch}`),
+                'took the create arm over an existing branch — this is the exit-128 path',
+                f,
+            );
+            return f;
+        },
+    },
+    'stale-branch-merges-main-at-step-1': {
+        summary:
+            'step 1: a branch behind origin/main merges it in there — NOT at the push, where the preflight used to be the first to notice',
+        // Second half of the same defect. On 14.15.0 the branch had been cut
+        // from an older main during an earlier aborted run; steps 2 and 3
+        // bumped and committed, and only the pre-push preflight said `branch is
+        // BEHIND origin/main`. The cheapest moment to integrate main is the
+        // moment the branch is checked out.
+        config: { resume: false, branch_behind_main: 3 },
+        expect_success: true,
+        verify: (w) => {
+            const f: string[] = [];
+            const merge = w.calls.indexOf('git merge origin/main --no-edit');
+            const push = w.calls.indexOf(`git push -u origin ${w.branch}`);
+            _expect(merge >= 0, 'main was never merged into the stale branch', f);
+            _expect(push >= 0, 'the branch was never pushed', f);
+            // Ordering is the whole point: a merge AFTER the push would mean the
+            // preflight had already refused.
+            _expect(
+                merge >= 0 && push >= 0 && merge < push,
+                'main was merged after the push, not before it',
+                f,
+            );
+            _expect(
+                _count(w, 'git merge origin/main --no-edit') === 1,
+                'merged main more than once — the probe is not being re-read after the merge',
+                f,
+            );
+            return f;
+        },
+    },
     'marker-refuses-before-commit': {
         summary:
             'step 3: a draft marker refuses BEFORE the release commit — no local release state, and therefore no remote state either',
@@ -685,12 +836,13 @@ function run_scenario(name: string): ScenarioOutcome {
         captured.push(String(s));
         return true;
     };
+    const tree_snapshot = _snapshot_step_2_files();
     _set_exec_override((args) => world.exec(args));
     // The working-tree read, faked for the same reason the command layer is.
     // Without this the drill's step 8 reads the repository's real CHANGELOG.md.
     _set_changelog_reader(() => world.changelog_file);
     try {
-        execute(plan, { wait_for_checks: true, dry_run: false, resume: true });
+        execute(plan, { wait_for_checks: true, dry_run: false, resume: scenario.config.resume ?? true });
     } catch (err) {
         if (err instanceof SystemExitError) {
             error = `SystemExit(${err.code}): ${captured.join('')}`;
@@ -702,6 +854,7 @@ function run_scenario(name: string): ScenarioOutcome {
         _set_changelog_reader(null);
         process.stdout.write = orig_out;
         process.stderr.write = orig_err;
+        _restore_step_2_files(tree_snapshot);
     }
 
     const failures: string[] = [];

@@ -515,6 +515,97 @@ export function guard_release_branch_push(branch: string): void {
  * and every line above 1500 is charged by the growth ratchet, while this module
  * is far below it.
  */
+/**
+ * Own the whole step-1 branch decision: reuse an existing release branch, and
+ * make sure whatever we end up on carries current `main`.
+ *
+ * Three defects it closes, all measured on 14.15.0 (2026-09-03) in one sitting,
+ * and all the same underlying mistake — a release branch that is not on current
+ * `main`, discovered later than it could have been.
+ *
+ * 1. **Reuse was gated on `--resume`.** The two "branch exists" arms read
+ *    `resume && _branch_exists_local(branch)`, so a PLAIN `task release` over an
+ *    existing branch fell through to `git checkout -b` and died with exit 128.
+ *    That is exactly the state `guard_release_curation` leaves behind — it stops
+ *    before the commit, and the branch it stops on already exists — while its
+ *    own message says to re-run `task release`. The message was right about
+ *    what to do and the code refused to do it. Reuse no longer consults
+ *    `resume`: an existing release branch is a fact about the repository, not
+ *    about the flag.
+ * 2. **A branch cut from an older `main` failed at the PUSH.** The pre-push
+ *    preflight reported `branch is BEHIND origin/main` after steps 2 and 3 had
+ *    already bumped and committed — the cheapest moment to integrate `main` is
+ *    the moment we check the branch out, not eight steps later.
+ * 3. **A fresh branch was cut from whatever local `main` happened to be.** The
+ *    create arm never pulled, so a stale local `main` produced a stale release
+ *    branch and defect 2 followed on the next run. Fixed on the same terms
+ *    rather than left as the half that still bites: leaving it would reproduce
+ *    the "fix that does not fix it" pattern the other two came from.
+ *
+ * `say` is a callback rather than a direct write because the `[N/total]` step
+ * prefix belongs to the orchestrator, which knows the total; this module does
+ * not. Keeping the printing there and the decision here is also what lets
+ * `release.ts` shed twenty lines — it sits ~500 lines past the 1500-line cap,
+ * where every line is charged by the growth ratchet, and this module is under
+ * it.
+ *
+ * The merge is `git merge`, never a rebase and never a force: a release branch
+ * can already carry a pushed commit and somebody else's merge, and neither is
+ * ours to rewrite.
+ */
+export function checkout_release_branch(
+    branch: string,
+    prMerged: boolean,
+    say: (msg: string) => void,
+): void {
+    if (prMerged) {
+        say(`PR for ${branch} already merged — staying on ${MAIN_BRANCH}`);
+        if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== MAIN_BRANCH) {
+            run(['git', 'checkout', MAIN_BRANCH]);
+        }
+        run(['git', 'pull', '--ff-only', REMOTE, MAIN_BRANCH]);
+        return;
+    }
+    if (_branch_exists_local(branch)) {
+        say(`Branch ${branch} exists locally — checkout`);
+        run(['git', 'checkout', branch]);
+    } else if (_branch_exists_remote(branch)) {
+        say(`Branch ${branch} exists on ${REMOTE} — fetch + checkout`);
+        run(['git', 'fetch', REMOTE, branch]);
+        run(['git', 'checkout', '-b', branch, `${REMOTE}/${branch}`]);
+    } else {
+        // Cut from CURRENT main, not from whatever the local ref happens to be.
+        say(`Create branch ${branch} from current ${MAIN_BRANCH}`);
+        if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) === MAIN_BRANCH) {
+            run(['git', 'pull', '--ff-only', REMOTE, MAIN_BRANCH]);
+        }
+        run(['git', 'checkout', '-b', branch]);
+        return;
+    }
+    integrate_main_if_behind(branch, say);
+}
+
+/**
+ * Merge `origin/<default>` into the checked-out release branch when it is
+ * behind, so the pre-push preflight is never the first place that surfaces.
+ *
+ * Silent when the branch is already current — a release run should not print a
+ * merge it did not make. Counting with `rev-list --count` against the fetched
+ * remote ref rather than the local one: the local `main` is exactly what went
+ * stale in the case this exists for.
+ */
+export function integrate_main_if_behind(branch: string, say: (msg: string) => void): void {
+    run(['git', 'fetch', REMOTE, MAIN_BRANCH], { check: false });
+    const behind = git(['rev-list', '--count', `HEAD..${REMOTE}/${MAIN_BRANCH}`], {
+        capture: true,
+    }).trim();
+    if (behind === '' || behind === '0') {
+        return;
+    }
+    say(`Branch ${branch} is ${behind} commit(s) behind ${REMOTE}/${MAIN_BRANCH} — merging it in`);
+    run(['git', 'merge', `${REMOTE}/${MAIN_BRANCH}`, '--no-edit']);
+}
+
 export function guard_release_curation(version: string, prMerged = false): void {
     if (prMerged) {
         return;
