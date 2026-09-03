@@ -69,9 +69,9 @@ instruction: the candidate is not read as prose by any decision path.
 
 ## Where the source name may live
 
-Not here, and not in any tracked artefact. `source-confidentiality` forbids a
+Not here, and not in any tracked artifact. `source-confidentiality` forbids a
 tracked file naming an external project this package learned from. A rejection
-reason names the **covering artefact in this package**, never the upstream. If
+reason names the **covering artifact in this package**, never the upstream. If
 a real link must be retained it takes the encrypted `ENC1:` form, and it lives
 in the provenance ledger, not in a roadmap or a report.
 

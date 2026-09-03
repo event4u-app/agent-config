@@ -47,6 +47,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { collect, _keyword_vector, _cosine } from './audit_skill_overlap.js';
+import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _DEFAULT_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -70,12 +71,10 @@ const MAX_FILE_BYTES = 512 * 1024;
 /**
  * Cosine above which the candidate is considered already covered.
  *
- * NOT a measured optimum, and said so rather than implied. `audit_skill_overlap`
- * reports pairs from 0.30 upward as worth a human read; 0.45 is chosen above
- * that so a coverage rejection is a claim about substantial overlap rather than
- * about shared vocabulary. Revisit-if: a real candidate is rejected at a score
- * a human reading both artefacts calls distinct, or accepted at one they call
- * duplicative.
+ * NOT a measured optimum, and said so rather than implied.
+ * `audit_skill_overlap` reports pairs from 0.30 upward as worth a human read;
+ * 0.45 sits above that so a coverage rejection is a claim about substantial
+ * overlap rather than about shared vocabulary.
  */
 export const COVERAGE_THRESHOLD = 0.45;
 
@@ -463,6 +462,39 @@ export function main(argv: readonly string[] | null = null): number {
 
     const dir = path.join(qroot, args.candidate);
     const intakeResult = intake(dir);
+
+    // SCAN-SCOPE ASSERTION, and it is not a formality here.
+    //
+    // `skill_scout` matches the `skill_` prefix in `_lib/gate_population.ts`,
+    // so the hardening ratchet counts it in the gate population. That filter is
+    // deliberately over-inclusive — "a reporting script that asserts its scan
+    // scope loses nothing, while a validator missing from the population is
+    // invisible exposure" — and the right response is to assert, not to widen
+    // the exclusion.
+    //
+    // It also happens to be the correct check on its own terms: a scout that
+    // read zero files would render a confident verdict over nothing, which is
+    // exactly the silent-green shape the whole manifest exists to catch. The
+    // line goes to STDERR so `--json` keeps a parseable stdout; the contract
+    // accepts either stream.
+    try {
+        reportScanned(
+            {
+                gate: 'skill_scout',
+                scanned: intakeResult.files_seen,
+                units: 'candidate file(s)',
+                roots: [`${QUARANTINE_REL}/${args.candidate}`],
+            },
+            (chunk: string) => process.stderr.write(chunk),
+        );
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     if (!intakeResult.accepted) {
         process.stderr.write(
             `skill-scout · ${args.candidate} · intake refused:\n` +
