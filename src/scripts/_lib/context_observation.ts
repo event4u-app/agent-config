@@ -7,8 +7,7 @@
  * a `gh` call, so it can only be taken by the probe and never by a hook on the
  * Stop path, where a subprocess is a cost paid on every reply.
  *
- * ## Why a file, and why this comparison and not another
- *
+ * Why a file, and why this comparison and not another:
  * `run_checkpoint.RunCheckpoint.context_fingerprint` already had the right idea
  * and no producer: `session_eol_hook` built its checkpoints without ever passing
  * one, so the field was `null` in every checkpoint this package has ever

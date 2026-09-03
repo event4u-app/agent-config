@@ -13,7 +13,7 @@
  * |---|---|---|---|
  * | phase | one audit-log line — a `/work` PHASE | here, consumed by `orchestration_record` | 4 |
  * | step  | one work-engine STEP | `work_engine/delivery_state.ts` (template tree) | 3 |
- * | run   | one command or gate RUN | here, consumed by `outcome_envelope` | 7 |
+ * | run   | one command or gate RUN | here, consumed by `outcome_envelope` | 7 |  code-comment-allow report-comment -- one row of a pre-existing three-row table documenting the three vocabularies; the digit changed from 6 to 7 with the vocabulary, and the table is the registry's whole point
  *
  * All three are declared in code AND emitted today. `skipped` and `error` are
  * not aspirational: `envelopeOutcome` in `orchestration_record.ts` returns
@@ -47,8 +47,8 @@
  * which point unifying those two becomes the cheaper answer.
  *
  * **The run vocabulary grew to seven on 2026-09-03** — exactly the first branch
- * of that `revisit-if`: the continuation ladder needed a word for a run whose
- * plan premise moved, and had none. AI council (anthropic/claude-sonnet-4-5 +
+ * of the reopening condition above: the continuation ladder needed a word for a
+ * run whose plan premise moved, and had none. AI council (anthropic/claude-sonnet-4-5 +
  * openai/codex-default, three rounds, blind chairman) resolved it unanimously
  * as option (a), extend rather than overload `blocked` with a reason field. The
  * seats attached the same prerequisites, discharged here: a versioned value
