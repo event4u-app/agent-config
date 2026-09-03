@@ -99,6 +99,24 @@ Decoration is the only case where removal is the answer, which is why
 per block: *if the motion never plays, is the content still there and
 still understandable?* Record the answer, not the query.
 
+**WCAG 2.2 additions — the six criteria 2.1 did not have.** An AA claim is
+cumulative: AA conformance means every level-**A** criterion *and* every
+level-AA one, so the two level-A rows below sit inside the claim, not beneath
+it. Each is audited on its own; a surface that skips one is not AA under 2.2.
+
+| SC | Level | Testable condition | Failure |
+|---|---|---|---|
+| 2.4.11 Focus Not Obscured (Min.) | AA | `Tab` through every focusable element with sticky headers / footers / cookie bars present — the focused element stays at least partially visible, never fully covered | A sticky bar hides the focused row; the keyboard user cannot see where they are |
+| 2.5.7 Dragging Movements | AA | Every drag interaction (reorder, slider, map pan, kanban) has a single-pointer alternative that is not a drag — buttons, a menu, or arrow keys | Reorder is drag-only, so a user who cannot drag cannot reorder |
+| 2.5.8 Target Size (Min.) | AA | Every pointer target is ≥ 24×24 CSS px, **or** carries ≥ 24 px spacing to its neighbours, **or** is one of the stated exceptions (inline text, user-agent-controlled, essential) | 16 px icon buttons packed edge-to-edge in a toolbar |
+| 3.3.8 Accessible Authentication (Min.) | AA | No login step requires a cognitive function test (remembering, transcribing, puzzle-solving) without an alternative — a password manager can paste, and paste is not blocked | An OTP field that blocks paste, or "type the 3rd character of your memorable word" |
+| 3.2.6 Consistent Help | A | Where a help mechanism (contact link, chat, self-help) repeats across pages, it appears in the same relative order on each | Support link in the header on one page, buried in the footer on the next |
+| 3.3.7 Redundant Entry | A | Information already entered in the same process is auto-populated or selectable, unless re-entry is essential (confirming a password is essential) | A 4-step checkout asking for the same address twice |
+
+Outside an AA claim, and stated here rather than left silent: **2.4.12 Focus Not
+Obscured (Enhanced)** and **2.4.13 Focus Appearance** are level **AAA**. Audit
+them on request; their absence is not an AA failure.
+
 ### 3. Run the keyboard pass
 
 `Tab` from page start: every interactive element receives focus,
@@ -191,8 +209,8 @@ values.
 
 WCAG 2.2 AA compliance is non-negotiable detail — each success criterion
 has a specific testable condition, failure mode, and remediation path.
-The skill carries the full WCAG criterion matrix with concrete test
-procedures (not just "check contrast"), keyboard-navigation patterns
+The skill carries the WCAG 2.2 additions with concrete test
+procedures per criterion (not just "check contrast"), keyboard-navigation patterns
 (roving tabindex, trap management, escape-key handling), ARIA role/
 property/state tables, and screen-reader-specific edge cases per
 assistive technology. Condensing to "check contrast and add aria-labels"
