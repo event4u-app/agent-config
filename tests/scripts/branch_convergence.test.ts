@@ -7,7 +7,9 @@
  * two negative directions (omitting the default ref, and adding it
  * unconditionally); 7 proves the trust boundary rather than documenting it.
  */
+import { execFileSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -466,5 +468,84 @@ describe('branch-convergence — Phase 2 the sequence has a runner', () => {
             .split('\n')
             .filter((l) => /\bgit\s+(merge|rebase|pull)\b/.test(l) && !/merge-base/.test(l) && !l.trim().startsWith('#'));
         expect(mutating).toEqual([]);
+    });
+});
+
+describe('the deviation is only safe while the policy path stays trackable', () => {
+    // WHY THIS BLOCK EXISTS. The council specified `.agent-settings.yml`; this
+    // module reads `.branch-convergence.yml` instead, because a SHA-pinned read
+    // requires a TRACKED file and `.agent-settings.yml` is gitignored here and
+    // in every consumer. That deviation is what KEEPS the trust boundary: a
+    // gitignored file is unreadable at any commit, so the only way to read one
+    // would be the working tree — the confused-deputy bypass one seat said it
+    // would block any implementation for.
+    //
+    // The deviation's load-bearing premise was unguarded: nothing asserted the
+    // new path is actually trackable. An ignore pattern reaching it later makes
+    // `git show <sha>:<path>` return nothing at every commit, and the tempting
+    // repair is a working-tree fallback, which is the bypass. Closes the real
+    // half of adversarial-review finding b64b04412839.
+    const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
+    it('the policy path is not gitignored in this repository', () => {
+        // git's own matcher, not a hand-rolled glob approximation. Exit 1 means
+        // no pattern matches, which is the answer this design needs.
+        const r = spawnSync('git', ['check-ignore', '-v', '--no-index', POLICY_PATH], {
+            cwd: REPO_ROOT,
+            encoding: 'utf-8',
+        });
+        expect(
+            r.status,
+            `${POLICY_PATH} must stay trackable — matched: ${(r.stdout ?? '').trim()}`,
+        ).not.toBe(0);
+    });
+
+    it('the consumer managed gitignore block cannot reach the policy path', () => {
+        // Same question one repository over: the block this package writes into
+        // every consumer must not ignore the file the policy is read from.
+        const block = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'config', 'gitignore-block.txt'),
+            'utf-8',
+        );
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-ignore-'));
+        try {
+            execFileSync('git', ['init', '-q'], { cwd: tmp });
+            fs.writeFileSync(path.join(tmp, '.gitignore'), block);
+            const r = spawnSync('git', ['check-ignore', '-v', '--no-index', POLICY_PATH], {
+                cwd: tmp,
+                encoding: 'utf-8',
+            });
+            expect(
+                r.status,
+                `the managed block would ignore ${POLICY_PATH} in every consumer — matched: ${(r.stdout ?? '').trim()}`,
+            ).not.toBe(0);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('the module reads no filesystem and resolves no SHA of its own', () => {
+        // The docblock claims "there is deliberately no filesystem access
+        // anywhere in it". Asserted on the literal source, so the claim cannot
+        // rot into prose — the same shape as the no-egress test the scout
+        // carries.
+        const source = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'branch_convergence.ts'),
+            'utf-8',
+        );
+        for (const needle of [
+            'node:fs',
+            'readFileSync',
+            'existsSync',
+            'node:child_process',
+            'execFileSync',
+            'spawnSync',
+            'rev-parse',
+        ]) {
+            expect(
+                source,
+                `${needle} would let the policy be read from something other than the target commit`,
+            ).not.toContain(needle);
+        }
     });
 });
