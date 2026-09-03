@@ -160,6 +160,8 @@ import {
     SystemExitError,
     set_augment_manifest_version,
     set_marketplace_version,
+    _rstrip,
+    _splitlines,
 } from './release_env.js';
 import type { RunResult } from './release_publication.js';
 // Re-export surface for the six names tests import from `release.js` and that
@@ -192,6 +194,7 @@ import {
     _target_from_branch,
     create_and_push_annotated_tag,
     guard_publication,
+    guard_release_curation,
     die,
     gh,
     git,
@@ -744,22 +747,6 @@ function prepend_changelog(p: string, entry: string): void {
 }
 
 /** Mirror of Python `str.splitlines()` (no trailing empty for a final newline). */
-function _splitlines(text: string): string[] {
-    if (text === '') {
-        return [];
-    }
-    const parts = text.split(/\r\n|\r|\n/);
-    if (parts.length > 0 && parts[parts.length - 1] === '') {
-        parts.pop();
-    }
-    return parts;
-}
-
-/** Mirror of Python `str.rstrip()` (trailing whitespace). */
-function _rstrip(text: string): string {
-    return text.replace(/\s+$/u, '');
-}
-
 // ─── file mutations ───────────────────────────────────────────────────────────
 
 /** Update the top-level `version` field; preserve 4-space indentation. */
@@ -1167,7 +1154,6 @@ function _step(n: number, total: number, msg: string): void {
     process.stdout.write(`[${n}/${total}] ${msg}\n`);
 }
 
-
 function execute(
     plan: Plan,
     opts: { wait_for_checks: boolean; dry_run: boolean; resume?: boolean; ci?: boolean },
@@ -1275,6 +1261,8 @@ function execute(
         _step(2, total, 'Regenerate derived files (`task release-prepare`)');
         run(['task', 'release-prepare']);
     }
+
+    guard_release_curation(plan.target, pr_merged);
 
     // ─── 3. commit ──────────────────────────────────────────────────────────
     if (pr_merged) {

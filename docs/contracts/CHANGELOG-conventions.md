@@ -97,16 +97,34 @@ marker.
 > alongside its verdict, so writing the real claim does not start with eleven
 > `git show` lookups. Nothing about the blocking condition changed — only the
 > moment it is enforced, and how much a releaser has to reconstruct to satisfy
-> it. Pinned by the drill scenario `marker-refuses-before-branch-push` (which
-> asserts no push, no PR, no check-watch after the refusal) and by the
-> section-scope near-misses in
+> it. Pinned by the drill scenario `marker-refuses-before-commit` (which
+> asserts no commit, no push, no PR, no check-watch after the refusal) and by
+> the section-scope near-misses in
 > `tests/scripts/release_push_failure_masking.test.ts`.
+>
+> **Moved one step earlier, 2026-09-03 — the branch push was still too late.**
+> The paragraph above is accurate about remote state and was wrong about local
+> state, which it did not mention. Refusing at the push means steps 2 and 3
+> have already run: six files bumped, the derived trees regenerated, and all of
+> it committed as `release: X.Y.Z`. Measured on 14.14.1, which died at step
+> 4/10 having produced `136cea960 release: 14.14.1`, so the releaser curated
+> prose on top of a commit that already claimed to be the release.
+> `guard_release_curation` is the fifth guard site and it fires between the
+> changelog write and the commit, on the non-merged path only — the merged path
+> runs neither step and firing there preempts the step-8 and step-9 guards,
+> which was measured as three red drill scenarios before the condition was
+> added. It names the marked LINES, not just the marker, because the next
+> action is an edit. The four later guards are unchanged and stay as
+> defence-in-depth for a section that changes after the commit.
 >
 > **What this does NOT fix, stated rather than left to the next reader.** A
 > release still halts once whenever any label is substantiated, and every
 > release of this package substantiates at least one. That is the cadence the
 > flip chose; it is now a local halt with the evidence in hand instead of a red
-> PR, which is a different cost, not zero cost. The unattended path
+> PR, which is a different cost, not zero cost. Since 2026-09-03 that halt also
+> arrives before the release commit rather than after it, so the edit is made
+> on a clean tree and the re-run is `task release`, not `task release --
+> --resume`. The unattended path
 > (`.github/workflows/release.yml`, `--ci --yes`, ADR-113) therefore cannot
 > complete a release whose head is uncurated — it refuses before the push
 > instead of dying at the check, which is strictly better and still not
