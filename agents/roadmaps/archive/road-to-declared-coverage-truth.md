@@ -30,7 +30,7 @@ edits to files that already exist.
 
 ## Phase 1 — The rule that names uploads and cannot be reached by them
 
-- [ ] **1.1 Close the gap between the trigger set and the rule's own table.**
+- [x] **1.1 Close the gap between the trigger set and the rule's own table.**
       `src/rules/security-sensitive-stop.md` is `type: auto`, so it loads on its
       `triggers:` block alone. That block carries `auth`, `billing`, `tenant`,
       `webhook`, `oauth`, `signing key` (`:11-17`). The rule's own
@@ -44,7 +44,16 @@ edits to files that already exist.
       prompts "add a file upload endpoint", "wire up the SSRF allow-list",
       "expose a public status endpoint", "add a field to the API resource"
       reports `security-sensitive-stop` as matched for each.
-- [ ] **1.2 Declare the collisions the new keywords create, or narrow them.**
+      <!-- verify-substituted 2026-09-03, council AMEND: `rule_trigger_eval` is a
+      LIVE-LLM harness ("advisory only, never gating",
+      src/scripts/rule_trigger_eval.ts:1-4) whose usage is
+      `[--dry-run] [--model] [--out] [--max-cases]` — it takes no ad-hoc prompt,
+      so this verify was never executable as written. The four prompts were
+      added as `positives:` to tests/eval/routing-matrix/security-sensitive-stop.yaml
+      — the corpus that harness reads AND the input to the deterministic
+      tests/scripts/routing_matrix.test.ts (193 passed). Rationale + the six
+      pinned near-misses: agents/evidence/analysis/declared-coverage-truth-2026-09-03.md -->
+- [x] **1.2 Declare the collisions the new keywords create, or narrow them.**
       `upload` and `endpoint`-shaped keywords overlap `broken-access-control`
       (`endpoint`, `route`) and `senior-engineering-discipline` (`endpoint`).
       An overlap that is intended is declared in `collision_ok:`, which this
@@ -53,7 +62,7 @@ edits to files that already exist.
       verify: `./scripts-run src/scripts/lint_trigger_collisions` and
       `./scripts-run src/scripts/lint_trigger_precision` are green, and every
       accepted overlap carries a one-line reason.
-- [ ] **1.3 Re-read the always-budget before the description changes.** The
+- [x] **1.3 Re-read the always-budget before the description changes.** The
       description is rendered into catalogues; a longer one costs tokens in
       every session. Keep the edit inside the trigger block unless the
       description is factually wrong.
@@ -61,7 +70,7 @@ edits to files that already exist.
 
 ## Phase 2 — The accessibility skill and the version it names
 
-- [ ] **2.1 Establish which WCAG 2.2 criteria the skill actually carries.**
+- [x] **2.1 Establish which WCAG 2.2 criteria the skill actually carries.**
       `src/skills/accessibility-auditor/SKILL.md` states "WCAG 2.2 AA" in four
       places (`:4`, `:17`, `:62`, `:192`). Of the nine success criteria WCAG 2.2
       added over 2.1, a grep across the skill directory finds exactly two —
@@ -71,19 +80,19 @@ edits to files that already exist.
       Authentication (**AA**) return zero hits.
       verify: the census is written into the roadmap's evidence note with the
       per-criterion counts, reproducible by the same grep.
-- [ ] **2.2 Close the two AA gaps, which are the ones the claim is about.**
+- [x] **2.2 Close the two AA gaps, which are the ones the claim is about.**
       2.4.11 and 3.3.8 are AA and therefore inside the claim the skill makes.
       Add each as a checklist row with a testable condition and a failure mode,
       in the shape the skill's existing rows already use.
       verify: the skill's checklist contains both criteria by number, and each
       row names how to test it.
-- [ ] **2.3 Decide the two A-level criteria explicitly, in the file.** 3.2.6 and
+- [x] **2.3 Decide the two A-level criteria explicitly, in the file.** 3.2.6 and
       3.3.7 are level A, so they sit below the declared AA bar but inside 2.2.
       Either add them or state in one line why an AA audit omits them. Silence
       here is what produced the drift.
       verify: each of the two appears either as a checklist row or as a named
       omission with a reason.
-- [ ] **2.4 Make the version claim self-checking.** A gate or test asserts that
+- [x] **2.4 Make the version claim self-checking.** A gate or test asserts that
       every criterion number the skill claims to cover appears in its own
       content, so the next version bump cannot be a description-only edit.
       verify: the check fails when "WCAG 2.2" is claimed with 2.4.11 removed,
@@ -91,7 +100,7 @@ edits to files that already exist.
 
 ## Phase 3 — The icon default the sibling rule forbids
 
-- [ ] **3.1 Resolve the contradiction between the skill and the rule.**
+- [x] **3.1 Resolve the contradiction between the skill and the rule.**
       `src/rules/icon-consistency.md` § What this gates names "**Defaulting to
       Lucide without a deliberate choice** — Lucide as the 'AI default' is the
       anti-pattern; the project must have consciously adopted it, not inherited
@@ -104,7 +113,7 @@ edits to files that already exist.
       candidates with the criterion that picks between them.
       verify: the skill no longer presents any set as the default, and
       `icon-consistency` and `iconography` cite each other.
-- [ ] **3.2 Keep the stack mappings as observations, not as instructions.**
+- [x] **3.2 Keep the stack mappings as observations, not as instructions.**
       `react-shadcn-ui → Lucide` describes what that ecosystem ships; written in
       an imperative pick step it reads as a recommendation. Move it to a note
       that says which set each stack ships with, leaving the choice at 3.1.
@@ -123,13 +132,13 @@ edits to files that already exist.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A prompt naming a file upload, an SSRF allow-list, a public
+- [x] AC-1 — A prompt naming a file upload, an SSRF allow-list, a public
       endpoint or an API response field matches `security-sensitive-stop`, and
       every trigger overlap it introduces is declared or narrowed.
-- [ ] AC-2 — Every WCAG 2.2 AA criterion the skill's claim covers appears in the
+- [x] AC-2 — Every WCAG 2.2 AA criterion the skill's claim covers appears in the
       skill's own content with a testable condition, and the two level-A
       criteria are either present or omitted with a stated reason.
-- [ ] AC-3 — A check fails when the skill claims a WCAG version whose criteria
+- [x] AC-3 — A check fails when the skill claims a WCAG version whose criteria
       it does not carry.
-- [ ] AC-4 — `iconography` presents no icon set as the default, states the
+- [x] AC-4 — `iconography` presents no icon set as the default, states the
       criterion that selects one, and cross-references `icon-consistency`.
