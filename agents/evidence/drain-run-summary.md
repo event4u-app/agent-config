@@ -519,3 +519,144 @@ it is the last **content** commit. The commit after it touches only
 `agents/evidence/reviews/…findings.md`, which the review-scope diff excludes by
 construction — the re-bind the completion-review contract requires, and the one
 commit that cannot change what this summary describes.
+
+---
+
+# Autonomous roadmap drain — run 18, 2026-09-03
+
+Recorded after a context reset mid-run, so the run has two halves: the six
+completion PRs below were opened between 04:01 and 05:27 UTC, and the second
+half re-derived the inventory from the tree, verified each PR's closure claims
+from the pushed refs, and cleared the one gate that had gone red under all six.
+
+## The instruction, and where it did not match the tree
+
+The brief seeded **36 active roadmaps** at commit `c536dbd` and said to
+recompute before use. Recomputed at `54f024250`, the live inventory was **7** —
+the seed list was stale by roughly thirty archivals, the same way it was stale
+for run 17. It was discarded and the queue rebuilt from the tree.
+
+All seven sat at 0/N on `main`, so the brief's ≥10 %-first rule selected nobody
+and the whole queue fell to the complexity-ascending branch:
+
+| # | Roadmap | On `main` | Complexity | Outcome |
+|---|---|---|---|---|
+| 1 | `road-to-self-description-truth` | 0/13 | lightweight | PR #1817 — 13/13, archived |
+| 2 | `road-to-governed-skill-scouting` | 0/13 | lightweight | PR #1815 — 12/13 + one `[~]` carry, archived |
+| 3 | `road-to-artifact-location-and-doctor-reach` | 0/14 | lightweight | PR #1819 — 14/14, archived |
+| 4 | `road-to-cascading-base-integration` | 0/14 | lightweight | PR #1821 — 14/14, archived |
+| 5 | `road-to-ship-control-coverage` | 0/14 | lightweight | PR #1816 — 14/14, archived |
+| 6 | `road-to-wired-instruments` | 0/15 | lightweight | PR #1818 — 15/15, archived |
+| 7 | `road-to-council-topology-evidence-followups` | 0/38 | structural | Untouched by a standing lock — see below |
+
+The 0/N readings are a property of `main`, not of the work: each roadmap is
+complete and archived on its own branch, and `main` cannot see that until the PR
+merges.
+
+## Pull requests
+
+| PR | Branch | Head pushed this run |
+|---|---|---|
+| #1815 | `drain/governed-skill-scouting` | `7e3fe731c` |
+| #1816 | `drain/ship-control-coverage` | `db7482ce8` |
+| #1817 | `drain/self-description-truth` | `05307d68d` |
+| #1818 | `drain/wired-instruments` | `15441336c` |
+| #1819 | `drain/artifact-location` | `f05617b1c` |
+| #1821 | `drain/cascading-base` | `366d9eeb2` |
+
+`git merge-base --is-ancestor origin/main origin/drain/<branch>` returns 0 for
+all six, so every PR carries current `main` rather than merely claiming to.
+
+## Blockers — seven, all Class 3, all council-resolved
+
+`agent-config gates --all --json` on `main` reports **7 open blockers, 0
+`needsYou`**, every one `class: 3` and `owner: maintainer` with an A/B option
+set. Read back from the pushed refs, all seven carry `Status: resolved` in their
+archived roadmaps: `governed-skill-scouting` 2/2, and 1/1 each for
+`ship-control-coverage`, `wired-instruments`, `artifact-location`,
+`cascading-base` and `self-description-truth`. The council session standing in
+for each maintainer signature is recorded in that PR's own body, with members,
+round count and transport, rather than restated here.
+
+The one unchecked box in the six is `road-to-governed-skill-scouting` 4.1, a
+`[~]` deferral carrying
+`<!-- deferred-resolution: carried-to=road-to-skill-ecosystem-capability-queue -->`
+against a receiver the same branch creates under `later/`. `[~]` is deferred,
+never cancelled, and the archival sweep validates the carry from both ends —
+so 12/13 is a closed roadmap, not a 92 %-finished one.
+
+## What this run actually had to fix
+
+All six PRs were `BEHIND` `main` and red on exactly one job — `Static Checks
+(ESLint · typecheck · prepack)`, at its `npm audit (runtime deps, high+)` step
+(`.github/workflows/tests.yml:443-447`). That failure was not theirs: #1822 had
+already cleared the three runtime advisories on `main`. Merging `main` in makes
+`npm audit --omit=dev --audit-level=high` print `found 0 vulnerabilities`, which
+was verified in each worktree before its push rather than inferred from #1822.
+
+Two things about the push path are worth carrying forward:
+
+- The **remote branch head was ahead of the local worktree on all six** — a
+  GitHub *Update branch* press. The pre-push preflight refuses a push whose PR
+  head is unreachable locally (`❌ PR #1817 head 7bc8fa4f7 is not reachable from
+  the local branch`), so `git merge origin/<branch>` is a mandatory step before
+  `git merge origin/main`, not a no-op. Nothing was force-pushed.
+- Each preflight emitted an **advisory** `missing-artifact` completion-review
+  violation, non-blocking and left alone as out of scope for a merge-only
+  change: 2 code paths of 7 changed files on #1815, 6 of 17 on #1816, 3 of 12 on
+  #1817, 25 of 38 on #1818. #1818's 25 is large enough to be worth a real
+  completion-review artifact before that one merges; that is a flag, not a
+  finding, and no gate blocks on it today.
+
+## Roadmap 7 — the lock held, and the council was deliberately not re-run
+
+`road-to-council-topology-evidence-followups` is `status: carrier`: it exists so
+the 38 `[~]` items deferred out of an archived parent have a live destination
+that `deferralProblems` can verify, and `lint_carrier_integrity` reds with
+`❌ 38 broken deferral carries` if it moves. Its own § Disposition records a
+2-round, 2/2-quorum council verdict on this exact question under a **materially
+identical** owner instruction, twice — drain runs 15 and 16 — with the boundary:
+*preserve all 38 obligations in place · preserve the three measurable resumption
+triggers · do not archive, cancel, promote or transfer the carrier · do not claim
+its work is complete.*
+
+Re-asking a council that has already ruled twice on the same mechanism under the
+same instruction is verdict shopping, so it was not re-asked. The one thing a new
+run can add is a live trigger reading, and both triggers were re-measured rather
+than assumed: Phase 2 needs `n >= 5` independent eligible seats and
+`agent-config council:status` reports **2 enabled of 5** (anthropic, openai);
+Phase 3 needs a two-day 30-calls-per-provider reservation that does not exist.
+Neither moved. No item was checked, nothing archived, promoted or transferred,
+and no third disposition section was added — a third identical record is estate
+noise, not evidence.
+
+## One finding, recorded rather than built
+
+This is the **third consecutive run** to spend reasoning deciding that the
+carrier is out of scope, and the cause is mechanical: the brief builds its queue
+from `agents/roadmaps/*.md` directly, while `status: carrier` is precisely the
+marker that keeps a file off the dashboard and out of the estate count. A queue
+derived from the tree cannot see a status whose whole job is to be invisible to
+the dashboard.
+
+Nothing was built for it. The permissive half of a **divergent** council in this
+same family already ruled that a standing drain instruction *"authorizes closing
+this roadmap under current rules, not creating new CI gates with repository-wide
+scope"*, and a divergent council carries no mandate. The finding is the
+deliverable.
+
+## Honest limits of this report
+
+- **CI is not claimed green.** Every push cleared the audit gate locally and all
+  six PRs read `UNSTABLE` with zero `FAILURE` at the time of writing, but runs
+  were still in flight and `ci_settle` returned `DID NOT SETTLE within 9 min —
+  no verdict is claimed` on #1817. A pending check is not a passing check.
+- **No PR was merged.** Merging to a production trunk is a Hard-Floor action that
+  no standing instruction lifts, and the brief asked for PRs, not merges.
+- **`main`'s own red gates were not re-audited this run.** Run 17 named three
+  (`check_gate_completeness`, `check_roadmap_trackable:relates`, four dead
+  `check_gate_coverage --canary` rows); whether they still stand was not
+  measured here and is not asserted either way.
+- **Zero metered spend in the second half of this run.** No council call was made
+  after the context reset; the council sessions the PR bodies cite belong to the
+  first half and record their own `billable=0` transport.
