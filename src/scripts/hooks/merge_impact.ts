@@ -67,6 +67,70 @@ const DESTRUCTIVE_MARKERS: ReadonlyArray<{ label: string; re: RegExp }> = [
   { label: "a whole file was deleted", re: /^deleted file mode /m },
 ];
 
+/**
+ * Schema-removal patterns, ADDED-side anchor stripped, for use inside a rename.
+ *
+ * Kept as its own list rather than derived by rewriting the table above,
+ * because a regex rewritten at runtime is a second source of truth that no
+ * test reads.
+ */
+const SCHEMA_REMOVAL_BODY =
+  /\b(dropColumn|dropTable|dropIfExists|removeColumn|drop_column|drop_table|DROP\s+(TABLE|COLUMN|INDEX|CONSTRAINT)|TRUNCATE\s+TABLE)\b/i;
+
+/** Git's own rename metadata for one file block. */
+const RENAME_METADATA = /^rename (?:from|to) /m;
+
+/**
+ * Per-file blocks of a unified diff, split on git's own file header.
+ *
+ * The first element of the split is whatever precedes the first `diff --git`
+ * (usually empty, sometimes a commit header) and is dropped.
+ */
+function fileBlocks(patch: string): string[] {
+  return patch
+    .split(/^(?=diff --git )/m)
+    .filter((b) => b.startsWith('diff --git '));
+}
+
+/**
+ * Does a RENAMED file drop schema on the side the added-line anchors cannot see?
+ *
+ * MEASURED at 022c0d240. A rename with `similarity index 88%` whose hunk reads
+ *
+ *     -Schema::dropTable("users");
+ *     +Schema::create("users");
+ *
+ * classified `additive`, markers `[]`. Both schema markers in the table above
+ * are anchored to `^\+` for a good reason — a migration that REMOVES a
+ * `dropColumn` call is the opposite of destructive, and that counter-case is
+ * pinned by its own test. But the reason stops holding inside a rename: the
+ * content did not stay put, so a removal on the old path is not "the drop was
+ * taken out", it is "the drop moved and the file it lived in is gone".
+ *
+ * So the widened scan is CONDITIONAL on git's rename metadata, per the risk
+ * this roadmap recorded against exactly this step — it is not applied to every
+ * deleted line, which would score the pinned counter-case destructive.
+ *
+ * NOT COVERED, and stated rather than implied: a `similarity index 100%` rename
+ * carries no content lines at all, so nothing here fires on it and it stays
+ * `additive`. That is the honest reading — a pure move drops nothing — but it
+ * does mean a moved migration is invisible to this scan. Recorded as a residual
+ * rather than closed by guessing at a path-shape heuristic.
+ */
+function renamedSchemaRemoval(patch: string): boolean {
+  for (const block of fileBlocks(patch)) {
+    if (!RENAME_METADATA.test(block)) {
+      continue;
+    }
+    for (const line of block.split('\n')) {
+      if (line.startsWith('-') && !line.startsWith('---') && SCHEMA_REMOVAL_BODY.test(line)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /** A major-version bump in a manifest, which is the author declaring a break. */
 const MAJOR_BUMP =
   /^-\s*"version"\s*:\s*"(\d+)\.[^"]*"[\s\S]{0,200}?^\+\s*"version"\s*:\s*"(\d+)\./m;
@@ -87,6 +151,10 @@ export function classifyDiff(patch: string): MergeImpact {
     if (re.test(patch)) {
       markers.push(label);
     }
+  }
+
+  if (renamedSchemaRemoval(patch)) {
+    markers.push("a renamed file drops a column or table");
   }
 
   const bump = MAJOR_BUMP.exec(patch);

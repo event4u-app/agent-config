@@ -111,6 +111,54 @@ describe("classifyDiff — destructive markers", () => {
     expect(classifyDiff(patch).markers).not.toContain("migration drops a column or table");
   });
 
+  it("a rename around a schema drop is destructive — the drop moved, it was not removed", () => {
+    // MEASURED at 022c0d240: this classified `additive` with markers []. Both
+    // schema markers are anchored to `^\+`, and inside a rename that anchor
+    // hides the case — the content did not stay put, so a removal on the old
+    // path is the drop MOVING, not the drop being taken out.
+    const patch = [
+      "diff --git a/db/m.php b/db/mig.php",
+      "similarity index 88%",
+      "rename from db/m.php",
+      "rename to db/mig.php",
+      "--- a/db/m.php",
+      "+++ b/db/mig.php",
+      "@@ -1,3 +1,3 @@",
+      '-Schema::dropTable("users");',
+      '+Schema::create("users");',
+      "",
+    ].join("\n");
+    const impact = classifyDiff(patch);
+    expect(impact.verdict).toBe("destructive");
+    expect(impact.markers).toContain("a renamed file drops a column or table");
+  });
+
+  it("and the widened scan stays conditional — the pinned counter-case is unchanged", () => {
+    // The SENSITIVITY of the fix in the other direction. If the deleted-side
+    // scan were applied to every block instead of only to renamed ones, this
+    // would flip and the test above it would still pass — so the pair has to
+    // be read together.
+    const patch = `diff --git a/db/m.php b/db/m.php\n--- a/db/m.php\n+++ b/db/m.php\n@@\n-            $table->dropColumn('legacy_id');\n`;
+    const impact = classifyDiff(patch);
+    expect(impact.verdict).toBe("additive");
+    expect(impact.markers).toEqual([]);
+  });
+
+  it("a 100% rename stays additive — recorded as a residual, not closed by guessing", () => {
+    // A `similarity index 100%` rename carries no content lines, so nothing
+    // fires. A pure move drops nothing, which is the honest reading; the cost
+    // is that a MOVED migration is invisible to this scan. Asserted so the
+    // residual is a pinned fact rather than an unexamined gap.
+    const patch = [
+      "diff --git a/db/old.php b/db/new.php",
+      "similarity index 100%",
+      "rename from db/old.php",
+      "rename to db/new.php",
+      "",
+    ].join("\n");
+    expect(classifyDiff(patch).verdict).toBe("additive");
+  });
+
   it("collects every marker that fires, not just the first", () => {
     const patch =
       `diff --git a/db/m.php b/db/m.php\n@@\n+  $table->dropTable('x');\n` +
