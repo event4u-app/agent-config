@@ -151,6 +151,30 @@ tasks:
       task dev:hooks-effect -- --host cursor --format json
     cmd: ./agent-config hooks:effect {{.CLI_ARGS}}
 
+  dev:skill-scout:
+    desc: |
+      Evaluate an external skill candidate against what this package already
+      covers, and end in a written verdict either way.
+      IN-REPO ONLY. `scout-invocation-surface` resolved (a) by AI council on
+      2026-09-03, so the scout runs here and nowhere else; a maintainer running
+      it is already in the repository that would receive the change, and the
+      "shall I open a PR" question never arises. It is a `dev:` task rather
+      than a CLI verb because ADR-041 governs verb growth, and rather than a
+      skill because the preamble payload has no headroom for a catalogue entry.
+      NO NETWORK. `scout-egress-authority` resolved (a) in the same session:
+      candidates arrive by HUMAN COPY into
+      agents/runtime/skill-scout/candidates/<name>/ (gitignored). The scout
+      never fetches, so the lethal-trifecta legs stay separated by
+      construction. Contract: docs/contracts/skill-scout-quarantine.md
+      The normal ending is a REJECTION with a reason. A candidate this package
+      already covers is a reject however well it is written, and the reason
+      names the covering artefact.
+      Usage:
+      task dev:skill-scout -- --list
+      task dev:skill-scout -- --candidate <name> --licence MIT \
+        --benefit "..." --challenges 3 [--critical-open 0] [--json]
+    cmd: ./scripts-run src/scripts/skill_scout {{.CLI_ARGS}}
+
   push-ready:
     desc: |
       The documented pre-push freshness sequence, executed rather than

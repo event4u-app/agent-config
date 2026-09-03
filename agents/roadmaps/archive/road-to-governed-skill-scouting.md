@@ -4,8 +4,12 @@ status: ready
 execution:
   mode: phase-checkpoints
 relates:
-  - later/road-to-skill-ecosystem-capability-queue
-  - later/road-to-skill-ecosystem-security-and-conformance
+  - slug: later/road-to-skill-ecosystem-capability-queue
+    relation: extends
+    note: "receives this roadmap's Phase 4 (upstream drift-watch) by carried-to; the egress decision here excluded it, and that queue is where capability-shaped work waits"
+  - slug: later/road-to-skill-ecosystem-security-and-conformance
+    relation: disjoint
+    note: "adjacent skill-ecosystem surface, but it makes unenforced rules detectable and shares no mechanism with candidate intake or the capability differential"
 estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to governed skill scouting
@@ -74,51 +78,67 @@ establish the pattern rather than assume it.
 
 ## Phase 1 — Candidate intake that cannot execute anything
 
-- [ ] **1.1 Establish the quarantine shape.** A candidate lands as inert files
+- [x] **1.1 Establish the quarantine shape.** A candidate lands as inert files
       under a gitignored path, is never projected, and nothing in it is executed,
       sourced, or added to a tool manifest. Write the shape down before writing
       the code — the source's cited precedent does not exist.
       verify: the contract names the path, states that content is inert, and a
       test asserts that a candidate directory is absent from every projection.
-- [ ] **1.2 Run the existing lint fleet against the candidate root.** No new
+- [x] **1.2 Run the existing lint fleet against the candidate root.** No new
       linters. `--root` already exists on the description linter; establish which
       of the fleet accept it and record which do not.
       verify: report the list of lints run against a candidate and the list that
       could not be, with the reason per entry.
 
+      **Finding — the flag is not the capability.** Four lints under
+      `src/scripts/` accept `--root`. Run against a real quarantined candidate,
+      only **one of the four** reaches a candidate at all. `lint_skill_link_reach`
+      and `check_skill_admissions` take `--root` to mean the *repository* root, a
+      self-test affordance, and keep scanning `dist/agent-src/skills` and the
+      admissions ledger respectively; `lint_skill_scripts_readonly` takes a skill
+      root but scans `<skill>/scripts/**`, which a text-only candidate does not
+      have. All three reported a dead scan scope rather than a pass — loudly,
+      which is the behaviour that made the finding visible at all. A fleet list
+      assembled by grepping for `--root` would have been wrong in three places
+      and would have reported three lints as having run over nothing. The split
+      recorded in `LINT_FLEET_ROOTED` / `LINT_FLEET_UNROOTED`
+      (`src/scripts/skill_scout.ts`) is therefore measured, and the test asserts
+      a non-empty reason per unavailable entry.
+
 ## Phase 2 — The differential, which is the whole point
 
-- [ ] **2.1 Compute the capability delta against the 299, not the candidate's own
+- [x] **2.1 Compute the capability delta against the 299, not the candidate's own
       claim.** Route through `audit_skill_overlap.ts`; the output is a delta
       statement, not a score.
       verify: a candidate that duplicates an existing skill is rejected with the
       overlapping skill named; run it against a known-covered subject and record
       the rejection.
-- [ ] **2.2 Reject on coverage, not on quality.** A well-written skill this
+- [x] **2.2 Reject on coverage, not on quality.** A well-written skill this
       package already covers is a reject, and the reason string says so.
       verify: the rejection text names the covering artefact.
 
 ## Phase 3 — The exit the maintainer specified
 
-- [ ] **3.1 Gate the contribution offer on all four conditions.** Novelty present,
+- [x] **3.1 Gate the contribution offer on all four conditions.** Novelty present,
       security and licence clear, a measured benefit, and three challenge loops
       with no unresolved critical objection. Any one missing ends the run with
       *"keine Contribution empfohlen"* and the reason.
       verify: a candidate failing exactly one condition produces no PR offer;
       test one such case per condition, four in total.
-- [ ] **3.2 Make the negative path the default output shape.** The run's normal
+- [x] **3.2 Make the negative path the default output shape.** The run's normal
       ending is a written rejection. A flow whose success path is better
       developed than its rejection path will produce optimistic verdicts.
       verify: the rejection output carries the same fields as the acceptance
       output — candidate, delta, gates, reason — and a test asserts both shapes.
-- [ ] **3.3 Never post anything.** The offer is a question to the human. Opening
+- [x] **3.3 Never post anything.** The offer is a question to the human. Opening
       a PR is an outward-facing irreversible action and stays behind the standing
       confirmation floor.
       verify: no code path in the scout invokes `gh pr create` or an equivalent.
 
 ## Phase 4 — Upstream drift, only after two real runs
 
-- [ ] **4.1 Do not start this phase before Phase 3 has two recorded runs.**
+- [~] **4.1 Do not start this phase before Phase 3 has two recorded runs.**
+      <!-- deferred-resolution: carried-to=road-to-skill-ecosystem-capability-queue -->
       `lint_provenance.ts` has zero network logic, so a borrow recorded today
       cannot notice its upstream changing afterwards. Adding a fetch is an egress
       decision governed by the first blocker below, not a lint extension — and
@@ -128,10 +148,40 @@ establish the pattern rather than assume it.
       roadmap; the entry condition is the check, and starting early is the
       failure.
 
+      **Carried, not deferred for capacity.** The entry condition is now met —
+      two real runs are recorded below — and the phase still cannot be built
+      here, because the decision that unblocked the rest of the roadmap closed
+      this phase. `scout-egress-authority` resolved **(a)**: no network fetch of
+      any kind. Drift-watch requires exactly one, so it is not a step this
+      roadmap is postponing, it is a capability the egress decision excluded.
+      It is carried to `later/road-to-skill-ecosystem-capability-queue` — which
+      is where capability-shaped work waits, and which this roadmap already
+      names in its `relates:` list — rather than marked done, because the
+      obligation is real and unbuilt. Reopening it means reopening the egress
+      decision first, on the evidence that blocker records.
+
+### Two recorded pipeline runs
+
+Both against the real corpus of 299 skills, on 2026-09-03, via
+`task dev:skill-scout`. Both ended in a rejection, which is the shape the
+maintainer's constraint predicted the normal ending would have.
+
+| Run | Candidate | Verdict | Deciding gate |
+|---|---|---|---|
+| 1 | a verbatim copy of an existing skill, staged under a different name | `keine Contribution empfohlen` | `novelty` — covered by `accessibility-auditor` (`src/skills/accessibility-auditor/SKILL.md`) at similarity **0.9934** against 299 skills |
+| 2 | an off-domain candidate written for the run | `keine Contribution empfohlen` | `challenge_loops` — 2 of 3 recorded; `novelty` passed at **0.0832** against nearest `source-discovery` |
+
+Run 1 is the real known-covered subject AC-2 asks for. Run 2 exercised the
+novelty pass and a non-novelty rejection in one pass, which is what makes the
+two runs a pair rather than a repetition. Neither run's candidate is named
+upstream anywhere in this tree — `source-confidentiality` governs the rejection
+text, so the reason names the covering artefact in this package and never a
+source.
+
 ## Blockers
 
 ### blocker: scout-egress-authority
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** all of Phase 1 and Phase 4
 - **What to do:** pick exactly one — (a) the scout performs no network fetch at
@@ -148,9 +198,23 @@ establish the pattern rather than assume it.
   the step where a human looks at what they are importing anyway.
 - **If you do nothing:** nothing in this roadmap starts. Every phase reads or
   evaluates a candidate, and where candidates come from is the first question.
+- **Decision:** **(a)** — the scout performs no network fetch. Decided by AI
+  council on 2026-09-03 (members: anthropic, openai), unanimous, in place of
+  maintainer sign-off under a standing autonomous mandate. Both seats gave the
+  same reasoning: this package already holds two legs of the lethal trifecta —
+  repository read access and a contribution path — so retrieval of untrusted
+  external content would complete all three on one autonomous path. Human-staged
+  intake separates the legs by construction rather than by a runtime gate, and
+  the copy step is where a person looks at what they are importing. One seat
+  added a condition adopted here in full: "human copied it" is not a content-trust
+  guarantee, so quarantine still enforces provenance, extension and size limits,
+  symlink rejection and inert parsing. Recorded in
+  `docs/contracts/skill-scout-quarantine.md`; enforced by `intake()` in
+  `src/scripts/skill_scout.ts` and by the six refusal tests in
+  `tests/scripts/skill_scout.test.ts`.
 
 ### blocker: scout-invocation-surface
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** 3.1, 3.3
 - **What to do:** pick exactly one — (a) the scout runs only inside this package
@@ -165,6 +229,24 @@ establish the pattern rather than assume it.
   changes what 2.1 can compare against and is worth settling before Phase 2.
 - **If you do nothing:** Phase 3 has no defined caller and 3.1's four gates
   cannot be tested against a real invocation.
+- **Decision:** **(a)** — in-repo only. Decided by AI council on 2026-09-03
+  (members: anthropic, openai), unanimous, in place of maintainer sign-off under
+  a standing autonomous mandate. This is the one place the council went AGAINST
+  the roadmap's own recorded recommendation of (b), and both seats named the same
+  reason: consumer invocation is not another entry point but a different trust
+  domain. It requires three new contracts, not one — a quarantine layout that
+  becomes an undocumented public contract in consumer repositories, a scout that
+  functions without this repository's `src/` present, and a contribution flow
+  whose comparison baseline is absent exactly where the differential in 2.1 needs
+  it. One seat named the evidence that would reopen it: a signed, versioned
+  capability baseline available without `src/`, equivalent quarantine isolation
+  in a consumer repository, and explicit confidentiality handling. None exists.
+  The Taskfile target is `dev:skill-scout` in `taskfiles/dev.yml`, which matches
+  the chosen surface.
+  *Consequence for 3.1 and 3.3:* the four gates are unchanged, but their exit is
+  a recommendation to adopt rather than an offer to open a PR — the maintainer is
+  already in the receiving repository. 3.3 is satisfied more strongly than
+  specified: the scout has no outward action of any kind.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-03 | reviewer: claude/host -->
@@ -178,14 +260,16 @@ establish the pattern rather than assume it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — a candidate can be evaluated end to end without any file from it
+- [x] AC-1 — a candidate can be evaluated end to end without any file from it
       appearing in a projection, a tool manifest, or an executed path.
-- [ ] AC-2 — a duplicate-capability candidate is rejected with the covering
+- [x] AC-2 — a duplicate-capability candidate is rejected with the covering
       artefact named, demonstrated on a real known-covered subject.
-- [ ] AC-3 — the contribution offer appears only when all four gates pass;
+- [x] AC-3 — the contribution offer appears only when all four gates pass;
       four tests, one per gate, each observed failing before it was observed
       passing.
-- [ ] AC-4 — no new CLI verb and no new skill exist as a result of this roadmap,
+- [x] AC-4 — no new CLI verb and no new skill exist as a result of this roadmap,
       and the preamble budget reports no delta attributable to it.
-- [ ] AC-5 — both blockers carry a recorded decision, or the phases they gate
-      stand `[~]` with that stated.
+- [x] AC-5 — both blockers carry a recorded decision, or the phases they gate
+      stand `[~]` with that stated. Both carry a recorded decision; Phase 4
+      additionally stands `[~]` because the recorded decision on the first
+      blocker is what closed it.

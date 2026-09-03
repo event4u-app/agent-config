@@ -1,9 +1,20 @@
 ---
 complexity: lightweight
 status: later
+parent_roadmap: road-to-governed-skill-scouting
 ---
 
 # Road to the capability queue — everything capability-shaped, waiting on a capacity slot
+
+> **Carried in 2026-09-03 from `road-to-governed-skill-scouting` (step 4.1):
+> upstream drift-watch for a borrowed skill.** `lint_provenance.ts` has no
+> network logic, so a borrow recorded today cannot notice its upstream changing
+> afterwards. Noticing requires a fetch, and that roadmap's
+> `scout-egress-authority` blocker resolved **(a) — no network fetch of any
+> kind**, on the grounds that this package already holds the other two legs of
+> the lethal trifecta. So drift-watch is not postponed for capacity: it is a
+> capability an egress decision excluded, and reopening it means reopening that
+> decision first, on the evidence the blocker records.
 
 > **Parked on capacity only.** The 2026-08-05 council split the freeze into a
 > verification arm and a capability arm and gated the latter partly on external
