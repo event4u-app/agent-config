@@ -117,20 +117,41 @@ marker.
 > action is an edit. The four later guards are unchanged and stay as
 > defence-in-depth for a section that changes after the commit.
 >
-> **What this does NOT fix, stated rather than left to the next reader.** A
-> release still halts once whenever any label is substantiated, and every
-> release of this package substantiates at least one. That is the cadence the
-> flip chose; it is now a local halt with the evidence in hand instead of a red
-> PR, which is a different cost, not zero cost. Since 2026-09-03 that halt also
-> arrives before the release commit rather than after it, so the edit is made
-> on a clean tree and the re-run is `task release`, not `task release --
-> --resume`. The unattended path
-> (`.github/workflows/release.yml`, `--ci --yes`, ADR-113) therefore cannot
-> complete a release whose head is uncurated — it refuses before the push
-> instead of dying at the check, which is strictly better and still not
-> unattended. Whether the generator should emit a publishable derived claim
-> instead of a rewrite-me draft is an open maintainer question, not something
-> this repair decided.
+> **The halt is GONE since 2026-09-03, and the open question above is what
+> closed it.** The paragraph that stood here described the halt as the cadence
+> the flip chose, said it was "a different cost, not zero cost", and ended by
+> naming its own successor: *whether the generator should emit a publishable
+> derived claim instead of a rewrite-me draft is an open maintainer question.*
+> The maintainer answered it — *"fix the bug so this stops happening"* — and
+> that instruction is the authority for this change.
+>
+> The arithmetic behind why it had to go: every release of this package touches
+> `src/rules/` or `src/scripts/schemas/`, so `Behaviour changes` is always
+> substantiated, so the generator always wrote a line the gate always refused.
+> A release halting *by construction* is not a cadence, it is a failure with a
+> schedule. Two intermediate positions were tried and neither removed it — the
+> 2026-09-01 flip made the marker a hard refusal at the PR, and 2026-09-03's
+> first attempt (`guard_release_curation`) moved that refusal before the
+> commit. Both made the halt cheaper. Only the writer change removes it.
+>
+> `render_derived_head_values` now emits the COMMIT SUBJECTS behind each
+> category with their SHAs, and no marker: "stage-2 impact scan, so a refused
+> merge can be answered in four words (5a3b7c5)" rather than "rule/schema diffs
+> in 5a3b7c5". Measured against the real 14.15.0 span, seven commits, the
+> rendered head returns zero publication blockers.
+>
+> What is deliberately NOT relaxed: `highlight_contradictions` still refuses a
+> human editing a substantiated line down to `_none_`, which is what the false
+> 9.13.0 and 9.14.0 heads actually were; and the marker constant with its four
+> guard sites stays, now covering only a marker written BY HAND. The unattended
+> path (`.github/workflows/release.yml`, `--ci --yes`, ADR-113) can therefore
+> complete a release, which it could not before.
+>
+> **The honest cost, stated rather than left to be discovered.** The head is
+> now a categorised view of the span rather than curated prose, and it ships
+> without a human having read it. That is a real reduction in editorial
+> quality, accepted deliberately: an operator who wants better prose still
+> edits the section, and is no longer STOPPED until they do.
 >
 > **No escape hatch exists, deliberately.** See § No escape hatch below.
 >

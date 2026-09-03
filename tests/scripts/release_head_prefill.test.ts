@@ -21,6 +21,7 @@ import {
     HEAD_NONE,
     type SpanCommit,
     derive_category_hits,
+    publication_blockers,
     render_derived_head_values,
     stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
@@ -70,12 +71,40 @@ describe('render_derived_head_values', () => {
         );
     });
 
-    it('cites the substantiating SHAs and carries the rewrite marker', () => {
+    it('cites the substantiating SHAs AND the commit subjects behind them', () => {
         const values = render_derived_head_values(derive_category_hits(TYPICAL_SPAN));
         const behaviour = values['Behaviour changes']!;
-        expect(behaviour).toContain(DERIVED_MARKER);
         expect(behaviour).toContain('71c3527');
         expect(behaviour).toContain('b3cc0ad');
+        // The subject, not the name of the rule that classified it. "rule/schema
+        // diffs in 71c3527" restates why the classifier fired; the claim a
+        // reader can use is the sentence the committer wrote.
+        expect(behaviour).toContain('merge brand pair, disjoin security triggers');
+        // And the conventional-commit prefix is dropped: `refactor(rules):` is
+        // metadata the changelog's own commit list already carries.
+        expect(behaviour).not.toContain('refactor(rules):');
+    });
+
+    it('emits NO draft marker — the writer never produces text that cannot ship', () => {
+        // The whole subject of the 2026-09-03 fix. Every release of this package
+        // touches `src/rules/` or `src/scripts/schemas/`, so **Behaviour
+        // changes** is always substantiated; with the marker in the emission and
+        // a gate refusing the marker, every release halted BY CONSTRUCTION. This
+        // is the assertion that keeps that combination from returning.
+        const values = render_derived_head_values(derive_category_hits(TYPICAL_SPAN));
+        for (const [label, value] of Object.entries(values)) {
+            expect(value, `${label} carries the draft marker`).not.toContain(DERIVED_MARKER);
+        }
+    });
+
+    it('renders a section the publication guards accept — no halt on the writer output', () => {
+        // One rung above the marker assertion: not "the marker is absent" but
+        // "the four guard sites would let this through". Asserting the blockers
+        // directly is what pins the property the operator actually feels.
+        const head = render_release_head(
+            render_derived_head_values(derive_category_hits(TYPICAL_SPAN)),
+        ).join('\n');
+        expect(publication_blockers(head, '9.9.9')).toEqual([]);
     });
 
     it('omits a label the span does not substantiate, so `_none_` survives there', () => {
@@ -142,11 +171,19 @@ describe('generated head clears the gate', () => {
 });
 
 describe('stale_draft_labels', () => {
-    it('names every label still carrying the unedited draft', () => {
+    it('names every label carrying a HAND-WRITTEN marker', () => {
+        // Rewritten 2026-09-03. This used to feed the GENERATOR's output, which
+        // is exactly what stopped carrying the marker — so the old form asserted
+        // a state the writer can no longer produce. The function is not dead:
+        // its four guard sites now cover a marker somebody types by hand, and
+        // that is the state fed here. Deleting the test would have dropped the
+        // only coverage of the marker path.
         const values = render_derived_head_values(derive_category_hits(TYPICAL_SPAN));
+        values['Behaviour changes'] = `${DERIVED_MARKER} someone typed this by hand.`;
+        values['Honest nulls'] = `${DERIVED_MARKER} and this one too.`;
         const curated = parse_curated_head(render_release_head(values).join('\n'))!;
         expect(stale_draft_labels(curated).sort()).toEqual(
-            ['Behaviour changes', 'Honest nulls', 'Security and correctness'].sort(),
+            ['Behaviour changes', 'Honest nulls'].sort(),
         );
     });
 

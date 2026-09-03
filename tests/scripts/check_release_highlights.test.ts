@@ -265,8 +265,15 @@ describe('derive_categories — recorded-null forms beyond the literal marker', 
             }),
         ];
         const prefilled = render_derived_head_values(derive_category_hits(span));
-        expect(prefilled['Security and correctness']).toContain(DERIVED_MARKER);
-        expect(prefilled['Honest nulls']).toContain(DERIVED_MARKER);
+        // Substantiated, and publishable — the two halves of "not red". Since
+        // 2026-09-03 the pre-fill carries the commit subject rather than a draft
+        // marker, so what is asserted is that the label is FILLED (nothing for
+        // the contradiction check to catch) and that it carries no text the
+        // publication guards would refuse.
+        expect(prefilled['Security and correctness']).toContain('refuse a cli-delegate bundle');
+        expect(prefilled['Honest nulls']).toContain('the soak was waived not met');
+        expect(prefilled['Security and correctness']).not.toContain(DERIVED_MARKER);
+        expect(prefilled['Honest nulls']).not.toContain(DERIVED_MARKER);
 
         const curated = parse_curated_head(render_release_head(prefilled).join('\n'))!;
         expect(highlight_contradictions(curated, derive_categories(span))).toEqual([]);
