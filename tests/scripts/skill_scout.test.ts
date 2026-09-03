@@ -12,10 +12,13 @@ import {
     LINT_FLEET_UNROOTED,
     QUARANTINE_REL,
     buildVerdict,
+    candidateNameRefusal,
+    candidateText,
     computeDelta,
     evaluateGates,
     intake,
     render,
+    resolveCandidateDir,
     type Delta,
     type GateName,
 } from '../../src/scripts/skill_scout.js';
@@ -328,5 +331,119 @@ describe('AC-4 — no new CLI verb and no new skill', () => {
 
     it('the scout is reachable as a script, not as a dispatcher verb', () => {
         expect(fs.existsSync(path.join(REPO_ROOT, 'src', 'scripts', 'skill_scout.ts'))).toBe(true);
+    });
+});
+
+describe('quarantine confinement — the root is the trust boundary, not a hint', () => {
+    // The contract states every inertness guarantee as a property of a directory
+    // UNDER the quarantine root, because the human copy step is the checkpoint.
+    // A name that leaves the root names something nobody copied there.
+    const escapes = [
+        '../../../../.github/workflows',
+        '..',
+        '.',
+        'nested/candidate',
+        '/etc',
+        'a/../../b',
+        '',
+        '   ',
+    ];
+
+    for (const name of escapes) {
+        it(`refuses the unconfined candidate name ${JSON.stringify(name)}`, () => {
+            expect(candidateNameRefusal(name)).not.toBeNull();
+            const r = resolveCandidateDir('/tmp/quarantine-root', name);
+            expect(r.dir).toBeNull();
+            expect(r.refusal).not.toBeNull();
+        });
+    }
+
+    it('accepts a plain single-segment name and pins it directly under the root', () => {
+        expect(candidateNameRefusal('wcag-checker')).toBeNull();
+        const r = resolveCandidateDir('/tmp/quarantine-root', 'wcag-checker');
+        expect(r.refusal).toBeNull();
+        expect(r.dir).toBe(path.join('/tmp/quarantine-root', 'wcag-checker'));
+    });
+
+    it('no resolved candidate directory ever leaves the root', () => {
+        for (const name of [...escapes, 'ok', 'ok.md', 'ok-1_2']) {
+            const r = resolveCandidateDir('/tmp/quarantine-root', name);
+            if (r.dir === null) continue;
+            expect(r.dir.startsWith('/tmp/quarantine-root' + path.sep)).toBe(true);
+        }
+    });
+
+    it('the CLI refuses a traversing candidate instead of rendering a verdict over it', () => {
+        // Before the confinement guard this exact invocation walked 33 files
+        // under .github/workflows and printed "adoption recommended" for them.
+        let stdout = '';
+        let stderr = '';
+        let code = 0;
+        try {
+            stdout = execFileSync(
+                path.join(REPO_ROOT, 'scripts-run'),
+                [
+                    'src/scripts/skill_scout',
+                    '--candidate',
+                    '../../../../.github/workflows',
+                    '--licence',
+                    'MIT',
+                    '--benefit',
+                    'measured: none',
+                    '--challenges',
+                    '3',
+                ],
+                { encoding: 'utf-8', cwd: REPO_ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
+            );
+        } catch (exc) {
+            const e = exc as { status?: number; stdout?: string; stderr?: string };
+            code = e.status ?? 1;
+            stdout = e.stdout ?? '';
+            stderr = e.stderr ?? '';
+        }
+        expect(code, 'a traversing name is not a candidate').toBe(1);
+        expect(stdout).not.toContain('adoption recommended');
+        expect(stdout).not.toContain('verdict');
+        expect(stderr).toContain('intake refused');
+        // And the scan-scope assertion must never have reported the traversed
+        // root — the refusal lands before it runs.
+        expect(stderr).not.toContain('scanned:');
+        expect(stderr).not.toContain('.github/workflows —');
+    });
+});
+
+describe('read-time inertness — the intake-then-swap window is narrowed', () => {
+    it('does not follow a symlink planted after a clean intake', () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'scout-outside-'));
+        tmps.push(outside);
+        const secret = path.join(outside, 'secret.md');
+        fs.writeFileSync(secret, 'TOCTOU-LEAK-CANARY\n');
+
+        const dir = mkCandidate({ 'a.md': 'inert candidate body\n' });
+
+        // Intake sees a clean, regular, in-quarantine file.
+        expect(intake(dir).accepted).toBe(true);
+
+        // ...and the directory is then mutated before the read pass, which is
+        // the whole of the reported race.
+        fs.unlinkSync(path.join(dir, 'a.md'));
+        fs.symlinkSync(secret, path.join(dir, 'a.md'));
+
+        const text = candidateText(dir);
+        expect(text, 'a post-intake symlink must not be followed out of quarantine').not.toContain(
+            'TOCTOU-LEAK-CANARY',
+        );
+    });
+
+    it('still reads an ordinary candidate file', () => {
+        const dir = mkCandidate({ 'a.md': 'inert candidate body\n' });
+        expect(candidateText(dir)).toContain('inert candidate body');
+    });
+
+    it('skips a file that grew past the cap after intake', () => {
+        const dir = mkCandidate({ 'a.md': 'small\n' });
+        expect(intake(dir).accepted).toBe(true);
+        fs.writeFileSync(path.join(dir, 'a.md'), 'x'.repeat(512 * 1024 + 1));
+        expect(candidateText(dir)).toBe('');
     });
 });

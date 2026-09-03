@@ -199,6 +199,70 @@ function _walk(dir: string): string[] {
 }
 
 /**
+ * Confine a candidate name to ONE segment directly under the quarantine root.
+ *
+ * WHY THIS IS A REFUSAL AND NOT A NORMALISATION. Every guarantee the quarantine
+ * contract makes is a property of a directory *under the quarantine root* — the
+ * human copy step is the trust checkpoint, and a path that leaves the root was
+ * never copied there. Rewriting a traversing name into a confined one would
+ * accept the operator's typo as an instruction; refusing states that the name
+ * did not identify a candidate at all.
+ *
+ * Without this the name flowed straight into `path.join(qroot, name)`, so
+ * `--candidate ../../../../.github/workflows` walked 33 files that no human
+ * staged and rendered `adoption recommended` over them — and the scan-scope
+ * line reported its root as `…/candidates/../../../../.github/workflows`,
+ * asserting a scope it was not scanning. Both halves are closed here, before
+ * `reportScanned` runs, so the assertion can never record the traversed root.
+ *
+ * Returns the refusal reason, or `null` when the name is confined.
+ */
+export function candidateNameRefusal(name: string): string | null {
+    if (name.trim() === '') {
+        return 'candidate name is empty';
+    }
+    if (name.includes('\0')) {
+        return 'candidate name contains a NUL byte';
+    }
+    if (name === '.' || name === '..') {
+        return `candidate name ${name} is a directory reference, not a candidate`;
+    }
+    // Both separators, on every platform: a backslash is a legal POSIX filename
+    // character, so checking only `path.sep` would let `a\..\b` through on
+    // POSIX and mean something else entirely once the same name reaches Windows.
+    if (name.includes('/') || name.includes('\\')) {
+        return `candidate name ${name} is not a single path segment — candidates live directly under ${QUARANTINE_REL}/`;
+    }
+    if (name !== path.basename(name)) {
+        return `candidate name ${name} is not a single path segment`;
+    }
+    return null;
+}
+
+/**
+ * Resolve a candidate name against the quarantine root, or refuse it.
+ *
+ * The containment assertion is deliberately kept after the name check rather
+ * than instead of it: the name check states the rule, and this states that the
+ * resolved path obeys it whatever `path` does on the host platform.
+ */
+export function resolveCandidateDir(
+    quarantineRoot: string,
+    name: string,
+): { readonly dir: string; readonly refusal: null } | { readonly dir: null; readonly refusal: string } {
+    const named = candidateNameRefusal(name);
+    if (named !== null) {
+        return { dir: null, refusal: named };
+    }
+    const root = path.resolve(quarantineRoot);
+    const dir = path.resolve(root, name);
+    if (dir !== path.join(root, name) || !dir.startsWith(root + path.sep)) {
+        return { dir: null, refusal: `candidate ${name} resolves outside ${QUARANTINE_REL}/` };
+    }
+    return { dir, refusal: null };
+}
+
+/**
  * Refuse a candidate that is not inert.
  *
  * Every check is a refusal, never a repair. A candidate that fails is reported
@@ -235,12 +299,34 @@ export function intake(candidateDir: string): IntakeResult {
     return { accepted: refusals.length === 0, refusals, files_seen: files.length };
 }
 
-/** Concatenate a candidate's text into one vector source. */
+/**
+ * Concatenate a candidate's text into one vector source.
+ *
+ * THE INERTNESS CHECKS ARE RE-RUN HERE, and the reason is a window rather than
+ * a doubt about `intake`. `intake` walks and `lstat`s, then this walks and
+ * reads — two separate passes over a mutable directory. A regular `x.md`
+ * swapped for a symlink between them passed a clean intake and would then be
+ * followed out of the quarantine at read time, because the extension filter is
+ * the only thing this pass used to look at.
+ *
+ * This NARROWS that window; it does not close it. Closing it needs an
+ * fd-based open plus `fstat` on the same descriptor, which `readFileSync` does
+ * not give us. What remains is a regular file swapped for a different regular
+ * file inside the read pass — by an actor who already has write access to the
+ * local, gitignored quarantine root, and whose reward is a cosine number, since
+ * no candidate text reaches the verdict output. The residual is recorded in the
+ * originating roadmap rather than implied to be gone.
+ */
 export function candidateText(candidateDir: string): string {
     return _walk(candidateDir)
         .filter((f) => ALLOWED_EXT.has(path.extname(f).toLowerCase()))
         .map((f) => {
             try {
+                const st = fs.lstatSync(f);
+                // Not a regular file (symlink, fifo, device) → it is not
+                // candidate text, whatever it was when intake saw it.
+                if (!st.isFile()) return '';
+                if (st.size > MAX_FILE_BYTES) return '';
                 return fs.readFileSync(f, 'utf-8');
             } catch {
                 return '';
@@ -460,7 +546,16 @@ export function main(argv: readonly string[] | null = null): number {
         return 1;
     }
 
-    const dir = path.join(qroot, args.candidate);
+    const resolved = resolveCandidateDir(qroot, args.candidate);
+    if (resolved.refusal !== null) {
+        // Refused BEFORE the scan-scope assertion below, so that assertion can
+        // never report a root the run had no business reading.
+        process.stderr.write(
+            `skill-scout · ${args.candidate} · intake refused:\n  - ${resolved.refusal}\n`,
+        );
+        return 1;
+    }
+    const dir = resolved.dir;
     const intakeResult = intake(dir);
 
     // SCAN-SCOPE ASSERTION, and it is not a formality here.
