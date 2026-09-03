@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
   "release": "14.15.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
   "findings": [
     {
       "finding_id": "7aee57d1e98e",
@@ -114,6 +121,5 @@
       "verified_by": "read of the ADR\\u2019s evidence table: the deferred item is stated as deferred, with what it defers",
       "date": "2026-09-03"
     }
-  ],
-  "review_independence": null
+  ]
 }
