@@ -67,6 +67,7 @@ import {
   consumeGrantTarget,
   ledgerFileFor,
   pendingFileFor,
+  PR_NUMBER_MAX,
   readGrants,
   STATE_FILE,
   type GitOp,
@@ -626,15 +627,26 @@ export function commandOp(command: string): GitOp | null {
  * unnamed target never consumes a grant minted for a named one.
  */
 export function mergeTargetOf(command: string): number | null {
-  const gh = /\bgh\s+pr\s+merge\s+(?:-{1,2}\S+\s+)*?(\d{1,7})\b/i.exec(command);
+  // Ten digits lexically, `PR_NUMBER_MAX` numerically — the API contract's own
+  // bound, imported from the mint site so the two cannot drift. The old
+  // `\d{1,7}` put the `\b` after digit seven, so an eight-digit target did not
+  // resolve to an out-of-range value: it resolved to NOTHING, and the gate fell
+  // back to the clock-bound path with no diagnostic.
+  const gh = /\bgh\s+pr\s+merge\s+(?:-{1,2}\S+\s+)*?(\d{1,10})\b/i.exec(command);
   if (gh) {
-    return Number.parseInt(gh[1] as string, 10);
+    return _boundedTarget(gh[1] as string);
   }
   // The same operation by its REST spelling. `commandOp` already classifies
   // `gh api -X PUT repos/o/r/pulls/1499/merge` as `pr-merge`, so a reader that
   // missed it here would silently fall back to the clock.
-  const api = /\/pulls\/(\d{1,7})\/merge\b/i.exec(command);
-  return api ? Number.parseInt(api[1] as string, 10) : null;
+  const api = /\/pulls\/(\d{1,10})\/merge\b/i.exec(command);
+  return api ? _boundedTarget(api[1] as string) : null;
+}
+
+/** A target only counts inside the API's own range; anything else is no target. */
+function _boundedTarget(digits: string): number | null {
+  const n = Number.parseInt(digits, 10);
+  return Number.isSafeInteger(n) && n > 0 && n <= PR_NUMBER_MAX ? n : null;
 }
 
 /**
