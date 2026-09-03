@@ -122,7 +122,7 @@ Do NOT use when:
   components in the same surface.
 - **Anti-AI-slop catalog + linter.** Pull
   [`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
-  before the polish step (Visual V1–V7, Layout L1–L8 are the React-component
+  before the polish step (Visual V1–V8, Layout L1–L10 are the React-component
   slop tells); the objective quality floors (WCAG contrast, focus-visible,
   reduced-motion) are validated via `accessibility-auditor`'s checklist —
   cite its verdict rather than eyeballing.
