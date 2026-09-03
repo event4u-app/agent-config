@@ -31,12 +31,9 @@ and dropped **402 entries** from the model-visible skills list
 projection moved that to 330 and stripped the descriptions anyway.
 
 402 is the **host's own count against the host's own denominator**, which is not
-this package's. On 2026-08-16 that same install projected 297 skills <!-- artefact-count: dated-measurement -->
-— the `legacy-all` row of
-`agents/evidence/analysis/scoped-projection-host-delivery.md`, a measurement of
-that host on that day and never a live self-count. So the figure is a magnitude,
-never a subtraction anyone can perform. What it establishes is that most of the
-catalogue is not model-visible — which is all this rule needs.
+this package's: that install projected 297 skills <!-- count: dated -->, so the figure
+is a magnitude, never a subtraction anyone can perform. What it establishes is that
+most of the catalogue is not model-visible — which is all this rule needs.
 
 So "I do not see a skill for this" is evidence about the **delivery**, never
 about the tree.

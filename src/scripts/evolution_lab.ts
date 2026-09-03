@@ -785,7 +785,18 @@ function verbRun(argv: readonly string[]): number {
     // one thing and scored another. Every guard already in this verb fires
     // before the run starts and never looks again.
     const ordered = [...files].sort(byteCompare);
-    const readRecord = (f: string): string => fs.readFileSync(f, 'utf-8');
+    const readRecord = (f: string): string => {
+        try {
+            return fs.readFileSync(f, 'utf-8');
+        } catch {
+            // Unreadable is a STATE of the record set here, not a reason to
+            // fail: the loop below already reports the specific file with its
+            // own message, and a freeze that pre-empted it would replace a
+            // precise diagnostic with a vaguer one. The marker still moves the
+            // digest, so a record that appears or vanishes mid-run is drift.
+            return '\u0000<unreadable>';
+        }
+    };
     let frozenSpec;
     let frozenDigest: string;
     try {

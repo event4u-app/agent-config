@@ -103,7 +103,7 @@ export function rule_surfaces(root: string = ROOT): string[] {
  * reviewer can falsify: the line must name the date or the artefact the figure
  * was measured against.
  */
-export const DATED_MEASUREMENT_MARKER = '<!-- artefact-count: dated-measurement -->';
+export const DATED_MEASUREMENT_MARKER = '<!-- count: dated -->';
 
 /** kind → canonical-count resolver. "governed rules" is the canonical total
  * phrasing for rules; bare "N rules" is NOT matched (too many legitimate

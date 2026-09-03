@@ -225,10 +225,24 @@ does not exist.
 > The gate's charter already excluded dated snapshots but could only express it
 > by leaving a whole FILE out, which is useless when one paragraph of live rule
 > prose carries one dated figure. So the exclusion became per line:
-> `<!-- artefact-count: dated-measurement -->`, which silences that line only and
-> keeps it out of the cross-surface inconsistency net as well. The rule's prose
-> now names the date and the artefact, so the exemption is falsifiable rather
-> than a mute button.
+> `<!-- count: dated -->`, which silences that line only and keeps it out of the
+> cross-surface inconsistency net as well. The paragraph directly above the marked
+> line already names the date and the evidence artefact, so the exemption is
+> falsifiable rather than a mute button — and the marker is terse for a measured
+> reason, not a stylistic one (see the payload note below).
+>
+> **A second regression this phase caught, on the payload budget.** `main`
+> measures **exactly** 138,273 tokens of per-spawn preamble against a grace
+> ceiling of 138,273 — zero headroom, and that ceiling may never move up by its
+> own contract. The first version of these two rule edits was +48, which reds
+> `check_preamble_payload_budget`. Verified pre-existing-vs-mine by restoring
+> both `dist/agent-src/rules/` files to `origin/main` and re-measuring: base
+> 138,273 exactly. The edits were then tightened until the net was negative —
+> the citation prose was dropped because the paragraph above it already carries
+> the date and the artefact path, and the marker was shortened from
+> `artefact-count: dated-measurement` to `count: dated`. Final: **138,272**,
+> one token below the ceiling and one below `main`. A rule edit in this tree
+> now has to pay for itself.
 >
 > **`src/rules/**` is deliberately NOT in the anchor-coverage pass**, and the
 > reason is mechanical: satisfying it would make `update_counts` a writer into

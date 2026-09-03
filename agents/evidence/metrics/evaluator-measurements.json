@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-26T10:47:19.954Z",
-    "git_sha": "1c8321f0c19fc6eff9b953c41567a46f75cfbc52",
+    "recorded_at": "2026-09-03T04:19:34.745Z",
+    "git_sha": "982494d948823631e8604a5fe807ebcd14d022f3",
     "run_url": null,
-    "conditions": "Refresh for the 108 -> 109 cli_help_command_count move: the stubs:due verb (road-to-inbox-harvest-2026-08-f-owner-decision-queue step 2.1) registers in the same PR that adds the surface. Re-measured via the pinned method (registry enumeration) on this tree: 109. Every other metric is carried forward unchanged from the 2026-08-26 record — only the CLI count moved in this change.",
+    "conditions": "Refresh for the 109 -> 110 cli_help_command_count move: the hooks:effect verb (road-to-wired-instruments Phase 1.1 -- the CLI entry for hook_effect_doctor) registers in the same PR that adds the surface. Re-measured via the pinned method (registry enumeration) on this tree: 110. mcp_public_tool_count is carried forward unchanged at 20 -- this change adds no MCP tool; only the CLI count moved.",
     "measurements": {
-        "cli_help_command_count": 109,
+        "cli_help_command_count": 110,
         "mcp_public_tool_count": 20
     }
 }

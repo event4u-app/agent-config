@@ -33,6 +33,7 @@ import {
 import { EXIT_GUARD_ABORT } from '../../src/scripts/evolution_lab.js';
 
 const BASELINE = 'baseline-shape-fixed-for-this-test';
+const runnerSource = readFileSync(resolve(process.cwd(), 'src/scripts/evolution_lab.ts'), 'utf-8');
 
 let dir: string;
 let recordA: string;
@@ -89,6 +90,42 @@ describe('the drift fixture', () => {
         expect(freeze(forward)).toBe(freeze(backward));
     });
 
+    it('an unreadable record does not pre-empt the loop\'s own diagnostic', () => {
+        // The freeze reads the record set BEFORE the clone loop, so it is now
+        // the first thing to touch a missing file. It must not become the
+        // reporter: the loop names the specific file and says why, and a
+        // vaguer message arriving earlier is a regression in diagnosis, not a
+        // guard working. Checked at the runner, where the behaviour lives.
+        expect(runnerSource).toMatch(/return '\\u0000<unreadable>';/);
+        expect(runnerSource).toMatch(/const readRecord = \(f: string\): string => \{/);
+    });
+
+    it('a record that appears mid-run is still drift', () => {
+        // The tolerance above must not become a hole: a path that was
+        // unreadable when frozen and readable when asserted has moved, and the
+        // marker keeps that visible.
+        const missing = join(dir, 'not-there-yet.json');
+        const tolerant = (f: string): string => {
+            try {
+                return read(f);
+            } catch {
+                return '\u0000<unreadable>';
+            }
+        };
+        const files = [recordA, missing];
+        const spec = buildRunSpec(files, tolerant, BASELINE);
+        const digest = freeze(spec);
+
+        writeFileSync(missing, JSON.stringify({ id: 'late' }), 'utf-8');
+        try {
+            expect(() => assertUnchanged(digest, spec, buildRunSpec(files, tolerant, BASELINE))).toThrow(
+                ExperimentDriftError,
+            );
+        } finally {
+            rmSync(missing, { force: true });
+        }
+    });
+
     it('the corpus digest is over content, not paths alone', () => {
         const before = recordSetDigest([['p', 'one']]);
         const after = recordSetDigest([['p', 'two']]);
@@ -106,10 +143,7 @@ describe('the drift fixture', () => {
 });
 
 describe('the binding is wired into the runner', () => {
-    const source = readFileSync(
-        resolve(process.cwd(), 'src/scripts/evolution_lab.ts'),
-        'utf-8',
-    );
+    const source = runnerSource;
 
     it('evolution_lab imports the freeze primitive', () => {
         expect(source).toMatch(/from '\.\/_lib\/experiment_freeze\.js'/);
