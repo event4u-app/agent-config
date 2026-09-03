@@ -63,10 +63,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
 import { atomic_write_json } from "./state_io.js";
 import {
+  consumeGrantTarget,
   ledgerFileFor,
   pendingFileFor,
+  readGrants,
   STATE_FILE,
   type GitOp,
+  type MergeGrant,
 } from "../git_authorization_hook.js";
 
 const EXIT_ALLOW = 0;
@@ -504,6 +507,55 @@ export function commandOp(command: string): GitOp | null {
 }
 
 /**
+ * The pull request a merge command acts on, or `null` when the command does not
+ * say.
+ *
+ * `gh pr merge` with no number merges whatever the current branch's PR is — the
+ * command text identifies no object, so no grant can match it and the
+ * clock-bound path applies unchanged. That is the fail-closed direction: an
+ * unnamed target never consumes a grant minted for a named one.
+ */
+export function mergeTargetOf(command: string): number | null {
+  const gh = /\bgh\s+pr\s+merge\s+(?:-{1,2}\S+\s+)*?(\d{1,7})\b/i.exec(command);
+  if (gh) {
+    return Number.parseInt(gh[1] as string, 10);
+  }
+  // The same operation by its REST spelling. `commandOp` already classifies
+  // `gh api -X PUT repos/o/r/pulls/1499/merge` as `pr-merge`, so a reader that
+  // missed it here would silently fall back to the clock.
+  const api = /\/pulls\/(\d{1,7})\/merge\b/i.exec(command);
+  return api ? Number.parseInt(api[1] as string, 10) : null;
+}
+
+/**
+ * Does a standing grant cover this exact merge?
+ *
+ * Three conditions, all necessary: the grant is for this op, the command named
+ * a target, and that target sits in the grant's frozen set unspent.
+ *
+ * No clock is consulted here, and that is the whole of ADR-252. `authorized`
+ * answers "did the user name this operation recently"; a grant answers "did the
+ * user name this operation AND this pull request". The second question does not
+ * decay with time, because the object it names cannot drift into a different
+ * object — a force-push changes the SHA, but the grant is spent on first use, so
+ * a merge that already happened can never be replayed against a moved head.
+ */
+export function grantCovers(
+  grants: MergeGrant[],
+  op: GitOp,
+  target: number | null,
+): MergeGrant | null {
+  if (op !== "pr-merge" || target === null) {
+    return null;
+  }
+  return (
+    grants.find(
+      (g) => g.op === "pr-merge" && g.targets.includes(target) && !g.consumed.includes(target),
+    ) ?? null
+  );
+}
+
+/**
  * A ledger older than this is not "this turn" under any reading.
  *
  * **Widening this constant for a long run is forbidden practice.** On
@@ -558,7 +610,15 @@ function _loadLedger(
   consumer_root: string,
   session_id: string,
   now: number,
-): { authorized: Set<GitOp>; present: boolean } {
+): { authorized: Set<GitOp>; present: boolean; grants: MergeGrant[] } {
+  // Grants are read on their OWN path, and the separation is load-bearing.
+  // `_readLedgerFile` below discards the entire ledger once `detected_at` is
+  // older than `LEDGER_MAX_AGE_MS`, so folding grants into its return value
+  // would let the clock silently kill them too — the change would ship, look
+  // correct, and do nothing after thirty minutes, with no test going red.
+  // `readGrants` performs the session check and no age check, which is exactly
+  // the contract: object identity, not recency (ADR-252).
+  const grants = readGrants(consumer_root, session_id);
   // This session's own ledger first; the flat legacy file only as a fallback,
   // so a ledger written by an older build still counts. Reading the flat file
   // FIRST was the defect: any concurrent session in the repo overwrites it, and
@@ -570,10 +630,10 @@ function _loadLedger(
   for (const rel of candidates) {
     const found = _readLedgerFile(path.join(consumer_root, rel), session_id, now);
     if (found !== null) {
-      return found;
+      return { ...found, grants };
     }
   }
-  return { authorized: new Set<GitOp>(), present: false };
+  return { authorized: new Set<GitOp>(), present: false, grants };
 }
 
 /**
@@ -622,11 +682,20 @@ export interface Decision {
    * `git_authorization_hook.PENDING_FILE` for why that record exists at all.
    */
   blockedOp?: GitOp;
+  /**
+   * The grant target this decision spent, when a standing grant is what allowed
+   * it.
+   *
+   * `decide` stays pure; `run` turns this into the ledger write that marks the
+   * target used. Single use is the property that keeps a grant from being a
+   * standing licence: the user authorized merging PR #1499, once.
+   */
+  consumedTarget?: number;
 }
 
 export function decide(
   command: string | null,
-  ledger: { authorized: Set<GitOp>; present: boolean },
+  ledger: { authorized: Set<GitOp>; present: boolean; grants?: MergeGrant[] },
 ): Decision {
   if (command === null) {
     return { exit: EXIT_ALLOW, stdout: "", stderr: "" };
@@ -634,6 +703,18 @@ export function decide(
   const op = commandOp(command);
   if (op === null || ledger.authorized.has(op)) {
     return { exit: EXIT_ALLOW, stdout: "", stderr: "" };
+  }
+
+  // A standing grant is the SECOND way an operation can be authorized, and it
+  // is strictly narrower than the first rather than an escape from it. Only
+  // `pr-merge` can hold one, the command must name its pull request, and that
+  // number must sit unspent in a set the user's own sentence froze. An unnamed
+  // target matches nothing and a spent target matches nothing, so every path
+  // that is not exactly "the user named this PR and it has not been merged yet"
+  // falls through to the clock-bound decision below unchanged (ADR-252).
+  const target = mergeTargetOf(command);
+  if (grantCovers(ledger.grants ?? [], op, target) && target !== null) {
+    return { exit: EXIT_ALLOW, stdout: "", stderr: "", consumedTarget: target };
   }
 
   const shown = command.length > 120 ? `${command.slice(0, 117)}…` : command;
@@ -679,6 +760,13 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     extractCommand(envelope),
     _loadLedger(options.consumer_root, session_id, Date.now()),
   );
+  if (decision.consumedTarget !== undefined) {
+    // Spend the target at the moment the merge is actually let through, never
+    // when the grant was minted. A grant the run never reached stays whole, and
+    // a pull request that merged can never be replayed — which is what makes a
+    // force-push back to an already-merged head harmless here.
+    consumeGrantTarget(options.consumer_root, session_id, decision.consumedTarget);
+  }
   if (decision.blockedOp) {
     // Record WHAT was refused, so the user's answer to the question this
     // refusal just told the agent to ask can authorize that one operation.

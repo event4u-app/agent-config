@@ -25,11 +25,27 @@
  *   { "session_id": str, "detected_at": iso8601, "authorized": [op, …],
  *     "evidence": { op: "phrase" }, "prompt_chars": int }
  *
- * Each user turn REPLACES the ledger — that is the point. `commit-policy`'s
+ * Each user turn REPLACES `authorized` — that is the point. `commit-policy`'s
  * "one-shot authorization is not a standing license" says an authorization is
  * spent on the operation it named; carrying it forward is the exact inference
  * the rule forbids, so a new prompt with no authorization phrase yields an
- * empty ledger rather than an inherited one.
+ * empty `authorized` list rather than an inherited one.
+ *
+ * **`grants` are the one exception, and they are narrower, not broader**
+ * (ADR-252, 2026-09-03). A bare operation name says *the user wants a merge*;
+ * a grant says *the user wants THESE pull requests merged*, with the numbers
+ * frozen from the user's own sentence at mint time and each spent on first use.
+ * Because the objects are fixed, elapsed time is no longer what protects the
+ * user — target identity is — so a grant survives later turns and carries no
+ * clock, while everything without frozen objects keeps both the replacement
+ * rule above and the guard's 30-minute freshness bound.
+ *
+ * The measured defect this fixes: a neutral follow-up ("weiter", "fix the CI")
+ * replaced the whole ledger and silently erased a merge authorization the user
+ * had given two turns earlier, so a multi-PR run the user explicitly ordered
+ * became unexecutable without re-typing the order every 30 minutes. Two
+ * hand-widenings of the guard's clock (2026-08-21, 2026-08-30) are what that
+ * pressure produced instead.
  *
  * Never blocks. Exit 0 always. The blocking half lives in the pre_tool_use
  * concern, which is where the operation is actually observable.
@@ -358,12 +374,149 @@ function _commandLines(fence: string): string[] {
     .filter((l) => /^(git|gh|npm|pnpm|yarn|task)\b/.test(l));
 }
 
+/**
+ * A standing, target-bound, single-use capability minted from the user's own
+ * words — the ADR-252 shape.
+ *
+ * A `GitOp` in `authorized` says *the user named this operation on this turn*
+ * and is governed by the guard's freshness clock. A grant says something
+ * strictly narrower: *the user named this operation AND the exact objects it
+ * may act on*. Because the objects are frozen at grant time, elapsed time stops
+ * being the thing that protects the user — target identity is — so a grant
+ * carries no clock.
+ *
+ * The narrowing is what buys the clock exemption, and it is why only
+ * enumerable operations can hold one. `npm publish` names a version, not the
+ * bytes that will be published, so no prompt can freeze its effect; it holds no
+ * grants and keeps the clock. See ADR-252 § Per-operation verdict.
+ */
+export type MergeGrant = {
+  /** Replay-resistant id — session slug, mint time, and the frozen target set. */
+  id: string;
+  /** Only `pr-merge` mints grants today. The field exists so the reader of a
+   *  stored ledger never has to infer the op from the grant's shape. */
+  op: GitOp;
+  /** PR numbers named by the human, frozen at mint time. Never a wildcard: a
+   *  cardinality word with no numbers mints nothing (ADR-252 § What "all" does
+   *  not buy). */
+  targets: number[];
+  /** Per-target single-use state. A merged target is spent and cannot be
+   *  replayed, which is what makes a force-push back to a merged SHA harmless. */
+  consumed: number[];
+  granted_at: string;
+  /** The literal human phrase, for audit. Never the enforcement key. */
+  evidence: string;
+};
+
 export interface Ledger extends JsonObject {
   session_id: string;
   detected_at: string;
   authorized: GitOp[];
   evidence: { [op: string]: string };
   prompt_chars: number;
+  /**
+   * Standing grants, carried across the session's human turns.
+   *
+   * Optional so a ledger written by an older build still parses. Absent reads
+   * as "no grants", which is the pre-ADR-252 behaviour exactly.
+   */
+  grants?: MergeGrant[];
+}
+
+/**
+ * PR numbers the prompt names, as merge targets.
+ *
+ * Deliberately narrow. It matches a `#`-prefixed or `PR `-prefixed integer and
+ * nothing else, so a bare number in prose ("merge the 3 branches") freezes no
+ * target and mints no grant. Over-matching here would hand a clockless
+ * capability to a sentence that never identified an object, which is the exact
+ * conflation of lexical and object specificity both council seats rejected.
+ */
+export function extractMergeTargets(prompt: string): number[] {
+  const out = new Set<number>();
+  const re = /(?:#|\bpr[- ]?|\bpull[- ]request\s+#?)(\d{1,7})\b/giu;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(prompt)) !== null) {
+    const n = Number.parseInt(m[1] as string, 10);
+    if (Number.isSafeInteger(n) && n > 0) {
+      out.add(n);
+    }
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+/**
+ * A human turn that withdraws standing merge authority.
+ *
+ * Revocation must be cheaper to express than authorization, so this matches a
+ * bare stop word on its own as well as an explicit "don't merge". It is
+ * deliberately over-inclusive in the safe direction: a false revocation costs
+ * one prompt, a missed revocation costs an unwanted merge.
+ */
+const REVOKE_RE =
+  /\b(stop|stopp|halt|abbrechen|abbruch|cancel|revoke|widerruf(en)?|zur(ü|ue)ck(nehmen|ziehen)|hold\s+(everything|on|the\s+merge)|warte|wait)\b|(?:\b(nicht|kein(e|en)?|no|not|dont|don't|never|niemals|nie)\b[^.!?\n]{0,30}\b(merg(e|en|ing)|zusammenf(ü|ue)hren)\b)/iu;
+
+/** Does this human turn withdraw standing merge grants? */
+export function isRevocation(prompt: string): boolean {
+  return REVOKE_RE.test(prompt);
+}
+
+/** Mint a grant id that a replayed ledger cannot collide with. */
+function _grantId(session_id: string, at: string, targets: number[]): string {
+  return `${sessionSlug(session_id) || "nosession"}:${at}:${targets.join(",")}`;
+}
+
+/**
+ * Fold this turn's authorization into the grants the session already holds.
+ *
+ * Three rules, and the order is the contract:
+ *   1. A revocation drops every standing grant. It wins over anything else in
+ *      the same prompt — "merge #1 but stop if it conflicts" revokes.
+ *   2. An explicit `pr-merge` naming PR numbers mints one grant over those
+ *      numbers.
+ *   3. Everything else carries the existing grants forward untouched. This is
+ *      the clause that fixes the measured defect: before ADR-252 a neutral
+ *      "weiter" replaced the whole ledger and silently erased authority the
+ *      user had given two turns earlier.
+ *
+ * Consumption is NOT done here — the guard consumes a target when it actually
+ * lets the merge through, so a grant that was never acted on stays whole.
+ */
+export function foldGrants(
+  prior: MergeGrant[],
+  prompt: string,
+  authorized: GitOp[],
+  session_id: string,
+  now: Date,
+): MergeGrant[] {
+  if (isRevocation(prompt)) {
+    return [];
+  }
+  const carried = prior.filter((g) => g.consumed.length < g.targets.length);
+  if (!authorized.includes("pr-merge")) {
+    return carried;
+  }
+  const targets = extractMergeTargets(prompt);
+  if (targets.length === 0) {
+    return carried;
+  }
+  const at = now.toISOString();
+  const already = new Set(carried.flatMap((g) => g.targets));
+  const fresh = targets.filter((t) => !already.has(t));
+  if (fresh.length === 0) {
+    return carried;
+  }
+  return [
+    ...carried,
+    {
+      id: _grantId(session_id, at, fresh),
+      op: "pr-merge",
+      targets: fresh,
+      consumed: [],
+      granted_at: at,
+      evidence: prompt.trim().slice(0, 120),
+    },
+  ];
 }
 
 /** Classify which ops a prompt authorizes. Exported for direct testing. */
@@ -416,6 +569,88 @@ export function classifyAuthorization(prompt: string): {
   }
 
   return { authorized: [...authorized], evidence };
+}
+
+/** Grants the session already holds, or `[]` for any ledger that has none. */
+export function readGrants(consumer_root: string, session_id: string): MergeGrant[] {
+  try {
+    const raw = fs.readFileSync(path.join(consumer_root, ledgerFileFor(session_id)), "utf8");
+    const decoded = JSON.parse(raw) as unknown;
+    if (!_isObject(decoded) || !Array.isArray(decoded["grants"])) {
+      return [];
+    }
+    // A grant recorded against a different session is another conversation's
+    // consent, exactly as the ledger's own session check treats `authorized`.
+    const owner = typeof decoded["session_id"] === "string" ? decoded["session_id"] : "";
+    if (session_id && owner && owner !== session_id) {
+      return [];
+    }
+    return (decoded["grants"] as unknown[]).flatMap((g) => {
+      if (!_isObject(g)) return [];
+      const op = g["op"];
+      if (typeof op !== "string" || !(ALL_OPS as readonly string[]).includes(op)) return [];
+      const targets = Array.isArray(g["targets"]) ? g["targets"] : [];
+      const consumed = Array.isArray(g["consumed"]) ? g["consumed"] : [];
+      return [
+        {
+          id: String(g["id"] ?? ""),
+          op: op as GitOp,
+          targets: targets.filter((t): t is number => typeof t === "number"),
+          consumed: consumed.filter((t): t is number => typeof t === "number"),
+          granted_at: String(g["granted_at"] ?? ""),
+          evidence: String(g["evidence"] ?? ""),
+        },
+      ];
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Mark one target spent, in place, on the session's ledger.
+ *
+ * Called by the guard at the moment it lets a merge through — not by the agent,
+ * and not at mint time. A grant the run never reached stays whole, and a target
+ * that merged can never be replayed, which is what makes a force-push back to
+ * an already-merged SHA harmless.
+ */
+export function consumeGrantTarget(
+  consumer_root: string,
+  session_id: string,
+  target: number,
+): void {
+  const file = path.join(consumer_root, ledgerFileFor(session_id));
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    return;
+  }
+  if (!_isObject(decoded) || !Array.isArray(decoded["grants"])) {
+    return;
+  }
+  let touched = false;
+  for (const g of decoded["grants"] as unknown[]) {
+    if (!_isObject(g) || !Array.isArray(g["targets"]) || !Array.isArray(g["consumed"])) {
+      continue;
+    }
+    const targets = g["targets"] as JsonValue[];
+    const consumed = g["consumed"] as JsonValue[];
+    if (targets.includes(target) && !consumed.includes(target)) {
+      consumed.push(target);
+      touched = true;
+    }
+  }
+  if (touched) {
+    try {
+      atomic_write_json(file, decoded as JsonObject);
+    } catch {
+      /* Observability only. A failed write leaves the target unspent, which
+         re-allows one merge of a PR the user did authorize by name — it fails
+         toward the user's stated intent, never toward an unauthorized target. */
+    }
+  }
 }
 
 /**
@@ -525,12 +760,24 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
       `"${prompt.trim().slice(0, 40)}"`;
   }
 
+  const now = new Date();
   const ledger: Ledger = {
     session_id: typeof envelope["session_id"] === "string" ? envelope["session_id"] : "",
-    detected_at: new Date().toISOString(),
+    detected_at: now.toISOString(),
     authorized,
     evidence,
     prompt_chars: prompt.length,
+    // Grants survive this write; `authorized` does not. That asymmetry IS the
+    // decision. A bare operation name stays one-shot exactly as `commit-policy`
+    // requires, and only an authorization that also froze its objects earns a
+    // life longer than the turn. See ADR-252.
+    grants: foldGrants(
+      readGrants(options.consumer_root, session),
+      prompt,
+      authorized,
+      session,
+      now,
+    ),
   };
 
   try {
