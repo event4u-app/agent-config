@@ -1,6 +1,11 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-02
+keep-beta-until: 2026-12-02
+beta-extension-reason: Window extended on 2026-09-03 without a substantive review of the
+  contract's content. The prior window lapsed on 2026-09-02 and, being outside the frozen
+  2026-08-25 lapsed-beta baseline, turned every open PR red. The extension is an explicit
+  deferral of the review, not its outcome; it is recorded here so the next reader can tell a
+  reviewed deadline from a deferred one.
 ---
 
 # Capability packs
