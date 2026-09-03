@@ -1,3 +1,4 @@
+<!-- evidence-type: analysis -->
 # Declared coverage truth — census and execution evidence
 
 <!-- generated-by: hand, road-to-declared-coverage-truth · verified against 7211a4274 -->
