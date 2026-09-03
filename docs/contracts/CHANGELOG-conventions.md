@@ -126,7 +126,7 @@ marker.
 > that instruction is the authority for this change.
 >
 > The arithmetic behind why it had to go: every release of this package touches
-> `src/rules/` or `src/scripts/schemas/`, so **Behaviour changes** is always
+> `src/rules/` or `src/scripts/schemas/`, so `Behaviour changes` is always
 > substantiated, so the generator always wrote a line the gate always refused.
 > A release halting *by construction* is not a cadence, it is a failure with a
 > schedule. Two intermediate positions were tried and neither removed it — the
