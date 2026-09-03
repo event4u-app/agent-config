@@ -34,6 +34,12 @@ import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+    MissingBranchConvergencePolicy,
+    UnresolvableTargetSha,
+    loadPolicyAtSha,
+    type ShaFileReader,
+} from './_lib/branch_convergence.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const NETWORK_TIMEOUT_MS = 8_000;
@@ -288,41 +294,462 @@ export function renderConflictReport(plan: Plan): string {
     return out.join('');
 }
 
-/** Resolve the base this branch will actually merge into. */
-export function resolveBase(repo: string, override: string | null): { base: string | null; how: string } {
-    if (override !== null && override.trim() !== '') {
-        return { base: override.trim(), how: 'given by --base' };
+/**
+ * Why the base is a SET now, and what each entry means.
+ *
+ * The old resolution was an EXCLUSIVE chain — `--base`, then the open PR's
+ * base, then `origin/HEAD` — so a PR targeting a release line or a stacked
+ * parent was kept current with its target and arbitrarily stale against the
+ * default branch. Whether the default belongs in the set is a policy question
+ * decided per target and read from the TARGET's own commit; see
+ * `_lib/branch_convergence.ts` for the decision and the trust boundary.
+ */
+export type BaseReason =
+    | 'pull-request-target'
+    | 'explicit-base-override'
+    | 'repository-default-branch'
+    | 'branch-convergence-policy:include-default';
+
+export interface BaseEntry {
+    readonly ref: string;
+    readonly reason: BaseReason;
+}
+
+/**
+ * One stable structured type for every outcome.
+ *
+ * Deliberately NOT "an array normally, an object when the policy is off": a
+ * shape that varies by outcome couples every consumer to ad-hoc type
+ * discrimination, which the council flagged as a real architectural objection.
+ */
+export interface ResolveBaseResult {
+    readonly entries: readonly BaseEntry[];
+    readonly policyStatus: 'applied' | 'not-required' | 'disabled';
+}
+
+/** Neither an open PR nor a default branch answered. Distinct from a missing policy. */
+export class UnresolvableBase extends Error {
+    constructor(detail: string) {
+        super(`unresolvable — ${detail}`);
+        this.name = 'UnresolvableBase';
     }
-    const branch = sh('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo).out.trim();
-    if (branch !== '' && branch !== 'HEAD') {
-        // The forge knows the REAL base, which matters for a stacked or
-        // release-line PR: measuring against the repo default would compare
-        // against a branch this PR never merges into.
-        const pr = sh('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'baseRefName', '--limit', '1'], repo);
-        if (pr.ok) {
+}
+
+/**
+ * The git questions base resolution asks, as data.
+ *
+ * Injected rather than called inline so the twelve council fixtures can be
+ * exercised without a network, a forge, or a real release line — this
+ * repository has none, so a live fixture could only ever cover the
+ * default-target path.
+ */
+export interface BaseDeps {
+    readonly currentBranch: () => string;
+    /** The open PR's `baseRefName`, bare (`release/1.x`), or null. */
+    readonly prBase: (branch: string) => string | null;
+    /** The default branch as a remote-tracking ref (`origin/main`), or null. */
+    readonly defaultBranch: () => string | null;
+    /** The SHA the server reports for a ref right now, or null. */
+    readonly remoteSha: (ref: string) => string | null;
+    readonly readAtSha: ShaFileReader;
+}
+
+export function makeGitDeps(repo: string): BaseDeps {
+    return {
+        currentBranch: (): string => sh('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo).out.trim(),
+        prBase: (branch: string): string | null => {
+            if (branch === '' || branch === 'HEAD') return null;
+            // The forge knows the REAL base, which matters for a stacked or
+            // release-line PR: measuring against the repo default would compare
+            // against a branch this PR never merges into.
+            const pr = sh('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'baseRefName', '--limit', '1'], repo);
+            if (!pr.ok) return null;
             try {
                 const rows = JSON.parse(pr.out || '[]') as Array<{ baseRefName?: string }>;
                 const b = rows[0]?.baseRefName;
-                if (typeof b === 'string' && b !== '') {
-                    return { base: `origin/${b}`, how: `the open PR base (${b})` };
-                }
+                return typeof b === 'string' && b !== '' ? b : null;
             } catch {
-                /* fall through to the default-branch probe */
+                return null;
             }
-        }
-    }
-    const head = sh('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], repo);
-    if (head.ok && head.out.trim() !== '') {
-        return { base: head.out.trim(), how: 'the repo default branch' };
-    }
-    return { base: null, how: 'unresolvable — no open PR and no origin/HEAD' };
+        },
+        // ASK THE SERVER first, and only then fall back to the local ref.
+        //
+        // The local-only form was this module's whole answer until the default
+        // branch became load-bearing here: the policy's `include` needs a ref to
+        // add, and the target-is-default identity check needs one to compare
+        // against. Measured in this worktree on 2026-09-03 — `refs/remotes/
+        // origin/HEAD` is not set, so the local form returned null and
+        // `sync_pr_branch` reported "no open PR and no origin/HEAD" while
+        // `check_branch_freshness`, standing three lines away in the same
+        // sequence, resolved `origin/main` from the server symref and passed.
+        // Two resolvers disagreeing about the base is the defect this roadmap
+        // exists to close, one layer down. Mirrors
+        // `check_branch_freshness.ts:223` `serverDefaultBase`.
+        defaultBranch: (): string | null => {
+            const remote = sh('git', ['ls-remote', '--symref', 'origin', 'HEAD'], repo);
+            const fromServer = remote.ok ? parseSymrefDefault(remote.out) : null;
+            if (fromServer !== null) return fromServer;
+            const head = sh('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], repo);
+            return head.ok && head.out.trim() !== '' ? head.out.trim() : null;
+        },
+        remoteSha: (ref: string): string | null => {
+            const bare = ref.replace(/^origin\//, '');
+            const out = sh('git', ['ls-remote', '--heads', 'origin', bare], repo);
+            if (!out.ok) return null;
+            const sha = out.out.trim().split(/\s+/)[0];
+            return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
+        },
+        // `git show <sha>:<path>` and nothing else. There is no filesystem read
+        // here by construction: a policy the PR head carries must not be able to
+        // change the criteria the PR is judged against.
+        readAtSha: (sha: string, rel: string): string | null => {
+            const out = sh('git', ['show', `${sha}:${rel}`], repo);
+            return out.ok ? out.out : null;
+        },
+    };
 }
 
-export function sync(repo: string, baseOverride: string | null, dryRun: boolean): Plan {
-    const { base, how } = resolveBase(repo, baseOverride);
-    if (base === null) {
-        return { exit: 1, message: `cannot resolve a base to update against — ${how}.`, generated: [], remeasured: [], authored: [], scanned: 0 };
+/**
+ * The default branch the SERVER reports, from `git ls-remote --symref origin HEAD`.
+ *
+ * Pure and exported so the parse is testable without a network round trip, and
+ * because it closes a measured defect rather than a hypothetical one. Until
+ * 2026-09-03 this module read the default branch from `refs/remotes/origin/HEAD`
+ * alone — a clone-time ref that is simply absent in some checkouts. Measured in
+ * a worktree of this repository the same day: the local form returned null, so
+ * `sync_pr_branch` refused with "no open PR and no origin/HEAD" while
+ * `check_branch_freshness`, three lines later in the same documented sequence,
+ * resolved `origin/main` from the server symref and passed. Two resolvers
+ * disagreeing about the base is this roadmap's own subject one layer down, and
+ * the default branch stopped being cosmetic here the moment the policy's
+ * `include` needed a ref to add. Mirrors `check_branch_freshness.ts:223`.
+ */
+export function parseSymrefDefault(lsRemoteOut: string): string | null {
+    for (const line of lsRemoteOut.split('\n')) {
+        const t = line.trim();
+        if (!t.startsWith('ref:')) continue;
+        const name = t.slice('ref:'.length).trim().split(/\s+/)[0] ?? '';
+        if (!name.startsWith('refs/heads/')) continue;
+        const short = name.slice('refs/heads/'.length).trim();
+        if (short !== '') return `origin/${short}`;
     }
+    return null;
+}
+
+/** Strip the remote prefix so a policy key is the branch name a human writes. */
+function bareName(ref: string): string {
+    return ref.replace(/^origin\//, '');
+}
+
+/**
+ * Resolve the base SET this branch has to be current with.
+ *
+ * Throws rather than returning a partial set: `MissingBranchConvergencePolicy`
+ * when a non-default target names no entry, `UnresolvableTargetSha` when the
+ * target names no commit, `UnresolvableBase` when nothing answered at all.
+ * Neither inclusion nor exclusion is universally safe, so an absent entry must
+ * not manufacture repository intent.
+ */
+export function resolveBase(repo: string, override: string | null, deps: BaseDeps = makeGitDeps(repo)): ResolveBaseResult {
+    const defaultRef = deps.defaultBranch();
+
+    let target: BaseEntry;
+    if (override !== null && override.trim() !== '') {
+        target = { ref: override.trim(), reason: 'explicit-base-override' };
+    } else {
+        const pr = deps.prBase(deps.currentBranch());
+        if (pr !== null) {
+            target = { ref: `origin/${pr}`, reason: 'pull-request-target' };
+        } else if (defaultRef !== null) {
+            target = { ref: defaultRef, reason: 'repository-default-branch' };
+        } else {
+            throw new UnresolvableBase('no open PR and no origin/HEAD');
+        }
+    }
+
+    // A PR targeting the default branch needs no entry — identity by ref name,
+    // or by the SHA both names resolve to.
+    const sameName = defaultRef !== null && bareName(target.ref) === bareName(defaultRef);
+    const targetSha = deps.remoteSha(target.ref);
+    const defaultSha = defaultRef === null ? null : deps.remoteSha(defaultRef);
+    const sameSha = targetSha !== null && defaultSha !== null && targetSha === defaultSha;
+    if (sameName || sameSha) {
+        return { entries: [target], policyStatus: 'not-required' };
+    }
+
+    if (targetSha === null) {
+        throw new UnresolvableTargetSha(bareName(target.ref));
+    }
+    const policy = loadPolicyAtSha(targetSha, deps.readAtSha);
+    if (policy === null) {
+        throw new MissingBranchConvergencePolicy(bareName(target.ref));
+    }
+    if (!policy.enabled) {
+        // The kill switch. Surfaced as BYPASSED by `renderBaseSummary`, never as
+        // a pass — a caller that discards stderr would otherwise read a bypass
+        // as a clean run.
+        return { entries: [target], policyStatus: 'disabled' };
+    }
+    const entry = policy.targets[bareName(target.ref)];
+    if (entry === undefined) {
+        throw new MissingBranchConvergencePolicy(bareName(target.ref));
+    }
+    if (entry.defaultBranch === 'exclude') {
+        return { entries: [target], policyStatus: 'applied' };
+    }
+    if (defaultRef === null) {
+        throw new UnresolvableBase('policy says include the default branch, but origin/HEAD names none');
+    }
+    return {
+        entries: [target, { ref: defaultRef, reason: 'branch-convergence-policy:include-default' }],
+        policyStatus: 'applied',
+    };
+}
+
+/**
+ * The order the refs are MERGED in — default first, then the target.
+ *
+ * Deliberately not the order `entries` carries. The result type is target-first
+ * because the target is the ref the PR actually merges into and the stable head
+ * of the contract (council § 4, fixture 4); integration is default-first so a
+ * conflict surfaces against the BROADER base before the narrower one, where it
+ * is cheapest to abandon (roadmap step 1.3). Both orders are stated here rather
+ * than one being inferred from the other.
+ */
+export function integrationOrder(r: ResolveBaseResult): string[] {
+    const policyAdded = r.entries.filter((e) => e.reason === 'branch-convergence-policy:include-default');
+    const rest = r.entries.filter((e) => e.reason !== 'branch-convergence-policy:include-default');
+    return [...policyAdded, ...rest].map((e) => e.ref);
+}
+
+/** Human-readable provenance per entry — the `how` string, one per ref. */
+export function describeReason(reason: BaseReason): string {
+    switch (reason) {
+        case 'explicit-base-override':
+            return 'given by --base';
+        case 'pull-request-target':
+            return 'the open PR base';
+        case 'repository-default-branch':
+            return 'the repo default branch';
+        case 'branch-convergence-policy:include-default':
+            return 'the default branch, added by the branch-convergence policy';
+    }
+}
+
+/**
+ * The verdict line for a resolved set, in INTEGRATION order.
+ *
+ * `disabled` renders as BYPASSED and carries no success marker. A stderr
+ * warning is not enough — callers discard stderr, and a bypass reported only
+ * there is indistinguishable from a pass.
+ */
+export function renderBaseSummary(r: ResolveBaseResult): string {
+    const byRef = new Map(r.entries.map((e) => [e.ref, e.reason]));
+    const parts = integrationOrder(r).map((ref) => `${ref} (${describeReason(byRef.get(ref) as BaseReason)})`);
+    const head = r.policyStatus === 'disabled'
+        ? 'BYPASSED — branch-convergence policy disabled at the target commit; the default branch was NOT considered'
+        : r.policyStatus === 'applied'
+          ? 'branch-convergence policy applied'
+          : 'no branch-convergence policy required (target is the default branch)';
+    return `${head}; integrating in order: ${parts.join(' → ')}`;
+}
+
+/** The ceiling on base-moved retries. A bound, never a queue (roadmap 4.2). */
+export const MAX_BASE_ATTEMPTS = 3;
+
+/** One integration attempt against one ref, with the OIDs that bracket it. */
+export interface IntegrationAttempt {
+    readonly attempt: number;
+    readonly ref: string;
+    /** The OID the merge was planned against. */
+    readonly before: string | null;
+    /** The OID the server reported after the merge finished. */
+    readonly after: string | null;
+}
+
+export interface IntegrationOutcome {
+    readonly ok: boolean;
+    readonly attempts: readonly IntegrationAttempt[];
+    readonly conflicted: readonly string[];
+    readonly message: string;
+}
+
+/** The git operations the retry loop needs, injected so a moving base is testable. */
+export interface IntegrateOps {
+    readonly remoteSha: (ref: string) => string | null;
+    readonly merge: (ref: string) => { ok: boolean; conflicted: string[] };
+}
+
+function renderAttempts(attempts: readonly IntegrationAttempt[]): string {
+    return attempts
+        .map((a) => `  attempt ${String(a.attempt)}: ${a.ref} ${a.before ?? '?'} → ${a.after ?? '?'}`)
+        .join('\n');
+}
+
+/**
+ * Integrate every ref in the set, pinning each base OID and re-checking it.
+ *
+ * Gap C is measured, not hypothetical: `sync_pr_branch.ts:10` records PR #1391,
+ * where the base moved three times during one run and the push was rejected.
+ * The bound is three attempts and then a STOP carrying the observed OIDs —
+ * reporting the evidence is what makes a genuinely moving base distinguishable
+ * from a slow run, which is the whole point of the ceiling. No state outside the
+ * run: no queue, no rerere, no persisted attempt log (roadmap 4.2, AC-5).
+ */
+export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateOps): IntegrationOutcome {
+    const attempts: IntegrationAttempt[] = [];
+    for (let n = 1; n <= MAX_BASE_ATTEMPTS; n++) {
+        const pinned = refs.map((ref) => ({ ref, before: ops.remoteSha(ref) }));
+        let conflicted: string[] = [];
+        let clean = true;
+        for (const q of pinned) {
+            const m = ops.merge(q.ref);
+            if (!m.ok) {
+                clean = false;
+                conflicted = m.conflicted;
+                break;
+            }
+        }
+        const moved: string[] = [];
+        for (const q of pinned) {
+            const after = ops.remoteSha(q.ref);
+            attempts.push({ attempt: n, ref: q.ref, before: q.before, after });
+            if (after !== q.before) moved.push(q.ref);
+        }
+        if (!clean) {
+            return {
+                ok: false,
+                attempts,
+                conflicted,
+                message: `merge hit ${String(conflicted.length)} conflict(s) on attempt ${String(n)}.`,
+            };
+        }
+        if (moved.length === 0) {
+            return { ok: true, attempts, conflicted: [], message: `integrated ${refs.join(', ')} on attempt ${String(n)}.` };
+        }
+    }
+    return {
+        ok: false,
+        attempts,
+        conflicted: [],
+        message:
+            `the base moved under every one of ${String(MAX_BASE_ATTEMPTS)} attempts — stopping rather than looping.\n` +
+            `${renderAttempts(attempts)}\n` +
+            '  → a base that moves this fast is a finding about landing speed, not a transient race.',
+    };
+}
+
+/** The regeneration operations Phase 3 needs, injected so no real conflict is required. */
+export interface RegenOps {
+    readonly regenerate: () => { ok: boolean; err: string };
+    /** Paths that still differ after a regeneration — the byte-identity probe. */
+    readonly dirty: (paths: readonly string[]) => string[];
+    readonly stage: (paths: readonly string[]) => boolean;
+}
+
+export interface GeneratedResolution {
+    readonly resolved: boolean;
+    readonly message: string;
+}
+
+/**
+ * Auto-resolve a conflict set that is GENERATED and nothing else.
+ *
+ * For a path whose only correct resolution is "run the generator", refusing is
+ * ceremony — the classification at `classifyConflicts` already knows which
+ * paths those are. Two hard limits, and both are the point rather than caution:
+ *
+ * - A single REMEASURED or AUTHORED path in the set refuses the WHOLE set. A
+ *   measured baseline and a hand-written file have no single correct
+ *   resolution, and resolving their neighbours first would hand the human a
+ *   half-resolved tree to reason about.
+ * - Byte-identity is ASSERTED, not assumed: the generator runs, the outputs are
+ *   staged, and the generator runs again. A path that is partly hand-edited does
+ *   not reproduce, so the second run leaves it dirty and the resolution is
+ *   refused instead of silently overwriting the hand edit (risk-register row 2).
+ */
+export function autoResolveGenerated(
+    split: Pick<Plan, 'generated' | 'remeasured' | 'authored'>,
+    ops: RegenOps,
+): GeneratedResolution {
+    if (split.remeasured.length > 0 || split.authored.length > 0) {
+        return {
+            resolved: false,
+            message:
+                'NOT auto-resolved: the conflict set contains ' +
+                `${String(split.remeasured.length)} remeasured and ${String(split.authored.length)} authored path(s), ` +
+                'which have no single correct resolution.',
+        };
+    }
+    if (split.generated.length === 0) {
+        return { resolved: false, message: 'nothing to auto-resolve.' };
+    }
+    const first = ops.regenerate();
+    if (!first.ok) {
+        return { resolved: false, message: `NOT auto-resolved: regeneration failed — ${first.err.split('\n')[0] ?? '?'}` };
+    }
+    if (!ops.stage(split.generated)) {
+        return { resolved: false, message: 'NOT auto-resolved: could not stage the regenerated paths.' };
+    }
+    const second = ops.regenerate();
+    if (!second.ok) {
+        return { resolved: false, message: `NOT auto-resolved: the byte-identity re-run failed — ${second.err.split('\n')[0] ?? '?'}` };
+    }
+    const drift = ops.dirty(split.generated);
+    if (drift.length > 0) {
+        return {
+            resolved: false,
+            message:
+                'NOT auto-resolved: these paths are not byte-identical to a clean regeneration, ' +
+                `so at least one is partly hand-edited — ${drift.join(', ')}`,
+        };
+    }
+    return {
+        resolved: true,
+        message: `auto-resolved ${String(split.generated.length)} generated conflict(s) by regeneration, byte-identity asserted.`,
+    };
+}
+
+function gitRegenOps(repo: string): RegenOps {
+    return {
+        // The repository's own consistency target — the exact CI mirror the
+        // pre-push hook already runs. Named here rather than open-coded so the
+        // generator this trusts is the one the gate trusts.
+        regenerate: (): { ok: boolean; err: string } => {
+            const r = sh('task', ['consistency'], repo);
+            return { ok: r.ok, err: r.err };
+        },
+        dirty: (paths: readonly string[]): string[] => {
+            const r = sh('git', ['status', '--porcelain', '--', ...paths], repo);
+            if (!r.ok) return [...paths];
+            return r.out
+                .split('\n')
+                .map((l) => l.slice(3).trim())
+                .filter((l) => l !== '');
+        },
+        stage: (paths: readonly string[]): boolean => sh('git', ['add', '--', ...paths], repo).ok,
+    };
+}
+
+export function sync(repo: string, baseOverride: string | null, dryRun: boolean, autoResolve = false): Plan {
+    let resolved: ResolveBaseResult;
+    try {
+        resolved = resolveBase(repo, baseOverride);
+    } catch (exc) {
+        // A missing policy, an unresolvable target SHA and an unresolvable base
+        // are all REFUSALS carrying their own typed message. None of them
+        // degrades to "check the default branch instead".
+        return {
+            exit: 1,
+            message: `cannot resolve a base set to update against — ${exc instanceof Error ? exc.message : String(exc)}`,
+            generated: [],
+            remeasured: [],
+            authored: [],
+            scanned: 0,
+        };
+    }
+    const summary = renderBaseSummary(resolved);
+    const order = integrationOrder(resolved);
 
     const fetched = sh('git', ['fetch', 'origin', '--prune'], repo);
     if (!fetched.ok) {
@@ -338,44 +765,83 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean)
         };
     }
 
-    const behind = sh('git', ['rev-list', '--count', `HEAD..${base}`], repo).out.trim();
-    if (behind === '' || behind === '0') {
-        return { exit: 0, message: `already current with ${base} (${how}).`, generated: [], remeasured: [], authored: [], scanned: 1 };
+    const behindEach = order.map((ref) => ({
+        ref,
+        behind: Number(sh('git', ['rev-list', '--count', `HEAD..${ref}`], repo).out.trim() || '0'),
+    }));
+    // De-duplicated by ancestry: a ref already contained in HEAD is 0 behind and
+    // is not merged again, which is what keeps a target that already contains
+    // the default from being merged twice.
+    const stale = behindEach.filter((b) => b.behind > 0);
+    if (stale.length === 0) {
+        return { exit: 0, message: `already current with every base ref — ${summary}.`, generated: [], remeasured: [], authored: [], scanned: order.length };
     }
     if (dryRun) {
+        const detail = stale.map((b) => `${b.ref} (${String(b.behind)} behind)`).join(', ');
         return {
             exit: 0,
-            message: `${behind} commit(s) behind ${base} (${how}) — would merge it in. Dry run, nothing changed.`,
+            message: `${summary}. Behind: ${detail} — would merge in that order. Dry run, nothing changed.`,
             generated: [],
             remeasured: [],
             authored: [],
-            scanned: 1,
+            scanned: order.length,
         };
     }
 
-    const merge = sh('git', ['merge', base, '--no-edit'], repo);
-    if (merge.ok) {
+    const outcome = integrateWithPinnedBase(
+        stale.map((b) => b.ref),
+        {
+            remoteSha: (ref: string): string | null => makeGitDeps(repo).remoteSha(ref),
+            merge: (ref: string): { ok: boolean; conflicted: string[] } => {
+                const m = sh('git', ['merge', ref, '--no-edit'], repo);
+                if (m.ok) return { ok: true, conflicted: [] };
+                return {
+                    ok: false,
+                    conflicted: sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n'),
+                };
+            },
+        },
+    );
+
+    if (outcome.ok) {
         return {
             exit: 0,
             message:
-                `merged ${base} in (${how}, was ${behind} behind). REGENERATE derived files now — a clean ` +
-                'auto-merge of a generated file is still wrong.',
+                `${summary}. ${outcome.message} REGENERATE derived files now — a clean auto-merge of a ` +
+                'generated file is still wrong.',
             generated: [],
             remeasured: [],
             authored: [],
-            scanned: 1,
+            scanned: order.length,
         };
     }
+    if (outcome.conflicted.length === 0) {
+        // The base kept moving. No conflict to classify; the evidence IS the
+        // per-attempt OID list already in the message.
+        return { exit: 1, message: `${summary}. ${outcome.message}`, generated: [], remeasured: [], authored: [], scanned: order.length };
+    }
 
-    const conflicted = sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n');
-    const split = classifyConflicts(conflicted);
+    const split = classifyConflicts(outcome.conflicted);
+    if (autoResolve) {
+        const attempt = autoResolveGenerated(split, gitRegenOps(repo));
+        if (attempt.resolved) {
+            return { exit: 0, message: `${summary}. ${attempt.message}`, generated: [], remeasured: [], authored: [], scanned: order.length };
+        }
+        return {
+            exit: 1,
+            message: `${summary}. ${outcome.message} ${attempt.message}`,
+            ...split,
+            scanned: order.length,
+        };
+    }
     return {
         exit: 1,
         message:
-            `merge of ${base} (${how}) hit ${String(split.generated.length + split.remeasured.length + split.authored.length)} conflict(s). ` +
-            'NOT auto-resolved: a content conflict is where a parallel session\'s work disappears.',
+            `${summary}. ${outcome.message} ` +
+            'NOT auto-resolved: a content conflict is where a parallel session\'s work disappears. ' +
+            '(--auto-resolve-generated resolves a set that is GENERATED and nothing else.)',
         ...split,
-        scanned: 1,
+        scanned: order.length,
     };
 }
 
@@ -385,6 +851,7 @@ export function main(argv?: readonly string[]): number {
     let base: string | null = null;
     let dryRun = false;
     let quiet = false;
+    let autoResolve = false;
     for (let i = 0; i < args.length; i++) {
         const a = args[i] as string;
         const val = (): string | null => {
@@ -409,16 +876,23 @@ export function main(argv?: readonly string[]): number {
             base = v;
         } else if (a === '--dry-run') {
             dryRun = true;
+        } else if (a === '--auto-resolve-generated') {
+            autoResolve = true;
         } else if (a === '--quiet') {
             quiet = true;
         } else if (a === '-h' || a === '--help') {
             process.stdout.write(
-                'usage: sync_pr_branch [--repo PATH] [--base REF] [--dry-run] [--quiet]\n' +
+                'usage: sync_pr_branch [--repo PATH] [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]\n' +
                     '  Merges the PR base into the current branch so the PR does not go stale.\n' +
                     '  Resolves the base from the open PR when there is one. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
-                    '  measured ratchet baselines are a third class, re-measured not merged.\n',
+                    '  measured ratchet baselines are a third class, re-measured not merged.\n' +
+                    '  The base is a SET: a non-default target may also carry the default branch,\n' +
+                    '  per the branch-convergence policy read at the TARGET commit. Integration\n' +
+                    '  runs the default first so the broad conflict surfaces first.\n' +
+                    '  --auto-resolve-generated resolves a conflict set that is GENERATED and\n' +
+                    '  nothing else, by regenerating and asserting byte-identity.\n',
             );
             reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'help output' });
             return 0;
@@ -431,7 +905,7 @@ export function main(argv?: readonly string[]): number {
 
     let plan: Plan;
     try {
-        plan = sync(repo, base, dryRun);
+        plan = sync(repo, base, dryRun, autoResolve);
     } catch (exc) {
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'internal error' });
         process.stderr.write(`❌  sync_pr_branch: internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`);
@@ -440,6 +914,11 @@ export function main(argv?: readonly string[]): number {
 
     if (plan.exit === 1) {
         process.stdout.write(renderConflictReport(plan));
+    } else if (plan.message.includes('BYPASSED')) {
+        // The kill switch is a BYPASS, never a pass. Loud even under --quiet and
+        // never behind a success marker: a caller that reads only stdout must
+        // not be able to mistake a disabled policy for a clean run.
+        process.stdout.write(`⚠️  sync_pr_branch: ${plan.message}\n`);
     } else if (plan.message.startsWith('unverified')) {
         // Loud even under --quiet: unverified reported silently is
         // indistinguishable from verified, which is the defect being closed.
