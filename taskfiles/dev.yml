@@ -134,3 +134,19 @@ tasks:
       Usage:
       task dev:standing-rule-delivery
     cmd: ./scripts-run src/scripts/check_standing_rule_delivery
+
+  dev:hooks-effect:
+    desc: |
+      Does any bound hook concern actually FIRE on THIS host? Dispatches each
+      eligible concern against a scratch root and reports one of five
+      per-concern states and one of four host verdicts.
+      Not `hooks:doctor`: that one reads the manifest (what is declared), this
+      one reads what happened (what took effect).
+      Local-only on purpose, and the same reason as dev:standing-rule-delivery:
+      the verdict is a property of the operator's host, and a CI runner is
+      nobody's host — an automatic green there would describe an install no
+      consumer has, which is worse than no reading at all.
+      Usage:
+      task dev:hooks-effect
+      task dev:hooks-effect -- --host cursor --format json
+    cmd: ./agent-config hooks:effect {{.CLI_ARGS}}

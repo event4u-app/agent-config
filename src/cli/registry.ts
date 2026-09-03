@@ -87,6 +87,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'hooks:install', disposition: 'delegate', synopsis: 'Install the combined pre-commit hook.' },
     { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },
+    { name: 'hooks:effect', disposition: 'delegate', synopsis: 'Does a bound concern actually FIRE here? Sandboxed synthetic dispatch per concern; five per-concern states, four host verdicts (read-only).' },
     { name: 'routing:doctor', disposition: 'delegate', synopsis: 'Live routing diagnosis: per-gate ACTIVE/INACTIVE with reason, chain, freshness, orchestration state (read-only).' },
     { name: 'workspace:doctor', disposition: 'delegate', synopsis: 'Workspace identity with provenance (repo root, main worktree, current worktree, branch, PR base) + session claim and worktree pressure (read-only).' },
     { name: 'route:explain', disposition: 'delegate', synopsis: 'Deterministic rule-routing trace for one prompt: matched triggers, tier, disposition, budget, rejected candidates (trigger-match level only).' },
