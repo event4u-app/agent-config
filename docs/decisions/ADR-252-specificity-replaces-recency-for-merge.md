@@ -220,6 +220,36 @@ now been recorded being routed around three times.
   four were named by the council; none is needed for the merge case, and shipping
   a half-form of any of them would replace a weak control with an untested one.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| The ledger was replaced on every human turn, so a neutral follow-up erased a standing merge authorization | `src/scripts/git_authorization_hook.ts` `run()` at the pre-change base — the ledger literal was rebuilt from `classifyAuthorization(prompt)` alone with no read of the prior file. Pinned from the other side by `tests/scripts/git_authorization.test.ts` "a new turn replaces the ledger — a spent authorization does not carry forward", which asserted the behaviour deliberately |
+| 17 of 25 borderline-destructive operations classified as nothing | Direct probe of `commandOp` over a 25-command corpus, 2026-09-02. Re-probed after the change: 17 of 17 now classify, and the 4 read-only controls (`git status`, `git log`, `gh pr view`, a read-only `gh api` on the protection path) still classify as nothing. Both halves pinned in `tests/scripts/git_auth_destructive_coverage.test.ts` |
+| Three of those seventeen are worse than anything the guard already caught | Same probe: `gh api -X DELETE …/branches/main/protection` removes the guard, `gh pr review --approve` satisfies a required-review gate and releases an armed auto-merge, `npm unpublish` breaks every lockfile that resolved the version. None classified before this change |
+| `npm unpublish` was unreachable by the publish pattern | `\bpublish\b` finds no word boundary between `n` and `p` in `unpublish`. Pinned by the "an unpublish instruction does not unlock a publish" case, asserted in both directions |
+| Negation leaked on 15 of 15 newly added phrases, and on `push` and `branch` before them | Direct probe of `classifyAuthorization` over a 17-row negated corpus, 2026-09-03: 15 of 15 new phrases plus 2 pre-existing ops returned the operation their sentence forbade. Re-probed after `negatedBefore`: 0 of 17. Corpus committed as the `NEGATED` table in `git_auth_destructive_coverage.test.ts` |
+| Only `pr-merge` had negation protection before this change | The inline look-behind in the `pr-merge` phrase, and its own comment recording the identical defect found there in isolation. No other pattern carried one |
+| The negation is often inside the match rather than before it | Nine rows of the same corpus stayed red after a look-behind-only fix, all of them noun-first patterns where the match begins before the negation. German word order, not a regex accident |
+| A grant survives three hours and a PR the user never named does not | `tests/scripts/git_auth_grants.test.ts` § end to end, which ages `detected_at` past `LEDGER_MAX_AGE_MS` and drives the real `run()` entry points |
+| The clock exemption is load-bearing and the tests are sensitive to it | Sabotage probe 2026-09-03: neutralising `grantCovers` turned exactly 5 of 39 grant tests red and left the 34 refusal tests green. A test never seen red has unknown sensitivity |
+| Folding grants into the clock-checked read path would have shipped green and done nothing | `_readLedgerFile` returns `null` for a ledger older than `LEDGER_MAX_AGE_MS`, which the caller treats as absent. Grants are read by `readGrants`, which performs the session check and no age check |
+| The pause-and-renew shape was routed around a third time | The 2026-09-03 session opened on the stated premise that the constant was already at six hours with the bundle rebuilt; read-only verification found `src/scripts/hooks/block_unauthorized_git.ts` and `dist/hooks/dispatch.js` both at 30 minutes, bundle mtime 2026-09-02 16:48 |
+| The two prior widenings, and that the window has never been recorded catching an unintended merge | ADR-251 § Context and § The residual this record does not resolve, both carried forward unchanged |
+
+**The grade is E2 — repeated and comparative.** Every row is a probe run in this
+tree with its corpus committed as a test, a file read at a named symbol, or a
+measurement carried forward from the superseded record. The two probes were each
+run before and after the change, so the rows state a delta rather than an
+endpoint.
+
+**What no evidence establishes**, and it is the load-bearing gap: **that this
+shape is safer than the 30-minute window.** Nothing here measures unintended
+merges prevented, in either direction, because the window has no recorded
+instance of preventing one. The honest claim is narrower — the new shape cannot
+cover a pull request the user did not name, and the old one expired on a clock
+that was routed around three times.
+
 ## Consequences
 
 **Positive.** An operator who names the pull requests gets a multi-hour drain with
