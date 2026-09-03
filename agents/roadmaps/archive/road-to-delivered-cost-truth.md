@@ -314,3 +314,33 @@ genuinely not inferable from the manifest.
   than here.
 - **A consolidation refactor.** 4.3 inventories parallel forms. Merging them is
   a separate change with its own blast radius.
+
+## Corrections
+
+### 2026-09-03 — the `hooks_doctor.ts:88` half of the Phase 3 landing claim is false
+
+The blocker disposition above closes with *"Landed at
+`src/scripts/_lib/hook_effect_probe.ts:38` and `src/scripts/hooks_doctor.ts:88`."*
+The original sentence is left exactly as written: the record of a wrong claim is
+the evidence, and rewriting it would remove the only trace that this happened.
+
+**The first half is true.** `src/scripts/_lib/hook_effect_probe.ts` carries the
+five-state vocabulary and the coverage metrics, and it is where the council's
+option (c) actually landed.
+
+**The second half never was.** Verified 2026-09-03 at `2b3d2b347`:
+`grep -c 'hook_effect' src/scripts/hooks_doctor.ts` returns `0`, and line 88 of
+that file is the closing brace of a `statSync` filesystem helper. The probe was
+never wired into `hooks_doctor`, and by design it should not have been — the two
+are different instruments, which the probe's own module header says in as many
+words. The claim named a plausible file instead of the one that would have made
+the instrument reachable, and nothing checked it, so a closed roadmap asserted a
+wiring that did not exist for six days short of a week.
+
+**Where the wiring actually landed.** `road-to-wired-instruments` Phase 1.1, on
+2026-09-03: the probe is reachable as the CLI verb **`agent-config hooks:effect`**
+— registered in `src/cli/registry.ts` beside the `hooks:doctor` row it is
+deliberately not merged with, dispatched by `cmd_hooks_effect` in
+`src/scripts/_dispatch.bash`, and entered through `main()` in
+`src/scripts/hook_effect_doctor.ts`. `hooks_doctor.ts` is still untouched, and
+still reports `0` for that grep.

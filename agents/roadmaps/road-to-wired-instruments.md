@@ -58,24 +58,44 @@ does not exist.
 
 ## Phase 1 — Make the hook-liveness instrument reachable
 
-- [ ] **1.1 Give `hook_effect_doctor` a CLI entry.** Register it in
+- [x] **1.1 Give `hook_effect_doctor` a CLI entry.** Register it in
       `src/cli/registry.ts` beside the existing `hooks:doctor` row (`:89`), which
       answers a different question — manifest scope, not whether a bound concern
       actually fires on this host.
       verify: `./agent-config <the new verb> --help` exits 0 and prints the
       probe's own verdict vocabulary; `grep -c '<the new verb>' src/cli/registry.ts` ≥ 1.
-- [ ] **1.2 Correct the archived landing record.** Append a dated correction to
+- [x] **1.2 Correct the archived landing record.** Append a dated correction to
       `agents/roadmaps/archive/road-to-delivered-cost-truth.md` stating that the
       `hooks_doctor.ts:88` half of its landing claim is false, and where the
       wiring actually landed once 1.1 is done. Do not rewrite the original line —
       the record of the wrong claim is the evidence.
       verify: `grep -c 'hook_effect' src/scripts/hooks_doctor.ts` is still `0`
       **and** the archived file carries a correction paragraph naming that fact.
-- [ ] **1.3 Decide whether the verb runs anywhere automatically.** It is a
+- [x] **1.3 Decide whether the verb runs anywhere automatically.** It is a
       diagnostic, and a diagnostic nothing invokes is the defect this roadmap is
       about. Pick a caller or state in one line why on-demand is the right shape.
       verify: either a Taskfile target or a workflow step invokes it, or the
       roadmap carries the one-line reason and the step is `[~]`.
+
+> **Phase 1 landed 2026-09-03.** The verb is **`agent-config hooks:effect`**
+> (`src/cli/registry.ts:90`, dispatched by `cmd_hooks_effect` in
+> `src/scripts/_dispatch.bash`, entered at `src/scripts/hook_effect_doctor.ts`
+> `main()`). `--help` renders both closed vocabularies from `PROBE_STATES` and
+> `HOST_VERDICTS` rather than restating them, so the help cannot describe a
+> vocabulary the probe no longer has. Two stale self-references inside the module
+> were corrected in the same edit: its usage block and its error prefix both said
+> `hooks_doctor`, the very confusion its own header exists to prevent.
+>
+> **1.3, the one-line reason, recorded rather than implied:** `task
+> dev:hooks-effect` is the invocation surface, and the verb is deliberately NOT
+> in `task ci` or a workflow — the verdict is a property of the operator's host,
+> and a CI runner is nobody's host, so an automatic green there would describe an
+> install no consumer has. This is the identical argument
+> `dev:standing-rule-delivery` already carries in its own `desc`, and it is why
+> the answer is a discoverable target rather than a scheduled run.
+>
+> Observed on this host at `--limit 4`: `verdict: partial`, 1 `effective`,
+> 3 `bound-not-fired`, `inert slot(s): session_start`, exit 0.
 
 ## Phase 2 — Connect the drift detector to the decision it should change
 
