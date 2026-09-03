@@ -180,7 +180,6 @@ import {
     readUnavailableDependency,
     stallSignal,
     type StallLevel,
-    type UnavailableDependency,
 } from '../_lib/loop_guards.js';
 import { premiseMoved, readContextObservation } from '../_lib/context_observation.js';
 import { RUN_TERMINAL_VOCABULARY_VERSION } from '../_lib/outcome_vocabularies.js';
