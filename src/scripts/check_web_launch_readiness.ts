@@ -44,7 +44,12 @@ export type Tier = 'critical' | 'high' | 'medium' | 'situational';
  *
  * `applies_to` decides WHETHER a check applies; a region decides HOW SEVERELY.
  * A legal page is not more or less *applicable* in Germany — it is more or less
- * *optional*, because TMG 5 and DSGVO Art. 13 make it owed rather than advisable.
+ * *optional*, because German and EU law make it owed rather than advisable. The
+ * two citations behind that sentence are NOT restated here: they live in the
+ * escalation row's `authority` field in `web-launch-readiness.json`, where a
+ * `review_by` date can lapse them. That is the whole point of the
+ * `ddg-citation-authority` decision — a statute in prose went stale for sixteen
+ * months and nothing could see it.
  * Modelling it as a tier escalation keeps one check with one implementation and
  * puts the jurisdiction where it belongs: on the consequence.
  */
@@ -142,6 +147,10 @@ export interface Escalation {
  * sentence into a citation the gate then demands a source for — which is how a
  * scoped gate becomes a blanket one nobody can satisfy. The numbered-provision
  * arm (`Art. 13`, `§ 5`) catches an instrument the list does not name yet.
+ *
+ * `TMG` is retained as a token on purpose, and this is a HISTORICAL NOTE rather
+ * than a citation: the statute was superseded by the DDG in May 2024, so a row
+ * that names it again is exactly what this detector must still catch.
  */
 export const STATUTE_RE =
     /\b(TMG|DDG|TTDSG|TDDDG|DSGVO|GDPR|BDSG|RDG|UWG|BGB|HGB|StGB|CCPA|CPRA|HIPAA|ePrivacy|DSA|DMA|BFSG|EAA)\b|(?:\bArt\.|\bArticle\b|§)\s*\d/;

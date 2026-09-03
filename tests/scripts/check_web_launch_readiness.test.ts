@@ -193,7 +193,9 @@ describe('2.3 — the region axis escalates a tier, it does not add a check', ()
         const f = r.findings.find((x) => x.check === 'required-legal-pages');
         expect(f?.tier).toBe('critical');
         expect(r.escalated).toHaveLength(1);
-        expect(r.escalated[0]?.why).toContain('TMG');
+        // The reason travels; the CITATION does not — it sits in `authority`
+        // with a review date, per the `ddg-citation-authority` decision.
+        expect(r.escalated[0]?.why).toContain('Abmahnung');
     });
 
     it('the escalation changes the EXIT CODE, which is what makes it load-bearing', () => {
@@ -440,7 +442,7 @@ describe('2.2 — loadConfig REFUSES a config whose legal row has lapsed', () =>
         expect(() => loadConfig(root)).not.toThrow();
     });
 
-    it('throws when the authority is stripped from a row that still names a statute', () => {
+    it('throws when the authority is stripped from a dated legal row — the two fields travel together', () => {
         write((doc) => {
             const regions = doc['regions'] as { escalations: Record<string, unknown>[] };
             delete regions.escalations[0]!['authority'];

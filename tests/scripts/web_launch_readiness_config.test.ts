@@ -153,12 +153,18 @@ describe('a legal claim carries its own authority and expiry (2.1)', () => {
     const rows = legalRowsOf(cfg as never);
 
     it('at least one row asserts a legal basis, or this contract polices nothing', () => {
-        expect(rows.filter((r) => STATUTE_RE.test(r.why)).length).toBeGreaterThan(0);
+        // Reads `authority`, not `why`. After the `ddg-citation-authority`
+        // decision the statute lives in the field, so a guard that only looked
+        // at prose would report "polices nothing" as a pass.
+        expect(rows.filter((r) => STATUTE_RE.test(r.authority ?? '')).length).toBeGreaterThan(0);
     });
 
-    it('every row whose why names a statute carries authority AND review_by', () => {
-        for (const r of rows) {
-            if (!STATUTE_RE.test(r.why)) continue;
+    it('every row asserting a legal basis carries authority AND review_by', () => {
+        const legal = rows.filter(
+            (r) => STATUTE_RE.test(r.why) || r.authority !== undefined || r.review_by !== undefined,
+        );
+        expect(legal.length, 'rows asserting a legal basis').toBeGreaterThan(0);
+        for (const r of legal) {
             expect(r.authority?.trim().length, `${r.kind} ${r.id}.authority`).toBeGreaterThan(20);
             expect(r.review_by, `${r.kind} ${r.id}.review_by`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         }
@@ -166,6 +172,20 @@ describe('a legal claim carries its own authority and expiry (2.1)', () => {
 
     it('the shipped config has no live violation of the contract', () => {
         expect(legalRowViolations(rows, cfg.registered_at)).toEqual([]);
+    });
+
+    it('the Impressum and Datenschutz citations live in `authority`, never in prose', () => {
+        // Blocker `ddg-citation-authority`, resolved to option (b): the statute is
+        // provenance behind a review date, not a sentence this package asserts.
+        // Both halves migrated together — the council made that a condition, on the
+        // ground that fixing one and leaving the other perpetuates the defect.
+        const esc = rows.find((r) => r.kind === 'escalation' && r.id === 'required-legal-pages@de');
+        expect(esc, 'the DE escalation row').toBeDefined();
+        expect(STATUTE_RE.test(esc!.why), `why must name no statute, got: ${esc!.why}`).toBe(false);
+        expect(esc!.authority, 'the Impressum half').toMatch(/DDG/);
+        expect(esc!.authority, 'the Datenschutz half').toMatch(/DSGVO Art\. 13/);
+        // The other condition: a citation never ships without its expiry.
+        expect(esc!.review_by, 'the expiry that ships with it').toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
     it('a row with neither field is left alone — the gate is scoped, not blanket', () => {
