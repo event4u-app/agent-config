@@ -61,6 +61,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readHookStdin } from "./hook_stdin.js";
+import { analyseMergeImpact, describeImpact } from "./merge_impact.js";
 import { atomic_write_json } from "./state_io.js";
 import {
   consumeGrantTarget,
@@ -805,6 +806,7 @@ export interface Decision {
 export function decide(
   command: string | null,
   ledger: { authorized: Set<GitOp>; present: boolean; grants?: MergeGrant[] },
+  impact?: string,
 ): Decision {
   if (command === null) {
     return { exit: EXIT_ALLOW, stdout: "", stderr: "" };
@@ -829,10 +831,15 @@ export function decide(
   const shown = command.length > 120 ? `${command.slice(0, 117)}…` : command;
 
   if (BLOCK_OPS.has(op)) {
+    // STAGE 2. The refusal stands either way — what the scan changes is whether
+    // the user has to go read the diff to answer it. `impact` is injected by
+    // `run`, never computed here, so `decide` stays pure and testable without a
+    // repository.
+    const scan = op === "pr-merge" && target !== null && impact ? ` ${impact}` : "";
     const reason =
       `Blocked: \`${op}\` with no authorization in this turn's prompt. ` +
       `This operation is irreversible and non-destructive-by-default already declares it ` +
-      `never-autonomous. Command: ${shown}. ` +
+      `never-autonomous. Command: ${shown}.${scan} ` +
       `Ask the user, in one numbered-options block, and run it only after they answer this turn.`;
     return { exit: EXIT_BLOCK, stdout: "", stderr: `${reason}\n`, blockedOp: op };
   }
@@ -865,10 +872,35 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     }
   }
   const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
-  const decision = decide(
-    extractCommand(envelope),
-    _loadLedger(options.consumer_root, session_id, Date.now()),
-  );
+  const command = extractCommand(envelope);
+  const ledger = _loadLedger(options.consumer_root, session_id, Date.now());
+
+  // STAGE 2 runs only on the path where it can change something: a merge that is
+  // ABOUT to be refused. Not on an allowed merge (nothing to tell the user), not
+  // on an op whose target the command does not name, and never on publish or
+  // release — a scan costs a diff read, and spending one where it cannot change
+  // the outcome is latency in the user's critical path for nothing.
+  let impact: string | undefined;
+  const stage1 = command === null ? null : commandOp(command);
+  const stage2Target = command === null ? null : mergeTargetOf(command);
+  if (
+    stage1 === "pr-merge" &&
+    stage2Target !== null &&
+    !ledger.authorized.has("pr-merge") &&
+    !grantCovers(ledger.grants ?? [], "pr-merge", stage2Target)
+  ) {
+    try {
+      impact = describeImpact(
+        stage2Target,
+        analyseMergeImpact(stage2Target, { cwd: options.consumer_root }),
+      );
+    } catch {
+      // The scan is an enrichment, never a gate. A refusal without it is the
+      // pre-stage-2 message, which is still correct.
+    }
+  }
+
+  const decision = decide(command, ledger, impact);
   if (decision.consumedTarget !== undefined) {
     // Spend the target at the moment the merge is actually let through, never
     // when the grant was minted. A grant the run never reached stays whole, and
