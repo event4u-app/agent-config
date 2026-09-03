@@ -149,12 +149,15 @@ than less: the gate can now read the PR's real `baseRefName` from the forge, so
 a stacked or release-line PR is measured against the branch it will actually
 merge into instead of against the repo default.
 
-**The whole SEQUENCE is executable now, not just this step.** `task push-ready`
-runs all six — fetch, integrate the base set, regenerate, verify, re-check
-freshness, then hand the push back to you — and `task push-ready DRY=1` prints
-each step with its outcome without touching the tree. The pre-push hook refuses
-and points at it; the hook never merges, because a merge inside `pre-push`
-rewrites the tree at the moment you believe your work is finished.
+**The whole SEQUENCE is executable now, not just this step.** All six steps —
+fetch, integrate the base set, regenerate, verify, re-check freshness, then hand
+the push back to you — sit behind one runner, and a dry mode prints each step
+with its outcome without touching the tree. In this package that runner is the
+`push-ready` target in `taskfiles/dev.yml`; a consumer project wires the same
+six steps behind whatever its own task runner is, with steps 3 and 4 being its
+own generator and verify commands. The pre-push hook refuses and points at the
+runner; the hook never merges, because a merge inside `pre-push` rewrites the
+tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
 `./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
