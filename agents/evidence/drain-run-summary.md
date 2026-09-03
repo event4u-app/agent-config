@@ -659,7 +659,10 @@ deliverable.
   queued macOS shards rather than a result.
 - **Heads at the close of this run**, so a later reader can tell which commit any
   claim above describes: #1815 `1fd2204a2` · #1816 `73e8dcad9` ·
-  #1817 `5c89ce3f5` · #1818 `002596eec` · #1819 `f05617b1c` · #1821 `4a6544c96`.
+  #1818 `002596eec` · #1819 `f05617b1c` · #1821 `4a6544c96`. #1817 is the PR
+  carrying this file, so its head is the commit that records this line — a sha
+  no commit can quote for itself, named as what it is rather than pinned to a
+  value that goes stale on the next push.
 - **No PR was merged.** Merging to a production trunk is a Hard-Floor action that
   no standing instruction lifts, and the brief asked for PRs, not merges.
 - **`main`'s own red gates were not re-audited this run.** Run 17 named three
