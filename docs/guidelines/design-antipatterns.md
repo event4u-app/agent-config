@@ -262,7 +262,7 @@ are listed in § Quality floors.
 | M3 | backed | |
 | M4 | backed | |
 | M5 | floor | reduced-motion alternative, Q4 |
-| M6 | judgment-only | two independent reasons, both measured: the scanner classifies no engine for plain `.ts` / `.js` (`lint_design_slop.ts` § enginesForExt), which is where a reveal hook normally lives; and the clean corpus contains zero `IntersectionObserver`, so an M1 = 0 would measure nothing. Promotion prerequisites: `agents/roadmaps/stubs/road-to-tell-detector-promotions.md` |
+| M6 | judgment-only | two independent reasons, both measured: the scanner classifies no engine for plain `.ts` / `.js` (`lint_design_slop.ts` § enginesForExt), which is where a reveal hook normally lives; and the clean corpus contains zero `IntersectionObserver`, so an M1 = 0 would measure nothing. Promotion needs both closed first: a corpus carrying a legitimate near-miss for the signal, and a recorded decision on whether the scanner reaches `.ts` / `.js` |
 | M7 | judgment-only | same two reasons as M6: no engine for `.ts` / `.js`, and zero `mousemove` and zero `radial-gradient` in the clean corpus |
 | M8 | judgment-only | the corpus carries no `:hover { opacity }` at all, and its only `opacity` occurrences sit inside a `@keyframes` block, so it cannot separate a hover fade from a legitimate transition |
 | CP1 | backed | |
