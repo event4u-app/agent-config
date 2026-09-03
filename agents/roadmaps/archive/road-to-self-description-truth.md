@@ -126,6 +126,54 @@ comment."*
       verify: `grep -rn 'no runtime daemon' docs/decisions/` returns only
       historical quotations that are marked as such.
 
+> **Correction, 2026-09-03 — the evidence chain behind 1.2 had a dead link, and
+> a roadmap about claims outrunning their evidence is the worst place to leave
+> one.** AC-1 closes on `check_claims` exiting 0. It does exit 0, and that is a
+> weaker fact than it reads as. Two separate gaps, both verified at this head.
+>
+> **1. The retired claim's own evidence pointer no longer resolved.**
+> `docs/CLAIMS.md`'s `no-runtime-daemon` entry advertised
+> `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite`. That was
+> never two links. `#file-first` was never a heading in that file — it was the
+> bold inline phrase at its old `:11`, *"AC is a **file-first, no-runtime
+> suite**"*, quoted into the field and split by its own comma; no test suite of
+> that name has ever existed. The phrase was removed at `68463a1e0`
+> (2026-08-28), the ADR-249 supersession flip — one day AFTER the entry was
+> withdrawn. Replicating the gate's own `pointer_unresolved`
+> (`check_claims.ts:459-485`) against that pointer returns:
+>
+> ```
+> evidence file lacks 'file-first, no-runtime suite': docs/contracts/no-runtime-boundary.md
+> ```
+>
+> Nothing reported it because the rot guard at `check_claims.ts:542` reads
+> `if (entry.status !== 'backed') continue;` — a withdrawn claim's pointer stops
+> being resolved the moment it closes. Measured across the ledger's 8 closed
+> entries, this was the only one of the 5 path-shaped pointers that dangled, so
+> it is a single instance and not a class. The guard gap that hid it is real
+> either way, and is recorded here rather than widened: extending the rot guard
+> to closed entries is a gate change with its own blast radius over three
+> `resolved-null` entries whose `evidence:` field carries pre-registration prose
+> instead of a path, and it does not belong in a correction.
+>
+> **2. `check_claims` exit 0 does not validate the replacement wording.**
+> `README.md:30` now reads *"no mandatory or always-on daemon"* and carries no
+> claim marker, so the gate's verdict is only that the retired needle is gone —
+> never that the new sentence is backed. The wording is consistent with ADR-249
+> (permitted-under-governance is not mandatory-and-always-on), and the ledger
+> entry that would back it, `resident-process-permitted-under-governance`, is
+> `status: unbacked` by design and may not be markered while it stays that way.
+> So the honest statement is: 1.2 removed a retired absolute and put a governed
+> one in its place on the authority of a decision record, and no gate covers the
+> result. That is precisely the unmarkered-prose blind spot this roadmap's own
+> Context names at `:54`, reproduced one bullet later inside its own fix.
+>
+> **Repaired:** the ledger pointer now names the superseded contract itself,
+> which resolves, and the entry's `non_inference` no longer asserts that the old
+> pointer "still resolves" — it records what the pointer was, when it died, and
+> why the gate was silent. 1.2's edit to `README.md` stands unchanged; the
+> finding is about what backed it, not about the wording.
+
 ## Phase 2 — Repair the capability-matrix provenance
 
 - [x] **2.1 Point `docs/capability-matrix.md:2-4` at the generators that exist.**
@@ -280,7 +328,9 @@ comment."*
 
 - [x] AC-1 — `./scripts-run src/scripts/check_claims` exits 0 with
       `no background daemon` present in `retires_phrasings`, and no publish
-      surface carries that wording.
+      surface carries that wording. **What that does and does not establish is
+      qualified by the Phase 1 correction of 2026-09-03:** exit 0 proves the
+      retired needle is gone, never that the replacement wording is backed.
 - [x] AC-2 — no ADR under `docs/decisions/` asserts an unqualified runtime-daemon
       absence outside a marked historical quotation.
 - [x] AC-3 — every script path in `docs/capability-matrix.md`'s header resolves
