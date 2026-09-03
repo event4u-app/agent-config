@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "release": "14.15.0",
+  "findings": [
+    {
+      "finding_id": "7aee57d1e98e",
+      "severity": "high",
+      "kind": "security",
+      "title": "Stage-2 impact scan exposes diff content in hook stderr without sanitization",
+      "detail": "merge_impact.ts reads pull request diffs (via `gh pr diff` or local git refs) and pipes markers into the pre_tool_use hook's stderr refusal message. If a diff contains secrets (API keys in removed .env lines, credentials in deleted config), those reach the agent's context unsanitized. The scan runs on EVERY refused merge where a target is named, so the exposure is automatic rather than opt-in. No redaction, no .gitignore awareness, no secret-pattern filter. `describeImpact` writes markers verbatim; a marker like 'an exported symbol was removed' could quote the line, and even the safe case—`filesChanged` count—leaks that a PR exists and its size.",
+      "file": "src/scripts/hooks/merge_impact.ts",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE on the claim, with one residual named. The finding supposes a marker \"could quote the line\". It cannot: describeImpact builds every message from literals plus two numbers, the marker strings come from a closed eight-entry DESTRUCTIVE_MARKERS table, the four reason strings are literals, the major-bump interpolation captures digits only, and fetchPatch runs its subprocesses with stdio [\"ignore\",\"pipe\",\"ignore\"] so the patch reader's own stderr is discarded. Probed empirically: a patch carrying a GitHub-token-shaped string, an AWS-key-shaped string, a POSIX home path, a Windows path and an internal URL produces a message containing none of them, on both the additive and the destructive path. RESIDUAL, stated because the finding is right that it exists: the filesChanged count IS patch-derived, and it is the one variable in the message besides the PR number the agent already typed. A scalar count is not diff content, so it does not change the verdict. The property is now pinned by a test rather than by a comment, which is what Phase 3 of this roadmap was for.",
+      "verified_by": "tests/scripts/merge_impact_closed_vocabulary.test.ts (7 cases; asserts over the classifyDiff -> describeImpact PIPELINE, with a sabotage case proving the checker fails on an interpolating message and a case proving the token list is present in the fixture)",
+      "date": "2026-09-03"
+    },
+    {
+      "finding_id": "13713a1a9ae6",
+      "severity": "high",
+      "kind": "security",
+      "title": "Grant negation check fails on multi-sentence prompts with boundary punctuation",
+      "detail": "`negatedBefore` (git_authorization_hook.ts:549) uses a 30-char lookback window anchored by sentence delimiters, but the regex `['.', '!', '?', '\\n']` matches only ASCII punctuation. A prompt with Unicode sentence breaks (…, —, ¿, ¡) or a negation crossing a comma/semicolon boundary can leak. Example: 'PR #12 zusammenführen; niemals #99 mergen' — the negation is 33 chars before '#99', outside the window, so #99 gets a grant. The window is inherited from pr-merge's inline lookbehind and not re-measured for the 15 new ops. Worse: a negation at char 29 inside a sentence is caught; at char 31 it leaks.",
+      "file": "src/scripts/git_authorization_hook.ts",
+      "status": "fixed",
+      "rationale": "REAL, and broader than the title. Four shapes leaked, not one: a negation trailing the match (\"Merge PR #12 auf keinen Fall.\", \"Merge #12 under no circumstances.\"), an abbreviation dot cutting the sentence (\"Du sollss nicht z.B. den PR #12 mergen.\"), and a negation 38 characters upstream, past the fixed 30-character window (\"Bitte unter keinen Umstaenden ... mergen\"). A fifth prompt failed the other way: \"Do not push. Merge PR #12.\" authorized NOTHING, because isInterrogative read the leading \"Do\" and classified the whole block as a question. ROOT CAUSE of the ledger gap this finding sits in, per the three timestamps: the disposition job \"Blocking review findings dispositioned\" completed 2026-09-03T12:51:54Z, the machine-readable findings comment was posted at 12:53:25Z, and the PR merged at 12:58:10Z. The consumer read the PR comments 91 seconds BEFORE the block it reads existed, hit the allowEmpty pass with an absent ledger and zero reported findings, and printed green. renderReview appends that block unconditionally on the findings-present path, independent of --enforce, so the gap is an ORDERING defect between two workflow files and not an enforcement setting. Closing the ordering itself needs a synthetic release/* pull request, which is a Hard-Floor surface; it is carried to road-to-release-finding-ordering in later/ with the four candidate mechanisms and their costs. FIX: the negation window is now a clause scan in both directions bounded by a comma, semicolon, colon or contrast cue; sentence boundaries ignore abbreviation dots and decimal points; isInterrogative is applied per sentence; and the pr-merge pattern's duplicate inline lookbehind is removed in favour of the single vocabulary its own comment asked for.",
+      "verified_by": "tests/scripts/git_auth_negation_corpus.test.ts (25 cases over a typed corpus with stable ids) plus 228 pre-existing authorization tests unchanged",
+      "date": "2026-09-03",
+      "commit": "6a08ed26177bd601b2677428c598ce72f1e256c5"
+    },
+    {
+      "finding_id": "9b91a14e9d35",
+      "severity": "medium",
+      "kind": "security",
+      "title": "MCP tool descriptions not part of attack surface inventory despite ADR-252 council citing tool-poisoning",
+      "detail": "agent-security-review skill (L58-62) says 'the most dangerous chains […] only surface when the red-team lens INSPECTS how the surfaces compose' and names 'rug-pull MCP tool whose description mutates post-approval' as the worked example. But the git auth changes here—new BLOCK_OPS, new phrase patterns, grants—never enumerate or hash the MCP tool descriptions that will be live when the guard fires. A poisoned tool description saying 'gh pr merge: read-only PR viewer' would pass the static audit and defeat the runtime gate. The diff touches authorization, adds 17 ops, and ships with no MCP surface cross-check.",
+      "file": "src/skills/agent-security-review/SKILL.md",
+      "status": "accepted_risk",
+      "rationale": "REAL and OUT OF SCOPE here, accepted for this release rather than dismissed. The finding is that MCP tool descriptions are absent from the attack-surface inventory of the agent-security-review skill, while the ADR its council cited names tool poisoning. Nothing in this roadmap edits that skill, and folding a skill-content change into a release-findings ledger pass would be the scope creep the roadmap\\u2019s own Not-in-scope section guards. Non-blocking by severity (medium/security is below the blocking bar of critical|high x security|claim), so it does not gate 14.15.0. Carried, with its finding id, to road-to-release-finding-ordering in later/.",
+      "verified_by": "scope check against this roadmap\\u2019s Goal and phases: no phase touches src/skills/agent-security-review/SKILL.md, and none of the four authorization defects reaches it",
+      "date": "2026-09-03"
+    },
+    {
+      "finding_id": "220223cedd5e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Target extraction regex allows 7-digit PR numbers but GitHub's max is 2^31-1",
+      "detail": "`extractMergeTargets` (git_authorization_hook.ts:248) matches `(\\d{1,7})` and parses with `Number.parseInt`. A valid GitHub PR number is u32 (up to 4,294,967,295), so `#9999999` parses but `#99999999` (8 digits) does not. The cap is arbitrary and fails-closed (over-long numbers freeze no target), but it means a legitimate high-numbered PR in a busy repo cannot be granted. The isSafeInteger check (L251) would catch 2^53 overflow; this cap fires earlier for no stated reason.",
+      "file": "src/scripts/git_authorization_hook.ts",
+      "status": "fixed",
+      "rationale": "REAL. Both sites carried \\d{1,7}: extractMergeTargets (mint) and mergeTargetOf (consume). The failure mode is worse than out-of-range — the word boundary sits after digit seven, so an eight-digit target resolved to NOTHING and the gate fell back to the clock-bound path silently. Widening only the consume site, which is what the roadmap step named, would have been inert: the mint site is where a grant's target set is frozen, so a target that cannot be minted can never be matched. Both now accept ten digits and range-check against one exported PR_NUMBER_MAX = 2147483647 taken from the API contract. The mint site's required # or PR prefix is unchanged.",
+      "verified_by": "tests/scripts/git_auth_observability_and_bounds.test.ts (both sites, plus a git-show probe that the seven-digit bound was present at 022c0d240)",
+      "date": "2026-09-03",
+      "commit": "1cf8f70869593281b26a16a00408ce24050db4a7"
+    },
+    {
+      "finding_id": "637df9899aaa",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Consumption write failure leaves target unspent but emits no observability signal",
+      "detail": "`consumeGrantTarget` (git_authorization_hook.ts:842) catches `atomic_write_json` failures and does nothing—the comment says 'observability only […] fails toward the user's stated intent'. But there IS no observability: no log, no stderr, no metric, no breadcrumb. A replayed merge of an already-authorized PR is the safe failure mode, but an operator debugging 'why did this merge twice' has zero trace that the consumption write failed. The try/catch suppresses the error and leaves the mystery.",
+      "file": "src/scripts/git_authorization_hook.ts",
+      "status": "fixed",
+      "rationale": "REAL, and there were TWO sites rather than the one named. consumeGrantTarget and the session-ledger write ~130 lines below it both carried an \"Observability only\" comment and wrote nothing, which inverts the word. AC-5 describes a behavioural class, so fixing one would have made the acceptance claim half true. The failure DIRECTION is unchanged and still defensible in both: an unconsumed grant fails toward the user\\u2019s stated intent, and a missing session ledger degrades the gate to \"no ledger\", which denies the irreversible subset. What changed is that neither is silent.",
+      "verified_by": "tests/scripts/git_auth_observability_and_bounds.test.ts (an unwritable ledger directory produces a stderr diagnostic and does not throw; plus a structural assertion that no atomic_write_json catch in the file binds nothing)",
+      "date": "2026-09-03",
+      "commit": "1cf8f70869593281b26a16a00408ce24050db4a7"
+    },
+    {
+      "finding_id": "ed9c6db22f65",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Destructive marker patterns match added lines only—a rename that deletes+adds the same DROP statement scores additive",
+      "detail": "merge_impact.ts L57 says markers match `^\\+.*` (added lines only), and the test at L114 pins that 'REMOVING a dropColumn call is not destructive'. But a file rename or a refactor that moves a `dropColumn` call from one migration to another produces `-` and `+` lines with identical text. The `+` line fires the marker, the context is lost, and the verdict is `destructive` for a no-op move. The inverse is worse: a migration that WAS going to drop a column, now doesn't, shows a `-` line with `dropColumn` and scores `additive`, hiding that a schema change was removed.",
+      "file": "src/scripts/hooks/merge_impact.ts",
+      "status": "fixed",
+      "rationale": "REAL OUTCOME, WRONG MECHANISM. The finding says the markers \"match added lines only\" — four of the eight match DELETED lines (removed export, removed public symbol, removed route, deleted file mode). And the diff it describes, one that deletes and re-adds the same DROP, already scored destructive, because the re-added line trips the added-side anchor. The real leak is adjacent: a rename whose hunk drops schema on the DELETED side only. Measured additive with no markers at 022c0d240. FIX: a deleted-side schema scan CONDITIONAL on git\\u2019s rename metadata — conditional because applying it to every block would score the pinned counter-case destructive, which is the risk this roadmap recorded against this step by name. RESIDUAL: a similarity index 100% rename carries no content lines and stays additive, so a moved migration is invisible to this scan. Asserted as a test rather than left as a gap.",
+      "verified_by": "tests/scripts/merge_impact.test.ts (a rename around a schema drop is destructive; the pinned removing-a-dropColumn counter-case is asserted unchanged beside it; a 100% rename is asserted additive)",
+      "date": "2026-09-03",
+      "commit": "6fa2b068a1c5e6df9c15d90fd9fe13fbd96160e3"
+    },
+    {
+      "finding_id": "0687468c0d65",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "No measurement that target-bound grants are safer than the 30-min window",
+      "detail": "ADR-252 (L194, L274) states twice 'what no evidence establishes: that this shape is safer than the 30-minute window' and 'nothing here measures unintended merges prevented, in either direction'. The authority_basis is `owner_intent`, not evidence. The changelog (L9) claims 'Security and correctness' but the record explicitly disclaims a safety proof. The shape is narrower (can't cover unnamed PRs) but unmeasured in the dimension that matters (catching unintended merges), so calling it a security win is unsubstantiated.",
+      "file": "docs/decisions/ADR-252-specificity-replaces-recency-for-merge.md",
+      "status": "accepted_risk",
+      "rationale": "REAL, non-blocking, and accepted with the gap named. There is no measurement that target-bound grants are safer than the 30-minute window; the argument for the change was structural (a named object cannot be consumed by an unnamed command) rather than empirical. Producing the measurement needs a corpus of real authorization turns and a definition of \"safer\" that separates a refused-but-intended merge from an authorized-but-unintended one — a measurement design, not a fix, and out of this roadmap\\u2019s scope. Recorded so the claim is not read as measured. Carried to road-to-release-finding-ordering in later/.",
+      "verified_by": "the ADR itself states the absence: its evidence table records the mechanism change without a comparative measurement, which is the finding restated rather than refuted",
+      "date": "2026-09-03"
+    },
+    {
+      "finding_id": "134d0e0c20a7",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Negation defect disclosure in test file leaks implementation of fix to agent context",
+      "detail": "git_auth_destructive_coverage.test.ts L136-148 says 'Every row here returned the operation its sentence forbade when probed on 2026-09-03' and 'The same probe showed the hole predates them'. A model reading this learns exactly which patterns leaked and that the fix is a centralized `negatedBefore` check, so a future prompt-injection attempt can target the 30-char window or non-ASCII boundaries. The disclosure is complete (15/15 leaked, both old ops affected, window inherited from pr-merge). Threat-modeling would ask: does this help an attacker more than a developer?",
+      "file": "tests/scripts/git_auth_destructive_coverage.test.ts",
+      "status": "false_positive",
+      "rationale": "FALSE POSITIVE as a defect, and the opposite of one as a practice. The finding is that a test file discloses the negation defect and so leaks the implementation of the fix into agent context. A negation corpus cannot assert the property without naming the shapes that broke it, and the archived road-to-merge-op-split-and-negation-guard learned exactly this: it asserted a PHRASE LIST where the property was the thing to assert, and four further shapes leaked afterwards. Hiding the shapes is what produced the follow-up. The corpus added in this release names them deliberately, with the reason in its header, and asserts the property alongside them. The security model does not depend on an agent not knowing which prompts were once mishandled — it depends on the guard holding, which is what the corpus measures.",
+      "verified_by": "tests/scripts/fixtures/git_auth_negation_corpus.ts header, which states the disclosure and its reason explicitly",
+      "date": "2026-09-03"
+    },
+    {
+      "finding_id": "26c9fdbcedc2",
+      "severity": "low",
+      "kind": "style",
+      "title": "Evidence table in ADR-252 cites _splitlines duplication but defers the fix, leaving the note as TODO archaeology",
+      "detail": "ADR-252 evidence row 'the ledger was replaced on every human turn' cites release_env.ts L318-321, and L321 says 'Known duplication, recorded rather than fixed here: adoption_report.ts:106 and readme_linter.ts:418 carry their own copies. Collapsing all three onto one definition touches three modules and is not this change's subject.' That note will sit in the ADR forever. Either fix it now (in-scope: release.ts moved the helpers to stay under the size cap), defer it to an issue, or delete the note. A recorded-not-fixed comment in evidence is a commit message, not a design record.",
+      "file": "docs/decisions/ADR-252-specificity-replaces-recency-for-merge.md",
+      "status": "accepted_risk",
+      "rationale": "REAL, low/style, accepted. The ADR\\u2019s evidence table cites a duplication and defers the fix, leaving a note a later reader has to excavate. Editing an accepted ADR\\u2019s evidence table to tidy a deferred note is a change to a decision record for presentational reasons, which is a worse trade than the archaeology it saves. Non-blocking. Carried to road-to-release-finding-ordering in later/ with the other three.",
+      "verified_by": "read of the ADR\\u2019s evidence table: the deferred item is stated as deferred, with what it defers",
+      "date": "2026-09-03"
+    }
+  ],
+  "review_independence": null
+}
