@@ -38,7 +38,7 @@ export interface NegationCase {
 }
 
 export const NEGATION_CORPUS: readonly NegationCase[] = [
-    // ── The four leaks: a negation the clause scan must now see ───────────────
+    // The four leaks: a negation the clause scan must now see.
     {
         id: 'negation.de.pr-merge.trailing-01',
         prompt: 'Merge PR #12 auf keinen Fall.',
@@ -73,7 +73,7 @@ export const NEGATION_CORPUS: readonly NegationCase[] = [
             'a digit dot is not a sentence boundary either',
     },
 
-    // ── The must-allow leak: a question word suppressing a real instruction ──
+    // The must-allow leak: a question word suppressing a real instruction.
     {
         id: 'interrogative.en.pr-merge.sentence-scope-01',
         prompt: 'Do not push. Merge PR #12.',
@@ -131,7 +131,7 @@ export const NEGATION_CORPUS: readonly NegationCase[] = [
         why: 'a declarative sentence opening with "Is" is not a question, and must not suppress the next one',
     },
 
-    // ── Contrast cues: a negation must NOT cross into the next clause ────────
+    // Contrast cues: a negation must NOT cross into the next clause.
     {
         id: 'contrast.en.pr-merge.but-01',
         prompt: 'Merge PR #123, but do not push to production.',
@@ -161,7 +161,7 @@ export const NEGATION_CORPUS: readonly NegationCase[] = [
             'must keep DENYING push. Duplicated prompt, different obligation',
     },
 
-    // ── Controls: green at HEAD before the change, and must stay green ───────
+    // Controls: green at HEAD before the change, and must stay green.
     {
         id: 'control.en.pr-merge.plain-01',
         prompt: 'merge PR #123',
