@@ -3,11 +3,8 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing"
-# Trigger set disjoint from secret-vcs-guard by design (2026-08-04): bare
-# `secret` / `password` belong to the VCS-write surface (secret-vcs-guard);
-# this rule keeps the conversational security surface (editing auth/billing/
-# tenant/webhook paths and secrets *infrastructure*, not committing a
-# credential).
+# Disjoint from secret-vcs-guard by design (2026-08-04): bare `secret` /
+# `password` are that rule's VCS-write surface, not this rule's.
 triggers:
   - keyword: "auth"
   - keyword: "billing"
