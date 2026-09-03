@@ -10,34 +10,57 @@ parent_roadmap: road-to-inbox-harvest-2026-08-e-council-topology-evidence
 > `road-to-inbox-harvest-2026-08-e-council-topology-evidence` on 2026-09-01 have
 > a **live destination** that `deferralProblems`
 > (`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) can verify from
-> both ends. `status: draft` keeps it off the dashboard until a human flips it to
-> `ready`; nothing here is scheduled work today.
+> both ends. `status: carrier` keeps it off the dashboard and out of the active
+> estate count until a human flips it to `ready`; nothing here is scheduled work
+> today. (This line said `status: draft` until 2026-09-03; the frontmatter has
+> read `carrier` since the status that costs something landed, and a header
+> naming a status the file does not carry is the class of error this whole
+> roadmap is about.)
 >
 > **`[~]` is DEFERRED, never cancelled.** Every item below is planned and
 > carried, with a resumption trigger. The detail — evidence, forbidden claims,
 > red-proof tables, execution sequences — lives in the three stubs each group
 > names, and is not duplicated here.
 >
-> **Nothing guards this file, and that is worth knowing before relying on it.**
-> The 38 obligations this file carries rest on it continuing to exist, and no
-> gate in the repository would notice if it stopped. `deferralProblems` is a
-> **one-shot** admission gate: its only production call
-> (`src/agent-src/scripts/archive_completed_roadmaps.ts:574`) sits inside a loop
-> over `collect()` (`src/agent-src/scripts/update_roadmap_progress.ts:748`),
-> which skips every `status: draft` file (`:755-757`) and everything under
-> `archive/`, `skipped/`, `stubs/` and `later/` (`:95`, `:315`). The parent is
-> already archived, so the check that created this receiver can never run
-> against the pair again. No linter reads `deferred-resolution:` or
-> `parent_roadmap:` — the one other mention under `src/` is a warning string
-> (`src/scripts/lint_roadmap_complexity.ts:259`). Neither reference gate sees
-> the inbound links. Deleting this file would red nothing and would score as an
-> estate **credit** (`src/scripts/check_estate_count.ts:490-534`).
+> **This file IS guarded now — corrected 2026-09-03, and the correction is the
+> point.** This paragraph used to open "Nothing guards this file", state that no
+> gate would notice if it stopped existing, and conclude that "deleting this file
+> would red nothing". All three were true when written and all three are now
+> false. `src/scripts/lint_carrier_integrity.ts` landed on 2026-09-02 (#1810,
+> `6641d4719`) and walks from the ARCHIVED side: an archived parent names its
+> receiver by slug, so the expected set of live receivers is derivable without a
+> registry, and whole-file deletion is caught on the first pass.
+>
+> **Measured, not asserted.** Moving this file out of the tree and re-running the
+> gate produces `❌ 38 broken deferral carries` and exit 1, naming the archived
+> parent and the destination that "no longer exists anywhere under
+> `agents/roadmaps/`". Restoring it returns exit 0. That gate's own baseline
+> entry names this file by path as the reason its broken-destination class
+> carries **no baseline at all**: "deleting
+> `agents/roadmaps/road-to-council-topology-evidence-followups.md` produces 38 of
+> those and must red immediately rather than nudge a count."
+>
+> What remains accurate from the original paragraph, and is kept because it
+> explains why a second gate was needed: `deferralProblems`
+> (`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) IS a one-shot
+> admission gate — its only production call (`:574`) sits inside a loop over
+> `collect()` (`src/agent-src/scripts/update_roadmap_progress.ts:748`), which
+> skips every unscheduled file (`:755-757`) and everything under `archive/`,
+> `skipped/`, `stubs/` and `later/` (`:95`, `:315`). The parent is already
+> archived, so that check can never run against this pair again. The standing
+> validator is what closed the gap, not a change to the one-shot one.
+>
+> Two claims are NOT re-verified here and are left as they stand: whether
+> deletion still scores as an estate **credit**
+> (`src/scripts/check_estate_count.ts:490-534`), and the reference-gate reach.
+> Deletion is a hard failure now regardless of how the estate would score it, so
+> the credit question no longer decides anything.
 >
 > Full derivation, including the 43 inbound-reference census:
 > [`agents/evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md`](../evidence/analysis/topology-followups-disposition-evidence-2026-09-01.md)
-> § 3. Closing the gap is
-> [`stubs/road-to-deferral-carry-guard.md`](stubs/road-to-deferral-carry-guard.md),
-> and it is deliberately not done here.
+> § 3. The stub that was to close the gap has been consumed by the change that
+> closed it, so the pointer that stood here is deliberately not replaced with
+> another.
 
 ## Why one receiver rather than three, and the council split behind it
 
@@ -330,10 +353,10 @@ closed (`:591`), so each of those receivers discharged the work it received
 before being archived. So the naive standing validator — the guard stub's
 option 1 — is **2-of-2 false-positive on the live corpus at this commit**.
 
-That converts
-[`stubs/road-to-deferral-carry-guard.md`](stubs/road-to-deferral-carry-guard.md)'s
-predicted *"disposition vocabulary it does not have today"* from a prediction
-into a measurement: the vocabulary has to distinguish a receiver archived
+That converts the guard stub's predicted *"disposition vocabulary it does not
+have today"* from a prediction into a measurement (the stub itself is gone —
+consumed by #1810, the change that shipped the guard, so it is named rather than
+linked): the vocabulary has to distinguish a receiver archived
 **after discharging** the carry from one archived **with it still open**, and
 nothing in the tree records that difference today.
 
@@ -449,3 +472,58 @@ mechanism was built, and no capacity was reserved. The file is materially
 unchanged apart from this record. That is the honest terminal state of a
 carrier whose every trigger is a fact about the world rather than a fact about
 the repository.
+
+## Disposition 2026-09-03 (drain run 16) — the same instruction arrived again, and the lock held
+
+A second autonomous drain run reached this file under a **written owner
+instruction materially identical to drain run 15's**: drive every active roadmap
+to completion, route every open decision to the AI council rather than to the
+owner, and — the clause that decides this file — *"legitimate gate closure
+only… never mark a gate green without one of those three."*
+
+**The council was NOT re-run on it, and that is the discipline rather than a
+shortcut.** The prior section records a 2-round, 2/2-quorum council verdict on
+this exact question, on this exact mechanism, under this exact instruction shape.
+Re-asking after an unwelcome verdict is verdict shopping, not rigour. The
+recorded boundary is unchanged and was re-read before being cited: *preserve all
+38 obligations in place · preserve the three measurable resumption triggers · do
+not archive, cancel, promote or transfer the carrier · do not claim its work is
+complete.*
+
+**The triggers were measured live rather than assumed, which is the one thing a
+new run can add.** Phase 2's trigger requires `n >= 5` independent eligible
+seats. `agent-config council:status` on this machine reports **2 enabled of 5**
+(anthropic, openai), so the seat condition is unmet by three seats — before the
+20-consecutive-UTC-day reservation and the estate-headroom condition are even
+reached. Phase 3's trigger needs two consecutive UTC-day windows at 30 calls per
+provider against a 50-per-provider-per-day cap; no reservation exists. Both are
+facts about the world, and neither moved since 2026-09-01.
+
+### What this run DID change, and why it is inside the boundary
+
+Three factual claims in the header, and two dead links. All five were true when
+written and had gone false:
+
+1. The header said `status: draft`; the frontmatter has read `carrier` since
+   #1810.
+2. It said **"Nothing guards this file"**, that no gate would notice its
+   deletion, and that deleting it **"would red nothing"**.
+   `src/scripts/lint_carrier_integrity.ts` landed 2026-09-02 (#1810,
+   `6641d4719`) and walks from the archived side. Verified by moving this file
+   out of the tree: `❌ 38 broken deferral carries`, exit 1; restored, exit 0.
+   That gate's own baseline entry names this file by path as the reason its
+   broken-destination class carries no baseline at all.
+3. Two links pointed at `stubs/road-to-deferral-carry-guard.md`, which no longer
+   exists — the change that shipped the guard consumed it.
+
+None of that touches an obligation, a trigger, or the carrier's status, so it
+sits inside the recorded boundary rather than against it. A carrier whose whole
+subject is "a mechanism keyed on something that moved" is the worst possible
+place to leave a stale claim standing, and leaving one because the file is
+parked would be the error this roadmap exists to describe.
+
+### What this run did NOT do
+
+No item was checked, nothing was archived, promoted, cancelled or transferred,
+no mechanism was built, no capacity was reserved, and no work here is claimed
+complete. Every one of the 38 obligations stands exactly where it stood.
