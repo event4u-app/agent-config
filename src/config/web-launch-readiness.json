@@ -182,7 +182,7 @@
         "region": "de",
         "to": "critical",
         "why": "A DE-targeted commercial site owes a published imprint and a privacy notice by law; the two citations and the date they must be re-read by live in this row's `authority` field, not in this sentence. Abmahnung risk is real and immediate, which is what separates critical from situational here.",
-        "authority": "Impressum: DDG § 5 (Digitale-Dienste-Gesetz), gesetze-im-internet.de/ddg -- in force since 2024-05-14, superseding the identically-numbered provision of the TMG, which is why the pre-2026-09-03 form of this row was sixteen months stale. Datenschutzerklaerung: DSGVO Art. 13, Regulation (EU) 2016/679, consolidated text at eur-lex.europa.eu. Both are cited here as provenance a reader can re-check, never as counsel: src/rules/legal-safety-floor.md governs how this package may speak about law, and `review_by` below is the date these two must be read again.",
+        "authority": "Impressum: DDG § 5 (Digitale-Dienste-Gesetz), gesetze-im-internet.de/ddg -- in force since 2024-05-14, superseding the identically-numbered provision of the TMG, which is why the pre-2026-09-03 form of this row cited dead law: it was written on 2026-08-25, twenty-seven months after that supersession. Datenschutzerklaerung: DSGVO Art. 13, Regulation (EU) 2016/679, consolidated text at eur-lex.europa.eu. Both are cited here as provenance a reader can re-check, never as counsel: src/rules/legal-safety-floor.md governs how this package may speak about law, and `review_by` below is the date these two must be read again.",
         "review_by": "2027-09-03"
       }
     ]

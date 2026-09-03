@@ -152,8 +152,8 @@ somewhere in the build.
 - [x] **2.1 Add `authority` and `review_by` to every check row that asserts a
       legal basis.** `authority` names the statute and its source; `review_by` is
       the date the citation must be re-read. This is the generalisation the TMG
-      defect earns: the citation went stale for roughly sixteen months and
-      nothing in the file could have surfaced it.
+      defect earns: the citation was already twenty-seven months out of date on
+      the day it was written, and nothing in the file could have surfaced it.
       verify: the config schema requires both fields on any row whose `why`
       names a statute, and the gate fails a row that omits them.
 
@@ -333,6 +333,17 @@ somewhere in the build.
   entry's own recommendation, which is worth stating plainly rather than reading
   as independent corroboration.
 
+  **Correction, 2026-09-03.** The quoted *"sixteen months"* is left verbatim
+  because it is a quotation, and it is wrong. The figure anchors to nothing:
+  DDG § 5 has been in force since **2024-05-14**, and the TMG citation entered
+  this tree at `627f1a23c` (2026-08-25, on `main`) and was corrected at
+  `1260b4668` (2026-09-03) — `git log -S "TMG" -- src/config/web-launch-readiness.json`
+  returns exactly those two commits and no other. So the citation was
+  **twenty-seven months** out of date on the day it was written and shipped for
+  **nine days**. The number was this roadmap's own, repeated back by the seats;
+  the council's reasoning does not rest on it, and correcting it does not
+  reopen decision (b).
+
   Both seats attached the **same two binding conditions**, and both are part of
   the decision rather than commentary on it:
 
@@ -359,8 +370,8 @@ somewhere in the build.
   the row policed now that its `why` names nothing.
 - **Recommendation:** (b). This package is not a legal advisor and
   `legal-safety-floor` already governs how it may speak about law; a citation
-  behind a dated `authority` field is checkable, and one in prose is what went
-  stale for sixteen months.
+  behind a dated `authority` field is checkable, and one in prose is what
+  shipped dead law for nine days without anything noticing.
 - **If you do nothing:** the wrong citation keeps shipping. This is the one item
   here with an outward-facing cost today, so leaving it is a decision, not a
   deferral.

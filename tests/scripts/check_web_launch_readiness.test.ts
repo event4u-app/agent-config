@@ -330,9 +330,10 @@ describe('exit codes carry the blocking distinction', () => {
 
 describe('2.1/2.2 — a legal claim carries its own authority and expiry', () => {
     // The generalisation the stale-statute defect earns. A citation sat wrong in
-    // this config for roughly sixteen months and nothing in the file could have
-    // surfaced it, because a statute reference in prose is a comment: no field
-    // said where it came from and no field said when to re-read it.
+    // this config from the day it was written -- law dead twenty-seven months
+    // already -- and nothing in the file could have surfaced it, because a
+    // statute reference in prose is a comment: no field said where it came from
+    // and no field said when to re-read it.
     const row = (over: Partial<LegalRow> = {}): LegalRow => ({
         kind: 'escalation',
         id: 'required-legal-pages@de',

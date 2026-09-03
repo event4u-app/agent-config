@@ -48,8 +48,8 @@ export type Tier = 'critical' | 'high' | 'medium' | 'situational';
  * two citations behind that sentence are NOT restated here: they live in the
  * escalation row's `authority` field in `web-launch-readiness.json`, where a
  * `review_by` date can lapse them. That is the whole point of the
- * `ddg-citation-authority` decision — a statute in prose went stale for sixteen
- * months and nothing could see it.
+ * `ddg-citation-authority` decision — a statute in prose cited law already dead
+ * for twenty-seven months and nothing could see it.
  * Modelling it as a tier escalation keeps one check with one implementation and
  * puts the jurisdiction where it belongs: on the consequence.
  */
