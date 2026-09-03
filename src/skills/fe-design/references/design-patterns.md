@@ -171,6 +171,34 @@ Before adding any animation to a UI element, run through this decision tree:
 - **Never animate layout properties** (width, height, top, left, padding). Why: triggers browser layout recalculation on every frame; always solvable with `transform`.
 - **Always add `@media (prefers-reduced-motion: reduce)`** — gentler animation (reduced distance/opacity), NOT display:none. Why: vestibular disorders make motion UI unusable; reducing is better than removing.
 
+**4. Is the trigger the reader's position, or the reader's action?**
+
+Position-triggered motion is the interaction layer's current tell, and it is
+the one case where the decision tree above returns "no" and gets overridden
+anyway. Two shapes, both catalogued:
+
+- **Scroll-reveal on every section** (catalog M6). The reader has already
+  scrolled to the content; fading it in delays what they asked for. Animate a
+  reveal only where position carries meaning — a stepped narrative whose beats
+  must land in order, or a long-form piece using position to signal progress —
+  and then say so in the brief. A reveal applied per section is a default.
+- **A pointer-tracking spotlight** (catalog M7). The cursor is the one element
+  on the page whose position the reader already knows, so highlighting it
+  carries no information. Legitimate only where the spotlight *is* the
+  interaction: an inspection tool, a reveal mechanic, a magnifier.
+
+**5. Does the hover state spend contrast or add it?**
+
+A control that lowers its own opacity on hover (catalog M8) reads as retreating
+from the pointer, and it reduces legibility at the moment the reader is
+committing to the target. Hover is carried by brightness, background, border or
+elevation — never by removing contrast. A fade is correct only when it
+communicates a real state change, such as an item being dismissed.
+
+The six interaction states every interactive element must assert are
+[`design-review`](../../design-review/SKILL.md)'s; this entry is the motion half
+of the hover one.
+
 **4. What to animate?**
 Animate `transform` and `opacity` only. Why: these run on the GPU compositor thread, not the main thread; they never trigger layout or paint.
 `scale(0)` → `scale(1)` is wrong. Why: nothing in the real world appears from nothing. Use `scale(0.95)` + `opacity: 0` → `scale(1)` + `opacity: 1` instead.
