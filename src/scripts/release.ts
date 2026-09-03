@@ -194,6 +194,7 @@ import {
     _target_from_branch,
     create_and_push_annotated_tag,
     guard_publication,
+    checkout_release_branch,
     guard_release_curation,
     die,
     gh,
@@ -1177,23 +1178,9 @@ function execute(
     const pr_merged = pr_state === 'MERGED';
 
     // ─── 1. branch ──────────────────────────────────────────────────────────
-    if (pr_merged) {
-        _step(1, total, `PR for ${branch} already merged — staying on ${MAIN_BRANCH}`);
-        if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== MAIN_BRANCH) {
-            run(['git', 'checkout', MAIN_BRANCH]);
-        }
-        run(['git', 'pull', '--ff-only', REMOTE, MAIN_BRANCH]);
-    } else if (resume && _branch_exists_local(branch)) {
-        _step(1, total, `Branch ${branch} exists locally — checkout`);
-        run(['git', 'checkout', branch]);
-    } else if (resume && _branch_exists_remote(branch)) {
-        _step(1, total, `Branch ${branch} exists on ${REMOTE} — fetch + checkout`);
-        run(['git', 'fetch', REMOTE, branch]);
-        run(['git', 'checkout', '-b', branch, `${REMOTE}/${branch}`]);
-    } else {
-        _step(1, total, `Create branch ${branch}`);
-        run(['git', 'checkout', '-b', branch]);
-    }
+    checkout_release_branch(branch, pr_merged, (m) => {
+        _step(1, total, m);
+    });
 
     // ─── 1b. era split (optional, separate commit) ─────────────────────────
     // Lands as `chore(changelog): split era ...` BEFORE the release commit
