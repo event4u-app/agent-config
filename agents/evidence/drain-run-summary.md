@@ -666,10 +666,13 @@ silently dropped.
   the correct one.
 - **#1817's own first push of this record went red, and the cause was this
   file.** Its triage section cited the skill-scout quarantine contract by full
-  path under `docs/contracts/`. That file exists on #1815's branch and on no
-  other, so `check_references` reported one broken reference pointing at this
+  path under `docs/contracts/`. At the time that file existed only on #1815's
+  branch, so `check_references` reported one broken reference pointing at this
   very summary, and `demo-commands-still-pass` failed for the same single reason
-  via `task check-refs`. Both now name the contract without writing a path this
+  via `task check-refs`. #1815 has since merged and the file now resolves on
+  `main` - past tense here is load-bearing, because a present-tense reading of
+  this sentence went false the moment that PR landed, which is the third time in
+  one run that a claim in this file outran its own evidence. Both now name the contract without writing a path this
   tree does not carry - including this sentence, which reintroduced the identical
   break on the first attempt at describing it. Green afterwards:
   `check_references` 1828 scanned, no broken references, and the demo script's
