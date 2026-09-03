@@ -1,9 +1,16 @@
 # Capability matrix — what works on which host
 
-> **Generated** by `scripts/generate_capability_matrix.py` — do NOT
-> hand-edit. Derived from the `generate_tools()` projection logic in
-> `condense.py` (each cell traces to a `generate_*` dispatcher call).
-> Drift-checked in CI (`--check`).
+> **Generated — still generated, not hand-maintained prose wearing a
+> generated header.** Emitted by `src/scripts/generate_capability_matrix.ts`;
+> do NOT hand-edit. Derived from the `generate_tools()` projection logic in
+> `src/scripts/condense.ts` (each cell traces to a `generate_*` dispatcher
+> call). Drift-checked in CI (`--check`).
+>
+> Until 2026-09-03 this header named two Python-era generator paths that
+> have not existed since ADR-200 ended that era, so a reader checking the
+> provenance of this table found dead paths and no way to tell whether
+> anything still produced it. They are described rather than reproduced
+> here, so every path this header names resolves.
 
 Cells: **✅ native** (host consumes the artifact directly — symlink /
 native dir) · **🔁 adapter** (projected through a host-specific

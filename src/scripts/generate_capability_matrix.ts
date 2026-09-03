@@ -72,7 +72,7 @@ interface FnSpec {
     cells: Record<string, string>;
 }
 
-// Each condense.py dispatcher generator → what it emits, for which host(s),
+// Each condense.ts dispatcher generator → what it emits, for which host(s),
 // via which mechanism. Universal generators (symlink fan-out to every host
 // that consumes the artifact) list all consuming hosts explicitly. This is the
 // one place the host×artifact mechanism is asserted; the coverage guard below
@@ -222,10 +222,17 @@ export function render_md(matrix: Record<string, Record<string, string>>): strin
     const lines: string[] = [
         '# Capability matrix — what works on which host',
         '',
-        '> **Generated** by `generate_capability_matrix` — do NOT',
-        '> hand-edit. Derived from the `generate_tools()` projection logic in',
-        '> `condense.py` (each cell traces to a `generate_*` dispatcher call).',
-        '> Drift-checked in CI (`--check`).',
+        '> **Generated — still generated, not hand-maintained prose wearing a',
+        '> generated header.** Emitted by `src/scripts/generate_capability_matrix.ts`;',
+        '> do NOT hand-edit. Derived from the `generate_tools()` projection logic in',
+        '> `src/scripts/condense.ts` (each cell traces to a `generate_*` dispatcher',
+        '> call). Drift-checked in CI (`--check`).',
+        '>',
+        '> Until 2026-09-03 this header named two Python-era generator paths that',
+        '> have not existed since ADR-200 ended that era, so a reader checking the',
+        '> provenance of this table found dead paths and no way to tell whether',
+        '> anything still produced it. They are described rather than reproduced',
+        '> here, so every path this header names resolves.',
         '',
         'Cells: **✅ native** (host consumes the artifact directly — symlink /',
         'native dir) · **🔁 adapter** (projected through a host-specific',
@@ -337,8 +344,8 @@ interface ParsedArgs {
 class _ArgExit extends Error {}
 
 function _argError(msg: string): never {
-    process.stderr.write('usage: generate_capability_matrix.py [-h] [--check] [--quiet]\n');
-    process.stderr.write(`generate_capability_matrix.py: error: ${msg}\n`);
+    process.stderr.write('usage: generate_capability_matrix [-h] [--check] [--quiet]\n');
+    process.stderr.write(`generate_capability_matrix: error: ${msg}\n`);
     process.exitCode = 2;
     throw new _ArgExit();
 }
@@ -347,7 +354,7 @@ function parse_args(argv: string[]): ParsedArgs {
     const out: ParsedArgs = { check: false, quiet: false };
     for (const a of argv) {
         if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: generate_capability_matrix.py [-h] [--check] [--quiet]\n');
+            process.stdout.write('usage: generate_capability_matrix [-h] [--check] [--quiet]\n');
             process.exitCode = 0;
             throw new _ArgExit();
         } else if (a === '--check') {
@@ -383,7 +390,7 @@ export function main(argv: string[] | null = null): number {
     const missing = coverage_guard();
     if (missing.length > 0) {
         process.stderr.write(
-            '❌  generate_capability_matrix: condense.py dispatcher has ' +
+            '❌  generate_capability_matrix: condense.ts dispatcher has ' +
                 `generator(s) not mapped in _FN_SPEC: ${_pyListRepr(missing)}. Add an _FN_SPEC ` +
                 'entry so the matrix stays derived (never silently drift).\n',
         );
