@@ -67,7 +67,7 @@ describe('the journal join', () => {
 });
 
 describe('the documented query shape', () => {
-    it('names the four non-success states and the NULL consumption test', () => {
+    it('names every non-success state and the NULL consumption test', () => {
         for (const state of NON_SUCCESS_STATES) {
             expect(IGNORED_BLOCKER_QUERY).toContain(`'${state}'`);
         }

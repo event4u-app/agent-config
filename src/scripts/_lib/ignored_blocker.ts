@@ -105,11 +105,18 @@ export interface JournalConsumptionRow {
  * cannot drift: if this string and {@link rowIsIgnoredBlocker} ever disagree,
  * the disagreement is visible in one file. It is a documented query shape, not
  * a live query — nothing in this module opens a database.
+ *
+ * The `IN` list is DERIVED from {@link NON_SUCCESS_STATES}, not written out.
+ * It used to be four hand-typed literals, and "kept beside the predicate so the
+ * two cannot drift" was true of the FILE and false of the LIST: when the run
+ * vocabulary gained a seventh state (`road-to-wired-instruments` 2.3) the
+ * predicate picked it up from the set and this string did not, so the same
+ * module answered its own question two ways. Co-location is not a binding.
  */
 export const IGNORED_BLOCKER_QUERY = `
 SELECT episode_id, state, suggestion
 FROM journal_events
-WHERE state IN ('blocked', 'approval-required', 'exhausted', 'stagnated')
+WHERE state IN (${[...NON_SUCCESS_STATES].map((s) => `'${s}'`).join(', ')})
   AND consumption IS NULL
 ORDER BY episode_id
 `.trim();
