@@ -177,17 +177,71 @@ does not exist.
 
 ## Phase 4 — Close the count-messaging scope gap
 
-- [ ] **4.1 Add `src/rules/**` to `SURFACES` in
+- [x] **4.1 Add `src/rules/**` to `SURFACES` in
       `src/scripts/check_artefact_count_messaging.ts`.** The list at `:44-67`
       carries a written rationale per entry; add one for this class too — rules
       are the most-delivered surface this package has, and a wrong self-count
       there reaches every consumer session.
       verify: running the gate before the fix reports the two known hits; after
       4.2 it reports zero.
-- [ ] **4.2 Fix the two stale counts.** `src/rules/missing-skill-recovery.md`
+- [x] **4.2 Fix the two stale counts.** `src/rules/missing-skill-recovery.md`
       (297) and `src/rules/token-budget-discipline.md` (~290) against the actual
       299. Both edits are line-scoped; a whole-file sweep is a drive-by change.
       verify: `./scripts-run src/scripts/check_artefact_count_messaging` exits 0.
+
+> **Phase 4 landed 2026-09-03, with one correction to this roadmap's own premise.**
+>
+> `SURFACES` at `src/scripts/check_artefact_count_messaging.ts:44-67` now carries
+> `src/rules/**` as `RULE_SURFACE_DIR`, enumerated at run time rather than
+> hand-listed — a list of 120 paths would go stale on the first rule added, which
+> is the drift class this gate exists to catch. Rationale for the class, written
+> beside the others: rules are the most-delivered surface this package ships, so
+> a wrong self-count there reaches every consumer session. An empty walk is a
+> hard failure, never a clean run.
+>
+> **Risk 3 measured rather than predicted.** 120 rule files entered a gate tuned
+> on 16 curated docs. The widened gate reported exactly **two** hits — the two
+> this roadmap named — and no phrasing the regex was never tuned against. Run
+> before the fix, as 4.1 asks:
+>
+> ```
+> ❌  Artefact-count messaging drift — 2 mismatch(es):
+>     src/rules/missing-skill-recovery.md:34: skills says 297, expected 299
+>     src/rules/token-budget-discipline.md:60: skills says 290, expected 299 (approximation "~" not allowed on flagship surfaces)
+>     internal inconsistency — skills: {290, 297, 299}
+> ```
+>
+> **The finding: only ONE of the two was a stale self-count.**
+> `token-budget-discipline.md:60` was — `~290 skills` against a live 299, and its
+> derived 15 % cap of `~43` was stale with it; both are corrected in one
+> line-scoped edit (`299 skills`, cap `~44`).
+> `missing-skill-recovery.md:34` was **not**. Its `297` is a figure from the
+> dated measurement the same paragraph cites — the `legacy-all` row of
+> `agents/evidence/analysis/scoped-projection-host-delivery.md`, measured
+> 2026-08-16 — and rewriting it to 299 would have falsified recorded evidence to
+> satisfy a gate. This roadmap's Context asserted both were stale; that half is
+> wrong, and it is recorded here rather than quietly implemented.
+>
+> The gate's charter already excluded dated snapshots but could only express it
+> by leaving a whole FILE out, which is useless when one paragraph of live rule
+> prose carries one dated figure. So the exclusion became per line:
+> `<!-- artefact-count: dated-measurement -->`, which silences that line only and
+> keeps it out of the cross-surface inconsistency net as well. The rule's prose
+> now names the date and the artefact, so the exemption is falsifiable rather
+> than a mute button.
+>
+> **`src/rules/**` is deliberately NOT in the anchor-coverage pass**, and the
+> reason is mechanical: satisfying it would make `update_counts` a writer into
+> `src/rules/`, where the kernel rules sit behind `block_kernel_rule_writes`. A
+> generator that must never touch part of its own target directory is one path
+> move away from being disarmed. A stale rule count therefore fails on value and
+> a human fixes it; the gate's failure advice says so instead of pointing at a
+> generator that will not write there.
+>
+> **Both polarities observed.** Dropping the rule set back out of the scan makes
+> a planted `271 skills` in a rule pass with exit 0 — the blindness as it stood.
+> Removing the marker handling reds three tests including the live gate.
+> Restored: gate exits 0, `Tests 18 passed (18)`.
 
 ## Blockers
 
@@ -220,12 +274,12 @@ does not exist.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -rn 'hook_effect_doctor\|hook_effect_probe' src Taskfile.yml .github`
+- [x] AC-1 — `grep -rn 'hook_effect_doctor\|hook_effect_probe' src Taskfile.yml .github`
       names at least one caller that is not the two modules themselves.
-- [ ] AC-2 — `grep -rn experiment_freeze src` names at least one non-test importer.
+- [x] AC-2 — `grep -rn experiment_freeze src` names at least one non-test importer.
 - [ ] AC-3 — `grep -c context_fingerprint src/scripts/hooks/run_continuation_hook.ts` > 0,
       or Phase 2 stands `[~]` with the blocker unresolved and said so.
-- [ ] AC-4 — `./scripts-run src/scripts/check_artefact_count_messaging` exits 0
+- [x] AC-4 — `./scripts-run src/scripts/check_artefact_count_messaging` exits 0
       with `src/rules/**` inside its scanned set.
-- [ ] AC-5 — the archived `road-to-delivered-cost-truth.md` no longer asserts an
+- [x] AC-5 — the archived `road-to-delivered-cost-truth.md` no longer asserts an
       unqualified landing at `hooks_doctor.ts:88`.
