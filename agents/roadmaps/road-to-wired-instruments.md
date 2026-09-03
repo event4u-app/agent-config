@@ -119,7 +119,7 @@ does not exist.
 
 ## Phase 3 — Give the freeze primitive its first consumer
 
-- [ ] **3.1 Bind `ExperimentSpec` where the corpus is already pinned.**
+- [x] **3.1 Bind `ExperimentSpec` where the corpus is already pinned.**
       `evolution_lab.ts` fails closed on holdout leak and `corpus_manifest.ts`
       pins the corpus, but the two mechanisms are independent; `ExperimentSpec`
       exists to join evaluator, corpus, task, baseline and fixtures into one
@@ -127,10 +127,53 @@ does not exist.
       verify: `grep -rn experiment_freeze src` names at least one non-test
       importer, and a drift fixture makes `ExperimentDriftError` throw in a test
       that fails when the binding is removed.
-- [ ] **3.2 Prove the sensitivity, not just the pass.** Neutralise the binding,
+- [x] **3.2 Prove the sensitivity, not just the pass.** Neutralise the binding,
       watch the test go red, restore it. A test never seen red has unknown
       sensitivity.
       verify: the roadmap records the observed red output verbatim.
+
+> **Phase 3 landed 2026-09-03.** The binding is
+> `src/scripts/_lib/experiment_binding.ts`, imported by
+> `src/scripts/evolution_lab.ts:92-93` — the first non-test importer
+> `experiment_freeze` has ever had. It joins the five elements out of identities
+> the run already carries (`CASCADE_STAGES` in order, a content digest over the
+> candidate record set, the sorted `PROMOTION_EVIDENCE_FIELDS`,
+> `target_shape_hash()`, `WITH_SURFACES`) rather than inventing a second pinning
+> scheme. `verbRun` freezes before the clone loop and asserts after it, and
+> `guardAbort` maps `ExperimentDriftError` onto `EXIT_GUARD_ABORT` — the same
+> throw-to-exit-code conversion the `guard-call-site-integration` blocker
+> demanded of the budget and holdout guards.
+>
+> The window it closes is specific: the loop clones from one read of a record
+> and then RE-READS the same file from disk to evaluate it, so a record
+> rewritten in between yields a run that cloned one thing and scored another.
+> Every guard already in that verb fires before the run starts and never looks
+> again.
+>
+> **3.2 — the observed red, verbatim, both polarities.** Two independent
+> neutralisations, each restored byte-exact afterwards (`diff -q` clean).
+>
+> Removing the `assertUnchanged` call site from `verbRun`:
+>
+> ```
+>  FAIL  tests/scripts/experiment_binding.test.ts > the binding is wired into the runner > it freezes once and re-derives the spec for the assertion
+> AssertionError: expected 1 to be greater than or equal to 2
+>  FAIL  tests/scripts/experiment_binding.test.ts > the binding is wired into the runner > the freeze happens BEFORE the clone loop
+> AssertionError: expected -1 to be greater than -1
+>       Tests  2 failed | 7 passed (9)
+> ```
+>
+> Making `recordSetDigest` ignore file content (`void bytes;` in place of the
+> content hash), which leaves the wiring intact and kills only the detection:
+>
+> ```
+>  FAIL  tests/scripts/experiment_binding.test.ts > the drift fixture > a record rewritten mid-run aborts, naming the corpus
+> AssertionError: expected undefined to be an instance of ExperimentDriftError
+> ```
+>
+> Restored: `Tests  9 passed (9)`. The two probes matter separately — the first
+> proves the runner is really the consumer, the second proves the detection is
+> really content-sensitive. A single probe would have left one of those unknown.
 
 ## Phase 4 — Close the count-messaging scope gap
 
