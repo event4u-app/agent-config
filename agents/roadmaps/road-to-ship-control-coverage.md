@@ -4,8 +4,12 @@ status: ready
 execution:
   mode: phase-checkpoints
 relates:
-  - later/road-to-web-launch-readiness-benchmark
-  - archive/road-to-web-launch-readiness
+  - slug: later/road-to-web-launch-readiness-benchmark
+    relation: disjoint
+    note: "holds the four source controls (P2, P5, P9, P10) this roadmap excludes by design; its Context section says the park stands and nothing here touches it, so the scopes are made disjoint deliberately rather than by accident"
+  - slug: archive/road-to-web-launch-readiness
+    relation: extends
+    note: "built the web-launch-readiness command, its check config and the region axis; this roadmap corrects that config's legal citation and adds the authority/review_by contract it shipped without"
 estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
 # Road to ship-control coverage
@@ -67,12 +71,51 @@ somewhere in the build.
 
 ## Phase 1 — Correct the shipped legal citation
 
-- [ ] **1.1 Replace TMG 5 with DDG 5 at all three sites.** Line-scoped edits at
+- [x] **1.1 Correct the shipped citation under option (b).** Line-scoped edits at
       `web-launch-readiness.json:171`, `:184` and
-      `check_web_launch_readiness.ts:45`. Keep the DSGVO Art. 13 half unchanged —
-      it is correct.
+      `check_web_launch_readiness.ts:45`.
       verify: `grep -rn 'TMG' src` returns nothing outside a marked historical
-      note; `grep -rn 'DDG' src` names the three sites.
+      note; the DDG citation is reachable from all three sites through the one
+      `authority` field they now point at.
+
+      **Done under the resolved blocker, which changed the shape of this step.**
+      The step was drafted for option (a) — swap the token at three sites — and
+      the decision chose (b): the statute leaves prose entirely and lives in the
+      structured `authority` field Phase 2 built, dated by `review_by`. So the
+      three sites are still three edits, but two of them *remove* a citation
+      rather than replacing one, and the single place the citation now exists is
+      `web-launch-readiness.json:185`.
+
+      | Site | Was | Is |
+      |---|---|---|
+      | `web-launch-readiness.json:171` (`regions._comment`) | "owes Impressum and Datenschutz by law (TMG 5 / DSGVO Art. 13)" | names the obligation, points at the escalation's dated `authority` field, cites nothing |
+      | `web-launch-readiness.json:184` (escalation `why`) | "TMG 5 obliges an Impressum and DSGVO Art. 13 a Datenschutzerklaerung…" | "owes a published imprint and a privacy notice by law; the two citations and the date they must be re-read by live in this row's `authority` field, not in this sentence" |
+      | `check_web_launch_readiness.ts:45` (the `Region` doc-comment) | "because TMG 5 and DSGVO Art. 13 make it owed rather than advisable" | "because German and EU law make it owed" + six lines saying where the citations went and why |
+      | `web-launch-readiness.json:185` (`authority`) — **the sibling migration** | DSGVO Art. 13 only; the Impressum half deliberately withheld pending this blocker | **both** halves: DDG § 5 with `gesetze-im-internet.de/ddg`, DSGVO Art. 13 with the EUR-Lex consolidated text, and the supersession date that explains the staleness |
+
+      **The sibling migration is part of the verdict, not an extension of it.**
+      Both council seats said so independently: DSGVO Art. 13 is precedent only
+      for the defect, not for the solution, and fixing one citation via (a)-shaped
+      prose while leaving the other perpetuates the maintenance burden. So the
+      correct half moved too, and `why` now names **no** statute at all.
+
+      **Three residual `TMG` occurrences in `src/`, every one a marked historical
+      note and none a statement of live law:** `web-launch-readiness.json:185`
+      records the supersession inside the citation it replaced; and
+      `check_web_launch_readiness.ts:151` + `:156` keep `TMG` as a *detector*
+      token, with a new doc-comment saying in as many words that it is retained
+      so a row naming it again is still caught. Reported rather than driven to
+      zero — a grep count of zero would have removed the guard.
+
+      **The contract did not have to change to survive this**, which is 2.1's
+      third obligation discharged in practice: with `why` naming no statute the
+      row is still policed, because `authority` and `review_by` travel together
+      and their presence alone makes a row legal. Asserted directly by a new test
+      that reads `authority` rather than prose, and by rewriting the two tests
+      that had pinned the pre-decision form — `check_web_launch_readiness.test.ts`
+      asserted `why` contained the literal `TMG`, and the config test's
+      "or this contract polices nothing" guard read `why`, so after the migration
+      it would have passed vacuously. Both were observed red before green.
 - [x] **1.2 Search the tree for sibling dead citations.** One instance is a
       sample. Name the exact wrong construct — a statute reference with no
       authority attached — and grep for it across `src/`.
@@ -272,16 +315,48 @@ somewhere in the build.
 ## Blockers
 
 ### blocker: ddg-citation-authority
-- **Status:** open
+- **Status:** resolved (2026-09-03, AI council: `anthropic/claude-sonnet-4-5` +
+  `openai/codex-default`, three rounds, blind chairman, standing in for
+  maintainer sign-off under the standing drain mandate)
 - **Owner:** maintainer
-- **Blocks:** 1.1
+- **Blocks:** — (was: 1.1)
 - **What to do:** pick exactly one — (a) cite DDG § 5 directly, matching how the
   row cites DSGVO Art. 13, and accept that this package states a statute
   reference; or (b) drop the statute from the `why` text and describe the
   obligation without a citation, moving the legal reference into `authority`
   where 2.1 puts it behind a review date.
-- **Resolved when:** the three sites carry the chosen form and Phase 2's schema
-  agrees with it.
+- **Decision:** **(b), unanimous** — remove the stale prose citation and use
+  structured `authority` metadata. In the council's own words: *"This package is
+  not a legal advisor and `legal-safety-floor` already governs how it may speak
+  about law; a citation behind a dated `authority` field is checkable, and one in
+  prose is what went stale for sixteen months."* The verdict agrees with this
+  entry's own recommendation, which is worth stating plainly rather than reading
+  as independent corroboration.
+
+  Both seats attached the **same two binding conditions**, and both are part of
+  the decision rather than commentary on it:
+
+  1. **It ships atomically.** The prose correction, the populated `authority`
+     field and the `review_by` date land together — one seat put it as *"do not
+     present `review_by` as a completed control if it lands later."*
+  2. **The sibling DSGVO Art. 13 citation migrates in the same change.** One
+     seat: *"The DSGVO Art. 13 citation is precedent only for the defect, not
+     the solution. Both citations should migrate to structured `authority`
+     fields together. Fixing one via (a) while leaving the other creates
+     inconsistency and perpetuates the maintenance burden."* The other agreed
+     independently.
+
+  Both conditions are discharged in the same commit as 1.1: `why` names no
+  statute, `authority` carries DDG § 5 **and** DSGVO Art. 13 with a source for
+  each, and `review_by` (2027-09-03) was already present and is what dates them.
+  The council transcript is not cited by path — council output is gitignored and
+  auto-pruned, so the durable trace is the date, the members and the quoted text
+  above.
+- **Resolved when:** ~~the three sites carry the chosen form and Phase 2's schema
+  agrees with it~~ — both met. The three sites carry (b); the schema needed no
+  change to agree with it, because 2.1's second obligation (`authority` and
+  `review_by` travel together) was written for exactly this migration and keeps
+  the row policed now that its `why` names nothing.
 - **Recommendation:** (b). This package is not a legal advisor and
   `legal-safety-floor` already governs how it may speak about law; a citation
   behind a dated `authority` field is checkable, and one in prose is what went
@@ -302,10 +377,14 @@ somewhere in the build.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — no file under `src/` cites TMG as live law, and the sibling-citation
+- [x] AC-1 — no file under `src/` cites TMG as live law, and the sibling-citation
       sweep has reported its count. *Second clause discharged by 1.2 (35 sites,
-      21 files, zero further dead citations). First clause is 1.1's, which is
-      blocked on `ddg-citation-authority` and deliberately untouched here.*
+      21 files, zero further dead citations). First clause discharged by 1.1
+      under the resolved blocker: three `TMG` strings remain in `src/`, one
+      recording the supersession inside the citation that replaced it and two
+      keeping it as a detector token under an explicit historical-note comment —
+      none asserts it as live law, and driving the count to zero would have
+      deleted the guard that catches a reintroduction.*
 - [x] AC-2 — every check row asserting a legal basis carries `authority` and
       `review_by`, and a lapsed date fails the gate in a test that was observed
       red before it was observed green.
