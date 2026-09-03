@@ -55,6 +55,33 @@ tells the reader this package projects **297** skills and
 count going stale would catch both — its `KIND_PATTERNS` regex matches each
 phrasing — and it never looks at the directory where they live.
 
+> **Correction, 2026-09-03 — half of the paragraph above is wrong, and Phase 4
+> is where that was found.** Two of its claims do not survive the phase that
+> acted on them. The live figure is not one of them: `ls -d src/skills/*/ | wc -l`
+> → **299**, and `check_estate_count` on `main` reports
+> `skill_count 299 (floor 299)`. The arithmetic was right; the reading of one
+> site was not.
+>
+> **`missing-skill-recovery.md` does not tell the reader that "this package
+> projects 297 skills".** Its `:34` reads *"that install projected 297 skills"* —
+> the denominator of ONE host install, taken from the dated `legacy-all`
+> measurement the same paragraph cites
+> (`agents/evidence/analysis/scoped-projection-host-delivery.md`, measured
+> 2026-08-16). That is a recorded historical figure, not a live self-count, and
+> rewriting it to 299 would have falsified evidence to satisfy a gate. The line
+> now carries `<!-- count: dated -->`, which exempts that line alone and keeps it
+> out of the cross-surface inconsistency net.
+>
+> **So "would catch both" was wrong in the direction that mattered.** The
+> widened gate did REPORT both, and exactly one of the two was a stale
+> self-count: `token-budget-discipline.md:60`, `~290 skills` carrying a derived
+> `~43` cap, both corrected in one line-scoped edit. The full finding, with the
+> pre-fix gate output, is in the Phase 4 note below.
+>
+> The mistaken premise is left standing above rather than rewritten: it is what
+> Phase 4 measured against, and deleting it would hide the finding instead of
+> recording it.
+
 Worse, for the first instrument: `agents/roadmaps/archive/road-to-delivered-cost-truth.md:258`
 records the probe as *"Landed at `src/scripts/_lib/hook_effect_probe.ts:38` and
 `src/scripts/hooks_doctor.ts:88`"*. The first half is true. The second names a
@@ -138,6 +165,22 @@ does not exist.
 > nothing — the roadmap's own defect class, reproduced inside its fix. So Phase 2
 > built the missing producer first.
 >
+> **Why 2.1 keeps its `[x]` on the corrected premise.** The wrong half made the
+> step BIGGER, never moot. Its deliverable was "the ladder reads
+> `context_fingerprint`", and both verify conditions as written discharge at this
+> head: `grep -c context_fingerprint src/scripts/hooks/run_continuation_hook.ts`
+> → **6**, where the step asked for `> 0`; and `ladder()` is driven with a
+> disagreeing fingerprint at
+> `tests/scripts/hooks/run_continuation.test.ts:205`, asserting
+> `halt-premise-invalidated` rather than `exhausted`, which is 2.2's claim tested
+> in isolation from the rung's existence. What the correction ADDED was a
+> producer the step had assumed already existed; nothing the step asked for was
+> dropped, weakened or substituted, so the box is honest. The step's own premise
+> clause — "stored by `run_checkpoint.ts`" — is false and is left standing above
+> for the same reason the Context paragraph is: it is what the work was measured
+> against. Had the correction instead made the deliverable unreachable, this
+> would be `[~]` against a named `carried-to=` receiver, not `[x]`.
+>
 > **The producer** is `src/scripts/_lib/context_observation.ts`, written by
 > `roadmap_context.ts:762` — the one thing in the tree that can actually OBSERVE
 > the world, because the fingerprint costs a `gh` call. It records to a single
@@ -150,8 +193,8 @@ does not exist.
 >
 > **The two consumers** are now both real: `session_eol_hook.ts:393` passes the
 > observation into the checkpoint, so `context_fingerprint` stops being
-> structurally null; and `run_continuation_hook.ts:1386` compares the fingerprint
-> the run ENGAGED under (recorded once, at `:1464`) against the newest
+> structurally null; and `run_continuation_hook.ts:1384` compares the fingerprint
+> the run ENGAGED under (recorded once, at `:1462`) against the newest
 > observation, and feeds the verdict to the ladder.
 >
 > **Risk 1 is answered by construction, not by tuning.** The rung cannot fire on
@@ -172,7 +215,15 @@ does not exist.
 > is a violation. Rather than raise a baseline, the ladder — the surface actually
 > under change — moved to `_lib/continuation_ladder.ts` (under the cap, so free)
 > and is re-exported, so every existing import path is unchanged. Net: 1,539 →
-> 1,530, nine lines BELOW where the phase started.
+> 1,529, ten lines BELOW where the phase started.
+>
+> *Three numbers in this note were corrected on 2026-09-03, and by this branch's
+> own doing rather than by drift from elsewhere: it first recorded `:1386`,
+> `:1464` and `1,530 / nine lines`, all true when written and all falsified two
+> commits later by `bb5c26a83`, the own-orphan import drop above. The anchored
+> values are `:1384`, `:1462` and `1,529 / ten lines` — the last of which is what
+> `check_source_size_budget`'s own baseline note already records
+> (`1,539 -> 1,529`), so the roadmap was the stale copy, not the gate.*
 >
 > **Sensitivity, both polarities, five probes; each restored byte-exact
 > afterwards (`diff -q` clean).**
