@@ -128,15 +128,19 @@ describe('D2 — the POSITIVE control corpus', () => {
     });
 });
 
-describe('a finding this roadmap did NOT scope, recorded rather than silently fixed', () => {
-    it('the negation defect is not merge-only — `push` still authorizes under a negation', () => {
-        // "Nicht pushen." authorizes `push`. The roadmap scoped Phase 2 to the
-        // merge action, and widening the guard to every op is a change to the
-        // authorization surface that deserves its own screen — the same reason
-        // the merge fix needed a positive control corpus before it was trusted.
-        //
-        // Asserted as the CURRENT behaviour so the day someone fixes it, this
-        // test fails and points at the note instead of the gap going unnoticed.
-        expect(ops('Nicht pushen. Merge PR #12.')).toContain('push');
+describe('the negation defect that was recorded here, closed 2026-09-03', () => {
+    // This block used to assert the LEAK as current behaviour, with a note
+    // saying that the day someone fixes it this test should fail and point at
+    // the note rather than let the gap go unnoticed. That is exactly what
+    // happened, so the assertion is inverted rather than deleted.
+    //
+    // The widening the note asked for a screen on has now had one, and it was a
+    // measurement rather than a judgement: probing fifteen newly added phrases
+    // on 2026-09-03 found 15 of 15 authorizing the operation their sentence
+    // forbade, and the same probe showed `push` and `branch` had been leaking
+    // all along. `negatedBefore` applies one sentence-scoped check to every op,
+    // so there is no longer a per-op vocabulary to drift.
+    it('a negated push no longer authorizes a push', () => {
+        expect(ops('Nicht pushen. Merge PR #12.')).not.toContain('push');
     });
 });

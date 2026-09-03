@@ -186,7 +186,51 @@ export type GitOp =
   | "pr-merge-auto"
   | "tag"
   | "release"
-  | "publish";
+  | "publish"
+  // ── Added 2026-09-03. Measured gap, not a speculative widening: of 25
+  // borderline-destructive operations probed against `commandOp`, 17 classified
+  // as NOTHING — the guard was sharp on five spellings and silent on the rest,
+  // including three that are strictly worse than the ones it caught (deleting
+  // branch protection, approving a review that releases an armed auto-merge,
+  // and unpublishing a package every lockfile already resolved).
+  //
+  // Each entry below is an operation the `non-destructive-by-default` Hard
+  // Floor already declares never-autonomous in prose. Naming them here makes an
+  // existing prohibition mechanical; it does not create a new one.
+  /** `npm unpublish` — the "undo" that breaks every lockfile resolving it. */
+  | "unpublish"
+  /** `npm deprecate` — no code changes, and every install in the world warns. */
+  | "deprecate"
+  /** Replacing or removing a published release asset consumers checksummed. */
+  | "release-asset"
+  /** Removing a branch protection rule or ruleset — deletes the guard itself. */
+  | "protection"
+  /** Disabling a workflow — no data lost, and the gate below it is gone. */
+  | "workflow-toggle"
+  /** Archiving, deleting or re-visibility-ing a repository. */
+  | "repo-lifecycle"
+  /** Approving a review — no code moves, and a required-review gate opens. */
+  | "review-approve"
+  /** Force-push — discards commits that arrived after your last fetch. */
+  | "force-push"
+  /** `git worktree remove --force` — destroys work a parallel session holds. */
+  | "worktree-remove"
+  /** `git clean -x` — takes `.env` and local certificates with the scratch. */
+  | "clean-ignored"
+  /** Moving an existing tag locally; the push that publishes it is `tag`. */
+  | "tag-force"
+  /** Rebase — local until pushed, then a history rewrite for everyone. */
+  | "rebase"
+  /** `git reset --hard` — uncommitted work does not reach the reflog. */
+  | "reset-hard"
+  /** `git clean` without `-x` — untracked only, ignored files survive. */
+  | "clean"
+  /** Dropping or clearing a stash. */
+  | "stash-drop"
+  /** Deleting a branch, locally or on the remote. */
+  | "branch-delete"
+  /** Closing a pull request or an issue. */
+  | "close";
 
 export const ALL_OPS: readonly GitOp[] = [
   "commit",
@@ -198,6 +242,23 @@ export const ALL_OPS: readonly GitOp[] = [
   "tag",
   "release",
   "publish",
+  "unpublish",
+  "deprecate",
+  "release-asset",
+  "protection",
+  "workflow-toggle",
+  "repo-lifecycle",
+  "review-approve",
+  "force-push",
+  "worktree-remove",
+  "clean-ignored",
+  "tag-force",
+  "rebase",
+  "reset-hard",
+  "clean",
+  "stash-drop",
+  "branch-delete",
+  "close",
 ];
 
 /**
@@ -211,7 +272,17 @@ export const ALL_OPS: readonly GitOp[] = [
 const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
   { op: "commit", re: /\b(commit(e|et|te|ten)?|committe|einchecken)\b/i },
   { op: "push", re: /\b(push(e|en|t)?|hochladen|hochschieben|raufschieben)\b/i },
-  { op: "branch", re: /\b(branch|feature-branch|zweig)\b/i },
+  // A CREATION VERB IS REQUIRED, as for `pr-create` above and for the same
+  // reason. The bare noun could not tell an authorization from a mention, and
+  // the mention is the dangerous half: "den branch nicht löschen" names the
+  // object precisely in order to forbid acting on it, yet authorized branch
+  // creation — the negation trails a bare-noun match, so neither the
+  // look-behind nor the span check in `negatedBefore` can reach it. Widened
+  // 2026-09-03 alongside the destructive-coverage work that measured it.
+  {
+    op: "branch",
+    re: /\b(erstell(e|en)?|mach(e|en)?|leg(e|en)?\s+an|anleg(e|en)?|(er|be)?(ö|oe)ffne|open|create|new|neuer?|starte?|checkout|wechsl?e|switch)\b[^.\n]{0,30}\b(branch|feature-branch|zweig)\b|\b(branch|feature-branch|zweig)\b[^.\n]{0,25}\b(erstellen|anlegen|aufmachen|(ö|oe)ffnen|starten)\b/i,
+  },
   // A creation verb is required — "schau dir den PR an" is not "open a PR".
   {
     op: "pr-create",
@@ -249,6 +320,111 @@ const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     re: /\b(releasen?|ver(ö|oe)ffentlich(e|en))\b(?!\s*[- ]?(notes?|branch|candidate|pr\b|datum|date|zweig))/i,
   },
   { op: "publish", re: /\b(publish(e|en)?|publiziere[n]?)\b/i },
+
+  // ── Authorization vocabulary for the ops added 2026-09-03.
+  //
+  // NON-NEGOTIABLE, and the reason it ships in the same change as the new BLOCK
+  // ops: a blocked operation with no phrase that authorizes it is a dead end.
+  // The guard refuses, the user says "doch, mach das", the classifier records
+  // nothing, and the refusal repeats forever. Every op the guard can block must
+  // have a sentence that unblocks it, or the user's override is a claim rather
+  // than a mechanism.
+  //
+  // Tight on purpose. Under-matching costs one confirmation; over-matching
+  // authorizes something the user did not ask for, so each pattern demands the
+  // object noun rather than a bare verb wherever the verb is ordinary German.
+  //
+  // `unpublish` before nothing in particular — `\bpublish\b` does not match
+  // inside "unpublish" (no word boundary between `n` and `p`), so the two never
+  // collide.
+  // TWO SHAPES EVERY GERMAN PATTERN BELOW MUST CARRY, both learned from tests
+  // that went red rather than from inspection:
+  //
+  //   1. THE IMPERATIVE DROPS ITS `-e`. "entfern die worktree", "archivier das
+  //      repo", "deaktivier den workflow" are what people type; `entfern(e|en)`
+  //      matches none of them. Every verb ending is therefore `(e|en)?`.
+  //   2. WORD ORDER GOES BOTH WAYS. "archivier das repo" and "das repo
+  //      archivieren" are one instruction, and a pattern anchored on the noun
+  //      first sees only the second.
+  //
+  // The object noun stays REQUIRED in every pattern that has one. That is what
+  // keeps the loosened verb endings from over-authorizing: "lösch" alone
+  // authorizes nothing, "lösch den branch" authorizes a branch deletion.
+  { op: "unpublish", re: /\bunpublish(e|en)?\b/i },
+  {
+    op: "deprecate",
+    re: /\bdeprecate(d|n)?\b|\bals\s+veraltet\s+markier(e|en)?\b/i,
+  },
+  {
+    op: "release-asset",
+    re: /\brelease[-\s]?asset\b|\b(clobber|(ü|ue)berschreib(e|en)?|ersetz(e|en)?|replace|austausch(e|en)?)\b[^.\n]{0,25}\b(asset|artefakt|artifact|tarball|binary)\b|\b(asset|artefakt|artifact)\b[^.\n]{0,25}\b((ü|ue)berschreiben|ersetzen|austauschen|replace)\b/i,
+  },
+  // A VERB IS REQUIRED, like `tag` and `release` above and for the same reason.
+  // A bare noun cannot tell an authorization from a mention, and here the
+  // mention is the dangerous half: "die branch-protection nicht anfassen" names
+  // the object precisely in order to forbid touching it. Measured — this was the
+  // one row of the negation corpus that neither the look-behind nor the
+  // span check could reach, because the negation trails a bare-noun match.
+  {
+    op: "protection",
+    re: /\b(entfern(e|en)?|l(ö|oe)sch(e|en)?|deaktivier(e|en)?|nimm|weg|remove|delete|disable|drop|lift)\b[^.\n]{0,30}\b(branch[-\s]?protection|protection[-\s]?rule|schutzregel|ruleset)\b|\b(branch[-\s]?protection|protection[-\s]?rule|schutzregel|ruleset)\b[^.\n]{0,30}\b(entfernen|l(ö|oe)schen|deaktivieren|abschalten|remove|delete|disable|drop|lift|weg)\b/i,
+  },
+  {
+    op: "workflow-toggle",
+    re: /\bworkflow\b[^.\n]{0,25}\b(deaktivier(e|en)?|aktivier(e|en)?|disable|enable|abschalt(e|en)?|ausschalt(e|en)?)\b|\b(deaktivier(e|en)?|aktivier(e|en)?|disable|enable|abschalt(e|en)?|ausschalt(e|en)?)\b[^.\n]{0,25}\bworkflow\b/i,
+  },
+  {
+    op: "repo-lifecycle",
+    re: /\b(repo|repository)\b[^.\n]{0,30}\b(archivier(e|en)?|archive|l(ö|oe)sch(e|en)?|delete)\b|\b(archivier(e|en)?|archive|l(ö|oe)sch(e|en)?|delete)\b[^.\n]{0,25}\b(repo|repository)\b|\b(repo|repository)\b[^.\n]{0,30}\bauf\s+(privat|public|öffentlich|private)\b/i,
+  },
+  {
+    op: "review-approve",
+    re: /\b(approve|genehmig(e|en)?|freigeb(e|en)?|abnehm(e|en)?)\b[^.\n]{0,30}\b(review|pr|pull[-\s]request)\b|\b(review|pr|pull[-\s]request)\b[^.\n]{0,20}\b(approve|approven|genehmigen|freigeben)\b/i,
+  },
+  {
+    op: "force-push",
+    re: /\bforce[-\s]?push(e|en|st)?\b|--force(-with-lease)?\b|\bmit\s+gewalt\s+push(e|en)?\b/i,
+  },
+  {
+    op: "worktree-remove",
+    re: /\bworktree\b[^.\n]{0,25}\b(entfern(e|en)?|l(ö|oe)sch(e|en)?|remove|delete|weg(werfen|r(ä|ae)umen))\b|\b(entfern(e|en)?|l(ö|oe)sch(e|en)?|remove|delete)\b[^.\n]{0,25}\bworktree\b/i,
+  },
+  // The `-x` flag is the whole distinction: without it `git clean` spares
+  // ignored files, with it `.env` and local certificates go too.
+  {
+    op: "clean-ignored",
+    re: /\bgit\s+clean\b[^.\n]{0,20}-[A-Za-z]*x|\b(ignorierte|ignored)\b[^.\n]{0,25}\b(dateien|files)\b[^.\n]{0,25}\b(l(ö|oe)sch(e|en)?|entfern(e|en)?|remove|delete)\b/i,
+  },
+  {
+    op: "tag-force",
+    re: /\btag\b[^.\n]{0,25}\b(verschieb(e|en)?|(ü|ue)berschreib(e|en)?|umh(ä|ae)ng(e|en)?|force|move)\b|\b(verschieb(e|en)?|(ü|ue)berschreib(e|en)?)\b[^.\n]{0,20}\btag\b/i,
+  },
+  { op: "rebase", re: /\brebase(n|st|d)?\b/i },
+  {
+    op: "reset-hard",
+    re: /\breset\s+--hard\b|\bhard\s+reset\b|\bhart\s+zur(ü|ue)cksetz(e|en)?\b/i,
+  },
+  { op: "clean", re: /\bgit\s+clean\b/i },
+  {
+    op: "stash-drop",
+    re: /\bstash\b[^.\n]{0,25}\b(drop|clear|verwerf(e|en)?|l(ö|oe)sch(e|en)?)\b|\b(verwerf(e|en)?|l(ö|oe)sch(e|en)?|drop)\b[^.\n]{0,20}\bstash\b/i,
+  },
+  {
+    op: "branch-delete",
+    re: /\b(l(ö|oe)sch(e|en)?|entfern(e|en)?|delete|remove)\b[^.\n]{0,25}\b(branch|branches|zweig)\b|\b(branch|branches|zweig)\b[^.\n]{0,25}\b(l(ö|oe)schen|entfernen|delete|remove)\b/i,
+  },
+  {
+    op: "close",
+    re: /\b(schlie(ß|ss)(e|en)?|close)\b[^.\n]{0,30}\b(pr|pull[-\s]request|issue|ticket)\b|\b(pr|pull[-\s]request|issue|ticket)\b[^.\n]{0,20}\b(schlie(ß|ss)en|close)\b/i,
+  },
+  // Enabling auto-merge is its own op on the guard side, so it needs its own
+  // sentence. Without one it is the dead end this block exists to prevent: the
+  // plain merge phrase authorizes `pr-merge` and never `pr-merge-auto`, so the
+  // refusal would have repeated forever.
+  {
+    op: "pr-merge-auto",
+    re: /\bauto[-\s]?merge\b|\bmerge\b[^.\n]{0,20}\bautomatisch\b|\bautomatisch\b[^.\n]{0,20}\bmerg(e|en)\b/i,
+  },
 ];
 
 /**
@@ -519,6 +695,53 @@ export function foldGrants(
   ];
 }
 
+/**
+ * Negation words that turn an instruction into its opposite.
+ *
+ * ONE vocabulary for the whole file, deliberately. The `pr-merge` pattern
+ * already carried this list inline, and its own comment warns that "two
+ * negation vocabularies in one tree drift, and the drift is invisible until a
+ * prompt lands in the gap between them" — so the list moved here rather than
+ * being copied fifteen times.
+ */
+const NEGATION_WORD =
+  /\b(nicht|nichts|kein(e|en|em|er|es)?|niemals|nie|no|not|dont|don't|never|without|ohne)\b/i;
+
+/**
+ * Is the match at `index` under a negation?
+ *
+ * MEASURED, not anticipated. Probed on 2026-09-03 against the fifteen phrases
+ * added that day: **15 of 15 leaked** — "nicht unpublishen", "den workflow nicht
+ * deaktivieren", "kein force-push bitte" each authorized exactly the operation
+ * the sentence forbade. The same probe showed the hole predates them, since
+ * "kein force-push bitte" also authorized a plain `push` and "den branch nicht
+ * löschen" also authorized `branch`. Only `pr-merge` was protected, by a
+ * lookbehind written after the identical defect was found there in isolation.
+ *
+ * SENTENCE-SCOPED, and that bound is load-bearing rather than decorative.
+ * "Do not push. Merge PR #12." is two instructions, and a negation whose reach
+ * crossed the full stop would silently stop authorizing merges the user DID
+ * order — a failure worse than the defect, because nothing happens and nothing
+ * says why. The 30-character window inside the sentence is inherited from the
+ * `pr-merge` lookbehind that this generalises.
+ */
+export function negatedBefore(text: string, index: number, matched = ""): boolean {
+  let start = 0;
+  for (const mark of [".", "!", "?", "\n"]) {
+    const at = text.lastIndexOf(mark, index - 1);
+    if (at + 1 > start) {
+      start = at + 1;
+    }
+  }
+  const before = text.slice(Math.max(start, index - 30), index);
+  // The negation is often INSIDE the match, not before it, and German word
+  // order is why: "das asset nicht ersetzen" is matched by a noun-first pattern
+  // that starts at "asset", so a look-behind from the match index sees an empty
+  // window. Measured — nine of the fifteen rows in the negation corpus failed
+  // exactly this way after the look-behind alone was added.
+  return NEGATION_WORD.test(before) || NEGATION_WORD.test(matched);
+}
+
 /** Classify which ops a prompt authorizes. Exported for direct testing. */
 export function classifyAuthorization(prompt: string): {
   authorized: GitOp[];
@@ -537,7 +760,7 @@ export function classifyAuthorization(prompt: string): {
 
   for (const { op, re } of isInterrogative(instruction) ? [] : PHRASES) {
     const m = re.exec(instruction);
-    if (m) {
+    if (m && !negatedBefore(instruction, m.index, m[0])) {
       authorized.add(op);
       evidence[op] = `prose: "${m[0]}"`;
     }

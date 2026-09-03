@@ -98,6 +98,31 @@ export const BLOCK_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   // Enabling auto-merge commits the outcome to a condition the agent does not
   // control, so it is blocked on the same terms as the merge it schedules.
   "pr-merge-auto",
+
+  // ── Added 2026-09-03. Every one is already never-autonomous in the
+  // `non-destructive-by-default` prose; the measurement that drove it is in the
+  // `GitOp` union's own note — 17 of 25 borderline operations classified as
+  // NOTHING, including three worse than anything the guard already caught.
+  /** The undo that is more destructive than the act: lockfiles break. */
+  "unpublish",
+  /** Metadata only, and every install on earth starts warning. */
+  "deprecate",
+  /** Replaces bytes consumers already hold a checksum for. */
+  "release-asset",
+  /** Deletes the guard rather than the data — everything after is unguarded. */
+  "protection",
+  /** No data lost; the gate that protects everything downstream is off. */
+  "workflow-toggle",
+  /** Reach outside the repository, and mostly one-way. */
+  "repo-lifecycle",
+  /** No code moves, and an armed auto-merge is released. */
+  "review-approve",
+  /** Discards commits that landed after the last fetch, on a shared ref. */
+  "force-push",
+  /** Destroys uncommitted work belonging to a session this one cannot see. */
+  "worktree-remove",
+  /** `-x` is the flag that takes `.env` and local certificates. */
+  "clean-ignored",
 ]);
 
 /** Recoverable operations — warned without a this-turn authorization. */
@@ -106,6 +131,22 @@ export const WARN_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   "push",
   "pr-create",
   "branch",
+
+  // ── Added 2026-09-03, deliberately at warn rather than block.
+  //
+  // Each is destructive in some reading, and each is also routine enough that
+  // blocking it would be the friction that gets the whole guard routed around —
+  // the failure mode this estate has already recorded twice. `reset-hard` is the
+  // sharpest case and stays here for a decidable reason: the Hard Floor's
+  // qualifier is "past unpushed work", and the command text cannot say whether
+  // the work was pushed.
+  "tag-force",
+  "rebase",
+  "reset-hard",
+  "clean",
+  "stash-drop",
+  "branch-delete",
+  "close",
 ]);
 
 /**
@@ -194,6 +235,74 @@ const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     op: "pr-create",
     re: new RegExp(`${P}gh\\s+pr\\s+create\\b|${ghApiWrite("\\/pulls\\b").source}`, "i"),
   },
+  // ── Added 2026-09-03. Placement inside this table is as load-bearing as the
+  // patterns: the loop takes the MOST SEVERE match per segment, but within one
+  // op the first pattern wins, so anything more specific than a plain `git push`
+  // has to sit above it.
+
+  // `npm unpublish` is NOT reached by the publish pattern — `\bpublish\b` needs
+  // a word boundary that `unpublish` does not provide between `n` and `p`. That
+  // is why it classified as nothing for as long as it did.
+  { op: "unpublish", re: new RegExp(`${P}(npm|pnpm|yarn)\\s+${G}unpublish\\b`, "i") },
+  { op: "deprecate", re: new RegExp(`${P}(npm|pnpm|yarn)\\s+${G}deprecate\\b`, "i") },
+  {
+    op: "release-asset",
+    re: new RegExp(`${P}gh\\s+release\\s+(upload|edit|delete)\\b`, "i"),
+  },
+  {
+    op: "protection",
+    re: new RegExp(
+      `${P}gh\\s+api\\b(?=[^\\n]*(?:protection|rulesets?)\\b)(?=[^\\n]*(?:-X|--method)\\s+(?:DELETE|PUT|PATCH|POST)\\b)|${P}gh\\s+ruleset\\s+delete\\b`,
+      "i",
+    ),
+  },
+  {
+    op: "workflow-toggle",
+    re: new RegExp(`${P}gh\\s+workflow\\s+(disable|enable)\\b`, "i"),
+  },
+  {
+    op: "repo-lifecycle",
+    re: new RegExp(
+      `${P}gh\\s+repo\\s+(archive|delete|unarchive)\\b|${P}gh\\s+repo\\s+edit\\b(?=[^\\n]*--visibility\\b)`,
+      "i",
+    ),
+  },
+  {
+    op: "review-approve",
+    re: new RegExp(`${P}gh\\s+pr\\s+review\\b(?=[^\\n]*--approve\\b)`, "i"),
+  },
+  // Above `push`, and both spellings: `--force` and `--force-with-lease`. The
+  // "safe force" is in the same class here because what it is safe against is a
+  // stale local view, not a collaborator who pushed after your fetch.
+  {
+    op: "force-push",
+    re: new RegExp(`${P}git\\s+${G}push\\b[^\\n;|&]*(--force\\b|--force-with-lease\\b|\\s-f\\b)`, "i"),
+  },
+  {
+    op: "worktree-remove",
+    re: new RegExp(`${P}git\\s+worktree\\s+remove\\b[^\\n;|&]*(--force\\b|\\s-f\\b)`, "i"),
+  },
+  // `-x` (or `-X`) anywhere in the flag cluster is what reaches ignored files.
+  {
+    op: "clean-ignored",
+    re: new RegExp(`${P}git\\s+clean\\b[^\\n;|&]*-[A-Za-z]*x`, "i"),
+  },
+  { op: "tag-force", re: new RegExp(`${P}git\\s+tag\\b[^\\n;|&]*(-f\\b|--force\\b)`, "i") },
+  { op: "rebase", re: new RegExp(`${P}git\\s+${G}rebase\\b`, "i") },
+  { op: "reset-hard", re: new RegExp(`${P}git\\s+${G}reset\\b[^\\n;|&]*--hard\\b`, "i") },
+  { op: "clean", re: new RegExp(`${P}git\\s+clean\\b`, "i") },
+  { op: "stash-drop", re: new RegExp(`${P}git\\s+stash\\s+(drop|clear)\\b`, "i") },
+  // Remote deletion and the local `-D` are one op: both remove a ref, and the
+  // remote form additionally closes any open PR pointing at it.
+  {
+    op: "branch-delete",
+    re: new RegExp(
+      `${P}git\\s+branch\\b[^\\n;|&]*(-D\\b|--delete\\b)|${P}git\\s+${G}push\\b[^\\n;|&]*(--delete\\b|\\s:\\S)`,
+      "i",
+    ),
+  },
+  { op: "close", re: new RegExp(`${P}gh\\s+(pr|issue)\\s+close\\b`, "i") },
+
   { op: "push", re: new RegExp(`${P}git\\s+${G}push\\b`, "i") },
   { op: "commit", re: new RegExp(`${P}git\\s+${G}commit\\b`, "i") },
   { op: "branch", re: new RegExp(`${P}git\\s+${G}(checkout\\s+-b|switch\\s+-c)\\b`, "i") },
