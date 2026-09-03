@@ -24,7 +24,7 @@ mode, full convergence). Where it lives:
 - **`src/scripts/` clusters** are mapped in
   [`src/scripts/surface-tiers.yml`](../../src/scripts/surface-tiers.yml)
   (exhaustive over cluster directories).
-- A **boundary guard** (`scripts/check_surface_tiers.py`) asserts the registry
+- A **boundary guard** (`src/scripts/check_surface_tiers.ts`) asserts the registry
   is exhaustive and that no `core` module hard-imports a `lab` module.
 
 ## Pack / domain tiers

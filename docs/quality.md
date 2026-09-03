@@ -24,7 +24,7 @@ This runs, in order:
 
 ## Skill Linter
 
-The linter (`scripts/skill_linter.py`) validates:
+The linter (`src/scripts/skill_linter.ts`) validates:
 
 - **Required structure** — YAML frontmatter, description, triggers
 - **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../agents/reference/docs/frontmatter-contract.md))

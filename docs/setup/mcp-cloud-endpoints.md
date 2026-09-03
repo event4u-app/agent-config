@@ -103,7 +103,7 @@ identity surface.
 
 ## Parity smoke
 
-Post-deploy CI runs `scripts/mcp_parity_smoke.py` against the new
+Post-deploy CI runs `src/scripts/mcp_parity_smoke.ts` against the new
 deployment with `--target https://mcp.<domain>`. A non-zero exit
 aborts the `latest.txt` repoint, so the previous release keeps
 serving on `/latest/`.

@@ -21,7 +21,7 @@ build time:
 
 | Artifact | Producer | Shape |
 |---|---|---|
-| `.tokens.json` | [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) | DTCG (`$value` / `$type`) token tree — colour, type, spacing, radius. The same file `design-tokens/scripts/tokens.py` emits CSS vars + Tailwind from. |
+| `.tokens.json` | [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) | DTCG (`$value` / `$type`) token tree — colour, type, spacing, radius. The same file `src/skills/design-tokens/scripts/tokens.ts` emits CSS vars + Tailwind from. |
 | voice profile | [`brand-strategy`](../../src/skills/brand-strategy/SKILL.md) / [`brand-identity`](../../src/skills/brand-identity/SKILL.md) | the confirmed voice traits + do/don't (3-5 traits) used to seed microcopy register. |
 
 **Read contract (frozen v1):**

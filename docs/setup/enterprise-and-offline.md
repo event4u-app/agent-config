@@ -50,7 +50,7 @@ Pin the consumed version in the consumer project's
 agent_config_version: "2.6.1"  # matches the version your mirror has indexed
 ```
 
-`scripts/install.py` reads `agent_config_version` at install time and
+`src/scripts/install.ts` reads `agent_config_version` at install time and
 records it in `~/.event4u/agent-config/installed.lock` per ADR-007.
 The registry-mirror caveat: your mirror **must** index the
 `@event4u/agent-config` scope before the first `npx` call — `npx`

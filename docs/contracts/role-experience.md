@@ -116,7 +116,7 @@ The lint pass (`task lint-role-experiences`, wired into `task ci`) asserts:
 5. `status` is one of `draft | beta-internal | beta | stable`.
 6. `status: beta` and `status: stable` require a **non-null** `recruit_session_ref` (external-validation gate). `draft` and `beta-internal` may keep `recruit_session_ref: null`.
 
-Lint pass code lives at `scripts/lint_role_experiences.py`, ≤ 200 LOC.
+Lint pass code lives at `src/scripts/lint_role_experiences.ts`, ≤ 200 LOC.
 
 ## Open questions (Phase 3 optional council pass)
 

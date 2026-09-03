@@ -11,7 +11,7 @@ keep-beta-until: 2026-08-13
 
 Define the wire-shape, redaction floor, opt-in semantics, and producer/consumer split for anonymous telemetry emitted by `agent-config init --interactive`. Used to validate the **Universal-OS reframe hypothesis**: that real `init` runs distribute across non-developer `user_type` values, not only `developer`.
 
-This contract ships **ahead of execution**. The producer (`scripts/install.py`) and consumer (aggregation endpoint) are gated on `step-9` user-type filtering — until that ships, this document is the binding shape for the deferred implementation.
+This contract ships **ahead of execution**. The producer (`src/scripts/install.ts`) and consumer (aggregation endpoint) are gated on `step-9` user-type filtering — until that ships, this document is the binding shape for the deferred implementation.
 
 ## Scope
 
@@ -118,7 +118,7 @@ When `telemetry.init: false`, the producer:
 
 | Side | Responsibility | Where |
 |---|---|---|
-| **Producer** | Construct + POST the event when opt-in is active. Silent failure. | `scripts/install.py::_emit_init_telemetry()` (deferred to `step-9` wire-up). |
+| **Producer** | Construct + POST the event when opt-in is active. Silent failure. | `src/scripts/install.ts::_emit_init_telemetry()` (deferred to `step-9` wire-up). |
 | **Consumer** | Receive + validate against this schema; aggregate per UTC day; purge raw after 30 d. | Telemetry endpoint (not in this repo; pinned URL ships with `step-9`). |
 
 ## Cross-references

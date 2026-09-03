@@ -41,7 +41,7 @@ re-litigated every time a contributor read `scripts/mcp_server/server.py`.
 |---|---|---|---|
 | Runtime already in repo | ✅ Python is the `scripts/` runtime | ✅ Same | ❌ Adds Node-runtime path for one server |
 | A0 safety boundary fit (read-only `prompts/list`, `prompts/get`, narrow `tools/*` allowlist) | ✅ Direct handler control matches the [Phase 1 scope contract](mcp-phase-1-scope.md) | ⚠️ Decorator sugar can obscure the unimplemented-tool guard | ✅ Possible but duplicates Python helpers |
-| Import-surface guard (`tests/test_mcp_server.py` asserts no `subprocess`, `os.system`, `os.popen`, no HTTP client in `scripts.mcp_server.prompts/tools`) | ✅ Trivial to enforce — one module set to audit | ⚠️ FastMCP pulls in extra deps that widen the audit surface | ❌ Would need a TS-side equivalent |
+| Import-surface guard — **the guard itself did not survive ADR-200 and is described rather than renamed.** Its subject was a *Python* import surface: it asserted no `subprocess`, `os.system` or `os.popen` in `scripts.mcp_server.prompts/tools`) | ✅ Trivial to enforce — one module set to audit | ⚠️ FastMCP pulls in extra deps that widen the audit surface | ❌ Would need a TS-side equivalent |
 | Reuse of existing project helpers (`scripts/skill_linter.py`, `scripts/chat_history.py`) | ✅ Direct in-process call | ✅ Same | ❌ Cross-runtime IPC or duplicated logic |
 | Pin / supply-chain footprint | One pin (`mcp==1.27.1`) + `PyYAML` | Adds FastMCP version coupling on top | Node toolchain (`npm`, `tsc`, `dist/`) |
 | Smoke-test path | `task mcp:setup && task mcp:run` (already shipped) | Would re-wrap the same SDK | Separate test runner |

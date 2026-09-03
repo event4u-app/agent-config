@@ -109,7 +109,7 @@ safe default).
 
 ## Test surface
 
-Coverage lives in `tests/work_engine/scoring/test_decision_engine.py`:
+Coverage lives in `tests/scripts/work_engine/scoring_decision_engine.test.ts`:
 
 - schema parser: defaults, unknown-key rejection, bad-type rejection;
 - gate evaluation: per-phase, per-signal, conflict isolation;

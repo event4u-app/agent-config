@@ -99,7 +99,7 @@ Net always-rule budget delta: **+39 lines** (≈ 1.8 % of the current
   updated to point at the right split. Inventory: ~30 files (rules,
   templates, scripts, commands, contexts, README, AGENTS.md).
 - `docs-sync.md` table needs the new triple instead of the singleton.
-- `scripts/check_references.py` runs catch broken links; CI gates the
+- `src/scripts/check_references.ts` runs catch broken links; CI gates the
   split.
 - Any consumer project carrying a project-level override of
   `chat-history` must also split (or alias) — handled by an explicit

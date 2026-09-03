@@ -61,7 +61,7 @@ Augment copy exists for the Augment tool surface itself, not for the
 dispatcher.
 
 The wizard is the same engine, not a separate one: `src/server/routes/wizard.ts`
-spawns `scripts/install.py --apply-payload` (`wizard.ts:325`, `:371`, `:953`),
+spawns `src/scripts/install.ts --apply-payload` (`wizard.ts:325`, `:371`, `:953`),
 so all GUI installs converge on the copy semantics above.
 
 ### Channel 3 — documented manual copies (opt-in features)
@@ -77,7 +77,7 @@ made.
 ## (b) Can consumers modify the scripts locally? Do re-installs overwrite?
 
 - **Installer-deployed copies are always overwritten.** `_resolve_file_conflict`
-  (`install.py:229-243`) unconditionally returns `"write"` — "deploys always
+  (the Python-era installer's payload-router branch (line range dropped: it addressed `install.py`, which ADR-200 replaced with `src/scripts/install.ts`, and a line range does not survive a port)) unconditionally returns `"write"` — "deploys always
   overwrite; the flag never gates a write". Edits inside `~/.augment/templates/`
   (or a legacy project `.augment/`) are clobbered on the next
   `init`/`sync`/`refresh`. Orphans are never deleted, though — the copier only

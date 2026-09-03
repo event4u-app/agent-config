@@ -14,7 +14,7 @@ keep-beta-until: 2026-08-12
 
 A **two-tier consensus mechanism**, layered by cost:
 
-1. **Tier A — Automated ontology lint (every PR).** `scripts/skill_collision_clusters.py` produces `agents/runtime/reports/skill-collision-clusters.json`. New skills that fall into an existing collision cluster (description-vector similarity ≥ threshold or trigger-keyword overlap ≥ threshold) **break the build** unless paired with one of:
+1. **Tier A — Automated ontology lint (every PR).** `src/scripts/skill_collision_clusters.ts` produces `agents/runtime/reports/skill-collision-clusters.json`. New skills that fall into an existing collision cluster (description-vector similarity ≥ threshold or trigger-keyword overlap ≥ threshold) **break the build** unless paired with one of:
    - A routing rule (tier-2a path-prefix or tier-3 keyword) that declares ownership, OR
    - An ADR under `docs/contracts/adr-*.md` that names the trade-off.
 2. **Tier B — ADR on first collision (per cluster, not per skill).** When Tier A flags a new collision and the author chooses to keep both skills, they write a one-page ADR naming what each skill owns and where the boundary lives. The ADR is **per cluster**, not per skill — adding a fourth `php-*` skill to an established `php-*` cluster does not require a new ADR; only the cluster's first ADR matters.
@@ -52,8 +52,8 @@ The two-tier choice is the convener-skeptic synthesis: **(b) is the always-on ga
 
 ## Acceptance test
 
-- [x] `scripts/skill_collision_clusters.py` exists and emits `agents/runtime/reports/skill-collision-clusters.json`
-- [x] `scripts/score_skill_selection.py` exists and emits `agents/runtime/reports/skill-selection-accuracy.json`
+- [x] `src/scripts/skill_collision_clusters.ts` exists and emits `agents/runtime/reports/skill-collision-clusters.json`
+- [x] `src/scripts/score_skill_selection.ts` exists and emits `agents/runtime/reports/skill-selection-accuracy.json`
 - [x] Phase 3 routing rules (`laravel-routing`, `symfony-routing`, `copilot-routing`, `devcontainer-routing`) demonstrate the tier-B response to a flagged cluster
 - [ ] Lint promoted to `fail-the-build` once thresholds are confirmed stable across one full release cycle (currently `warn-only`)
 
@@ -62,7 +62,7 @@ The final acceptance gate (lint going from warn-only to fail-the-build) is defer
 ## Related
 
 - Origin: [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
-- Mechanical scripts: [`scripts/skill_collision_clusters.py`](../../src/scripts/skill_collision_clusters.ts), [`scripts/score_skill_selection.py`](../../src/scripts/score_skill_selection.ts)
+- Mechanical scripts: [`src/scripts/skill_collision_clusters.ts`](../../src/scripts/skill_collision_clusters.ts), [`src/scripts/score_skill_selection.ts`](../../src/scripts/score_skill_selection.ts)
 - Sibling decision: [`docs/contracts/rule-router.md`](rule-router.md) — the routing layer the ADR feeds
 - Sibling decision: [`docs/contracts/multi-tool-projection-fidelity.md`](multi-tool-projection-fidelity.md) — Phase 4 of the same roadmap
 - Standing skill: [`.augment/skills/ai-council/SKILL.md`](../../.augment/skills/ai-council/SKILL.md) — the explicit-opt-in path for the rare moments tier C is invoked

@@ -872,7 +872,7 @@ Each fixture is a **stdin payload** — the dispatcher wraps it via
 
 The corpus is platform-shape-representative, not platform-exhaustive
 — multi-platform shape coverage lives in
-`tests/hooks/test_event_shape_contract.py`. The replay test asserts
+`tests/scripts/hooks/event_shape_contract.test.ts`. The replay test asserts
 1:1 mapping between `EVENT_VOCABULARY` and this directory.
 
 ## Replay mode — `AGENT_CONFIG_REPLAY=1`

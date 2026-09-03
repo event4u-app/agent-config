@@ -53,7 +53,7 @@ corresponding report is rejected by reviewer convention (no CI gate yet
 
 8 commands × 2 arms (raw vs. rtk-filtered) = 16 local shell invocations
 per run. Zero API spend — pure local measurement. Wall-time ≈ 5–10 s on
-the maintainer's repo (`scripts/bench_rtk_savings.py --quiet`).
+the maintainer's repo (`./scripts-run src/scripts/bench_rtk_savings --quiet`).
 
 ## Cost envelope (`telegraph` corpus)
 

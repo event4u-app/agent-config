@@ -171,8 +171,8 @@ sit in the override band (≤ 4k ceiling).
 | **total**                 | **25590** | **0.795** | — | **≤ 26 000** ✓ |
 
 Acceptance gates (P2.2 § Equivalence):
-- ✅ `measure_rule_budget.py --kernel-budget-check` exits 0
-- ✅ `iron_law_sha.py --all-kernel` confirms byte-identical fence content for all 8 fence-bearing rules
+- ✅ `./scripts-run src/scripts/measure_rule_budget --kernel-budget-check` exits 0
+- ✅ `./scripts-run src/scripts/iron_law_sha --all-kernel` confirms byte-identical fence content for all 8 fence-bearing rules
 - ✅ `pytest tests/golden/` 29/29 green
 
 Future edits to any kernel rule must keep the Iron-Law SHA stable
@@ -298,7 +298,7 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 | Pilot reproducibility | `./scripts-run src/scripts/_pilot_measure` | r-values, sum, SHAs identical across runs |
 | Iron-Law preservation | SHA-256 of fence-block content (whitespace-norm, case-fold) | all 3 pilots match originals |
 | Bucket projection | `r_median × sum(always)` | ≤ 25 000 chars |
-| Per-rule cap (P2.1) | `measure_rule_budget.py --kernel-budget-check` (P2 deliverable) | each ≤ 2 500 chars OR ADR |
+| Per-rule cap (P2.1) | `./scripts-run src/scripts/measure_rule_budget --kernel-budget-check` (P2 deliverable) | each ≤ 2 500 chars OR ADR |
 
 ## § 8 — What this contract does NOT do
 

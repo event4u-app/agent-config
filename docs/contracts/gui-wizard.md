@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-19
 > trust-and-safety layer ([`trust-and-safety.md`](trust-and-safety.md)).
 > The wizard is a thin HTTP wrapper: it is a **selection front-end**, and
 > every real write goes through the single installer
-> `scripts/install.py --apply-payload` (D12 / ADR-020). It is **optional by
+> `src/scripts/install.ts --apply-payload` (D12 / ADR-020). It is **optional by
 > design** — the CLI is the canonical entry point; the wizard exists for
 > non-technical users who want a visual picker.
 
@@ -20,7 +20,7 @@ The GUI is a Fastify server (`src/server/`) serving a Preact SPA
 (`src/ui/`), booted by the `install` / `setup` / `config` (alias
 `settings`) / `ui:serve` CLI subcommands. The legacy
 `packages/core/installer/src/gui/*` tree was retired; the single real
-installer is `scripts/install.py`.
+installer is `src/scripts/install.ts`.
 
 Entry-point map (road-to-setup-experience § Phase 1):
 
@@ -68,7 +68,7 @@ directly (via `runUiServe`, install mode) whenever it can actually be used —
 interactive TTY, a display, and no CLI-mode flag. There is no CLI tool-picker
 in that path; the wizard collects the tool/pack/settings selection and its
 Finish drives the **whole** install through `POST /api/v1/wizard/apply` →
-`scripts/install.py --apply-payload` (one installer).
+`src/scripts/install.ts --apply-payload` (one installer).
 
 `init` falls back to the non-interactive bash CLI install (`src/scripts/install`
 → `src/scripts/install.ts`) and never boots the GUI when any opt-out below
@@ -136,7 +136,7 @@ Versioned under `/api/v1/`. Selected routes:
 | POST   | `/api/v1/wizard/ai-council`   | Comment-preserving scalar merge into `.ai-council.yml`                  |
 | POST   | `/api/v1/wizard/finish`       | 2PC commit of settings + user-identity                                  |
 | POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
-| POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `scripts/install.py --apply-payload` |
+| POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `src/scripts/install.ts --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
 | POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
 | GET    | `/api/v1/install/recovery`    | Interrupted-run recovery state                                          |
@@ -144,7 +144,7 @@ Versioned under `/api/v1/`. Selected routes:
 
 The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
 were removed (road-to-single-install-source-of-truth § Phase 3). All real
-writes now flow through `POST /api/v1/wizard/apply` → `scripts/install.py`.
+writes now flow through `POST /api/v1/wizard/apply` → `src/scripts/install.ts`.
 
 Every request passes three `onRequest` hooks in
 [`src/server/app.ts`](../../src/server/app.ts): a `Host`-header allow-list,
@@ -174,7 +174,7 @@ drives it goes away — the local process should not outlive its only client:
 On boot, `runUiServe` records `{pid, port, url}` to
 `~/.event4u/agent-config/local-server.json`
 ([`src/server/serverInfo.ts`](../../src/server/serverInfo.ts)) and removes it
-on graceful exit. A fresh `agent-config init` (via `scripts/install.py`
+on graceful exit. A fresh `agent-config init` (via `src/scripts/install.ts`
 `_kill_stale_wizard_server`) reads that record, terminates a still-running
 prior instance, and starts a new server — so init always lands on step 1.
 
@@ -186,9 +186,9 @@ prior instance, and starts a new server — so init always lands on step 1.
 
 `POST /api/v1/wizard/apply` is the only write path:
 
-- `dry_run: true` → spawns `install.py --apply-payload <tmp> --dry-run` and
+- `dry_run: true` → spawns `src/scripts/install.ts --apply-payload <tmp> --dry-run` and
   returns the buffered plan-summary text (used by the Review preview).
-- otherwise → spawns `install.py --apply-payload <tmp>` (real apply) and
+- otherwise → spawns `src/scripts/install.ts --apply-payload <tmp>` (real apply) and
   **streams** the installer's NDJSON stdout
   (`{type:"file",…}` / `{type:"done"|"error"}`) mapped to the SSE frames the
   SPA consumes. The child is killed if the client disconnects
@@ -213,7 +213,7 @@ The browser stops reading on `done` / `error`; the server ends the stream.
 - **Remote exploitation** — loopback bind, Host allow-list, Origin
   allow-list, per-server bearer token.
 - **DNS rebinding** — Host header check covers POSTs that omit `Origin`.
-- **Mid-install crash** — `scripts/install.py` owns the user-scope
+- **Mid-install crash** — `src/scripts/install.ts` owns the user-scope
   lockfile + project manifest; the recovery routes
   (`/api/v1/install/recovery`) surface an interrupted run on next boot.
 
@@ -221,7 +221,7 @@ The browser stops reading on `done` / `error`; the server ends the stream.
 
 - Not a hosted SaaS — no auth account model, no telemetry.
 - Not a parallel installer — the GUI is a selection front-end; every
-  real write goes through `scripts/install.py --apply-payload`.
+  real write goes through `src/scripts/install.ts --apply-payload`.
 - Not a CI surface — `--no-open` headless boots are supported for smoke
   tests, but the canonical CI path is the flag-driven non-interactive CLI.
 
@@ -239,7 +239,7 @@ The browser stops reading on `done` / `error`; the server ends the stream.
 **D12 (locked).** Single apply endpoint with a `schema_version`
 discriminator — **not** two endpoints with a shared Python backend.
 Reasoning: one bind, one token, one installer; the
-Python `scripts/install.py` payload-router branches on
+The `src/scripts/install.ts` payload-router branches on
 `schema_version` before any disk write. The dual-endpoint variant was
 considered and rejected for doubling the surface with no gain.
 

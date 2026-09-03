@@ -60,7 +60,7 @@ their semver, not derived from unstable stdout parsing.
 > .build_args`; it does not re-read this column.
 >
 > **Detection (ADR-068).** This table is mirrored by `HOST_INVENTORY` in
-> `src/cli/python/workspace_hosts.py`; `tests/test_workspace_hosts.py` asserts
+> `src/cli/python/workspace_hosts.ts`; `tests/scripts/cli/python/workspace_hosts.test.ts` asserts
 > the two agree, so this markdown stays the source of truth. `workspace_hosts.py
 > detect <id>` returns a host's **effective tier** (its inventory tier, demoted
 > to 3 if the Tier-1 CLI is absent from PATH — fail-closed), side-effect-free

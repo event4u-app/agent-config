@@ -20,7 +20,7 @@ shape below must (a) bump `install_layout_version` and (b) carry a
 [`BREAKING_CHANGES.md`](../../BREAKING_CHANGES.md).
 
 - **Authoritative writer:** [`src/scripts/install.py`](../../src/scripts/install.ts)
-  (the wizard plans via `src/install/`, then `install.py --apply-payload`
+  (the wizard plans via `src/install/`, then `src/scripts/install.ts --apply-payload`
   performs the real writes).
 - **Lockfile writers:** [`src/scripts/_lib/installed_tools.py`](../../src/scripts/_lib/installed_tools.ts)
   (project manifest), [`src/scripts/_lib/installed_lock.py`](../../src/scripts/_lib/installed_lock.ts)
