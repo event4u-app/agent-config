@@ -1,10 +1,10 @@
 ---
 adr: 251
-status: accepted
+status: superseded
 date: 2026-08-30
 decision: authorization-window-shape-not-width
 supersedes: —
-superseded_by: —
+superseded_by: ADR-252
 phase: road-to-turnaround-followups · Phase 2
 type: structural
 reopen_policy: owner
@@ -39,7 +39,18 @@ review_trigger: >-
 
 ## Status
 
-**Accepted** · 2026-08-30. `LEDGER_MAX_AGE_MS` in
+**Superseded** by [ADR-252](ADR-252-specificity-replaces-recency-for-merge.md) on
+2026-09-03, on both of this record's own reopening conditions: the pause-and-renew
+shape was routed around a third time, and the ledger gained the PR-number binding
+this record named as the transition that changes the question.
+
+**The 30-minute width is unchanged** and still governs every operation that has
+not frozen its targets. What ADR-252 adds is that a target-bound authorization no
+longer needs a clock, because what protects the user there is object identity
+rather than recency. The measurements, the residual and the authority analysis
+below stand — they are the input to that record, not something it overturned.
+
+Originally **accepted** · 2026-08-30. `LEDGER_MAX_AGE_MS` in
 `src/scripts/hooks/block_unauthorized_git.ts:545` stays at **30 minutes**. What
 changes is the behaviour AT expiry: a run that outlives its authorization
 **pauses, reports, and asks for re-authorization** instead of terminating.
