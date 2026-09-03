@@ -4,9 +4,15 @@ status: ready
 execution:
   mode: phase-checkpoints
 relates:
-  - stubs/road-to-runtime-orchestration-substrate
-  - later/road-to-experience-loop-owner-decisions
-  - archive/road-to-delivered-cost-truth
+  - slug: archive/road-to-delivered-cost-truth
+    relation: extends
+    note: "Phase 1 finishes the hook-liveness wiring that roadmap RECORDED as landed at hooks_doctor.ts:88 and never made, and appends the dated correction beside the original claim"
+  - slug: stubs/road-to-runtime-orchestration-substrate
+    relation: disjoint
+    note: "adjacent vocabulary (run supervision, orchestration) and no shared mechanism -- every track there is a resident Class-B process gated on the governance-flip ADR, while this roadmap wires in-process instruments that already exist and adds no resident process"
+  - slug: later/road-to-experience-loop-owner-decisions
+    relation: disjoint
+    note: "that file carries 7.6 (incremental card updates, decision E8) and 9.6 (the Class-C question); this roadmap touches neither -- its only overlap in that family is with the PARENT road-to-experience-loop-broadening step 1.3, whose registry revisit-if Phase 2.3 fires, and the parent is not this file"
 estate_growth_exempt: This diff adds six roadmaps and the seven blockers they carry, taking active_roadmaps 1 to 7 and open_blockers 29 to 36. The growth is the point of the change: the 2026-09-b inbox round produced six survivors that each needed a decision recorded as a blocker rather than an assumption made silently. Claimed once, for this change only.
 estate_offset_exempt: Added by the 2026-09-b inbox round on the maintainer's instruction to carry its survivors into ready roadmaps. No archive move was available as a named one-in-one-out counterpart, so this is a self-issued claim and not an offset -- the distinction the owner-reserved question in agents/roadmaps/stubs/road-to-owner-authority-decisions.md records as undecided. Stated rather than smoothed over.
 ---
@@ -99,23 +105,115 @@ does not exist.
 
 ## Phase 2 — Connect the drift detector to the decision it should change
 
-- [ ] **2.1 Read `context_fingerprint` in the continuation ladder.** The
+- [x] **2.1 Read `context_fingerprint` in the continuation ladder.** The
       fingerprint is built by `roadmap_context.ts` from `origin/main` plus open
       PR heads and stored by `run_checkpoint.ts`; `verifyCheckpoint` already
       returns per-field agreement. The ladder in
       `src/scripts/hooks/run_continuation_hook.ts:487` never consults it.
       verify: `grep -c context_fingerprint src/scripts/hooks/run_continuation_hook.ts` > 0,
       and a unit test drives `ladder()` with a disagreeing fingerprint.
-- [ ] **2.2 Place the rung before the iteration cap.** A run whose plan premise
+- [x] **2.2 Place the rung before the iteration cap.** A run whose plan premise
       moved should terminate under its own word, not as `exhausted` — the two
       are different findings and the current vocabulary cannot tell them apart.
       verify: the test from 2.1 asserts the new terminal state, not `exhausted`.
-- [ ] **2.3 Add the terminal state to the closed vocabulary.**
+- [x] **2.3 Add the terminal state to the closed vocabulary.**
       `RUN_TERMINAL_STATES` in `src/scripts/_lib/outcome_vocabularies.ts` holds
       six values and is re-exported as `TerminalState` through
       `outcome_envelope.ts`, which `runtime_journal.test.ts` pins with an
       anti-fork assertion. Extend the one declaration; never add a second.
       verify: `task test` green, including `runtime_journal.test.ts`.
+
+> **Phase 2 landed 2026-09-03, and it found a second dead instrument on the way
+> in.** The rung is `halt-premise-invalidated` in
+> `src/scripts/_lib/continuation_ladder.ts:143`, and it reports the run terminal
+> state `premise-invalidated` through `terminalStateFor` at `:106`.
+>
+> **The premise this step was written on was half wrong, and the half that was
+> wrong is the important one.** The Context table says `context_fingerprint` is
+> "written by `run_checkpoint.ts`" and merely not read by the ladder. It is
+> written by nothing: `session_eol_hook.ts:384` was the only production caller of
+> `buildCheckpoint`, it passed no options, and the field is therefore `null` in
+> every checkpoint this package has ever written. Consuming it in the ladder
+> would have wired one instrument to another instrument that was itself wired to
+> nothing — the roadmap's own defect class, reproduced inside its fix. So Phase 2
+> built the missing producer first.
+>
+> **The producer** is `src/scripts/_lib/context_observation.ts`, written by
+> `roadmap_context.ts:769` — the one thing in the tree that can actually OBSERVE
+> the world, because the fingerprint costs a `gh` call. It records to a single
+> repository-wide file, not a per-roadmap one: `contextFingerprint(base_sha,
+> open_prs)` takes no roadmap argument, so keying it per roadmap would key a
+> repository-wide fact on something it does not depend on and would miss every
+> unscoped probe. Only a `network: 'live'` reading is recorded — offline the
+> digest is a statement about the network, and recording it would make every
+> dropped connection look like a moved premise.
+>
+> **The two consumers** are now both real: `session_eol_hook.ts:384` passes the
+> observation into the checkpoint, so `context_fingerprint` stops being
+> structurally null; and `run_continuation_hook.ts:1386` compares the fingerprint
+> the run ENGAGED under (recorded once, at `:1463`) against the newest
+> observation, and feeds the verdict to the ladder.
+>
+> **Risk 1 is answered by construction, not by tuning.** The rung cannot fire on
+> `origin/main` moving: nothing is observed unless the run itself re-probes, and
+> `premiseMoved` returns false whenever either side is unknown. Three negative
+> cases are pinned through the live dispatcher — unchanged observation, no
+> observation at all, and every unknown-side combination — because a rung that
+> halted healthy runs would be switched off within a day and the positive case
+> alone cannot tell the two apart.
+>
+> **2.2's ordering claim is tested in isolation from the rung's existence.** The
+> rung sits above the counter rungs and below the zero-open rungs: finished work
+> cannot be un-finished by a stale premise, and everything below it is a BUDGET,
+> which is the wrong word for staleness.
+>
+> **The phase paid for its own lines.** `run_continuation_hook.ts` sat at 1,539
+> lines against `check_source_size_budget`'s 1,500-line ratchet, where every line
+> is a violation. Rather than raise a baseline, the ladder — the surface actually
+> under change — moved to `_lib/continuation_ladder.ts` (under the cap, so free)
+> and is re-exported, so every existing import path is unchanged. Net: 1,539 →
+> 1,530, nine lines BELOW where the phase started.
+>
+> **Sensitivity, both polarities, five probes; each restored byte-exact
+> afterwards (`diff -q` clean).**
+>
+> 1. The rung deleted from the ladder (`void premiseInvalidated;`):
+>
+> ```
+>  FAIL  ladder — the premise rung > a disagreeing fingerprint halts under its OWN word
+> AssertionError: expected 'engage' to be 'halt-premise-invalidated'
+> ```
+>
+> 2. The rung KEPT but moved below the iteration cap — 2.2's claim on its own,
+>    with the rung intact:
+>
+> ```
+>  FAIL  ladder — the premise rung > it fires BEFORE the iteration cap, so a stale plan is never reported as exhausted
+> AssertionError: expected 'halt-max-iterations' to be 'halt-premise-invalidated'
+>  FAIL  ladder — the premise rung > and before the wall clock and the stall rungs, for the same reason
+> AssertionError: expected 'halt-wall-clock' to be 'halt-premise-invalidated'
+> ```
+>
+> 3. The hook stops passing the verdict (`premiseInvalidated,` → `false,`) —
+>    everything still built, nothing consumed, which is this roadmap's subject:
+>
+> ```
+>  FAIL  run-continuation — the premise rung, through the live dispatcher > an observation that MOVED after the run engaged halts it under the premise rung
+> AssertionError: expected 2 to be +0
+> ```
+>
+> 4. The tolerant journal read reverted to the blind cast:
+>
+> ```
+>  FAIL  terminal_state — a widened value domain > a row written by a NEWER vocabulary reads as not-recorded, never as a crash
+> AssertionError: expected 'from-the-future' to be null
+> ```
+>
+> 5. The forward-tolerance branch dropped from `parseHaltStamp`:
+>
+> ```
+> AssertionError: expected null to be 'halt-from-a-future-version'
+> ```
 
 ## Phase 3 — Give the freeze primitive its first consumer
 
@@ -260,7 +358,7 @@ does not exist.
 ## Blockers
 
 ### blocker: continuation-terminal-state-arity
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** 2.3, and therefore 2.1 and 2.2
 - **What to do:** pick exactly one — (a) extend `RUN_TERMINAL_STATES` with a
@@ -275,6 +373,96 @@ does not exist.
   conflation the rung exists to remove.
 - **If you do nothing:** Phase 2 cannot land. Phases 1, 3 and 4 are unaffected
   and can ship without this decision.
+- **Decision:** **(a)**, unanimous. AI council 2026-09-03, members
+  `anthropic/claude-sonnet-4-5` and `openai/codex-default`, three rounds, blind
+  chairman, standing in for maintainer sign-off under the standing drain
+  mandate. Verdict as recorded: *extend `RUN_TERMINAL_STATES` with a seventh
+  value. Premise invalidation is operationally distinct from budget exhaustion
+  and from being blocked; conflating it via a reason field defeats the purpose,
+  losing both aggregation by state and type-enforced exhaustive handling. It is
+  distinct enough to aggregate and route independently from ordinary blocking.*
+  This agrees with the recommendation above, which is why the recommendation is
+  left standing rather than rewritten.
+
+  Both seats independently attached the SAME prerequisite set, and the seats
+  treated them as part of the decision rather than as optional hardening — one
+  wrote *"MUST ship with: schema versioning, unknown-value handling, downgrade
+  mapping to `blocked`, rollback trigger for compatibility failures"*, the other
+  *"emit it only after schema versioning, exhaustive-consumer inventory,
+  unknown-value tolerance, and a downgrade mapping to `blocked` are in place"*.
+  Each one, and how it was discharged:
+
+  1. **Exhaustive-consumer inventory — BUILT, and it found the two persisted
+     domains.** Every consumer of `RUN_TERMINAL_STATES` / `TerminalState`, from
+     `grep -rn` over `src` and `tests`:
+     · `_lib/repeated_failure.ts:30-49` — throws at module load on any
+       unclassified state, so the new value had to be classified (it is
+       EXCLUDED, beside `approval-required`: a premise invalidation is the drift
+       detector working, and its base rate is set by other people's pushes, so
+       counting it as a failure would make the repeated-failure rate track
+       repository traffic — Risk 1 arriving through the metric).
+     · `_lib/outcome_envelope.ts:37` — `NON_SUCCESS_STATES`; the value is in it,
+       so an envelope in that state must carry a next action.
+     · `_lib/runtime_journal.ts` — **persists** it in SQLite (`:756` column,
+       `:1017` write guard, `:1108` read). The one consumer whose data outlives
+       its code.
+     · `_lib/ignored_blocker.ts:51,96` — reuses the type verbatim, no switch.
+     · `tests/contracts/outcome_vocabularies.test.ts`,
+       `tests/scripts/runtime_journal.test.ts`,
+       `tests/scripts/envelope_consumption.test.ts` — the last of these carries
+       an explicit arity guard that fired as designed and was updated by
+       enumerating the new value, never by widening the assertion.
+     · `src/agent-src/contexts/execution/terminal-states.md` — the contract,
+       bound by test rather than by import.
+     The inventory also surfaced a **second** widened domain the blocker did not
+     name: `LadderAction`, persisted as `RunState.halted` in the run-state file.
+     It is treated on the same terms below.
+
+  2. **Schema versioning — BUILT.** `RUN_TERMINAL_VOCABULARY_VERSION = 2` plus
+     `RUN_TERMINAL_STATE_SINCE` in `_lib/outcome_vocabularies.ts`. Deliberately
+     NOT a bump of `JOURNAL_SCHEMA_VERSION`: that number covers tables and
+     columns and a mismatch DISCARDS the store, so bumping it for a widened
+     value domain would throw away every unrelated row to no purpose. The
+     reasoning is recorded at the export site, not only here. The run-continuation
+     ledger line now carries `terminal_vocabulary_version` beside its
+     `terminal_state`, so a persisted shape names the vocabulary it was written
+     against.
+
+  3. **Unknown-value tolerance — BUILT on both persisted domains, and the two
+     landed on different answers for a stated reason.** For the terminal state,
+     `readRunTerminalState` at the journal read boundary returns `null` for a
+     value this build cannot place, which is the state every downstream consumer
+     already handles as "not recorded"; the previous code blind-cast the column
+     and handed consumers a typed value outside the type. For the ladder stamp,
+     `parseHaltStamp` PRESERVES an unrecognised `halt-`prefixed value instead of
+     dropping it — the old reader did not crash, it downgraded a newer build's
+     halt to no halt at all, which re-engages a run that was deliberately ended.
+     Fail-open in the one direction a budget must not fail open. The old
+     docblock's claim that such a value "would become an action no branch below
+     handles" was checked against every branch and is false for a halt-prefixed
+     one; it is corrected at the source rather than carried forward.
+
+  4. **Downgrade mapping to `blocked` — BUILT, and generalised.**
+     `RUN_TERMINAL_STATE_DOWNGRADE` declares `premise-invalidated → blocked`, and
+     `downgradeRunTerminalState(state, toVersion)` is what a consumer pinned at
+     an older version calls. A contract test asserts that EVERY post-v1 member
+     has a downgrade to a v1 member, so an eighth value cannot ship
+     undowngradable. An unrecognised string downgrades to `null`, never to
+     `blocked`: `blocked` is what a reader reports for a value it knows is newer,
+     while a value it cannot place at all is an absence, and reporting `blocked`
+     there would manufacture a measurement.
+
+  5. **Rollback trigger — STATED, and deliberately not instrumented.** Recorded
+     in `_lib/outcome_vocabularies.ts`: withdraw the value — remove it from
+     `RUN_TERMINAL_STATES` and let the ladder rung report its declared downgrade
+     `blocked` — on EITHER (1) any consumer observed failing on encountering it,
+     or (2) `readRunTerminalState` returning `null` for a persisted value in
+     normal operation, which would mean a writer emitted something the registry
+     does not know. Single-occurrence triggers rather than rates, because the
+     downgrade mapping already exists and withdrawal costs one commit and no
+     migration, so there is no reason to tolerate a budget of failures first. No
+     telemetry is built for this and none is claimed: (1) surfaces as a failing
+     run and (2) as a null where a value was written.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-03 | reviewer: claude/host -->
@@ -291,7 +479,7 @@ does not exist.
 - [x] AC-1 — `grep -rn 'hook_effect_doctor\|hook_effect_probe' src Taskfile.yml .github`
       names at least one caller that is not the two modules themselves.
 - [x] AC-2 — `grep -rn experiment_freeze src` names at least one non-test importer.
-- [ ] AC-3 — `grep -c context_fingerprint src/scripts/hooks/run_continuation_hook.ts` > 0,
+- [x] AC-3 — `grep -c context_fingerprint src/scripts/hooks/run_continuation_hook.ts` > 0,
       or Phase 2 stands `[~]` with the blocker unresolved and said so.
 - [x] AC-4 — `./scripts-run src/scripts/check_artefact_count_messaging` exits 0
       with `src/rules/**` inside its scanned set.
