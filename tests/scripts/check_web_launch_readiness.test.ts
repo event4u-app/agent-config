@@ -17,8 +17,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     IMPLEMENTED,
+    type LegalRow,
     audit,
     enabled,
+    legalRowViolations,
+    legalRowsOf,
     loadConfig,
     main,
     render,
@@ -190,7 +193,9 @@ describe('2.3 — the region axis escalates a tier, it does not add a check', ()
         const f = r.findings.find((x) => x.check === 'required-legal-pages');
         expect(f?.tier).toBe('critical');
         expect(r.escalated).toHaveLength(1);
-        expect(r.escalated[0]?.why).toContain('TMG');
+        // The reason travels; the CITATION does not — it sits in `authority`
+        // with a review date, per the `ddg-citation-authority` decision.
+        expect(r.escalated[0]?.why).toContain('Abmahnung');
     });
 
     it('the escalation changes the EXIT CODE, which is what makes it load-bearing', () => {
@@ -319,5 +324,218 @@ describe('exit codes carry the blocking distinction', () => {
         } finally {
             process.stdout.write = orig;
         }
+    });
+});
+
+
+describe('2.1/2.2 — a legal claim carries its own authority and expiry', () => {
+    // The generalisation the stale-statute defect earns. A citation sat wrong in
+    // this config from the day it was written -- law dead twenty-seven months
+    // already -- and nothing in the file could have surfaced it, because a
+    // statute reference in prose is a comment: no field said where it came from
+    // and no field said when to re-read it.
+    const row = (over: Partial<LegalRow> = {}): LegalRow => ({
+        kind: 'escalation',
+        id: 'required-legal-pages@de',
+        why: 'DSGVO Art. 13 obliges a Datenschutzerklaerung for a DE-targeted commercial site.',
+        authority: 'DSGVO Art. 13 (Regulation (EU) 2016/679) — eur-lex.europa.eu',
+        review_by: '2099-01-01',
+        ...over,
+    });
+    const drop = (r: LegalRow, field: 'authority' | 'review_by'): LegalRow => {
+        const out = { ...r };
+        delete out[field];
+        return out;
+    };
+
+    it('a row whose why names a statute must carry an authority', () => {
+        const v = legalRowViolations([drop(row(), 'authority')], '2026-09-03');
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('authority');
+    });
+
+    it('a row whose why names a statute must carry a review_by', () => {
+        const v = legalRowViolations([drop(row(), 'review_by')], '2026-09-03');
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('review_by');
+    });
+
+    it('a LAPSED review_by fails — an overdue date is a finding, never a silent pass', () => {
+        // The neutralise half of the pair 2.2 asks for: the date is moved into
+        // the past and the gate must say so.
+        const v = legalRowViolations([row({ review_by: '2020-01-01' })], '2026-09-03');
+        expect(v).toHaveLength(1);
+        expect(v[0]).toContain('lapsed');
+    });
+
+    it('and the SAME row with the date restored is clean — the restore half', () => {
+        expect(legalRowViolations([row()], '2026-09-03')).toEqual([]);
+    });
+
+    it('a date exactly on the review day has not lapsed; the day after has', () => {
+        expect(legalRowViolations([row({ review_by: '2026-09-03' })], '2026-09-03')).toEqual([]);
+        expect(legalRowViolations([row({ review_by: '2026-09-02' })], '2026-09-03')).toHaveLength(1);
+    });
+
+    it('a malformed review_by is a violation, never a date that silently parses', () => {
+        expect(legalRowViolations([row({ review_by: 'soon' })], '2026-09-03')).toHaveLength(1);
+    });
+
+    it('a row with no statute and no authority is NOT policed — scoped, not blanket', () => {
+        // The gate must not turn every prose field into a legal claim. A row
+        // that asserts no legal basis owes no citation.
+        const plain = drop(drop(row({ why: 'A framework default error page loses the visitor.' }), 'authority'), 'review_by');
+        expect(legalRowViolations([plain], '2026-09-03')).toEqual([]);
+    });
+
+    it('an authority with no review_by fails even when the why names no statute', () => {
+        // The half that keeps the field honest once the statute moves OUT of the
+        // prose: a citation parked in `authority` still needs an expiry.
+        const moved = drop(row({ why: 'A DE-targeted commercial site owes an imprint and a privacy notice.' }), 'review_by');
+        expect(legalRowViolations([moved], '2026-09-03')).toHaveLength(1);
+    });
+
+    it('a review_by with no authority fails too — a date with no citation dates nothing', () => {
+        const moved = drop(row({ why: 'A DE-targeted commercial site owes an imprint and a privacy notice.' }), 'authority');
+        expect(legalRowViolations([moved], '2026-09-03')).toHaveLength(1);
+    });
+
+    it('the shipped config declares at least one legal row and passes its own gate', () => {
+        const doc = JSON.parse(fs.readFileSync(path.join(REPO, 'src/config/web-launch-readiness.json'), 'utf8')) as never;
+        const rows = legalRowsOf(doc);
+        const legal = rows.filter((r) => r.authority !== undefined);
+        expect(legal.length).toBeGreaterThan(0);
+        expect(legalRowViolations(rows, '2026-09-03')).toEqual([]);
+    });
+});
+
+describe('2.2 — loadConfig REFUSES a config whose legal row has lapsed', () => {
+    // Run against a real file through the real read path, not against the pure
+    // function alone: the gate is only load-bearing if the loader enforces it.
+    let root: string;
+    const write = (mutate: (doc: Record<string, unknown>) => void): void => {
+        const doc = JSON.parse(
+            fs.readFileSync(path.join(REPO, 'src/config/web-launch-readiness.json'), 'utf8'),
+        ) as Record<string, unknown>;
+        mutate(doc);
+        fs.mkdirSync(path.join(root, 'src/config'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src/config/web-launch-readiness.json'), JSON.stringify(doc, null, 2));
+    };
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'wlr-legal-'));
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('throws on a lapsed row, and loads the identical config once the date is restored', () => {
+        write((doc) => {
+            const regions = doc['regions'] as { escalations: { review_by: string }[] };
+            regions.escalations[0]!.review_by = '2001-01-01';
+        });
+        expect(() => loadConfig(root)).toThrow(DeadScopeError);
+        expect(() => loadConfig(root)).toThrow(/lapsed/);
+
+        write(() => {
+            /* unmodified — the restore half */
+        });
+        expect(() => loadConfig(root)).not.toThrow();
+    });
+
+    it('throws when the authority is stripped from a dated legal row — the two fields travel together', () => {
+        write((doc) => {
+            const regions = doc['regions'] as { escalations: Record<string, unknown>[] };
+            delete regions.escalations[0]!['authority'];
+        });
+        expect(() => loadConfig(root)).toThrow(/authority/);
+    });
+});
+
+describe('3.1/3.2 — the consent check performs the ordering assertion its row specifies', () => {
+    // The row's own `verification` field already reads "Load the page with
+    // consent declined and assert no request to the analytics origin". The
+    // static frame cannot load a page, so the strongest assertion it CAN make
+    // is source order within one document — and where it cannot make even that,
+    // it says `unknown` rather than reporting a pass it did not earn.
+    const analytics = (dir: string) => audit(path.join(FIX, dir), 'marketing-site', REPO);
+
+    it('the tag ABOVE the gate is reported, with the two line numbers named', () => {
+        const r = analytics('consent-order-bad');
+        const f = r.findings.filter((x) => x.check === 'analytics-and-consent-wiring');
+        expect(f).toHaveLength(1);
+        expect(f[0]?.location).toBe('index.html:9');
+        expect(f[0]?.evidence).toContain('ABOVE the consent gate at line 10');
+    });
+
+    it('the tag BELOW the gate is NOT reported — both directions, or the polarity is untested', () => {
+        const r = analytics('consent-order-good');
+        expect(r.findings.filter((x) => x.check === 'analytics-and-consent-wiring')).toEqual([]);
+        expect(r.passed).toContain('analytics-and-consent-wiring');
+        expect(r.unknown.filter((u) => u.check === 'analytics-and-consent-wiring')).toEqual([]);
+    });
+
+    it('prose naming consent is not a gate — the bad fixture says the word and still fires', () => {
+        // The meta description on consent-order-bad contains "consent". A
+        // detector that counted it would report the page correctly ordered
+        // while the tag still fires first.
+        const html = fs.readFileSync(path.join(FIX, 'consent-order-bad/index.html'), 'utf8');
+        expect(html).toContain('name="description"');
+        expect(html.split('\n')[6]).toContain('consent');
+        expect(analytics('consent-order-bad').findings.some((x) => x.check === 'analytics-and-consent-wiring')).toBe(true);
+    });
+
+    it('a minified single-file bundle is UNKNOWN — never passed, never a finding', () => {
+        const r = analytics('consent-minified');
+        const u = r.unknown.filter((x) => x.check === 'analytics-and-consent-wiring');
+        expect(u).toHaveLength(1);
+        expect(u[0]?.reason).toMatch(/same line|minified/i);
+        expect(r.passed).not.toContain('analytics-and-consent-wiring');
+        expect(r.findings.some((x) => x.check === 'analytics-and-consent-wiring')).toBe(false);
+    });
+
+    it('and the gate does NOT exit 0 on it, as though it had checked', () => {
+        const orig = process.stdout.write.bind(process.stdout);
+        process.stdout.write = (() => true) as typeof process.stdout.write;
+        const run = (dir: string): number =>
+            main(['--build', path.join(FIX, dir), '--site-type', 'marketing-site', '--force'], REPO);
+        try {
+            // The three fixtures differ only in where the two script tags sit,
+            // so the exit codes below are attributable to the ordering pass and
+            // to nothing else.
+            expect(run('consent-order-good')).toBe(0);
+            expect(run('consent-minified')).toBe(1);
+            // The sharp contrast: on a marketing site this check is SITUATIONAL,
+            // so an actual ordering FINDING does not block — and an UNDECIDED
+            // one still does. The exit code tracks "did the instrument answer",
+            // not the severity of the answer.
+            expect(run('consent-order-bad')).toBe(0);
+        } finally {
+            process.stdout.write = orig;
+        }
+    });
+
+    it('an undecided check is rendered under its own heading, never folded into PASSED', () => {
+        const text = render(analytics('consent-minified'));
+        expect(text).toContain('UNDECIDED');
+        expect(text).not.toMatch(/PASSED:[^\n]*analytics-and-consent-wiring/);
+    });
+
+    it('no message anywhere claims the checker does not check load order', () => {
+        // The disclaimer this step replaces. A check that advertises a
+        // capability it declines in the same string is the defect.
+        const src = fs.readFileSync(path.join(REPO, 'src/scripts/check_web_launch_readiness.ts'), 'utf8');
+        expect(src).not.toContain('Load order is NOT checked here');
+        for (const dir of ['consent-order-bad', 'consent-minified', 'defects-marketing']) {
+            const text = render(audit(path.join(FIX, dir), 'marketing-site', REPO));
+            expect(text.toLowerCase()).not.toContain('is not checked here');
+        }
+    });
+
+    it('analytics with NO gate anywhere still reports, and says what was and was not established', () => {
+        const r = audit(path.join(FIX, 'defects-marketing'), 'marketing-site', REPO);
+        const f = r.findings.filter((x) => x.check === 'analytics-and-consent-wiring');
+        expect(f.length).toBeGreaterThan(0);
+        expect(f[0]?.evidence).toContain('no consent mechanism');
     });
 });
