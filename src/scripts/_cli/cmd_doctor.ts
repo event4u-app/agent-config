@@ -3049,6 +3049,12 @@ function _run_no_manifest(
         }
         return fail_check ? 1 : 0;
     }
+    const strictNoManifest = _strictExit(opts, checks, false);
+    if (strictNoManifest !== null) {
+        // A missing manifest is itself a reason a caller may not proceed, so a
+        // strict run keeps the 2 rather than softening it to 1.
+        return bridge_present ? strictNoManifest : 2;
+    }
     if (opts.ci && bridge_present) {
         // Same fold as the manifest path: check failures are red under --ci.
         return fail_check ? 1 : 0;
@@ -3077,6 +3083,19 @@ function _emit_json(
     }
     if (checks !== null) {
         payload['checks'] = checks;
+        // The two fields 2.2 of road-to-artifact-location-and-doctor-reach asks
+        // for. `status` is the roll-up a human reads; `can_proceed` is the
+        // boolean a caller branches on without parsing prose. Both are facts
+        // about the tree, never about the exit policy — a caller running with
+        // the kill switch set still gets `can_proceed: false`.
+        const driftPresent =
+            missing.length > 0 || modified.length > 0 || foreign.length > 0 || tag_drift.length > 0;
+        payload['can_proceed'] = canProceed(driftPresent, checks);
+        payload['status'] = payload['can_proceed']
+            ? checks.some((c) => c['status'] === 'warn')
+                ? 'warn'
+                : 'ok'
+            : 'fail';
         // The detection section rides along whenever checks ran, so the agent /
         // GUI contract carries the full provider → transport → billing table
         // and not just the one-line check row.
@@ -3155,10 +3174,69 @@ function _emit_text(
     }
 }
 
+/**
+ * `--strict` — the failing exit mode, and the ONE decision behind it.
+ *
+ * `doctor-exit-contract` was resolved by AI council on 2026-09-03 (members
+ * anthropic, openai), unanimously **(b)**: `doctor` keeps its exit contract and
+ * a separate strict mode carries the failing exit, leaving current callers
+ * untouched at the cost of one more surface. ADR-041 governs verb growth, so a
+ * flag rather than a verb; and the existing contract is load-bearing for callers
+ * that run `doctor` for information rather than for permission.
+ *
+ * WHAT WAS ALREADY TRUE, measured rather than assumed. The originating roadmap
+ * says `doctor` "writes nothing and always exits zero". Half of that is wrong:
+ * the default run already returns 1 on DRIFT (`return drift_present ? 1 : 0`),
+ * and `--ci` already folds check failures in on top. What is genuinely missing
+ * is a failing exit for check failures OUTSIDE the `--ci` JSON contract — `--ci`
+ * forces `opts.json = true`, so there is no human-readable strict run — and that
+ * gap is what `--strict` closes. Recorded here because a comment claiming to
+ * implement a premise the code contradicts is worse than no comment.
+ *
+ * SEVERITY IS CONFIGURABLE, per a condition both council seats attached:
+ * `--strict-level fail` (default) fails on `fail` rows; `--strict-level warn`
+ * also fails on `warn`. A caller adopting strict picks its own bar rather than
+ * inheriting one.
+ *
+ * THE KILL SWITCH is `AGENT_CONFIG_DOCTOR_NO_FAIL=1`, the other condition both
+ * seats attached: an immediate way to disable failing exits that is not a code
+ * rollback. When set, `--strict` still REPORTS every finding and still emits
+ * `can_proceed: false`; only the exit code is suppressed, and the suppression is
+ * announced on stderr so a green run cannot be silently bought. A switch that
+ * hid the finding as well would be the "warning ignored eighteen times" shape
+ * this repository already documents.
+ */
+const STRICT_DEFAULT_LEVEL = 'fail';
+const STRICT_LEVELS: ReadonlySet<string> = new Set(['fail', 'warn']);
+/** Env var that suppresses the failing exit without suppressing the finding. */
+const STRICT_KILL_SWITCH = 'AGENT_CONFIG_DOCTOR_NO_FAIL';
+
+/** Statuses that trip `--strict` at the given level. */
+export function strictTripping(level: string): ReadonlySet<string> {
+    return level === 'warn' ? new Set(['fail', 'warn']) : new Set(['fail']);
+}
+
+/**
+ * The machine-readable "may I proceed" answer — nothing in this tree carried
+ * one before (`grep -rc can_proceed src` returned zero hits tree-wide).
+ *
+ * Deliberately independent of `--strict`: a caller asking the JSON whether it
+ * may proceed gets the same answer whether or not the exit code was configured
+ * to fail, because the two questions are different. The exit code is a policy;
+ * `can_proceed` is a fact.
+ */
+export function canProceed(driftPresent: boolean, checks: readonly Dict[]): boolean {
+    return !driftPresent && !checks.some((c) => c['status'] === 'fail');
+}
+
 interface Options {
     project: string | null;
     json: boolean;
     ci: boolean;
+    /** Fail the exit on findings at or above {@link Options.strict_level}. */
+    strict: boolean;
+    /** `fail` (default) or `warn`. Only meaningful with {@link Options.strict}. */
+    strict_level: string;
     check: string | null;
     trace_root: boolean;
     context: boolean;
@@ -3173,18 +3251,21 @@ const PROG = 'agent-config doctor';
 // terminal width; golden tests assert the `usage:` token + exit code only.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
+    '                           [--strict] [--strict-level {fail,warn}]\n' +
     '                           [--trace-root] [--context] [--anatomy]\n' +
     '                           [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
     '--ci': 'ci',
+    '--strict': 'strict',
     '--trace-root': 'trace_root',
     '--context': 'context',
     '--anatomy': 'anatomy',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
+    '--strict-level': 'strict_level',
     '--project': 'project',
     '--check': 'check',
     '--repair': 'repair',
@@ -3196,11 +3277,22 @@ function _argError(msg: string): never {
     throw new ArgparseExit(2);
 }
 
+function _validateStrictLevel(level: string): void {
+    if (!STRICT_LEVELS.has(level)) {
+        _argError(
+            `argument --strict-level: invalid choice: ${pyRepr(level)} ` +
+                `(choose from 'fail', 'warn')`,
+        );
+    }
+}
+
 function _parse(argv: string[]): Options {
     const opts: Record<string, unknown> = {
         project: null,
         json: false,
         ci: false,
+        strict: false,
+        strict_level: STRICT_DEFAULT_LEVEL,
         check: null,
         trace_root: false,
         context: false,
@@ -3428,8 +3520,49 @@ function _run_repair(opts: Options): number {
     return 2;
 }
 
+/**
+ * The `--strict` verdict, or `null` when strict is off.
+ *
+ * Factored out because `main` has TWO exit paths and only one of them was
+ * obvious: a project with no install manifest returns through
+ * `_run_no_manifest` long before the drift branch, so a strict check written
+ * only in the drift branch silently never fires there. Measured, not guessed —
+ * the first implementation exited 0 on a tree carrying a `fail` check row and a
+ * `can_proceed: false` payload, because this repository has no manifest of its
+ * own. Both paths call this now, so the two cannot diverge again.
+ */
+function _strictExit(
+    opts: Options,
+    checks: readonly Dict[],
+    driftPresent: boolean,
+): number | null {
+    if (!opts.strict) {
+        return null;
+    }
+    const tripping = strictTripping(opts.strict_level);
+    const tripped = checks.filter((c) => tripping.has(c['status'] as string));
+    if (!driftPresent && tripped.length === 0) {
+        return 0;
+    }
+    if (process.env[STRICT_KILL_SWITCH] === '1') {
+        // The finding is NEVER suppressed — only the exit code is, and the
+        // suppression announces itself. A switch that hid the finding as well
+        // would be the ignored-warning shape this repository already documents.
+        eprint(
+            `⚠️  doctor --strict: ${String(tripped.length)} finding(s) at or above ` +
+                `'${opts.strict_level}'` +
+                (driftPresent ? ' plus manifest drift' : '') +
+                `, but ${STRICT_KILL_SWITCH}=1 suppressed the failing exit. ` +
+                'The findings above still stand; unset it to restore the gate.',
+        );
+        return 0;
+    }
+    return 1;
+}
+
 function main(argv: string[] | null = null): number {
     const opts = _parse(argv !== null ? Array.from(argv) : process.argv.slice(2));
+    _validateStrictLevel(opts.strict_level);
     if (opts.ci) {
         // `--ci` = machine-readable consumer-CI contract: JSON payload on
         // stdout, zero interactive output, and check failures fold into the
@@ -3501,6 +3634,10 @@ function main(argv: string[] | null = null): number {
         // Exit contract under --ci: 0 clean · 1 any drift OR any check fail
         // · 2 unresolvable environment (handled above via ProjectRootError).
         return drift_present || fail_check ? 1 : 0;
+    }
+    const strict = _strictExit(opts, checks, drift_present);
+    if (strict !== null) {
+        return strict;
     }
     return drift_present ? 1 : 0;
 }
