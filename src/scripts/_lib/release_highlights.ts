@@ -279,9 +279,57 @@ export function derive_categories(commits: readonly SpanCommit[]): Record<string
  *
  * A label with no evidence is omitted, so the caller's `_none_` default still
  * applies where `_none_` is the true answer. One line per label keeps the
- * rendered head inside its cap; SHA citations are capped at `DERIVED_SHA_CAP`
- * with an explicit remainder count rather than a silent truncation.
+ * rendered head inside its cap; citations are capped at `DERIVED_SHA_CAP` with
+ * an explicit remainder count rather than a silent truncation.
+ *
+ * **PUBLISHABLE BY DEFAULT since 2026-09-03, and this is the third position
+ * this line has held.** It shipped `DERIVED_MARKER` plus a CATEGORY
+ * DESCRIPTION — "rule/schema diffs, breaking commits or removed public surface
+ * in 5a3b7c5". The 2026-09-01 flip then made that marker a hard refusal, and
+ * the combination had a consequence nobody priced: every release of this
+ * package touches `src/rules/` or `src/scripts/schemas/`, so **Behaviour
+ * changes** is always substantiated, so the generator always wrote a line the
+ * gate always refused. Every release halted, by construction. That was
+ * recorded as "the cadence the flip chose"; the maintainer's instruction of
+ * 2026-09-03 — *"fix the bug so this stops happening"* — is the authority for
+ * removing it.
+ *
+ * The fix is not a weaker gate, and it is not the marker moving somewhere
+ * cheaper (that was 2026-09-03's first attempt, `guard_release_curation`,
+ * which relocated the halt without removing it). It is the writer no longer
+ * emitting text that cannot ship. Two changes, and the first is what makes the
+ * second honest:
+ *
+ * 1. The line now states the COMMIT SUBJECTS behind each category, not the
+ *    name of the category's own detection rule. "hooks:effect reports whether
+ *    a bound concern fires (b0a03a7)" is a claim a reader can use; "rule/schema
+ *    diffs in b0a03a7" is a restatement of why the classifier fired.
+ * 2. `DERIVED_MARKER` is gone from the emission, so nothing unpublishable is
+ *    ever written and no release halts on the writer's own output.
+ *
+ * What is deliberately NOT relaxed: `highlight_contradictions` still refuses a
+ * human editing a substantiated line down to `_none_`, which is the failure the
+ * false 9.13.0 and 9.14.0 heads actually were; and the marker constant and its
+ * four guard sites stay, now covering only a marker somebody writes BY HAND.
+ * The honest cost of this change, stated rather than left to be discovered: the
+ * head is a categorised view of the span rather than curated prose, and it
+ * ships without a human having read it. An operator who wants better prose
+ * still edits it — they are no longer STOPPED until they do.
  */
+/**
+ * A commit subject reduced to the claim inside it.
+ *
+ * Drops the conventional-commit `type(scope):` prefix, because "feat(hooks):"
+ * is metadata about the commit and the changelog's own commit lists already
+ * carry it — what a highlight line needs is the sentence after the colon. Keeps
+ * the subject otherwise verbatim: rewording it here would make the head a
+ * paraphrase of the span rather than a citation of it, and the whole point of
+ * this module is that the two cannot disagree.
+ */
+function _claim_text(subject: string): string {
+    return subject.replace(/^[a-z]+(?:\([^)]*\))?!?:\s*/u, '').trim();
+}
+
 export function render_derived_head_values(
     hits: Readonly<Record<string, readonly CategoryHit[]>>,
 ): Record<string, string> {
@@ -292,11 +340,19 @@ export function render_derived_head_values(
         if (!reason || ev.length === 0) {
             continue;
         }
-        const shas = ev.map((h) => h.sha.slice(0, 7));
-        const shown = shas.slice(0, DERIVED_SHA_CAP);
-        const remainder = shas.length - shown.length;
-        const more = remainder > 0 ? ` +${remainder} more` : '';
-        out[label] = `${DERIVED_MARKER} ${reason} in ${shown.join(', ')}${more}.`;
+        const shown = ev.slice(0, DERIVED_SHA_CAP);
+        const remainder = ev.length - shown.length;
+        const more = remainder > 0 ? `; +${String(remainder)} more` : '';
+        const cited = shown
+            .map((h) => `${_claim_text(h.text)} (${h.sha.slice(0, 7)})`)
+            .join('; ');
+        // `reason` still names the classifier that fired, kept as the fallback
+        // for a hit whose subject renders empty after trimming — a subject that
+        // is nothing but a conventional-commit prefix. Without it the line
+        // would read "( b0a03a7)".
+        out[label] = cited ? `${cited}${more}.` : `${reason} in ${shown
+            .map((h) => h.sha.slice(0, 7))
+            .join(', ')}${more}.`;
     }
     return out;
 }
