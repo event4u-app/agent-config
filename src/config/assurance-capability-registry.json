@@ -6,7 +6,7 @@
   "registered_at": "2026-08-23",
   "grader": {
     "path": "src/scripts/grade_target_readiness.ts",
-    "dimensions": 10,
+    "dimensions": 13,
     "knockouts": [
       "test-presence",
       "static-analysis",

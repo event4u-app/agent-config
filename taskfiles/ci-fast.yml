@@ -2067,6 +2067,17 @@ tasks:
     desc: Fail if any _one_off_*.py script lands outside scripts/ai_council/one_off_archive/<YYYY-MM>/
     cmd: ./scripts-run src/scripts/check_one_off_location {{.QUIET_FLAG}} --quiet
 
+  check-agent-artifact-location:
+    silent: true
+    desc: >
+      Fail if a roadmap-shaped .md sits outside agents/roadmaps/. Detects by
+      SHAPE, not by filename alone: the shared is_roadmap_candidate name filter
+      plus roadmap frontmatter plus a `## Phase` heading plus a checkbox step,
+      all three. Scans THIS repository only — a consumer project never runs it,
+      and the failure this was written for happened in one. The gate's own
+      header states that limit.
+    cmd: ./scripts-run src/scripts/check_agent_artifact_location {{.QUIET_FLAG}}
+
   check-review-schema:
     silent: true
     desc: "Every committed review-findings ledger conforms to its schema and declares its independence consistently — a same-family reviewer set may not claim cross-model acceptance"

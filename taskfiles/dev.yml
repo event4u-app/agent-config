@@ -134,3 +134,48 @@ tasks:
       Usage:
       task dev:standing-rule-delivery
     cmd: ./scripts-run src/scripts/check_standing_rule_delivery
+
+  push-ready:
+    desc: |
+      The documented pre-push freshness sequence, executed rather than
+      described. `src/domains/git/pr/create/command.md` § 1b-ii already
+      specifies it correctly and calls it MANDATORY on every later push;
+      what did not exist was something that runs it.
+
+      Six steps, each printing its own outcome:
+        1 fetch                — origin, pruned
+        2 integrate the SET    — the PR target plus, per the
+                                 branch-convergence policy read at the
+                                 TARGET commit, the default branch. The
+                                 DEFAULT is merged first so a conflict
+                                 surfaces against the broader base.
+        3 regenerate           — `task sync` + `task generate-tools`
+        4 verify               — `task consistency`, the exact CI mirror
+        5 re-check freshness   — `check_branch_freshness` after the merge
+        6 push                 — NOT run here. Pushing is the contributor's
+                                 call and stays one deliberate command.
+
+      DRY=1 runs steps 1, 2 and 5 read-only and prints what 3, 4 and 6
+      would do, so a stale branch can be inspected without mutating it.
+
+      Usage:
+      task push-ready
+      task push-ready DRY=1
+    vars:
+      DRY: '{{.DRY | default ""}}'
+    cmds:
+      - 'echo "── push-ready ──────────────────────────────────────────"'
+      - 'echo "1 fetch"'
+      - 'git fetch origin --prune && echo "  → origin fetched" || echo "  → FAILED: origin unreachable"'
+      - 'echo "2 integrate the base set (default first, then target)"'
+      # DRY reports the step's outcome and carries on, so all six steps are
+      # visible in one pass. A real run stops on the first refusal.
+      - '{{if .DRY}}./scripts-run src/scripts/sync_pr_branch --dry-run || echo "  → refused (see above); the real run would stop here"{{else}}./scripts-run src/scripts/sync_pr_branch{{end}}'
+      - 'echo "3 regenerate derived files"'
+      - '{{if .DRY}}echo "  → would run: task sync && task generate-tools"{{else}}task sync && task generate-tools && echo "  → regenerated"{{end}}'
+      - 'echo "4 verify (task consistency — the exact CI mirror)"'
+      - '{{if .DRY}}echo "  → would run: task consistency"{{else}}task consistency && echo "  → consistent"{{end}}'
+      - 'echo "5 re-check freshness after the merge"'
+      - '{{if .DRY}}./scripts-run src/scripts/check_branch_freshness || echo "  → not current (see above); the real run would stop here"{{else}}./scripts-run src/scripts/check_branch_freshness{{end}}'
+      - 'echo "6 push"'
+      - 'echo "  → NOT run here. Review the merge, then push deliberately."'

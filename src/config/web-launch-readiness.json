@@ -168,7 +168,7 @@
     "ceiling_enforced_by": "tests/scripts/web_launch_readiness_config.test.ts asserts checks.length < 50. Currently 7."
   },
   "regions": {
-    "_comment": "Region axis (road-to-web-launch-readiness 2.3). Separate from site_types because it answers a different question: site_types decides WHETHER a check applies, regions decides HOW SEVERELY. A DE-targeted site owes Impressum and Datenschutz by law (TMG 5 / DSGVO Art. 13), so `required-legal-pages` is critical there and situational elsewhere -- the same check, a different tier. Modelled as a tier ESCALATION rather than as a second applies_to list, because a legal page is not more or less applicable in Germany, it is more or less optional.",
+    "_comment": "Region axis (road-to-web-launch-readiness 2.3). LEGAL-ROW CONTRACT: any row here or in `checks` whose `why` names a statute MUST carry `authority` (the citation and where it can be read) and `review_by` (the ISO date it must be re-read by); `authority` and `review_by` travel together, so a citation moved out of prose into `authority` stays dated; and a lapsed `review_by` FAILS the loader rather than warning, because a date nothing reads is a comment. Enforced by legalRowViolations() in src/scripts/check_web_launch_readiness.ts, which loadConfig() calls before returning. Separate from site_types because it answers a different question: site_types decides WHETHER a check applies, regions decides HOW SEVERELY. A DE-targeted site owes an Impressum and a Datenschutzerklaerung by law -- the citations sit in the escalation's `authority` field, dated, rather than in prose, which is what the `ddg-citation-authority` decision of 2026-09-03 settled -- so `required-legal-pages` is critical there and situational elsewhere -- the same check, a different tier. Modelled as a tier ESCALATION rather than as a second applies_to list, because a legal page is not more or less applicable in Germany, it is more or less optional.",
     "values": [
       "de",
       "eu",
@@ -181,7 +181,9 @@
         "check": "required-legal-pages",
         "region": "de",
         "to": "critical",
-        "why": "TMG 5 obliges an Impressum and DSGVO Art. 13 a Datenschutzerklaerung for a DE-targeted commercial site. Abmahnung risk is real and immediate, which is what separates critical from situational here."
+        "why": "A DE-targeted commercial site owes a published imprint and a privacy notice by law; the two citations and the date they must be re-read by live in this row's `authority` field, not in this sentence. Abmahnung risk is real and immediate, which is what separates critical from situational here.",
+        "authority": "Impressum: DDG § 5 (Digitale-Dienste-Gesetz), gesetze-im-internet.de/ddg -- in force since 2024-05-14, superseding the identically-numbered provision of the TMG, which is why the pre-2026-09-03 form of this row cited dead law: it was written on 2026-08-25, twenty-seven months after that supersession. Datenschutzerklaerung: DSGVO Art. 13, Regulation (EU) 2016/679, consolidated text at eur-lex.europa.eu. Both are cited here as provenance a reader can re-check, never as counsel: src/rules/legal-safety-floor.md governs how this package may speak about law, and `review_by` below is the date these two must be read again.",
+        "review_by": "2027-09-03"
       }
     ]
   }
