@@ -37,12 +37,30 @@ execution:
 1. **Identify the icon need** — what does the icon communicate? Name the semantic
    intent (e.g., "download action", "warning state", "user profile") rather than
    visual description alone.
-2. **Pick the icon set** per stack and brand context. Default open sets:
-   **Lucide** (clean, Tailwind-native), **Heroicons** (Tailwind/React first-party),
-   **Phosphor** (multi-weight, flexible), **Tabler** (comprehensive, stroke-based).
-   Brand/provider marks use **lobe-icons** (`lobe-icons:openai-color`, etc.).
-   Stack consumers: `react-shadcn-ui` → Lucide; `blade-ui` → Heroicons or Lucide;
-   `tailwind-engineer` → any web-font-friendly set.
+2. **Choose the icon set — three rungs, and record which one answered.** The
+   set is *chosen*, never inherited: adopting one because a scaffold shipped it
+   is the anti-pattern [`icon-consistency`](../../rules/icon-consistency.md)
+   § What this gates names by name. Stop at the first rung that answers.
+   1. **A brand token or brand guide that names an icon set** — authoritative,
+      stop here ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)).
+   2. **The set already in use in this project** — detected at the Inspect step
+      of the Iconography floor below. One icon system per project; a second
+      visual language is the defect, not a preference.
+   3. **Neither exists → select from the open candidates by the criterion the
+      surface actually imposes, and state which criterion decided it.** The
+      candidates, unordered: **Heroicons**, **Lucide**, **Phosphor**, **Tabler**.
+
+   | Criterion the surface imposes | Candidates that satisfy it |
+   |---|---|
+   | Several stroke weights inside one UI (thin captions, bold empty states) | Phosphor (six weights) |
+   | One uniform stroke across a dense admin UI | Lucide, Tabler |
+   | First-party match to a component library the project already adopted | Heroicons (Tailwind UI), Lucide (shadcn/ui) |
+   | Widest glyph coverage for domain-specific nouns | Tabler, Phosphor |
+
+   Two criteria pointing at different candidates is a real trade-off — name it
+   and pick one; do not split the UI across both. Brand and provider marks are
+   a separate axis and use **lobe-icons** (`lobe-icons:openai-color`) whatever
+   the UI set is.
 3. **Resolve to a concrete Iconify name** in `set:name` format, e.g.
    `lucide:arrow-right`, `heroicons:user-solid`, `ph:warning-bold`,
    `tabler:download`. Verify the name exists on
@@ -53,6 +71,19 @@ execution:
    - **Framework component** — `<Icon icon="lucide:arrow-right" />` via `@iconify/react`, `@iconify/vue`, or the stack's Iconify wrapper.
 5. **Verify** — check the resolved name on `iconify.design/icon/{set}:{name}`;
    confirm the icon renders as expected before shipping.
+
+## Which set each stack ships with — an observation, not a pick
+
+Recorded so rung 2 above can recognise an incumbent. Finding one of these in a
+project is rung-2 evidence. Reaching for it because the stack is *new* skips
+rung 3 and is exactly the scaffold inheritance
+[`icon-consistency`](../../rules/icon-consistency.md) forbids.
+
+| Stack / consumer | Ships with |
+|---|---|
+| `react-shadcn-ui` | Lucide |
+| `blade-ui` | Heroicons (Tailwind first-party) |
+| `tailwind-engineer` | none of its own — any web-font-friendly set |
 
 ## Iconography floor (design fidelity)
 
