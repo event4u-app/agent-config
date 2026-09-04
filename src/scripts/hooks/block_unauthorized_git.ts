@@ -931,8 +931,21 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
         session_id,
         refused_at: new Date().toISOString(),
       });
-    } catch {
-      /* observability only — see above */
+    } catch (err) {
+      /* The FAILURE DIRECTION is unchanged and still defensible: an unrecorded
+         refusal degrades to the pre-record behaviour, where the refusal simply
+         repeats on the next attempt. It fails CLOSED — no operation is let
+         through that would not have been. What changed on 2026-09-04 is that it
+         stops being INVISIBLE, on the same grounds `consumeGrantTarget` was
+         repaired: the user is about to answer a numbered question this refusal
+         just told the agent to ask, and that answer is now unrecordable. The
+         operator sees a refusal repeat and has no way to know why. */
+      process.stderr.write(
+        `block-unauthorized-git: pending-refusal write failed (${_errText(err)}) — ` +
+          "the refused operation was NOT recorded, so answering the question this " +
+          "refusal posed cannot authorize it and the refusal will repeat. " +
+          "Refusal outcome unchanged.\n",
+      );
     }
   }
   if (decision.stdout) {
@@ -942,6 +955,12 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     process.stderr.write(decision.stderr);
   }
   return decision.exit;
+}
+
+/** One-line, bounded rendering of a caught value for a stderr diagnostic. */
+function _errText(err: unknown): string {
+  const t = err instanceof Error ? err.message : String(err);
+  return t.replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
 export function main(argv?: string[]): number {
