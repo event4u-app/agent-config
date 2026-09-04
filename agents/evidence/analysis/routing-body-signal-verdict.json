@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-09-03",
+  "measured_at": "2026-09-04",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -13,12 +13,12 @@
     "verdict": "harmful",
     "reason": "false activation +6.96 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 5.685,
+    "delta_recall_pp": 5.943,
     "delta_false_activation_pp": 6.959,
-    "p_value": 0.03707,
+    "p_value": 0.02809,
     "discordant_positive_pairs": {
       "gained": 62,
-      "lost": 40
+      "lost": 39
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -35,14 +35,14 @@
       },
       "description+body": {
         "positives": 387,
-        "positiveHits": 272,
+        "positiveHits": 273,
         "negatives": 388,
         "negativeHits": 80
       }
     },
     "recall_pp": {
       "description": 64.599,
-      "description+body": 70.284
+      "description+body": 70.543
     },
     "false_activation_pp": {
       "description": 13.66,
