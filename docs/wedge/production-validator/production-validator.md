@@ -61,6 +61,48 @@ implementation under the test actually exists and ran against a real system.
    trace. Green unit tests over mocks are **not** that evidence.
 4. Apply the removal test: *if every test double were deleted, would this feature
    still function end-to-end?* If no, it is not done.
+5. **When the shipped path is a WEB surface and a build directory exists**, run
+   `check_web_launch_readiness` over the built output rather than reasoning about
+   the source:
+
+   ```bash
+   check_web_launch_readiness --build <build-dir> --site-type <type> [--region <de|eu|us>]
+   ```
+
+   `--site-type` and `--region` also resolve from `web_launch_readiness:` in
+   `.agent-settings.yml`; a flag overrides the file. The gate is **default-off**
+   and exits 0 saying so unless `web_launch_readiness.enabled: true` is set —
+   that silence is a real answer, and it is not a `READY`.
+
+   Read its exit code as follows, because the three outcomes are not the same
+   claim:
+
+   | Exit | Meaning | Your verdict |
+   |---|---|---|
+   | 0 | every applicable check applied and cleared | contributes to `READY` |
+   | 1 | a critical/high finding, **or** an applicable check the instrument could not decide | `NOT READY`, quoting the `file:line` |
+   | 2 | usage error or a dead scan scope | not a verdict on the site — fix the invocation |
+
+   An `UNDECIDED` block is a statement about the INSTRUMENT, not a clearance and
+   not a defect: it means the build carried no evidence that check can read (a
+   component-rendered tree with no HTML page, for instance). Report it as missing
+   evidence in exactly the sense step 3 already uses — never fold it into a pass.
+
+   <!-- Why this binding, and not the two others considered (roadmap
+        road-to-the-check-that-cannot-see 2.1; AI council 2026-09-04, 2/2,
+        anthropic + openai, both seats): this file is the only candidate with
+        EXECUTION SEMANTICS and enough context to supply `--build`. A hook
+        concern under src/scripts/hooks/ reaches more hosts but cannot know the
+        build directory, so it could only nudge — and "widest host coverage" is
+        the wrong selector for a consumer that would never actually consume. A
+        flow entry in src/flows/ was rejected because that schema resolves
+        commands and skills, not scripts, and delivery.yaml's own comment says
+        its team block has "no execution semantics". The cost is stated rather
+        than hidden: this subagent is `discovery.visible: false` with
+        `requires_capability: claude_subagents`, so the binding reaches ONE
+        host. Both seats called that acceptable for a default-off gate during
+        calibration, and a host-neutral binding waits on build-directory
+        discovery existing at all. -->
 
 ## What you do NOT do
 
