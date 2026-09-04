@@ -100,7 +100,22 @@ export interface Undecided {
     /** `file:line` the instrument stopped at, so the reader can look at it. */
     location: string;
     reason: string;
+    /** WHY it could not decide — see `UndecidedReason`. Never a fifth state. */
+    reason_class: UndecidedReason;
 }
+
+/**
+ * The two ways a check can fail to decide. A REASON CLASS on the existing
+ * `Undecided` state, deliberately not a new state.
+ *
+ * `instrument-limit`   the input carries no evidence this reader can consume.
+ *                      A static reader looking for `<img>` in a tree with no
+ *                      HTML page is not finding zero violations — it is
+ *                      reading zero bytes, and those are different answers.
+ * `declaration-missing` the evidence is readable, but the CALLER declared
+ *                      nothing that would settle which rule applies to it.
+ */
+export type UndecidedReason = 'instrument-limit' | 'declaration-missing';
 
 /** A tier the region axis moved, and why. Reported so the axis is visible. */
 export interface Escalated {
@@ -337,14 +352,35 @@ export function tierFor(
     return e === undefined ? { tier: c.tier, escalatedBy: null } : { tier: e.to, escalatedBy: e.why };
 }
 
-/** `web_launch_readiness.enabled: true` in `.agent-settings.yml` — default OFF. */
-export function enabled(root: string): boolean {
+/**
+ * The `web_launch_readiness:` block of `.agent-settings.yml`, as read.
+ *
+ * `site_type` and `region` join `enabled` here because they were CLI-ONLY, and
+ * that is D12: a consumer could set `enabled: true`, run the gate, and get
+ * `required-legal-pages` at SITUATIONAL — non-blocking, exit 0 — while the same
+ * finding is CRITICAL and blocking for a DE-targeted site. The escalation was
+ * not overridden; it was never reachable, because `--region` defaults to
+ * `unspecified` and no settings key could say otherwise.
+ *
+ * `undefined` means the key is ABSENT, which is a different fact from
+ * `region: 'unspecified'` — the first is a caller who said nothing, the second
+ * a caller who said "no jurisdiction". `render()` distinguishes them.
+ */
+export interface WebLaunchSettings {
+    enabled: boolean;
+    site_type?: SiteType;
+    region?: Region;
+}
+
+/** Two-space keys under `web_launch_readiness:` in `.agent-settings.yml`. */
+export function readSettings(root: string): WebLaunchSettings {
     let raw: string;
     try {
         raw = fs.readFileSync(path.join(root, '.agent-settings.yml'), 'utf-8');
     } catch {
-        return false;
+        return { enabled: false };
     }
+    const out: WebLaunchSettings = { enabled: false };
     let inSection = false;
     for (const line of raw.split('\n')) {
         if (/^web_launch_readiness:\s*$/.test(line)) {
@@ -355,12 +391,22 @@ export function enabled(root: string): boolean {
             inSection = false;
             continue;
         }
-        if (inSection && /^\s{2}enabled:\s*true\s*$/.test(line)) return true;
+        if (!inSection) continue;
+        if (/^\s{2}enabled:\s*true\s*$/.test(line)) out.enabled = true;
+        const st = /^\s{2}site_type:\s*["']?([a-z-]+)["']?\s*$/.exec(line);
+        if (st !== null) out.site_type = st[1] as SiteType;
+        const rg = /^\s{2}region:\s*["']?([a-z]+)["']?\s*$/.exec(line);
+        if (rg !== null) out.region = rg[1] as Region;
     }
-    return false;
+    return out;
 }
 
-/* ── the one implemented check: staging indexability ───────────────────────── */
+/** `web_launch_readiness.enabled: true` in `.agent-settings.yml` — default OFF. */
+export function enabled(root: string): boolean {
+    return readSettings(root).enabled;
+}
+
+/* -- staging indexability: the check that predates the IMPLS table --------- */
 
 const NOINDEX_RE = /<meta[^>]+name\s*=\s*["']robots["'][^>]*content\s*=\s*["'][^"']*noindex/i;
 const XROBOTS_RE = /x-robots-tag[^\n]*noindex/i;
@@ -778,11 +824,153 @@ const analyticsAndConsent: Impl = (files) => analyseConsentOrder(files).hits;
  * EMPTY `Located[]` means "applied and found nothing" is what keeps the
  * silent-green defect out of `IMPLS`, and folding a third state into that return
  * type would put the invariant back in play for all eight implementations.
+ *
+ * EVERY check has an entry, and the entries are NOT interchangeable. Measured
+ * on this tree before the table was filled: a build holding only `index.js` and
+ * `src/App.vue` — one `<img>` with no alt, no `<title>`, no `lang`, no charset,
+ * no viewport, no canonical — produced
+ *
+ *     PASSED: staging-noindex-leftover, https-enforcement, per-route-metadata,
+ *             image-alternative-text, document-head-basics,
+ *             canonical-and-sitemap-coherence, analytics-and-consent-wiring
+ *     exit 0
+ *
+ * Five of those iterated ZERO files, because `isPage()` filtered every file out.
+ * The `Impl` contract above states the rule they broke in its own words, and
+ * `audit()` turned each empty array into a pass.
+ *
+ * The probes are keyed to EVIDENCE SURFACE, not to one shared blindness
+ * predicate. An AI council (2026-09-04, 2/2, anthropic + openai) rejected the
+ * single predicate: "no HTML page" is honest for a check that reads rendered
+ * markup and semantically wrong for one that matches route paths, where the
+ * absence of HTML does not establish the absence of a route surface. Four
+ * surfaces, nine checks.
  */
-type Undecide = (files: readonly SourceFile[]) => Located[];
+interface UndecideHit extends Located {
+    reason_class: UndecidedReason;
+    /**
+     * The instrument could not read this check's evidence surface AT ALL, so
+     * whatever the `Impl` returned came from the same zero evidence and must
+     * not be reported.
+     *
+     * Without this, `custom-error-route` on a component-rendered build reports
+     * "no 404.html in the build output" as a HIGH finding AND, two lines lower,
+     * that the absence of the file establishes nothing. Both sentences are
+     * printed from the same read, and one of them is wrong. A PER-LOCATION
+     * undecided (the consent-order pass) is the opposite case: other locations
+     * were decided, so its findings stand and the cover legitimately overlaps.
+     */
+    surface_blind?: true;
+}
+export interface UndecideCtx {
+    region: Region;
+    siteType: SiteType;
+    escalations: readonly Escalation[];
+}
+export type Undecide = (files: readonly SourceFile[], ctx: UndecideCtx) => UndecideHit[];
+
+/** Surface 1 — anything at all was read. */
+const readAnything = (files: readonly SourceFile[]): boolean => files.length > 0;
+
+/** Surface 2 — a rendered HTML page exists, so markup is inspectable. */
+const hasPage = (files: readonly SourceFile[]): boolean => files.some(isPage);
+
+/** Surface 3 — code the consent pass can read at all (`.md` is prose, not code). */
+const hasCode = (files: readonly SourceFile[]): boolean => files.some((f) => !/\.md$/i.test(f.base));
+
+const ROUTE_DIR_RE = /(^|\/)(routes?|pages)(\/|$)/i;
+const ROUTER_FILE_RE = /^(router|routes)\.(js|jsx|ts|tsx|mjs|cjs)$/i;
+
+/**
+ * Surface 4 — a statically inspectable ROUTE surface.
+ *
+ * Enumerated rather than described, because a predicate is only as good as the
+ * artefacts it names: an HTML page, a `sitemap.xml`, a `routes/` or `pages/`
+ * tree, or a router module. None of the four present means a 404 route or a
+ * legal page can exist entirely inside a client bundle, and its absence AS A
+ * FILE establishes nothing. One of the four present and the absence IS the
+ * finding — which is why this is not the markup predicate wearing another name.
+ */
+const hasRouteSurface = (files: readonly SourceFile[]): boolean =>
+    files.some(
+        (f) =>
+            isPage(f) ||
+            f.base === 'sitemap.xml' ||
+            ROUTE_DIR_RE.test(f.rel.replace(/\\/g, '/')) ||
+            ROUTER_FILE_RE.test(f.base),
+    );
+
+/** A whole-tree undecided: an absence has no line, and inventing one would lie. */
+const blind = (text: string, reason_class: UndecidedReason = 'instrument-limit'): UndecideHit[] => [
+    { file: '.', line: 0, text, reason_class, surface_blind: true },
+];
+
+/** `p(files)` true → decidable, no entry. False → one whole-tree undecided. */
+const unless = (p: (f: readonly SourceFile[]) => boolean, text: string): Undecide =>
+    (files) => (p(files) ? [] : blind(text));
+
+const NO_MARKUP =
+    'no HTML page in this build tree, so this check read zero bytes rather than finding zero ' +
+    'violations. Markup is produced by components or a template engine that a static reader ' +
+    'does not evaluate';
 
 export const UNDECIDABLE: Readonly<Record<string, Undecide>> = {
-    'analytics-and-consent-wiring': (files) => analyseConsentOrder(files).undecided,
+    'staging-noindex-leftover': unless(
+        readAnything,
+        'the build tree holds no scannable file at all — "no indexability leftover" would be a ' +
+            'verdict on zero bytes. This check reads .js/.ts/.vue too, so a page-only predicate ' +
+            'would understate what it can normally see.',
+    ),
+    'https-enforcement': unless(hasPage, `${NO_MARKUP}, so an insecure asset URL is invisible here rather than absent.`),
+    'per-route-metadata': unless(hasPage, `${NO_MARKUP}, and a head manager sets <title> and description at runtime.`),
+    'image-alternative-text': unless(hasPage, `${NO_MARKUP}, so an <img> with no alt cannot be reached.`),
+    'document-head-basics': unless(hasPage, `${NO_MARKUP}, and lang/charset/viewport come from a shell this reader does not resolve.`),
+    'canonical-and-sitemap-coherence': unless(hasPage, `${NO_MARKUP}, and rel="canonical" is commonly injected at runtime.`),
+    'custom-error-route': unless(
+        hasRouteSurface,
+        'no statically inspectable route surface — no HTML page, no sitemap.xml, no routes/ or ' +
+            'pages/ tree, no router module. A 404 route may exist only inside a client bundle, so ' +
+            'its absence as a FILE establishes nothing.',
+    ),
+    'required-legal-pages': (files, ctx) => {
+        if (!hasRouteSurface(files)) {
+            return blind(
+                'no statically inspectable route surface — no HTML page, no sitemap.xml, no ' +
+                    'routes/ or pages/ tree, no router module. A legal page matched on its PATH ' +
+                    'cannot be found in a tree that publishes no paths.',
+            );
+        }
+        // The declaration arm, and it is D12's silent loss stated precisely.
+        // The matcher accepts EITHER the DE pair (Impressum + Datenschutz) or
+        // the generic pair (privacy + terms/imprint/legal). A tree carrying only
+        // the generic pair passes at every region — including `de`, where an
+        // Impressum is owed by name. With no region declared, whether the
+        // generic pair discharges the obligation is a question about the
+        // CALLER, not about the tree, and the instrument must not answer it.
+        const paths = files.map((f) => f.rel.replace(/\\/g, '/'));
+        const all = (res: RegExp[]): boolean => res.every((re) => paths.some((p) => re.test(p)));
+        const registered = ctx.escalations.some((e) => e.check === 'required-legal-pages');
+        if (ctx.region === 'unspecified' && registered && all(LEGAL_GENERIC) && !all(LEGAL_DE)) {
+            return blind(
+                'this build carries the generic legal pair (privacy + terms/imprint/legal) and ' +
+                    'NOT the DE pair (Impressum + Datenschutz), and no region was declared. The ' +
+                    'config registers a region escalation for this check, so the answer depends on ' +
+                    'a declaration the caller did not make: pass `--region` or set ' +
+                    '`web_launch_readiness.region` in .agent-settings.yml.',
+                'declaration-missing',
+            );
+        }
+        return [];
+    },
+    'analytics-and-consent-wiring': (files) => {
+        if (!hasCode(files)) {
+            return blind(
+                'the build tree holds no code file at all (prose is excluded from this pass by ' +
+                    'construction), so neither a measurement tag nor a consent gate could be read.',
+            );
+        }
+        return analyseConsentOrder(files).undecided.map((u) => ({ ...u, reason_class: 'instrument-limit' as const }));
+    },
 };
 
 /** First line containing `needle`, 1-indexed; 1 when absent (an absence has no line). */
@@ -813,6 +1001,18 @@ export function audit(
     siteType: SiteType,
     root = REPO_ROOT,
     region: Region = 'unspecified',
+    /**
+     * The blind-spot probe table, overridable so a test can DELETE one entry
+     * and observe that check fall back to `passed`.
+     *
+     * That reversal is the whole proof the predicates are narrow: an entry that
+     * cannot be removed without the fixture staying undecided was never doing
+     * the work, and a probe that answers `undecided` on every input is as
+     * useless as one that answers `passed` on every input — only harder to
+     * notice. Same shape as `root` and `region`: defaulted, so no caller
+     * changes.
+     */
+    undecidable: Readonly<Record<string, Undecide>> = UNDECIDABLE,
 ): Report {
     const { checks, siteTypes, regions, escalations } = loadConfig(root);
     if (!siteTypes.includes(siteType)) {
@@ -858,14 +1058,24 @@ export function audit(
             impl === undefined
                 ? scanIndexability(buildDir).hits
                 : impl(files);
-        const undecided = UNDECIDABLE[c.id]?.(files) ?? [];
+        const undecided = undecidable[c.id]?.(files, { region, siteType, escalations }) ?? [];
         for (const u of undecided) {
-            unknown.push({ check: c.id, tier, location: `${u.file}:${String(u.line)}`, reason: u.text });
+            unknown.push({
+                check: c.id,
+                tier,
+                location: `${u.file}:${String(u.line)}`,
+                reason: u.text,
+                reason_class: u.reason_class,
+            });
         }
         if (hits.length === 0 && undecided.length === 0) {
             passed.push(c.id);
             continue;
         }
+        // A surface-blind probe read nothing, so the Impl's hits came from the
+        // same nothing. Reporting them alongside "this establishes nothing"
+        // would print two contradictory sentences from one read.
+        if (undecided.some((u) => u.surface_blind === true)) continue;
         for (const h of hits) {
             findings.push({
                 check: c.id,
@@ -877,7 +1087,7 @@ export function audit(
             });
         }
     }
-    return {
+    const report: Report = {
         site_type: siteType,
         region,
         enabled: enabled(root),
@@ -889,6 +1099,58 @@ export function audit(
         escalated,
         scanned_files: files.length,
     };
+    assertEveryCheckAccounted(report, checks);
+    return report;
+}
+
+/** The five report buckets, as a set of check ids each. */
+export function bucketsOf(r: Report): Readonly<Record<string, ReadonlySet<string>>> {
+    return {
+        findings: new Set(r.findings.map((f) => f.check)),
+        passed: new Set(r.passed),
+        unimplemented: new Set(r.unimplemented),
+        unknown: new Set(r.unknown.map((u) => u.check)),
+        skipped: new Set(r.skipped.map((s) => s.check)),
+    };
+}
+
+/**
+ * Every configured check lands in at least one bucket — enforced HERE, not only
+ * in a test, because a test is not present in a consumer's run.
+ *
+ * A COVER, not a partition. A check can be in `findings` AND `unknown` at once:
+ * `audit()` pushes both and only short-circuits to `passed` when both are empty.
+ * Asserting disjointness would therefore red a correct report.
+ *
+ * Compared by check ID rather than by cardinality, because duplicate entries can
+ * make two counts agree while a check has silently vanished — the exact failure
+ * the report's own `passed`/`unimplemented` split exists to prevent. An AI
+ * council (2026-09-04, 2/2) chose the throw over a report field: exposing the
+ * gap as data makes the consumer responsible for noticing what it cannot
+ * reliably detect, and a check that lands nowhere reads as green.
+ *
+ * The error carries the missing ids AND the buckets built so far, so a
+ * diagnosis does not lose the findings that were already computed.
+ */
+export function assertEveryCheckAccounted(r: Report, checks: readonly CheckDef[]): void {
+    const buckets = bucketsOf(r);
+    const seen = new Set<string>();
+    for (const ids of Object.values(buckets)) for (const id of ids) seen.add(id);
+    const configured = new Set(checks.map((c) => c.id));
+    const missing = [...configured].filter((id) => !seen.has(id)).sort();
+    const stray = [...seen].filter((id) => !configured.has(id)).sort();
+    if (missing.length === 0 && stray.length === 0) return;
+    const where = Object.entries(buckets)
+        .map(([k, v]) => `${k}=[${[...v].sort().join(', ')}]`)
+        .join(' · ');
+    throw new DeadScopeError(
+        'check_web_launch_readiness',
+        'the report does not account for every configured check, so some result would have ' +
+            'been read as clean by omission.' +
+            (missing.length > 0 ? `\n  in no bucket: ${missing.join(', ')}` : '') +
+            (stray.length > 0 ? `\n  in a bucket but not configured: ${stray.join(', ')}` : '') +
+            `\n  buckets built so far: ${where}`,
+    );
 }
 
 const TIER_ORDER: readonly Tier[] = ['critical', 'high', 'medium', 'situational'];
@@ -897,6 +1159,17 @@ const TIER_ORDER: readonly Tier[] = ['critical', 'high', 'medium', 'situational'
 export function render(r: Report): string {
     const out: string[] = [];
     out.push(`site type: ${r.site_type}  ·  region: ${r.region}`);
+    if (r.region === 'unspecified') {
+        // 2.2. The axis that decides SEVERITY is invisible when it is absent,
+        // and an invisible axis reads as "no escalation applies" rather than as
+        // "nobody said". `escalated` is empty on `unspecified` BY CONSTRUCTION,
+        // so silence here is exactly the shape of the lost escalation.
+        out.push(
+            '  region unspecified → DE escalation not active. Every tier below is the base tier; ' +
+                'declare `--region de` or `web_launch_readiness.region` to raise the ones the ' +
+                'config registers.',
+        );
+    }
     for (const e of r.escalated) {
         // Printed BEFORE the findings, because a reader who sees a check at
         // CRITICAL on one run and SITUATIONAL on another needs the axis that
@@ -940,16 +1213,23 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
         return i >= 0 ? argv[i + 1] : undefined;
     };
     const build = arg('--build');
-    const siteType = arg('--site-type') as SiteType | undefined;
-    const region = (arg('--region') ?? 'unspecified') as Region;
+    // CLI first, settings second, default last. A flag is an explicit statement
+    // about THIS run; a settings key is a standing declaration about the
+    // project; the default is nobody saying anything, and only the last of the
+    // three is silent about a jurisdiction.
+    const settings = readSettings(root);
+    const siteType = (arg('--site-type') ?? settings.site_type) as SiteType | undefined;
+    const region = (arg('--region') ?? settings.region ?? 'unspecified') as Region;
     if (build === undefined || siteType === undefined) {
         process.stderr.write(
             'usage: check_web_launch_readiness --build <dir> --site-type <type> ' +
-                '[--region <de|eu|us|unspecified>] [--json]\n',
+                '[--region <de|eu|us|unspecified>] [--json]\n' +
+                '  --site-type and --region also resolve from `web_launch_readiness:` in ' +
+                '.agent-settings.yml; a flag overrides the file.\n',
         );
         return 2;
     }
-    if (!enabled(root) && !argv.includes('--force')) {
+    if (!settings.enabled && !argv.includes('--force')) {
         process.stdout.write(
             'web-launch-readiness is DEFAULT-OFF until the pre-registered benchmark returns\n' +
                 'positive (claim:web-launch-readiness-finds-more, status unbacked). Enable with\n' +
