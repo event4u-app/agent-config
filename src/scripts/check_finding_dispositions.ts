@@ -24,8 +24,39 @@
  *       self_review_gate --findings-out) into the ledger with an empty
  *       disposition, so validation is red until a human fills it.
  *
- * Exit codes: 0 complete · 1 missing/incomplete dispositions · 2 usage or
- * schema error. Deliberately NOT fail-open: this script never calls a model;
+ * ABSENCE IS NOT EVIDENCE OF ZERO. An absent ledger used to exit 0 for any
+ * version, so a RELEASED version whose findings were never ingested read as
+ * "no findings" — the failure this paragraph exists to stop. When the ledger
+ * file is missing the gate now asks whether the version has SHIPPED:
+ *
+ *   released        a tag for the version exists locally, or the remote says
+ *                   the release exists  ->  an absent ledger is a FAILURE (1)
+ *   unreleased      the local tag list is COMPLETE and lacks it, or the remote
+ *                   says so  ->  normal in-flight state, absent ledger is fine
+ *   undeterminable  the tag list cannot settle it and no remote answered  ->
+ *                   exit 2. Refusing beats passing: a silent green here is the
+ *                   very inversion this split exists to remove
+ *
+ * THE SOURCE IS THE TAG / RELEASE, AND DELIBERATELY NOT `CHANGELOG.md`. The
+ * changelog heading is written by the release PR itself — gh pr diff 1836 shows
+ * "+## [14.16.0](...)" inside the release commit — so on branch release/X the
+ * changelog claims X is released before X exists. Reading it would redden every
+ * in-flight release branch over a file nobody could yet have written, which is
+ * the exact behaviour this split is here to preserve. The tag is created at
+ * publish, after merge, so it cannot make that mistake.
+ *
+ * A local tag MISS is not authoritative on its own: actions/checkout fetches
+ * depth 1 and no tags by default, and the one workflow that runs this gate does
+ * not override either, so in CI the local tag list is EMPTY. See releaseStatus
+ * for the asymmetry and the remote fallback.
+ *
+ * A future reader changing allowEmpty below is the person this is addressed to:
+ * the EMPTY_VALID waiver still covers a ledger that exists and is empty, and an
+ * unreleased version. It no longer covers a released version with no ledger.
+ *
+ * Exit codes: 0 complete · 1 missing/incomplete dispositions (an absent ledger
+ * for a RELEASED version is one of them) · 2 usage error, schema error, or an
+ * undeterminable release status. Deliberately NOT fail-open: this script never calls a model;
  * a broken ledger file is a hard error, not a neutral skip.
  */
 import { spawnSync } from 'node:child_process';
@@ -103,6 +134,124 @@ export function missing_dispositions(findings: readonly LedgerFinding[]): string
         }
     }
     return problems;
+}
+
+export type ReleaseStatus = 'released' | 'unreleased' | 'undeterminable';
+export type RemoteReleaseAnswer = 'released' | 'unreleased' | 'unavailable';
+
+/**
+ * Pure core of the released-vs-unreleased discriminator. Every signal is
+ * INJECTED, so both directions AND the degradation are testable offline. A
+ * red-only test cannot catch the day this starts answering 'unreleased' for
+ * everything, which silently restores the fail-open it exists to replace.
+ *
+ * The asymmetry is the design, and it is the council correction to a first
+ * implementation that read local tags only:
+ *
+ *   a local tag HIT  is authoritative      — the tag exists, the version shipped
+ *   a local tag MISS is NOT authoritative  — unless the tag list is COMPLETE
+ *
+ * A miss means "not in THIS checkout", which is not "never shipped".
+ * tagsComplete is the condition under which a miss IS authoritative: the
+ * repository is not shallow and carries at least one tag. That keeps a normal
+ * full clone offline and deterministic; only an incomplete checkout pays for a
+ * remote lookup.
+ */
+export function releaseStatus(signals: {
+    localTagHit: boolean;
+    tagsComplete: boolean;
+    remote: RemoteReleaseAnswer;
+}): ReleaseStatus {
+    if (signals.localTagHit) {
+        return 'released';
+    }
+    if (signals.tagsComplete) {
+        return 'unreleased';
+    }
+    if (signals.remote === 'released') {
+        return 'released';
+    }
+    if (signals.remote === 'unreleased') {
+        return 'unreleased';
+    }
+    return 'undeterminable';
+}
+
+/** Tag equality, tolerating this repo bare tags and a v prefix. */
+export function localTagHit(release: string, tags: readonly string[]): boolean {
+    const v = release.trim();
+    if (!v) {
+        return false;
+    }
+    return tags.some((t) => {
+        const tt = t.trim();
+        return tt === v || tt === `v${v}`;
+    });
+}
+
+function _git(args: readonly string[]): { ok: boolean; out: string } {
+    const r = spawnSync('git', args as string[], {
+        encoding: 'utf-8',
+        cwd: REPO_ROOT,
+        maxBuffer: 16 * 1024 * 1024,
+    });
+    return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
+}
+
+/** This repository tags. A git failure is an empty list, i.e. not complete. */
+export function git_tags(): string[] {
+    const r = _git(['tag', '--list']);
+    return r.ok ? r.out.split('\n').map((l) => l.trim()).filter(Boolean) : [];
+}
+
+/** True when a local tag MISS may be trusted: full clone, and tags present. */
+export function tags_complete(tags: readonly string[]): boolean {
+    if (tags.length === 0) {
+        return false;
+    }
+    const r = _git(['rev-parse', '--is-shallow-repository']);
+    return r.ok && r.out === 'false';
+}
+
+/**
+ * Remote answer, used ONLY when the local tag list cannot settle it. gh first —
+ * this repo publishes tag and GitHub Release together, the Release object is
+ * publication-specific rather than a bare ref push, and --pr mode already shells
+ * out to gh. git ls-remote is the fallback when gh is absent.
+ */
+export function remote_release_status(release: string): RemoteReleaseAnswer {
+    const gh = spawnSync('gh', ['release', 'view', release, '--json', 'tagName'], {
+        encoding: 'utf-8',
+        cwd: REPO_ROOT,
+        maxBuffer: 8 * 1024 * 1024,
+    });
+    if (gh.status === 0) {
+        return 'released';
+    }
+    if (gh.status !== null && /release not found|could not find|not found/i.test(gh.stderr ?? '')) {
+        return 'unreleased';
+    }
+    const ls = spawnSync(
+        'git',
+        ['ls-remote', '--tags', 'origin', `refs/tags/${release}`, `refs/tags/v${release}`],
+        { encoding: 'utf-8', cwd: REPO_ROOT, maxBuffer: 8 * 1024 * 1024 },
+    );
+    if (ls.status === 0) {
+        return (ls.stdout ?? '').trim() ? 'released' : 'unreleased';
+    }
+    return 'unavailable';
+}
+
+/** Resolve every signal and decide. Called only when the ledger file is absent. */
+export function resolve_release_status(release: string): ReleaseStatus {
+    const tags = git_tags();
+    const hit = localTagHit(release, tags);
+    const complete = tags_complete(tags);
+    return releaseStatus({
+        localTagHit: hit,
+        tagsComplete: complete,
+        remote: hit || complete ? 'unavailable' : remote_release_status(release),
+    });
 }
 
 /** Findings the gate comment reported but the ledger never ingested. */
@@ -227,6 +376,30 @@ function main(argv: readonly string[]): number {
         return 0;
     }
 
+    if (!fs.existsSync(ledgerPath)) {
+        const status = resolve_release_status(release);
+        if (status === 'released') {
+            process.stderr.write(
+                `❌  ${release} has shipped and carries no findings ledger at `
+                    + `${path.relative(REPO_ROOT, ledgerPath)}.\n`
+                    + '    Absence is not evidence of zero — the release PR\'s self-review may have\n'
+                    + '    reported findings that were never ingested. Recover the machine block and:\n'
+                    + `    ./scripts-run src/scripts/check_finding_dispositions --ingest <findings.json> --release ${release}\n`,
+            );
+            return 1;
+        }
+        if (status === 'undeterminable') {
+            process.stderr.write(
+                `❌  cannot determine whether ${release} has shipped: this checkout tag list is`
+                    + ' incomplete (shallow or tagless) and no remote answered.\n'
+                    + '    Refusing to pass on an absent ledger without knowing — that silent green is\n'
+                    + '    the defect this check replaces. Fetch tags (actions/checkout fetch-tags: true)\n'
+                    + '    or make the gh CLI available.\n',
+            );
+            return 2;
+        }
+    }
+
     let ledger: Ledger = { schema_version: 1, release, findings: [] };
     if (fs.existsSync(ledgerPath)) {
         try {
@@ -253,7 +426,10 @@ function main(argv: readonly string[]): number {
             allowEmpty:
                 'EMPTY_VALID: zero recorded findings IS the pass state for a release whose '
                 + 'self-review reported none — the ledger file is created on first --ingest, so a '
-                + 'clean release legitimately has no <version>.json. Un-ingested findings are '
+                + 'clean release legitimately has no <version>.json. NARROWED: this no longer '
+                + 'covers a RELEASED version with no ledger, which returns 1 above on the '
+                + 'released/unreleased split; the waiver now covers an empty-but-present ledger '
+                + 'and an unreleased version. Un-ingested findings on an in-flight release are '
                 + 'caught by --pr (unrecorded_findings), never by this count.',
         });
     } catch (exc) {
