@@ -246,10 +246,13 @@ provenance belongs to `road-to-frontend-fidelity-calibration` Phases 0 and 2.
 
 ## Anti-slop discipline
 
-Before proposing a direction, scan the Visual (V1–V7) and Layout (L1–L8)
-sections of [`design-antipatterns`](../../../docs/guidelines/design-antipatterns.md).
+Before proposing a direction, scan the Visual (V1–V8) and Layout (L1–L10)
+sections of [`design-antipatterns`](../../../docs/guidelines/design-antipatterns.md),
+plus Motion (M1–M8) for the interaction layer.
 On a match, choose differently or invoke the entry's own override condition in
-the brief — every entry has one, and they are register-scoped. The Q* floors are
+the brief — every entry has one. Two of them, T7 and T8, are additionally
+*register-scoped*: the brand and product registers admit different answers, and
+neither admits an undeclared pick. The Q* floors are
 in [`references/craft-floor.md`](references/craft-floor.md) instead of here, so
 they arrive at the write rather than at skill load.
 

@@ -17,8 +17,21 @@ const ctxWith = (raw: string): DesignContext => ({
 const FIXTURES: Record<string, { ext: string; positive: string; negative: string }> = {
   "slop-v1-side-stripe": {
     ext: "css",
-    positive: ".card { border-left: 4px solid #6c5ce7; padding: 16px; }",
-    negative: ".card { border-left: 1px solid #eee; padding: 16px; }",
+    // three positives: the original side stripe, the current four-sided colored
+    // card border, and a gradient border-image (which carries no width token).
+    positive:
+      ".card { border-left: 4px solid #6c5ce7; padding: 16px; }\n" +
+      ".panel { border: 3px solid #6c5ce7; padding: 16px; }\n" +
+      ".hero { border-image: linear-gradient(90deg, #6c5ce7, #00b894) 1; }",
+    // negatives, all of which must stay clean: a 1px side rule, a 1px
+    // four-sided neutral border, a border-color-only focus treatment, and the
+    // two placeholder colors at an accent width.
+    negative:
+      ".card { border-left: 1px solid #eee; padding: 16px; }\n" +
+      ".panel { border: 1px solid var(--border-strong); padding: 16px; }\n" +
+      ".input:focus-visible { border-color: var(--accent); }\n" +
+      ".tab { border: 2px solid transparent; }\n" +
+      ".icon-btn { border: 2px solid currentColor; }",
   },
   "slop-v3-ghost-card": {
     ext: "css",

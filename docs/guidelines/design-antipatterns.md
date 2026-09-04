@@ -87,13 +87,14 @@ Within-project invariants + repetition caps. Override = declare the value in
 
 | # | Pattern | Why it reads as AI-generated | Override condition |
 |---|---|---|---|
-| V1 | Side-stripe `border-left` or `border-right` > 1px as a colored accent | The single most recognizable AI-UI signature; every scaffold-default card uses it | Brand token explicitly defines a stripe; document the decision in the design brief |
+| V1 | A colored accent border above 1px — the side stripe (`border-left` / `border-right`), a fully colored border on all four sides, or a gradient `border-image` | The single most recognizable AI-UI signature; every scaffold-default card uses it. Widened 2026-09-03: the side stripe was the 2024 form, the four-sided colored or gradient card border is the current one, and the entry as written reached only the first | Brand token explicitly defines the accent border; document the decision in the design brief. A 1px neutral border, a `border-color`-only focus treatment, and `transparent` / `currentColor` at any width are not accents and do not flag |
 | V2 | Glassmorphism as decoration (`backdrop-blur` + `bg-white/10`) with no functional depth hierarchy | Model defaults to it for "premium feel"; result looks like 2021 Material You clip-art | Element genuinely sits above a complex, blurred background layer; use sparingly and only for top-level floating surfaces |
 | V3 | Ghost card: `border: 1px solid` + box-shadow ≥ 16px spread together | The combination creates visual noise — the ghost card signals no confident decision about depth | Choose either border OR shadow to indicate depth; never both on the same surface |
 | V4 | Over-rounded small cards or badges: `border-radius` > 16px on elements < 200px wide | Excessive rounding on small surfaces looks toy-ish; standard cap is 12–16px | Pill shape (`border-radius: 9999px`) is intentional on single-line tags/chips only |
 | V5 | Hand-drawn or illustrated SVG icons mixed with crisp icon-system icons | Visual register collision; instantly reads as "generated asset" | Intentional illustrative section (hero illustration, empty-state art); isolate from the icon system |
 | V6 | Repeating diagonal stripes as a background texture | A cliché background default; reads as generated CSS art | Brand explicitly uses pattern backgrounds (e.g., a textile brand); document the stripe definition |
 | V7 | Nested cards: a card inside a card inside a card | Depth hierarchy collapses; user cannot parse elevation intent | A truly three-level hierarchy (e.g., project → board → card); ensure each level has distinct visual weight |
+| V9 | Noise or grain texture laid over a gradient as a "premium" surface default | The visual sibling of V6's diagonal stripes — a generated-CSS-art texture reached for to make a flat gradient look considered, applied because it is available rather than because the surface needed a texture | The texture is part of a documented brand surface treatment (a print-inspired or analog-photographic identity) with the grain opacity defined as a token, not chosen per surface |
 
 ---
 
@@ -150,6 +151,9 @@ Within-project invariants + repetition caps. Override = declare the value in
 | M3 | Animating `<img>` element on hover (scale, filter, transform) | Triggers composite + image decode; often causes content shift | Animate the card's background, border, or shadow instead; leave the image static |
 | M4 | `transition: all` shorthand | Animates every property including layout, color, opacity simultaneously; unpredictable and expensive | Enumerate only the properties that should animate: `transition: transform 200ms ease-out, opacity 200ms` |
 | M5 | Missing `@media (prefers-reduced-motion: reduce)` alternative for any animation | Accessibility violation; vestibular disorders make animated UI unusable | Never acceptable; always add a `prefers-reduced-motion` variant — gentler animation (reduced distance/opacity) is preferred over `display: none` |
+| M6 | Every section fading and rising into view on scroll | The most recognisable interaction tell of the current generation; a reveal applied per section carries no information — the reader has already scrolled to the content, so the animation delays what they asked for | The reveal carries meaning: a stepped narrative where each beat must land before the next, or a long-form article using position to signal progress. A reveal on *every* section is a default, not a decision |
+| M7 | A radial highlight tracking the pointer across a dark hero | A `mousemove` handler feeding a radial gradient; it draws the eye to the cursor, which is the one thing on the page the user already knows the position of | The spotlight is the interaction — a genuine reveal mechanic, a canvas inspection tool, an accessibility magnifier. Ambience is not a purpose |
+| M8 | An interactive control that reduces its own opacity on hover | Reads as the element retreating from the pointer rather than responding to it, and a fade is the one hover treatment that *reduces* legibility at the moment the user is committing to the target — see the six interaction states in [`design-review`](../../src/skills/design-review/SKILL.md) | The fade communicates a real state change (an item being dismissed, a layer being peeled back). Hover must stay legible; brightness, background or border carry hover without spending contrast |
 
 ---
 
@@ -225,6 +229,7 @@ are listed in § Quality floors.
 | V6 | backed | |
 | V7 | judgment-only | DOM-structure nesting depth, measured too false-positive-prone |
 | V8 | backed | |
+| V9 | judgment-only | texture-over-gradient is a compositional judgment, and the pre-registered clean corpus contains no grain-over-gradient near-miss, so an M1 = 0 for a detector here would be a vacuous pass rather than measured precision |
 | C1 | judgment-only | the tell is the combination *as the primary scheme*; which colours are primary is a judgment |
 | C2 | backed | |
 | C3 | backed | |
@@ -257,6 +262,9 @@ are listed in § Quality floors.
 | M3 | backed | |
 | M4 | backed | |
 | M5 | floor | reduced-motion alternative, Q4 |
+| M6 | judgment-only | two independent reasons, both measured: the scanner classifies no engine for plain `.ts` / `.js` (`lint_design_slop.ts` § enginesForExt), which is where a reveal hook normally lives; and the clean corpus contains zero `IntersectionObserver`, so an M1 = 0 would measure nothing. Promotion needs both closed first: a corpus carrying a legitimate near-miss for the signal, and a recorded decision on whether the scanner reaches `.ts` / `.js` |
+| M7 | judgment-only | same two reasons as M6: no engine for `.ts` / `.js`, and zero `mousemove` and zero `radial-gradient` in the clean corpus |
+| M8 | judgment-only | the corpus carries no `:hover { opacity }` at all, and its only `opacity` occurrences sit inside a `@keyframes` block, so it cannot separate a hover fade from a legitimate transition |
 | CP1 | backed | |
 | CP2 | backed | |
 | CP3 | judgment-only | copy phrase-list; that mechanism is council-rejected |
@@ -290,7 +298,7 @@ The bar: a visitor should ask "how was this made?", not "which AI made this?"
 - `fe-design` — stack-agnostic heuristics (form, table, responsive, a11y)
 - `design-review` — structured UI/UX review methodology
 - `existing-ui-audit` — mandatory pre-step: inventory before designing
-- `motion-choreographer` — animation heuristics (should-it, which-easing, how-much)
+- `fe-design` § Motion — animation heuristics (should-it, which-easing, how-long), and the home of the interaction-layer guidance M6 and M8 name. Corrected 2026-09-03: this line used to point at `motion-choreographer`, which is a text-to-video prompt builder (`packs: [ai-video]`) and carries none of what the line described
 - `typography-system` — modular-scale construction and pairing
 - `accessibility-auditor` — WCAG audit method
 - `brand-to-tokens` — first-party brand token extraction (the legitimate override source for most anti-patterns above)
