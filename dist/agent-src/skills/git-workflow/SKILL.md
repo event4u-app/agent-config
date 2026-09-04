@@ -100,14 +100,14 @@ Work complete. What would you like to do?
 ### Option 1: Push and create PR
 
 1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
-2. **`task push-ready`** — fetch → integrate the base SET → regenerate → verify
-   → re-check freshness. Not optional housekeeping: see § A push closes its own
-   loop below. The pre-push hook refuses a stale push, so skipping this buys the
-   refusal rather than avoiding the work.
+2. **The push-ready sequence** — fetch → integrate the base SET → regenerate →
+   verify → re-check freshness (this repo wires it as a `push-ready` task target;
+   a consumer wires its own). Not optional housekeeping: see § A push closes its
+   own loop. A stale push is refused, so skipping this buys the refusal.
 3. `git push -u origin <branch>`.
 4. `gh pr create` using PR template.
-5. **Settle it** — `./scripts-run src/scripts/ci_settle <pr>`. The turn is not
-   over at step 4.
+5. **Settle it** — the turn is not over at step 4:
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <pr>`
 
 ## A push closes its own loop
 
@@ -126,8 +126,8 @@ ones — a branch pushed behind its base was verified against a base it no longe
 merges into. **Unsettled push**: 22 of 30 sessions ran `gh run view
 --log-failed`, and 20 of 50 PRs carried a follow-up `fix(ci|gates|budget)`
 commit. Only 19 of 50 landed with neither. Each half now has a deterministic
-carrier — the pre-push hook refuses a verified-behind branch and points at
-`task push-ready`; the `push-settle` PostToolUse concern fires the moment git
+carrier — the pre-push hook refuses a verified-behind branch and points at the
+push-ready sequence; the `push-settle` PostToolUse concern fires the moment git
 reports a ref advanced. Neither replaces the discipline: the hook is skippable
 with `AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1` for a genuine WIP push, and the
 settle reminder is advisory, because leaving a push deliberately unsettled is

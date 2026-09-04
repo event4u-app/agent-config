@@ -20,7 +20,7 @@
  * pushed, reported the work as delivered, and the red arrived afterwards, where
  * the user found it. `verify-before-complete` already forbids that, and it is
  * model-carried at exactly the moment a turn feels finished — which is the
- * moment a behavioural rule is least likely to fire.
+ * moment a behavior rule is least likely to fire.
  *
  * So this hook fires where the fact is deterministic: right after a shell
  * command that ACTUALLY ADVANCED A REMOTE REF. It reads git's own push report

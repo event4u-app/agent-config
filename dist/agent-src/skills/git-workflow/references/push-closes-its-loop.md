@@ -48,7 +48,7 @@ returned 0, the turn closed, and the red arrived where the user found it.
 
 ## The two carriers
 
-| Half | Carrier | Behaviour |
+| Half | Carrier | Behavior |
 |---|---|---|
 | Stale base | `check_branch_freshness` in the pre-push hook (`src/scripts/install-hooks.sh`) | Asks the REMOTE, one `ls-remote`, ~4.5 s. Refuses only on a VERIFIED behind state and points at `task push-ready`. Never merges. |
 | Unsettled push | the `push-settle` PostToolUse concern (`src/scripts/hooks/push_settle_hook.ts`) | Fires on git's own ref-advance report, resolves the PR number, and names the literal `ci_settle` command. Warn only. |
@@ -66,7 +66,7 @@ returned 0, the turn closed, and the red arrived where the user found it.
 - **The concern cannot block.** It is `severity: advisory`,
   `fail_closed: false`. Leaving a push deliberately unsettled is legitimate;
   ending the turn silently on one is what the reminder exists to stop. Whether
-  the reminder changes behaviour is unmeasured — it ships as a carrier, not as a
+  the reminder changes behavior is unmeasured — it ships as a carrier, not as a
   claim.
 - **Neither reaches a host without the slot.** `agent-config hooks:status`
   answers which slots are bound where you actually are; `post_tool_use` is
