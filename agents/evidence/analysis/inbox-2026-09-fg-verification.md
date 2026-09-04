@@ -117,19 +117,19 @@ resolves by repo-wide name with a first-hit `.find`.
 ## Three findings about the rounds themselves
 
 **1. The seed of round g was never obtained.** Its own transcript:
-*"eine öffentlich auffindbare Kopie des konkreten Skills habe ich bei der Suche
-nicht gefunden"*, and later *"Der TikTok-Skill selbst bleibt aktuell 'nicht
-öffentlich gefunden'"*. The 25-repository corpus is a substitute the agent chose.
+*"eine öffentlich auffindbare Kopie des konkreten Skills habe ich bei der Suche <!-- md-language-check: ignore -->
+nicht gefunden"*, and later *"Der TikTok-Skill selbst bleibt aktuell 'nicht <!-- md-language-check: ignore -->
+öffentlich gefunden'"*. The 25-repository corpus is a substitute the agent chose. <!-- md-language-check: ignore -->
 The expansion from a checklist to a "Web Assurance layer" was decided in the
-agent's **first reply** — *"ich würde ihn deutlich größer und technischer denken
+agent's **first reply** — *"ich würde ihn deutlich größer und technischer denken <!-- md-language-check: ignore -->
 als der TikTok-Ansatz"* — citing *"unsere gestrige Web-Quality-Roadmap"*, an
 agenda that predates the seed. The user's actual words were the opposite in
-direction: *"aber auch die eigentliche idee, wirklich im detail analysieren"*.
+direction: *"aber auch die eigentliche idee, wirklich im detail analysieren"*. <!-- md-language-check: ignore -->
 
 **2. Both rounds stopped after loop 1 of the three that were asked for.**
-`g`: *"Ich musste an der Werkzeug-Grenze dieser Antwort stoppen … die drei
-Überarbeitungsschleifen und die Download-Datei stehen noch aus."*
-`f`: *"Ich bin mitten in der Analyse an das Tool-Limit dieser Antwort gestoßen."*
+`g`: *"Ich musste an der Werkzeug-Grenze dieser Antwort stoppen … die drei <!-- md-language-check: ignore -->
+Überarbeitungsschleifen und die Download-Datei stehen noch aus."* <!-- md-language-check: ignore -->
+`f`: *"Ich bin mitten in der Analyse an das Tool-Limit dieser Antwort gestoßen."* <!-- md-language-check: ignore -->
 Later "three complete loops" claims come from the other thread in the same file.
 
 **3. At least one directive may be mis-attributed to the owner.** Round g's
@@ -137,7 +137,7 @@ transcript refers to *"deine Rechte-Direktive"* and *"deine dritte Direktive"*,
 but the file contains **two** user turns and neither is that. The nearest
 antecedent is a legal-expansion block produced by the other agent and relayed
 into the thread. Round f's reading is also stronger than its source: the owner
-wrote *"wir könnten ihn sogar kopieren"* — a hypothetical framing a question —
+wrote *"wir könnten ihn sogar kopieren"* — a hypothetical framing a question — <!-- md-language-check: ignore -->
 and the proposal reads it as a licence grant and as authority to supersede
 ADR-246, an ADR the owner never named. Flagged, not asserted; it changes what
 counts as owner-directed and therefore what an agent may execute.
@@ -160,7 +160,7 @@ counts as owner-directed and therefore what an agent may execute.
 - **The "Code Intelligence Fabric" provider ladder** — SCIP, LSP, tsserver,
   rust-analyzer, gopls, PHPStan, CodeQL, taint analysis, control/data-flow
   providers. Killed by the round's own consolidation on the strongest available
-  ground: *"kein einziger der gemessenen NULL-Fälle braucht Compiler-Präzision"*.
+  ground: *"kein einziger der gemessenen NULL-Fälle braucht Compiler-Präzision"*. <!-- md-language-check: ignore -->
   `references` fails for want of `const` nodes, not of type inference.
 - **Promoting the tree-sitter parsers to runtime dependencies.** ~51 MB per
   consumer for a path whose only retrieval measurement lost; the alternative is
@@ -197,7 +197,7 @@ Ceiling: none fired. Ten steps selected of the rounds' directives.
 | Superseding ADR-246 | accepted record; its live reopen trigger is a consumer-named case nobody has |
 | A Class-A ruling for a web runtime probe | ADR-124 classification decision |
 | Bringing web-assurance legal rows under `pack-legal-review-prep` | pack-boundary decision that decides whether the legal floors engage at all |
-| Whether to port external code at all | the owner's *"wir könnten ihn sogar kopieren"* is a hypothetical; a port is a derivative work with NOTICE obligations and would require naming the source in the tree, which is the opposite of the source-silence the same round applies |
+| Whether to port external code at all | the owner's *"wir könnten ihn sogar kopieren"* is a hypothetical; a port is a derivative work with NOTICE obligations and would require naming the source in the tree, which is the opposite of the source-silence the same round applies | <!-- md-language-check: ignore -->
 
 ## Estate note, stated because the last round's was
 

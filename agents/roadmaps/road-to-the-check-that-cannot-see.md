@@ -82,9 +82,9 @@ transfers, licensing, consumer law and accessibility law, in 3,895 lines. It is
 declined as authored, on four grounds, each recorded so it is not re-proposed:
 
 1. **The seed was never obtained.** The round's own transcript records it:
-   *"eine öffentlich auffindbare Kopie des konkreten Skills habe ich bei der
-   Suche nicht gefunden"* and *"Der TikTok-Skill selbst bleibt aktuell 'nicht
-   öffentlich gefunden'"*. The 25-repository corpus is a substitute the agent
+   *"eine öffentlich auffindbare Kopie des konkreten Skills habe ich bei der <!-- md-language-check: ignore -->
+   Suche nicht gefunden"* and *"Der TikTok-Skill selbst bleibt aktuell 'nicht <!-- md-language-check: ignore -->
+   öffentlich gefunden'"*. The 25-repository corpus is a substitute the agent <!-- md-language-check: ignore -->
    chose, and the expansion to a layer was decided in the agent's **first reply**,
    before any instruction to expand existed — citing *"unsere gestrige
    Web-Quality-Roadmap"*, an agenda that predates the seed.
@@ -105,8 +105,8 @@ declined as authored, on four grounds, each recorded so it is not re-proposed:
    ADR-124's Class-C prohibits a network build path; a browser/HTTP prober needs
    an explicit Class-A ruling first, and that is a decision, not a step.
 4. **The measured negative is already recorded.** The round's own note:
-   *"'überall anwenden' per Prosa erhöht nur die Payload und greift nachweislich
-   nicht (harness-native-Befund, 0/299 Skills mit `context: fork`)"* — the naive
+   *"'überall anwenden' per Prosa erhöht nur die Payload und greift nachweislich <!-- md-language-check: ignore -->
+   nicht (harness-native-Befund, 0/299 Skills mit `context: fork`)"* — the naive <!-- md-language-check: ignore -->
    form of process-wide mounting is measured not to work.
 
 Nothing here forbids the layer. It is an owner-scale product decision, and the

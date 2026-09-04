@@ -90,7 +90,7 @@ would be the failure this repository has recorded before.
 
 - **Not a new provider.** No SCIP, no LSP, no tsserver, no compiler. The
   proposal's own consolidation finding says it too: *"kein einziger der
-  gemessenen NULL-Fälle braucht Compiler-Präzision"*.
+  gemessenen NULL-Fälle braucht Compiler-Präzision"*. <!-- md-language-check: ignore -->
 - **Not a change to ADR-246**, and not a reopen of it. That record
   (`code-graph-parsers-stay-devdependencies`, accepted 2026-08-26) is
   `status: accepted`. It carries two reopen triggers and **names this exact
@@ -110,7 +110,7 @@ would be the failure this repository has recorded before.
   measurement"* (`:108-109`). None of the three proposal files cites it. This
   roadmap clears the lock the only way it can be cleared: the § Reproduced table
   above is **new evidence, taken here**, not a re-reading of the v2 report.
-- **Not a port of external code.** The owner's words were *"wir könnten ihn sogar
+- **Not a port of external code.** The owner's words were *"wir könnten ihn sogar <!-- md-language-check: ignore -->
   kopieren"* — a hypothetical framing a question, not a licence grant.
   [`code-provenance`](../../src/rules/code-provenance.md) applies unchanged: read,
   close the source, re-derive.
