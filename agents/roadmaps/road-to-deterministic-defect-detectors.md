@@ -32,7 +32,7 @@ produced the diff.
 
 ## Phase 0 — Anchor and corpus
 
-- [ ] **0.1 Commit the tamper corpus before any detector.** One fixture diff per
+- [x] **0.1 Commit the tamper corpus before any detector.** One fixture diff per
       detector class, each a minimal patch that a human reads as tampering:
       an assertion removed after a failure, an assertion weakened
       (`assertEquals` to `assertNotNull`, a narrowed range), a `skip` / `xfail` /
@@ -43,7 +43,7 @@ produced the diff.
       message says why.
       verify: the corpus exists and every positive fixture is unmatched before
       Phase 1 runs; every negative fixture stays unmatched throughout.
-- [ ] **0.2 Record the refuted proposal.** The source asks for a check that
+- [x] **0.2 Record the refuted proposal.** The source asks for a check that
       flags a pull request raising a function's **cyclomatic** complexity by
       three or more. The tree already answered that question the other way:
       `src/scripts/_lib/bench_ab_complexity.ts:32` rejects cyclomatic by name —

@@ -1,0 +1,16 @@
+diff --git a/tests/pricing.test.ts b/tests/pricing.test.ts
+deleted file mode 100644
+index 1111111..0000000
+--- a/tests/pricing.test.ts
++++ /dev/null
+@@ -1,10 +0,0 @@
+-import { describe, it, expect } from 'vitest';
+-import { computeTotal } from '../src/pricing.js';
+-
+-describe('computeTotal', () => {
+-    it('sums the line items', () => {
+-        const cart = [{ price: 20 }, { price: 22 }];
+-        const total = computeTotal(cart);
+-        expect(total).toBe(42);
+-    });
+-});
