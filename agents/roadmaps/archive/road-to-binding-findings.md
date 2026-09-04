@@ -278,8 +278,12 @@ advisory.
       **One known limit is recorded rather than hidden:**
       `"do not push, but merge PR #7"` is a single sentence opening with `do`,
       so the per-sentence scope cannot reach it and it still authorizes nothing.
-      The same prompt prefixed with `"Please"` is green. Carried to the
-      receiver.
+      The same prompt prefixed with `"Please"` is green. Carried to
+      [`road-to-one-negation-vocabulary.md`](../road-to-one-negation-vocabulary.md)
+      Phase 3.1, which names this restatement and the corpus row
+      (`git_auth_negation_corpus.ts:109-119`) it restates, and owns giving the
+      limit a receiver or a recorded decline. Receiver named 2026-09-04; the
+      phrase said "the receiver" without one until then.
 
 ## Phase 3 — Lock the properties that are currently only true by accident
 
