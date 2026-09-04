@@ -62,6 +62,33 @@ unknown to resolve), or when the user has already fixed the sequence.
 A short ordered plan that leads with the load-bearing unknown + how it will be
 proven, then the dependent steps. One recommendation, not a survey.
 
+## The four plan criteria — what a reviewer fails the ordered plan on
+
+Risk-first ordering is one of four things a plan is judged on. All four are
+stated so a reviewer can **fail** a plan on them — each names what failing looks
+like. This skill owns the third; the other three are stated here because a plan
+reviewed on ordering alone passes while being unnecessary, insufficient, or
+built on verbs that do not exist. The same four are carried in
+[`feature-planning`](../feature-planning/SKILL.md).
+
+1. **Necessity** — every step traces to a stated problem or acceptance criterion.
+   **Fails when** the plan carries work nothing asked for — a spike for an
+   unknown that is not load-bearing is the version of this failure this skill
+   causes.
+2. **Sufficiency** — every requirement is discharged by at least one step.
+   **Fails when** a requirement owns no step, or its only step has no verifiable
+   outcome. Walk the requirements, not the steps.
+3. **Ordering** — the load-bearing unknown is resolved before anything that
+   assumes it, and no step consumes what a later step creates. **Fails when** the
+   plan front-loads the easy parts, or ranks by effort instead of dependency
+   blast radius (see Gotchas). This is the criterion this skill exists for.
+4. **Groundedness** — every command, skill and tool the plan tells someone to run
+   exists. **Fails when** the plan names a verb that is not in the index. Check
+   it against [`CAPABILITIES.yaml`](../../../CAPABILITIES.yaml) at the repository
+   root — the generated capability index of every shipped skill and command —
+   plus the project's own script/task entry points. It is the only one of the
+   four decidable without judgement, so it is never waved through.
+
 ## Do NOT
 
 - Build the easy parts first to show progress, then discover the hard part breaks them.
