@@ -57,7 +57,7 @@ produced the diff.
 
 ## Phase 1 — The tamper detector, loop-local
 
-- [ ] **1.1 Specify the detector vocabulary before writing it.** Closed set of
+- [x] **1.1 Specify the detector vocabulary before writing it.** Closed set of
       detector ids, one per class in 0.1, each with a severity and a mandatory
       `file:line` evidence field. Reuse `GateOutcome`
       (`src/scripts/_lib/gate_result.ts:46`) rather than inventing a second
@@ -66,7 +66,7 @@ produced the diff.
       most needs.
       verify: the vocabulary is committed and every id in it has a fixture in
       0.1.
-- [ ] **1.2 Implement the post-fail diff check.** Deterministic, no model call:
+- [x] **1.2 Implement the post-fail diff check.** Deterministic, no model call:
       given the diff between a failing run and the next attempt, decide whether
       the path to green weakened the verification. `severity` for an added
       `skip` is the one genuinely contested call in the source — the field is
@@ -74,7 +74,7 @@ produced the diff.
       the corpus as evidence.
       verify: every positive fixture of 0.1 is detected with its id, and every
       negative fixture stays clean.
-- [ ] **1.3 Bind it in the loop, not in CI.** `verify-repair-loop` gets the
+- [x] **1.3 Bind it in the loop, not in CI.** `verify-repair-loop` gets the
       check as a loop-local step, fail-closed inside the loop only. It does not
       become a global gate in this roadmap: the tree's own measured lesson is
       that reach, not content, is the scarce thing, and a new always-on gate is
@@ -84,7 +84,7 @@ produced the diff.
 
 ## Phase 2 — Phantom verification
 
-- [ ] **2.1 Require a fresh runner timestamp for a green verdict.** "Claimed
+- [x] **2.1 Require a fresh runner timestamp for a green verdict.** "Claimed
       green without re-running" is the failure the repair loop is most exposed
       to, and it is decidable: the verdict carries the runner's own timestamp,
       and a verdict whose timestamp predates the last edit in the loop is its

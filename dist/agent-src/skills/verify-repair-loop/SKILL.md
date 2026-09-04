@@ -94,9 +94,38 @@ Each iteration is agent turns, never executing control-flow code:
    * **Plateau** (last `plateau_window` scores within `tolerance`) → STOP; surface
      suspected flakiness or a stuck point. Do not thrash.
    * **`attempts == max_attempts`** → STOP, hand back the best envelope.
-4. **Numeric gate** — score `< threshold` and attempts remain → back to step 1
-   (attempts++). Score `≥ threshold`, no regression → **escalate** (step 4 of the
-   stage).
+4. **Tamper check (deterministic, loop-local)** — before the numeric gate is
+   allowed to say anything, run the detector over the diff this attempt
+   produced and over the recorded verdict:
+
+   ```bash
+   ./scripts-run src/scripts/detect_verification_tampering \
+       --diff <this attempt's diff> --message <this attempt's message> \
+       --verdict <the runner's recorded verdict>
+   ```
+
+   It is **fail-closed inside the loop**: outcome `violations` or
+   `stale_verdict` STOPS the loop and hands back with the finding's
+   `file:line`, whatever the score says. `clean` changes nothing — an
+   ordinary passing attempt is unaffected, because the detector reports only
+   on shapes the diff introduced.
+
+   The check answers exactly the gap the Iron Law names: `assertion-removed`,
+   `assertion-weakened`, `verification-skipped` (warn), `expectation-rewritten`,
+   `early-exit-injected`, `test-file-deleted`, `subject-mocked-away`, and
+   `stale_verdict` for a runner that finished before the last edit. A change
+   that legitimately deletes an obsolete test or relaxes an over-tight
+   assertion declares it in the attempt's message —
+   `tamper-allow: <detector-id> — <reason>` — scoped to one id, never to all.
+
+   It is **not** a CI gate and does not become one here. The tree's measured
+   lesson is that reach, not content, is the scarce thing; a new always-on
+   gate is the opposite of that lesson. Promotion owes a measured
+   false-positive rate first.
+
+5. **Numeric gate** — score `< threshold` and attempts remain → back to step 1
+   (attempts++). Score `≥ threshold`, no regression, tamper check clean →
+   **escalate** (step 4 of the stage).
 
 ### 4. Judge escalation (only after the numeric gate passes)
 
@@ -135,10 +164,13 @@ Before finalizing, confirm:
 
 1. The numeric gate **escalated to a judge** — it did not apply on its own.
 2. No baseline-green check regressed (or the loop stopped and said so).
-3. The loop stopped at `max_attempts`, a plateau, or a judge `apply` — never
+3. The tamper check ran on the final attempt and returned `clean` — or the loop
+   stopped on its finding. A green verdict recorded over a `violations` or
+   `stale_verdict` outcome is not a green verdict.
+4. The loop stopped at `max_attempts`, a plateau, or a judge `apply` — never
    ran unbounded.
-4. The judge saw only the diff + results, dispatched in fresh context.
-5. No **unsupervised** resident process introduced — and none of the four
+5. The judge saw only the diff + results, dispatched in fresh context.
+6. No **unsupervised** resident process introduced — and none of the four
    governance conditions in `resident-process-governance.md` left unmet if a
    supervised one is. (Amended 2026-08-27, ADR-249: this read "No daemon /
    persistent runtime introduced" when a daemon was prohibited outright. The
@@ -182,9 +214,15 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 ## Gotcha
 
 * **Metric gaming** — the agent "passes" by deleting a failing test or
-  weakening an assertion. The numeric gate cannot catch this; the
-  fresh-context judge is the safeguard. If the diff *removes* checks,
+  weakening an assertion. The *numeric* gate still cannot catch this, and that
+  is why loop step 3.4 exists: `detect_verification_tampering` decides the
+  mechanical shapes deterministically, and the fresh-context judge remains the
+  safeguard for everything shape cannot decide. If the diff *removes* checks,
   that is a `reject`, not a `pass`.
+* **Phantom verification** — the loop records a green verdict it never re-ran,
+  so the exit code describes a tree that no longer exists. The verdict carries
+  the runner's own timestamp; one that predates the last edit is
+  `stale_verdict`, its own outcome, never a pass.
 * **Flake mistaken for a plateau** — a single non-deterministic test flips
   the score and the window-comparison reads it as "no improvement". Re-run
   the suspected check before declaring a plateau; surface flakiness instead
@@ -202,6 +240,9 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
 ## Do NOT
 
 * NEVER let the numeric score apply a change without judge confirmation.
+* NEVER record a green verdict over a tamper finding or a stale runner
+  timestamp — inside the loop the detector is fail-closed.
+* NEVER widen a `tamper-allow` declaration past the one id it names.
 * NEVER continue past a regression because the overall score improved.
 * NEVER run the live-app Playwright path here — it is deferred (needs a runtime).
 * NEVER judge with the generator's own context — dispatch a fresh-context judge.
@@ -215,6 +256,10 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
   review; wires this loop as an opt-in step.
 * [`playwright-testing`](../playwright-testing/SKILL.md),
   [`quality-tools`](../quality-tools/SKILL.md) — verdict sources.
+* `src/scripts/detect_verification_tampering.ts` — the loop-local tamper and
+  phantom-verification check bound at step 3.4, with its fixture corpus in
+  `tests/fixtures/tamper-corpus/` and its polarity proven both ways by
+  `--self-test`.
 * [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 cap.
 * [`resident-process-governance`](../../../docs/contracts/resident-process-governance.md) — the
   runtime-free constraint this loop honors.
