@@ -100,21 +100,46 @@ Work complete. What would you like to do?
 ### Option 1: Push and create PR
 
 1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
-2. `git push -u origin <branch>`.
-3. `gh pr create` using PR template.
+2. **`task push-ready`** — fetch → integrate the base SET → regenerate → verify
+   → re-check freshness. Not optional housekeeping: see § A push closes its own
+   loop below. The pre-push hook refuses a stale push, so skipping this buys the
+   refusal rather than avoiding the work.
+3. `git push -u origin <branch>`.
+4. `gh pr create` using PR template.
+5. **Settle it** — `./scripts-run src/scripts/ci_settle <pr>`. The turn is not
+   over at step 4.
 
-### Option 2: Keep as-is
+## A push closes its own loop
 
-Report: "Branch `<name>` preserved locally." — do nothing.
-
-### Option 3: Discard
-
-**Confirm first** — list branch name and commit count.
-Wait for explicit confirmation. Then:
-```bash
-git checkout main
-git branch -D <feature-branch>
 ```
+A PUSH IS NOT A DELIVERY. THE EVIDENCE FOR A PUSH IS THE CI VERDICT,
+NEVER THE PUSH'S OWN EXIT CODE.
+BEHIND THE BASE → INTEGRATE BEFORE PUSHING, NEVER AFTER THE PR IS RED.
+RED AFTER PUSHING → FIX IT IN THE SAME TURN, OR SAY PLAINLY THAT YOU DID NOT.
+NEVER HAND THE USER A RED PR WITH ITS CAUSE NAMED AND UNFIXED.
+```
+
+Two halves, failing differently, over the 30 sessions and 50 PRs before
+2026-09-04. **Stale base**: 25 of 50 PRs carried a `Merge branch 'main' into …`
+commit (52 in total), and the three most-failing workflows are the base-relative
+ones — a branch pushed behind its base was verified against a base it no longer
+merges into. **Unsettled push**: 22 of 30 sessions ran `gh run view
+--log-failed`, and 20 of 50 PRs carried a follow-up `fix(ci|gates|budget)`
+commit. Only 19 of 50 landed with neither. Each half now has a deterministic
+carrier — the pre-push hook refuses a verified-behind branch and points at
+`task push-ready`; the `push-settle` PostToolUse concern fires the moment git
+reports a ref advanced. Neither replaces the discipline: the hook is skippable
+with `AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1` for a genuine WIP push, and the
+settle reminder is advisory, because leaving a push deliberately unsettled is
+legitimate — **ending the turn silently on one is not**.
+
+`ci_settle` non-zero → read only the failing part
+(`gh run view --job <id> --log-failed | grep -E '×|FAIL|Error'`), fix, push
+again; the author of the red is irrelevant (`fix-what-you-see`). Three failed
+attempts on one target → stop and surface them (`autonomous-execution` N=3).
+Exit `2` is **not** a verdict — the wait timed out or the API could not be read.
+Counts, carrier limits and the honest cost:
+[`references/push-closes-its-loop.md`](references/push-closes-its-loop.md).
 
 ## PR template
 
