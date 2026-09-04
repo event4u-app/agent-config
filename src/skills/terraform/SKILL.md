@@ -108,7 +108,7 @@ changing, not over this repository.
 | `grep -rn '0\.0\.0\.0/0' --include='*.tf' .` | An ingress or egress rule whose CIDR is 0.0.0.0/0, i.e. open to the whole internet. On a management or database port stop and treat it as CRITICAL - the corpus row enumerates which ports those are. | A deliberately public listener - an ALB or CloudFront origin on 80/443. Nothing else. Record the reason next to the rule. |
 | `grep -rn 'publicly_accessible\|block_public_acls\|ignore_public_acls' --include='*.tf' .` | Either `publicly_accessible = true` on a database, or a bucket with no public-access block present at all. Absence is the more common hit and the grep returning nothing is the failing case. | A bucket that genuinely serves public web assets, with the policy written explicitly rather than inherited from a default. |
 | `grep -rnE '"(Action\|Resource)" *: *"\*"\|= *\["\*"\]' --include='*.tf' .` | A wildcard IAM action or resource. One compromised workload credential then reaches everything in the account. | A named, reviewed exception - `iam:PassRole` scoped by condition, or a bootstrap role. Never the default. |
-| `grep -rLn 'encrypt' --include='*.tf' .` (files with no encryption mention) | A storage, volume, snapshot, or database resource with no encryption block. | None for data at rest. A resource holding no data at all. |
+| `grep -rL 'encrypt' --include='*.tf' .` (lists files with NO encryption mention; `-L` prints names only, so no `-n`) | A storage, volume, snapshot, or database resource with no encryption block. | None for data at rest. A resource holding no data at all. |
 
 Read the surface class before the fix, not after: the mitigation text, the
 abuse case, and the negative test live in the `infrastructure` rows of
