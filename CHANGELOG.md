@@ -434,6 +434,64 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 14.15.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [14.16.0](https://github.com/event4u-app/agent-config/compare/14.15.0...14.16.0) (2026-09-04)
+
+### Release highlights
+
+- **Behaviour changes:** pay for the new triggers inside the same file, not out of the ceiling (e6737e0); make security-sensitive-stop reachable by the surfaces its own table names (bb857f1).
+- **Default changes + migration:** stop iconography handing an agent the default icon-consistency forbids (4461e31).
+- **Security and correctness:** stop asserting two things about the environment rather than the code (d3896a3); drop the box-rule dividers from the negation corpus (83158f1); import the merge-impact module by its .js specifier (1522c89); read a rename as a rename, and pin the closed-vocabulary property (6fa2b06); take the pull-request bound from the API contract, and stop swallowing a failed write (1cf8f70); scope a negation to its clause, in both directions (6a08ed2); +4 more.
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **catalog:** represent the interaction and texture layer, and bring V1 current ([1172647](https://github.com/event4u-app/agent-config/commit/117264783230fde125bf6aaed2feabe938ffc5ab))
+
+### Bug Fixes
+
+* **tests:** stop asserting two things about the environment rather than the code ([d3896a3](https://github.com/event4u-app/agent-config/commit/d3896a37f2e97689c93adeb22db8486e84ff4e41))
+* **docs:** repair every live doc asserting a Python-era path as current ([8ded7ff](https://github.com/event4u-app/agent-config/commit/8ded7ff568366d03c7e1efdf1fb07e18df3cf42a))
+* **evidence:** declare review independence on the 14.15.0 ledger ([42f53f8](https://github.com/event4u-app/agent-config/commit/42f53f8f5af12249d72563ac5c2b54bc4a6b7656))
+* **tests:** drop the box-rule dividers from the negation corpus ([83158f1](https://github.com/event4u-app/agent-config/commit/83158f1246b8a6301749575ba233ee67d8fd6987))
+* **tests:** import the merge-impact module by its .js specifier ([1522c89](https://github.com/event4u-app/agent-config/commit/1522c897ebab000bc3f92eeecc608ba2a6ee89f5))
+* **auth:** read a rename as a rename, and pin the closed-vocabulary property ([6fa2b06](https://github.com/event4u-app/agent-config/commit/6fa2b068a1c5e6df9c15d90fd9fe13fbd96160e3))
+* **auth:** take the pull-request bound from the API contract, and stop swallowing a failed write ([1cf8f70](https://github.com/event4u-app/agent-config/commit/1cf8f70869593281b26a16a00408ce24050db4a7))
+* **auth:** scope a negation to its clause, in both directions ([6a08ed2](https://github.com/event4u-app/agent-config/commit/6a08ed26177bd601b2677428c598ce72f1e256c5))
+* **catalog:** state M6's promotion prerequisites instead of citing a roadmap path ([a04d99e](https://github.com/event4u-app/agent-config/commit/a04d99e4b4bb9b9ee74f283672d4ed0bd98deaa3))
+* **skills:** stop three of the tree's own surfaces handing over what the catalog flags ([0e18887](https://github.com/event4u-app/agent-config/commit/0e1888704ea5837d2f2752c1fde0b37f469bc0ed))
+* **rules:** pay for the new triggers inside the same file, not out of the ceiling ([e6737e0](https://github.com/event4u-app/agent-config/commit/e6737e0a218119902d20fe34d9799587fd2b929b))
+* **skills:** stop iconography handing an agent the default icon-consistency forbids ([4461e31](https://github.com/event4u-app/agent-config/commit/4461e319aa7b42005715a921122d72388e84040f))
+* **skills:** make the accessibility skill carry the WCAG version it claims ([2bd8e50](https://github.com/event4u-app/agent-config/commit/2bd8e5064129d6cc233ebc34a1c7af4ff2390234))
+* **rules:** make security-sensitive-stop reachable by the surfaces its own table names ([bb857f1](https://github.com/event4u-app/agent-config/commit/bb857f113ca0fa9b4c621478412891d94dd1cad7))
+* **release:** reuse an existing release branch without --resume, and carry main at step 1 ([d9ca89d](https://github.com/event4u-app/agent-config/commit/d9ca89d6ae58d642e5fae79fa0ba59482da996d1))
+
+### Documentation
+
+* **evidence:** record the run-19 drain summary ([057efa3](https://github.com/event4u-app/agent-config/commit/057efa30557e15a5710389e027774e91b212ec87))
+* **roadmaps:** archive road-to-python-era-doc-references ([69db685](https://github.com/event4u-app/agent-config/commit/69db685abe0079ef2df3c3f81e94d5d8667d1275))
+* **roadmaps:** promote python-era-doc-references to ready ([48fed1c](https://github.com/event4u-app/agent-config/commit/48fed1c5b85d19f871ac609c412c7027b010ce94))
+* **roadmaps:** archive road-to-binding-findings ([ed6fedd](https://github.com/event4u-app/agent-config/commit/ed6fedd47a9ca26d16b0851ff73f1be3a6ccfa58))
+* **roadmaps:** record the binding-findings verdicts and its own prose corrections ([6b00c58](https://github.com/event4u-app/agent-config/commit/6b00c583356b7479fba7abb7c325da9f861366f2))
+* **evidence:** disposition all nine 14.15.0 findings, and park the ordering guarantee ([4d44188](https://github.com/event4u-app/agent-config/commit/4d44188afce223392ffef1339370d2f333c26be8))
+* **roadmaps:** close and archive road-to-tell-currency ([77178e8](https://github.com/event4u-app/agent-config/commit/77178e8935442466b125f60ea8917cde347edcad))
+* **roadmaps:** correct four measured claims on the topology carrier and its stub ([5c1c927](https://github.com/event4u-app/agent-config/commit/5c1c92732e2e035762294ea584dfff7d4607aff1))
+* **roadmaps:** record the tell-currency verdicts and park the two deferrals ([856f5b1](https://github.com/event4u-app/agent-config/commit/856f5b10e08a0a03e6229df96efc1dbe949c5fd2))
+* **fe-design:** put the interaction-layer motion guidance in its declared home ([d9fd8b6](https://github.com/event4u-app/agent-config/commit/d9fd8b63fa47f54d8e62bd44ce99af52549a818c))
+* **evidence:** declare the evidence type on the coverage-truth note ([d4de5ba](https://github.com/event4u-app/agent-config/commit/d4de5ba5a997a0bfda972db03794498913bdeca3))
+* **roadmaps:** close and archive road-to-declared-coverage-truth ([b131995](https://github.com/event4u-app/agent-config/commit/b131995896f3036e01c29f3a4c77b680a6623a61))
+* **evidence:** declare the completion-review skip for the inbox-2026-09-c diff ([2133161](https://github.com/event4u-app/agent-config/commit/21331619b8635785657313cc36c3744d550b368e))
+* **roadmaps:** three roadmaps from the inbox-2026-09-c round ([5d9140a](https://github.com/event4u-app/agent-config/commit/5d9140a54bef3a95a79ce6cd5b41691a287bcf7b))
+* **evidence:** record the inbox-2026-09-c verification and disposition ([27f5b2a](https://github.com/event4u-app/agent-config/commit/27f5b2a510a1fe3319bd6ce119bacdbedc08f597))
+
+### Chores
+
+* **sync:** reproject the fe-design motion reference ([dd636df](https://github.com/event4u-app/agent-config/commit/dd636dff8f58dc631fb9ed53a2f72880b3d9b394))
+* **evidence:** re-anchor the routing body-signal verdict after two skill-body edits ([ca0c479](https://github.com/event4u-app/agent-config/commit/ca0c479df99dff54ae5c544e5eea7108c3736e36))
+* **sync:** reproject security-sensitive-stop after the trigger narrowing ([71ca6b0](https://github.com/event4u-app/agent-config/commit/71ca6b01670a189ded73f314fe7d6e1eaaa5a531))
+
+Tests: 20974 (+52 since 14.15.0)
+
 ## [14.15.0](https://github.com/event4u-app/agent-config/compare/14.14.1...14.15.0) (2026-09-03)
 
 ### Release highlights
