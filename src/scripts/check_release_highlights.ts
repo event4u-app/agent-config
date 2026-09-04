@@ -2,12 +2,12 @@
  * Highlight plausibility gate (release-truth Phase 2).
  *
  * The recorded failure: the curated release head said `_none_` twice while
- * false — 9.13.0 shipped behaviour changes, a removed public trigger type, a
+ * false — 9.13.0 shipped behavior changes, a removed public trigger type, a
  * security fix, and honest nulls; the head claimed none of it. Same at
  * 9.14.0.
  *
  * This gate derives GENERATED evidence categories from the release span
- * (security-tagged commits, behaviour/default changes from conventional
+ * (security-tagged commits, behavior/default changes from conventional
  * commit types + rule/schema diffs, honest-null markers, removed public
  * surface) and FAILS when a populated generated category meets a `_none_`
  * curated field. It blocks the contradiction only — a human still writes the
@@ -23,7 +23,7 @@
  * ## REVERSED 2026-09-01 — an unrewritten derived line now BLOCKS
  *
  * This header used to end the paragraph above with *"An unrewritten derived
- * line warns; it never blocks."* That is no longer the behaviour, and the
+ * line warns; it never blocks."* That is no longer the behavior, and the
  * sentence is replaced rather than deleted so the reversal is legible.
  *
  * **The premise was never wrong; the conclusion drawn from it was.** A derived
@@ -150,7 +150,7 @@ export function highlight_contradictions(
  * Exported so the advisory-vs-blocking decision is a fixture, not a claim.
  *
  * CORRECTED 2026-09-01 with the reversal. This comment used to say that
- * `stale_draft_labels` firing while the exit code stays 0 is the behaviour the
+ * `stale_draft_labels` firing while the exit code stays 0 is the behavior the
  * cadence blocker adjudicates. That is no longer what happens — the branch at
  * the call site returns 1 — and the sentence is replaced rather than deleted
  * because it was the load-bearing claim on the other side.

@@ -2,7 +2,7 @@
 adr: 253
 status: accepted
 date: 2026-09-04
-decision: per-pr-user-artefact-gate-declined
+decision: per-pr-user-artifact-gate-declined
 supersedes: —
 superseded_by: —
 phase: road-to-meta-ratio-measured · Phase 1.1
@@ -25,7 +25,7 @@ evidence:
 review_trigger: >-
   Reopen on either of two observations, each of which refutes a premise this
   record rests on rather than merely arguing against it. First — a same-PR
-  user-artefact gate is demonstrated somewhere to change what a release
+  user-artifact gate is demonstrated somewhere to change what a release
   contains rather than how a pull request is packaged, since "it measures
   packaging, not progress" is the whole basis of the decline and one worked
   counter-example refutes it. Second — the published release-mix ratio does not
@@ -37,7 +37,7 @@ review_trigger: >-
   no new mechanism argument. This record is the answer to that request.
 ---
 
-# ADR-253 — the same-PR user-artefact gate is declined; the release mix is measured instead
+# ADR-253 — the same-PR user-artifact gate is declined; the release mix is measured instead
 
 ## Status
 
@@ -52,7 +52,7 @@ recorded in the Consequences below.
 ## Context
 
 An external multi-model review round asked, in two consecutive cycles, for one
-rule: **no meta/governance feature without a user-facing artefact in the same
+rule: **no meta/governance feature without a user-facing artifact in the same
 pull request.** The second ask carried its own prediction — that two tidy
 cycles of not doing it would itself be the signal that the meta layer outranks
 the cap.
@@ -70,7 +70,7 @@ the reviewer asked for.
 
 ## Decision
 
-**The per-PR user-artefact gate is declined.** It is not deferred, not
+**The per-PR user-artifact gate is declined.** It is not deferred, not
 scheduled, and not softened into a maybe. The mechanism is rejected, on
 mechanism rather than on threshold, for two reasons both seats gave
 independently:
@@ -137,7 +137,7 @@ because each is a place a later reader would otherwise re-argue:
   ranges, with the taxonomy locked before the numbers were computed. codex
   named four biases a retrospective reading carries that a prospective one does
   not — taxonomy-selection, history-shape, survivorship, and the absence of a
-  behavioural response from contributors who could not see the metric — and
+  behavioral response from contributors who could not see the metric — and
   both seats still preferred publishing now to waiting two cycles, which is
   close to the two cycles of nothing the reviewer predicted.
 - *Generated projections are excluded from both views.* `dist/` is a byte-exact
@@ -170,7 +170,7 @@ the mechanism, not of the concern.
   seats as the way the replacement fails — a published ratio nobody must answer
   for is a number in a file.
 - **Wait for two future releases before publishing anything.** Rejected: it
-  delays the whole mechanism by two release cycles, which is the behaviour the
+  delays the whole mechanism by two release cycles, which is the behavior the
   reviewer predicted.
 - **Classify from commit subjects.** Rejected: subjects are mutable,
   inconsistently formatted, and can contradict the files a commit touches. The
@@ -181,7 +181,7 @@ the mechanism, not of the concern.
 
 | Claim | Basis |
 |---|---|
-| No per-PR user-artefact rule or gate exists | `git grep -iE 'user-facing artefact\|anwender-artefakt\|meta.*feature.*same PR' b75d7f7cb -- src/rules docs/contracts .github/workflows` → 0 hits |
+| No per-PR user-artifact rule or gate exists | `git grep -iE 'user-facing artifact\|anwender-artefakt\|meta.*feature.*same PR' b75d7f7cb -- src/rules docs/contracts .github/workflows` → 0 hits |
 | The nearest gate caps roadmap count, not mix | `src/scripts/check_estate_count.ts` |
 | Both seats declined the per-PR gate, 2/2 | AI council 2026-09-04, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum 2/2, $0.00; convergence inlined in `agents/roadmaps/road-to-meta-ratio-measured.md` § What was asked |
 | Both seats ruled A/A/A on shape, obligation surface and retrospective baselines | AI council 2026-09-04, same seats, 2 rounds, quorum 2/2, $0.00; convergence inlined in `agents/evidence/reports/release-mix-baseline.md` § Council convergence |
@@ -194,7 +194,7 @@ the mechanism, not of the concern.
 
 **Evidence this record does NOT have.** No reading exists for a release cut
 *after* the response obligation came into force, so the claim that an attached
-response changes behaviour is untested. That is the second reopen trigger
+response changes behavior is untested. That is the second reopen trigger
 above, and it is the reason no threshold is set here.
 
 ## References

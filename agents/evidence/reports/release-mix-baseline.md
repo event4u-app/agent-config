@@ -6,7 +6,7 @@
 > repository and none may be set from these two numbers. Both AI-council seats
 > refused to pick a threshold on fewer than two readings, and one asked for four
 > to five before the conversation is even had. Read
-> [`ADR-253`](../../../docs/decisions/ADR-253-per-pr-user-artefact-gate-declined.md)
+> [`ADR-253`](../../../docs/decisions/ADR-253-per-pr-user-artifact-gate-declined.md)
 > before quoting a ratio from this page.
 
 Measured 2026-09-04 at `b75d7f7cb` with

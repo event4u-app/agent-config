@@ -1,7 +1,7 @@
 {
   "taxonomy_version": "1.0.0",
   "updated": "2026-09-04",
-  "contract": "docs/decisions/ADR-253-per-pr-user-artefact-gate-declined.md",
+  "contract": "docs/decisions/ADR-253-per-pr-user-artifact-gate-declined.md",
   "reader": "src/scripts/measure_release_mix.ts",
   "note": [
     "Path -> category mapping for the release governance-vs-product measurement.",
@@ -161,11 +161,11 @@
   ],
   "governance_contracts_note": [
     "`docs/contracts/` defaults to `consumer` because most contracts on that page",
-    "describe behaviour the package promises an installing consumer -- classifying the",
+    "describe behavior the package promises an installing consumer -- classifying the",
     "whole directory as governance would systematically undercount shipped work.",
     "The files listed above are the exceptions: contracts that govern this",
     "repository's own process (decision recording, council, release cutting, CI",
-    "floors, evidence discipline) rather than promised behaviour. They resolve to",
+    "floors, evidence discipline) rather than promised behavior. They resolve to",
     "`governance`. A contract absent from this list and absent from the tree is a",
     "stale entry and is reported by `--audit`."
   ]

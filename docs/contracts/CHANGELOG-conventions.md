@@ -341,8 +341,8 @@ every introduced or substantially reworked subsystem — required by
 ## Governance-versus-product response
 
 > **In force from the first reading — not from a threshold.** Added 2026-09-04
-> by [`ADR-253`](../decisions/ADR-253-per-pr-user-artefact-gate-declined.md),
-> which declines the per-PR user-artefact gate an external reviewer asked for
+> by [`ADR-253`](../decisions/ADR-253-per-pr-user-artifact-gate-declined.md),
+> which declines the per-PR user-artifact gate an external reviewer asked for
 > twice and replaces it with a release-level measurement. Read that record
 > before proposing the per-PR shape again; it is declined on mechanism, so a
 > worse ratio does not revive it.

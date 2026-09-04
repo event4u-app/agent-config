@@ -6,7 +6,7 @@
  * Why this exists, and what it deliberately is not.
  *
  * An external reviewer asked twice for a per-PR rule: "no meta/governance
- * feature without a user-facing artefact in the same PR". The AI council
+ * feature without a user-facing artifact in the same PR". The AI council
  * DECLINED that proposal (2026-09-04, anthropic/claude-sonnet-4-5 +
  * openai/codex-default, 2 rounds, quorum 2/2, $0.00 — both seats
  * subscription-authed) on two grounds: a same-PR gate measures packaging rather
@@ -14,7 +14,7 @@
  * governance-only pull request; and it rejects legitimate work by construction,
  * since a CI fix, a dependency bump and an analysis round producing only
  * roadmaps are all real work with no consumer surface. The decline is recorded
- * in `docs/decisions/ADR-253-per-pr-user-artefact-gate-declined.md`.
+ * in `docs/decisions/ADR-253-per-pr-user-artifact-gate-declined.md`.
  *
  * This script is the replacement both seats specified: classify at RELEASE
  * level, publish two views, attach a response obligation, and refuse to pick a

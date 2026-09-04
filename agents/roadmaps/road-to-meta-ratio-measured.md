@@ -61,7 +61,7 @@ carries no denominator.
       analysis file is the silence this roadmap exists to end.
       verify: the ADR exists, cites the council date, members and quorum, and
       names the replacement mechanism.
-      DONE: `docs/decisions/ADR-253-per-pr-user-artefact-gate-declined.md` —
+      DONE: `docs/decisions/ADR-253-per-pr-user-artifact-gate-declined.md` —
       Status cites 2026-09-04, anthropic/claude-sonnet-4-5 +
       openai/codex-default, 2 rounds, quorum 2/2, $0.00; Decision names the
       three-part replacement. The council path is inlined, never linked:
