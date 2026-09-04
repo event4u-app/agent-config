@@ -96,6 +96,37 @@ Check existing modules in the project for which registry modules are used.
 - Security groups follow least-privilege: only allow traffic between known services.
 - IAM policies use specific resource ARNs, not wildcards (except where unavoidable).
 
+### Permissive defaults and missing security blocks
+
+The failure that reaches production is almost never a pinned-version mistake;
+it is a resource that works either way and was left on its permissive default.
+Four constructs carry it. Each backstop grep is over the `.tf` tree you are
+changing, not over this repository.
+
+| Backstop grep | What a hit means | Override condition |
+|---|---|---|
+| `grep -rn '0\.0\.0\.0/0' --include='*.tf' .` | An ingress or egress rule whose CIDR is 0.0.0.0/0, i.e. open to the whole internet. On a management or database port stop and treat it as CRITICAL - the corpus row enumerates which ports those are. | A deliberately public listener - an ALB or CloudFront origin on 80/443. Nothing else. Record the reason next to the rule. |
+| `grep -rn 'publicly_accessible\|block_public_acls\|ignore_public_acls' --include='*.tf' .` | Either `publicly_accessible = true` on a database, or a bucket with no public-access block present at all. Absence is the more common hit and the grep returning nothing is the failing case. | A bucket that genuinely serves public web assets, with the policy written explicitly rather than inherited from a default. |
+| `grep -rnE '"(Action\|Resource)" *: *"\*"\|= *\["\*"\]' --include='*.tf' .` | A wildcard IAM action or resource. One compromised workload credential then reaches everything in the account. | A named, reviewed exception - `iam:PassRole` scoped by condition, or a bootstrap role. Never the default. |
+| `grep -rLn 'encrypt' --include='*.tf' .` (files with no encryption mention) | A storage, volume, snapshot, or database resource with no encryption block. | None for data at rest. A resource holding no data at all. |
+
+Read the surface class before the fix, not after: the mitigation text, the
+abuse case, and the negative test live in the `infrastructure` rows of
+[`threat-modeling`](../threat-modeling/SKILL.md)'s corpus, which is the single
+authority for them. Ground with:
+
+```bash
+./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
+  --manifest <skills-root>/threat-modeling/data/manifest.json \
+  "terraform security group ingress open to 0.0.0.0/0"
+```
+
+Those rows also carry a `Decided by:` clause stating which check actually
+decides each one. For all four constructs above that clause reads NO CHECK IN
+THIS REPOSITORY - no HCL or IAM-policy parser ships here, so these greps and
+your own IaC policy scanner are the whole enforcement story. Do not write or
+imply otherwise.
+
 ## Common patterns
 
 ### ECS service with CodeDeploy (Blue/Green)
