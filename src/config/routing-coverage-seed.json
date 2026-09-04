@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.8952,
-        "skills": 0.3813
+        "skills": 0.3344
     },
     "seed_provenance": {
         "rules": "94 covered of 105 routed rules (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "114 of 299 skills carry evals/triggers.json on 2026-09-04.",
+        "skills": "100 of 299 skills carry evals/triggers.json on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
     },
     "history": [
@@ -38,13 +38,6 @@
             "from": 0.3144,
             "to": 0.3344,
             "reason": "road-to-governed-harness-evolution Phase 2.4 authored six wave-1 corpus files (94 -> 100 of 299), chosen by 2.2's inbound-confusion-edge ordering rather than picked. The seed rises so the gain cannot be given back silently; it may never be LOWERED. Surfaced by check_routing_coverage.test.ts, which asserts seed == live measurement in BOTH directions -- a seed left below the tree is a red test, not slack, which is the same asymmetry check_source_size_budget uses and for the same reason: nothing else would force the ratchet to follow a gain."
-        },
-        {
-            "date": "2026-09-04",
-            "scope": "skills",
-            "from": 0.3344,
-            "to": 0.3813,
-            "reason": "road-to-the-tenth-arrival Phase 2.2 authored a 14-file wave (100 -> 114 of 299), selected by a declared priority rule rather than alphabetically: the skills that carry a deterministic MUST/NEVER/ALWAYS obligation per `report_skill_activation` and had no corpus. AI council 2026-09-04 (anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum 2/2) chose a bounded, individually reviewable wave over closing the 199-file gap in one run, and required the remaining gap to be stated rather than implied closed: 185 skills still carry no corpus. The seed rises so the gain cannot be given back silently; it may never be LOWERED."
         }
     ]
 }

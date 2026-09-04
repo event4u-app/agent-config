@@ -60,6 +60,11 @@ shipped-default decision and actual spend are owner-reserved.
 The third sub-item bundled into the same finding — the trigger corpus at 100 of
 299 skills — is held by nothing at all. It inherited a blocker by association.
 
+> **Falsified in execution, 2026-09-04.** It is held — not by the blocker it
+> inherited, but by three published reproduce-from-tree measurement pins and a
+> partition decision the frozen holdout artefact reserves to Phase 5. Step 2.2
+> records the finding; AC-3 is left open because of it.
+
 ## Phase 1 — Correct the record
 
 - [x] **1.1 Amend the disposition rather than writing a new verdict over it.**
@@ -121,27 +126,40 @@ makes it real work rather than a phrase-adding exercise.
       `design-fidelity`'s routing matrix already applies to rules.
       verify: every new trigger set has both fixtures, and the near-miss rows
       fail if the trigger is widened by one word.
-      **Done, with one clause reported rather than claimed.** 14 corpus files
-      authored, 100 → 114 of 299; ratchet raised to 0.3813 with its history
-      entry; 14 stale entries removed from the shrink-only grandfather
-      allowlist. Scope and selection went to the AI council 2026-09-04 (2/2):
-      a bounded, individually reviewable wave over closing the 199-file gap,
-      selected by a **declared** rule rather than alphabetically — the skills
-      carrying a deterministic MUST/NEVER/ALWAYS obligation (16 of the 34
-      `report_skill_activation` names) that had no corpus. Two of the 16 were
-      not reached (`motion-choreographer`, `upstream-contribute`) and **185
-      skills still carry no corpus**; the council explicitly required that
-      remainder to be stated rather than implied closed. Every file passes
-      `lint_skill_trigger_corpus` (≥3 positives, ≥2 near-misses, a declared
-      German positive, a declared case class per query).
-      **The one-word-widening clause is not machine-decidable on this surface**
-      and is not claimed to be: the skill harness is advisory only, never gating
-      (`src/scripts/rule_trigger_eval.ts:4`), and skill selection is model
-      judgement over prose rather than a matcher a fixture can widen. It is
-      discharged in the reviewable form instead — every negative declares
-      `near-miss` vs `counterexample` and carries a `note` naming the neighbour
-      skill it must route to — and the limit is written down in the evidence
-      file rather than implied away.
+      **Done as a finding: the step's premise is FALSE and the wave was
+      reverted.** 14 corpus files were authored to the full discipline by the
+      declared rule the AI council 2026-09-04 (2/2) required — the skills
+      carrying a deterministic MUST/NEVER/ALWAYS obligation per
+      `report_skill_activation` that had no corpus — and every corpus-local
+      gate went green at `skills 114 / 299 = 0.3813`. The full suite then failed
+      in three files, 8 tests, all reproduce-from-tree pins over that exact
+      corpus: `tests/scripts/trigger_corpus_holdout_pin.test.ts` (the SET-SHA256
+      published in `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`
+      plus one row per file), `tests/scripts/routing_signal_measurement.test.ts`
+      (`expected 114 to be 100`, `expected 93 to be 82`), and
+      `tests/scripts/delivery_set_compatibility.test.ts` (`precision_at_k`
+      82.508 against 82.934 published).
+      **So "held by nothing" is wrong.** The corpus is held by three published
+      measurement records and by a governance decision the frozen artefact
+      reserves in its own words: *"Whether it joins the holdout, joins the train
+      set, or forms a second frozen generation is a Phase 5 decision."* The
+      ordering `road-to-governed-harness-evolution` AC-6 certifies has already
+      elapsed — the freeze predates `ac2501313`, which added
+      `candidate_proposer.ts` — so a re-pin taken now would post-date the
+      proposer and let the name-hash silently answer the reserved question.
+      Green corpus-discipline gates were necessary and not sufficient: they
+      check corpus-local shape, and the binding constraint is a cross-phase
+      ordering property no shape gate can see.
+      AI council 2026-09-04 (anthropic/claude-sonnet-4-5 + openai/codex-default,
+      2 rounds, quorum 2/2, $0.00), convergent: revert the wave, close the step
+      on the finding, preserve the 14 files as Phase 5 input, and let the
+      durable fix be an explicitly versioned second corpus generation rather
+      than a rewrite of the first generation's pins. Finding and the preserved
+      files: `agents/evidence/analysis/trigger-corpus-wave2-deferred-2026-09-04.md`.
+      Coverage on this branch is unchanged at 100/299, the seed at 0.3344 and
+      the grandfather allowlist at 199.
+      **Consequence, not worked around: AC-3 is not met and this roadmap does
+      not close.**
 - [x] **2.3 Publish activation at the new coverage.** `docs/CLAIMS.md:240` says
       activation is "separately measured and is near zero". That measurement is
       the denominator the authority question lacks. Surface it, then re-read it
@@ -276,6 +294,7 @@ correction to a shorter plan.
 | 1 | The split is read as authorization to flip | product | Correcting the lock removes the reason the flip was refused, and a prepared change set one approval away is exactly the state where an autonomous run talks itself into shipping | 3.2 requires `eager-all` to still resolve on every host after the phase, with a test; 3.3 makes the owner's decision the deliverable rather than the flip | Phase 3 — Delivery-mode preparation |
 | 2 | Trigger expansion raises false activation | product | 199 new trigger sets against a corpus tuned for 100 is the one way this work makes the product worse rather than better, and the failure is invisible until a wrong skill fires | 2.2 requires a near-miss fixture per addition that fails on a one-word widening — the same discipline the routing matrix already enforces for rules | Phase 2 — Trigger corpus |
 | 3 | Phase 2 produces no movement and the finding is called closed | implementation | If activation stays near zero at 299, the temptation is to report the sub-item done and let the flip question lapse back into the bundle | 2.3 requires a null to be published as a finding, and Phase 1's record keeps the three sub-items separately stated so an unmoved one stays visibly open | Phase 2 — Trigger corpus |
+| 5 | *(added 2026-09-04, in execution)* The corpus is held by a frozen measurement generation | implementation | Risk 2 anticipated false activation and missed this one entirely: three published reproduce-from-tree pins and a Phase 5 partition reservation make any corpus growth a governance decision, and every corpus-local gate stays green while it happens | The wave was reverted, the finding and the 14 files preserved, and AC-3 left open rather than closed on a green-gates reading. The durable fix is a versioned second generation, not a re-pin | Phase 2 — Trigger corpus |
 | 4 | The budget rows land dormant and mislead a later reader | implementation | Moving slot sums for a mode nobody has enabled leaves the file asserting headroom the shipped configuration does not use | 3.1 ties the derivation to the measured emission, and 3.3 states explicitly which parts need approval before landing rather than after | Phase 3 — Delivery-mode preparation |
 
 ## Acceptance Criteria
@@ -285,9 +304,18 @@ correction to a shorter plan.
       council round that established it.
 - [x] AC-2 — The finding exists as three sub-items with three named owners and
       three separate blocker states.
-- [x] AC-3 — Trigger coverage is re-derived by a reproducible command, expanded
+- [ ] AC-3 — Trigger coverage is re-derived by a reproducible command, expanded
       with a positive and a near-miss fixture per addition, and activation is
       published at the new coverage — including if it did not move.
+      **NOT MET, and reported rather than claimed.** Two of its three conjuncts
+      hold: the coverage is re-derived by `check_routing_coverage` with its
+      output quoted (step 2.1), and activation is published as its own ledger
+      row including the null (step 2.3). The **expanded** conjunct does not: the
+      14-file wave that satisfied it was reverted, because the corpus is held by
+      three published measurement pins and by a Phase 5 partition decision an
+      agent may not take. Closing this AC needs that decision — a second,
+      explicitly versioned corpus generation with its own partition provenance —
+      which is owner/Phase-5 work, not a re-run of this step.
 - [x] AC-4 — A held change set and a decision packet exist for the flip, and
       `lean_projection.mode` still resolves to `eager-all` on every host.
 - [x] AC-5 — `b-behavioural-bench-spend` remains attached only to the always-on-tier

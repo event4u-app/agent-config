@@ -144,16 +144,31 @@ bundle. Carried by `road-to-the-tenth-arrival.md`.
 
 | # | Sub-item | Owner | Blocker state | Disposition |
 |---|---|---|---|---|
-| 1 | Trigger corpus coverage | agent | **none** — it inherited a blocker by association and was never held by one | Advanced 2026-09-04: 100 → 114 of 299 by a declared priority rule, ratchet raised, **185 still uncovered**. Measurement: `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md` |
+| 1 | Trigger corpus coverage | **Phase 5 / owner** — reclassified 2026-09-04, see below | **held**, and not by the blocker it inherited: three published reproduce-from-tree measurement pins plus a partition decision the frozen holdout artefact reserves to Phase 5 | A 14-file wave was authored to the full discipline (100 → 114 of 299), reddened all three pins, and was reverted by AI council 2026-09-04 (2/2). Coverage stays 100/299. Finding + the preserved files: `agents/evidence/analysis/trigger-corpus-wave2-deferred-2026-09-04.md` |
 | 2 | `lean_projection.mode` flip | **owner** for the shipped-default decision; agent for everything before it | held by the three holds above, none of which blocks preparation | Prepared 2026-09-04 as a held change set plus a decision packet (`agents/evidence/analysis/tenth-arrival-delivery-decision-packet.md`). `eager-all` still resolves on every host, asserted by a test |
 | 3 | Behavioural bench (always-on tier) | **owner** | `b-behavioural-bench-spend`, spend-bearing, owner-reserved — unchanged | Stays attached to `road-to-mixed-trigger-activation-cost`. Not a sub-item of this finding; folding it in is what built the bundle |
 
 Which of `recurring-criticism`'s three outcomes applies is now answerable per
-sub-item rather than for the bundle. For sub-items 1 and 2 the disposition was
-**right in substance and wrong in routing** — the work was doable and was not
-being done because a lock from elsewhere was cited over it. For sub-item 3 the
-disposition was **right and stays**: it is genuinely owner-reserved, and it is
-the only one of the three that is.
+sub-item rather than for the bundle, and the answer is not the one this
+amendment first wrote down.
+
+For sub-item **2** the disposition was **right in substance and wrong in
+routing** — preparation was doable and was not being done because a lock from
+elsewhere was cited over it. That is now discharged: a held change set and a
+decision packet exist.
+
+For sub-item **1** the routing was wrong AND the destination was wrong. Both
+council rounds, including this amendment's own, read it as held by nothing —
+and executing it proved otherwise: three published measurement pins and a
+reserved Phase 5 partition decision. **The correct outcome for it is
+`right-and-unreachable`**: it was never a free item, and nine rounds of
+disposition never said why because nobody had tried to do it. The reason is now
+written down instead of inherited, which is the difference between a tenth
+restatement and an answer.
+
+For sub-item **3** the disposition was **right and stays**: it is genuinely
+owner-reserved, and it is now one of two owner-held items rather than the only
+one.
 
 ## Declined
 

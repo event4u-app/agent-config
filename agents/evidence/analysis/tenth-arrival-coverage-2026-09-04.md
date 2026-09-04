@@ -54,41 +54,27 @@ in doubt; what the divergence shows is that "trigger coverage" names two
 unrelated surfaces — a test corpus and a routing declaration — and the review
 did not say which. That distinction is what makes the 2.3 null below readable.
 
-## 2.2 — The wave, and the priority rule it followed
+## 2.2 — The wave was authored, measured, and reverted
 
 AI council 2026-09-04 (anthropic/claude-sonnet-4-5 + openai/codex-default,
 2 rounds, quorum 2/2, $0.00 — both seats subscription-authed) converged on a
-bounded wave of 10–15 files over closing the 199-file gap in one run:
-fixture quality and near-miss silence must stay individually reviewable, and
-both seats independently required that the selection follow a declared rule
-rather than alphabetical order or a copied batch size.
+bounded wave of 10–15 files over closing the 199-file gap in one run, selected
+by a declared rule rather than alphabetical order. The rule used, reproducible
+from the census this roadmap already runs: **the skills that carry a
+deterministic `MUST` / `NEVER` / `ALWAYS` obligation and had no corpus** — 16 of
+the 34 `report_skill_activation` names. 14 were authored, and every
+corpus-local gate went green at `skills 114 / 299 = 0.3813`.
 
-The rule used, reproducible from the census this roadmap already runs: **the
-skills that carry a deterministic `MUST` / `NEVER` / `ALWAYS` obligation and
-had no corpus.** A missed activation there has an actual cost, because the
-skill body contains an absolute the session never sees.
+**The step's premise then turned out to be false and the wave was reverted.**
+The corpus is not "held by nothing": it is pinned by three published
+reproduce-from-tree measurement records, and the frozen holdout artefact
+reserves the partition of any later wave to a Phase 5 decision. The full
+finding, the three pins, the council decision and the 14 files themselves are
+preserved in
+`agents/evidence/analysis/trigger-corpus-wave2-deferred-2026-09-04.md`.
 
-```
-$ ./scripts-run src/scripts/report_skill_activation   # 34 with a deterministic obligation
-```
-
-16 of the 34 had no corpus. 14 were authored, inside the council's band; the two
-not reached are `motion-choreographer` and `upstream-contribute`, named here so
-the remainder is a list rather than a subtraction.
-
-Coverage after the wave:
-
-```
-$ ./scripts-run src/scripts/check_routing_coverage
-  = skills  114 / 299  = 0.3813  (seed 0.3813)
-$ ./scripts-run src/scripts/lint_skill_trigger_corpus
-  114 corpus file(s) hold the discipline (>=3 positives, >=2 near-misses)
-$ ./scripts-run src/scripts/check_trigger_eval_presence
-  114/299 skills carry evals/triggers.json (185 grandfathered, shrink-only)
-```
-
-**185 skills still carry no corpus.** That is the open number; this wave did not
-close the finding and must not be read as having closed it.
+Coverage on this branch is therefore **unchanged at 100 / 299**, the ratchet
+seed is unchanged at 0.3344, and the grandfather allowlist is unchanged at 199.
 
 ### What the near-miss discipline can and cannot assert
 
@@ -96,12 +82,12 @@ Step 2.2's verify line asks that "the near-miss rows fail if the trigger is
 widened by one word". On the **rule** surface that is machine-decidable and
 already enforced. On the **skill** surface it is not: the skill harness
 (`rule_trigger_eval.ts:4`) is advisory only, never gating, and skill selection
-is model judgement over prose rather than a matcher a fixture can widen. So the
-assertion is discharged in the reviewable form instead — every negative in the
-14 new files carries a declared `class` (`near-miss` vs `counterexample`) and a
-`note` naming the neighbour skill it must route to instead, which is the claim a
-reader can falsify. Saying this is cheaper than implying a sensitivity test that
-does not exist on this surface.
+is model judgement over prose rather than a matcher a fixture can widen. The
+authored files discharge it in the reviewable form instead — every negative
+declares a `class` (`near-miss` vs `counterexample`) and carries a `note` naming
+the neighbour skill it must route to. Recorded here because it is a limit of the
+surface, not of the reverted wave, and it applies equally to whatever Phase 5
+lands.
 
 ## 2.3 — Activation at the new coverage: an honest null
 
@@ -114,7 +100,7 @@ $ ./scripts-run src/scripts/report_skill_activation \
     --store "$HOME/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"
 ```
 
-| | before (100/299) | after (114/299) |
+| | before the wave (100/299) | with the wave applied (114/299) |
 |---|---|---|
 | sessions scanned | 30 | 30 |
 | assistant turns | 11,013 | 11,049 |
@@ -127,8 +113,9 @@ $ ./scripts-run src/scripts/report_skill_activation \
 this store it is zero, not near it. The turn-count difference is this session's
 own turns accumulating while it ran, not a change in the corpus.
 
-The reading did not move, and the reason is structural rather than
-disappointing: `evals/triggers.json` is a **test fixture**, read by
+Both readings are real: the second was taken with the 14 files present, before
+the reversion described in § 2.2. The reading did not move, and the reason is
+structural rather than disappointing: `evals/triggers.json` is a **test fixture**, read by
 `check_routing_coverage`, `lint_skill_trigger_corpus` and `check_trigger_evals`.
 It is not read by any host at routing time, and nothing in this branch delivers
 it to a session. Expecting an activation gain from it would have been the same
