@@ -84,6 +84,27 @@ path the hook gets *cheaper*, not dearer — the refusal exits before the ~10 s
 regeneration and the preflight set, because everything after it would be
 answered against a base that is about to move.
 
+## The gap this change does NOT close
+
+**The pre-push hook is INSTALLED, not read from source.** `install-hooks.sh`
+writes `.git/hooks/pre-push`, and nothing re-writes it afterwards except
+`npm prepare` (i.e. an `npm install`) or `task install-hooks` by hand. Measured
+in this repository on 2026-09-04, before this change: the installed hook was
+**113 lines** against a source body of ~146 — it was missing header revisions
+merged on 2026-08-30, so it had been stale for days with no signal anywhere.
+
+The freshness gate therefore does nothing on a checkout whose hook predates it,
+and the contributor is not told. That is a real hole in a change whose whole
+subject is "the agent should not leave work for the user to discover", and it is
+recorded rather than papered over:
+
+    task install-hooks     # rewrites .git/hooks/* from source
+
+A deterministic fix — comparing the installed hook against the heredoc and
+saying so — is a third mechanism with its own gate, its own test and its own
+budget, and it is deliberately not smuggled into this change. It is the obvious
+follow-up.
+
 ## Revisit-if
 
 - A later corpus shows base merges and post-push repair commits at a rate the
