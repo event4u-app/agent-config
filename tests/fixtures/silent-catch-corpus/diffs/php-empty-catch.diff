@@ -1,0 +1,11 @@
+diff --git a/src/Mailer/Dispatch.php b/src/Mailer/Dispatch.php
+index aaaaaaa..bbbbbbb 100644
+--- a/src/Mailer/Dispatch.php
++++ b/src/Mailer/Dispatch.php
+@@ -20,5 +20,9 @@ final class Dispatch
++        try {
++            $this->transport->send($message);
++        } catch (\Throwable $e) {
++        }
+     }
+ }

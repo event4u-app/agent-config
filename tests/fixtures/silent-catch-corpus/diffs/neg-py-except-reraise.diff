@@ -1,0 +1,11 @@
+diff --git a/src/ingest/loader.py b/src/ingest/loader.py
+index aaaaaaa..bbbbbbb 100644
+--- a/src/ingest/loader.py
++++ b/src/ingest/loader.py
+@@ -12,3 +12,8 @@ def load(path):
++    try:
++        return json.loads(read(path))
++    except ValueError as exc:
++        logging.warning("bad payload at %s", path)
++        raise LoaderError(path) from exc
+ 
