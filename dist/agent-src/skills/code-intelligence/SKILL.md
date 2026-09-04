@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-intelligence
-description: "Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'."
+description: "Route codebase-structure questions (who calls X, where is this used, what imports, change-impact) to an existing code-graph first: cheaper, never more precise; grep stays routine. Also 'call graph'."
 domain: engineering
 workspaces:
   - engineering
@@ -14,11 +14,14 @@ requires_skills:
 # code-intelligence
 
 > For a **structure** question — *who calls X*, *where is Y used*, *what
-> imports Z*, *what breaks if I change this symbol* — a code-graph answers far
-> more precisely than a blind `grep`, at a fraction of the tokens. This skill
-> routes such questions to the native code-graph engine (ADR-124, Class A) or a
-> consumer-shipped index first, and falls back to grep **with a stated reason**
-> when the graph cannot answer. It is the executable side of
+> imports Z*, *what breaks if I change this symbol* — ask an index that already
+> exists before rebuilding the relationship by hand: it is already built, its
+> answer is structured, and it costs a fraction of the tokens. It is **not** more
+> precise than a blind `grep` — measured on this repository's own source, zero
+> classes met the win bar (§ Measured twice) — so grep is the arm you fall back
+> to routinely and **with a stated reason**, not grudgingly. This skill routes
+> such questions to the native code-graph engine (ADR-124, Class A) or a
+> consumer-shipped index first. It is the executable side of
 > [`external-code-graph-interop`](../../rules/external-code-graph-interop.md):
 > *orchestrator first, owner where it wins*.
 
@@ -50,9 +53,15 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
    - `agent-config code-graph path <a> <b>` — how two symbols connect.
    - `agent-config code-graph explain <symbol>` — 2-hop neighbourhood.
    Pass `--budget <tokens>` to cap output.
-4. **Read the confidence.** `EXTRACTED` = syntactic fact; `INFERRED` =
-   hierarchy-resolved; `AMBIGUOUS` = dynamic dispatch / facade, carries
+4. **Read the confidence.** `EXTRACTED` = syntactic fact — a symbol declared in
+   the file, or a name bound to the module specifier the file names; `INFERRED`
+   = resolved by hierarchy, or by a repo-wide same-name lookup with no binding
+   in the file to justify it; `AMBIGUOUS` = dynamic dispatch / facade, carries
    candidates — treat its target as *one of* the candidates, never as certain.
+   Two target shapes are **not nodes** and resolve to nothing you can read:
+   `symbol:<name>` (a name this repository does not declare) and
+   `external:<module>` / `external:<module>#<name>` (a name imported from
+   outside the indexed root — `external:node:path`).
 5. **Fall back honestly.** If the graph has no entry for the symbol, grep — and
    say so: *"the graph has no entry for X, so I grepped."* If this command is
    not available, grep and say so.
@@ -72,10 +81,22 @@ Every answer built with this skill MUST:
 - **A stale graph lies confidently.** If `detect` reports the index is N commits
   behind, rebuild (`agent-config code-graph build --update`) before trusting
   relationship answers, or say the answer is from a stale index.
-- **Dynamic dispatch is honestly ambiguous.** On a Laravel/JS codebase most
-  method-call edges are `AMBIGUOUS` (facades, injected services, `$obj->m()`).
-  That is the engine being honest, not broken — do not "resolve" them yourself
-  by guessing.
+- **Dynamic dispatch is honestly ambiguous — where there is anything to be
+  ambiguous ABOUT.** A `$obj->m()` whose name matches a method declared
+  somewhere in the repo is `AMBIGUOUS` and carries those candidates: the engine
+  being honest, not broken — do not "resolve" them yourself by guessing. A
+  dynamic call whose name matches **no** in-repo method (`xs.push()`,
+  `map.get()`) is not emitted at all, and the count is published as
+  `suppressed_edge_counts.dynamic_no_candidate`. It used to be 39 % of this
+  engine's own graph, pointing at `symbol:push`, which is not a node and which
+  no query verb could reach.
+- **The AMBIGUOUS share is a property of the code, not a constant.** Measured
+  2026-09-04 over the three roots the v2 benchmark uses: `AMBIGUOUS` is 0 of 495
+  edges under `src/scripts/code_graph`, 0 of 181 under `src/shared`, and 121 of
+  4,002 (3.0 %) under `src/scripts/ai_council` — class-free TypeScript has
+  almost no in-repo method to be ambiguous between. A Laravel codebase, where
+  facades and injected services dispatch onto real in-repo methods, is the
+  opposite case. Read the counts in the graph rather than a remembered ratio.
 
 ## Measured twice, and it has not won (v2, 2026-08-29)
 
