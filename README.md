@@ -483,7 +483,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 - **Verify with real execution** — no "should work"
 - **Challenge to improve** — agents are thought partners, not yes-machines
 - **Strict by design** — quality over flexibility
-- **Zero overhead by default** — nothing runs until you ask for it
+- **Governed runtime** — resident processes require supervision, scoped writes, and a stop control
 
 ---
 
