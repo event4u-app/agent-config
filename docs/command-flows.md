@@ -5,9 +5,9 @@
 
 > road-to-6.1.0 Step 9. Commands are **flow members**, not a flat list. The layered model is `Profile → Pack → Flow → Command → Skill → Rule`; this view answers *"what am I trying to do?"* before *"which command do I type?"*.
 
-> Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `src/scripts/lint_command_flow_coverage.ts`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
+> Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**202 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**203 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -66,7 +66,7 @@ _Build it. The core "make the change" front — drive a prompt, ticket, or featu
 - `module-create` — Create a new module from .module-template with interactive setup
 - `tdd` — TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
 - `tdd-green` — TDD green phase — write the minimum production code to make the failing test pass; no test edits
-- `tdd-red` — TDD red phase — enumerate cases, write ONE failing test, watch it fail at an assertion (not an import error)
+- `tdd-red` — TDD red phase — enumerate cases, write ONE failing test, watch it fail for a reason that is about the behav…
 - `tdd-refactor` — TDD refactor phase — clean up (rename, deduplicate) while keeping the test green
 - `tests` — Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 - `tests-create` — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
@@ -113,6 +113,7 @@ _Ship it. Commit in logical chunks, open the PR, answer review comments, and pre
 - `git-commit-in-chunks` — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for au…
 - `fix` — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality
 - `fix-comments` — Review the code comments touched by the current branch and simplify, shorten, or remove each one
+- `fix-commit-messages` — Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects…
 - `fix-portability` — Find and fix project-specific references in shared .augment/ package files
 - `fix-pr-comments` — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 - `fix-pr-comments-loop` — Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no ne…
