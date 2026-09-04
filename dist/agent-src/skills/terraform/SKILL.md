@@ -113,13 +113,11 @@ changing, not over this repository.
 Read the surface class before the fix, not after: the mitigation text, the
 abuse case, and the negative test live in the `infrastructure` rows of
 [`threat-modeling`](../threat-modeling/SKILL.md)'s corpus, which is the single
-authority for them. Ground with:
-
-```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
-  --manifest <skills-root>/threat-modeling/data/manifest.json \
-  "terraform security group ingress open to 0.0.0.0/0"
-```
+authority for them. Ask that skill's grounded-corpus step for the
+`infrastructure` surface class - it carries the invocation - and describe the
+change you are making, e.g. *terraform security group ingress open to
+0.0.0.0/0*. Do not copy the command here: one skill owns that interface, for
+the same reason one file owns the control text.
 
 Those rows also carry a `Decided by:` clause stating which check actually
 decides each one. For all four constructs above that clause reads NO CHECK IN

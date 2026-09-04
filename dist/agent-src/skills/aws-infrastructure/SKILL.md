@@ -154,13 +154,9 @@ here or in the infrastructure repo.
 Do not restate the mitigation here. The abuse case, the required controls, and
 the negative test for each of the four live in the `infrastructure` surface
 class of [`threat-modeling`](../threat-modeling/SKILL.md)'s corpus, which is
-their single authority:
-
-```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
-  --manifest <skills-root>/threat-modeling/data/manifest.json \
-  "iam role with a wildcard action"
-```
+their single authority. Ask that skill's grounded-corpus step for the
+`infrastructure` surface class - it carries the invocation - describing the
+change, e.g. *iam role with a wildcard action*.
 
 Those rows carry a `Decided by:` clause naming the check that actually decides
 each one. For the IAM, networking, storage, and encryption rows it reads NO
