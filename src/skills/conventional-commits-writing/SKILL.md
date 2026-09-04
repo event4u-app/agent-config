@@ -52,7 +52,8 @@ imposing the shipped default there produces commits that read as foreign in
 
 Release automation is the trap that makes tier 1 outrank tier 2 even when the
 history disagrees: a repo whose `git log` is 85 % `[JIRA-123] Fix thing` but
-whose `package.json` runs `semantic-release` is a repo **migrating toward**
+whose manifest (`package.json`, `composer.json`, `pyproject.toml`, `Cargo.toml`)
+runs `semantic-release` or its ecosystem equivalent is a repo **migrating toward**
 Conventional Commits, and the measurement is reading its past, not its intent.
 Check for the parser before you trust the prevalence.
 
@@ -64,7 +65,8 @@ git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
 grep -rniE 'commit|conventional' CONTRIBUTING.md docs/CONTRIBUTING.md 2>/dev/null | head
 grep -rniE 'semantic-release|changesets|git-cliff|conventional-changelog|commitlint' \
-  package.json .github/workflows/ 2>/dev/null | head
+  package.json composer.json pyproject.toml Cargo.toml .github/workflows/ .gitlab-ci.yml \
+  2>/dev/null | head
 ```
 
 A hit ends the procedure — that is the convention, and no measurement can
