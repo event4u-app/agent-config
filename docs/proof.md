@@ -95,6 +95,7 @@ evidence pointer, or `task check-claims` fails the build.
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
+| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,049 assistant turns records 0 Skill invocations and 0 of 299 distinct skills invoked (2026-09-04). A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states, which is the finding rather than a disappointment: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, and no host reads it at routing time. The two surfaces share the word "trigger" and are unrelated. Separately, only 12 of 299 skills (4.0%) declare a machine-matchable trigger key in frontmatter at all. <!-- count: dated --> | quant | `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md#an honest null` | ✅ |
 | 299 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with. | quant | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` | ✅ |
@@ -105,14 +106,14 @@ evidence pointer, or `task check-claims` fails the build.
 | A MEASURED-BUT-NOT-SHIPPED experiment — a `lean_projection.mode: delivery` projection plus the default-OFF `rule-inject` hook concern delivers rule bodies on a trigger match at 579/579 byte-equal deliveries, 94/94 labelled rules reachable, 0 false fires over 194 labelled near-misses, and $0.7285 vs $4.0335 per 50-turn x 5-spawn session at sonnet rates (standing rule corpus 120,582 -> 18,573 exact-BPE tokens). Shipped default does NOT include this: `lean_projection.mode` still resolves to `eager-all`, the concern emits zero bytes, and the flip is Claude-only and carries an unpaid activation charge (a 20,480-byte emission row above the 4,096/2,048-byte slot sums). Latency is not part of that charge: the concern carries no tokenizer and measures p95 0.04-0.05 ms gate-closed and 0.61 ms gate-open, with the whole `pre_tool_use` slot at 62 ms against a 175 ms budget. What these four endpoints license is delivery equivalence and cost, and nothing wider — the paired-judging instrument is closed by ADR-202 at inter-evaluator Cohen's kappa 0.472 against a registered 0.800 floor, and this run does not reopen it. Method: `model_rule_injection --endpoints` over the frozen `tests/eval/routing-matrix` corpus, pre-registered in `internal/bench/thin-inject-PREREG.md` before the report artifact existed, with `--selftest` requiring each endpoint to reject a planted defect first. | quant | `internal/bench/reports/thin-inject-2026-08-23.md#endpoints` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**59 backed claim(s)** — all evidence pointers resolve in CI.
+**60 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**17 of 59** backed claims carry `exec:` evidence —
+**17 of 60** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**42** rest on a pointer: CI checks that the artefact
+**43** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -158,6 +159,7 @@ given:
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation doe | external cite — CI does not fetch the network |
+| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not n | prose or contract artefact — no exit code carries the verdict |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context r | external cite — CI does not fetch the network |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that st | prose or contract artefact — no exit code carries the verdict |
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is | prose or contract artefact — no exit code carries the verdict |
@@ -350,7 +352,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (81) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 97 ledger entries · 59 backed · 31 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 98 ledger entries · 60 backed · 31 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -435,6 +437,7 @@ Undeclared rules (81) carry no row — an honest gap beats a false claim.
 | `second-brain-recall-lift` | quant | backed | — | `internal/bench/reports/second-brain-delta.json` |
 | `sequential-thinking-chain-of-thought` | qual | backed | — | `https://arxiv.org/abs/2201.11903 (2026-08-11)` |
 | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | — | `exec:lint_agent_security -> 0` |
+| `skill-activation-census-zero` | quant | backed | — | `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md#an honest null` |
 | `skill-count` | quant | backed | — | `exec:check_artefact_count_messaging -> 0` |
 | `skill-improvement-reflexion` | qual | backed | — | `https://arxiv.org/abs/2303.11366 (2026-08-11)` |
 | `skill-link-census` | quant | backed | — | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` |
