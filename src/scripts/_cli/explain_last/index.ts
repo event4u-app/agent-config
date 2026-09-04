@@ -144,7 +144,7 @@ export function build_trace(
         inputs: _inputs.build(project_root),
         route: _route.build(project_root, state),
         council: _council.build(project_root, state_file),
-        memory: _memory.build(project_root, state),
+        memory: _memory.build(state),
         pack: _inputs.build_pack(project_root),
         assumptions: _assumptions.build(state),
         halt: _halt.build(state),
