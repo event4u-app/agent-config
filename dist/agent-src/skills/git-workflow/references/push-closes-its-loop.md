@@ -50,7 +50,7 @@ returned 0, the turn closed, and the red arrived where the user found it.
 
 | Half | Carrier | Behavior |
 |---|---|---|
-| Stale base | `check_branch_freshness` in the pre-push hook (`src/scripts/install-hooks.sh`) | Asks the REMOTE, one `ls-remote`, ~4.5 s. Refuses only on a VERIFIED behind state and points at `task push-ready`. Never merges. |
+| Stale base | `check_branch_freshness` in the pre-push hook (`src/scripts/install-hooks.sh`) | Asks the REMOTE, one `ls-remote`, ~4.5 s. Refuses only on a VERIFIED behind state and names the push-ready sequence. Never merges. |
 | Unsettled push | the `push-settle` PostToolUse concern (`src/scripts/hooks/push_settle_hook.ts`) | Fires on git's own ref-advance report, resolves the PR number, and names the literal `ci_settle` command. Warn only. |
 
 ### What each one does NOT do
@@ -58,7 +58,7 @@ returned 0, the turn closed, and the red arrived where the user found it.
 - **The hook never merges.** Resolution belongs to a step run with the result in
   front of you; a hook that rewrites the tree at the moment the contributor
   believes their work is finished turns one refused push into an unreviewed
-  commit. It refuses and names `task push-ready`.
+  commit. It refuses and names the push-ready sequence instead.
 - **The hook cannot see an unverifiable base.** Offline, in CI, on a detached
   HEAD, or standing on the base itself, `check_branch_freshness` exits 0 and
   says which — so an unreachable network never blocks a push, and a green there
