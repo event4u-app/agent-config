@@ -55,16 +55,22 @@ carries no denominator.
 
 ## Phase 1 — Decline the gate in a record
 
-- [ ] **1.1 Write the decision record.** An ADR stating that the same-PR
+- [x] **1.1 Write the decision record.** An ADR stating that the same-PR
       user-artifact gate is declined, with the two grounds above, the council
       round that decided it, and the replacement. A decline that lives only in an
       analysis file is the silence this roadmap exists to end.
       verify: the ADR exists, cites the council date, members and quorum, and
       names the replacement mechanism.
+      DONE: `docs/decisions/ADR-253-per-pr-user-artefact-gate-declined.md` —
+      Status cites 2026-09-04, anthropic/claude-sonnet-4-5 +
+      openai/codex-default, 2 rounds, quorum 2/2, $0.00; Decision names the
+      three-part replacement. The council path is inlined, never linked:
+      `agents/runtime/council/` is gitignored and `check_council_references`
+      fails the build on a tracked citation of it.
 
 ## Phase 2 — Classify a release, from the diff
 
-- [ ] **2.1 Define the path→category mapping as data, not as a regex in a
+- [x] **2.1 Define the path→category mapping as data, not as a regex in a
       script.** Four categories, from the council's converged list: `consumer`
       (shipped skills, rules, commands, guidelines), `governance` (roadmaps,
       evidence ledgers, verdicts, archive and promotion records,
@@ -75,33 +81,67 @@ carries no denominator.
       verify: the mapping file exists with a version field, and every top-level
       path in the tree resolves to exactly one category or is explicitly
       unclassified.
-- [ ] **2.2 Classify from changed paths, never from commit subjects.**
+      DONE: `src/scripts/release_mix_taxonomy.json` (`taxonomy_version:
+      1.0.0`). `measure_release_mix --audit` at `b75d7f7cb`: 9337 tracked
+      paths over 90 classification units, 0 unmatched. One unit resolves to a
+      deliberate `unclassified` (`src/shared/`, 13 files). The audit walks
+      EVERY tracked path rather than only the top level, because `src/` has no
+      bare rule by design — it classifies at the subdirectory the taxonomy
+      actually decides at.
+- [x] **2.2 Classify from changed paths, never from commit subjects.**
       Subjects are mutable, inconsistently formatted and can contradict the
       files a commit touches — codex's objection to the cheaper reading.
       verify: the script's classification is unchanged when a commit subject is
       rewritten, pinned by a test.
-- [ ] **2.3 Do not collapse `mixed` into product.** Collapsing it recreates the
+      DONE: `src/scripts/measure_release_mix.ts` consumes only `git show
+      --name-only --format=` and `git diff --numstat`; no message field is
+      read anywhere in the file. `tests/scripts/measure_release_mix.test.ts`
+      commits under a subject claiming consumer work, measures, runs `git
+      commit --amend -m` with a contradicting subject, and asserts the
+      classification-bearing part of the reading is unchanged.
+- [x] **2.3 Do not collapse `mixed` into product.** Collapsing it recreates the
       exact gaming the declined rule permits: one consumer file makes a
       governance commit read as product.
       verify: `mixed` is reported as its own bucket in both views, and a test
       plants a governance commit carrying one consumer file and asserts it lands
       in `mixed`.
-- [ ] **2.4 Publish two views.** A commit view (exclusive counts per category
+      DONE: `mixed` is a bucket in `commit_view` with a `mixed_combinations`
+      breakdown, and the diff view attributes lines per category so a mixed
+      commit's governance lines are never counted as consumer. The planted
+      case is pinned; sensitivity confirmed by collapsing `mixed` into its
+      first category, which reds that case and only that case (1 failed / 7
+      passed), restored green afterwards.
+- [x] **2.4 Publish two views.** A commit view (exclusive counts per category
       plus mixed) and a diff view (added/deleted lines per category, excluding
       generated projections and lockfiles — this repo's `dist/agent-src/`,
       `.augment/`, `.claude/` and `package-lock.json` would otherwise dominate
       every reading).
       verify: both views are emitted as machine-readable JSON and as a human
       summary, and the generated trees are excluded by name.
+      DONE: `--json <path>` writes the reading; the default stdout render is
+      the human summary. `excluded_generated` names `dist/`, `.augment/`,
+      `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md`,
+      the two plugin manifests, `package-lock.json` and the two generated
+      index files. Exclusion happens BEFORE classification, so a commit left
+      empty lands in the `generated_only` diagnostic instead of maintenance.
 
 ## Phase 3 — Baseline before threshold, and a response that is owed
 
-- [ ] **3.1 Take a baseline over two releases before choosing any number.**
+- [x] **3.1 Take a baseline over two releases before choosing any number.**
       Both seats refused a threshold on one cycle. The first two readings are
       levels, not verdicts, and are published as such.
       verify: two readings exist with their release tags, and no threshold is
       committed to the repository before the second.
-- [ ] **3.2 Attach the response obligation now, not after the threshold.**
+      DONE: `agents/evidence/reports/release-mix-14.15.0.json` and
+      `release-mix-14.16.0.json`, summarised in `release-mix-baseline.md`.
+      14.15.0 (`a3a14d535..c9f32f39f`): governance-only 3 vs consumer-only 1.
+      14.16.0 (`c9f32f39f..9d6ad7fc6`): 16 vs 6. Both are labelled levels, not
+      verdicts. NO threshold is committed anywhere in this change — grep the
+      diff: the only inequality is the response trigger, which is the
+      obligation of 3.2 and not a ratio. Both council seats ruled the
+      retrospective reading legitimate with the taxonomy locked first;
+      codex's four named biases are recorded in the baseline report.
+- [x] **3.2 Attach the response obligation now, not after the threshold.**
       Effective from the first reading: when governance-only commits outnumber
       consumer-only commits in a release, the release notes carry a written
       response naming either the next cycle's consumer work or a maintainer
@@ -109,12 +149,33 @@ carries no denominator.
       codex's word.
       verify: the obligation is written where the release process reads it, and
       the first release that trips it carries the response.
-- [ ] **3.3 State the escalation, and the condition that triggers it.** If the
+      DONE, with the second half's limit stated. The obligation is in
+      `docs/contracts/CHANGELOG-conventions.md` § Governance-versus-product
+      response — the document that governs the curated release head — and it
+      is ENFORCED by `check_release_highlights`, which now refuses a release
+      whose section owes a response and does not carry one. Reproduced both
+      ways against the real 14.16.0 span: without the line, `❌ the 14.16.0
+      section owes a governance-versus-product response: governance-only 16 vs
+      consumer-only 6`; with a `> **Governance mix:**` line present, `✅ …
+      response present`. The clause "the first release that trips it carries
+      the response" cannot be discharged inside this change because no release
+      is cut here; the gate is what makes it unskippable at the next release
+      PR. Coverage limit, stated rather than implied: the refusal fires at the
+      release PR step in `.github/workflows/release-validation.yml`, NOT at
+      the local push guard, which reads a different function
+      (`publication_blockers`) and is left untouched.
+- [x] **3.3 State the escalation, and the condition that triggers it.** If the
       published ratio does not move over two measured releases, a release-level
       gate is reconsidered — never the per-PR gate, which is declined on
       mechanism rather than on threshold.
       verify: the ADR from 1.1 carries the escalation condition and the explicit
       exclusion of the per-PR shape.
+      DONE: ADR-253 § Consequences — "if the published ratio does not move
+      across two measured releases with the response obligation in force, a
+      RELEASE-level gate is reconsidered", with "the per-PR shape is not
+      reconsidered by that escalation, at any ratio". The same condition is
+      the record's second `review_trigger`, so it is machine-visible to
+      `adr_cite_check` and not only prose.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-04 | reviewer: claude/host -->
@@ -127,14 +188,14 @@ carries no denominator.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An ADR declines the same-PR user-artifact gate, states the two
+- [x] AC-1 — An ADR declines the same-PR user-artifact gate, states the two
       grounds, cites the council round, and names the replacement and its
       escalation condition.
-- [ ] AC-2 — A versioned path→category mapping exists and every top-level path
+- [x] AC-2 — A versioned path→category mapping exists and every top-level path
       resolves to one category or is explicitly unclassified.
-- [ ] AC-3 — The release classifier reads changed paths, not commit subjects,
+- [x] AC-3 — The release classifier reads changed paths, not commit subjects,
       pinned by a test that rewrites a subject and asserts no change.
-- [ ] AC-4 — `mixed` is a reported bucket, and a planted governance-plus-one-
+- [x] AC-4 — `mixed` is a reported bucket, and a planted governance-plus-one-
       consumer-file commit lands in it.
-- [ ] AC-5 — Two release readings are published as levels with no committed
+- [x] AC-5 — Two release readings are published as levels with no committed
       threshold, and the response obligation is in force from the first.
