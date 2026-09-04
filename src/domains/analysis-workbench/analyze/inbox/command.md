@@ -242,7 +242,7 @@ that exists because this bucket used to go nowhere.
 
 ```
 EVERY POINT EXTRACTED HERE LEAVES THE RUN WITH A NAMED DISPOSITION.
-A POINT IN NO TABLE, NO ARTEFACT, AND NO DECLINE LINE WAS NOT JUDGED —
+A POINT IN NO TABLE, NO ARTIFACT, AND NO DECLINE LINE WAS NOT JUDGED —
 IT WAS DROPPED. TWO OF THE THREE BUCKETS ALREADY CARRY A MANDATORY LABEL;
 THE THIRD CARRYING NONE IS WHY A SOURCE CAN BE READ IN FULL AND STILL
 FEEL IGNORED.
@@ -250,7 +250,7 @@ FEEL IGNORED.
 
 **Carry the author's own severity, verbatim.** A source that grades its items —
 `P0`, `blocker`, `kritisch`, `must`, or an ordered list it calls priorities — has
-made a claim about ordering, and dropping that grade silently re-prioritises the
+made a claim about ordering, and dropping that grade silently re-prioritizes the
 file under the reader's own preferences. Record it per point as
 `severity(source)`. Departing from it is allowed and is itself a finding: name
 the item that moved and why. Absent → `ungraded`, the normal path and not a
@@ -590,7 +590,7 @@ that names no artifact.
 own evidence file.**
 
 ```
-A RECURRENCE COUNT RECORDED ONLY IN A ROUND-SCOPED ARTEFACT IS NOT A COUNT —
+A RECURRENCE COUNT RECORDED ONLY IN A ROUND-SCOPED ARTIFACT IS NOT A COUNT —
 IT IS A SENTENCE THE NEXT ROUND WILL RE-DERIVE FROM ZERO.
 THE COUNTER LIVES ON THE STUB, THE later/ ROADMAP, OR THE BLOCKER THAT HOLDS IT.
 IT ONLY EVER GOES UP.
@@ -599,7 +599,7 @@ IT ONLY EVER GOES UP.
 This is the failure caught in this repo's own tree. Round `inbox-2026-09-d`
 found its leading item arriving for the **ninth** time, named all four fields
 correctly, and wrote them into
-`agents/evidence/analysis/inbox-2026-09-d-disposition.md` — an artefact created
+`agents/evidence/analysis/inbox-2026-09-d-disposition.md` — an artifact created
 by that round, read by no later one. The held object,
 `agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md`, carries no
 arrival count at all, and a `grep` for one across every file under
@@ -667,7 +667,7 @@ Three hard defaults, from this repo's own scar tissue:
 
 ### Phase 5b — Discharge every demand
 
-Phase 5 maps what the file *contains* onto artefact types. This settles what the
+Phase 5 maps what the file *contains* onto artifact types. This settles what the
 file *wants* — bucket (iii) — and it is the phase that closes the gap between
 "the source was read in full" and "the source was answered".
 
@@ -681,7 +681,7 @@ operator's:
 
 | Discharge | What it means | What it costs |
 |---|---|---|
-| `adopted` | it becomes, or joins, an artefact | the artefact path |
+| `adopted` | it becomes, or joins, an artifact | the artifact path |
 | `already-satisfied` | the tree already does this | one `file:line` |
 | `declined` | judged and not taken | one sentence of reason |
 | `owner-decision` | crosses a boundary an agent may not | the escalation block above |
@@ -790,7 +790,7 @@ each one is and why it is spent, and let the user remove it.
   "wenn es endlich mal …". <!-- md-language-check: ignore -->
   Tone is not a truth value, and the bucket a point lands in is never a
   judgement about whether it deserves an answer.
-- Re-prioritise a graded source silently. Moving an item the author called `P0`
+- Re-prioritize a graded source silently. Moving an item the author called `P0`
   is allowed; moving it without saying so replaces the author's ordering with
   the reader's under cover of analysis.
 - Record a recurrence count in the round's own evidence file and nowhere else.
