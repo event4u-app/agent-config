@@ -208,6 +208,46 @@ rg -n '\b(it|test|describe)\.skip\b|\.only\b|xit\(|xdescribe\(|@pytest\.mark\.(s
 
 This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antipattern (bulk `skip`/`xfail` to force green counts as the tool being wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
 
+### The named smells — canonical vocabulary, and what it does NOT cover
+
+The behaviours above are described; two of them also have field names a
+reviewer can cite, and this table is where the name meets the behaviour. The
+grep column follows the shape [`ai-code-blindspots`](../ai-code-blindspots/SKILL.md)
+uses: an authoring-time backstop, zero results is the pass, a hit is a prompt
+to read that line — never an auto-fix.
+
+| Canonical name | The behaviour, as already described above | Backstop grep |
+|---|---|---|
+| **Magic-number test** | Anti-Pattern 6 — "a hardcoded expected value the code will always emit". The expectation is a literal rather than something derived from the input, so the test cannot disagree with the code. | `rg -n '\b(toBe\|toEqual\|assertEquals\|assertSame)\(\s*-?[0-9]{2,}' tests/` |
+| **Assertion roulette** | The multi-case stack Anti-Pattern 6 *requires* (boundary, error, abuse in one test), written without per-assertion messages — so a failure names a line number and not a reason. The stack is right; the silence is the smell. | `rg -c '\b(expect\|assert\w*\|self\.assert\w*\|\$this->assert\w*)\(' tests/ \| awk -F: '$2 >= 8'` |
+
+Both greps are scoped to **the test file you just wrote**, not to a tree —
+`tests/` above is a placeholder for that path. Run over a whole repository
+they are useless as verdicts: measured on this repository on 2026-09-04 the
+first returns 585 lines and the second 1189 files, because an exact assertion
+against a two-digit literal and a file with eight assertions are both ordinary.
+They are authoring-time prompts to reread one file, exactly as
+`ai-code-blindspots` states, and neither is a gate.
+
+The second grep counts per **file**, not per test — no regex sees a test
+boundary.
+
+**Three further names are deliberately NOT in the table**, recorded here so a
+later round meets a record rather than a fresh argument. Measured 2026-09-04
+over both files of this skill: `roulette`, `eager`, `lazy` and `duplicate` each
+return **0** occurrences, and `hardcoded` returns **6**.
+
+- **Eager test** (one test exercising several behaviours) would carry the same
+  behaviour and the same grep as assertion roulette above, and Anti-Pattern 6
+  *prescribes* the shape on purpose. A row for it would be one entry under two
+  names, which is the drift this table exists to prevent.
+- **Lazy test** (several tests over one fixture, differing only in name) is
+  described nowhere above. A row would be new guidance wearing a naming step's
+  clothes.
+- **Duplicate assert** (the same condition asserted twice in one test) is
+  likewise undescribed, and is not greppable without parsing test boundaries —
+  so it could not carry the backstop column even if it were.
+
 ## Output format
 
 1. The mocking decision recorded as a one-line comment in the test file (`// mock at <seam>: <reason>`).

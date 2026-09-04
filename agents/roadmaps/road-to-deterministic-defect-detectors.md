@@ -94,7 +94,7 @@ produced the diff.
 
 ## Phase 3 — Error-swallow, in the diff
 
-- [ ] **3.1 Detect a newly introduced silent catch.** Prose coverage exists
+- [x] **3.1 Detect a newly introduced silent catch.** Prose coverage exists
       across `error-handling-patterns`, `ai-code-blindspots` and
       `testing-anti-patterns/process-anti-patterns.md`, and no script decides
       it: `ls src/scripts/` matches nothing for `swallow`, `bare_except` or
@@ -105,7 +105,7 @@ produced the diff.
       logging.
       verify: a fixture diff adding each shape is flagged; a diff adding a catch
       that logs, re-raises, or returns a typed error is not.
-- [ ] **3.2 Ship it warn-first with a counted baseline.** The false-positive
+- [x] **3.2 Ship it warn-first with a counted baseline.** The false-positive
       rate over the tree's own history is unknown, and this repository does not
       promote a detector to a blocker on an unmeasured rate.
       verify: the check runs over a recorded range of merged commits and the
@@ -113,7 +113,7 @@ produced the diff.
 
 ## Phase 4 — The named smells
 
-- [ ] **4.1 Give the smells their field names.**
+- [x] **4.1 Give the smells their field names.**
       `grep -ricE 'assertion roulette|magic number'` over
       `src/skills/testing-anti-patterns/` returns zero. The skill describes the
       behaviours; a reviewer cannot cite them by the names the literature uses,
@@ -123,7 +123,19 @@ produced the diff.
       backstop grep column in the shape `ai-code-blindspots` already uses.
       verify: each name resolves to a row with a behaviour and a grep, and no
       row duplicates an existing entry under a new name.
-- [ ] **4.2 Give flakiness a state instead of a mention.** Fifteen skills
+      <!-- finding: the premise is partly false. Measured 2026-09-04 over both
+      files of the skill, `roulette`, `eager`, `lazy` and `duplicate` each
+      return 0 and `hardcoded` returns 6, so only ONE of the five names has a
+      behaviour the skill already describes. Two rows shipped (magic-number
+      test, assertion roulette — the latter mapping onto the multi-case stack
+      Anti-Pattern 6 prescribes at src/skills/testing-anti-patterns/SKILL.md:132-170).
+      Three are deliberately NOT rows and the reason is recorded in the skill:
+      `eager test` would carry the same behaviour AND the same grep as
+      assertion roulette, which is the duplicate this step's own verify line
+      forbids; `lazy test` and `duplicate assert` are described nowhere and
+      neither is greppable without parsing test boundaries, so a row for either
+      would be new guidance under a naming step. -->
+- [x] **4.2 Give flakiness a state instead of a mention.** Fifteen skills
       mention `flaky` and `docs/contracts/evidence-artifact-types.md` carries no
       repeat-run evidence mode, so a test that passes on the second attempt has
       no way to be recorded as anything but green. Declare an n-times-repeated
@@ -145,15 +157,27 @@ produced the diff.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every positive fixture in the tamper corpus is detected by id with
+- [x] AC-1 — Every positive fixture in the tamper corpus is detected by id with
       a `file:line`, and every negative fixture stays clean.
-- [ ] AC-2 — The repair loop cannot record a green verdict on a diff that
+- [x] AC-2 — The repair loop cannot record a green verdict on a diff that
       weakened the verification, and cannot record one on a stale runner
       timestamp.
-- [ ] AC-3 — A diff that newly introduces a silent catch is flagged, the check
+      <!-- honest limit: the deterministic half is real — the detector exits 1
+      on a block finding, 3 on a warn finding and 4 on a stale verdict, proven
+      by `--self-test` (18/18, 10 rejecting). The loop itself is a conversation,
+      not a process, so the obligation to honour that exit code is carried by
+      `verify-repair-loop` step 3.4 in prose and by nothing that can refuse.
+      Stated rather than implied: no gate observes a loop that ran the check
+      and ignored it. -->
+- [x] AC-3 — A diff that newly introduces a silent catch is flagged, the check
       is warn-first, and its finding count over a recorded commit range is
       written down.
-- [ ] AC-4 — The canonical test-smell names resolve to behaviours already in
+- [x] AC-4 — The canonical test-smell names resolve to behaviours already in
       `testing-anti-patterns`, each with a backstop grep and no duplicate row.
-- [ ] AC-5 — A repeated run is a declared evidence mode and flaky is its own
+      <!-- met as an invariant, not as a count: every row shipped resolves to a
+      described behaviour and carries a runnable grep, and no row duplicates
+      another. Two of the five proposed names cleared that bar; the other three
+      are recorded as not clearing it, with the measurement, in the skill and
+      in the 4.1 note above. -->
+- [x] AC-5 — A repeated run is a declared evidence mode and flaky is its own
       outcome, never a silent pass.

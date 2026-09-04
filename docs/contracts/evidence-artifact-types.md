@@ -114,6 +114,68 @@ Said plainly because the opposite is the attractive misreading: knowing that an
 artifact is an `original-review` does not make a stale binding acceptable. It
 makes the staleness legible. Those are different things.
 
+## The second axis — execution mode, and the `flaky` outcome
+
+Added 2026-09-04 by `road-to-deterministic-defect-detectors` step 4.2, after an
+AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds, quorum 2/2,
+convergent on option A) was asked whether this belongs here at all and, if so,
+as a sixth type or as a separate axis.
+
+**It is a separate axis, and saying so is the whole point.** A *type* answers
+"what does this artifact assert". A *mode* answers "how was the verification
+run". Fifteen skills mention `flaky` and none of them can record it: a test
+that passes on the second attempt has no way to be written down as anything but
+green. Making `flaky` a sixth type would conflate the two questions and force
+the table to grow a new row for every future combination — the proliferation
+the council named as the cost of option B.
+
+### Modes
+
+| Mode | Meaning | How it is declared |
+|---|---|---|
+| `single-run` | The verification ran once. | **The implicit default.** Never written. Every artifact that predates this section is `single-run` and needs no edit. |
+| `repeated:<n>` | The same verification ran `n` times, `n >= 2`, with the per-run results retained. | `<!-- evidence-mode: repeated:5 -->` |
+
+`n >= 2` is required, not conventional: `repeated:1` is `single-run` with extra
+syntax, and admitting it would let a single run be presented as a repeat.
+
+### The outcome
+
+`flaky` is a recordable outcome, and it is valid **only** under
+`repeated:<n>`. Under `single-run` there is nothing to be flaky between.
+
+> **flaky** — the `n` runs did not agree. At least one passed and at least one
+> failed on the same input, the same tree, and the same command.
+
+That definition is deliberately narrow. Runs that all passed are a pass; runs
+that all failed are a fail; a run that failed for a *different* reason each time
+is not flakiness but an unstable environment, and is recorded as its own failure
+rather than laundered into `flaky`.
+
+**Never a silent red, never a silent green.** A `flaky` result is neither. It is
+its own outcome and it is reported as itself — the same discipline
+`_lib/gate_result.ts` applies when it refuses to let `crashed` read as
+`violations`.
+
+### Aggregation and retention — without these, `flaky` is not reproducible
+
+Raised by the council as the refinement neither reviewer stated: an outcome that
+records only the aggregate cannot be checked by the next reader.
+
+- **Retain the per-run results.** `repeated:<n>` means `n` recorded verdicts,
+  not one verdict with a count beside it. An artifact that kept only "3 of 5
+  passed" has recorded a number, not evidence.
+- **Aggregate by unanimity, and state it.** All `n` pass → pass. All `n` fail →
+  fail. Anything else → `flaky`. There is no threshold and no majority rule: a
+  4-of-5 pass is exactly the case this outcome exists to stop being called a
+  pass.
+
+### What this does not do
+
+It does not retrofit. It does not make an existing artifact wrong. It does not
+change when an artifact must be re-bound. `single-run` being the unwritten
+default is what keeps all three true.
+
 ## Where the type is written
 
 For the two types with no existing grammar, one HTML comment anywhere in the
