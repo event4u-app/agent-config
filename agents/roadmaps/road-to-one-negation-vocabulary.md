@@ -190,10 +190,10 @@ over the tree returns 0.
 
 ### Two council decisions
 
-Run: `agents/runtime/council/questions/one-negation-vocabulary.md` ->
-`agents/runtime/council/responses/one-negation-vocabulary.md`
-(anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum
-concluded 2/2).
+Convergence summary — 2026-09-04, members `anthropic/claude-sonnet-4-5` and
+`openai/codex-default`, 2 rounds, blind chairman, quorum concluded 2 of 2. The
+question and the responses are session artefacts and are not linked: that
+directory is gitignored and auto-pruned, so a path here would rot.
 
 1. **The residual row.** The shared clause machinery alone cannot read
    `"Merge PR #12? Actually, don't."` — the merge sits in a question sentence
