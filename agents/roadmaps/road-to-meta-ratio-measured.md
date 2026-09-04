@@ -8,6 +8,7 @@ relates: []
 # `meta`, `ratio`, `inventory_meta_layers` — nothing owns it. The nearest gate,
 # check_estate_count, caps the NUMBER of active roadmaps and says nothing about
 # the governance-vs-product mix of a release.
+estate_offset_exempt: "Cannot be offset, and offsetting it would be the finding. It exists because two consecutive cycles neither built nor declined the request; archiving an active roadmap to make room for the decline would be the third cycle of trading the ask against estate arithmetic, which is the behaviour the reviewer predicted."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. It answers a request an external reviewer made in two consecutive cycles and neither cycle built nor declined — the third silence would itself be the finding. A 2/2 AI-council round supplied the mechanism, which is a release-level measurement rather than the per-PR gate that was asked for, so the deliverable is a script, a mapping and a decision record and does not fit any sibling roadmap in this change. Parking it is the behaviour the reviewer predicted would prove the meta layer outranks the cap."
 ---
 # Road to a measured meta ratio

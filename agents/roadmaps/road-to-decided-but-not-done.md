@@ -8,6 +8,7 @@ relates: []
 # `.agent-memory`, `attest_artifact`, `ADR-220` and `Carried to the` — none of
 # the three items below is owned by an open roadmap or stub. ADR-094 and ADR-220
 # are the records; neither has a receiver for its residue.
+estate_offset_exempt: "Cannot be offset. Its three items are residue of decisions recorded in ADR-094 and ADR-220, neither of which has a receiver; the four active roadmaps at the floor own unrelated subjects and none of them can absorb a dead read path, an unwired primitive and two dangling promises without becoming a grab bag."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. Its three items are the cheapest work in this change and the only ones an external reviewer named a closure test — a live tested read path into a file nothing writes, a primitive with zero importers at its fourth consecutive audit, and a promise with no receiver. Folding them into any of the three sibling roadmaps would hide small confirmed residue under a parser fix, a ledger, or a sweep. Parking them is what produced the fourth audit."
 ---
 # Road to decided but not done

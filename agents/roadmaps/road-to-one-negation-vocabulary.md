@@ -10,6 +10,7 @@ relates: []
 # stubs/road-to-merge-confirmation-doctrine.md:9,77, back-references the drained
 # parent archive/road-to-merge-op-split-and-negation-guard.md and owns a kernel
 # rule edit, not the parser.
+estate_offset_exempt: "Cannot be offset. The four active roadmaps at the floor are a topology carrier a recorded verdict forbids closing, and three items from the 2026-09-d round that landed one day ago and have not been started; archiving any of them to make room would trade a reproduced authorization defect for an unfinished one."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. It repairs a reproduced authorization defect — a standing merge grant surviving an unambiguous withdrawal — that no artefact in the tree owns; the two sibling roadmaps in this change touch neither the hook nor its corpus, so folding would put a parser fix, a ledger gate and a dead-code sweep in one file. Parking it leaves a grant-survival path live while the fix is one function."
 ---
 # Road to one negation vocabulary

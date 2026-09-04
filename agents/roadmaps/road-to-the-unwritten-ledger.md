@@ -5,6 +5,7 @@ execution:
   mode: phase-checkpoints
 relates:
   - agents/roadmaps/later/road-to-release-finding-ordering.md
+estate_offset_exempt: "Cannot be offset. Its natural offset would be the parked sibling road-to-release-finding-ordering, and that one is Hard-Floor blocked on a synthetic release/* pull request no autonomous run may open — archiving it to pay for this would close the demonstration half by accounting rather than by doing it."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. It closes the half of the release-findings gap that needs no synthetic `release/*` branch — a released version whose ledger was never written, and a gate that prints green for exactly that state — while the parked sibling keeps the half that is Hard-Floor blocked. Folding it into that roadmap would put reproducible-today work behind a maintainer-only demonstration, which is the partition that roadmap was created to avoid. Parking it leaves ten findings from a shipped release, one of them high-severity security, with no record at all."
 ---
 # Road to the unwritten ledger

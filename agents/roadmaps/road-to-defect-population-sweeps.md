@@ -9,6 +9,7 @@ relates: []
 # close artefact, archive/road-to-self-description-truth.md, is complete and
 # covered four named instances, not the class. No open roadmap or stub owns any
 # of the three sweeps below.
+estate_offset_exempt: "Cannot be offset. Every active roadmap at the floor is either owner-blocked or one day old, and the three sweeps here have counted populations in this tree — a silent swallowed write in a security hook among them — that no other active roadmap can absorb without losing its own subject."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. Its three items are one shape — a defect fixed at the site it was reported and never searched for elsewhere — and each carries a counted, verified population from this tree, which is what separates it from the two sibling roadmaps in this change (a parser fix and a ledger). Folding it into either would bury three sweeps under an unrelated subject. Parking it leaves a silent swallowed write live in a security hook, in the same class a commit in the same release rebutted by name one file away."
 ---
 # Road to defect-population sweeps
