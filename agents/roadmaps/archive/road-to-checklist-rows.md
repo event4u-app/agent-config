@@ -73,8 +73,8 @@ four needs a new artefact.
       both skills, phrased so a reviewer can fail a plan on one of them.
       verify: each criterion appears in both skills as a line a reviewer can
       apply, and each says what failing it looks like.
-      DONE: `src/skills/feature-planning/SKILL.md:216` and
-      `src/skills/complexity-first-planning/SKILL.md:74` — Necessity,
+      DONE: `src/skills/feature-planning/SKILL.md:179` and
+      `src/skills/complexity-first-planning/SKILL.md:65` — Necessity,
       Sufficiency, Ordering, Groundedness, each with an explicit **Fails when**
       clause. The complexity-first copy states that it owns Ordering and carries
       the other three so a plan reviewed on ordering alone cannot pass while
