@@ -74,8 +74,8 @@ carries are named in the convergence below.
 
 ## Council convergence — inlined, not linked
 
-`agents/runtime/council/` is gitignored and auto-pruned, so no tracked file may
-cite a path there. The convergence is recorded here instead.
+The council's own response tree is gitignored and auto-pruned, so no tracked
+file may cite a path inside it. The convergence is recorded here instead.
 
 **Round 1 — the decline.** 2026-09-04 · anthropic/claude-sonnet-4-5 +
 openai/codex-default · 2 rounds · quorum 2/2 · $0.00 (both seats

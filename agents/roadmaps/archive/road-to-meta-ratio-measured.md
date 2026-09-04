@@ -65,7 +65,7 @@ carries no denominator.
       Status cites 2026-09-04, anthropic/claude-sonnet-4-5 +
       openai/codex-default, 2 rounds, quorum 2/2, $0.00; Decision names the
       three-part replacement. The council path is inlined, never linked:
-      `agents/runtime/council/` is gitignored and `check_council_references`
+      the council's response tree is gitignored and `check_council_references`
       fails the build on a tracked citation of it.
 
 ## Phase 2 — Classify a release, from the diff
