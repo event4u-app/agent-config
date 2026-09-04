@@ -1,7 +1,7 @@
 {
   "name": "agent-config",
   "description": "A governed skill framework for AI agents — runtime execution, tooling, observability, feedback, and lifecycle management with policy-driven quality enforcement.",
-  "version": "14.15.0",
+  "version": "14.16.0",
   "author": {
     "name": "event4u",
     "email": "dev@event4u.app"
