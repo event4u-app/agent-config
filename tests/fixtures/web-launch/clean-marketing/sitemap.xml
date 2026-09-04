@@ -4,4 +4,6 @@
   <url><loc>https://example.com/about</loc></url>
   <url><loc>https://example.com/privacy</loc></url>
   <url><loc>https://example.com/imprint</loc></url>
+  <url><loc>https://example.com/impressum</loc></url>
+  <url><loc>https://example.com/datenschutz</loc></url>
 </urlset>
