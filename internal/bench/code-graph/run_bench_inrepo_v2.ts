@@ -449,8 +449,14 @@ function main(): number {
     if (isRerun) {
         md.push(`> **COMPARABLE to \`internal/bench/reports/${REPORT_STEM}.md\`, and to nothing else.**`);
         md.push('> Same registration, same corpus SHA, same per-class bars, same arm-B verb');
-        md.push('> set. The variable that moved is the ENGINE, which is what the comparison');
-        md.push('> is for. One scorer line also moved: `fileOfEndpoint` now rejects an');
+        md.push('> set. The variable the comparison is FOR is the ENGINE — but it is not');
+        md.push('> automatically the only one that moved: a measured root is live source and');
+        md.push('> may have changed between the two runs. Check the tree-hash table below');
+        md.push('> against the baseline report\'s before attributing any per-question delta to');
+        md.push('> the engine, and treat a root whose tree moved as carrying two variables.');
+        md.push('> `src/scripts/code_graph` is a standing exception in both directions: it IS');
+        md.push('> the engine, so its content necessarily moves whenever the engine does.');
+        md.push('> One scorer line also moved: `fileOfEndpoint` now rejects an');
         md.push('> `external:` endpoint, the pseudo-endpoint shape the import repair');
         md.push('> introduced — a no-op on this corpus, because no external specifier under');
         md.push('> the three measured roots carries a filename extension. No threshold was');
