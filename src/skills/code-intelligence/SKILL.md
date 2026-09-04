@@ -134,6 +134,33 @@ engine on this repository's own code. The rule now gives the reasons that surviv
 measurement — an index that exists is already built and structured, so it is the
 cheap first question — and drops the precision claim its own benchmark refuted.
 
+## Re-run after the extractor repair (2026-09-04) — still no class won
+
+`internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`. The
+SAME registration, the same corpus SHA, the same per-class bars and the same
+arm-B verbs, re-run after the import-binding repair. The 2026-08-29 report is
+untouched; this is a second report beside it, which is how v1 was handled too.
+
+| Class | graph R then | graph R now | graph P then | graph P now | verdict then → now |
+|---|---|---|---|---|---|
+| `callers` | 1.000 | 1.000 | 0.667 | 0.667 | TIE → TIE |
+| `transitive-impact` | 0.500 | **0.611** | 0.667 | **1.000** | **NULL → TIE** |
+| `path-between` | 1.000 | 1.000 | 1.000 | 1.000 | TIE → TIE |
+| `references` | 0.333 | **1.000** | 0.333 | **1.000** | **NULL → TIE** |
+
+**Zero classes met the win bar, again.** Two NULLs became TIEs and nothing
+regressed, so the routing verdict below is unchanged — a TIE is not a win, and
+no bar was renegotiated after the repair.
+
+Read with two caveats the report states in full. A measured root is live source:
+`src/shared` is byte-identical between the runs, `src/scripts/ai_council` moved
+by 27 files on `main` in between, and `src/scripts/code_graph` IS the engine, so
+its content necessarily moves whenever the engine does — which is also why the
+GREP arm's macro precision moved (0.806 → 0.764) in a run that changed nothing
+about grep. Both classes that changed verdict did so on rows whose root did not
+drift: `references` moved on `code_graph` and `shared`, `transitive-impact` on
+`shared` alone.
+
 **No class is graph-first.** Query the index first because an index that already
 exists is cheap to ask and its answer is structured — not because it answers
 better. When it returns nothing, that is the common case, and grep remains the
