@@ -16,7 +16,7 @@ provenance:
 evidence:
   strength: E2
   basis:
-    - agents/roadmaps/road-to-meta-ratio-measured.md
+    - agents/roadmaps/archive/road-to-meta-ratio-measured.md
     - agents/evidence/reports/release-mix-baseline.md
     - agents/evidence/reports/release-mix-14.15.0.json
     - agents/evidence/reports/release-mix-14.16.0.json
@@ -183,7 +183,7 @@ the mechanism, not of the concern.
 |---|---|
 | No per-PR user-artifact rule or gate exists | `git grep -iE 'user-facing artifact\|anwender-artefakt\|meta.*feature.*same PR' b75d7f7cb -- src/rules docs/contracts .github/workflows` → 0 hits |
 | The nearest gate caps roadmap count, not mix | `src/scripts/check_estate_count.ts` |
-| Both seats declined the per-PR gate, 2/2 | AI council 2026-09-04, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum 2/2, $0.00; convergence inlined in `agents/roadmaps/road-to-meta-ratio-measured.md` § What was asked |
+| Both seats declined the per-PR gate, 2/2 | AI council 2026-09-04, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum 2/2, $0.00; convergence inlined in `agents/roadmaps/archive/road-to-meta-ratio-measured.md` § What was asked |
 | Both seats ruled A/A/A on shape, obligation surface and retrospective baselines | AI council 2026-09-04, same seats, 2 rounds, quorum 2/2, $0.00; convergence inlined in `agents/evidence/reports/release-mix-baseline.md` § Council convergence |
 | 14.15.0 reads governance-only 3 vs consumer-only 1 | `agents/evidence/reports/release-mix-14.15.0.json` |
 | 14.16.0 reads governance-only 16 vs consumer-only 6 | `agents/evidence/reports/release-mix-14.16.0.json` |
@@ -199,7 +199,7 @@ above, and it is the reason no threshold is set here.
 
 ## References
 
-- `agents/roadmaps/road-to-meta-ratio-measured.md` — the roadmap this record closes.
+- `agents/roadmaps/archive/road-to-meta-ratio-measured.md` — the roadmap this record closes.
 - [`CHANGELOG-conventions`](../contracts/CHANGELOG-conventions.md) § Governance-versus-product response — the obligation's text.
 - `src/scripts/measure_release_mix.ts`, `src/scripts/release_mix_taxonomy.json` — the mechanism.
 - `agents/evidence/reports/release-mix-baseline.md` — the two published readings.
