@@ -8,7 +8,7 @@
 
 ```
 dist/agent-src/**                      ← Condensed payload
-    ↓ scripts/condense.py --generate-tools
+    ↓ src/scripts/condense.ts --generate-tools
 .claude/      .cursor/             ← Claude Code, Cursor (rules + skills)
 .clinerules/  .windsurfrules       ← Cline (rules dir), Windsurf (concatenated file)
 GEMINI.md                          ← Gemini CLI (symlink → AGENTS.md)

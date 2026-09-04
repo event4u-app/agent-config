@@ -67,7 +67,11 @@ phase with its own design-call gate.
 
 ## Static guarantees enforced by tests
 
-`tests/test_mcp_server.py` asserts the boundary at unit level:
+The boundary is asserted at unit level. The Python-era suite that held these
+assertions was **split** at ADR-200 into `tests/scripts/mcp_server_server.test.ts`,
+`mcp_server_tools.test.ts` and `mcp_server_serve.test.ts`, and the
+import-surface half of it did not survive the port — see the note in
+`docs/contracts/adr-mcp-runtime.md`. The remaining assertions are:
 
 1. `prompts/list` returns the full skills + commands set with
    `skill.<name>` and `command.<name>` wire-name prefixes.
@@ -96,7 +100,7 @@ returns `isError=True`.
 
 | Tool name | Mode | Side effects |
 |---|---|---|
-| `lint_skills` | read-only | Wraps `scripts.skill_linter.lint_file`. Never spawns `git` (no `--changed`). Returns the same JSON shape as `scripts/skill_linter.py --format json`. |
+| `lint_skills` | read-only | Wraps `scripts.skill_linter.lint_file`. Never spawns `git` (no `--changed`). Returns the same JSON shape as `./scripts-run src/scripts/skill_linter --format json`. |
 | `chat_history_append` | path-scoped write | Wraps `scripts.chat_history.append`. Writes are allowed only when the resolved target is `agents/runtime/.agent-chat-history` (current default), `agents/.agent-chat-history`, or `.agent-chat-history` under `<consumer_root>`. `dry_run=True` validates the payload without touching the filesystem. |
 
 **Path-scoping invariant** — any tool that writes must resolve its

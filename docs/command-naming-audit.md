@@ -22,7 +22,7 @@ schema. That would **duplicate** the mechanism that already ships:
 
 - **`replaces:`** (on the new/canonical command) — the prior name(s) or
   alias(es) it absorbs. Colon forms are allowed here on purpose (historical
-  aliases like `commit:in-chunks`). Enforced by `lint_command_routing.py`.
+  aliases like `commit:in-chunks`). Enforced by `lint_command_routing.ts`.
 - **`superseded_by:`** (on the old shim) — points forward to the successor.
 
 Adding a second `aliases:` field would re-create the exact two-sources-of-

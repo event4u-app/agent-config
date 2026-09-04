@@ -7,7 +7,7 @@ stability: stable
 > **Status:** Active · governs the shape of [`CHANGELOG.md`](../../CHANGELOG.md)
 > and the per-era archive files under [`docs/archive/`](../archive/).
 > Cited from the CHANGELOG header and enforced by
-> `tests/test_changelog_eras.py`.
+> `tests/lib/changelog_eras.test.ts`.
 
 ## Purpose
 
@@ -373,7 +373,7 @@ files under `.agent-src.uncondensed/` that round-trip through
 `CHANGELOG.md` keeps only the **current era** inline; prior eras live
 under [`docs/archive/`](../archive/) and are read-only.
 
-Drift gate — `tests/test_changelog_eras.py` fails when the current
+Drift gate — `tests/lib/changelog_eras.test.ts` fails when the current
 era's body (lines between `# Era: X.Y.x — current` and the next era
 header) exceeds **250 lines**. When that happens:
 

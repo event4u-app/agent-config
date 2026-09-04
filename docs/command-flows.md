@@ -5,7 +5,7 @@
 
 > road-to-6.1.0 Step 9. Commands are **flow members**, not a flat list. The layered model is `Profile → Pack → Flow → Command → Skill → Rule`; this view answers *"what am I trying to do?"* before *"which command do I type?"*.
 
-> Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
+> Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `src/scripts/lint_command_flow_coverage.ts`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
 **202 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 

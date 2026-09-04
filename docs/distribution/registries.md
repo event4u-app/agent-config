@@ -10,7 +10,7 @@ Per [`ADR-033`](../decisions/ADR-033-distribution-identity-npm-primary.md), the 
 
 | Channel | Status | Canonical install | Notes |
 |---|---|---|---|
-| npm — `@event4u/agent-config` | **Primary** | `npm install @event4u/agent-config` or `npx @event4u/agent-config install` | The release pipeline (`scripts/release.py`) runs `npm publish` exclusively; `package.json` is the source of truth for the published version. |
+| npm — `@event4u/agent-config` | **Primary** | `npm install @event4u/agent-config` or `npx @event4u/agent-config install` | The release pipeline (`src/scripts/release.ts`) runs `npm publish` exclusively; `package.json` is the source of truth for the published version. |
 | Packagist — `event4u/agent-config` | **Deprecated-in-place** | (do not install — see ADR-033) | The 1.0.4 listing is a legacy artefact from the pre-3.x repo namespace. No `composer.json` ships from this repo. Maintainer-side claim/archive action required (see below). |
 
 ### Packagist deprecation — human-owner item

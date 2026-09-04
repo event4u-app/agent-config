@@ -42,7 +42,7 @@ scoring rubrics, walkthroughs) must work in any host without
 external dependencies.
 
 Mechanical enforcement: the structural-malice check in
-`scripts/skill_linter.py` blocks:
+`src/scripts/skill_linter.ts` blocks:
 
 - Credential exfiltration patterns (env-var reads of `*_TOKEN`,
   `*_KEY`, `*_SECRET` followed by network egress).

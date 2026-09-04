@@ -78,7 +78,7 @@ enforces this.
 
 ## Loader contract
 
-The Phase 1 loader lives at `scripts/config/profiles.py`. Resolution
+The Phase 1 loader lives at `src/scripts/config/profiles.ts`. Resolution
 chain (last writer wins):
 
 1. `pack.profile_id` (if pack active) → `profile.id`.

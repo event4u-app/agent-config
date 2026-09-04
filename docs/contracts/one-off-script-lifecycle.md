@@ -46,8 +46,8 @@ NOT live at `scripts/_one_off/_one_off_*.py` (no month) or under
 | State | Action |
 |---|---|
 | Age ≤ 60 days from month-directory date | active, no warning |
-| 60 < Age ≤ 90 days | warning emitted by `lint_one_off_age.py`, no failure |
-| Age > 90 days | `lint_one_off_age.py` fails CI; the script is purged in the next housekeeping pass |
+| 60 < Age ≤ 90 days | warning emitted by `lint_one_off_age.ts`, no failure |
+| Age > 90 days | `lint_one_off_age.ts` fails CI; the script is purged in the next housekeeping pass |
 
 Age = `today − first-of-month(<YYYY-MM>)` in UTC days. The 60-day
 soft floor and 30-day grace window are intentional — they cover one
@@ -75,7 +75,7 @@ still live at six months, it is a durable concern and belongs in
 
 ## Purge mechanism
 
-`lint_one_off_age.py` runs in `task ci`. On a clean working tree, it
+`lint_one_off_age.ts` runs in `task ci`. On a clean working tree, it
 prints purge candidates as a list. Purge itself is a separate human-
 or-CI action — `task purge-one-offs` removes flagged files. The
 linter does not auto-delete.
@@ -101,7 +101,7 @@ rule.
   command catalog.
 - The cleanup-mechanics context for housekeeping passes:
   `agents/settings/contexts/cleanup-mechanics.md`.
-- Linter implementation: `scripts/lint_one_off_age.py`.
+- Linter implementation: `scripts/lint_one_off_age.ts`.
 
 ## Stability
 

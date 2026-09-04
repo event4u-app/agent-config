@@ -37,7 +37,7 @@ agents/tickets/_registry.yml   # machine-generated index of all bundles
 ```
 
 - **Separate tree, not co-located** under the roadmap — the flat-file dashboard
-  and archival machinery (`update_roadmap_progress.py`,
+  and archival machinery (`update_roadmap_progress.ts`,
   `archive_completed_roadmaps.py`) assume `agents/roadmaps/*.md` are flat files;
   a separate tree keeps that untouched (ADR-101 R1).
 - **Discovery** is via the generated `agents/tickets/_registry.yml` — one scan,
@@ -133,7 +133,7 @@ bundles:
     status: in_progress        # derived from manifest
 ```
 
-`update_roadmap_progress.py` reads this one file; never recursive-globs bundles.
+`update_roadmap_progress.ts` reads this one file; never recursive-globs bundles.
 
 ## 8. Tracker handoff — paste-ready, or via MCP (no API export)
 

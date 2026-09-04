@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-12
 
 > **Audience:** rule, skill, and command authors who need to extract
 > reasoning material into a `contexts/` file.
-> **Linter:** `scripts/check_context_paths.py`
+> **Linter:** `scripts/check_context_paths.ts`
 > (run via `task check-context-paths`).
 > **Companion:** [`load-context-schema.md`](load-context-schema.md) —
 > frontmatter contract for citing a context from a rule.
@@ -52,7 +52,7 @@ contexts/skills-and-commands.md
 contexts/subagent-configuration.md
 ```
 
-## Rules enforced by `check_context_paths.py`
+## Rules enforced by `check_context_paths.ts`
 
 1. **Sub-tree allow-list.** Every `*.md` under
    `.agent-src.uncondensed/contexts/` must be either (a) in one of the
@@ -79,16 +79,16 @@ diagnostic per offence.
 3. Bump this contract's version line in the roadmap (G2 fan-out: the
    ownership matrix re-runs after the bump and new cells must remain
    `READ_ONLY` only).
-4. Update `LOCKED_SUBTREES` in `scripts/check_context_paths.py` and
+4. Update `LOCKED_SUBTREES` in `scripts/check_context_paths.ts` and
    the table above in the same PR.
 
-## Why `check_context_paths.py` carries the orphan check
+## Why `check_context_paths.ts` carries the orphan check
 
 `road-to-structural-optimization.md` 0.6.3 specified extending
 `scripts/docs-sync.py` for the orphan check. That script does not exist
 in this repo (the cross-reference checker lives in
 `scripts/check_references.py`, scoped to broken refs rather than orphan
-detection). Folding the orphan check into `check_context_paths.py` keeps
+detection). Folding the orphan check into `check_context_paths.ts` keeps
 all context-file invariants in one linter and avoids inventing a new
 sync tool. Functionally equivalent to the roadmap intent; the roadmap
 itself is annotated with this deviation.

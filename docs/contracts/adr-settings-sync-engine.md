@@ -93,9 +93,9 @@ projects, several of which lock Python deps tightly.
   surfaces as a friendly `ValueError` from `_rt.sync()`, caught by
   `sync_agent_settings.main` and turned into exit code 2 with a
   user-readable message. Documented in
-  `tests/test_sync_agent_settings.py::test_malformed_user_yaml_exits_2_with_message`.
-- **Test debt:** `tests/test_sync_round_trip.py` (34 tests) and
-  `tests/test_sync_agent_settings.py` (15 tests) are the contract.
+  `tests/scripts/sync_agent_settings.test.ts::test_malformed_user_yaml_exits_2_with_message`.
+- **Test debt:** the 34-test round-trip suite was **dropped rather than ported** at ADR-200 — no successor exists, and it is named here as a gap rather than as a path. Together with
+  `tests/scripts/sync_agent_settings.test.ts` (15 tests) are the contract.
   Any parser change must keep those green and is the entry point
   for new fixtures under `tests/fixtures/sync_yaml_rt/`.
 
@@ -124,5 +124,5 @@ of the following holds:
   docstring — the supported YAML subset, listed exhaustively.
 - `tests/test_sync_round_trip.py` — verbatim, scalar-guard, healer,
   CRLF, and synthetic-header pinning.
-- `tests/test_sync_agent_settings.py` — CLI integration, profile
+- `tests/scripts/sync_agent_settings.test.ts` — CLI integration, profile
   override, malformed-input exit code.

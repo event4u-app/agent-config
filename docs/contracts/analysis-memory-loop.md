@@ -62,7 +62,7 @@ duplicate candidate fails the loop contract.
 
 ## § 3 — Promote: the admission gate
 
-`/memory promote` runs `scripts/check_memory_proposal.py`.
+`/memory promote` runs `src/scripts/check_memory_proposal.ts`.
 
 **Admission criteria** (unchanged from the existing gate):
 
@@ -136,7 +136,7 @@ generically across analysis skills. Using them in a skill named
 ## § 7 — What this contract does NOT cover
 
 - The schema of curated memory entries (governed by `low-impact-corpus-format.md`).
-- The internal mechanics of `check_memory_proposal.py` (lives in `src/scripts/`).
+- The internal mechanics of `check_memory_proposal.ts` (lives in `src/scripts/`).
 - AI-specific RCA (deferred; gated on `road-to-security-hardening`).
 
 ---

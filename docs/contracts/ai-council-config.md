@@ -631,7 +631,7 @@ A heuristic pre-flight that decides whether the request actually
 warrants a full council deliberation. Three verdicts (`necessary`,
 `borderline`, `unnecessary`) drive three exit paths in the dispatcher
 (skip silently, educate + block, or proceed). Implemented in
-[`scripts/ai_council/necessity.py`](../../src/scripts/ai_council/necessity.ts);
+[`src/scripts/ai_council/necessity.ts`](../../src/scripts/ai_council/necessity.ts);
 wired into `council_cli.cmd_run` and `cmd_debate` before any member
 is invoked.
 
@@ -693,7 +693,7 @@ Decision table:
 | `== 0` | `== 0` | no | `borderline` |
 
 Trigger word lists live in
-[`scripts/ai_council/necessity.py`](../../src/scripts/ai_council/necessity.ts)
+[`src/scripts/ai_council/necessity.ts`](../../src/scripts/ai_council/necessity.ts)
 as `NECESSARY_TRIGGERS` and `UNNECESSARY_TRIGGERS` — extend there with
 a unit test; never edit downstream copies.
 
@@ -944,7 +944,7 @@ confirm interactive); a successful repair replaces the member's round entry.
 
 Five-class impact classifier triages every pending agent question
 before it surfaces. Heuristic, shape-based, keyword-driven — no LLM
-call, fully explainable. Lives in `scripts/ai_council/necessity.py`
+call, fully explainable. Lives in `src/scripts/ai_council/necessity.ts`
 (`classify_impact`, `route_decision`).
 
 | Class | Trigger shape | Default mode |

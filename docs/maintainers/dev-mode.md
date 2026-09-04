@@ -11,7 +11,7 @@ canonical reference once Phase 3 lands.
 ## Why the flag exists
 
 Phase 3 of `road-to-global-only-install` flips `SCOPE_SUPPORT` so that
-**every** consumer scope on `scripts/install.py` is global. The
+**every** consumer scope on `src/scripts/install.ts` is global. The
 package repo itself is structurally identical to a consumer repo
 (same `.augment/`, `.claude/`, `.cursor/` projection layout) which
 means maintainer dev-installs would otherwise be blocked by the same
@@ -30,7 +30,7 @@ With the flag set, the installer:
 3. Treats `~/.event4u/agent-config/` as a peer install — touches are
    limited to the working-copy projection.
 
-Without the flag, `scripts/install.py` refuses to write anywhere
+Without the flag, `src/scripts/install.ts` refuses to write anywhere
 under the repo tree and points at this document.
 
 ## When to set it
@@ -73,7 +73,7 @@ the flag is set outside the package repo.
 
 - **Audit-visible.** Every install run logs whether the flag was set
   at the top of the transaction log.
-- **No silent fallback.** If `scripts/install.py` detects the
+- **No silent fallback.** If `src/scripts/install.ts` detects the
   package repo signature (presence of `.agent-src.uncondensed/` plus
   `dist/router.json`) and the flag is **not** set, the install
   refuses with a one-line error pointing here.

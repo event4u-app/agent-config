@@ -122,7 +122,7 @@ backstop; the consistency gate fails if regeneration drifts.
   scanned roots. Bare backtick-name references (e.g., `` `skill-quality` ``)
   are **not** edges in v1; they are too ambiguous to attribute.
 - **Cycles** are not the matrix's concern — the existing
-  `lint_load_context.py` rejects them. The matrix generator follows
+  `lint_load_context.ts` rejects them. The matrix generator follows
   edges with a visited-set so a cycle, if one slipped through, cannot
   loop forever; it would surface as a depth-3 abort.
 

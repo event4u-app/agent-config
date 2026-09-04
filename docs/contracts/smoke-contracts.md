@@ -91,7 +91,7 @@ constant in the script body and the row below.
 438 lintable artefacts · 0 schema FAILs · ≤ 92 warns
 ```
 
-- **0 FAILs** — hard assertion. `scripts/skill_linter.py --all` returns
+- **0 FAILs** — hard assertion. `./scripts-run src/scripts/skill_linter --all` returns
   exit 0/1 (warns) but never 2 (fail).
 - **≤ 92 warns** — measured 2026-05-16; locks regression. Warns
   trending down updates the constant.

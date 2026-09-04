@@ -8,7 +8,7 @@ keep-beta-until: 2026-08-12
 > **Audience:** maintainers of `type: "always"` rules and the budget
 > linter who need a single, deterministic answer to "how many chars
 > does this rule cost the always-budget?".
-> **Linter:** `scripts/check_always_budget.py`
+> **Linter:** `src/scripts/check_always_budget.ts`
 > (run via `task check-always-budget`).
 > **Companion:** [`load-context-schema.md`](load-context-schema.md) —
 > frontmatter contract for citing a context from a rule.
@@ -96,7 +96,7 @@ must order their `load_context:` entries from "load this first" to
 
 Locked by Phase 1.3 of `road-to-context-layer-maturity` (council
 session `2026-05-03T17-56-21Z`, v2 lock). Enforced by
-`scripts/check_always_budget.py` as `MAX_CONTEXTS_PER_RULE = 3`.
+`src/scripts/check_always_budget.ts` as `MAX_CONTEXTS_PER_RULE = 3`.
 
 A rule's combined count of `load_context:` + `load_context_eager:`
 top-level entries must not exceed **3**. The cap is on *declared*
@@ -155,7 +155,7 @@ context citing a third context (depth 3) **aborts the build**.
 Rationale: bounded recursion makes the linter terminate in O(N) and
 prevents accidental cycles. Council Round-2 finding 9 (HIGH).
 
-The check is enforced by `scripts/check_always_budget.py` as a
+The check is enforced by `src/scripts/check_always_budget.ts` as a
 separate exit-code-1 condition (independent of the budget caps), so
 that a depth violation surfaces with the violating chain, not as a
 budget-cap breach.
@@ -208,7 +208,7 @@ diagnostics but does not gate the always-budget cap.
 
 ## Linter contract
 
-`scripts/check_always_budget.py` enforces:
+`src/scripts/check_always_budget.ts` enforces:
 
 1. `EffectiveSize` per always-rule against the per-rule cap (with
    the transitional allowlist).
