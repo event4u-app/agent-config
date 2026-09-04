@@ -338,6 +338,61 @@ every introduced or substantially reworked subsystem — required by
 `src/scripts/lint_changelog_rollback.ts` for versions above the current
 `package.json` version (historical sections never retro-fail).
 
+## Governance-versus-product response
+
+> **In force from the first reading — not from a threshold.** Added 2026-09-04
+> by [`ADR-253`](../decisions/ADR-253-per-pr-user-artefact-gate-declined.md),
+> which declines the per-PR user-artefact gate an external reviewer asked for
+> twice and replaces it with a release-level measurement. Read that record
+> before proposing the per-PR shape again; it is declined on mechanism, so a
+> worse ratio does not revive it.
+
+`src/scripts/measure_release_mix.ts` classifies a release span from the files
+its commits touch — never from commit subjects — into `consumer`,
+`governance`, `maintenance`, `mixed` and `unclassified`, using the versioned
+mapping in `src/scripts/release_mix_taxonomy.json`. Generated projections and
+lockfiles are excluded from both views by name.
+
+**The obligation.** When governance-only commits **strictly outnumber**
+consumer-only commits over the release span, the section under release carries
+a written response naming either the next cycle's consumer work or a maintainer
+justification. One line, immediately under the curated head, outside it:
+
+```md
+> **Governance mix:** governance-only 16 vs consumer-only 6 (taxonomy 1.0.0).
+> Next cycle ships <the consumer work>, tracked in <roadmap or issue>.
+```
+
+It sits outside the `### Release highlights` head on purpose: the head's
+ten-line cap (`RELEASE_HEAD_CAP_LINES`) is for operator-relevant product
+lines, and a sixth label would make every historical section retroactively
+incomplete.
+
+**What is enforced, and what is not.** `check_release_highlights` refuses a
+release whose section owes a response and does not carry one — a **missing
+answer**, never a particular number. No threshold is committed to this
+repository, and none may be until at least two readings exist; both council
+seats refused to pick one on a single cycle and the reviewer's "more than half
+the cycle" carries no denominator. Read the measurement command yourself with:
+
+```bash
+./scripts-run src/scripts/measure_release_mix --from <prev-tag> --to <tag> --label <tag>
+```
+
+**Coverage, stated honestly.** The refusal fires at the release **pull
+request** (`.github/workflows/release-validation.yml`, the
+`check_release_highlights` step). The local push guard
+(`guard_release_branch_push`) reads `publication_blockers`, a different
+function, and does **not** check the mix response — so the earliest refusal for
+this one obligation is the PR, not the push. A measurement that cannot run
+(shallow clone, missing tag) degrades to a printed warning rather than to a
+refusal: this is a governance signal, not a correctness control, and turning an
+environment fact into a blocked release would be the wrong trade.
+
+**Published readings** live in `agents/evidence/reports/release-mix-*.json`
+with a human summary in `agents/evidence/reports/release-mix-baseline.md`. They
+are levels, not verdicts.
+
 ## What counts as breaking
 
 A change is **breaking** (and MUST appear under `### BREAKING CHANGES`
