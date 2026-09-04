@@ -17,7 +17,7 @@ estate_growth_exempt: "Adds one active roadmap against a floor of 1. Its three i
 > **Source:** `agents/tmp.old/inbox-2026-09-e/` — an external multi-model review
 > round on release 14.16.0. One reviewer named the shape directly: *"Das ist
 > viermal dasselbe Muster: eine Komponente **behauptet** eine Eigenschaft, die
-> sie nicht **erfüllt**"*, and another asked for a fault-injection test over every
+> sie nicht **erfüllt**"*, and another asked for a fault-injection test over every <!-- md-language-check: ignore -->
 > guard write path. Every population count below was taken from this tree at
 > `main@56aa348b3`, not from the review.
 

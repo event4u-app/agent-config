@@ -4,7 +4,13 @@ status: ready
 execution:
   mode: phase-checkpoints
 relates:
-  - agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md
+  - slug: road-to-mixed-trigger-activation-cost
+    relation: disjoint
+    note: >
+      The roadmap whose blocker was being cited for a question it does not gate.
+      This one splits the misrouted finding and leaves that roadmap's
+      `b-behavioural-bench-spend` attached to the always-on-tier question it
+      actually asks. Phase 4.1 verifies that blocker is unmodified.
 estate_offset_exempt: "Cannot be offset. The roadmap it corrects, road-to-mixed-trigger-activation-cost, is in later/ and blocked by two blockers an agent may not lift, so it is not available as an offset; and archiving an active sibling to pay for a routing correction would be the accounting move that let this finding arrive ten times."
 estate_growth_exempt: "Adds one active roadmap against a floor of 1. It exists because a 2/2 AI-council round found the tree is citing the wrong lock for its most-repeated external finding — ten arrivals answered by a spend blocker that gates a different question — and the correction is a split into three owners, which needs a file rather than a note. The three sibling roadmaps in this change touch the authorization parser, the findings ledger and three defect sweeps; none of them can carry a routing correction about delivery mode. Parking it means the eleventh arrival meets the same wrong lock."
 ---

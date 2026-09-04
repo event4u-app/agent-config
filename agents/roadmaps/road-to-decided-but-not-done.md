@@ -15,8 +15,8 @@ estate_growth_exempt: "Adds one active roadmap against a floor of 1. Its three i
 
 > **Source:** `agents/tmp.old/inbox-2026-09-e/` — an external multi-model review
 > round on release 14.16.0. One reviewer made the first item a test of the whole
-> system: *"Ein Findings-/Roadmap-System, das ein solches triviales bestätigtes
-> Residuum nicht entfernt, hat ein Priorisierungsproblem."* Each item below was
+> system: *"Ein Findings-/Roadmap-System, das ein solches triviales bestätigtes <!-- md-language-check: ignore -->
+> Residuum nicht entfernt, hat ein Priorisierungsproblem."* Each item below was <!-- md-language-check: ignore -->
 > re-checked against `main@56aa348b3`.
 
 ## Goal

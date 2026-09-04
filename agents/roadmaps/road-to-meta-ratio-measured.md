@@ -29,8 +29,8 @@ that states why, so a third round meets a decision rather than silence.
 ## What was asked, and what the council decided
 
 The ask, twice: *"kein Meta-Verwaltungs-Feature ohne Anwender-Artefakt im selben
-PR."* The second ask carried its own prediction — *"Wenn ihr es zwei aufgeräumte
-Zyklen lang nicht tut, ist das selbst das Signal, dass die Meta-Schicht euch
+PR."* The second ask carried its own prediction — *"Wenn ihr es zwei aufgeräumte <!-- md-language-check: ignore -->
+Zyklen lang nicht tut, ist das selbst das Signal, dass die Meta-Schicht euch <!-- md-language-check: ignore -->
 lieber ist als die Deckelung."*
 
 Verified before the council ran: no such rule or gate exists anywhere in

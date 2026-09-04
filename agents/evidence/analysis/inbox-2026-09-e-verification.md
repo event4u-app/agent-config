@@ -1,4 +1,5 @@
-# Inbox round 2026-09-a — verification and disposition
+<!-- evidence-type: analysis -->
+# Inbox round 2026-09-e — verification and disposition
 
 > Analysed 2026-09-04 against `main@56aa348b3`, which is the exact baseline the
 > round was drafted against. Three files, one of them a 7,690-line concatenation
@@ -155,7 +156,7 @@ ones.
 
 ### P-1 — The stderr leak is a false positive, and was already adjudicated
 
-One reviewer's single strongest ask was *"Prüf, ob 7aee57d1 gefixt oder geparkt
+One reviewer's single strongest ask was *"Prüf, ob 7aee57d1 gefixt oder geparkt <!-- md-language-check: ignore -->
 ist"* — a high-severity claim that the Stage-2 impact scan pipes unsanitised diff
 content into the hook's stderr refusal.
 
@@ -204,9 +205,9 @@ rather than a fresh argument.
 ## Declined — recorded so it is not re-proposed
 
 - **A cross-surface semantic-consistency engine / global coverage engine.** Asked
-  for in one form and warned against in another by the same round: *"Ich würde
+  for in one form and warned against in another by the same round: *"Ich würde <!-- md-language-check: ignore -->
   daraus aber keine neue globale Coverage Engine machen"*, *"Allerdings will ich
-  daraus NICHT sofort noch einen allgemeinen Consistency Engine bauen."*
+  daraus NICHT sofort noch einen allgemeinen Consistency Engine bauen."* <!-- md-language-check: ignore -->
   `road-to-defect-population-sweeps` Phase 3 takes the narrow version instead —
   three measured claim kinds with a planted-negative test.
 - **A "Structured Operation Authorization Core" as the next build.** Requested by
@@ -228,8 +229,8 @@ rather than a fresh argument.
 
 ## One tension this round leaves in place
 
-This analysis answers a round that criticises estate growth — *"Estate wächst
-weiter"*, estate simplicity scored down 4.5 → 4.3 — by adding **six** active
+This analysis answers a round that criticises estate growth — *"Estate wächst <!-- md-language-check: ignore -->
+weiter"*, estate simplicity scored down 4.5 → 4.3 — by adding **six** active <!-- md-language-check: ignore -->
 roadmaps, taking the estate from 4 to 10. That is the pattern the criticism
 names, and stating it is cheaper than the reading that nobody noticed.
 
@@ -248,7 +249,7 @@ classifier it proposes. The first reading it takes should say so.
 
 | # | step, as the round states it | verdict | what was observed |
 |---|---|---|---|
-| 1 | "Prüf, ob `7aee57d1` gefixt oder geparkt ist" | **diverged** | Not a commit; a finding id, dispositioned `false_positive`, property pinned by a test that runs 7/7 green |
+| 1 | "Prüf, ob `7aee57d1` gefixt oder geparkt ist" | **diverged** | Not a commit; a finding id, dispositioned `false_positive`, property pinned by a test that runs 7/7 green | <!-- md-language-check: ignore -->
 | 2 | `isRevocation("Merge PR #12 auf keinen Fall.")` should revoke | **reproduced** | `false`; `foldGrants` leaves `[[12]]` intact |
 | 3 | `check_finding_dispositions --release 14.16.0` | **reproduced** | exit 0, "ledger absent" |
 | 4 | Grep the tree for a `.agent-memory` writer | **reproduced** | one hit, a test fixture |
