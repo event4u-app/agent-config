@@ -1,0 +1,9 @@
+{
+  "_comment": "Pre-existing standard-conformance claims in src/skills/**/SKILL.md and src/rules/*.md that carry NO `enforced_by:` declaration. The list may only SHRINK — an entry whose artefact gained a declaration must leave it in the same change, and a new undeclared claim is never added. Written by road-to-defect-population-sweeps 3.2; enforced by tests/contracts/conformance_claim_declaration.test.ts.",
+  "_why_empty": "The measured population was TWO artefacts, not the large legacy set 3.2 anticipated, and both were declarable honestly in the same change: accessibility-auditor names its real resolver, design-review declares the gap with its reason. An empty baseline is the strongest state this ratchet can be in, not a missing one — the file exists so the mechanism is wired and testable, and so a future undeclared claim has somewhere it is conspicuously NOT allowed to land.",
+  "_known_out_of_scope": [
+    "src/skills/design-intelligence/references/design-rules-checklist.md — carries `WCAG 2.2 AA` in a dedup NOTE that points at accessibility-auditor rather than claiming conformance itself. Out of scope because roadmap step 3.1 scopes the bar to `a skill or rule`, and the scanned set is the artefacts that carry frontmatter: `SKILL.md` and `src/rules/*.md`. Recorded here rather than silently excluded."
+  ],
+  "count": 0,
+  "undeclared": []
+}

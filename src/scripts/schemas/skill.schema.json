@@ -472,6 +472,16 @@
       ],
       "description": "Classifier signal for auto-dispatch. 'steps' = ordered multi-step plan → do-in-steps. 'files' = N independent files of the same shape → do-in-parallel. 'independent' = N independent same-shape targets (not files) → do-in-parallel. Omit for skills that are always single-pass. Read by auto-dispatch-classification.md classifier signal 1."
     },
+    "enforced_by": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(hook:[a-z0-9_-]+|validator:[A-Za-z0-9_./-]+|test:[A-Za-z0-9_./-]+|observer:[a-z0-9 _-]+|instruction-only: *[^ ].*|none)$"
+      },
+      "description": "What resolves a CHECKABLE CLAIM this skill makes about itself \u2014 a standard-conformance claim of the form `<standard> <version> <level>` (WCAG 2.2 AA). Deliberately the SAME key and the same value vocabulary as rule.schema.json's `enforced_by`, per council 2026-09-04 (anthropic + openai, 2/2 for frontmatter over body markers; the residual split between reusing this key and minting a new `claim_resolvers:` was resolved on measurement \u2014 reuse costs ONE schema addition where a new key costs two, and adds no second vocabulary for one idea). `test:<path>` names the resolver; `instruction-only: <reason>` declares an honest gap, and the reason is MANDATORY because a bare marker is a claim with no triage record behind it. Resolved by tests/contracts/conformance_claim_declaration.test.ts. NOT read by check_enforcement_coverage.ts or lint_rule_enforcement_declaration.ts \u2014 both scan `src/rules/` only, so a skill carrying this key does not join the rule-enforcement ratchet."
+    },
     "gaps": {
       "type": "array",
       "description": "B6 — honest-null known limitations. Human-curated (NOT auto-discovered), not all skills. Each entry documents a real limitation and cites a witness test that reproduces it. Rendered on the proof page's 'Known Limits'; check_skill_gaps enforces every witness path exists. The offensive-transparency surface a headline-benchmark cannot ship.",

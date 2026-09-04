@@ -5,6 +5,8 @@ description: "Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard 
 personas:
   - frontend-engineer
 domain: quality
+enforced_by:
+  - "test:tests/contracts/accessibility_wcag_version_claim.test.ts"
 workspaces:
   - engineering
 packs:
