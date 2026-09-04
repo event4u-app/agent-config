@@ -271,7 +271,6 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         return null;
     };
 
-    // ── per-file binding scopes ──────────────────────────────────────────────
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
     const fileIds = new Set(nodes.filter((n) => n.kind === 'file').map((n) => n.id));
     const scopes = new Map<string, FileScope>();
