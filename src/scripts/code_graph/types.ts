@@ -21,7 +21,20 @@ export interface CodeNode {
     /** Path-qualified from day one: `<relpath>#<symbol>` (collision-free). */
     id: string;
     label: string;
-    kind: 'file' | 'class' | 'interface' | 'trait' | 'function' | 'method' | 'skipped';
+    /**
+     * `constant` / `type` / `enum` were added by
+     * `road-to-the-graph-that-lies-confidently` 2.1: the v2 benchmark's
+     * `references` class probes a const (`EXT_LANG`) and a type alias
+     * (`SettingsClass`), and neither had a node to resolve to. `interface` is
+     * reused rather than forked — a TS interface and a PHP interface are the
+     * same thing to a caller.
+     *
+     * The kind is also a CAPABILITY claim the build pass reads: a `constant` is
+     * never callable and never constructible, so a bare `foo()` may not resolve
+     * to one by name. `const Widget = class {}` is emitted as `class` for
+     * exactly that reason.
+     */
+    kind: 'file' | 'class' | 'interface' | 'trait' | 'function' | 'method' | 'constant' | 'type' | 'enum' | 'skipped';
     source_file: string;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
@@ -74,11 +87,33 @@ export interface CodeGraph {
     grammar_abi: number;
     /** per-confidence-class edge counts, so the honesty split is visible. */
     edge_confidence_counts: Record<EdgeConfidence, number>;
+    /**
+     * Edges the build pass REFUSED to emit, by reason. Present so a smaller
+     * edge total cannot be read as a better graph without saying what was
+     * dropped: an engine that quietly deletes its worst edges publishes a
+     * flattering confidence ratio and no evidence.
+     *
+     * `dynamic_no_candidate` — a dynamic member call (`x.push()`) whose method
+     * name matches NO method declared in this repository. The edge could only
+     * ever have pointed at a `symbol:` pseudo-node, which is not a node, so no
+     * query verb could reach it: `affected` and `path` resolve their seeds
+     * against real nodes. It was 257 of 660 edges on this engine's own source.
+     */
+    suppressed_edge_counts: { dynamic_no_candidate: number };
     nodes: CodeNode[];
     edges: CodeEdge[];
 }
 
-export const SCHEMA_VERSION = 1;
+/**
+ * Bumped 1 → 2 by `road-to-the-graph-that-lies-confidently`: `CodeNode.kind`
+ * gained three members, `CodeGraph` gained `suppressed_edge_counts`, and the
+ * per-file extract sidecar gained the import specifier. A cached sidecar
+ * written at v1 carries raw edges with no `moduleSpecifier`, which would make
+ * `--update` resolve imports the old (name-lookup) way for every unchanged
+ * file — a silently mixed graph. `readSidecar` refuses a version mismatch, so
+ * the bump is what makes that impossible rather than merely unlikely.
+ */
+export const SCHEMA_VERSION = 2;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;
