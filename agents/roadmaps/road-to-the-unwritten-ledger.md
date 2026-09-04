@@ -131,6 +131,46 @@ what nobody can currently answer.
       verify: the rendered comment carries the sentence, and a test asserts it is
       present rather than that it merely rendered.
 
+## Phase 2b — A gate that cannot tell a documented defect from an introduced one
+
+Observed on this roadmap's own pull request, 2026-09-04. The self-review gate ran
+over a diff of six roadmaps and one evidence file — **prose describing defects,
+introducing none** — and reported **ten findings, two of them
+`high (Blocking)` security**. Every one maps 1:1 to a defect the diff *documents*:
+
+```
+5642305ff717  high  security  road-to-one-negation-vocabulary.md
+              "Authorization negation defect now owned but not fixed"
+e2fb09a4665b  high  security  road-to-defect-population-sweeps.md
+              "Swallowed write in security hook"
+```
+
+The gate read the roadmap's own description of a defect elsewhere in the tree and
+classified it as a defect in the diff. This is not a small false positive: it is
+the shape that makes the enforcement flip the whole round demands unsafe. Under
+`--enforce`, **every analysis pull request would be blocked by the findings it
+was written to record**, and the only way to pass would be to describe defects
+less precisely.
+
+- [ ] **2b.1 State the class before the flip is taken.** The
+      `self-review-gate-cost` blocker currently reads as a cost-and-authority
+      question. It also has a correctness precondition: the gate must
+      distinguish a defect the diff *introduces* from one it *documents*, or
+      enforcement inverts the incentive on exactly the artefacts this package
+      produces most.
+      verify: the blocker text names this class with the run that produced it,
+      and the ten finding ids are recorded so the next reading is a comparison.
+- [ ] **2b.2 Find the cheapest discriminator, and say if there is none.**
+      Candidates, none free: scope findings to non-prose paths; require a finding
+      to cite a line the diff *changed* in the file it names rather than a line
+      the prose quotes; or accept prose findings as advisory-only while code
+      findings block. Each has a failure — the first exempts rules and skills,
+      which are prose that ships; the second breaks on a genuine defect a diff
+      introduces in a quoted example.
+      verify: one discriminator is chosen with the other two's costs recorded, or
+      the step states that none is cheap and the enforcement flip stays gated on
+      it.
+
 ## Phase 3 — The sibling's review date meets its second occurrence
 
 - [ ] **3.1 Pull `review_by` forward with the reason attached.**
@@ -165,6 +205,9 @@ what nobody can currently answer.
       string still passes, both pinned by tests.
 - [ ] AC-3 — A finding id is identifiable as a finding id from the rendered pull
       request comment without opening the source.
-- [ ] AC-4 — `road-to-release-finding-ordering` records the 14.16.0 occurrence and
+- [ ] AC-4 — The `self-review-gate-cost` blocker names the documented-versus-
+      introduced class, with the ten finding ids from the 2026-09-04 run, and
+      either a chosen discriminator or a statement that none is cheap.
+- [ ] AC-5 — `road-to-release-finding-ordering` records the 14.16.0 occurrence and
       a review date consistent with two occurrences; its own AC-2 demonstration
       is untouched and still owed.

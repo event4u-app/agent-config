@@ -261,6 +261,22 @@ classifier it proposes. The first reading it takes should say so.
 Ceiling: none fired. Eight steps selected of the round's directives; the rest are
 opinions or claims, handled above.
 
+## Found while shipping this analysis — the gate cannot tell documented from introduced
+
+The self-review gate ran over this change's own pull request: six roadmaps and one
+evidence file, prose describing defects and introducing none. It reported **ten
+findings, two `high (Blocking)` security**, each mapping 1:1 to a defect this
+change *documents* — `5642305ff717` is the negation defect
+`road-to-one-negation-vocabulary` exists to fix, `e2fb09a4665b` is the swallowed
+write `road-to-defect-population-sweeps` counts.
+
+This bears directly on the round's most-repeated P0. Making the gate enforcing
+would, today, block every analysis pull request with the findings it was written
+to record, and the way to pass would be to describe defects less precisely.
+Carried as `road-to-the-unwritten-ledger` Phase 2b — a correctness precondition on
+the `self-review-gate-cost` blocker that the round's reviewers did not have,
+because none of them had run the gate over an analysis diff.
+
 ## Council rounds
 
 | question | members | rounds | quorum | verdict |
