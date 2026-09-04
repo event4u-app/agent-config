@@ -12,7 +12,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { classifyAuthorization } from '../../src/scripts/git_authorization_hook.js';
+import { classifyAuthorization, foldGrants, isRevocation } from '../../src/scripts/git_authorization_hook.js';
 import { NEGATION_CORPUS } from './fixtures/git_auth_negation_corpus.js';
 
 describe('authorization negation corpus', () => {
@@ -34,6 +34,56 @@ describe('authorization negation corpus', () => {
             expect([...got].sort(), `${c.id}: ${c.prompt}`).toEqual([...c.expect].sort());
         });
     }
+});
+
+/**
+ * The SAME corpus, read by the other function.
+ *
+ * Until 2026-09-04 these rows were fed to `classifyAuthorization` only, while
+ * `isRevocation` ran a separate negation grammar — a fixed 30-character
+ * backward window with its own inline vocabulary. The corpus could not see the
+ * disagreement because it only ever asked one of the two. Asserting both here
+ * is what makes "one negation vocabulary" a property the suite checks rather
+ * than a claim the docblock makes.
+ *
+ * Every row is asserted, including the ones that must NOT revoke — a corpus
+ * that only asserted the withdrawals would go green on a parser that revokes
+ * everything, which is the failure direction that silently costs the user their
+ * merge authority on every turn.
+ */
+describe('the same corpus, read by isRevocation', () => {
+    for (const c of NEGATION_CORPUS) {
+        it(`${c.id} — revokes=${String(c.revokes)}`, () => {
+            expect(isRevocation(c.prompt), `${c.id}: ${c.prompt}`).toBe(c.revokes);
+        });
+    }
+
+    it('a withdrawal row actually drops a standing grant, and a non-withdrawal row does not', () => {
+        // `isRevocation` is a predicate; the USER-VISIBLE consequence is what
+        // `foldGrants` does with it. Asserting only the predicate would leave
+        // the wiring untested, and the wiring is where the defect was felt: a
+        // standing grant over PR #12 survived "Merge PR #12 auf keinen Fall."
+        const prior = [
+            {
+                id: 'g1',
+                op: 'pr-merge' as const,
+                targets: [12],
+                consumed: [] as number[],
+                granted_at: '2026-09-04T00:00:00.000Z',
+                evidence: 'prior turn',
+            },
+        ];
+        const at = new Date('2026-09-04T01:00:00Z');
+        for (const c of NEGATION_CORPUS) {
+            const authorized = classifyAuthorization(c.prompt).authorized;
+            const kept = foldGrants(prior, c.prompt, authorized, 'sess', at).flatMap((g) => g.targets);
+            if (c.revokes) {
+                expect(kept, `${c.id} must drop the prior grant`).not.toContain(12);
+            } else {
+                expect(kept, `${c.id} must keep the prior grant`).toContain(12);
+            }
+        }
+    });
 });
 
 describe('the corpus asserts the property, not a phrase list', () => {
