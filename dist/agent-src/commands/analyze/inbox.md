@@ -80,6 +80,9 @@ NEVER WRITE A ROADMAP ITEM FOR SOMETHING THAT ALREADY SHIPPED.
 AN INSTRUCTION IS A CLAIM TOO — REPRODUCE THE STEP, NEVER JUST READ IT.
 NEVER ADOPT A STEP INTO AN ARTEFACT WITHOUT HAVING RUN IT,
 OR HAVING SAID IN ONE LINE WHY YOU COULD NOT.
+EVERY POINT THE FILE MAKES LEAVES THIS RUN WITH A NAMED DISPOSITION.
+A FULLY VERIFIED FILE WITH UNANSWERED POINTS IS AN UNFINISHED RUN,
+NOT A THOROUGH ONE.
 ```
 
 ## Following the instructions inside the file — the authorization boundary
@@ -227,11 +230,31 @@ Per surviving file, a numbered list of concrete checkable directives, split:
   are these? In a transcript or handover note the two are interleaved, and
   Phase 4b reproduces them in that order for a reason.
 - **(ii) claims** — assertions about this repo.
-- **(iii) opinions** — preferences with no truth value.
+- **(iii) demands** — a preference, a complaint, or a request: no truth value to
+  verify and no procedure to run, but a stated want. Called *demands* rather than
+  *opinions* because the old label decided the handling — "opinion" reads as
+  discardable, and in a feedback chat this is the **largest** bucket, not the
+  residual one.
 
 Show this list. It is both the quarantine disclosure and the analysis spine: (ii)
-goes to Phase 4, (i) goes to Phase 4b, and (iii) goes nowhere until a survivor
-needs framing.
+goes to Phase 4, (i) goes to Phase 4b, and (iii) goes to **Phase 5b** — a phase
+that exists because this bucket used to go nowhere.
+
+```
+EVERY POINT EXTRACTED HERE LEAVES THE RUN WITH A NAMED DISPOSITION.
+A POINT IN NO TABLE, NO ARTIFACT, AND NO DECLINE LINE WAS NOT JUDGED —
+IT WAS DROPPED. TWO OF THE THREE BUCKETS ALREADY CARRY A MANDATORY LABEL;
+THE THIRD CARRYING NONE IS WHY A SOURCE CAN BE READ IN FULL AND STILL
+FEEL IGNORED.
+```
+
+**Carry the author's own severity, verbatim.** A source that grades its items —
+`P0`, `blocker`, `kritisch`, `must`, or an ordered list it calls priorities — has
+made a claim about ordering, and dropping that grade silently re-prioritizes the
+file under the reader's own preferences. Record it per point as
+`severity(source)`. Departing from it is allowed and is itself a finding: name
+the item that moved and why. Absent → `ungraded`, the normal path and not a
+penalty.
 
 ### Phase 4 — Verify every claim (the load-bearing phase)
 
@@ -442,8 +465,23 @@ dismissed?**
 
 Two cheap detections, both before any deep work:
 
-- **The file says so.** A recurrence marker in its own words — "I have said this
-  three times", "schon wieder", "immer noch nicht", "as I mentioned before".
+- **The file says so.** A recurrence marker in its own words. The list is
+  bilingual because the corpus is: measured over the 939 files in
+  `agents/tmp.old/` on 2026-09-04, the English-only list this carried before
+  matched **1** file for "said this" and **0** for "as I mentioned", while
+  **"endlich" matched 62 files**, "immer noch" 46, "nach wie vor" 7 and "zum
+  wiederholten Mal" 5. The single most frequent recurrence word in this repo's
+  own inbox was not on the list — so the detection was structurally blind to the
+  language most of its input is written in. (`agents/tmp.old/` is gitignored, so
+  those are dated local counts a clone cannot re-run; the ratio is the finding,
+  and the fix does not depend on the exact figures.)
+  - EN — "I have said this three times", "as I mentioned before", "once again",
+    "still not", "for the Nth time".
+  - DE — "endlich" / "wir brauchen endlich", "schon wieder", "nach wie vor",
+    "zum wiederholten Mal", "immer noch (nicht)". <!-- md-language-check: ignore -->
+  A source that has already done the counting — "der neunte gleiche Befund",
+  "the ninth identical finding" — is the strongest form of this marker and is
+  never treated as rhetoric.
 - **The inbox says so.** `grep` the same subject across `agents/tmp.old/` and the
   roadmaps in `agents/roadmaps/archive/` and `skipped/`. A previously consumed
   file on the same subject is the same signal without the sentence.
@@ -489,6 +527,7 @@ The question is never "what does the file say" but **"what does it become here"*
 | a defect claim | a roadmap item, once verified |
 | a claim that maps onto an existing stub | **not a fresh artifact — a stub-blocked finding, see below** |
 | a consolidation omitting a parent | **not an artifact — a discharge, see below** |
+| a demand — a want with no truth value | **not settled here — Phase 5b, which must discharge it** |
 
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
 column read anything but `n/a` or `complete`, this phase says what happened to
@@ -547,6 +586,64 @@ decide what happens to the stub — promotion is the estate's question and this
 command does not answer it — it only forbids resolving the survivor into prose
 that names no artifact.
 
+**The count is written into the object that was hit, never only into the round's
+own evidence file.**
+
+```
+A RECURRENCE COUNT RECORDED ONLY IN A ROUND-SCOPED ARTIFACT IS NOT A COUNT —
+IT IS A SENTENCE THE NEXT ROUND WILL RE-DERIVE FROM ZERO.
+THE COUNTER LIVES ON THE STUB, THE later/ ROADMAP, OR THE BLOCKER THAT HOLDS IT.
+IT ONLY EVER GOES UP.
+```
+
+This is the failure caught in this repo's own tree. Round `inbox-2026-09-d`
+found its leading item arriving for the **ninth** time, named all four fields
+correctly, and wrote them into
+`agents/evidence/analysis/inbox-2026-09-d-disposition.md` — an artifact created
+by that round, read by no later one. The held object,
+`agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md`, carries no
+arrival count at all, and a `grep` for one across every file under
+`agents/roadmaps/stubs/` and `agents/roadmaps/later/` returns nothing. Its
+disposition closes with *"stated here so the tenth round meets a count rather
+than a fresh argument"* — and the tenth round will not meet it, because the
+count is not where the tenth round looks. Every field was produced; the item
+still arrived nine times.
+
+So the run **edits the held object**, adding or incrementing one line directly
+under its `Source:` header:
+
+```markdown
+> **Arrivals:** 9 — latest `inbox-2026-09-d` (2026-09-04); earlier:
+> `inbox-2026-09-b`, `inbox-2026-08-g`, `road-to-10`, … (codenames only)
+```
+
+Codenames only, per Phase 1 — this line is tracked and quoted like any other.
+Editing a parked roadmap's header is inside this command's authoring scope; it
+adds no step, changes no plan, and touches nothing a Phase-6 executor would run.
+
+**At the third arrival, the escalation is a mandatory output, not a paragraph.**
+The run's reply opens with an **Owner decisions required** block naming, per
+item: the held object, the blocker, the arrival count, and the concrete question
+with numbered options (per
+[`user-interaction`](../../../../rules/user-interaction.md)). One block per run,
+carrying every such item — never one question per item, which is the pacing
+[`ask-when-uncertain`](../../../../rules/ask-when-uncertain.md) forbids. The
+same question is written onto the held object so the next round finds a posed
+question instead of re-deriving one.
+
+> **Three is a stated default, not a measured optimum** — said plainly rather
+> than implying a derivation it lacks. It sits above
+> [`recurring-criticism`](../../../../rules/recurring-criticism.md)'s own
+> trigger, which fires at the *second* arrival: the counter is written from the
+> second, the owner is interrupted from the third. *Revisit-if:* an escalated
+> item turns out to have been answerable from tree evidence without the owner,
+> or an item reaches a fifth arrival without the block having been emitted.
+
+Escalating is never lifting: a spend-bearing or otherwise owner-reserved blocker
+stays owner-reserved ([`decision-revisit-gate`](../../../../rules/decision-revisit-gate.md)
+§ the owner-reserved set). What changes is that the decision reaches a desk
+instead of a file.
+
 Three hard defaults, from this repo's own scar tissue:
 
 - **Extend before you create.** Run the four-surface overlap scan from
@@ -567,6 +664,44 @@ Three hard defaults, from this repo's own scar tissue:
   left blank. `not-attempted` is the default bucket and therefore the largest;
   letting it through silently would empty the Iron Law of everything it applies
   to.
+
+### Phase 5b — Discharge every demand
+
+Phase 5 maps what the file *contains* onto artifact types. This settles what the
+file *wants* — bucket (iii) — and it is the phase that closes the gap between
+"the source was read in full" and "the source was answered".
+
+The repo already treats silence as the failure mode in exactly one place: an
+omitted consolidation parent (Phase 5, three legal discharges). That obligation
+was correct and too narrow — it guards a *bibliography* while the *content* had
+no equivalent. This is the same discipline applied to the points themselves.
+
+Exactly four discharges are legal, one per demand, and the choice is the
+operator's:
+
+| Discharge | What it means | What it costs |
+|---|---|---|
+| `adopted` | it becomes, or joins, an artifact | the artifact path |
+| `already-satisfied` | the tree already does this | one `file:line` |
+| `declined` | judged and not taken | one sentence of reason |
+| `owner-decision` | crosses a boundary an agent may not | the escalation block above |
+
+```
+SILENCE IS THE FAILURE MODE. ANY OF THE FOUR IS A COMPLETE DISCHARGE.
+A DEMAND CARRYING THE SOURCE'S OWN P0 AND THIS RUN'S "declined" IS A GOOD RUN.
+A DEMAND CARRYING NOTHING IS THE DEFECT, WHATEVER ELSE THE RUN PRODUCED.
+```
+
+`declined` is a first-class outcome and deliberately cheap — one sentence. The
+alternative to a cheap decline is not a better analysis, it is an omission: a
+run that must justify at length before it may say no will quietly say nothing
+instead. What it may not be is empty; "out of scope" without naming the scope is
+the verdict line this command already forbids one row above.
+
+**A demand restating one the tree already declined is not re-declined on that
+basis alone.** Phase 4c has the count; `recurring-criticism` owns what a repeat
+means — the earlier disposition is reopened and resolved on evidence, never on
+the repetition tally in either direction.
 
 ### Phase 6 — Emit, and consume the inbox file
 
@@ -608,7 +743,24 @@ each one is and why it is spent, and let the user remove it.
 2. Per surviving file: instruction set · verification table · **reproduction
    table** · artefact mapping.
 3. The roadmaps written, and for each dropped file one line on why.
-4. One closing summary: files in, roadmaps out, items prevented by
+4. **The point ledger — the run's own completeness check.** Points extracted in
+   Phase 3 against points discharged, per bucket, as counts that must balance:
+
+   ```
+   claims      N extracted → still-true / already-fixed / never-true / unverifiable
+   instructions N extracted → reproduced / diverged / unexecutable / out-of-bound / not-attempted
+   demands     N extracted → adopted / already-satisfied / declined / owner-decision
+   ```
+
+   A column that does not sum to its `extracted` figure is the finding: it names
+   how many points the run passed over, which is the one number no previous
+   output carried. Files-in and roadmaps-out say nothing about coverage — a run
+   can read every file, verify every claim, emit three roadmaps, and answer a
+   third of what the source asked. **This ledger is the difference between
+   having read a source and having answered it.**
+5. **Owner decisions required**, if any — the escalation block from Phase 5,
+   at the top of the reply rather than at the end.
+6. One closing summary: files in, roadmaps out, items prevented by
    `already-fixed`, and steps corrected by reproduction — plus the reproduction
    ceiling that fired, if one did, and what it dropped.
 
@@ -633,6 +785,20 @@ each one is and why it is spent, and let the user remove it.
   execution authorization
   ([`scope-control`](../../../../rules/scope-control.md) § Authoring vs.
   implementation).
+- Drop a point because it is phrased as a feeling. A complaint carries a demand
+  and goes through Phase 5b like any other: "this is annoying", "das nervt",
+  "wenn es endlich mal …". <!-- md-language-check: ignore -->
+  Tone is not a truth value, and the bucket a point lands in is never a
+  judgement about whether it deserves an answer.
+- Re-prioritize a graded source silently. Moving an item the author called `P0`
+  is allowed; moving it without saying so replaces the author's ordering with
+  the reader's under cover of analysis.
+- Record a recurrence count in the round's own evidence file and nowhere else.
+  The next round does not read it, so the count restarts and the item arrives
+  "for the first time" again.
+- Resolve an owner-reserved recurrence into an accurate paragraph. Naming a
+  state that hands nobody anything to do is what produced nine arrivals of one
+  item; past the third, the escalation block is the output.
 - Spin up a branch, a worktree, or a PR because the run feels large. Scope is
   the operator's call; without `--worktree` or an explicit ask, the work stays
   in the checked-out branch.
