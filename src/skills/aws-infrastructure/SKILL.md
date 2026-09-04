@@ -127,6 +127,47 @@ are typically managed via **Terraform + Terragrunt** in a separate infrastructur
 
 See the `terraform` and `terragrunt` skills for general IaC conventions.
 
+### Least privilege and permissive defaults
+
+The conventions above describe how this project deploys. This section is the
+floor underneath them, and it holds whether or not a given resource is managed
+here or in the infrastructure repo.
+
+- **Least-privilege IAM, always.** A task role, an OIDC role, or an execution
+  role enumerates its actions and its resource ARNs. `Action: *` and
+  `Resource: *` are not shorthand for "we will scope it later" - one
+  compromised task credential then reaches every service and object in the
+  account. A wildcard needs a named, reviewed exception written beside it.
+- **Least-privilege networking.** A security group opens a port to the
+  narrowest source that works: another security group id, a prefix list, a
+  known CIDR. An internet-wide source belongs to a public listener and nothing
+  else.
+- **Permissive defaults are decisions.** A bucket with no public-access block,
+  a database with `publicly_accessible` left true, a volume or snapshot with no
+  encryption block - each of these works either way, which is why it survives
+  review. Treat an absent security block as a finding, not as a silence.
+- **Credentials come from Secrets Manager, never from a vars file.** A literal
+  password, token, or key in a `.vars.yaml` or a task-definition template is
+  the same defect as one in `.tf`, and the state and template files are as
+  readable as the code.
+
+Do not restate the mitigation here. The abuse case, the required controls, and
+the negative test for each of the four live in the `infrastructure` surface
+class of [`threat-modeling`](../threat-modeling/SKILL.md)'s corpus, which is
+their single authority. Ask that skill's grounded-corpus step for the
+`infrastructure` surface class - it carries the invocation - describing the
+change, e.g. *iam role with a wildcard action*.
+
+Those rows carry a `Decided by:` clause naming the check that actually decides
+each one. For the IAM, networking, storage, and encryption rows it reads NO
+CHECK IN THIS REPOSITORY; only the credential-in-a-file row names a real gate.
+Nothing here parses IAM policy documents or cloud config, so the discipline
+above is the enforcement, and saying otherwise would claim coverage this
+package does not have.
+
+See also the `terraform` skill's *Permissive defaults and missing security
+blocks* section for the backstop greps over a `.tf` tree.
+
 ## Output format
 
 1. Modified infrastructure config/template files
