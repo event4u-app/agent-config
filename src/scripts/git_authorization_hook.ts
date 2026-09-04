@@ -296,20 +296,22 @@ const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
   // "never auto-merge" each returned ["pr-merge"] — a prompt saying DO NOT
   // MERGE authorized a merge. The noun-sense lookahead was never a negator.
   //
-  // The lookBEHIND is line-scoped by `[^.!?\n]` on purpose, the same scoping
-  // `turn_end_gate_hook.ts` uses for its own negation exclusion (`:330`) and
-  // its negated-claim window (`:490-493`). A sentence boundary ends a
-  // negation's reach: "Do not push. Merge PR #12." is two instructions, and a
-  // guard that let the first suppress the second would silently stop
-  // authorizing merges the user DID order — the failure mode that is worse
-  // than the defect, because nothing happens and nothing says why.
-  //
-  // Reusing that vocabulary rather than inventing a third is deliberate: two
+  // The inline negative lookBEHIND that used to live in this pattern was
+  // REMOVED on 2026-09-03, and its own comment is why. It warned that "two
   // negation vocabularies in one tree drift, and the drift is invisible until
-  // a prompt lands in the gap between them.
+  // a prompt lands in the gap between them" — and by then they had drifted:
+  // `negatedBefore` became clause-scanned in both directions while this
+  // lookbehind stayed a blind 30-character window with no forward half. The
+  // prompt that landed in the gap is `"nicht pushen, aber mergen"`, which the
+  // lookbehind refused (13 characters, inside its window, across a contrast
+  // cue it could not see) while the clause scan correctly authorizes it.
+  //
+  // Every phrase match already passes through `negatedBefore` at the call
+  // site, so the guard is not weakened by the removal — it is applied once,
+  // by the one vocabulary this file's comment asked for.
   {
     op: "pr-merge",
-    re: /(?<!\b(nicht|nichts|kein(e|en|em|er|es)?|niemals|nie|no|not|dont|don't|never|without|ohne)\b[^.!?\n]{0,30})\b(merge|merg(e|en|st|t)|zusammenf(ü|ue)hren|reinmergen)\b(?!\s*[- ]?(conflict|konflikt|commit|base|queue|state|status))/i,
+    re: /\b(merge|merg(e|en|st|t)|zusammenf(ü|ue)hren|reinmergen)\b(?!\s*[- ]?(conflict|konflikt|commit|base|queue|state|status))/i,
   },
   // A tag is an ACTION here — bare "Tag" is the German word for day, and
   // "Version" is an ordinary noun. Both authorized a BLOCK op before this.
@@ -450,15 +452,26 @@ export function isInterrogative(prose: string): boolean {
   if (!t) {
     return false;
   }
+  // An explicit trailing question mark OUTRANKS the imperative escape below.
+  // Measured 2026-09-03: the escape ran first, so "Can you do the release
+  // now?" needed `now` to stay OUT of the imperative list to be read as a
+  // question — which left `now` absent while its German counterpart `jetzt`
+  // was present, and "Do the release now." was therefore classified a question
+  // and authorized nothing while "Do the release jetzt." authorized `release`.
+  // Ordering the `?` first is what makes closing that parity gap safe: it is a
+  // NARROWING (more prompts read as questions), and it lets the widening below
+  // be a one-word list addition rather than a trade.
+  if (/\?\s*$/.test(t)) {
+    return true;
+  }
   const hasImperative =
-    /\b(mach|mache|bitte|leg|lege|erstell|erstelle|f(ü|ue)hr|f(ü|ue)hre|setz|setze|starte|los|jetzt|go ahead|do it|ja[,.]?\s|ok[,.]?\s)\b/i.test(
+    /\b(mach|mache|bitte|leg|lege|erstell|erstelle|f(ü|ue)hr|f(ü|ue)hre|setz|setze|starte|los|jetzt|now|asap|go ahead|do it|ja[,.]?\s|ok[,.]?\s)\b/i.test(
       t,
     );
   if (hasImperative) {
     return false;
   }
   return (
-    /\?\s*$/.test(t) ||
     /^(was|wie|warum|wieso|weshalb|wann|wer|welche[rs]?|wo|ist|sind|kann|kannst|k(ö|oe)nnen|soll|sollen|darf|d(ü|ue)rfen|why|what|how|when|which|who|is|are|can|could|should|does|do)\b/i.test(
       t,
     )
@@ -608,13 +621,43 @@ export interface Ledger extends JsonObject {
  * capability to a sentence that never identified an object, which is the exact
  * conflation of lexical and object specificity both council seats rejected.
  */
+/** One-line, bounded rendering of a caught value for a diagnostic. */
+function _errText(err: unknown): string {
+  const t = err instanceof Error ? err.message : String(err);
+  return t.replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
+/**
+ * The largest pull-request number GitHub can issue: a signed 32-bit integer.
+ *
+ * Taken from the API contract rather than estimated, and shared by the mint
+ * site here and the consume site in `hooks/block_unauthorized_git.ts` so the
+ * two cannot drift — the failure this file already learned once with its
+ * negation vocabulary.
+ */
+export const PR_NUMBER_MAX = 2147483647;
+
 export function extractMergeTargets(prompt: string): number[] {
   const out = new Set<number>();
-  const re = /(?:#|\bpr[- ]?|\bpull[- ]request\s+#?)(\d{1,7})\b/giu;
+  // The BOUND comes from the API contract, not from a guess: GitHub issue and
+  // pull-request numbers are a signed 32-bit integer, so ten digits is the
+  // lexical ceiling and `PR_NUMBER_MAX` is the real one. The old `\d{1,7}` was
+  // neither — an eight-digit number simply failed to match, and since the
+  // `\b` sits after digit seven it failed SILENTLY rather than out of range.
+  //
+  // Widening here is required for the consume-side widening to do anything at
+  // all: this is where a grant's target set is frozen, so a target that cannot
+  // be MINTED can never be matched however well it resolves later.
+  //
+  // The `#` / `PR ` prefix requirement is deliberately unchanged. Over-matching
+  // here would hand a clockless capability to a sentence that never identified
+  // an object, which is the conflation of lexical and object specificity both
+  // council seats rejected.
+  const re = /(?:#|\bpr[- ]?|\bpull[- ]request\s+#?)(\d{1,10})\b/giu;
   let m: RegExpExecArray | null;
   while ((m = re.exec(prompt)) !== null) {
     const n = Number.parseInt(m[1] as string, 10);
-    if (Number.isSafeInteger(n) && n > 0) {
+    if (Number.isSafeInteger(n) && n > 0 && n <= PR_NUMBER_MAX) {
       out.add(n);
     }
   }
@@ -725,21 +768,162 @@ const NEGATION_WORD =
  * says why. The 30-character window inside the sentence is inherited from the
  * `pr-merge` lookbehind that this generalises.
  */
-export function negatedBefore(text: string, index: number, matched = ""): boolean {
+const CONTRAST_CUE = /\b(aber|sondern|jedoch|but|however|instead)\b/gi;
+
+/**
+ * Abbreviation and decimal dots are NOT sentence boundaries.
+ *
+ * MEASURED. `"Du sollst nicht z.B. den PR #12 mergen."` authorized `pr-merge`
+ * at 022c0d240: the boundary scan took the second dot of `z.B.` as the sentence
+ * start, which put the window at `" den PR #12 "` and left `nicht` out of
+ * scope. `"Nach Release 1.5 bitte nicht mergen."` fails the same way on the
+ * decimal point.
+ *
+ * Two rules, both narrow on purpose. A dot is not a boundary when it sits
+ * between digits, or when the word-ish token ending at it is a known
+ * abbreviation — including a single letter, which is what makes `z.B.` two
+ * non-boundaries rather than one.
+ */
+const ABBREVIATION_BEFORE_DOT =
+  /(?:^|[\s("'\u2018\u201c])(?:[a-z]|z\.b|bzw|ca|usw|d\.h|u\.a|evtl|ggf|inkl|max|min|nr|abb|e\.g|i\.e|etc|vs|approx|fig|no|st|dr|prof)\.$/i;
+
+function isSentenceBoundary(text: string, at: number): boolean {
+  const mark = text[at];
+  if (mark !== ".") {
+    return true;
+  }
+  if (/\d/.test(text[at - 1] ?? "") && /\d/.test(text[at + 1] ?? "")) {
+    return false;
+  }
+  return !ABBREVIATION_BEFORE_DOT.test(text.slice(0, at + 1));
+}
+
+/** Bounds of the sentence containing `index`, abbreviation- and decimal-aware. */
+export function sentenceBounds(text: string, index: number): { start: number; end: number } {
   let start = 0;
-  for (const mark of [".", "!", "?", "\n"]) {
-    const at = text.lastIndexOf(mark, index - 1);
-    if (at + 1 > start) {
-      start = at + 1;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const c = text[i] as string;
+    if ((c === "." || c === "!" || c === "?" || c === "\n") && isSentenceBoundary(text, i)) {
+      start = i + 1;
+      break;
     }
   }
-  const before = text.slice(Math.max(start, index - 30), index);
+  let end = text.length;
+  for (let i = index; i < text.length; i += 1) {
+    const c = text[i] as string;
+    if ((c === "." || c === "!" || c === "?" || c === "\n") && isSentenceBoundary(text, i)) {
+      end = i;
+      break;
+    }
+  }
+  return { start, end };
+}
+
+/**
+ * Split prose into sentences on the same boundaries `sentenceBounds` uses, so
+ * an abbreviation or a decimal point cannot split one instruction into two.
+ */
+export function _sentences(text: string): string[] {
+  const out: string[] = [];
+  let from = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i] as string;
+    if ((c === "." || c === "!" || c === "?" || c === "\n") && isSentenceBoundary(text, i)) {
+      out.push(text.slice(from, i + 1));
+      from = i + 1;
+    }
+  }
+  if (from < text.length) {
+    out.push(text.slice(from));
+  }
+  return out.filter((t) => t.trim() !== "");
+}
+
+/** Last clause boundary at or before `to`, within `[from, to)`. */
+function clauseStart(text: string, from: number, to: number): number {
+  let start = from;
+  const seg = text.slice(from, to);
+  for (let i = seg.length - 1; i >= 0; i -= 1) {
+    const c = seg[i] as string;
+    if (c === "," || c === ";" || c === ":") {
+      start = from + i + 1;
+      break;
+    }
+  }
+  CONTRAST_CUE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = CONTRAST_CUE.exec(seg)) !== null) {
+    const after = from + m.index + m[0].length;
+    if (after > start) {
+      start = after;
+    }
+  }
+  return start;
+}
+
+/** First clause boundary at or after `from`, within `(from, to]`. */
+function clauseEnd(text: string, from: number, to: number): number {
+  const seg = text.slice(from, to);
+  let end = to;
+  const punct = seg.search(/[,;:]/);
+  if (punct !== -1) {
+    end = from + punct;
+  }
+  CONTRAST_CUE.lastIndex = 0;
+  const m = CONTRAST_CUE.exec(seg);
+  if (m !== null && from + m.index < end) {
+    end = from + m.index;
+  }
+  return end;
+}
+
+/**
+ * Is the match at `index` under a negation?
+ *
+ * MEASURED, not anticipated. Probed on 2026-09-03 against the fifteen phrases
+ * added that day: **15 of 15 leaked** — "nicht unpublishen", "den workflow nicht
+ * deaktivieren", "kein force-push bitte" each authorized exactly the operation
+ * the sentence forbade. The same probe showed the hole predates them, since
+ * "kein force-push bitte" also authorized a plain `push` and "den branch nicht
+ * löschen" also authorized `branch`. Only `pr-merge` was protected, by a
+ * lookbehind written after the identical defect was found there in isolation.
+ *
+ * SENTENCE-SCOPED, and that bound is load-bearing rather than decorative.
+ * "Do not push. Merge PR #12." is two instructions, and a negation whose reach
+ * crossed the full stop would silently stop authorizing merges the user DID
+ * order — a failure worse than the defect, because nothing happens and nothing
+ * says why.
+ *
+ * CLAUSE-SCANNED IN BOTH DIRECTIONS since 2026-09-03, replacing a fixed
+ * 30-character lookbehind inherited from the `pr-merge` pattern. Four shapes
+ * leaked past that window, all measured at 022c0d240:
+ *
+ *   "Merge PR #12 auf keinen Fall."          negation AFTER the match
+ *   "Merge #12 under no circumstances."      negation AFTER the match
+ *   "Du sollss nicht z.B. den PR #12 mergen." abbreviation dot cut the sentence
+ *   "Bitte unter keinen Umstaenden … mergen"  38-44 chars, past the 30 window
+ *
+ * The scan runs to the nearest CLAUSE boundary rather than to the sentence
+ * bound, and that half is what keeps the widening from over-denying: a comma,
+ * a semicolon, a colon or a contrast cue ends the scan. Without it,
+ * "I do not want to wait any longer, please merge PR #12" would read as
+ * negated and silently refuse a merge the user ordered — the failure the
+ * sentence bound above exists to prevent, reintroduced one level down. With
+ * it, "Merge PR #123, but do not push to production." keeps authorizing the
+ * merge and keeps denying the push, which is the only reading a human gives it.
+ */
+export function negatedBefore(text: string, index: number, matched = ""): boolean {
+  const { start, end } = sentenceBounds(text, index);
+  const before = text.slice(clauseStart(text, start, index), index);
+  const afterFrom = index + matched.length;
+  const after =
+    afterFrom < end ? text.slice(afterFrom, clauseEnd(text, afterFrom, end)) : "";
   // The negation is often INSIDE the match, not before it, and German word
   // order is why: "das asset nicht ersetzen" is matched by a noun-first pattern
   // that starts at "asset", so a look-behind from the match index sees an empty
   // window. Measured — nine of the fifteen rows in the negation corpus failed
   // exactly this way after the look-behind alone was added.
-  return NEGATION_WORD.test(before) || NEGATION_WORD.test(matched);
+  return NEGATION_WORD.test(before) || NEGATION_WORD.test(matched) || NEGATION_WORD.test(after);
 }
 
 /** Classify which ops a prompt authorizes. Exported for direct testing. */
@@ -758,11 +942,30 @@ export function classifyAuthorization(prompt: string): {
     .filter((l) => !OUTPUT_LINE.test(l))
     .join("\n");
 
-  for (const { op, re } of isInterrogative(instruction) ? [] : PHRASES) {
-    const m = re.exec(instruction);
-    if (m && !negatedBefore(instruction, m.index, m[0])) {
-      authorized.add(op);
-      evidence[op] = `prose: "${m[0]}"`;
+  // PER SENTENCE, not per prompt. `isInterrogative` reads a leading "Do " as a
+  // question, so `"Do not push. Merge PR #12."` classified the WHOLE block as
+  // interrogative and authorized nothing — a merge the user ordered in the
+  // second sentence, silently dropped because of the first word of the first.
+  // Measured at 022c0d240, and the archived roadmap that added the check had
+  // already recorded it as pre-existing. `"Do the release now. Merge PR #12."`
+  // and `"Is everything green. Merge PR #12."` fail the same way.
+  //
+  // The bound this restores is the one `question-not-instruction` states: a
+  // question sentence authorizes nothing, and an instruction sentence beside
+  // it still does. A genuine question is still refused whole —
+  // `"was macht npm publish eigentlich genau?"` is one sentence and stays
+  // denied.
+  for (const { op, re } of PHRASES) {
+    for (const sentence of _sentences(instruction)) {
+      if (isInterrogative(sentence)) {
+        continue;
+      }
+      const m = re.exec(sentence);
+      if (m && !negatedBefore(sentence, m.index, m[0])) {
+        authorized.add(op);
+        evidence[op] = `prose: "${m[0]}"`;
+        break;
+      }
     }
   }
 
@@ -868,10 +1071,20 @@ export function consumeGrantTarget(
   if (touched) {
     try {
       atomic_write_json(file, decoded as JsonObject);
-    } catch {
-      /* Observability only. A failed write leaves the target unspent, which
-         re-allows one merge of a PR the user did authorize by name — it fails
-         toward the user's stated intent, never toward an unauthorized target. */
+    } catch (err) {
+      /* The FAILURE DIRECTION is unchanged and still defensible: a failed write
+         leaves the target unspent, which re-allows one merge of a PR the user
+         did authorize by name — it fails toward the user's stated intent, never
+         toward an unauthorized target. What changed on 2026-09-03 is that it is
+         no longer INVISIBLE. "Observability only" was the reason given for
+         writing nothing, which inverted the word: a grant that silently fails
+         to be consumed is a capability that outlives its single use, and the
+         operator has no way to know. */
+      process.stderr.write(
+        `git-authorization: grant-consumption write failed (${_errText(err)}) — ` +
+          "the target stays UNSPENT, so one further merge of a PR the user named " +
+          "will still be authorized. Authorization outcome unchanged.\n",
+      );
     }
   }
 }
@@ -1005,10 +1218,19 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
 
   try {
     atomic_write_json(path.join(options.consumer_root, ledgerFileFor(session)), ledger);
-  } catch {
-    // Observability only — a failed write degrades the gate to "no ledger",
-    // which the pre_tool_use concern treats as "not authorized" for the
-    // irreversible subset and as a warn for the rest.
+  } catch (err) {
+    // The SIBLING of the swallow in `consumeGrantTarget`, and named here
+    // because AC-5 describes a behavioural class rather than one call site:
+    // fixing one and leaving the other would have made the acceptance claim
+    // half true. Same reasoning, different degradation — a failed write here
+    // degrades the gate to "no ledger", which the pre_tool_use concern treats
+    // as "not authorized" for the irreversible subset and as a warn for the
+    // rest, so the direction is fail-closed and still unchanged.
+    process.stderr.write(
+      `git-authorization: session-ledger write failed (${_errText(err)}) — ` +
+        "the gate degrades to \"no ledger\" for this session, which denies the " +
+        "irreversible subset and warns on the rest. Authorization outcome unchanged.\n",
+    );
   }
   return EXIT_ALLOW;
 }
