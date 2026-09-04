@@ -98,8 +98,8 @@ surface_tier: core
 token_passport:
   basis: chars/4
   catalog_tokens: 3647
-  commands_tokens: 224284
+  commands_tokens: 225648
   other_tokens: 1298
   rules_tokens: 65236
-  total_tokens: 294465
+  total_tokens: 295829
 trust_level_default: core

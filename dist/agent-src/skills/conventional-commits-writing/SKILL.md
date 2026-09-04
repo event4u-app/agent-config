@@ -63,14 +63,30 @@ Check for the parser before you trust the prevalence.
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
-grep -rniE 'commit|conventional' CONTRIBUTING.md docs/CONTRIBUTING.md 2>/dev/null | head
-grep -rniE 'semantic-release|changesets|git-cliff|conventional-changelog|commitlint' \
+grep -rniE 'semantic-release|git-cliff|conventional-changelog|release-please|commitlint' \
   package.json composer.json pyproject.toml Cargo.toml .github/workflows/ .gitlab-ci.yml \
   2>/dev/null | head
 ```
 
-A hit ends the procedure — that is the convention, and no measurement can
-outrank it. Say which file answered.
+**Every one of these produces candidates, not verdicts — open the file before
+you act on the hit.** A `commit.template` proves a template exists, not that it
+constrains the subject: a `.gitmessage` carrying only a body checklist ends
+nothing. `CONTRIBUTING.md` is prose and cannot be grepped for a convention —
+`grep -i commit` matches "please commit early and often" — so read its commits
+section if it has one and take the grammar from the sentences, not from the
+match. Only a **confirmed** source ends the procedure, and when it does, say
+which file answered.
+
+`changesets` is deliberately not in the parser list: it reads `.changeset/*.md`
+files and never parses a commit subject, so its presence says nothing about the
+convention. The four that do parse subjects — semantic-release, git-cliff,
+conventional-changelog, release-please — count only when the hit is a real
+dependency or a wired job, not a mention in a comment.
+
+The tier table above calls a confirmed hit Class A. That is exact for a machine
+-readable config and loose for `CONTRIBUTING.md`, which carries no digest and is
+read by a human judgement — treat a prose source as tier 1 in **precedence** and
+as a quoted sentence in the report, so the next reader can check it.
 
 ### 2. Sample the history — native source per dimension
 
@@ -85,51 +101,101 @@ is a valid, honest result for each:
 | PR title shape | forge API (`gh pr list`) | only with forge access |
 | Granularity (atomic vs batched) | per-commit diff stat | **no** where the repo squash-merges — the evidence was destroyed at merge |
 
+Resolve the trunk explicitly. `origin/HEAD` is set by `git clone` and is absent
+in a `git init` + `git remote add` checkout, in many CI checkouts and in
+worktrees, where the sample command would die rather than return nothing:
+
 ```bash
-git log --first-parent origin/HEAD --no-merges -n 200 \
-  --since='24 months ago' --pretty=format:'%aN%x09%aE%x09%s'
+TRUNK=$(git symbolic-ref -q --short refs/remotes/origin/HEAD)
+[ -n "$TRUNK" ] || TRUNK=$(git rev-parse -q --verify origin/main >/dev/null && echo origin/main)
+[ -n "$TRUNK" ] || TRUNK=$(git rev-parse -q --verify origin/master >/dev/null && echo origin/master)
+[ -n "$TRUNK" ] || TRUNK=HEAD          # no remote at all: this checkout is the trunk
+git log "$TRUNK" --no-merges -n 200 --since='24 months ago' \
+  --pretty=format:'%H%x09%aN%x09%aE%x09%s'
 ```
 
-`--first-parent` keeps the trunk's own commits; `--no-merges` drops merge
-commits. Then drop, from the sample:
+**`--first-parent` is deliberately absent.** On a merge-commit workflow the
+trunk's first-parent chain is merge commits, which `--no-merges` then drops —
+the two together leave only what was committed straight to the trunk, which on
+a PR-based repo is nearly nothing. The convention lives in the feature commits,
+so walk the whole reachable history and exclude merges alone.
+
+The terminal `HEAD` matters as much as the first line: a chain that ends with an
+unset `TRUNK` hands `git log` an empty argument, which walks `HEAD` anyway —
+silently doing the right thing on a local repo while hiding that the resolution
+failed on one where it should not have.
+
+`%H` leads the format because two of the exclusions below need the commit, not
+just its subject. Drop, from the sample:
 
 - **bot authors** — `[bot]`, `dependabot`, `renovate`, `github-actions`,
   `semantic-release`, `release-please`;
 - **automation subjects** — `^Revert `, `^Merge `, `chore(release)`,
   `^Bump `, a bare `v?\d+\.\d+\.\d+`;
-- **bulk imports** — any single commit touching > 500 files.
+- **bulk imports** — resolve with the hash the format carries:
+  `git show --stat --oneline <sha> | tail -1` and drop anything over 500 files.
+  Check this only for the handful of subjects that read like an import; running
+  it per commit costs 200 subprocesses to remove two rows.
 
 ### 3. Classify each surviving subject
 
-Match in order; first hit wins, `other` is the fallthrough:
+Match in order, first hit wins. These are POSIX extended regular expressions,
+given outside a table because a markdown cell would need the alternation pipes
+escaped and `\|` in ERE is a literal pipe, not an alternation:
 
-| Family | Shape |
-|---|---|
-| `conventional` | `^(build\|chore\|ci\|docs\|feat\|fix\|perf\|refactor\|revert\|style\|test)(\(.+\))?!?: ` |
-| `ticket-prefix` | `^\[?[A-Z][A-Z0-9]+-\d+\]?[:\ ]` |
-| `gitmoji` | leading `:shortcode:` or emoji |
-| `imperative-plain` | no marker, capitalised verb first, no trailing period |
-| `other` | anything else |
+```
+conventional      ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+ticket-prefix     ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
+imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
+other             everything else
+```
+
+`imperative-plain` is deliberately mechanical — capitalised first word, no
+trailing period — and does **not** test for the imperative mood. Mood needs a
+verb lexicon this procedure does not ship, and `Update` versus `Updated` is
+exactly the pair a lexicon-free test cannot separate. That is a stated limit of
+the classifier, not a gap to fill by guessing: a repo whose only distinction
+from Conventional is mood will read as `imperative-plain` either way, and the
+mood question belongs in the ask at step 6.
+
+`classifier_version` in step 7 names the revision of THIS section — the five
+patterns above plus the exclusions in step 2. It is a provenance stamp so a
+later measurement can be compared against a like one; it does not claim an
+executable classifier ships anywhere in the tree.
 
 Record the runner-up family too — a near-tie is itself the finding.
 
-### 4. Aggregate, capped per author
+### 4. Aggregate, capped per author, per half
 
 Raw commit counts let one prolific author or an unfiltered bot define the house
 style; one-vote-per-author lets a drive-by contributor with two commits veto it.
-Cap instead: **each author contributes at most 20 commits** to the tally, then
-compute the dominant family's share of the capped total.
+Cap instead: split the sample into a newer and an older half by position first,
+then let **each author contribute at most 20 commits to each half**. Capping the
+sample as a whole would let one author's newest 20 fill their entire quota and
+empty the older half, which is precisely where step 5's coherence check has to
+look.
+
+Compute the dominant family's share over the **capped** total, and report that
+total — a percentage quoted against the raw eligible count describes a statistic
+nobody computed.
+
+With fewer than three authors the cap is **off**: there is no dominance to guard
+against, and a cap of 20 would put the single-maintainer bar's own `n ≥ 30`
+out of reach of its denominator.
 
 ### 5. The evidence bar
 
 A measured convention is eligible to be proposed only when **all** hold:
 
 - **n ≥ 30** eligible commits after exclusions;
-- **≥ 3 distinct human authors** — or, for a single-maintainer repo, n ≥ 30 and
-  a **≥ 90 %** share;
-- **≥ 80 %** capped-weighted share for the dominant family;
-- **temporal coherence** — the same family is dominant in the newest half of
-  the sample *and* in the preceding half. If the halves disagree materially the
+- **≥ 80 %** capped-weighted share for the dominant family, over **≥ 3 human
+  authors** — or, with **one or two** authors, an uncapped **≥ 90 %** share over
+  n ≥ 30. Two authors take the stricter branch rather than falling between the
+  two: a two-person repo is a small-team repo, and leaving it unreachable by
+  both branches would make the measurement permanently advisory there;
+- **temporal coherence** — the same family is dominant in the newer half of
+  the sample *and* in the older half. If the halves disagree materially the
   repository is **migrating**: abstain, name the change point, and use the
   newer half's family only if it independently clears the bar.
 
@@ -147,8 +213,9 @@ Below the bar, or on a migrating repo: use Conventional Commits and say so
 **once**, in one line, when a commit is actually requested. Do not ask.
 
 At or above the bar, ask once, as numbered options (per `user-interaction`):
-name the family, the share, the sample size, the author count, and — if a
-tier-1 parser exists — the tooling that would stop parsing.
+name the family, the share **and the capped total it was computed over**, the
+author count, and — if a tier-1 parser exists — the tooling that would stop
+parsing.
 
 ### 7. Persist the answer where the next session finds it
 
@@ -158,7 +225,7 @@ approval is what moves it to `approved/`. Carry `observed_n`,
 `dominant_share`, `author_count`, `sample_window`, `classifier_version`, and
 `confirm_against` — aggregates only, never per-author identities. Re-measure
 and re-review when the share falls below **70 %**, when a tier-1 source
-appears, or when the newest half's family changes.
+appears, or when the newer half's family changes.
 
 ## What a measurement may never lower
 
