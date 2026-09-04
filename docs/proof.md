@@ -200,10 +200,10 @@ shipping theater; the full per-cell data is committed at
 `internal/bench/reports/persona-placebo.json`.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **40 of 299** skills carry a behavioural
+as good as its measurement. Today **42 of 299** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
 `rich` + routers) are **fully covered (35 of 35)**, the long tail
-(5 of 264) is not. We publish that gap rather than imply
+(7 of 264) is not. We publish that gap rather than imply
 "299 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
