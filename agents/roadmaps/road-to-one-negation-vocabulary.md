@@ -77,7 +77,7 @@ each other on a corpus row asserted green
 
 ## Phase 1 — One implementation, both callers
 
-- [ ] **1.1 Route `isRevocation` through the clause-scoped negation check.**
+- [x] **1.1 Route `isRevocation` through the clause-scoped negation check.**
       The negated-merge alternation of `REVOKE_RE` (`:676`) is replaced by a call
       into the same `sentenceBounds` / `clauseStart` / `clauseEnd` /
       `NEGATION_WORD` machinery `negatedBefore` (`:915-927`) uses, so the
@@ -89,14 +89,14 @@ each other on a corpus row asserted green
       circumstances."` and `"Merge PR #12? Actually, don't."` each return
       `isRevocation === true`, and `foldGrants` drops a prior `[[12]]` grant on
       each — run against the real module, not a re-implementation.
-- [ ] **1.2 Fix the opposite-direction contradiction.** With 1.1 landed,
+- [x] **1.2 Fix the opposite-direction contradiction.** With 1.1 landed,
       `"Please do not push, but merge PR #7."` must not be read as a revocation:
       the contrast cue that makes `classifyAuthorization` return `["pr-merge"]`
       is now visible to the revocation path too.
       verify: that prompt returns `isRevocation === false` and
       `classifyAuthorization === ["pr-merge"]`, and `foldGrants` leaves a prior
       grant intact.
-- [ ] **1.3 State the shared-parser property where the next reader will look.**
+- [x] **1.3 State the shared-parser property where the next reader will look.**
       One line in `NEGATION_WORD`'s docblock (`:743-748`) naming both callers, so
       the "one vocabulary" claim is checkable against the code rather than
       aspirational.
@@ -106,8 +106,9 @@ each other on a corpus row asserted green
 
 ## Phase 2 — The corpus reaches both functions
 
-- [ ] **2.1 Run the negation corpus against `isRevocation`.**
-      `tests/scripts/fixtures/git_auth_negation_corpus.ts` (20 rows) is fed only
+- [x] **2.1 Run the negation corpus against `isRevocation`.**
+      `tests/scripts/fixtures/git_auth_negation_corpus.ts` (19 rows — the step
+      said 20; the file holds 19 and always did) is fed only
       to `classifyAuthorization`
       (`tests/scripts/git_auth_negation_corpus.test.ts:15,32`). Every row whose
       expectation is a withdrawal is asserted against `isRevocation` as well.
@@ -115,7 +116,7 @@ each other on a corpus row asserted green
       verify: the corpus test file references both functions, and removing the
       1.1 fix makes at least one of the new rows fail — a corpus that cannot go
       red on the reverted fix has not tested it.
-- [ ] **2.2 Add the trailing-negation rows to the `isRevocation` unit tests.**
+- [x] **2.2 Add the trailing-negation rows to the `isRevocation` unit tests.**
       `tests/scripts/git_auth_grants.test.ts:82-100` covers three positive rows,
       all forward negation. The three reproduced trailing forms and the
       contrast-cue row from 1.2 join them.
@@ -124,14 +125,20 @@ each other on a corpus row asserted green
 
 ## Phase 3 — The orphan promise
 
-- [ ] **3.1 Give the recorded KNOWN LIMIT a receiver or a decline.**
+- [x] **3.1 Give the recorded KNOWN LIMIT a receiver or a decline.**
       `git_auth_negation_corpus.ts:109-119` records
       `interrogative.en.pr-merge.known-limit-01` — `"do not push, but merge PR #7"`
       classifies as `[]` although it should authorise `pr-merge` — with the note
       *"Carried to the follow-up"*, restated in
       `agents/roadmaps/archive/road-to-binding-findings.md:278-282` as *"Carried
       to the receiver."* A sweep over `agents/roadmaps/**` finds no receiver for
-      either. Either this roadmap becomes it (the interrogative-detection limit
+      either. **Premise partly false at `b75d7f7cb`:** a receiver DOES exist —
+      `agents/roadmaps/road-to-decided-but-not-done.md:94-101` (open, `status:
+      ready`) names this exact corpus site and its AC-5 covers it. Its step 3.1
+      reads *"`road-to-one-negation-vocabulary` Phase 3 owns the same promise
+      from the corpus side"*, so the two roadmaps agree rather than collide: the
+      corpus row is resolved here, the archived restatement and the tree-wide
+      census stay there. Either this roadmap becomes it (the interrogative-detection limit
       is a different mechanism from the revocation gap, so folding it in is a
       decision, not a default), or the row's `why` states that the false negative
       is accepted and names why. Recording the decline is a complete discharge;
@@ -151,16 +158,101 @@ each other on a corpus row asserted green
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `src/scripts/git_authorization_hook.ts` contains one negation
+- [x] AC-1 — `src/scripts/git_authorization_hook.ts` contains one negation
       vocabulary and one clause-scoping implementation, reached by both
       `classifyAuthorization` and `isRevocation`.
-- [ ] AC-2 — A standing merge grant over PR #12 does not survive
+- [x] AC-2 — A standing merge grant over PR #12 does not survive
       `"Merge PR #12 auf keinen Fall."`, `"Merge #12 under no circumstances."` or
       `"Merge PR #12? Actually, don't."`, demonstrated by calling `foldGrants` on
       the real module.
-- [ ] AC-3 — `"Please do not push, but merge PR #7."` produces one consistent
+- [x] AC-3 — `"Please do not push, but merge PR #7."` produces one consistent
       reading across both functions.
-- [ ] AC-4 — The negation corpus is asserted against both functions, and reverting
+- [x] AC-4 — The negation corpus is asserted against both functions, and reverting
       the Phase 1 fix turns it red.
-- [ ] AC-5 — The `Carried to the follow-up` promise on the interrogative KNOWN
+- [x] AC-5 — The `Carried to the follow-up` promise on the interrogative KNOWN
       LIMIT resolves to a named receiver or a recorded acceptance.
+
+## Closing note
+
+Executed 2026-09-04 on `drain/one-negation-vocabulary`, branched from
+`origin/main@b75d7f7cb`. The defect table in § The defect, reproduced was
+re-measured against that head before any edit and reproduced row for row,
+including the two-parser contradiction on
+`contrast.en.pr-merge.please-prefix-01`.
+
+### What the fix is
+
+`isRevocation` keeps its bare-stop-word alternation — orthogonal to negation,
+unchanged — and reaches the negation reading through the same
+`sentenceBounds` / `clauseStart` / `clauseEnd` / `NEGATION_WORD` machinery
+`classifyAuthorization` uses. `REVOKE_RE` no longer exists; `grep -c REVOKE_RE`
+over the tree returns 0.
+
+### Two council decisions
+
+Run: `agents/runtime/council/questions/one-negation-vocabulary.md` ->
+`agents/runtime/council/responses/one-negation-vocabulary.md`
+(anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, quorum
+concluded 2/2).
+
+1. **The residual row.** The shared clause machinery alone cannot read
+   `"Merge PR #12? Actually, don't."` — the merge sits in a question sentence
+   and the refusal in the next, so no clause holds both, and letting the window
+   cross the sentence bound is the failure that bound exists to prevent. Both
+   members chose **Option A conditionally**: add `isBareRefusal` — a clause
+   whose every token is a negation word, read from the one shared vocabulary —
+   subject to three conditions, all discharged:
+   - *grant-target semantics stated*: it revokes every standing grant, which is
+     the pre-existing `foldGrants` contract for a bare `"stop"`, not a new
+     transition. Documented at the function and pinned by a test.
+   - *conversational asides must not fire*: `"Actually, I don't think so."`,
+     `"Don't worry, I'll do it."` and `"Actually, don't worry about it."` all
+     return false — a content word in the clause is the discriminator.
+   - *token policy*: contractions, all four apostrophe forms, and
+     empty/punctuation-only clauses are covered by explicit tests.
+2. **The orphan promise.** Both members chose **Option B**: record the decline.
+   `interrogative.en.pr-merge.known-limit-01`'s `why` now states the accepted
+   false negative, its cost (one restatement), why releasing it is unsafe
+   (it would loosen interrogative classification against
+   `interrogative.en.release.question-mark-wins-01`), and that no follow-up work
+   is implied. `grep "Carried to the"` over `tests/` and `src/` returns nothing.
+
+### A live leak found while discharging the token-policy condition
+
+The shared vocabulary was ASCII-only (`dont|don't`) while macOS, iOS, Word and
+Slack substitute U+2019 by default. Measured at `b75d7f7cb`, leaking in the
+**authorizing** direction, not merely the revoking one:
+
+```
+"don't merge PR #12"   classifyAuthorization = []            (denied)
+"don’t merge PR #12"   classifyAuthorization = ["pr-merge"]  (AUTHORIZED)
+"don’t push"           classifyAuthorization = ["push"]      (AUTHORIZED)
+```
+
+One smart quote turned a prohibition into a grant for an irreversible
+operation. Fixed in the one shared list (`don[APOSTROPHE]?t`, four forms), so
+both callers gained it at once; the tokenizer reads the same `APOSTROPHE`
+constant, because writing the set out twice reproduced this file's own drift
+failure one character wide.
+
+### Sensitivity, both required probes
+
+Run by copying the file aside and restoring it, never `git stash` or
+`git checkout --`.
+
+- **2.1** — reverting `isRevocation` to the pre-fix 30-character backward window
+  turns the corpus **red with 9 failures in BOTH directions**: 4 missed
+  withdrawals (`negation.de.pr-merge.trailing-01`, `trailing-02`,
+  `abbreviation-01`, `distance-01`), 4 spurious withdrawals
+  (`known-limit-01`, `please-prefix-01`, `aber-01`, `aber-02`) and the
+  `foldGrants` wiring row (`expected [ 12 ] to not include 12`).
+- **2.2** — restoring the whole pre-fix source fails exactly the three new unit
+  tests, with `expected [ { id: 'g1', op: 'pr-merge', …(4) } ] to deeply equal []`
+  — the grant-survival defect itself.
+
+### Unresolved, and owned elsewhere
+
+`agents/roadmaps/archive/road-to-binding-findings.md:281` still reads *"Carried
+to the receiver."* It is an **archived** roadmap and
+`road-to-decided-but-not-done` step 3.1 owns confirming it plus the tree-wide
+census; it is listed here rather than edited, per this step's verify.
