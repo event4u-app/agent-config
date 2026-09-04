@@ -1,0 +1,41 @@
+{
+    "skill": "recursive-verification",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the general orchestration surface this specialises and the repair loop it is most often confused with; the discriminator is the DEPTH-BOUNDED attempt -> critic -> re-attempt knob.",
+    "queries": [
+        {
+            "q": "run a depth-bounded attempt-critic-reattempt loop on this task",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "spend more test-time compute: let a critic score the output and retry twice",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "lass das Ergebnis von einem Kritiker bewerten und bis zu zwei Mal nachbessern",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "which orchestration mode fits these three independent slices?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "mode selection across the nine modes, not the self-correction knob -> subagent-orchestration"
+        },
+        {
+            "q": "the verification failed — fix it and re-run",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a single repair pass, not a bounded critic loop -> verify-repair-loop"
+        },
+        {
+            "q": "is this feature finished? show me the evidence",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a completion-evidence check, no loop involved -> verify-completion-evidence"
+        }
+    ]
+}

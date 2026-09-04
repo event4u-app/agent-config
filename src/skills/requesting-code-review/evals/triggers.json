@@ -1,0 +1,41 @@
+{
+    "skill": "requesting-code-review",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the two neighbours on either side of the request: who should review it, and what to do once feedback arrives.",
+    "queries": [
+        {
+            "q": "this is ready to merge — open the PR",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I want a review on this branch; what context should I give the reviewer?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "die Änderung ist fertig — bereite sie für den Review vor",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "who on the team should review this change?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "reviewer selection and risk flags -> review-routing"
+        },
+        {
+            "q": "the reviewer left six comments — how do I respond?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "handling feedback after the review -> receiving-code-review"
+        },
+        {
+            "q": "review this diff for me",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the agent performing a review, not the author requesting one -> code-review"
+        }
+    ]
+}

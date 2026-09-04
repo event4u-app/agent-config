@@ -1,0 +1,41 @@
+{
+    "skill": "judge-test-coverage",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the two testing surfaces that WRITE tests or teach test authoring, versus judging whether an existing diff is covered.",
+    "queries": [
+        {
+            "q": "does this diff have enough tests, or are branches uncovered?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this bug fix has no regression test — flag what is missing",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "prüf ob dieser Diff ausreichend getestet ist — fehlende Assertions, zu viel gemockt",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write the tests for this new service class",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring the tests rather than judging coverage of a diff -> tests-create"
+        },
+        {
+            "q": "what makes an assertion tautological?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "guidance about test smells in general, no diff under review -> testing-anti-patterns"
+        },
+        {
+            "q": "the test suite takes nine minutes — make it faster",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "runtime of the suite, not coverage of a change -> test-performance"
+        }
+    ]
+}

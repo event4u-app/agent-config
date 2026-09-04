@@ -1,0 +1,41 @@
+{
+    "skill": "subagent-orchestration",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the policy rule that decides WHETHER to delegate and the self-correction specialisation of one of the nine modes.",
+    "queries": [
+        {
+            "q": "split this into independent slices and run them as parallel subagents",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "which orchestration mode fits: implementer plus judge, or a debate?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "verteil das auf mehrere Subagenten und lass einen Judge das Ergebnis prüfen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "should I be delegating this at all, or just do it here?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the delegate-or-not decision, upstream of mode selection -> delegation-policy"
+        },
+        {
+            "q": "run a bounded critic loop over this single output",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "one mode's specialisation, not mode selection -> recursive-verification"
+        },
+        {
+            "q": "orchestrate the release pipeline steps",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "CI/release sequencing that reuses the word 'orchestrate' -> github-ci"
+        }
+    ]
+}

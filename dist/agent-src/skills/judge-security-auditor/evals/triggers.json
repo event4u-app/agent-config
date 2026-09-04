@@ -1,0 +1,41 @@
+{
+    "skill": "judge-security-auditor",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the two security surfaces that fire BEFORE code exists (threat model) or over a whole request chain rather than a diff (authz review).",
+    "queries": [
+        {
+            "q": "does this diff introduce an injection or mass-assignment risk?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "security-review these changes for secrets, SSRF and unsafe deserialization",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "prüf diesen Diff auf Sicherheitsrisiken — Injection, XSS, offengelegte Secrets",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "we are about to add file uploads — what could go wrong?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "abuse-case enumeration before the code is written -> threat-modeling"
+        },
+        {
+            "q": "walk the authorization chain for this endpoint from route to response",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an end-to-end chain audit, not a diff lens -> authz-review"
+        },
+        {
+            "q": "rotate the API signing key and move it out of the repo",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "credential handling, no diff under review -> secrets-management"
+        }
+    ]
+}

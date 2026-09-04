@@ -1,0 +1,41 @@
+{
+    "skill": "dependency-upgrade",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the two package surfaces that share the word 'package'; the discriminator is whether a dependency ALREADY in the manifest moves version, versus one arriving for the first time.",
+    "queries": [
+        {
+            "q": "bump the framework to the next major and tell me what breaks",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "upgrade our packages and review the changelogs for breaking changes",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wir müssen die Abhängigkeiten aktualisieren — welche Breaking Changes kommen da?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "we want to add a new charting library — is it safe to install?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "intake of a dependency that is not yet in the manifest -> supply-chain-intake"
+        },
+        {
+            "q": "how do I publish this as a composer package?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring/publishing a package rather than moving an installed one -> composer-packages"
+        },
+        {
+            "q": "upgrade the staging instance to a larger machine type",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "infrastructure sizing that reuses the word 'upgrade' -> aws-infrastructure"
+        }
+    ]
+}

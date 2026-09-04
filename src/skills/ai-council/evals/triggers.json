@@ -1,0 +1,41 @@
+{
+    "skill": "ai-council",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the two in-session critique surfaces whose vocabulary ('second opinion', 'poke holes') overlaps entirely; the discriminator is whether a model OUTSIDE the host session is polled.",
+    "queries": [
+        {
+            "q": "get a second opinion on this roadmap from another model",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "cross-check this design with OpenAI and Anthropic before I commit to it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "hol bitte eine neutrale Zweitmeinung von einem externen Modell zu diesem Diff",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "poke holes in this plan — be brutal",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an in-session adversarial teardown by the host model itself, no external seat polled -> adversarial-review"
+        },
+        {
+            "q": "review the changes on this branch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "routine review by the host, not a neutral external second opinion -> code-review"
+        },
+        {
+            "q": "which model should we use for the production summarisation endpoint?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a provider/model selection question about the product, not a governance consult -> llm-provider-knowledge"
+        }
+    ]
+}

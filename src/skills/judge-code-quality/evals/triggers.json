@@ -1,0 +1,41 @@
+{
+    "skill": "judge-code-quality",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses are the sibling correctness judge over the same diff and the skill that PERFORMS a refactor rather than judging one.",
+    "queries": [
+        {
+            "q": "review this diff for naming, dead code and duplication",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does this change match the conventions used elsewhere in the codebase?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "bewerte die Lesbarkeit dieses Diffs — Benennung, Verantwortlichkeiten, Duplikate",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "check this diff for off-by-one and null-safety bugs",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the correctness lens over the same diff -> judge-bug-hunter"
+        },
+        {
+            "q": "extract this duplicated block into a shared helper",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "performing the cleanup rather than judging the diff -> code-refactoring"
+        },
+        {
+            "q": "the linter is complaining about formatting — fix it",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a deterministic tool finding, not a readability judgement -> quality-tools"
+        }
+    ]
+}

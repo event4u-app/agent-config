@@ -1,0 +1,41 @@
+{
+    "skill": "using-git-worktrees",
+    "last_eval": "2026-09-04",
+    "description": "Authored 2026-09-04 under road-to-the-tenth-arrival 2.2, wave selected by the priority rule in agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md: skills carrying a deterministic MUST/NEVER/ALWAYS obligation (report_skill_activation) that had no corpus. 3 exemplars (1 de) + 2 near-misses + 1 counterexample. Near-misses mirror the boundary already declared from the other side in worktree-lifecycle's own corpus: creation mechanics here, governance of an existing worktree there.",
+    "queries": [
+        {
+            "q": "spawn a worktree so I can try this on the side without touching my branch",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "set up an isolated checkout for this experiment with a clean test baseline",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "leg ein separates Worktree an, damit ich parallel daran arbeiten kann",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "is this worktree merge-ready, and can I clean it up safely?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "governance and teardown of an existing worktree -> worktree-lifecycle"
+        },
+        {
+            "q": "switch to the feature branch and keep working there",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a plain branch switch in the same checkout -> git-workflow"
+        },
+        {
+            "q": "create a branch for this fix",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "branch creation without isolation; no second working directory -> git-workflow"
+        }
+    ]
+}
