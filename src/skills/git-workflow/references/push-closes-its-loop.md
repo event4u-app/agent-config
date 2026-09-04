@@ -101,10 +101,18 @@ recorded rather than papered over:
 
     task install-hooks     # rewrites .git/hooks/* from source
 
-A deterministic fix — comparing the installed hook against the heredoc and
-saying so — is a third mechanism with its own gate, its own test and its own
-budget, and it is deliberately not smuggled into this change. It is the obvious
-follow-up.
+The follow-up is tracked, and it is smaller than it looks: the installer already
+writes `post-merge` and `post-checkout`, and their auto-sync block already
+detects a pull that changes `src/scripts/install-hooks.sh` — it just rebuilds
+the CLI instead of re-installing the hooks. So the fix is an action inside an
+existing branch, not a new mechanism. It is deliberately not smuggled into this
+change; it is `road-to-the-hook-that-was-never-installed`.
+
+A separate, larger question is left open rather than assumed away: a consumer
+install writes **no git hooks at all** (`src/install/` references `.git/hooks`
+nowhere, and the package manager's post-install lifecycle step does not run for
+a registry dependency), so the pre-push gate is a maintainer-only mechanism
+today. Whether it should reach consumers is not decided here.
 
 ## Revisit-if
 

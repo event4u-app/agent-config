@@ -51,16 +51,31 @@ not, and the copy is what runs.
       freshly-installed hook reports clean. Both directions, or the check is
       untested in the direction that matters.
 
-- [ ] **1.2 Decide where it fires, and pay for that choice explicitly.**
-      Not in the pre-push hook itself: a stale hook is exactly the one that would
-      not run the check. Candidates are a CI gate (sees the repo, never the
-      contributor's `.git/`, so it can only check that the SOURCE is
-      self-consistent — likely useless) and a `session_start` concern (sees the
-      real `.git/`, costs a per-session read, and is inert on a host with no such
-      slot). Pick one, and write down what the rejected one could not have seen.
-      verify: the chosen carrier's slot is named in `src/scripts/hook_manifest.yaml`
-      or in the CI workflow, and `agent-config hooks:status` (or the workflow run)
-      shows it bound where the decision says it is.
+- [ ] **1.2 Re-install from `post-merge` / `post-checkout`, where the trigger
+      already fires.** The first version of this step claimed the check had no
+      obvious carrier and named a CI gate and a `session_start` concern as the
+      only candidates. That was wrong, and it was wrong for the ordinary reason:
+      nobody looked. `install-hooks.sh` already writes `post-merge`,
+      `post-checkout`, `post-commit` and `post-rewrite`, and the first two
+      already carry an auto-sync block that diffs `prev..new` and acts on a path
+      list. One of its two branches matches
+      `src/(cli|server|shared|install|scripts)/` — so a pull that changes
+      `src/scripts/install-hooks.sh` is **already detected today**; that branch
+      just rebuilds the CLI and never re-runs the installer. The work is
+      therefore an action in an existing `if`, not a new mechanism, a new trigger
+      or a new budget.
+      This also fires on the event that CAUSES the staleness (a pull or a branch
+      switch that moves the installer), which neither rejected candidate does: a
+      CI gate never sees a contributor's `.git/`, and a session-start check would
+      report the staleness without being able to say when it appeared. It
+      bootstraps once — after a single manual install the hooks maintain
+      themselves — and worktrees share `.git/hooks` through the common dir, so
+      one repair covers every worktree at once.
+      verify: a test that runs the installed `post-merge` body against a
+      `prev..new` pair whose diff touches `src/scripts/install-hooks.sh` and
+      asserts the hook body was rewritten, plus the inverse — a diff touching
+      neither leaves it byte-identical. Both directions, or the re-install is
+      untested in the direction that matters.
 
 - [ ] **1.3 Do not add a concern without paying its ledger.**
       If 1.2 lands on a hook concern, it owes a row in
@@ -75,7 +90,7 @@ not, and the copy is what runs.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The check has no honest place to run | implementation | A CI gate cannot see the contributor's `.git/hooks/`, and the pre-push hook cannot report its own staleness. If neither carrier works, the roadmap produces a check nobody reaches — a silent instrument, which is the defect class it exists to remove. | 1.2 forces the choice to be made and written down BEFORE the check is built, and requires naming what the rejected carrier could not have seen. A conclusion that no carrier works is a legitimate outcome, recorded as an honest null. | Phase 1 — Say when the installed hook is stale |
+| 1 | A hook that repairs hooks fails silently | implementation | `post-merge` is `\|\| true` throughout by design — it must never block a pull. A re-install that fails there fails invisibly, which is the same silence this roadmap exists to remove, one layer over. | 1.2's verify asserts the rewrite HAPPENED rather than that the hook exited 0, so a swallowed failure is a red test. The installer's own output stays on stderr for a human who is watching. | Phase 1 — Say when the installed hook is stale |
 | 2 | A byte-comparison is too strict to be useful | implementation | The installer may legitimately interpolate paths into the hook body, so the installed copy is not always byte-identical to the heredoc. A check that fires on every install would be turned off within a week. | 1.1's verify demands the inverse direction — a freshly-installed hook must report clean — which fails loudly if the comparison is stricter than the installer is deterministic. | Phase 1 — Say when the installed hook is stale |
 
 ## Acceptance Criteria
@@ -84,6 +99,13 @@ not, and the copy is what runs.
       `install-hooks.sh` body produces a message naming the mismatch and the fix,
       from a carrier that is bound and named. A checkout that just ran the
       installer produces nothing.
-- [ ] AC-2 — The carrier decision in 1.2 is written down with the rejected
-      alternative and what it could not have seen, so a later reader can tell a
-      chosen trade-off from an unexamined default.
+- [ ] AC-2 — A pull or branch switch that moves `src/scripts/install-hooks.sh`
+      leaves the installed hooks matching it, without anyone running a command.
+      One manual install is still required to bootstrap a fresh clone, and the
+      README says so rather than leaving it to be discovered.
+- [ ] AC-3 — The consumer question is answered in writing, either way. A
+      consumer install today writes **no git hooks at all** — `src/install/`
+      contains no reference to `.git/hooks`, and npm's `prepare` does not run
+      for a registry dependency — so the pre-push gate is a maintainer-only
+      mechanism. Whether consumers should get it is a separate decision; what
+      this roadmap owes is that it stops being an unstated one.
