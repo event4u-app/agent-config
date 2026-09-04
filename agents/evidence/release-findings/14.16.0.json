@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "release": "14.16.0",
+  "findings": [
+    {
+      "finding_id": "64d61651eff3",
+      "severity": "high",
+      "kind": "security",
+      "title": "Authorization negation defect: trailing negation and interrogative suppression leaked operations",
+      "file": "src/scripts/git_authorization_hook.ts",
+      "status": "accepted_risk",
+      "rationale": "SPLIT, and the split is the disposition. The AUTHORIZATION path named in the title does not leak in this tree: probing the shipped module (src/scripts/git_authorization_hook.ts) with the three trailing/interrogative forms returns classifyAuthorization={\"authorized\":[],\"evidence\":{}} for \"Merge PR #12 auf keinen Fall.\", \"Merge #12 under no circumstances.\" and \"Merge PR #12? Actually, don't.\" — the 14.15.0 predecessor 13713a1a9ae6 closed that half in 6a08ed26, whose own rationale already names both shapes this finding reports. What IS live is the REVOCATION path, which the first fix never reached: isRevocation returns false for all three forms, and foldGrants (:704-712) drops grants only under isRevocation, so a prior standing grant survives an unambiguous withdrawal — measured foldGrants([{targets:[12],consumed:[]}], \"Merge PR #12 auf keinen Fall.\", [], ...) -> [[12]] SURVIVES, while \"do not merge PR #12\" -> [] correctly drops. Two negation grammars exist about 240 lines apart (NEGATION_WORD :750, 14 forms, clause-scoped both directions; REVOKE_RE :676, 10 forms, before-only, fixed 30-char window). NOT fixed: nothing has landed for the revocation path. NOT false_positive: the grant-survival is reproduced above. Carried as accepted_risk with a named receiver: agents/roadmaps/road-to-one-negation-vocabulary.md owns the consolidation of the two vocabularies into one clause-scoped implementation.",
+      "verified_by": "Independent reproduction 2026-09-04 against the shipped module at b75d7f7cb via npx tsx (isRevocation/classifyAuthorization over the three forms, plus a foldGrants grant-survival probe); code read of foldGrants src/scripts/git_authorization_hook.ts:704-712. Receiver roadmap: agents/roadmaps/road-to-one-negation-vocabulary.md. Predecessor comparison: 13713a1a9ae6 in agents/evidence/release-findings/14.15.0.json.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "564f5716b621",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Merge impact: renamed schema drop scored additive — only added-side anchor fired",
+      "file": "src/scripts/hooks/merge_impact.ts",
+      "status": "fixed",
+      "commit": "6fa2b068a1c5e6df9c15d90fd9fe13fbd96160e3",
+      "rationale": "REAL, and reproduced against the parent before being called fixed: running the rename patch (similarity index 88%, rename from/to, -Schema::dropTable(\"users\")) through 5a3b7c506:src/scripts/hooks/merge_impact.ts returned {\"verdict\":\"additive\",\"markers\":[]}. The current tree carries a removed-side anchor that did not exist before — SCHEMA_REMOVAL_BODY (merge_impact.ts:76-77, added-line ^\\+ anchor stripped), RENAME_METADATA (:80), fileBlocks (:86-90) and renamedSchemaRemoval (:120-132), which scans '-' lines ONLY inside blocks carrying git rename metadata (:122-126) and is wired in at :156-158. Residual pinned rather than closed: a similarity index 100% rename carries no content lines, so a purely moved migration is still invisible; that is asserted deliberately at tests/scripts/merge_impact.test.ts:147, not overlooked.",
+      "verified_by": "tests/scripts/merge_impact.test.ts:114 'a rename around a schema drop is destructive — the drop moved, it was not removed' (positive pin), :136 'and the widened scan stays conditional — the pinned counter-case is unchanged' (sensitivity pin in the other direction), :147 '100% rename stays additive — recorded as a residual'. Run 2026-09-04: 30 tests passed across merge_impact.test.ts + merge_impact_closed_vocabulary.test.ts.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "fec596e8beb4",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Target extraction: 7-digit regex cap failed silently on 8-digit PR numbers",
+      "file": "src/scripts/git_authorization_hook.ts",
+      "status": "fixed",
+      "commit": "1cf8f70869593281b26a16a00408ce24050db4a7",
+      "rationale": "REPEAT CLASS — a DUPLICATE REPORT of 14.15.0 finding 220223cedd5e, not a regression and not an uncovered instance. Checked against the tree, not the title: src/scripts/git_authorization_hook.ts:638 exports PR_NUMBER_MAX = 2147483647 and :656 matches (\\d{1,10}), so the seven-digit cap the finding names is absent from the reviewed head. Why it was reported anyway is itself evidence for the documented-versus-introduced class recorded in Phase 2b of road-to-the-unwritten-ledger: the fix commit landed INSIDE the reviewed 14.15.0..14.16.0 span, and it left an explanatory comment at :644 that literally quotes the string 'The old `\\d{1,7}` was' — so the only occurrence of the defect pattern in the diff is the fix's own description of what it removed. The 14.15.0 ledger, itself added inside the same span by 4d44188af, describes the defect again in prose.",
+      "verified_by": "Read of src/scripts/git_authorization_hook.ts:638-660 at b75d7f7cb (PR_NUMBER_MAX + \\d{1,10} + the :644 comment quoting the old pattern); git merge-base --is-ancestor confirming 1cf8f708 lies inside 14.15.0..14.16.0; predecessor entry 220223cedd5e in agents/evidence/release-findings/14.15.0.json; tests/scripts/git_auth_observability_and_bounds.test.ts as cited by that predecessor.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "b7f02ba65b83",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Closed-vocabulary property unpinned: patch text could reach refusal via future edit",
+      "file": "src/scripts/hooks/merge_impact.ts",
+      "status": "false_positive",
+      "commit": "6fa2b068a1c5e6df9c15d90fd9fe13fbd96160e3",
+      "rationale": "FALSE POSITIVE as a defect, and the gap it did identify is now closed. No leak path existed: describeImpact (src/scripts/hooks/merge_impact.ts:253-275) interpolates only pr, impact.filesChanged, impact.reason and impact.markers.join(\"; \"), and every marker classifyDiff can push (:150-163) is either a literal from the DESTRUCTIVE_MARKERS table (:55-68), the literal at :157, or the MAJOR_BUMP string at :162 whose two interpolations are (\\d+) captures (:136) — digits only. So patch text could not reach the refusal. What the finding correctly identified is that this property was asserted in comments and by no test; that pin now exists and is scoped over the classifyDiff -> describeImpact pipeline rather than describeImpact alone, which matters because markers is a caller-supplied string[]. Honest caveat: the literal-table assertion runs over a patch with no version bump, so the MAJOR_BUMP marker string is covered by the regex read rather than by that test.",
+      "verified_by": "tests/scripts/merge_impact_closed_vocabulary.test.ts:93 'every destructive marker label is a literal from the closed table', :109 'the only variable parts of the message are numbers', plus the sensitivity pair :124 'a message built by interpolating the diff is caught' and :136 'and it is not vacuous'. Run 2026-09-04: passed.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "14193814d0ed",
+      "severity": "low",
+      "kind": "style",
+      "title": "security-sensitive-stop: five triggers added, two narrowed from obvious single word",
+      "file": "src/rules/security-sensitive-stop.md",
+      "status": "false_positive",
+      "rationale": "The finding describes the fix, not a defect. Both halves are literally accurate — bb857f113ca0fa9b4c621478412891d94dd1cad7 adds exactly five keywords (src/rules/security-sensitive-stop.md:15-19: file upload, ssrf, api resource, public endpoint, status endpoint) on top of six pre-existing ones at :9-14, and two are multi-word rather than the obvious single word. The narrowing is DELIBERATE with the rationale recorded in that commit message: keyword matching is word-boundary substring, so a bare 'upload' fires on \"upload the roadmap\" and a bare 'endpoint' fires on documentation edits; the bare form was the first implementation and was narrowed after an AI-council round named \"Document the API endpoint parameter\" as a real near-miss the rule's own section When NOT to fire excludes. That is the over-broad-single-word anti-pattern being avoided on purpose. Reported as style; adjudicated as intended design.",
+      "verified_by": "tests/eval/routing-matrix/security-sensitive-stop.yaml carries the four new positives AND four matching near-misses (including \"Upload the roadmap to the shared drive.\" and \"Document the API endpoint parameter in the reference page.\"), so the denial side is pinned, not only the claim side. Run via tests/scripts/routing_matrix.test.ts 2026-09-04: 193 passed.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "1eb584e32407",
+      "severity": "low",
+      "kind": "claim",
+      "title": "accessibility-auditor: claimed WCAG 2.2 AA, carried 2 of 9 criteria as corpus rows only",
+      "file": "src/skills/accessibility-auditor/SKILL.md",
+      "status": "fixed",
+      "commit": "2bd8e5064129d6cc233ebc34a1c7af4ff2390234",
+      "rationale": "REAL and closed. The claim is still WCAG 2.2 AA (src/skills/accessibility-auditor/SKILL.md:4 description, :17 opening, :210 rich-class justification), and the criteria it claims are now carried as a checklist table with a testable condition and a failure mode per row at :109-114 — 2.4.11, 2.5.7, 2.5.8, 3.3.8 (AA) plus 3.2.6 and 3.3.7 (level A, included because AA conformance is cumulative, stated at :102-105). The two AAA criteria 2.4.12 and 2.4.13 are explicitly dispositioned as out of AA scope at :116-118 rather than left silent. The same commit corrected the overclaim at :212 from 'the full WCAG criterion matrix' to 'the WCAG 2.2 additions'.",
+      "verified_by": "tests/contracts/accessibility_wcag_version_claim.test.ts (NOTE: tests/contracts/, not tests/scripts/), suite 'accessibility-auditor: claimed WCAG version is carried', four cases including two sensitivity probes — 'is sensitive — removing 2.4.11 from the content produces a finding' and 'is sensitive — claiming an unregistered version produces a finding'. The checker keys on the CLAIMED version rather than hardcoding 2.2. Run 2026-09-04: 4 passed.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "06dac819fa16",
+      "severity": "low",
+      "kind": "style",
+      "title": "iconography: step 2 opened 'Default open sets: Lucide', contradicting sibling rule",
+      "file": "src/skills/iconography/SKILL.md",
+      "status": "fixed",
+      "commit": "4461e319aa7b42005715a921122d72388e84040f",
+      "rationale": "REAL and closed. Pre-fix, step 2 opened 'Default open sets: Lucide (clean, Tailwind-native)' and hard-wired react-shadcn-ui -> Lucide inside the imperative pick step, which is exactly the anti-pattern src/rules/icon-consistency.md:38 names ('Defaulting to Lucide without a deliberate choice'). Current step 2 (src/skills/iconography/SKILL.md:40-63) is a three-rung selection — brand token, then incumbent set already in the project, then open candidates — opening 'The set is chosen, never inherited' and citing icon-consistency by name at :42-43; the candidate list at :51 is alphabetical so ordering carries no signal. The stack mapping survives at :80-86 under 'an observation, not a pick'. Remaining lucide occurrences (:65, :69, :71, :114) are set:name syntax examples.",
+      "verified_by": "Read of src/skills/iconography/SKILL.md:40-86 and src/rules/icon-consistency.md:38 at b75d7f7cb; git show 4461e319 for the pre-fix text; dist projection matches source modulo path rewriting. HONEST GAP: prose-only — no test pins the skill body's absence of a default. tests/eval/routing-matrix/icon-consistency.yaml pins the RULE's trigger routing, not this skill's content.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "6a202adf5669",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "design-slop V1: side-stripe detector missed four-sided colored border and gradient form",
+      "file": "src/scripts/design_slop_rules.ts",
+      "status": "fixed",
+      "commit": "117264783230fde125bf6aaed2feabe938ffc5ab",
+      "rationale": "REAL and closed. The V1 detector is now three alternatives, not one: src/scripts/design_slop_rules.ts:234 border-(?:left|right) stripe, :236 four-sided border, :238 border-image gradient (linear|conic|radial), combined at :239 with stripe || foursided || gradient. The pre-fix version visible in the commit diff was the single border-(?:left|right) regex, which is exactly the miss the finding names. Placeholder colours (transparent, currentColor) and 1px borders stay excluded by the COLOR/WIDTH fragments at :231-233, so widening did not cost the negative side.",
+      "verified_by": "src/scripts/design_slop_rules.test.ts:18-34, case 'slop-v1-side-stripe (V1)' under describe 'positive fixtures fire, negative fixtures are clean', carrying all three positives (border-left: 4px solid #6c5ce7, border: 3px solid #6c5ce7, border-image: linear-gradient(...)) plus five negatives. Run 2026-09-04: 32 passed.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "62a75157ca93",
+      "severity": "low",
+      "kind": "claim",
+      "title": "fe-design and react-shadcn-ui: two catalog id ranges cited V1–V7/L1–L8, making V8/L9/L10 unreachable",
+      "file": "src/skills/react-shadcn-ui/SKILL.md",
+      "status": "fixed",
+      "commit": "0e1888704ea5837d2f2752c1fde0b37f469bc0ed",
+      "rationale": "The defect AS REPORTED is closed: src/skills/react-shadcn-ui/SKILL.md:125 now reads '(Visual V1-V8, Layout L1-L10 ...)' and src/skills/fe-design/SKILL.md:249-251 reads 'Visual (V1-V8) and Layout (L1-L10) ... plus Motion (M1-M8)', so V8, L9 and L10 are reachable and L10/M8 match the real maxima at docs/guidelines/design-antipatterns.md:82 and :156. RESIDUAL, RECORDED NOT CLOSED, and it is a NEW instance of the same class rather than part of this finding: the true Visual maximum is V9, not V8 — docs/guidelines/design-antipatterns.md:97 carries 'V9 | Noise or grain texture laid over a gradient' inside the Visual section (heading :86; V8 lives in the earlier Consistency Locks block :71-78). V9 was added by commit 117264783 at 22:55, fourteen minutes before this citation fix at 23:09, which wrote V1-V8 and did not pick it up. V9 is judgment-only (design-antipatterns.md:232), so no detector compensates for the prose gap. This disposition closes the reported ids and does not claim V9.",
+      "verified_by": "Read of src/skills/react-shadcn-ui/SKILL.md:125, src/skills/fe-design/SKILL.md:249-251 and docs/guidelines/design-antipatterns.md:82/:97/:156/:232 at b75d7f7cb. HONEST GAP: no test pins citation ranges — grep over tests/ for V1-V8 / L1-L10 returns nothing, and the one catalog gate src/scripts/lint_design_antipattern_parity.ts:12-24 checks catalog-to-registry parity only, never skill citation ranges. The V9 residual is therefore unguarded.",
+      "date": "2026-09-04"
+    },
+    {
+      "finding_id": "87cfda3a665d",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "design-intelligence ux-guidelines row 9: Code Example Good carried transition-all, the M4 defect itself",
+      "file": "src/skills/design-intelligence/data/ux-guidelines.csv",
+      "status": "fixed",
+      "commit": "0e1888704ea5837d2f2752c1fde0b37f469bc0ed",
+      "rationale": "REAL and closed for the file named. Both readings of 'row 9' land on the same line: src/skills/design-intelligence/data/ux-guidelines.csv:9 now reads '8,Animation,Duration Timing,All,...,transition-colors duration-200,transition-all duration-1000,Medium' — Good = transition-colors duration-200, Bad = transition-all duration-1000. At 14.15.0 the same line carried 'transition-all duration-200' in the Good column, i.e. the M4 defect in the exemplar. M4 is confirmed as that defect at src/scripts/design_slop_rules.ts:405-410 (id slop-m4-transition-all) and docs/guidelines/design-antipatterns.md:152. grep for transition-all over the file returns line 9 only, in the Bad column. ADJACENT RESIDUAL, RECORDED NOT CLOSED: the same defect survives one file over at src/skills/design-intelligence/data/stacks/html-tailwind.csv:4, whose Code Good column still reads 'transition-all duration-200'; it was not part of this fix despite the commit message claiming to clear three of the tree's own surfaces.",
+      "verified_by": "Read of src/skills/design-intelligence/data/ux-guidelines.csv:1,9 and stacks/html-tailwind.csv:1,4 at b75d7f7cb; src/scripts/design_slop_rules.ts:405-410; docs/guidelines/design-antipatterns.md:152. HONEST GAP: no test pins this — nothing under tests/ references ux-guidelines, and lint_design_slop.ts classifies no engine for .csv, so the corpus is unscanned by the detector that defines M4.",
+      "date": "2026-09-04"
+    }
+  ]
+}
