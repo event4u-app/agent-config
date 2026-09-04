@@ -1,5 +1,7 @@
 # `status: ready` under `agents/roadmaps/archive/` — the population
 
+<!-- evidence-type: analysis -->
+
 > Taken 2026-09-04 by `road-to-defect-population-sweeps` 3.3, which expected
 > one instance. This is the "or the remaining hits are listed with a reason"
 > branch that step's own `verify:` line provides.

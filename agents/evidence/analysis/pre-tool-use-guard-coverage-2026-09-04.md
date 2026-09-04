@@ -1,5 +1,7 @@
 # `pre_tool_use` guard coverage — the roster
 
+<!-- evidence-type: analysis -->
+
 > Derived from `src/scripts/hook_manifest.yaml` on 2026-09-04
 > (`road-to-defect-population-sweeps` 2.2) and held current by
 > `tests/hooks/pre_tool_use_guard_coverage.test.ts`, which reds when a guard

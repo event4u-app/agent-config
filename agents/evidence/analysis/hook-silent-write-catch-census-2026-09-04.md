@@ -1,5 +1,7 @@
 # Silent write-adjacent catches under `src/scripts/hooks/` — a census
 
+<!-- evidence-type: analysis -->
+
 > Taken 2026-09-04 on `drain/defect-population-sweeps`, which is stacked on
 > `drain/one-negation-vocabulary`. Produced by
 > `road-to-defect-population-sweeps` step 1.3. This is a **count and a list**,
