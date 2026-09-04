@@ -87,9 +87,10 @@ answered against a base that is about to move.
 ## The gap this change does NOT close
 
 **The pre-push hook is INSTALLED, not read from source.** `install-hooks.sh`
-writes `.git/hooks/pre-push`, and nothing re-writes it afterwards except
-`npm prepare` (i.e. an `npm install`) or `task install-hooks` by hand. Measured
-in this repository on 2026-09-04, before this change: the installed hook was
+writes `.git/hooks/pre-push`, and afterwards it is rewritten only by the
+package manager's post-install lifecycle step or by running the installer
+again. Measured in this repository on 2026-09-04, before this change: the
+installed hook was
 **113 lines** against a source body of ~146 — it was missing header revisions
 merged on 2026-08-30, so it had been stale for days with no signal anywhere.
 
