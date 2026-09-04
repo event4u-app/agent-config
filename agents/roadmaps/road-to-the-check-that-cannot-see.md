@@ -295,9 +295,32 @@ verified defects below do not wait on it.
       produces its own report line rather than a quieter verdict.
 - [x] AC-5 — No superseded contract is cited as the live-app blocker's reason, and
       no file retypes a check count in prose.
-- [~] AC-6 — **PARTIAL, and reported as failed rather than claimed.** The
-      polarity half is met and observed: `check_no_external_sources` exits 1 on
-      a tracked file naming a denied derivation source and 0 on one naming only
-      detection-target vendors. The clause "from this round" is NOT met and
-      cannot be: those names survive in no artefact (see 3.4). Carried nowhere —
-      there is no receiver, because there is nothing left to give one.
+- [ ] AC-6 — **AWAITING OWNER DISPOSITION. Not met, and not claimed.** The
+      identities of the round-specific derivation sources are irrecoverable, so
+      their denylist coverage and their rejection by `check_no_external_sources`
+      cannot be evaluated. Residual risk remains that those unidentified sources
+      are absent from the denylist.
+
+      *Evidence note — substitute testing verified the MECHANISM only:*
+      `check_no_external_sources` rejected a tracked file naming an existing
+      denylisted derivation source (exit 1, token quoted at `file:line`) and
+      permitted a tracked file naming only detection-target vendors (exit 0).
+      This does **not** satisfy the round-specific coverage requirement, and is
+      recorded separately so it cannot be read as partial satisfaction.
+
+      *Disposition — AI council 2026-09-04, 2 rounds, 2/2 seats (anthropic +
+      openai), quorum concluded, $0.00 (subscription-authed):* both seats
+      converged on `[-]` (cancelled-as-invalidated) as the correct marker, and
+      both stated that `[-]` is **owner-reserved** and an agent may not apply it
+      to itself. `[x]` would be false — the criterion is conjunctive and the
+      substitute token cannot satisfy "from this round". `[~]` is unavailable
+      because there is no genuine receiving roadmap and a placeholder would
+      corrupt the meaning of deferral. So the line stays `[ ]` labelled awaiting
+      owner disposition, the roadmap does **not** archive, and that is the
+      honest state rather than an oversight.
+
+      One seat named the recursion, and it is worth keeping: this roadmap's
+      subject is a check that reported `passed` on input it could not see, and
+      the same defect then appeared in its own acceptance criterion — a
+      criterion asking for evidence that was never going to exist. That is a
+      roadmap-AUTHORING gap, not an execution one, and it is not closed here.
