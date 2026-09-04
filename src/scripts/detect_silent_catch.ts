@@ -8,7 +8,7 @@
  * `ls src/scripts/ | grep -icE 'swallow|bare_except'` returned 0 when this was
  * written. Prose that nothing checks is a preference.
  *
- * ## Scope: the lines the diff ADDS
+ * SCOPE — the lines the diff ADDS.
  *
  * A pre-existing empty catch is debt this check does not own. The block must
  * be wholly contained in added lines; a block whose body reaches into context
@@ -17,7 +17,7 @@
  * stay silent. If it ever fires, this has quietly become a whole-tree sweep,
  * which is a different tool with a different false-positive budget.
  *
- * ## Two shapes, both unambiguous
+ * TWO SHAPES, both unambiguous.
  *
  *   `catch-empty`            no statements at all in the block
  *   `catch-discards-error`   statements, but the caught value is never used,
@@ -29,7 +29,7 @@
  * rather than discipline". Comments and `pass` / `...` are stripped before the
  * block is judged, so neither rescues an empty block.
  *
- * ## NO ESCAPE-HATCH MARKER, deliberately
+ * NO ESCAPE-HATCH MARKER, deliberately.
  *
  * Every other suppression in this tree is a declared, reasoned marker. This
  * check has none, because it is WARN-ONLY: it blocks nothing, so a marker
@@ -37,7 +37,7 @@
  * wearing the house convention's clothes. Revisit together with promotion —
  * a blocking version owes a hatch, a warning one does not.
  *
- * ## Warn-first, and what that means for the exit code
+ * WARN-FIRST, and what that means for the exit code.
  *
  * Exit 0 on findings by default: this is a REPORT. `--strict` turns findings
  * into exit 1 and exists so `--self-test` can prove the detection discriminates

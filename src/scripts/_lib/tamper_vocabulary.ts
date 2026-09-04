@@ -8,7 +8,7 @@
  * ids the failure classes need. Every id below has a fixture in
  * `tests/fixtures/tamper-corpus/`, committed one commit earlier.
  *
- * ## Why the outcome type extends `GateOutcome` instead of replacing it
+ * WHY THE OUTCOME TYPE EXTENDS `GateOutcome` INSTEAD OF REPLACING IT.
  *
  * `_lib/gate_result.ts` already separates "the check ran and found something"
  * (`violations`) from "the check could not run" (`crashed`) from "the
@@ -26,7 +26,7 @@
  * says that. Adding a fifth member is a smaller change than a second
  * vocabulary, which is what 1.1 forbids.
  *
- * ## Severity, and the one contested call
+ * SEVERITY, AND THE ONE CONTESTED CALL.
  *
  * Six ids are `block`. `verification-skipped` is `warn`, and that is not a
  * confidence statement about the detection — an added `it.skip` is as
@@ -36,7 +36,7 @@
  * promote a class to blocking on a split. It ships `warn` with the corpus as
  * the evidence a later promotion would need.
  *
- * ## The escape hatch is scoped to one id, deliberately
+ * THE ESCAPE HATCH IS SCOPED TO ONE ID, DELIBERATELY.
  *
  * A blanket `tamper-allow` in a commit message would suppress every detector at
  * once, which turns one honest exception into a general amnesty. The grammar

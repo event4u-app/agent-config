@@ -13,7 +13,7 @@
  * No model call. No network. The input is a unified diff, a commit message, and
  * optionally a recorded runner verdict.
  *
- * ## THIS IS NOT A CI GATE, AND THE NAME SAYS SO
+ * THIS IS NOT A CI GATE, AND THE NAME SAYS SO.
  *
  * It is `detect_*`, not `check_*` / `lint_*`, and that is a claim about scope
  * rather than a way around a counter. `_lib/gate_population.ts` classifies a
@@ -27,7 +27,7 @@
  * population. Promoting it is a later decision that owes a measured
  * false-positive rate first, exactly as step 3.2 requires of its sibling.
  *
- * ## Self-honesty
+ * SELF-HONESTY.
  *
  * This detector must not commit the defects it detects. It contains no
  * `catch` that discards its error, no skipped test, and no assertion it
