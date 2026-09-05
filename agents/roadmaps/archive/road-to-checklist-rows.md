@@ -31,7 +31,7 @@ four needs a new artefact.
 
 ## Phase 1 — The render surface has security rows and no completeness rows
 
-- [ ] **1.1 Add the state matrix to the render row.**
+- [x] **1.1 Add the state matrix to the render row.**
       `src/skills/ai-code-blindspots/SKILL.md:50` covers a user-controlled
       render for output encoding, `dangerouslySetInnerHTML`, client secrets and
       token storage — every row is a security control.
@@ -42,15 +42,28 @@ four needs a new artefact.
       skill's existing row shape, each with its backstop grep column.
       verify: the four states appear as rows on the render surface, each with a
       grep, and the existing security rows are unchanged.
-- [ ] **1.2 Keep it a checklist row, not a new evidence mode.** The source asks
+      DONE: `src/skills/ai-code-blindspots/SKILL.md:60` — a four-row
+      `### Render surface — the completeness rows` sub-table (Empty, Loading,
+      Error, Keyboard path), each with an assert cell and a grep cell. The step's
+      wording was self-contradicting — the "existing row shape" is a 3-column
+      table with no grep column — so the shape went to the council (2/2,
+      Option 1: sub-table with the column labelled `heuristic`, plus a pointer
+      from the render row). The 13 security rows keep every requirement they had;
+      the render row gained navigation text only. The grep POLARITY is inverted
+      versus the main table (zero hits is the prompt here) and the sub-table says
+      so, because reading it the other way is the failure mode it would have.
+- [x] **1.2 Keep it a checklist row, not a new evidence mode.** The source asks
       for a declared "task-completion evidence mode" for UI work. That is a
       contract change with its own consumers; the row in the checklist is the
       part that is cheap and immediately useful, and it is what this step does.
       verify: no new evidence type is added by this phase.
+      DONE: the change is four table rows and prose in one SKILL.md. No evidence
+      enum, artifact type, or completion-review type was touched — the diff for
+      this phase is `src/skills/ai-code-blindspots/SKILL.md` only.
 
 ## Phase 2 — The plan criteria the planning skills do not name
 
-- [ ] **2.1 Write the four criteria into the two planning skills.**
+- [x] **2.1 Write the four criteria into the two planning skills.**
       `grep -ricE 'necessity|sufficiency|groundedness|premature|scope creep'`
       over `src/skills/feature-planning/` and
       `src/skills/complexity-first-planning/` returns zero across both. Plans
@@ -60,15 +73,26 @@ four needs a new artefact.
       both skills, phrased so a reviewer can fail a plan on one of them.
       verify: each criterion appears in both skills as a line a reviewer can
       apply, and each says what failing it looks like.
-- [ ] **2.2 Make groundedness the machine-checkable one.** Of the four,
+      DONE: `src/skills/feature-planning/SKILL.md:179` and
+      `src/skills/complexity-first-planning/SKILL.md:65` — Necessity,
+      Sufficiency, Ordering, Groundedness, each with an explicit **Fails when**
+      clause. The complexity-first copy states that it owns Ordering and carries
+      the other three so a plan reviewed on ordering alone cannot pass while
+      being unnecessary or ungrounded.
+- [x] **2.2 Make groundedness the machine-checkable one.** Of the four,
       groundedness is decidable: does the plan reference verbs and tools that
       exist? The capabilities index is already the answer to that question, so
       the criterion points at it rather than describing a new check.
       verify: the groundedness line names the index it is checked against.
+      DONE: both copies name `CAPABILITIES.yaml` at the repository root — the
+      generated capability index (`src/scripts/generate_capabilities_index.ts`,
+      drift-checked with `--check`) listing every shipped skill and command per
+      capability area — plus the project's own script/task entry points for what
+      the index does not cover.
 
 ## Phase 3 — Transactional email
 
-- [ ] **3.1 Cover what a mail client needs, in a skill that exists.** The only
+- [x] **3.1 Cover what a mail client needs, in a skill that exists.** The only
       hit for `outlook` across `src/skills/` is in
       `humanizer/data/patterns.md`, which is about prose. `laravel-mail`
       carries one line — `:173`, "Use Markdown templates for consistent styling
@@ -78,10 +102,16 @@ four needs a new artefact.
       the client list worth testing, and what breaks in each.
       verify: the section exists in `laravel-mail`, and no new skill was
       created.
+      DONE: `src/skills/laravel-mail/SKILL.md:170` — `## Surviving the mail
+      client`: four ordered requirements (table layout, inline styles, no web
+      fonts or background images, explicit image width and alt) and a six-row
+      client table naming what breaks in each, including the Gmail ~102 KB clip
+      and dark-mode inversion. `git status src/skills/` shows four modified
+      files and no new directory.
 
 ## Phase 4 — A retirement enforced against two literal strings
 
-- [ ] **4.1 Retire the wording, not only the phrase.**
+- [x] **4.1 Retire the wording, not only the phrase.**
       `docs/CLAIMS.md:215` retires `claim:no-runtime-daemon` with
       `retires_phrasings: zero runtime daemon | no background daemon` — two
       literal strings. `README.md:486` publishes "**Zero overhead by default** —
@@ -93,11 +123,30 @@ four needs a new artefact.
       actually true.
       verify: `check_claims` flags the README line before the repair and is
       clean after it.
-- [ ] **4.2 Say what the phrase list can and cannot reach.** A substring list
+      DONE, both halves observed. With the two needles added and README.md
+      untouched, `check_claims` reported 2 findings, both on README.md, both
+      naming `claim:no-runtime-daemon` — one per needle. After the repair it
+      returns clean (97 entries scanned). Needle set is now `zero runtime daemon
+      | no background daemon | zero overhead by default | nothing runs until you
+      ask`; both new needles clear the 12-char floor. `README.md:486` now reads
+      "**Governed runtime** — resident processes require supervision, scoped
+      writes, and a stop control" — the council's wording (2/2 on retiring both
+      phrases; split on the replacement, and the normative `require` form was
+      taken because the alternative asserted an unbacked comparative property
+      and the successor entry records that nothing supervised ships today).
+- [x] **4.2 Say what the phrase list can and cannot reach.** A substring list
       catches republication of a wording and cannot catch a synonym. That is a
       real limit, not a bug to fix here, and the entry should say so rather than
       leaving the next reader to assume coverage.
       verify: the claim entry carries one line naming the limit.
+      DONE: `docs/CLAIMS.md`, the `no-runtime-daemon` entry's `non_inference`
+      field now closes with `WHAT THE PHRASE LIST REACHES, STATED 2026-09-04`,
+      which says the scan is a literal case-insensitive substring match over the
+      five publish surfaces, catches republication of a wording and cannot catch
+      a paraphrase, and uses this entry as its own worked example — the two
+      needles added today shared no substring with the original pair and so
+      shipped on README.md for the whole window since the 2026-08-27 withdrawal.
+      The list is a record of what was caught, never a coverage proof.
 
 ## Not in scope
 
@@ -120,14 +169,14 @@ Planning it here would be a second stem on an owned subject.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The render surface of `ai-code-blindspots` carries empty, loading,
+- [x] AC-1 — The render surface of `ai-code-blindspots` carries empty, loading,
       error and keyboard-path rows with backstop greps, and its security rows
       are unchanged.
-- [ ] AC-2 — Both planning skills carry the four plan criteria as lines a
+- [x] AC-2 — Both planning skills carry the four plan criteria as lines a
       reviewer can fail a plan on, and groundedness names the index it is
       checked against.
-- [ ] AC-3 — `laravel-mail` carries a transactional-email section with
+- [x] AC-3 — `laravel-mail` carries a transactional-email section with
       table layout, inline styles and a client list, and no new skill exists.
-- [ ] AC-4 — `check_claims` flags the README wording before the repair and is
+- [x] AC-4 — `check_claims` flags the README wording before the repair and is
       clean afterwards, and the claim entry states what a substring list cannot
       reach.

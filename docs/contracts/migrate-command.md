@@ -1,11 +1,22 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+promote-to: stable
+promote-reason: >-
+  Beta review 2026-09-05. 91 days in beta, last touched 2026-07-13, seven
+  consumer references including the implementation
+  (`src/scripts/_cli/cmd_migrate.ts:11`), the whole 14.x series shipped it
+  unchanged. No contract dependency, no open clause, no deferred decision. Ten
+  stale Python pointers left by the ADR-200 port are repaired in this same
+  change rather than allowed to buy another window: two of them named a test
+  file and a fixture directory that exist under no extension, so the § Test
+  surface described tests that were never ported. Decided by AI council
+  2026-09-05, 2/2 convergent, both seats requiring the doc repair in the same
+  change.
 ---
 
 # `agent-config migrate` — Behavior Contract
 
-> **Status:** active · **Owner:** maintainer (`src/scripts/_cli/cmd_migrate.py`) · **Opened:** 2026-05-29
+> **Status:** active · **Owner:** maintainer (`src/scripts/_cli/cmd_migrate.ts`) · **Opened:** 2026-05-29
 >
 > Source: `road-to-one-migrate-command.md` Phase 1. Locks the union of
 > cleanup actions performed by the unified `./agent-config migrate`
@@ -79,7 +90,7 @@ repo carries **none** of these:
 - ❌ Empty `agent-config/` shell at the project root.
 
 The `.gitignore` block is refreshed to the canonical shape
-documented in `scripts/_cli/cmd_migrate.py::GITIGNORE_NEW_BODY`.
+documented in `src/scripts/_cli/cmd_migrate.ts::GITIGNORE_NEW_BODY`.
 
 ## Action order — opinionated, fixed
 
@@ -176,9 +187,9 @@ intentionally **outside** the unified `migrate` command:
 |---|---|---|
 | Lift project-local YAML into `~/.event4u/agent-config/` | wizard (`agent-config setup`) | New global config is created fresh by the wizard; preserving stale values defeats the deletion-over-migration policy. |
 | Write a fresh `.agent-settings.yml` | wizard (`agent-config setup`) | Same as above — the wizard is the source of truth for new project config. |
-| Run the perms gate (`lint_global_paths.py`) | `agent-config doctor` | Migration deletes project-local state; the perms audit is a separate diagnostic on the global tree. |
+| Run the perms gate (`src/scripts/lint_global_paths.ts`) | `agent-config doctor` | Migration deletes project-local state; the perms audit is a separate diagnostic on the global tree. |
 | `.legacy-pre-global-only/<stamp>/` snapshot | (removed) | Snapshot-and-rollback was a `migrate-to-global` semantic. The deletion path needs no snapshot — git history is the rollback surface. |
-| `agents/.event4u-bridge.yml` legacy marker removal | `install.py` | Marker is retired (ADR-020 amendment 2026-07-13); install now deletes any legacy leftover instead of writing it. Global root resolves from `~/.event4u/agent-config`. |
+| `agents/.event4u-bridge.yml` legacy marker removal | `src/scripts/install.ts` | Marker is retired (ADR-020 amendment 2026-07-13); install now deletes any legacy leftover instead of writing it. Global root resolves from `~/.event4u/agent-config`. |
 | `settings:migrate` (read-only copy of project YAML into global) | (removed; superseded by wizard) | The read-only copy was a stepping stone for the destructive move. With the deletion policy, neither step survives. |
 
 ## Exit codes
@@ -195,28 +206,45 @@ even if a sibling step's predicate is already satisfied.
 
 ## Test surface
 
-`tests/migrate/test_unified_migrate.py` covers, against a fixture
-consumer dir under `tests/fixtures/migrate/`:
+Two suites cover this contract, both building their legacy-install fixtures in a
+temporary directory at run time rather than from a committed fixture tree:
 
-- **Full apply** — fixture carries every input signal; assert each
-  output-state predicate holds post-run; summary lists each action.
-- **`--dry-run`** — same fixture, assert zero filesystem mutations
-  (snapshot dir tree before and after; bit-identical).
-- **Idempotency** — run twice; assert second run is the
-  "already migrated" no-op.
+[`tests/scripts/_cli/cmd_migrate.test.ts`](../../tests/scripts/_cli/cmd_migrate.test.ts)
+
+- **Usage / arg errors** — unknown flags and bad `--from` values.
+- **Already migrated** — a clean repo is the "nothing to do" no-op.
+- **Detection on a legacy fixture** — each input signal is recognised.
+- **Apply (mutating)** — the output-state predicates hold post-run.
+
+[`tests/scripts/_cli/cmd_migrate_v0_state.test.ts`](../../tests/scripts/_cli/cmd_migrate_v0_state.test.ts)
+
+- **Apply** — v0 `.implement-ticket-state.json` becomes `.work-state.json`, the
+  `.bak` is preserved and the v0 file is removed.
+- **`--dry-run`** — describes the migration in `would …` voice and mutates nothing.
+- **`--check`** — exits 2 on a v0-state legacy repo, reports the pending action,
+  writes nothing.
+
+**Corrected 2026-09-05:** this section previously described
+`tests/migrate/test_unified_migrate.py` running against a fixture directory
+`tests/fixtures/migrate/`. Neither exists under any extension — the Python suite
+was not ported one-for-one during ADR-200, and a reader checking this contract's
+coverage found a test surface that had never been there. The idempotency case
+the old text claimed ("run twice; assert the second run is the already-migrated
+no-op") is covered by the *already migrated* case above rather than by a
+dedicated double-run assertion.
 
 ## Rollback
 
 Restoring the previous command surface:
 
-1. Restore the previous `scripts/_cli/cmd_migrate.py` from git
+1. Restore the previous `src/scripts/_cli/cmd_migrate.ts` from git
    history.
 2. Restore `scripts/_cli/cmd_migrate_to_global.py`,
    `cmd_migrate_state()` / `cmd_migrate_to_global()` in
-   `scripts/_dispatch.bash`, and the corresponding registry entries
+   `src/scripts/_dispatch.bash`, and the corresponding registry entries
    in `src/cli/registry.ts`.
 3. Delete this contract doc.
-4. Restore `scripts/_cli/cmd_settings_migrate.py` if also removed
+4. Restore `src/scripts/_cli/cmd_settings_migrate.ts` if also removed
    (note: this command was originally cited only as a discussion
    item in Phase 1 cross-check; see "Excluded" table above).
 
@@ -228,6 +256,6 @@ Restoring the previous command surface:
   shipped `migrate-to-global`; superseded by this contract.
 - `road-to-portable-runtime-and-update-check.md` § P3.5–P3.6 — the
   original `migrate` command (composer / npm cleanup).
-- `scripts/_cli/cmd_migrate.py` — implementation.
-- `dist/agent-src/templates/scripts/work_engine/migration/v0_to_v1.py`
+- `src/scripts/_cli/cmd_migrate.ts` — implementation.
+- `dist/agent-src/templates/scripts/work_engine/migration/v0_to_v1.ts`
   — state-file migration helper invoked from step 4.

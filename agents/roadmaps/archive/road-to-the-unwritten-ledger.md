@@ -74,7 +74,7 @@ what nobody can currently answer.
 
 ## Phase 1 — Write the ledger that is missing
 
-- [ ] **1.1 Ingest the ten findings.** The machine block is intact on the pull
+- [x] **1.1 Ingest the ten findings.** The machine block is intact on the pull
       request (`<!-- release-findings-json: … -->`), so the ingestion path exists
       without recovering an expired artifact: extract it and feed it to
       `check_finding_dispositions --ingest <file> --release 14.16.0`. Ingestion
@@ -83,21 +83,21 @@ what nobody can currently answer.
       verify: `agents/evidence/release-findings/14.16.0.json` carries ten
       findings with the ids above, and
       `check_finding_dispositions --release 14.16.0` now exits **1**, not 0.
-- [ ] **1.2 Disposition the high finding against the tree, not against the
+- [x] **1.2 Disposition the high finding against the tree, not against the
       title.** `64d61651eff3` is reproduced and owned by
       `road-to-one-negation-vocabulary`, which measures a standing merge grant
       surviving `"Merge PR #12 auf keinen Fall."`. Its disposition is therefore
       neither `fixed` (nothing has landed) nor `false_positive`.
       verify: the entry names that roadmap as its receiver and its status is one
       the schema admits, with the reproduction cited in `verified_by`.
-- [ ] **1.3 Disposition the remaining nine, each against the tree.** Several
+- [x] **1.3 Disposition the remaining nine, each against the tree.** Several
       have plausibly been closed by commits inside the 14.16.0 window
       (`6fa2b068` for the rename/closed-vocabulary pair, `2bd8e506` for the WCAG
       claim, `4461e319` for iconography); a plausible mapping is not a
       disposition. Each entry states what was checked and where.
       verify: `check_finding_dispositions --release 14.16.0` exits 0, and every
       `fixed` row names a commit that a `git show --stat` resolves.
-- [ ] **1.4 Say whether the two repeat classes are regressions.** For
+- [x] **1.4 Say whether the two repeat classes are regressions.** For
       `fec596e8beb4` and `64d61651eff3`, the entry records whether the 14.15.0
       fix regressed, never covered this instance, or the finding is a duplicate
       report — one sentence each, with the evidence.
@@ -105,7 +105,7 @@ what nobody can currently answer.
 
 ## Phase 2 — Absence stops reading as zero
 
-- [ ] **2.1 A released version with no ledger is red.** `check_finding_dispositions
+- [x] **2.1 A released version with no ledger is red.** `check_finding_dispositions
       --release X.Y.Z` currently returns 0 on an absent file. Where the version
       resolves to a release that exists — a git tag, or an entry in
       `CHANGELOG.md` — an absent ledger is a failure, not a clean pass. A version
@@ -116,13 +116,13 @@ what nobody can currently answer.
       removed, exits 0 for an unreleased version string, and a test pins both
       directions. A test that only asserts the red half cannot catch the day the
       predicate inverts.
-- [ ] **2.2 Name the discriminator in the script's own docblock.** The gate's
+- [x] **2.2 Name the discriminator in the script's own docblock.** The gate's
       header already explains why the ledger and not the comment is the record;
       it must now also say what makes absence a finding, since a future reader
       changing `allowEmpty` is the person who needs it.
       verify: the docblock states the released-vs-unreleased discriminator and
       the source it reads it from.
-- [ ] **2.3 Make a finding id legible as a finding id.** Three separate reviewers
+- [x] **2.3 Make a finding id legible as a finding id.** Three separate reviewers
       in this round searched the commit log for `7aee57d1` and reported "no fix
       found"; it is the first eight characters of finding id `7aee57d1e98e`, and
       it looks exactly like a short SHA. One line in the ledger schema's own
@@ -145,6 +145,15 @@ e2fb09a4665b  high  security  road-to-defect-population-sweeps.md
               "Swallowed write in security hook"
 ```
 
+> **Read against the live pull request, 2026-09-04.** The excerpt above quotes
+> run 1. #1839 carries **two machine blocks**, 3.5 minutes apart
+> (`04:54:35Z`, `04:58:08Z`), ten findings each, with **zero id overlap** and
+> eight of ten `(kind, file)` pairs shared — the same defects, reworded, some
+> re-severitied. `parse_comment_findings` takes the LAST block, so the ids the
+> gate actually consumes are run 2 (`b9e68835cea0`, `3f5e513f11bd`, …). Both
+> sets are recorded in the blocker under 2b.1; the instability itself is a
+> second, independent enforcement blocker recorded there under 2b.2.
+
 The gate read the roadmap's own description of a defect elsewhere in the tree and
 classified it as a defect in the diff. This is not a small false positive: it is
 the shape that makes the enforcement flip the whole round demands unsafe. Under
@@ -152,7 +161,7 @@ the shape that makes the enforcement flip the whole round demands unsafe. Under
 was written to record**, and the only way to pass would be to describe defects
 less precisely.
 
-- [ ] **2b.1 State the class before the flip is taken.** The
+- [x] **2b.1 State the class before the flip is taken.** The
       `self-review-gate-cost` blocker currently reads as a cost-and-authority
       question. It also has a correctness precondition: the gate must
       distinguish a defect the diff *introduces* from one it *documents*, or
@@ -160,7 +169,7 @@ less precisely.
       produces most.
       verify: the blocker text names this class with the run that produced it,
       and the ten finding ids are recorded so the next reading is a comparison.
-- [ ] **2b.2 Find the cheapest discriminator, and say if there is none.**
+- [x] **2b.2 Find the cheapest discriminator, and say if there is none.**
       Candidates, none free: scope findings to non-prose paths; require a finding
       to cite a line the diff *changed* in the file it names rather than a line
       the prose quotes; or accept prose findings as advisory-only while code
@@ -173,7 +182,7 @@ less precisely.
 
 ## Phase 3 — The sibling's review date meets its second occurrence
 
-- [ ] **3.1 Pull `review_by` forward with the reason attached.**
+- [x] **3.1 Pull `review_by` forward with the reason attached.**
       `agents/roadmaps/later/road-to-release-finding-ordering.md` carries
       `review_by: 2026-12-03`, set when the defect had one recorded occurrence.
       It now has two: 14.15.0's 91-second read, and 14.16.0 shipping with no
@@ -197,17 +206,17 @@ less precisely.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `agents/evidence/release-findings/14.16.0.json` exists and carries all
+- [x] AC-1 — `agents/evidence/release-findings/14.16.0.json` exists and carries all
       ten findings from PR #1836 with complete dispositions, and
       `check_finding_dispositions --release 14.16.0` exits 0 because they are
       dispositioned, not because the file is absent.
-- [ ] AC-2 — Removing that ledger turns the gate red, and an unreleased version
+- [x] AC-2 — Removing that ledger turns the gate red, and an unreleased version
       string still passes, both pinned by tests.
-- [ ] AC-3 — A finding id is identifiable as a finding id from the rendered pull
+- [x] AC-3 — A finding id is identifiable as a finding id from the rendered pull
       request comment without opening the source.
-- [ ] AC-4 — The `self-review-gate-cost` blocker names the documented-versus-
+- [x] AC-4 — The `self-review-gate-cost` blocker names the documented-versus-
       introduced class, with the ten finding ids from the 2026-09-04 run, and
       either a chosen discriminator or a statement that none is cheap.
-- [ ] AC-5 — `road-to-release-finding-ordering` records the 14.16.0 occurrence and
+- [x] AC-5 — `road-to-release-finding-ordering` records the 14.16.0 occurrence and
       a review date consistent with two occurrences; its own AC-2 demonstration
       is untouched and still owed.

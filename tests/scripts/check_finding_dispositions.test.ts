@@ -10,6 +10,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
     isBlocking,
+    localTagHit,
+    releaseStatus,
+    tags_complete,
     missing_dispositions,
     parse_comment_findings,
     parse_ledger,
@@ -140,5 +143,128 @@ describe('finding_id stability', () => {
                 file: 'src/scripts/update_counts.ts',
             }),
         ).toBe('3ddcca7957b4');
+    });
+});
+
+/**
+ * Absence is not evidence of zero.
+ *
+ * Before this split, `check_finding_dispositions --release 14.16.0` exited 0 on
+ * an absent ledger for a version that had already shipped — a released version
+ * with no record read as "no findings". Both directions are pinned here on
+ * purpose: a test that only asserts the RED half cannot catch the day the
+ * predicate inverts and answers "unreleased" for everything, which restores the
+ * old green with no visible change.
+ */
+describe('releaseStatus — the released-vs-unreleased discriminator', () => {
+    const REMOTE_UNAVAILABLE = { remote: 'unavailable' } as const;
+
+    it('released: a local tag hit is authoritative, with no remote needed', () => {
+        expect(
+            releaseStatus({ localTagHit: true, tagsComplete: false, ...REMOTE_UNAVAILABLE }),
+        ).toBe('released');
+    });
+
+    it('unreleased: a miss against a COMPLETE tag list is authoritative', () => {
+        expect(
+            releaseStatus({ localTagHit: false, tagsComplete: true, ...REMOTE_UNAVAILABLE }),
+        ).toBe('unreleased');
+    });
+
+    it('released: a miss against an INCOMPLETE list defers to the remote', () => {
+        expect(
+            releaseStatus({ localTagHit: false, tagsComplete: false, remote: 'released' }),
+        ).toBe('released');
+    });
+
+    it('unreleased: the remote may also settle it the other way', () => {
+        expect(
+            releaseStatus({ localTagHit: false, tagsComplete: false, remote: 'unreleased' }),
+        ).toBe('unreleased');
+    });
+
+    it('undeterminable: an incomplete list and no remote answer never passes silently', () => {
+        expect(
+            releaseStatus({ localTagHit: false, tagsComplete: false, ...REMOTE_UNAVAILABLE }),
+        ).toBe('undeterminable');
+    });
+
+    it('is sensitive — a miss on an incomplete list is NOT read as unreleased', () => {
+        // The inversion the risk register names: if this ever returns
+        // 'unreleased' the gate goes green on every absent ledger in CI, where
+        // actions/checkout leaves the tag list empty.
+        expect(
+            releaseStatus({ localTagHit: false, tagsComplete: false, ...REMOTE_UNAVAILABLE }),
+        ).not.toBe('unreleased');
+    });
+});
+
+describe('localTagHit — tag matching, and what must NOT match', () => {
+    const TAGS = ['14.15.0', '14.16.0', 'v9.14.0', 'backup/pre-rebase'];
+
+    it('matches this repo bare tags', () => {
+        expect(localTagHit('14.16.0', TAGS)).toBe(true);
+    });
+
+    it('matches a v-prefixed tag too', () => {
+        expect(localTagHit('9.14.0', TAGS)).toBe(true);
+    });
+
+    it('does not match an unreleased version', () => {
+        expect(localTagHit('99.99.0', TAGS)).toBe(false);
+    });
+
+    it('does not prefix-match — 14.1 is not 14.16.0, 14.16.01 is not either', () => {
+        expect(localTagHit('14.1', TAGS)).toBe(false);
+        expect(localTagHit('14.16.01', TAGS)).toBe(false);
+    });
+
+    it('an empty version string matches nothing', () => {
+        expect(localTagHit('   ', TAGS)).toBe(false);
+    });
+});
+
+describe('tags_complete — an empty tag list is never complete', () => {
+    it('no tags means the local miss cannot be trusted', () => {
+        // The CI case: actions/checkout fetches depth 1 and no tags, so this is
+        // the state the gate is actually in when release-validation runs it.
+        expect(tags_complete([])).toBe(false);
+    });
+});
+
+/**
+ * A 12-hex finding id looks exactly like a short commit SHA. Three reviewers in
+ * the 2026-09 round searched the commit log for one, found nothing, and reported
+ * "no fix found". The rendered comment must say what the id is and where its
+ * disposition lives — and the assertion below checks the SENTENCE is present,
+ * not merely that the comment rendered.
+ */
+describe('renderReview — a finding id is legible as a finding id', () => {
+    const F: Finding = {
+        severity: 'high',
+        kind: 'security',
+        title: 'a blocking finding',
+        file: 'src/x.ts',
+    } as Finding;
+
+    it('names the id as a finding id, denies it is a commit SHA, and points at the ledger', () => {
+        const body = renderReview([F], false);
+        expect(body).toContain('is a FINDING id');
+        expect(body).toContain('not a commit SHA');
+        expect(body).toContain('agents/evidence/release-findings/<version>.json');
+    });
+
+    it('places the sentence with the table, not inside the machine block', () => {
+        const body = renderReview([F], false);
+        const note = body.indexOf('is a FINDING id');
+        const machine = body.indexOf('<!-- release-findings-json:');
+        expect(note).toBeGreaterThan(-1);
+        expect(machine).toBeGreaterThan(-1);
+        // A reader of the RENDERED comment must see it; an HTML comment is invisible.
+        expect(note).toBeLessThan(machine);
+    });
+
+    it('is sensitive — the no-findings comment carries no id note, having no ids', () => {
+        expect(renderReview([], false)).not.toContain('is a FINDING id');
     });
 });

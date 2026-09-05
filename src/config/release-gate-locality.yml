@@ -1,0 +1,129 @@
+# Release-gate locality registry
+#
+# WHY THIS FILE EXISTS
+#
+# `release-validation.yml` is the last gate a release passes and the first one
+# that costs something to fail: by the time it runs, a branch, a pull request
+# and a CI run already exist. Until 2026-09-05 nothing related its jobs to the
+# commands a maintainer can run BEFORE any of that leaves the machine, and the
+# result was a recurring failure shape rather than a one-off — 14.14.0 (PR
+# #1812) on the curated head, 14.17.0 (PR #1856) on the governance-mix
+# response. Both were discoverable locally in under two seconds. Neither was
+# discovered locally, because nothing asked.
+#
+# The registry is the relation the tree was missing. It is read by two
+# consumers, which is what keeps it from rotting into a comment:
+#
+#   1. `tests/scripts/release_gate_locality.test.ts` — every job in the
+#      workflow has a row, every row names a live job, every declared script
+#      exists, and every `local: ~` carries a reason with an approved prefix.
+#      A new release-validation job therefore cannot land without answering
+#      "and how does a maintainer run this before pushing?".
+#   2. `task release:verify` — runs every row marked `verify: true` against the
+#      working tree. That is the command the release pipeline points at, and
+#      the one to run before `task release`.
+#
+# WHAT A ROW MEANS
+#
+#   local:   the shell command that reproduces the job's assertion locally.
+#            `~` (null) means it genuinely cannot run before the PR exists.
+#   reason:  REQUIRED when `local` is null. Must start with one of
+#            NEEDS_PR: / NEEDS_ARTIFACT: / NEEDS_NETWORK: / NEEDS_TOKEN:
+#            so the cause is classified rather than merely narrated.
+#   verify:  whether `task release:verify` runs it. Cheap and deterministic
+#            rows are true; anything that packs or installs is false and stays
+#            opt-in.
+#   network: marks a row that leaves the machine. Excluded from `--cheap`,
+#            which is the set the release pipeline runs on its own, so a
+#            registry outage cannot read as a release defect.
+#   release_branch_only:
+#            the assertion only means anything on a `release/X.Y.Z` head.
+#            Skipped with a printed reason elsewhere — never silently, and
+#            never reported as a pass.
+#   script:  the implementing script, when the assertion lives in one. `~`
+#            marks an assertion that exists only as inline workflow YAML —
+#            which is itself the defect this column makes countable.
+#   guard:   the local guard site that ALSO refuses this, when one exists.
+#            A row with a guard fails before the push, not merely before CI.
+#   partial: REQUIRED when the `local` command reproduces only part of what the
+#            job asserts. Names the uncovered part. A row silently claiming
+#            full coverage it does not have is the defect this file exists to
+#            end, so the gap is written down rather than inferred.
+
+version: 1
+workflow: .github/workflows/release-validation.yml
+
+jobs:
+  release-shape:
+    local: 'git diff --name-only origin/main...HEAD | ./scripts-run src/scripts/check_release_pr_shape --files -'
+    verify: true
+    # The assertion is about a RELEASE PR's diff — every ordinary branch fails
+    # it by construction, so running it off a release branch would teach a
+    # maintainer to ignore this command's red. Skipped with a printed reason
+    # instead, which is the difference between a gate that is not applicable
+    # and one that passed.
+    release_branch_only: true
+    script: src/scripts/check_release_pr_shape.ts
+    guard: ~
+
+  changelog-entry:
+    # The job asserts three things: a heading for the head version, a non-empty
+    # body, and a `Tests: N (+M since PREV)` footer.
+    #
+    # `check_release_highlights` covers the first two — it exits 2 with
+    # "CHANGELOG carries no section for <v>". It does NOT read the footer, and
+    # saying otherwise here would be the exact defect this registry exists to
+    # end: a row asserting a coverage it does not have. The footer half is
+    # covered locally by the guard named below, not by the `local` command, so
+    # `partial` states that rather than leaving a reader to grep for it.
+    local: './scripts-run src/scripts/check_release_highlights --version ${VERSION}'
+    verify: true
+    partial: 'heading + non-empty body only; the `Tests: N` footer half is covered by the guard, not by this command'
+    script: ~
+    guard: guard_release_curation
+
+  surface-equality:
+    local: ~
+    reason: 'NEEDS_PR: compares the live PR body against the CHANGELOG section; there is no PR body before `gh pr create`. The body is DERIVED from that same section (`pr_body_from_section`), so the local half is the section check above.'
+    verify: false
+    script: src/scripts/check_release_surface_equality.ts
+    guard: ~
+
+  highlight-plausibility:
+    # The job that failed 14.17.0. All four sub-checks (authoring instruction,
+    # unrewritten derived marker, `_none_` contradiction, governance-mix
+    # response) run locally from local tags alone — no origin, no HEAD_REF.
+    local: './scripts-run src/scripts/check_release_highlights --version ${VERSION}'
+    verify: true
+    script: src/scripts/check_release_highlights.ts
+    guard: guard_release_branch_push
+
+  version-consistency:
+    local: './scripts-run src/scripts/check_template_pin_drift'
+    verify: true
+    script: src/scripts/check_template_pin_drift.ts
+    guard: ~
+
+  finding-dispositions:
+    local: './scripts-run src/scripts/check_finding_dispositions --release ${VERSION}'
+    verify: false
+    reason: 'NEEDS_PR: the unrecorded-findings half reads live PR review comments. The missing-dispositions half does run locally and is what the `local` command covers.'
+    script: src/scripts/check_finding_dispositions.ts
+    guard: ~
+
+  audit-gate:
+    local: 'npm audit --omit=dev --audit-level=high'
+    verify: true
+    # Reaches the registry, so it is excluded from the `--cheap` set the
+    # release pipeline runs unattended: a registry outage must not read as a
+    # release defect. `task release:verify` (no flag) still runs it.
+    network: true
+    script: ~
+    guard: ~
+
+  release-install-e2e:
+    local: ~
+    reason: 'NEEDS_ARTIFACT: needs a packed tarball plus a BASELINE_TARBALL of the upgrade-from version; runnable by hand as `bash tests/test_release_install_e2e.sh`, too slow for a pre-push gate.'
+    verify: false
+    script: ~
+    guard: ~

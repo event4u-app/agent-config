@@ -143,7 +143,9 @@ activity for 48 h. `review` keeps its disqualifying reason so the next sweep
 starts from a shorter list; `live` means another session may hold it. A
 worktree outside the conventional roots is never `safe` — sitting beside the
 repo it can be mistaken for a sibling package, so its removal stays a
-judgement call.
+judgement call. It is also the placement that loses the persistent shell
+cwd on a host with a working-directory boundary — see
+[`using-git-worktrees`](../using-git-worktrees/SKILL.md) § 2.
 
 The mode reports only. `--plan` prints `git worktree remove` plus
 `git branch -d` (never `-D`) for the safe set; **running it is a bulk deletion

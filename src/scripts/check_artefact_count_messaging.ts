@@ -288,6 +288,15 @@ export function anchor_coverage_gaps(root: string = ROOT): CoverageGap[] {
             const allowed = ANCHOR_KINDS[kind] ?? [kind];
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i]!;
+                // The dated-measurement marker is honoured HERE too, and it was
+                // not. `scan_text` skipped a marked line while this pass still
+                // demanded an anchor for it, so a figure the gate's own charter
+                // excludes — a point-in-time measurement, not a live total —
+                // could be silenced on value and never on coverage. An anchor is
+                // exactly the wrong repair for that line: `update_counts` would
+                // rewrite a recorded measurement to today's number, which is the
+                // falsification the marker's own docstring forbids.
+                if (line.includes(DATED_MEASUREMENT_MARKER)) continue;
                 const re = new RegExp(pattern.source, pattern.flags);
                 if (!re.test(line)) continue;
                 const anchored = anchors.some(

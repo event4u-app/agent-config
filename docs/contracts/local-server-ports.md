@@ -1,6 +1,16 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+promote-to: stable
+promote-reason: >-
+  Beta review 2026-09-05. All four STABILITY.md criteria checked rather than
+  assumed: 37 days in beta, no content change in 39 days, sixteen minor releases
+  (14.0.0 to 14.16.0) shipped it unchanged, and four consumer references
+  including the implementation itself (`src/server/port.ts:13`). No
+  contract-to-contract dependency in either direction that is beta; the adjacent
+  `local-server-api.md` points at this file, not away from it. Its three
+  open-looking clauses are closed carve-outs with recorded council rejections
+  (2026-07-23, 2026-07-27), not pending decisions. Decided by AI council
+  2026-09-05, 2/2 convergent, under the maintainer instruction to fix the CI.
 ---
 
 # Contract: local server ports + host integration

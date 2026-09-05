@@ -114,7 +114,7 @@ verified defects below do not wait on it.
 
 ## Phase 1 — No pass on input the check cannot see
 
-- [ ] **1.1 Give the eight binary checks an `Undecide` function for their known
+- [x] **1.1 Give the eight binary checks an `Undecide` function for their known
       blind spot.** `image-alternative-text` on a tree that renders images only
       through framework components sees zero `<img>` and returns `passed`;
       `document-head-basics` on an app with a head manager sees no `<title>`.
@@ -123,7 +123,24 @@ verified defects below do not wait on it.
       verify: one fixture per check that forces `undecided`; each fixture returns
       `passed` when its `Undecide` entry is removed, which is what proves the
       entry is doing the work.
-- [ ] **1.2 The accounting invariant, in its five-bucket form, inside
+      DONE — nine probes, keyed to FOUR evidence surfaces rather than one shared
+      predicate (`check_web_launch_readiness.ts` § `UNDECIDABLE`). An AI council
+      (2026-09-04, 2/2, anthropic + openai) rejected the single "no HTML page"
+      predicate: honest for a check reading rendered markup, semantically wrong
+      for one matching route paths, where absent HTML does not establish an
+      absent route surface. Surfaces: anything-read · a rendered page · readable
+      code · an inspectable route surface (page ∪ sitemap.xml ∪ routes//pages/
+      ∪ router module). Reversibility is executed, not asserted — `audit()` takes
+      the probe table as a defaulted parameter, and the test deletes each entry
+      in turn and requires that check back in `passed`/`findings` (7 reversals,
+      count asserted so a neutered table cannot pass vacuously). Council also
+      asked for a mixed-evidence tree — HTML present, no 404 and no legal page —
+      where the two route checks must FIND rather than abstain; it is pinned.
+      One behaviour was added beyond the step: a surface-blind probe SUPPRESSES
+      its own check's findings, because `custom-error-route` otherwise printed
+      "no 404.html in the build output" as HIGH and, two lines lower, that the
+      absence establishes nothing — two contradictory sentences from one read.
+- [x] **1.2 The accounting invariant, in its five-bucket form, inside
       `audit()`.** For every fixture:
       `|applicable| = |findings ∪ undecided ∪ passed ∪ unimplemented ∪ unknown|`
       and `|skipped| = |checks| − |applicable|`. The existing assertion at
@@ -134,17 +151,35 @@ verified defects below do not wait on it.
       verify: the check goes red when a check is removed from `audit()`, red
       again when one is made to return nothing, and red on a synthetic report
       whose `unknown` bucket is non-empty while the old four-way union passes.
+      DONE — `assertEveryCheckAccounted()`, called from `audit()` before it
+      returns, throwing `DeadScopeError` (council 2026-09-04, 2/2: option A over
+      a report field — exposing the gap as data makes the consumer responsible
+      for noticing what it cannot detect). Compared by check ID, not by
+      cardinality, because duplicates can make two counts agree while a check
+      vanishes; the error carries the missing ids AND the buckets built so far,
+      so a diagnosis does not lose computed findings. The union is a COVER, not
+      a partition — `findings` and `unknown` legitimately overlap — and the test
+      asserts the old four-way union would have called the `unknown`-only case
+      unaccounted.
 
 ## Phase 2 — A consumer, and a declaration that cannot be lost
 
-- [ ] **2.1 Bind the gate to something that is not a test.** One consumer is
+- [x] **2.1 Bind the gate to something that is not a test.** One consumer is
       enough to stop it being a dark instrument; three is what the proposal asked
       for and is more than this phase needs. Pick the binding whose host coverage
       is widest and say why the others were not taken — `production-validator` is
       the one the script's own header names and the one that reaches a single host.
       verify: `grep -rl check_web_launch_readiness src/flows src/subagents src/scripts/hooks`
       is non-empty, and the chosen consumer's own file names the gate.
-- [ ] **2.2 Read site-type and region from settings, and say when they are
+      DONE — `src/subagents/production-validator.md`, as step 5 of its own
+      procedure, with the exit-code table and the rule that an `UNDECIDED` block
+      is missing evidence rather than a clearance. The step's own hint that
+      "widest host coverage" should pick the binding was CORRECTED by the
+      council (2/2, both seats independently): the hook reaches more hosts and
+      cannot know the build directory, so it could only nudge, and the flow
+      schema resolves commands and skills rather than scripts — neither would
+      consume the gate at all. Coverage is one host and the file says so.
+- [x] **2.2 Read site-type and region from settings, and say when they are
       absent.** `enabled()` reads one key; the two axes that decide severity come
       only from `--site-type` and `--region`, with `region` defaulting to
       `unspecified`. Add them to the settings section, and when a value is absent
@@ -152,22 +187,44 @@ verified defects below do not wait on it.
       active"* — rather than a quieter result.
       verify: a fixture with `enabled: true` and no declaration produces that
       line; a fixture declaring `region: de` escalates `required-legal-pages`.
-- [ ] **2.3 Do not add a new state.** Four states exist (`Finding`, `Skipped`,
+      DONE — `readSettings()` reads `enabled`, `site_type` and `region`;
+      resolution is CLI → settings → default, and an ABSENT key stays
+      `undefined` rather than collapsing into the string `unspecified`, because
+      "nobody said" and "no jurisdiction" are different facts. Observed both
+      directions with no CLI axis flag at all: no declaration → the report
+      carries `region unspecified → DE escalation not active` and
+      `required-legal-pages` is SITUATIONAL; `region: de` in the file alone →
+      `escalated by region: required-legal-pages situational → critical`.
+- [x] **2.3 Do not add a new state.** Four states exist (`Finding`, `Skipped`,
       `Undecided`, `passed`) plus the `unimplemented` render bucket. Anything the
       new paths need is a reason class on `undecided`
       (`instrument-limit`, `declaration-missing`), never a fifth state.
       verify: an enum test; no state outside the existing set.
+      DONE — `UndecidedReason = 'instrument-limit' | 'declaration-missing'` as a
+      field on the existing `Undecided`. The enum test asserts the union is
+      closed, that the report still carries exactly five buckets and ten
+      top-level fields, and that BOTH members have a real user reached from a
+      real audit rather than asserted from the type: `instrument-limit` from the
+      nine probes, `declaration-missing` from the one case where the answer
+      depends on the caller — a tree carrying the generic legal pair and not the
+      DE pair with no region declared, which the matcher passes at every region
+      while `--region de` owes an Impressum by name.
 
 ## Phase 3 — Two stale sentences
 
-- [ ] **3.1 Stop citing a superseded contract as a live reason.**
+- [x] **3.1 Stop citing a superseded contract as a live reason.**
       `later/road-to-live-app-verdict.md:36-37` justifies its park with
       `docs/contracts/no-runtime-boundary.md`, which is `stability: superseded`.
       The trigger and the status do not change — only the reason, which becomes
       the Class-A form under ADR-124 § 4 and `resident-process-governance.md`.
       verify: that file references no superseded contract, and its two-conjunct
       trigger and `status: later` are byte-identical.
-- [ ] **3.2 Stop retyping a number.** `web-launch-readiness.json:168` says
+      DONE, and the step undercounted: there were TWO citations, at `:36` and at
+      `:47`, not one. Both now cite `resident-process-governance.md` (P1/P2 and
+      the four governance conditions) plus ADR-124 § 1 Class A. `grep -c
+      no-runtime-boundary` on that file is 0; the trigger block and `status:
+      later` are untouched — the diff contains no line from either.
+- [x] **3.2 Stop retyping a number.** `web-launch-readiness.json:168` says
       "Currently 7"; `checks` holds 9. The repository already learned this class
       and wrote the lesson down — *"A number a human retypes on every ledger edit
       will drift; the only fix is to stop retyping it"*
@@ -175,8 +232,9 @@ verified defects below do not wait on it.
       prose names the ceiling and stops naming the count.
       verify: `grep -c 'Currently' src/config/web-launch-readiness.json` is 0, and
       the existing `checks.length < 50` assertion is unchanged.
+      DONE — 0, and `web_launch_readiness_config.test.ts` has no diff at all.
 
-- [ ] **3.3 Correct the "one implemented check" prose (D13).** Two places say
+- [x] **3.3 Correct the "one implemented check" prose (D13).** Two places say
       the gate ships one check: `check_web_launch_readiness.ts:363` and
       `tests/scripts/check_web_launch_readiness.test.ts:3`. Nine are implemented.
       This is not cosmetic — a sibling analysis in this same round read that
@@ -184,7 +242,11 @@ verified defects below do not wait on it.
       exist. Name the count nowhere; assert it instead, in the shape 3.2 uses.
       verify: neither file states a check count in prose, and a test asserts
       `Object.keys(IMPLS).length + 1 === checks.length`.
-- [ ] **3.4 Teach the source gate the names this round used.** The proposal set
+      DONE — both sites reworded and the assertion added, with the count-in-prose
+      pattern ASSEMBLED at runtime because written as a literal it matched its
+      own source. The guard did real work before it went green: it caught two
+      live instances, one of them a comment written in this same step.
+- [x] **3.4 Teach the source gate the names this round used.** The proposal set
       names 25 external repositories plus several vendors as **derivation**
       sources; `check_no_external_sources` passes today because
       `src/scripts/external_sources_denylist.json` carries none of them, so a
@@ -194,6 +256,22 @@ verified defects below do not wait on it.
       explicitly permits naming.
       verify: the gate fails on a planted tracked file naming one of the added
       tokens, and passes on one naming a detection-target vendor.
+      **FALSE PREMISE — no token was added, and none could be.** The step asks
+      for the round's derivation-source names; they exist in no surviving
+      artefact. The source directory this roadmap cites was never tracked and is
+      gone from the tree, and this repository's own verification of that round
+      records the corpus as unreachable: *"clone and read the 25 external
+      repositories | agent | out-of-bound | network"* and *"the corpus is
+      irrecoverable — private third-party repositories, a permission fact, not a
+      lost file"* (`agents/evidence/analysis/inbox-2026-09-fg-verification.md:187`
+      and `:113`). Inventing 25 names to populate a denylist would be
+      fabrication, so none were invented. The step's MECHANISM half was executed
+      instead and passed both directions on the real gate: a tracked file naming
+      a denied derivation source → exit 1 with the token quoted; the same file
+      naming only detection-target vendors (which `source-confidentiality`
+      permits) → exit 0. The residual risk the step names — a future round
+      landing one of those 25 names silently — is real and is NOT closed by this
+      roadmap; closing it needs the names, and the names are gone.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-04 | reviewer: claude/host -->
@@ -206,17 +284,43 @@ verified defects below do not wait on it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every one of the nine checks has an `undecided` path for an input it
+- [x] AC-1 — Every one of the nine checks has an `undecided` path for an input it
       cannot decide, and removing any one of those paths turns its fixture green
       again.
-- [ ] AC-2 — A five-bucket accounting invariant is enforced inside `audit()`,
+- [x] AC-2 — A five-bucket accounting invariant is enforced inside `audit()`,
       includes `unknown`, and fails when a check lands in no bucket.
-- [ ] AC-3 — `check_web_launch_readiness` has at least one non-test consumer, and
+- [x] AC-3 — `check_web_launch_readiness` has at least one non-test consumer, and
       the reason the others were not taken is recorded.
-- [ ] AC-4 — Site-type and region resolve from settings, and an absent value
+- [x] AC-4 — Site-type and region resolve from settings, and an absent value
       produces its own report line rather than a quieter verdict.
-- [ ] AC-5 — No superseded contract is cited as the live-app blocker's reason, and
+- [x] AC-5 — No superseded contract is cited as the live-app blocker's reason, and
       no file retypes a check count in prose.
-- [ ] AC-6 — `check_no_external_sources` fails on a tracked file naming a
-      derivation source from this round, and still passes on one naming a
-      detection-target vendor.
+- [ ] AC-6 — **AWAITING OWNER DISPOSITION. Not met, and not claimed.** The
+      identities of the round-specific derivation sources are irrecoverable, so
+      their denylist coverage and their rejection by `check_no_external_sources`
+      cannot be evaluated. Residual risk remains that those unidentified sources
+      are absent from the denylist.
+
+      *Evidence note — substitute testing verified the MECHANISM only:*
+      `check_no_external_sources` rejected a tracked file naming an existing
+      denylisted derivation source (exit 1, token quoted at `file:line`) and
+      permitted a tracked file naming only detection-target vendors (exit 0).
+      This does **not** satisfy the round-specific coverage requirement, and is
+      recorded separately so it cannot be read as partial satisfaction.
+
+      *Disposition — AI council 2026-09-04, 2 rounds, 2/2 seats (anthropic +
+      openai), quorum concluded, $0.00 (subscription-authed):* both seats
+      converged on `[-]` (cancelled-as-invalidated) as the correct marker, and
+      both stated that `[-]` is **owner-reserved** and an agent may not apply it
+      to itself. `[x]` would be false — the criterion is conjunctive and the
+      substitute token cannot satisfy "from this round". `[~]` is unavailable
+      because there is no genuine receiving roadmap and a placeholder would
+      corrupt the meaning of deferral. So the line stays `[ ]` labelled awaiting
+      owner disposition, the roadmap does **not** archive, and that is the
+      honest state rather than an oversight.
+
+      One seat named the recursion, and it is worth keeping: this roadmap's
+      subject is a check that reported `passed` on input it could not see, and
+      the same defect then appeared in its own acceptance criterion — a
+      criterion asking for evidence that was never going to exist. That is a
+      roadmap-AUTHORING gap, not an execution one, and it is not closed here.
