@@ -1,6 +1,18 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. Its own § 14-16 makes its status conditional on
+  `design-artifact-verification.md` § Staged rollout, and that contract is beta
+  and extended to 2026-11-24 in this same change; the two are one review, not
+  two, and re-dating them separately would recreate the mismatch in 90 days.
+  Stage 2 is also overstated in the tree: of the five skills the sibling contract
+  names, only `existing-ui-audit` and `iconography` cite this contract —
+  `fe-design`, `ui-component-architect` and `design-review` carry zero
+  references. Before the window ends: either stage 2 is completed for the three
+  missing skills or § 14's stage claim is corrected to the measured state, and
+  the two `directives/ui/*.ts` short-form paths at §§ 81 and 87 are anchored at
+  `src/agent-src/templates/scripts/work_engine/`.
 ---
 
 # Design-Artifact Lifecycle Contract

@@ -2,20 +2,20 @@
  * Resolve the `memory` why-slot for the trace.
  *
  * Ported from the retired Python `src/scripts/_cli/explain_last/memory.py` (ADR-200).
- * Behaviour pins the historical contract exactly — same two sources, same
- * coercion order, same `float()` semantics, same `None`-on-empty branch.
- * No behaviour changes.
+ * The coercion order, the `float()` semantics and the `None`-on-empty branch
+ * still pin that historical contract. The second source the port carried — a
+ * sidecar whose only documented producer was the Layer-2 memory-MCP
+ * integration — does not, because
+ * `docs/decisions/ADR-094-agent-memory-layer-removal.md` removed that layer
+ * and rejected leaving its surfaces inert. Nothing in the tree ever wrote it.
  *
- * Two sources are consulted:
+ * One source is consulted:
  *
  * - `state.memory[]` — the work-engine writes per-run memory hits here
  *   during the `memory` step. Each entry carries `{entry_id, hit_score,
  *   used_in}` already shaped to the trace contract.
- * - `<root>/.agent-memory/hits.jsonl` — optional sidecar produced by the
- *   memory-MCP integration. Filtered to entries tagged with the run id
- *   when present.
  *
- * Returns `null` when neither source produced a non-empty list (the schema
+ * Returns `null` when that source produced no non-empty list (the schema
  * accepts a null memory slot so the renderer can drop the section cleanly).
  *
  * Parity note (ADR-200): Python's `hit_score = float(...)` always yields a
@@ -23,9 +23,6 @@
  * The twin carries it as a `PyFloat` marker so the downstream JSON
  * serializer (and the section renderer's `:.2f`) stays byte-identical.
  */
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import { scrub_string } from './scrubber.js';
 
 /**
@@ -36,8 +33,6 @@ import { scrub_string } from './scrubber.js';
 export class PyFloat {
     constructor(readonly value: number) {}
 }
-
-const MEMORY_SIDECAR = path.join('.agent-memory', 'hits.jsonl');
 
 /** Python truthiness (empty string / 0 / null / empty container falsy). */
 function _pyTruthy(value: unknown): boolean {
@@ -132,100 +127,9 @@ function _from_state(state: Record<string, unknown>): Record<string, unknown>[] 
     return entries;
 }
 
-/**
- * Python `str.splitlines()` (no args). Splits on the Python line-boundary
- * set (`\n \r \r\n \v \f \x1c \x1d \x1e \x85    `) and emits no
- * trailing empty element when the string ends on a break.
- */
-function _splitlines(s: string): string[] {
-    if (s === '') {
-        return [];
-    }
-    const breaks = new Set([
-        '\n', '\r', '\v', '\f',
-        '\x1c', '\x1d', '\x1e', '\x85',
-        ' ', ' ',
-    ]);
-    const out: string[] = [];
-    let cur = '';
-    for (let i = 0; i < s.length; i += 1) {
-        const ch = s[i] as string;
-        if (ch === '\r' && s[i + 1] === '\n') {
-            out.push(cur);
-            cur = '';
-            i += 1;
-            continue;
-        }
-        if (breaks.has(ch)) {
-            out.push(cur);
-            cur = '';
-            continue;
-        }
-        cur += ch;
-    }
-    if (cur !== '') {
-        out.push(cur);
-    }
-    return out;
-}
-
-function _from_sidecar(project_root: string, run_id: string | null): Record<string, unknown>[] {
-    const p = path.join(project_root, MEMORY_SIDECAR);
-    if (!fs.existsSync(p)) {
-        return [];
-    }
-    const entries: Record<string, unknown>[] = [];
-    let content: string;
-    try {
-        content = fs.readFileSync(p, 'utf-8');
-    } catch {
-        return [];
-    }
-    for (let line of _splitlines(content)) {
-        line = line.trim();
-        if (!line) {
-            continue;
-        }
-        let raw: unknown;
-        try {
-            raw = JSON.parse(line);
-        } catch {
-            continue; // json.JSONDecodeError → skip line
-        }
-        if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-            continue;
-        }
-        const rawDict = raw as Record<string, unknown>;
-        // if run_id and raw.get("run_id") not in (None, run_id): continue
-        if (run_id) {
-            const got = rawDict.run_id ?? null;
-            if (got !== null && got !== run_id) {
-                continue;
-            }
-        }
-        const entry = _coerce_entry(rawDict);
-        if (entry !== null) {
-            entries.push(entry);
-        }
-    }
-    return entries;
-}
-
 export function build(
-    project_root: string,
     state: Record<string, unknown>,
 ): Record<string, unknown>[] | null {
-    // run_id = (state.get("input") or {}).get("data", {}).get("id")
-    const input = _pyTruthy(state.input) ? (state.input as Record<string, unknown>) : {};
-    const dataRaw = 'data' in input ? input.data : {};
-    const data =
-        typeof dataRaw === 'object' && dataRaw !== null && !Array.isArray(dataRaw)
-            ? (dataRaw as Record<string, unknown>)
-            : {};
-    const run_id = data.id;
     const entries = _from_state(state);
-    entries.push(
-        ..._from_sidecar(project_root, typeof run_id === 'string' ? run_id : null),
-    );
     return entries.length > 0 ? entries : null;
 }

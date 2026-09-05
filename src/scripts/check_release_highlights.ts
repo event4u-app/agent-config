@@ -2,12 +2,12 @@
  * Highlight plausibility gate (release-truth Phase 2).
  *
  * The recorded failure: the curated release head said `_none_` twice while
- * false — 9.13.0 shipped behaviour changes, a removed public trigger type, a
+ * false — 9.13.0 shipped behavior changes, a removed public trigger type, a
  * security fix, and honest nulls; the head claimed none of it. Same at
  * 9.14.0.
  *
  * This gate derives GENERATED evidence categories from the release span
- * (security-tagged commits, behaviour/default changes from conventional
+ * (security-tagged commits, behavior/default changes from conventional
  * commit types + rule/schema diffs, honest-null markers, removed public
  * surface) and FAILS when a populated generated category meets a `_none_`
  * curated field. It blocks the contradiction only — a human still writes the
@@ -23,7 +23,7 @@
  * ## REVERSED 2026-09-01 — an unrewritten derived line now BLOCKS
  *
  * This header used to end the paragraph above with *"An unrewritten derived
- * line warns; it never blocks."* That is no longer the behaviour, and the
+ * line warns; it never blocks."* That is no longer the behavior, and the
  * sentence is replaced rather than deleted so the reversal is legible.
  *
  * **The premise was never wrong; the conclusion drawn from it was.** A derived
@@ -71,9 +71,11 @@ import {
     collect_span_commits,
     derive_categories,
     parse_git_log,
+    mix_response_blockers,
     previous_release_tag,
     stale_draft_labels,
 } from './_lib/release_highlights.js';
+import { loadTaxonomy, measureRange } from './measure_release_mix.js';
 import {
     CURATED_HEAD_INSTRUCTION,
     extract_changelog_section,
@@ -149,7 +151,7 @@ export function highlight_contradictions(
  * Exported so the advisory-vs-blocking decision is a fixture, not a claim.
  *
  * CORRECTED 2026-09-01 with the reversal. This comment used to say that
- * `stale_draft_labels` firing while the exit code stays 0 is the behaviour the
+ * `stale_draft_labels` firing while the exit code stays 0 is the behavior the
  * cadence blocker adjudicates. That is no longer what happens — the branch at
  * the call site returns 1 — and the sentence is replaced rather than deleted
  * because it was the load-bearing claim on the other side.
@@ -237,6 +239,18 @@ export function main(argv: readonly string[]): number {
         );
         return 1;
     }
+    // Hoisted above the curated-head branches on purpose. It used to sit inside
+    // `contradictions.length === 0`, so CI reached it only for a section that
+    // HAS a head, carries no unrewritten draft and contradicts nothing — while
+    // the local guards call the same predicate unconditionally. A section
+    // without a curated head was therefore refused locally and waved through by
+    // CI: one predicate, two different gatekeepers, which is the drift this
+    // change exists to remove.
+    const mix = check_governance_mix_response(section.body, from, to, version);
+    if (mix !== 0) {
+        return mix;
+    }
+
     const curated = parse_curated_head(section.body);
     if (!curated) {
         process.stdout.write(`ℹ️  no curated head in the ${version} section — nothing to check\n`);
@@ -328,6 +342,77 @@ export function main(argv: readonly string[]): number {
     process.stderr.write(
         '    Fill the curated head in CHANGELOG.md (a human writes the prose) or adjudicate ' +
             'the evidence in the PR — the gate only blocks the `_none_` contradiction.\n',
+    );
+    return 1;
+}
+
+/**
+ * The governance-versus-product response, checked for PRESENCE, never for the
+ * ratio (ADR-253).
+ *
+ * `measure_release_mix` publishes a level. This is the one place that level has
+ * a consequence, and the consequence is deliberately about completeness of the
+ * written answer: when governance-only commits strictly outnumber consumer-only
+ * commits over the release span, the section under release must carry a written
+ * response naming either the next cycle's consumer work or a maintainer
+ * justification. No number is enforced, and no number can be — both council
+ * seats refused a threshold on fewer than two readings, and a gate with no
+ * threshold that blocks on the ratio is a smuggled threshold.
+ *
+ * The response lives OUTSIDE the curated head, as its own `> **Governance
+ * mix:**` line, so it does not consume the head's ten-line cap and does not
+ * become a sixth label every historical section would suddenly lack.
+ *
+ * Scope matches every other check here: only the section under release is read.
+ *
+ * A measurement failure DEGRADES to a printed warning rather than to a refusal.
+ * This is a governance signal, not a correctness or security control, and a
+ * shallow clone or a missing tag on the release path would otherwise turn an
+ * unrelated environment fact into a blocked release.
+ */
+export function check_governance_mix_response(
+    body: string,
+    from: string,
+    to: string,
+    version: string,
+): number {
+    let reading;
+    try {
+        reading = measureRange(from, to, loadTaxonomy(), version, REPO_ROOT);
+    } catch (err) {
+        process.stdout.write(
+            `⚠️   governance mix not measured for ${version}: ${(err as Error).message}\n`,
+        );
+        return 0;
+    }
+    const o = reading.response_obligation;
+    const level = `governance-only ${o.governance_only} vs consumer-only ${o.consumer_only} (taxonomy ${reading.taxonomy_version})`;
+    if (!o.triggered) {
+        process.stdout.write(`✅  governance mix for ${version}: ${level} — no response owed\n`);
+        return 0;
+    }
+    // ONE predicate, shared with `guard_release_branch_push` — see
+    // `mix_response_blockers`. This side prints and exits; the local side dies
+    // before anything leaves the machine. Neither owns the rule.
+    const blockers = mix_response_blockers(body, version, `\`release/${version}\``, {
+        triggered: true,
+        level,
+    });
+    if (blockers.length === 0) {
+        process.stdout.write(`✅  governance mix for ${version}: ${level} — response present\n`);
+        return 0;
+    }
+    process.stderr.write(
+        `❌  the ${version} section owes a governance-versus-product response: ${level}.\n` +
+            blockers.map((b) => `    - ${b}\n`).join('') +
+            '    Governance-only commits outnumber consumer-only commits over the release span, so\n' +
+            '    the section carries a written response naming either the next cycle\'s consumer work\n' +
+            '    or a maintainer justification (docs/contracts/CHANGELOG-conventions.md § Governance-\n' +
+            '    versus-product response; the decline this replaces is ADR-253).\n' +
+            '    Only that section is read; historical sections are out of scope. No ratio is\n' +
+            '    enforced — this blocks a MISSING answer, never a particular number.\n' +
+            '    Reproduce locally, before any push:\n' +
+            `        ./scripts-run src/scripts/check_release_highlights --version ${version}\n`,
     );
     return 1;
 }

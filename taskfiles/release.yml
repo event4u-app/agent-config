@@ -20,6 +20,21 @@ tasks:
     interactive: true
     cmd: ./scripts-run src/scripts/release {{.CLI_ARGS}}
 
+  release:verify:
+    desc: |
+      Run every release-PR assertion that can run locally, BEFORE anything is
+      pushed. Derived from src/config/release-gate-locality.yml, which
+      tests/scripts/release_gate_locality.test.ts keeps in step with
+      .github/workflows/release-validation.yml — so a new release-validation job
+      cannot land without either a local command here or a declared, classified
+      reason it has none. Run it before `task release`; a failure here costs one
+      local edit, the same failure on the release PR costs a branch, a PR and a
+      CI run. Usage:
+      task release:verify
+      task release:verify -- --version 14.17.0
+      task release:verify -- --list
+    cmd: ./scripts-run src/scripts/release_verify {{.CLI_ARGS}}
+
   release:drill:
     desc: |
       Exercise the release step machinery (checkout → push → PR → checks →

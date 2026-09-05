@@ -101,6 +101,75 @@ disposition was wrong, or it was right and unrecorded, or right and unreachable
 lift. It is stated here so the tenth round meets a count rather than a fresh
 argument.
 
+
+### Amendment 2026-09-04 — the lock cited above gates a different question
+
+The section above stands as written: nine arrivals are a fact about the
+disposition, not about the item. What it got wrong is the **mechanism check**,
+and correcting a lock is a different answer from restating a recurrence. It
+routed the whole finding to `road-to-mixed-trigger-activation-cost.md` and named
+`b-behavioural-bench-spend` as the reason nothing could proceed.
+
+That blocker gates the always-on-tier question. Its own text
+(`agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md:516-536`) asks
+whether the **remaining 15** always-on rules cost measurable behaviour — turns,
+tool calls, refusals — rather than only tokens, via a paired A/B run billing
+model tokens across 5–8 tasks. It blocks that roadmap's steps 3.1 and 3.2. It
+says nothing about the delivery-mode projection, and nothing about the trigger
+corpus.
+
+The `lean_projection.mode` flip has three recorded holds, and the bench is not
+among them:
+
+| hold | where it is written | what it asks for |
+|---|---|---|
+| activation charge | `src/config/hook-token-budget.json`, `rule-inject_reason` | move the `user_prompt_submit` (4,096 B) and `pre_tool_use` (2,048 B) slot-sum rows, which the 20,480 B `rule-inject` row sits above on purpose. The row states it itself: *"The run that flips `lean_projection.mode: delivery` is the run that must move those two slot rows"* |
+| host scope | `docs/CLAIMS.md` § `thin-inject-delivery-equivalence` | the flip is Claude-only |
+| authority | council 2026-08-23, quoted in `agents/roadmaps/archive/road-to-trigger-delivered-rule-bodies.md:498` | *"flag to owner for post-roadmap review given the authority question is genuinely close"* |
+
+None of the three prevents **preparation**. Only the shipped-default decision
+and actual spend are owner-reserved.
+
+Put to the AI council 2026-09-04 (anthropic/claude-sonnet-4-5 +
+openai/codex-default, 2 rounds, quorum 2/2, $0.00 — both seats
+subscription-authed) rather than to the maintainer, because it is a mechanism
+question the tree's own evidence settles. Both seats: the disposition used a
+spend lock from an adjacent workstream to halt the delivery-mode workstream, and
+that is a routing error.
+
+### The split — three sub-items, three owners, three blocker states
+
+Recorded separately so an eleventh arrival meets three states rather than one
+bundle. Carried by `road-to-the-tenth-arrival.md`.
+
+| # | Sub-item | Owner | Blocker state | Disposition |
+|---|---|---|---|---|
+| 1 | Trigger corpus coverage | **Phase 5 / owner** — reclassified 2026-09-04, see below | **held**, and not by the blocker it inherited: three published reproduce-from-tree measurement pins plus a partition decision the frozen holdout artefact reserves to Phase 5 | A 14-file wave was authored to the full discipline (100 → 114 of 299), reddened all three pins, and was reverted by AI council 2026-09-04 (2/2). Coverage stays 100/299. Finding + the preserved files: `agents/evidence/analysis/trigger-corpus-wave2-deferred-2026-09-04.md` |
+| 2 | `lean_projection.mode` flip | **owner** for the shipped-default decision; agent for everything before it | held by the three holds above, none of which blocks preparation | Prepared 2026-09-04 as a held change set plus a decision packet (`agents/evidence/analysis/tenth-arrival-delivery-decision-packet.md`). `eager-all` still resolves on every host, asserted by a test |
+| 3 | Behavioural bench (always-on tier) | **owner** | `b-behavioural-bench-spend`, spend-bearing, owner-reserved — unchanged | Stays attached to `road-to-mixed-trigger-activation-cost`. Not a sub-item of this finding; folding it in is what built the bundle |
+
+Which of `recurring-criticism`'s three outcomes applies is now answerable per
+sub-item rather than for the bundle, and the answer is not the one this
+amendment first wrote down.
+
+For sub-item **2** the disposition was **right in substance and wrong in
+routing** — preparation was doable and was not being done because a lock from
+elsewhere was cited over it. That is now discharged: a held change set and a
+decision packet exist.
+
+For sub-item **1** the routing was wrong AND the destination was wrong. Both
+council rounds, including this amendment's own, read it as held by nothing —
+and executing it proved otherwise: three published measurement pins and a
+reserved Phase 5 partition decision. **The correct outcome for it is
+`right-and-unreachable`**: it was never a free item, and nine rounds of
+disposition never said why because nobody had tried to do it. The reason is now
+written down instead of inherited, which is the difference between a tenth
+restatement and an answer.
+
+For sub-item **3** the disposition was **right and stays**: it is genuinely
+owner-reserved, and it is now one of two owner-held items rather than the only
+one.
+
 ## Declined
 
 - **A dedicated tamper-detector import.** The source names two field tools as a

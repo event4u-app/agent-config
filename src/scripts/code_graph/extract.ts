@@ -36,6 +36,37 @@ export interface RawEdge {
     enclosingClassId?: string;
     /** scope token for `Scope::m()` scoped calls (a class name / self / static). */
     scopeName?: string;
+    /**
+     * `imports` only: the module specifier as written (`'./types.js'`,
+     * `'node:path'`), stripped of its quotes.
+     *
+     * Before this field the extractor read the import CLAUSE and threw the
+     * `from` away, so the build pass had nothing to resolve against but a
+     * repo-wide same-name table — which is how `import * as path from
+     * 'node:path'` came to bind to this repository's own `path()` function in
+     * `query.ts`, at `EXTRACTED`, in four of eleven files. The specifier is the
+     * one piece of evidence that says WHERE the name came from, and it is in
+     * the source text; discarding it turned a syntactic fact into a guess.
+     *
+     * Absent for PHP `use`, which names a fully-qualified symbol rather than a
+     * module path — those still resolve by name, and the build pass labels them
+     * accordingly.
+     */
+    moduleSpecifier?: string;
+    /**
+     * `imports` only: which import form produced this binding. `namespace`
+     * (`import * as x`) and `default` bind the MODULE (or its default export),
+     * never a named export, so neither may be matched against a same-named
+     * symbol inside the target file.
+     */
+    importKind?: 'namespace' | 'named' | 'default';
+    /**
+     * `imports` only: the LOCAL binding name, when it differs from
+     * `targetName` (`import { foo as bar }` → targetName `foo`, localName
+     * `bar`). The file's scope is keyed on the local name; the target file is
+     * searched for the remote one.
+     */
+    localName?: string;
 }
 
 export interface FileExtract {
@@ -245,27 +276,99 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
 
 // ── TypeScript / JavaScript ───────────────────────────────────────────────────
 
+/**
+ * Node types that open a new function or class scope. A `const` inside one of
+ * these is a LOCAL variable, not a module-level declaration, and emitting a
+ * node for it would put every loop counter in the symbol table — the
+ * count-inflation failure `2.1` is explicitly not allowed to cause.
+ */
+const TS_SCOPE_INTRODUCERS = new Set([
+    'arrow_function',
+    'function_expression',
+    'function_declaration',
+    'generator_function',
+    'generator_function_declaration',
+    'method_definition',
+    'class_declaration',
+    'class',
+    'class_body',
+]);
+
 function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
     const fileId = file;
 
-    const walk = (n: TsNode, classId: string | null, scopeId: string): void => {
+    const walk = (n: TsNode, classId: string | null, scopeId: string, topLevel: boolean): void => {
+        // A declaration is module-level until the walk descends through a
+        // function or class scope; from there down it is a local.
+        const inner = topLevel && !TS_SCOPE_INTRODUCERS.has(n.type);
         switch (n.type) {
             case 'import_statement': {
+                const src = n.childForFieldName('source');
+                // The specifier node is a `string`; its text carries the quotes.
+                const specifier = src ? src.text.replace(/^['"`]/, '').replace(/['"`]$/, '') : undefined;
                 const clause = firstNamed(n, new Set(['import_clause']));
+                const emitImport = (
+                    remote: string,
+                    local: string,
+                    importKind: 'namespace' | 'named' | 'default',
+                ): void => {
+                    out.rawEdges.push({
+                        sourceId: fileId,
+                        relation: 'imports',
+                        targetName: baseName(remote),
+                        confidenceHint: 'EXTRACTED',
+                        ...(specifier === undefined ? {} : { moduleSpecifier: specifier }),
+                        importKind,
+                        ...(local === remote ? {} : { localName: local }),
+                    });
+                };
                 if (clause) {
-                    for (const spec of namedChildren(clause)) {
-                        for (const idn of [spec, ...namedChildren(spec)])
-                            if (idn.type === 'identifier' || idn.type === 'import_specifier') {
-                                const nm = idn.type === 'import_specifier' ? nameField(idn) ?? idn.text : idn.text;
-                                out.rawEdges.push({
-                                    sourceId: fileId,
-                                    relation: 'imports',
-                                    targetName: baseName(nm),
-                                    confidenceHint: 'EXTRACTED',
-                                });
+                    for (const child of namedChildren(clause)) {
+                        if (child.type === 'namespace_import') {
+                            // `import * as path from 'node:path'` — the binding
+                            // is the MODULE. Matching `path` against a local
+                            // symbol of the same name is the false edge 1.1
+                            // exists to remove.
+                            const idn = firstNamed(child, new Set(['identifier']));
+                            if (idn) emitImport(idn.text, idn.text, 'namespace');
+                        } else if (child.type === 'named_imports') {
+                            for (const sp of namedChildren(child)) {
+                                if (sp.type !== 'import_specifier') continue;
+                                const nameNode = sp.childForFieldName('name');
+                                const aliasNode = sp.childForFieldName('alias');
+                                const remote = nameNode ? nameNode.text : sp.text;
+                                emitImport(remote, aliasNode ? aliasNode.text : remote, 'named');
                             }
+                        } else if (child.type === 'identifier') {
+                            emitImport(child.text, child.text, 'default');
+                        }
                     }
                 }
+                return;
+            }
+            // `const`, `type`, `interface`, `enum` — the shapes the v2 corpus
+            // asks `references` questions about (`EXT_LANG` is a const,
+            // `SettingsClass` a type alias). The extractor used to emit none of
+            // them, which is the named mechanical cause of `references` recall
+            // 0.333 against grep's 1.000.
+            //
+            // The body is not walked: a type or interface position holds no
+            // call sites, and an enum body holds member names rather than
+            // symbols this graph answers questions about.
+            case 'interface_declaration':
+            case 'type_alias_declaration':
+            case 'enum_declaration': {
+                const nmNode = n.childForFieldName('name') ?? firstNamed(n, NAME_TYPES);
+                const nm = nmNode ? nmNode.text : '<anon>';
+                const kind =
+                    n.type === 'interface_declaration'
+                        ? 'interface'
+                        : n.type === 'type_alias_declaration'
+                          ? 'type'
+                          : 'enum';
+                const id = `${file}#${nm}`;
+                out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
+                out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 return;
             }
             case 'class_declaration': {
@@ -280,7 +383,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                             if (idn.type === 'identifier' || idn.type === 'type_identifier')
                                 out.inherits.push({ classId: id, parentName: baseName(idn.text) });
                 const body = n.childForFieldName('body');
-                if (body) for (const c of namedChildren(body)) walk(c, id, id);
+                if (body) for (const c of namedChildren(body)) walk(c, id, id, false);
                 return;
             }
             case 'method_definition': {
@@ -294,7 +397,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                     confidenceHint: 'EXTRACTED',
                 });
                 const body = n.childForFieldName('body');
-                if (body) for (const c of namedChildren(body)) walk(c, classId, id);
+                if (body) for (const c of namedChildren(body)) walk(c, classId, id, false);
                 return;
             }
             case 'function_declaration': {
@@ -303,7 +406,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
-                if (body) for (const c of namedChildren(body)) walk(c, classId, id);
+                if (body) for (const c of namedChildren(body)) walk(c, classId, id, false);
                 return;
             }
             // Modern TS declares most of its functions as bindings, not as
@@ -313,17 +416,58 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             // 170-vs-13,428 TS/PHP symbol gap: the six handled kinds simply do
             // not cover the dominant declaration form.
             //
-            // Scoped deliberately to bindings whose value IS a function. A
-            // `const x = 3` is data, not a symbol this graph answers questions
-            // about, and emitting a node per constant would inflate the count
-            // without improving recall — which is the cosmetic-improvement
-            // failure the phase falsifier exists to catch.
+            // The scoping note that stood here said a `const x = 3` is "data,
+            // not a symbol this graph answers questions about", and that
+            // emitting a node per constant would raise the count without
+            // improving recall. **The v2 benchmark falsified the first half and
+            // the second half no longer follows.** Two of its three
+            // `references` questions probe exactly this shape — `EXT_LANG` (a
+            // const) and `SettingsClass` (a type alias) — and the class scored
+            // recall 0.333 against grep's 1.000 because neither had a node to
+            // resolve to. The count-inflation worry was real and is answered by
+            // SCOPE rather than by refusal: a binding earns a node only at
+            // MODULE level (`topLevel`), so a loop counter inside a function
+            // body still gets none. The reason is kept rather than deleted,
+            // because a reversed decision whose reason disappears gets re-taken.
             case 'lexical_declaration':
             case 'variable_declaration': {
                 for (const d of namedChildren(n)) {
                     if (d.type !== 'variable_declarator') continue;
                     const value = d.childForFieldName('value');
-                    if (!value || (value.type !== 'arrow_function' && value.type !== 'function_expression')) {
+                    const nmNode = d.childForFieldName('name');
+                    const isFn =
+                        value !== null &&
+                        value !== undefined &&
+                        (value.type === 'arrow_function' || value.type === 'function_expression');
+                    const isClassExpr = value?.type === 'class';
+                    if (!isFn) {
+                        // Only a plain `identifier` name: a destructuring
+                        // pattern (`const { a, b } = x`) binds several names and
+                        // none of them is a declaration this graph can id.
+                        if (topLevel && nmNode?.type === 'identifier') {
+                            const nm = nmNode.text;
+                            const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                            out.nodes.push({
+                                id,
+                                label: nm,
+                                // `const Widget = class {}` IS constructible;
+                                // calling it a constant would let the build pass
+                                // reject a `new Widget()` that is perfectly real.
+                                kind: isClassExpr ? 'class' : 'constant',
+                                source_file: file,
+                                source_location: loc(d),
+                            });
+                            out.rawEdges.push({
+                                sourceId: classId ?? fileId,
+                                relation: 'member',
+                                targetName: nm,
+                                confidenceHint: 'EXTRACTED',
+                            });
+                        }
+                        // Non-function declarators still need walking for their
+                        // calls — returning early on the whole declaration
+                        // silently drops call edges from initialisers.
+                        walk(d, classId, scopeId, inner);
                         continue;
                     }
                     const nm = nameField(d) ?? '<anon>';
@@ -353,16 +497,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                     // can iterate children because a `statement_block` is never
                     // the interesting node; here it often is.
                     const body = value.childForFieldName('body');
-                    if (body) walk(body, classId, id);
-                }
-                // Non-function declarators still need walking for their calls.
-                for (const d of namedChildren(n)) {
-                    if (d.type !== 'variable_declarator') continue;
-                    const value = d.childForFieldName('value');
-                    if (value && (value.type === 'arrow_function' || value.type === 'function_expression')) {
-                        continue;
-                    }
-                    walk(d, classId, scopeId);
+                    if (body) walk(body, classId, id, false);
                 }
                 return;
             }
@@ -388,7 +523,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         confidenceHint: 'EXTRACTED',
                     });
                     const body = value.childForFieldName('body');
-                    if (body) walk(body, classId, id);
+                    if (body) walk(body, classId, id, false);
                     return;
                 }
                 break;
@@ -481,11 +616,11 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             default:
                 break;
         }
-        for (const c of namedChildren(n)) walk(c, classId, scopeId);
+        for (const c of namedChildren(n)) walk(c, classId, scopeId, inner);
     };
 
     out.nodes.push({ id: fileId, label: file, kind: 'file', source_file: file, source_location: [] });
-    walk(root, null, fileId);
+    walk(root, null, fileId, true);
 }
 
 /**

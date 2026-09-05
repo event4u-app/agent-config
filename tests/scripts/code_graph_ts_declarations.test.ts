@@ -40,13 +40,62 @@ describe('code-graph TS extraction — binding and field declarations', () => {
         ]);
     });
 
-    it('does NOT emit a node for a non-function binding', async () => {
-        // The scoping decision, pinned. Emitting a node per constant would raise
-        // the symbol count without improving recall, which is exactly the
-        // cosmetic-improvement failure the roadmap's pre-falsifier exists to
-        // catch. A test that only checked "more nodes than before" would have
-        // rewarded it.
-        expect(await symbols('const answer = 42; export const name = "x";')).toEqual([]);
+    it('emits a constant node for a MODULE-LEVEL non-function binding', async () => {
+        // DECISION REVERSED by `road-to-the-graph-that-lies-confidently` 2.1,
+        // and the reason it reversed is kept here rather than deleted.
+        //
+        // This test used to assert `[]`, on the reasoning that a node per
+        // constant would raise the symbol count without improving recall. The
+        // v2 benchmark falsified the premise: two of its three `references`
+        // questions probe exactly this shape — `EXT_LANG` is a const and
+        // `SettingsClass` a type alias — and the class scored recall 0.333
+        // against grep's 1.000 because neither probe had a node to resolve to.
+        //
+        // The count-inflation worry it encoded was real, and is answered by the
+        // MODULE-LEVEL scoping asserted in the sibling test below rather than
+        // by refusing the node.
+        expect(await symbols('const answer = 42; export const name = "x";')).toEqual([
+            ['constant', 'answer'],
+            ['constant', 'name'],
+        ]);
+    });
+
+    it('does NOT emit a node for a binding inside a function body', async () => {
+        // The scoping guard that replaces the blanket refusal. A loop counter
+        // is not a symbol this graph answers questions about, and emitting one
+        // per local IS the count-inflation failure the reversed test feared.
+        expect(await symbols('export function f() { const local = 1; return local; }')).toEqual([
+            ['function', 'f'],
+        ]);
+        expect(await symbols('const g = () => { const inner = 2; return inner; };')).toEqual([
+            ['function', 'g'],
+        ]);
+        // Also inside a callback the walker reaches by plain recursion rather
+        // than through a declaration case.
+        expect(await symbols('list.map((x) => { const each = x; return each; });')).toEqual([]);
+    });
+
+    it('does NOT emit a node for a destructuring binding', async () => {
+        // `const { a, b } = obj` binds two names and neither is a declaration
+        // the graph can give a stable id to.
+        expect(await symbols('const { a, b } = obj;')).toEqual([]);
+    });
+
+    it('emits type, interface and enum nodes', async () => {
+        expect(
+            await symbols('export type Alias = string; export interface Shape { a: number } export enum C { R }'),
+        ).toEqual([
+            ['type', 'Alias'],
+            ['interface', 'Shape'],
+            ['enum', 'C'],
+        ]);
+    });
+
+    it('emits a CLASS node for a class-expression binding, not a constant', async () => {
+        // `kind` is a capability claim the build pass reads: a `constant` may
+        // not satisfy `new X()`. Calling this one a constant would make a real
+        // `new Widget()` unresolvable.
+        expect(await symbols('const Widget = class {};')).toEqual([['class', 'Widget']]);
     });
 
     it('still walks a non-function binding for the calls inside it', async () => {

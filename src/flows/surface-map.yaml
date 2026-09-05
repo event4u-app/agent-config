@@ -103,6 +103,7 @@ commands:
   delivery:
     - fix
     - fix/comments
+    - fix/commit-messages
     - fix/portability
     - fix/pr-comments
     - fix/pr-comments-loop

@@ -2,7 +2,18 @@
 complexity: structural
 status: later
 parent_roadmap: road-to-binding-findings
-review_by: 2026-12-03
+review_by: 2026-10-03
+relates:
+  - slug: road-to-the-unwritten-ledger
+    relation: disjoint
+    note: >
+      Same ledger, same gate, deliberately non-overlapping halves. That roadmap
+      wrote the missing 14.16.0 ledger and closed the post-tag read — an absent
+      ledger for a released version no longer exits 0. This one still owns WHEN
+      the consumer reads inside the pull-request workflow, which needs a
+      synthetic release/* pull request no autonomous run may open. It also
+      recorded the second occurrence below and moved this review_by; it did not
+      touch this roadmap status or its AC-2 demonstration, which is still owed.
 estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings ORDERING guarantee, which road-to-binding-findings could not close: demonstrating it end to end requires creating a synthetic release/* pull request, and release/* is named in non-destructive-by-default's Hard-Floor table, which no autonomous run lifts. The four authorization defects and the ledger ingestion in that roadmap are independently verified and close there; holding them open behind an administrative and Hard-Floor dependency would be worse than partitioning. It also receives the three non-blocking findings dispositioned accepted_risk, so each carries a named receiver rather than an expiring note. That roadmap archives in the same change, so the active count falls by one."
 ---
 # Road to the release-finding ordering guarantee
@@ -39,6 +50,40 @@ carries all nine findings with complete dispositions, ingested from the original
 `self-review-findings` artifact (run `33757633620`, sha256
 `826c002033733060932dd3113199c462079597f563aac4d01a0c61203134ff07`). What
 remains is making the ordering **impossible**, and demonstrating that it is.
+
+### Second occurrence — 14.16.0, one day later
+
+Recorded 2026-09-04 by `road-to-the-unwritten-ledger`. The date above was set
+when this defect had **one** measured occurrence. It now has two, and the second
+arrived inside a single release cycle:
+
+| | first occurrence | second occurrence |
+|---|---|---|
+| release | 14.15.0, shipped 2026-09-03 | 14.16.0, shipped 2026-09-04T03:40:10Z |
+| shape | the consumer read the comments 91 seconds before the block existed | the ledger was never written at all |
+| what the gate printed | green, via `allowEmpty` with an absent ledger | green, via `allowEmpty` with an absent ledger |
+| findings left unrecorded | nine, two high-severity security | ten, one `high (Blocking)` security |
+
+The second occurrence is the same fail-open reached by a different road. There
+was no ordering race in 14.16.0 — `agents/evidence/release-findings/14.16.0.json`
+simply did not exist, while PR #1836 had merged reporting ten findings. The gate
+read the absence as zero. Measured before the fix:
+
+```
+$ npx tsx src/scripts/check_finding_dispositions.ts --release 14.16.0
+✅  no recorded findings for 14.16.0 (ledger absent)   exit 0
+```
+
+**Why the date moved: 2026-12-03 → 2026-10-03.** A review date is a prediction
+about how long a parked item can wait without costing anything. That prediction
+was 91 days, made with one occurrence on record; the observed recurrence interval
+turned out to be **one day**. Ninety-one days is not a defensible interval
+against a one-day recurrence, so it is cut to 29. The date moves and nothing
+else does — `status: later` is unchanged, and AC-2 below is still owed, because
+the sibling closed the post-tag read and not the in-workflow ordering this
+roadmap exists for. Recording the occurrence without moving the date would have
+left a falsified prediction standing; moving the date without recording the
+occurrence would have been a preference rather than a finding.
 
 ## Why an autonomous run cannot finish it
 

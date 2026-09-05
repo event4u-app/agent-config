@@ -133,6 +133,18 @@ export function fileOfEndpoint(endpoint: string): string | null {
     const head = endpoint.split('#')[0];
     if (head === undefined || head.length === 0) return null;
     if (head.startsWith('symbol:')) return null;
+    // `external:<module specifier>` — the endpoint shape the 2026-09-04 import
+    // repair introduced for a name imported from outside the measured root
+    // (`external:node:path`, `external:../_lib/fs_atomic.js#write_atomic`).
+    // It is a pseudo-endpoint exactly like `symbol:`, and the SAME defect-3
+    // class: a specifier that happens to end in `.js` would otherwise pass the
+    // extension test below and be counted as a file in the root, which it is
+    // not. Verified to be a no-op on THIS corpus — no external specifier under
+    // the three measured roots carries a filename extension
+    // (`grep -rhoE "from '[^']+'" <roots> | sort -u`: js-yaml, node:*, vitest,
+    // yaml, zod) — so it removes a latent mis-score rather than moving a
+    // published number.
+    if (head.startsWith('external:')) return null;
     if (!/\.[A-Za-z0-9]+$/.test(head)) return null;
     return head;
 }
@@ -262,6 +274,14 @@ function classVerdict(rows: Row[]): { verdict: string; validity: string; validit
 }
 
 function main(): number {
+    // A re-run of THIS registration on repaired engine code must not overwrite
+    // the report it is compared against. `--report-stem` names the new file;
+    // the corpus, the bars and the arm verbs are untouched by it, so the
+    // comparison stays legitimate and the earlier report stays on disk.
+    const argv = process.argv.slice(2);
+    const stemIdx = argv.indexOf('--report-stem');
+    const reportStem = stemIdx >= 0 ? (argv[stemIdx + 1] ?? REPORT_STEM) : REPORT_STEM;
+    const isRerun = reportStem !== REPORT_STEM;
     const corpusPath = path.join(HERE, CORPUS_FILE);
     const preregPath = path.join(HERE, PREREG_FILE);
     if (!fs.existsSync(corpusPath)) { console.error(`missing corpus: ${corpusPath}`); return 2; }
@@ -416,7 +436,7 @@ function main(): number {
 
     const outDir = path.join(REPO_ROOT, 'internal', 'bench', 'reports');
     fs.mkdirSync(outDir, { recursive: true });
-    fs.writeFileSync(path.join(outDir, `${REPORT_STEM}.json`), `${JSON.stringify(summary, null, 2)}\n`);
+    fs.writeFileSync(path.join(outDir, `${reportStem}.json`), `${JSON.stringify(summary, null, 2)}\n`);
 
     const md: string[] = [];
     md.push(`# Code-graph vs grep — in-repo corpus **v2**, ${summary.generated}`);
@@ -426,6 +446,23 @@ function main(): number {
     md.push('> different corpus, a different arm-B verb set, and a corrected scorer. No');
     md.push('> delta may be computed against either. Both earlier reports are untouched.');
     md.push('');
+    if (isRerun) {
+        md.push(`> **COMPARABLE to \`internal/bench/reports/${REPORT_STEM}.md\`, and to nothing else.**`);
+        md.push('> Same registration, same corpus SHA, same per-class bars, same arm-B verb');
+        md.push('> set. The variable the comparison is FOR is the ENGINE — but it is not');
+        md.push('> automatically the only one that moved: a measured root is live source and');
+        md.push('> may have changed between the two runs. Check the tree-hash table below');
+        md.push('> against the baseline report\'s before attributing any per-question delta to');
+        md.push('> the engine, and treat a root whose tree moved as carrying two variables.');
+        md.push('> `src/scripts/code_graph` is a standing exception in both directions: it IS');
+        md.push('> the engine, so its content necessarily moves whenever the engine does.');
+        md.push('> One scorer line also moved: `fileOfEndpoint` now rejects an');
+        md.push('> `external:` endpoint, the pseudo-endpoint shape the import repair');
+        md.push('> introduced — a no-op on this corpus, because no external specifier under');
+        md.push('> the three measured roots carries a filename extension. No threshold was');
+        md.push('> renegotiated after seeing a result, and the earlier report is untouched.');
+        md.push('');
+    }
     md.push(`Pre-registered in \`internal/bench/code-graph/${PREREG_FILE}\` before this run.`);
     md.push(`Corpus \`${CORPUS_FILE}\` bound by SHA-256 \`${got.slice(0, 16)}…\`; the runner refuses on mismatch.`);
     md.push('');
@@ -557,7 +594,7 @@ function main(): number {
     md.push('`devDependencies` and `dependencies`. That is ADR-246\'s question, and any');
     md.push('reopen is a separate change under `decision-revisit-gate`.');
     md.push('');
-    fs.writeFileSync(path.join(outDir, `${REPORT_STEM}.md`), `${md.join('\n')}\n`);
+    fs.writeFileSync(path.join(outDir, `${reportStem}.md`), `${md.join('\n')}\n`);
 
     console.log('');
     for (const c of GRAPH_CLASSES) {
@@ -566,7 +603,7 @@ function main(): number {
     }
     console.log(`in-domain negative controls: grep clean ${inDomainResult.grep_clean_rate}, graph clean ${inDomainResult.graph_clean_rate}`);
     console.log(`capability boundary: grep recall ${boundaryResult.grep_recall}, graph recall ${boundaryResult.graph_recall}`);
-    console.log(`wrote internal/bench/reports/${REPORT_STEM}.{md,json}`);
+    console.log(`wrote internal/bench/reports/${reportStem}.{md,json}`);
     return 0;
 }
 

@@ -167,6 +167,50 @@ Route::get('/mail-preview', function () {
 });
 ```
 
+## Surviving the mail client
+
+An email is not a web page. Mail clients strip, rewrite, and ignore CSS that
+every browser honors, so a template that renders correctly in
+`/mail-preview` tells you nothing about the inbox. Markdown templates (above)
+give you a tested baseline for free — this section is what to hold to when a
+design forces you off them.
+
+**Four requirements, in order of what breaks first:**
+
+1. **Table-based layout, not flexbox or grid.** Use nested `<table>` elements
+   with `role="presentation"`, a fixed outer width of 600px, and `cellpadding`
+   / `cellspacing` / `border` set to `0`. `display: flex` and
+   `display: grid` are unsupported or partially supported in the Windows
+   Outlook family and collapse to a single stacked column.
+2. **Inline styles, not a `<style>` block.** Write `style="…"` on the element.
+   A `<head><style>` block is stripped outright by some webmail clients, and
+   class selectors then match nothing. Use a CSS inliner at build time if the
+   template is authored with classes — never ship the classes unresolved. Keep
+   a `<style>` block only for what cannot be inlined (media queries), and treat
+   everything in it as optional.
+3. **No web fonts, no background images, no external JS.** Declare a font stack
+   ending in a system fallback; a remote font silently degrades. Background
+   images require the `v:fill` VML fallback in Outlook, so put the color on
+   `bgcolor` and treat the image as decoration.
+4. **Explicit width and alt text on every image, and no image-only content.**
+   Images are blocked by default in several clients, so an email whose call to
+   action is an image is an email with no call to action.
+
+**The client list worth testing, and what breaks in each:**
+
+| Client | What breaks |
+|---|---|
+| **Outlook 2016-2019 / Windows (Word engine)** | `flex`, `grid`, `float`, `max-width`, `border-radius`, background images, `padding` on `<div>`; the strictest target — if it renders, most others do |
+| **Outlook.com / Outlook 365 web** | strips `<style>` blocks in some views; rewrites `class` attributes; ignores `margin` on several elements |
+| **Gmail web** | clips the message past ~102 KB of HTML with a "view entire message" link — anything below the clip, including the unsubscribe link, is not seen; strips `<style>` when the message is clipped |
+| **Gmail app (iOS / Android)** | no support for embedded `<style>` on non-Gmail accounts; media queries ignored there, so the mobile layout must be the fluid default |
+| **Apple Mail / iOS Mail** | the most permissive; auto-scales small text and auto-links dates and addresses unless suppressed — a false green if it is the only client you check |
+| **Dark mode (Apple Mail, Outlook, Gmail)** | colors are force-inverted; a logo on a hardcoded white background becomes a white box on dark, and `#000` text on a transparent background becomes invisible |
+
+**Verify against a real client, not a preview route.** `/mail-preview` renders in
+a browser and proves none of the above. Send to real accounts, or use a
+rendering service, before the template ships.
+
 ## Core rules
 
 - **Always queue emails** — implement `ShouldQueue` to avoid blocking requests.

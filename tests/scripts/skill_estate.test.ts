@@ -122,9 +122,23 @@ describe('the live corpus', () => {
         // clauses a description cluster requires. Six tokens, in the direction
         // the ceiling wants — a re-derivation of the pin after a decided
         // change, which is what the comment above describes.
+        //
+        // 11455 -> 11445 on 2026-09-04: `conventional-commits-writing` gained a
+        // house-convention procedure, and its description was rewritten to name
+        // that (187 -> 166 chars) rather than grown. Ten tokens, again in the
+        // direction the ceiling wants — the preamble sat 10 tokens under its
+        // grace ceiling at the time, which is why the body carries the
+        // capability and the description paid part of it back.
+        //
+        // 11445 -> 11444 on 2026-09-05: `code-intelligence` rewrote its
+        // description to state the routing verdict the branch measured — an
+        // existing graph is cheaper and never more precise, so grep stays
+        // routine. One token, again in the direction the ceiling wants, and a
+        // re-derivation of the pin after a decided change rather than a
+        // loosened bar.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(299);
-        expect(e.skill_description_tokens).toBe(11455);
+        expect(e.skill_description_tokens).toBe(11444);
         expect(e.deprecated_count).toBe(0);
     });
 

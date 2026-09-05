@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 300
+- **artefacts**: 301
 
-## Commands (154)
+## Commands (155)
 
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -50,6 +50,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`fix`** — Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality
 - **`fix-ci`** — Fetch CI errors from GitHub Actions and fix them
 - **`fix-comments`** — Review the code comments touched by the current branch and simplify, shorten, or remove each one
+- **`fix-commit-messages`** — Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default
 - **`fix-portability`** — Find and fix project-specific references in shared .augment/ package files
 - **`fix-pr-comments`** — Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR
 - **`fix-pr-comments-loop`** — Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments
@@ -248,7 +249,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`analysis-autonomous-mode`** — Autonomous multi-step investigation — deep research carried end-to-end without per-step approval; explicit request only, never for normal feature work.
 - **`analysis-skill-router`** — Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
-- **`code-intelligence`** — Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'.
+- **`code-intelligence`** — Route codebase-structure questions (who calls X, where is this used, what imports, change-impact) to an existing code-graph first: cheaper, never more precise; grep stays routine. Also 'call graph'.
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
 - **`command-writing`** — Use when creating or editing a slash command in src/agent-src/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 - **`complexity-first-planning`** — Use when staging multi-component or uncertain work — tackle the load-bearing unknown first (risk-first decomposition), not the easy parts first.

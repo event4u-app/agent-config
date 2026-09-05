@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **738 artefacts** in this package.
+Maintainer-facing index of all **739 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -46,7 +46,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`character-consistency`](../src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
-| skill | [`code-intelligence`](../src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'. |
+| skill | [`code-intelligence`](../src/skills/code-intelligence/SKILL.md) | official | Route codebase-structure questions (who calls X, where is this used, what imports, change-impact) to an existing code-graph first: cheaper, never more precise; grep stays routine. Also 'call graph'. |
 | skill | [`code-refactoring`](../src/skills/code-refactoring/SKILL.md) | official | When the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools. |
 | skill | [`code-review`](../src/skills/code-review/SKILL.md) | official | Use when the user says \"review this\", \"check my code\", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | skill | [`command-routing`](../src/skills/command-routing/SKILL.md) | official | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
@@ -62,7 +62,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`context-document`](../src/skills/context-document/SKILL.md) | official | Use when the user says \"create context\", \"document this area\", or wants a structured snapshot of a codebase area for agent orientation. |
 | skill | [`contract-review`](../src/skills/contract-review/SKILL.md) | official | Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'. |
 | skill | [`contracts-cognition`](../src/skills/contracts-cognition/SKILL.md) | official | Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'. |
-| skill | [`conventional-commits-writing`](../src/skills/conventional-commits-writing/SKILL.md) | official | When writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
+| skill | [`conventional-commits-writing`](../src/skills/conventional-commits-writing/SKILL.md) | official | When writing a commit message, branch name or squash title — measure the repo's own convention first, Conventional Commits as fallback — even on a bare 'commit this'. |
 | skill | [`copilot-agents-optimization`](../src/skills/copilot-agents-optimization/SKILL.md) | official | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
 | skill | [`copilot-config`](../src/skills/copilot-config/SKILL.md) | official | Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`). |
 | skill | [`corpus-grounding`](../src/skills/corpus-grounding/SKILL.md) | official | Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints. |
@@ -435,7 +435,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (202)
+## Commands (203)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -512,6 +512,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`fix`](../src/domains/engineering-base/fix/command.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality |
 | command | [`fix-ci`](../src/domains/engineering-base/fix/ci/command.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../src/domains/engineering-base/fix/comments/command.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
+| command | [`fix-commit-messages`](../src/domains/engineering-base/fix/commit-messages/command.md) | cluster: fix | Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default |
 | command | [`fix-portability`](../src/domains/engineering-base/fix/portability/command.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments-loop`](../src/domains/engineering-base/fix/pr-comments-loop/command.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
 | command | [`fix-pr-comments`](../src/domains/engineering-base/fix/pr-comments/command.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |
