@@ -479,6 +479,19 @@ describe('governance-mix response', () => {
         expect(out[0]).toContain(LEVEL);
     });
 
+    it('refuses the second placeholder too — CHANGELOG.md is published to npm', () => {
+        // Deleting only the first token would leave `<roadmap or issue>` in a
+        // file `package.json` `files` ships, which is the same failure
+        // CURATED_HEAD_INSTRUCTION exists for, one token to the right.
+        const half =
+            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
+            '> Next cycle ships the install flow, tracked in <roadmap or issue>.';
+        expect(half).not.toContain(MIX_RESPONSE_PLACEHOLDER);
+        const out = mix_response_blockers(half, V, '`main`', { triggered: true, level: LEVEL });
+        expect(out).toHaveLength(1);
+        expect(out[0]).toContain('<roadmap or issue>');
+    });
+
     it('refuses the writer’s placeholder — an emitted line is not an answer', () => {
         // The measured level alone clears the 40-character floor, so without
         // this the generator would discharge a written-answer obligation for

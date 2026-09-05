@@ -29,6 +29,7 @@ import {
     CURATED_HEAD_INSTRUCTION,
     MIX_RESPONSE_MARKER,
     MIX_RESPONSE_PLACEHOLDER,
+    MIX_RESPONSE_PLACEHOLDERS,
 } from './release_material.js';
 
 /** The five curated labels, in the order an operator reads them. */
@@ -521,12 +522,13 @@ export function mix_response_blockers(
         ];
     }
     const written = sectionBody.slice(idx + MIX_RESPONSE_MARKER.length).split('\n')[0]!.trim();
-    if (sectionBody.includes(MIX_RESPONSE_PLACEHOLDER)) {
+    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => sectionBody.includes(t));
+    if (left.length > 0) {
         return [
             `the ${version} governance-versus-product response still carries the writer's ` +
-                `placeholder (\`${MIX_RESPONSE_PLACEHOLDER}\`) — the measured level is the ` +
-                'generator\'s, the answer is not. Name the next cycle\'s consumer work (or the ' +
-                `justification) on ${where} and re-run.`,
+                `placeholder(s) (${left.map((t) => `\`${t}\``).join(', ')}) — the measured level ` +
+                'is the generator\'s, the answer is not, and `CHANGELOG.md` is published to npm. ' +
+                `Name the next cycle's consumer work (or the justification) on ${where} and re-run.`,
         ];
     }
     if (written.length < MIX_RESPONSE_MIN_CHARS) {

@@ -325,6 +325,24 @@ export const MIX_RESPONSE_MARKER = '**Governance mix:**';
 export const MIX_RESPONSE_PLACEHOLDER = '<the consumer work>';
 
 /**
+ * Every placeholder token the writer emits, so none of them can ship.
+ *
+ * The block carries two, and refusing only the first would leave
+ * `<roadmap or issue>` publishable — `CHANGELOG.md` is in `package.json`
+ * `files`, so that is the same "the generator's own scaffolding reached npm"
+ * failure `CURATED_HEAD_INSTRUCTION` exists for, one token to the right.
+ *
+ * A named list rather than a shape match over angle brackets, for the reason
+ * that constant already states: a pattern such as `/<[a-z ]+>/` rejects
+ * unrelated legitimate prose and misses a reworded placeholder. Adding a token
+ * to `render_mix_response` means adding it here.
+ */
+export const MIX_RESPONSE_PLACEHOLDERS: readonly string[] = [
+    MIX_RESPONSE_PLACEHOLDER,
+    '<roadmap or issue>',
+];
+
+/**
  * Render the response block the writer emits when the obligation triggers.
  *
  * Two blockquote lines, immediately under the curated head and outside it, per
