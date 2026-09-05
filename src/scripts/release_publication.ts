@@ -432,6 +432,71 @@ export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
 }
 
 /**
+ * The pre-push local gate run, as an argv the caller hands to `run()`.
+ *
+ * Every release-PR assertion that can run locally, run BEFORE the branch leaves
+ * the machine. `guard_release_branch_push` below covers the changelog-section
+ * obligations; this covers the rest of `release-validation.yml` — PR shape,
+ * template pin — from `src/config/release-gate-locality.yml`, the registry
+ * `tests/scripts/release_gate_locality.test.ts` keeps in step with the
+ * workflow. `--cheap` drops the one row that leaves the machine, so a registry
+ * outage cannot read as a release defect.
+ *
+ * An argv rather than a call, so the pipeline issues it through `run()` and
+ * `release_drill` intercepts it exactly as it intercepts `task
+ * release-prepare`. A real subprocess inside the simulated world would run
+ * gates against the live tree.
+ *
+ * Lives here rather than in `release.ts` for the reason
+ * `_refuse_unpublishable` already states: that file is 2000+ lines and every
+ * line above 1500 is charged by the source-size growth ratchet.
+ */
+export function local_release_gate_argv(): string[] {
+    return ['task', 'release:verify', '--', '--cheap'];
+}
+
+/**
+ * Measure the governance-versus-product level for the span under release.
+ *
+ * The push guard's fourth site reads the SAME obligation the release PR reads,
+ * which until 2026-09-05 it did not: `publication_blockers` knew two sentinels
+ * and not this one, so the earliest refusal was the pull request. That gap was
+ * documented in `docs/contracts/CHANGELOG-conventions.md` and it is what turned
+ * 14.17.0 red after a branch, a PR and a CI run had already been spent.
+ *
+ * Returns `null` on any measurement failure — a shallow clone or a missing tag
+ * is an environment fact, and the contract is explicit that it degrades to a
+ * warning rather than to a refusal. `null` produces no blocker downstream.
+ */
+export function measure_mix_obligation(
+    version: string,
+    fromRef?: string | null,
+): MixObligation | null {
+    try {
+        const from = fromRef ?? previous_release_tag('HEAD', REPO_ROOT);
+        if (!from) return null;
+        const reading = measureRange(from, 'HEAD', loadTaxonomy(), version, REPO_ROOT);
+        const o = reading.response_obligation;
+        return {
+            triggered: o.triggered,
+            level:
+                `governance-only ${String(o.governance_only)} vs consumer-only ` +
+                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version})`,
+        };
+    } catch (err) {
+        // The CI side prints `⚠️  governance mix not measured`; swallowing it
+        // here made a broken taxonomy file disable BOTH local guards in
+        // silence while CI kept refusing — the exact asymmetry this change
+        // exists to remove, restored one layer down.
+        process.stderr.write(
+            `⚠️   governance mix not measured for ${version}: ${(err as Error).message}\n` +
+                '    Both local guards are inert for this obligation; the release PR still refuses.\n',
+        );
+        return null;
+    }
+}
+
+/**
  * Refuse the FIRST remote state of a release whose section is not publishable.
  *
  * The fourth guard site, and the one the other three structurally cannot cover.
@@ -464,63 +529,6 @@ export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
  * sites, which need a section to publish; refusing here would break every
  * non-release push through this helper).
  */
-/**
- * Measure the governance-versus-product level for the span under release.
- *
- * The push guard's fourth site reads the SAME obligation the release PR reads,
- * which until 2026-09-05 it did not: `publication_blockers` knew two sentinels
- * and not this one, so the earliest refusal was the pull request. That gap was
- * documented in `docs/contracts/CHANGELOG-conventions.md` and it is what turned
- * 14.17.0 red after a branch, a PR and a CI run had already been spent.
- *
- * Returns `null` on any measurement failure — a shallow clone or a missing tag
- * is an environment fact, and the contract is explicit that it degrades to a
- * warning rather than to a refusal. `null` produces no blocker downstream.
- */
-/**
- * The pre-push local gate run, as an argv the caller hands to `run()`.
- *
- * Every release-PR assertion that can run locally, run BEFORE the branch leaves
- * the machine. `guard_release_branch_push` below covers the changelog-section
- * obligations; this covers the rest of `release-validation.yml` — PR shape,
- * template pin — from `src/config/release-gate-locality.yml`, the registry
- * `tests/scripts/release_gate_locality.test.ts` keeps in step with the
- * workflow. `--cheap` drops the one row that leaves the machine, so a registry
- * outage cannot read as a release defect.
- *
- * An argv rather than a call, so the pipeline issues it through `run()` and
- * `release_drill` intercepts it exactly as it intercepts `task
- * release-prepare`. A real subprocess inside the simulated world would run
- * gates against the live tree.
- *
- * Lives here rather than in `release.ts` for the reason
- * `_refuse_unpublishable` already states: that file is 2000+ lines and every
- * line above 1500 is charged by the source-size growth ratchet.
- */
-export function local_release_gate_argv(): string[] {
-    return ['task', 'release:verify', '--', '--cheap'];
-}
-
-export function measure_mix_obligation(
-    version: string,
-    fromRef?: string | null,
-): MixObligation | null {
-    try {
-        const from = fromRef ?? previous_release_tag('HEAD', REPO_ROOT);
-        if (!from) return null;
-        const reading = measureRange(from, 'HEAD', loadTaxonomy(), version, REPO_ROOT);
-        const o = reading.response_obligation;
-        return {
-            triggered: o.triggered,
-            level:
-                `governance-only ${String(o.governance_only)} vs consumer-only ` +
-                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version})`,
-        };
-    } catch {
-        return null;
-    }
-}
-
 export function guard_release_branch_push(branch: string): void {
     const prefix = 'release/';
     if (!branch.startsWith(prefix)) {
@@ -685,16 +693,28 @@ export function guard_release_curation(version: string, prMerged = false): void 
     if (!section) {
         return;
     }
-    // The section level, and the mix obligation with it: this is the CHEAPEST
-    // site of the five — the changelog has just been written and nothing is
-    // committed — so an obligation that can be read here should not wait for
-    // the push guard, let alone for the release PR.
-    const blockers = section_publication_blockers(
-        section.body,
-        version,
-        `\`release/${version}\``,
-        measure_mix_obligation(version),
-    );
+    // The head-level blockers plus the mix obligation — deliberately NOT the
+    // tests footer.
+    //
+    // This site runs BEFORE `prepend_changelog`'s output is committed, and
+    // `--resume` skips the whole bump block once `package.json` already carries
+    // the target version. So a refusal here for a missing footer is a trap: the
+    // writer never gets a second chance to render it, the message forbids
+    // hand-writing it, and the operator is left rolling `package.json` back by
+    // hand. The footer is a MEASUREMENT the writer produces, not prose the
+    // operator can supply, which is exactly why it does not belong at the site
+    // that fires before the artefact exists in git.
+    //
+    // `guard_release_branch_push` carries it instead: by then the section is
+    // committed and editable on the branch, and nothing has left the machine.
+    const blockers = [
+        ...publication_blockers(
+            section.body,
+            version,
+            `\`release/${version}\``,
+            measure_mix_obligation(version),
+        ),
+    ];
     if (blockers.length === 0) {
         return;
     }

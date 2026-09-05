@@ -193,6 +193,15 @@ describe('guard_release_branch_push — refuses before any remote state, and onl
     expect(() => guard_release_branch_push('release/9.9.9')).toThrow();
   });
 
+  it('refuses a missing Tests footer here, where the commit already exists', () => {
+    // The obligation moved to this site rather than being dropped: the section
+    // is committed and editable on the branch, and nothing has left the machine.
+    const noFooter = CLEAN.replace(/\nTests: \d+[^\n]*\n/u, '\n');
+    expect(noFooter).not.toMatch(/^Tests: /mu);
+    _set_changelog_reader(() => noFooter);
+    expect(() => guard_release_branch_push('release/9.9.9')).toThrow();
+  });
+
   it('passes a curated section straight through', () => {
     _set_changelog_reader(() => CLEAN);
     expect(() => guard_release_branch_push('release/9.9.9')).not.toThrow();
@@ -296,6 +305,18 @@ describe('guard_release_curation — asks before the release commit exists', () 
     expect(msg).toContain('Behaviour changes');
     expect(msg).toContain('Security and correctness');
     expect(msg).toContain('Stopped BEFORE committing');
+  });
+
+  it('does not refuse a missing Tests footer before the commit exists', () => {
+    // `--resume` skips the whole bump block once `package.json` carries the
+    // target, so `prepend_changelog` never runs again: refusing here for a
+    // footer the WRITER produces would leave no way forward but a manual
+    // `package.json` rollback. The push guard carries that obligation instead,
+    // where the section is committed and editable on the branch.
+    const noFooter = CURATED_HEAD.replace(/\nTests: \d+[^\n]*\n/u, '\n');
+    expect(noFooter).not.toMatch(/^Tests: /mu);
+    _set_changelog_reader(() => noFooter);
+    expect(() => guard_release_curation('9.9.9')).not.toThrow();
   });
 
   it('passes a curated head straight through', () => {
