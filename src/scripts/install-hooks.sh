@@ -85,6 +85,49 @@ fi
 
 fail=0
 
+# BASE FRESHNESS — first, and it EXITS rather than setting fail=1.
+#
+# The header above has promised "when this hook refuses for staleness" since the
+# hook was written, and nothing below ever asked. Measured over the 50 PRs
+# preceding 2026-09-04: 25 of them carried at least one `Merge branch 'main'
+# into <branch>` commit (52 such commits in total), and 17 of the 36 PRs whose
+# workflow runs were still readable had at least one FAILED run — the three
+# workflows that failed most (Tests 18, Consistency 16, Rule Backstops 13) are
+# exactly the base-relative ones: ratchets, budgets and generated counts that
+# were green against the base the branch forked from and red against the base it
+# merges into. A branch pushed behind its base buys a CONFLICTING PR, a red run,
+# or both, and the contributor pays for it after the work looks finished.
+#
+# It runs FIRST because everything after it is invalidated by the merge that has
+# to happen anyway: `task consistency` regenerates derived files against the
+# stale base, the merge then re-dirties them, and the ~10s is spent twice. And
+# it EXITS instead of accumulating into `fail`, for the same reason — there is
+# no useful second finding to collect from a tree that is about to move.
+#
+# It never merges. `check_branch_freshness` asks the REMOTE (one `ls-remote`,
+# measured 4.5s) and returns 1 only on a VERIFIED behind state; offline, in CI,
+# on a detached HEAD, or standing on the base itself it returns 0 and says so.
+# So an unreachable network cannot block a push, and a stale local tracking ref
+# cannot fake a green.
+echo "🔍 Base freshness — is this branch behind the base it will merge into?"
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
+elif [ ! -x ./scripts-run ]; then
+    echo "⚠️  ./scripts-run not found — skipping the freshness check for this push."
+elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
+    echo ""
+    echo "   Push blocked — the branch is behind its base, and the gates you just"
+    echo "   passed were answered against a base that no longer exists."
+    echo ""
+    echo "     task push-ready         # fetch → integrate the base SET → regenerate"
+    echo "                             # → verify → re-check freshness, then push"
+    echo "     task push-ready DRY=1   # the same steps, read-only"
+    echo ""
+    echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
+    echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
+    exit 1
+fi
+
 if ! command -v task >/dev/null 2>&1; then
     echo "⚠️  'task' (go-task) not found — cannot run the consistency gate locally."
     echo "    Install it (https://taskfile.dev) so pre-push can mirror the CI check;"
