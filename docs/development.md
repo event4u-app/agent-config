@@ -161,6 +161,66 @@ CI; the fix is `task consistency-fix`, stage, re-push. The hook auto-installs on
 manually if you skipped install scripts. Bypass a genuine WIP push with
 `git push --no-verify`.
 
+#### One manual install is required, and nothing installs it for you
+
+`npm install` in a git clone runs the `prepare` script, which runs the
+installer. **That is the only automatic path.** A clone made with install
+scripts skipped, a fresh worktree on a machine that never ran `npm install`, or
+a checkout where `.git/hooks` was cleared has **no hooks**, and no gate in this
+repository can tell — CI never sees your `.git/`. Run it once:
+
+```bash
+task install-hooks
+```
+
+#### The installed hooks go stale, and now they say so
+
+The installer WRITES `.git/hooks/*`; it does not link them. Between two runs of
+the installer the installed copy drifts from the source that writes it.
+Measured on 2026-09-05: the installed `pre-push` in this repository was 146
+lines against a 189-line source body, missing the entire base-freshness gate
+merged five days earlier — a gate that read as live in the source, in CI, and in
+the skill documenting it, and did not exist on the checkout that ran it.
+
+`check_installed_hooks_fresh` closes that. It renders what `install-hooks.sh`
+would write into a scratch directory and byte-compares it against what is
+installed, so it reports the drift rather than a person noticing it. Two
+carriers, both installed by the same installer:
+
+| Carrier | Behaviour |
+|---|---|
+| `pre-push`, first gate | **Refuses the push**, names the stale hooks and `task install-hooks`. Bypass with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
+| `post-merge` / `post-checkout` | **Reports on stderr, never repairs.** Fires on the pull or branch switch that caused the drift. |
+
+The second one reports and does not repair on purpose. Linked worktrees **share
+one `.git/hooks`** through the common dir, so a checkout that re-ran the
+installer would silently redefine the gates every other worktree runs, and a
+checkout of an older branch would reinstall older hooks over newer ones. An AI
+council (`claude-sonnet-4-5` + `codex-default`, 2026-09-05, 2 of 2 seats)
+refused that mutation unanimously. Reopening it needs per-worktree hook
+isolation (`core.hooksPath`) or a branch-independent dispatcher — see
+[`push-closes-its-loop`](../src/skills/git-workflow/references/push-closes-its-loop.md).
+
+Both carriers skip themselves on a checkout that predates the gate, for the same
+shared-`.git/hooks` reason: an older branch in a sibling worktree must not have
+its push refused by a script that is not on it.
+
+#### Git hooks are maintainer-only — consumers get none
+
+A consumer who installs `@event4u/agent-config` as a dependency receives **no
+git hooks**. `src/install/` references `.git/hooks` nowhere, and `prepare` does
+not run for a registry dependency. This is a decision, not an oversight: the
+pre-push chain runs `task consistency` and `task preflight`, which depend on
+this repository's Taskfile, its `./scripts-run` shim and its generated trees —
+none of which exist in a consumer project. Shipping hooks on dependency install
+would also establish persistent repository execution from a package install,
+which is not a thing a dependency should do silently.
+
+Decided 2026-09-05 by AI council (`claude-sonnet-4-5` + `codex-default`, 2 of 2
+seats, unanimous). *Revisit-if* a consumer-native gate set is designed with its
+own opt-in command and consent step — a separate product feature, not an
+extension of this installer.
+
 ### Local dev install (no release)
 
 Use these tasks to run the working tree as if it were a published
