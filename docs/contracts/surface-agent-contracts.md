@@ -1,6 +1,19 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. Normatively dependent on `design-artifact-verification.md`
+  at §§ 15-18 and 63, where it is the design surface's truth source; that contract
+  is extended to 2026-11-24 here, and this file takes the same date because they
+  are one review. Independently unpromotable: its own § 13 self-description
+  "advisory first" is still accurate 57 days on. Three of eleven surfaces are at
+  advisory (spreadsheet, deck, document); the other eight have no artefact
+  referencing the contract at all. The advisory-to-routed transition has no
+  mechanism — `tests/surface-contracts/` holds the fixture file and nothing else,
+  no runner, no Taskfile target, no CI registration — so "eval fixtures pass" can
+  never be reported. Before the window ends: a runner or a recorded rubric pass
+  exists for those fixtures, and the browser row at § 67 names a real owner or is
+  marked unowned; no `src/skills/browser/` exists today.
 ---
 
 # Surface-Agent Contracts — medium invariants, not one generic agent
