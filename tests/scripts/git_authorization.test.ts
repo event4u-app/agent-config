@@ -1,5 +1,8 @@
 // Tests for the git-authorization ledger (src/scripts/git_authorization_hook.ts)
-// and its blocking half (src/scripts/hooks/block_unauthorized_git.ts).
+// and the command classifier (src/scripts/hooks/git_command_classifier.ts).
+//
+// The blocking half both used to feed was removed by owner decision on
+// 2026-09-04 (ADR-254), so nothing here asserts a refusal any more.
 //
 // Every fixture below is drawn from a real turn in the 30-session conformance
 // audit (2026-08-06). The two that matter most:
@@ -22,19 +25,13 @@ import {
   pendingFileFor,
   humanTypedThisTurn,
   run as ledgerRun,
-  STATE_FILE,
   type GitOp,
 } from "../../src/scripts/git_authorization_hook.js";
-import { EXIT_BLOCK as DISPATCHER_BLOCK } from "../../src/scripts/hooks/dispatch_hook.js";
 import {
-  BLOCK_OPS,
-  WARN_OPS,
   commandOp,
   invokedSegments,
-  decide,
   extractCommand,
-  run as gateRun,
-} from "../../src/scripts/hooks/block_unauthorized_git.js";
+} from "../../src/scripts/hooks/git_command_classifier.js";
 
 let tmp: string;
 
@@ -53,19 +50,6 @@ function ledger(session = "s1"): { authorized: GitOp[] } {
   return JSON.parse(fs.readFileSync(path.join(tmp, ledgerFileFor(session)), "utf8")) as {
     authorized: GitOp[];
   };
-}
-
-// The guard sees the session id in production, so the fixture does too — the
-// cross-session clobber below is invisible without it.
-function preTool(command: string, session = "s1"): number {
-  return gateRun(
-    JSON.stringify({
-      event: "pre_tool_use",
-      session_id: session,
-      payload: { tool_name: "Bash", tool_input: { command } },
-    }),
-    { consumer_root: tmp },
-  );
 }
 
 describe("classifyAuthorization — prose", () => {
@@ -335,163 +319,6 @@ describe("extractCommand", () => {
   });
 });
 
-describe("decide", () => {
-  it("blocks every irreversible op when the ledger is empty", () => {
-    for (const [cmd, op] of [
-      ["npm publish", "publish"],
-      ["git push origin --tags", "tag"],
-      ["gh release create 9.20.0", "release"],
-      ["gh pr merge 1188 --squash", "pr-merge"],
-    ] as const) {
-      const d = decide(cmd, { authorized: new Set(), present: false });
-      expect(BLOCK_OPS.has(op)).toBe(true);
-      expect(d.exit).toBe(DISPATCHER_BLOCK);
-      expect(d.stderr).toMatch(/Blocked/);
-      expect(d.stderr).toContain(op);
-    }
-  });
-
-  it("warns but allows the recoverable ops when the ledger is empty", () => {
-    for (const [cmd, op] of [
-      ["git commit -m x", "commit"],
-      ["git push origin feat/x", "push"],
-      ["gh pr create --base main", "pr-create"],
-    ] as const) {
-      const d = decide(cmd, { authorized: new Set(), present: false });
-      expect(WARN_OPS.has(op)).toBe(true);
-      expect(d.exit).toBe(0);
-      expect(JSON.parse(d.stdout).decision).toBe("warn");
-    }
-  });
-
-  it("allows an op the ledger authorizes", () => {
-    const d = decide("npm publish", { authorized: new Set<GitOp>(["publish"]), present: true });
-    expect(d.exit).toBe(0);
-    expect(d.stdout).toBe("");
-  });
-
-  it("allows an unrelated command outright", () => {
-    expect(decide("git status", { authorized: new Set(), present: false }).exit).toBe(0);
-    expect(decide(null, { authorized: new Set(), present: false }).exit).toBe(0);
-  });
-});
-
-describe("end to end", () => {
-  it("a German release authorization unlocks the release, not the publish", () => {
-    submit("Release 9.20.0 sauber, dann den eigenen PR.");
-    expect(ledger().authorized).toContain("release");
-    expect(preTool("gh release create 9.20.0")).toBe(0);
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("reproduces the measured failure: a pasted rejection trace does not unlock the release chain", () => {
-    submit(
-      "```\nTo github.com:event4u-app/agent-config.git\n ! [rejected]  main -> main\n" +
-        "error: failed to push some refs\n```",
-    );
-    expect(ledger().authorized).toEqual([]);
-    expect(preTool("gh pr merge 1134 --squash")).toBe(DISPATCHER_BLOCK);
-    expect(preTool("git push origin --tags")).toBe(DISPATCHER_BLOCK);
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("a new turn replaces the ledger — a spent authorization does not carry forward", () => {
-    submit("mach den npm publish");
-    expect(preTool("npm publish")).toBe(0);
-    submit("fixe die ci");
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("no ledger at all is treated as not-authorized for the block subset", () => {
-    expect(fs.existsSync(path.join(tmp, STATE_FILE))).toBe(false);
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-});
-
-// The deadlock this pair was measured to produce (2026-08-18, 14.0.0 release).
-//
-// `user-interaction` requires a Hard-Floor decision to reach the user as a
-// numbered-options block; the answer to one is `1`, which carries no operation
-// for the classifier to record. The guard refused, the agent asked exactly as
-// the refusal instructed, the user answered, and the next attempt refused
-// identically — three turns, with real consent on the record every time.
-describe("confirming a refused operation", () => {
-  it("reproduces the deadlock, and closes it: a numbered answer confirms the refused op", () => {
-    submit("mach den Release fertig");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(DISPATCHER_BLOCK);
-    // The agent asks; the user picks option 1.
-    submit("1");
-    expect(ledger().authorized).toContain("pr-merge");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(0);
-  });
-
-  it("confirms ONLY the operation that was refused", () => {
-    submit("mach den Release fertig");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(DISPATCHER_BLOCK);
-    submit("ja");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(0);
-    // The merge refusal never named a publish, so it cannot consent to one.
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("is single-use — a second affirmative does not re-open the same op", () => {
-    submit("mach den Release fertig");
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-    submit("ok");
-    expect(preTool("npm publish")).toBe(0);
-    submit("ok");
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("a prompt that opens new work is not an answer — it must name its own op", () => {
-    submit("mach den Release fertig");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(DISPATCHER_BLOCK);
-    // The real turn that motivated this test. It reads as consent to a human,
-    // and it authorizes exactly the op it names — not the pending one.
-    submit("release und fixe auch den schess bug");
-    expect(ledger().authorized).toContain("release");
-    expect(ledger().authorized).not.toContain("pr-merge");
-    expect(preTool("gh pr merge 1412 --merge")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("an affirmative with no refusal behind it authorizes nothing", () => {
-    submit("1");
-    expect(ledger().authorized).toEqual([]);
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("a stale refusal has expired — it is not still the question being answered", () => {
-    fs.mkdirSync(path.dirname(path.join(tmp, pendingFileFor("s1"))), { recursive: true });
-    fs.writeFileSync(
-      path.join(tmp, pendingFileFor("s1")),
-      JSON.stringify({
-        op: "publish",
-        session_id: "s1",
-        refused_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-      }),
-    );
-    submit("ja");
-    expect(ledger().authorized).toEqual([]);
-    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("the refusal is recorded so the next prompt can answer it", () => {
-    submit("mach den Release fertig");
-    expect(fs.existsSync(path.join(tmp, pendingFileFor("s1")))).toBe(false);
-    expect(preTool("gh pr merge 1412 --merge")).toBe(DISPATCHER_BLOCK);
-    const pending = JSON.parse(fs.readFileSync(path.join(tmp, pendingFileFor("s1")), "utf8")) as {
-      op: string;
-    };
-    expect(pending.op).toBe("pr-merge");
-  });
-
-  it("a warn-tier refusal records nothing — there is no refusal to answer", () => {
-    submit("lies den code");
-    expect(preTool("git push origin main")).toBe(0);
-    expect(fs.existsSync(path.join(tmp, pendingFileFor("s1")))).toBe(false);
-  });
-});
-
 describe("isAffirmative", () => {
   it("accepts the shapes a numbered-options block produces", () => {
     for (const t of ["1", "2.", "1)", "Option 3", "ja", "ok", "mach das", "go ahead", "do it"]) {
@@ -529,23 +356,13 @@ describe("concurrent sessions", () => {
     // A different conversation in the same repo types something unrelated.
     submit("lies den code", "other");
 
-    expect(preTool("gh pr merge 1412 --merge", "mine")).toBe(0);
+    expect(ledger("mine").authorized).toContain("pr-merge");
   });
 
   it("and it does not lend its own authorization to anyone else", () => {
     submit("mach den npm publish", "mine");
-    expect(preTool("npm publish", "other")).toBe(DISPATCHER_BLOCK);
-  });
-
-  it("keeps each session's refused-operation record apart", () => {
-    submit("mach den Release fertig", "mine");
-    expect(preTool("gh pr merge 1 --merge", "mine")).toBe(DISPATCHER_BLOCK);
-    // The other session answers ITS own question, not this one's.
-    submit("ja", "other");
-    expect(preTool("gh pr merge 1 --merge", "other")).toBe(DISPATCHER_BLOCK);
-    // The answer still belongs to the session that was refused.
-    submit("ja", "mine");
-    expect(preTool("gh pr merge 1 --merge", "mine")).toBe(0);
+    expect(ledger("mine").authorized).toContain("publish");
+    expect(fs.existsSync(path.join(tmp, ledgerFileFor("other")))).toBe(false);
   });
 
   // The session id arrives from the host envelope, so it is untrusted input on
@@ -560,21 +377,6 @@ describe("concurrent sessions", () => {
         expect(path.relative(stateDir, resolved).split(path.sep)).toHaveLength(2);
       }
     }
-  });
-
-  it("falls back to the flat legacy ledger when no per-session file exists", () => {
-    fs.mkdirSync(path.dirname(path.join(tmp, STATE_FILE)), { recursive: true });
-    fs.writeFileSync(
-      path.join(tmp, STATE_FILE),
-      JSON.stringify({
-        session_id: "mine",
-        detected_at: new Date().toISOString(),
-        authorized: ["pr-merge"],
-        evidence: {},
-        prompt_chars: 5,
-      }),
-    );
-    expect(preTool("gh pr merge 1 --merge", "mine")).toBe(0);
   });
 });
 

@@ -34,12 +34,13 @@ ACTIVATION NEEDS THE OWNER DECISION IN THE `merge-authority` BLOCKER OF
 `road-to-drain-commands` — NEVER A COMMAND EDIT, AND NEVER A GUARD EDIT.
 ```
 
-**The invocation is the authorization, and nothing else is.** `pr-merge` is a
-`BLOCK_OPS` member in `block_unauthorized_git.ts` because it is irreversible.
-This command would consume the authorization the user's own prompt text already
-wrote to the per-session ledger on `UserPromptSubmit`; it introduces no second
-authorization store, and it never writes one. When that window closes the run
-stops and reports (§ 7) — the window never grows.
+**The invocation is the authorization, and nothing else is.** `pr-merge` is
+irreversible, and since 2026-09-04 (ADR-254) NOTHING MECHANICAL CHECKS IT —
+the gate that did was removed after it refused authorizations the owner had in
+fact given. The per-session ledger still records what the user's own prompt
+authorized, and this command still reads it as an audit trail; it introduces no
+second authorization store, and it never writes one. When the work left is
+outside what the owner authorized, the run stops and reports (§ 7).
 
 Why it ships inert rather than not at all: everything before § 9 — the target
 manifest, the four conflict classes, the superseded check, the bounded CI
@@ -266,54 +267,44 @@ exceeds the remaining window, stop entering CI-fix loops and merge everything
 already green first. Pre-greening several PRs ahead of their merge is forbidden
 under window pressure.
 
-**The signal, named — otherwise neither this rule nor § 7 is actionable.** The
-window is the per-session authorization ledger's own freshness bound. Read it,
-never write it:
+**No mechanical window remains, and that is the change.** Until 2026-09-04 the
+run read a freshness bound off the authorization ledger and paused when it
+closed. The owner removed the enforcing gate (ADR-254) after it was measured
+refusing authorizations that had in fact been given, so there is no constant to
+read and no expiry to schedule against. Authorization is carried by the
+conversation and by `non-destructive-by-default`, not by a clock.
+
+The per-session ledger is still written, and is still read-only to this run:
 
 ```bash
 cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
 ```
 
-Remaining window = `detected_at + LEDGER_MAX_AGE_MS − now`. Take the constant
-from the guard source **only after** `check_hook_bundle_content` says the
-source and the executing bundle agree — reading the source alone is the
-2026-08-21 failure re-expressed as an instruction, since the bundle is what
-enforces the value and a source edit without a rebuild is silently inert. Under
-pressure means
-the remaining window is shorter than one CI cycle on this repository. The read
-is the whole interaction: the run never edits that file, the constant, or the
-built bundle.
+It records what a turn authorized. It no longer gates anything, so treat it as
+an audit trail, never as permission. The run never edits that file.
 
-## 7. Expiry is a reported state, never a stall
+## 7. Authorization is the owner's sentence, not a timer
 
 ```
-WHEN THE AUTHORIZATION WINDOW CLOSES WITH WORK LEFT, THE RUN PAUSES, REPORTS,
-AND ASKS FOR RE-AUTHORIZATION. IT NEVER RETRIES THE GUARD, AND IT NEVER EDITS
-THE GUARD, ITS SOURCE, OR ITS BUNDLES — READ-ONLY VERIFICATION ONLY.
+THE RUN MERGES WHAT THE OWNER AUTHORIZED AND NOTHING ELSE. WHEN THE WORK LEFT
+IS OUTSIDE WHAT WAS AUTHORIZED, THE RUN PAUSES, REPORTS, AND ASKS. IT NEVER
+INFERS A WIDER MANDATE FROM A LONG RUN OR FROM MOMENTUM.
 ```
 
-**Unreachable while the merge step is gated**, and stated rather than left for
-a reader to discover: with nothing merging, the run performs no `BLOCK_OPS`
-operation (`push` and `commit` are `WARN_OPS`), so the window governs nothing
-it does. This section is the contract for when the gate opens.
+With the gate removed nothing refuses an unauthorized merge, which makes this
+section the whole control rather than a second layer behind one. Two rules
+follow, and they are stricter than the ones they replace:
 
-Write the summary as-is with a `window-expired` disposition per unprocessed PR
-and name the exact re-authorization needed. Then STOP and wait — do not end the
-run, and do not proceed to the next PR. ADR-251 (2026-08-30) decided this
-shape: expiry is a pause, not a termination.
+- **A cardinality word does not authorize a PR the owner never named.** "All the
+  open PRs" is an instruction to work the queue as it stood when the owner said
+  it. A PR opened after that sentence is new work and needs its own go-ahead.
+- **A one-shot authorization is spent on the operation it named.** Per
+  `commit-policy`, "merge #1499" does not authorize the next merge, and a
+  conflict cycle or a CI fix in between does not renew it.
 
-**The operator's reply is what resumes it, and it renews the window through the
-path that already exists.** `git_authorization_hook.ts` rewrites this session's
-ledger with a fresh `detected_at` on every human-typed prompt, so a reply
-carrying the re-authorization you named resets the age the guard compares
-against — no new mechanism, and the signal still comes from text the user typed.
-Re-verify the manifest entry (number and head SHA) before resuming, exactly as
-§ 8 requires: the pause is a window in which the world can move.
-
-Widening `LEDGER_MAX_AGE_MS` is still forbidden practice, and ADR-251 kept the
-30-minute value deliberately rather than by omission: on 2026-08-21 it was
-patched to six hours for a drain run and the widening reached the trunk. The run proposes no value for it, edits neither it nor its bundles,
-and treats a refusal as the answer.
+Write the summary as-is with an `unauthorized` disposition per unprocessed PR
+and name the exact authorization needed. Then STOP and wait — do not end the
+run, and do not proceed to the next PR.
 
 ## 8. Kill switches, and what happens after a merge
 

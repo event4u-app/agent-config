@@ -34,7 +34,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 import { readHookStdin } from './hook_stdin.js';
-import { substitutionPayloads } from './block_unauthorized_git.js';
+import { substitutionPayloads } from './git_command_classifier.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -400,7 +400,7 @@ function _is_blocked(git_tokens: string[]): [boolean, string] {
  * genuinely unparseable command that DOES invoke git. So the test moves from
  * "the string contains git" to "some command position is git", with heredoc
  * bodies removed first — the same data-not-command distinction
- * `block_unauthorized_git` already makes.
+ * `git_command_classifier` already makes.
  *
  * Deliberately regex-shaped rather than tokenised: shlex has already failed by
  * the time this runs, so no reliable token stream exists. It therefore stays
@@ -450,7 +450,7 @@ export function _looks_like_git_invocation(cmd: string, depth = 0): boolean {
  * `_git_base` never sees git. The more parseable the command, the less it was
  * protected. Classification inside the payload is by command position, so a
  * substitution that INVOKES git is checked and one that merely names it in an
- * argument is not — matching what `block_unauthorized_git` does one level up.
+ * argument is not — matching what `git_command_classifier` does one level up.
  *
  * Heredoc bodies are removed before extraction: a backtick or `$(` inside a
  * commit message being written to a file is data, and feeding it back through

@@ -140,7 +140,7 @@ in **all three**, each one refusing work the operator had asked for:
 | Concern | Input | What it refused |
 |---|---|---|
 | `evidence-independence` | a subagent **prompt** | 15 of 16 workers in an implementation fan-out |
-| `block-unauthorized-git` | a **shell command** | a PR whose title said "publish", two read-only `gh api` GETs |
+| `block-unauthorized-git` (removed 2026-09-04, ADR-254) | a **shell command** | a PR whose title said "publish", two read-only `gh api` GETs, and — the removal — a guardrail sentence inside the owner's own authorization |
 | `turn-end-gate` | the assistant's **reply prose** | honest "not done yet" status lines |
 
 Each was fixed by narrowing its pattern. The council convened on the design
@@ -150,8 +150,11 @@ answer, and the reason is not stylistic:
 > a finite pattern cannot bound an infinite false-positive set — narrowing is
 > sampling from an unbounded error space, not converging on a solution.
 
-The history supports it. `block-unauthorized-git` has now been narrowed three
-times (quoted `|`, dotted path segments, unanchored verb) and
+The history supports it, and its end point is the strongest evidence in the
+table: `block-unauthorized-git` was narrowed three times (quoted `|`, dotted
+path segments, unanchored verb) and then REMOVED outright on 2026-09-04
+(ADR-254), because the fourth false positive was the owner's own authorization
+revoking itself. Narrowing did not converge; it ran out. And
 `evidence-independence`'s self-scope discriminator was *itself* the fix for an
 earlier false positive of the same shape.
 
@@ -403,9 +406,9 @@ platform, every event key must be in the agent-config event vocabulary.
 
 ### Which hosts carry `pre_tool_use` — bound-and-denying, bound-only, capability-limited, unbound, absent
 
-Five `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
-`block-unauthorized-git`, `block-kernel-rule-writes`, `block-config-weakening`
-and `evidence-independence` (its blocking branch) — so "which hosts is this
+Four `severity: blocking` concerns sit on `pre_tool_use` — `block-no-verify`,
+`block-kernel-rule-writes`, `block-config-weakening` and
+`evidence-independence` (its blocking branch) — so "which hosts is this
 actually enforced on" is asked of this manifest repeatedly. It has **four**
 answers — **five since 2026-08-24** — and every collapse of them has produced a
 false claim in shipped prose: collapsing the bottom two asserts a host limitation

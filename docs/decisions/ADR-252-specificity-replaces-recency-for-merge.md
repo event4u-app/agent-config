@@ -1,10 +1,10 @@
 ---
 adr: 252
-status: accepted
+status: superseded
 date: 2026-09-03
 decision: specificity-replaces-recency-for-merge
 supersedes: ADR-251
-superseded_by: —
+superseded_by: ADR-254
 phase: —
 type: structural
 reopen_policy: owner

@@ -13,7 +13,7 @@
  *
  *   language-pin      ← language_mirror_hook.classify
  *   git-authorization ← git_authorization_hook.classifyAuthorization
- *                       + block_unauthorized_git.commandOp / BLOCK_OPS
+ *                       + git_command_classifier.commandOp / BLOCK_OPS
  *   vacuous-evidence  ← before_complete_hook.isVacuousOutput / isCiPoll / pendingCount
  *   evidence-steering ← evidence_independence.isEvaluationPrompt / preloadedVerdict
  *   completion-claim  ← turn_end_gate_hook.detectCompletionClaim          (round 7)
@@ -54,7 +54,7 @@ import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 import { classify } from "./language_mirror_hook.js";
 import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
 import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
-import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
+import { BLOCK_OPS, commandOp } from "./hooks/git_command_classifier.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
 // Round 7 § 1.5 — the SAME predicate `turn-end-gate` refuses on, imported rather
 // than reimplemented, so the measured rate and the gate cannot disagree.
