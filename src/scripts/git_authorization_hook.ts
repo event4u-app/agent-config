@@ -665,19 +665,50 @@ export function extractMergeTargets(prompt: string): number[] {
 }
 
 /**
- * A human turn that withdraws standing merge authority.
+ * A bare stop word — a withdrawal that names no operation at all.
  *
  * Revocation must be cheaper to express than authorization, so this matches a
- * bare stop word on its own as well as an explicit "don't merge". It is
- * deliberately over-inclusive in the safe direction: a false revocation costs
- * one prompt, a missed revocation costs an unwanted merge.
+ * bare stop word on its own. It is deliberately over-inclusive in the safe
+ * direction: a false revocation costs one prompt, a missed revocation costs an
+ * unwanted merge. The alternation is orthogonal to negation and is unchanged.
  */
-const REVOKE_RE =
-  /\b(stop|stopp|halt|abbrechen|abbruch|cancel|revoke|widerruf(en)?|zur(ü|ue)ck(nehmen|ziehen)|hold\s+(everything|on|the\s+merge)|warte|wait)\b|(?:\b(nicht|kein(e|en)?|no|not|dont|don't|never|niemals|nie)\b[^.!?\n]{0,30}\b(merg(e|en|ing)|zusammenf(ü|ue)hren)\b)/iu;
+const REVOKE_STOP_WORD =
+  /\b(stop|stopp|halt|abbrechen|abbruch|cancel|revoke|widerruf(en)?|zur(ü|ue)ck(nehmen|ziehen)|hold\s+(everything|on|the\s+merge)|warte|wait)\b/iu;
+
+/** The merge verb itself, with no negation notion of its own. */
+const MERGE_VERB = /\b(merg(e|en|ing)|zusammenf(ü|ue)hren)\b/giu;
 
 /** Does this human turn withdraw standing merge grants? */
 export function isRevocation(prompt: string): boolean {
-  return REVOKE_RE.test(prompt);
+  if (REVOKE_STOP_WORD.test(prompt) || isBareRefusal(prompt)) {
+    return true;
+  }
+  // ONE negation implementation, both callers. Until 2026-09-04 this function
+  // carried its own inline vocabulary and a fixed `{0,30}` BACKWARD window,
+  // while `classifyAuthorization` reached the clause-scoped, abbreviation-aware
+  // `negatedBefore` about 240 lines below. The two disagreed on real prompts in
+  // both directions — measured at b75d7f7cb:
+  //
+  //   "Merge PR #12 auf keinen Fall."       isRevocation=false, a standing
+  //                                         grant over #12 SURVIVED
+  //   "Merge #12 under no circumstances."   isRevocation=false, same
+  //   "Please do not push, but merge PR #7." isRevocation=true while
+  //                                         classifyAuthorization returned
+  //                                         ["pr-merge"] — the two parsers
+  //                                         contradicting each other on a
+  //                                         corpus row asserted green
+  //
+  // `NEGATION_WORD`'s docblock already stated the rule this restores: one
+  // vocabulary for the whole file, because two drift invisibly until a prompt
+  // lands in the gap between them.
+  MERGE_VERB.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = MERGE_VERB.exec(prompt)) !== null) {
+    if (negatedBefore(prompt, m.index, m[0])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Mint a grant id that a replayed ledger cannot collide with. */
@@ -746,9 +777,53 @@ export function foldGrants(
  * negation vocabularies in one tree drift, and the drift is invisible until a
  * prompt lands in the gap between them" — so the list moved here rather than
  * being copied fifteen times.
+ *
+ * BOTH DIRECTIONS READ IT, and since 2026-09-04 that is checkable rather than
+ * aspirational: `classifyAuthorization` reaches it through `negatedBefore`, and
+ * `isRevocation` reaches the same `negatedBefore` plus `isBareRefusal`. The
+ * revocation path was the copy the original consolidation missed — it kept a
+ * ten-form inline list behind a fixed 30-character backward window, and the two
+ * grammars disagreed on real prompts in both directions until they were merged.
+ * A THIRD caller adds itself here, not next to itself.
+ *
+ * THE APOSTROPHE IS PART OF THE VOCABULARY, not a typo tolerance. The list
+ * read `dont|don't` — ASCII only — while every macOS, iOS, Word and Slack
+ * input turns a typed apostrophe into U+2019 by default. Measured at
+ * b75d7f7cb, and it leaked in the DANGEROUS direction on the authorization
+ * path, not merely the revocation one:
+ *
+ *   "don't merge PR #12"   classifyAuthorization = []            (denied)
+ *   "don\u2019t merge PR #12"   classifyAuthorization = ["pr-merge"]  (AUTHORIZED)
+ *   "don\u2019t push"           classifyAuthorization = ["push"]      (AUTHORIZED)
+ *
+ * One character of smart-quote substitution turned a prohibition into a grant
+ * for an irreversible operation. `don['\u2019\u2018\u02bc]?t` covers the straight, the two
+ * typographic and the modifier-letter forms in the one shared list, so both
+ * callers gain it at once — which is the whole argument for one vocabulary.
  */
-const NEGATION_WORD =
-  /\b(nicht|nichts|kein(e|en|em|er|es)?|niemals|nie|no|not|dont|don't|never|without|ohne)\b/i;
+/**
+ * Every apostrophe a keyboard or an autocorrect can produce for one word.
+ *
+ * Named once and shared by the vocabulary AND the tokenizer below. Written out
+ * twice, `don\u2018t` matched the vocabulary and then split into TWO tokens in
+ * `isBareRefusal` — this file's own drift failure, one character wide, caught
+ * by the council-mandated token-policy test rather than in review.
+ */
+const APOSTROPHE = "'\u2019\u2018\u02bc";
+
+const NEGATION_ALTERNATION =
+  `nicht|nichts|kein(?:e|en|em|er|es)?|niemals|nie|no|not|don[${APOSTROPHE}]?t|never|without|ohne`;
+
+const NEGATION_WORD = new RegExp(`\\b(${NEGATION_ALTERNATION})\\b`, "i");
+
+/**
+ * The same vocabulary, anchored to a whole token.
+ *
+ * Built from `NEGATION_ALTERNATION` rather than written out a second time —
+ * a copied list is the exact drift this file's `NEGATION_WORD` docblock warns
+ * about, and repairing one such copy is what this change is for.
+ */
+const NEGATION_TOKEN = new RegExp(`^(?:${NEGATION_ALTERNATION})$`, "i");
 
 /**
  * Is the match at `index` under a negation?
@@ -768,7 +843,9 @@ const NEGATION_WORD =
  * says why. The 30-character window inside the sentence is inherited from the
  * `pr-merge` lookbehind that this generalises.
  */
-const CONTRAST_CUE = /\b(aber|sondern|jedoch|but|however|instead)\b/gi;
+const CONTRAST_ALTERNATION = "aber|sondern|jedoch|but|however|instead";
+
+const CONTRAST_CUE = new RegExp(`\\b(${CONTRAST_ALTERNATION})\\b`, "gi");
 
 /**
  * Abbreviation and decimal dots are NOT sentence boundaries.
@@ -924,6 +1001,61 @@ export function negatedBefore(text: string, index: number, matched = ""): boolea
   // window. Measured — nine of the fifteen rows in the negation corpus failed
   // exactly this way after the look-behind alone was added.
   return NEGATION_WORD.test(before) || NEGATION_WORD.test(matched) || NEGATION_WORD.test(after);
+}
+
+/**
+ * Is any clause of this turn a BARE refusal — negation words and nothing else?
+ *
+ * `negatedBefore` answers "is this operation negated", which needs the
+ * operation to be in the clause. A withdrawal does not have to name one:
+ * `"Merge PR #12? Actually, don't."` puts the merge in a question sentence and
+ * the refusal in the next one, so no clause anywhere holds both. Measured at
+ * b75d7f7cb and again after the shared-parser change: `isRevocation` returned
+ * false and a standing grant over #12 survived.
+ *
+ * The scope is a CLAUSE whose every token is a negation word, which is the
+ * narrow half. `"Do not push."` is not a bare refusal — `push` is a content
+ * word, so the clause names an operation and `negatedBefore` owns it. That
+ * boundary is what keeps this from revoking `"Nicht pushen. Merge PR #12."`,
+ * a corpus row whose merge must still be authorized.
+ *
+ * It reuses `NEGATION_TOKEN`, so the one vocabulary covers this reading too.
+ *
+ * WHAT IT REVOKES — every standing grant, and that is the PRE-EXISTING
+ * contract rather than a new one. `foldGrants` returns `[]` for any revocation,
+ * which is how a bare `"stop"` has always behaved; a bare refusal is the same
+ * class of utterance and takes the same transition. Nothing here narrows or
+ * widens grant selection, so the council's question about which grant a bare
+ * `"don't"` targets is answered by the existing product semantics: all of them,
+ * in the safe direction.
+ *
+ * WHAT IT DOES NOT FIRE ON — a negation carrying any content word, which is
+ * what keeps a conversational aside from costing the user their authority.
+ * Measured against the council's boundary set:
+ *
+ *   "Merge #12? Actually, I don't think so."   false — "think"/"so" are content
+ *   "Merge #12? Don't worry, I'll do it."      false — "worry" is content
+ *   "Actually, don't worry about it."          false — same
+ *   "Merge #12? Actually, don't."              TRUE  — the clause is only "don't"
+ *   "Merge #12. Don't."                        TRUE  — a retraction one sentence later
+ *   "Merge #12?  ,  ;  ."                      false — no tokens at all
+ */
+/** A word token, apostrophes included, so `don't` stays ONE token. */
+const WORD_TOKEN = new RegExp(`[\\p{L}\\p{N}${APOSTROPHE}]+`, "gu");
+
+/** Clause boundaries, built from the one contrast vocabulary above. */
+const CLAUSE_SPLIT = new RegExp(`[,;:]|\\b(?:${CONTRAST_ALTERNATION})\\b`, "iu");
+
+export function isBareRefusal(text: string): boolean {
+  for (const sentence of _sentences(text)) {
+    for (const clause of sentence.split(CLAUSE_SPLIT)) {
+      const tokens = (clause ?? "").match(WORD_TOKEN) ?? [];
+      if (tokens.length > 0 && tokens.every((t) => NEGATION_TOKEN.test(t))) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /** Classify which ops a prompt authorizes. Exported for direct testing. */
