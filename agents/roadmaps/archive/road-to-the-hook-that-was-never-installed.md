@@ -74,10 +74,21 @@ not, and the copy is what runs.
       nothing and report a green meaning "no data" — the vacuous-pass class the
       2026-07 gates-that-cannot-fail audit catalogued. Reasoning is in the script
       docstring; correctness is covered by vitest, which does run in CI.
-      12 tests in tests/scripts/check_installed_hooks_fresh.test.ts. Sensitivity
-      proven by three sabotages, each restored: forcing state:'match' reds 4
-      tests, removing either carrier reds 2, renaming the pre-push echo line reds
-      the ordering test. -->
+      19 tests in tests/scripts/check_installed_hooks_fresh.test.ts. Sensitivity
+      proven by six sabotages, each restored: forcing state:'match' reds 4 tests,
+      removing either carrier reds 2, renaming the pre-push echo line reds the
+      ordering test, promoting the advisory back to a blocker reds 1, dropping
+      the executable-bit read reds 1, dropping the empty-seam guard reds 1.
+      REVISED AFTER THE R2 BLIND REVIEW (9 findings, all fixed, dispositions in
+      agents/evidence/reviews/): the comparison also reads the executable bit,
+      since git SKIPS a non-executable hook and a byte-identical file that lost
+      +x is exactly the installed-but-inert case this gate exists to find; an
+      unreadable hook is no longer reported as missing; `--hooks-dir --flag` is a
+      usage error rather than a staleness verdict; and the AGENT_CONFIG_HOOKS_DIR
+      seam now REFUSES a set-but-empty value instead of falling through to the
+      real .git/hooks. That last one is not preventive — the sabotage that
+      removed the guard let the test suite install over this repository's real
+      shared hooks dir, which is the finding reproduced live. -->
 
 - [x] **1.2 Re-install from `post-merge` / `post-checkout`, where the trigger
       already fires.** The first version of this step claimed the check had no
@@ -181,31 +192,41 @@ not, and the copy is what runs.
 ## Acceptance Criteria
 
 - [x] AC-1 — A checkout whose `.git/hooks/pre-push` predates the current
-      `install-hooks.sh` body produces a message naming the mismatch and the fix,
-      from a carrier that is bound and named. A checkout that just ran the
-      installer produces nothing.
+      `install-hooks.sh` body produces a message naming the mismatch and what to
+      do about it, from a carrier that is bound and named. A checkout that just
+      ran the installer produces nothing.
       <!-- MET, on this repository's own stale hooks rather than a fixture. Two
       carriers, both bound by the same installer and both named in
       docs/development.md § "The installed hooks go stale, and now they say so":
       the pre-push body's FIRST gate (src/scripts/install-hooks.sh:98-132) and
       the post-merge / post-checkout auto-sync block (:476-494).
-      Positive direction, live: running the rendered pre-push in this worktree
-      against the real shared hooks dir printed "the installed git hooks are
-      stale", named pre-push / post-merge / post-checkout with installed-vs-source
-      fingerprints, named `task install-hooks`, and exited 1 with
-      "Push blocked — the hook that just ran is not the hook this tree ships."
-      Negative direction, live: the same gate against a directory the installer
-      had just written printed "6 installed hook(s) match" and exited 0 — and the
-      pre-push block itself prints one status line and falls through. Both
-      directions are also pinned in vitest against a real install, plus the
-      one-byte-edit, deleted-hook, never-installed and unmanaged-file cases.
-      Ordering is asserted, not incidental: the test fails if the gate is moved
-      after base-freshness or preflight, because everything after it is answered
-      by a hook that may not be the current one. -->
+      Positive direction, live: the gate against the real shared hooks dir named
+      pre-push / post-merge / post-checkout with installed-vs-source fingerprints
+      and exited 1. Negative direction, live: against a directory the installer
+      had just written it printed "6 installed hook(s) match" and exited 0, and
+      the pre-push block prints one status line and falls through. Both
+      directions pinned in vitest against a real install, plus one-byte-edit,
+      deleted-hook, lost-executable-bit, unreadable, never-installed and
+      unmanaged-file cases.
+      CORRECTED AFTER THE R2 BLIND REVIEW: the pre-push carrier does NOT refuse,
+      and it runs AFTER base freshness rather than before it. As first shipped it
+      did both, and the reviewer showed that combination hands the contributor a
+      HARMFUL instruction: the commonest cause of a mismatch is a checkout behind
+      a base that moved the installer, and re-installing from there writes the
+      OLDER hook set over the shared .git/hooks — the exact regression 1.2 refuses
+      auto-repair to avoid — while preempting the gate that would have said
+      "merge". Base freshness now exits first. And the refusal is gone entirely:
+      the predicate is "installed == what THIS checkout renders", which across
+      eight worktrees sharing one .git/hooks has no unique referent, so a block
+      fires on ordinary parallel work until the skip variable becomes routine.
+      AI council round 3 (claude-sonnet-4-5 + codex-default, 2026-09-05, 2 of 2
+      seats) chose advisory unanimously, reversing its own round-1 choice on a
+      fact round 1 did not have. Both the ordering and the never-refuses property
+      are pinned by tests that red when either is undone. -->
 - [x] AC-2 — Installed hooks that no longer match `src/scripts/install-hooks.sh`
       are reported at the pull or branch switch that caused it, on stderr,
-      without anyone running a command — and refused at the next push. The repair
-      itself stays a human command. One manual install is still required to
+      without anyone running a command — and again at the next push. Both
+      notices are advisory; the repair itself stays a human command. One manual install is still required to
       bootstrap a fresh clone, and the developer documentation says so rather
       than leaving it to be discovered.
       <!-- MET AS REWRITTEN, AND THE ORIGINAL WORDING IS DESCOPED. It read:
@@ -226,7 +247,11 @@ not, and the copy is what runs.
       property is gone; the zero-UNNOTICED-staleness property is what shipped.
       Reopen the original on either per-worktree hook isolation (core.hooksPath)
       or a branch-independent dispatcher installed once in the common dir, plus
-      atomic installer writes (measured prerequisite — see 1.2).
+      atomic installer writes (measured prerequisite — see 1.2). The same two
+      conditions gate restoring a BLOCKING push-time check: council round 3
+      (2026-09-05, 2 of 2 seats) found the block rests on the same non-unique
+      predicate as the repair, and the word "refused" left this AC in the first
+      draft with it.
       The bootstrap half is met at docs/development.md § "One manual install is
       required, and nothing installs it for you", which states that `npm install`
       in a git clone is the ONLY automatic path and names the three states that

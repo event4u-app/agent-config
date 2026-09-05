@@ -104,11 +104,21 @@ recorded rather than papered over:
 ### Closed 2026-09-05 — the contributor is now told
 
 `check_installed_hooks_fresh` renders what `install-hooks.sh` would write into a
-scratch directory and byte-compares it against `.git/hooks`. It runs as the
-FIRST gate in the pre-push body, where it refuses the push and names the
-re-install command shown above, and again from the `post-merge` /
-`post-checkout` auto-sync block, where it reports on stderr at the moment a pull
-causes the drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
+scratch directory and compares content AND the executable bit against
+`.git/hooks`. It runs in the pre-push body — advisory, and after the
+base-freshness gate — and again from the `post-merge` / `post-checkout`
+auto-sync block, at the moment a pull causes the drift.
+
+**It reports and never refuses, and the ordering is part of the answer.** The
+predicate is "installed == what THIS checkout renders", and `.git/hooks` is
+shared by every linked worktree, so with two worktrees whose installer bodies
+differ at most one satisfies it at a time — a refusal would fire on ordinary
+parallel work and the skip variable would become routine, which retires the
+check rather than enforcing it. And being behind a base that moved the installer
+is the commonest cause of a mismatch, whose repair is to MERGE: re-installing
+from a behind-base checkout writes the older hook set over the shared directory.
+Base freshness therefore answers first, and the notice never prescribes a
+re-install as universally correct. On the checkout that closed the gap it found `pre-push`, `post-merge` and
 `post-checkout` all stale — the same drift, five days on and one hook wider.
 
 It compares rendered output rather than slicing these heredocs, because
@@ -151,7 +161,10 @@ and its generated trees — none of which exist in a consumer project — and a
 dependency install should not establish persistent repository execution. *Revisit-if* a
 consumer-native gate set is designed with its own opt-in command and consent
 step; that is a product feature, not an extension of this installer. Stated for
-consumers in [`docs/development.md`](../../../../docs/development.md).
+consumers in `docs/development.md` § "Git hooks are maintainer-only". Named
+rather than linked: this file is projected byte-identically into
+`dist/agent-src/`, which sits one level deeper, so a repo-root-relative link
+resolves in one copy and not in the other.
 
 ## Revisit-if
 

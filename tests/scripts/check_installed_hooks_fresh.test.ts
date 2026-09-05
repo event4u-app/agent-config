@@ -47,6 +47,16 @@ function installInto(dir: string): void {
   });
 }
 
+/** Run the gate's real CLI with arbitrary argv. */
+function runGateArgv(args: string[]): { code: number; out: string } {
+  const res = spawnSync(TSX, [GATE, ...args], {
+    cwd: REPO,
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  return { code: res.status ?? 1, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
+}
+
 /** Run the gate's real CLI against an arbitrary installed-hooks directory. */
 function runGate(hooksDir: string): { code: number; out: string } {
   const res = spawnSync(TSX, [GATE, "--hooks-dir", hooksDir], {
@@ -92,9 +102,15 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
 
     const { code, out } = runGate(stale);
     expect(code).toBe(1);
-    expect(out).toContain("the installed git hooks are stale");
+    expect(out).toContain("does not match this checkout");
     expect(out).toContain("pre-push");
     expect(out).toContain("task install-hooks");
+    // A mismatch proves difference, never which side is newer, so the notice
+    // must not prescribe the re-install unconditionally: from a behind-base
+    // checkout it writes the OLDER hook set over the shared directory.
+    expect(out).toContain("does not by itself say which side is newer");
+    expect(out).toContain("behind the base");
+    expect(out).toContain("sibling worktree");
     // The other five must NOT be named — a detector that flags everything is
     // as useless as one that flags nothing.
     for (const name of MANAGED.filter((n) => n !== "pre-push")) {
@@ -122,6 +138,31 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
     expect(runGate(nudged).code).toBe(1);
   });
 
+  it("reports a hook that lost its executable bit, byte-identical or not", () => {
+    // Git SKIPS a non-executable hook, so this is the installed-but-inert case
+    // the gate exists to find. Content-only comparison called it `match`.
+    const inert = tmp("hookfresh-noexec-");
+    installInto(inert);
+    fs.chmodSync(path.join(inert, "pre-push"), 0o644);
+    const { code, out } = runGate(inert);
+    expect(code).toBe(1);
+    expect(out).toContain("NOT EXECUTABLE");
+    expect(out).toContain("pre-push");
+  });
+
+  it("distinguishes an unreadable hook from a missing one", () => {
+    const unread = tmp("hookfresh-unreadable-");
+    installInto(unread);
+    // A directory where a file is expected: EISDIR on read, and a re-install
+    // will not fix it, so it must not be reported as MISSING.
+    fs.rmSync(path.join(unread, "post-commit"));
+    fs.mkdirSync(path.join(unread, "post-commit"));
+    const { code, out } = runGate(unread);
+    expect(code).toBe(1);
+    expect(out).toContain("UNREADABLE");
+    expect(out).not.toMatch(/post-commit\s+MISSING/);
+  });
+
   it("exits 0 and says so when nothing is installed at all", () => {
     const empty = tmp("hookfresh-empty-");
     const { code, out } = runGate(empty);
@@ -138,6 +179,28 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
     expect(runGate(extras).code).toBe(0);
   });
 
+  it("treats `--hooks-dir --quiet` as a usage error, not as staleness", () => {
+    // Swallowing the flag as a path reports every hook missing and exits 1 —
+    // a staleness verdict for a typo. Exit 2 is what the contract reserves.
+    const { code, out } = runGateArgv(["--hooks-dir", "--quiet"]);
+    expect(code).toBe(2);
+    expect(out).toContain("needs a path");
+    expect(out).not.toContain("does not match this checkout");
+  });
+
+  it("refuses to run the installer without a real redirect", () => {
+    // The seam fails open: install-hooks.sh treats an EMPTY value as "install
+    // normally", which would overwrite the real .git/hooks — including the
+    // pre-push running the inspection.
+    const res = spawnSync("bash", [INSTALLER], {
+      cwd: REPO,
+      encoding: "utf8",
+      env: { ...process.env, AGENT_CONFIG_HOOKS_DIR: "" },
+    });
+    expect(res.status).toBe(2);
+    expect(`${res.stdout ?? ""}${res.stderr ?? ""}`).toContain("set but empty");
+  });
+
   it("exposes the same verdict through the library entry point", () => {
     const report = inspect(REPO, fresh);
     expect(report.neverInstalled).toBe(false);
@@ -146,19 +209,47 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
 });
 
 describe("carrier — the pre-push hook body", () => {
-  it("calls the gate before any other content gate, and exits on a stale hook", () => {
-    const rendered = renderExpected(REPO).get("pre-push")!.toString("utf8");
-    expect(rendered).toContain("src/scripts/check_installed_hooks_fresh");
-    expect(rendered).toContain("AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH");
-    expect(rendered).toContain("task install-hooks");
-    // Ordering is the load-bearing part: everything after this gate is answered
-    // by a hook that may not be the current one.
-    const hookFresh = rendered.indexOf("Installed-hook freshness");
-    const baseFresh = rendered.indexOf("Base freshness");
-    const preflight = rendered.indexOf("Preflight — the CI-only");
-    expect(hookFresh).toBeGreaterThan(-1);
-    expect(hookFresh).toBeLessThan(baseFresh);
+  const rendered = () => renderExpected(REPO).get("pre-push")!.toString("utf8");
+
+  it("calls the gate, guarded, and offers a way to silence it", () => {
+    const body = rendered();
+    expect(body).toContain("src/scripts/check_installed_hooks_fresh");
+    expect(body).toContain("AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH");
+    // All three guards, and -d node_modules is the one the blocking version
+    // omitted while its sibling carrier had it.
+    expect(body).toMatch(/-x \.\/scripts-run/);
+    expect(body).toMatch(/-d node_modules/);
+    expect(body).toMatch(/-f src\/scripts\/check_installed_hooks_fresh\.ts/);
+  });
+
+  it("runs AFTER base freshness and before preflight", () => {
+    // Being behind a base that moved the installer is the commonest cause of a
+    // mismatch, and its repair is to MERGE. Base freshness exits first, so that
+    // contributor is never handed a re-install that would write the OLDER hook
+    // set over the shared directory.
+    const body = rendered();
+    const hookFresh = body.indexOf("Installed-hook freshness");
+    const baseFresh = body.indexOf("Base freshness");
+    const preflight = body.indexOf("Preflight — the CI-only");
+    expect(baseFresh).toBeGreaterThan(-1);
+    expect(hookFresh).toBeGreaterThan(baseFresh);
     expect(hookFresh).toBeLessThan(preflight);
+  });
+
+  it("is ADVISORY — it never sets fail or exits on a mismatch", () => {
+    // The predicate has no unique referent across linked worktrees sharing one
+    // .git/hooks, so a refusal fires on ordinary parallel work. Pinned so a
+    // future edit cannot quietly promote it back to a blocker.
+    const body = rendered();
+    const start = body.indexOf("# INSTALLED-HOOK FRESHNESS");
+    const end = body.indexOf("if ! command -v task", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const block = body.slice(start, end);
+    expect(block).not.toMatch(/^\s*exit 1\s*$/m);
+    expect(block).not.toMatch(/^\s*fail=1\s*$/m);
+    // …and it distinguishes "could not render" from "mismatch".
+    expect(block).toContain("not a staleness verdict");
   });
 });
 
