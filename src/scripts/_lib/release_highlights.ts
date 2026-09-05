@@ -25,7 +25,11 @@
  */
 import { spawnSync } from 'node:child_process';
 
-import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
+import {
+    CURATED_HEAD_INSTRUCTION,
+    MIX_RESPONSE_MARKER,
+    MIX_RESPONSE_PLACEHOLDERS,
+} from './release_material.js';
 
 /** The five curated labels, in the order an operator reads them. */
 export const HEAD_LABELS: readonly string[] = [
@@ -398,6 +402,7 @@ export function publication_blockers(
     sectionBody: string,
     version: string,
     where = '`main`',
+    mix: MixObligation | null = null,
 ): string[] {
     const out: string[] = [];
     if (sectionBody.includes(DERIVED_MARKER)) {
@@ -414,7 +419,173 @@ export function publication_blockers(
                 'comment line from the section and re-run.',
         );
     }
+    out.push(...mix_response_blockers(sectionBody, version, where, mix));
     return out;
+}
+
+/**
+ * Everything that makes a whole SECTION unpublishable — the head-level
+ * blockers above plus the two obligations that only exist for a full section.
+ *
+ * Two levels and not one, because `publication_blockers` is legitimately called
+ * with a bare curated head (the prefill tests do exactly that), and a head
+ * fragment has no tests footer by construction. Folding a section obligation
+ * into the head predicate would make those callers red on a rule that does not
+ * apply to what they passed.
+ *
+ * The TWO cheapest guard sites call this one — `guard_release_curation` (before
+ * any commit) and `guard_release_branch_push` (before any remote state). The
+ * two publication sites reached through `_refuse_unpublishable` (the annotated
+ * tag and the GitHub Release) stay on the head-level predicate: by then the
+ * section has already shipped in a merged PR, and adding a refusal there would
+ * block a resumed publication over an obligation the release cannot still act
+ * on. Stated rather than implied, because "the guard sites call this one" read
+ * as all four and is not true of any of them but the two named here.
+ */
+export function section_publication_blockers(
+    sectionBody: string,
+    version: string,
+    where = '`main`',
+    mix: MixObligation | null = null,
+): string[] {
+    const out = publication_blockers(sectionBody, version, where, mix);
+    if (!TEST_FOOTER_RE.test(sectionBody)) {
+        out.push(
+            `the ${version} section carries no \`Tests: N (+M since PREV)\` footer. ` +
+                '`_render_test_trend_line` degrades to `null` when the vitest collection ' +
+                'fails, so a missing line means the collection failed during `task release`. ' +
+                'Fix the collection, then render the number and put it on the section — ' +
+                `the release commit already exists on ${where}, so amend it there. Do not ` +
+                'invent the count: `npx vitest list | wc -l` is the same probe the writer runs.',
+        );
+    }
+    return out;
+}
+
+/**
+ * The tests-footer convention, in force for every release since 9.1.0.
+ *
+ * Duplicated from `release-validation.yml`'s inline check until 2026-09-05,
+ * where it was the ONLY copy — so the absence was red at release-PR time and
+ * invisible before it. 9.8.0 shipped without the line. The regex is the same
+ * one the workflow uses; the workflow's own comment already recorded that the
+ * writer "degrades SILENTLY to null on collection failure", which is exactly a
+ * defect a local guard should see first.
+ */
+const TEST_FOOTER_RE = /^Tests: \d+/mu;
+
+/**
+ * The measured governance-versus-product level, as the writer and the guards
+ * both receive it.
+ *
+ * A plain record and not the measurement itself: this module is reached by the
+ * push guard, the pre-commit ask and the CI gate, and only the callers have git
+ * to measure with. Passing the reading in keeps the predicate pure and keeps
+ * `measure_release_mix`'s git access out of a module three guards import.
+ */
+export interface MixObligation {
+    triggered: boolean;
+    level: string;
+}
+
+/** Minimum written characters after the marker — a bare marker is not an answer. */
+export const MIX_RESPONSE_MIN_CHARS = 40;
+
+/**
+ * The ONE predicate for the governance-versus-product obligation.
+ *
+ * `check_release_highlights` refuses this from the CI side and
+ * `guard_release_branch_push` from the local side, and until 2026-09-05 only
+ * the first of the two knew the obligation existed. That asymmetry is what the
+ * contract itself recorded — *"the earliest refusal for this one obligation is
+ * the PR, not the push"* (`docs/contracts/CHANGELOG-conventions.md`) — and what
+ * cost 14.17.0 a red release PR. Both sides now read this function, so a change
+ * to the obligation cannot reach one guard and miss the other.
+ *
+ * `null` means the measurement did not run (shallow clone, missing tag). That
+ * degrades to no blocker, matching the gate's documented stance: this is a
+ * governance signal, not a correctness control, and an environment fact must
+ * not block a release.
+ */
+export function mix_response_blockers(
+    sectionBody: string,
+    version: string,
+    where = '`main`',
+    mix: MixObligation | null = null,
+): string[] {
+    if (!mix || !mix.triggered) {
+        return [];
+    }
+    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
+    if (idx === -1) {
+        return [
+            `the ${version} section owes a governance-versus-product response ` +
+                `(${mix.level}) and carries none. Add one \`> ${MIX_RESPONSE_MARKER}\` line ` +
+                `immediately under the curated head on ${where}, naming the next cycle's ` +
+                'consumer work or a maintainer justification.',
+        ];
+    }
+    const block = mix_response_block(sectionBody, idx);
+    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => block.includes(t));
+    if (left.length > 0) {
+        return [
+            `the ${version} governance-versus-product response still carries the writer's ` +
+                `placeholder(s) (${left.map((t) => `\`${t}\``).join(', ')}) — the measured level ` +
+                'is the generator\'s, the answer is not, and `CHANGELOG.md` is published to npm. ' +
+                `Name the next cycle's consumer work (or the justification) on ${where} and re-run.`,
+        ];
+    }
+    if (human_answer(block, mix.level).length < MIX_RESPONSE_MIN_CHARS) {
+        return [
+            `the ${version} governance-versus-product response carries no written answer ` +
+                `beyond the measured level (${mix.level}). The level is the generator's; the ` +
+                `response has to name the next cycle's consumer work or a maintainer ` +
+                `justification. Write it on ${where}, in the \`> \` block under the marker.`,
+        ];
+    }
+    return [];
+}
+
+/**
+ * The whole response block: the marker's line plus every blockquote line under it.
+ *
+ * Reading only the FIRST line after the marker was wrong in both directions, and
+ * both were reproduced before this was written. It **accepted** a section whose
+ * placeholder line had simply been deleted, because the machine-written level
+ * alone is 54 characters and cleared the floor — the smuggled auto-approval the
+ * placeholder exists to prevent. And it **refused** the writer's own two-line
+ * template, where the level sits on line 1 and the answer on line 2.
+ *
+ * Scoping to the block also fixes the placeholder scan, which searched the
+ * entire section body: a legitimate changelog line containing
+ * `<roadmap or issue>` blocked the release.
+ */
+export function mix_response_block(sectionBody: string, markerIdx: number): string {
+    const lines = sectionBody.slice(markerIdx).split('\n');
+    const out: string[] = [lines[0] ?? ''];
+    for (const line of lines.slice(1)) {
+        if (!line.trimStart().startsWith('>')) break;
+        out.push(line);
+    }
+    return out.join('\n');
+}
+
+/**
+ * What is left of the response block once the generator's own contribution is
+ * removed — i.e. the part a human had to write.
+ *
+ * The measured level is stripped because the writer emitted it; a floor that
+ * counted it would be satisfied by the tool on the author's behalf, which is
+ * the whole failure this obligation guards against.
+ */
+export function human_answer(block: string, level: string): string {
+    return block
+        .replace(MIX_RESPONSE_MARKER, '')
+        .split(level)
+        .join('')
+        .replace(/^[>\s.]+|[>\s.]+$/gu, '')
+        .replace(/[>\s]+/gu, ' ')
+        .trim();
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */

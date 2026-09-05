@@ -71,6 +71,7 @@ import {
     collect_span_commits,
     derive_categories,
     parse_git_log,
+    mix_response_blockers,
     previous_release_tag,
     stale_draft_labels,
 } from './_lib/release_highlights.js';
@@ -238,6 +239,18 @@ export function main(argv: readonly string[]): number {
         );
         return 1;
     }
+    // Hoisted above the curated-head branches on purpose. It used to sit inside
+    // `contradictions.length === 0`, so CI reached it only for a section that
+    // HAS a head, carries no unrewritten draft and contradicts nothing — while
+    // the local guards call the same predicate unconditionally. A section
+    // without a curated head was therefore refused locally and waved through by
+    // CI: one predicate, two different gatekeepers, which is the drift this
+    // change exists to remove.
+    const mix = check_governance_mix_response(section.body, from, to, version);
+    if (mix !== 0) {
+        return mix;
+    }
+
     const curated = parse_curated_head(section.body);
     if (!curated) {
         process.stdout.write(`ℹ️  no curated head in the ${version} section — nothing to check\n`);
@@ -314,10 +327,6 @@ export function main(argv: readonly string[]): number {
     }
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
-        const mix = check_governance_mix_response(section.body, from, to, version);
-        if (mix !== 0) {
-            return mix;
-        }
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);
         return 0;
     }
@@ -361,9 +370,6 @@ export function main(argv: readonly string[]): number {
  * shallow clone or a missing tag on the release path would otherwise turn an
  * unrelated environment fact into a blocked release.
  */
-export const MIX_RESPONSE_MARKER = '**Governance mix:**';
-const MIX_RESPONSE_MIN_CHARS = 40;
-
 export function check_governance_mix_response(
     body: string,
     from: string,
@@ -385,22 +391,28 @@ export function check_governance_mix_response(
         process.stdout.write(`✅  governance mix for ${version}: ${level} — no response owed\n`);
         return 0;
     }
-    const idx = body.indexOf(MIX_RESPONSE_MARKER);
-    const written = idx === -1 ? '' : body.slice(idx + MIX_RESPONSE_MARKER.length).split('\n')[0]!.trim();
-    if (written.length >= MIX_RESPONSE_MIN_CHARS) {
+    // ONE predicate, shared with `guard_release_branch_push` — see
+    // `mix_response_blockers`. This side prints and exits; the local side dies
+    // before anything leaves the machine. Neither owns the rule.
+    const blockers = mix_response_blockers(body, version, `\`release/${version}\``, {
+        triggered: true,
+        level,
+    });
+    if (blockers.length === 0) {
         process.stdout.write(`✅  governance mix for ${version}: ${level} — response present\n`);
         return 0;
     }
     process.stderr.write(
         `❌  the ${version} section owes a governance-versus-product response: ${level}.\n` +
+            blockers.map((b) => `    - ${b}\n`).join('') +
             '    Governance-only commits outnumber consumer-only commits over the release span, so\n' +
             '    the section carries a written response naming either the next cycle\'s consumer work\n' +
             '    or a maintainer justification (docs/contracts/CHANGELOG-conventions.md § Governance-\n' +
             '    versus-product response; the decline this replaces is ADR-253).\n' +
-            `    Add one line under the ${version} curated head, for example:\n` +
-            `        > ${MIX_RESPONSE_MARKER} ${level}. Next cycle ships <the consumer work>.\n` +
             '    Only that section is read; historical sections are out of scope. No ratio is\n' +
-            '    enforced — this blocks a MISSING answer, never a particular number.\n',
+            '    enforced — this blocks a MISSING answer, never a particular number.\n' +
+            '    Reproduce locally, before any push:\n' +
+            `        ./scripts-run src/scripts/check_release_highlights --version ${version}\n`,
     );
     return 1;
 }
