@@ -213,12 +213,37 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
     // a directory git never executes. The divergent case is NOT exercised: this
     // repository's block-no-verify guard refuses any command carrying
     // core.hooksPath, read-only probes included.
-    const viaGitPath = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
+    const raw = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
       cwd: REPO,
       encoding: "utf8",
     }).trim();
-    expect(resolveHooksDir(REPO)).toBe(viaGitPath);
-    expect(resolveHooksDir(REPO)).toContain(".git/hooks");
+    // `--git-path` answers RELATIVE in an ordinary checkout (CI) and ABSOLUTE
+    // in a linked worktree (this repo's normal workflow), so the assertion has
+    // to resolve it the way the function does. Comparing the raw string passed
+    // locally and failed on both CI runners.
+    const expected = path.isAbsolute(raw) ? raw : path.join(REPO, raw);
+    expect(resolveHooksDir(REPO)).toBe(expected);
+    expect(path.basename(resolveHooksDir(REPO))).toBe("hooks");
+    // The property that actually broke CI: an ordinary checkout answers
+    // RELATIVE (`.git/hooks`), a linked worktree answers absolute, and every
+    // caller joins this onto a hook name. It must be absolute either way.
+    expect(path.isAbsolute(resolveHooksDir(REPO))).toBe(true);
+
+    // And in a linked worktree specifically: it must be the SHARED hooks dir,
+    // not the worktree's private gitdir. That is the property every
+    // shared-state argument in this change rests on. Skipped in an ordinary
+    // checkout, where the two are the same directory and prove nothing.
+    const commonDir = execFileSync("git", ["rev-parse", "--git-common-dir"], {
+      cwd: REPO,
+      encoding: "utf8",
+    }).trim();
+    const gitDir = execFileSync("git", ["rev-parse", "--git-dir"], {
+      cwd: REPO,
+      encoding: "utf8",
+    }).trim();
+    if (path.resolve(REPO, commonDir) !== path.resolve(REPO, gitDir)) {
+      expect(resolveHooksDir(REPO)).toBe(path.join(path.resolve(REPO, commonDir), "hooks"));
+    }
   });
 
   it("exposes the same verdict through the library entry point", () => {
