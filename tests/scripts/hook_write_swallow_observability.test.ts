@@ -29,7 +29,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { pendingFileFor } from '../../src/scripts/git_authorization_hook.js';
 import {
     run as runEvidence,
     STATE_FILE,
@@ -113,14 +112,6 @@ function captureStdout(fn: () => void): string {
         (process.stdout as unknown as { write: unknown }).write = original;
     }
     return seen.join('');
-}
-
-function refuseEnvelope(session: string): string {
-    return JSON.stringify({
-        event: 'pre_tool_use',
-        session_id: session,
-        payload: { tool_name: 'Bash', tool_input: { command: 'npm publish' } },
-    });
 }
 
 describe('evidence_independence — a failed evaluation-count write is observable', () => {
