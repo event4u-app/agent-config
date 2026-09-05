@@ -313,6 +313,25 @@ that hook carries was **inert** on that checkout. `task install-hooks` fixed it;
 the detector then reported 6 of 6 hooks matching. Sensitivity is therefore
 demonstrated in **both directions on real input**, not only against fixtures.
 
+**The detector then caught a cross-session hook revert, live.** After
+`task install-hooks` brought the maintainer checkout to `pre-push 765e070cb6a9`
+and the detector confirmed 6 of 6 matching, a later push from the drain worktree
+**failed with a shell syntax error** in `.git/hooks/pre-push` at a line number
+that did not match the file on disk. `bash -n` and `sh -n` both passed on that
+file, and its mtime was **later than the install** — so the push had read the
+hook while it was being rewritten. Re-running the detector reported the installed
+hash back at the *original* stale value `6ea9f1174826`: another session had
+overwritten the fresh hook with an older installer's output.
+
+Linked worktrees share `$GIT_COMMON_DIR/hooks`, so every worktree on this
+repository shares one hook set and any session can revert another's install. The
+push succeeded once install and push were issued in a single narrow window.
+Recorded for three reasons: it is a second instance of the shared-state hazard
+the stash incident showed; it is a *validation* of lane B's detector, which
+caught a real revert it was never written to anticipate; and a half-written hook
+presents as a syntax error at a phantom line number, which is a confusing
+signature worth naming. `--no-verify` was never used.
+
 **Another session's stash was popped by accident, and preserved.** A
 `git stash push` with an explicit pathspec **failed** (the untracked evidence file
 did not match), so it created nothing; the following `git stash pop` then popped
