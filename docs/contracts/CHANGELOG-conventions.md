@@ -379,15 +379,35 @@ the cycle" carries no denominator. Read the measurement command yourself with:
 ./scripts-run src/scripts/measure_release_mix --from <prev-tag> --to <tag> --label <tag>
 ```
 
-**Coverage, stated honestly.** The refusal fires at the release **pull
-request** (`.github/workflows/release-validation.yml`, the
-`check_release_highlights` step). The local push guard
-(`guard_release_branch_push`) reads `publication_blockers`, a different
-function, and does **not** check the mix response — so the earliest refusal for
-this one obligation is the PR, not the push. A measurement that cannot run
-(shallow clone, missing tag) degrades to a printed warning rather than to a
-refusal: this is a governance signal, not a correctness control, and turning an
-environment fact into a blocked release would be the wrong trade.
+**Coverage, stated honestly.** Corrected 2026-09-05, after the paragraph this
+replaces described the gap and 14.17.0 then fell into it (PR #1856). It read:
+*"the local push guard reads `publication_blockers`, a different function, and
+does not check the mix response — so the earliest refusal for this one
+obligation is the PR, not the push."* That was accurate and it was a defect
+written down rather than fixed.
+
+Three things now hold. The **writer emits the line**: `render_changelog_entry`
+measures the span it is already walking and writes the response block with the
+measured level and the `MIX_RESPONSE_PLACEHOLDER` sentinel — never a finished
+answer, because a generator that discharged a written-answer obligation for
+itself would turn it into a formality. **One predicate** (`mix_response_blockers`)
+is read by the CI gate and by the two local guards, so the two sides cannot
+drift. And the earliest refusal is now `guard_release_curation`, which runs
+before anything is committed, with `guard_release_branch_push` behind it before
+anything is pushed.
+
+A measurement that cannot run (shallow clone, missing tag) still degrades to a
+printed warning rather than to a refusal: this is a governance signal, not a
+correctness control, and turning an environment fact into a blocked release
+would be the wrong trade.
+
+The general form of that defect — a release-validation assertion with no local
+counterpart — is now registered rather than remembered:
+[`src/config/release-gate-locality.yml`](../../src/config/release-gate-locality.yml)
+relates every job in `release-validation.yml` to the command that reproduces it
+locally, `tests/scripts/release_gate_locality.test.ts` fails when a job has no
+row, and `task release:verify` runs the reproducible set. Three jobs genuinely
+cannot run before the PR exists; the registry says which and why.
 
 **Published readings** live in `agents/evidence/reports/release-mix-*.json`
 with a human summary in `agents/evidence/reports/release-mix-baseline.md`. They

@@ -30,6 +30,37 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Fixed
+
+- **Release gates now refuse before the push, not on the release PR.** 14.17.0
+  (PR #1856) failed `check_release_highlights` on a missing
+  `> **Governance mix:**` line — an assertion reproducible locally in under two
+  seconds, discovered instead after a branch, a pull request and a CI run had
+  been spent. It was the second instance of the shape in three releases
+  (14.14.0 / PR #1812 was the first, on the curated head), and
+  `docs/contracts/CHANGELOG-conventions.md` had **recorded** the gap rather than
+  closed it. Three changes: `render_changelog_entry` now emits the response
+  block with the measured level and a placeholder sentinel the guards refuse
+  (never a finished answer — a generator that discharged a written-answer
+  obligation for itself would make it a formality); one predicate
+  (`mix_response_blockers`) is read by the CI gate and both local guards, so the
+  two sides cannot drift; and the missing `Tests: N` footer joins it as a
+  section-level publication blocker, which until now also existed only inside
+  `release-validation.yml`.
+
+### Added
+
+- **A release-gate locality registry, so the next orphan cannot land silently.**
+  `src/config/release-gate-locality.yml` relates every job in
+  `release-validation.yml` to the command that reproduces it locally;
+  `tests/scripts/release_gate_locality.test.ts` fails when a job has no row, or
+  when a row claims a script that is not in the tree, or when a missing local
+  command carries no classified `NEEDS_*` reason. `task release:verify` runs the
+  reproducible set from that same registry — and `task release` now runs its
+  `--cheap` subset itself, before the branch is pushed. Three jobs genuinely
+  cannot run pre-PR; the registry names which and why, and a green run prints
+  what it did not cover rather than reading as a clearance.
+
 ### Changed
 
 - **Docs hygiene — retired stale authoring-source pointers.** 43 stale
