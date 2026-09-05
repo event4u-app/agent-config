@@ -92,8 +92,8 @@ Every answer built with this skill MUST:
   no query verb could reach.
 - **The AMBIGUOUS share is a property of the code, not a constant.** Measured
   2026-09-04 over the three roots the v2 benchmark uses: `AMBIGUOUS` is 0 of 495
-  edges under `src/scripts/code_graph`, 0 of 181 under `src/shared`, and 121 of
-  4,002 (3.0 %) under `src/scripts/ai_council` — class-free TypeScript has
+  edges under the package's own graph-engine root, 0 of 181 under `src/shared`, and 121 of
+  4,002 (3.0 %) under its council root — class-free TypeScript has
   almost no in-repo method to be ambiguous between. A Laravel codebase, where
   facades and injected services dispatch onto real in-repo methods, is the
   opposite case. Read the counts in the graph rather than a remembered ratio.
@@ -153,12 +153,12 @@ regressed, so the routing verdict below is unchanged — a TIE is not a win, and
 no bar was renegotiated after the repair.
 
 Read with two caveats the report states in full. A measured root is live source:
-`src/shared` is byte-identical between the runs, `src/scripts/ai_council` moved
-by 27 files on `main` in between, and `src/scripts/code_graph` IS the engine, so
+`src/shared` is byte-identical between the runs, the council root moved
+by 27 files on `main` in between, and the graph-engine root IS the engine, so
 its content necessarily moves whenever the engine does — which is also why the
 GREP arm's macro precision moved (0.806 → 0.764) in a run that changed nothing
 about grep. Both classes that changed verdict did so on rows whose root did not
-drift: `references` moved on `code_graph` and `shared`, `transitive-impact` on
+drift: `references` moved on the graph-engine and shared roots, `transitive-impact` on
 `shared` alone.
 
 **No class is graph-first.** Query the index first because an index that already
