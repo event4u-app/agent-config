@@ -1,6 +1,19 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-10-06
+keep-beta-reason: >-
+  Beta review 2026-09-05. The healthiest of its group and the closest to
+  promotable — no dead reference, and its own kill criterion holds: every job in
+  the table resolves to a live job. It is not promoted because a measurements
+  contract cannot be frozen while its newest row is marked "not yet in CI"
+  (`collector-lifecycle`, a local estimate) and its stated next review, 2026-08-26,
+  is overdue and unperformed. Anchor, derived from a clause inside the file
+  rather than chosen: § Quarterly review checklist says "run the first Monday of
+  every quarter"; the first Monday of Q4 2026 is 2026-10-05, so 2026-10-06 reads
+  the checklist's output instead of scheduling it. Before the window ends: the Q4
+  pass runs, `collector-lifecycle` gets a real CI figure, shard 3/4 is measured
+  against its own 300 s threshold, and the resulting classification is written
+  into this file rather than left in CI history.
 ---
 
 # CI Cost Budget

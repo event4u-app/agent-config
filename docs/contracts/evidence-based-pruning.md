@@ -1,6 +1,20 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. Promotion is structurally excluded: its single data
+  source, `local-analytics.md`, is `stability: experimental` — a level below beta,
+  carrying no review date at all and describing itself as "v0 / design". A stable
+  contract cannot rest normatively on an experimental one, and no successor exists
+  for supersession. The contract has also never fired: it ships thresholds that a
+  future roadmap holding 30+ days of telemetry was to apply, the overlap half ran
+  but the telemetry half did not, and no open roadmap carries the pass. Anchor:
+  the baseline `clear_by: 2026-11-23`, the one dated fact in reach, since the
+  dependency can supply none. Three stale Python pointers are repaired in this
+  change. Before the window ends: `local-analytics` reaches at least beta, and
+  either the measuring roadmap opens or it is recorded that the contract has no
+  consumer — in which case the next round is an unmaintained-or-supersede
+  question, not another extension.
 ---
 
 # Evidence-based pruning contract
@@ -41,7 +55,7 @@ data", never as "unused".
 
 A specialist persona is a **deprecation candidate** when **both** hold:
 
-- **< 5 skill citations** — counted by `lint_persona_governance.py`'s
+- **< 5 skill citations** — counted by `src/scripts/lint_persona_governance.ts`'s
   `citations_for()` (the `personas: [<id>]` frontmatter references), and
 - **< 3 commits in the trailing 12 months** — from `git log --follow` on the
   persona file.
@@ -98,5 +112,5 @@ candidate; the human, seeing the evidence, makes the call.
 - [`local-analytics.md`](local-analytics.md) — the measurement events + privacy floor.
 - [`capability-packs.md`](capability-packs.md) — sibling per-pack budget governance.
 - [`ADR-041`](../decisions/ADR-041-controlled-command-verbs.md) — sibling command-surface governance.
-- `lint_persona_governance.py` — persona citation counting.
-- `scripts/audit_skill_overlap.py` — skill-family overlap analysis (Step 8).
+- `src/scripts/lint_persona_governance.ts` — persona citation counting.
+- `src/scripts/audit_skill_overlap.ts` — skill-family overlap analysis (Step 8).

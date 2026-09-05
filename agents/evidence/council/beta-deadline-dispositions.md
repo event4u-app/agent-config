@@ -238,3 +238,143 @@ because it "strengthens" a floor, on the ground that it would establish a
 precedent from governance text nobody had supplied.
 
 That bound is recorded on `plain-language-surface` itself, not only here.
+
+---
+
+# Council decision — the sixteen beta contracts that lapsed on 2026-09-04
+
+**Round** · 2026-09-05 · anthropic/claude-sonnet-4-5, openai/codex-default · 2 rounds · blind chairman · quorum 2/2 concluded · $0.0000 (both seats subscription-authed, nothing billed)
+
+Sixteen contracts shared `keep-beta-until: 2026-09-04` and lapsed together — the
+same one-uniform-window shape STABILITY.md describes for the 2026-08-25 cohort,
+recurring. None was in the frozen baseline, so every one was a fresh lapse and a
+hard error, and every open PR in the repository was red on the Consistency job.
+
+Each of the sixteen was read in full before a disposition was written. The
+readings ran as four parallel passes and every load-bearing claim below was
+re-verified against the tree by the author before it was acted on.
+
+## What was put to the council, and what was not
+
+**Not put:** the twelve extensions. Each is anchored to a dated fact — a
+dependency contract's own review date, a roadmap stub's `review_by`, a quarterly
+checklist's next Monday, the frozen baseline's `clear_by`. Holding a contract in
+beta lowers no floor, so it is not an owner-reserved transition.
+
+**Put:** the four promotion candidates, because promotion is owner-reserved.
+
+| Contract | anthropic | openai | Landed |
+|---|---|---|---|
+| `local-server-ports` | promote | promote | **`promote-to: stable`** |
+| `migrate-command` | promote + repair | promote + repair | **`promote-to: stable`** |
+| `skill-distribution-channels` | promote + test | promote + test | **`promote-to: stable`** |
+| `prelaunch-diagnostics` | **extend** | **promote** | **extend to 2026-10-06** |
+
+## The split, and why the conservative branch was taken
+
+`prelaunch-diagnostics` is the one place the seats disagreed, and they disagreed
+about a real ambiguity in STABILITY.md rather than about the evidence.
+
+The promote row's literal test is "≥ 1 consumer reference", and one exists:
+`launch-readiness/SKILL.md` defers to the contract normatively. The keep-beta row
+names "consumer count = 0" as a reason to hold. The contract has an internal
+reference and zero deployments, so the two rows point in opposite directions on
+the same file.
+
+- **openai** read the literal criterion as governing: a normative in-repository
+  integration is a consumer reference, and external adoption is required only
+  where a contract says so. It proposed clarifying STABILITY.md prospectively.
+- **anthropic** reframed the blocker away from internal-versus-external
+  entirely: the § 4 diff gate and § 5 suppression have never executed against a
+  committed baseline, so promotion would freeze *unexercised* behaviour — which
+  would be true of an internal consumer that exercised them, and is not.
+
+A split is an escalation condition, not a verdict. The conservative branch — hold
+in beta — lowers no floor and forecloses nothing, so it was taken and the
+question is recorded on the contract for the maintainer. The STABILITY.md
+clarification openai proposed is a governance edit and was deliberately not made
+here.
+
+## The two repairs both seats required
+
+Neither promotion was unconditional, and the conditions were the same from both
+seats.
+
+- **`migrate-command`** — its § Test surface described
+  `tests/migrate/test_unified_migrate.py` running against `tests/fixtures/migrate/`.
+  Neither exists under any extension: the Python suite was never ported
+  one-for-one. The section now describes the two real suites
+  (`cmd_migrate.test.ts`, `cmd_migrate_v0_state.test.ts`) and records what the
+  old text claimed. Nine further stale Python pointers were repaired in the same
+  change.
+
+- **`skill-distribution-channels`** — the single-channel invariant had **no
+  test**. The regression its carrier roadmap promised as
+  `tests/test_canonical_distribution.py` was never ported, and
+  `docs/architecture.md` still linked it as the proof. Both seats required the
+  gap closed before promotion; anthropic added that the contract's own § 47-53
+  acceptance criteria name that test, so promoting without it would retroactively
+  change what "frozen as part of a roadmap step" meant.
+
+  `tests/scripts/canonical_distribution.test.ts` now covers it, on both
+  polarities: default install must NOT project the Claude plugin manifest,
+  `--legacy-both` must. **Sensitivity was verified rather than assumed** —
+  removing the `LEGACY_BOTH` guard from `install.sh` turns 2 of the 3 cases red;
+  `install.sh` was restored from a copy, not by `git checkout`.
+
+anthropic also made a sequencing argument worth recording: landing a repair
+*after* promotion removes the chance for that repair to reveal a blocking issue.
+Both repairs are therefore in this change, and openai's step 5 — "run that
+regression before merging; withdraw contract 4's promotion if it exposes
+nonconforming behaviour" — was carried out. It passes.
+
+## Defects found while reading, repaired here
+
+The reading was worth more than the dispositions. Nine defects, none of which any
+gate in this repository can see:
+
+| Contract | Defect |
+|---|---|
+| `benchmark-ab-contract` | Ten dead Python pointers; § regenerate describes a v1 pipeline while the live `docs/benchmark.md` is a v2 pinned composite — following the contract would overwrite the curated file |
+| `ci-green-floor` | Two `scripts/ci_status.py` pointers; § Blocking set cites a "Per-PR-shape required-check matrix" section **deleted on 2026-08-02**, and the file it cites now records the opposite — exactly one required check |
+| `migrate-command` | Ten stale pointers, two of them naming a test file and a fixture tree that never existed |
+| `evidence-based-pruning` | Three stale Python pointers |
+| `install-scopes` | Cites a safety regression (`tests/test_cleanup_other_scope.py`) that exists under no extension; five copy-paste `bash scripts/…` lines that resolve to nothing |
+| `harness-expectations` | A `bash scripts/…` line; cites an "agents-md-thin-root § Tool loading" section that does not exist in that skill |
+| `skill-distribution-channels` | Acceptance section written in pending tense about phases that closed in May |
+| `plan-review-gates` | `templates/roadmaps.md` — no such root directory |
+| `docs/architecture.md` | Linked the never-ported regression test as the canonical-channel proof |
+
+The `install-scopes` citation was **removed rather than repointed**: repointing
+it at a neighbouring test would claim coverage that is not there. Restoring the
+regression is now a named precondition on that contract's window.
+
+## The cohort problem, and what was done about it
+
+The 2026-09-04 cohort is the second of its kind. Extending all sixteen to one
+date would produce a third, so the twelve extensions carry **five** different
+dates, each from a different fact:
+
+| Date | Contracts | Anchor |
+|---|---|---|
+| 2026-09-15 | `install-scopes`, `harness-expectations` | `install-layout.md`'s own `keep-beta-until`; it names install-scopes as its companion contract and owns the paths that contract enumerates |
+| 2026-09-26 | `branch-protection-policy`, `ci-green-floor`, `release-pr-gating` | the day after `review_by: 2026-09-25` in `road-to-main-protection-ruleset-changes.md`, which holds the ruleset write all three are waiting on |
+| 2026-10-06 | `ci-cost-budget` | the day after the first Monday of Q4 2026, which its own § Quarterly review checklist names |
+| 2026-10-06 | `prelaunch-diagnostics` | the escalated split above — disclosed on the contract as a maintainer-decision window, **not** a fact about the contract |
+| 2026-11-24 | `benchmark-ab-contract`, `design-artifact-verification`, `design-artifact-lifecycle`, `surface-agent-contracts`, `evidence-based-pruning`, `plan-review-gates` | the day after the frozen baseline's `clear_by: 2026-11-23`, the date by which each one's beta or baseline-resident dependency must have resolved or the 90-day cadence itself reopens |
+
+The last group is six contracts on one date, and that is deliberate rather than
+overlooked: all six are blocked by the same review regime, and STABILITY.md
+already schedules a reassessment there. They are one review, not six.
+
+## What this run did not do
+
+- **No baseline edit.** The ratchet forbids growth, and an entry leaves only
+  because the contract's own state changed.
+- **No STABILITY.md change**, though one seat proposed clarifying internal
+  consumer references prospectively. That is governance self-amendment.
+- **No `stability:` flip.** `promote-to: stable` schedules the promotion for the
+  next release and keeps the flip a release decision.
+- **No repair deferred into a window it could have hidden in.** Every defect
+  above is fixed in this change except the two named as preconditions, and those
+  are named on the contracts rather than here.

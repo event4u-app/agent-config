@@ -109,6 +109,18 @@ Ask format:
 
 **Recommendation: 1 — `.worktrees/`** — project-local keeps the worktree next to the repo (easy cleanup), and the leading dot keeps it out of `ls`. Caveat: pick 3 if multiple repos must share a single worktree root.
 
+> **A worktree outside the repository root costs the persistent shell cwd.**
+> It sits outside the host's working-directory boundary, so a `cd` into it does
+> not survive the call — Claude Code appends `Shell cwd was reset to <root>` and
+> the next command runs in the main checkout. Every command then repeats its own
+> `cd`, and one that forgets edits the wrong tree silently. Measured 2026-09-05
+> on this repository: 2,128 transcript records carrying that line across 20
+> sessions, alongside 1,694 whose `cd` targeted a worktree placed beside the
+> repo. Choosing option 3 — or any path outside the root — means also declaring
+> the parent directory in the host's working-directory allowlist
+> (`permissions.additionalDirectories` on Claude Code). Options 1 and 2 are
+> inside the root and need nothing.
+
 ### 3. Verify ignore-safety (project-local only)
 
 ```bash
