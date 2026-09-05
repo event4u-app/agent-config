@@ -1,6 +1,20 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. Its declared shape owner, `benchmark-report-schema.md`,
+  is beta, lapsed since 2026-08-14 and inside the frozen baseline, so its live
+  governing date is the baseline clear-by. Beyond that dependency the contract is
+  not merely stale but actively wrong about the artefact it governs: § "When
+  `docs/benchmark.md` regenerates" describes a deterministic v1 render from
+  `internal/bench/reports/ab/`, while the live `docs/benchmark.md` is a curated
+  two-host composite pinned from `ab-v2/` — a reader following the instruction
+  would overwrite the curated file. Anchor: baseline `clear_by: 2026-11-23`,
+  which is the date its shape owner must leave the baseline by; 2026-11-24 reads
+  that outcome. Ten stale Python pointers are repaired in this change. Before the
+  window ends: the regenerate section and the § 62 reader instruction are
+  reconciled with the v2 pinned-composite pipeline or the v1 axis is scoped out,
+  and `benchmark-report-schema.md` leaves the baseline.
 ---
 
 # Package-Impact A/B Benchmark — Contract
@@ -15,15 +29,15 @@ This contract covers the **variant axis** (`with` vs. `without` agent-config) th
 
 | Concern | Owner |
 |---|---|
-| Materialising the variant clones | `scripts/bench_ab_clone.py` |
-| Verifying the clones differ only at the agent-config surface | `scripts/bench_ab_integrity.py` |
-| Track A (behavioural) runner | `scripts/bench_ab_tracka_run.py` |
-| Track B (task) runner | `scripts/bench_ab_task_runner.py` |
-| Track B scoring | `scripts/_lib/bench_ab_scoring.py` |
-| Cache key + lookup | `scripts/_lib/bench_ab_cache.py` |
-| Variant diff | `scripts/bench_ab_diff.py` |
-| Rendered report | `scripts/render_benchmark_md.py` → `docs/benchmark.md` |
-| Corpus / doc linter | `scripts/lint_bench_ab.py` |
+| Materialising the variant clones | `src/scripts/bench_ab_clone.ts` |
+| Verifying the clones differ only at the agent-config surface | `src/scripts/bench_ab_integrity.ts` |
+| Track A (behavioural) runner | `src/scripts/bench_ab_tracka_run.ts` |
+| Track B (task) runner | `src/scripts/bench_ab_task_runner.ts` |
+| Track B scoring | `src/scripts/_lib/bench_ab_scoring.ts` |
+| Cache key + lookup | `src/scripts/_lib/bench_ab_cache.ts` |
+| Variant diff | `src/scripts/bench_ab_diff.ts` |
+| Rendered report | `src/scripts/render_benchmark_md.ts` → `docs/benchmark.md` |
+| Corpus / doc linter | `src/scripts/lint_bench_ab.ts` |
 | Task orchestration | `taskfiles/bench-ab.yml` (`task bench:ab*`) |
 
 ## When `docs/benchmark.md` regenerates
@@ -52,7 +66,7 @@ Invalidation triggers:
 |---|---|
 | Edit `internal/bench/corpora/ab-tracka.yaml` or `ab-trackb.yaml` | `corpus_hash` |
 | Upgrade the local `claude` CLI | `claude_cli_version` |
-| Add / remove a `WITH_SURFACE` in `scripts/bench_ab_clone.py` | `target_shape_hash` |
+| Add / remove a `WITH_SURFACE` in `src/scripts/bench_ab_clone.ts` | `target_shape_hash` |
 | Edit any file under `internal/bench/ab/fixture/` | `target_shape_hash` |
 
 ## How a reader interprets the staleness flag
@@ -80,7 +94,7 @@ Track A measures **surface availability** — does the rule/skill body the promp
 - `without` MUST score 0% — no agent-config surface present → no expected_target file exists.
 - `with` should score close to 100% — every expected_target file should exist with the expected_keywords.
 
-The integrity check `bench_ab_tracka_run.py::integrity_check` fails the run if `without` ever scores non-zero. That's the safety boundary: if `without` scores anything, the variant axis leaked and the bench is invalid.
+The integrity check `bench_ab_tracka_run.ts::integrity_check` fails the run if `without` ever scores non-zero. That's the safety boundary: if `without` scores anything, the variant axis leaked and the bench is invalid.
 
 ## Acceptance criteria for a "real" run
 
