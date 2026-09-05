@@ -396,6 +396,15 @@ drift. And the earliest refusal is now `guard_release_curation`, which runs
 before anything is committed, with `guard_release_branch_push` behind it before
 anything is pushed.
 
+**Where the line ends up, stated because it is not obvious.** The section is the
+single source for four published surfaces — the release-PR body, the annotated
+tag message, the GitHub Release notes, and the `CHANGELOG.md` that
+`package.json` `files` ships to npm. So the response is not an internal
+governance note: writing it, a reader outside the project sees this project's
+governance ratio and its answer to it. That is a deliberate consequence of
+single-sourcing the section, not an accident, and it is why the line is one
+sentence of plain prose rather than a metrics dump.
+
 A measurement that cannot run (shallow clone, missing tag) still degrades to a
 printed warning rather than to a refusal: this is a governance signal, not a
 correctness control, and turning an environment fact into a blocked release

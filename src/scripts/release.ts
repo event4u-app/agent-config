@@ -164,8 +164,8 @@ import {
     _splitlines,
 } from './release_env.js';
 import type { RunResult } from './release_publication.js';
-// Re-export surface for the six names tests import from `release.js` and that
-// moved into the publication unit. `export ... from` rather than a bare import,
+// Re-export surface for the names tests import from `release.js` and that moved
+// into the publication unit — eleven since the test-count-trend unit followed. `export ... from` rather than a bare import,
 // because these are not USED here — an unused import would be dropped and the
 // test import path would break silently.
 export {
@@ -1171,7 +1171,8 @@ function execute(
         // `git push -u` is naturally idempotent — it prints "Everything
         // up-to-date" when remote already matches. push_release_branch
         // additionally absorbs a remote that moved under us.
-        _step(4, total, 'Verify release gates locally (`task release:verify -- --cheap`)');
+        // Not a `_step`: a second `[4/10]` makes the cited evidence anchors ambiguous.
+        process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
         run(local_release_gate_argv());
 
         _step(4, total, `Push ${branch} to ${REMOTE}`);
@@ -1721,8 +1722,9 @@ function main(argv: readonly string[] | null = null): number {
     // made the preview print the `_none_` skeleton while the real run wrote
     // pre-filled lines — a preview that contradicts its own output, which is
     // the exact class of surface disagreement this pre-fill exists to end.
-    // One `git log` over the span, like `_derive_head_prefill` — so the preview
-    // and the real run cannot disagree. See `measure_mix_obligation`.
+    // Unconditional for the same preview-parity reason as `_derive_head_prefill`,
+    // at a different cost: one `git show` per commit — measured 3.2 s over a
+    // 120-commit span, paid 3-4× per release. Not the ~25 ms of the line above.
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
         head: _derive_head_prefill(prev),
