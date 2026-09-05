@@ -210,13 +210,13 @@ This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-
 
 ### The named smells — canonical vocabulary, and what it does NOT cover
 
-The behaviours above are described; two of them also have field names a
-reviewer can cite, and this table is where the name meets the behaviour. The
+The behaviors above are described; two of them also have field names a
+reviewer can cite, and this table is where the name meets the behavior. The
 grep column follows the shape [`ai-code-blindspots`](../ai-code-blindspots/SKILL.md)
 uses: an authoring-time backstop, zero results is the pass, a hit is a prompt
 to read that line — never an auto-fix.
 
-| Canonical name | The behaviour, as already described above | Backstop grep |
+| Canonical name | The behavior, as already described above | Backstop grep |
 |---|---|---|
 | **Magic-number test** | Anti-Pattern 6 — "a hardcoded expected value the code will always emit". The expectation is a literal rather than something derived from the input, so the test cannot disagree with the code. | `rg -n '\b(toBe\|toEqual\|assertEquals\|assertSame)\(\s*-?[0-9]{2,}' tests/` |
 | **Assertion roulette** | The multi-case stack Anti-Pattern 6 *requires* (boundary, error, abuse in one test), written without per-assertion messages — so a failure names a line number and not a reason. The stack is right; the silence is the smell. | `rg -c '\b(expect\|assert\w*\|self\.assert\w*\|\$this->assert\w*)\(' tests/ \| awk -F: '$2 >= 8'` |
@@ -237,8 +237,8 @@ later round meets a record rather than a fresh argument. Measured 2026-09-04
 over both files of this skill: `roulette`, `eager`, `lazy` and `duplicate` each
 return **0** occurrences, and `hardcoded` returns **6**.
 
-- **Eager test** (one test exercising several behaviours) would carry the same
-  behaviour and the same grep as assertion roulette above, and Anti-Pattern 6
+- **Eager test** (one test exercising several behaviors) would carry the same
+  behavior and the same grep as assertion roulette above, and Anti-Pattern 6
   *prescribes* the shape on purpose. A row for it would be one entry under two
   names, which is the drift this table exists to prevent.
 - **Lazy test** (several tests over one fixture, differing only in name) is
