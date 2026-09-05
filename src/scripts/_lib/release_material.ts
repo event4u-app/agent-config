@@ -289,8 +289,6 @@ function _first_diff(a: string, b: string): string {
     return 'surfaces differ only in normalization-invisible content';
 }
 
-// ─── governance-versus-product response ──────────────────────────────────────
-
 /**
  * The marker the governance-versus-product response line carries.
  *

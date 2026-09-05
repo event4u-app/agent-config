@@ -1098,8 +1098,6 @@ export function create_and_push_annotated_tag(version: string): void {
     _push_tag(version);
 }
 
-// ─── test-count trend ────────────────────────────────────────────────────────
-//
 // Relocated from `release.ts` on 2026-09-05, for the reason
 // `_refuse_unpublishable` above already states: that file is 2000+ lines and
 // every line above 1500 is charged by the source-size growth ratchet. The move
