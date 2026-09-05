@@ -1,6 +1,19 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. It is the anchor of its pair, not the dependant, and
+  the four criteria are met — but the contract describes a three-stage rollout
+  whose third stage has demonstrably not landed: no verification gate is
+  default-on anywhere, and `design-review-after-ui-write` declares itself
+  `instruction-only` with a self-reported verdict. Promoting a rollout plan with
+  an open final stage would freeze that stage as authoritative. Anchor:
+  `lapsed-beta-baseline.json` `clear_by: 2026-11-23`, restated in STABILITY.md as
+  "not a soft target: if the list is not empty by then, the 90-day cadence itself
+  is reassessed"; 2026-11-24 is the first date that reads that outcome. Disclosed
+  weakness: this anchor is a fact about the review regime the contract sits in,
+  not about its content — the file carries no dated clause of its own. Before the
+  window ends: the stage-3 decision is recorded, default-on or struck.
 ---
 
 # Design-Artifact Verification — Host-Capability & Degrade Contract
