@@ -9,21 +9,21 @@
 >
 > Rebound artefact-only against `origin/main`, which is the base the gate
 > resolves. Binding against a pinned older sha is what made the dispatcher and
-> the gate disagree on the scope hash across three attempts.
-<!-- completion-review: v1 | reviewed: 2026-09-05 | scope: c0e0415a80af10e75185c858ce28e5d9f01b608f76e161114188df47426ebb4f | diff: b81ea346d06a0f996d040193b6a3d77cd17eb8e1 | reviewer: r2-fresh-subagent-the-hook-that-was-never-installed | prompt_hash: dd19996a7f14ac7be5c4a98ff758f801049a2ad054da27f6fb4c9b187b8c0b68 -->
+> `check_completion_review` disagree on the scope hash across three attempts.
+<!-- completion-review: v1 | reviewed: 2026-09-05 | scope: 69e98156c44d0620ffa57c72c88c355bff477b5c65a704302fdf549f42c869b4 | diff: beef00285bf60d25c471fc9eb9485a4906b3cd15 | reviewer: r2-fresh-subagent-the-hook-that-was-never-installed | prompt_hash: 53bb51660f6af5b686e8246a88970ca42c19b99d584a723c2b63e82522310bd2 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-the-hook-that-was-never-installed"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-05 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: b81ea346d06a0f996d040193b6a3d77cd17eb8e1
-  scope_hash: c0e0415a80af10e75185c858ce28e5d9f01b608f76e161114188df47426ebb4f
+  diff_sha: beef00285bf60d25c471fc9eb9485a4906b3cd15
+  scope_hash: 69e98156c44d0620ffa57c72c88c355bff477b5c65a704302fdf549f42c869b4
   roadmap: agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md
   roadmap_hash: 5444239b2d926f568afe8d3d35a8866abc6203a15611f119b0b161aea1f9d6eb
   ac_hash: 443f1d62fce313e67684d11973d07f9326ea0f0e4d346273884db751471e96d4
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-09-05T14:07:07Z
+dispatched: 2026-09-05T14:32:17Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |

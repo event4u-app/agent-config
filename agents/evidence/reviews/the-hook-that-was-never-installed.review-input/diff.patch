@@ -696,7 +696,7 @@ index 6747d7c3b51945ac9a5f79d721f2640b33eac21f..037906d08686e2a173fd8e726da1e6c2
  ## Revisit-if
  
 diff --git a/tests/scripts/check_installed_hooks_fresh.test.ts b/tests/scripts/check_installed_hooks_fresh.test.ts
-index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..eed5abddb15d52bed47f76c292aff1ef8f5bad23 100644
+index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..680978cd009891175d01fe9018f7908bfde3d7a3 100644
 --- a/tests/scripts/check_installed_hooks_fresh.test.ts
 +++ b/tests/scripts/check_installed_hooks_fresh.test.ts
 @@ -17,7 +17,11 @@ import * as os from "node:os";
@@ -778,7 +778,7 @@ index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..eed5abddb15d52bed47f76c292aff1ef
    it("exits 0 and says so when nothing is installed at all", () => {
      const empty = tmp("hookfresh-empty-");
      const { code, out } = runGate(empty);
-@@ -138,6 +183,44 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+@@ -138,6 +183,69 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
      expect(runGate(extras).code).toBe(0);
    });
  
@@ -812,18 +812,43 @@ index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..eed5abddb15d52bed47f76c292aff1ef
 +    // a directory git never executes. The divergent case is NOT exercised: this
 +    // repository's block-no-verify guard refuses any command carrying
 +    // core.hooksPath, read-only probes included.
-+    const viaGitPath = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
++    const raw = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
 +      cwd: REPO,
 +      encoding: "utf8",
 +    }).trim();
-+    expect(resolveHooksDir(REPO)).toBe(viaGitPath);
-+    expect(resolveHooksDir(REPO)).toContain(".git/hooks");
++    // `--git-path` answers RELATIVE in an ordinary checkout (CI) and ABSOLUTE
++    // in a linked worktree (this repo's normal workflow), so the assertion has
++    // to resolve it the way the function does. Comparing the raw string passed
++    // locally and failed on both CI runners.
++    const expected = path.isAbsolute(raw) ? raw : path.join(REPO, raw);
++    expect(resolveHooksDir(REPO)).toBe(expected);
++    expect(path.basename(resolveHooksDir(REPO))).toBe("hooks");
++    // The property that actually broke CI: an ordinary checkout answers
++    // RELATIVE (`.git/hooks`), a linked worktree answers absolute, and every
++    // caller joins this onto a hook name. It must be absolute either way.
++    expect(path.isAbsolute(resolveHooksDir(REPO))).toBe(true);
++
++    // And in a linked worktree specifically: it must be the SHARED hooks dir,
++    // not the worktree's private gitdir. That is the property every
++    // shared-state argument in this change rests on. Skipped in an ordinary
++    // checkout, where the two are the same directory and prove nothing.
++    const commonDir = execFileSync("git", ["rev-parse", "--git-common-dir"], {
++      cwd: REPO,
++      encoding: "utf8",
++    }).trim();
++    const gitDir = execFileSync("git", ["rev-parse", "--git-dir"], {
++      cwd: REPO,
++      encoding: "utf8",
++    }).trim();
++    if (path.resolve(REPO, commonDir) !== path.resolve(REPO, gitDir)) {
++      expect(resolveHooksDir(REPO)).toBe(path.join(path.resolve(REPO, commonDir), "hooks"));
++    }
 +  });
 +
    it("exposes the same verdict through the library entry point", () => {
      const report = inspect(REPO, fresh);
      expect(report.neverInstalled).toBe(false);
-@@ -146,20 +229,59 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+@@ -146,20 +254,59 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
  });
  
  describe("carrier — the pre-push hook body", () => {
@@ -895,7 +920,7 @@ index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..eed5abddb15d52bed47f76c292aff1ef
  });
  
  /**
-@@ -188,7 +310,16 @@ function runPostMerge(touched: string, gatePresent = true): {
+@@ -188,7 +335,16 @@ function runPostMerge(touched: string, gatePresent = true): {
    const prev = git("rev-parse", "HEAD").trim();
  
    fs.mkdirSync(path.join(dir, path.dirname(touched)), { recursive: true });
@@ -913,7 +938,7 @@ index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..eed5abddb15d52bed47f76c292aff1ef
    git("add", touched);
    git("commit", "-qm", "second");
  
-@@ -256,6 +387,12 @@ describe("carrier — post-merge, both directions", () => {
+@@ -256,6 +412,12 @@ describe("carrier — post-merge, both directions", () => {
      // reason that .git/hooks is shared across linked worktrees.
      const r = runPostMerge("src/scripts/install-hooks.sh");
      expect(r.hookAfter).toBe(r.hookBefore);
