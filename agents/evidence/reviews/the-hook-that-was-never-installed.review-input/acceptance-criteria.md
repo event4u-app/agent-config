@@ -1,31 +1,43 @@
 ## Acceptance Criteria
 
 - [x] AC-1 — A checkout whose `.git/hooks/pre-push` predates the current
-      `install-hooks.sh` body produces a message naming the mismatch and the fix,
-      from a carrier that is bound and named. A checkout that just ran the
-      installer produces nothing.
+      `install-hooks.sh` body produces a message naming the mismatch and what to
+      do about it, from a carrier that is bound and named. A checkout that just
+      ran the installer produces nothing.
       <!-- MET, on this repository's own stale hooks rather than a fixture. Two
       carriers, both bound by the same installer and both named in
       docs/development.md § "The installed hooks go stale, and now they say so":
-      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:98-132) and
-      the post-merge / post-checkout auto-sync block (:476-494).
-      Positive direction, live: running the rendered pre-push in this worktree
-      against the real shared hooks dir printed "the installed git hooks are
-      stale", named pre-push / post-merge / post-checkout with installed-vs-source
-      fingerprints, named `task install-hooks`, and exited 1 with
-      "Push blocked — the hook that just ran is not the hook this tree ships."
-      Negative direction, live: the same gate against a directory the installer
-      had just written printed "6 installed hook(s) match" and exited 0 — and the
-      pre-push block itself prints one status line and falls through. Both
-      directions are also pinned in vitest against a real install, plus the
-      one-byte-edit, deleted-hook, never-installed and unmanaged-file cases.
-      Ordering is asserted, not incidental: the test fails if the gate is moved
-      after base-freshness or preflight, because everything after it is answered
-      by a hook that may not be the current one. -->
+      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:149-194) and
+      the post-merge / post-checkout auto-sync block (:492-510).
+      Positive direction, live: the gate against the real shared hooks dir named
+      pre-push / post-merge / post-checkout with installed-vs-source fingerprints
+      and exited 1. Negative direction, live: against a directory the installer
+      had just written it printed "6 installed hook(s) match" and exited 0, and
+      the pre-push block prints one status line and falls through. Both
+      directions pinned in vitest against a real install, plus one-byte-edit,
+      deleted-hook, lost-executable-bit, unreadable, never-installed and
+      unmanaged-file cases.
+      CORRECTED AFTER THE R2 BLIND REVIEW: the pre-push carrier does NOT refuse,
+      and it runs AFTER base freshness rather than before it. As first shipped it
+      did both, and the reviewer showed that combination hands the contributor a
+      HARMFUL instruction: the commonest cause of a mismatch is a checkout behind
+      a base that moved the installer, and re-installing from there writes the
+      OLDER hook set over the shared .git/hooks — the exact regression 1.2 refuses
+      auto-repair to avoid — while preempting the gate that would have said
+      "merge". Base freshness now exits first. And the refusal is gone entirely:
+      the predicate is "installed == what THIS checkout renders", which across
+      eight worktrees sharing one .git/hooks has no unique referent, so a block
+      fires on ordinary parallel work until the skip variable becomes routine.
+      AI council round 3 (claude-sonnet-4-5 + codex-default, 2026-09-05, 2 of 2
+      seats) chose advisory unanimously, reversing its own round-1 choice on a
+      fact round 1 did not have. Both the ordering and the never-refuses property
+      are pinned by tests that red when either is undone. -->
 - [x] AC-2 — Installed hooks that no longer match `src/scripts/install-hooks.sh`
-      are reported at the pull or branch switch that caused it, on stderr,
-      without anyone running a command — and refused at the next push. The repair
-      itself stays a human command. One manual install is still required to
+      are reported at the merge-pull or branch switch that caused it, on stderr,
+      without anyone running a command — and at the next push regardless of how
+      the drift arrived. Both notices are advisory; the repair itself stays a
+      human command. A rebase-pull is reported at the push only, and the
+      exclusion is written down rather than left to be discovered. One manual install is still required to
       bootstrap a fresh clone, and the developer documentation says so rather
       than leaving it to be discovered.
       <!-- MET AS REWRITTEN, AND THE ORIGINAL WORDING IS DESCOPED. It read:
@@ -46,7 +58,18 @@
       property is gone; the zero-UNNOTICED-staleness property is what shipped.
       Reopen the original on either per-worktree hook isolation (core.hooksPath)
       or a branch-independent dispatcher installed once in the common dir, plus
-      atomic installer writes (measured prerequisite — see 1.2).
+      atomic installer writes (measured prerequisite — see 1.2). The same two
+      conditions gate restoring a BLOCKING push-time check: council round 3
+      (2026-09-05, 2 of 2 seats) found the block rests on the same non-unique
+      predicate as the repair, and the word "refused" left this AC in the first
+      draft with it.
+      SECOND R2 ROUND, finding 2: `git pull --rebase` fires neither post-merge
+      nor post-checkout — it fires post-rewrite, which carries no detector — so
+      the event half of this AC silently excluded rebase-pull users. Named in
+      docs/development.md and in the gate docstring rather than closed:
+      post-rewrite also fires on every `git commit --amend`, so wiring it there
+      trades a real gap for a notice on an operation that cannot have moved the
+      installer. The push-time carrier still catches it.
       The bootstrap half is met at docs/development.md § "One manual install is
       required, and nothing installs it for you", which states that `npm install`
       in a git clone is the ONLY automatic path and names the three states that

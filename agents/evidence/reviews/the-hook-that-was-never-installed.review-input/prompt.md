@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 500da8b781ee8af1a5c44946123964d8c0c94440, review
-  artefacts excluded), scope hash `826f4ce189d4b03a4f002ece7862caf7ef5a38a41c573f2d3fe69a963cfd5ed5`
+- diff: `diff.patch` — the review scope (branch head 89305f333f4c44efcc71c56d9c46bdd8f6e5e88c, review
+  artefacts excluded), scope hash `72cf17c9532cbaab4d5b213edb5b00249da447357d6c43cc8fe5e7e710b7da4c`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -56,7 +56,7 @@ Fill the findings table in `the-hook-that-was-never-installed.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 826f4ce189d4b03a4f002ece7862caf7ef5a38a41c573f2d3fe69a963cfd5ed5, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 72cf17c9532cbaab4d5b213edb5b00249da447357d6c43cc8fe5e7e710b7da4c, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
