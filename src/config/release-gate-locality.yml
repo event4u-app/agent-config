@@ -45,6 +45,10 @@
 #            which is itself the defect this column makes countable.
 #   guard:   the local guard site that ALSO refuses this, when one exists.
 #            A row with a guard fails before the push, not merely before CI.
+#   partial: REQUIRED when the `local` command reproduces only part of what the
+#            job asserts. Names the uncovered part. A row silently claiming
+#            full coverage it does not have is the defect this file exists to
+#            end, so the gap is written down rather than inferred.
 
 version: 1
 workflow: .github/workflows/release-validation.yml
@@ -63,14 +67,20 @@ jobs:
     guard: ~
 
   changelog-entry:
-    # The heading/non-empty-body half is structurally guaranteed by the writer
-    # (`prepend_changelog`). The `Tests: N` footer half is NOT — it degrades to
-    # `null` silently when the vitest collection fails — so it is now a
-    # publication blocker, which is what makes this row's guard non-empty.
+    # The job asserts three things: a heading for the head version, a non-empty
+    # body, and a `Tests: N (+M since PREV)` footer.
+    #
+    # `check_release_highlights` covers the first two — it exits 2 with
+    # "CHANGELOG carries no section for <v>". It does NOT read the footer, and
+    # saying otherwise here would be the exact defect this registry exists to
+    # end: a row asserting a coverage it does not have. The footer half is
+    # covered locally by the guard named below, not by the `local` command, so
+    # `partial` states that rather than leaving a reader to grep for it.
     local: './scripts-run src/scripts/check_release_highlights --version ${VERSION}'
     verify: true
+    partial: 'heading + non-empty body only; the `Tests: N` footer half is covered by the guard, not by this command'
     script: ~
-    guard: guard_release_branch_push
+    guard: guard_release_curation
 
   surface-equality:
     local: ~

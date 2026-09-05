@@ -44,6 +44,7 @@ interface Row {
     reason?: string;
     verify: boolean;
     network?: boolean;
+    partial?: string;
     release_branch_only?: boolean;
     script: string | null;
     guard?: string | null;
@@ -62,7 +63,8 @@ function plan(rows: ReadonlyArray<readonly [string, Row]>, version: string): Arr
     const byCommand = new Map<string, string[]>();
     for (const [id, r] of rows) {
         const cmd = r.local!.replace('${VERSION}', version);
-        byCommand.set(cmd, [...(byCommand.get(cmd) ?? []), id]);
+        const label = r.partial ? `${id} (partial: ${r.partial})` : id;
+        byCommand.set(cmd, [...(byCommand.get(cmd) ?? []), label]);
     }
     return [...byCommand.entries()].map(([cmd, ids]) => [ids.join(' + '), cmd]);
 }
@@ -75,7 +77,18 @@ function plan(rows: ReadonlyArray<readonly [string, Row]>, version: string): Arr
  * will read would be a green run that proves nothing. `package.json` is the
  * fallback for a maintainer probing before the branch exists.
  */
+const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
+
 export function resolve_version(argv: readonly string[], cwd = REPO_ROOT): string | null {
+    const v = resolve_version_raw(argv, cwd);
+    // Every row's command is interpolated into `bash -c`, and two of the three
+    // sources here are strings git and npm hand back rather than values this
+    // file chose. `on_release_branch` already applies exactly this shape check;
+    // not applying it on the path that reaches a shell was the asymmetry.
+    return v !== null && SEMVER_RE.test(v) ? v : null;
+}
+
+function resolve_version_raw(argv: readonly string[], cwd = REPO_ROOT): string | null {
     const i = argv.indexOf('--version');
     if (i !== -1 && argv[i + 1]) return argv[i + 1]!;
     const branch = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
@@ -109,17 +122,45 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const reg = parseYaml(fs.readFileSync(REGISTRY, 'utf-8')) as { jobs: Record<string, Row> };
     const cheap = argv.includes('--cheap');
     const releaseHead = on_release_branch();
-    const skippedOffRelease = Object.entries(reg.jobs)
-        .filter(([, r]) => r.verify && r.local && r.release_branch_only && !releaseHead)
-        .map(([id]) => id);
-    const rows = Object.entries(reg.jobs)
-        .filter(([, r]) => r.verify && r.local)
-        .filter(([, r]) => !(cheap && r.network))
-        .filter(([, r]) => releaseHead || !r.release_branch_only);
+    // Every job lands in exactly one bucket, and the buckets are built from one
+    // pass so they cannot fail to partition. The first version filtered `rows`
+    // and then derived `uncovered` from a DIFFERENT predicate, so `audit-gate`
+    // under `--cheap` satisfied neither and vanished from the report: the run
+    // printed "3 pass" and "4 not covered" over eight jobs and read as a
+    // clearance for a job nobody ran. `--cheap` is the variant `task release`
+    // fires unattended, so that was the report nobody would be reading.
+    const runnable: Array<[string, Row]> = [];
+    const skipped: Array<[string, string]> = [];
+    for (const [id, r] of Object.entries(reg.jobs)) {
+        if (!r.verify || !r.local) {
+            skipped.push([id, r.reason ?? 'not part of the verify set']);
+        } else if (cheap && r.network) {
+            skipped.push([id, 'skipped by --cheap — leaves the machine']);
+        } else if (r.release_branch_only && !releaseHead) {
+            skipped.push([id, 'asserts a release-PR diff, and HEAD is not a release/X.Y.Z branch']);
+        } else {
+            runnable.push([id, r]);
+        }
+    }
+    if (runnable.length + skipped.length !== Object.keys(reg.jobs).length) {
+        process.stderr.write('release_verify: internal accounting error — jobs lost.\n');
+        return 2;
+    }
+    const rows = runnable;
     const steps = plan(rows, version);
 
+    // Where the version came from, because off a release branch it falls back
+    // to `package.json` — which is the version already RELEASED, not the one
+    // being cut. A green run against it says nothing about the next release,
+    // and `task release:verify` with no arguments is exactly the pre-probe the
+    // task description invites.
+    const provenance = argv.includes('--version')
+        ? 'from --version'
+        : releaseHead
+          ? 'from the release branch'
+          : 'from package.json — NOT a release branch, so this is the version already released';
     process.stdout.write(
-        `release_verify: ${version} — ${String(steps.length)} local gate command(s)` +
+        `release_verify: ${version} (${provenance}) — ${String(steps.length)} local gate command(s)` +
             `${cheap ? ' (cheap set — network rows skipped)' : ''}\n\n`,
     );
 
@@ -127,17 +168,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         for (const [id, cmd] of steps) {
             process.stdout.write(`  ${id}\n    ${cmd}\n`);
         }
-        const skipped = Object.entries(reg.jobs).filter(([, r]) => !r.verify || !r.local);
-        for (const [id, r] of skipped) {
-            process.stdout.write(`  ${id} — not run locally\n    ${r.reason ?? 'cheap-gate opt-out'}\n`);
+        for (const [id, why] of skipped) {
+            process.stdout.write(`  ${id} — not run\n    ${why}\n`);
         }
         return 0;
-    }
-
-    for (const id of skippedOffRelease) {
-        process.stdout.write(
-            `─── ${id}\n    skipped — asserts a release-PR diff, and HEAD is not a release/X.Y.Z branch.\n\n`,
-        );
     }
 
     const failed: string[] = [];
@@ -160,18 +194,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
     // The runner names what it did NOT cover — a green run that silently
-    // omitted three jobs would read as a clearance it is not.
-    const uncovered = [
-        ...Object.entries(reg.jobs)
-            .filter(([, r]) => !r.verify || !r.local)
-            .map(([id]) => id),
-        ...skippedOffRelease,
-    ];
+    // omitted a job would read as a clearance it is not.
     process.stdout.write(
-        `✅  ${String(rows.length)} release-validation job(s) pass for ${version} ` +
-            `(${String(steps.length)} command(s)).\n` +
-            `    Not covered by this run (${String(uncovered.length)}): ` +
-            `${uncovered.join(', ')} — see release-gate-locality.yml.\n`,
+        `✅  ${String(rows.length)} of ${String(Object.keys(reg.jobs).length)} ` +
+            `release-validation job(s) pass for ${version} (${String(steps.length)} command(s)).\n` +
+            `    Not covered by this run (${String(skipped.length)}):\n` +
+            skipped.map(([id, why]) => `      ${id} — ${why}\n`).join('') +
+            '    See src/config/release-gate-locality.yml.\n',
     );
     return 0;
 }

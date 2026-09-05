@@ -20,6 +20,7 @@
  * DECLARED, with a classified reason.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,22 +54,22 @@ function loadRegistry(): Registry {
 }
 
 /**
- * Job ids as the workflow declares them.
+ * Job ids as the workflow declares them — read with the YAML parser.
  *
- * A two-space-indented `<id>:` under `jobs:` — the same shape every job in this
- * workflow uses. Parsing the YAML would also work; this stays textual so a
- * malformed workflow surfaces as a missing job rather than as a parser crash
- * three files away from the edit that caused it.
+ * It was a two-space `^ {2}([a-z0-9][a-z0-9-]*):\s*$` regex, chosen so a
+ * malformed workflow would surface as a missing job rather than as a parser
+ * crash. That reasoning was wrong in the direction that matters: the regex was
+ * blind to `release_install_e2e:` (underscore), `Release-Shape:` (uppercase)
+ * and `audit-gate:  # network` (trailing comment) — all legal GitHub Actions
+ * job ids — so a job named any of those ways would never enter `jobIds`, and
+ * the whole point of this file ("a new job cannot land without a row") silently
+ * would not hold. A parser that cannot see the thing it is checking for is
+ * worse than one that throws.
  */
 function workflowJobIds(workflowPath: string): string[] {
     const text = fs.readFileSync(path.join(REPO_ROOT, workflowPath), 'utf-8');
-    const body = text.slice(text.indexOf('\njobs:'));
-    const ids: string[] = [];
-    for (const line of body.split('\n')) {
-        const m = /^ {2}([a-z0-9][a-z0-9-]*):\s*$/u.exec(line);
-        if (m) ids.push(m[1]!);
-    }
-    return ids;
+    const doc = parseYaml(text) as { jobs?: Record<string, unknown> };
+    return Object.keys(doc.jobs ?? {});
 }
 
 describe('release-gate locality registry', () => {
@@ -152,5 +153,26 @@ describe('release_verify — what the run covers', () => {
         // Pinned rather than assumed: a `release/X.Y.Z` head would make the
         // release_branch_only rows run, and this suite never executes on one.
         expect(on_release_branch()).toBe(false);
+    });
+});
+
+
+describe('workflow job-id parsing', () => {
+    it('sees the id shapes the previous regex was blind to', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rgl-'));
+        try {
+            const f = path.join(tmp, 'w.yml');
+            fs.writeFileSync(
+                f,
+                'name: X\non: [push]\njobs:\n' +
+                    '  release_install_e2e:\n    runs-on: ubuntu-latest\n' +
+                    '  Release-Shape:\n    runs-on: ubuntu-latest\n' +
+                    '  audit-gate:  # network\n    runs-on: ubuntu-latest\n',
+            );
+            const ids = workflowJobIds(path.relative(REPO_ROOT, f));
+            expect(ids).toEqual(['release_install_e2e', 'Release-Shape', 'audit-gate']);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
     });
 });
