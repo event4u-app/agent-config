@@ -105,10 +105,10 @@ recorded rather than papered over:
 
 `check_installed_hooks_fresh` renders what `install-hooks.sh` would write into a
 scratch directory and byte-compares it against `.git/hooks`. It runs as the
-FIRST gate in the pre-push body, where it refuses the push and names
-`task install-hooks`, and again from the `post-merge` / `post-checkout`
-auto-sync block, where it reports on stderr at the moment a pull causes the
-drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
+FIRST gate in the pre-push body, where it refuses the push and names the
+re-install command shown above, and again from the `post-merge` /
+`post-checkout` auto-sync block, where it reports on stderr at the moment a pull
+causes the drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
 `post-checkout` all stale — the same drift, five days on and one hook wider.
 
 It compares rendered output rather than slicing these heredocs, because
@@ -145,10 +145,10 @@ A consumer install writes **no git hooks at all** (`src/install/` references
 `.git/hooks` nowhere, and the package manager's post-install lifecycle step does
 not run for a registry dependency), so the pre-push gate is a maintainer-only
 mechanism. The same council, unanimously, made that the decision rather than the
-status quo: the pre-push chain runs `task consistency` and `task preflight`,
-which depend on this repository's Taskfile, `./scripts-run` shim and generated
-trees — none of which exist in a consumer project — and a dependency install
-should not establish persistent repository execution. *Revisit-if* a
+status quo: the pre-push chain runs this repository's own consistency and
+preflight gate chains, which depend on its Taskfile, its `./scripts-run` shim
+and its generated trees — none of which exist in a consumer project — and a
+dependency install should not establish persistent repository execution. *Revisit-if* a
 consumer-native gate set is designed with its own opt-in command and consent
 step; that is a product feature, not an extension of this installer. Stated for
 consumers in [`docs/development.md`](../../../../docs/development.md).

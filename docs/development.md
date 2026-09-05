@@ -187,7 +187,7 @@ would write into a scratch directory and byte-compares it against what is
 installed, so it reports the drift rather than a person noticing it. Two
 carriers, both installed by the same installer:
 
-| Carrier | Behaviour |
+| Carrier | Behavior |
 |---|---|
 | `pre-push`, first gate | **Refuses the push**, names the stale hooks and `task install-hooks`. Bypass with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
 | `post-merge` / `post-checkout` | **Reports on stderr, never repairs.** Fires on the pull or branch switch that caused the drift. |
