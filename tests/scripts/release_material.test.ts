@@ -503,6 +503,42 @@ describe('governance-mix response', () => {
         expect(out[0]).toContain(MIX_RESPONSE_PLACEHOLDER);
     });
 
+    it('refuses a section whose placeholder line was simply deleted', () => {
+        // The measured level alone is 54 characters, so a floor that read only
+        // the first line after the marker ACCEPTED this — the machine
+        // discharging the obligation on the author's behalf, which is exactly
+        // what the placeholder exists to prevent. Reproduced before the fix.
+        const machineOnly = `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.`;
+        expect(machineOnly).not.toContain(MIX_RESPONSE_PLACEHOLDER);
+        const out = mix_response_blockers(machineOnly, V, '`main`', { triggered: true, level: LEVEL });
+        expect(out).toHaveLength(1);
+        expect(out[0]).toContain('no written answer beyond the measured level');
+    });
+
+    it('accepts the answer on the second line — the writer’s own template shape', () => {
+        // `render_mix_response` puts the level on line 1 and the answer on
+        // line 2, so a first-line-only read refused the format the tool itself
+        // emits. Reproduced before the fix.
+        const onLineTwo =
+            `${head}\n\n> ${MIX_RESPONSE_MARKER}\n` +
+            '> Next cycle ships the installer UX rewrite, tracked in road-to-install-ux.';
+        expect(
+            mix_response_blockers(onLineTwo, V, '`main`', { triggered: true, level: LEVEL }),
+        ).toEqual([]);
+    });
+
+    it('does not read a placeholder out of unrelated changelog prose', () => {
+        // The scan used to run over the whole section body, so an ordinary
+        // entry mentioning the token blocked the release.
+        const elsewhere =
+            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
+            '> Next cycle ships the installer UX rewrite, tracked in road-to-install-ux.\n\n' +
+            '### Features\n\n* docs: explain the `<roadmap or issue>` placeholder (abc1234)';
+        expect(
+            mix_response_blockers(elsewhere, V, '`main`', { triggered: true, level: LEVEL }),
+        ).toEqual([]);
+    });
+
     it('accepts a written answer', () => {
         const answered =
             `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +

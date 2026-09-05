@@ -239,6 +239,18 @@ export function main(argv: readonly string[]): number {
         );
         return 1;
     }
+    // Hoisted above the curated-head branches on purpose. It used to sit inside
+    // `contradictions.length === 0`, so CI reached it only for a section that
+    // HAS a head, carries no unrewritten draft and contradicts nothing — while
+    // the local guards call the same predicate unconditionally. A section
+    // without a curated head was therefore refused locally and waved through by
+    // CI: one predicate, two different gatekeepers, which is the drift this
+    // change exists to remove.
+    const mix = check_governance_mix_response(section.body, from, to, version);
+    if (mix !== 0) {
+        return mix;
+    }
+
     const curated = parse_curated_head(section.body);
     if (!curated) {
         process.stdout.write(`ℹ️  no curated head in the ${version} section — nothing to check\n`);
@@ -315,10 +327,6 @@ export function main(argv: readonly string[]): number {
     }
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
-        const mix = check_governance_mix_response(section.body, from, to, version);
-        if (mix !== 0) {
-            return mix;
-        }
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);
         return 0;
     }
@@ -362,8 +370,6 @@ export function main(argv: readonly string[]): number {
  * shallow clone or a missing tag on the release path would otherwise turn an
  * unrelated environment fact into a blocked release.
  */
-export { MIX_RESPONSE_MARKER } from './_lib/release_material.js';
-
 export function check_governance_mix_response(
     body: string,
     from: string,

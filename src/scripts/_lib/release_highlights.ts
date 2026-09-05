@@ -433,11 +433,14 @@ export function publication_blockers(
  * into the head predicate would make those callers red on a rule that does not
  * apply to what they passed.
  *
- * The three guard sites that read `extract_changelog_section(...).body` call
- * THIS one, so the composition lives in a single place. Before 2026-09-05 there
- * was no section level at all, each guard site called the head predicate, and
- * the two obligations below existed only inside `release-validation.yml` and
- * `check_release_highlights` — i.e. only after the pull request existed.
+ * The TWO cheapest guard sites call this one — `guard_release_curation` (before
+ * any commit) and `guard_release_branch_push` (before any remote state). The
+ * two publication sites reached through `_refuse_unpublishable` (the annotated
+ * tag and the GitHub Release) stay on the head-level predicate: by then the
+ * section has already shipped in a merged PR, and adding a refusal there would
+ * block a resumed publication over an obligation the release cannot still act
+ * on. Stated rather than implied, because "the guard sites call this one" read
+ * as all four and is not true of any of them but the two named here.
  */
 export function section_publication_blockers(
     sectionBody: string,
@@ -450,8 +453,10 @@ export function section_publication_blockers(
         out.push(
             `the ${version} section carries no \`Tests: N (+M since PREV)\` footer. ` +
                 '`_render_test_trend_line` degrades to `null` when the vitest collection ' +
-                'fails, so a missing line means the collection failed during `task release` ' +
-                `— fix the collection on ${where} and re-run, never hand-write the footer.`,
+                'fails, so a missing line means the collection failed during `task release`. ' +
+                'Fix the collection, then render the number and put it on the section — ' +
+                `the release commit already exists on ${where}, so amend it there. Do not ` +
+                'invent the count: `npx vitest list | wc -l` is the same probe the writer runs.',
         );
     }
     return out;
@@ -520,8 +525,8 @@ export function mix_response_blockers(
                 'consumer work or a maintainer justification.',
         ];
     }
-    const written = sectionBody.slice(idx + MIX_RESPONSE_MARKER.length).split('\n')[0]!.trim();
-    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => sectionBody.includes(t));
+    const block = mix_response_block(sectionBody, idx);
+    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => block.includes(t));
     if (left.length > 0) {
         return [
             `the ${version} governance-versus-product response still carries the writer's ` +
@@ -530,13 +535,57 @@ export function mix_response_blockers(
                 `Name the next cycle's consumer work (or the justification) on ${where} and re-run.`,
         ];
     }
-    if (written.length < MIX_RESPONSE_MIN_CHARS) {
+    if (human_answer(block, mix.level).length < MIX_RESPONSE_MIN_CHARS) {
         return [
-            `the ${version} governance-versus-product response is a bare marker ` +
-                `(${mix.level}). Write the answer after \`${MIX_RESPONSE_MARKER}\` on ${where}.`,
+            `the ${version} governance-versus-product response carries no written answer ` +
+                `beyond the measured level (${mix.level}). The level is the generator's; the ` +
+                `response has to name the next cycle's consumer work or a maintainer ` +
+                `justification. Write it on ${where}, in the \`> \` block under the marker.`,
         ];
     }
     return [];
+}
+
+/**
+ * The whole response block: the marker's line plus every blockquote line under it.
+ *
+ * Reading only the FIRST line after the marker was wrong in both directions, and
+ * both were reproduced before this was written. It **accepted** a section whose
+ * placeholder line had simply been deleted, because the machine-written level
+ * alone is 54 characters and cleared the floor — the smuggled auto-approval the
+ * placeholder exists to prevent. And it **refused** the writer's own two-line
+ * template, where the level sits on line 1 and the answer on line 2.
+ *
+ * Scoping to the block also fixes the placeholder scan, which searched the
+ * entire section body: a legitimate changelog line containing
+ * `<roadmap or issue>` blocked the release.
+ */
+export function mix_response_block(sectionBody: string, markerIdx: number): string {
+    const lines = sectionBody.slice(markerIdx).split('\n');
+    const out: string[] = [lines[0] ?? ''];
+    for (const line of lines.slice(1)) {
+        if (!line.trimStart().startsWith('>')) break;
+        out.push(line);
+    }
+    return out.join('\n');
+}
+
+/**
+ * What is left of the response block once the generator's own contribution is
+ * removed — i.e. the part a human had to write.
+ *
+ * The measured level is stripped because the writer emitted it; a floor that
+ * counted it would be satisfied by the tool on the author's behalf, which is
+ * the whole failure this obligation guards against.
+ */
+export function human_answer(block: string, level: string): string {
+    return block
+        .replace(MIX_RESPONSE_MARKER, '')
+        .split(level)
+        .join('')
+        .replace(/^[>\s.]+|[>\s.]+$/gu, '')
+        .replace(/[>\s]+/gu, ' ')
+        .trim();
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */
