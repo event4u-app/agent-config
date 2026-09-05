@@ -7,7 +7,7 @@
       "b": "testing-anti-patterns",
       "a_path": "src/skills/test-driven-development/SKILL.md",
       "b_path": "src/skills/testing-anti-patterns/SKILL.md",
-      "similarity": 0.727,
+      "similarity": 0.729,
       "same_domain": true,
       "shared_packs": [
         "engineering-base"
