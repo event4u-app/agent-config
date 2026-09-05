@@ -79,7 +79,6 @@ function writeJson(p: string, obj: unknown): void {
 /** Build the "rich" fixture: every slot populated, scrubber-active values. */
 function buildRichFixture(): void {
     mkdirSync(path.join(root, 'dist'), { recursive: true });
-    mkdirSync(path.join(root, '.agent-memory'), { recursive: true });
     mkdirSync(path.join(root, 'agents', 'runtime', 'council', 'sessions', 's1'), {
         recursive: true,
     });
@@ -87,14 +86,6 @@ function buildRichFixture(): void {
         kernel: ['k-one', 'k-two'],
         tier_1: [{ id: 't-a' }, { id: 't-b' }, { bad: 'noid' }, { id: 123 }],
     });
-    writeFileSync(
-        path.join(root, '.agent-memory', 'hits.jsonl'),
-        `${JSON.stringify({ entry_id: 'm1', hit_score: 2, used_in: 'refine', run_id: 'TICK-1' })}\n`
-        + `${JSON.stringify({ id: 'm2', score: 0.5 })}\n`
-        + 'not json line\n'
-        + `${JSON.stringify({ entry_id: 'other', run_id: 'OTHER' })}\n`,
-        'utf-8',
-    );
     const councilFile = path.join(
         root, 'agents', 'runtime', 'council', 'sessions', 's1', 'council-responses.json',
     );
@@ -124,7 +115,14 @@ function buildRichFixture(): void {
             },
         },
         persona: 'developer',
-        memory: [{ entry_id: 's-mem', hit_score: 1.25, used_in: 'plan' }],
+        // Exercises _coerce_entry's three fallbacks on the one live source:
+        // explicit fields, int-valued score (PyFloat), and the id/score/
+        // used_in fallbacks.
+        memory: [
+            { entry_id: 's-mem', hit_score: 1.25, used_in: 'plan' },
+            { entry_id: 'm1', hit_score: 2, used_in: 'refine' },
+            { id: 'm2', score: 0.5 },
+        ],
         halts: [{ reason: 'needs review', step: 'refine', surface: ['line A', 'line B'] }],
     };
     const stateFile = path.join(root, '.work-state.json');

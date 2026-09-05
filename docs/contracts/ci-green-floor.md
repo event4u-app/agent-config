@@ -1,7 +1,22 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-09-26
 roadmap_ref: road-to-adoption-proof-and-ci-green.md
+keep-beta-reason: >-
+  Beta review 2026-09-05, re-derived rather than repeated. The 2026-08-27
+  extension named three conditions and all three are unmet: its anchor
+  `branch-protection-policy.md` lapsed on the same day rather than resolving, and
+  neither the `cloud-release.yml` nor the `deploy-mcp-worker.yml` advisory row has
+  a recorded outcome. Re-extending on the same lapsed anchor with no new evidence
+  is the unevidenced extension house precedent forbids, so the anchor moves to a
+  live dated record: `road-to-main-protection-ruleset-changes.md` carries
+  `review_by: 2026-09-25`, and 2026-09-26 keeps this contract and its anchor
+  contract in one review, which their dependency requires. Two repairs ship in
+  this change rather than becoming conditions: the `scripts/ci_status.py` pointers
+  are repointed at `src/scripts/ci_status.ts`, and the § Blocking set citation of
+  a "Per-PR-shape required-check matrix" section is corrected — that section was
+  deleted from `branch-protection-policy.md` on 2026-08-02 and that file now
+  records the opposite.
 ---
 
 # CI Green Floor
@@ -51,7 +66,7 @@ other workflow is advisory until it earns inclusion.
 
 | Tier | Definition | Effect on merge | Effect on freeze |
 |---|---|---|---|
-| **Blocking** | Listed in [`branch-protection-policy.md`](branch-protection-policy.md) § Per-PR-shape required-check matrix for the current PR shape. | Red blocks the PR merge. | Red on `main` (post-merge) triggers a freeze tag — see [Freeze rule](#freeze-rule-the-mechanics). |
+| **Blocking** | Listed in [`branch-protection-policy.md`](branch-protection-policy.md) § What is actually enforced. | Red blocks the PR merge. | Red on `main` (post-merge) triggers a freeze tag — see [Freeze rule](#freeze-rule-the-mechanics). |
 | **Advisory** | Workflow ships in `.github/workflows/` but is NOT listed in the required-check matrix (e.g. `bench-drift.yml`, `cloud-release.yml`, `deploy-mcp-worker.yml`). | Red is visible on the PR page but does not block merge. | Red on `main` does not freeze. |
 | **Phantom** | Workflow registers a run with `Jobs: 0` and `Conclusion: failure` — typically `workflow_dispatch`-only workflows that GitHub's check-suite still registers on push. | Filtered out of every status query. | Never. |
 
@@ -64,7 +79,14 @@ current HEAD SHA.
 
 The blocking set is defined per PR shape (feature / release /
 docs-only) in [`branch-protection-policy.md`](branch-protection-policy.md)
-§ Per-PR-shape required-check matrix. The summary for `main`:
+§ What is actually enforced. **Corrected 2026-09-05:** both citations named a
+"§ Per-PR-shape required-check matrix" in that file. It was deleted on
+2026-08-02 and the file now records the opposite at its § What is actually
+enforced — **exactly one** required status check, `Sync + Generate Tools
+Consistency`; everything else is advisory at the branch-protection layer. The
+three sets below are the *intended* partition, not the enforced one, and they
+are kept because the enforce half is queued rather than abandoned (see
+`branch-protection-policy.md` § Enforce half):
 
 - **Feature PR set** — `Consistency`, `Smoke Contracts`, `Skill Lint`,
   `Tests` (every matrix entry), `Public Install Smoke`.
@@ -72,8 +94,8 @@ docs-only) in [`branch-protection-policy.md`](branch-protection-policy.md)
   `Release Validation` jobs.
 - **Docs-only PR set** — `Consistency`, `Smoke Contracts`.
 
-`task ci:status` reads the same set when run with `--strict` (Phase
-A Step 6); the set is single-sourced from `scripts/ci_status.py`.
+`task ci:status` reads the intended set when run with `--strict` (Phase
+A Step 6); it is single-sourced from `src/scripts/ci_status.ts`.
 
 ## Advisory list — explicit non-blockers
 
@@ -105,7 +127,7 @@ workflows and for path-filtered workflows whose paths do not match
 the push diff. Removing the `push:` trigger does NOT eliminate the
 phantom; the check-suite still registers.
 
-`task ci:status` and `scripts/ci_status.py` drop any run with
+`task ci:status` and `src/scripts/ci_status.ts` drop any run with
 `Jobs: 0` from the tally before computing pass/fail. The phantom
 is visible in the GitHub UI but invisible to the gate.
 

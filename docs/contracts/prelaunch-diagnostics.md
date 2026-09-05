@@ -1,6 +1,25 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-10-06
+keep-beta-reason: >-
+  Beta review 2026-09-05 — AI council SPLIT, so the conservative disposition
+  stands and the question is escalated rather than settled. On the four
+  STABILITY.md criteria the contract passes: 37 days in beta, body unchanged for
+  54 days, a normative consumer in `launch-readiness/SKILL.md`, and a carrier
+  roadmap archived with every acceptance criterion ticked, which is the
+  "explicitly frozen as part of a roadmap step" branch. One seat read that as
+  PROMOTE. The other read the § 4 diff gate and § 5 suppression as never having
+  executed against a committed baseline — untested behaviour rather than merely
+  zero external adoption — and voted EXTEND. Honest disclosure about this date:
+  it is a maintainer-decision window, NOT a fact about the contract, and the
+  dissenting seat said so of the same date. The contract carries no dated clause
+  and no dependency, so no contract-internal anchor exists. Before the window
+  ends the maintainer answers one question: does a normative in-repository
+  consumer reference satisfy the promote criterion when the contract's core
+  features have never run — or does STABILITY.md's "consumer count = 0" keep-beta
+  reason govern? Either answer resolves this contract; the second seat also
+  proposed clarifying STABILITY.md prospectively, which is a governance edit and
+  is deliberately not made here.
 ---
 
 # Pre-Launch Diagnostics — finding IDs, epistemics, regression gate

@@ -214,8 +214,19 @@ block on this host constrains every new hook's exit contract.
       **DONE — `hook-architecture-v1` § Stop-event capability tiers.** Blocks (claude) / re-injects / notifies-only, and the step's own demand is met in as many words: **enforcement is real on tier 1 and nowhere else.** The honest claim about this loop is *"enforced on claude, advisory elsewhere"*. Two consequences recorded rather than left to be re-derived: a budget is still worth keeping on the degraded tiers, and `agent-config hooks:status` answers for the host you are actually on.
 - [x] **Step 6:** Add `src/scripts/attest_artifact.ts` storing a content hash beside any tracked artifact that a hook would inject, refusing injection on a hash mismatch or a missing attestation. Auto-injection turns a governed file into a standing injection amplifier, so the attestation is the precondition, not a follow-up. <!-- verify: task typecheck-ts -->
 
+      **REVERTED 2026-09-04 — this step landed against `blocker:
+      plan-injection-decision`, whose 2/2 resolution (c) said Steps 6 and 7
+      *"land nothing"*. The file was removed as enforcement of that ruling; see
+      the blocker's CORRECTION above. The `[x]` stands because the work did land
+      — history is preserved, not rewritten — but it no longer describes the
+      tree. The original DONE text follows.**
+
       **DONE — `src/scripts/attest_artifact.ts`.** A hook that injects a tracked file turns it into a STANDING INJECTION AMPLIFIER: whoever can write the file writes the agent's instructions, every session, without a review. Four statuses and only `ok` injects. `inject` is a FIELD rather than a caller-side `if`, because a `status === 'mismatch'` check silently treats `unattested` as permission. **What it does NOT claim, stated in the header:** the sidecar sits beside the artifact, so this is not a signature and cannot stop someone who writes both — what it buys is that a change to an injected file must also change a hash line, and a hash line in a review is a question where prose is not.
 - [x] **Step 7:** Add a test that a modified artifact fails attestation and that a missing attestation refuses rather than defaults to injecting. <!-- verify: npx vitest run tests/scripts/attest_artifact.test.ts -->
+
+      **REVERTED 2026-09-04 — removed with the Step 6 file it tested, as
+      enforcement of `blocker: plan-injection-decision` resolution (c). The
+      original DONE text follows.**
 
       **DONE — 12 tests, and the step's two cases are the load-bearing ones.** A modified artifact fails; a MISSING attestation REFUSES rather than defaulting to inject — the case a permissive implementation gets wrong, because *"nothing said no"* reads like consent and the file an attacker adds is exactly the one with no sidecar. An unparseable sidecar is treated as absent, never as permission.
 
@@ -325,6 +336,47 @@ block on this host constrains every new hook's exit contract.
 - **Status:** resolved 2026-08-25 — **(c): defer the whole injection half, AND
   the attestation with it.** AI council **2/2**, and both seats **overruled this
   blocker's own recommendation of (b)**. Same session as `shim-scope-decision`.
+
+  **CORRECTION 2026-09-04 — this resolution was contradicted, and has now been
+  enforced.** Steps 6 and 7 below are marked `[x]` DONE, and
+  `src/scripts/attest_artifact.ts` plus `tests/scripts/attest_artifact.test.ts`
+  landed on 2026-08-26 — the day after this ruling said they *"land nothing"*,
+  and they are the exact two files option (b) named, which both seats rejected.
+  The contradiction sits inside a single commit: `7d19d885a`
+  (2026-08-26T06:39:07+02:00) adds this resolution and those two `[x]` marks to
+  this file in one 372-line insertion; the script itself landed 14 minutes
+  earlier in `34dae8d2c`. **No documented reopening of this ruling was found** —
+  the deliberately careful formulation, since an absent record is not proof that
+  no authority existed. PR #1657's own review gate flagged it at merge time as
+  **critical/blocking** (`874766e6afa0`: *"the attestation guards injection but
+  the injection half was deferred — the guard has no consumer"*), and the PR
+  merged with that gate advisory rather than enforcing.
+
+  **Both files were removed 2026-09-04**, as ENFORCEMENT of this standing
+  resolution rather than as a new decision. Its `Revisit-if` was re-checked and
+  neither branch has fired: no provenance-backed context-rot or
+  artifact-tampering incident, and no design naming the protected artifact, the
+  trust boundary, the attacker or failure mode, the attestation's consumer and
+  the required response. Reachability immediately before deletion: 0 importers
+  outside its own test, 0 of 299 skills carrying `attest: true`, no
+  `agent-config` verb, no task, workflow or hook binding, no `gate-coverage`
+  row, and no generated `.attest.json` sidecar anywhere in the tree. Git history
+  preserves the primitive should a concrete injection design later justify it.
+
+  Recorded by AI council 2026-09-04, 2 seats (anthropic/claude-sonnet-4-5,
+  openai/codex-default), 2 rounds, quorum 2/2 concluded, no metered spend (both
+  seats on subscription transport). **Both seats converged**: remove both files;
+  the act is enforcement of this 2/2 ruling and needs no fresh council
+  authority; the record belongs here and in the removal commit, with **no new
+  ADR and no separate evidence artefact**. They **split 1-1** on whether ADR-220
+  should carry a one-line note disclaiming this script — one seat for it (four
+  audit rounds conflated the two mechanisms), one against (naming the script in
+  ADR-220 preserves the very association the correction removes). The
+  conservative side was taken: ADR-220 is unedited, because it does not mention
+  this script today and adding the note would introduce that association into an
+  accepted record for the first time. ADR-220 specifies an in-reply text line
+  `[skill-attest] <skill-name>`; this script hashed artifact files. They share a
+  word, not a mechanism.
 
   **Why (b) failed, and it is not the argument the recommendation makes.** (b)
   proposed shipping `src/scripts/attest_artifact.ts` *"on its own merit"* as a
