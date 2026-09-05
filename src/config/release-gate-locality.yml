@@ -36,6 +36,10 @@
 #   network: marks a row that leaves the machine. Excluded from `--cheap`,
 #            which is the set the release pipeline runs on its own, so a
 #            registry outage cannot read as a release defect.
+#   release_branch_only:
+#            the assertion only means anything on a `release/X.Y.Z` head.
+#            Skipped with a printed reason elsewhere — never silently, and
+#            never reported as a pass.
 #   script:  the implementing script, when the assertion lives in one. `~`
 #            marks an assertion that exists only as inline workflow YAML —
 #            which is itself the defect this column makes countable.
@@ -49,6 +53,12 @@ jobs:
   release-shape:
     local: 'git diff --name-only origin/main...HEAD | ./scripts-run src/scripts/check_release_pr_shape --files -'
     verify: true
+    # The assertion is about a RELEASE PR's diff — every ordinary branch fails
+    # it by construction, so running it off a release branch would teach a
+    # maintainer to ignore this command's red. Skipped with a printed reason
+    # instead, which is the difference between a gate that is not applicable
+    # and one that passed.
+    release_branch_only: true
     script: src/scripts/check_release_pr_shape.ts
     guard: ~
 

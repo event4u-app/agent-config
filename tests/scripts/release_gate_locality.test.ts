@@ -26,6 +26,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
+import { on_release_branch, resolve_version } from '../../src/scripts/release_verify.js';
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const REGISTRY = path.join(REPO_ROOT, 'src', 'config', 'release-gate-locality.yml');
 
@@ -122,5 +124,33 @@ describe('release-gate locality registry', () => {
             .filter(([, r]) => typeof r.local !== 'string' || r.local.length === 0)
             .map(([id]) => id);
         expect(unrunnable, 'a `verify: true` row needs a local command to run').toEqual([]);
+    });
+});
+
+/**
+ * The runner's two branch-dependent decisions.
+ *
+ * Both are pure reads over `git rev-parse` plus `package.json`, and both change
+ * WHICH gates run — so a silent regression here would turn a green
+ * `task release:verify` into a run that checked less than it says. The counts
+ * the runner prints are the only thing standing between that and a false
+ * clearance.
+ */
+describe('release_verify — what the run covers', () => {
+    it('prefers an explicit --version over anything it could infer', () => {
+        expect(resolve_version(['--version', '9.9.9'])).toBe('9.9.9');
+    });
+
+    it('falls back to a resolvable version off a release branch', () => {
+        // This spec runs on a feature branch in CI and locally, so the fallback
+        // is the path exercised; it must produce a version rather than null,
+        // because `null` makes the runner exit 2 and check nothing.
+        expect(resolve_version([])).toMatch(/^\d+\.\d+\.\d+/u);
+    });
+
+    it('knows it is not on a release branch here', () => {
+        // Pinned rather than assumed: a `release/X.Y.Z` head would make the
+        // release_branch_only rows run, and this suite never executes on one.
+        expect(on_release_branch()).toBe(false);
     });
 });

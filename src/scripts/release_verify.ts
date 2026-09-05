@@ -44,6 +44,7 @@ interface Row {
     reason?: string;
     verify: boolean;
     network?: boolean;
+    release_branch_only?: boolean;
     script: string | null;
     guard?: string | null;
 }
@@ -93,6 +94,12 @@ export function resolve_version(argv: readonly string[], cwd = REPO_ROOT): strin
     }
 }
 
+/** Whether HEAD is a `release/X.Y.Z` branch — decides the `release_branch_only` rows. */
+export function on_release_branch(cwd = REPO_ROOT): boolean {
+    const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd, encoding: 'utf-8' });
+    return /^release\/\d+\.\d+\.\d+$/u.test((r.stdout ?? '').trim());
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const version = resolve_version(argv);
     if (!version) {
@@ -101,9 +108,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     const reg = parseYaml(fs.readFileSync(REGISTRY, 'utf-8')) as { jobs: Record<string, Row> };
     const cheap = argv.includes('--cheap');
+    const releaseHead = on_release_branch();
+    const skippedOffRelease = Object.entries(reg.jobs)
+        .filter(([, r]) => r.verify && r.local && r.release_branch_only && !releaseHead)
+        .map(([id]) => id);
     const rows = Object.entries(reg.jobs)
         .filter(([, r]) => r.verify && r.local)
-        .filter(([, r]) => !(cheap && r.network));
+        .filter(([, r]) => !(cheap && r.network))
+        .filter(([, r]) => releaseHead || !r.release_branch_only);
     const steps = plan(rows, version);
 
     process.stdout.write(
@@ -120,6 +132,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             process.stdout.write(`  ${id} — not run locally\n    ${r.reason ?? 'cheap-gate opt-out'}\n`);
         }
         return 0;
+    }
+
+    for (const id of skippedOffRelease) {
+        process.stdout.write(
+            `─── ${id}\n    skipped — asserts a release-PR diff, and HEAD is not a release/X.Y.Z branch.\n\n`,
+        );
     }
 
     const failed: string[] = [];
@@ -143,11 +161,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     // The runner names what it did NOT cover — a green run that silently
     // omitted three jobs would read as a clearance it is not.
-    const uncovered = Object.entries(reg.jobs).filter(([, r]) => !r.verify || !r.local);
+    const uncovered = [
+        ...Object.entries(reg.jobs)
+            .filter(([, r]) => !r.verify || !r.local)
+            .map(([id]) => id),
+        ...skippedOffRelease,
+    ];
     process.stdout.write(
-        `✅  ${String(rows.length)} local release gate(s) pass for ${version}.\n` +
-            `    Not covered locally (${String(uncovered.length)}): ` +
-            `${uncovered.map(([id]) => id).join(', ')} — see release-gate-locality.yml.\n`,
+        `✅  ${String(rows.length)} release-validation job(s) pass for ${version} ` +
+            `(${String(steps.length)} command(s)).\n` +
+            `    Not covered by this run (${String(uncovered.length)}): ` +
+            `${uncovered.join(', ')} — see release-gate-locality.yml.\n`,
     );
     return 0;
 }
