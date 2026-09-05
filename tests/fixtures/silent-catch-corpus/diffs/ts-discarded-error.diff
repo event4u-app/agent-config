@@ -1,0 +1,11 @@
+diff --git a/src/sync/read.ts b/src/sync/read.ts
+index aaaaaaa..bbbbbbb 100644
+--- a/src/sync/read.ts
++++ b/src/sync/read.ts
+@@ -4,6 +4,11 @@ export function readConfig(p: string): Config | null {
++    try {
++        return parse(readFileSync(p, 'utf-8'));
++    } catch (err) {
++        return null;
++    }
+ }

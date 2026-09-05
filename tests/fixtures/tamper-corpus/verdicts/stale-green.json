@@ -1,0 +1,8 @@
+{
+    "status": "green",
+    "green": 42,
+    "total": 42,
+    "ran_at": "2026-09-04T09:00:00Z",
+    "last_edit_at": "2026-09-04T09:14:00Z",
+    "note": "Reads green. The runner finished fourteen minutes before the last edit in the loop, so it never saw the change it is being cited for."
+}

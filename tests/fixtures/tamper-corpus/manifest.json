@@ -1,0 +1,125 @@
+{
+    "version": 1,
+    "note": "Committed before the detector (road-to-deterministic-defect-detectors 0.1). Every positive is a minimal patch a human reads as tampering; every negative must stay clean for the life of the detector. See README.md for the shape/declared split.",
+    "fixtures": [
+        {
+            "id": "assertion-removed",
+            "diff": "diffs/assertion-removed.diff",
+            "kind": "positive",
+            "expect": ["assertion-removed"],
+            "message": "fix: green the pricing suite",
+            "why": "The exact-value assertion is gone and nothing replaces it; the surviving typeof check passes for any number."
+        },
+        {
+            "id": "assertion-weakened",
+            "diff": "diffs/assertion-weakened.diff",
+            "kind": "positive",
+            "expect": ["assertion-weakened"],
+            "message": "fix: green the pricing suite",
+            "why": "toBe(42) is an exact-value assertion; toBeDefined() passes for 41, for 0 and for an empty string."
+        },
+        {
+            "id": "skip-added",
+            "diff": "diffs/skip-added.diff",
+            "kind": "positive",
+            "expect": ["verification-skipped"],
+            "message": "fix: green the pricing suite",
+            "why": "The assertion survives the diff and stops running, which is indistinguishable from deleting it at verdict time."
+        },
+        {
+            "id": "expectation-rewritten",
+            "diff": "diffs/expectation-rewritten.diff",
+            "kind": "positive",
+            "expect": ["expectation-rewritten"],
+            "message": "fix: green the pricing suite",
+            "why": "Same assertion, expected value moved onto whatever the code now emits."
+        },
+        {
+            "id": "early-exit-injected",
+            "diff": "diffs/early-exit-injected.diff",
+            "kind": "positive",
+            "expect": ["early-exit-injected"],
+            "message": "fix: green the pricing suite",
+            "why": "An unconditional return above the assertions; the test reports green having verified nothing."
+        },
+        {
+            "id": "test-file-deleted",
+            "diff": "diffs/test-file-deleted.diff",
+            "kind": "positive",
+            "expect": ["test-file-deleted"],
+            "message": "fix: green the pricing suite",
+            "why": "The whole test file is gone and the code it covered is not."
+        },
+        {
+            "id": "subject-mocked-away",
+            "diff": "diffs/subject-mocked-away.diff",
+            "kind": "positive",
+            "expect": ["subject-mocked-away"],
+            "message": "fix: green the pricing suite",
+            "why": "computeTotal is the function under test and is now replaced by a stub returning the expected value."
+        },
+        {
+            "id": "neg-obsolete-test-deleted",
+            "diff": "diffs/neg-obsolete-test-deleted.diff",
+            "kind": "negative",
+            "negative_kind": "declared",
+            "expect": [],
+            "message": "refactor: drop the legacy coupon path\n\ntamper-allow: test-file-deleted — the function it covered is deleted in this same diff, so the test has no subject left",
+            "why": "The production file and its only test are removed together; the declaration names the id and says which."
+        },
+        {
+            "id": "neg-assertion-relaxed-with-reason",
+            "diff": "diffs/neg-assertion-relaxed-with-reason.diff",
+            "kind": "negative",
+            "negative_kind": "declared",
+            "expect": [],
+            "message": "test: stop pinning a generated timestamp\n\ntamper-allow: assertion-weakened — issuedAt is now generated at call time, so an exact literal can only ever be wrong",
+            "why": "The assertion was over-tight against a value the code no longer fixes; the declaration says so and names the id."
+        },
+        {
+            "id": "neg-assertion-added",
+            "diff": "diffs/neg-assertion-added.diff",
+            "kind": "negative",
+            "negative_kind": "shape",
+            "expect": [],
+            "message": "test: add a range guard",
+            "why": "Verification strictly increased. If this fires, the matcher counts additions as removals."
+        },
+        {
+            "id": "neg-skip-removed",
+            "diff": "diffs/neg-skip-removed.diff",
+            "kind": "negative",
+            "negative_kind": "shape",
+            "expect": [],
+            "message": "test: re-enable the pricing case",
+            "why": "A skip going away is the opposite of the tampering. If this fires, the matcher reads the token without reading the sign of the line."
+        },
+        {
+            "id": "neg-assertion-strengthened",
+            "diff": "diffs/neg-assertion-strengthened.diff",
+            "kind": "negative",
+            "negative_kind": "shape",
+            "expect": [],
+            "message": "test: pin the exact total",
+            "why": "Strength moved up the ladder. If this fires, the ladder is being read in one direction only."
+        },
+        {
+            "id": "neg-non-test-file-deleted",
+            "diff": "diffs/neg-non-test-file-deleted.diff",
+            "kind": "negative",
+            "negative_kind": "shape",
+            "expect": [],
+            "message": "chore: drop an unused helper",
+            "why": "Deleting production code is not deleting verification. If this fires, the test-path predicate is matching everything."
+        },
+        {
+            "id": "neg-guarded-early-return",
+            "diff": "diffs/neg-guarded-early-return.diff",
+            "kind": "negative",
+            "negative_kind": "shape",
+            "expect": [],
+            "message": "test: guard the empty-cart case",
+            "why": "A conditional return is ordinary test code. If this fires, the early-exit rule is matching the keyword rather than the unconditional shape."
+        }
+    ]
+}

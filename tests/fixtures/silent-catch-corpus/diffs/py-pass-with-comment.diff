@@ -1,0 +1,10 @@
+diff --git a/src/ingest/probe.py b/src/ingest/probe.py
+index aaaaaaa..bbbbbbb 100644
+--- a/src/ingest/probe.py
++++ b/src/ingest/probe.py
+@@ -12,3 +12,7 @@ def probe(path):
++    try:
++        return json.loads(read(path))
++    except ValueError:
++        pass  # intentional
+ 

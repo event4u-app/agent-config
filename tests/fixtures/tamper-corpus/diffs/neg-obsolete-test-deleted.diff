@@ -1,0 +1,23 @@
+diff --git a/src/checkout/legacy_coupon.ts b/src/checkout/legacy_coupon.ts
+deleted file mode 100644
+index 3333333..0000000
+--- a/src/checkout/legacy_coupon.ts
++++ /dev/null
+@@ -1,5 +0,0 @@
+-export function applyLegacyCoupon(total: number): number {
+-    return total - 5;
+-}
+diff --git a/tests/legacy_coupon.test.ts b/tests/legacy_coupon.test.ts
+deleted file mode 100644
+index 1111111..0000000
+--- a/tests/legacy_coupon.test.ts
++++ /dev/null
+@@ -1,8 +0,0 @@
+-import { describe, it, expect } from 'vitest';
+-import { applyLegacyCoupon } from '../src/checkout/legacy_coupon.js';
+-
+-describe('applyLegacyCoupon', () => {
+-    it('subtracts five', () => {
+-        expect(applyLegacyCoupon(10)).toBe(5);
+-    });
+-});

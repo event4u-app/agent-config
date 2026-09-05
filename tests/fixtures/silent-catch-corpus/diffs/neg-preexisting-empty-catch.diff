@@ -1,0 +1,11 @@
+diff --git a/src/sync/legacy.ts b/src/sync/legacy.ts
+index aaaaaaa..bbbbbbb 100644
+--- a/src/sync/legacy.ts
++++ b/src/sync/legacy.ts
+@@ -8,6 +8,7 @@ export function legacyFlush(): void {
+     try {
+         drain();
+     } catch (err) {
+     }
++    metrics.increment('legacy_flush');
+ }

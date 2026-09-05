@@ -1,0 +1,12 @@
+diff --git a/tests/pricing.test.ts b/tests/pricing.test.ts
+index 1111111..2222222 100644
+--- a/tests/pricing.test.ts
++++ b/tests/pricing.test.ts
+@@ -4,6 +4,7 @@ describe('computeTotal', () => {
+     it('sums the line items', () => {
+         const cart = [{ price: 20 }, { price: 22 }];
+         const total = computeTotal(cart);
+         expect(total).toBe(42);
++        expect(total).toBeGreaterThan(0);
+     });
+ });

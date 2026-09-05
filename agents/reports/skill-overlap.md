@@ -12,7 +12,7 @@
 
 | Skill A | Skill B | similarity | shared packs |
 |---|---|--:|---|
-| `test-driven-development` | `testing-anti-patterns` | 71% | engineering-base |
+| `test-driven-development` | `testing-anti-patterns` | 73% | engineering-base |
 
 ## Cross-domain overlaps (informational, not merge candidates)
 
