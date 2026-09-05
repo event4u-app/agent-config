@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **737 public artefacts** shipped by
+Consumer-facing catalog of all **738 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -78,7 +78,7 @@ are excluded.
 | skill | [`context-document`](../dist/agent-src/skills/context-document/SKILL.md) | official | Use when the user says \"create context\", \"document this area\", or wants a structured snapshot of a codebase area for agent orientation. |
 | skill | [`contract-review`](../dist/agent-src/skills/contract-review/SKILL.md) | official | Use when reviewing a contract clause-by-clause from your party's side — buyer/seller/vendor/licensee. Triggers on 'review this contract', 'redline this MSA', 'is this clause a problem'. |
 | skill | [`contracts-cognition`](../dist/agent-src/skills/contracts-cognition/SKILL.md) | official | Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'. |
-| skill | [`conventional-commits-writing`](../dist/agent-src/skills/conventional-commits-writing/SKILL.md) | official | When writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
+| skill | [`conventional-commits-writing`](../dist/agent-src/skills/conventional-commits-writing/SKILL.md) | official | When writing a commit message, branch name or squash title — measure the repo's own convention first, Conventional Commits as fallback — even on a bare 'commit this'. |
 | skill | [`copilot-agents-optimization`](../dist/agent-src/skills/copilot-agents-optimization/SKILL.md) | official | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
 | skill | [`copilot-config`](../dist/agent-src/skills/copilot-config/SKILL.md) | official | Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`). |
 | skill | [`corpus-grounding`](../dist/agent-src/skills/corpus-grounding/SKILL.md) | official | Shared corpus-grounding engine — BM25 + structured filters + decision rules over CSV corpora via a domain manifest. Use when a skill needs grounded pre-action option-space constraints. |
@@ -450,7 +450,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (202)
+## Commands (203)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -527,6 +527,7 @@ are excluded.
 | command | [`fix`](../dist/agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, comments, quality |
 | command | [`fix-ci`](../dist/agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix-comments`](../dist/agent-src/commands/fix/comments.md) | cluster: fix | Review the code comments touched by the current branch and simplify, shorten, or remove each one |
+| command | [`fix-commit-messages`](../dist/agent-src/commands/fix/commit-messages.md) | cluster: fix | Measure the repo's commit convention, ask which style to standardise on, then rewrite past commit subjects to it — own commits and full history by default |
 | command | [`fix-portability`](../dist/agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix-pr-comments-loop`](../dist/agent-src/commands/fix/pr-comments-loop.md) | cluster: fix | Loop /fix pr-comments on a PR — fix, commit+push, re-request Copilot review, repeat until Copilot has no new comments |
 | command | [`fix-pr-comments`](../dist/agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix, commit+push, reply to, then resolve all open review comments (bots + human reviewers) on a GitHub PR |

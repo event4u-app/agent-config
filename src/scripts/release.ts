@@ -102,7 +102,6 @@
  * - `_lib.changelog_eras` imports resolve to the `.ts` twin, never a `.py`.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -120,16 +119,17 @@ import {
 } from './_lib/changelog_eras.js';
 import {
     HEAD_LABELS,
+    type MixObligation,
     collect_span_commits,
     derive_category_hits,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import {
-    NEXT_SECTION_RE,
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
+    render_mix_response,
 } from './_lib/release_material.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
@@ -164,11 +164,16 @@ import {
     _splitlines,
 } from './release_env.js';
 import type { RunResult } from './release_publication.js';
-// Re-export surface for the six names tests import from `release.js` and that
-// moved into the publication unit. `export ... from` rather than a bare import,
+// Re-export surface for the names tests import from `release.js` and that moved
+// into the publication unit — eleven since the test-count-trend unit followed. `export ... from` rather than a bare import,
 // because these are not USED here — an unused import would be dropped and the
 // test import path would break silently.
 export {
+    _TEST_LIST_MAX_BUFFER,
+    _count_from_list_result,
+    _count_tests_current,
+    _previous_test_count_from_changelog,
+    _render_test_trend_line,
     _failed_check_names,
     _failed_checks_report,
     _is_non_fast_forward,
@@ -176,7 +181,7 @@ export {
     _no_checks_action,
     _required_contexts_from_rules,
 } from './release_publication.js';
-import { _cap_body, jsonDumpsIndent, reEscape } from './release_env.js';
+import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
     _MERGE_UPDATE_ROUNDS,
     _branch_exists_local,
@@ -195,7 +200,10 @@ import {
     create_and_push_annotated_tag,
     guard_publication,
     checkout_release_branch,
+    _render_test_trend_line,
     guard_release_curation,
+    local_release_gate_argv,
+    measure_mix_obligation,
     die,
     gh,
     git,
@@ -500,7 +508,11 @@ function render_changelog_entry(
     prev: string | null,
     commits: readonly Commit[],
     today: string,
-    opts: { test_trend_line?: string | null; head?: Readonly<Record<string, string>> } = {},
+    opts: {
+        test_trend_line?: string | null;
+        head?: Readonly<Record<string, string>>;
+        mix?: MixObligation | null;
+    } = {},
 ): [string, string] {
     const test_trend_line = opts.test_trend_line ?? null;
     let heading: string;
@@ -539,6 +551,11 @@ function render_changelog_entry(
 
     // The curated head sits above the generated log, which stays unchanged.
     const body_lines: string[] = [...render_release_head(opts.head ?? {})];
+    // Under the head and outside it — rationale on `MIX_RESPONSE_PLACEHOLDER`.
+    if (opts.mix?.triggered) {
+        body_lines.push('');
+        body_lines.push(...render_mix_response(opts.mix.level));
+    }
     const ordered_labels = ['BREAKING CHANGES', ...SECTIONS.map(([label]) => label)];
     for (const label of ordered_labels) {
         const bucket = grouped[label] ?? [];
@@ -579,139 +596,6 @@ function _changelog_line(c: Commit): string {
     const short = c.sha.slice(0, 7);
     const link = `https://github.com/${REPO_SLUG}/commit/${c.sha}`;
     return `* ${scope}${c.subject} ([${short}](${link}))`;
-}
-
-// ─── test-count trend (road-to-feedback-followups P3.2) ───────────────────────
-
-const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
-
-/**
- * Buffer ceiling for the `vitest list` probe, in bytes.
- *
- * `spawnSync` buffers the child's whole stdout in memory and fails with
- * ENOBUFS past `maxBuffer`, whose default is 1 MiB. The probe emits one line
- * per test case, so its output grows with the suite: at 9470 cases the listing
- * is ~1.25 MB, i.e. already past the default. That is what silently dropped
- * the footer from the 9.10.0 notes and turned the `changelog-entry` gate red.
- * 64 MiB is ~50× the current listing — headroom for a suite many times this
- * size, at no cost when the output is small.
- */
-const _TEST_LIST_MAX_BUFFER = 64 * 1024 * 1024;
-
-/**
- * Count test cases from a finished `vitest list` spawn result, or return null
- * when the probe did not produce a usable listing.
- *
- * Split out from `_count_tests_current` so the failure modes are testable
- * without spawning the real (~14s, >1 MB) collection. `warn` is injected for
- * the same reason; it defaults to stderr.
- */
-function _count_from_list_result(
-    res: {
-        error?: (Error & { code?: string }) | undefined;
-        status: number | null;
-        stdout: string | null;
-    },
-    warn: (msg: string) => void = (msg) => void process.stderr.write(msg),
-): number | null {
-    // The trend line is informational and never blocks a release — but a
-    // SILENT drop is what shipped 9.8.0 and 9.10.0 without a footer, so every
-    // degradation says why. The `changelog-entry` CI gate treats a missing
-    // footer as fatal, so this warning is the difference between fixing the
-    // probe now and finding out from a red release PR.
-    if (res.error) {
-        // ENOENT (no npx) · ETIMEDOUT · ENOBUFS (listing past maxBuffer).
-        const code = res.error.code ?? res.error.message;
-        warn(
-            `⚠️  test-count probe failed (${code}) — the \`Tests:\` footer will ` +
-                `be omitted from the release notes, which fails the ` +
-                `\`CHANGELOG entry exists for head version\` gate.\n`,
-        );
-        return null;
-    }
-    if ((res.status ?? 1) !== 0) {
-        warn(
-            `⚠️  test-count probe exited ${res.status ?? '(null)'} — the ` +
-                `\`Tests:\` footer will be omitted from the release notes.\n`,
-        );
-        return null;
-    }
-    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
-    if (lines.length === 0) {
-        warn('⚠️  test-count probe listed 0 cases — the `Tests:` footer will be omitted.\n');
-        return null;
-    }
-    return lines.length;
-}
-
-/**
- * Return the collected vitest test-case count on the current tree
- * (`npx vitest list`, one line per case; ~14s wall). Returns null when
- * collection fails — the trend line is informational, never a release
- * blocker, but every failure warns (see `_count_from_list_result`).
- * (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
- * road-to-truth-and-reference-hygiene Phase 3: the Python suite was retired
- * with ADR-200, so the old probe always degraded to null and the `Tests:`
- * footer silently vanished from release notes.)
- */
-function _count_tests_current(): number | null {
-    // Recursion/cost guard: `npx vitest list` inside a vitest-driven release
-    // test would collect the whole suite from within the suite (the child
-    // inherits VITEST=… from the runner) — the exact recursion the caller
-    // comment warns about. Degrade to null there, same as any other
-    // collection failure.
-    if (process.env['VITEST'] !== undefined) {
-        return null;
-    }
-    const res = spawnSync('npx', ['vitest', 'list'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-        timeout: 180_000,
-        maxBuffer: _TEST_LIST_MAX_BUFFER,
-    });
-    return _count_from_list_result(res);
-}
-
-/**
- * Read CHANGELOG.md and return the most recent `Tests: N` footer under the
- * `prev_tag` heading, or null when not found.
- */
-function _previous_test_count_from_changelog(prev_tag: string | null): number | null {
-    if (!prev_tag || !fs.existsSync(CHANGELOG)) {
-        return null;
-    }
-    const text = fs.readFileSync(CHANGELOG, 'utf-8');
-    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(prev_tag)}\\b`, 'm');
-    const m = heading_re.exec(text);
-    if (!m) {
-        return null;
-    }
-    const headEnd = m.index + m[0].length;
-    const rest = text.slice(headEnd);
-    const next_heading = NEXT_SECTION_RE.exec(rest);
-    const sectionEnd = headEnd + (next_heading ? next_heading.index : rest.length);
-    const section = text.slice(headEnd, sectionEnd);
-    const count_match = _TEST_COUNT_LINE_RE.exec(section);
-    return count_match ? Number.parseInt(count_match[1] as string, 10) : null;
-}
-
-/**
- * Return the `Tests: N (+M since X.Y.Z)` footer line, or null when the current
- * count cannot be determined. Silent on collection errors.
- */
-function _render_test_trend_line(prev_tag: string | null): string | null {
-    const current = _count_tests_current();
-    if (current === null) {
-        return null;
-    }
-    const previous = _previous_test_count_from_changelog(prev_tag);
-    if (previous === null || !prev_tag) {
-        return `Tests: ${current}`;
-    }
-    const delta = current - previous;
-    const sign = delta >= 0 ? '+' : '';
-    return `Tests: ${current} (${sign}${delta} since ${prev_tag})`;
 }
 
 /**
@@ -1287,6 +1171,10 @@ function execute(
         // `git push -u` is naturally idempotent — it prints "Everything
         // up-to-date" when remote already matches. push_release_branch
         // additionally absorbs a remote that moved under us.
+        // Not a `_step`: a second `[4/10]` makes the cited evidence anchors ambiguous.
+        process.stdout.write('        · verifying release gates locally (`task release:verify -- --cheap`)\n');
+        run(local_release_gate_argv());
+
         _step(4, total, `Push ${branch} to ${REMOTE}`);
         push_release_branch(branch);
     }
@@ -1834,9 +1722,13 @@ function main(argv: readonly string[] | null = null): number {
     // made the preview print the `_none_` skeleton while the real run wrote
     // pre-filled lines — a preview that contradicts its own output, which is
     // the exact class of surface disagreement this pre-fill exists to end.
+    // Unconditional for the same preview-parity reason as `_derive_head_prefill`,
+    // at a different cost: one `git show` per commit — measured 3.2 s over a
+    // 120-commit span, paid 3-4× per release. Not the ~25 ms of the line above.
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
         head: _derive_head_prefill(prev),
+        mix: measure_mix_obligation(target, prev),
     });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
@@ -1954,10 +1846,6 @@ export {
     _detect_in_flight_target,
     print_preview,
     latest_tag,
-    _render_test_trend_line,
-    _previous_test_count_from_changelog,
-    _count_from_list_result,
-    _TEST_LIST_MAX_BUFFER,
     Commit,
     Plan,
     SystemExitError,

@@ -60,9 +60,14 @@ shipped-default decision and actual spend are owner-reserved.
 The third sub-item bundled into the same finding — the trigger corpus at 100 of
 299 skills — is held by nothing at all. It inherited a blocker by association.
 
+> **Falsified in execution, 2026-09-04.** It is held — not by the blocker it
+> inherited, but by three published reproduce-from-tree measurement pins and a
+> partition decision the frozen holdout artefact reserves to Phase 5. Step 2.2
+> records the finding; AC-3 is left open because of it.
+
 ## Phase 1 — Correct the record
 
-- [ ] **1.1 Amend the disposition rather than writing a new verdict over it.**
+- [x] **1.1 Amend the disposition rather than writing a new verdict over it.**
       The ninth-arrival section stays; it gains the mechanism check it was
       missing — that `b-behavioural-bench-spend` does not gate the flip, which
       three holds do, and which of those permit preparation. A recurrence
@@ -70,38 +75,111 @@ The third sub-item bundled into the same finding — the trigger corpus at 100 o
       answered again.
       verify: the disposition names all three real holds with their sources and
       states that the bench gates the always-on-tier question only.
-- [ ] **1.2 Record the split with owners.** Three sub-items, each with its own
+      **Done** — `inbox-2026-09-d-disposition.md:105-138`, an amendment under the
+      ninth-arrival section rather than a rewrite of it. All three holds are
+      named with sources; `b-behavioural-bench-spend`'s own scope is quoted from
+      `road-to-mixed-trigger-activation-cost.md:516-536`. A **fourth** hold the
+      table above does not list was found while checking: the settings schema
+      (`src/scripts/schemas/agent-settings.schema.json:36-45`) declares
+      `"enum": ["eager-all", "thin"]`, so `delivery` is not a value the setting
+      can take at all. Carried into the decision packet and into the guard test.
+- [x] **1.2 Record the split with owners.** Three sub-items, each with its own
       owner and its own blocker, so the eleventh arrival meets three states
       rather than one bundle.
       verify: the record names sub-items, owners and blockers, and the council
       round is cited with its date, members and quorum.
+      **Done** — `inbox-2026-09-d-disposition.md:140-157`, a three-row table:
+      trigger corpus (agent, no blocker), delivery flip (owner for the default,
+      agent for preparation, three-plus-one holds), behavioural bench (owner,
+      `b-behavioural-bench-spend`, unchanged). Council cited inline as
+      2026-09-04, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds,
+      quorum 2/2, $0.00 (both seats subscription-authed).
 
 ## Phase 2 — Trigger corpus (unblocked, agent-doable)
 
 Held by nothing. Both council seats agreed, and codex added the constraint that
 makes it real work rather than a phrase-adding exercise.
 
-- [ ] **2.1 Measure the current coverage from the tree, not from the review.**
+- [x] **2.1 Measure the current coverage from the tree, not from the review.**
       The "100 of 299" figure comes from the disposition file. Re-derive it,
       name the instrument, and state what the denominator counts — the review's
       figure and a `grep -l 'triggers:' src/skills/*/SKILL.md` disagree, and a
       coverage number nobody can reproduce cannot show movement later.
       verify: the count is reproduced by a named command whose output is quoted,
       and any divergence from 100/299 is explained rather than silently adopted.
-- [ ] **2.2 Expand coverage with collision and ambiguity validation.** Adding
+      **Done** — `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md`.
+      **The review's figure reproduces exactly**: `check_routing_coverage` prints
+      `skills 100 / 299 = 0.3344`, and the declared measurement in
+      `src/config/routing-coverage-seed.json` is
+      `src/skills/*/evals/triggers.json` over `src/skills/*/SKILL.md`. The
+      divergence the step anticipated is real and is a different population, not
+      a wrong count: `grep -l 'triggers:'` reads FRONTMATTER declarations (13
+      line-anchored, 12 once restricted to the frontmatter fence, 27 unanchored)
+      while the finding's figure reads the EVAL CORPUS. The 13→12 step is one
+      file — `src/skills/rule-writing/SKILL.md:195` carries `triggers:` in the
+      body as an authoring example. That "trigger" names two unrelated surfaces
+      is what makes 2.3's null readable.
+- [x] **2.2 Expand coverage with collision and ambiguity validation.** Adding
       199 trigger sets carelessly raises false activation, which is the failure
       mode that would make the whole finding worse. Each addition carries a
       positive fixture and a near-miss that must stay silent — the discipline
       `design-fidelity`'s routing matrix already applies to rules.
       verify: every new trigger set has both fixtures, and the near-miss rows
       fail if the trigger is widened by one word.
-- [ ] **2.3 Publish activation at the new coverage.** `docs/CLAIMS.md:240` says
+      **Done as a finding: the step's premise is FALSE and the wave was
+      reverted.** 14 corpus files were authored to the full discipline by the
+      declared rule the AI council 2026-09-04 (2/2) required — the skills
+      carrying a deterministic MUST/NEVER/ALWAYS obligation per
+      `report_skill_activation` that had no corpus — and every corpus-local
+      gate went green at `skills 114 / 299 = 0.3813`. The full suite then failed
+      in three files, 8 tests, all reproduce-from-tree pins over that exact
+      corpus: `tests/scripts/trigger_corpus_holdout_pin.test.ts` (the SET-SHA256
+      published in `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md`
+      plus one row per file), `tests/scripts/routing_signal_measurement.test.ts`
+      (`expected 114 to be 100`, `expected 93 to be 82`), and
+      `tests/scripts/delivery_set_compatibility.test.ts` (`precision_at_k`
+      82.508 against 82.934 published).
+      **So "held by nothing" is wrong.** The corpus is held by three published
+      measurement records and by a governance decision the frozen artefact
+      reserves in its own words: *"Whether it joins the holdout, joins the train
+      set, or forms a second frozen generation is a Phase 5 decision."* The
+      ordering `road-to-governed-harness-evolution` AC-6 certifies has already
+      elapsed — the freeze predates `ac2501313`, which added
+      `candidate_proposer.ts` — so a re-pin taken now would post-date the
+      proposer and let the name-hash silently answer the reserved question.
+      Green corpus-discipline gates were necessary and not sufficient: they
+      check corpus-local shape, and the binding constraint is a cross-phase
+      ordering property no shape gate can see.
+      AI council 2026-09-04 (anthropic/claude-sonnet-4-5 + openai/codex-default,
+      2 rounds, quorum 2/2, $0.00), convergent: revert the wave, close the step
+      on the finding, preserve the 14 files as Phase 5 input, and let the
+      durable fix be an explicitly versioned second corpus generation rather
+      than a rewrite of the first generation's pins. Finding and the preserved
+      files: `agents/evidence/analysis/trigger-corpus-wave2-deferred-2026-09-04.md`.
+      Coverage on this branch is unchanged at 100/299, the seed at 0.3344 and
+      the grandfather allowlist at 199.
+      **Consequence, not worked around: AC-3 is not met and this roadmap does
+      not close.**
+- [x] **2.3 Publish activation at the new coverage.** `docs/CLAIMS.md:240` says
       activation is "separately measured and is near zero". That measurement is
       the denominator the authority question lacks. Surface it, then re-read it
       after 2.2.
       verify: the measurement's instrument and its reading are named, before and
       after, and a null — activation stays near zero at 299 — is published as
       the finding it is rather than treated as a failed step.
+      **Done, and the null is sharper than the claim it tests.** Instrument:
+      `report_skill_activation` (advisory, gates on nothing;
+      `taskfiles/ci-fast.yml:1015`). Reading over the project's transcript
+      store, same command before and after the wave: 30 sessions, 11,013 →
+      11,049 assistant turns, **0 Skill invocations and 0 of 299 distinct
+      skills in both** — zero, not near zero. Published as its own ledger row,
+      `docs/CLAIMS.md § skill-activation-census-zero`, and
+      `published-artifact-counts`'s `non_inference` now points at it instead of
+      asserting "near zero" with nothing behind it.
+      The reading did not move, and the reason is structural rather than
+      disappointing: `evals/triggers.json` is a test fixture read by three
+      gates and by no host at routing time. Expecting activation to follow it
+      would be the same two-surfaces error 2.1 exposes.
 
 ## Phase 3 — Delivery-mode preparation (agent prepares, owner ships)
 
@@ -109,17 +187,62 @@ Sequenced after Phase 2 deliberately. Sizing the budget rows before knowing the
 load at 299 skills sizes them against the wrong corpus — the council's own
 correction to a shorter plan.
 
-- [ ] **3.1 Size the two slot-sum rows against the measured delivery load.**
+- [x] **3.1 Size the two slot-sum rows against the measured delivery load.**
       The `rule-inject` row is 20,480 B against slot sums of 4,096 and 2,048.
       Produce the moved rows with their derivation, not a guess.
       verify: the derivation cites the measured emission at the post-2.2 corpus,
       and `bench_hook_injection` reads the concern within the proposed rows.
-- [ ] **3.2 Prepare the flip as a held change set.** Claude-scoped, with the
+      **First clause done; the second is not satisfiable by that instrument and
+      that is the finding.** Re-run today,
+      `model_rule_injection --corpus tests/eval/routing-matrix` measures p50
+      1,764 / p90 5,042 / p99 8,510 / max 13,290 exact-BPE tokens against the
+      4,804 p90 the row was registered on — so the p90 rounds up to 5,500 tok,
+      not 5,000, and **the registered 20,480 B row had fallen BELOW its own
+      stated derivation** (22,528 B at 4.096 B/tok). The concern's own comment
+      demands exactly this re-run
+      (`src/scripts/hooks/rule_inject_hook.ts:89-90`). Two slot rows move, each
+      by the concern's full ceiling: `user_prompt_submit` 4,096 → 26,624,
+      `pre_tool_use` 2,048 → 24,576, with `per_turn_aggregate_bytes.ceiling_bytes`
+      47,104 → 294,912 as the arithmetic consequence its own
+      `ceiling_derivation` says it must be. `pre_compact` is BOUND but stays at
+      2,048 — the concern clears its latch and returns before injecting there
+      (`src/scripts/hooks/rule_inject_hook.ts:258-261`), so the recorded
+      two-row charge is right; checked rather than assumed, and the packet's
+      first draft had it wrong.
+      **Note on the sequencing premise.** Phase 3 was sequenced after Phase 2 so
+      the rows would be sized against the post-2.2 corpus. The two corpora are
+      disjoint: 2.2 moved the SKILL eval corpus, while `rule-inject` delivers
+      RULE bodies over `tests/eval/routing-matrix`, whose coverage
+      (`rules 94/105`) this branch does not touch. The sequencing therefore
+      changed nothing about the number — stated rather than presented as though
+      it had.
+      **Why the bench cannot read the concern.** `bench_hook_injection` drives
+      each concern against a committed fixture, and
+      `tests/fixtures/hooks/user_prompt_submit.json` carries the prompt
+      `"echo hello"`, which matches no rule trigger. Probed with a
+      `mode: delivery` settings file present (gitignored, created and deleted):
+      `rule-inject` still reads 0 B. It reads 0 B inside the proposed rows and
+      inside the current ones, which is a vacuous green. A trigger-matching
+      fixture is the concrete follow-up, recorded in the packet's § 6.
+- [x] **3.2 Prepare the flip as a held change set.** Claude-scoped, with the
       unsupported hosts named and verified unchanged, a rollback, and the tests.
       Nothing in this phase changes a shipped default.
       verify: `lean_projection.mode` still resolves to `eager-all` on every host
       after this phase, and a test asserts it.
-- [ ] **3.3 Hand the owner a decision packet, not a summary.** The exact diff,
+      **Done** — `tests/scripts/_lib/lean_projection_shipped_default.test.ts`,
+      5 assertions: the shipped template says `eager-all`, this repo's own
+      settings resolve to it, `DEFAULT_LEAN_PROJECTION_MODE` is unmoved, the
+      schema still does not admit `delivery`, and every generated host tree
+      still carries full rule bodies rather than pointer stubs. Sensitivity
+      proven rather than assumed: with the template flipped to `delivery` the
+      suite goes 1 failed / 4 passed, and the tree was restored from a copy
+      (never `git checkout`). The test is designed to go RED when the owner
+      lands the flip — that is the tripwire that routes whoever lands it to the
+      decision packet.
+      The change set itself is held in that packet and applied nowhere:
+      `git diff origin/main` touches neither `hook-token-budget.json`, nor the
+      settings schema, nor the settings template.
+- [x] **3.3 Hand the owner a decision packet, not a summary.** The exact diff,
       the before/after cost with its method, the residual risk, the rollback, and
       the one policy question the 2026-08-23 council flagged as genuinely close.
       Landing the budget-policy rows may itself need maintainer review — the
@@ -128,15 +251,40 @@ correction to a shorter plan.
       verify: the packet exists, names the unresolved authority question in the
       owner's words, and states which of its parts a maintainer must approve
       before landing versus after.
+      **Done** — `agents/evidence/analysis/tenth-arrival-delivery-decision-packet.md`.
+      It carries the exact four-file diff as applyable hunks rather than a
+      description of them, the before/after cost with its method
+      ($4.0417 → $0.7167 per 50-turn × 5-spawn session, 82.3 %, re-measured
+      today rather than quoted from 2026-08-23, with the drift against those
+      published figures recorded), the residual risk in both directions, the
+      one-flip rollback, and a before/after approval table. The authority
+      question is quoted verbatim from
+      `agents/roadmaps/archive/road-to-trigger-delivered-rule-bodies.md:497-498`
+      — including that the 2026-08-23 round was 2 configured / 1 answering, a
+      degraded reading rather than convergence.
+      **Nothing lands.** AI council 2026-09-04, 2/2: keep
+      `hook-token-budget.json` byte-unchanged and carry the diff in the packet,
+      because configuration must describe the shipped `eager-all` mode until the
+      flip and its dependent rows can land atomically. Both seats also required
+      a validity window on the measurements, which the packet's header carries:
+      re-run `model_rule_injection` before applying, because the p90 has already
+      moved once.
 
 ## Phase 4 — What stays where it is
 
-- [ ] **4.1 Leave the behavioural bench attached to its own question.**
+- [x] **4.1 Leave the behavioural bench attached to its own question.**
       `b-behavioural-bench-spend` keeps gating the always-on-tier question on
       `road-to-mixed-trigger-activation-cost`. It is not a sub-item of this
       finding, and folding it in would rebuild the bundle this roadmap unpicks.
       verify: that roadmap's blocker text is unchanged, and this roadmap does not
       claim to unblock it.
+      **Verified, not asserted.** `git diff origin/main -- agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md`
+      is empty, and the blocker section hashes byte-identically on this branch
+      and on `origin/main`
+      (`sha256 b949aaa9658f51d12f3d224de2aa4f89dd1d4c260f04800a693e440ddd0df3ba`).
+      The disposition's new split table records it as owner-reserved and
+      unchanged, and the packet's § 1 states explicitly that this roadmap does
+      not answer the flip's authority question.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-04 | reviewer: claude/host -->
@@ -147,18 +295,28 @@ correction to a shorter plan.
 | 2 | Trigger expansion raises false activation | product | 199 new trigger sets against a corpus tuned for 100 is the one way this work makes the product worse rather than better, and the failure is invisible until a wrong skill fires | 2.2 requires a near-miss fixture per addition that fails on a one-word widening — the same discipline the routing matrix already enforces for rules | Phase 2 — Trigger corpus |
 | 3 | Phase 2 produces no movement and the finding is called closed | implementation | If activation stays near zero at 299, the temptation is to report the sub-item done and let the flip question lapse back into the bundle | 2.3 requires a null to be published as a finding, and Phase 1's record keeps the three sub-items separately stated so an unmoved one stays visibly open | Phase 2 — Trigger corpus |
 | 4 | The budget rows land dormant and mislead a later reader | implementation | Moving slot sums for a mode nobody has enabled leaves the file asserting headroom the shipped configuration does not use | 3.1 ties the derivation to the measured emission, and 3.3 states explicitly which parts need approval before landing rather than after | Phase 3 — Delivery-mode preparation |
+| 5 | *(added 2026-09-04, in execution)* The corpus is held by a frozen measurement generation | implementation | Risk 2 anticipated false activation and missed this one entirely: three published reproduce-from-tree pins and a Phase 5 partition reservation make any corpus growth a governance decision, and every corpus-local gate stays green while it happens | The wave was reverted, the finding and the 14 files preserved, and AC-3 left open rather than closed on a green-gates reading. The durable fix is a versioned second generation, not a re-pin | Phase 2 — Trigger corpus |
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The disposition record names the three real holds on the flip, states
+- [x] AC-1 — The disposition record names the three real holds on the flip, states
       that `b-behavioural-bench-spend` gates a different question, and cites the
       council round that established it.
-- [ ] AC-2 — The finding exists as three sub-items with three named owners and
+- [x] AC-2 — The finding exists as three sub-items with three named owners and
       three separate blocker states.
 - [ ] AC-3 — Trigger coverage is re-derived by a reproducible command, expanded
       with a positive and a near-miss fixture per addition, and activation is
       published at the new coverage — including if it did not move.
-- [ ] AC-4 — A held change set and a decision packet exist for the flip, and
+      **NOT MET, and reported rather than claimed.** Two of its three conjuncts
+      hold: the coverage is re-derived by `check_routing_coverage` with its
+      output quoted (step 2.1), and activation is published as its own ledger
+      row including the null (step 2.3). The **expanded** conjunct does not: the
+      14-file wave that satisfied it was reverted, because the corpus is held by
+      three published measurement pins and by a Phase 5 partition decision an
+      agent may not take. Closing this AC needs that decision — a second,
+      explicitly versioned corpus generation with its own partition provenance —
+      which is owner/Phase-5 work, not a re-run of this step.
+- [x] AC-4 — A held change set and a decision packet exist for the flip, and
       `lean_projection.mode` still resolves to `eager-all` on every host.
-- [ ] AC-5 — `b-behavioural-bench-spend` remains attached only to the always-on-tier
+- [x] AC-5 — `b-behavioural-bench-spend` remains attached only to the always-on-tier
       question, unmodified by this roadmap.

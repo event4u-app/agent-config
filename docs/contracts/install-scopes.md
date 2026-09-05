@@ -1,6 +1,18 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-09-15
+keep-beta-reason: >-
+  Beta review 2026-09-05, extended to the anchor's date rather than a round
+  number. `install-layout.md` names this file as its companion contract and owns
+  the on-disk paths the scope table enumerates; its own `keep-beta-until` is
+  2026-09-15, so reviewing the install-surface pair on one date is what stops
+  them drifting apart again. Not promotable today: § 23 says on its own face that
+  the contract "works toward" an invariant that is not achieved, and the work
+  that would achieve it — single-delivery Phase 2 — is recorded HALTED since
+  2026-08-19. Before the window ends: restore the safety regression cited at § 83
+  (it exists under no extension — the citation is corrected to name the gap in
+  this change) or delete the promise, and resolve § 23 either by unblocking
+  Phase 2 or by restating the line as an aspiration.
 ---
 
 # Install Scopes — user-global vs project-local
@@ -34,7 +46,7 @@ Installing at **both** scopes simultaneously is the failure mode the canonical-c
   1. Abort install — fix drift first (recommended)
   2. Upgrade the OTHER scope first
   3. Force install at this scope — accept drift (set SCOPE_GUARD_BYPASS=1)
-  4. Clean the other scope (bash scripts/cleanup_other_scope.sh --confirm)
+  4. Clean the other scope (bash src/scripts/cleanup_other_scope.sh --confirm)
 ```
 
 Non-interactive shells default to **abort**. CI runs and the orchestrator set `SCOPE_GUARD_BYPASS=1` to skip the gate.
@@ -47,16 +59,16 @@ Use the companion script:
 
 ```bash
 # Dry-run (default) — list what would be removed
-bash scripts/cleanup_other_scope.sh --user
+bash src/scripts/cleanup_other_scope.sh --user
 
 # Confirm and delete
-bash scripts/cleanup_other_scope.sh --user --confirm
+bash src/scripts/cleanup_other_scope.sh --user --confirm
 
 # Narrow to a single tool
-bash scripts/cleanup_other_scope.sh --user --confirm --tools=claude-code
+bash src/scripts/cleanup_other_scope.sh --user --confirm --tools=claude-code
 
 # Remove from a specific project root
-bash scripts/cleanup_other_scope.sh --project /path/to/proj --confirm
+bash src/scripts/cleanup_other_scope.sh --project /path/to/proj --confirm
 ```
 
 The script refuses to delete anything without `--confirm` per `non-destructive-by-default`. It only touches the tool-scoped paths the contract names (`.claude/skills/`, `.augment/`, `.cursor/rules/`, `.clinerules/`, `.windsurf/rules/`, `.github/copilot-instructions.md`); the rest of the scope root is never modified.
@@ -78,7 +90,11 @@ The scope guard does **not** make the picking decision; it enforces "one scope p
 ## See also
 
 - [`docs/contracts/skill-distribution-channels.md`](skill-distribution-channels.md) — per-tool canonical channel.
-- [`scripts/_lib/scope_guard.sh`](../../src/scripts/_lib/scope_guard.sh) — guard implementation.
-- [`scripts/cleanup_other_scope.sh`](../../src/scripts/cleanup_other_scope.sh) — companion cleanup.
-- [`tests/test_cleanup_other_scope.py`](../../tests/test_cleanup_other_scope.py) — safety regression.
+- [`src/scripts/_lib/scope_guard.sh`](../../src/scripts/_lib/scope_guard.sh) — guard implementation.
+- [`src/scripts/cleanup_other_scope.sh`](../../src/scripts/cleanup_other_scope.sh) — companion cleanup.
+- **Safety regression — MISSING.** This list cited `tests/test_cleanup_other_scope.py`
+  until 2026-09-05; it exists under no extension, and nothing else in the tree
+  covers the cleanup path. The citation is removed rather than repointed, because
+  repointing it at a neighbouring test would claim coverage that is not there.
+  Restoring it is the named precondition on this contract's beta window.
 - [`README.md` § Installation](../../README.md) — consumer-facing install path.

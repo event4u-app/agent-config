@@ -18,7 +18,9 @@ import * as path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  classifyAuthorization,
   consumeGrantTarget,
+  isBareRefusal,
   extractMergeTargets,
   foldGrants,
   isRevocation,
@@ -87,13 +89,134 @@ describe("isRevocation — withdrawal must be cheaper to say than authorization"
   });
 
   it("catches a negated merge in either language", () => {
+    // FORWARD negation — the three shapes the pre-2026-09-04 backward window
+    // already caught, kept as controls for the widening.
     expect(isRevocation("nicht mergen")).toBe(true);
     expect(isRevocation("don't merge that after all")).toBe(true);
     expect(isRevocation("never merge this one")).toBe(true);
+
+    // TRAILING negation — the three reproduced leaks. Measured at b75d7f7cb:
+    // each returned false, and `foldGrants` kept a standing grant over PR #12
+    // through an unambiguous withdrawal. The first two are now read by the same
+    // clause scan `classifyAuthorization` uses; the third is a bare refusal in
+    // the sentence AFTER the merge, which no clause scan can reach.
+    expect(isRevocation("Merge PR #12 auf keinen Fall.")).toBe(true);
+    expect(isRevocation("Merge #12 under no circumstances.")).toBe(true);
+    expect(isRevocation("Merge PR #12? Actually, don't.")).toBe(true);
+  });
+
+  it("drops a standing grant on each of the three trailing forms", () => {
+    // The predicate is not the point — this is. Each of these kept [[12]] at
+    // b75d7f7cb, which is a merge grant surviving the user withdrawing it.
+    const prior = [
+      {
+        id: "g1",
+        op: "pr-merge" as const,
+        targets: [12],
+        consumed: [] as number[],
+        granted_at: "2026-09-04T00:00:00.000Z",
+        evidence: "prior turn",
+      },
+    ];
+    for (const p of [
+      "Merge PR #12 auf keinen Fall.",
+      "Merge #12 under no circumstances.",
+      "Merge PR #12? Actually, don't.",
+    ]) {
+      expect(foldGrants(prior, p, [], "s1", new Date("2026-09-04T01:00:00Z")), p).toEqual([]);
+    }
+  });
+
+  it("does not read a contrast cue as a withdrawal", () => {
+    // The opposite-direction half of the same defect. At b75d7f7cb this prompt
+    // returned isRevocation=true AND classifyAuthorization=["pr-merge"] — the
+    // two parsers contradicting each other, so the turn authorized the merge,
+    // minted no standing grant, and wiped any prior one. The corpus asserts the
+    // authorization half as `contrast.en.pr-merge.please-prefix-01`; this is the
+    // revocation half of the same row.
+    expect(isRevocation("Please do not push, but merge PR #7.")).toBe(false);
+    expect(classifyAuthorization("Please do not push, but merge PR #7.").authorized).toEqual([
+      "pr-merge",
+    ]);
+  });
+
+  it("a bare refusal is a clause of negation ONLY — a conversational aside is not one", () => {
+    // The AI council (2026-09-04, anthropic + openai, both members) made this
+    // the condition on shipping `isBareRefusal` at all: a reader that fires on
+    // any negation-anywhere would revoke grants the user never connected to the
+    // refusal. The discriminator is a content word in the clause.
+    for (const p of [
+      "Merge #12? Actually, I don't think so.",
+      "Merge #12? Don't worry, I'll do it.",
+      "Actually, don't worry about it.",
+    ]) {
+      expect(isBareRefusal(p), p).toBe(false);
+      expect(isRevocation(p), p).toBe(false);
+    }
+    for (const p of ["Merge #12? Actually, don't.", "Merge #12. Don't.", "Merge #12? No."]) {
+      expect(isBareRefusal(p), p).toBe(true);
+    }
+  });
+
+  it("a clause with no tokens at all is not a refusal", () => {
+    // The `tokens.length > 0` guard, pinned. `every` on an empty array is true,
+    // so without the guard a prompt of pure punctuation would revoke — a vacuous
+    // match, and the one way this reader could fire on nothing.
+    for (const p of ["Merge #12 ... ---", "Merge #12?  ,  ;  .", "", "   "]) {
+      expect(isBareRefusal(p), p).toBe(false);
+    }
+  });
+
+  it("the typographic apostrophe is in the vocabulary, on BOTH paths", () => {
+    // MEASURED LEAK at b75d7f7cb, found while discharging the council's
+    // token-policy condition. The list was ASCII-only (`dont|don't`) while every
+    // macOS, iOS, Word and Slack input substitutes U+2019 by default — so one
+    // smart quote turned a prohibition into a grant on an IRREVERSIBLE op:
+    //   "don't merge PR #12" -> []            (denied)
+    //   "don’t merge PR #12" -> ["pr-merge"]   (AUTHORIZED)
+    for (const apostrophe of ["'", "\u2019", "\u2018", "\u02bc"]) {
+      const dont = `don${apostrophe}t`;
+      expect(classifyAuthorization(`${dont} merge PR #12`).authorized, dont).toEqual([]);
+      expect(classifyAuthorization(`${dont} push`).authorized, dont).toEqual([]);
+      expect(isRevocation(`${dont} merge PR #12`), dont).toBe(true);
+      expect(isBareRefusal(`Merge #12? Actually, ${dont}.`), dont).toBe(true);
+    }
+    // `dont` without any apostrophe stays in the vocabulary.
+    expect(classifyAuthorization("dont merge PR #12").authorized).toEqual([]);
+  });
+
+  it("a negated merge naming ANOTHER PR still revokes every standing grant", () => {
+    // Not a new behaviour and deliberately pinned as such: `foldGrants` has
+    // always returned [] for any revocation, so a bare "stop" and this prompt
+    // take the same transition. Over-revoking is the safe direction, and
+    // narrowing grant selection would be a separate change with its own risk.
+    const prior = [
+      {
+        id: "g1",
+        op: "pr-merge" as const,
+        targets: [12],
+        consumed: [] as number[],
+        granted_at: "2026-09-04T00:00:00.000Z",
+        evidence: "prior turn",
+      },
+    ];
+    expect(isRevocation("Merge #12? Actually, don't merge #13.")).toBe(true);
+    expect(
+      foldGrants(prior, "Merge #12? Actually, don't merge #13.", [], "s1", new Date()),
+    ).toEqual([]);
   });
 
   it("does not fire on ordinary work", () => {
-    for (const p of ["merge #12", "fixe die ci", "schau dir den diff an", "weiter"]) {
+    for (const p of [
+      "merge #12",
+      "fixe die ci",
+      "schau dir den diff an",
+      "weiter",
+      // A negation that is not a refusal: the clause carries content words, so
+      // the bare-refusal reading must not claim it.
+      "Merge PR #7, no rush.",
+      "Do not push. Merge PR #12.",
+    ]) {
       expect(isRevocation(p), p).toBe(false);
     }
   });

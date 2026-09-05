@@ -260,6 +260,17 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         // mistyped path as a fresh baseline.
         what: 'review prompts whose recorded prompt_hash does not re-derive',
     },
+    {
+        file: 'src/config/conformance-claim-baseline.json',
+        listKey: 'undeclared',
+        tier: 'string_list',
+        // Absent at the base ref because this change introduces it. Remove the
+        // flag on the next change once the introducing commit is an ancestor of
+        // main — the scan below fails while it is set and the file resolves,
+        // so the flag closes itself rather than needing to be remembered.
+        newInThisChange: true,
+        what: 'skill and rule artefacts carrying a standard-conformance claim with no enforced_by declaration',
+    },
 ];
 
 export interface SuppressionFinding {
