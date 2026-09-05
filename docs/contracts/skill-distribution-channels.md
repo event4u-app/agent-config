@@ -1,6 +1,17 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+promote-to: stable
+promote-reason: >-
+  Beta review 2026-09-05. 91 days in beta, content unchanged for 88 days, eight
+  consumer references, the 6.x to 14.x band shipped it unchanged. It is the head
+  of its chain — `install-scopes.md` takes it as a normative Input, not the
+  reverse — so it is not blocked on a beta dependency. Its § 45 conditional is
+  satisfied in code and verified: `_lib/scope_guard.sh` wired into `install.sh`
+  with a wizard endpoint and a test, `probe_skill_registration.ts` with a test
+  and a `task probe:skills` target, `--legacy-both` live. The acceptance section
+  is restated in past tense in this change. Decided by AI council 2026-09-05,
+  2/2 convergent, both seats requiring the missing canonical-channel regression
+  to be closed in the same change.
 ---
 
 # Skill Distribution Channels — canonical per AI tool
@@ -44,13 +55,34 @@ Two-round debate on whether filesystem or plugin should be canonical for Claude.
 
 Both members agreed the decision is structurally correct **conditional on** the cross-scope drift fix landing in Phase B and the probe being fail-loud in Phase C. This contract is published with those follow-up commitments.
 
-## Acceptance criteria for follow-up phases
+## Acceptance criteria for follow-up phases — all landed
 
-Phase B and Phase C of `road-to-clean-skill-distribution-channels.md` MUST:
+Phase B and Phase C of `road-to-clean-skill-distribution-channels.md` required
+the three items below. **Restated in the past tense 2026-09-05**, on a
+verification against the tree rather than on the roadmap's own checkboxes; the
+section had stood in pending tense about phases that closed in May.
 
-- (Phase B) Add a pre-install guard that detects existing installs at the other scope and either refuses, warns, or upgrades — surfaced via numbered options.
-- (Phase C) Run a probe at `agent-config setup` time AND from `scripts/install.sh --strict` that fails the install on cross-scope drift findings (per the council convergence — fail-loud, not informational).
-- (Phase A Step 4) Update `scripts/install.sh` and `task generate-tools` so the canonical channel above is what lands in the consumer install. Document `--legacy-both` for opt-in.
+- (Phase B) A pre-install guard that detects an existing install at the other
+  scope and refuses, warns, or upgrades via numbered options —
+  [`src/scripts/_lib/scope_guard.sh`](../../src/scripts/_lib/scope_guard.sh),
+  wired into [`src/scripts/install.sh`](../../src/scripts/install.sh), with a
+  wizard endpoint and
+  [`tests/server/wizard.scope-guard.test.ts`](../../tests/server/wizard.scope-guard.test.ts).
+- (Phase C) A fail-loud cross-scope drift probe —
+  [`src/scripts/probe_skill_registration.ts`](../../src/scripts/probe_skill_registration.ts),
+  covered by
+  [`tests/scripts/probe_skill_registration.test.ts`](../../tests/scripts/probe_skill_registration.test.ts)
+  and reachable as `task probe:skills`.
+- (Phase A Step 4) `install.sh` and `task generate-tools` write the canonical
+  channel above; `--legacy-both` is the documented opt-in.
+
+**The single-channel invariant itself is covered by
+[`tests/scripts/canonical_distribution.test.ts`](../../tests/scripts/canonical_distribution.test.ts)**,
+added 2026-09-05. Until then the invariant was held only by a default branch in
+`install.sh`: the regression the carrier roadmap promised as
+`tests/test_canonical_distribution.py` was never ported and existed under no
+extension, while `docs/architecture.md` still linked it as the proof. That gap
+is what the beta review closed before this contract was scheduled for promotion.
 
 ## Out of scope
 

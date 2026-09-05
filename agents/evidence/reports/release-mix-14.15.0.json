@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "taxonomy_version": "1.0.0",
+  "classifier_version": "1.0.0",
+  "label": "14.15.0",
+  "range": {
+    "from": "14.14.1",
+    "to": "14.15.0",
+    "from_sha": "a3a14d535d878e3c32d6736fd3e4adef0dbdec28",
+    "to_sha": "c9f32f39ffb0eef8928b0194bfa2191e4f61c0d5"
+  },
+  "merge_handling": "no-merges",
+  "rename_handling": "git-default",
+  "commit_view": {
+    "consumer": 1,
+    "governance": 3,
+    "maintenance": 0,
+    "unclassified": 0,
+    "mixed": 6
+  },
+  "diff_view": {
+    "consumer": {
+      "added": 478,
+      "deleted": 13
+    },
+    "governance": {
+      "added": 369,
+      "deleted": 21
+    },
+    "maintenance": {
+      "added": 1650,
+      "deleted": 58
+    },
+    "unclassified": {
+      "added": 0,
+      "deleted": 0
+    }
+  },
+  "diagnostics": {
+    "generated_only_commits": 0,
+    "commits_with_unclassified": 0,
+    "unclassified_paths": [],
+    "mixed_combinations": {
+      "consumer+maintenance": 4,
+      "governance+maintenance": 1,
+      "consumer+governance+maintenance": 1
+    },
+    "largest_contributors": {
+      "consumer": [
+        [
+          "src/config",
+          2
+        ],
+        [
+          "src/scripts",
+          2
+        ],
+        [
+          "CHANGELOG.md",
+          1
+        ],
+        [
+          "src/agent-src",
+          1
+        ]
+      ],
+      "governance": [
+        [
+          "docs/decisions",
+          2
+        ],
+        [
+          "agents/evidence",
+          1
+        ],
+        [
+          "docs/contracts",
+          1
+        ]
+      ],
+      "maintenance": [
+        [
+          "tests/scripts",
+          8
+        ],
+        [
+          "src/scripts",
+          6
+        ],
+        [
+          "package.json",
+          1
+        ]
+      ],
+      "unclassified": []
+    }
+  },
+  "response_obligation": {
+    "triggered": true,
+    "rule": "governance-only commits > consumer-only commits",
+    "governance_only": 3,
+    "consumer_only": 1
+  }
+}

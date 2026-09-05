@@ -288,3 +288,69 @@ function _first_diff(a: string, b: string): string {
     }
     return 'surfaces differ only in normalization-invisible content';
 }
+
+/**
+ * The marker the governance-versus-product response line carries.
+ *
+ * Relocated here on 2026-09-05 from `check_release_highlights.ts`, where it was
+ * defined next to the refusal that reads it. That placement is why 14.17.0
+ * failed: the gate owned the marker, so the **generator** could not write the
+ * line without importing a gate, and therefore did not write it at all. The
+ * obligation was then discoverable only after `gh pr create` had already spent
+ * a branch, a PR and a CI run — the exact cost `guard_release_branch_push` was
+ * added to avoid for the sibling obligation two releases earlier.
+ *
+ * This module has no imports on purpose (see `CURATED_HEAD_INSTRUCTION`), which
+ * is what lets the writer, the local push guard and the CI gate all reach one
+ * definition instead of three copies.
+ */
+export const MIX_RESPONSE_MARKER = '**Governance mix:**';
+
+/**
+ * The sentinel that marks an EMITTED-BUT-UNANSWERED response.
+ *
+ * A generator that emits the measured level alone would satisfy the gate's
+ * length floor (`MIX_RESPONSE_MIN_CHARS`, 40) with a number the machine
+ * produced, turning a written-answer obligation into a formality the tool
+ * discharges for itself. That is a smuggled auto-approval, not a fix.
+ *
+ * So the writer emits the level AND this sentinel, and every gate refuses the
+ * sentinel — the same discipline `CURATED_HEAD_INSTRUCTION` and
+ * `DERIVED_MARKER` already follow. The net effect is only that the obligation
+ * moves from CI to the moment the section is written, where the fix is an edit
+ * to a file already open in the working tree.
+ */
+export const MIX_RESPONSE_PLACEHOLDER = '<the consumer work>';
+
+/**
+ * Every placeholder token the writer emits, so none of them can ship.
+ *
+ * The block carries two, and refusing only the first would leave
+ * `<roadmap or issue>` publishable — `CHANGELOG.md` is in `package.json`
+ * `files`, so that is the same "the generator's own scaffolding reached npm"
+ * failure `CURATED_HEAD_INSTRUCTION` exists for, one token to the right.
+ *
+ * A named list rather than a shape match over angle brackets, for the reason
+ * that constant already states: a pattern such as `/<[a-z ]+>/` rejects
+ * unrelated legitimate prose and misses a reworded placeholder. Adding a token
+ * to `render_mix_response` means adding it here.
+ */
+export const MIX_RESPONSE_PLACEHOLDERS: readonly string[] = [
+    MIX_RESPONSE_PLACEHOLDER,
+    '<roadmap or issue>',
+];
+
+/**
+ * Render the response block the writer emits when the obligation triggers.
+ *
+ * Two blockquote lines, immediately under the curated head and outside it, per
+ * `docs/contracts/CHANGELOG-conventions.md` § Governance-versus-product
+ * response — the head's ten-line cap is for product lines, and a sixth label
+ * would make every historical section retroactively incomplete.
+ */
+export function render_mix_response(level: string): string[] {
+    return [
+        `> ${MIX_RESPONSE_MARKER} ${level}.`,
+        `> Next cycle ships ${MIX_RESPONSE_PLACEHOLDER}, tracked in <roadmap or issue>.`,
+    ];
+}

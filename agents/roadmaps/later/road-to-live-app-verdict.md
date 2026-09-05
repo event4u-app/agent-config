@@ -32,8 +32,14 @@ parent_roadmap: autonomous-verify-loop
    into a **consumer's CI** (a live app the loop can drive).
 
 Until both hold, [`verify-repair-loop`](../../../src/skills/verify-repair-loop/SKILL.md)
-uses test/quality verdicts only — never a live app (which needs running services
-= a runtime, violating [`no-runtime-boundary`](../../../docs/contracts/no-runtime-boundary.md)).
+uses test/quality verdicts only — never a live app. The reason is no longer a flat
+prohibition: [`resident-process-governance`](../../../docs/contracts/resident-process-governance.md)
+replaced that on 2026-08-27 (ADR-249). Services a Playwright verdict drives outlive the
+command that started them, so they are a **P1 supervised resident process** — permitted
+only with a named supervisor, a declared write scope, a documented stop path and
+claim-consistency. Nothing here declares any of the four, which makes it P2 and
+prohibited. ADR-124 § 1 Class A says the same thing from the engine side: a Class-A
+invocation terminates after command completion.
 
 ## Phase 1 — Live-app verdict (only when the trigger fires)
 
@@ -43,8 +49,8 @@ uses test/quality verdicts only — never a live app (which needs running servic
       unit tests — per the council's verify-context-heterogeneity finding).
 - [ ] Decision doc: confirm the live-app path stays runtime-free **per turn**
       (services spun up + torn down inside the turn, no persistent daemon) or
-      explicitly scope it as ephemeral-runtime-required; honor
-      `no-runtime-boundary`.
+      explicitly scope it as ephemeral-runtime-required; satisfy the four
+      governance conditions in `resident-process-governance` or stay P0.
 - [ ] `evals/triggers.json` + behavior eval updated for the live-app context.
 
 ## Council notes

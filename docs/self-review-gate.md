@@ -63,3 +63,39 @@ and zero-spend; the multi-model run is the maintainer's run-time act.
    (an inert gate is not a passed gate).
 
 Blocker `self-review-gate-cost` (maintainer-owned) gates steps 1–2.
+
+### Two correctness preconditions, open (recorded 2026-09-04)
+
+That blocker settled **cost and authority**. Steps 1-2 above have a separate
+**correctness precondition** that it never covered, and it is not met:
+
+1. **The gate cannot tell a defect a diff INTRODUCES from one it DOCUMENTS.**
+   Pull request #1839 changed six roadmaps and one evidence file — prose
+   describing defects elsewhere in the tree, introducing none — and the gate
+   reported ten findings, two of them `high (Blocking)` security, each mapping
+   1:1 to a defect the diff *documents*. Under `--enforce` every analysis pull
+   request would be blocked by the findings it was written to record, and the
+   only way to pass would be to describe defects less precisely. The class is
+   **not** prose-specific: finding `fec596e8beb4` on #1836 was reported against a
+   `.ts` file, where the sole occurrence of the pattern in the diff was the
+   already-landed fix commenting on what it had removed.
+
+   An AI council (2026-09-04, 2 seats, 2 rounds, quorum 2/2) found **no cheap
+   discriminator**; the three obvious candidates — non-prose paths, cite-a-changed-
+   line, prose-advisory-code-blocking — all fail on that one code instance. The
+   shared failure mode is causal misattribution: an added line may expose rather
+   than cause, and a regression may arrive by deletion, configuration, or
+   template.
+
+2. **Finding ids are not stable across runs.** `finding_id` is
+   `sha256(kind|title|file)`, so a reworded title mints a new id for the same
+   defect. #1839 carries two machine blocks 3.5 minutes apart, ten findings each,
+   **zero id overlap**, with eight of ten `(kind, file)` pairs shared. Since the
+   consumer takes the last block, a ledger dispositioned against the first run is
+   red against the second. This blocks enforcement independently of (1).
+
+Until both are closed, `--enforce` stays off. A narrower pilot is defensible only
+if named for what it is (`added-code security enforcement`), kill-switched,
+override-audited, treating a malformed or duplicate result block as an
+infrastructure failure rather than a quiet pass, and splitting `security` from
+`claim` rather than enforcing the union.

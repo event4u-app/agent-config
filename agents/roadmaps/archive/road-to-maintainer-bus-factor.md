@@ -364,6 +364,90 @@ trailing-90-day reviewer count is tracked and reported truthfully.
   spend-authorization discipline at run time — no separate roadmap gate
   needed. The "Resolved when" stays Phase 1's exit criterion.
 
+- **Correctness precondition on the enforcement flip, added 2026-09-04 by
+  `road-to-the-unwritten-ledger` Phase 2b.** The cost-and-authority question
+  above stays **resolved**; this does not reopen the spend decision. It records a
+  *separate* precondition on arming the teeth (`docs/self-review-gate.md`
+  § Arming it, steps 1-2), which that resolution never covered.
+
+  **The class.** The gate cannot distinguish a defect a diff **introduces** from
+  one it **documents**. Observed on pull request #1839 (merged
+  2026-09-04T05:22:24Z), whose diff was six roadmaps and one evidence file —
+  prose describing defects that live elsewhere in the tree, introducing none. The
+  gate reported ten findings, two of them `high (Blocking)` security, and every
+  one maps 1:1 to a defect the diff *documents*. Under `--enforce`, every analysis
+  pull request this package produces would be blocked by the findings it was
+  written to record, and the only way to pass would be to describe defects less
+  precisely.
+
+  **The ten ids, and why there are twenty.** That pull request carries **two**
+  machine blocks, 3.5 minutes apart, with **zero id overlap** — so the next
+  reading is a comparison against both, not one:
+
+  | | run 1 · `2026-09-04T04:54:35Z` | run 2 · `2026-09-04T04:58:08Z` |
+  |---|---|---|
+  | high security | `5642305ff717`, `e2fb09a4665b` | `b9e68835cea0`, `3f5e513f11bd` |
+  | medium | `65ad56f65cc7`, `75d5de0eda05`, `e43f97a96867`, `d3c5ab8e222d`, `fc51dd451cce` | `abb55a424fda`, `413c7c1e323e`, `d608a3340c48` |
+  | low | `16ced138a92c`, `7b2aacbd97d7`, `47dbfbceee87` | `2f77c1f5837f`, `fb1f65bb44b1`, `bf3b9aced256`, `ca608713a7f9`, `e8d4dc032d28` |
+
+  Eight of ten `(kind, file)` pairs match across the two runs — the same defects,
+  reworded, some re-severitied. `parse_comment_findings` takes the LAST block, so
+  a ledger dispositioned against run 1 is red against run 2.
+
+  **The class is NOT prose-specific, which kills the obvious fix.** Finding
+  `fec596e8beb4` on release pull request #1836 reported a seven-digit regex cap
+  against `src/scripts/git_authorization_hook.ts` — a **code** file. The defect
+  was already fixed inside the reviewed span, and the only occurrence of the
+  pattern in the diff is the fix's own explanatory comment at `:644`, which the
+  fix ADDED. The gate read a code comment describing a removed defect and reported
+  it as live.
+
+  **Discriminator: none is cheap. AI council, 2026-09-04, 2 seats
+  (anthropic/claude-sonnet-4-5, openai/codex-default), 2 rounds, quorum 2/2
+  concluded, $0.00 (subscription transport).** Verdict: *there is no cheap
+  discriminator that reliably determines whether a diff introduced a defect rather
+  than documented, repaired, moved, or exposed it.* The three candidates and their
+  measured costs:
+
+  | candidate | cost |
+  |---|---|
+  | scope findings to non-prose paths | fails on `fec596e8beb4`, which is in a `.ts` file; also exempts rules and skills, which are prose that ships |
+  | require the finding to cite a line the diff CHANGED | fails on the same instance — `:644` *is* a changed line, added by the fix |
+  | prose advisory, code blocking | fails on the same instance, which is a code finding and a false positive |
+
+  The council added the general failure mode the three share, **causal
+  misattribution**: an added executable line may merely expose, instrument, or
+  refactor a pre-existing defect; a regression may be introduced by *deleting* a
+  guard, or live in strings, templates, configuration, or dependency metadata; and
+  the model-cited line is often supporting evidence rather than the causal line.
+  A model-authored "reachable code path" requirement only moves the untrusted
+  assertion into another field.
+
+  **Recorded as a second, independent blocker: finding-id instability.** Because
+  `finding_id` is `sha256(kind|title|file)`, a reworded title mints a new id for
+  the same defect — which is what the twenty ids above measure. This falsifies the
+  contract in `src/scripts/schemas/review-findings.schema.json`, which describes
+  the id as *"Stable across runs, which is what lets the disposition ledger key on
+  it"*. Council: this blocks enforcement in its own right, separately from the
+  class above, because it breaks disposition persistence, deduplication, audit
+  history and rerun comparison even if provenance classification were perfect. The
+  recommended shape is three layers rather than one hash — `run_id` (one
+  execution), `occurrence_id` (auditable, deliberately NOT stable across runs),
+  and a ledger-**allocated** `issue_id` that is never re-derived — with
+  reconciliation returning `matched | new | ambiguous`, and an ambiguous finding
+  neither inheriting an old disposition nor silently invalidating it.
+
+  **Status of the flip: still gated, now on three things** — the cost/authority
+  question (resolved above), the documented-versus-introduced class (open, no
+  cheap discriminator), and finding-id instability (open). A narrower pilot is
+  defensible only if it is named for what it is, `added-code security
+  enforcement`, carries a repository kill switch and an audited per-PR override,
+  treats a malformed or duplicate result block as an infrastructure failure rather
+  than silently as advisory (that downgrade is a fail-open trust-boundary error),
+  and splits `security` from `claim` — requiring an executable anchor makes most
+  of the `claim` category ineligible by construction, so the current
+  `security|claim × high+` union cannot carry one policy.
+
 ### blocker: second-reviewer-availability
 - **Status:** resolved
 - **Owner:** maintainer

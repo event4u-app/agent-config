@@ -209,6 +209,18 @@ interface WorldConfig {
      * it fakes is one every resumed release actually passes through.
      */
     pr_already_merged?: boolean;
+
+    /**
+     * Make `task release:verify` fail, as a red local release gate would.
+     *
+     * Without this the drill returns OK for EVERY `task` invocation, so the
+     * pre-push gate run added 2026-09-05 would be exercised only on its happy
+     * path — wired but never proven to stop anything. The whole point of that
+     * step is that a red local gate costs one edit instead of a branch, a PR
+     * and a CI run, and that property is only real if a scenario watches it
+     * hold.
+     */
+    release_verify_fails?: boolean;
 }
 
 /**
@@ -231,6 +243,20 @@ export function defaultChangelogFixture(target: string): string {
         '### Features',
         '',
         '- fixture entry for the release drill',
+        '',
+        // Both lines are section-level publication obligations
+        // (`section_publication_blockers`), so a fixture without them refuses
+        // at the curation guard and every sequencing scenario dies at step 2 —
+        // the same "fixture trips the guard the drill exists to sequence"
+        // failure this builder's docstring already warns about, for the two
+        // obligations added 2026-09-05. The mix answer is written OUT rather
+        // than measured: measuring would couple every scenario to the live
+        // repository's commit span, which is the coupling `changelog` was
+        // introduced to remove.
+        '> **Governance mix:** governance-only 2 vs consumer-only 1 (taxonomy 1.0.0).',
+        '> Next cycle ships the fixture consumer work, tracked in the drill.',
+        '',
+        'Tests: 1000 (+0 since 0.0.0)',
         '',
         '## [0.0.0]',
         '',
@@ -267,6 +293,8 @@ class FakeWorld {
     pr_merged = false;
     release_created = false;
     branch_exists_remote = true;
+    /** Whether the simulated `task release:verify` reports a red local gate. */
+    private readonly release_verify_fails: boolean;
     /** Live PR body (release-truth Phase 1: refreshed from the changelog at head). */
     pr_body = '';
 
@@ -296,6 +324,7 @@ class FakeWorld {
         this.merge_fails_hard = cfg.merge_fails_hard ?? false;
         this.checks_fail = cfg.checks_fail ?? false;
         this.pr_merged = cfg.pr_already_merged ?? false;
+        this.release_verify_fails = cfg.release_verify_fails ?? false;
     }
 
     exec(args: readonly string[]): ExecResult {
@@ -374,7 +403,14 @@ class FakeWorld {
 
         // ── task ─────────────────────────────────────────────────────────
         if (args[0] === 'task') {
-            return OK; // release-prepare — regeneration is out of drill scope
+            // `release-prepare` — regeneration is out of drill scope.
+            // `release:verify` — the pre-push local gate run; simulated
+            // red only when a scenario asks for it, so the step's stopping
+            // power is exercised rather than assumed.
+            if (args[1] === 'release:verify' && this.release_verify_fails) {
+                return { status: 1, stdout: '', stderr: '❌  1 release gate(s) would fail the release PR: release-shape.\n' };
+            }
+            return OK;
         }
 
         // ── gh ───────────────────────────────────────────────────────────
@@ -541,6 +577,40 @@ const SCENARIOS: Record<string, Scenario> = {
             return f;
         },
     },
+    'local-gates-refuse-before-push': {
+        summary:
+            'step 4: a red local release gate stops the run BEFORE the branch is pushed — no branch on origin, no PR, no CI',
+        config: { release_verify_fails: true },
+        expect_success: false,
+        verify: (w, err) => {
+            const f: string[] = [];
+            _expect(
+                (err ?? '').includes('release:verify'),
+                `died for the wrong reason: ${err ?? '(no error)'}`,
+                f,
+            );
+            // The three remote side effects the 14.17.0 run actually produced
+            // before `check_release_highlights` refused it on the PR. Each is
+            // a separate assertion because each was a separate cost.
+            _expect(
+                !w.calls.some((c) => c.startsWith('git push')),
+                'the release branch was pushed after the local gates refused',
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.startsWith('gh pr create')),
+                'a pull request was opened after the local gates refused',
+                f,
+            );
+            _expect(
+                !w.calls.some((c) => c.includes('pr checks')),
+                'CI was watched after the local gates refused',
+                f,
+            );
+            return f;
+        },
+    },
+
     'marker-refuses-before-commit': {
         summary:
             'step 3: a draft marker refuses BEFORE the release commit — no local release state, and therefore no remote state either',

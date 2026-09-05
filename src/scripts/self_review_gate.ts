@@ -356,6 +356,15 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
             ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+).`
             : `⚠️ ${blocking.length} finding(s) WOULD block merge under an enforced gate (advisory now).`
         : '✅ No merge-blocking findings (style/correctness advise only).';
+    // Three reviewers in the 2026-09 round searched the commit log for a finding
+    // id's first eight characters, found nothing, and reported "no fix found". A
+    // 12-hex id looks exactly like a short SHA, so the rendered comment now says
+    // what it is and where its disposition lives. This is the only place a reader
+    // of the comment can learn it without opening the source.
+    const idNote =
+        '\n\n`id` above is a FINDING id — the first 12 hex of sha256(kind|title|file), '
+        + '**not a commit SHA**. Searching the git log for it finds nothing, by design. '
+        + 'Its disposition is recorded in `agents/evidence/release-findings/<version>.json`.';
     // Machine-readable block (release-truth Phase 3): invisible in the rendered
     // comment; `check_finding_dispositions --pr` reads it as the TRIGGER that
     // demands committed dispositions. The comment is transport, never the
@@ -363,7 +372,7 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     const machine = `\n\n<!-- release-findings-json: ${JSON.stringify(
         findings.map((f) => ({ finding_id: findingId(f), severity: f.severity, kind: f.kind, title: f.title, file: f.file ?? null })),
     )} -->`;
-    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${esc}${machine}`;
+    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${idNote}${esc}${machine}`;
 }
 
 function postReview(body: string): void {
