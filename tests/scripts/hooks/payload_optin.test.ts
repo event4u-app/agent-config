@@ -281,7 +281,6 @@ describe("payload opt-in — the shipped manifest", () => {
   it("declares 'input' on every tool-slot guard", () => {
     for (const name of [
       "block-no-verify",
-      "block-unauthorized-git",
       "block-kernel-rule-writes",
       "block-config-weakening",
       "evidence-independence",

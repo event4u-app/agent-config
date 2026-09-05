@@ -22,7 +22,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { classifyAuthorization } from '../../src/scripts/git_authorization_hook.js';
-import { commandOp } from '../../src/scripts/hooks/block_unauthorized_git.js';
+import { commandOp } from '../../src/scripts/hooks/git_command_classifier.js';
 
 const fence = (cmd: string): string => `\`\`\`\n${cmd}\n\`\`\``;
 const ops = (prompt: string): string[] => classifyAuthorization(prompt).authorized;

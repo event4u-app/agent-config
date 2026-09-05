@@ -21,7 +21,7 @@ import {
   BLOCK_OPS,
   WARN_OPS,
   commandOp,
-} from "../../src/scripts/hooks/block_unauthorized_git.js";
+} from "../../src/scripts/hooks/git_command_classifier.js";
 
 function tierOf(command: string): "BLOCK" | "warn" | "uncaught" {
   const op = commandOp(command);
