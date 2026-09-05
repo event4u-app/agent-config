@@ -213,6 +213,13 @@ Both carriers skip themselves when the gate is not runnable on the checkout —
 no `node_modules`, no `./scripts-run`, or a branch that predates the gate —
 because the shared `.git/hooks` also runs on all of those.
 
+**One event is not covered:** `git pull --rebase` fires neither `post-merge`
+nor `post-checkout`. It fires `post-rewrite`, which carries no detector, so a
+rebase-pull that moves the installer is reported at your next push and not
+before. Named rather than closed: `post-rewrite` also fires on every
+`git commit --amend`, so wiring it there would trade a real gap for a notice on
+an operation that cannot have moved the installer.
+
 #### Git hooks are maintainer-only — consumers get none
 
 A consumer who installs `@event4u/agent-config` as a dependency receives **no

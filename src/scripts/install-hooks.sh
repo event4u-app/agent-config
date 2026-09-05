@@ -38,6 +38,12 @@ else
 fi
 
 mkdir -p "$HOOKS_DIR"
+# Name the destination. AGENT_CONFIG_HOOKS_DIR is a global override, and a
+# stray non-empty value would otherwise redirect a real `task install-hooks`
+# while it printed six "hook installed" lines that name no path at all — the
+# freshness check would then report every hook missing with nothing pointing at
+# the cause.
+echo "→  installing git hooks into $HOOKS_DIR" >&2
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash

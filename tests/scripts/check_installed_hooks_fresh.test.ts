@@ -17,7 +17,11 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { inspect, renderExpected } from "../../src/scripts/check_installed_hooks_fresh.js";
+import {
+  inspect,
+  renderExpected,
+  resolveHooksDir,
+} from "../../src/scripts/check_installed_hooks_fresh.js";
 
 const REPO = path.resolve(__dirname, "../..");
 const GATE = path.join(REPO, "src/scripts/check_installed_hooks_fresh.ts");
@@ -201,6 +205,22 @@ describe("check_installed_hooks_fresh — the detector, both directions", () => 
     expect(`${res.stdout ?? ""}${res.stderr ?? ""}`).toContain("set but empty");
   });
 
+  it("resolves the hooks dir with the primitive that honours core.hooksPath", () => {
+    // From THIS linked worktree, `--git-path hooks` and the old
+    // `--git-common-dir` + "/hooks" composition agree — both give the SHARED
+    // hooks dir, which is what the whole shared-state argument rests on. They
+    // diverge only when core.hooksPath is set, where composing by hand compares
+    // a directory git never executes. The divergent case is NOT exercised: this
+    // repository's block-no-verify guard refuses any command carrying
+    // core.hooksPath, read-only probes included.
+    const viaGitPath = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
+      cwd: REPO,
+      encoding: "utf8",
+    }).trim();
+    expect(resolveHooksDir(REPO)).toBe(viaGitPath);
+    expect(resolveHooksDir(REPO)).toContain(".git/hooks");
+  });
+
   it("exposes the same verdict through the library entry point", () => {
     const report = inspect(REPO, fresh);
     expect(report.neverInstalled).toBe(false);
@@ -246,8 +266,19 @@ describe("carrier — the pre-push hook body", () => {
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const block = body.slice(start, end);
-    expect(block).not.toMatch(/^\s*exit 1\s*$/m);
-    expect(block).not.toMatch(/^\s*fail=1\s*$/m);
+    // Deliberately token-level rather than form-specific. The earlier pin was
+    // /^\s*exit 1\s*$/m and /^\s*fail=1\s*$/m, which `exit 1  # blocked`,
+    // `exit "$hookfresh_rc"`, `return 1` and `fail=$hookfresh_rc` all slip
+    // past — so the property could have been undone with this test green.
+    // Every code line in the block is checked, comments excluded so the
+    // paragraph explaining why it does not refuse cannot trip its own pin.
+    const code = block
+        .split("\n")
+        .filter((l) => !l.trim().startsWith("#"))
+        .join("\n");
+    expect(code).not.toMatch(/\bexit\b/);
+    expect(code).not.toMatch(/\bfail\s*=/);
+    expect(code).not.toMatch(/\breturn\b/);
     // …and it distinguishes "could not render" from "mismatch".
     expect(block).toContain("not a staleness verdict");
   });
@@ -279,7 +310,16 @@ function runPostMerge(touched: string, gatePresent = true): {
   const prev = git("rev-parse", "HEAD").trim();
 
   fs.mkdirSync(path.join(dir, path.dirname(touched)), { recursive: true });
-  fs.writeFileSync(path.join(dir, touched), "changed\n");
+  // When the touched path IS the installer, make it a working stand-in that
+  // rewrites ./post-merge. Otherwise the carrier could gain a real re-install
+  // and this fixture would not notice: a `bash src/scripts/install-hooks.sh`
+  // over a file containing "changed" is a no-op behind `|| true`, so the
+  // byte-identical assertion below would pass over a live mutation.
+  const body =
+    touched === "src/scripts/install-hooks.sh"
+      ? '#!/usr/bin/env bash\nprintf "#!/usr/bin/env bash\\nREINSTALLED\\n" > ./post-merge\n'
+      : "changed\n";
+  fs.writeFileSync(path.join(dir, touched), body, { mode: 0o755 });
   git("add", touched);
   git("commit", "-qm", "second");
 
@@ -347,6 +387,12 @@ describe("carrier — post-merge, both directions", () => {
     // reason that .git/hooks is shared across linked worktrees.
     const r = runPostMerge("src/scripts/install-hooks.sh");
     expect(r.hookAfter).toBe(r.hookBefore);
-    expect(r.hookAfter).not.toContain("AGENT_CONFIG_HOOKS_DIR");
+    // The previous second assertion here checked that the hook body does not
+    // contain "AGENT_CONFIG_HOOKS_DIR" — a string that lives in the installer
+    // PREAMBLE and never in a rendered hook, so it passed whether or not a
+    // repair had run. This one cannot: a re-install writes the installer's own
+    // success line, and the marker below is unique to a rendered hook body.
+    expect(r.hookAfter).not.toContain("REINSTALLED");
+    expect(r.out).not.toContain("installing git hooks into");
   });
 });

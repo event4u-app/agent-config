@@ -11,6 +11,15 @@ relates:
       This one detects a stale COPY of a generated file — the installed git
       hook against the installer that writes it. No detector is shared, and
       neither changes the other's scan scope.
+# NOTE (added at archival, second R2 round finding 10): the two exempt fields
+# below were written when this roadmap was authored and their arithmetic is now
+# stale — step 1.3 records active_roadmaps 2, not twelve unstarted, and PR #1843
+# is merged so main's floor already reads concern_count 57 and the growth
+# exemption has nothing to spend. Left as authored rather than rewritten: they
+# are the record of what was claimed to pass the gate at authoring time, and the
+# live readings are in 1.3's DONE note. `status: ready` is likewise the
+# repository's archival convention (340 of the archived roadmaps carry it), not
+# a claim that work remains.
 estate_offset_exempt: "Cannot be offset. All twelve active roadmaps are unstarted, so any archive would be archiving unfinished work. The nearest sibling by shape, road-to-deterministic-defect-detectors, detects defects in authored content; a staleness check on an installed copy of a generated file is a different subject, and folding it in would replace that roadmap's scope rather than extend it."
 estate_growth_exempt: "Claims the one concern PR #1843 adds (push-settle, concern_count 56 → 57). That PR made a push refuse a stale base and report whether it finished; measured over the 50 PRs before 2026-09-04, 25 needed a base merge and 20 needed a CI-repair commit. The concern is the second half of that mechanism and has no offsetting retirement — no existing concern reads git's ref-advance report, and the nearest neighbour (pr-url-reminder) is silent on every push that does not create a PR."
 ---
@@ -224,9 +233,11 @@ not, and the copy is what runs.
       fact round 1 did not have. Both the ordering and the never-refuses property
       are pinned by tests that red when either is undone. -->
 - [x] AC-2 — Installed hooks that no longer match `src/scripts/install-hooks.sh`
-      are reported at the pull or branch switch that caused it, on stderr,
-      without anyone running a command — and again at the next push. Both
-      notices are advisory; the repair itself stays a human command. One manual install is still required to
+      are reported at the merge-pull or branch switch that caused it, on stderr,
+      without anyone running a command — and at the next push regardless of how
+      the drift arrived. Both notices are advisory; the repair itself stays a
+      human command. A rebase-pull is reported at the push only, and the
+      exclusion is written down rather than left to be discovered. One manual install is still required to
       bootstrap a fresh clone, and the developer documentation says so rather
       than leaving it to be discovered.
       <!-- MET AS REWRITTEN, AND THE ORIGINAL WORDING IS DESCOPED. It read:
@@ -252,6 +263,13 @@ not, and the copy is what runs.
       (2026-09-05, 2 of 2 seats) found the block rests on the same non-unique
       predicate as the repair, and the word "refused" left this AC in the first
       draft with it.
+      SECOND R2 ROUND, finding 2: `git pull --rebase` fires neither post-merge
+      nor post-checkout — it fires post-rewrite, which carries no detector — so
+      the event half of this AC silently excluded rebase-pull users. Named in
+      docs/development.md and in the gate docstring rather than closed:
+      post-rewrite also fires on every `git commit --amend`, so wiring it there
+      trades a real gap for a notice on an operation that cannot have moved the
+      installer. The push-time carrier still catches it.
       The bootstrap half is met at docs/development.md § "One manual install is
       required, and nothing installs it for you", which states that `npm install`
       in a git clone is the ONLY automatic path and names the three states that
