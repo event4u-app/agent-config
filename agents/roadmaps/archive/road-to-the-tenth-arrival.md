@@ -304,9 +304,10 @@ correction to a shorter plan.
       council round that established it.
 - [x] AC-2 — The finding exists as three sub-items with three named owners and
       three separate blocker states.
-- [ ] AC-3 — Trigger coverage is re-derived by a reproducible command, expanded
+- [~] AC-3 — Trigger coverage is re-derived by a reproducible command, expanded
       with a positive and a near-miss fixture per addition, and activation is
       published at the new coverage — including if it did not move.
+      <!-- deferred-resolution: carried-to=road-to-second-trigger-corpus-generation -->
       **NOT MET, and reported rather than claimed.** Two of its three conjuncts
       hold: the coverage is re-derived by `check_routing_coverage` with its
       output quoted (step 2.1), and activation is published as its own ledger
@@ -316,6 +317,24 @@ correction to a shorter plan.
       agent may not take. Closing this AC needs that decision — a second,
       explicitly versioned corpus generation with its own partition provenance —
       which is owner/Phase-5 work, not a re-run of this step.
+      **Carried, not cancelled, 2026-09-05.** The unmet conjunct was reproduced
+      at n=1 rather than left resting on the 14-file wave: ONE preserved corpus
+      file restored to `src/skills/ai-council/evals/triggers.json` reds 6 tests
+      across the three pins while `check_routing_coverage` reports it as a rise
+      to `101 / 299 = 0.3378` and `lint_skill_trigger_corpus` passes. The probe
+      and its output are
+      `agents/evidence/analysis/tenth-arrival-ac3-disposition-2026-09-05.md`; the
+      file was removed with `rm`, never `git checkout`.
+      AI council 2026-09-05 (anthropic/claude-sonnet-4-5 + openai/codex-default,
+      2 rounds, quorum 2/2, $0.00), convergent on carrying the conjunct to a
+      follow-up created in the same change — the route
+      `roadmap-progress-sync.md:80` assigns to the council — and both seats
+      routed cancellation to `[-]` to the owner instead, on the rule's own words.
+      Both also recorded that a second generation is technically FEASIBLE and
+      that the deferral is a scope judgement, not an impossibility claim. The
+      receiver is `road-to-second-trigger-corpus-generation`, which carries the
+      conjunct verbatim as its own AC-3 and holds the owner question — whether a
+      corpus no host reads is worth growing at all — as a named blocker.
 - [x] AC-4 — A held change set and a decision packet exist for the flip, and
       `lean_projection.mode` still resolves to `eager-all` on every host.
 - [x] AC-5 — `b-behavioural-bench-spend` remains attached only to the always-on-tier

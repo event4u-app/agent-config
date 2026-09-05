@@ -101,18 +101,57 @@ recorded rather than papered over:
 
     task install-hooks     # rewrites .git/hooks/* from source
 
-The follow-up is tracked, and it is smaller than it looks: the installer already
-writes `post-merge` and `post-checkout`, and their auto-sync block already
-detects a pull that changes `src/scripts/install-hooks.sh` — it just rebuilds
-the CLI instead of re-installing the hooks. So the fix is an action inside an
-existing branch, not a new mechanism. It is deliberately not smuggled into this
-change; it is `road-to-the-hook-that-was-never-installed`.
+### Closed 2026-09-05 — the contributor is now told
 
-A separate, larger question is left open rather than assumed away: a consumer
-install writes **no git hooks at all** (`src/install/` references `.git/hooks`
-nowhere, and the package manager's post-install lifecycle step does not run for
-a registry dependency), so the pre-push gate is a maintainer-only mechanism
-today. Whether it should reach consumers is not decided here.
+`check_installed_hooks_fresh` renders what `install-hooks.sh` would write into a
+scratch directory and byte-compares it against `.git/hooks`. It runs as the
+FIRST gate in the pre-push body, where it refuses the push and names the
+re-install command shown above, and again from the `post-merge` /
+`post-checkout` auto-sync block, where it reports on stderr at the moment a pull
+causes the drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
+`post-checkout` all stale — the same drift, five days on and one hook wider.
+
+It compares rendered output rather than slicing these heredocs, because
+`post-merge` and `post-checkout` are a heredoc PLUS an appended block: no slice
+of the installer equals what it installs, so a slice-based comparison would have
+been wrong for two of six hooks.
+
+**What was deliberately NOT built: the repair.** The roadmap asked for
+`post-merge` to re-run the installer so the hooks fixed themselves with no
+command. Two findings stopped it, and both are worth keeping.
+
+1. **Measured 2026-09-05:** a bash script that `cat >`-overwrites its own path
+   mid-run stops executing at that point and **exits 0**. Every statement after
+   it is skipped, silently. A repair placed in `post-merge` would truncate
+   `post-merge`'s own remaining body — the projection sync and the CLI rebuild —
+   and report success. Any future attempt needs the installer to stage and
+   `mv` into place first.
+2. **Linked worktrees share one `.git/hooks`** through the common dir. "The
+   installed hooks match the checked-out tree" has no unique referent when eight
+   worktrees hold eight versions of the installer: a repair would let whichever
+   worktree checked out last redefine the gates all the others run, and a
+   checkout of an older branch would reinstall older hooks over newer ones.
+
+An AI council (`claude-sonnet-4-5` + `codex-default`, 2026-09-05, two rounds,
+2 of 2 seats present in both) reached the same verdict independently in both
+seats: report, do not repair. *Reopen* on either per-worktree hook isolation
+(`core.hooksPath`) or a branch-independent dispatcher installed once in the
+common dir — both make "which version is authoritative" answerable, which is the
+question the repair cannot currently answer.
+
+### Answered 2026-09-05 — consumers get no git hooks, by decision
+
+A consumer install writes **no git hooks at all** (`src/install/` references
+`.git/hooks` nowhere, and the package manager's post-install lifecycle step does
+not run for a registry dependency), so the pre-push gate is a maintainer-only
+mechanism. The same council, unanimously, made that the decision rather than the
+status quo: the pre-push chain runs this repository's own consistency and
+preflight gate chains, which depend on its Taskfile, its `./scripts-run` shim
+and its generated trees — none of which exist in a consumer project — and a
+dependency install should not establish persistent repository execution. *Revisit-if* a
+consumer-native gate set is designed with its own opt-in command and consent
+step; that is a product feature, not an extension of this installer. Stated for
+consumers in [`docs/development.md`](../../../../docs/development.md).
 
 ## Revisit-if
 

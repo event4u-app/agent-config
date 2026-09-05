@@ -12,7 +12,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # (where $PROJECT_ROOT/.git is a file, not a dir, and a literal .git/hooks path
 # would break under `set -e`). --git-common-dir points at the main .git even from
 # a worktree; fall back to the literal path only outside a git repo.
-if COMMON_GIT_DIR="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir 2>/dev/null)"; then
+#
+# AGENT_CONFIG_HOOKS_DIR overrides the destination. It exists so that
+# `check_installed_hooks_fresh` can render what this installer WOULD write into
+# a scratch directory and byte-compare it against what is installed — the only
+# way to answer "is the installed copy stale?" without re-parsing these
+# heredocs, which carry an appended block (post-merge / post-checkout) that no
+# heredoc slice can reproduce. It is a test/inspection seam; a normal install
+# never sets it.
+if [ -n "${AGENT_CONFIG_HOOKS_DIR:-}" ]; then
+    HOOKS_DIR="$AGENT_CONFIG_HOOKS_DIR"
+elif COMMON_GIT_DIR="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir 2>/dev/null)"; then
     case "$COMMON_GIT_DIR" in /*) : ;; *) COMMON_GIT_DIR="$PROJECT_ROOT/$COMMON_GIT_DIR" ;; esac
     HOOKS_DIR="$COMMON_GIT_DIR/hooks"
 else
@@ -85,7 +95,46 @@ fi
 
 fail=0
 
-# BASE FRESHNESS — first, and it EXITS rather than setting fail=1.
+# INSTALLED-HOOK FRESHNESS — first, and it EXITS, for the same reason base
+# freshness does: everything below is answered by THIS file, and if this file is
+# stale the answers are from a gate set that no longer exists. Measured
+# 2026-09-05, before this block existed: the installed pre-push in this
+# repository was 146 lines against a 189-line source body, missing the entire
+# base-freshness gate merged five days earlier — which read as live in the
+# source, in CI, and in the skill documenting it, and did not run here.
+#
+# The check renders what install-hooks.sh WOULD write into a scratch directory
+# and byte-compares; it does not re-parse these heredocs, two of which carry an
+# appended block no slice of the source can reproduce.
+#
+# It is the LAST line of defence, not the first: post-merge / post-checkout
+# already report the same staleness at the moment a pull causes it. This one
+# catches the checkout that never pulled.
+echo "🔍 Installed-hook freshness — do .git/hooks still match install-hooks.sh?"
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1"
+elif [ ! -x ./scripts-run ] || [ ! -f src/scripts/check_installed_hooks_fresh.ts ]; then
+    # Both guards matter, and the second is the one that is easy to miss.
+    # .git/hooks is SHARED across linked worktrees through the common dir, so
+    # this file also runs in a worktree standing on a branch that predates the
+    # gate. Calling a script that is not on that checkout would refuse the push
+    # with a message about the wrong thing — a hook made worse by a hook.
+    echo "⚠️  check_installed_hooks_fresh not present on this checkout — skipping."
+elif ! ./scripts-run src/scripts/check_installed_hooks_fresh --quiet; then
+    echo ""
+    echo "   Push blocked — the hook that just ran is not the hook this tree ships."
+    echo "   Re-install, then push again; the gates you are missing will run."
+    echo ""
+    echo "     task install-hooks"
+    echo ""
+    echo "   Bypass a genuine WIP push with AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1."
+    exit 1
+fi
+
+# BASE FRESHNESS — second since 2026-09-05, and it EXITS rather than setting
+# fail=1. It was first until the installed-hook check above took that slot: a
+# stale hook is a fact about which gate set is running at all, so it has to be
+# answered before any gate's verdict means anything.
 #
 # The header above has promised "when this hook refuses for staleness" since the
 # hook was written, and nothing below ever asked. Measured over the 50 PRs
@@ -423,6 +472,25 @@ if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
         grep -qE '^(src/(cli|server|shared|install|scripts)/|tsconfig\\.json|package\\.json)'; then
         if command -v npm >/dev/null 2>&1 && [ -d node_modules ]; then
             npm run build:cli >/dev/null 2>&1 || true
+        fi
+        # Installed-hook staleness — REPORT it here, never repair it here.
+        #
+        # This is the event that CAUSES the staleness, so it is where the news
+        # belongs. It is NOT where the repair belongs: linked worktrees SHARE
+        # .git/hooks through the common dir, so re-running the installer from a
+        # checkout would let one worktree silently redefine the gates every
+        # other worktree runs, and an older branch would reinstall older hooks
+        # over newer ones. An AI council (claude-sonnet-4-5 + codex-default,
+        # 2026-09-05, 2 of 2 seats) refused that mutation unanimously.
+        #
+        # Output goes to stderr and is NOT swallowed: the rest of this block is
+        # "|| true" so a pull is never blocked, and a repair notice nobody can
+        # see is the same silence this check exists to remove.
+        # The -f guard is not belt-and-braces: this hook is shared across
+        # linked worktrees, so it also runs on checkouts that predate the gate.
+        if [ -x ./scripts-run ] && [ -d node_modules ] \
+            && [ -f src/scripts/check_installed_hooks_fresh.ts ]; then
+            ./scripts-run src/scripts/check_installed_hooks_fresh --quiet >&2 || true
         fi
     fi
 fi
