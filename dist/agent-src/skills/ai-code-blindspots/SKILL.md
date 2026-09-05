@@ -47,7 +47,7 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 | **HTTP endpoint / route** | authorization (this principal may act on this resource — not just authenticated); tenant scope; **the three negative tests** (unauth→401, non-owner→403/404, cross-tenant→403/404); input validation at the boundary; rate limit actually wired; state-changing → CSRF + audit log | `broken-access-control`, `authz-review`, `threat-modeling` |
 | **DB query / ORM** | parameterized, never string-built; tenant predicate present; no `SELECT *` across a serialization boundary; N+1 avoided (eager load) | `source-discovery`, `security` |
 | **Migration** | reversible (`down`); expand-contract for drop/rename (never a bare `DROP COLUMN` before code stops reading it); transaction; index on new FK/filter column | `engineering-safety-floor`, `migration-architect` |
-| **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage` | `frontend-render-security` |
+| **User-controlled render (FE)** | output-encoded; no `dangerouslySetInnerHTML`/`v-html`/`innerHTML`/`eval` on non-constant input; no secret/token in client code; token not in `localStorage`. **This surface also carries the four completeness rows below — they are part of it, not an optional extra.** | `frontend-render-security` |
 | **Third-party asset in shipped markup / CSS** | delivery is self-hosted through the project's own route (framework font/asset primitive, bundled package, or locally-served file) — a font/icon/stylesheet CDN link transmits the **visitor's IP** to that third party on every page view; a hotlink only on a stated consumer opt-in; `integrity` + `crossorigin` if a CDN link stays | `design-fidelity-mechanics` § Asset & imagery discipline (owner), `typography-system` |
 | **File / outbound fetch** | path confined to an allowed base; SSRF allow-list + private-IP block on user-supplied URLs; size limit; **explicit timeout** (no unbounded/default-infinite wait); server-side validation (never client-only) | `security`, `defense-in-depth` |
 | **Infra / IaC** | least-privilege (no `Action:*`/`Resource:*`); encryption at rest; no `0.0.0.0/0` to mgmt/DB ports; no hardcoded creds; scanner-verified, not `plan`-verified | `engineering-safety-floor`, `terraform`, `secrets-management` |
@@ -56,6 +56,32 @@ Run the row(s) for what you touched. The grep is a fast authoring-time backstop 
 | **Error path / timeout / retry** | failure handled, never silently swallowed (no empty `catch {}`); external call has a bounded timeout; retry is capped + backed-off + idempotent (no retry storm); the error surfaced to the caller carries no secret / stack / PII; a partial failure leaves consistent state (no half-written record) | `systematic-debugging`, `defense-in-depth` |
 | **Concurrency / shared state** | check-then-act guarded (DB lock / atomic op / transaction — not a read-modify-write race); retried write carries an idempotency key; no unbounded parallel fan-out; shared mutable state synchronized | `source-discovery`, `security` |
 | **Test** | asserts general behavior; expected derived from inputs/seeded data, not hardcoded; boundary + error + abuse cases, not only happy path | `testing-anti-patterns`, `test-driven-development` |
+
+### Render surface — the completeness rows
+
+Every row above is a **security** control. These four are the **completeness**
+controls for the same surface — the states an agent most reliably omits, because
+the prompt named the happy path and nothing else. A render that ships only the
+populated state is not finished; it is one of four states written.
+
+**The grep polarity is INVERTED here, and reading it the other way is the failure
+mode this table has.** Above, zero hits is the pass. Below, **zero hits next to a
+render that fetches or iterates is the prompt to look** — the state is probably
+absent. A hit is not a pass either: the column is a `heuristic`, a locator for
+code to read, never proof the state behaves. A framework abstraction can
+implement all four correctly and match none of these patterns, and a codebase can
+match all four while shipping a broken empty state.
+
+| State | Assert on the render you wrote | Backstop grep (heuristic — zero hits is the prompt) |
+|---|---|---|
+| **Empty** | the zero-rows / no-results case renders a deliberate state, not a bare frame or a collapsed layout; it says what is missing and what the user can do next | `rg -n -e '\.length\s*[=<]' -e '\bisEmpty\b' -e 'count\(\)\s*[=<]' -e '\bempty\b'` — over the file that maps the collection |
+| **Loading** | the pending case renders (skeleton, spinner, disabled control); no layout shift on arrival; the state is reachable from the actual async call, not only defined | `rg -n -e 'isLoading' -e 'isPending' -e 'isFetching' -e 'Skeleton' -e 'Spinner' -e 'aria-busy'` |
+| **Error** | the failed case renders a recoverable state with a retry or a next step; the message carries no stack, secret or PII (the `frontend-render-security` row owns that half) | `rg -n -e 'isError' -e 'onError' -e 'ErrorBoundary' -e '\.catch\(' -e 'role="alert"'` |
+| **Keyboard path** | every interactive element is reachable and operable by keyboard alone, with a visible focus ring; a click handler on a non-button element carries a role, `tabindex` and a key handler | `rg -n -e 'onClick' -e '@click' -e 'v-on:click'` lists the handlers, then `rg -n -e 'tabIndex' -e 'tabindex' -e 'onKeyDown' -e '@keydown' -e 'role='` on the same file — a handler with no match on the second is the prompt |
+
+Route to `accessibility-auditor` for the keyboard row when the surface is more
+than a handful of controls — this row asserts the path exists, it is not a WCAG
+pass.
 
 ### Backstop greps (authoring-time, cross-stack)
 

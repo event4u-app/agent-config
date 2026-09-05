@@ -176,6 +176,40 @@ complexity: lightweight  # default — skips bite-sized granularity
 
 Source: adapted from an external reference; complexity-gating is our addition (Council Round 1, Q4 — mitigates UX pushback for senior engineers on well-scoped work).
 
+## The four plan criteria — what a reviewer fails a plan on
+
+The 3-scan self-review below catches mechanical gaps. These four catch the plan
+itself. Each is written so a reviewer can **fail** on it: the criterion states
+what failing looks like, not what passing feels like. A plan that cannot be
+failed on any of the four has not been reviewed, it has been read.
+
+1. **Necessity** — every phase, step and artifact in the plan is traceable to a
+   stated problem or acceptance criterion. **Fails when** the plan contains work
+   no requirement asked for: a new abstraction with one caller, a migration for a
+   field nothing reads, a "while we're in there" refactor, a config surface
+   nobody requested. Name the orphan step and the requirement it does not map to.
+2. **Sufficiency** — every stated requirement and acceptance criterion is
+   discharged by at least one step. **Fails when** a requirement has no owning
+   step, or when the only step that claims it is a heading with no verifiable
+   outcome under it. This is the mirror of Necessity and is checked in the
+   opposite direction: walk the requirements, not the steps.
+3. **Ordering** — no step depends on the outcome of a step that comes after it,
+   and the load-bearing unknown is resolved before the work that assumes it (see
+   [`complexity-first-planning`](../complexity-first-planning/SKILL.md)).
+   **Fails when** step N consumes something step N+2 creates, or when the plan
+   builds three cheap phases on an integration nobody has proven yet.
+4. **Groundedness** — every command, skill, command-verb and tool the plan tells
+   someone to run **exists**. **Fails when** the plan names a verb, skill or
+   command that is not in the index. Check it against
+   [`CAPABILITIES.yaml`](../../../CAPABILITIES.yaml) at the repository root — the
+   generated capability index listing every shipped skill and command per
+   capability area — plus the project's own script/task entry points for anything
+   the index does not cover. This is the one of the four that is decidable
+   without judgement, so it is the one that should never be waved through.
+
+A failure on any of the four is a blocker, not a note: fix the plan and re-run
+the criterion, or move the item to *Open questions* with the reason.
+
 ## Self-review (3-scan checklist)
 
 Before presenting any plan, run these three scans in order. Each is a fast pass — not a deep review. Failures block presentation; fix and re-scan.
