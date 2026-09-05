@@ -30,6 +30,12 @@ three shapes its own v2 benchmark asked about and scored 0.333 recall on.
 
 ## Reproduced, on this repository's own source
 
+**Re-derived 2026-09-04 before anything was changed.** Every figure below
+reproduces except the node count, which is **98**, not 97 — one function node
+was added to the engine between the roadmap being written and this run. The
+660 edges, the 403/0/257 confidence split, the 414-of-660 pseudo-node share, the
+zero file→file edges and all four false `path` edges reproduce exactly.
+
 Built with the shipped CLI over the roots the v2 benchmark used:
 
 ```
@@ -135,14 +141,21 @@ codebase-structure questions … to a code-graph first, grep fallback"* against
 `:116` **"No class is graph-first."** The description is the routing surface an
 agent actually sees, so the contradicted half is the half that travels.
 
-- [ ] **0.1 Apply the retraction where the claim still lives.** The body sentence
+- [x] **0.1 Apply the retraction where the claim still lives.** The body sentence
       at `:16-18` says what `:109-114` withdraws. Replace it with the reason that
       survived measurement — an index that exists is cheap to ask and structured
       — rather than deleting the paragraph.
       verify: `grep -c 'far more precisely' src/skills/code-intelligence/SKILL.md`
       is 1, and the remaining hit is inside the retraction paragraph that quotes
       it.
-- [ ] **0.2 Make the description agree with the measurement.** `description:`
+      **Finding — the verify grep cannot discriminate.** It returned `1` BEFORE
+      the change too: the claim at `:16-18` wraps across a line break (`answers far`
+      / `more precisely`), so `grep` never counted the line it was aimed at, and
+      the single hit was always `:110`, the retraction. The substantive defect was
+      real and is fixed; the check offered for it was satisfied by the defect. The
+      discriminating check is `grep -c 'more precisely'`, which was 2 before and is
+      1 after, with the survivor inside the retraction.
+- [x] **0.2 Make the description agree with the measurement.** `description:`
       promises graph-first routing that `:116` denies.
       verify: the description no longer promises an ordering the body refutes,
       and its length stays inside the skill-description budget the estate ratchet
@@ -150,7 +163,7 @@ agent actually sees, so the contradicted half is the half that travels.
 
 ## Phase 1 — The false edge
 
-- [ ] **1.1 Bind an import name to the module it came from.** Read the module
+- [x] **1.1 Bind an import name to the module it came from.** Read the module
       specifier at `extract.ts:254-267` and carry it on the edge, so resolution
       can ask "which file did this name come from" instead of consulting a
       repo-wide table. A namespace import (`import * as path`) resolves to an
@@ -158,43 +171,82 @@ agent actually sees, so the contradicted half is the half that travels.
       verify: rebuild over `src/scripts/code_graph`; zero edges named
       `*.ts -imports-> query.ts#path`, and the four namespace imports resolve to
       an external target or to none.
-- [ ] **1.2 A name that cannot be bound does not get `EXTRACTED`.**
+- [x] **1.2 A name that cannot be bound does not get `EXTRACTED`.**
       `build.ts:102,150,230-237` labels a global-table hit as a syntactic fact.
       Where the binding came from a repo-wide name lookup rather than from a
       resolved specifier, the edge is at most `INFERRED` — the class that exists
       for exactly this and currently carries **0** edges.
       verify: the rebuild reports a non-zero `INFERRED` count, and no edge whose
       target was resolved by name alone is labelled `EXTRACTED`.
-- [ ] **1.3 Pin the false edge as a test.** A fixture with a namespace import of
+      **Finding — `INFERRED` stays 0 on THIS root, and that is the repair working.**
+      The second half holds everywhere: no edge reaching a specific in-repo node by
+      same-name lookup carries `EXTRACTED` any more. The first half does not hold on
+      `src/scripts/code_graph`, because after 1.1 every callable in it is either
+      declared in the calling file or bound by an explicit import, so the
+      name-lookup tier is never reached — 0 INFERRED is the honest count, not a
+      missing class. Non-zero is measured where the tier IS reached:
+      `src/scripts/ai_council` reports `INFERRED 11` (was 7), and the PHP fixture in
+      `tests/scripts/code_graph_import_binding.test.ts` asserts a `use A\B` binding
+      and the `inherits` edge riding it are both INFERRED.
+- [x] **1.3 Pin the false edge as a test.** A fixture with a namespace import of
       a node builtin whose base name collides with a local function.
       verify: the test fails when 1.1 is reverted. A test never seen red has
       unknown sensitivity.
 
 ## Phase 2 — The nodes the questions ask about
 
-- [ ] **2.1 Emit nodes for `const`, `type`, `interface` and `enum`.** The
+- [x] **2.1 Emit nodes for `const`, `type`, `interface` and `enum`.** The
       comment at `extract.ts:316-317` is a decision, and the v2 benchmark
       falsified it: the corpus's `references` questions name a const and a type.
       Replace the comment with what is now known, rather than deleting it —
       a reversed decision whose reason disappears gets re-taken.
       verify: `EXT_LANG` and `SettingsClass` each have a node after a rebuild
       over their roots, and the old comment's text is replaced by the correction.
-- [ ] **2.2 Report the node-count change as a finding either way.** More nodes is
+- [x] **2.2 Report the node-count change as a finding either way.** More nodes is
       not the goal; answering the question is. If the count rises and the
       `references` questions still return nothing, that is the result.
       verify: the before/after node and edge counts are recorded with the
       commit, and the three v2 `references` probes are re-run and their output
       quoted whichever way it lands.
+      **Result — all three answer their exact truth sets.** Probes run with the
+      benchmark's own arm-B invocation (`affected <probe> --budget 500`), quoted
+      verbatim:
+      `cg-references-01` / `EXT_LANG` → `build.ts --imports--> types.ts#EXT_LANG`
+      and `types.ts --member--> types.ts#EXT_LANG` (truth: `types.ts`,
+      `build.ts`; was the empty set).
+      `sh-references-01` / `SettingsClass` → `settingsAsks.ts --imports-->`,
+      `settingsClasses.ts --member-->` and `settingsConsent.ts --imports-->`
+      `settingsClasses.ts#SettingsClass` (truth: those three files; was the empty
+      set).
+      `ac-references-01` / `evaluateQuorum` → `quorum.ts --member-->`,
+      `quorum_wiring.ts --imports-->` and
+      `quorum_wiring.ts#_postRunQuorum --calls--> quorum.ts#evaluateQuorum`
+      (truth: `quorum.ts`, `quorum_wiring.ts`; already correct before).
+      Node/edge counts, three roots, before → after:
+      `code_graph` 98→170 nodes, 660→495 edges; `shared` 66→117, 235→181;
+      `ai_council` 997→1585, 4897→4002.
 
 ## Phase 3 — The noise
 
-- [ ] **3.1 Stop minting a pseudo-node per built-in method call.** 414 of 660
+- [x] **3.1 Stop minting a pseudo-node per built-in method call.** 414 of 660
       edges point at `symbol:push` and its siblings. Either suppress the class or
       route it to one named external node per module, but do not leave two thirds
       of the graph pointing at method names.
       verify: the pseudo-node share after a rebuild is reported; a fixture asserts
       that a `.push()` call no longer produces a distinct `symbol:` target.
-- [ ] **3.2 Say what the `AMBIGUOUS` share means afterwards.** It is 39 % today
+      **Result — both routes taken, each where it fits.** A name imported from
+      outside the root is ROUTED to one named external node per module
+      (`external:node:path`, `external:../_lib/fs_atomic.js#write_atomic`); a
+      dynamic member call matching no in-repo method is SUPPRESSED, because there
+      is no module to name for an unknown receiver. Pseudo-node share after the
+      rebuild: `code_graph` 414/660 = 62.7 % → 93/495 = 18.8 %; `shared`
+      147/235 = 62.6 % → 29/181 = 16.0 %; `ai_council` 2539/4897 = 51.8 % →
+      774/4002 = 19.3 %. Suppression counts ship in the graph
+      (`suppressed_edge_counts.dynamic_no_candidate` = 277 / 105 / 1483), so a
+      smaller edge total cannot be read as a better graph without the drop being
+      visible. Fixture: `code_graph_import_binding.test.ts` § "zero-candidate
+      dynamic dispatch is dropped, and the drop is published".
+- [x] **3.2 Say what the `AMBIGUOUS` share means afterwards.** It is 39 % today
       and reads as honesty about dynamic dispatch. After 3.1 the number will move
       and the skill's own text about confidence classes must match what the
       engine now emits.
@@ -204,20 +256,47 @@ agent actually sees, so the contradicted half is the half that travels.
 
 ## Phase 4 — Re-measure, and publish the null if it is one
 
-- [ ] **4.1 Re-run the v2 corpus unedited.** Same 19 questions, same roots, same
+- [x] **4.1 Re-run the v2 corpus unedited.** Same 19 questions, same roots, same
       pre-registered bars. No threshold is renegotiated after the repair — that
       is the discipline the closed `road-to-code-graph-benchmark-rerun` stub
       recorded verbatim before it closed unmet.
       verify: a second report exists beside
       `internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md` with its
       own date, and the delta per class is stated in both directions.
-- [ ] **4.2 Leave the default alone.** Whatever 4.1 returns, this roadmap does not
+      **Result — zero classes won, two NULLs became TIEs, nothing regressed.**
+      `internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`,
+      same corpus SHA, same bars, same arm-B verbs, no threshold renegotiated.
+      Graph recall/precision then → now: `callers` 1.000/0.667 → 1.000/0.667 (TIE
+      → TIE); `transitive-impact` 0.500/0.667 → 0.611/1.000 (NULL → TIE);
+      `path-between` 1.000/1.000 → 1.000/1.000 (TIE → TIE); `references`
+      0.333/0.333 → 1.000/1.000 (NULL → TIE). Graph macro 0.667/0.708 →
+      0.917/0.903.
+      **Finding — a measured root is live source, and one of them drifted.**
+      `src/shared` is byte-identical between the runs (`dcdc6807…` in both
+      reports); `src/scripts/ai_council` moved by 27 files / +5,709 lines on
+      `main` in between, two of which (`config.ts`, `orchestrator.ts`) sit in
+      `ac-*` truth sets; and `src/scripts/code_graph` IS the engine, so its
+      content necessarily moves whenever the engine does. That second variable is
+      visible in the GREP arm, whose macro precision moved 0.806 → 0.764 in a run
+      that changed nothing about grep. Both classes that changed verdict did so on
+      rows whose root did NOT drift — `references` on `code_graph` and `shared`,
+      `transitive-impact` on `shared` alone — so neither verdict change is
+      attributable to the drift. The runner now prints this caveat on every
+      re-run rather than leaving it to the reader.
+- [x] **4.2 Leave the default alone.** Whatever 4.1 returns, this roadmap does not
       move a shipped default; the skill's recorded *"no class is graph-first"* and
       the engine's default-off posture (ADR-124 § Falsifiability-first) stand
       until a separate decision moves them.
       verify: `git diff` over the phase touches no default, and the skill's
       no-class-is-graph-first sentence is unchanged unless 4.1 refutes it — in
       which case the change cites 4.1.
+      **Result — nothing moved, and 4.1 did not refute it.** `git diff --name-only
+      origin/main...HEAD` matches no `agent-settings`, `src/config/`,
+      `package.json` or `*.template.*` path, and no dependency moved between
+      `devDependencies` and `dependencies` (ADR-246 untouched). Zero classes met
+      the win bar, so "No class is graph-first" stands verbatim; the skill gains a
+      second dated result section beside the 2026-08-29 table rather than an edit
+      to it, which is the precedent it already applies to v1 vs v2.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-04 | reviewer: claude/host -->
@@ -230,18 +309,18 @@ agent actually sees, so the contradicted half is the half that travels.
 
 ## Acceptance Criteria
 
-- [ ] AC-0 — `src/skills/code-intelligence/SKILL.md` asserts no claim its own
+- [x] AC-0 — `src/skills/code-intelligence/SKILL.md` asserts no claim its own
       measurement section withdraws, and its description does not promise an
       ordering its body denies.
-- [ ] AC-1 — No edge in a rebuild of `src/scripts/code_graph` binds a namespace
+- [x] AC-1 — No edge in a rebuild of `src/scripts/code_graph` binds a namespace
       import of a node builtin to a local symbol, and a test fails if that
       binding returns.
-- [ ] AC-2 — No edge resolved by repo-wide name lookup alone carries
+- [x] AC-2 — No edge resolved by repo-wide name lookup alone carries
       `EXTRACTED`; the `INFERRED` class is non-empty.
-- [ ] AC-3 — `EXT_LANG` and `SettingsClass` resolve to nodes, and the three v2
+- [x] AC-3 — `EXT_LANG` and `SettingsClass` resolve to nodes, and the three v2
       `references` probes are re-run with their output recorded.
-- [ ] AC-4 — The `symbol:` pseudo-node share is reported after the change, and
+- [x] AC-4 — The `symbol:` pseudo-node share is reported after the change, and
       the skill's confidence-class prose matches what the engine emits.
-- [ ] AC-5 — The v2 corpus is re-run unedited against its original bars, the
+- [x] AC-5 — The v2 corpus is re-run unedited against its original bars, the
       per-class delta is published in both directions, and no shipped default
       moved.

@@ -41,6 +41,7 @@ import { main as wrapperFreshnessMain } from '../wrapper_freshness_hook.js';
 import { main as surfaceProbeMain } from '../surface_probe_hook.js';
 import { main as teamReviewGateMain } from '../team_review_gate_hook.js';
 import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
+import { main as pushSettleMain } from './push_settle_hook.js';
 import { main as sessionCanaryMain } from '../session_canary_hook.js';
 import { main as councilAvailabilityMain } from '../council_availability_hook.js';
 import { main as telemetryDisclosureMain } from '../telemetry_disclosure_hook.js';
@@ -101,6 +102,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/surface_probe_hook.ts': surfaceProbeMain as ConcernMain,
     'src/scripts/team_review_gate_hook.ts': teamReviewGateMain as ConcernMain,
     'src/scripts/pr_url_reminder_hook.ts': prUrlReminderMain as ConcernMain,
+    'src/scripts/hooks/push_settle_hook.ts': pushSettleMain as ConcernMain,
     'src/scripts/session_canary_hook.ts': sessionCanaryMain as ConcernMain,
     'src/scripts/council_availability_hook.ts': councilAvailabilityMain as ConcernMain,
     'src/scripts/telemetry_disclosure_hook.ts': telemetryDisclosureMain as ConcernMain,

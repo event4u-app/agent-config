@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: completed
 execution:
   mode: phase-checkpoints
 relates:

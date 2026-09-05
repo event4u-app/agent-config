@@ -1,0 +1,8 @@
+{
+    "status": "red",
+    "green": 40,
+    "total": 42,
+    "ran_at": "2026-09-04T09:00:00Z",
+    "last_edit_at": "2026-09-04T09:14:00Z",
+    "note": "Stale AND red. Staleness is reported for a red verdict too — a stale red is not evidence of failure either, and silently passing it through as `violations` would make the outcome depend on which way the stale run happened to land."
+}

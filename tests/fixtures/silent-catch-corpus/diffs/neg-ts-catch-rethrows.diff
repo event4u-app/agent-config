@@ -1,0 +1,12 @@
+diff --git a/src/sync/push.ts b/src/sync/push.ts
+index aaaaaaa..bbbbbbb 100644
+--- a/src/sync/push.ts
++++ b/src/sync/push.ts
+@@ -10,6 +10,11 @@ export async function push(payload: Payload): Promise<void> {
+     const body = serialize(payload);
++    try {
++        await transport.send(body);
++    } catch (err) {
++        throw new PushFailed('transport rejected the payload', { cause: err });
++    }
+ }

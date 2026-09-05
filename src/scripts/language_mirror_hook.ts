@@ -630,9 +630,17 @@ export function _setPinLost(consumer_root: string, session_id: string): void {
   _migrateLegacyMarker(consumer_root);
   try {
     atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), new Date().toISOString());
-  } catch {
-    // Observability only — a failed marker write costs one un-restored pin,
-    // never a broken turn.
+  } catch (err) {
+    // The COST is unchanged and still bounded — one un-restored pin, never a
+    // broken turn. What changed on 2026-09-04 is that it stops being silent.
+    // The legacy-marker migration above documents exactly how this catch can
+    // become PERMANENT for a root (`EEXIST` then `ENOTDIR`, reproduced against
+    // Node), and a permanently dead mechanism that never says so is the failure
+    // the sibling swallows in `git_authorization_hook` were repaired for.
+    process.stderr.write(
+      `language-mirror: pin-lost marker write failed (${_errText(err)}) — ` +
+        "the pin will NOT be re-emitted after this compaction. Turn outcome unchanged.\n",
+    );
   }
 }
 
@@ -1124,8 +1132,16 @@ export function run(
       // per tool call — and never before the write it is cleaning up after.
       _pruneLegacyState(options.consumer_root);
       _pruneStaleSessions(options.consumer_root, Date.now());
-    } catch {
-      // Observability only — a failed state write never blocks the turn.
+    } catch (err) {
+      // Direction unchanged: the turn is never blocked. But the pin lives ONLY
+      // in this file, so a failed write silently reverts the next turn to
+      // re-derivation — the user re-states a language they already pinned and
+      // has no way to know why. Named rather than swallowed.
+      process.stderr.write(
+        `language-mirror: pin-state write failed (${_errText(err)}) — ` +
+          "the language pin did NOT persist and the next turn re-derives it. " +
+          "This turn's notice is unchanged.\n",
+      );
     }
   }
 
@@ -1145,6 +1161,12 @@ export function run(
  * named export because it is part of this module's tested surface.
  */
 export { isSyntheticPrompt };
+
+/** One-line, bounded rendering of a caught value for a stderr diagnostic. */
+function _errText(err: unknown): string {
+  const t = err instanceof Error ? err.message : String(err);
+  return t.replace(/\s+/g, " ").trim().slice(0, 200);
+}
 
 export function main(argv?: string[]): number {
   const args = argv ?? process.argv.slice(2);

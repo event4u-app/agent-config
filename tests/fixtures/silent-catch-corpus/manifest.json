@@ -1,0 +1,104 @@
+{
+    "version": 1,
+    "note": "Fixtures for detect_silent_catch (road-to-deterministic-defect-detectors 3.1). Positives are shapes the diff ADDS; negatives are either a handled error or the same silent catch present only as CONTEXT, which is pre-existing debt this check does not own.",
+    "fixtures": [
+        {
+            "id": "ts-empty-catch",
+            "diff": "diffs/ts-empty-catch.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "The catch block has no statements at all; the failure disappears with no trace."
+        },
+        {
+            "id": "ts-comment-only-catch",
+            "diff": "diffs/ts-comment-only-catch.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "A comment saying `intentional` is the one-token evasion the risk register names. Comments are not statements and do not rescue the block."
+        },
+        {
+            "id": "ts-single-line-empty-catch",
+            "diff": "diffs/ts-single-line-empty-catch.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "Same shape written on one line. A matcher that only reads multi-line blocks would miss the tersest spelling."
+        },
+        {
+            "id": "php-empty-catch",
+            "diff": "diffs/php-empty-catch.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "Brace-language catch with a typed exception and an empty body."
+        },
+        {
+            "id": "py-bare-except-pass",
+            "diff": "diffs/py-bare-except-pass.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "A bare except whose only statement is pass \u2014 the canonical Python spelling."
+        },
+        {
+            "id": "py-pass-with-comment",
+            "diff": "diffs/py-pass-with-comment.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-empty"
+            ],
+            "why": "The roadmap's Risk 3 as a fixture: a trailing `# intentional` comment on the pass. The first implementation of this detector was defeated by exactly this line, so the fixture is the regression pin, not a hypothetical."
+        },
+        {
+            "id": "ts-discarded-error",
+            "diff": "diffs/ts-discarded-error.diff",
+            "kind": "positive",
+            "expect": [
+                "catch-discards-error"
+            ],
+            "why": "The error is bound and then never used, logged, or re-raised; the caller sees null and cannot tell absent from broken."
+        },
+        {
+            "id": "neg-ts-catch-logs",
+            "diff": "diffs/neg-ts-catch-logs.diff",
+            "kind": "negative",
+            "expect": [],
+            "why": "The error reaches a log. If this fires, the log predicate is not being read."
+        },
+        {
+            "id": "neg-ts-catch-rethrows",
+            "diff": "diffs/neg-ts-catch-rethrows.diff",
+            "kind": "negative",
+            "expect": [],
+            "why": "The error is wrapped and re-thrown. If this fires, the rethrow predicate is not being read."
+        },
+        {
+            "id": "neg-ts-catch-returns-typed-error",
+            "diff": "diffs/neg-ts-catch-returns-typed-error.diff",
+            "kind": "negative",
+            "expect": [],
+            "why": "The error is returned in a typed result. If this fires, the check demands a throw where a value is equally explicit."
+        },
+        {
+            "id": "neg-py-except-reraise",
+            "diff": "diffs/neg-py-except-reraise.diff",
+            "kind": "negative",
+            "expect": [],
+            "why": "Logged and chained. If this fires, Python handling is being read as swallowing."
+        },
+        {
+            "id": "neg-preexisting-empty-catch",
+            "diff": "diffs/neg-preexisting-empty-catch.diff",
+            "kind": "negative",
+            "expect": [],
+            "why": "The empty catch is CONTEXT, not an added line \u2014 pre-existing debt this check does not own. This is the scope negative: if it fires, the check has silently become a whole-tree sweep."
+        }
+    ]
+}

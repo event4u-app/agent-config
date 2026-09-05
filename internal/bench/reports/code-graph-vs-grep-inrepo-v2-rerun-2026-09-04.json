@@ -1,0 +1,644 @@
+{
+  "benchmark": "code-graph-vs-grep-inrepo-v2",
+  "generated": "2026-09-04",
+  "measured_commit": "f8e7955b25e3bbbfee7fb884de90a791728c795a",
+  "measured_commit_date": "2026-09-04",
+  "postdates_extractor_repair": true,
+  "measured_trees": {
+    "note": "The durable pointer. A commit id does not survive a squash merge — v1 cited c454648af, which is not an ancestor of main and resolves to nothing in a fresh clone. These git tree hashes identify the exact measured content and are stable across the merge. Verify with `git rev-parse <ref>:<path>`.",
+    "roots": {
+      "src/scripts/code_graph": "8588cacf61b7550a431ecc6e51f9d44ada9fca56",
+      "src/shared": "dcdc68073e0f2340b3734678cc4e82f34c241dba",
+      "src/scripts/ai_council": "e0a509b177fc3fe66e2688597c3edd80b791bdc1"
+    },
+    "corpus_sha256": "719885107aae85f1031314b822ee5d8e1dfc4e0d1d784a644b6a98862307f00b"
+  },
+  "not_comparable_to": {
+    "runs": [
+      {
+        "report": "internal/bench/reports/code-graph-vs-grep.md",
+        "run_date": "2026-07-28",
+        "reason": "Different corpus (three private external repositories), different question set, a build predating the 2026-08-22 extractor repair, and a single aggregate bar."
+      },
+      {
+        "report": "internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md",
+        "run_date": "2026-08-28",
+        "reason": "v1 of this benchmark. Same three roots, but a different corpus (19 questions vs 16; path-between re-probed, two classes restructured, three items added), a different arm-B verb set (path-between now uses the shipped `path` verb), and a corrected scorer (symbol: pseudo-nodes no longer counted as files). Three variables moved at once; no delta may be computed."
+      }
+    ]
+  },
+  "corpus": {
+    "file": "internal/bench/code-graph/inrepo-corpus-v2-2026-08-29.yaml",
+    "sha256": "719885107aae85f1031314b822ee5d8e1dfc4e0d1d784a644b6a98862307f00b",
+    "questions": 19,
+    "graph_shaped": 12,
+    "in_domain_negative_controls": 3,
+    "capability_boundary": 4
+  },
+  "bars": {
+    "per_class_recall_delta_required_pp": 10,
+    "per_class_precision_floor_pp": 5,
+    "note": "Identical to v1. Re-choosing a bar after diagnosing a defect is choosing a bar to fit a number."
+  },
+  "build_ms": {
+    "code_graph": 398,
+    "shared": 330,
+    "ai_council": 765
+  },
+  "per_class": {
+    "callers": {
+      "verdict": "TIE",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": 0,
+      "precision_ok": true,
+      "grep": {
+        "p": 0.611,
+        "r": 1
+      },
+      "graph": {
+        "p": 0.667,
+        "r": 1
+      },
+      "n": 3
+    },
+    "transitive-impact": {
+      "verdict": "TIE",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": 0,
+      "precision_ok": true,
+      "grep": {
+        "p": 1,
+        "r": 0.611
+      },
+      "graph": {
+        "p": 1,
+        "r": 0.611
+      },
+      "n": 3
+    },
+    "path-between": {
+      "verdict": "TIE",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": 8.3,
+      "precision_ok": true,
+      "grep": {
+        "p": 0.722,
+        "r": 0.917
+      },
+      "graph": {
+        "p": 1,
+        "r": 1
+      },
+      "n": 3
+    },
+    "references": {
+      "verdict": "TIE",
+      "validity": "VALID",
+      "validity_note": "",
+      "recall_delta_pp": 0,
+      "precision_ok": true,
+      "grep": {
+        "p": 0.722,
+        "r": 1
+      },
+      "graph": {
+        "p": 1,
+        "r": 1
+      },
+      "n": 3
+    }
+  },
+  "in_domain_negative_controls": {
+    "n": 3,
+    "note": "An arm passes an item iff it returned the EMPTY set for a symbol-shaped probe that names nothing in the root. Scored as a clean-rate; recall is undefined over an empty truth set and is not computed. These rows are excluded from every recall figure and from the macro average.",
+    "grep_clean_rate": 1,
+    "graph_clean_rate": 1,
+    "graph_false_positives": [],
+    "grep_false_positives": []
+  },
+  "capability_boundary": {
+    "n": 4,
+    "note": "LITERAL-string probes. A symbol index cannot answer them by construction. v1 folded these four into a negative-control recall FLOOR and then reported the floor FAILED; v2 reports the class and derives NO verdict from it. It is a statement about where grep stays necessary, not a measurement of the engine.",
+    "grep_recall": 1,
+    "graph_recall": 0
+  },
+  "macro_average_reported_only": {
+    "note": "REPORTED ONLY — not a pass criterion. Covers the four graph-shaped classes; the in-domain controls (undefined recall) and the capability-boundary class (unanswerable by construction) are excluded.",
+    "grep": {
+      "precision": 0.764,
+      "recall": 0.882
+    },
+    "graph": {
+      "precision": 0.917,
+      "recall": 0.903
+    }
+  },
+  "classes_won": [],
+  "classes_void": [],
+  "rows": [
+    {
+      "id": "cg-callers-01",
+      "root": "code_graph",
+      "category": "callers",
+      "question": "Which files contain a call site of emitSqliteTwin (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 389,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 563,
+        "output_bytes": 1892,
+        "answered": 3
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "sqlite_store.ts"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "sqlite_store.ts"
+      ]
+    },
+    {
+      "id": "sh-callers-01",
+      "root": "shared",
+      "category": "callers",
+      "question": "Which files contain a call site of isConservativeDefault (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 443,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 510,
+        "output_bytes": 1066,
+        "answered": 3
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "settingsClasses.ts"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "settingsClasses.ts"
+      ]
+    },
+    {
+      "id": "ac-callers-01",
+      "root": "ai_council",
+      "category": "callers",
+      "question": "Which files contain a call site of classifyCliFailure (excluding its own declaration)?",
+      "grep": {
+        "precision": 0.5,
+        "recall": 1,
+        "wall_ms": 24,
+        "output_bytes": 595,
+        "answered": 4
+      },
+      "graph": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 530,
+        "output_bytes": 2502,
+        "answered": 3
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [
+        "transport_resolver.ts"
+      ],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "qualification.ts",
+        "transport_resolver.ts"
+      ]
+    },
+    {
+      "id": "cg-impact-01",
+      "root": "code_graph",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the contract of getParser changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 0.5,
+        "wall_ms": 16,
+        "output_bytes": 218,
+        "answered": 2
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.5,
+        "wall_ms": 536,
+        "output_bytes": 1162,
+        "answered": 2
+      },
+      "missed_by_graph": [
+        "build.ts",
+        "cli.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "build.ts",
+        "cli.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-impact-01",
+      "root": "shared",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the SETTINGS_CLASSES value tuple changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 0.333,
+        "wall_ms": 19,
+        "output_bytes": 255,
+        "answered": 1
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 0.333,
+        "wall_ms": 562,
+        "output_bytes": 371,
+        "answered": 1
+      },
+      "missed_by_graph": [
+        "settingsAsks.ts",
+        "settingsConsent.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "settingsAsks.ts",
+        "settingsConsent.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-impact-01",
+      "root": "ai_council",
+      "category": "transitive-impact",
+      "question": "Which files would be affected if the behaviour of would_exceed changed?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 384,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 584,
+        "output_bytes": 1884,
+        "answered": 3
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "cg-path-01",
+      "root": "code_graph",
+      "category": "path-between",
+      "question": "Is there a call path from cmdBuild to getParser, and through what?",
+      "grep": {
+        "precision": 1,
+        "recall": 0.75,
+        "wall_ms": 34,
+        "output_bytes": 366,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 274,
+        "output_bytes": 337,
+        "answered": 4
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [
+        "build.ts"
+      ],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-path-01",
+      "root": "ai_council",
+      "category": "path-between",
+      "question": "Is there a call path from estimate_cost to priceKey, and through what?",
+      "grep": {
+        "precision": 0.5,
+        "recall": 1,
+        "wall_ms": 34,
+        "output_bytes": 1775,
+        "answered": 4
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 273,
+        "output_bytes": 279,
+        "answered": 2
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "explain_route.ts",
+        "orchestrator.ts"
+      ]
+    },
+    {
+      "id": "ac-path-02",
+      "root": "ai_council",
+      "category": "path-between",
+      "question": "Is there a call path from classify_impact_with_corpus_fuzzy to load_validated_phrases, and through what?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 33,
+        "output_bytes": 1145,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 267,
+        "output_bytes": 292,
+        "answered": 2
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "necessity.ts"
+      ]
+    },
+    {
+      "id": "cg-references-01",
+      "root": "code_graph",
+      "category": "references",
+      "question": "Where is EXT_LANG declared, imported, or used?",
+      "grep": {
+        "precision": 0.667,
+        "recall": 1,
+        "wall_ms": 13,
+        "output_bytes": 615,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 502,
+        "output_bytes": 387,
+        "answered": 2
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "extract.ts"
+      ]
+    },
+    {
+      "id": "sh-references-01",
+      "root": "shared",
+      "category": "references",
+      "question": "Where is the SettingsClass type declared, imported, or used?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 930,
+        "answered": 3
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 524,
+        "output_bytes": 513,
+        "answered": 3
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-references-01",
+      "root": "ai_council",
+      "category": "references",
+      "question": "Where is evaluateQuorum declared, imported, or used?",
+      "grep": {
+        "precision": 0.5,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 739,
+        "answered": 4
+      },
+      "graph": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 539,
+        "output_bytes": 954,
+        "answered": 2
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": [
+        "config.ts",
+        "events_log.ts"
+      ]
+    },
+    {
+      "id": "cg-negctl-01",
+      "root": "code_graph",
+      "category": "negative-control-in-domain",
+      "question": "Which files reach extractFileCached?",
+      "grep": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 15,
+        "output_bytes": 0,
+        "answered": 0
+      },
+      "graph": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 519,
+        "output_bytes": 278,
+        "answered": 0
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-negctl-01",
+      "root": "shared",
+      "category": "negative-control-in-domain",
+      "question": "Which files reach planSettingsGate?",
+      "grep": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 16,
+        "output_bytes": 0,
+        "answered": 0
+      },
+      "graph": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 502,
+        "output_bytes": 270,
+        "answered": 0
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-negctl-01",
+      "root": "ai_council",
+      "category": "negative-control-in-domain",
+      "question": "Which files reach evaluateQuorumWeights?",
+      "grep": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 17,
+        "output_bytes": 0,
+        "answered": 0
+      },
+      "graph": {
+        "precision": null,
+        "recall": null,
+        "wall_ms": 522,
+        "output_bytes": 278,
+        "answered": 0
+      },
+      "missed_by_graph": [],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "cg-negative-01",
+      "root": "code_graph",
+      "category": "capability-boundary",
+      "question": "Where does the refresh path emit the message fragment 'old cache kept'?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 15,
+        "output_bytes": 453,
+        "answered": 1
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 512,
+        "output_bytes": 526,
+        "answered": 0
+      },
+      "missed_by_graph": [
+        "cli.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "sh-negative-01",
+      "root": "shared",
+      "category": "capability-boundary",
+      "question": "Where does the severity literal 'must_fix' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 16,
+        "output_bytes": 465,
+        "answered": 1
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 515,
+        "output_bytes": 270,
+        "answered": 0
+      },
+      "missed_by_graph": [
+        "settingsSurface.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-negative-01",
+      "root": "ai_council",
+      "category": "capability-boundary",
+      "question": "Where does the ledger filename 'council-spend.jsonl' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 18,
+        "output_bytes": 259,
+        "answered": 1
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 526,
+        "output_bytes": 3666,
+        "answered": 0
+      },
+      "missed_by_graph": [
+        "budget_guard.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    },
+    {
+      "id": "ac-negative-02",
+      "root": "ai_council",
+      "category": "capability-boundary",
+      "question": "Where does the environment-variable name 'AI_COUNCIL_CONFIG' appear?",
+      "grep": {
+        "precision": 1,
+        "recall": 1,
+        "wall_ms": 17,
+        "output_bytes": 156,
+        "answered": 1
+      },
+      "graph": {
+        "precision": 0,
+        "recall": 0,
+        "wall_ms": 524,
+        "output_bytes": 1751,
+        "answered": 0
+      },
+      "missed_by_graph": [
+        "config.ts"
+      ],
+      "wrong_by_graph": [],
+      "missed_by_grep": [],
+      "wrong_by_grep": []
+    }
+  ]
+}

@@ -14,6 +14,29 @@
 // for review: a coverage table is easy to satisfy by matching too much, and a
 // guard that refuses `git status` would be routed around within a day. Every
 // read-only command below MUST stay unclassified.
+//
+// ── WHAT IS DERIVED, AND WHAT IS FROZEN (road-to-defect-population-sweeps 2.1)
+//
+// This file has TWO subjects and they have different truth conditions, which is
+// why it used to read as one snapshot:
+//
+//   The OPERATION set IS derivable. `BLOCK_OPS ∪ WARN_OPS` is the truth source,
+//   it is imported below, and `describe("the operation set is derived …")` at
+//   the foot of this file fails when an op joins either tier with no command
+//   probe anywhere in the corpus. Adding an op and forgetting to probe it is
+//   now a red test, not a silent gap.
+//
+//   The COMMAND corpus is NOT derivable and is a DATED FREEZE: 25 borderline
+//   commands probed on 2026-09-02, plus the rows added since. `commandOp` is a
+//   parser, so its input language is infinite and no enumeration of it exists
+//   to derive from. This half goes stale the way any dated sample does, and
+//   saying so is the honest form — an implied completeness was the defect.
+//
+// The corpus for the derived half is every test file that exercises
+// `commandOp`, not this file alone: nine of the twenty-six ops predate
+// 2026-09-03 and are probed in `git_authorization.test.ts` and
+// `git_auth_merge_ops.test.ts`. Asserting them here too would duplicate rather
+// than cover.
 import { describe, expect, it } from "vitest";
 
 import { classifyAuthorization, type GitOp } from "../../src/scripts/git_authorization_hook.js";
@@ -22,6 +45,8 @@ import {
   WARN_OPS,
   commandOp,
 } from "../../src/scripts/hooks/git_command_classifier.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 function tierOf(command: string): "BLOCK" | "warn" | "uncaught" {
   const op = commandOp(command);
@@ -208,5 +233,60 @@ describe("authorizing one destructive op does not authorize its neighbours", () 
     expect(classifyAuthorization("sollen wir die branch-protection wegnehmen?").authorized).toEqual(
       [],
     );
+  });
+});
+
+
+describe("the operation set is derived from BLOCK_OPS ∪ WARN_OPS, not frozen", () => {
+  // The op a probe asserts is the SECOND element of a CAUGHT row here, and a
+  // quoted op literal in the sibling files. Reading the corpus as text rather
+  // than importing it keeps this assertion from depending on how any one
+  // sibling happens to shape its own fixtures.
+  const CORPUS = [
+    "tests/scripts/git_auth_destructive_coverage.test.ts",
+    "tests/scripts/git_authorization.test.ts",
+    "tests/scripts/git_auth_merge_ops.test.ts",
+  ];
+  const REPO_ROOT = path.resolve(__dirname, "..", "..");
+  const corpusText = CORPUS.map((f) => fs.readFileSync(path.join(REPO_ROOT, f), "utf8")).join("\n");
+
+  it("every op in either tier has a command probe somewhere in the corpus", () => {
+    const unprobed = [...BLOCK_OPS, ...WARN_OPS].filter(
+      (op) => !corpusText.includes(`"${op}"`) && !corpusText.includes(`'${op}'`),
+    );
+    expect(
+      unprobed,
+      "an op joined a tier with no command probe — add a row to CAUGHT, or a probe in a sibling",
+    ).toEqual([]);
+  });
+
+  it("the corpus files it reads all exist — a renamed sibling must not silently empty the check", () => {
+    for (const f of CORPUS) {
+      expect(fs.existsSync(path.join(REPO_ROOT, f)), `${f} is missing from the corpus`).toBe(true);
+    }
+  });
+
+  it("is sensitive — an op with no probe anywhere is reported", () => {
+    // Assembled at runtime rather than written as a literal: this file is IN
+    // its own corpus, so a spelled-out sentinel would find itself and the
+    // sensitivity check would pass for the wrong reason.
+    const sentinel = ["op", "that", "nobody", "probes"].join("-");
+    const unprobed = [sentinel].filter(
+      (op) => !corpusText.includes(`"${op}"`) && !corpusText.includes(`'${op}'`),
+    );
+    expect(unprobed, "the derived check must report an op no corpus file probes").toEqual([
+      sentinel,
+    ]);
+  });
+
+  it("every CAUGHT row names an op that is actually in a tier", () => {
+    // The other direction: a row asserting an op that no longer exists would
+    // pass `tierOf` by throwing, and a stale row is how a table drifts.
+    for (const [, op] of CAUGHT) {
+      expect(
+        BLOCK_OPS.has(op) || WARN_OPS.has(op),
+        `CAUGHT probes \`${op}\`, which is in neither tier`,
+      ).toBe(true);
+    }
   });
 });

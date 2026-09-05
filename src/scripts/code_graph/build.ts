@@ -20,6 +20,7 @@ import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
     type CodeGraph,
+    type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
     type Lang,
@@ -110,6 +111,87 @@ interface SymbolTable {
     classByName: Map<string, string>;
 }
 
+/**
+ * What a resolved name is allowed to BE at a given use site.
+ *
+ * The council that reviewed this repair made the same point from both seats: a
+ * confidence label cannot contain a false edge, only describe one, so the
+ * candidate set has to be filtered by capability BEFORE a confidence is
+ * assigned. A `const` cannot satisfy `foo()`; a `type` alias cannot satisfy
+ * `new T()`. Without this, adding constant/type/enum nodes in 2.1 would feed
+ * the very same-name table that produced the false `path` edge in the first
+ * place.
+ */
+type Capability = 'callable' | 'constructible' | 'any';
+const CALLABLE_KINDS: ReadonlySet<string> = new Set(['function', 'method']);
+const CONSTRUCTIBLE_KINDS: ReadonlySet<string> = new Set(['class']);
+
+function satisfies(kind: string | undefined, want: Capability): boolean {
+    if (kind === undefined) return true; // a file id / external ref — unknown, not disqualified
+    if (want === 'callable') return CALLABLE_KINDS.has(kind);
+    if (want === 'constructible') return CONSTRUCTIBLE_KINDS.has(kind);
+    return true;
+}
+
+/**
+ * One file's name bindings — the thing this engine did not have, and whose
+ * absence is the whole of defect 1.1.
+ *
+ * `locals` is every symbol DECLARED in the file. `imports` is every name the
+ * file BINDS from elsewhere, keyed on the local binding name, carrying whether
+ * the binding was resolved from a module specifier (`exact`) or merely matched
+ * by name (PHP `use`, which names a fully-qualified symbol and is matched on
+ * its base name without checking the namespace).
+ */
+interface FileScope {
+    locals: Map<string, string[]>;
+    imports: Map<string, { target: string; exact: boolean }>;
+}
+
+const REL_EXTS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
+
+/** POSIX-only join/dirname over graph ids, which are always POSIX-relative. */
+function idDirname(id: string): string {
+    const i = id.lastIndexOf('/');
+    return i === -1 ? '' : id.slice(0, i);
+}
+function idJoin(dir: string, rel: string): string {
+    const parts = (dir === '' ? [] : dir.split('/')).concat(rel.split('/'));
+    const out: string[] = [];
+    for (const p of parts) {
+        if (p === '' || p === '.') continue;
+        if (p === '..') {
+            // A `..` that would escape the root is KEPT, so the caller can see
+            // the specifier points outside the indexed tree rather than
+            // silently resolving to something inside it.
+            if (out.length && out[out.length - 1] !== '..') out.pop();
+            else out.push('..');
+            continue;
+        }
+        out.push(p);
+    }
+    return out.join('/');
+}
+
+/**
+ * A relative module specifier → the id of the file node it names, or `null`
+ * when that file is not in this graph (out of root, or an unsupported
+ * extension). A bare specifier (`node:path`, `js-yaml`) is external by
+ * definition and returns `null` too — the caller distinguishes the two by
+ * looking at the specifier itself.
+ *
+ * TS source imports `./types.js` and the file on disk is `types.ts`, so the
+ * runtime extension is stripped before the candidate list is tried.
+ */
+function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<string>): string | null {
+    if (!spec.startsWith('.')) return null;
+    const base = idJoin(idDirname(fromFile), spec);
+    const stem = base.replace(/\.(js|jsx|mjs|cjs)$/, '');
+    const candidates = [base, ...REL_EXTS.map((e) => stem + e), ...REL_EXTS.map((e) => base + '/index' + e)];
+    for (const c of candidates) if (fileIds.has(c)) return c;
+    return null;
+}
+
 function push(map: Map<string, string[]>, k: string, v: string): void {
     const arr = map.get(k);
     if (arr) {
@@ -146,6 +228,11 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
     };
     for (const n of nodes) {
         const lang = nodeLang.get(n.id) ?? null;
+        // `byName` stays the CALLABLE/CONSTRUCTIBLE table it always was. The
+        // kinds 2.1 added (constant / type / enum) are deliberately NOT put in
+        // it: they are reachable through a file's own scope and through
+        // `imports`, and letting them satisfy a bare `foo()` by name is the
+        // defect this roadmap removes, not a feature it adds.
         if (n.kind === 'class' || n.kind === 'interface' || n.kind === 'trait' || n.kind === 'function') {
             push(sym.byName, k(lang, n.label), n.id);
             if (n.kind !== 'function' && !sym.classByName.has(k(lang, n.label)))
@@ -184,6 +271,87 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         return null;
     };
 
+    const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
+    const fileIds = new Set(nodes.filter((n) => n.kind === 'file').map((n) => n.id));
+    const scopes = new Map<string, FileScope>();
+    for (const ex of extracts) {
+        const locals = new Map<string, string[]>();
+        for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
+        const imports = new Map<string, { target: string; exact: boolean }>();
+        for (const r of ex.rawEdges) {
+            if (r.relation !== 'imports') continue;
+            const local = r.localName ?? r.targetName;
+            if (imports.has(local)) continue; // first binding wins, deterministically
+            const spec = r.moduleSpecifier;
+            if (spec === undefined) {
+                // PHP `use A\B\C` — a fully-qualified NAME, not a module path.
+                // Resolved by base name without checking the namespace, so the
+                // binding is a lookup, not a syntactic fact: `exact: false`.
+                const hit =
+                    sym.classByName.get(k(ex.lang, r.targetName)) ??
+                    (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
+                if (hit) imports.set(local, { target: hit, exact: false });
+                continue;
+            }
+            const file = resolveSpecifier(ex.file, spec, fileIds);
+            if (file === null) {
+                // Bare (`node:path`, `zod`) or relative-but-out-of-root. Either
+                // way the module is real and NAMED, and it is not this
+                // repository's same-named symbol. `import * as path from
+                // 'node:path'` ends here, which is the whole of 1.1.
+                const named = r.importKind === 'named';
+                imports.set(local, { target: named ? `external:${spec}#${r.targetName}` : `external:${spec}`, exact: true });
+                continue;
+            }
+            // A namespace or default import binds the MODULE, never a
+            // same-named export inside it.
+            const member = `${file}#${r.targetName}`;
+            const target = r.importKind === 'named' && nodeKind.has(member) ? member : file;
+            imports.set(local, { target, exact: true });
+        }
+        scopes.set(ex.file, { locals, imports });
+    }
+    const emptyScope: FileScope = { locals: new Map(), imports: new Map() };
+
+    /**
+     * Resolve a bare name at a use site inside `file`, capability-filtered.
+     *
+     * The ladder is the language's own: a LOCAL declaration shadows an import
+     * (both council seats named this, and JS/TS/PHP all agree), an import
+     * resolved from a specifier is next, and only then the repo-wide same-name
+     * table — which is a guess and is labelled as one.
+     */
+    const resolveInScope = (
+        file: string,
+        name: string,
+        want: Capability,
+        lang: Lang,
+        scopeOnly = false,
+    ): { target: string; confidence: EdgeConfidence } | null => {
+        const scope = scopes.get(file) ?? emptyScope;
+        for (const id of scope.locals.get(name) ?? [])
+            if (satisfies(nodeKind.get(id), want)) return { target: id, confidence: 'EXTRACTED' };
+        const bound = scope.imports.get(name);
+        if (bound && satisfies(nodeKind.get(bound.target), want))
+            return { target: bound.target, confidence: bound.exact ? 'EXTRACTED' : 'INFERRED' };
+        if (scopeOnly) return null;
+        const wide =
+            want === 'constructible'
+                ? sym.classByName.get(k(lang, name))
+                : (sym.byName.get(k(lang, name)) ?? []).find(
+                      (id) => id.includes('#') && !id.includes('::') && satisfies(nodeKind.get(id), want),
+                  );
+        // Reached only by matching a name across the whole repository, with no
+        // binding in this file to justify it. That is not a syntactic fact and
+        // no longer claims to be one.
+        if (wide) return { target: wide, confidence: 'INFERRED' };
+        return null;
+    };
+
+    // Deduped the same way emitted edges are, so the count is comparable to
+    // `edges.length` rather than being a raw call-site tally that reads as a
+    // larger loss than the graph actually took.
+    const suppressedKeys = new Set<string>();
     const edges: CodeEdge[] = [];
     const seen = new Set<string>();
     const emit = (e: CodeEdge): void => {
@@ -198,8 +366,13 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
     for (const ex of extracts) {
         // structural inherits edges (same-language resolution)
         for (const inh of ex.inherits) {
-            const parentId = sym.classByName.get(k(ex.lang, inh.parentName)) ?? `symbol:${inh.parentName}`;
-            emit({ source: inh.classId, target: parentId, relation: 'inherits', confidence: 'EXTRACTED' });
+            const hit = resolveInScope(ex.file, inh.parentName, 'constructible', ex.lang);
+            emit({
+                source: inh.classId,
+                target: hit?.target ?? `symbol:${inh.parentName}`,
+                relation: 'inherits',
+                confidence: hit?.confidence ?? 'EXTRACTED',
+            });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
     }
@@ -216,50 +389,50 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
             });
             return;
         }
-        if (r.relation === 'imports' || r.relation === 'uses') {
-            // A class name first, which is what `imports` and the pre-existing
-            // `uses` sites emit. Then a FREE FUNCTION, which the registry
-            // literals added by 1.3 point at: `{ foo: handleFoo }` names a
-            // function, not a class, so a class-only lookup left every such edge
-            // at `symbol:<name>` — an edge that exists and resolves nowhere,
-            // which is barely better than the missing edge it replaced.
-            //
-            // Same predicate as the `free` call branch below (`#` and no `::`),
-            // so a function reference and a function call resolve identically
-            // rather than by two rules that can drift.
-            const resolved =
-                sym.classByName.get(k(ex.lang, r.targetName)) ??
-                (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find(
-                    (id) => id.includes('#') && !id.includes('::'),
-                );
+        if (r.relation === 'imports') {
+            // The import's own binding, computed once per file above. A
+            // specifier-resolved binding is a syntactic fact — the file says
+            // where the name comes from — and a PHP `use` matched by base name
+            // is not, and says so.
+            const bound = (scopes.get(ex.file) ?? emptyScope).imports.get(r.localName ?? r.targetName);
             emit({
                 source: r.sourceId,
-                target: resolved ?? `symbol:${r.targetName}`,
-                relation: r.relation,
-                confidence: 'EXTRACTED',
+                target: bound?.target ?? `symbol:${r.targetName}`,
+                relation: 'imports',
+                confidence: bound ? (bound.exact ? 'EXTRACTED' : 'INFERRED') : 'EXTRACTED',
+            });
+            return;
+        }
+        if (r.relation === 'uses') {
+            // A registry literal (`{ foo: handleFoo }`) or an object shorthand
+            // (`{ id, label }`) names something bound IN THIS FILE. It is
+            // resolved through the file's scope and NOWHERE else: a shorthand
+            // property almost always names a local variable, and matching it
+            // against a same-named declaration elsewhere in the repository is
+            // the defect this roadmap removes, applied to a second relation.
+            const hit = resolveInScope(ex.file, r.targetName, 'any', ex.lang, true);
+            emit({
+                source: r.sourceId,
+                target: hit?.target ?? `symbol:${r.targetName}`,
+                relation: 'uses',
+                confidence: hit?.confidence ?? 'EXTRACTED',
             });
             return;
         }
         // relation === 'calls'
-        if (r.callStyle === 'new') {
-            const resolved = sym.classByName.get(k(ex.lang, r.targetName));
+        if (r.callStyle === 'new' || r.callStyle === 'free') {
+            const want: Capability = r.callStyle === 'new' ? 'constructible' : 'callable';
+            const hit = resolveInScope(ex.file, r.targetName, want, ex.lang);
             emit({
                 source: r.sourceId,
-                target: resolved ?? `symbol:${r.targetName}`,
+                target: hit?.target ?? `symbol:${r.targetName}`,
                 relation: 'calls',
-                confidence: 'EXTRACTED',
-            });
-            return;
-        }
-        if (r.callStyle === 'free') {
-            const resolved = (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find(
-                (id) => id.includes('#') && !id.includes('::'),
-            );
-            emit({
-                source: r.sourceId,
-                target: resolved ?? `symbol:${r.targetName}`,
-                relation: 'calls',
-                confidence: 'EXTRACTED',
+                // An UNRESOLVED name stays EXTRACTED: `symbol:strlen` claims
+                // nothing about a node, it records that a call to a name this
+                // repository does not declare happened here. What is no longer
+                // EXTRACTED is a claim about a SPECIFIC in-repo node reached by
+                // name alone.
+                confidence: hit?.confidence ?? 'EXTRACTED',
             });
             return;
         }
@@ -287,6 +460,27 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         }
         // scoped (Class::m unresolved / facade) or dynamic ($obj->m) → AMBIGUOUS
         const cands = methodCandidates(r.targetName, ex.lang);
+        if (r.callStyle === 'dynamic' && cands.length === 0) {
+            // `x.push()`, `m.get()`, `s.join()` — a dynamic member call whose
+            // method name matches NO method declared in this repository. The
+            // only target available is `symbol:push`, which is not a node, so
+            // no query verb can reach it: `affected` and `path` resolve seeds
+            // against real nodes and a pseudo-node is never one. It was 257 of
+            // 660 edges on this engine's own source — 39 % of the graph
+            // asserting "a method named push was called somewhere".
+            //
+            // NOT suppressed: a `scoped` call (`Cache::get()`) and a
+            // `hierarchy-unresolved` `$this->missing()` both name a real
+            // unresolved intent inside a known receiver, which a later
+            // resolution pass could settle. This drops only the class where
+            // there is nothing to settle.
+            //
+            // The count is published in `suppressed_edge_counts` — an engine
+            // that silently deletes its worst edges reports a flattering
+            // confidence ratio and no evidence.
+            suppressedKeys.add(`${r.sourceId}\0calls\0symbol:${r.targetName}`);
+            return;
+        }
         emit({
             source: r.sourceId,
             target: ambiguousTarget(cands, r.targetName),
@@ -310,6 +504,7 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
 
     const counts = { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 };
     for (const e of edges) counts[e.confidence] += 1;
+    const suppressed = { dynamic_no_candidate: suppressedKeys.size };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
 
@@ -328,6 +523,7 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         languages,
         grammar_abi: EXPECTED_GRAMMAR_ABI,
         edge_confidence_counts: counts,
+        suppressed_edge_counts: suppressed,
         nodes,
         edges,
     };
@@ -370,6 +566,7 @@ export function serializeGraph(g: CodeGraph): string {
         'languages',
         'grammar_abi',
         'edge_confidence_counts',
+        'suppressed_edge_counts',
         'nodes',
         'edges',
     ];
