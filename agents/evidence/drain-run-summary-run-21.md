@@ -55,13 +55,20 @@ instruction. Every *executable* active roadmap was drained.
 | [#1861](https://github.com/event4u-app/agent-config/pull/1861) | `roadmap: complete road-to-the-tenth-arrival` | settled green, 6 checks | merged 13:30:16Z |
 | [#1864](https://github.com/event4u-app/agent-config/pull/1864) | `roadmap: close road-to-second-trigger-corpus-generation (W-NO)` | settled green, 6 checks | merged 13:49:54Z |
 | [#1862](https://github.com/event4u-app/agent-config/pull/1862) | `roadmap: complete road-to-the-hook-that-was-never-installed` | settled green | merged 13:56:35Z |
-| [#1863](https://github.com/event4u-app/agent-config/pull/1863) | `fix(roadmaps): land the AC-6 cancellation PR #1860 archived without` | settled green, 6 checks | open at time of writing |
+| [#1863](https://github.com/event4u-app/agent-config/pull/1863) | `fix(roadmaps): land the AC-6 cancellation PR #1860 archived without` | settled green (6 checks) on its first run; re-running after two base updates | open at time of writing |
 | this PR | `docs(evidence): record the run-21 drain` | — | final PR of the run |
 
 Six PRs for four roadmaps. The two extra are **not** scope creep and are
 explained where they arose: #1864 closes a roadmap this run itself created
 (D-4 → D-5), and #1863 repairs a defect this run itself shipped (see § The
 defect this run shipped).
+
+**#1863 needed two base updates.** It was opened before #1861 and #1864 merged,
+so GitHub reported it `BEHIND` and automerge would not take it; `main` then moved
+again when #1862 merged. Each update re-triggered the six checks. One
+consequence worth recording: `ci_settle` caps at 9 minutes and the
+`Sync + Generate Tools Consistency` job runs ~10, so a first call returned exit
+**2** — *not a verdict* — which must not be read as a failure or as a green.
 
 ## Council decisions
 
