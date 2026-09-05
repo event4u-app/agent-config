@@ -2,9 +2,14 @@
 /**
  * Git-authorization ledger — `user_prompt_submit` concern.
  *
- * Records which git operations the user's OWN WORDS authorize this turn, so
- * `hooks/block_unauthorized_git.ts` can check an operation against a fact
- * instead of against the model's recollection of the conversation.
+ * Records which git operations the user's OWN WORDS authorize this turn.
+ *
+ * NOTHING ENFORCES THIS LEDGER ANY MORE. Its consumer — the
+ * `block-unauthorized-git` gate — was removed by owner decision on 2026-09-04
+ * (ADR-254). What still reads the file is `hooks/evidence_independence.ts`,
+ * which takes `detected_at` as a per-turn stamp, and `conformance_scan.ts`,
+ * which MEASURES unauthorized operations after the fact. The record is kept
+ * because measuring is worth keeping; it refuses nothing.
  *
  * WHY — the measured defect (30-session conformance audit, 2026-08-06):
  *
@@ -630,10 +635,9 @@ function _errText(err: unknown): string {
 /**
  * The largest pull-request number GitHub can issue: a signed 32-bit integer.
  *
- * Taken from the API contract rather than estimated, and shared by the mint
- * site here and the consume site in `hooks/block_unauthorized_git.ts` so the
- * two cannot drift — the failure this file already learned once with its
- * negation vocabulary.
+ * Taken from the API contract rather than estimated, and shared with
+ * `hooks/git_command_classifier.ts` so the two cannot drift — the failure this
+ * file already learned once with its negation vocabulary.
  */
 export const PR_NUMBER_MAX = 2147483647;
 

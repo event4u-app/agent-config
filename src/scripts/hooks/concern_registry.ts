@@ -48,7 +48,6 @@ import { main as selfRepairMain } from '../self_repair_hook.js';
 import { main as sessionRegisterMain } from '../session_register_hook.js';
 import { main as languageMirrorMain } from '../language_mirror_hook.js';
 import { main as gitAuthorizationMain } from '../git_authorization_hook.js';
-import { main as blockUnauthorizedGitMain } from './block_unauthorized_git.js';
 import { main as evidenceIndependenceMain } from './evidence_independence.js';
 import { main as blockNoVerifyMain } from './block_no_verify.js';
 import { main as blockKernelRuleWritesMain } from './block_kernel_rule_writes.js';
@@ -109,7 +108,6 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/session_register_hook.ts': sessionRegisterMain as ConcernMain,
     'src/scripts/language_mirror_hook.ts': languageMirrorMain as ConcernMain,
     'src/scripts/git_authorization_hook.ts': gitAuthorizationMain as ConcernMain,
-    'src/scripts/hooks/block_unauthorized_git.ts': blockUnauthorizedGitMain as ConcernMain,
     'src/scripts/hooks/evidence_independence.ts': evidenceIndependenceMain as ConcernMain,
     'src/scripts/hooks/block_no_verify.ts': blockNoVerifyMain as ConcernMain,
     'src/scripts/hooks/block_kernel_rule_writes.ts': blockKernelRuleWritesMain as ConcernMain,
