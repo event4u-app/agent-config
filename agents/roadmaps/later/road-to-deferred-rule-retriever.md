@@ -5,6 +5,8 @@ complexity: lightweight
 
 # Road to deferred-rule retriever — command-invoked Class-A variant of the rejected MCP retrieval server
 
+> **Arrivals:** 4 (at least) — latest `inbox-2026-09-k` (2026-09-05); earlier: agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
+
 > **Blocked until BOTH hold:** (1) the first native engine's Phase-5 benchmark
 > verdict is published (ADR-124 sequencing rule — one native engine at a
 > time; queue position 1 behind the code-graph engine per the sequencing plan

@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to a gate pre-authorisation the agent cannot sign
 
+> **Arrivals:** 4 (at least) — latest `inbox-2026-09-m` (2026-09-05); earlier: agents/roadmaps/archive/road-to-gate-autonomy.md, agents/roadmaps/archive/road-to-user-out-of-the-loop.md, one untracked prior round.
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
 > [`road-to-gate-autonomy.md`](../road-to-gate-autonomy.md) step 2.3.
 > Council disposition **B**, outcome state **transferred**, per the framework of

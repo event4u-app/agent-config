@@ -6,6 +6,8 @@ probe: none
 
 # Stub: road to the owner-reserved authority decisions
 
+> **Arrivals:** 4 (at least) — latest `inbox-2026-09-m` (2026-09-05); earlier: agents/roadmaps/archive/road-to-gate-autonomy.md, agents/roadmaps/archive/road-to-user-out-of-the-loop.md, one untracked prior round.
+
 > **Stub — not active work.** A **drain-run transfer**, created 2026-08-22 when
 > [`road-to-evidence-based-adr-governance.md`](../archive/road-to-evidence-based-adr-governance.md)
 > was drained. It carries the three decisions that roadmap could not take,

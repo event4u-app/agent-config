@@ -17,6 +17,8 @@ estate_offset_exempt: >-
 
 # Road to operational proof of the experience-card lifecycle
 
+> **Arrivals:** 3 (at least) — latest `inbox-2026-09-p` (2026-09-05); earlier: agents/roadmaps/archive/road-to-experience-loop-broadening.md, two untracked prior rounds.
+
 > **Parked in `later/` — blocked on an external trigger, not on effort.** Carries **AC-9 verbatim** out of
 > `road-to-experience-loop-broadening`, which closed 2026-08-30 as
 > *implementation complete; operational validation deferred*. AI council

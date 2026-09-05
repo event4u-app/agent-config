@@ -5,6 +5,8 @@ status: later
 
 # Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B)
 
+> **Arrivals:** 2 — latest `inbox-2026-09-n` (2026-09-05); earlier: the untracked round of 2026-08-03 that created this roadmap.
+
 > **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
 > roadmap was anchored on external adoption; that anchoring is struck by
 > [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)

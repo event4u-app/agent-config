@@ -8,6 +8,8 @@ estate_growth_exempt: "Adds one later/ roadmap because a [~] deferral has no oth
 
 # Road to the interaction-layer detector promotions
 
+> **Arrivals:** 3 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-design-craft-antislop.md, agents/roadmaps/stubs/road-to-frontend-power-detector-promotions.md.
+
 > **Parked, not abandoned.** Created 2026-09-03 when `road-to-tell-currency`
 > closed. It receives two deferrals from that roadmap — the four new
 > interaction/texture detectors, and the T4 widening — on an AI-council verdict

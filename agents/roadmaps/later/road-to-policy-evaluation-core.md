@@ -5,6 +5,8 @@ complexity: lightweight
 
 # Road to policy-evaluation core — deterministic Class-A slice of the rejected resident enforcement plane
 
+> **Arrivals:** 3 (at least) — latest `inbox-2026-09-i` (2026-09-05); earlier: two untracked prior rounds on the same subject, recorded in that round's recurrence table.
+
 > **Blocked until BOTH hold:** (1) the first native engine's Phase-5 benchmark
 > verdict is published (ADR-124 sequencing rule; queue position 2 per the
 > sequencing plan in `road-to-native-code-intelligence.md`), AND (2) a named

@@ -16,6 +16,8 @@ probe: none
 >
 > **Source:** agents/tmp.old/godmod3/road-to-perturbation-family-assurance-and-review-independence.md
 
+> **Arrivals:** 2 — latest `inbox-2026-09-o` (2026-09-05); earlier: the round of 2026-08-24 that created this stub.
+
 ## Why the parent did not land
 
 Roughly 85 percent of the parent draft was already built or already decided.
