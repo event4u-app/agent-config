@@ -13,7 +13,6 @@ provenance:
   kind: human
   decision_makers: [owner]
   human_directed: true
-  agentic_mode: none
 evidence:
   strength: E2
   basis:
