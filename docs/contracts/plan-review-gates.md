@@ -1,6 +1,21 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-11-24
+keep-beta-reason: >-
+  Beta review 2026-09-05. Two independent blocks. Its artefact-location argument
+  at §§ 158-161 and 926-929 rests on `agents-layout.md`, which is beta, lapsed on
+  2026-08-17 and sits in the frozen baseline — so promoting this contract would
+  stand a stable location argument on a lapsed beta one. And Gate R2 is still in
+  its Stage-A advisory window, which closes on a count of ten `r2_review` events:
+  `agents/evidence/metrics/gate-metrics.jsonl` holds one line and zero such
+  events, 32 days in, and the follow-up roadmap is parked in `later/` recording
+  that no work inside it can advance the count. The § 1 exemption table also
+  gained a `carrier` row on 2026-09-02, inside the 14-day no-breaking-change
+  window, which alone defers promotion to 2026-09-16. Anchor: the baseline
+  `clear_by: 2026-11-23`, the date by which `agents-layout.md` must have left the
+  baseline or the cadence itself reopens. Before the window ends: that
+  disposition lands, and the Stage-A window either closes or its metrics producer
+  is wired so the stall stops being invisible.
 ---
 
 # Plan review gates — machine-checked grammars (v1)

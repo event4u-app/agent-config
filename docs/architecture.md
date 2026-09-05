@@ -84,7 +84,7 @@ src/                      ──Pipeline A──▶  dist/agent-src/
 
 ### Canonical distribution channel per AI tool
 
-For every tool the package supports, **filesystem** is the canonical channel that the consumer installer (`scripts/install.sh`) writes — see [`contracts/skill-distribution-channels.md`](contracts/skill-distribution-channels.md). Pipeline C above always writes the filesystem trees (`.claude/skills/`, `.cursor/rules/`, `.clinerules/`, `.windsurfrules`, etc.) into the consumer project. Plugin manifests at the package source (`.claude-plugin/marketplace.json`, `.augment-plugin/marketplace.json`) are preserved for users who install via the host's plugin registry, but the installer does **not** project a second registry into consumer projects. Users on older harnesses that require both channels opt in with `bash scripts/install.sh --legacy-both`. Regression test: [`tests/test_canonical_distribution.py`](../tests/test_canonical_distribution.py).
+For every tool the package supports, **filesystem** is the canonical channel that the consumer installer (`scripts/install.sh`) writes — see [`contracts/skill-distribution-channels.md`](contracts/skill-distribution-channels.md). Pipeline C above always writes the filesystem trees (`.claude/skills/`, `.cursor/rules/`, `.clinerules/`, `.windsurfrules`, etc.) into the consumer project. Plugin manifests at the package source (`.claude-plugin/marketplace.json`, `.augment-plugin/marketplace.json`) are preserved for users who install via the host's plugin registry, but the installer does **not** project a second registry into consumer projects. Users on older harnesses that require both channels opt in with `bash scripts/install.sh --legacy-both`. Regression test: [`tests/scripts/canonical_distribution.test.ts`](../tests/scripts/canonical_distribution.test.ts).
 
 Cross-references inside `dist/agent-src/rules/*.md` are written
 **relative to `dist/agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
@@ -155,7 +155,7 @@ note, package-internal path-swap, description budget, and the
 |---|---|---|
 | **Skills** | 299 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
 | **Rules** | 120 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 202 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+| **Commands** | 203 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
 | **Guidelines** | 118 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |

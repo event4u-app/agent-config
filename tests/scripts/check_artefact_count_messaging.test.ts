@@ -9,7 +9,12 @@
  */
 import { describe, expect, it } from "vitest";
 
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import {
+    anchor_coverage_gaps,
     canonical_for,
     DATED_MEASUREMENT_MARKER,
     main,
@@ -199,5 +204,46 @@ describe("the dated-measurement marker", () => {
         );
         expect(findings).toHaveLength(1);
         expect(findings[0]).toMatchObject({ line: 2, found: 271 });
+    });
+});
+
+describe("anchor_coverage_gaps honours the dated-measurement marker", () => {
+    // The value pass (`scan_text`) skipped a marked line from the day the
+    // marker shipped; this pass did not, so a legitimately dated figure was
+    // silenced on value and still demanded an anchor for coverage — and an
+    // anchor is the one repair that must NOT be applied to it, because
+    // `update_counts` would rewrite a recorded measurement to today's total.
+    // Polarity is tested in both directions: a marker that silenced nothing
+    // would pass the first case by accident.
+    function withSurface(body: string): ReturnType<typeof anchor_coverage_gaps> {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), "acm-anchor-"));
+        try {
+            fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+            fs.writeFileSync(path.join(root, "docs", "CLAIMS.md"), body);
+            return anchor_coverage_gaps(root);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    }
+
+    const DATED_LINE = "- claim: measured 2026-09-04, 0 of 299 skills were invoked.";
+
+    it("reports an un-anchored count-shaped line with no marker", () => {
+        const gaps = withSurface(`${DATED_LINE}\n`);
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]).toMatchObject({ file: "docs/CLAIMS.md", kind: "skills", line: 1 });
+    });
+
+    it("reports nothing once the same line carries the marker", () => {
+        const gaps = withSurface(`${DATED_LINE} ${DATED_MEASUREMENT_MARKER}\n`);
+        expect(gaps).toEqual([]);
+    });
+
+    it("is per line — a marked line does not silence its neighbour", () => {
+        const gaps = withSurface(
+            `${DATED_LINE} ${DATED_MEASUREMENT_MARKER}\nand the suite ships 299 skills today.\n`,
+        );
+        expect(gaps).toHaveLength(1);
+        expect(gaps[0]).toMatchObject({ line: 2 });
     });
 });

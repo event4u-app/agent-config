@@ -66,7 +66,7 @@
           "finding_id": {
             "type": "string",
             "pattern": "^[0-9a-f]{12}$",
-            "description": "First 12 hex of sha256(`kind|title|file`), per findingId() in self_review_gate.ts. Stable across runs, which is what lets the disposition ledger key on it. NOT required: an in-flight finding may not have been keyed yet, and requiring it would make the schema reject the shape the model returns before the gate stamps it."
+            "description": "First 12 hex of sha256(`kind|title|file`), per findingId() in self_review_gate.ts. Stable across runs, which is what lets the disposition ledger key on it. NOT required: an in-flight finding may not have been keyed yet, and requiring it would make the schema reject the shape the model returns before the gate stamps it. It is a FINDING id, NOT a commit SHA — a 12-hex string looks exactly like a short SHA, and searching the commit log for it finds nothing by design; the disposition lives in agents/evidence/release-findings/<version>.json."
           },
           "severity": {
             "enum": [
