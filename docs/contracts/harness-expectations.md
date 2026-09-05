@@ -1,6 +1,17 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-09-15
+keep-beta-reason: >-
+  Beta review 2026-09-05. Content-wise the closest to promotable of its group —
+  Class C is marked fixed, the carrier roadmap is archived, the diagnostic
+  sequence is exhaustive, and there is no open clause. It is held back only by
+  its two normative anchors at § 103-104: `skill-distribution-channels.md`, which
+  this change promotes, and `install-scopes.md`, which this change extends to
+  2026-09-15. The date is the later of the two, so the next review reads a
+  settled base. Before the window ends: `install-scopes` reaches a non-beta
+  disposition, and the § 83 pointer to an "agents-md-thin-root § Tool loading"
+  section is repaired — that skill has no such section and no mention of
+  deferred tools, so the contract promises a pattern the target does not carry.
 ---
 
 # Harness Expectations — when AI tool behaviour looks like a package bug but isn't
@@ -103,7 +114,7 @@ Unlike Classes A and B, this is a real package-side issue.
 1. **Default install is filesystem-only** ([`skill-distribution-channels.md`](skill-distribution-channels.md)).
 2. **Pre-flight scope guard** refuses installs that would create cross-scope drift ([`install-scopes.md`](install-scopes.md)).
 3. **Post-install probe** surfaces any remaining drift after install (`task probe:skills`).
-4. **Cleanup script** for stale other-scope installs (`bash scripts/cleanup_other_scope.sh --confirm`).
+4. **Cleanup script** for stale other-scope installs (`bash src/scripts/cleanup_other_scope.sh --confirm`).
 
 ### Where to look for the true source
 
