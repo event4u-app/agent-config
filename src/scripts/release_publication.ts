@@ -16,12 +16,20 @@
  * import path changes.
  */
 import { spawnSync } from 'node:child_process';
-import { DERIVED_MARKER, publication_blockers } from './_lib/release_highlights.js';
+import {
+    DERIVED_MARKER,
+    type MixObligation,
+    previous_release_tag,
+    publication_blockers,
+    section_publication_blockers,
+} from './_lib/release_highlights.js';
+import { loadTaxonomy, measureRange } from './measure_release_mix.js';
 import * as fs from 'node:fs';
 import process from 'node:process';
 
 import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
 import {
+    NEXT_SECTION_RE,
     extract_changelog_section,
     tag_message_from_section,
     pr_body_from_section,
@@ -37,6 +45,7 @@ import {
     SystemExitError,
     _cap_body,
     read_changelog_text,
+    reEscape,
 } from './release_env.js';
 
 function die(msg: string, code = 2): never {
@@ -455,6 +464,63 @@ export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
  * sites, which need a section to publish; refusing here would break every
  * non-release push through this helper).
  */
+/**
+ * Measure the governance-versus-product level for the span under release.
+ *
+ * The push guard's fourth site reads the SAME obligation the release PR reads,
+ * which until 2026-09-05 it did not: `publication_blockers` knew two sentinels
+ * and not this one, so the earliest refusal was the pull request. That gap was
+ * documented in `docs/contracts/CHANGELOG-conventions.md` and it is what turned
+ * 14.17.0 red after a branch, a PR and a CI run had already been spent.
+ *
+ * Returns `null` on any measurement failure — a shallow clone or a missing tag
+ * is an environment fact, and the contract is explicit that it degrades to a
+ * warning rather than to a refusal. `null` produces no blocker downstream.
+ */
+/**
+ * The pre-push local gate run, as an argv the caller hands to `run()`.
+ *
+ * Every release-PR assertion that can run locally, run BEFORE the branch leaves
+ * the machine. `guard_release_branch_push` below covers the changelog-section
+ * obligations; this covers the rest of `release-validation.yml` — PR shape,
+ * template pin — from `src/config/release-gate-locality.yml`, the registry
+ * `tests/scripts/release_gate_locality.test.ts` keeps in step with the
+ * workflow. `--cheap` drops the one row that leaves the machine, so a registry
+ * outage cannot read as a release defect.
+ *
+ * An argv rather than a call, so the pipeline issues it through `run()` and
+ * `release_drill` intercepts it exactly as it intercepts `task
+ * release-prepare`. A real subprocess inside the simulated world would run
+ * gates against the live tree.
+ *
+ * Lives here rather than in `release.ts` for the reason
+ * `_refuse_unpublishable` already states: that file is 2000+ lines and every
+ * line above 1500 is charged by the source-size growth ratchet.
+ */
+export function local_release_gate_argv(): string[] {
+    return ['task', 'release:verify', '--', '--cheap'];
+}
+
+export function measure_mix_obligation(
+    version: string,
+    fromRef?: string | null,
+): MixObligation | null {
+    try {
+        const from = fromRef ?? previous_release_tag('HEAD', REPO_ROOT);
+        if (!from) return null;
+        const reading = measureRange(from, 'HEAD', loadTaxonomy(), version, REPO_ROOT);
+        const o = reading.response_obligation;
+        return {
+            triggered: o.triggered,
+            level:
+                `governance-only ${String(o.governance_only)} vs consumer-only ` +
+                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version})`,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export function guard_release_branch_push(branch: string): void {
     const prefix = 'release/';
     if (!branch.startsWith(prefix)) {
@@ -465,7 +531,12 @@ export function guard_release_branch_push(branch: string): void {
     if (!section) {
         return;
     }
-    const blockers = publication_blockers(section.body, version, `\`${branch}\``);
+    const blockers = section_publication_blockers(
+        section.body,
+        version,
+        `\`${branch}\``,
+        measure_mix_obligation(version),
+    );
     if (blockers.length === 0) {
         return;
     }
@@ -614,7 +685,16 @@ export function guard_release_curation(version: string, prMerged = false): void 
     if (!section) {
         return;
     }
-    const blockers = publication_blockers(section.body, version, `\`release/${version}\``);
+    // The section level, and the mix obligation with it: this is the CHEAPEST
+    // site of the five — the changelog has just been written and nothing is
+    // committed — so an obligation that can be read here should not wait for
+    // the push guard, let alone for the release PR.
+    const blockers = section_publication_blockers(
+        section.body,
+        version,
+        `\`release/${version}\``,
+        measure_mix_obligation(version),
+    );
     if (blockers.length === 0) {
         return;
     }
@@ -1016,4 +1096,146 @@ export function create_and_push_annotated_tag(version: string): void {
     _refuse_unpublishable(merged.body, version, 'annotated tag');
     run(['git', 'tag', '-a', version, '-m', tag_message_from_section(merged.body, version)]);
     _push_tag(version);
+}
+
+// ─── test-count trend ────────────────────────────────────────────────────────
+//
+// Relocated from `release.ts` on 2026-09-05, for the reason
+// `_refuse_unpublishable` above already states: that file is 2000+ lines and
+// every line above 1500 is charged by the source-size growth ratchet. The move
+// is not incidental to this change — the `Tests: N` footer became a
+// section-level publication obligation in the same diff
+// (`section_publication_blockers`), so the writer that emits it and the guard
+// that refuses its absence now sit in one module. `release.ts` re-exports all
+// four names, so every existing importer is unaffected.
+
+const _TEST_COUNT_LINE_RE = /^Tests:\s+(\d+)/m;
+
+/**
+ * Buffer ceiling for the `vitest list` probe, in bytes.
+ *
+ * `spawnSync` buffers the child's whole stdout in memory and fails with
+ * ENOBUFS past `maxBuffer`, whose default is 1 MiB. The probe emits one line
+ * per test case, so its output grows with the suite: at 9470 cases the listing
+ * is ~1.25 MB, i.e. already past the default. That is what silently dropped
+ * the footer from the 9.10.0 notes and turned the `changelog-entry` gate red.
+ * 64 MiB is ~50× the current listing — headroom for a suite many times this
+ * size, at no cost when the output is small.
+ */
+export const _TEST_LIST_MAX_BUFFER = 64 * 1024 * 1024;
+
+/**
+ * Count test cases from a finished `vitest list` spawn result, or return null
+ * when the probe did not produce a usable listing.
+ *
+ * Split out from `_count_tests_current` so the failure modes are testable
+ * without spawning the real (~14s, >1 MB) collection. `warn` is injected for
+ * the same reason; it defaults to stderr.
+ */
+export function _count_from_list_result(
+    res: {
+        error?: (Error & { code?: string }) | undefined;
+        status: number | null;
+        stdout: string | null;
+    },
+    warn: (msg: string) => void = (msg) => void process.stderr.write(msg),
+): number | null {
+    // The trend line is informational and never blocks a release — but a
+    // SILENT drop is what shipped 9.8.0 and 9.10.0 without a footer, so every
+    // degradation says why. The `changelog-entry` CI gate treats a missing
+    // footer as fatal, so this warning is the difference between fixing the
+    // probe now and finding out from a red release PR.
+    if (res.error) {
+        // ENOENT (no npx) · ETIMEDOUT · ENOBUFS (listing past maxBuffer).
+        const code = res.error.code ?? res.error.message;
+        warn(
+            `⚠️  test-count probe failed (${code}) — the \`Tests:\` footer will ` +
+                `be omitted from the release notes, which fails the ` +
+                `\`CHANGELOG entry exists for head version\` gate.\n`,
+        );
+        return null;
+    }
+    if ((res.status ?? 1) !== 0) {
+        warn(
+            `⚠️  test-count probe exited ${res.status ?? '(null)'} — the ` +
+                `\`Tests:\` footer will be omitted from the release notes.\n`,
+        );
+        return null;
+    }
+    const lines = (res.stdout ?? '').split('\n').filter((l) => l.trim().length > 0);
+    if (lines.length === 0) {
+        warn('⚠️  test-count probe listed 0 cases — the `Tests:` footer will be omitted.\n');
+        return null;
+    }
+    return lines.length;
+}
+
+/**
+ * Return the collected vitest test-case count on the current tree
+ * (`npx vitest list`, one line per case; ~14s wall). Returns null when
+ * collection fails — the trend line is informational, never a release
+ * blocker, but every failure warns (see `_count_from_list_result`).
+ * (Replaced the dead `pytest --collect-only` probe on 2026-07-08,
+ * road-to-truth-and-reference-hygiene Phase 3: the Python suite was retired
+ * with ADR-200, so the old probe always degraded to null and the `Tests:`
+ * footer silently vanished from release notes.)
+ */
+export function _count_tests_current(): number | null {
+    // Recursion/cost guard: `npx vitest list` inside a vitest-driven release
+    // test would collect the whole suite from within the suite (the child
+    // inherits VITEST=… from the runner) — the exact recursion the caller
+    // comment warns about. Degrade to null there, same as any other
+    // collection failure.
+    if (process.env['VITEST'] !== undefined) {
+        return null;
+    }
+    const res = spawnSync('npx', ['vitest', 'list'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 180_000,
+        maxBuffer: _TEST_LIST_MAX_BUFFER,
+    });
+    return _count_from_list_result(res);
+}
+
+/**
+ * Read CHANGELOG.md and return the most recent `Tests: N` footer under the
+ * `prev_tag` heading, or null when not found.
+ */
+export function _previous_test_count_from_changelog(prev_tag: string | null): number | null {
+    if (!prev_tag || !fs.existsSync(CHANGELOG)) {
+        return null;
+    }
+    const text = fs.readFileSync(CHANGELOG, 'utf-8');
+    const heading_re = new RegExp(`^##\\s+\\[?${reEscape(prev_tag)}\\b`, 'm');
+    const m = heading_re.exec(text);
+    if (!m) {
+        return null;
+    }
+    const headEnd = m.index + m[0].length;
+    const rest = text.slice(headEnd);
+    const next_heading = NEXT_SECTION_RE.exec(rest);
+    const sectionEnd = headEnd + (next_heading ? next_heading.index : rest.length);
+    const section = text.slice(headEnd, sectionEnd);
+    const count_match = _TEST_COUNT_LINE_RE.exec(section);
+    return count_match ? Number.parseInt(count_match[1] as string, 10) : null;
+}
+
+/**
+ * Return the `Tests: N (+M since X.Y.Z)` footer line, or null when the current
+ * count cannot be determined. Silent on collection errors.
+ */
+export function _render_test_trend_line(prev_tag: string | null): string | null {
+    const current = _count_tests_current();
+    if (current === null) {
+        return null;
+    }
+    const previous = _previous_test_count_from_changelog(prev_tag);
+    if (previous === null || !prev_tag) {
+        return `Tests: ${current}`;
+    }
+    const delta = current - previous;
+    const sign = delta >= 0 ? '+' : '';
+    return `Tests: ${current} (${sign}${delta} since ${prev_tag})`;
 }

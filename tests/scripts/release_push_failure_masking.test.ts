@@ -166,6 +166,13 @@ describe('guard_release_branch_push — refuses before any remote state, and onl
     '',
     `- **Behaviour changes:** ${DERIVED_MARKER} rule/schema diffs in abc1234.`,
     '',
+    // See the note on MARKED_HEAD below: both lines are section-level
+    // obligations, and this fixture stands for a section, not a head.
+    '> **Governance mix:** governance-only 2 vs consumer-only 1 (taxonomy 1.0.0).',
+    '> Next cycle ships the fixture consumer work, tracked in the spec.',
+    '',
+    'Tests: 1000 (+0 since 0.0.0)',
+    '',
     '## [0.0.0]',
     '',
     '- earlier release',
@@ -232,6 +239,15 @@ describe('guard_release_curation — asks before the release commit exists', () 
     `- **Behaviour changes:** ${DERIVED_MARKER} rule/schema diffs in abc1234.`,
     `- **Security and correctness:** ${DERIVED_MARKER} fixes to executable surface in def5678.`,
     '- **Honest nulls:** _none_',
+    '',
+    // Section-level publication obligations added 2026-09-05
+    // (`section_publication_blockers`): a curated head alone is no longer a
+    // publishable SECTION, so the fixture carries both or the "passes
+    // straight through" case refuses for a reason the spec is not about.
+    '> **Governance mix:** governance-only 2 vs consumer-only 1 (taxonomy 1.0.0).',
+    '> Next cycle ships the fixture consumer work, tracked in the spec.',
+    '',
+    'Tests: 1000 (+0 since 0.0.0)',
     '',
     '## [0.0.0]',
     '',

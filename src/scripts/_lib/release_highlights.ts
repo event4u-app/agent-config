@@ -25,7 +25,11 @@
  */
 import { spawnSync } from 'node:child_process';
 
-import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
+import {
+    CURATED_HEAD_INSTRUCTION,
+    MIX_RESPONSE_MARKER,
+    MIX_RESPONSE_PLACEHOLDER,
+} from './release_material.js';
 
 /** The five curated labels, in the order an operator reads them. */
 export const HEAD_LABELS: readonly string[] = [
@@ -398,6 +402,7 @@ export function publication_blockers(
     sectionBody: string,
     version: string,
     where = '`main`',
+    mix: MixObligation | null = null,
 ): string[] {
     const out: string[] = [];
     if (sectionBody.includes(DERIVED_MARKER)) {
@@ -414,7 +419,123 @@ export function publication_blockers(
                 'comment line from the section and re-run.',
         );
     }
+    out.push(...mix_response_blockers(sectionBody, version, where, mix));
     return out;
+}
+
+/**
+ * Everything that makes a whole SECTION unpublishable — the head-level
+ * blockers above plus the two obligations that only exist for a full section.
+ *
+ * Two levels and not one, because `publication_blockers` is legitimately called
+ * with a bare curated head (the prefill tests do exactly that), and a head
+ * fragment has no tests footer by construction. Folding a section obligation
+ * into the head predicate would make those callers red on a rule that does not
+ * apply to what they passed.
+ *
+ * The three guard sites that read `extract_changelog_section(...).body` call
+ * THIS one, so the composition lives in a single place. Before 2026-09-05 there
+ * was no section level at all, each guard site called the head predicate, and
+ * the two obligations below existed only inside `release-validation.yml` and
+ * `check_release_highlights` — i.e. only after the pull request existed.
+ */
+export function section_publication_blockers(
+    sectionBody: string,
+    version: string,
+    where = '`main`',
+    mix: MixObligation | null = null,
+): string[] {
+    const out = publication_blockers(sectionBody, version, where, mix);
+    if (!TEST_FOOTER_RE.test(sectionBody)) {
+        out.push(
+            `the ${version} section carries no \`Tests: N (+M since PREV)\` footer. ` +
+                '`_render_test_trend_line` degrades to `null` when the vitest collection ' +
+                'fails, so a missing line means the collection failed during `task release` ' +
+                `— fix the collection on ${where} and re-run, never hand-write the footer.`,
+        );
+    }
+    return out;
+}
+
+/**
+ * The tests-footer convention, in force for every release since 9.1.0.
+ *
+ * Duplicated from `release-validation.yml`'s inline check until 2026-09-05,
+ * where it was the ONLY copy — so the absence was red at release-PR time and
+ * invisible before it. 9.8.0 shipped without the line. The regex is the same
+ * one the workflow uses; the workflow's own comment already recorded that the
+ * writer "degrades SILENTLY to null on collection failure", which is exactly a
+ * defect a local guard should see first.
+ */
+const TEST_FOOTER_RE = /^Tests: \d+/mu;
+
+/**
+ * The measured governance-versus-product level, as the writer and the guards
+ * both receive it.
+ *
+ * A plain record and not the measurement itself: this module is reached by the
+ * push guard, the pre-commit ask and the CI gate, and only the callers have git
+ * to measure with. Passing the reading in keeps the predicate pure and keeps
+ * `measure_release_mix`'s git access out of a module three guards import.
+ */
+export interface MixObligation {
+    triggered: boolean;
+    level: string;
+}
+
+/** Minimum written characters after the marker — a bare marker is not an answer. */
+export const MIX_RESPONSE_MIN_CHARS = 40;
+
+/**
+ * The ONE predicate for the governance-versus-product obligation.
+ *
+ * `check_release_highlights` refuses this from the CI side and
+ * `guard_release_branch_push` from the local side, and until 2026-09-05 only
+ * the first of the two knew the obligation existed. That asymmetry is what the
+ * contract itself recorded — *"the earliest refusal for this one obligation is
+ * the PR, not the push"* (`docs/contracts/CHANGELOG-conventions.md`) — and what
+ * cost 14.17.0 a red release PR. Both sides now read this function, so a change
+ * to the obligation cannot reach one guard and miss the other.
+ *
+ * `null` means the measurement did not run (shallow clone, missing tag). That
+ * degrades to no blocker, matching the gate's documented stance: this is a
+ * governance signal, not a correctness control, and an environment fact must
+ * not block a release.
+ */
+export function mix_response_blockers(
+    sectionBody: string,
+    version: string,
+    where = '`main`',
+    mix: MixObligation | null = null,
+): string[] {
+    if (!mix || !mix.triggered) {
+        return [];
+    }
+    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
+    if (idx === -1) {
+        return [
+            `the ${version} section owes a governance-versus-product response ` +
+                `(${mix.level}) and carries none. Add one \`> ${MIX_RESPONSE_MARKER}\` line ` +
+                `immediately under the curated head on ${where}, naming the next cycle's ` +
+                'consumer work or a maintainer justification.',
+        ];
+    }
+    const written = sectionBody.slice(idx + MIX_RESPONSE_MARKER.length).split('\n')[0]!.trim();
+    if (sectionBody.includes(MIX_RESPONSE_PLACEHOLDER)) {
+        return [
+            `the ${version} governance-versus-product response still carries the writer's ` +
+                `placeholder (\`${MIX_RESPONSE_PLACEHOLDER}\`) — the measured level is the ` +
+                'generator\'s, the answer is not. Name the next cycle\'s consumer work (or the ' +
+                `justification) on ${where} and re-run.`,
+        ];
+    }
+    if (written.length < MIX_RESPONSE_MIN_CHARS) {
+        return [
+            `the ${version} governance-versus-product response is a bare marker ` +
+                `(${mix.level}). Write the answer after \`${MIX_RESPONSE_MARKER}\` on ${where}.`,
+        ];
+    }
+    return [];
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */

@@ -21,8 +21,11 @@ import { describe, expect, it } from 'vitest';
 import {
     CURATED_HEAD_INSTRUCTION,
     CURATED_HEAD_INSTRUCTION_COMMENT,
+    MIX_RESPONSE_MARKER,
+    MIX_RESPONSE_PLACEHOLDER,
     extract_changelog_section,
     normalize_release_text,
+    render_mix_response,
     PR_ONLY_END,
     PR_ONLY_START,
     pr_body_from_section,
@@ -34,7 +37,11 @@ import {
     TRUNCATION_MARKER,
 } from '../../src/scripts/_lib/release_material.js';
 import { check_surface_equality } from '../../src/scripts/check_release_surface_equality.js';
-import { publication_blockers } from '../../src/scripts/_lib/release_highlights.js';
+import {
+    mix_response_blockers,
+    publication_blockers,
+    section_publication_blockers,
+} from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
 const V = '9.99.0';
@@ -439,4 +446,80 @@ describe('publication integrity — acceptance over npm pack', () => {
             fs.rmSync(dest, { recursive: true, force: true });
         }
     }, 180_000);
+});
+
+/**
+ * The governance-versus-product obligation, read by the SAME predicate on both
+ * sides of the push.
+ *
+ * 14.17.0 (PR #1856) failed `check_release_highlights` on a missing
+ * `> **Governance mix:**` line. Nothing emitted the line and no local guard
+ * asked for it, so the earliest possible discovery was the release PR — a
+ * property `docs/contracts/CHANGELOG-conventions.md` had recorded as an
+ * accepted gap. These specs pin the three pieces that close it: the writer
+ * emits, the predicate refuses the writer's own placeholder, and the predicate
+ * is the one both guards call.
+ */
+describe('governance-mix response', () => {
+    const V = '9.9.9';
+    const LEVEL = 'governance-only 31 vs consumer-only 13 (taxonomy 1.0.0)';
+    const head = '### Release highlights\n\n- **Fixes:** x';
+
+    it('is not owed when the obligation did not trigger', () => {
+        expect(mix_response_blockers(head, V, '`main`', null)).toEqual([]);
+        expect(mix_response_blockers(head, V, '`main`', { triggered: false, level: LEVEL })).toEqual(
+            [],
+        );
+    });
+
+    it('refuses a triggered obligation the section does not answer', () => {
+        const out = mix_response_blockers(head, V, '`main`', { triggered: true, level: LEVEL });
+        expect(out).toHaveLength(1);
+        expect(out[0]).toContain(MIX_RESPONSE_MARKER);
+        expect(out[0]).toContain(LEVEL);
+    });
+
+    it('refuses the writer’s placeholder — an emitted line is not an answer', () => {
+        // The measured level alone clears the 40-character floor, so without
+        // this the generator would discharge a written-answer obligation for
+        // itself. That is the smuggled auto-approval the placeholder prevents.
+        const emitted = `${head}\n\n${render_mix_response(LEVEL).join('\n')}`;
+        expect(emitted).toContain(MIX_RESPONSE_PLACEHOLDER);
+        const out = mix_response_blockers(emitted, V, '`main`', { triggered: true, level: LEVEL });
+        expect(out).toHaveLength(1);
+        expect(out[0]).toContain(MIX_RESPONSE_PLACEHOLDER);
+    });
+
+    it('accepts a written answer', () => {
+        const answered =
+            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
+            '> Next cycle ships the consumer-facing install flow, tracked in road-to-install-ux.';
+        expect(mix_response_blockers(answered, V, '`main`', { triggered: true, level: LEVEL })).toEqual(
+            [],
+        );
+    });
+
+    it('refuses a bare marker with no answer after it', () => {
+        const bare = `${head}\n\n> ${MIX_RESPONSE_MARKER}\n`;
+        const out = mix_response_blockers(bare, V, '`main`', { triggered: true, level: LEVEL });
+        expect(out).toHaveLength(1);
+    });
+
+    it('reaches the section-level predicate the guards call', () => {
+        // The head-level predicate stays usable with a bare head (the prefill
+        // specs pass fragments); the section level is what the three guard
+        // sites read, and it is where the tests footer joins the mix response.
+        const section = `${head}\n\nTests: 100 (+1 since 9.9.8)`;
+        expect(publication_blockers(section, V)).toEqual([]);
+        const blocked = section_publication_blockers(section, V, '`main`', {
+            triggered: true,
+            level: LEVEL,
+        });
+        expect(blocked.some((b) => b.includes(MIX_RESPONSE_MARKER))).toBe(true);
+    });
+
+    it('refuses a section that lost its Tests footer', () => {
+        const out = section_publication_blockers(head, V);
+        expect(out.some((b) => b.includes('Tests: N'))).toBe(true);
+    });
 });
