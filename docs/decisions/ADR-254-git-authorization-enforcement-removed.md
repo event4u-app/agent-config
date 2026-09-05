@@ -151,6 +151,33 @@ enforcement deployed before classification. That pass informed nothing about
 *whether* to remove the gate — the owner decided that — and it is cited only as
 the standing objection to rebuilding the removed shape.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| Six sentence shapes in a real authorization make `isRevocation` return true | Direct probe of the shipped `isRevocation` over the owner's actual PR-drain authorization plus five isolated variants, 2026-09-04: `Never merge empty PRs to raise the count.`, `Never force-merge past failing required checks`, `Rote required checks sind ein Halt, kein Bypass.`, `Warte auf CI, dann merge #12.`, `Es gibt keinen Grund, PR #12 nicht zu mergen.`, `No reviewer objected; merge #12.` — all `true` |
+| A revocation verdict empties the grant set before the clock is read | `foldGrants` at the pre-change base returns `[]` on its first statement when `isRevocation(prompt)` holds. `LEDGER_MAX_AGE_MS` is never consulted on that path |
+| The authorization did otherwise mint | Same probe: `classifyAuthorization` returned `pr-merge` and `extractMergeTargets` returned the named PR numbers on the identical prompt. Both were discarded by rule 1 |
+| A trip-word-free authorization still mints a clockless grant | Same probe with the guardrail sentences removed: `grants minted: [[1841,1843,1844,1846,1848,1849,1851,1852]]`, `isRevocation: false`. The mechanism was reachable only by a sentence the owner would not naturally write |
+| An option number carries no authorizing token | `isAffirmative` accepts `1`, and `classifyAuthorization` records no operation for it. Pinned from the other side by the deleted `confirming a refused operation` fixture, whose own comment described the resulting three-turn deadlock as measured on 2026-08-18 |
+| Both branches of `isRevocation` were prompt-wide | `REVOKE_RE` at the pre-change base: one alternation of bare stop words and one negation-within-30-characters clause, tested against the whole prompt with no sentence bound. The sibling `negatedBefore` in the same file is sentence-scoped, and its docstring states the bound is load-bearing |
+| The clock had been hand-widened twice under this pressure | ADR-251 § Context and ADR-252's commit body, both carried forward unchanged (2026-08-21, 2026-08-30) |
+| The removal leaves the two neighbouring guards intact | `block_no_verify` imports only `substitutionPayloads`; `evidence_independence` reads only `detected_at`; `conformance_scan` imports `commandOp` and `BLOCK_OPS`. All four symbols survive in `git_command_classifier.ts`, and the three files' test suites are green after the change |
+| Nothing enforcing survives in the executing artifact | `dist/hooks/dispatch.js` rebuilt after the change contains zero occurrences of `block_unauthorized_git`, `LEDGER_MAX_AGE_MS` or `grantCovers`; `hook_manifest.json` contains zero occurrences of the concern |
+
+**The grade is E2 — repeated and comparative.** Every row is a probe run in this
+tree against the shipped code, a file read at a named symbol, or a measurement
+carried forward from the superseded record. The `isRevocation` probe was run
+against both the owner's real prompt and isolated single-sentence variants, so
+the rows name which clause fires rather than only that one did.
+
+**What no evidence establishes**, and it is the load-bearing gap: **that removal
+is safer than the gate.** Nothing here measures unintended merges the gate
+prevented, because — as ADR-251 already recorded — the window has no instance of
+preventing one on record either. The honest claim is narrower: the gate was
+measured refusing authorizations that were given, and it was never measured
+refusing one that was not.
+
 ## Alternatives considered
 
 **Narrow `isRevocation` — compound-verb guard, qualified-object guard,
