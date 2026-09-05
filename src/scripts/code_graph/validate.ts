@@ -6,7 +6,18 @@ import type { CodeGraph } from './types.js';
 
 const RELATIONS = new Set(['calls', 'imports', 'uses', 'inherits', 'member']);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
-const KINDS = new Set(['file', 'class', 'interface', 'trait', 'function', 'method', 'skipped']);
+const KINDS = new Set([
+    'file',
+    'class',
+    'interface',
+    'trait',
+    'function',
+    'method',
+    'constant',
+    'type',
+    'enum',
+    'skipped',
+]);
 
 export interface ValidateResult {
     ok: boolean;

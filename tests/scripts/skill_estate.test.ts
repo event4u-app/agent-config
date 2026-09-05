@@ -129,9 +129,16 @@ describe('the live corpus', () => {
         // direction the ceiling wants — the preamble sat 10 tokens under its
         // grace ceiling at the time, which is why the body carries the
         // capability and the description paid part of it back.
+        //
+        // 11445 -> 11444 on 2026-09-05: `code-intelligence` rewrote its
+        // description to state the routing verdict the branch measured — an
+        // existing graph is cheaper and never more precise, so grep stays
+        // routine. One token, again in the direction the ceiling wants, and a
+        // re-derivation of the pin after a decided change rather than a
+        // loosened bar.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(299);
-        expect(e.skill_description_tokens).toBe(11445);
+        expect(e.skill_description_tokens).toBe(11444);
         expect(e.deprecated_count).toBe(0);
     });
 
