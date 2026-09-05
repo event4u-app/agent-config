@@ -365,8 +365,21 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     });
     try {
       atomic_write_json(target, state);
-    } catch {
-      /* observability only */
+    } catch (err) {
+      /* Unlike its two siblings in `git_authorization_hook`, this one fails
+         OPEN, which is why it gets a diagnostic rather than a shrug. The turn's
+         evaluation count lives only in this file: a failed write leaves
+         `evaluations` one short, so the NEXT self-commissioned evaluation in the
+         same turn reads `priorEvaluations === 0` and the verdict-shopping warn
+         does not fire. The item-1 pre-loaded-verdict BLOCK is unaffected — it
+         reads the prompt, not this state — so the degradation is bounded to the
+         advisory half. Silent was the wrong call for a guard that loses a check
+         when it fails. */
+      process.stderr.write(
+        `evidence-independence: evaluation-count write failed (${_errText(err)}) — ` +
+          "this turn's count did NOT advance, so a second self-scoped evaluation " +
+          "will not be warned about. The pre-loaded-verdict block is unaffected.\n",
+      );
     }
   }
 
@@ -377,6 +390,12 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     process.stderr.write(decision.stderr);
   }
   return decision.exit;
+}
+
+/** One-line, bounded rendering of a caught value for a stderr diagnostic. */
+function _errText(err: unknown): string {
+  const t = err instanceof Error ? err.message : String(err);
+  return t.replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
 export function main(argv?: string[]): number {
