@@ -444,6 +444,12 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **Honest nulls:** _none_
 - **Known limitations:** _none_
 
+> **Governance mix:** governance-only 31 vs consumer-only 13 (taxonomy 1.0.0).
+> Next cycle ships the rows four shipped-skill lists are missing — the render
+> state matrix, the plan criteria the two planning skills judge against, and what
+> a transactional email needs to survive a mail client — tracked in
+> `agents/roadmaps/road-to-checklist-rows.md`.
+
 ### Features
 
 * **delivery-mode:** a held change set and an owner decision packet, nothing flipped ([14330b8](https://github.com/event4u-app/agent-config/commit/14330b86810483e5d8f471826c9dbd0666977abb))
