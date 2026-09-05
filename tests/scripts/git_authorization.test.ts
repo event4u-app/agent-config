@@ -1,5 +1,8 @@
 // Tests for the git-authorization ledger (src/scripts/git_authorization_hook.ts)
-// and its blocking half (src/scripts/hooks/git_command_classifier.ts).
+// and the command classifier (src/scripts/hooks/git_command_classifier.ts).
+//
+// The blocking half both used to feed was removed by owner decision on
+// 2026-09-04 (ADR-254), so nothing here asserts a refusal any more.
 //
 // Every fixture below is drawn from a real turn in the 30-session conformance
 // audit (2026-08-06). The two that matter most:
@@ -22,12 +25,9 @@ import {
   pendingFileFor,
   humanTypedThisTurn,
   run as ledgerRun,
-  STATE_FILE,
   type GitOp,
 } from "../../src/scripts/git_authorization_hook.js";
 import {
-  BLOCK_OPS,
-  WARN_OPS,
   commandOp,
   invokedSegments,
   extractCommand,
