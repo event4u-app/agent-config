@@ -16,13 +16,8 @@
  * rebutted phrase — repairing two of four would be the very pathology the
  * roadmap exists to end.
  *
- * The two sites fail in OPPOSITE directions, which is why each assertion names
- * its own:
+ * The site named here fails OPEN, which is why the assertion says so:
  *
- *   block_unauthorized_git  — fail-CLOSED. An unrecorded refusal simply repeats;
- *                             nothing is let through. What is lost is the user's
- *                             ability to authorize by answering the question the
- *                             refusal posed.
  *   evidence_independence   — fail-OPEN. The turn's evaluation count does not
  *                             advance, so the SECOND self-scoped evaluation in
  *                             that turn is not warned about. The pre-loaded
@@ -34,8 +29,6 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { pendingFileFor } from '../../src/scripts/git_authorization_hook.js';
-import { run as runGitGuard } from '../../src/scripts/hooks/block_unauthorized_git.js';
 import {
     run as runEvidence,
     STATE_FILE,
@@ -121,50 +114,6 @@ function captureStdout(fn: () => void): string {
     return seen.join('');
 }
 
-function refuseEnvelope(session: string): string {
-    return JSON.stringify({
-        event: 'pre_tool_use',
-        session_id: session,
-        payload: { tool_name: 'Bash', tool_input: { command: 'npm publish' } },
-    });
-}
-
-describe('block_unauthorized_git — a failed pending-refusal write is observable', () => {
-    it('the happy path records the refusal, so the unwritable case is measured against a working one', () => {
-        const root = tmpRoot();
-        captureStdout(() => captureStderr(() => runGitGuard(refuseEnvelope('sess-ok'), { consumer_root: root })));
-        const file = path.join(root, pendingFileFor('sess-ok'));
-        expect(fs.existsSync(file), 'a refused BLOCK op must leave a pending record').toBe(true);
-        expect(JSON.parse(fs.readFileSync(file, 'utf8')).op).toBe('publish');
-    });
-
-    it('an unwritable pending directory writes a diagnostic and leaves the refusal intact', () => {
-        const root = tmpRoot();
-        const dir = path.dirname(path.join(root, pendingFileFor('sess-ro')));
-        if (!makeUnwritable(dir)) {
-            expect(
-                process.getuid?.() === 0 || process.platform === 'win32',
-                'an unwritable directory stayed writable — expected only as root or on win32',
-            ).toBe(true);
-            return;
-        }
-        let exit = -1;
-        const text = captureStderr(() => {
-            captureStdout(() => {
-                // The contract is that it does NOT throw and the refusal still stands.
-                expect(() => {
-                    exit = runGitGuard(refuseEnvelope('sess-ro'), { consumer_root: root });
-                }).not.toThrow();
-            });
-        });
-        expect(exit, 'the refusal outcome is unchanged by a persistence failure').not.toBe(0);
-        expect(text, 'a failed pending-refusal write must not be silent').toMatch(
-            /pending-refusal write failed/,
-        );
-        expect(text, 'the diagnostic must state what the operator loses').toMatch(/refusal will repeat/);
-    });
-});
-
 describe('evidence_independence — a failed evaluation-count write is observable', () => {
     function evalEnvelope(session: string, prompt: string): string {
         return JSON.stringify({
@@ -223,7 +172,6 @@ describe('the population, not the two instances — no write in these files swal
     // the one that CANNOT report. A `} catch (err) {` may still discard, but the
     // per-site assertions above are what stop it.
     it.each([
-        'src/scripts/hooks/block_unauthorized_git.ts',
         'src/scripts/hooks/evidence_independence.ts',
     ])('%s binds the error on every atomic_write_json catch', (rel) => {
         const src = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');

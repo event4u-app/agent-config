@@ -56,22 +56,22 @@ const BLOCKING_ALLOWLIST = new Set([
     //
     // Kill switch: AGENT_CONFIG_ALLOW_SPEAKING_INBOX=1.
     'block-speaking-inbox-dir',
-    // road-to-agent-behavior-conformance. Both refuse, and both refuse only
-    // what a rule already declares never-autonomous — the deliberate decision
-    // this allowlist exists to record:
+    // road-to-agent-behavior-conformance. It refuses only what a rule already
+    // declares never-autonomous — the deliberate decision this allowlist
+    // exists to record:
     //
-    //   block-unauthorized-git — blocks ONLY the irreversible subset
-    //   non-destructive-by-default already names (npm publish, tag push,
-    //   gh release create, gh pr merge) when the turn's prompt carries no
-    //   authorization. Everything recoverable (commit, push, pr-create,
-    //   branch) warns. The audit measured a full release chain — prod-trunk
-    //   merge, tag, GitHub release, npm publish — shipped with no Go.
+    // `block-unauthorized-git` sat here beside it until 2026-09-04, when the
+    // OWNER REMOVED IT (ADR-254). It had been measured refusing authorizations
+    // the owner had in fact given: a guardrail sentence inside an
+    // authorization ("never merge empty PRs") read as a withdrawal and erased
+    // the whole ledger, and an answer given as an option number matched no
+    // authorizing pattern at all. Git authorization is model-carried now. Do
+    // not re-add the entry without reopening that record.
     //
     //   evidence-independence — blocks an evaluation prompt that pre-loads its
     //   verdict, and a second self-review dispatch in one turn. The audit found
     //   a fabricated NO-FINDINGS committed as binding gate evidence over a
     //   delta an unsteered pass then found a live critical in.
-    'block-unauthorized-git',
     'evidence-independence',
     // road-to-conformance-round5 Phase 3. The FIRST concern that refuses a
     // turn-END rather than a tool call, so it is the first entry here whose

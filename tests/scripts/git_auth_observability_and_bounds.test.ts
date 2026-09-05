@@ -28,7 +28,7 @@ import {
     PR_NUMBER_MAX,
     readGrants,
 } from '../../src/scripts/git_authorization_hook.js';
-import { mergeTargetOf } from '../../src/scripts/hooks/block_unauthorized_git.js';
+import { mergeTargetOf } from '../../src/scripts/hooks/git_command_classifier.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const cleanups: Array<() => void> = [];
@@ -161,7 +161,7 @@ describe('AC — an eight-digit pull-request target resolves at both sites', () 
 
     it('both sites carry the same bound, read from one constant', () => {
         const consume = fs.readFileSync(
-            path.join(REPO_ROOT, 'src/scripts/hooks/block_unauthorized_git.ts'),
+            path.join(REPO_ROOT, 'src/scripts/hooks/git_command_classifier.ts'),
             'utf8',
         );
         const mint = fs.readFileSync(

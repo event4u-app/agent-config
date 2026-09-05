@@ -91,7 +91,7 @@ export function correctedVolume(numstat: string): { volume: number; excluded: nu
 }
 
 /**
- * Tools that carry a shell command. Mirrors `block_unauthorized_git`'s set.
+ * Tools that carry a shell command. Mirrors `git_command_classifier`'s set.
  *
  * `SHIP_PATTERNS` are unanchored, so without this gate a `grep` for the string
  * `git push` spawns two `git` subprocesses on a blocking slot. ALLOW-list: a

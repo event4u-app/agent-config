@@ -295,11 +295,13 @@ verified defects below do not wait on it.
       produces its own report line rather than a quieter verdict.
 - [x] AC-5 — No superseded contract is cited as the live-app blocker's reason, and
       no file retypes a check count in prose.
-- [ ] AC-6 — **AWAITING OWNER DISPOSITION. Not met, and not claimed.** The
+- [-] AC-6 — **CANCELLED BY DELEGATED OWNER DISPOSITION. Not met, and not
+      claimed.** The criterion is cancelled; the risk it names is not. The
       identities of the round-specific derivation sources are irrecoverable, so
       their denylist coverage and their rejection by `check_no_external_sources`
-      cannot be evaluated. Residual risk remains that those unidentified sources
-      are absent from the denylist.
+      cannot be evaluated — not now and not later. Residual risk remains that
+      those unidentified sources are absent from the denylist, and this
+      disposition does not close it.
 
       *Evidence note — substitute testing verified the MECHANISM only:*
       `check_no_external_sources` rejected a tracked file naming an existing
@@ -308,19 +310,47 @@ verified defects below do not wait on it.
       This does **not** satisfy the round-specific coverage requirement, and is
       recorded separately so it cannot be read as partial satisfaction.
 
-      *Disposition — AI council 2026-09-04, 2 rounds, 2/2 seats (anthropic +
-      openai), quorum concluded, $0.00 (subscription-authed):* both seats
-      converged on `[-]` (cancelled-as-invalidated) as the correct marker, and
-      both stated that `[-]` is **owner-reserved** and an agent may not apply it
-      to itself. `[x]` would be false — the criterion is conjunctive and the
-      substitute token cannot satisfy "from this round". `[~]` is unavailable
-      because there is no genuine receiving roadmap and a placeholder would
-      corrupt the meaning of deferral. So the line stays `[ ]` labelled awaiting
-      owner disposition, the roadmap does **not** archive, and that is the
-      honest state rather than an oversight.
+      *Why the criterion is unresolvable rather than unfinished.* The corpus was
+      private, untracked third-party repositories; this repository's own
+      verification of that round records it as *"irrecoverable — private
+      third-party repositories, a permission fact, not a lost file"*
+      (`agents/evidence/analysis/inbox-2026-09-fg-verification.md:113`, with the
+      out-of-bound network verdict at `:187`). Inventing 25 names to populate a
+      denylist would be fabrication, so none were invented. No follow-up stub is
+      created: there is no executable recovery work, and manufacturing a receiver
+      for irrecoverable information would corrupt the meaning of a deferral.
 
-      One seat named the recursion, and it is worth keeping: this roadmap's
-      subject is a check that reported `passed` on input it could not see, and
-      the same defect then appeared in its own acceptance criterion — a
+      *Disposition — AI council 2026-09-05, 2 rounds, 2/2 seats present, quorum
+      concluded (anthropic/claude-sonnet-4-5 + openai/codex-default), $0.00,
+      both seats subscription-authed.* The maintainer delegated owner-required
+      dispositions for that run to the council in writing. **Both seats agreed
+      the delegation reaches this owner-reserved marker** — the anthropic seat
+      conceded it explicitly (*"That language is strong enough to reach a `[-]`
+      authorization"*) — **both agreed the roadmap may archive, and both agreed
+      no follow-up stub is warranted.** The seats **split on the marker**:
+      openai chose `[-]` with this memo; anthropic chose instead to rewrite AC-6
+      into the mechanism-only criterion and tick it `[x]`. The split is recorded
+      rather than smoothed.
+
+      `[-]` was taken, on three grounds. First, the **prior** council on this
+      same question (2026-09-04, 2 rounds, 2/2, same two providers) converged
+      that `[-]` is the semantically correct marker and blocked only on the
+      missing authorization — an authorization that now exists, and that neither
+      seat this round disputed. Second, the rewrite-then-tick path converts an
+      unmet criterion into a met one, which is the exact shape this roadmap's
+      own subject condemns: a check reporting `passed` on input it could not
+      see. Third, `[-]` keeps the unmet-ness and the residual risk legible to a
+      later reader without requiring them to reconstruct that the criterion had
+      been narrowed. The archive disposition is `closed-with-cancellations`
+      (`src/scripts/build_archive_index.ts:27`), which is the accurate record.
+
+      *Revisit-if:* the 25 source identities become recoverable from any
+      surviving artefact; or a later denylist gap is traced to this round's
+      unverified sources; or repository policy establishes that a drop requires
+      direct human action and cannot be delegated.
+
+      One seat named the recursion in the prior round, and it is kept: this
+      roadmap's subject is a check that reported `passed` on input it could not
+      see, and the same defect then appeared in its own acceptance criterion — a
       criterion asking for evidence that was never going to exist. That is a
       roadmap-AUTHORING gap, not an execution one, and it is not closed here.

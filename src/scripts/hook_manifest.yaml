@@ -487,16 +487,15 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
-  # The blocking half. BLOCKS only the irreversible subset that
-  # non-destructive-by-default already declares never-autonomous (npm publish,
-  # tag push, gh release create, gh pr merge); WARNS on commit / push /
-  # pr-create / branch. Severity, not reach — see the header of the script.
-  block-unauthorized-git:
-    script: src/scripts/hooks/block_unauthorized_git.ts
-    args: []
-    fail_closed: true
-    severity: blocking
-    needs_payload_bodies: [input]
+  # The blocking half was REMOVED by owner decision on 2026-09-04 (ADR-254).
+  # It refused authorizations the owner had in fact given: a guardrail sentence
+  # inside an authorization ("never merge empty PRs") read as a withdrawal and
+  # erased the ledger, and an answer given as an option number matched no
+  # authorizing pattern at all. `git-authorization` above still RECORDS what a
+  # turn authorized — `evidence_independence` reads its ledger as a per-turn
+  # stamp — and the command parser survives as `hooks/git_command_classifier.ts`
+  # for `block_no_verify` and `conformance_scan`. Nothing enforces git
+  # authorization any more; `non-destructive-by-default` is model-carried here.
   # Evaluator independence. Gates EVALUATION dispatches only. Two branches with
   # DIFFERENT severities, per the tier rule in
   # docs/contracts/hook-architecture-v1.md (§ What a concern may block on):
@@ -1181,7 +1180,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   claude:
@@ -1189,7 +1188,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
@@ -1243,7 +1242,7 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
     # subagent-ledger IS bound here, unlike the two nudges above, and the
     # difference is the delivery channel rather than the platform: the nudges

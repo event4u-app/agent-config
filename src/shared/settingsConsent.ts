@@ -15,7 +15,7 @@
  * would mean the agent could arrive at its own permission by observing the
  * world, which is the confused-deputy shape in miniature.
  *
- * Modelled on `src/scripts/hooks/block_unauthorized_git.ts`: answer from a
+ * Modelled on `src/scripts/hooks/git_command_classifier.ts`: answer from a
  * recorded fact rather than from the model's recollection, and treat a missing
  * record as NOT granted rather than as probably-fine.
  *
