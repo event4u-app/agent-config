@@ -1,6 +1,18 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-09-26
+keep-beta-reason: >-
+  Beta review 2026-09-05. Its normative core is delegated at § 145-147 to
+  `branch-protection-policy.md`, which is beta and extended in this same change,
+  so promoting this one would make a stable contract depend on a beta one — the
+  ci-green-floor precedent verbatim. Independently, the same stub roadmap holds a
+  committed, not-yet-executed edit to this contract's required-check list, so its
+  § Kept surface table describes a floor the ruleset does not yet enforce.
+  Anchor: `road-to-main-protection-ruleset-changes.md` `review_by: 2026-09-25`;
+  2026-09-26 puts the three coupled contracts on one review date. Before the
+  window ends: the ruleset write lands, the § Kept surface synchronisation the
+  stub names is performed, and `branch-protection-policy.md` reaches its own
+  disposition.
 ---
 
 # Release-PR Gating Contract

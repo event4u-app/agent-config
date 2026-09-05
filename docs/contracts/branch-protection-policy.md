@@ -1,6 +1,18 @@
 ---
 stability: beta
-keep-beta-until: 2026-09-04
+keep-beta-until: 2026-09-26
+keep-beta-reason: >-
+  Beta review 2026-09-05. The four STABILITY.md criteria are met, and it is still
+  not promotable: a queued admin write will break it. The stub roadmap
+  `road-to-main-protection-ruleset-changes.md` lists the seven required-check
+  additions this contract recommends and records that the write makes the
+  "(the only required one)" annotation false, forcing synchronised edits here.
+  Promoting now would price a known, queued edit at a SemVer-major bump. Anchor:
+  that stub carries `review_by: 2026-09-25` — a dated review of the exact
+  blocker — so 2026-09-26 is the first date on which this review reads an outcome
+  instead of restating the wait. Before the window ends: the repo-admin either
+  performs the `required_status_checks` write, with §§ 43, 59 and Enforce half
+  rewritten in the same change, or records a decision not to.
 ---
 
 # Branch Protection Policy

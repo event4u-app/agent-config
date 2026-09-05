@@ -35,8 +35,8 @@
     "benefit_unconditional": 64.599,
     "benefit_conditional_on_activation": 82.508,
     "adjudicated_deliveries": 303,
-    "unadjudicated_deliveries": 3326,
-    "tie_decided_cut_pp": 78.796
+    "unadjudicated_deliveries": 3328,
+    "tie_decided_cut_pp": 78.927
   },
   "set_compatibility": {
     "shared_prompts": 10,
