@@ -28,7 +28,6 @@ import { spawnSync } from 'node:child_process';
 import {
     CURATED_HEAD_INSTRUCTION,
     MIX_RESPONSE_MARKER,
-    MIX_RESPONSE_PLACEHOLDER,
     MIX_RESPONSE_PLACEHOLDERS,
 } from './release_material.js';
 

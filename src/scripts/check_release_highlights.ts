@@ -78,8 +78,6 @@ import {
 import { loadTaxonomy, measureRange } from './measure_release_mix.js';
 import {
     CURATED_HEAD_INSTRUCTION,
-    MIX_RESPONSE_MARKER,
-    MIX_RESPONSE_PLACEHOLDER,
     extract_changelog_section,
 } from './_lib/release_material.js';
 import { assertScanned, assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';

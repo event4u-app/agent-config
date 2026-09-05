@@ -102,7 +102,6 @@
  * - `_lib.changelog_eras` imports resolve to the `.ts` twin, never a `.py`.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -126,7 +125,6 @@ import {
     render_derived_head_values,
 } from './_lib/release_highlights.js';
 import {
-    NEXT_SECTION_RE,
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
     pr_body_from_section,
@@ -183,7 +181,7 @@ export {
     _no_checks_action,
     _required_contexts_from_rules,
 } from './release_publication.js';
-import { _cap_body, jsonDumpsIndent, reEscape } from './release_env.js';
+import { _cap_body, jsonDumpsIndent } from './release_env.js';
 import {
     _MERGE_UPDATE_ROUNDS,
     _branch_exists_local,
