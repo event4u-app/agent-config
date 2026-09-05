@@ -53,11 +53,11 @@ not, and the copy is what runs.
       <!-- DONE: src/scripts/check_installed_hooks_fresh.ts. CORRECTED THE
       METHOD: it does NOT compare against the heredoc. install-hooks.sh writes
       post-merge and post-checkout as a heredoc PLUS an appended auto-sync block
-      (src/scripts/install-hooks.sh:435-499), and interpolates the hook name into
+      (src/scripts/install-hooks.sh:451-515), and interpolates the hook name into
       both, so no slice of the source file equals an installed body — a
       heredoc-slice comparison would have been wrong for two of six hooks. The
       gate instead runs the real installer with a new AGENT_CONFIG_HOOKS_DIR seam
-      (src/scripts/install-hooks.sh:16-27, seam at :23-24) pointed at a scratch dir and
+      (src/scripts/install-hooks.sh:16-38, seam + refusal at :23-32) pointed at a scratch dir and
       byte-compares the six rendered files against .git/hooks. That also settles
       risk-register row 2 structurally rather than by tolerance: anything the
       installer does deterministically compares equal by construction.
@@ -117,7 +117,7 @@ not, and the copy is what runs.
       untested in the direction that matters.
       <!-- DONE, WITH THE RE-INSTALL REFUSED. The step's position was right and
       its action was wrong. What shipped: the detector runs from inside the
-      existing `if` in the auto-sync block (src/scripts/install-hooks.sh:476-494),
+      existing `if` in the auto-sync block (src/scripts/install-hooks.sh:492-510),
       on the event that causes the staleness, and REPORTS on stderr. It does not
       re-install. Two findings stopped the re-install, and both are recorded in
       src/skills/git-workflow/references/push-closes-its-loop.md.
@@ -153,7 +153,7 @@ not, and the copy is what runs.
       triggering diff on a checkout that does not carry the gate script invokes
       nothing and does not fail, because .git/hooks is shared and an older branch
       in a sibling worktree must not have its push refused by a script that is not
-      on it (guards at src/scripts/install-hooks.sh:116 and :491-492). -->
+      on it (guards at src/scripts/install-hooks.sh:176-177 and :507-508). -->
 
 - [x] **1.3 Do not add a concern without paying its ledger.**
       If 1.2 lands on a hook concern, it owes a row in
@@ -198,8 +198,8 @@ not, and the copy is what runs.
       <!-- MET, on this repository's own stale hooks rather than a fixture. Two
       carriers, both bound by the same installer and both named in
       docs/development.md § "The installed hooks go stale, and now they say so":
-      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:98-132) and
-      the post-merge / post-checkout auto-sync block (:476-494).
+      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:149-194) and
+      the post-merge / post-checkout auto-sync block (:492-510).
       Positive direction, live: the gate against the real shared hooks dir named
       pre-push / post-merge / post-checkout with installed-vs-source fingerprints
       and exited 1. Negative direction, live: against a directory the installer
