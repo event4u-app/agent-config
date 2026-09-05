@@ -21,14 +21,13 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 89305f333f4c44efcc71c56d9c46bdd8f6e5e88c, review
-  artefacts excluded), scope hash `72cf17c9532cbaab4d5b213edb5b00249da447357d6c43cc8fe5e7e710b7da4c`
+- diff: `diff.patch` — the review scope (branch head b81ea346d06a0f996d040193b6a3d77cd17eb8e1, review
+  artefacts excluded), scope hash `c0e0415a80af10e75185c858ce28e5d9f01b608f76e161114188df47426ebb4f`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md
-- agents/roadmaps/road-to-the-hook-that-was-never-installed.md
 - dist/agent-src/skills/git-workflow/references/push-closes-its-loop.md
 - docs/development.md
 - src/scripts/check_installed_hooks_fresh.ts
@@ -56,7 +55,7 @@ Fill the findings table in `the-hook-that-was-never-installed.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 72cf17c9532cbaab4d5b213edb5b00249da447357d6c43cc8fe5e7e710b7da4c, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope c0e0415a80af10e75185c858ce28e5d9f01b608f76e161114188df47426ebb4f, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
