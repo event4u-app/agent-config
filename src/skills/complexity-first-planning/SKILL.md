@@ -69,7 +69,7 @@ stated so a reviewer can **fail** a plan on them — each names what failing loo
 like. This skill owns the third; the other three are stated here because a plan
 reviewed on ordering alone passes while being unnecessary, insufficient, or
 built on verbs that do not exist. The same four are carried in
-[`feature-planning`](../feature-planning/SKILL.md).
+`feature-planning` (pack `product-basic`), which is pruned under `projection.mode: scoped` and so is named rather than linked.
 
 1. **Necessity** — every step traces to a stated problem or acceptance criterion.
    **Fails when** the plan carries work nothing asked for — a spike for an
