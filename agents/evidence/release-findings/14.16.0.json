@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
   "release": "14.16.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
   "findings": [
     {
       "finding_id": "64d61651eff3",
