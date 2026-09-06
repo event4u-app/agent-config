@@ -304,7 +304,7 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 120 rules · 16 blocking (13.3%) · 10 observer · 0 local-only · 81 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 120 rules · 16 blocking (13.3%) · 10 observer · 0 local-only · 81 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 72 not declared yet.
 
 `denominator: 120 rule(s), frame in-scope (src/rules/*.md) == governed-total 120`
 
@@ -350,7 +350,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (81) carry no row — an honest gap beats a false claim.
+Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 98 ledger entries · 60 backed · 31 unbacked inventory · 7 resolved-null.
 

@@ -39,9 +39,26 @@
  * Escape hatch: `<!-- enforcement-count-ok: <reason> -->` on the line, reason
  * mandatory. A bare marker stays a finding.
  *
+ * THE SECOND HALF — the projection owes the split. Exempting the generated file
+ * settles WHERE the number may be published; it says nothing about whether the
+ * published number is readable. `undeclared` quoted bare reads as a backlog
+ * somebody forgot to wire, and for nine of them that is not what it is:
+ * `block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule
+ * with no agent-accessible override, so those cannot declare one at all. The
+ * resolver has always computed `kernel_denied`; the published line dropped it
+ * and appended the word `yet`, promising a future that does not exist for that
+ * nine. So a line in the sanctioned projection that states an `undeclared`
+ * figure without its kernel-denied split is the SAME class of failure as a
+ * hand-written count elsewhere: a figure the reader cannot resolve.
+ *
+ * This deliberately does NOT check the split's value, for the same reason the
+ * first half does not check the count's — the resolver is the only source, and
+ * a value comparison here would be a second place the number lives.
+ *
  * Exit codes:
- *   0 — no hand-written enforcement count in the published corpus
- *   1 — at least one (or a marker with no reason)
+ *   0 — no hand-written enforcement count in the published corpus, and every
+ *       published `undeclared` figure carries its kernel-denied split
+ *   1 — at least one (or a marker with no reason, or a split-less figure)
  *   2 — the gate could not run (dead scan scope, bad args)
  */
 import * as fs from 'node:fs';
@@ -57,8 +74,8 @@ const _HERE = fileURLToPath(import.meta.url);
 const DEFAULT_ROOT = path.join(path.dirname(_HERE), '..', '..');
 const SELF = 'src/scripts/check_enforcement_denominator.ts';
 
-const SELF_TEST_MIN_CASES = 7;
-const SELF_TEST_MIN_REJECT = 3;
+const SELF_TEST_MIN_CASES = 10;
+const SELF_TEST_MIN_REJECT = 5;
 
 /** Roots walked, repo-relative. */
 const SCAN_ROOTS = ['docs', 'README.md'] as const;
@@ -82,6 +99,19 @@ const MARKER = 'enforcement-count-ok:';
 const ENFORCEMENT_KEYWORDS =
     /undeclared|enforced_by|enforcement coverage|carry a backstop|backstop that fails/;
 
+/**
+ * Shapes that state the `undeclared` figure itself. Narrower than
+ * {@link COUNT_SHAPES} on purpose: this is the ONE figure whose split is
+ * load-bearing, and a wider net would demand the split beside `blocking`.
+ */
+const UNDECLARED_FIGURE_SHAPES: readonly RegExp[] = [
+    /\b\d+\s+undeclared\b/i,
+    /\bundeclared\s+rules?\s*\(\s*\d+/i,
+];
+
+/** The split that makes the figure readable. Presence is checked, never value. */
+const SPLIT_TOKEN = /kernel[-_]denied/i;
+
 const COUNT_SHAPES: readonly RegExp[] = [
     /\b\d+\s+of\s+\d+\s+(?:governed\s+)?rules?\b/,
     /\b\d+\s+(?:governed\s+)?rules?\b/,
@@ -93,8 +123,12 @@ export interface Finding {
     file: string;
     line: number;
     excerpt: string;
-    /** `raw` — an unmarked count. `bare-marker` — a marker with no reason. */
-    kind: 'raw' | 'bare-marker';
+    /**
+     * `raw` — an unmarked count. `bare-marker` — a marker with no reason.
+     * `missing-split` — the projection states `undeclared` without its
+     * kernel-denied split.
+     */
+    kind: 'raw' | 'bare-marker' | 'missing-split';
 }
 
 function markerOn(line: string): 'none' | 'bare' | 'reasoned' {
@@ -118,6 +152,30 @@ export function scanText(relPath: string, text: string): Finding[] {
             line: i + 1,
             excerpt: line.trim().slice(0, 120),
             kind: marker === 'bare' ? 'bare-marker' : 'raw',
+        });
+    }
+    return out;
+}
+
+/**
+ * The projection's own obligation: every line stating an `undeclared` figure
+ * carries the kernel-denied split. Run INSTEAD of {@link scanText} on a
+ * generated file — that file is allowed to state the number, and is the only
+ * one that owes the split.
+ */
+export function scanGenerated(relPath: string, text: string): Finding[] {
+    const out: Finding[] = [];
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i] ?? '';
+        if (!UNDECLARED_FIGURE_SHAPES.some((re) => re.test(line))) continue;
+        if (SPLIT_TOKEN.test(line)) continue;
+        if (markerOn(line) === 'reasoned') continue;
+        out.push({
+            file: relPath,
+            line: i + 1,
+            excerpt: line.trim().slice(0, 120),
+            kind: 'missing-split',
         });
     }
     return out;
@@ -177,7 +235,13 @@ export function check(root: string): { code: number; findings: Finding[]; scanne
         for (const rel of files) {
             const text = fs.readFileSync(path.join(root, rel), 'utf-8');
             if (isGenerated(text)) {
-                ledger.complete(rel);
+                const split = scanGenerated(rel, text);
+                if (split.length > 0) {
+                    findings.push(...split);
+                    ledger.fail(rel, `${String(split.length)} undeclared figure(s) without the split`);
+                } else {
+                    ledger.complete(rel);
+                }
                 continue;
             }
             const found = scanText(rel, text);
@@ -259,13 +323,46 @@ export function selfTest(): number {
                 }),
         },
         {
-            name: "accepts the resolver's own generated projection",
+            name: "accepts the resolver's own generated projection when it carries the split",
             expect: 'accept',
             run: () =>
                 run({
                     'docs/proof.md':
                         `<!-- ${GENERATED_MARKER} src/scripts/build_proof.ts -->\n\n` +
+                        '120 rules · 15 blocking · 86 undeclared — of which 9 kernel-denied.\n',
+                }),
+        },
+        {
+            // DENIAL POLARITY for the split half. Same file, same exemption, the
+            // split removed: the projection is allowed to state the number and is
+            // still a finding when it states it bare.
+            name: 'rejects the generated projection when the kernel-denied split is removed',
+            expect: 'reject',
+            run: () =>
+                run({
+                    'docs/proof.md':
+                        `<!-- ${GENERATED_MARKER} src/scripts/build_proof.ts -->\n\n` +
                         '120 rules · 15 blocking · 86 undeclared (no enforced_by yet).\n',
+                }),
+        },
+        {
+            name: 'rejects a bare "Undeclared rules (N)" restatement in the projection',
+            expect: 'reject',
+            run: () =>
+                run({
+                    'docs/proof.md':
+                        `<!-- ${GENERATED_MARKER} src/scripts/build_proof.ts -->\n\n` +
+                        'Undeclared rules (86) carry no row.\n',
+                }),
+        },
+        {
+            name: 'accepts a generated line about enforcement that states no undeclared figure',
+            expect: 'accept',
+            run: () =>
+                run({
+                    'docs/proof.md':
+                        `<!-- ${GENERATED_MARKER} src/scripts/build_proof.ts -->\n\n` +
+                        '120 rules · 15 blocking · the resolver prints its own frame.\n',
                 }),
         },
         {
@@ -318,11 +415,24 @@ export function main(argv?: readonly string[]): number {
     if (code === 2) return 2;
 
     if (findings.length > 0) {
-        process.stdout.write('❌  hand-written enforcement count(s) in a published doc:\n\n');
+        process.stdout.write('❌  unresolvable enforcement figure(s) in a published doc:\n\n');
         for (const f of findings) {
             const why =
-                f.kind === 'bare-marker' ? `\`${MARKER}\` with no reason` : 'hand-written count';
+                f.kind === 'bare-marker'
+                    ? `\`${MARKER}\` with no reason`
+                    : f.kind === 'missing-split'
+                      ? 'published `undeclared` figure with no kernel-denied split'
+                      : 'hand-written count';
             process.stdout.write(`  ${f.file}:${String(f.line)} — ${why}\n      ${f.excerpt}\n`);
+        }
+        if (findings.some((f) => f.kind === 'missing-split')) {
+            process.stdout.write(
+                '\nThe projection may state the `undeclared` figure — it is the only surface\n' +
+                    'that may — but not bare. Nine of those rules are kernel-denied:\n' +
+                    '`block_kernel_rule_writes` refuses an `enforced_by` write with no\n' +
+                    'agent-accessible override, so for them there is no *yet*. Print\n' +
+                    "`summary.kernel_denied` on the same line (`build_proof.ts` § 4b does).\n",
+            );
         }
         process.stdout.write(
             '\nExactly one enforcement denominator is quotable, and it comes from\n' +
@@ -362,4 +472,4 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }
 
-export { SCAN_ROOTS, EXCLUDED_PREFIXES, MARKER };
+export { SCAN_ROOTS, EXCLUDED_PREFIXES, MARKER, SPLIT_TOKEN, UNDECLARED_FIGURE_SHAPES };

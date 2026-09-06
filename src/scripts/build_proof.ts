@@ -413,10 +413,20 @@ function render(): string {
     {
         const rows = collectEnforcement();
         const s = summariseEnforcement(rows);
+        // The split ships WITH the figure, and the word `yet` travels only with
+        // the half it is true of. `kernel_denied` rules cannot carry an
+        // `enforced_by` field at all — `block_kernel_rule_writes` refuses the
+        // write with no agent-accessible override — so publishing them as "not
+        // declared yet" promises a future that does not exist for them. They
+        // still count as uncovered — the counting policy is unchanged; only the
+        // claim about their future is.
         L.push(
             `**Axis 1 — enforcement level per rule.** ${s.total} rules · ` +
                 `${s.blocking} blocking (${s.blocking_pct}%) · ${s.observer} observer · ` +
-                `${s.local_only} local-only · ${s.undeclared} undeclared (no \`enforced_by\` yet).`,
+                `${s.local_only} local-only · ${s.undeclared} undeclared — of which ` +
+                `${s.kernel_denied} kernel-denied (\`block_kernel_rule_writes\` refuses an ` +
+                `\`enforced_by\` write on a kernel rule, so no declaration is reachable ` +
+                `for them at all) and ${s.undeclared - s.kernel_denied} not declared yet.`,
         );
         L.push('');
         // The denominator, WITH the frame that produced it. Until 2026-08-23 the
@@ -436,7 +446,10 @@ function render(): string {
             L.push(`| \`${r.id}\` | ${r.effective} | ${decl} |`);
         }
         L.push('');
-        L.push(`Undeclared rules (${s.undeclared}) carry no row — an honest gap beats a false claim.`);
+        L.push(
+            `Undeclared rules (${s.undeclared}, of which ${s.kernel_denied} kernel-denied) ` +
+                'carry no row — an honest gap beats a false claim.',
+        );
     }
     L.push('');
     {

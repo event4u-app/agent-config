@@ -113,8 +113,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`research`** — Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans.
 - **`research-deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.
 - **`research-report`** — Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime.
-- **`review`** — Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
-- **`review-changes`** — Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts
+- **`review`** — Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
+- **`review-changes`** — Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 - **`roadmap`** — Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.

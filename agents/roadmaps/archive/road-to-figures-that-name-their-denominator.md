@@ -45,13 +45,13 @@ and any change to which judges run.
 
 ## Phase 1 — The coverage line says what it counts
 
-- [ ] **1.1 Publish the kernel-denied split beside the undeclared figure.** The
+- [x] **1.1 Publish the kernel-denied split beside the undeclared figure.** The
       resolver already computes `kernel_denied`; the published line drops it. Print it,
       and replace `yet` with wording that holds for the nine — the policy is unchanged,
       only the claim about their future is.
       verify: `docs/proof.md` § 4b names both numbers, and no published surface says
       `yet` about a rule `check_enforcement_coverage` reports as kernel-denied.
-- [ ] **1.2 Fail the publication when the two disagree.** `check_enforcement_denominator`
+- [x] **1.2 Fail the publication when the two disagree.** `check_enforcement_denominator`
       already reds when a figure appears in a doc the resolver did not generate; extend
       it so a published `undeclared` figure that omits the kernel-denied split is the
       same class of failure.
@@ -60,7 +60,7 @@ and any change to which judges run.
 
 ## Phase 2 — The command counts its own judges
 
-- [ ] **2.1 Correct the count at every site, from the table.** The table is the
+- [x] **2.1 Correct the count at every site, from the table.** The table is the
       authority: seven rows, seven frontmatter entries, seven dispatched. Bring `:12`,
       `:27`, `:112` and every remaining prose occurrence into line with it, keeping the
       passages that legitimately say "the other six" — those count a set minus one and
@@ -68,14 +68,14 @@ and any change to which judges run.
       verify: every cardinal in the file that refers to the judge set matches the row
       count of its own table, and the two "why the seventh exists" passages still read
       correctly against their neighbours.
-- [ ] **2.2 Bind the number to the table.** A hand-typed count beside a list is the
+- [x] **2.2 Bind the number to the table.** A hand-typed count beside a list is the
       defect; a check that reads both is the fix.
       verify: adding an eighth row to the table without touching the prose reddens a
       check, and updating both greens it.
 
 ## Phase 3 — A workflow comment does not contradict its sibling
 
-- [ ] **3.1 Correct the site-publicity statement.** `site.yml:6` reasons from a premise
+- [x] **3.1 Correct the site-publicity statement.** `site.yml:6` reasons from a premise
       that stopped holding on 2026-07-05. Either the filter's justification is rewritten
       to the real reason, or the filter is widened to the surfaces `deploy-site.yml`
       already publishes — the two workflows disagree today about whether `docs/**`
@@ -96,8 +96,8 @@ and any change to which judges run.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The published enforcement figure names both the undeclared count and the kernel-denied count, and no surface claims a kernel-denied rule may yet declare.
-- [ ] AC-2 — Removing the split from the published doc reddens a check that was green before this roadmap.
-- [ ] AC-3 — Every cardinal describing the judge set in `review/changes/command.md` matches its own table, and the set-minus-one passages are unchanged.
-- [ ] AC-4 — Adding a row to the judge table without touching the prose reddens a check.
-- [ ] AC-5 — No workflow comment asserts the docs site is unpublished, and the two site workflows' path filters are identical or their difference is stated.
+- [x] AC-1 — The published enforcement figure names both the undeclared count and the kernel-denied count, and no surface claims a kernel-denied rule may yet declare.
+- [x] AC-2 — Removing the split from the published doc reddens a check that was green before this roadmap.
+- [x] AC-3 — Every cardinal describing the judge set in `review/changes/command.md` matches its own table, and the set-minus-one passages are unchanged.
+- [x] AC-4 — Adding a row to the judge table without touching the prose reddens a check.
+- [x] AC-5 — No workflow comment asserts the docs site is unpublished, and the two site workflows' path filters are identical or their difference is stated.
