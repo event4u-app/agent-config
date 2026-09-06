@@ -643,6 +643,14 @@ tasks:
       publish an "## Auto-trigger keywords" section.
     cmd: ./scripts-run src/scripts/lint_skill_trigger_contradiction {{.QUIET_FLAG}}
 
+  check-mcp-doc-drift:
+    silent: true
+    desc: |
+      The documented MCP client snippets must match the entry the installer
+      writes. Four snippets documented an absolute tsx path while the installer
+      wrote npx.
+    cmd: ./scripts-run src/scripts/check_mcp_doc_drift {{.QUIET_FLAG}}
+
   lint-readme-size:
     silent: true
     desc: |

@@ -67,6 +67,33 @@ export interface HostCapabilityManifest {
      * stop-loss behaviour — loudly, never silently.
      */
     worker_respawn: boolean;
+    /**
+     * The host reads a PROJECT-scope MCP config file (`.mcp.json` or its
+     * per-host equivalent) and starts the servers it names.
+     *
+     * Added because nothing in this tree could answer it: the installer writes
+     * `.mcp.json` for `claude-code` alone while writing other hosts' config
+     * files for hooks, and no code could say whether that omission was a
+     * measured absence or an unasked question.
+     *
+     * Same discipline as `worker_respawn`: `true` only once OBSERVED on a host,
+     * never inferred from the fact that a host supports MCP at all — a host may
+     * read a user-scope config and ignore a project one, which is precisely the
+     * distinction a consumer needs and the one an inference would erase.
+     */
+    reads_project_mcp_config: boolean;
+    /**
+     * The host requires a human action after installation before the MCP server
+     * is live — an approval dialog, a restart, a manual enable.
+     *
+     * `true` is the SAFE default here, and it is the opposite of every other
+     * field in this manifest. The others answer "can the host do X", where an
+     * unknown must not read as a capability. This one answers "is there a step
+     * left for the user", where an unknown must not read as "nothing to do":
+     * an install that silently omits a required step leaves a server nobody
+     * started and no message saying so.
+     */
+    mcp_needs_manual_activation: boolean;
 }
 
 /** Safe default — unknown host assumes no subagent primitive. */
@@ -78,6 +105,10 @@ const SAFE_DEFAULT: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    reads_project_mcp_config: false,
+    // `true` because the safe answer here is "there is still a step", not
+    // "there is nothing to do" — see the field's own note.
+    mcp_needs_manual_activation: true,
 };
 
 /** Coerce one field: only a strict boolean `true` survives; everything else is `false`. */
@@ -106,6 +137,11 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
         separate_quota_pool: asBool(src.separate_quota_pool),
         agent_teams: asBool(src.agent_teams),
         worker_respawn: asBool(src.worker_respawn),
+        reads_project_mcp_config: asBool(src.reads_project_mcp_config),
+        // Inverted coercion, matching the inverted default: only an explicit
+        // `false` clears the residual, so an absent or malformed value keeps
+        // the manual step visible instead of silently dropping it.
+        mcp_needs_manual_activation: src.mcp_needs_manual_activation !== false,
     };
 }
 
@@ -287,6 +323,8 @@ const CAPABILITY_FIELDS: readonly CapabilityField[] = [
     'separate_quota_pool',
     'agent_teams',
     'worker_respawn',
+    'reads_project_mcp_config',
+    'mcp_needs_manual_activation',
 ];
 
 /**

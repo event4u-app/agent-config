@@ -75,6 +75,8 @@ import { build_merge_entries } from './_lib/json_pointers.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
 import * as mcp_bridge from './_lib/mcp_bridge.js';
+import { probeHostCapabilities } from './_lib/host_capability.js';
+import * as mcp_consent_residual from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -1115,6 +1117,32 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
 // `_lib/mcp_bridge.ts`; only the call sites are here (see that module's header
 // for why). Names are forwarded so the export surface is unchanged.
 const ensure_mcp_bridge = mcp_bridge.makeEnsureMcpBridge(merge_json_file);
+// Step 3.3 — registration on the OTHER hosts, gated on the capability axis.
+// Additive to the line above: `claude-code`'s `.mcp.json` is unconditional and
+// stays that way; this reaches a host only where BOTH the `--tools` selection
+// and an OBSERVED `reads_project_mcp_config` say so.
+const ensure_mcp_registrations = mcp_bridge.makeEnsureMcpRegistrations(merge_json_file);
+
+/** The axis reader the installer uses. Injected in tests, never overridden here. */
+function _reads_project_mcp_config(host_id: string): boolean {
+    return probeHostCapabilities(host_id).reads_project_mcp_config;
+}
+
+/**
+ * Hosts to register beyond `claude-code`, for a given `--tools` selection.
+ *
+ * Exported so a test can pin BOTH halves of step 3.3's verify: that a host the
+ * axis marks as reading a project MCP config gets an entry, and that a host it
+ * does not mark gets none. On today's registry no host is marked, so the real
+ * installer resolves this to an empty list — a recorded absence, not a claim
+ * that those hosts do not read such a file.
+ */
+export function mcp_registration_targets(
+    tools: Set<string>,
+    reads_config: mcp_bridge.ReadsProjectMcpConfig = _reads_project_mcp_config,
+): mcp_bridge.McpRegistrationTarget[] {
+    return mcp_bridge.mcpRegistrationTargets(tools, reads_config);
+}
 const _resolve_tier_b = mcp_bridge.resolveTierB;
 const _tier_b_advisory = mcp_bridge.tierBAdvisory;
 const _prune_tier_b_modules = (
@@ -5123,7 +5151,7 @@ function _main_project_install(
         if (_is_tool_enabled(tools, 'claude-code')) {
             merged_keys_by_tool['claude-code'] = [
                 ...ensure_claude_bridge(project_root, opts.force),
-                ...ensure_mcp_bridge(project_root, opts.force),
+                ...ensure_mcp_bridge(project_root, opts.force, package_root),
             ];
         }
         if (_is_tool_enabled(tools, 'cursor')) {
@@ -5135,6 +5163,19 @@ function _main_project_install(
         }
         if (_is_tool_enabled(tools, 'gemini-cli')) {
             merged_keys_by_tool['gemini-cli'] = ensure_gemini_bridge(project_root, opts.force);
+        }
+        // Step 3.3 — the MCP entry for every OTHER host the capability axis
+        // records as reading a project MCP config. Appended, never replacing,
+        // so a host that also has a hooks bridge keeps both records.
+        for (const [tool_id, keys] of Object.entries(
+            ensure_mcp_registrations(
+                project_root,
+                opts.force,
+                package_root,
+                mcp_registration_targets(tools),
+            ),
+        )) {
+            (merged_keys_by_tool[tool_id] ??= []).push(...keys);
         }
         if (_is_tool_enabled(tools, 'copilot')) ensure_copilot_bridge(project_root, opts.force);
         if (_is_tool_enabled(tools, 'roocode')) ensure_roocode_bridge(project_root, opts.force);
@@ -5224,6 +5265,20 @@ function _main_project_install(
             process.stdout.write(
                 '  Re-run complete. Walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md\n',
             );
+            process.stdout.write('\n');
+        }
+        // Step 3.2 — name the CONSENT RESIDUALS for the tools this run selected,
+        // and nothing else. Deliberately not a checklist of what worked: a list
+        // of successes is noise the reader has to filter, and the one thing an
+        // installer can usefully hand over is what it could NOT do for them.
+        // Each line carries its provenance, so a value taken from a vendor's
+        // documentation cannot be read as something this run verified.
+        const residuals = mcp_consent_residual.residualReport(tools);
+        if (residuals.length > 0) {
+            process.stdout.write('  Still needs you (MCP):\n');
+            for (const line of residuals) {
+                process.stdout.write(`    • ${line.text}\n`);
+            }
             process.stdout.write('\n');
         }
         if (_is_tool_enabled(tools, 'claude-code')) {
