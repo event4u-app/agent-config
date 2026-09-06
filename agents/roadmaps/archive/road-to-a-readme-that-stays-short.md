@@ -43,13 +43,13 @@ as opposed to how long it takes to say it.
 
 ## Phase 1 — Measure the two things that regressed
 
-- [ ] **1.1 Add a word budget and a first-command budget to the existing linter.** Not a
+- [x] **1.1 Add a word budget and a first-command budget to the existing linter.** Not a
       new gate — `lint_readme_size.ts` already owns README size and already runs from
       `Taskfile.yml`. It gains two measurements: total words, and the line number of the
       first fenced block.
       verify: the linter prints all three figures, and a README with the first fence
       pushed 40 lines further down reddens it while a same-length reordering does not.
-- [ ] **1.2 Set both budgets from the archived roadmap's own end state, not from today.**
+- [x] **1.2 Set both budgets from the archived roadmap's own end state, not from today.**
       Today's file is the regression; taking it as the baseline would ratchet the defect
       in. Derive the numbers from the README as it stood when
       `readme-and-docs-improvement.md` archived, and state that derivation in the
@@ -60,7 +60,7 @@ as opposed to how long it takes to say it.
 
 ## Phase 2 — Bring the file back under them
 
-- [ ] **2.1 Move the first executable command above the budget line.** The content
+- [x] **2.1 Move the first executable command above the budget line.** The content
       between the top and line 160 is orientation prose; the archived roadmap's own
       criterion was that a reader reaches a command early. Nothing is deleted that a
       reader needs — it moves to `docs/` or to the site, which already carries a
@@ -68,7 +68,7 @@ as opposed to how long it takes to say it.
       verify: `grep -n '^```' README.md | head -1` is at or below the Phase 1 budget, and
       every claim relocated out of the README still exists somewhere `check_claims`
       scans.
-- [ ] **2.2 Bring the word count under its budget without dropping a backed claim.**
+- [x] **2.2 Bring the word count under its budget without dropping a backed claim.**
       `README.md` is a publish surface of `check_claims.ts`, so a trim that removes a
       claim is a claims change, not a length change.
       verify: `./scripts-run src/scripts/check_claims` passes and the set of claims it
@@ -77,13 +77,13 @@ as opposed to how long it takes to say it.
 
 ## Phase 3 — The ratchet holds where the last fix did not
 
-- [ ] **3.1 Register the linter's new budgets in `src/config/gate-coverage.yml` with a
+- [x] **3.1 Register the linter's new budgets in `src/config/gate-coverage.yml` with a
       CI-identical `argv`.** The previous round's failure mode was that nothing watched
       the file; a budget that is not registered can be removed as quietly as it was
       added.
       verify: `./scripts-run src/scripts/check_gate_coverage` passes with the row, and a
       deliberate mismatch between the row's `argv` and the CI invocation fails it.
-- [ ] **3.2 Record the recurrence where the next round will meet it.** The arrival count
+- [x] **3.2 Record the recurrence where the next round will meet it.** The arrival count
       above belongs on this roadmap while it is active and must survive its archival —
       either in the linter's comment or in the budget's own record.
       verify: after this roadmap archives, a reader of `lint_readme_size.ts` or its
@@ -101,9 +101,9 @@ as opposed to how long it takes to say it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `lint_readme_size` measures lines, words and the first fenced-block line, and prints all three.
-- [ ] AC-2 — Both new budgets are derived by a re-runnable command from the README as it stood at the archived roadmap's completion, and that derivation is recorded in the linter.
-- [ ] AC-3 — The first executable command sits at or below its budget, and the word count sits at or below its budget.
-- [ ] AC-4 — `check_claims` passes and the claim set published on `README.md` is unchanged, or each moved claim is listed with its new home.
-- [ ] AC-5 — `src/config/gate-coverage.yml` carries the linter's row with a CI-identical `argv`, and a deliberate mismatch fails `check_gate_coverage`.
-- [ ] AC-6 — A reader of the linter or its budget record learns that this file regressed once before, after this roadmap archives.
+- [x] AC-1 — `lint_readme_size` measures lines, words and the first fenced-block line, and prints all three.
+- [x] AC-2 — Both new budgets are derived by a re-runnable command from the README as it stood at the archived roadmap's completion, and that derivation is recorded in the linter.
+- [x] AC-3 — The first executable command sits at or below its budget, and the word count sits at or below its budget.
+- [x] AC-4 — `check_claims` passes and the claim set published on `README.md` is unchanged, or each moved claim is listed with its new home.
+- [x] AC-5 — `src/config/gate-coverage.yml` carries the linter's row with a CI-identical `argv`, and a deliberate mismatch fails `check_gate_coverage`.
+- [x] AC-6 — A reader of the linter or its budget record learns that this file regressed once before, after this roadmap archives.

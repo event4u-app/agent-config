@@ -18,11 +18,30 @@
 
 **A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more). **Resident processes are permitted only under the supervision contract ADR-249 establishes** — a policy this repository adopted on 2026-08-27, not a description of anything running today. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
+## Try it in 30 seconds
+
+**Try one thing in 30 seconds** — before the full suite, drop in a single
+self-contained subagent and see the discipline on your own repo:
+
+```bash
+mkdir -p .claude/agents
+curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/wedge/production-validator/production-validator.md \
+  -o .claude/agents/production-validator.md
+# then in Claude Code:  @production-validator check this branch is actually done
+```
+
+`production-validator` is read-only and installs nothing else — it gates "done"
+by hunting mocks/stubs on the shipped path and demanding real-system evidence
+([what it does](docs/wedge/production-validator/README.md)). Like it? The full
+suite installs in one command — [Quickstart ↓](#quickstart).
+
+---
+
 ### What's different
 
-It is both deep **and** disciplined — and honest about what it deliberately is not:
+Deep **and** disciplined, and honest about what it deliberately is not:
 
-- **Depth that routes itself** — a deep skill and command library, with a capability router that loads the right one on intent, not a 500-artefact context dump.
+- **Depth that routes itself** — a capability router loads the right skill on intent, not a 500-artefact context dump.
 - **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
@@ -39,41 +58,31 @@ See exactly [what works on which host](docs/capability-matrix.md) or jump to [th
 
 ### Pick your profile — six entry paths
 
-`agent-config setup` writes `profile.id` to `.agent-settings.yml`; each
-anchor below is the first-screen the wizard sends you to. One README,
-six entries, no role-detection guesswork.
+`agent-config setup` writes `profile.id` to `.agent-settings.yml` and sends you
+to that profile's first screen. Each experience page carries the full detail —
+who it's for, first commands and skills, packs and flows, and what is
+deliberately *not* loaded.
 
-| Profile (`profile.id`) | Audience | First commands | First skills |
-|---|---|---|---|
-| 👩‍💻 [`developer`](docs/profiles.md#profile-developer) | IC engineer | `/implement-ticket` · `/work` · `/review-changes` · `/fix` · `/commit` | `developer-like-execution` · `verify-completion-evidence` · `minimal-safe-diff` · `systematic-debugging` · `test-driven-development` |
-| ✍️ [`content_creator`](docs/profiles.md#profile-content_creator) | Writers, ghostwriters, marketers | `/work` · `/post-as` · `/ghostwriter` · `/optimize-prompt` · `/video:from-script` · `/video:storyboard` | `voice-and-tone-design` · `messaging-architecture` · `editorial-calendar` · `release-comms` · `character-consistency` |
-| 🚀 [`founder`](docs/profiles.md#profile-founder) | Solo / early-stage founder | `/work` · `/feature` · `/challenge-me` · `/council` | `refine-prompt` · `rice-prioritization` · `vision-articulation` · `fundraising-narrative` · `runway-cognition` |
-| 🏛 [`agency`](docs/profiles.md#profile-agency) | Multi-client delivery shop | `/work` · `/implement-ticket` · `/refine-ticket` · `/feature` · `/roadmap` | `doc-coauthoring` · `decision-record` · `refine-ticket` · `estimate-ticket` · `perf-feedback-craft` |
-| 💼 [`finance`](docs/profiles.md#profile-finance) | CFO / fractional finance / FP&A | `/work` · `/council` · `/challenge-me` | `dcf-modeling` · `forecasting` · `scenario-modeling` · `unit-economics-modeling` · `runway-cognition` |
-| 🛡 [`ops`](docs/profiles.md#profile-ops) | RevOps, support, SRE-adjacent | `/work` · `/threat-model` · `/review-changes` · `/fix` | `incident-commander` · `dashboard-design` · `logging-monitoring` · `threat-modeling` · `launch-readiness` |
+| Profile | Audience | Experience page |
+|---|---|---|
+| 👩‍💻 [`developer`](docs/profiles.md#profile-developer) | IC engineer | [page](docs/experiences/developer.md) |
+| ✍️ [`content_creator`](docs/profiles.md#profile-content_creator) | Writers, ghostwriters, marketers | [page](docs/experiences/content_creator.md) |
+| 🚀 [`founder`](docs/profiles.md#profile-founder) | Solo / early-stage founder | [page](docs/experiences/founder.md) |
+| 🏛 [`agency`](docs/profiles.md#profile-agency) | Multi-client delivery shop | [page](docs/experiences/agency.md) |
+| 💼 [`finance`](docs/profiles.md#profile-finance) | CFO / fractional finance / FP&A | [page](docs/experiences/finance.md) |
+| 🛡 [`ops`](docs/profiles.md#profile-ops) | RevOps, support, SRE-adjacent | [page](docs/experiences/ops.md) |
 
-**Not sure which one?** Run `npx @event4u/agent-config init` then
-`agent-config setup` — the browser wizard asks a single 8-option role
-question and maps to the closest profile. Source-of-truth:
-[`src/agent-src/profiles/`](src/agent-src/profiles/) ·
-schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
-Beyond software: [`user-types/`](src/agent-src/user-types/)
-(galabau · metalworking · truck — see [Beyond software](#beyond-software).
-
-**Per-profile experience pages** (who it's for · first tasks · packs + flows ·
-what is *not* loaded · examples):
-[developer](docs/experiences/developer.md) ·
-[content_creator](docs/experiences/content_creator.md) ·
-[founder](docs/experiences/founder.md) ·
-[agency](docs/experiences/agency.md) ·
-[finance](docs/experiences/finance.md) ·
-[ops](docs/experiences/ops.md).
+**Not sure which one?** The wizard asks a single 8-option role question and maps
+to the closest profile. Source-of-truth
+[`src/agent-src/profiles/`](src/agent-src/profiles/) · schema
+[`docs/contracts/profile-system.md`](docs/contracts/profile-system.md) · beyond
+software [`user-types/`](src/agent-src/user-types/) (galabau · metalworking ·
+truck — see [Beyond software](#beyond-software)).
 
 ### Workflows, not raw commands
 
-You don't memorize every command — you run a **work journey**. Four flows span the
-developer story end-to-end; each names the command you TYPE to start and the
-skills it composes:
+You don't memorize commands — you run a **work journey**. Four flows span the
+developer story end-to-end:
 
 | Flow | Start with | The journey |
 |---|---|---|
@@ -82,9 +91,7 @@ skills it composes:
 | 🔎 **Review** | `/review-changes` · `/judge` | self-review → judge → quality-fix → threat-model |
 | 🚢 **Delivery** | `/commit` · `/pr:create` | commit in chunks → open PR → answer review |
 
-Full detail — entry commands, canonical path, composed skills per flow:
-[`docs/flows.md`](docs/flows.md). (`agent-admin` — memory / analytics / config —
-is platform operation, not a user-work flow.)
+Composed skills and the canonical path per flow: [`docs/flows.md`](docs/flows.md).
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
@@ -122,23 +129,19 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 Don't take the claims on trust — **verify them.** [`docs/proof.md`](docs/proof.md)
 is generated from source: a claim→evidence table (every public claim binds to a
 resolvable pointer or CI fails), honest-null benchmarks *including the runs where
-the package changed nothing* and a "verify it yourself" block you run on a fresh
-checkout. The proof page fails CI if it drifts from its sources — reproducibility
-is the proof. Browse it on the deployed docs site — the proof page is the primary entry:
-[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/).
-The honest comparison frame lives at
-[`docs/us-vs-the-category.md`](docs/us-vs-the-category.md).
+the package changed nothing*, and a "verify it yourself" block you run on a fresh
+checkout. It fails CI if it drifts from its sources — reproducibility is the
+proof. Read it at
+[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/),
+with the comparison frame at [`docs/us-vs-the-category.md`](docs/us-vs-the-category.md).
 Freshest measured row: in one post-fix session, advisory context injection cut language-mirror violations 555 → 19 while the two blocking guards went 8 → 0 and 1 → 0 — advisory reduced massively, only blocking eliminated. One session and a post-hoc reading, so a recorded prior rather than a law.<!-- claim:conformance-advisory-vs-blocking -->
 
 Maintaining a skills catalog yourself? The **anti-reskin gate** that blocks
-find-replace re-skin PRs here runs on your catalog too —
-[`docs/anti-reskin-gate.md`](docs/anti-reskin-gate.md).
+find-replace re-skin PRs here runs on yours too — [`docs/anti-reskin-gate.md`](docs/anti-reskin-gate.md).
 
-Audit-disciplined by construction — every memory consult, decision
-key and hook concern lands in `agents/runtime/state/` so you can replay it.
-[Core principles](#core-principles) names the four invariants;
-[What `agent-config` is — and what it isn't](#what-agent-config-is--and-what-it-isnt)
-draws the scope boundary.
+Audit-disciplined by construction — every memory consult, decision key and hook
+concern lands in `agents/runtime/state/` so you can replay it.
+[Core principles](#core-principles) names the four invariants.
 
 ## Contribute
 
@@ -154,30 +157,13 @@ opt-in measurement loop. Source-of-truth tree is
 
 ## Quickstart
 
-**Try one thing in 30 seconds** — before the full suite, drop in a single
-self-contained subagent and see the discipline on your own repo:
-
-```bash
-mkdir -p .claude/agents
-curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/wedge/production-validator/production-validator.md \
-  -o .claude/agents/production-validator.md
-# then in Claude Code:  @production-validator check this branch is actually done
-```
-
-`production-validator` is read-only and installs nothing else — it gates "done"
-by hunting mocks/stubs on the shipped path and demanding real-system evidence
-([what it does](docs/wedge/production-validator/README.md)). Like it? Install the
-full suite:
-
 **One command. Detection-driven — your installed AI tools are found and
 pre-selected. Nothing is written until you click Finish. No YAML by hand.**
 
-Those four are structural: they hold on every run, because they are properties
-of the code path rather than of your machine. How *long* it takes is not one of
-them — that is dominated by network and registry latency, which we do not
-control. The install → `doctor` wall-clock is measured by CI on every umbrella
-run and published with its conditions, as evidence; it is never a promised
-number.
+Those four are structural — properties of the code path, not of your machine.
+How *long* it takes is not: that is dominated by network and registry latency.
+CI measures the install → `doctor` wall-clock on every umbrella run and
+publishes it with its conditions, as evidence rather than as a promise.
 
 ```bash
 # 1. Install — on a terminal with a display, the browser wizard launches
@@ -191,18 +177,17 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Headless / CI:** `init` skips the GUI automatically on CI, on a non-TTY, on a headless host, and whenever any CLI-mode flag is present — it then runs the non-interactive installer directly. The full opt-out set is listed once, against the code, in [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped). Pass flags (`--profile=balanced --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
+**Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host, or any CLI-mode flag, and runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
 
-**Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)). `--gui` is an opt-in that forces the wizard past the TTY and headless checks — it does **not** override `CI`, `AGENT_CONFIG_NO_UI`, or a CLI-mode flag; combining it with one of those exits non-zero rather than quietly running the CLI install. On a headless host add `--allow-headless` and connect a browser to the printed URL.
+**Pick specific AIs:** `--tools=claude-code,cursor,augment,…` (any subset). `--gui` forces the loopback-bound, CSRF-gated picker past the TTY and headless checks; it does **not** override `CI`, `AGENT_CONFIG_NO_UI` or a CLI-mode flag, and combining it with one of those exits non-zero rather than quietly running the CLI install.
 
-**Verify hook coverage:** `npx @event4u/agent-config hooks:status` prints the per-platform matrix (`--strict` for CI, `--format json` for tooling).
+**Verify hook coverage:** `npx @event4u/agent-config hooks:status` (`--strict` for CI, `--format json` for tooling).
 
-> **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` only (the bridge marker was retired — ADR-020 amendment 2026-07-13; the global root resolves from `~/.event4u/agent-config`). `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
+> **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` only. `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
 
-Migrating from a v1.x install? `npx @event4u/agent-config migrate` — full notes in [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
+Migrating from v1.x? `npx @event4u/agent-config migrate` — [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
 
 ---
-
 ## What `agent-config` is — and what it isn't
 
 A **content layer** — skills, rules, commands, guidelines, personas — distributed via npm and projected into every supported AI tool's native config format. It follows the [Agent Skills open standard](https://agentskills.io).
@@ -316,7 +301,7 @@ Create the user file interactively: `/agents user init` ([schema](docs/contracts
 
 ### Self-hosted MCP on Cloudflare — zero local install
 
-Skills, commands, rules and guidelines can be served as an MCP endpoint from your own Cloudflare Worker — any MCP client (Claude Desktop, Claude Code, Cursor, Zed, Continue, hosted agents) talks to it over HTTP. Two auth modes: `public` (default, OSS read-only deploys) and `bearer-auth` (operator opt-in, `MCP-Token` Wrangler secret).
+Skills, commands, rules and guidelines can be served as an MCP endpoint from your own Cloudflare Worker, reachable over HTTP by any MCP client. Two auth modes: `public` (default) and `bearer-auth` (operator opt-in, `MCP-Token` Wrangler secret).
 
 ```bash
 task mcp:cloud:login         # one-time, opens browser
@@ -328,7 +313,7 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 > **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the repository's local scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
 
-> The built-in **local stdio** server is listed for discovery in the [Glama MCP Registry](https://glama.ai/mcp/servers/event4u-app/agent-config) (agent developers / contributors; requires a local checkout, not a turnkey install — see [ADR-067](docs/decisions/ADR-067-glama-registry-listing.md)).
+> The built-in **local stdio** server is listed in the [Glama MCP Registry](https://glama.ai/mcp/servers/event4u-app/agent-config) — it requires a local checkout, not a turnkey install ([ADR-067](docs/decisions/ADR-067-glama-registry-listing.md)).
 
 ### Deployment posture
 
@@ -338,15 +323,13 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 | **Small team (3–10 people)** | ✅ today | Shared `agents/overrides/` Git repo + shared NAS for knowledge — no code change, no new server. Recipe: [`docs/deploy/small-team-recipe.md`](docs/deploy/small-team-recipe.md) |
 | **Organization mode** (SSO · central policy · team context · internal connectors) | ⏸ not started | Each shape gated on a recruited customer + funded audit + maintainer ADR. Posture rationale: [`docs/deploy/team-deployment-posture.md`](docs/deploy/team-deployment-posture.md) |
 
-The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
-
-> *The 9.3/10 feedback round (2026-05-25) re-asked for OAuth knowledge connectors, IAM / org governance and organization-shared memory. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md) under the same three release gates — recruited team customer · funded audit · maintainer ADR.*
+Organization-mode features (SSO, central policy, OAuth connectors, team-context) stay cancelled by design until a recruited customer and a funded security audit lift them; the small-team recipe is the supported path meanwhile. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md).
 
 ---
 
 ## Harness expectations
 
-Three classes of install/runtime behaviour look like package bugs but are host-harness behaviour the package cannot control — sibling-plugin namespaces (`codex:*`, `cc-gemini-plugin:*`), deferred tools surfaced via `ToolSearch` and cross-scope skill drift (real bug, fixed in the distribution-channels track). Diagnostics + the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). First step when a skill appears twice: `task probe:skills`.
+Three classes of install/runtime behaviour look like package bugs and are host-harness behaviour the package cannot control: sibling-plugin namespaces, deferred tools surfaced via `ToolSearch`, and cross-scope skill drift. Diagnostics and the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). When a skill appears twice, start with `task probe:skills`.
 
 ## Supported tools
 
@@ -431,7 +414,7 @@ accepts a host-supplied config root so its own settings stay profile-scoped.
 
 ## Who this is for
 
-Stack-agnostic governance core (orchestration · role modes · command clusters · quality gates · audit-discipline) plus parallel stack-specific skill sets:
+A stack-agnostic governance core (orchestration · role modes · command clusters · quality gates · audit discipline), plus stack-specific skill sets:
 
 | Stack | Coverage |
 |---|---|
@@ -455,7 +438,7 @@ Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md)
 
 ### Code provenance & license governance
 
-Every diff is checked against a **license policy derived from the target repo's own detected license** (`LICENSE`/`package.json`/`composer.json`, precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our own borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class license, an unknown license, a missing transformation note or a rename-only-phrased one — wired into `ci`/`ci-strict` from day one. A third piece, `license-compliance-audit`, runs an offline/online similarity scan on demand — a human invokes it deliberately, never a pipeline. This is **provenance-governed**, **license-policy-enforced** borrow discipline backed by an **audited borrow trail** — not a copy detector.
+Every diff is checked against a **license policy derived from the target repo's own detected license** (precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class or unknown license, a missing transformation note, or a rename-only-phrased one — wired into `ci`/`ci-strict`. `license-compliance-audit` runs a similarity scan on demand, invoked by a human and never by a pipeline. This is provenance-governed borrow discipline with an audited trail — not a copy detector.
 
 <!-- provenance-scope-box -->
 #### Scope & limits
@@ -517,71 +500,10 @@ layer`), the platform's concern chain, host hook registration, and router +
 projection freshness. Deeper hook internals (fail-open/closed posture, last
 dispatcher feedback per concern): `agent-config hooks:doctor`.
 
-### A new command / skill is missing in Claude Code after an upgrade
 
-Under the single-surface model, `agent-config upgrade` refreshes the
-`~/.claude/` file projection — that IS the content surface, so a fresh
-session picks the new commands up directly. If commands are still missing,
-the usual cause is a leftover **marketplace plugin**: it is a git-SHA
-snapshot that never moves with the npm upgrade and it shadows nothing —
-it just lists everything twice while lagging behind. Remove it:
-
-```bash
-claude plugin uninstall agent-config@event4u-agent-config
-```
-
-Then start a **new** Claude Code session. `agent-config doctor` reports a
-leftover plugin as `claude-plugin: duplicate surface`; hooks are unaffected
-(they live in a managed `~/.claude/settings.json` block — verify with the
-`hook-wiring` check).
-
-### Skills / commands appear twice in Claude Code
-
-Same cause as above: the deprecated marketplace plugin is installed next to
-the `~/.claude/` file projection, so every skill lists plain **and**
-`agent-config:`-prefixed. Uninstall the plugin (command above) and start a
-new session.
-
-### `agent-config upgrade` fails with `Unknown argument: --no-ui`
-
-Known bug in 8.2.0: `upgrade` passed a `--no-ui` flag that the install
-orchestrator did not accept yet, so the run aborted early. Fixed on `main`;
-until the next release, work around it with:
-
-```bash
-AGENT_CONFIG_NO_UI=1 agent-config global   # refresh the global install, no wizard
-```
-
-### Upgrade was interrupted (Ctrl-C, wizard closed, step failed)
-
-Only the initial `npm install -g` hard-aborts an upgrade. Every later step
-(global re-deploy with hook registration, settings sync, wrapper + git-hook
-refresh) runs independently — a single failed step is reported in the
-end-of-run summary instead of silently skipping the rest. Re-run
-`agent-config upgrade` to converge and use `agent-config doctor` to name
-anything left in a mixed state.
-
-### `agent-config: command not found` / hooks stopped firing
-
-Runtime hooks resolve the **global** binary on `PATH` — a project-local
-install alone is not enough for them. Reinstall the binary:
-
-```bash
-npm install -g @event4u/agent-config
-agent-config doctor   # verifies PATH + plugin wiring
-```
-
-### Project files look stale after a package update
-
-Project-local projections are only rewritten on an explicit refresh:
-
-```bash
-agent-config refresh             # re-apply the installed version to this project
-agent-config refresh --global    # same-version re-install of the global root
-```
-
-More per-version steps: [Migration](docs/MIGRATION.md) ·
-[getting-started § Keeping current](docs/getting-started.md#keeping-current).
+Upgrade and staleness symptoms — a command or skill missing after an upgrade,
+skills appearing twice, an interrupted upgrade, `command not found`, stale
+project files: [`docs/troubleshooting.md` § Upgrade and staleness](docs/troubleshooting.md#upgrade-and-staleness).
 
 ---
 
