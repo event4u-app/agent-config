@@ -8,10 +8,11 @@
  * `description` still told a reader to run two deleted files. A corpus nothing
  * can check is a corpus nothing does check.
  *
- * Scope is deliberately the SHAPE and nothing else. The deleted Python had a
- * second, billable half that scored fixtures against a live model; that
- * capability has no replacement and this file does not pretend to be one.
- * Nothing about validating the corpus needs a model call.
+ * Scope is deliberately the SHAPE and nothing else. Live scoring against a model
+ * is `skill_trigger_eval.ts`, which is billable and already exists; nothing about
+ * validating the corpus needs a model call. What the deleted `validate_fixtures.py`
+ * ALSO did and this does not is check the cost-gating invariants — that half was
+ * not ported and is not claimed here.
  *
  * Exit codes: 0 corpus well-formed · 1 a row is malformed · 2 the corpus is
  * missing or unparseable.
@@ -75,7 +76,7 @@ export function validateCorpus(text: string): { findings: Finding[]; rows: numbe
         }
         const row = raw as Record<string, unknown>;
         const keys = Object.keys(row).sort();
-        const expected = [...REQUIRED_KEYS].sort();
+        const expected: string[] = [...REQUIRED_KEYS].sort();
         for (const k of expected) {
             if (!keys.includes(k)) findings.push({ where, reason: `missing key '${k}'` });
         }
