@@ -109,7 +109,39 @@ export interface WorkerCapsule {
  * affordable precisely here — an envelope is consume-once and expires in
  * hours, so the migration window is a session, not a release.
  */
-export const CAPSULE_SCHEMA_VERSION = 3;
+export const CAPSULE_SCHEMA_VERSION = 4;
+
+/**
+ * Versions a reader ACCEPTS. Version 4 is the first bump that is purely
+ * ADDITIVE, and that is why it widens the accepted set instead of replacing it.
+ *
+ * ## The compatibility contract, stated rather than inferred
+ *
+ * - **Scope.** The version is ENVELOPE-WIDE, not per-variant. One number
+ *   describes the whole schema module, so a variant added later does not
+ *   silently re-date records of another variant.
+ * - **New reader, old record.** A v3 record validates. Its required set is v3's
+ *   — the fields added at v4 are not demanded of it, because demanding them
+ *   would be a retroactive requirement on records already written.
+ * - **Old reader, new record.** A v3-only reader rejects a v4 record with the
+ *   version violation named. That is the pre-existing loud-discard behaviour and
+ *   is affordable for the same reason v3 gave: a record is consume-once and
+ *   expires in {@link RECYCLE_MAX_AGE_HOURS} hours, so the migration window is a
+ *   session, not a release.
+ * - **Unknown version.** Anything outside this set is rejected with the set
+ *   printed. Absent is not a pass — an undated record is not "probably current".
+ * - **Unknown variant.** Rejected by `variant` check, never coerced. A reader
+ *   that does not know a variant must not guess at its required fields.
+ * - **Rollback.** Reverting to a v3-only reader after v4 records exist discards
+ *   those records loudly rather than mis-reading them; the loss is one session's
+ *   resume, which is the same loss as no record at all.
+ *
+ * Adding a required field is what forced v3 to be a hard break. v4 adds
+ * `successful_approaches`, `open_questions` and `predecessor`, and requires the
+ * first and third **only of records that declare themselves v4** — so no
+ * previously valid record becomes invalid.
+ */
+export const ACCEPTED_CAPSULE_VERSIONS: readonly number[] = [3, 4];
 
 /** The two CHECKPOINT variants sharing this schema. */
 export const CAPSULE_VARIANTS = ['worker', 'main_session'] as const;
@@ -280,6 +312,28 @@ export function validateCapsule(input: unknown): string[] {
  * wire gate; this variant is consumed from a FILE by
  * `handoff_context_hook`, so the module itself must be the strict gate.
  */
+/**
+ * ## The four questions a resuming session asks, and the field that answers each
+ *
+ * Written down here rather than left implicit, because the gap that produced
+ * `successful_approaches` was invisible for exactly as long as the mapping was
+ * unwritten: three of the four had a field, the fourth had nothing, and no
+ * reader of the schema had a reason to notice.
+ *
+ * | Question | Field | Kind |
+ * |---|---|---|
+ * | What was it about? | `task`, with `summary` as the one-line outcome | direct |
+ * | What was the goal? | `acceptance_criteria` | **proxy** — it states what *done* means, which is the goal expressed as a test rather than as an intention. `next_task` narrows it to the successor's first move. |
+ * | What did NOT work? | `failed_approaches` | direct, required, explicit `none` |
+ * | What DID work? | `successful_approaches` | direct, required at v4, explicit `none` |
+ *
+ * Two answers are proxies and are labelled as such. `acceptance_criteria` is
+ * not the goal — a goal can be met by criteria nobody wrote down — and reading
+ * it as one is the error the label exists to prevent. Everything else the
+ * schema carries (`remaining`, `not_carried_forward`, `constraints`,
+ * `decisions`, `open_questions`, the drift anchor) answers a question the four
+ * do not ask; it is not surplus, it is simply outside this mapping.
+ */
 export interface MainSessionRecycleEnvelope {
     /** Must be {@link CAPSULE_SCHEMA_VERSION}. */
     capsule_version: number;
@@ -371,6 +425,59 @@ export interface MainSessionRecycleEnvelope {
      * successor re-burning a recorded dead end.
      */
     failed_approaches: string[];
+    /**
+     * Approaches this session tried and KEPT — "did X, it worked because Y".
+     *
+     * **The counterpart `failed_approaches` did not have**, and its absence was
+     * a structural defect rather than an omission: a record that can say what to
+     * avoid and cannot say what to repeat is pessimistic by construction, and a
+     * successor re-derives every working decision from scratch while being
+     * warned off the dead ends.
+     *
+     * Required at capsule version 4 with at least one entry, for exactly the
+     * reason `failed_approaches` is: a session that kept nothing writes the
+     * single entry `none` explicitly, so "nothing worked" stays distinguishable
+     * from "nobody wrote it down". An optional field would re-create the silence
+     * one layer down.
+     */
+    successful_approaches?: string[];
+    /**
+     * Questions this session could not settle — the successor's first reading
+     * list. The worker variant has carried `open_risks` since v1
+     * (`WorkerCapsule.open_risks`) and the handoff template asks for open
+     * questions in prose; the session variant had neither, so the one thing a
+     * resuming session most needs to not silently drop had no field.
+     *
+     * Optional, unlike `successful_approaches`: an empty question list is not
+     * the same asymmetry — a record with nothing open is a complete claim, and
+     * `remaining` already carries the work.
+     */
+    open_questions?: string[];
+    /**
+     * The session that WROTE this record.
+     *
+     * Added with `predecessor` and not separable from it: an edge needs two
+     * endpoints, and before v4 a record carried neither. `workspace` answers
+     * "which checkout", which is what the identity check needs; it cannot
+     * answer "which session", which is what a chain needs.
+     */
+    session_id?: string;
+    /**
+     * The session this one continues, or the explicit string `none`.
+     *
+     * Required at capsule version 4. Before it, `grep -rn
+     * "predecessor_session\|lineage_id" src/` returned 0 and the reader
+     * injected whatever record was lying at the path — which is not the same
+     * question as "which record is mine" that the session key answers. A key
+     * says whose record this is; a predecessor edge says which record this
+     * session should be reading.
+     *
+     * `none` is a STATED ABSENCE, never an empty string or a missing field. The
+     * first session in a workspace has no predecessor and says so, so a reader
+     * never waits on something that will not arrive — and a NAMED predecessor
+     * that is absent is a refusal, never a fall-through to a different record.
+     */
+    predecessor?: string;
     /**
      * Drift anchor — all three, or none of them is one. Identity is the
      * canonicalized remote (or the realpath of the common git dir when there
@@ -615,6 +722,10 @@ const RECYCLE_ENVELOPE_KEYS: ReadonlySet<string> = new Set([
     'next_task',
     'suggested_skills',
     'failed_approaches',
+    'successful_approaches',
+    'open_questions',
+    'predecessor',
+    'session_id',
     'repo_identity',
     'branch',
     'head',
@@ -644,9 +755,16 @@ export function validateRecycleEnvelope(input: unknown): string[] {
         }
     }
 
-    if (e['capsule_version'] !== CAPSULE_SCHEMA_VERSION) {
-        errors.push(`capsule_version must be ${CAPSULE_SCHEMA_VERSION}`);
+    const version = e['capsule_version'];
+    if (typeof version !== 'number' || !ACCEPTED_CAPSULE_VERSIONS.includes(version)) {
+        errors.push(`capsule_version must be one of ${ACCEPTED_CAPSULE_VERSIONS.join(' | ')}`);
     }
+    // Requiredness is version-conditional, and only in the additive direction:
+    // a v4 record owes the v4 fields, a v3 record owes exactly what v3 owed.
+    // Demanding the new fields of an already-written record would be a
+    // retroactive requirement, which is the one thing the recorded schema lock
+    // forbids ("add fields or variants, never repurpose or remove one").
+    const atV4 = version === 4;
     if (e['variant'] !== 'main_session') {
         errors.push("variant must be 'main_session'");
     }
@@ -695,6 +813,38 @@ export function validateRecycleEnvelope(input: unknown): string[] {
             'failed_approaches must carry at least one entry — write "none" explicitly, so ' +
                 'silence and "nothing was abandoned" stay distinguishable',
         );
+    }
+
+    // Version 4 additions. `successful_approaches` mirrors `failed_approaches`
+    // exactly — required with >= 1 entry, `none` written explicitly — because
+    // the asymmetry between the two is the defect the field exists to remove,
+    // and an optional counterpart to a required field re-creates it.
+    checkList(errors, 'successful_approaches', e['successful_approaches'], MAX_LINE_CHARS, atV4);
+    if (Array.isArray(e['successful_approaches']) && e['successful_approaches'].length === 0) {
+        errors.push(
+            'successful_approaches must carry at least one entry — write "none" explicitly, so ' +
+                'silence and "nothing worked" stay distinguishable',
+        );
+    }
+    checkList(errors, 'open_questions', e['open_questions'], MAX_LINE_CHARS, false);
+
+    // The predecessor edge (Phase 2.3). Required at v4, and an EMPTY value is
+    // not an answer: `none` is a claim ("this session starts a chain"), absence
+    // is a reader waiting for something that will not arrive.
+    const predecessor = e['predecessor'];
+    if (predecessor === undefined) {
+        if (atV4) {
+            errors.push(
+                'predecessor is required — name the session this one continues, or write "none" ' +
+                    'explicitly for the first session in a workspace',
+            );
+        }
+    } else if (!isShortLine(predecessor, MAX_REF_CHARS)) {
+        errors.push(`predecessor must be a single line of 1–${MAX_REF_CHARS} chars ("none" when there is no predecessor)`);
+    }
+
+    if (e['session_id'] !== undefined && !isShortLine(e['session_id'], MAX_REF_CHARS)) {
+        errors.push(`session_id must be a single line of 1–${MAX_REF_CHARS} chars`);
     }
 
     // Drift anchor (Phase 3.2). Optional as a set — an older envelope simply

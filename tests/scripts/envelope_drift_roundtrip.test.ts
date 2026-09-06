@@ -13,7 +13,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { runSessionRecycle } from '../../src/scripts/_cli/cmd_session_recycle.js';
 import { consume_recycle_envelope } from '../../src/scripts/handoff_context_hook.js';
-import { RECYCLE_ENVELOPE_REL } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { env_session_id } from '../../src/scripts/sessions_cli.js';
 import { CAPSULE_SCHEMA_VERSION } from '../../src/scripts/_lib/subagent_capsule.js';
 
 const roots: string[] = [];
@@ -45,6 +46,8 @@ function composed(): Record<string, unknown> {
         remaining: ['phase 2'],
         not_carried_forward: ['diff bodies'],
         failed_approaches: ['none'],
+        successful_approaches: ['none'],
+        predecessor: 'none',
         next_task: 'implement phase 2',
     };
 }
@@ -64,7 +67,7 @@ describe('drift round-trip', () => {
         expect(result.code).toBe(0);
 
         const written = JSON.parse(
-            fs.readFileSync(path.join(root, RECYCLE_ENVELOPE_REL), 'utf-8'),
+            fs.readFileSync(path.join(root, recycle_envelope_rel(env_session_id())), 'utf-8'),
         ) as Record<string, unknown>;
 
         expect(written['capsule_version']).toBe(CAPSULE_SCHEMA_VERSION);
@@ -88,7 +91,7 @@ describe('drift round-trip', () => {
         const headB = git(root, ['rev-parse', 'HEAD']);
         expect(headB).not.toBe(headA);
 
-        const decision = consume_recycle_envelope(root);
+        const decision = consume_recycle_envelope(root, new Date(), null);
         expect(decision.action).toBe('inject');
         const block = String(decision.context);
         expect(block).toContain('COMMIT DRIFT');
@@ -99,7 +102,7 @@ describe('drift round-trip', () => {
     it('stays silent when nothing moved', () => {
         const root = makeRepo();
         expect(runSessionRecycle(JSON.stringify(composed()), { cwd: root }).code).toBe(0);
-        const block = String(consume_recycle_envelope(root).context);
+        const block = String(consume_recycle_envelope(root, new Date(), null).context);
         expect(block).not.toContain('DRIFT');
     });
 
@@ -107,7 +110,7 @@ describe('drift round-trip', () => {
         const root = makeRepo();
         expect(runSessionRecycle(JSON.stringify(composed()), { cwd: root }).code).toBe(0);
         process.env.AGENT_RESUME_FOCUS = 'the failing parser test';
-        const block = String(consume_recycle_envelope(root).context);
+        const block = String(consume_recycle_envelope(root, new Date(), null).context);
         expect(block).toContain('FOCUS: attack "the failing parser test" first');
     });
 });

@@ -59,6 +59,8 @@ export function recycleFixture(): MainSessionRecycleEnvelope {
         next_task: 'implement phase 3 against the committed threshold',
         suggested_skills: ['roadmap-management', 'git-workflow'],
         failed_approaches: ['tried a byte proxy for token counts — r was too low to use'],
+        successful_approaches: ['exact-BPE counting over the transcript — matched the host figure'],
+        predecessor: 'none',
     };
 }
 
@@ -76,7 +78,7 @@ describe('anti-fork: both variants validate through the one module', () => {
         // 3 since road-to-cost-parity-3 Phase 2 — the bump is deliberate:
         // `failed_approaches` became REQUIRED, so a v2 envelope must fail
         // loudly rather than be read as "nothing was abandoned".
-        expect(CAPSULE_SCHEMA_VERSION).toBe(3);
+        expect(CAPSULE_SCHEMA_VERSION).toBe(4);
     });
 
     it('versioning stays additive: the unversioned worker capsule remains valid (implicit v1)', () => {

@@ -45,7 +45,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
 
-import { RECYCLE_ENVELOPE_REL } from '../_lib/recycle_envelope_paths.js';
+import { recycle_envelope_rel } from '../_lib/recycle_envelope_paths.js';
 import {
     emptyCounters,
     eolSessionKey,
@@ -180,8 +180,16 @@ export function readState(file: string): SessionEolState {
  * session's state — a wrong resume instead of an empty one. An envelope whose
  * `written_at` predates the advisory is not this session's.
  */
-export function envelopeExists(workspaceRoot: string, since: string | null = null): boolean {
-    const target = path.join(workspaceRoot, RECYCLE_ENVELOPE_REL);
+export function envelopeExists(
+    workspaceRoot: string,
+    since: string | null = null,
+    sessionId: string | null = null,
+): boolean {
+    // Phase 2.1: the record is keyed by session, so the counter-check must look
+    // at THIS session's path. Checking the shared name would read a peer's
+    // record as proof that this session wrote one — the same cross-session
+    // confusion the key exists to remove, re-created in the checker.
+    const target = path.join(workspaceRoot, recycle_envelope_rel(sessionId));
     let raw: string;
     try {
         raw = fs.readFileSync(target, 'utf-8');
@@ -212,10 +220,10 @@ export function envelopeExists(workspaceRoot: string, since: string | null = nul
  * the next action the advisory recommended is the one that destroys the
  * session.
  */
-export function buildMissingEnvelopeLine(workspaceRoot: string): string {
+export function buildMissingEnvelopeLine(workspaceRoot: string, sessionId: string | null = null): string {
     return (
         `recycle advised earlier, but no envelope exists at ` +
-        `${path.join(workspaceRoot, RECYCLE_ENVELOPE_REL)} — /clear now starts the successor ` +
+        `${path.join(workspaceRoot, recycle_envelope_rel(sessionId))} — /clear now starts the successor ` +
         `from nothing. Re-run \`agent-config session:recycle\` and check that it prints the ` +
         `absolute path it wrote before clearing.`
     );
@@ -334,11 +342,14 @@ export function main(): number {
     // `AGENT_RECYCLE_THRESHOLD_TOKENS=0` is documented as the emergency switch
     // for the whole advisory lane, and a lane that keeps one more warn after
     // being switched off is not off.
+    // Raw id, not `sessionKey`: the record path is built from the id the host
+    // exported (`safe_stem`), never from the hashed state-file key.
+    const rawSessionId = payloadSessionId(payload, envelope) || null;
     const shouldWarnMissing =
         threshold !== null &&
         state.advisory_fired_at !== null &&
         (state.missing_envelope_warned_at ?? null) === null &&
-        !envelopeExists(workspaceRoot, state.advisory_fired_at);
+        !envelopeExists(workspaceRoot, state.advisory_fired_at, rawSessionId);
 
     const nextState: SessionEolState = {
         schema_version: 1,
@@ -415,7 +426,7 @@ export function main(): number {
             `${JSON.stringify({
                 decision: 'warn',
                 reason: 'session-eol: recycle advised, no envelope written',
-                additional_context: buildMissingEnvelopeLine(workspaceRoot),
+                additional_context: buildMissingEnvelopeLine(workspaceRoot, rawSessionId),
             })}\n`,
         );
         return EXIT_WARN;
