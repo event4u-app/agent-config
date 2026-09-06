@@ -17,7 +17,9 @@ A single JSON object, `schema_version: 1`:
   "status_polling": false,
   "separate_quota_pool": false,
   "agent_teams": false,
-  "worker_respawn": false
+  "worker_respawn": false,
+  "reads_project_mcp_config": false,
+  "mcp_needs_manual_activation": true
 }
 ```
 
@@ -66,6 +68,8 @@ to in-session execution rather than attempting an unsupported primitive.
 | `separate_quota_pool` | bool | Quota-arbitrage bonus (Phase 2) — subagents draw from a distinct quota pool than the session. `false` → assume shared quota. |
 | `agent_teams` | bool | Claude Code's experimental multi-instance Agent Teams primitive (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`). `false` → the [judgment ladder](auto-dispatch-classification.md#judgment-ladder-phase-2--road-to-always-on-orchestration)'s rung 3 (team) degrades to parallel subagents, recorded as `degraded_from: 3`. |
 | `worker_respawn` | bool | The host can kill a running worker and spawn a fresh one that continues the SAME task mid-flight. `false` on every host today, deliberately — set `true` only once OBSERVED, never by inference from spawning and killing existing separately. `false` → degrade to stop-loss behaviour, loudly. |
+| `reads_project_mcp_config` | bool | Whether the installer writes an MCP entry into this host's config. `false` → no entry is written for it. Set `true` only once OBSERVED — a host may read a USER-scope MCP config and ignore a project one, and an inference from "supports MCP" erases exactly that distinction. |
+| `mcp_needs_manual_activation` | bool | Whether a human step remains after install — an approval dialog, a restart, a manual enable. **Defaults to `true`, inverted against every other field here**, and only an explicit `false` clears it: the others answer "can the host do X", where an unknown must not read as a capability; this one answers "is there a step left for the user", where an unknown must not read as "nothing to do". |
 
 A field being `true` is a **precondition**, not a mandate: `parallel_spawn:
 true` permits concurrency but the dispatch cap still applies (see
@@ -126,6 +130,8 @@ A prober that decides for itself what counts as evidence is the inference
 | `status_polling` | a **completed poll returning a state the parent did not already hold**. A poll that returns what the parent knew is not an observation of polling |
 | `separate_quota_pool` | a **child leg continuing across a parent quota condition** — the parent constrained, the child proceeding |
 | `worker_respawn` | **one task continuing across a killed and re-spawned worker, same task id.** Never inferred from the fact that spawning and killing both exist separately |
+| `reads_project_mcp_config` | **a server named only in the project-scope config appearing in that host's own tool list.** Never inferred from the host documenting MCP support, which does not say which scope it reads |
+| `mcp_needs_manual_activation` | **a session in which the server is live with no human step after install.** The absence of an observation leaves the field `true` — the residual stays reported until somebody watches it not happen |
 
 ### `agent_teams` is out of scope for a row, by construction
 

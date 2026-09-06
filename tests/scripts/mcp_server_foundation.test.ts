@@ -50,6 +50,7 @@ import {
     scan_contexts,
     scan_guidelines,
     scan_rules,
+    resourcePriority,
     to_mcp_resource_meta,
 } from '../../src/scripts/mcp_server/resources.js';
 
@@ -352,6 +353,39 @@ describe('resources loader', () => {
         expect(meta.name).toBeTruthy();
         expect(meta.description).toBeTruthy();
         expect((meta._meta as Record<string, unknown>).kind).toBe(sample.kind);
+    });
+
+    // Protocol conformance only. No shipped host is known to consume `priority`
+    // for selection, and these cases must not be cited as evidence that one does.
+    it('carries the three standard annotations', () => {
+        const [resources] = load_all_resources();
+        const meta = to_mcp_resource_meta(resources[0]!);
+        expect(meta.audience).toEqual(['assistant']);
+        expect(typeof meta.priority).toBe('number');
+        expect(meta.priority as number).toBeGreaterThanOrEqual(0);
+        expect(meta.priority as number).toBeLessThanOrEqual(1);
+        expect(typeof meta.lastModified).toBe('string');
+        expect(Number.isNaN(Date.parse(meta.lastModified as string))).toBe(false);
+    });
+
+    it('priority ranks always-loaded above triggered above reference', () => {
+        // Derived from the frontmatter `type:` that exists, not from a `tier`
+        // field — there is none on a Resource.
+        const base = { uri: 'u', name: 'n', description: 'd', body: '', source: 'package',
+            mime_type: MIME_MARKDOWN, kind: 'rule' as const };
+        const p = (rule_type?: string): number =>
+            resourcePriority(rule_type === undefined ? base : { ...base, rule_type });
+        expect(p('always')).toBeGreaterThan(p('auto'));
+        expect(p('auto')).toBeGreaterThan(p('manual'));
+    });
+
+    it('omits lastModified rather than inventing one when mtime is unreadable', () => {
+        const meta = to_mcp_resource_meta({
+            uri: 'u', name: 'n', description: 'd', body: '', source: 'package',
+            mime_type: MIME_MARKDOWN, kind: 'guideline',
+        });
+        expect(meta.lastModified).toBeUndefined();
+        expect(meta.audience).toEqual(['assistant']);
     });
 
     it('ResourceCache invalidates on mtime (C4)', () => {
