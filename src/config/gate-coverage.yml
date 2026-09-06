@@ -64,6 +64,14 @@
 # CI-identical argv, and 75 of those 78 are listed below.** The manifest is
 # complete for every gate that can carry a floor, covering ~25 % of the population.
 #
+# RECOUNTED 2026-09-06, on the change that adds `lint_motion_authority_drift`.
+# Recomputed on this tree rather than incremented, because the block below
+# measured a tree that no longer exists: `count_gate_scripts()` returns **318**
+# and `grep -c '^  - id:'` returns **89** (88 before this row), so 89/318 =
+# 28.0 %. Five scripts and four rows arrived between 2026-09-03 and this change
+# without a recount in between — the same drift every block here keeps
+# describing.
+
 # RECOUNTED 2026-09-03, on the change that adds `check_agent_artifact_location`.
 # Recomputed on this tree rather than incremented: `count_gate_scripts()` returns
 # **313** and `grep -c '^  - id:'` returns **84** (83 before this row), so
@@ -392,6 +400,33 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_motion_authority_drift
+    argv: ["--quiet"]
+    min_scanned: 90
+    corpus: "every motion statement in the five carriers bound to `design-patterns.md` § Motion — 16 `motion.csv` rows, 84 `styles.csv` rows, 16 in-scope `design-rules-checklist.md` § 7 statements, 8 `ux-guidelines.csv` Animation rows and 4 `app-interface.csv` Animation rows: 128 at the time of writing. The floor is 90 rather than near 128 because `styles.csv` is 84 of the 128 and a style catalog legitimately loses rows; below 90 the scan has lost a whole carrier, which is the failure this floor exists to see. A `> 0` check could not: four of the five carriers could vanish and one 16-row CSV would still report success."
+    status: enforced
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is
+      five NAMED files, so a planted file lands in no scanned root; every
+      violation it can have is a MODIFICATION — a duration widened past its
+      band, an easing family swapped, an allowlisted sentence reworded. Same
+      class as `lint_metric_consumers`. Discrimination is proven instead by the
+      gate's own `--self-test`: 13 cases, 8 rejecting, each driving the real CLI
+      against a throwaway five-carrier tree, and covering both directions of the
+      two override paths — an elastic curve refused without an override
+      condition and accepted with one, an overshoot refused in `styles.csv`
+      without a declared playful register and accepted with one.
+    note: >
+      road-to-one-motion-authority step 1.4. Six shipped carriers stated motion
+      timing and easing and disagreed; this gate makes § Motion the sole carrier
+      and checks the other five against it. It does not restate the authority's
+      numbers, it PARSES them, so the authority cannot drift away from its own
+      enforcement. HONEST LIMIT, stated in the gate's own docstring: the
+      authority bands five named interactions, and a dependent row naming an
+      interaction it does not band — scroll reveal, stagger list, parallax,
+      loading loop — is reported as `unbanded` and NOT failed, because failing it
+      would mean inventing a band the authority never stated. 12 rows are
+      unbanded today and the count is printed on the green path.
   - id: lint_metric_consumers
     argv: ["--quiet"]
     min_scanned: 5
