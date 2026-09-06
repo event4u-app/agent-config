@@ -1,6 +1,138 @@
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-09-03 -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-09-06 -->
 
-# Autonomous roadmap drain — run 18, 2026-09-03
+# Autonomous roadmap drain — run 19, 2026-09-06
+
+Autonomous drain under a written owner instruction: drive active roadmaps to
+completion, route every decision that would reach the owner to the AI council
+instead, close gates only legitimately, one PR per roadmap, no user round-trips.
+
+Base `9b75231ed`. **Seven roadmaps closed and shipped; nine left active.** This
+run did not empty the estate and does not claim to.
+
+## The seed queue was stale in full
+
+The instruction carried a 36-roadmap queue "verified at commit `c536dbd`".
+**None of those 36 roadmaps exists.** The live estate was 18 roadmaps, all at
+**0 %**, so the progress-descending half of the ordering rule selected nothing
+and the queue resolved entirely by the complexity-ascending tie-break.
+Recomputed rather than trusted.
+
+## Pull requests
+
+| PR | Roadmap | State at writing |
+|---|---|---|
+| #1873 | figures-that-name-their-denominator | **merged**, 41/41 |
+| #1874 | a-beta-window-that-is-not-a-surprise | **merged** |
+| #1875 | the-skill-size-park-fired | **merged** |
+| #1876 | a-readme-that-stays-short | open · 37 pass / 0 fail |
+| #1877 | a-dated-trigger-that-decides | open · 45 pass / 0 fail |
+| #1878 | the-ledger-two-releases-skipped | open · 48/48 |
+| #1879 | the-reasoning-surface-that-is-wired | open · 34 pass / 0 fail |
+
+Plus `drain/authorization-that-reaches-further`, pushed carrying step 1.2 of 15
+and **no PR** — a roadmap at 1/15 is not a deliverable.
+
+**No PR was merged by this session.** Merging a production trunk is a Hard-Floor
+action no standing instruction lifts; the three merges above were not this
+session's.
+
+## Council — 6 sessions, 2 seats, $0.0000
+
+CLI subscription transport (`billable=0`), quota 12/50 per seat. The framework
+the seats converged on and every later session applied:
+
+1. A reversible internal choice is **not** owner-reserved merely because the
+   blocker says "owner decides". The reserved set is closed and textual.
+2. **Refusing** a proposal that lowers a floor or deletes a governance control
+   is council-decidable *as status-quo preservation*. **Accepting** one is
+   categorically unreachable.
+3. A refusal is scoped — "not authorized this round, no future ruling
+   prejudged" — never "the project will never", which would itself create a
+   public commitment.
+4. An observation closes only on a **genuine** observation. Unavailable access
+   is recorded as unavailable, never written up as verification.
+5. Widening a ratcheted gate to admit a *recurring* artefact is not
+   bookkeeping — it weakens the forcing function.
+
+**29 blockers dispositioned: 20 DECIDE · 4 RE-SCOPE · 5 DESCOPE.** Among them all
+five entries proposing to reduce the Hard Floor's scope, lower the tool-safety
+floor, or delete four governance controls — every one **rejected**.
+
+Two sessions split and were resolved rather than papered over: the RDP beta
+window took the disposition neither seat called unauthorized, and the
+exit-easing conflict closed on a seat's observation that a *duration ratio*
+cannot answer an *easing-curve* question.
+
+## What the maintainer must decide or know
+
+**1 — The repository goes red on 2026-09-15, by recorded decision.**
+`docs/contracts/reasoning-discipline-protocol.md` lapses; every PR reds until it
+is promoted, extended, or superseded. The council declined to avoid it, holding
+that moving a published lapse date is itself a commitment change and that
+urgency does not enlarge delegated authority. Record:
+`agents/evidence/analysis/rdp-beta-window-lapse-accepted-2026-09-06.md`.
+
+**2 — Five further contracts lapse in the same window and nothing owned them.**
+`release-sizing.md` on 2026-09-10 — sooner than the contract its roadmap was
+written about. Found by the horizon report that roadmap asked for, on its first
+run. Now owned by `agents/roadmaps/stubs/road-to-fresh-beta-lapses-2026-09.md`.
+
+**3 — The dogfooded self-review has been inert on the last two releases while
+reporting `success`.** Both went NEUTRAL on `HTTP 400: prompt is too long` —
+235,472 tokens for 14.17.0, 413,191 for 14.18.0, against a 200,000 ceiling —
+uploaded nothing, and concluded `success` because the job is
+`continue-on-error: true`. Every release from here yields an `unreviewed`
+ledger. Owned by no roadmap.
+
+**4 — One council split the seats could not close.** On the skill-size
+disclosure vehicle their proposals have an **empty intersection**: one wants a
+frontmatter note without forcing `token_budget_class`, the other forbids by name
+any note bypassing the classification system. Both name the same root cause —
+whether `rich`, meaning *exempt from condensation*, is right for a skill that is
+merely long. Recorded as an open transition in ADR-225.
+
+**5 — One step is time-blocked, not work-blocked.** Authorization roadmap 3.3
+needs interruption observations that accrue only as sessions run; the corpus is
+empty on both axes. The council ruled the pre-registration half **urgent** (a
+claim recorded after Phase-1 results are inspected is no longer pre-registered)
+and descoped the measurement with an **observation-based** reopening condition.
+
+## Roadmap premises corrected rather than worked around
+
+- `figures-that-name-their-denominator` said a frontmatter list "carries all
+  seven" judges. It carried six; `judge-spec-compliance` was dispatched while
+  appearing in neither `routes_to:` nor `skills:`.
+- `the-reasoning-surface-that-is-wired` named five dangling references to two
+  deleted files. There were **27, to three** — and its claim that the
+  live-scoring path "has no replacement" was false: two of the three were ported
+  and are in the tree.
+- `a-readme-that-stays-short` diagnosed its regression correctly, but the
+  obvious fix broke a contract test requiring the audience headings to precede
+  `## Quickstart`. Both hold once the section is split rather than moved.
+- `the-ledger-two-releases-skipped` assumed a self-review artifact existed. None
+  was ever produced; the honest state is "the review did not run".
+
+## Nine roadmaps remain
+
+`the-activation-census-consequence` (sequence **after #1876**, which supplies the
+argv-parity capability its step 1.2 needs) · `authorization-that-reaches-further`
+(1/15) · `host-enforcement-truth` · `admissible-council-seats` ·
+`one-motion-authority` · `observed-learning-signal` · `measured-prose-tells` ·
+`asked-not-parked` · `scan-that-fails-closed` ·
+`bounded-reference-harvest-loop` · `council-topology-evidence-followups`.
+
+Every blocker on all of them is dispositioned; the remainder is execution.
+
+## Limits of this record
+
+No roadmap closed without its own `verify:` satisfied literally, and every new
+gate was seen red under a deliberate sabotage probe before being trusted. Where
+a criterion could not be met it is recorded unmet, not reinterpreted.
+`lint-eval-freshness` is red on `main` throughout and untouched by every PR here.
+
+---
+
+# Prior run — autonomous roadmap drain, run 18, 2026-09-03
 
 Autonomous roadmap drain under a written owner instruction: drive every active
 roadmap to completion, route every open decision to the AI council rather than
