@@ -17,7 +17,7 @@ AI video pipeline.
 
 ## Skills (10)
 
-- **`canvas-design`** — Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'.
+- **`canvas-design`** — Creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — on 'design a poster' or 'mach uns ein Visual'. Grounded by design-intelligence.
 - **`character-consistency`** — Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
 - **`image-analyser`** — Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'.
 - **`image-creator`** — Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'.

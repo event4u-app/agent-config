@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: ui-component-architect
-description: "Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'."
+description: "Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui."
 personas:
   - frontend-engineer
 domain: engineering

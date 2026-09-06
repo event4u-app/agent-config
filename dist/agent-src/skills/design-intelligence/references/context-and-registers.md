@@ -78,6 +78,23 @@ config, not a vibe — never re-infer when `DESIGN.md` already sets them
 | default / unstated | 5–6 | 3–4 | 4–5 |
 | data-dense / dashboard / admin / cockpit | 4–6 | 2–3 | 7–9 |
 | bold / playful / expressive / awards / Dribbble | 8–10 | 7–10 | 3–5 |
+| **DISQUALIFIER** — brief `frequency: high` or `initiation: keyboard` | — | **cap 3** | — |
+
+The Motion row is the one dial with a **disqualifier**, and it outranks the
+brief signal above it rather than averaging with it. The two brief fields it
+reads are `frequency` and `initiation` ([`fe-design`](../../fe-design/SKILL.md)
+§ The loop, step 2): a surface used 100-plus times a day, or reached by
+keyboard, does not get a high Motion dial however expressive the rest of the
+brief reads. A keyboard-initiated surface is reached by someone who already
+knows where they are going, so the animation is latency they pay on every
+invocation — the decision tree in
+[`design-patterns.md`](../../fe-design/references/design-patterns.md) § Motion
+answers "should this animate at all" with *no* for exactly this case, and a
+dial that could still reach 9 would contradict it.
+
+A `bold / playful` brief on a command palette therefore resolves to `V 8–10 ·
+M ≤ 3 · D 3–5`, and the cap is stated in the Design Read line so the user can
+see it fired rather than wondering why the motion is flat.
 
 **Dial → downstream levers** (how a dial value changes generation):
 

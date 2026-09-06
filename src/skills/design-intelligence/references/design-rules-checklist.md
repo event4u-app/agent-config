@@ -25,7 +25,7 @@
 | 4 | Style Selection | HIGH | `style`, `product` | Match product type, Consistency, SVG icons (no emoji) | Mixing flat & skeuomorphic randomly, Emoji as icons |
 | 5 | Layout & Responsive | HIGH | `ux` | Mobile-first breakpoints, Viewport meta, No horizontal scroll | Horizontal scroll, Fixed px container widths, Disable zoom |
 | 6 | Typography & Color | MEDIUM | `typography`, `color` | Base 16px, Line-height 1.5, Semantic color tokens | Text &lt; 12px body, Gray-on-gray, Raw hex in components |
-| 7 | Animation | MEDIUM | `ux` | Duration 150–300ms, Motion conveys meaning, Spatial continuity | Decorative-only animation, Animating width/height, No reduced-motion |
+| 7 | Animation | MEDIUM | `ux` | Duration within the authority's per-interaction bands, Motion conveys meaning, Spatial continuity | Decorative-only animation, Animating width/height, No reduced-motion |
 | 8 | Forms & Feedback | MEDIUM | `ux` | Visible labels, Error near field, Helper text, Progressive disclosure | Placeholder-only label, Errors only at top, Overwhelm upfront |
 | 9 | Navigation Patterns | HIGH | `ux` | Predictable back, Bottom nav ≤5, Deep linking | Overloaded nav, Broken back behavior, No deep links |
 | 10 | Charts & Data | LOW | `chart` | Legends, Tooltips, Accessible colors | Relying on color alone to convey meaning |
@@ -146,16 +146,16 @@
 
 ### 7. Animation (MEDIUM)
 
-- `duration-timing` - Use 150–300ms for micro-interactions; complex transitions ≤400ms; avoid >500ms (MD)
+- `duration-timing` - Use the per-interaction bands in `design-patterns.md` § Motion; never above 500ms (MD)
 - `transform-performance` - Use transform/opacity only; avoid animating width/height/top/left
 - `loading-states` - Show skeleton or progress indicator when loading exceeds 300ms
 - `excessive-motion` - Animate 1-2 key elements per view max
-- `easing` - Use ease-out for entering, ease-in for exiting; avoid linear for UI transitions
+- `easing` - Use ease-out in both directions, entering and exiting; avoid linear for UI transitions
 - `motion-meaning` - Every animation must express a cause-effect relationship, not just be decorative (Apple HIG)
 - `state-transition` - State changes (hover / active / expanded / collapsed / modal) should animate smoothly, not snap
 - `continuity` - Page/screen transitions should maintain spatial continuity (shared element, directional slide) (Apple HIG)
 - `parallax-subtle` - Use parallax sparingly; must respect reduced-motion and not cause disorientation (Apple HIG)
-- `spring-physics` - Prefer spring/physics-based curves over linear or cubic-bezier for natural feel (Apple HIG fluid animations)
+- `spring-physics` - Prefer critically damped spring curves (no overshoot) over linear for natural feel (Apple HIG fluid animations)
 - `exit-faster-than-enter` - Exit animations shorter than enter (~60–70% of enter duration) to feel responsive (MD motion)
 - `stagger-sequence` - Stagger list/grid item entrance by 30–50ms per item; avoid all-at-once or too-slow reveals (MD)
 - `shared-element-transition` - Use shared element / hero transitions for visual continuity between screens (MD, HIG)

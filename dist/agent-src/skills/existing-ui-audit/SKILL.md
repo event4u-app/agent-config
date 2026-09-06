@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: existing-ui-audit
-description: "Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for the ui directive set."
+description: "Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for fe-design."
 personas:
   - frontend-engineer
 domain: discovery

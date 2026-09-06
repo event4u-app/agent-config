@@ -73,7 +73,7 @@ describe('the contract carries the mode', () => {
         'utf-8',
     );
 
-    it('declares repeated:<n> and single-run as an axis distinct from the five types', () => {
+    it('declares repeated:<n> and single-run as an axis distinct from the evidence types', () => {
         expect(contract).toContain('evidence-mode: repeated:5');
         expect(contract).toContain('`single-run`');
         expect(contract).toMatch(/separate axis/);
@@ -85,8 +85,8 @@ describe('the contract carries the mode', () => {
         expect(contract).toMatch(/4-of-5 pass/);
     });
 
-    it('still lists exactly the five types — the mode did not become a sixth', () => {
-        for (const t of ['original-review', 'current-binding', 'declared-skip', 'honest-null', 'analysis']) {
+    it('lists the evidence types and does not list the mode among them', () => {
+        for (const t of ['original-review', 'current-binding', 'declared-skip', 'honest-null', 'analysis', 'feel']) {
             expect(contract).toContain(`\`${t}\``);
         }
         expect(contract).not.toMatch(/\|\s*`flaky`\s*\|/);

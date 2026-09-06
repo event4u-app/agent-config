@@ -48,7 +48,7 @@ So the obligation is forward-looking: a **newly written** evidence artifact
 declares its type. `lint_evidence_artifacts.ts` enforces exactly that and
 nothing wider.
 
-## The five types
+## The six types
 
 | Type | What it asserts | How it is declared |
 |---|---|---|
@@ -57,6 +57,42 @@ nothing wider.
 | `declared-skip` | A completion deliberately not reviewed, with the reason recorded. | The existing `**Skipped:** no code surface for this completion — <reason>, scope <hash\|none>, declared <date>` line |
 | `honest-null` | A review that ran and found nothing. Distinct from a skip: the work happened. | The existing `**Honest-null:** 0 findings, scope <64-hex>, reviewed <date>` line |
 | `analysis` | A measurement, census, investigation, or report. Asserts what was true when it was written and is never re-bound. | `<!-- evidence-type: analysis -->` |
+| `feel` | A perceptual check on shipped motion — the class for "technically correct and still wrong", which every type above is blind to because every one of them is mechanical or textual. | `<!-- evidence-type: feel -->` **plus** a `**Feel:** <method> — <outcome>` line |
+
+### `feel` carries a method, not an adjective
+
+`feel` is the one type whose result may be **unbacked** and whose declaration
+may not be **absent**. A perceptual judgement is not reducible to a measurement
+— that is why it needs its own class rather than being squeezed into `analysis`
+— but "it felt fine" is not a check that ran, and an evidence class nothing can
+emit is a vocabulary entry rather than a control.
+
+So the floor is the **method token**, from a closed set of four, each naming how
+the motion was actually looked at:
+
+| Method | What it means |
+|---|---|
+| `slow-motion` | played back below real time, where an easing curve and an overshoot are visible |
+| `frame-step` | stepped frame by frame, where a dropped or duplicated frame is visible |
+| `device` | watched on a real target device rather than a desktop preview |
+| `next-day` | looked at again after a break, which is the only check that catches motion you have habituated to |
+
+The grammar, parsed by `lint_evidence_artifacts.ts`:
+
+```markdown
+<!-- evidence-type: feel -->
+**Feel:** slow-motion — the modal exit still reads abrupt at 0.25x
+```
+
+An outcome of `unbacked` is legal and is not a failure: it records that the
+method ran and settled nothing. A missing line, or a method outside the four, is
+a finding — the check refuses the word without the method, which is exactly the
+cheap satisfaction it exists to prevent.
+
+**What it does NOT claim.** Nothing verifies that the method was really used;
+the gate reads a declaration, not a video. It makes the OMISSION impossible, not
+the answer true — the same honest limit every declaration-shaped gate in this
+tree carries.
 
 ### Three of these were already enforced grammars
 
@@ -178,14 +214,14 @@ default is what keeps all three true.
 
 ## Where the type is written
 
-For the two types with no existing grammar, one HTML comment anywhere in the
+For the three types with no existing grammar, one HTML comment anywhere in the
 first 40 lines:
 
 ```markdown
 <!-- evidence-type: analysis -->
 ```
 
-Accepted values are exactly the five in the table. Anything else is a lint
+Accepted values are exactly the six in the table. Anything else is a lint
 error rather than a warning: a misspelled type reads as untyped to every
 consumer, which is the state this contract exists to end.
 

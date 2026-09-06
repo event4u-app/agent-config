@@ -1424,6 +1424,11 @@ tasks:
     desc: Enforce catalog-to-rule parity — every design-antipattern entry classified, every backed entry matched by a slop rule (road-to-design-detector-evidence Phase 1)
     cmd: ./scripts-run src/scripts/lint_design_antipattern_parity {{.QUIET_FLAG}}
 
+  lint-motion-authority-drift:
+    silent: true
+    desc: Enforce one motion authority — design-patterns.md § Motion states the duration bands, easing choice and bounce prohibition; the five dependent carriers may state nothing it does not permit (road-to-one-motion-authority Phase 1)
+    cmd: ./scripts-run src/scripts/lint_motion_authority_drift {{.QUIET_FLAG}}
+
   check-trunk-drift:
     silent: true
     desc: "Advisory pre-PR check — fail if the branch is behind origin/main (road-to-product-clarity Phase 4b). Run in the /create-pr pre-flight; wire into blocking CI per branch-protection policy."
