@@ -53,27 +53,7 @@ Exempt — the file set is enumerated **before** the first read and each read is
 - the members of a directory listing or grep result being opened in turn;
 - a declared read protocol under [`context-hygiene`](context-hygiene.md).
 
-Not exempt, and still the failure this rule exists to catch: re-reading the *same* file hoping for a different answer, re-running a failing command unchanged, or widening a grep by one word at a time instead of thinking. The discriminator is **did the previous call change what I know** — not the tool name.
-
-## Address another directory by flag, not by `cd`
-
-```
-A `cd X && …` COMPOUND RE-ENTERS THE DIRECTORY ON EVERY CALL.
-THE ONE CALL THAT FORGETS RUNS IN THE WRONG TREE AND SUCCEEDS.
-USE THE TOOL'S DIRECTORY FLAG. WHERE THERE IS NONE, USE A SUBSHELL.
-```
-
-Most tools carry one — `git -C <path>` and `make -C <path>` are the
-stack-agnostic pair; package managers, test runners and build tools each have
-their own spelling, and the project's own skills name it per stack. Where a tool
-genuinely has none, `( cd <path> && <cmd> )` keeps the change inside the
-subshell.
-
-Two costs, and the second is the reason this sits in a rule rather than in a
-skill. A host whose working-directory boundary excludes the target prints a
-cwd-reset line and runs the next command somewhere else, so the `cd` has to be
-repeated per call — that is the token cost. The silent one is worse: a command
-that omits the repeat does not fail, it edits the main checkout.
+Not exempt, and still the failure this rule exists to catch: re-reading the *same* file hoping for a different answer, re-running a failing command unchanged, or widening a grep by one word at a time instead of thinking. The discriminator is **did the previous call change what I know** — not the tool name. Nor `cd X && …`: `git -C`.
 
 ## Fresh Output Over Memory
 
