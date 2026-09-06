@@ -50,12 +50,22 @@
  * not override either, so in CI the local tag list is EMPTY. See releaseStatus
  * for the asymmetry and the remote fallback.
  *
+ * AN EMPTY LEDGER MUST SAY WHY IT IS EMPTY. The released/unreleased split above
+ * closed the missing-file half; it left the other half open, because
+ * `findings: []` still passed while asserting nothing. A writer could satisfy
+ * the gate by creating an empty file, which is the same silence wearing the
+ * shape of a record. `no_findings_reason` is now required whenever the file
+ * exists and the array is empty — see empty_ledger_problem for what the reason
+ * has to distinguish.
+ *
  * A future reader changing allowEmpty below is the person this is addressed to:
- * the EMPTY_VALID waiver still covers a ledger that exists and is empty, and an
- * unreleased version. It no longer covers a released version with no ledger.
+ * the EMPTY_VALID waiver now covers only an EXPLAINED empty ledger and an
+ * unreleased version. It covers neither a released version with no ledger nor an
+ * empty ledger with no reason.
  *
  * Exit codes: 0 complete · 1 missing/incomplete dispositions (an absent ledger
- * for a RELEASED version is one of them) · 2 usage error, schema error, or an
+ * for a RELEASED version and an unexplained empty ledger are both among them) ·
+ * 2 usage error, schema error, or an
  * undeterminable release status. Deliberately NOT fail-open: this script never calls a model;
  * a broken ledger file is a hard error, not a neutral skip.
  */
@@ -65,7 +75,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -91,6 +101,8 @@ export interface Ledger {
     schema_version: number;
     release: string;
     findings: LedgerFinding[];
+    /** Why the finding set is empty. Required when it is; see empty_ledger_problem. */
+    no_findings_reason?: string;
 }
 
 /** Mirrors self_review_gate.classifyBlocking — security/claim × critical/high. */
@@ -134,6 +146,36 @@ export function missing_dispositions(findings: readonly LedgerFinding[]): string
         }
     }
     return problems;
+}
+
+/**
+ * An empty finding set must say why it is empty.
+ *
+ * `findings: []` and a missing file made the same claim to every reader — "nothing
+ * to disposition" — and only one of them is evidence. Worse, they collapse two
+ * states that differ entirely: a review that ran and reported nothing, and a review
+ * that never ran at all. The reason field is what forces the writer to pick one and
+ * makes the pick falsifiable, so a fabricated empty ledger has to assert something
+ * a reader can check rather than merely occupy the path the gate looks at.
+ *
+ * Applies ONLY to a ledger file that exists. An absent ledger on an unreleased
+ * version is the normal in-flight state and has nothing to carry a reason.
+ */
+export function empty_ledger_problem(
+    ledger: Pick<Ledger, 'findings' | 'no_findings_reason'>,
+): string | null {
+    if (ledger.findings.length > 0) {
+        return null;
+    }
+    if ((ledger.no_findings_reason ?? '').trim() !== '') {
+        return null;
+    }
+    return (
+        'the ledger exists with an empty `findings` array and no `no_findings_reason`. '
+        + 'An unexplained empty ledger is indistinguishable from an absent one — state '
+        + 'whether the review ran and reported nothing, or did not run, and how a reader '
+        + 'can check that.'
+    );
 }
 
 export type ReleaseStatus = 'released' | 'unreleased' | 'undeterminable';
@@ -410,6 +452,19 @@ function main(argv: readonly string[]): number {
         }
     }
 
+    // An existing ledger that records nothing must say why. Checked here rather
+    // than in the schema because the requirement is conditional on the finding
+    // count, which the repo's Draft-07 subset validator cannot express.
+    if (fs.existsSync(ledgerPath)) {
+        const emptyProblem = empty_ledger_problem(ledger);
+        if (emptyProblem !== null) {
+            process.stderr.write(
+                `❌  ${path.relative(REPO_ROOT, ledgerPath)}: ${emptyProblem}\n`,
+            );
+            return 1;
+        }
+    }
+
     // Scope declaration, not a scope guard. The ledger is written per release by
     // `--ingest`, so "no <release>.json" is the normal state of a release whose
     // self-review reported nothing — the gate's own success line says so. That
@@ -418,7 +473,7 @@ function main(argv: readonly string[]): number {
     // durable trigger for an un-ingested finding is `--pr` mode, which compares
     // the ledger against what the self-review actually reported.
     try {
-        assertScanned({
+        reportScanned({
             gate: 'check_finding_dispositions',
             scanned: ledger.findings.length,
             units: 'recorded finding(s)',
@@ -426,11 +481,13 @@ function main(argv: readonly string[]): number {
             allowEmpty:
                 'EMPTY_VALID: zero recorded findings IS the pass state for a release whose '
                 + 'self-review reported none — the ledger file is created on first --ingest, so a '
-                + 'clean release legitimately has no <version>.json. NARROWED: this no longer '
+                + 'clean release legitimately has no <version>.json. NARROWED TWICE: it no longer '
                 + 'covers a RELEASED version with no ledger, which returns 1 above on the '
-                + 'released/unreleased split; the waiver now covers an empty-but-present ledger '
-                + 'and an unreleased version. Un-ingested findings on an in-flight release are '
-                + 'caught by --pr (unrecorded_findings), never by this count.',
+                + 'released/unreleased split, and it no longer covers an empty ledger that does '
+                + 'not say why it is empty, which returns 1 above via empty_ledger_problem. What '
+                + 'remains is an EXPLAINED empty ledger and an unreleased version. Un-ingested '
+                + 'findings on an in-flight release are caught by --pr (unrecorded_findings), '
+                + 'never by this count.',
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {

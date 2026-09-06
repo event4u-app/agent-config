@@ -51,6 +51,11 @@
         "type": "string"
       }
     },
+    "no_findings_reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Why the finding set is empty. REQUIRED whenever a ledger file exists and `findings` is empty — enforced in check_finding_dispositions.empty_ledger_problem rather than here, because the requirement is conditional on the array length and this repo's Draft-07 subset validator resolves no `if`/`then`. The field exists because `findings: []` and a missing file made the same claim to every reader while collapsing two states that differ entirely: a review that ran and reported nothing, and a review that never ran. The reason must pick one and say how a reader can check it."
+    },
     "findings": {
       "type": "array",
       "description": "May be empty. An empty array is an honest null, not a missing field — the distinction the Markdown track spells with its own §2.3 line. The item shape is INLINED rather than `$ref`-ed for the same measured reason: the subset validator does not resolve `$ref`, so a referenced definition would have validated nothing.",
