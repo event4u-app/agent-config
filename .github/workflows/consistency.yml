@@ -175,6 +175,24 @@ jobs:
       - name: Verify the roadmap dashboard is not committed
         run: task roadmap-dashboard-untracked-check
 
+      # Both gates land in `task ci` AND here, for the reason the steps above
+      # give: no workflow invokes `task ci`, so a gate registered only there
+      # cannot fail a pull request. The corpus validator exists precisely
+      # because tests/reasoning-layer-eval/ ran unchecked after its two Python
+      # validators were deleted — registering its replacement somewhere nothing
+      # runs would reproduce that in one move.
+      - name: Verify the RDP trigger-fixture corpus is well-formed
+        run: task lint-reasoning-fixtures
+
+      - name: Verify no skill claims explicit-request-only and auto-triggers
+        run: task lint-skill-trigger-contradiction
+
+      # Same reason as the two steps above: no workflow invokes `task ci`, so a
+      # budget registered only there cannot fail a pull request — which is how
+      # this file's previous fix stopped holding for three months.
+      - name: Verify README size, word and time-to-first-command budgets
+        run: task lint-readme-size --quiet
+
       # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
       # no workflow invokes `task ci` — so the check that exists to keep harvest
       # sources out of the tracked tree could not fail a pull request. Same
@@ -337,6 +355,32 @@ jobs:
 
       - name: Review-artifact independence declaration
         run: ./scripts-run src/scripts/check_review_schema
+
+      # The shipped version carries a findings ledger — checked OUTSIDE the
+      # `release/*` pull-request condition.
+      #
+      # The gate's only other caller is release-validation.yml's
+      # `finding-dispositions` job, gated on
+      # `startsWith(github.head_ref, 'release/')`. That branch is deleted after
+      # the merge, so nothing on the trunk ever ran the gate — and 14.17.0 and
+      # 14.18.0 both shipped with no ledger at all, undetected, because the only
+      # surface that could have said so no longer existed.
+      #
+      # TIMING, stated because it is not the obvious reading: this does NOT
+      # redden the release merge itself. At that moment the version is bumped
+      # but the tag and GitHub Release do not exist yet, so the gate's
+      # released-vs-unreleased probe correctly answers `unreleased` and an absent
+      # ledger is the normal in-flight state. It reddens on the first push to
+      # main AFTER publication — which is the window this is for: a human seeing
+      # it after the tag rather than on a branch that is gone.
+      #
+      # GH_TOKEN mirrors the release-validation job: when the ledger is absent
+      # the gate asks whether the version shipped, and in a checkout without
+      # tags `gh release view` is the authoritative answer.
+      - name: Shipped version carries a findings ledger
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts-run src/scripts/check_finding_dispositions
 
       # Both gates below were registered `enforced` and ran in NO workflow, so
       # each was its own finding: check_ci_local_parity exists to report gates

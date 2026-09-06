@@ -14,13 +14,16 @@ are settled by data, not assertion.
 
 1. **Trigger layer — *did the right discipline fire?***
    `trigger-fixtures.json`, in the repo's standard `{q, trigger, note}` schema
-   (+ additive `discipline` / `tier`). Live scoring reuses the existing runner
-   `src/scripts/skill_trigger_eval.py` (model calls → **billable, Phase 7**).
+   (+ additive `discipline` / `host`). Live scoring reuses the existing runner
+   `src/scripts/skill_trigger_eval.ts` (model calls → **billable, Phase 7**).
    When each RDP skill lands (Phases 4–6) it gets its own
    `skills/<skill>/evals/triggers.json` seeded from these rows, per the
    per-skill convention.
-   - Cost-free now: `python3 tests/reasoning-layer-eval/validate_fixtures.py`
-     checks shape + that the L10/L12/L13 cost-gating invariants are exercised.
+   - Cost-free now: `./scripts-run src/scripts/lint_reasoning_fixtures`
+     checks the shape of every row. It replaces the deleted
+     `validate_fixtures.py`, which went in the Python retirement and left the
+     corpus with no validator at all; the invariant half of the old script was
+     not ported and is not claimed here.
 
 2. **Quality layer — *did firing it produce better work?***
    `rubric.md` + `golden-transcripts/` — 12 tasks (4 per host-strength band), each run
@@ -53,9 +56,9 @@ are settled by data, not assertion.
 
 | step | cost | when |
 |---|---|---|
-| `validate_fixtures.py` | free (no model) | now / CI |
-| live trigger scoring (`skill_trigger_eval.py`) | billable | Phase 7 |
-| baseline + treatment transcript capture (`run_quality_eval.py`) | billable | Phase 7 |
+| `lint_reasoning_fixtures` | free (no model) | now / CI (`task lint-reasoning-fixtures`) |
+| live trigger scoring (`skill_trigger_eval.ts`) | billable | Phase 7 |
+| baseline + treatment transcript capture (`rdp_quality_eval.ts`) | billable | Phase 7 |
 | rubric hand-scoring | human time | Phase 7 |
 
 Baseline capture is intentionally **not** done during authoring — it needs real
@@ -82,11 +85,14 @@ host-model runs and is the first billable step in Phase 7.
 ## Files
 
 - `trigger-fixtures.json` — RDP trigger fixtures (21 rows, 8 disciplines).
-- `validate_fixtures.py` — cost-free structural + invariant validator.
+- `src/scripts/lint_reasoning_fixtures.ts` — cost-free structural validator
+  (shape only). The deleted `validate_fixtures.py` also checked cost-gating
+  invariants; that half was not ported.
 - `rubric.md` — the 12-slot plan + 4-dimension hand-scoring rubric + thresholds.
-- `run_quality_eval.py` — quality-layer runner: controlled two-system-prompt
-  differential (baseline = no RDP / treatment = +RDP), dry-run by default,
-  `--confirm` to spend. Mirrors `skill_trigger_eval.py`'s key + cost-gate.
+- `src/scripts/rdp_quality_eval.ts` — quality-layer runner: controlled
+  two-system-prompt differential (baseline = no RDP / treatment = +RDP),
+  dry-run by default, `--confirm` to spend. Mirrors `skill_trigger_eval.ts`'s
+  key + cost-gate.
 - `golden-transcripts/corpus-prompts.json` — the 12 task prompts (machine form).
 - `golden-transcripts/_template.md` — per-slot transcript + scoring template.
 - `golden-transcripts/<NN>-<slug>.md` — captured baseline+treatment transcripts.

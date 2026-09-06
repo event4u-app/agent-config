@@ -47,7 +47,7 @@ this roadmap touches), and any change to what a release is allowed to promise.
 
 ## Phase 1 — A date in a trigger is decidable
 
-- [ ] **1.1 Teach `adr_cite_check` the dated sub-class, and only that.** When a
+- [x] **1.1 Teach `adr_cite_check` the dated sub-class, and only that.** When a
       `review_trigger` opens with a parseable `Expiry YYYY-MM-DD` (or an equivalent
       leading date form), the tool returns `fired` or `not-fired` against `asOf()`
       instead of `indeterminate`. Every other trigger keeps `indeterminate`, which
@@ -56,7 +56,7 @@ this roadmap touches), and any change to what a release is allowed to promise.
       `trigger state fired` on any date at or after 2026-09-15 and `not-fired`
       before it, and a fixture ADR whose trigger is purely semantic still prints
       `indeterminate`.
-- [ ] **1.2 Say in the record why the council's rejection does not reach this.** The
+- [x] **1.2 Say in the record why the council's rejection does not reach this.** The
       2026-08-19 rejection was of forcing *semantic* conditions to a boolean. The
       docstring must state that the dated sub-class is decided by arithmetic and
       carries no interpretation, so a later reader cannot mistake 1.1 for the
@@ -64,7 +64,7 @@ this roadmap touches), and any change to what a release is allowed to promise.
       verify: the docstring names the rejection, states the carve-out in one
       sentence, and `./scripts-run src/scripts/adr_cite_check ADR-227` — whose
       trigger is semantic — still reports `indeterminate`.
-- [ ] **1.3 Surface a fired date where a human meets it.** A trigger that has fired,
+- [x] **1.3 Surface a fired date where a human meets it.** A trigger that has fired,
       or fires within a stated window, appears in the ADR index or the proof surface
       rather than only in a command nobody runs.
       verify: a fired or near-fired trigger is visible in generated output without
@@ -72,14 +72,14 @@ this roadmap touches), and any change to what a release is allowed to promise.
 
 ## Phase 2 — The release promise is read back
 
-- [ ] **2.1 Read the previous release's `Next cycle ships` line at release time.** The
+- [x] **2.1 Read the previous release's `Next cycle ships` line at release time.** The
       current release's head states whether each item the previous head promised
       shipped, did not ship, or was withdrawn with a reason. The reader is the existing
       `check_release_highlights` path; no new script.
       verify: a release head that ignores the previous promise is refused by
       `check_release_highlights`, and one that answers it — in any of the three forms —
       passes.
-- [ ] **2.2 Answer 14.18.0's own promise in the next head.** `CHANGELOG.md:497-500`
+- [x] **2.2 Answer 14.18.0's own promise in the next head.** `CHANGELOG.md:497-500`
       promises the MCP-bridge repair (version-pinned entry, self-migrating
       registration, docs matching the installer). The next release head states its
       outcome, whatever it is.
@@ -88,7 +88,7 @@ this roadmap touches), and any change to what a release is allowed to promise.
 
 ## Phase 3 — ADR-134's own date is met, not merely watched
 
-- [ ] **3.1 Route ADR-134 before 2026-09-15.** The ADR gives the maintainer exactly two
+- [x] **3.1 Route ADR-134 before 2026-09-15.** The ADR gives the maintainer exactly two
       actions — post, or commit a superseding deferral with a signed reason and a new
       expiry at most 90 days out. This roadmap does neither on its own authority; it
       makes the choice visible and dated. The owner decision is recorded as a blocker
@@ -101,7 +101,8 @@ this roadmap touches), and any change to what a release is allowed to promise.
 
 ### blocker: adr-134-expiry-owner-action
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome:** transferred — the ROADMAP dependency is closed; the owner action is not, and is not taken here.
 - **Owner:** maintainer
 - **Asked:** 2026-09-06, in the round `inbox-2026-09-q` disposition and in the reply that carried it.
 - **Blocks:** Phase 3 only. Phases 1 and 2 are independent and agent-doable in full.
@@ -117,6 +118,24 @@ this roadmap touches), and any change to what a release is allowed to promise.
   `decision-revisit-gate`'s reserved set; no agent may pick either. Phase 1 and
   Phase 2 are independent of this blocker and are agent-doable in full — the
   mechanism that makes a lapse visible does not need the lapse resolved first.
+- **Resolution, 2026-09-06 — roadmap closure, not substantive resolution.** AI
+  council, two seats, two rounds, under the maintainer's standing delegation for
+  the drain run: **unanimous** that posting the launch decision and writing a
+  superseding deferral are both owner-reserved public commitments, so this
+  blocker **descopes**. What closed is this roadmap's dependency on the answer.
+  What did **not** close is ADR-134: no record supersedes it, no launch decision
+  has been posted, and neither action was taken here or may be taken by an agent.
+  The `Resolved when:` clause is met on its second branch — a compliance finding
+  naming the lapse exists at
+  `agents/evidence/analysis/adr-134-expiry-compliance-finding.md`. That finding
+  does not say the action is unnecessary, deferred, implicitly extended, or
+  satisfied; it records that the expiry is 2026-09-15, that the action is
+  unrouted, and that ADR-134's own text makes a lapse "an open compliance finding
+  for the next review cycle, not a silent extension". The substantive question
+  stays where it already lived, in the date carrier
+  `agents/roadmaps/stubs/road-to-adr-134-expiry.md`, which is not duplicated and
+  not superseded. Phases 1 and 2 were independent of this blocker throughout and
+  were executed in full.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-06 | reviewer: claude/host -->
@@ -130,9 +149,9 @@ this roadmap touches), and any change to what a release is allowed to promise.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `adr_cite_check` reports `fired` or `not-fired` for a trigger whose condition is a leading date, and `indeterminate` for every trigger that is not.
-- [ ] AC-2 — The dated carve-out and the 2026-08-19 rejection it does not reach are both stated in the tool's own docstring.
-- [ ] AC-3 — A fired or near-fired dated trigger is visible in generated output, and deleting the date from its ADR removes the line.
-- [ ] AC-4 — A release head that neither confirms, denies, nor withdraws the previous head's promise is refused by an existing gate.
-- [ ] AC-5 — ADR-134 has either a superseding record with a new dated expiry, or a recorded compliance finding naming the lapse — never neither.
-- [ ] AC-6 — No new gate script, no new hook concern and no trigger grammar beyond the dated form exists in the tree as a result of this roadmap.
+- [x] AC-1 — `adr_cite_check` reports `fired` or `not-fired` for a trigger whose condition is a leading date, and `indeterminate` for every trigger that is not.
+- [x] AC-2 — The dated carve-out and the 2026-08-19 rejection it does not reach are both stated in the tool's own docstring.
+- [x] AC-3 — A fired or near-fired dated trigger is visible in generated output, and deleting the date from its ADR removes the line.
+- [x] AC-4 — A release head that neither confirms, denies, nor withdraws the previous head's promise is refused by an existing gate.
+- [x] AC-5 — ADR-134 has either a superseding record with a new dated expiry, or a recorded compliance finding naming the lapse — never neither.
+- [x] AC-6 — No new gate script, no new hook concern and no trigger grammar beyond the dated form exists in the tree as a result of this roadmap.

@@ -90,7 +90,7 @@ async function main(rawArgv: readonly string[]): Promise<number> {
     program
         .command('eval:record')
         .description('Record a live trigger-eval result into a corpus manifest (ADR-061 §6 refresh DoD)')
-        .requiredOption('--eval-json <path>', 'EvalResult JSON written by skill_trigger_eval.py --output')
+        .requiredOption('--eval-json <path>', 'EvalResult JSON written by skill_trigger_eval --output')
         .requiredOption('--manifest <path>', 'corpus manifest.json to patch')
         .option('--min-recall <n>', 'Recall floor override (per-skill default otherwise)', (v) => Number.parseFloat(v))
         .option('--min-precision <n>', 'Precision floor override (per-skill default otherwise)', (v) => Number.parseFloat(v))

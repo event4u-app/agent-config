@@ -88,16 +88,6 @@ export interface GateSpec {
   min_scanned: number;
   corpus: string;
   status: 'enforced' | 'pending';
-  /**
-   * Task whose `cmd:` must invoke this gate with exactly `argv` — opt-in.
-   *
-   * Without it, `argv` says how the coverage probe runs the gate and nothing
-   * ties that to how the pipeline runs it, so a row can drift from its own
-   * invocation and still report coverage. Opt-in rather than universal because
-   * most rows predate the field, and a blanket assertion would red the manifest
-   * on every row whose probe argv legitimately differs from its task argv.
-   */
-  ci_task?: string;
   /** Absent = this gate has no canary recipe; reported, never hidden. */
   canary?: CanarySpec;
   /**
@@ -123,6 +113,21 @@ export interface GateSpec {
    * `pending` is reported instead of hidden.
    */
   unavailable_exit?: number;
+  /**
+   * Repo-relative workflow file this row's `argv` is pinned to.
+   *
+   * Rule 2 of this manifest — CI-IDENTICAL INVOCATION — was an instruction to
+   * the author and nothing else: the guard runs whatever `argv` says and never
+   * looked at how CI calls the gate, so a row could drift from its workflow, or
+   * the workflow step could be deleted outright, and this file would keep
+   * reporting healthy coverage for a gate CI no longer runs.
+   *
+   * Opt-in per row, because most gates here have several CI invocations with
+   * different arguments and one `argv` cannot be identical to all of them. Where
+   * a row DOES name a workflow, that workflow must contain an invocation of the
+   * gate whose argument list equals `argv` exactly.
+   */
+  ci_invocation?: string;
   note?: string;
 }
 
@@ -201,72 +206,16 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
       ...(e['unavailable_exit'] === undefined
         ? {}
         : { unavailable_exit: _require_int(e['unavailable_exit'], id, i) }),
+      ...(e['ci_invocation'] === undefined
+        ? {}
+        : { ci_invocation: _require_str(e['ci_invocation'], 'ci_invocation', id, i) }),
       ...(e['note'] === undefined ? {} : { note: String(e['note']) }),
       ...(e['canary'] === undefined ? {} : { canary: _require_canary(e['canary'], id, i) }),
       ...(e['no_canary_reason'] === undefined
         ? {}
         : { no_canary_reason: _require_str(e['no_canary_reason'], 'no_canary_reason', id, i) }),
-      ...(e['ci_task'] === undefined ? {} : { ci_task: String(e['ci_task']) }),
     };
   });
-}
-
-/**
- * The args a task passes to its gate, or `null` when the task is not found.
- *
- * `{{.QUIET_FLAG}}` resolves to `--quiet` unless AGENT_SCRIPT_VERBOSITY=verbose
- * (Taskfile.yml `vars`), so it is normalised to its default rather than left as
- * a literal — comparing the unexpanded template would make every row using it
- * unmatchable and the assertion vacuous.
- */
-export function taskArgvFor(gateId: string, taskName: string, repoRoot: string): string[] | null {
-  const files = [path.join(repoRoot, 'Taskfile.yml')];
-  const tfDir = path.join(repoRoot, 'taskfiles');
-  if (fs.existsSync(tfDir)) {
-    for (const n of fs.readdirSync(tfDir).sort()) {
-      if (n.endsWith('.yml') || n.endsWith('.yaml')) files.push(path.join(tfDir, n));
-    }
-  }
-  const needle = new RegExp(`^\\s*${taskName}:\\s*$`);
-  for (const f of files) {
-    const lines = fs.readFileSync(f, 'utf-8').split('\n');
-    const at = lines.findIndex((l) => needle.test(l));
-    if (at === -1) continue;
-    for (let i = at + 1; i < lines.length; i += 1) {
-      const line = lines[i] as string;
-      if (/^\s{0,2}\S/.test(line) && !/^\s*(cmd|cmds|desc|silent|deps|vars|-)/.test(line)) break;
-      const m = /^\s*(?:-\s*)?cmd:\s*(.+?)\s*$/.exec(line);
-      if (!m) continue;
-      const parts = (m[1] as string).split(/\s+/);
-      const idx = parts.findIndex((t) => t.endsWith(`src/scripts/${gateId}`));
-      if (idx === -1) continue;
-      return parts
-        .slice(idx + 1)
-        .map((t) => (t === '{{.QUIET_FLAG}}' ? '--quiet' : t))
-        .filter((t) => t !== '');
-    }
-  }
-  return null;
-}
-
-/** Rows that opted into task-argv parity, checked. Returns human-readable failures. */
-export function checkCiArgvParity(specs: readonly GateSpec[], repoRoot: string): string[] {
-  const out: string[] = [];
-  for (const s of specs) {
-    if (s.ci_task === undefined) continue;
-    const got = taskArgvFor(s.id, s.ci_task, repoRoot);
-    if (got === null) {
-      out.push(`${s.id}: ci_task '${s.ci_task}' invokes no src/scripts/${s.id} — the row points at nothing`);
-      continue;
-    }
-    if (got.join(' ') !== s.argv.join(' ')) {
-      out.push(
-        `${s.id}: argv [${s.argv.join(' ')}] != task '${s.ci_task}' argv [${got.join(' ')}] — ` +
-          'the coverage probe does not run this gate the way the pipeline does',
-      );
-    }
-  }
-  return out;
 }
 
 function _require_canary(v: unknown, id: string, i: number): CanarySpec {
@@ -474,6 +423,73 @@ function report_negative_control_inventory(specs: readonly GateSpec[]): void {
   }
 }
 
+/**
+ * Invocations of `src/scripts/<id>` in a workflow, each as its argument list.
+ *
+ * Deliberately a text scan rather than a YAML walk: an invocation lives inside a
+ * `run:` block scalar, so parsing the workflow buys nothing and costs the ability
+ * to see a call split across a line continuation, which is how the release job
+ * writes this very gate. Backslash-newline joins are folded before matching for
+ * that reason.
+ */
+export function ci_invocations(workflowText: string, id: string): string[][] {
+  const folded = workflowText.replace(/\\\n\s*/gu, ' ');
+  const out: string[][] = [];
+  const re = new RegExp(String.raw`src/scripts/${id}(?![A-Za-z0-9_])([^\n]*)`, 'gu');
+  for (const m of folded.matchAll(re)) {
+    out.push(
+      (m[1] ?? '')
+        .trim()
+        .split(/\s+/u)
+        .filter((t) => t !== ''),
+    );
+  }
+  return out;
+}
+
+/**
+ * The row's `argv` must be reproducible from the workflow it pins.
+ *
+ * Both directions are failures and they are different defects: no matching
+ * invocation means the manifest probes the gate in a way CI does not (or CI
+ * stopped calling it at all), which is the drift rule 2 asks for and nothing
+ * enforced.
+ */
+export function ci_invocation_problem(
+  workflowText: string,
+  id: string,
+  argv: readonly string[],
+): string | null {
+  const found = ci_invocations(workflowText, id);
+  if (found.length === 0) {
+    return `no invocation of src/scripts/${id} — the workflow does not call this gate`;
+  }
+  const want = argv.join(' ');
+  if (found.some((a) => a.join(' ') === want)) {
+    return null;
+  }
+  return (
+    `argv [${want}] matches no invocation there; the workflow calls it as ` +
+    found.map((a) => `[${a.join(' ')}]`).join(', ')
+  );
+}
+
+/** Rows whose `ci_invocation` no longer describes their workflow. */
+export function ci_invocation_drift(specs: readonly GateSpec[], repoRoot = REPO_ROOT): string[] {
+  const problems: string[] = [];
+  for (const s of specs) {
+    if (s.ci_invocation === undefined) continue;
+    const file = path.join(repoRoot, s.ci_invocation);
+    if (!fs.existsSync(file)) {
+      problems.push(`${s.id}: ci_invocation ${s.ci_invocation} does not exist`);
+      continue;
+    }
+    const problem = ci_invocation_problem(fs.readFileSync(file, 'utf-8'), s.id, s.argv);
+    if (problem !== null) problems.push(`${s.id}: ${s.ci_invocation} — ${problem}`);
+  }
+  return problems;
+}
+
 export function main(argv: readonly string[]): number {
   const wantJson = argv.includes('--format') && argv[argv.indexOf('--format') + 1] === 'json';
   const listOnly = argv.includes('--list');
@@ -592,9 +608,9 @@ export function main(argv: readonly string[]): number {
     );
   }
   report_negative_control_inventory(specs);
-  const parity = checkCiArgvParity(specs, REPO_ROOT);
-  for (const p of parity) {
-    process.stdout.write(`❌  gate-coverage argv parity: ${p}\n`);
+  const drift = ci_invocation_drift(specs);
+  for (const d of drift) {
+    process.stdout.write(`  ❌ ${d}\n`);
   }
   const hardening = report_hardening_ratchet();
   const selfTest = report_self_test_ratchet();
@@ -602,7 +618,11 @@ export function main(argv: readonly string[]): number {
     process.stdout.write(`❌  ${String(failed.length)} gate(s) failed the coverage floor.\n`);
     return 1;
   }
-  if (parity.length > 0) {
+  if (drift.length > 0) {
+    process.stdout.write(
+      `❌  ${String(drift.length)} row(s) declare a ci_invocation their workflow no longer matches — ` +
+        `the manifest probes the gate differently from CI, or CI stopped calling it.\n`,
+    );
     return 1;
   }
   if (hardening !== 0) {

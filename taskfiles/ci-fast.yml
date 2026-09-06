@@ -628,6 +628,21 @@ tasks:
       (road-to-role-first-onboarding Phase 1 Step 3).
     cmd: ./scripts-run src/scripts/lint_featured_skills {{.QUIET_FLAG}}
 
+  lint-reasoning-fixtures:
+    silent: true
+    desc: |
+      Structural validation of tests/reasoning-layer-eval/trigger-fixtures.json.
+      The corpus lost both its validators in the Python retirement and ran
+      unchecked; this is the replacement for the cost-free half only.
+    cmd: ./scripts-run src/scripts/lint_reasoning_fixtures {{.QUIET_FLAG}}
+
+  lint-skill-trigger-contradiction:
+    silent: true
+    desc: |
+      No SKILL.md may say "explicit request only" in its description and also
+      publish an "## Auto-trigger keywords" section.
+    cmd: ./scripts-run src/scripts/lint_skill_trigger_contradiction {{.QUIET_FLAG}}
+
   lint-readme-size:
     silent: true
     desc: |

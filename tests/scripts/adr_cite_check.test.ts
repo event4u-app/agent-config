@@ -379,6 +379,49 @@ describe('trigger_state — `unclassified` is no condition, not an unknown one',
     });
 });
 
+describe('trigger_state — the dated sub-class', () => {
+    const D = (iso: string) => new Date(`${iso}T00:00:00Z`);
+    const EXPIRY_134 =
+        'Expiry 2026-09-15 — at that date the maintainer either posts or commits a ' +
+        'superseding deferral ADR with a signed reason and a new expiry at most 90 days out.';
+
+    it('is `not-fired` strictly before the named day', () => {
+        expect(trigger_state({ review_trigger: EXPIRY_134 }, D('2026-09-14'))).toBe('not-fired');
+    });
+
+    it('is `fired` on the named day and after it', () => {
+        expect(trigger_state({ review_trigger: EXPIRY_134 }, D('2026-09-15'))).toBe('fired');
+        expect(trigger_state({ review_trigger: EXPIRY_134 }, D('2027-01-01'))).toBe('fired');
+    });
+
+    it('reads a bare leading ISO date as the same sub-class', () => {
+        expect(trigger_state({ review_trigger: '2026-10-01 — revisit the pin.' }, D('2026-09-14'))).toBe(
+            'not-fired',
+        );
+    });
+
+    // The boundary IS the safety property: a date mentioned inside a semantic
+    // condition must not promote that condition to a decided one, or the
+    // carve-out becomes the trigger grammar two council seats rejected.
+    it('leaves a semantic condition that merely MENTIONS a date indeterminate', () => {
+        expect(
+            trigger_state(
+                { review_trigger: 'Revisit at the 2026-11-10 review date, or earlier on either event.' },
+                D('2027-01-01'),
+            ),
+        ).toBe('indeterminate');
+    });
+
+    it('reports a trigger that announces a date it cannot read, rather than degrading it', () => {
+        expect(trigger_state({ review_trigger: 'Expiry Q4 2026 — decide then.' }, D('2026-09-14'))).toBe(
+            'dated-unparsed',
+        );
+        expect(trigger_state({ review_trigger: 'Expiry 2026-13-45 — decide then.' }, D('2026-09-14'))).toBe(
+            'dated-unparsed',
+        );
+    });
+});
+
 describe('authority_effect: disabled-shadow-mode', () => {
     /**
      * The literal is load-bearing (council ruling): no grade authorizes anything
