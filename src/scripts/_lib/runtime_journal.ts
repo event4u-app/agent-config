@@ -174,6 +174,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { current_branch, git_common_dir, git_dir } from './git_common_dir.js';
 import type { TerminalState } from './outcome_envelope.js';
 import { readRunTerminalState, RUN_TERMINAL_STATES } from './outcome_vocabularies.js';
+import { addColumnIfMissing } from './sqlite_schema.js';
 import { readSurface, type Surface } from './surface.js';
 import {
     isSqliteAvailableSync,
@@ -410,13 +411,11 @@ export interface JournalEvent {
     /** Bounded identifier: the hook or command name. Never free text. */
     capability: string;
     /**
-     * IDE / CLI / cloud dimension of the dispatch that produced this event.
-     *
-     * A closed vocabulary ({@link SURFACES}) and almost always `unknown`: no
-     * host observed here sends a distinguishing marker, and the detector
-     * refuses to infer one. Recorded anyway because the question "did this
-     * event come from the surface the capability lattice assumed" has no answer
-     * at all while the field is absent.
+     * IDE / CLI / cloud dimension of the dispatch. Closed vocabulary, and
+     * almost always `unknown`: no host observed here sends a distinguishing
+     * marker and the detector refuses to infer one. Recorded anyway because
+     * "did this come from the surface the lattice assumed" has no answer at
+     * all while the field is absent.
      */
     surface: Surface;
     /** Imported from `outcome_envelope.ts`; null until an episode terminates. */
@@ -717,20 +716,6 @@ export function resolveJournal(root: string): JournalLocation {
 }
 
 /**
- * Add a column to an existing table when it is absent.
- *
- * `PRAGMA table_info` rather than a catch around `ALTER TABLE`: swallowing the
- * error would also swallow a genuine schema failure, and a store that silently
- * fails to migrate reads exactly like one that never needed to.
- */
-function addColumnIfMissing(db: DatabaseSync, table: string, column: string, decl: string): void {
-    const cols = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
-    if (cols.length === 0) return;
-    if (cols.some((c) => c.name === column)) return;
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
-}
-
-/**
  * A cache key for a derived episode PROJECTION — repository_id plus branch.
  *
  * Deliberately NOT a record field: the repository_id is branch-independent by
@@ -794,10 +779,8 @@ function createSchema(db: DatabaseSync): void {
             amends_seq INTEGER
         )`,
     );
-    // `CREATE TABLE IF NOT EXISTS` is a no-op on a database that predates the
-    // column, so an existing store needs the explicit add. Every pre-existing
-    // row takes the default, which is the honest value: those dispatches were
-    // never asked what surface they came from.
+    // A pre-existing row takes the default, which is the honest value: that
+    // dispatch was never asked what surface it came from.
     addColumnIfMissing(db, 'journal_event', 'surface', "TEXT NOT NULL DEFAULT 'unknown'");
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_episode ON journal_event(repository_id, episode_id, seq)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_session ON journal_event(repository_id, session_id, seq)');

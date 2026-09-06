@@ -9,12 +9,10 @@
  * stdout/stderr split, and exit codes. Helper names keep snake_case for
  * fidelity (concern authors rely on the documented surface).
  *
- * Per `docs/contracts/hook-architecture-v1.md`. Reads the manifest at
- * `scripts/hook_manifest.yaml`, resolves which concerns fire on the given
- * (platform, event) tuple, and runs each concern sequentially with the
- * stdin envelope contract. Reduces concern exit codes per the spec
- * (0=allow, 1=block, 2=warn, ≥3=error → fail-open unless concern is
- * fail_closed).
+ * Per `docs/contracts/hook-architecture-v1.md`. Reads `src/scripts/hook_manifest.yaml`,
+ * resolves which concerns fire on the given (platform, event) tuple, and runs each
+ * sequentially with the stdin envelope contract. Reduces concern exit codes per the
+ * spec (0=allow, 1=block, 2=warn, ≥3=error → fail-open unless concern is fail_closed).
  *
  * Invocation:
  *
