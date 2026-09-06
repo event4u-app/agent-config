@@ -2881,7 +2881,7 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
@@ -2967,7 +2967,7 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         // BOTH registries need the id. Registering only the first one crashed with

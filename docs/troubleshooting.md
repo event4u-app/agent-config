@@ -179,6 +179,76 @@ Keep `AGENTS.md` if you customized it — it is yours, not the package's.
 
 ---
 
+## Upgrade and staleness
+
+Moved out of `README.md` so the front page reaches its first command quickly; the content is unchanged.
+
+### A new command / skill is missing in Claude Code after an upgrade
+
+Under the single-surface model, `agent-config upgrade` refreshes the
+`~/.claude/` file projection — that IS the content surface, so a fresh
+session picks the new commands up directly. If commands are still missing,
+the usual cause is a leftover **marketplace plugin**: it is a git-SHA
+snapshot that never moves with the npm upgrade and it shadows nothing —
+it just lists everything twice while lagging behind. Remove it:
+
+```bash
+claude plugin uninstall agent-config@event4u-agent-config
+```
+
+Then start a **new** Claude Code session. `agent-config doctor` reports a
+leftover plugin as `claude-plugin: duplicate surface`; hooks are unaffected
+(they live in a managed `~/.claude/settings.json` block — verify with the
+`hook-wiring` check).
+
+### Skills / commands appear twice in Claude Code
+
+Same cause as above: the deprecated marketplace plugin is installed next to
+the `~/.claude/` file projection, so every skill lists plain **and**
+`agent-config:`-prefixed. Uninstall the plugin (command above) and start a
+new session.
+
+### `agent-config upgrade` fails with `Unknown argument: --no-ui`
+
+Known bug in 8.2.0: `upgrade` passed a `--no-ui` flag that the install
+orchestrator did not accept yet, so the run aborted early. Fixed on `main`;
+until the next release, work around it with:
+
+```bash
+AGENT_CONFIG_NO_UI=1 agent-config global   # refresh the global install, no wizard
+```
+
+### Upgrade was interrupted (Ctrl-C, wizard closed, step failed)
+
+Only the initial `npm install -g` hard-aborts an upgrade. Every later step
+(global re-deploy with hook registration, settings sync, wrapper + git-hook
+refresh) runs independently — a single failed step is reported in the
+end-of-run summary instead of silently skipping the rest. Re-run
+`agent-config upgrade` to converge and use `agent-config doctor` to name
+anything left in a mixed state.
+
+### `agent-config: command not found` / hooks stopped firing
+
+Runtime hooks resolve the **global** binary on `PATH` — a project-local
+install alone is not enough for them. Reinstall the binary:
+
+```bash
+npm install -g @event4u/agent-config
+agent-config doctor   # verifies PATH + plugin wiring
+```
+
+### Project files look stale after a package update
+
+Project-local projections are only rewritten on an explicit refresh:
+
+```bash
+agent-config refresh             # re-apply the installed version to this project
+agent-config refresh --global    # same-version re-install of the global root
+```
+
+More per-version steps: [Migration](MIGRATION.md) ·
+[getting-started § Keeping current](getting-started.md#keeping-current).
+
 ## Still stuck?
 
 Open an [issue](https://github.com/event4u-app/agent-config/issues) with:

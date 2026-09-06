@@ -53,8 +53,13 @@ import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 
 import { classify } from "./language_mirror_hook.js";
 import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
-import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
-import { BLOCK_OPS, commandOp } from "./hooks/git_command_classifier.js";
+import {
+  classifyAuthorization,
+  extractObjects,
+  OBJECT_REQUIRED_OPS,
+  type GitOp,
+} from "./git_authorization_hook.js";
+import { BLOCK_OPS, commandObject, commandOp } from "./hooks/git_command_classifier.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
 // Round 7 § 1.5 — the SAME predicate `turn-end-gate` refuses on, imported rather
 // than reimplemented, so the measured rate and the gate cannot disagree.
@@ -579,6 +584,8 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   let pinned: "de" | "en" | null = null;
   let pendingPoll: { at: string; cmd: string } | null = null;
   let authorized = new Set<GitOp>();
+  // Per-op objects the current turn's prompt named. Reset with `authorized`.
+  let authorizedObjects = new Map<GitOp, Set<string>>();
   let sawPending = false;
   let evaluationsThisTurn = 0;
   // Round-5 provenance for language violations. The round-5 audit could only
@@ -723,7 +730,15 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       if (c.language !== "und") {
         pinned = c.language;
       }
-      authorized = new Set(classifyAuthorization(ut).authorized);
+      const classified = classifyAuthorization(ut);
+      authorized = new Set(classified.authorized);
+      // Step 2.2 — the objects the turn NAMED, per operation. Rebuilt on every
+      // counted user turn for the same reason `authorized` is: an authorization
+      // for one table does not carry into the next prompt any more than the
+      // operation does.
+      authorizedObjects = new Map(
+        classified.authorized.map((op) => [op, new Set(extractObjects(op, ut))]),
+      );
       sawPending = false;
       evaluationsThisTurn = 0;
       pendingPoll = null;
@@ -811,6 +826,32 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
             at,
             detail: `irreversible \`${op}\` with no authorization in the turn's prompt: ${cmd.slice(0, 110)}`,
           });
+        } else if (op !== null && authorized.has(op) && OBJECT_REQUIRED_OPS.has(op)) {
+          // Step 2.2 — the operation WAS authorized and ran against something
+          // the turn never named. An authorization for one table is not an
+          // authorization for another, and until the ledger could carry an
+          // object this was indistinguishable from a clean turn.
+          //
+          // This REPORTS and refuses nothing — ADR-254 removed the enforcing
+          // reader, and the shape it preserved is a count after the fact.
+          //
+          // A command naming NO object produces no finding: `commandObject`
+          // returns null there, and a guessed object would manufacture a
+          // violation out of a parse failure. Under-reporting is the safe
+          // direction for a measurement.
+          const object = commandObject(op, cmd);
+          const named = authorizedObjects.get(op);
+          if (object !== null && !(named?.has(object) ?? false)) {
+            report.violations.push({
+              check: "git-authorization",
+              session: sessionId,
+              at,
+              detail:
+                `\`${op}\` authorized, but its object \`${object}\` is not one the ` +
+                `turn's prompt named (${named && named.size > 0 ? [...named].join(", ") : "no object named"}): ` +
+                cmd.slice(0, 110),
+            });
+          }
         }
         if (isCiPoll(cmd)) {
           // The RESULT of this call arrives on the NEXT entry, and that entry is
