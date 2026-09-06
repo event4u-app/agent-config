@@ -184,6 +184,27 @@ never lower this floor" is itself a public commitment, and creating one is the
 class of act these refusals decline to perform. A refusal says *not this round*,
 never *not ever*.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| All five blockers were open and each named the same discharge | `agents/roadmaps/archive/road-to-authorization-that-reaches-further.md` § Blockers — five entries, each `Resolved when:` a dated ruling or a recorded refusal filed in `docs/decisions/` |
+| Both seats refused all five, scoped to one round | AI council 2026-09-06, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2, `$0.0000`, CLI subscription transport, under the maintainer's standing delegation of 2026-09-06 |
+| Acceptance of any of the five is unreachable by a council | the framework the same session adopted: a refusal preserving a recorded floor is preservation of the status quo; acceptance lowers a floor or amends the amendment machinery, which `src/rules/decision-revisit-gate.md` § owner-reserved set routes to the owner |
+| Nothing named in the five moved | every rule, hook and lint threshold named is byte-identical to `5c539505d` — `git diff --quiet 5c539505d HEAD -- <path>` returns clean for all nine paths, which is the roadmap's own AC-6 |
+| ADR-254 reserves its own reopening to the owner | `docs/decisions/ADR-254-git-authorization-enforcement-removed.md` frontmatter — `reopen_policy: owner`, `protected_dimensions: security_floor`, and a `review_trigger` that excludes re-adding the gate in its old shape |
+| The kernel write is denied at tool-call time, so § 3 and § 4 could not have been applied even if accepted | `src/scripts/hooks/block_kernel_rule_writes.ts` |
+| Phase 2 added no refusal path | `BLOCK_OPS` and `commandOp` have exactly one consumer that acts on them — `src/scripts/conformance_scan.ts:807` — and `grep -c 'block-unauthorized-git\|block_unauthorized_git' src/scripts/hook_manifest.yaml` is 0, the roadmap's AC-4 |
+| The questions are carried, not dropped | `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` § Unresolved decisions 9-12, added in the same change |
+
+**Evidence this record does NOT have, and the shape of the gap matters.** There
+is **no owner statement** on any of the five — that is the point of the record
+rather than a defect in it, and reading a scoped council refusal as an owner
+ruling is the fabrication the owner-authority stub's own § Disposition refuses.
+There is also **no measurement** that any of the five floors is correctly
+calibrated: this record preserves them because preservation is what a council
+may decide, not because their current settings were shown to be right.
+
 ## References
 
 - [ADR-254](ADR-254-git-authorization-enforcement-removed.md) — the record
