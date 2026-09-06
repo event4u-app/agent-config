@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: fe-design
-description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, inventory, build, review. Use when building or changing any UI, not only when planning one."
+description: "Frontend design heuristics — and, outside the ticket engine, the loop applying them: existing-ui-audit, brief, inventory, build, review. Use when building or changing any UI, not only planning one."
 personas:
   - frontend-engineer
 domain: engineering
@@ -46,10 +46,37 @@ else runs the loop.
 1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
    What already exists (components, tokens, layout conventions) outranks every
    heuristic below. Reinventing an existing component is the #1 failure mode.
-2. **Brief** — cover the same five keys the engine requires before any code:
-   `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
-   five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
-   one is unfinished, not concise.
+2. **Brief** — seven keys before any code. Five are the ones the engine gates
+   (`REQUIRED_BRIEF_KEYS`): `layout`, `components`, `states`, `microcopy`,
+   `a11y`. `states` means all five of `empty`, `loading`, `error`, `success`,
+   `disabled` — a brief missing one is unfinished, not concise.
+
+   Two more are **declared, not gated**: `frequency` and `initiation`. The
+   engine does not halt on them, and that is stated rather than left to be
+   discovered — adding a required key would halt every brief already written
+   against the five.
+
+   | Key | Values | Why it is declared and never inferred |
+   |---|---|---|
+   | `frequency` | `one-time` · `low` · `medium` · `high` (100+ per day) | How often a surface is used decides whether motion on it reads as polish or as a toll. Nothing in a diff reveals it. |
+   | `initiation` | `keyboard` · `pointer` · `system` | A keyboard-initiated surface is reached by someone who already knows where they are going; an animation there is pure latency. |
+
+   Both are prefilled from the surface's role and overridden only on evidence.
+   There is no resolver and no inference from handlers: a `mousemove` listener
+   is not proof of pointer initiation, and a keyboard shortcut in the code is
+   not proof anyone uses it.
+
+   | Surface role | `frequency` | `initiation` |
+   |---|---|---|
+   | Command palette | `high` | `keyboard` |
+   | Tooltip | `high` | `pointer` |
+   | Modal / sheet | `medium` | `pointer` |
+   | Onboarding flow | `one-time` | `pointer` |
+   | Toast / notification | `medium` | `system` |
+   | Table row action | `high` | `pointer` |
+
+   The default for a role not listed is `medium` / `pointer`, stated in the
+   brief as a default rather than left blank.
 3. **Inventory — only when an artifact was provided, and before you build.**
    List the artifact's **interactions, keyframes, and script includes** from its
    source (`design-fidelity-mechanics` § Data-basis ladder — read it, do not
