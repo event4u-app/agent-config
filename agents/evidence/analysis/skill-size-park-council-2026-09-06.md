@@ -3,7 +3,7 @@
 # The council on ADR-225's fired skill-size park: prompt, verdicts, convergence
 
 Run 2026-09-06 on `drain/the-skill-size-park-fired`, based on `origin/main` @
-`9b75231ed`. Phase 2.1 of `agents/roadmaps/road-to-the-skill-size-park-fired.md`.
+`9b75231ed`. Phase 2.1 of `agents/roadmaps/archive/road-to-the-skill-size-park-fired.md`.
 
 The council's own output lives under the gitignored, auto-pruned runtime tree,
 so it is reproduced here in full rather than linked — a linked verdict rots

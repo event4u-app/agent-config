@@ -4,7 +4,7 @@
 
 Measured on `drain/the-skill-size-park-fired`, based on `origin/main` @
 `9b75231ed`, 2026-09-06. Phase 1 of
-`agents/roadmaps/road-to-the-skill-size-park-fired.md`.
+`agents/roadmaps/archive/road-to-the-skill-size-park-fired.md`.
 
 ADR-225 parks a skill-size ceiling behind a two-term disjunction, quoted from
 `docs/decisions/ADR-225-cross-corpus-proposal-verification.md:97-99`:
