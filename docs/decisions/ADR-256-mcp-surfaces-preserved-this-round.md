@@ -191,6 +191,31 @@ not by a bigger zero.
 - **Drop the catalogue entirely and serve through resources.** Rejected on the
   same grounds, more strongly — it removes more on the same absent evidence.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| All four blockers were open, each naming its own discharge | `agents/roadmaps/archive/road-to-mcp-bridge-integrity-and-reach-truth.md` § Blockers — four entries, each with a `Resolved when:` clause |
+| Both seats answered and converged on all four | AI council 2026-09-07, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, blind chairman, quorum 2/2 after the run, `$0.0000`, CLI subscription transport, under the maintainer's standing delegation |
+| Nothing writes the user-global activation keys today | `enabledMcpjsonServers` and `enableAllProjectMcpServers` are both grep-null across `src/scripts/install.ts`, so "reject" preserves current behaviour rather than changing it |
+| The resolver question meets a recorded decision | ADR-054 carries `status: rejected`; `docs/contracts/rule-router.md` states there is no runtime resolver |
+| The evidence a reopen had to answer | `agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md` — closed 2026-08-02 with 0 of 67 candidate failures confirmed against a required 5 |
+| The instructions cap is 400 bytes | `INSTRUCTIONS_BYTE_CAP` in `src/cli/mcp/dispatch.ts` |
+| The Phase 4 reading § 4 rests on | `agent-config telemetry:report --since all` on the machine this record was written on, 2026-09-06 UTC: `- calls recorded: **0**` under `## MCP lite surface` |
+| That zero is a property of the instrument, not of consumers | the emitter was added in this same branch (`src/cli/mcp/telemetry.ts`) and is gated off by default behind `telemetry.artifact_engagement.enabled`; `src/agent-src/templates/scripts/telemetry/mcp_lite.ts` prints that caveat beside every zero it renders |
+| Acceptance of the § 1 proposal is unreachable by a council | `src/rules/decision-revisit-gate.md` § owner-reserved set routes a change that lowers a recorded consent floor to the owner; a refusal preserving it does not |
+
+**Evidence this record does NOT have, and the shape of the gap is the point.**
+There is **no owner statement** on any of the four; each is a scoped council
+refusal or retention, and reading one as an owner ruling is exactly the
+fabrication the framework forbids. There is **no measurement** that the retained
+prompt catalogue is worth its cost — § 4 retains it because the only reading
+that could weigh it cannot yet weigh anything, not because it was shown to earn
+its place. And there is **no host observation** behind § 1: neither seat could
+cite the host's own scope, precedence and rollback semantics for
+`enabledMcpjsonServers`, which is one reason authorising it was out of reach and
+refusing it was not.
+
 ## References
 
 - `agents/roadmaps/road-to-mcp-bridge-integrity-and-reach-truth.md` — the four blockers.
