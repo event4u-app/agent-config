@@ -2531,3 +2531,46 @@ gates:
 
         - [ ] **1.1 A planted step.** Carries all three shape signals so the
               gate must report it from a directory that is not the roadmap root.
+
+  - id: lint_reasoning_fixtures
+    argv: ["--quiet"]
+    min_scanned: 21
+    corpus: >
+      the 21 rows of tests/reasoning-layer-eval/trigger-fixtures.json. The floor
+      is the live count rather than a number below it because the corpus is a
+      committed fixture set that changes only by a deliberate edit — a reading
+      below 21 means a row was dropped, which is exactly what this gate should
+      refuse to pass over. The gate exists because the corpus had ZERO
+      validators: both were deleted in the Python retirement while five
+      surviving references still told a reader to run them, and nothing in
+      Taskfile.yml or .github/workflows/ called the corpus at all.
+    no_canary_reason: >-
+      the corpus is a single committed JSON file, and the canary contract is
+      create-only. A planted file lands in no row; every violation this gate can
+      have is a MODIFICATION of that file — a key added, a field dropped, an
+      enum value changed. Discrimination is proven by `--self-test` instead
+      (4 cases, 3 rejecting), which drives the real CLI over a fixture root for
+      each of the three malformation classes the roadmap names by hand: a sixth
+      key, a missing `discipline`, and `host: "medium"`.
+
+  - id: lint_skill_trigger_contradiction
+    argv: ["--quiet"]
+    min_scanned: 250
+    corpus: >
+      every SKILL.md under src/skills/ — 299 at the time of writing. The floor
+      sits at 250 rather than at 299 because the skill count moves with ordinary
+      work in both directions, while a reading far below it means the walk lost
+      the directory rather than that skills were deleted. The gate exists
+      because three skills shipped saying "explicit request only" in the
+      description a catalogue reads while publishing an "## Auto-trigger
+      keywords" section nothing in src/ parses — so the operational-looking half
+      was the inert one, and a reader met two opposite answers in one file.
+    no_canary_reason: >-
+      a create-only canary CAN plant a SKILL.md, but planting one that carries
+      both halves would prove only that the matcher fires, which the self-test
+      already proves over a fixture root — and the plant would land inside
+      src/skills/, a projected tree, where a stray file reddens unrelated
+      generator and count gates before this one is reached. Discrimination is
+      proven by `--self-test` (3 cases, 1 rejecting) covering both directions:
+      the contradicting pair reds, and each half ALONE stays green, which is
+      what stops a matcher that fired on the keyword section alone.
