@@ -88,6 +88,16 @@ export interface GateSpec {
   min_scanned: number;
   corpus: string;
   status: 'enforced' | 'pending';
+  /**
+   * Task whose `cmd:` must invoke this gate with exactly `argv` — opt-in.
+   *
+   * Without it, `argv` says how the coverage probe runs the gate and nothing
+   * ties that to how the pipeline runs it, so a row can drift from its own
+   * invocation and still report coverage. Opt-in rather than universal because
+   * most rows predate the field, and a blanket assertion would red the manifest
+   * on every row whose probe argv legitimately differs from its task argv.
+   */
+  ci_task?: string;
   /** Absent = this gate has no canary recipe; reported, never hidden. */
   canary?: CanarySpec;
   /**
@@ -196,8 +206,67 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
       ...(e['no_canary_reason'] === undefined
         ? {}
         : { no_canary_reason: _require_str(e['no_canary_reason'], 'no_canary_reason', id, i) }),
+      ...(e['ci_task'] === undefined ? {} : { ci_task: String(e['ci_task']) }),
     };
   });
+}
+
+/**
+ * The args a task passes to its gate, or `null` when the task is not found.
+ *
+ * `{{.QUIET_FLAG}}` resolves to `--quiet` unless AGENT_SCRIPT_VERBOSITY=verbose
+ * (Taskfile.yml `vars`), so it is normalised to its default rather than left as
+ * a literal — comparing the unexpanded template would make every row using it
+ * unmatchable and the assertion vacuous.
+ */
+export function taskArgvFor(gateId: string, taskName: string, repoRoot: string): string[] | null {
+  const files = [path.join(repoRoot, 'Taskfile.yml')];
+  const tfDir = path.join(repoRoot, 'taskfiles');
+  if (fs.existsSync(tfDir)) {
+    for (const n of fs.readdirSync(tfDir).sort()) {
+      if (n.endsWith('.yml') || n.endsWith('.yaml')) files.push(path.join(tfDir, n));
+    }
+  }
+  const needle = new RegExp(`^\\s*${taskName}:\\s*$`);
+  for (const f of files) {
+    const lines = fs.readFileSync(f, 'utf-8').split('\n');
+    const at = lines.findIndex((l) => needle.test(l));
+    if (at === -1) continue;
+    for (let i = at + 1; i < lines.length; i += 1) {
+      const line = lines[i] as string;
+      if (/^\s{0,2}\S/.test(line) && !/^\s*(cmd|cmds|desc|silent|deps|vars|-)/.test(line)) break;
+      const m = /^\s*(?:-\s*)?cmd:\s*(.+?)\s*$/.exec(line);
+      if (!m) continue;
+      const parts = (m[1] as string).split(/\s+/);
+      const idx = parts.findIndex((t) => t.endsWith(`src/scripts/${gateId}`));
+      if (idx === -1) continue;
+      return parts
+        .slice(idx + 1)
+        .map((t) => (t === '{{.QUIET_FLAG}}' ? '--quiet' : t))
+        .filter((t) => t !== '');
+    }
+  }
+  return null;
+}
+
+/** Rows that opted into task-argv parity, checked. Returns human-readable failures. */
+export function checkCiArgvParity(specs: readonly GateSpec[], repoRoot: string): string[] {
+  const out: string[] = [];
+  for (const s of specs) {
+    if (s.ci_task === undefined) continue;
+    const got = taskArgvFor(s.id, s.ci_task, repoRoot);
+    if (got === null) {
+      out.push(`${s.id}: ci_task '${s.ci_task}' invokes no src/scripts/${s.id} — the row points at nothing`);
+      continue;
+    }
+    if (got.join(' ') !== s.argv.join(' ')) {
+      out.push(
+        `${s.id}: argv [${s.argv.join(' ')}] != task '${s.ci_task}' argv [${got.join(' ')}] — ` +
+          'the coverage probe does not run this gate the way the pipeline does',
+      );
+    }
+  }
+  return out;
 }
 
 function _require_canary(v: unknown, id: string, i: number): CanarySpec {
@@ -523,10 +592,17 @@ export function main(argv: readonly string[]): number {
     );
   }
   report_negative_control_inventory(specs);
+  const parity = checkCiArgvParity(specs, REPO_ROOT);
+  for (const p of parity) {
+    process.stdout.write(`❌  gate-coverage argv parity: ${p}\n`);
+  }
   const hardening = report_hardening_ratchet();
   const selfTest = report_self_test_ratchet();
   if (failed.length > 0) {
     process.stdout.write(`❌  ${String(failed.length)} gate(s) failed the coverage floor.\n`);
+    return 1;
+  }
+  if (parity.length > 0) {
     return 1;
   }
   if (hardening !== 0) {

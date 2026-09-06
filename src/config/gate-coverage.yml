@@ -2531,3 +2531,28 @@ gates:
 
         - [ ] **1.1 A planted step.** Carries all three shape signals so the
               gate must report it from a directory that is not the roadmap root.
+
+  - id: lint_readme_size
+    argv: ["--quiet"]
+    ci_task: lint-readme-size
+    min_scanned: 1
+    corpus: >
+      exactly one file — README.md — so the floor is 1 and a scan of 0 means the
+      gate ran somewhere the file does not exist rather than that it found
+      nothing to say. The gate is registered here because the failure it exists
+      to end was not a wrong measurement but an unwatched one: an earlier
+      roadmap brought this file under control, archived complete on 2026-05-18,
+      and the file drifted back over the following three months while the only
+      guard — a line budget with 112 lines of headroom — stayed green through
+      every step. A budget that is not registered can be removed as quietly as
+      it was added, which is how the previous fix stopped holding.
+    no_canary_reason: >-
+      the corpus is ONE file at a fixed path, and the canary contract is
+      create-only. A planted `README.md` would have to overwrite the real one to
+      land in scope, so the plant is either impossible or destructive; every
+      violation this gate can have is a MODIFICATION of that single file — words
+      added, a fence pushed down, lines grown. Discrimination is proven by
+      `--self-test` instead (4 cases, 3 rejecting, one per budget), which is the
+      stronger control here: a single planted file could only exercise one of the
+      three budgets, and measuring one while two regress is precisely the failure
+      that made this gate insufficient in the first place.
