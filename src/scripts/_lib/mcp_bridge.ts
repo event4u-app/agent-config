@@ -15,6 +15,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { probeHostCapabilities } from './host_capability.js';
 
 /** `install.ts`'s deploy tuple: [written, skipped, status, paths]. */
 export type DeployTuple = [number, number, string, string[]];
@@ -196,6 +197,48 @@ export function makeEnsureMcpRegistrations(
         }
         return merged;
     };
+}
+
+/** The axis reader the installer uses. Injected in tests, never overridden there. */
+function readsProjectMcpConfig(hostId: string): boolean {
+    return probeHostCapabilities(hostId).reads_project_mcp_config;
+}
+
+/**
+ * Write every MCP registration one install owes, and record the merged keys.
+ *
+ * ONE call site rather than three, because `install.ts` is 3,900 lines over the
+ * source-size ratchet's ceiling and every line added there is a line the ratchet
+ * charges for. The composition is the same either way; where it lives is the
+ * only thing that differs, and it belongs beside the entry it writes.
+ *
+ * `claude-code` is registered whenever it is selected — that write predates the
+ * axis and routing it through would DELETE it, the axis being `false` for every
+ * host today. Every OTHER host needs both gates: the `--tools` selection and an
+ * OBSERVED `reads_project_mcp_config`.
+ */
+export function registerMcpHosts(
+    mergeJsonFile: MergeJsonFile,
+    projectRoot: string,
+    force: boolean,
+    packageRoot: string,
+    tools: ReadonlySet<string>,
+    into: Record<string, Record<string, unknown>[]>,
+    readsConfig: ReadsProjectMcpConfig = readsProjectMcpConfig,
+): void {
+    const ensure = makeEnsureMcpRegistrations(mergeJsonFile);
+    const claude = MCP_PROJECT_CONFIG['claude-code'];
+    if (tools.has('claude-code') && claude !== undefined) {
+        const merged = ensure(projectRoot, force, packageRoot, [
+            { toolId: 'claude-code', hostId: claude.hostId, relPath: claude.relPath },
+        ]);
+        (into['claude-code'] ??= []).push(...(merged['claude-code'] ?? []));
+    }
+    for (const [toolId, keys] of Object.entries(
+        ensure(projectRoot, force, packageRoot, mcpRegistrationTargets(tools, readsConfig)),
+    )) {
+        (into[toolId] ??= []).push(...keys);
+    }
 }
 
 /**

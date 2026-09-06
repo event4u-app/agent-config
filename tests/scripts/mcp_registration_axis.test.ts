@@ -15,6 +15,7 @@ import {
     MCP_PROJECT_CONFIG,
     makeEnsureMcpRegistrations,
     mcpRegistrationTargets,
+    registerMcpHosts,
     MCP_SERVER_KEY,
     type MergeJsonFile,
 } from '../../src/scripts/_lib/mcp_bridge.js';
@@ -131,5 +132,39 @@ describe('step 3.3 — the measured state of the real axis', () => {
         // axis reports false for every host today.
         expect(mcpRegistrationTargets(new Set(['claude-code']), () => true).map((t) => t.toolId)).toEqual([]);
         expect(MCP_PROJECT_CONFIG['claude-code']).toBeDefined();
+    });
+});
+
+describe('step 3.3 — registerMcpHosts, the single call site the installer uses', () => {
+    it('registers claude-code unconditionally when selected, axis or no axis', () => {
+        const root = mkTmp();
+        const into: Record<string, Record<string, unknown>[]> = {};
+        registerMcpHosts(mergeJsonFile, root, false, root, new Set(['claude-code']), into, () => false);
+        expect(serversIn(root, '.mcp.json')).toContain(MCP_SERVER_KEY);
+        expect(Object.keys(into)).toEqual(['claude-code']);
+    });
+
+    it('writes nothing for claude-code when it is not selected', () => {
+        const root = mkTmp();
+        registerMcpHosts(mergeJsonFile, root, false, root, new Set(['cursor']), {}, () => false);
+        expect(serversIn(root, '.mcp.json')).toEqual([]);
+    });
+
+    it('registers claude-code AND an axis-marked host in one pass', () => {
+        const root = mkTmp();
+        const into: Record<string, Record<string, unknown>[]> = {};
+        registerMcpHosts(mergeJsonFile, root, false, root, ALL_TOOLS, into, (h) => h === 'cursor');
+        expect(serversIn(root, '.mcp.json')).toContain(MCP_SERVER_KEY);
+        expect(serversIn(root, '.cursor/mcp.json')).toContain(MCP_SERVER_KEY);
+        expect(serversIn(root, '.gemini/settings.json')).toEqual([]);
+        expect(Object.keys(into).sort()).toEqual(['claude-code', 'cursor']);
+    });
+
+    it('appends to an existing merged-keys entry rather than replacing it', () => {
+        const root = mkTmp();
+        const into: Record<string, Record<string, unknown>[]> = { 'claude-code': [{ sentinel: true }] };
+        registerMcpHosts(mergeJsonFile, root, false, root, new Set(['claude-code']), into, () => false);
+        expect((into['claude-code'] as Record<string, unknown>[])[0]).toEqual({ sentinel: true });
+        expect((into['claude-code'] as Record<string, unknown>[]).length).toBe(2);
     });
 });

@@ -7,7 +7,7 @@
  * did work is noise, a named residual is actionable" — so this module models
  * only what is left, and the surfaces that print it print nothing else.
  *
- * ## Provenance is carried, not assumed
+ * Provenance is carried, not assumed.
  *
  * Every residual says where its text came from, and the surfaces print it:
  *
@@ -17,7 +17,7 @@
  * - `observed` — a session on that host recorded it. Only an observation may
  *   replace a documented value, and only in that direction.
  *
- * ## An absent host is UNRECORDED, never "no residual"
+ * An absent host is UNRECORDED, never "no residual".
  *
  * A host with no entry here has not been looked at. `residualFor` returns
  * `null` and the callers say so in words, because printing nothing would make
@@ -150,4 +150,24 @@ export function residualReport(toolIds: Iterable<string>): ResidualLine[] {
         if (line.state !== 'cleared') out.push(line);
     }
     return out;
+}
+
+/**
+ * Print the residuals for one install's selected tools, or nothing.
+ *
+ * Lives here rather than inline in the installer's closing block for the same
+ * reason `registerMcpHosts` does: `install.ts` sits far over the source-size
+ * ratchet's ceiling, and the rendering belongs beside the table it renders.
+ */
+export function printResiduals(
+    toolIds: Iterable<string>,
+    quiet: boolean,
+    write: (s: string) => void = (s) => process.stdout.write(s),
+): void {
+    if (quiet) return;
+    const lines = residualReport(toolIds);
+    if (lines.length === 0) return;
+    write('  Still needs you (MCP):\n');
+    for (const line of lines) write(`    \u2022 ${line.text}\n`);
+    write('\n');
 }
