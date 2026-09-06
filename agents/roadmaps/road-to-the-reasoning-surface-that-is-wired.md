@@ -45,20 +45,20 @@ to what the RDP itself requires.
 
 ## Phase 1 — The corpus can be checked
 
-- [ ] **1.1 Write the structural validator the corpus lost.** A TypeScript check over
+- [x] **1.1 Write the structural validator the corpus lost.** A TypeScript check over
       `trigger-fixtures.json` asserting the real schema — the five keys `q`, `trigger`,
       `discipline`, `host`, `note`, `host` in `standard|strong`, `trigger` boolean — and
       failing on a malformed row. The deleted Python is the specification, not the
       implementation; nothing about the corpus needs a model call.
       verify: the check passes on the 21 shipped rows, and a fixture row with a sixth
       key, a missing `discipline`, or `host: "medium"` reddens it.
-- [ ] **1.2 Wire it, or say in the corpus that nothing runs it.** Either a Taskfile
+- [x] **1.2 Wire it, or say in the corpus that nothing runs it.** Either a Taskfile
       target and a `src/config/gate-coverage.yml` row with a CI-identical `argv`, or a
       line in `README.md` stating that the corpus is checked by hand.
       verify: `grep -rn reasoning-layer-eval Taskfile.yml .github/workflows/` returns a
       caller, or `README.md` carries the statement and no file claims a check that no
       caller performs.
-- [ ] **1.3 Repair the five dangling instructions.** `README.md:18,22,56,57` and
+- [x] **1.3 Repair the five dangling instructions.** `README.md:18,22,56,57` and
       `trigger-fixtures.json:3` name two deleted files. Point them at 1.1's validator,
       or delete the instruction where the capability is genuinely gone — the billable
       live-scoring path has no replacement and should say so rather than name a file.
@@ -67,7 +67,7 @@ to what the RDP itself requires.
 
 ## Phase 2 — A skill does not instruct a call nothing serves
 
-- [ ] **2.1 Say what `sequentialthinking` is, where it comes from, and what happens
+- [x] **2.1 Say what `sequentialthinking` is, where it comes from, and what happens
       without it.** `mcp.json` registers no servers, so on a default install the
       skill's three usage limits govern a call the model cannot make. Either the skill
       names the server a consumer must register and states the degraded path, or the
@@ -75,7 +75,7 @@ to what the RDP itself requires.
       verify: the skill contains no unqualified instruction to call a tool, and a
       reader on a default install can tell from the skill alone whether the tool is
       available to them.
-- [ ] **2.2 Resolve the grandfather entry against reality.** `trigger_eval_grandfather.json:169`
+- [x] **2.2 Resolve the grandfather entry against reality.** `trigger_eval_grandfather.json:169`
       excuses a skill from a trigger-eval requirement it does not meet, which reads as a
       waived obligation rather than an absent one.
       verify: either `src/skills/sequential-thinking/evals/` exists and the entry is
@@ -83,14 +83,14 @@ to what the RDP itself requires.
 
 ## Phase 3 — A description and its body agree
 
-- [ ] **3.1 Decide, per skill, which of the two statements is true.** For
+- [x] **3.1 Decide, per skill, which of the two statements is true.** For
       `adversarial-review`, `project-analyzer` and `sequential-thinking` the description
       says explicit-request-only and the body publishes auto-trigger keywords. One of
       them is wrong in each case and the pair is what a router and a reader read.
       verify: no `SKILL.md` in the tree both matches `explicit request only` in its
       description and carries an `## Auto-trigger keywords` section; a fixture carrying
       both reddens a check.
-- [ ] **3.2 Make the contradiction a check rather than a finding.** The pair is
+- [x] **3.2 Make the contradiction a check rather than a finding.** The pair is
       mechanically decidable from the file, so it should not need a reviewer to notice
       it again.
       verify: `./scripts-run src/scripts/check_gate_coverage` passes with the new check
@@ -108,9 +108,9 @@ to what the RDP itself requires.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A structural validator for `trigger-fixtures.json` exists, passes on the 21 shipped rows, and reddens on each of three named malformations.
-- [ ] AC-2 — Either a caller runs it and `src/config/gate-coverage.yml` carries its row with a CI-identical `argv`, or the corpus states in its own README that nothing runs it.
-- [ ] AC-3 — No file under `tests/` or `src/` instructs a reader to run a retired Python script except as a historical note.
-- [ ] AC-4 — `src/skills/sequential-thinking/SKILL.md` carries no unqualified instruction to call a tool that a default install does not serve, and no MCP server was registered by this roadmap.
-- [ ] AC-5 — The grandfather entry for that skill either names the absence or is gone, with an `evals/` directory in its place.
-- [ ] AC-6 — No `SKILL.md` both declares explicit-request-only and publishes auto-trigger keywords, and a fixture carrying both reddens a registered check.
+- [x] AC-1 — A structural validator for `trigger-fixtures.json` exists, passes on the 21 shipped rows, and reddens on each of three named malformations.
+- [x] AC-2 — Either a caller runs it and `src/config/gate-coverage.yml` carries its row with a CI-identical `argv`, or the corpus states in its own README that nothing runs it.
+- [x] AC-3 — No file under `tests/` or `src/` instructs a reader to run a retired Python script except as a historical note.
+- [x] AC-4 — `src/skills/sequential-thinking/SKILL.md` carries no unqualified instruction to call a tool that a default install does not serve, and no MCP server was registered by this roadmap.
+- [x] AC-5 — The grandfather entry for that skill either names the absence or is gone, with an `evals/` directory in its place.
+- [x] AC-6 — No `SKILL.md` both declares explicit-request-only and publishes auto-trigger keywords, and a fixture carrying both reddens a registered check.
