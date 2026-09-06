@@ -277,6 +277,40 @@ completion or archival path at its next scheduled review; independent work is
 demonstrably harmed by serialization; or re-proposals continue after the waiting
 state is visible to intake.
 
+## Unresolved decisions 9-12 — four authorization floors, refused for one round
+
+**Added 2026-09-06** by `road-to-authorization-that-reaches-further`, whose five
+blockers were dispositioned by an AI council (2 seats, unanimous) under the
+maintainer's standing delegation. The ruling is recorded in
+[`ADR-255`](../../../docs/decisions/ADR-255-authorization-floors-preserved-this-round.md).
+
+**What ADR-255 did and did not do.** It refused five proposals **for one round**,
+on the framework that a refusal preserving a recorded floor is council-decidable
+as preservation of the status quo, while acceptance of any of them is
+categorically unreachable by a council — including experimentally. So the
+roadmap's dependency is closed and **the policy question is not**. Each refusal
+is written scoped: not authorized in this round, current behaviour unchanged, no
+future ruling prejudged. None of them says the project will never do the thing;
+writing that would itself have created the public commitment the refusals
+decline to make.
+
+| # | Question, and where its instrument lives | ADR-255 |
+|---|---|---|
+| **9** | Does a git-authorization gate return at all, and if so in the typed-transition shape ADR-254's `review_trigger` requires? Two ledger items wait on it and on nothing else — object binding as a **matching** condition, and object-bound grants beyond `pr-merge` (`src/scripts/git_authorization_hook.ts`). | § 1 — ADR-254 stands this round |
+| **10** | Should `personal.autonomy`'s shipped default, or its `auto`-resolves-to-`off` semantics, change? (`src/config/agent-settings.template.yml`, `src/rules/autonomous-execution.md`) | § 2 — unchanged this round |
+| **11** | Should the Hard Floor's push/commit rows be narrowed, or a run-scoped grant accepted in place of the this-turn confirmation? (`src/rules/non-destructive-by-default.md`) | § 3 — both refused this round |
+| **12** | Should `src/rules/tool-safety.md` be rebuilt as consequence-aware, and the wildcard-grant finding in `src/scripts/lint_skill_frontmatter_safety.ts` demoted? "Capability is not risk" is a real argument on which ADR-255 takes **no position**. | § 5 — floor retained this round |
+
+**The roadmap's fifth blocker is not a ninth entry here.** Governance
+self-amendment — deleting `block_kernel_rule_writes.ts`, the soak guarantee, the
+task-scope reset and git section, or the owner-reserved set — is the question
+**Decision 3 above already holds**, and ADR-255 § 4 refuses all four deletions
+for this round on the same framework. Registering it twice would let one of the
+two records be closed while the other stayed open.
+
+**Severability.** Decisions 9-12 are severable from each other and from 1-8 in
+both directions. A ruling on any one settles that one.
+
 ## Blocking cost — recorded as `unknown`, deliberately
 
 The parent required that each non-`yes` row record its blocking cost "as sourced
@@ -309,7 +343,7 @@ that a decision is wrong.
 
 ## Reopens when
 
-An explicit owner ruling on any of the **eight**, independently of the others.
+An explicit owner ruling on any of the **twelve**, independently of the others.
 Each is severable; none implies the others — and Decision 4 is severable per
 RECORD, so a ruling on ADR-108 does not settle ADR-107.
 
@@ -318,3 +352,9 @@ directions. Two of them (6 and 7) are **surfaced without a position**: this file
 records where the decision lives and what each answer costs, and takes neither
 side. Decision 8 is narrower still — the council settled the operational
 question and only the underlying reasoning is registered here.
+
+Decisions 9-12 were added on 2026-09-06 and are severable from 1-8 in both
+directions. Each already carries a **dated council refusal scoped to one round**
+(ADR-255) rather than nothing, which is the difference between them and
+Decisions 1-4: the floor is recorded as preserved, and the authority to change
+it is recorded as unexercised. Neither is an owner ruling.
