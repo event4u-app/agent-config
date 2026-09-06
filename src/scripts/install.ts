@@ -5123,7 +5123,7 @@ function _main_project_install(
         if (_is_tool_enabled(tools, 'claude-code')) {
             merged_keys_by_tool['claude-code'] = [
                 ...ensure_claude_bridge(project_root, opts.force),
-                ...ensure_mcp_bridge(project_root, opts.force),
+                ...ensure_mcp_bridge(project_root, opts.force, package_root),
             ];
         }
         if (_is_tool_enabled(tools, 'cursor')) {

@@ -35,14 +35,43 @@ export type MergeJsonFile = (
  * installer end up with the same entry rather than two that drift.
  */
 export const MCP_SERVER_KEY = 'agent-config';
-export const MCP_BRIDGE_ENTRY = {
-    mcpServers: {
-        [MCP_SERVER_KEY]: {
-            command: 'npx',
-            args: ['-y', '@event4u/agent-config', 'mcp-server'],
+export const MCP_PACKAGE_NAME = '@event4u/agent-config';
+
+/**
+ * The entry, pinned to the version the installer is running from.
+ *
+ * Unpinned, `npx -y @event4u/agent-config` resolves the `latest` dist-tag on
+ * every server start, so the server a consumer runs is whatever the registry
+ * served most recently — not the one their installer approved, and not the one
+ * their lockfile records. The pin makes those the same artefact.
+ *
+ * A version that cannot be read is left unpinned rather than guessed: an
+ * invented specifier would fail to resolve at server start, which is a worse
+ * failure than the drift it was meant to close.
+ */
+export function mcpBridgeEntry(packageRoot: string): Record<string, unknown> {
+    const version = readPackageVersion(packageRoot);
+    const spec = version === null ? MCP_PACKAGE_NAME : `${MCP_PACKAGE_NAME}@${version}`;
+    return {
+        mcpServers: {
+            [MCP_SERVER_KEY]: {
+                command: 'npx',
+                args: ['-y', spec, 'mcp-server'],
+            },
         },
-    },
-};
+    };
+}
+
+/** The manifest `version`, or `null` when it is absent or unreadable. */
+export function readPackageVersion(packageRoot: string): string | null {
+    try {
+        const raw = fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf-8');
+        const v = (JSON.parse(raw) as { version?: unknown }).version;
+        return typeof v === 'string' && v.trim() !== '' ? v : null;
+    } catch {
+        return null;
+    }
+}
 
 /**
  * `.mcp.json` — the project-scope MCP config Claude Code reads.
@@ -66,9 +95,56 @@ export const MCP_BRIDGE_ENTRY = {
  */
 export function makeEnsureMcpBridge(
     mergeJsonFile: MergeJsonFile,
-): (projectRoot: string, force: boolean) => Record<string, unknown>[] {
-    return (projectRoot, force) =>
-        mergeJsonFile(path.join(projectRoot, '.mcp.json'), MCP_BRIDGE_ENTRY, force, '.mcp.json');
+): (projectRoot: string, force: boolean, packageRoot?: string) => Record<string, unknown>[] {
+    return (projectRoot, force, packageRoot = projectRoot) =>
+        mergeJsonFile(
+            path.join(projectRoot, '.mcp.json'),
+            mcpBridgeEntry(packageRoot),
+            force,
+            '.mcp.json',
+        );
+}
+
+/**
+ * Rewrite a stale `.mcp.json` entry in place, touching only the key we own.
+ *
+ * Install writes the entry once; nothing re-read it afterwards, so a pin
+ * written by one install stayed frozen at that version for the life of the
+ * file — which is exactly the drift the pin was added to close, one release
+ * later. This is the update path.
+ *
+ * Scope discipline: the ONLY key rewritten is `mcpServers[MCP_SERVER_KEY]`.
+ * A server a consumer added by hand sits beside it and is not read, compared,
+ * reordered or rewritten — the same contract `merge_json_file` honours on the
+ * install path, and the reason uninstall can subtract exactly one key.
+ *
+ * Returns `'absent'` (no file, or no entry of ours to repair — install owns
+ * that case, not this one), `'current'`, or `'rewritten'`.
+ */
+export function migrateMcpBridge(
+    projectRoot: string,
+    packageRoot: string,
+): 'absent' | 'current' | 'rewritten' {
+    const file = path.join(projectRoot, '.mcp.json');
+    let doc: Record<string, unknown>;
+    try {
+        doc = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
+    } catch {
+        return 'absent';
+    }
+    const servers = doc['mcpServers'];
+    if (servers === null || typeof servers !== 'object' || Array.isArray(servers)) return 'absent';
+    const table = servers as Record<string, unknown>;
+    if (table[MCP_SERVER_KEY] === undefined) return 'absent';
+
+    const wanted = (mcpBridgeEntry(packageRoot)['mcpServers'] as Record<string, unknown>)[
+        MCP_SERVER_KEY
+    ];
+    if (JSON.stringify(table[MCP_SERVER_KEY]) === JSON.stringify(wanted)) return 'current';
+
+    table[MCP_SERVER_KEY] = wanted;
+    fs.writeFileSync(file, `${JSON.stringify(doc, null, 2)}\n`, 'utf-8');
+    return 'rewritten';
 }
 
 /**
