@@ -53,7 +53,7 @@ Exempt — the file set is enumerated **before** the first read and each read is
 - the members of a directory listing or grep result being opened in turn;
 - a declared read protocol under [`context-hygiene`](context-hygiene.md).
 
-Not exempt, and still the failure this rule exists to catch: re-reading the *same* file hoping for a different answer, re-running a failing command unchanged, or widening a grep by one word at a time instead of thinking. The discriminator is **did the previous call change what I know** — not the tool name.
+Not exempt, and still the failure this rule exists to catch: re-reading the *same* file hoping for a different answer, re-running a failing command unchanged, or widening a grep by one word at a time instead of thinking. The discriminator is **did the previous call change what I know** — not the tool name. Nor `cd X && …`: `git -C`.
 
 ## Fresh Output Over Memory
 
