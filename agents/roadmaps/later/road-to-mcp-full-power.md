@@ -5,6 +5,8 @@ status: later
 
 # Roadmap: MCP Full Power — Glama leverage, coverage expansion, execution bridge
 
+> **Arrivals:** 4 (at least) — latest `inbox-2026-09-k` (2026-09-05); earlier: agents/roadmaps/archive/road-to-skill-delivery-over-mcp.md, agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md, agents/roadmaps/archive/road-to-routing-assurance.md.
+
 > Expose the full agent-config capability surface (including the TS background scripts / CLI subcommands) through MCP in safety tiers, and make the Glama + registry listings first-class distribution channels.
 
 > Blocked until the next council-approved MCP tool batch exists — the only open work (Phase 5 Step 3 codegen bridge + AC2) generates tools from an approved cut list, and the 2026-07-07 verdict left zero approved-but-unimplemented entries. Trigger: a new council round approves >= 1 additional tool (or a named consumer asks for a long-tail command via MCP).

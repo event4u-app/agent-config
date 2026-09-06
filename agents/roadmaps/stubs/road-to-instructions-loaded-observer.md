@@ -6,6 +6,8 @@ probe: none
 
 # Stub: road to the InstructionsLoaded observer, and the fork it would decide
 
+> **Arrivals:** 3 — latest `inbox-2026-09-k` (2026-09-05); earlier: `inbox-2026-09-i` (2026-09-05), agents/roadmaps/archive/road-to-standing-context-40k.md.
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-21, from
 > [`road-to-standing-context-40k.md`](../archive/road-to-standing-context-40k.md)
 > steps 3.0 and 3.1 plus blocker `b-rules-efficiency-signal`. Council

@@ -1,0 +1,135 @@
+---
+complexity: structural
+status: ready
+execution:
+  mode: phase-checkpoints
+estate_growth_exempt: "The one verified new capability in the round — the dispatcher never emits the host's permissionDecision field although the host contract records it as offered — has no receiver anywhere in the estate, and the four owner-reserved questions it exposes have sat unrecorded in two stubs for fourteen days."
+estate_offset_exempt: "It offsets nothing: it closes no existing roadmap, and the two stubs it names stay open because only the owner can close them."
+---
+# Road to authorization that reaches further
+
+> **Source:** `agents/tmp.old/inbox-2026-09-m/` — verified against the tree at `5c539505d` on 2026-09-05.
+
+## Goal
+
+Reduce the confirmations a normal coding task costs, without moving any recorded floor, by making the authorization the user already gave reach the operations it plainly covers — and by putting the questions that genuinely require the owner in front of the owner instead of leaving them in a stub. Verification against the tree removed most of the round's proposed work before it was planned, and a decision that landed while this file was being written removed most of the rest. ADR-254 (accepted 2026-09-04, owner-directed, superseding ADR-252) deletes the `block-unauthorized-git` concern and its three `pre_tool_use` bindings: **nothing in this package enforces git authorization any more**, the enforcing half of the reader is gone, and `src/scripts/hooks/block_unauthorized_git.ts` survives only as the non-gating parser `src/scripts/hooks/git_command_classifier.ts` for `block_no_verify` and `conformance_scan`. What survives is the `git-authorization` ledger concern, advisory exactly as it always was (`src/scripts/hook_manifest.yaml:485-489`) — it records what a turn's own words authorized and blocks nothing — plus `conformance_scan`'s after-the-fact count of irreversible operations that ran unauthorized (`src/scripts/conformance_scan.ts:807`). The Hard Floor is unchanged as a rule and is now **model-held** for git operations. So the plan below builds on the advisory record and the measurement, never on a gate. The one capability that ADR-254 does not touch is still absent: the dispatcher constructs only an `additionalContext` envelope (`src/scripts/hooks/host_semantics.ts:114-119`) even though the host contract records `permissionDecision` as offered and not emitted (`docs/contracts/hook-architecture-v1.md:496-512`). This roadmap is done when a category-A tool call reaches the host carrying an explicit allow, the package stops teaching the `cd X && …` shape that provokes a host prompt, the ledger records the consequence operations the owner named so the conformance count can see them, the friction is measured rather than asserted, and the five owner-reserved questions carry a dated ruling or a recorded refusal to rule.
+
+## Phase 1 — Stop provoking prompts nobody in this package asked for
+
+- [ ] **1.1 Emit `permissionDecision: allow` for category-A tool calls.** The dispatcher builds exactly one envelope shape at `src/scripts/hooks/host_semantics.ts:114-119` and never the permission field, although the host contract records the field as offered and explicitly names our own plumbing as the thing that does not emit it at `docs/contracts/hook-architecture-v1.md:496-512`. Category A is reads, navigation, build, test and lint inside the working tree with no consequence operation attached; nothing in this package gates those today — and after ADR-254 nothing in this package gates any git operation either — so an explicit allow removes a host prompt without removing a gate. Ship the composition policy with it — one `ask` or `deny` from any concern beats every `allow` — because the undecided composition question at `docs/contracts/hook-architecture-v1.md:518-521` is what stalled this path before.
+      verify: `grep -rn "permissionDecision" src/scripts/hooks/ | wc -l` is greater than zero (it is `0` today), and the composition precedence has a test that goes red when an `allow` is allowed to outrank a `deny`.
+- [ ] **1.2 Replace the `cd X && …` shape in the skill canon with a directory-flag form.** `grep -rn "git -C\|pushd\|subshell" src/rules/` returns zero, so nothing in the rule layer tells an agent to prefer `git -C <path>`, `npm --prefix <path>` or `composer -d <path>`, while `src/skills/using-git-worktrees/SKILL.md:138` teaches the compound form directly. Rewrite that line and re-scope the global worktree root at `src/skills/using-git-worktrees/SKILL.md:108`, which places a working directory outside the repository. `corrected-from-reproduction`
+      verify: `grep -n "cd \.worktrees" src/skills/using-git-worktrees/SKILL.md` returns nothing, and `grep -rn "git -C" src/rules/` returns at least one line.
+- [ ] **1.3 Report the host permission settings that produce the prompts, and write none of them.** A doctor check reads the consumer's own settings and reports read-deny rules, a missing worktree root in the host's additional-directories list, and the active default permission mode, with a copyable snippet. It never writes them: `src/templates/consumer-settings/claude-settings.json` carries `enabledPlugins` and `hooks` and zero `permissions` keys, and that stays true.
+      verify: `grep -c permissions src/templates/consumer-settings/claude-settings.json` returns 0, and the doctor output names each of the three settings on a project where they are absent.
+
+## Phase 2 — Widen what the advisory ledger records
+
+Both steps change what is **recorded and counted**, never what is refused. ADR-254 removed the enforcing reader; the ledger concern it left standing is advisory by manifest (`src/scripts/hook_manifest.yaml:485-489`), and the only consumer that acts on the vocabulary is the after-the-fact conformance count at `src/scripts/conformance_scan.ts:807`. Nothing here re-adds a gate, and nothing here may be read as a step toward one.
+
+- [ ] **2.1 Extend the operation vocabulary from git operations to consequence operations.** `src/scripts/git_authorization_hook.ts:240-267` enumerates exactly 26 git operations, and `src/scripts/hooks/git_command_classifier.ts:86` carries the irreversible subset the conformance scan counts against. The boundaries the owner named — production deploy, production data destruction, production infrastructure change, external send, money movement, force-push to a shared trunk, destructive work outside the task — have no vocabulary at all, so an authorization the user gave in plain words is invisible to the record and the corresponding operation is invisible to the count. Add them following the existing phrase table at `src/scripts/git_authorization_hook.ts:277`, keeping the negation handling at `src/scripts/git_authorization_hook.ts:996` and the fenced-paste exclusion at `src/scripts/git_authorization_hook.ts:517`. Recording an authorization is not granting one, and after ADR-254 there is no grantor left: the record feeds measurement only.
+      verify: a prompt naming a production deletion in German and in English records the operation, a prompt asking what such a deletion does records nothing, a fenced paste containing the phrase records nothing, and `./scripts-run src/scripts/conformance_scan` still exits without an error on the extended vocabulary.
+- [ ] **2.2 Record the object a consequence authorization names, and count mismatches.** An authorization for one table, one environment or one recipient class is not an authorization for another, and today the record cannot express the difference for anything but pull-request numbers. Add the object as a recorded field on the consequence operations from 2.1, mandatory for data destruction, external send and money movement, and teach the conformance check at `src/scripts/conformance_scan.ts:807` to count an operation whose object the turn's record does not name. This is measurement in the shape ADR-254 preserved — the scan reports after the fact and refuses nothing.
+      verify: a turn authorizing one table and executing against a different table produces one conformance violation and zero refusals, and the mismatch is a test that goes red when the object field is dropped.
+
+## Phase 3 — Measure the friction instead of asserting it
+
+- [ ] **3.1 Record the unauthorized-operation baseline ADR-254's review trigger is written against.** The ADR reopens when "the conformance scan's unauthorized-operation count rises over a measured baseline rather than staying flat", and no such baseline exists — the check counts violations per run (`src/scripts/conformance_scan.ts:807,963`) but nothing pins a reference value. Record one over a stated window, with the window size and the session count next to the figure, and re-record it after 2.1 lands so the vocabulary change is visibly separated from a behaviour change.
+      verify: `./scripts-run src/scripts/conformance_scan` reports a `git-authorization` count, and the recorded baseline names its window, its session count and the tree SHA it was measured at.
+- [ ] **3.2 Build an autonomy-friction corpus of the cases the round names.** The corpus holds the payload classes the owner named — directory change, directory change compounded with a status read, a test runner invoked from a subdirectory, a workspace package manager, a consequence operation with the authorizing phrase present, and the same operation with it absent — each with the expected number of confirmations rather than the number of gates that fire.
+      verify: the corpus runs and reports a per-case confirmation count; a case whose expectation is zero and whose observation is one fails.
+- [ ] **3.3 Report the residual interruptions over a window wide enough to mean something.** `src/scripts/interruption_report.ts:1-22` already measures asks, hand-backs and halts per run and already flags a short window; its buffer held five sessions when it was written. Persist enough runs that the window request is met, and pre-register the expected drop as a falsifiable claim with an honest null permitted.
+      verify: `./scripts-run src/scripts/interruption_report` reports a session count meeting its window request without the short-window flag, and the pre-registered claim is recorded before any phase-1 change is measured against it.
+
+## Blockers
+
+### blocker: git-enforcement-reinstatement
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — Phases 1–3 record and measure and refuse nothing; this entry records the two ledger items this file could no longer schedule, because both exist only to be read by a gate that ADR-254 deleted.
+- **Recommendation:** none; this is the owner's call — ADR-254 carries `reopen_policy: owner` and `protected_dimensions: security_floor`, and its own `review_trigger` states: "Explicitly NOT a trigger: a wish to re-add the gate in its old shape. The shape is what failed; a replacement must classify intent into typed transitions rather than test a prompt against a regex."
+- **If you do nothing:** grants keep being minted and stored (`src/scripts/git_authorization_hook.ts:587,739`) and nothing reads them — `consumeGrantTarget` at `src/scripts/git_authorization_hook.ts:1180` has no caller outside its own tests since the enforcing half was deleted — so the object-bound grant shape ADR-252 accepted stays recorded and inert, and git authorization stays model-held under `src/rules/non-destructive-by-default.md`.
+- **What to do:**
+  1. Decide whether a git-authorization gate returns at all, and if it does, whether it takes the typed-transition shape ADR-254's `review_trigger` requires rather than the deleted Boolean-over-prose shape. Two items wait on that ruling and on nothing else: making object binding a **matching** condition rather than a recorded field, and letting object-bound grants cover operations beyond pull-request merge (`src/scripts/git_authorization_hook.ts:590` still states that only `pr-merge` mints grants).
+  2. Record the ruling (authorization or refusal) in `docs/decisions/` as a record that supersedes or amends ADR-254, and update `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` to point at it.
+- **Resolved when:** a dated ruling (or a recorded refusal to rule) is filed in `docs/decisions/`, the stub is updated to point at it, and `Status:` is flipped to `resolved` in the same edit.
+
+ADR-254 is accepted, owner-directed, one day old, and reserves its own reopening to the owner. Its consequences section states the cost plainly: the failure the removed gate was built after is unguarded again, and if it recurs nothing stops it. This roadmap does not argue that away and does not plan around it. It records here, once, that two items the round proposed — mandatory object **matching** and grant generalisation beyond pull-request merge — have no non-gating purpose, so scheduling them would be re-adding mechanical enforcement under another name.
+
+### blocker: autonomy-default-semantics
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — Phases 1–3 are floor-preserving and do not touch `personal.autonomy`; this entry records the round's proposed default-semantics change for a dated ruling rather than dropping it silently.
+- **Recommendation:** none; this is the owner's call — `personal.autonomy` is a consumer-facing default projected to every host, and inverting or changing it changes behaviour for every consumer on their next update.
+- **If you do nothing:** `personal.autonomy` keeps shipping `auto`, resolving as `off` until opt-in; the round's proposed inversion stays unrecorded and unresolved.
+- **What to do:**
+  1. Decide whether the shipped default or its `auto`-resolves-to-`off` semantics (`src/config/agent-settings.template.yml:342`, `src/rules/autonomous-execution.md:30`) should change.
+  2. Record the ruling (authorization or refusal) in `docs/decisions/` and update `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` to point at it, per AC-7.
+- **Resolved when:** a dated ruling (or a recorded refusal to rule) is filed in `docs/decisions/`, the stub is updated to point at it, and `Status:` is flipped to `resolved` in the same edit.
+
+`personal.autonomy` ships as `auto` (`src/config/agent-settings.template.yml:342`) and `auto` resolves to the same behaviour as `off` until the user opts in (`src/rules/autonomous-execution.md:30`). Inverting that meaning, or changing the shipped default, changes behaviour for every consumer of this package on their next update, in a rule that is projected to every host. That is a consumer-facing default, which no agent may flip.
+
+### blocker: hard-floor-scope-reduction
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — Phases 1–3 leave `non-destructive-by-default.md` untouched by construction; this entry records the round's proposed floor-narrowing for a dated ruling.
+- **Recommendation:** none; this is the owner's call — narrowing the Hard Floor (removing the push or commit row, or accepting a run-scoped grant in place of the this-turn confirmation) lowers a recorded safety floor in a kernel rule, which `src/rules/decision-revisit-gate.md:140` reserves to the owner. ADR-254 raises the stakes rather than lowering them: since the gate was removed, this rule is the only carrier left for git operations.
+- **If you do nothing:** the push and commit rows stay inside the Hard Floor exactly as recorded, and every push/commit keeps requiring this-turn confirmation regardless of a standing instruction or roadmap authorization.
+- **What to do:**
+  1. Decide whether to narrow the Hard Floor's push/commit rows (`src/rules/non-destructive-by-default.md:33`) or accept a run-scoped grant in place of the this-turn requirement.
+  2. Record the ruling in `docs/decisions/` and update `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` to point at it, per AC-7.
+- **Resolved when:** a dated ruling (or a recorded refusal) is filed in `docs/decisions/`, the stub is updated, and `Status:` is flipped to `resolved` in the same edit.
+
+`src/rules/non-destructive-by-default.md:33` places any push in the same Hard Floor as production migrations, and the rule's opening requires confirmation on the turn itself, explicitly refusing a standing instruction or a roadmap authorization as a substitute. Removing the push row, removing the commit row, or accepting a run-scoped grant in place of the this-turn requirement each lower a recorded floor in a kernel rule. `src/rules/decision-revisit-gate.md:140` reserves exactly that to the owner, and `src/scripts/hooks/block_kernel_rule_writes.ts:5-16` denies the write at tool-call time.
+
+### blocker: kernel-rule-and-governance-self-amendment
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — the four self-amendment deletions it names are excluded by construction from Phases 1–3; the fourteen-day-old stub `road-to-owner-authority-decisions.md` already holds this exact question unruled.
+- **Recommendation:** none; this is the owner's call — governance self-amendment (deleting `block_kernel_rule_writes.ts`, the soak guarantee, `scope-control.md`'s task-scope reset and git section, or the owner-reserved set in `decision-revisit-gate.md`) is the one class of change with no council-decidable counterpart.
+- **If you do nothing:** the four named deletions stay unmade, `block_kernel_rule_writes.ts` keeps denying kernel writes at tool-call time, and the fourteen-day-old stub stays open with no ruling recorded.
+- **What to do:**
+  1. Rule individually on each of the four named deletions — the task-scope reset and git section in `src/rules/scope-control.md:24-36,54`, `src/scripts/hooks/block_kernel_rule_writes.ts`, the soak guarantee in `src/agent-src/contexts/authority/kernel-rule-edits.md:11-16`, and the owner-reserved set in `src/rules/decision-revisit-gate.md:130-141` — accept, reject, or defer with a stated reason.
+  2. Record the ruling in `docs/decisions/` and update `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` to point at it, closing both records in the same edit.
+- **Resolved when:** a dated ruling (or recorded refusal) covering all four named deletions is filed in `docs/decisions/`, the stub is updated, and `Status:` is flipped to `resolved` in the same edit.
+
+Four requests in this round amend the machinery that decides who may amend the machinery: deleting the task-scope reset and the git section from `src/rules/scope-control.md:24-36,54`, deleting `src/scripts/hooks/block_kernel_rule_writes.ts`, deleting the soak guarantee at `src/agent-src/contexts/authority/kernel-rule-edits.md:11-16`, and removing the owner-reserved set at `src/rules/decision-revisit-gate.md:130-141`. Governance self-amendment is the one row in that table with no council-decidable counterpart. The same question has been open in `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` since 2026-08-22 with no ruling recorded, and its recorded state is authority-unavailable rather than refusal — so a ruling here closes a fourteen-day-old record as well as this blocker.
+
+### blocker: tool-safety-floor-lowering
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap — Phases 1–3 leave `tool-safety.md` and `lint_skill_frontmatter_safety.ts`'s severity thresholds untouched; this entry records the round's proposed floor change for a dated ruling.
+- **Recommendation:** none; this is the owner's call — rebuilding the deny-by-default rule as consequence-aware and demoting the wildcard-grant finding both lower a recorded security floor, and "capability is not risk" is a real argument the agent may not settle unilaterally.
+- **If you do nothing:** `src/rules/tool-safety.md` stays deny-by-default with "deny under doubt", and `lint_skill_frontmatter_safety.ts` keeps treating a wildcard tool grant and a permission bypass as high severity.
+- **What to do:**
+  1. Decide whether to accept the consequence-aware rebuild of `src/rules/tool-safety.md` and the severity demotion in `src/scripts/lint_skill_frontmatter_safety.ts`, or keep the current floor.
+  2. Record the ruling in `docs/decisions/` and update `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` to point at it, per AC-7.
+- **Resolved when:** a dated ruling (or recorded refusal) is filed in `docs/decisions/`, the stub is updated, and `Status:` is flipped to `resolved` in the same edit.
+
+`src/rules/tool-safety.md:27,31` is deny-by-default and instructs denial under doubt; `src/scripts/lint_skill_frontmatter_safety.ts:16-18` treats a wildcard tool grant and a permission bypass as high severity. Rebuilding the rule as consequence-aware and demoting the wildcard finding both lower a recorded security floor. The distinction the round draws — that capability is not risk — is a real argument and not one an agent may settle on its own.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-09-05 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Category-A allow widens further than intended | implementation | An `allow` emitted for a call that carries a consequence operation would hand the host a pass on exactly the operations the Hard Floor still covers, and since ADR-254 that rule is the only carrier left for git. | Allow only inside the working tree with no consequence operation matched, and ship the composition policy in the same step so any `ask` or `deny` outranks it. | Phase 1 — Stop provoking prompts nobody in this package asked for |
+| 2 | Permission field unverified against the running host | implementation | The field is recorded as offered against one probed build; the tree's own contract says every other host is unprobed and warns against reading a fact about this plumbing as a fact about the host. | Probe the running binary before the emission path is enabled, and keep the existing envelope as the fallback when the probe fails. | Phase 1 — Stop provoking prompts nobody in this package asked for |
+| 3 | Wider vocabulary is mistaken for a wider gate | implementation | Extending the phrase table to production and external operations touches the same file the deleted gate read, so a later reader could take the record as an authorization surface and wire a refusal to it. | Keep the existing negation, question-versus-order and fenced-paste handling; state in the step, the code comment and the test names that the consumer is `conformance_scan` and that nothing refuses; leave the reinstatement question in its blocker. | Phase 2 — Widen what the advisory ledger records |
+| 4 | Measured drop is attributed to the wrong cause | implementation | Most confirmations in the round's own account originate outside this package, so a drop after phase 1 could be a host change rather than an effect of this work; the same applies to a change in the unauthorized-operation count after the vocabulary extension. | Pre-register the claim before measuring, record the host build and tree SHA alongside each window, re-record the baseline either side of 2.1, and permit an honest null. | Phase 3 — Measure the friction instead of asserting it |
+| 5 | Blockers stay open and the phases ship a partial answer | product | Every phase here is deliberately floor-preserving, so shipping all of them leaves the posture the owner objected to unchanged; the visible work could read as the answer. | State in the Goal and in each blocker that the posture question is the blockers' content, and keep the five blockers open until a dated ruling exists. | Phase 1 — Stop provoking prompts nobody in this package asked for |
+
+## Acceptance Criteria
+
+- [ ] AC-1 — A category-A tool call reaches the host carrying an explicit allow, and a concern's `ask` or `deny` outranks that allow.
+- [ ] AC-2 — No file under `src/rules/`, `src/skills/` or the consumer settings template teaches the `cd <path> && …` shape, and the rule layer names a directory-flag alternative.
+- [ ] AC-3 — The advisory ledger records the seven consequence operations with the named object recorded for data destruction, external send and money movement, and records nothing from a question, a negation or a fenced paste.
+- [ ] AC-4 — No step in this file adds, restores or wires a refusal on any git operation, and `grep -c 'block-unauthorized-git\|block_unauthorized_git' src/scripts/hook_manifest.yaml` stays at 0 — no concern definition, no `pre_tool_use` binding.
+- [ ] AC-5 — A friction corpus reports a per-case confirmation count, the conformance unauthorized-operation baseline is recorded with its window and tree SHA, and the interruption report meets its window request without the short-window flag.
+- [ ] AC-6 — Every kernel rule, hook and lint threshold named in the five blockers is byte-identical to its state at `5c539505d`, or carries a dated owner ruling authorising the change.
+- [ ] AC-7 — Each of the five blockers carries either a dated owner ruling or a recorded statement that the owner has not ruled, and `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` is updated to point at whichever landed.

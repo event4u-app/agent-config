@@ -10,6 +10,8 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 ---
 # Road to routing assurance — the live-harness floors
 
+> **Arrivals:** 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+
 > **Parent:** `road-to-routing-assurance`, closed at its Phase 2 cut line on
 > 2026-08-25. That roadmap's own text declares the stop: *"Stopping after Phase
 > 2 is a VALID end state: D1 and D2 are then repaired on the gated surface.
