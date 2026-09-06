@@ -57,6 +57,7 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
+import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -509,6 +510,7 @@ export function _build_envelope(args: Args, payload_text: string): JsonObject {
       process.env["AGENT_SESSION_ID"] ||
       "",
     workspace_root: process.cwd(),
+    surface: detectSurface(payloadObj),
     payload: payloadObj,
     settings: {},
   };
