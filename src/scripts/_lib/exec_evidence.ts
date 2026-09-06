@@ -68,6 +68,13 @@ export const ALLOWLIST_PREFIXES: readonly (readonly string[])[] = [
     // a name. Read-only, deterministic, model-free, and already run in CI for its
     // own reasons — the same class as its neighbours here.
     ['check_no_external_sources'],
+    // `--check` and only `--check`: the bare invocation reads a transcript store
+    // under `$HOME`, which is absent on a runner, so admitting it would make the
+    // verdict an artifact of where it ran. Under the flag it compares two
+    // committed files — the census record against the sentence `docs/CLAIMS.md`
+    // publishes — so its exit code IS the verdict for that claim rather than
+    // evidence that some report exists.
+    ['report_skill_activation', '--check'],
     ['check_token_regression'],
     ['lint_agent_security'],
     ['measure_lexical_ranking'],
