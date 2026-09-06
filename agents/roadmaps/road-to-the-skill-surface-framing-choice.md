@@ -11,8 +11,12 @@ parent_roadmap: road-to-the-activation-census-consequence
 > live destination `deferralProblems`
 > (`src/agent-src/scripts/archive_completed_roadmaps.ts`) can verify from both
 > ends, and so the choice that item was written to surface is stated somewhere a
-> reader meets it. `status: carrier` keeps it off the dashboard and out of the
-> active estate count until a human flips it to `ready`.
+> reader meets it. `status: carrier` keeps it off the roadmap dashboard, out of
+> `check_roadmap_trackable` and out of the plan risk register until a human
+> flips it to `ready`. It does NOT keep it out of the estate count:
+> `check_estate_count` adds top-level carriers back to `active_roadmaps`
+> deliberately, so this file was paid for by archiving its parent in the same
+> change rather than by an exemption.
 >
 > **Nothing here is scheduled work.** The parent roadmap built neither option
 > and this file builds neither. Its content is the packet: two options, the
