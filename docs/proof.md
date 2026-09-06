@@ -95,7 +95,7 @@ evidence pointer, or `task check-claims` fails the build.
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
-| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,049 assistant turns records 0 Skill invocations and 0 of 299 distinct skills invoked (2026-09-04). A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states, which is the finding rather than a disappointment: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, and no host reads it at routing time. The two surfaces share the word "trigger" and are unrelated. Separately, only 12 of 299 skills (4.0%) declare a machine-matchable trigger key in frontmatter at all. <!-- count: dated --> | quant | `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md#an honest null` | ✅ |
+| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `report_skill_activation --check` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero is a defect — a matchable declaration exists and nothing acted on it. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. <!-- count: dated --> | quant | `exec:report_skill_activation --check -> 0` | ✅ |
 | 299 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with. | quant | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` | ✅ |
@@ -110,10 +110,10 @@ evidence pointer, or `task check-claims` fails the build.
 
 ### How many of those re-derive themselves
 
-**17 of 60** backed claims carry `exec:` evidence —
+**18 of 60** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**43** rest on a pointer: CI checks that the artefact
+**42** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -159,7 +159,6 @@ given:
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation doe | external cite — CI does not fetch the network |
-| Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not n | prose or contract artefact — no exit code carries the verdict |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context r | external cite — CI does not fetch the network |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that st | prose or contract artefact — no exit code carries the verdict |
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is | prose or contract artefact — no exit code carries the verdict |
@@ -437,7 +436,7 @@ Undeclared rules (81, of which 9 kernel-denied) carry no row — an honest gap b
 | `second-brain-recall-lift` | quant | backed | — | `internal/bench/reports/second-brain-delta.json` |
 | `sequential-thinking-chain-of-thought` | qual | backed | — | `https://arxiv.org/abs/2201.11903 (2026-08-11)` |
 | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | — | `exec:lint_agent_security -> 0` |
-| `skill-activation-census-zero` | quant | backed | — | `agents/evidence/analysis/tenth-arrival-coverage-2026-09-04.md#an honest null` |
+| `skill-activation-census-zero` | quant | backed | — | `exec:report_skill_activation --check -> 0` |
 | `skill-count` | quant | backed | — | `exec:check_artefact_count_messaging -> 0` |
 | `skill-improvement-reflexion` | qual | backed | — | `https://arxiv.org/abs/2303.11366 (2026-08-11)` |
 | `skill-link-census` | quant | backed | — | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` |
