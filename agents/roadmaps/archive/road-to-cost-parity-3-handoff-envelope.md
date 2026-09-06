@@ -7,6 +7,18 @@ execution:
 
 # Road to cost parity — 3: the handoff envelope carries what the successor actually needs
 
+> **Arrivals:** the session-continuity subject appears in **28** consumed inbox
+> rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rli continuity`,
+> distinct round directories); `recycle` in 20 and `chat-history` in 35. Latest
+> `inbox-2026-09-t`. A floor on the recurrence, not a count of asks for this
+> roadmap. The broader `handoff` and `envelope` greps return 99 and 103 and are
+> deliberately NOT quoted as arrival counts — both words carry unrelated senses
+> in this tree, which is itself the vocabulary defect the successor repairs.
+> Written on the most recent ARCHIVED epoch of this subject because there is no
+> active owner: twelve archived roadmaps built these layers and none retired its
+> predecessor. The successor is `agents/roadmaps/road-to-one-continuity-record.md`,
+> and it is subtractive by construction.
+
 > The envelope that crosses every session boundary — worker CHECKPOINT,
 > main-session recycle, dispatch return — gains successor-tailoring, failed
 > approaches, a drift anchor and scripted environment grounding, and the
