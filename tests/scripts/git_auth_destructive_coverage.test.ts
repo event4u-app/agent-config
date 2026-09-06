@@ -67,7 +67,13 @@ const CAUGHT: ReadonlyArray<[string, GitOp, "BLOCK" | "warn"]> = [
   ["gh repo archive o/r", "repo-lifecycle", "BLOCK"],
   ["gh repo edit o/r --visibility public", "repo-lifecycle", "BLOCK"],
   ["gh pr review 1499 --approve", "review-approve", "BLOCK"],
-  ["git push --force origin main", "force-push", "BLOCK"],
+  // Re-pinned 2026-09-06: a force-push naming a TRUNK now classifies as
+  // `trunk-force-push`, the more specific of the two, per this table's own rule
+  // that the most specific pattern wins. Both rows stay BLOCK tier, so nothing
+  // about the tier moved — only the resolution did. The row below is the other
+  // half of the pair and must keep reading `force-push`: without it, a
+  // classifier that answered `trunk-force-push` for every force-push would pass.
+  ["git push --force origin main", "trunk-force-push", "BLOCK"],
   ["git push --force-with-lease origin feature/x", "force-push", "BLOCK"],
   ["git worktree remove --force ../wt", "worktree-remove", "BLOCK"],
   ["git clean -fdx", "clean-ignored", "BLOCK"],
@@ -143,6 +149,17 @@ describe("every blockable op has a sentence that authorizes it", () => {
     "force-push": "mach einen force-push",
     "worktree-remove": "entfern die worktree",
     "clean-ignored": "git clean -fdx bitte",
+
+    // The consequence vocabulary (2026-09-06). Same invariant, and it bites
+    // harder here: these seven exist only to be RECORDED, so an op the record
+    // cannot reach by any sentence is an op that measures nothing at all.
+    "prod-deploy": "deploy das nach production",
+    "prod-data-destroy": "l\u00f6sch die tabelle orders in der produktionsdatenbank",
+    "prod-infra-change": "\u00e4nder die infrastruktur im cluster",
+    "external-send": "schick die mail an die kunden raus",
+    "money-movement": "erstatt dem kunden den betrag",
+    "trunk-force-push": "force-push main",
+    "out-of-scope-destruction": "l\u00f6sch auch alles andere au\u00dferhalb der aufgabe",
   };
 
   it.each([...BLOCK_OPS])("%s is reachable by a human sentence", (op) => {

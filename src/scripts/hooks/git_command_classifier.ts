@@ -116,6 +116,22 @@ export const BLOCK_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
   "worktree-remove",
   /** `-x` is the flag that takes `.env` and local certificates. */
   "clean-ignored",
+
+  // ── The consequence vocabulary, added 2026-09-06. Every one is already
+  // never-autonomous in the `non-destructive-by-default` prose.
+  //
+  // MEMBERSHIP HERE IS A COUNTING DECISION, NOT A REFUSAL. The set's name
+  // predates ADR-254, which deleted the reader that blocked: the one consumer
+  // that acts on it now is `conformance_scan`'s after-the-fact tally, so
+  // "blocked" describes what the Hard Floor requires of the model, never what
+  // this package does at tool-call time.
+  "prod-deploy",
+  "prod-data-destroy",
+  "prod-infra-change",
+  "external-send",
+  "money-movement",
+  "trunk-force-push",
+  "out-of-scope-destruction",
 ]);
 
 /** Recoverable operations — warned without a this-turn authorization. */
@@ -153,6 +169,17 @@ const G = "(?:-[A-Za-z-]+(?:=\\S+)?(?:\\s+\\S+)?\\s+)*";
 
 /** Optional absolute/relative path in front of the tool word: `/usr/bin/npm`. */
 const P = "^(?:\\S*\\/)?";
+
+/**
+ * Tool words the consequence rows classify, as a head anchor.
+ *
+ * Kept as one constant rather than folded into each row: `commandOp` filters
+ * segments by head BEFORE consulting the table, so a row whose tool word is
+ * missing here never runs — a silent no-op that looks exactly like a pattern
+ * that did not match.
+ */
+const CONSEQUENCE_TOOL_HEAD =
+  /^(?:\S*\/)?(terraform|pulumi|kubectl|helm|aws|gcloud|az|vercel|netlify|flyctl|fly|wrangler|serverless|sls|eb|heroku|cap|psql|mysql|mariadb|sqlite3|mongosh|mongo|redis-cli|sendmail|msmtp|mail|mailx|curl|stripe|braintree|paypal|rm)\b/i;
 
 /**
  * A `gh api` call that WRITES. Read-only `gh api` is the standard way to inspect
@@ -268,6 +295,13 @@ const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
   // "safe force" is in the same class here because what it is safe against is a
   // stale local view, not a collaborator who pushed after your fetch.
   {
+    op: "trunk-force-push",
+    re: new RegExp(
+      `${P}git\\s+${G}push\\b[^\\n;|&]*(--force\\b|--force-with-lease\\b|\\s-f\\b)[^\\n;|&]*\\b(main|master|trunk|production|prod)\\b`,
+      "i",
+    ),
+  },
+  {
     op: "force-push",
     re: new RegExp(`${P}git\\s+${G}push\\b[^\\n;|&]*(--force\\b|--force-with-lease\\b|\\s-f\\b)`, "i"),
   },
@@ -295,6 +329,73 @@ const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     ),
   },
   { op: "close", re: new RegExp(`${P}gh\\s+(pr|issue)\\s+close\\b`, "i") },
+
+  // ── Consequence operations, added 2026-09-06
+  // (`road-to-authorization-that-reaches-further` 2.1).
+  //
+  // ORDER: above the generic `push`/`commit` fallbacks, because
+  // `trunk-force-push` is a `git push` and the most specific pattern must win —
+  // the rule this table states at its head.
+  //
+  // These classify commands the count could not see before. They add NOTHING to
+  // any refusal path: `commandOp` and `BLOCK_OPS` have exactly one consumer
+  // that acts on them, the after-the-fact tally in `conformance_scan`, and this
+  // change does not add a second.
+  {
+    op: "prod-data-destroy",
+    re: new RegExp(
+      `${P}(psql|mysql|mariadb|sqlite3|mongosh?)\\b[^\\n]*\\b(drop\\s+(table|database|schema)|truncate|delete\\s+from)\\b` +
+        `|${P}aws\\s+s3\\s+(rm|rb)\\b` +
+        `|${P}aws\\s+(dynamodb|rds)\\s+delete-\\S+` +
+        `|${P}redis-cli\\b[^\\n]*\\bflush(all|db)\\b`,
+      "i",
+    ),
+  },
+  {
+    op: "prod-infra-change",
+    re: new RegExp(
+      `${P}terraform\\s+(apply|destroy)\\b` +
+        `|${P}pulumi\\s+(up|destroy)\\b` +
+        `|${P}kubectl\\s+(apply|delete|scale|drain)\\b` +
+        `|${P}helm\\s+(install|upgrade|uninstall|rollback)\\b` +
+        `|${P}aws\\s+(iam|ec2|route53|elbv2)\\s+(create|delete|put|update|modify|attach|detach)-\\S+` +
+        `|${P}(gcloud|az)\\s+\\S+\\s+(create|delete|update)\\b`,
+      "i",
+    ),
+  },
+  {
+    op: "prod-deploy",
+    re: new RegExp(
+      `${P}(vercel|netlify|flyctl|fly|wrangler|serverless|sls|eb|heroku)\\s+${G}deploy\\b` +
+        `|${P}(vercel|netlify)\\b[^\\n]*--prod\\b` +
+        `|${P}(npm|pnpm|yarn)\\s+run\\s+deploy\\b` +
+        `|${P}cap\\s+production\\s+deploy\\b`,
+      "i",
+    ),
+  },
+  {
+    op: "external-send",
+    re: new RegExp(
+      `${P}(sendmail|msmtp|mailx?)\\b` +
+        `|${P}curl\\b(?=[^\\n]*(?:-X|--request)\\s+(?:POST|PUT|PATCH)\\b)(?=[^\\n]*https?:\\/\\/)`,
+      "i",
+    ),
+  },
+  {
+    op: "money-movement",
+    re: new RegExp(
+      `${P}(stripe|braintree|paypal)\\s+\\S*(charge|refund|payout|transfer|payment)\\S*\\b`,
+      "i",
+    ),
+  },
+  {
+    // `rm -rf` on an ABSOLUTE path or a home-relative one. Deliberately not
+    // "outside the working tree" — this function receives a command string and
+    // no cwd, so that reading is not decidable here and a classifier that
+    // guesses is worse than one that under-reports.
+    op: "out-of-scope-destruction",
+    re: new RegExp(`${P}rm\\s+(-\\S+\\s+)*-\\S*[rR]\\S*\\s+(-\\S+\\s+)*(~|/)\\S*`, "i"),
+  },
 
   { op: "push", re: new RegExp(`${P}git\\s+${G}push\\b`, "i") },
   { op: "commit", re: new RegExp(`${P}git\\s+${G}commit\\b`, "i") },
@@ -592,7 +693,14 @@ export function commandOp(command: string): GitOp | null {
   // unchecked once `publish` was authorized.
   let found: GitOp | null = null;
   for (const seg of invokedSegments(command)) {
-    if (!/^(?:\S*\/)?(git|gh|npm|pnpm|yarn)\b/.test(seg)) {
+    // Widened 2026-09-06 for the consequence vocabulary. Before this the gate
+    // admitted five tool words, so `terraform apply` and `aws s3 rm` were not
+    // merely unclassified — they could not reach the table at all, and the
+    // count read them as nothing rather than as unmeasured.
+    if (
+      !/^(?:\S*\/)?(git|gh|npm|pnpm|yarn)\b/.test(seg) &&
+      !CONSEQUENCE_TOOL_HEAD.test(seg)
+    ) {
       continue;
     }
     for (const { op, re } of COMMAND_OPS) {
@@ -633,6 +741,53 @@ export function mergeTargetOf(command: string): number | null {
   const api = /\/pulls\/(\d{1,10})\/merge\b/i.exec(command);
   return api ? _boundedTarget(api[1] as string) : null;
 }
+
+/**
+ * The object a consequence command acts on, or `null` when the command does not
+ * name one.
+ *
+ * The sibling of `mergeTargetOf`, generalised past pull-request numbers, and it
+ * inherits that function's fail-closed stance verbatim: a command that names no
+ * object matches no record, so the caller reports nothing rather than guessing.
+ * Under-reporting is the safe direction for a measurement; a guessed object
+ * would manufacture a violation out of a parse failure.
+ *
+ * Normalised to lower case with quotes stripped, so it compares against the
+ * prose side's `extractObjects` without either end re-deriving the rule.
+ */
+export function commandObject(op: GitOp, command: string): string | null {
+  const patterns = COMMAND_OBJECTS[op];
+  if (!patterns) return null;
+  for (const re of patterns) {
+    const m = new RegExp(re.source, re.flags.replace("g", "")).exec(command);
+    const raw = m?.[1];
+    if (raw) {
+      const value = raw.trim().replace(/^["'`]+|["'`]+$/g, "").replace(/[.,;:]+$/, "").toLowerCase();
+      if (value) return value;
+    }
+  }
+  return null;
+}
+
+/** Per-operation object patterns on the COMMAND side. */
+const COMMAND_OBJECTS: Readonly<Record<string, readonly RegExp[]>> = {
+  "prod-data-destroy": [
+    /\bdrop\s+(?:table|database|schema|collection)\s+(?:if\s+exists\s+)?["'`]?([\w.$-]+)/i,
+    /\btruncate\s+(?:table\s+)?["'`]?([\w.$-]+)/i,
+    /\bdelete\s+from\s+["'`]?([\w.$-]+)/i,
+    /\bs3:\/\/([\w.-]+)/i,
+    /--table-name[= ]["'`]?([\w.-]+)/i,
+  ],
+  "external-send": [
+    /\bhttps?:\/\/([^\s/"'`]+)/i,
+    /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/,
+  ],
+  "money-movement": [
+    /--customer[= ]["'`]?([\w.-]+)/i,
+    /--amount[= ]["'`]?([\d.,]+)/i,
+    /\b(\d[\d.,]*)\s*(?:eur|usd)\b/i,
+  ],
+};
 
 /** A target only counts inside the API's own range; anything else is no target. */
 function _boundedTarget(digits: string): number | null {
