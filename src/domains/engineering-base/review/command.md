@@ -8,7 +8,7 @@ intent: "Review dispatcher — multi-judge self-review of the current diff, or r
 routes_to: [review-changes, review-routing]
 replaces: []
 visibility: advanced
-description: Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
+description: Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
 cluster: review
 type: orchestrator
 suggestion:
@@ -49,7 +49,7 @@ Sub-command names match the locked contract in
 4. If the sub-command is unknown or missing, print the menu and ask — do not
    guess:
 
-   > 1. changes — five-judge self-review of the local diff (pre-PR)
+   > 1. changes — seven-judge self-review of the local diff (pre-PR)
    > 2. routing — suggest reviewers + surface matched historical bug patterns
 
 ## Rules

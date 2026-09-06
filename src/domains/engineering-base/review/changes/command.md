@@ -2,14 +2,14 @@
 model_tier: high
 name: review-changes
 pack: engineering-base
-intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture"
-routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, overbuild-review-lens]
+intent: "Multi-judge review of the current diff — bugs, security, tests, quality, architecture, spec, overbuild"
+routes_to: [code-review, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens]
 replaces: []
 visibility: internal
 sub: changes
 cluster: review
-skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, overbuild-review-lens, judge-synthesis, git-workflow]
-description: Self-review local changes before creating a PR — dispatches to six specialized judges (bug, security, tests, quality, architecture, spec) and consolidates verdicts
+skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, judge-spec-compliance, overbuild-review-lens, judge-synthesis, git-workflow]
+description: Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -24,7 +24,7 @@ packs:
 ## Instructions
 
 Review all uncommitted and committed-but-not-pushed changes against
-the default branch (`main`) by dispatching to six specialized judge
+the default branch (`main`) by dispatching to seven specialized judge
 sub-skills and consolidating their verdicts.
 
 ### 1. Update the current branch
@@ -109,7 +109,7 @@ folded together, a handover the reviewer could not parse would report as "there
 was nothing to check", which is the one outcome that hides a real failure
 behind a benign one.
 
-### 4. Dispatch to the six judges
+### 4. Dispatch to the seven judges
 
 Each judge receives **the same diff plus the task context** (ticket,
 PR body, commit messages) and runs independently. The judges are:
@@ -137,8 +137,8 @@ diff cannot answer about itself. It is dispatched on demand like the others, so
 it adds no standing token cost — verified: `check_preamble_payload_budget`'s
 measured total is unchanged by this routing.
 
-**Why the sixth exists, and why it is not a severity.** The other five all ask a
-craft-or-correctness question, so a change that is correct, clean, well-tested
+**Why the sixth exists, and why it is not a severity.** The five that preceded it
+all ask a craft-or-correctness question, so a change that is correct, clean, well-tested
 and architecturally sound — and **does not do what was asked** — used to pass
 this path with five green verdicts. Its finding does **not** enter the shared
 severity axis: `judge-synthesis` carries it on its own dimension, because "this
@@ -180,14 +180,14 @@ Read `verbosity.offer_council_in_delivery` from `.agent-settings.yml`
 - `true`: when `ai_council.enabled: true` **and** at least one member
   enabled, ask (in the user's language):
 
-  > 1. Add an external council review alongside the six internal judges? (billable)
+  > 1. Add an external council review alongside the seven internal judges? (billable)
   > 2. Skip — internal judges only
 
   Also suppress when `personal.autonomy: on` (council is billable).
 
 If picked **1**:
 
-- Run `/council diff:<base>..<head>` in parallel with the six
+- Run `/council diff:<base>..<head>` in parallel with the seven
   internal judges (or sequentially after them — whichever the
   dispatch mode picked in step 4 supports).
 - Treat each council member as one extra "judge" in the consolidated
@@ -202,12 +202,12 @@ If picked **2** → continue with internal judges only.
 
 ### 4b-fresh. The fresh reviewer — the one input with no implementation context
 
-The six judges above all read **the same diff plus the task context**, and on the common
+The seven judges above all read **the same diff plus the task context**, and on the common
 path they run in-session: the party that wrote the diff also reads it, with the whole
 implementation context in scope. That is a self-review, and calling it a review is the
 defect `road-to-review-independence` exists to close.
 
-So a **seventh input** is added, and its distinguishing property is a negative one: it
+So **one further input** is added, and its distinguishing property is a negative one: it
 has **no implementation context**. Not a new mechanism —
 [`dispatch_r2_reviewer.ts`](../../../../scripts/dispatch_r2_reviewer.ts) already derives
 the scope and persists the prompt it sent:
@@ -216,7 +216,7 @@ the scope and persists the prompt it sent:
 ./scripts-run src/scripts/dispatch_r2_reviewer --slug <slug> --base origin/main
 ```
 
-The six in-session judges stay exactly as they are. This is an addition, not a
+The seven in-session judges stay exactly as they are. This is an addition, not a
 replacement — a fresh reviewer is worse than a spec judge at spec compliance, and the
 point is not to be better at their job but to be uncontaminated by the author's framing.
 
@@ -262,7 +262,7 @@ Read `subagents.adversarial_council` from `.agent-settings.yml` (default
   which supplies the four slots, the one-question budget, and the storage line
   (not persisted: `subagents.adversarial_council` is class C). What only this
   command knows is *why now*: the diff is high-risk, and the offer is a paid
-  distinct-model red-team for finding coverage against the six internal judges.
+  distinct-model red-team for finding coverage against the seven internal judges.
 - `on`: run it automatically on a high-risk diff.
 
 When run, dispatch the
@@ -315,7 +315,7 @@ window back with `./scripts-run src/scripts/review_axis_report`; it reports
   before proceeding
 - If **any** judge returned `revise` → fix 🔴 findings automatically,
   ask before fixing 🟡 findings, report 🟢 as suggestions
-- If all six returned `apply` → the diff is ready; report and stop
+- If all seven returned `apply` → the diff is ready; report and stop
 
 **Opt-in (never auto-on):** when the `revise` findings are *test-driven*
 (failing checks, not subjective craft) and you want bounded auto-repair
@@ -360,7 +360,7 @@ Per `verbosity.routine_confirmations` (default `false`):
 ## Use this command when
 
 - Preparing a self-review before opening a PR
-- Stress-testing a local branch with the same six lenses a reviewer
+- Stress-testing a local branch with the same seven lenses a reviewer
   would apply
 - Sanity-checking a diff before handing it to `/create-pr`
 
@@ -389,6 +389,6 @@ Per `verbosity.routine_confirmations` (default `false`):
 
 - **LLM-as-a-Judge** — [arxiv.org/abs/2306.05685](https://arxiv.org/abs/2306.05685)
   MT-Bench and Chatbot Arena — judging LLM outputs with LLM judges.
-  This command adapts the pattern by dispatching to six specialized
-  judges (bug, security, tests, quality) instead of a single generic
-  judge, and consolidating their verdicts.
+  This command adapts the pattern by dispatching to seven specialized
+  judges (bug, security, tests, quality, architecture, spec, overbuild)
+  instead of a single generic judge, and consolidating their verdicts.
