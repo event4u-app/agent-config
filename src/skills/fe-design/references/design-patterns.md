@@ -241,8 +241,8 @@ silently does nothing and a shared-element route change gets hand-rolled.
   no pointer to leave.
 
 All six still obey step 3's bands, step 2's single `ease-out` curve, and the
-`prefers-reduced-motion` rule — a newer mechanism is not an exemption from the
-authority, it is another way of spending it.
+`@media (prefers-reduced-motion: reduce)` requirement above — a newer mechanism
+is not an exemption from the authority, it is another way of spending it.
 
 **4. What to animate?**
 Animate `transform` and `opacity` only. Why: these run on the GPU compositor thread, not the main thread; they never trigger layout or paint.
