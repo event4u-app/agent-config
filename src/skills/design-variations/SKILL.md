@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: design-variations
-description: "Produce 3+ substantively distinct hi-fi design variations — basic to bold, one file with tweak controls — when the user asks for options, alternatives, or \"show me a few takes\"."
+description: "Produce 3+ substantively distinct hi-fi design variations — basic to bold, one file with tweak controls — when the user asks for options, alternatives, or \"show me a few takes\". Extends fe-design."
 domain: product
 personas: []
 workspaces:

@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: ui-apply-generic
-description: "Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus."
+description: "Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. The stack-independent sibling of react-shadcn-ui; idiom comes from the stack corpus."
 personas:
   - frontend-engineer
 domain: engineering

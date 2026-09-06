@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: canvas-design
-description: "Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'."
+description: "Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even on 'design a poster' or 'mach uns ein Visual'. Grounded by design-intelligence."
 domain: product
 workspaces:
   - small-business

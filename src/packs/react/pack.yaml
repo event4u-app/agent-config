@@ -17,9 +17,9 @@ suggests:
 surface_tier: core
 token_passport:
   basis: chars/4
-  catalog_tokens: 136
+  catalog_tokens: 145
   commands_tokens: 0
   other_tokens: 0
   rules_tokens: 0
-  total_tokens: 136
+  total_tokens: 145
 trust_level_default: professional
