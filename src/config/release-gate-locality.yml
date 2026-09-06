@@ -135,7 +135,7 @@ jobs:
     # so CI can only re-take an empty reading and check the published figure
     # against its record. Run locally, the same command reads the real store,
     # which is the only place the census means anything.
-    local: './scripts-run src/scripts/report_skill_activation && ./scripts-run src/scripts/report_skill_activation --check'
+    local: './scripts-run src/scripts/report_skill_activation && ./scripts-run src/scripts/check_skill_activation_claim'
     verify: true
     script: src/scripts/report_skill_activation.ts
     guard: ~

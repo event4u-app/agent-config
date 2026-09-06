@@ -494,4 +494,4 @@ jobs:
         run: ./scripts-run src/scripts/report_skill_activation
 
       - name: Published census figure agrees with its record
-        run: ./scripts-run src/scripts/report_skill_activation --check
+        run: ./scripts-run src/scripts/check_skill_activation_claim

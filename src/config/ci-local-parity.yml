@@ -195,6 +195,9 @@ ci_only:
   # BEFORE the metadata is public, which is the only moment fixing it is free.
   # A contributor therefore discovers that failure locally by construction,
   # which is exactly the harm this checker exists to prevent.
+  - id: check_skill_activation_claim
+    class: release
+    reason: "the gating half of the same release job — it compares the published census figure against its record. Reachable locally through the same `task release:verify` row in src/config/release-gate-locality.yml, and outside the `task ci` closure for the same reason its sibling is"
   - id: sweep_source_surfaces
     class: network
     reason: "the CI invocation is the weekly five-surface census — needs `gh` for the PR surface and a full-depth clone for the ~9,000-commit trunk surface, writes counts not a verdict, and is deliberately non-failing; its GATE mode (`--gate-metadata`) is reachable locally on pre-push via src/scripts/hooks/prepush_metadata_sources.sh and by hand, so no failure is discoverable only after a push"

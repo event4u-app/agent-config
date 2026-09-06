@@ -47,12 +47,16 @@
  * Exit: the REPORT is 0 always, except a usage/IO error (1). Deliberate — it
  * gates on nothing and must not acquire a threshold.
  *
- * Two later modes DO carry a verdict, and neither is a threshold on the census:
- * `--check` compares the committed record against the sentence `docs/CLAIMS.md`
- * publishes and exits 1 when they disagree, which is an assertion about two
- * files rather than about the surface; `--self-test` proves that comparison
- * still discriminates. `--emit` exits 1 rather than writing a record from an
- * empty store.
+ * One later mode DOES carry a verdict, and it is not a threshold on the census:
+ * `--emit` exits 1 rather than writing a record from an empty store, because a
+ * zero-session reading is "no transcripts at this path" and publishing it as an
+ * activation figure is the defect this file exists to end.
+ *
+ * The assertion that the PUBLISHED figure still matches that record is a gate
+ * and lives in `check_skill_activation_claim.ts`. It is a separate script on
+ * purpose: `src/config/gate-coverage.yml` is a manifest of gates and
+ * `_lib/gate_population.ts` classifies one by prefix, so a `report_*` id
+ * registered there forks that population.
  */
 
 import * as fs from 'node:fs';
@@ -61,7 +65,6 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { projectStoreSlug } from './_lib/cc_transcript.js';
-import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -202,7 +205,9 @@ function _pct(n: number, d: number): string {
 
 /** Repo-relative path of the record the published claim is derived from. */
 export const RECORD_PATH = 'agents/evidence/metrics/skill-activation-census.json';
-const CLAIMS_PATH = 'docs/CLAIMS.md';
+export const CLAIMS_PATH = 'docs/CLAIMS.md';
+/** The one ledger entry this census backs. */
+export const CLAIM_ID = 'skill-activation-census-zero';
 
 /**
  * The three populations the shipped surface splits into, plus their overlap.
@@ -495,125 +500,9 @@ export function render(census: SkillCensus, usage: UsageReport[], published: Cen
 }
 
 const USAGE =
-  'usage: report_skill_activation [--root DIR] [--limit N] [--store PATH]... [--emit] [--allow-empty-store] [--check] [--self-test]\n';
-
-/**
- * Compare the committed record against the published claim. Exit 1 on any
- * disagreement — this is the mode `docs/CLAIMS.md` names as its own evidence,
- * so it must read only committed files and never the transcript store, which
- * does not exist on a CI runner.
- */
-function checkClaim(root: string): number {
-  const rec = readRecord(root);
-  if (rec === null) {
-    process.stderr.write(`report_skill_activation --check: ${RECORD_PATH} is missing\n`);
-    return 1;
-  }
-  const claimsFile = path.join(root, CLAIMS_PATH);
-  if (!fs.existsSync(claimsFile)) {
-    process.stderr.write(`report_skill_activation --check: ${CLAIMS_PATH} is missing\n`);
-    return 1;
-  }
-  const block = claimBlock(fs.readFileSync(claimsFile, 'utf8'), 'skill-activation-census-zero');
-  if (block === null) {
-    process.stderr.write('report_skill_activation --check: claim `skill-activation-census-zero` is not in docs/CLAIMS.md\n');
-    return 1;
-  }
-  const problems = claimProblems(rec, parseClaimFigures(block));
-  if (problems.length > 0) {
-    process.stderr.write('❌  the published census claim and its record disagree:\n');
-    for (const p of problems) {
-      process.stderr.write(`  · ${p}\n`);
-    }
-    process.stderr.write(`\nRe-take the measurement (report_skill_activation --emit) and update the claim from ${RECORD_PATH}.\n`);
-    return 1;
-  }
-  process.stdout.write(`✅  census claim matches ${RECORD_PATH} (measured ${rec.measured_at}).\n`);
-  return 0;
-}
-
-/**
- * The gate half proving it still discriminates.
- *
- * Only `--check` has a verdict to prove: the census itself is advisory and
- * exits 0 by design, so a self-test over the report would assert nothing. The
- * cases are the three ways the published sentence can stop matching its record
- * — a figure that moved, a population redrawn, and a figure the sentence stops
- * stating at all. The third is the one a value comparison alone would miss: a
- * claim that silently drops a number would otherwise pass every equality test
- * it no longer participates in.
- */
-function selfTest(): number {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'activation-census-selftest-'));
-  const record = {
-    schema_version: 1,
-    measured_at: '2026-01-02',
-    skills_shipped: 300,
-    with_trigger_key: 10,
-    with_trigger_corpus: 100,
-    trigger_key_and_corpus: 5,
-    human_named_only: 195,
-    sessions: 7,
-    assistant_turns: 1234,
-    invocations: 0,
-    distinct_skills_invoked: 0,
-    stores: ['fixture'],
-  };
-  const claim = (body: string): string =>
-    `# Claims\n\n### claim: skill-activation-census-zero\n- claim: ${body}\n- kind: quant\n- status: backed\n- last_verified: 2026-01-02\n\n### claim: unrelated\n- claim: x\n`;
-  const agreeing =
-    '`report_skill_activation` over 7 sessions and 1,234 assistant turns records 0 Skill ' +
-    'invocations and 0 of 300 distinct skills (measured 2026-01-02). 10 declare a ' +
-    'machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, ' +
-    '5 do both, and the remaining 195 are reachable only by a human naming them.';
-  const write = (name: string, body: string): string => {
-    const root = path.join(tmp, name);
-    fs.mkdirSync(path.join(root, path.dirname(RECORD_PATH)), { recursive: true });
-    fs.mkdirSync(path.join(root, path.dirname(CLAIMS_PATH)), { recursive: true });
-    fs.writeFileSync(path.join(root, RECORD_PATH), JSON.stringify(record));
-    fs.writeFileSync(path.join(root, CLAIMS_PATH), claim(body));
-    return root;
-  };
-  const run = (root: string): number =>
-    runGateCli(REPO_ROOT, 'src/scripts/report_skill_activation.ts', ['--check', '--root', root], root);
-  try {
-    return runSelfTest({
-      gate: 'report_skill_activation',
-      minCases: 4,
-      minRejectCases: 3,
-      cases: [
-        {
-          name: 'a turn count that moved away from the record is rejected',
-          expect: 'reject',
-          run: () => run(write('turns', agreeing.replace('1,234 assistant', '9,999 assistant'))),
-        },
-        {
-          name: 'a population redrawn to enlarge the human-named remainder is rejected',
-          expect: 'reject',
-          run: () => run(write('population', agreeing.replace('remaining 195 are', 'remaining 290 are'))),
-        },
-        {
-          name: 'a claim that stops stating the population split is rejected',
-          expect: 'reject',
-          run: () =>
-            run(write('dropped', agreeing.slice(0, agreeing.indexOf('. 10 declare') + 1))),
-        },
-        {
-          name: 'a claim reproducing every recorded figure passes',
-          expect: 'accept',
-          run: () => run(write('agreeing', agreeing)),
-        },
-      ],
-    });
-  } finally {
-    fs.rmSync(tmp, { recursive: true, force: true });
-  }
-}
+  'usage: report_skill_activation [--root DIR] [--limit N] [--store PATH]... [--emit] [--allow-empty-store]\n';
 
 function main(argv: string[]): number {
-  if (argv.includes('--self-test')) {
-    return selfTest();
-  }
   let limit = 30;
   let emit = false;
   let allowEmpty = false;
@@ -634,8 +523,6 @@ function main(argv: string[]): number {
       emit = true;
     } else if (a === '--allow-empty-store') {
       allowEmpty = true;
-    } else if (a === '--check') {
-      return checkClaim(root);
     } else if (a === '--help' || a === '-h') {
       process.stdout.write(USAGE);
       return 0;
