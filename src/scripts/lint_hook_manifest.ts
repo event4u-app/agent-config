@@ -32,6 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+import { asOf } from "./_lib/as_of.js";
 import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 
@@ -653,7 +654,7 @@ export function _check_host_lowering(
   tablePath: string,
   errors: string[],
   warnings: string[],
-  today: string = new Date().toISOString().slice(0, 10),
+  today: string = asOf().toISOString().slice(0, 10),
 ): void {
   let table: HostLowering;
   try {
@@ -706,7 +707,14 @@ export function _check_host_lowering(
   }
 }
 
-export function lint(manifestPath: string, strict: boolean, hostLoweringPath: string = DEFAULT_HOST_LOWERING): number {
+export function lint(
+  manifestPath: string,
+  strict: boolean,
+  hostLoweringPath: string = DEFAULT_HOST_LOWERING,
+  // Threaded so a fixture test can pin the day the verdict is read against.
+  // Left undefined the check resolves it through `asOf()`.
+  today?: string,
+): number {
   if (!_isFile(manifestPath)) {
     process.stderr.write(
       `lint_hook_manifest: file not found: ${manifestPath}\n`,
@@ -735,7 +743,7 @@ export function lint(manifestPath: string, strict: boolean, hostLoweringPath: st
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);
   _check_dead_concerns(concernNames, bound, warnings);
-  _check_host_lowering(hostLoweringPath, errors, warnings);
+  _check_host_lowering(hostLoweringPath, errors, warnings, today);
 
   for (const w of warnings) {
     process.stderr.write(`warn: ${w}\n`);

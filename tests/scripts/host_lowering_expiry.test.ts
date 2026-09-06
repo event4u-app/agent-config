@@ -22,6 +22,12 @@ function isoDaysFromNow(days: number): string {
     return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
 }
 
+// The fixtures are rendered against the wall clock, so the verdict must be read
+// against the same clock. Left to resolve itself the check would use `asOf()`,
+// which under CI is the COMMIT date — older than the fixture's "yesterday", so
+// the row would read as not-yet-expired and the test would assert nothing.
+const TODAY = isoDaysFromNow(0);
+
 let tmp: string;
 
 /** Materialise a fixture with `__YESTERDAY__` resolved. */
@@ -44,7 +50,7 @@ describe('host_lowering expiry gate', () => {
     it('fails and names the row when an expired row carries a blocking binding', () => {
         const errors: string[] = [];
         const warnings: string[] = [];
-        _check_host_lowering(fixture('expired_blocking.yaml'), errors, warnings);
+        _check_host_lowering(fixture('expired_blocking.yaml'), errors, warnings, TODAY);
         expect(errors).toHaveLength(1);
         expect(errors[0]).toContain('host_lowering fixturehost/any');
         expect(errors[0]).toContain(isoDaysFromNow(-1));
@@ -52,22 +58,22 @@ describe('host_lowering expiry gate', () => {
     });
 
     it('makes lint_hook_manifest exit non-zero on that fixture', () => {
-        expect(lint(MANIFEST, false, fixture('expired_blocking.yaml'))).not.toBe(0);
+        expect(lint(MANIFEST, false, fixture('expired_blocking.yaml'), TODAY)).not.toBe(0);
     });
 
     it('warns and passes when the same expired row carries no blocking binding', () => {
         const errors: string[] = [];
         const warnings: string[] = [];
-        _check_host_lowering(fixture('expired_advisory.yaml'), errors, warnings);
+        _check_host_lowering(fixture('expired_advisory.yaml'), errors, warnings, TODAY);
         expect(errors).toEqual([]);
         expect(warnings.some((w) => w.includes('host_lowering fixturehost/any'))).toBe(true);
-        expect(lint(MANIFEST, false, fixture('expired_advisory.yaml'))).toBe(0);
+        expect(lint(MANIFEST, false, fixture('expired_advisory.yaml'), TODAY)).toBe(0);
     });
 
     it('refuses a blocking binding on a row that was never verified', () => {
         const errors: string[] = [];
         const warnings: string[] = [];
-        _check_host_lowering(fixture('unverified_blocking.yaml'), errors, warnings);
+        _check_host_lowering(fixture('unverified_blocking.yaml'), errors, warnings, TODAY);
         expect(errors).toHaveLength(1);
         expect(errors[0]).toContain('verified: null');
     });
@@ -75,14 +81,14 @@ describe('host_lowering expiry gate', () => {
     it('passes at HEAD', () => {
         const errors: string[] = [];
         const warnings: string[] = [];
-        _check_host_lowering(COMMITTED, errors, warnings);
+        _check_host_lowering(COMMITTED, errors, warnings, TODAY);
         expect(errors).toEqual([]);
     });
 
     it('reports an unreadable table rather than passing it', () => {
         const errors: string[] = [];
         const warnings: string[] = [];
-        _check_host_lowering(path.join(tmp, 'does-not-exist.yaml'), errors, warnings);
+        _check_host_lowering(path.join(tmp, 'does-not-exist.yaml'), errors, warnings, TODAY);
         expect(errors).toHaveLength(1);
         expect(errors[0]).toContain('could not be read or parsed');
     });
