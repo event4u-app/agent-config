@@ -218,6 +218,7 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-pack-risk-class
       - task: lint-design-antipattern-parity
+      - task: lint-motion-authority-drift
       - task: lint-profile-overlay-set-only
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter

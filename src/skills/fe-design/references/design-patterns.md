@@ -152,6 +152,16 @@ Step indicator (1 — 2 — 3)
 
 ## Motion — decision-tree and rationale
 
+This section is the **sole carrier** of motion duration bands, easing choice and
+the bounce prohibition; the five files that restate any of them are bound to the
+values below and are checked against them by
+`src/scripts/lint_motion_authority_drift.ts`:
+`src/skills/design-intelligence/references/design-rules-checklist.md`,
+`src/skills/design-intelligence/data/ux-guidelines.csv`,
+`src/skills/design-intelligence/data/app-interface.csv`,
+`src/skills/design-intelligence/data/styles.csv`,
+`src/skills/design-intelligence/data/motion.csv`.
+
 Before adding any animation to a UI element, run through this decision tree:
 
 **1. Should this animate at all?**
@@ -162,8 +172,8 @@ Before adding any animation to a UI element, run through this decision tree:
 
 **2. Which easing?**
 - Entering (element appearing)? **ease-out** (starts fast, slows to rest). Why: the element arriving quickly signals responsiveness; the deceleration feels natural as it settles.
-- Exiting (element disappearing)? **ease-in** (starts slow, accelerates out). Why: the reverse is true — fast exit signals completion.
-- **Never ease-in for entering elements.** Why: ease-in delays the initial movement — the exact moment the user is watching most closely — making it feel slow even at the same total duration.
+- Exiting (element disappearing)? **ease-out** as well. Why: one curve in both directions is the value a reader can hold and a gate can check; the field has no settled answer on exit easing, so a single shared curve removes the contradiction between carriers instead of propagating it. This line settles the **curve** only — how long an exit runs relative to its enter is a separate question it does not answer.
+- **Never ease-in, in either direction.** Why: ease-in delays the initial movement — the exact moment the user is watching most closely — making it feel slow even at the same total duration.
 - **Never bounce or elastic easing in UI.** Why: bounce draws attention to the animation itself, not the content; it feels dated.
 
 **3. How long?**
@@ -198,6 +208,41 @@ communicates a real state change, such as an item being dismissed.
 The six interaction states every interactive element must assert are
 [`design-review`](../../design-review/SKILL.md)'s; this entry is the motion half
 of the hover one.
+
+**6. Which mechanism carries it?**
+
+Steps 1-5 decide *whether* and *how much*. This step decides *with what*, and it
+is the step the tree used to skip: a CSS `transition` was the implicit answer to
+everything, which is why an entry animation on a `<dialog>` or a popover
+silently does nothing and a shared-element route change gets hand-rolled.
+
+- **A CSS `transition` on `transform` and `opacity`** is the default and covers
+  most of steps 1-5. Reach past it only for the cases below.
+- **An element entering or leaving the DOM, or the top layer** (`<dialog>`,
+  `popover`) has no "before" state to transition from and is gone before an exit
+  could run. That is what `@starting-style` is for — it supplies the entry's
+  starting values — together with `transition-behavior: allow-discrete` so
+  `display` and `overlay` participate instead of snapping. Without both, the
+  animation is not slow or wrong; it does not happen.
+- **The Web Animations API** (`Element.animate()`) is the mechanism when the
+  values are computed at runtime, when the animation must be interruptible
+  (`Animation.cancel()`, `.reverse()`, `.finished`), or when several elements
+  share one timeline. A keyframe set known at author time does not need it.
+- **A view transition** (`document.startViewTransition()`) is the mechanism for
+  a state or route change where an element persists across the change. It is the
+  first-party form of what a hand-built shared-element transition approximates,
+  and it is the case the 300-500ms page-transition band is for.
+- **`transform-origin`** decides where a `scale()` grows from. A menu or popover
+  scaling in should originate at its trigger, not at its own centre, or it reads
+  as arriving from nowhere. Scale in from ~0.96, never from `scale(0)`: growing
+  from nothing is an entrance, and steps 1-2 asked for feedback.
+- **`@media (hover: hover)`** gates any hover-carried motion. Without it a touch
+  device fires the hover treatment on tap and leaves it stuck, because there is
+  no pointer to leave.
+
+All six still obey step 3's bands, step 2's single `ease-out` curve, and the
+`@media (prefers-reduced-motion: reduce)` requirement above — a newer mechanism
+is not an exemption from the authority, it is another way of spending it.
 
 **4. What to animate?**
 Animate `transform` and `opacity` only. Why: these run on the GPU compositor thread, not the main thread; they never trigger layout or paint.

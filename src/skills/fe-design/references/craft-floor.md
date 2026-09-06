@@ -43,6 +43,13 @@ the moment the floor has to be present. Same content, later delivery.
     An undeclared pick is an undeclared choice (T7).
 12. **Zero silent drops.** A mechanic present in a supplied source and absent
     from the output, with no `flagged` entry, is a silent drop.
+13. **Shipped motion carries a `feel` line naming its method.** Duration and
+    easing being inside the bands in
+    [`design-patterns.md`](design-patterns.md) § Motion is a static check, and
+    motion that passes it can still be wrong to watch. The line names one of
+    `slow-motion` · `frame-step` · `device` · `next-day` and its outcome; an
+    outcome of `unbacked` is legal, an absent method is not
+    (`docs/contracts/evidence-artifact-types.md` § `feel`).
 
 ## What is NOT on this page
 

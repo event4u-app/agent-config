@@ -13,4 +13,4 @@ React framework patterns.
 
 - **`project-analysis-react`** — Use for deep React analysis: component tree, state flow, props flow, hooks usage, rendering behavior, and React-specific failure patterns.
 - **`react-native-setup`** — Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'.
-- **`react-shadcn-ui`** — Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack.
+- **`react-shadcn-ui`** — Building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack; idiom from tailwind-engineer.

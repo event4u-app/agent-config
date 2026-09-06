@@ -174,6 +174,9 @@ ci_only:
   - id: check_finding_dispositions
     class: release
     reason: "adjudicates the release-PR self-review findings ledger, whose input JSON is produced by the self-review workflow job"
+  - id: report_skill_activation
+    class: release
+    reason: "declared for the reason `sweep_source_surfaces` is, and with the same nuance: it is not unreachable locally, it is outside the `task ci` closure on purpose. `src/config/release-gate-locality.yml` gives its release-validation job a `local:` command with `verify: true`, so `task release:verify` runs it before a release PR exists — and that is the only run that measures anything, because the transcript store the census reads is keyed on the directory it runs in and does not exist on a runner. Adding it to `task ci` would put an advisory report that gates on nothing into every local run"
   # road-to-source-silence Phase 5.3. Two modes, and the distinction is the whole
   # reason this is a declaration rather than a `task ci` entry.
   #
@@ -192,6 +195,9 @@ ci_only:
   # BEFORE the metadata is public, which is the only moment fixing it is free.
   # A contributor therefore discovers that failure locally by construction,
   # which is exactly the harm this checker exists to prevent.
+  - id: check_skill_activation_claim
+    class: release
+    reason: "the gating half of the same release job — it compares the published census figure against its record. Reachable locally through the same `task release:verify` row in src/config/release-gate-locality.yml, and outside the `task ci` closure for the same reason its sibling is"
   - id: sweep_source_surfaces
     class: network
     reason: "the CI invocation is the weekly five-surface census — needs `gh` for the PR surface and a full-depth clone for the ~9,000-commit trunk surface, writes counts not a verdict, and is deliberately non-failing; its GATE mode (`--gate-metadata`) is reachable locally on pre-push via src/scripts/hooks/prepush_metadata_sources.sh and by hand, so no failure is discoverable only after a push"

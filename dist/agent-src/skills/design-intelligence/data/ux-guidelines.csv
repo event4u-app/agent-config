@@ -6,13 +6,13 @@ No,Category,Issue,Platform,Description,Do,Don't,Code Example Good,Code Example B
 5,Navigation,Deep Linking,All,URLs should reflect current state for sharing,Update URL on state/view changes,Static URLs for dynamic content,Use query params or hash,Single URL for all states,Medium
 6,Navigation,Breadcrumbs,Web,Show user location in site hierarchy,Use for sites with 3+ levels of depth,Use for flat single-level sites,Home > Category > Product,Only on deep nested pages,Low
 7,Animation,Excessive Motion,All,Too many animations cause distraction and motion sickness,Animate 1-2 key elements per view maximum,Animate everything that moves,Single hero animation,animate-bounce on 5+ elements,High
-8,Animation,Duration Timing,All,Animations should feel responsive not sluggish,Use 150-300ms for micro-interactions,Use animations longer than 500ms for UI,transition-colors duration-200,transition-all duration-1000,Medium
+8,Animation,Duration Timing,All,Animations should feel responsive not sluggish,Use the per-interaction bands in design-patterns.md § Motion,Use animations longer than 500ms for UI,transition-colors duration-200,transition-all duration-1000,Medium
 9,Animation,Reduced Motion,All,Respect user's motion preferences,Check prefers-reduced-motion media query,Ignore accessibility motion settings,@media (prefers-reduced-motion: reduce),No motion query check,High
 10,Animation,Loading States,All,Show feedback during async operations,Use skeleton screens or spinners,Leave UI frozen with no feedback,animate-pulse skeleton,Blank screen while loading,High
 11,Animation,Hover vs Tap,All,Hover effects don't work on touch devices,Use click/tap for primary interactions,Rely only on hover for important actions,onClick handler,onMouseEnter only,High
 12,Animation,Continuous Animation,All,Infinite animations are distracting,Use for loading indicators only,Use for decorative elements,animate-spin on loader,animate-bounce on icons,Medium
 13,Animation,Transform Performance,Web,Some CSS properties trigger expensive repaints,Use transform and opacity for animations,Animate width/height/top/left properties,transform: translateY(),top: 10px animation,Medium
-14,Animation,Easing Functions,All,Linear motion feels robotic,Use ease-out for entering ease-in for exiting,Use linear for UI transitions,ease-out,linear,Low
+14,Animation,Easing Functions,All,Linear motion feels robotic,Use ease-out in both directions entering and exiting,Use linear for UI transitions,ease-out,linear,Low
 15,Layout,Z-Index Management,Web,Stacking context conflicts cause hidden elements,Define z-index scale system (10 20 30 50),Use arbitrary large z-index values,z-10 z-20 z-50,z-[9999],High
 16,Layout,Overflow Hidden,Web,Hidden overflow can clip important content,Test all content fits within containers,Blindly apply overflow-hidden,overflow-auto with scroll,overflow-hidden truncating content,Medium
 17,Layout,Fixed Positioning,Web,Fixed elements can overlap or be inaccessible,Account for safe areas and other fixed elements,Stack multiple fixed elements carelessly,Fixed nav + fixed bottom with gap,Multiple overlapping fixed elements,Medium

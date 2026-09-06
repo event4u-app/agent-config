@@ -122,7 +122,7 @@ describe("measureUsage", () => {
 describe("render", () => {
   it("prints the unmeasurable verdict while no skill declares a trigger, and never a rate", () => {
     const out = render(
-      { total: 288, withTriggerKey: [], withDeterministicObligation: ["a"] },
+      { total: 288, withTriggerKey: [], withTriggerCorpus: [], withDeterministicObligation: ["a"] },
       [{ store: "/x/store", sessions: 1, assistantTurns: 10, invocations: 1, bySkill: { a: 1 } }],
     );
     expect(out).toContain("not measurable as a rate");
@@ -135,7 +135,7 @@ describe("render", () => {
 
   it("drops the verdict once triggers exist, because then a detector is buildable", () => {
     const out = render(
-      { total: 2, withTriggerKey: ["a"], withDeterministicObligation: [] },
+      { total: 2, withTriggerKey: ["a"], withTriggerCorpus: ["b"], withDeterministicObligation: [] },
       [{ store: "/x", sessions: 0, assistantTurns: 0, invocations: 0, bySkill: {} }],
     );
     expect(out).not.toContain("not measurable as a rate");

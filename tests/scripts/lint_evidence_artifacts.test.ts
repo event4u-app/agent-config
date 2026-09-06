@@ -10,6 +10,8 @@ import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
 import {
     checkFiles,
     EVIDENCE_TYPES,
+    FEEL_METHODS,
+    parseFeelLine,
     resolveEvidenceType,
 } from '../../src/scripts/lint_evidence_artifacts.js';
 
@@ -189,5 +191,86 @@ describe('checkFiles', () => {
 
     it('a path that does not exist on disk is skipped, not reported', () => {
         expect(checkFiles(process.cwd(), ['agents/evidence/analysis/definitely-not-here.md'])).toEqual([]);
+    });
+});
+
+// road-to-one-motion-authority Phase 3. The perceptual class: its result may be
+// unbacked, its method line may not be absent.
+describe('the feel evidence type', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-feel-'));
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function write(rel: string, body: string): string {
+        const abs = path.join(root, rel);
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body, 'utf8');
+        return rel;
+    }
+
+    it('is one of the declared types', () => {
+        expect(EVIDENCE_TYPES as readonly string[]).toContain('feel');
+    });
+
+    it('resolves from the marker', () => {
+        const body = '<!-- evidence-type: feel -->\n\n**Feel:** slow-motion — the modal exit reads abrupt at 0.25x\n';
+        expect(resolveEvidenceType('agents/evidence/analysis/motion.md', body).type).toBe('feel');
+    });
+
+    it('accepts a fixture carrying a method and an outcome', () => {
+        const rel = write(
+            'agents/evidence/analysis/motion-feel.md',
+            '<!-- evidence-type: feel -->\n\n**Feel:** slow-motion — the modal exit reads abrupt at 0.25x\n',
+        );
+        expect(checkFiles(root, [rel])).toEqual([]);
+    });
+
+    it('accepts an unbacked outcome — a check that ran and settled nothing still ran', () => {
+        const rel = write(
+            'agents/evidence/analysis/motion-unbacked.md',
+            '<!-- evidence-type: feel -->\n\n**Feel:** next-day — unbacked\n',
+        );
+        expect(checkFiles(root, [rel])).toEqual([]);
+    });
+
+    it('accepts every method in the closed set', () => {
+        for (const method of FEEL_METHODS) {
+            const rel = write(
+                `agents/evidence/analysis/m-${method}.md`,
+                `<!-- evidence-type: feel -->\n\n**Feel:** ${method} — unbacked\n`,
+            );
+            expect(checkFiles(root, [rel]), method).toEqual([]);
+        }
+    });
+
+    // Sensitivity: the floor is the token, not the word.
+    it('refuses a feel artifact with no method line', () => {
+        const rel = write('agents/evidence/analysis/no-method.md', '<!-- evidence-type: feel -->\n\nIt felt fine.\n');
+        const findings = checkFiles(root, [rel]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.reason).toMatch(/no `\*\*Feel:\*\* <method>/);
+    });
+
+    it('refuses a method outside the closed set', () => {
+        const rel = write(
+            'agents/evidence/analysis/bad-method.md',
+            '<!-- evidence-type: feel -->\n\n**Feel:** vibes — looked great\n',
+        );
+        expect(checkFiles(root, [rel])).toHaveLength(1);
+    });
+
+    it('parseFeelLine reads the method and the outcome, and rejects anything else', () => {
+        expect(parseFeelLine('**Feel:** frame-step — one duplicated frame at the apex')).toEqual({
+            method: 'frame-step',
+            outcome: 'one duplicated frame at the apex',
+        });
+        expect(parseFeelLine('**Feel:** device —')).toBeNull();
+        expect(parseFeelLine('Feel: device — fine')).toBeNull();
     });
 });

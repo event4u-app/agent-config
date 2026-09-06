@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: design-intelligence
-description: "Grounded design brief from the adopted corpus — style, WCAG-checked color tokens, typography, layout pattern, anti-patterns. Use on ui-design-brief or any which-style/palette/font/chart decision."
+description: "Grounded design brief from the corpus — style, WCAG color tokens, typography, layout, anti-patterns. Use on ui-design-brief or any which-style/palette/font/chart call; feeds fe-design."
 domain: engineering
 personas:
   - frontend-engineer

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "measured_at": "2026-09-06",
+  "skills_shipped": 299,
+  "with_trigger_key": 12,
+  "with_trigger_corpus": 100,
+  "trigger_key_and_corpus": 2,
+  "human_named_only": 189,
+  "sessions": 30,
+  "assistant_turns": 11338,
+  "invocations": 0,
+  "distinct_skills_invoked": 0,
+  "stores": [
+    "-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"
+  ]
+}
