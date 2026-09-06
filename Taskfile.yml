@@ -415,6 +415,7 @@ tasks:
       - task: check-augmentignore
       - task: lint-reasoning-fixtures  # tests/reasoning-layer-eval/ corpus shape
       - task: lint-skill-trigger-contradiction
+      - task: check-mcp-doc-drift
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma

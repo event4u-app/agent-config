@@ -74,6 +74,16 @@ launch the server themselves via the config snippets below.
 
 ## Client configuration
 
+Every snippet below is the entry the installer itself writes — `check_mcp_doc_drift`
+compares them against `mcpBridgeEntry()` and fails the build when they diverge, so
+following the docs and running the installer land on the same server.
+
+Replace `<version>` with the release you installed (`npx @event4u/agent-config --version`).
+The pin is deliberate: unpinned, `npx -y @event4u/agent-config` resolves the `latest`
+dist-tag on every server start, so the server you run would be whatever the registry
+served most recently rather than the one you approved.
+
+
 ### Claude Desktop
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
@@ -83,9 +93,8 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 {
   "mcpServers": {
     "agent-config": {
-      "command": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
-      "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"],
-      "cwd": "/absolute/path/to/agent-config"
+      "command": "npx",
+      "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
     }
   }
 }
@@ -102,9 +111,8 @@ appear under the connector dropdown.
 {
   "mcpServers": {
     "agent-config": {
-      "command": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
-      "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"],
-      "cwd": "/absolute/path/to/agent-config"
+      "command": "npx",
+      "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
     }
   }
 }
@@ -119,8 +127,8 @@ appear under the connector dropdown.
   "context_servers": {
     "agent-config": {
       "command": {
-        "path": "/absolute/path/to/agent-config/node_modules/.bin/tsx",
-        "args": ["/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts"]
+        "path": "npx",
+        "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
       },
       "settings": {}
     }
@@ -135,9 +143,8 @@ appear under the connector dropdown.
 ```yaml
 mcpServers:
   - name: agent-config
-    command: /absolute/path/to/agent-config/node_modules/.bin/tsx
-    args: [/absolute/path/to/agent-config/src/scripts/mcp_server/__main__.ts]
-    cwd: /absolute/path/to/agent-config
+    command: npx
+    args: ["-y", "@event4u/agent-config@<version>", "mcp-server"]
 ```
 
 ## Smoke test
