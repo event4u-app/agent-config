@@ -351,6 +351,69 @@ export const MIX_RESPONSE_PLACEHOLDERS: readonly string[] = [
 export function render_mix_response(level: string): string[] {
     return [
         `> ${MIX_RESPONSE_MARKER} ${level}.`,
-        `> Next cycle ships ${MIX_RESPONSE_PLACEHOLDER}, tracked in <roadmap or issue>.`,
+        `> ${PROMISE_PHRASE} ${MIX_RESPONSE_PLACEHOLDER}, tracked in <roadmap or issue>.`,
     ];
+}
+
+/**
+ * The words that turn a governance response into a PROMISE about a later cycle.
+ *
+ * Named rather than inlined because two sides now read it: the writer emits it,
+ * and the next release reads the previous section for it to decide whether a
+ * read-back is owed. A promise nothing reads back costs nothing to restate, so
+ * it can be restated for as many cycles as there are cycles — the defect this
+ * constant exists to make addressable.
+ */
+export const PROMISE_PHRASE = 'Next cycle ships';
+
+/**
+ * The marker under which a release head answers the PREVIOUS head's promise.
+ *
+ * A named sentinel, on the same discipline as `MIX_RESPONSE_MARKER` and
+ * `DERIVED_MARKER`: a shape match over prose would accept a sentence that
+ * happens to mention last cycle and reject a reworded answer.
+ */
+export const PROMISE_READBACK_MARKER = '**Previous cycle:**';
+
+/**
+ * The three outcomes a read-back may report, and the reason there are exactly
+ * three.
+ *
+ * `shipped` and `did not ship` are the honest halves of the fact. `withdrawn`
+ * exists because a promise the project decided not to keep is a legitimate
+ * third state — but only WITH a reason, which is why the answer also has to
+ * clear a written-length floor rather than being one of these three words on
+ * its own. Without the third state the mechanism would push an author toward
+ * restating a dead promise as still-outstanding, which is the failure it is
+ * built to stop.
+ */
+export const PROMISE_OUTCOMES: readonly string[] = ['shipped', 'did not ship', 'withdrawn'];
+
+/** Every `## X.Y.Z` release version in the file, in document order (newest first). */
+export function changelog_versions(text: string): string[] {
+    const out: string[] = [];
+    for (const m of text.matchAll(/^##\s+\[?(\d+\.\d+\.\d+)\b/gmu)) {
+        out.push(m[1] as string);
+    }
+    return out;
+}
+
+/**
+ * The release published immediately before `version`, or null when there is none.
+ *
+ * Read from the CHANGELOG rather than from git tags on purpose: the promise
+ * being read back is a property of the SECTION, and a tag can exist for a
+ * version whose section was archived into `docs/archive/` under an era split —
+ * in which case there is no previous promise reachable in this file and the
+ * honest answer is that none is owed.
+ *
+ * `version` itself need not be present: a section still under authoring is
+ * named `[Unreleased]`, so the caller passes the version it is releasing and
+ * gets the newest RELEASED version that is not it.
+ */
+export function previous_changelog_version(text: string, version: string): string | null {
+    const versions = changelog_versions(text);
+    const idx = versions.indexOf(version);
+    if (idx !== -1) return versions[idx + 1] ?? null;
+    return versions[0] ?? null;
 }

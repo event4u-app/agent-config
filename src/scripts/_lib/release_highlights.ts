@@ -29,6 +29,10 @@ import {
     CURATED_HEAD_INSTRUCTION,
     MIX_RESPONSE_MARKER,
     MIX_RESPONSE_PLACEHOLDERS,
+    PROMISE_OUTCOMES,
+    PROMISE_PHRASE,
+    PROMISE_READBACK_MARKER,
+    extract_changelog_section,
 } from './release_material.js';
 
 /** The five curated labels, in the order an operator reads them. */
@@ -544,6 +548,95 @@ export function mix_response_blockers(
         ];
     }
     return [];
+}
+
+/**
+ * The promise the PREVIOUS release head made, or null when it made none.
+ *
+ * Scoped to that section's governance-response block, not to its whole body: a
+ * product line that happens to contain the phrase is not a promise the project
+ * made about the next cycle.
+ */
+export function previous_promise(changelogText: string, previousVersion: string): string | null {
+    const section = extract_changelog_section(changelogText, previousVersion);
+    if (section === null) return null;
+    const idx = section.body.indexOf(MIX_RESPONSE_MARKER);
+    if (idx === -1) return null;
+    const block = mix_response_block(section.body, idx);
+    return block.includes(PROMISE_PHRASE) ? block : null;
+}
+
+/**
+ * The ONE predicate for "did this head answer the previous head's promise?".
+ *
+ * The defect: `_lib/release_material.ts` generates a `Next cycle ships …` line
+ * and nothing has ever read the previous one back, so an unmet promise can be
+ * restated indefinitely at zero cost — the debt is booked and never called. A
+ * promise nobody reads is not a commitment, it is a sentence.
+ *
+ * Three outcomes are accepted and one of them must be chosen, which is the
+ * whole mechanism: it does not require the promise to have been KEPT, and no
+ * ratio, deadline or count is enforced here. Refusing an unkept promise would
+ * make the honest answer the expensive one and teach an author to promise less
+ * rather than to answer truthfully.
+ *
+ * Length floor and placeholder scan reuse the governance-response discipline
+ * for the same reason it exists there: a bare marker, or the writer's own
+ * scaffolding, is not an answer a human wrote.
+ */
+export function promise_readback_blockers(
+    sectionBody: string,
+    version: string,
+    previousVersion: string,
+    promise: string | null,
+    where = '`main`',
+): string[] {
+    if (promise === null) return [];
+    const idx = sectionBody.indexOf(PROMISE_READBACK_MARKER);
+    if (idx === -1) {
+        return [
+            `the ${version} section does not answer the ${previousVersion} head's ` +
+                `\`${PROMISE_PHRASE}\` promise. Add one \`> ${PROMISE_READBACK_MARKER}\` line ` +
+                `immediately under the curated head on ${where}, naming the promise and whether ` +
+                `it ${PROMISE_OUTCOMES.join(', ')} (the last one with its reason).`,
+        ];
+    }
+    const block = mix_response_block(sectionBody, idx);
+    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => block.includes(t));
+    if (left.length > 0) {
+        return [
+            `the ${version} previous-cycle answer still carries the writer's placeholder(s) ` +
+                `(${left.map((t) => `\`${t}\``).join(', ')}). \`CHANGELOG.md\` is published to npm. ` +
+                `Write the outcome on ${where} and re-run.`,
+        ];
+    }
+    const lower = block.toLowerCase();
+    const named = PROMISE_OUTCOMES.filter((o) => lower.includes(o));
+    if (named.length === 0) {
+        return [
+            `the ${version} previous-cycle answer names no outcome. It has to say which of ` +
+                `${PROMISE_OUTCOMES.join(', ')} applies to the ${previousVersion} promise — an ` +
+                'answer that restates the promise without resolving it is the failure this reads ' +
+                'back for.',
+        ];
+    }
+    if (readback_answer(block).length < MIX_RESPONSE_MIN_CHARS) {
+        return [
+            `the ${version} previous-cycle answer is shorter than a written answer ` +
+                `(${String(MIX_RESPONSE_MIN_CHARS)} characters after the marker). Name what was ` +
+                `promised and what became of it on ${where}, not the outcome word alone.`,
+        ];
+    }
+    return [];
+}
+
+/** What the author wrote under the read-back marker, marker and quoting removed. */
+export function readback_answer(block: string): string {
+    return block
+        .replace(PROMISE_READBACK_MARKER, '')
+        .replace(/^[>\s.]+|[>\s.]+$/gu, '')
+        .replace(/[>\s]+/gu, ' ')
+        .trim();
 }
 
 /**
