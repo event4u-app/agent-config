@@ -26,7 +26,7 @@ import {
     CONTEXT_FILL_REL,
     THRESHOLD_OVERRIDE_ENV,
 } from '../../src/scripts/hooks/session_eol_hook.js';
-import { RECYCLE_ENVELOPE_REL } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
 import { readCheckpoint } from '../../src/scripts/_lib/run_checkpoint.js';
 import { eolSessionKey } from '../../src/scripts/_lib/session_eol.js';
 import { roadmap_claim_rel } from '../../src/scripts/session_register_hook.js';
@@ -82,8 +82,15 @@ function writeThreshold(tokens: number): void {
  * stamp, so a fixture written with a past date is how a stale envelope from an
  * uncleared session is expressed. Default is now — this session's.
  */
-function writeEnvelope(writtenAt: string = new Date().toISOString()): void {
-    const target = path.join(workspace, RECYCLE_ENVELOPE_REL);
+function writeEnvelope(
+    writtenAt: string = new Date().toISOString(),
+    sessionId: string | null = 'session-a',
+): void {
+    // Phase 2.1: the record is keyed by session, so the fixture writes where
+    // the session under test would write. The default matches `runMain`'s
+    // default id — a fixture at the shared legacy path would be a peer
+    // session's record, which is exactly what the counter-check must not count.
+    const target = path.join(workspace, recycle_envelope_rel(sessionId));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify({ written_at: writtenAt }));
 }
@@ -192,6 +199,23 @@ describe('recycle advisory (Phase 3.2)', () => {
         expect(second.out).toBe('');
     });
 
+    // Sensitivity arm for the Phase-2.1 keying. Without it the previous test
+    // would pass against a checker that still read the shared legacy path: the
+    // fixture is absent there too. This one writes a record belonging to a
+    // DIFFERENT session and asserts the warning still fires — a peer's record
+    // is not proof that this session wrote one.
+    it('a peer session record does not silence the counter-check', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2);
+
+        writeEnvelope(new Date().toISOString(), 'some-other-session');
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        const second = runMain();
+        expect(second.rc).toBe(2);
+        expect(JSON.parse(second.out)['reason']).toContain('no envelope written');
+    });
+
     it('names the absolute path as the proof to wait for, not a bare /clear', () => {
         writeThreshold(100_000);
         writeEnvelope();
@@ -223,7 +247,7 @@ describe('missing-envelope counter-check', () => {
         expect(second.rc).toBe(2);
         const parsed = JSON.parse(second.out) as Record<string, string>;
         expect(parsed['reason']).toContain('no envelope written');
-        expect(parsed['additional_context']).toContain(path.join(workspace, RECYCLE_ENVELOPE_REL));
+        expect(parsed['additional_context']).toContain(path.join(workspace, recycle_envelope_rel('session-a')));
         expect(parsed['additional_context']).toContain('/clear now starts the successor from nothing');
 
         // …and never again: one reminder is a net, one per Stop is a nag.

@@ -128,7 +128,7 @@ mechanism* in Phase 4 while the capture substrate stays.
 
 ## Phase 1 — One word per concept, before any mechanism moves
 
-- [ ] **1.1 Name the collision and pick the surviving word.** `envelope` means
+- [x] **1.1 Name the collision and pick the surviving word.** `envelope` means
       the subagent outcome envelope and the session record; `handoff` means the
       skill-link lint, the CLI verb and the session artifact. Add both to the
       avoid-list in `docs/guidelines/redundancy-taxonomy.md` with the one term that
@@ -137,7 +137,7 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify: `grep -rn "HANDOFF.md" src/` returns no line attributing it to
       `lint_handoffs.ts`, and each of the two words resolves to one concept in the
       taxonomy.
-- [ ] **1.2 Refresh the host-capability surface before binding anything.** The
+- [x] **1.2 Refresh the host-capability surface before binding anything.** The
       proposals assume slots at compaction and session end; what this tree binds
       there today is `hot-context`, `journal-record` (default-off), `chat-history`,
       `session-register` and others — `hot_context_hook.ts:472` writes on `stop`,
@@ -152,7 +152,7 @@ mechanism* in Phase 4 while the capture substrate stays.
 
 ## Phase 2 — The record carries a session key
 
-- [ ] **2.1 Key the continuity artifact by session, not by workspace.** Two
+- [x] **2.1 Key the continuity artifact by session, not by workspace.** Two
       sessions in one checkout overwrite each other today, and the session register
       already holds the identity to key on.
       **No shared `latest` index is introduced.** A per-session key removes the
@@ -162,7 +162,7 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify: two concurrent sessions in one checkout each produce their own record
       and neither observes the other's; no file names "the latest" record; on
       ambiguity the reader starts clean and says so in one line.
-- [ ] **2.2 Give the schema a field for what worked, as an extension.**
+- [x] **2.2 Give the schema a field for what worked, as an extension.**
       `failed_approaches` has no counterpart, which makes the record structurally
       pessimistic — it can say what to avoid and not what to repeat. Add it and
       `open_questions` (which exists as `open_risks` on the worker variant at
@@ -173,7 +173,7 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify: a record carrying both new fields validates at the bumped version, an
       older record still validates, and the four owner questions each map to a
       named field or a stated proxy with the mapping written down.
-- [ ] **2.3 Record which session preceded this one.** `grep -rn
+- [x] **2.3 Record which session preceded this one.** `grep -rn
       "predecessor_session\|lineage_id" src/` returns **0**: the reader injects what
       is lying there, not what the right predecessor would be, so 2.1's key alone
       does not settle resolution.
@@ -241,12 +241,27 @@ mechanism* in Phase 4 while the capture substrate stays.
       artifact, the five end-state numbers are re-derived and lower, and the
       `run_checkpoint` question carries a written answer.
 - [ ] **4.1b Start with the two that cost nothing.** `HANDOFF.md` has no producer
-      and no consumer. `chat-history:checkpoint` is not a subcommand of
-      `chat_history.ts` at all — its `SUBCMDS` list does not contain it
-      (`src/scripts/chat_history.ts:1825-1838`); the verb is a shell wrapper.
-      Neither retirement needs the blocker below.
-      verify: both are gone, a grep for either name under `src/` returns only
-      historical notes, and no test or command referenced either.
+      and no consumer — **retired 2026-09-07**, together with the artifact-mode
+      validator inside `lint_handoffs.ts` and its test; `grep -rn "HANDOFF.md"
+      src/` now returns nothing, which also discharges 1.1's attribution clause.
+      *`corrected-from-reproduction`* — **the second half of this step is
+      refuted and must not be executed as written.** The step says
+      `chat-history:checkpoint` "is not a subcommand of `chat_history.ts` at
+      all". The literal name is indeed absent from `SUBCMDS`
+      (`src/scripts/chat_history.ts:1825-1838`) and the inference drawn from it
+      is wrong: `src/scripts/_dispatch.bash:1010` runs `chat_history.ts
+      hook-append --event phase`, `hook-append` **is** in `SUBCMDS` (`:1836`)
+      with a handler at `:1883`, and the verb has a real producer —
+      `src/scripts/install-hooks.sh:408-424` writes four git hooks
+      (`post-commit`, `post-merge`, `post-checkout`, `post-rewrite`) that call
+      it to append a phase boundary to `agents/runtime/.agent-chat-history`.
+      That append is chat-history **capture**, which the goal above places out
+      of scope by decision. What is left is a NAME collision, not an orphan, and
+      retiring the name is a protocol migration across already-installed
+      downstream git hooks — see the council disposition below.
+      verify (`HANDOFF.md` half, met): gone; `grep -rn "HANDOFF.md" src/`
+      returns nothing; no test or command references it; `lint_handoffs` green
+      at its unchanged 18-violation baseline and its 13 tests pass.
 - [ ] **4.2 Ratchet the surface count so it cannot grow back.** Twelve archived
       roadmaps built these layers and none retired its predecessor; a count that is
       not gated returns.
@@ -273,6 +288,61 @@ mechanism* in Phase 4 while the capture substrate stays.
 - **What to do:** nothing — the decision is taken. Phase 4.1 carries the authorised set and `src/cli/registry.ts` plus `src/domains/meta/` are the surfaces it edits.
 - **Resolved when:** — resolved 2026-09-06. The owner authorised **option 1, the full retirement set**, on the stated ground that option 2 halves the effect and leaves standing exactly the commands named as bloat, and option 3 makes this roadmap the thirteenth layer that removes nothing. The consumer path survives intact because `handoff` and `/agent-handoff` remain the single verb and command, and `chat-history` capture is out of scope.
 
+## Council disposition — Phases 3 and 4 are sequenced behind this change
+
+AI council, 2026-09-07, 2 seats of 2 present (anthropic, openai), design mode,
+deep depth, subscription transport, nothing billed. Asked because executing the
+authorised retirement set literally removes capabilities the 2026-09-06
+authorisation did not name. Five decisions were put with explicit option sets.
+
+**Verdict: option 1 directionally on all five, implementation greenlight
+DENIED.** Both seats. The direction was never the disputed part; the coupling
+and the sequencing were.
+
+| # | Decision | Ruling |
+|---|---|---|
+| D1 | `chat-history:checkpoint` | Removing the verb is inside the authorisation and preserving capture is required by scope, but the migration is a protocol change across git hooks already installed in downstream repositories. Rewriting a locally modified hook crosses an ownership boundary and needs design authority this council does not hold. |
+| D2 | `run_checkpoint` after `session-eol` retires | Keep `run_checkpoint` — it is preservation of the status quo. **Do NOT move its production "onto the new continuity concern".** Both seats named that the sharpest blocker: run-integrity evidence and conversational-state restoration have different lifecycles, consumers, keys and failure semantics, and one concern owning both is a lifecycle subsystem wearing a continuity name. Independent handlers behind the lifecycle dispatcher, with independent kill switches. |
+| D3 | `hot-context` and `memory.session_index` | Retiring the concern is authorised; preserving the setting is status quo; **changing where its restore is activated is new architecture and needs evidence of equivalence**, plus an explicit trust contract (repository/worktree identity, freshness, ordering, duplicate invocation, size limits) since restored memory is untrusted context. |
+| D4 | the deterministic writer's schema | Add a variant rather than stuffing absence markers into `main_session` — explicit absence markers "misrepresent unavailable model judgments as values". Tolerant readers must exist before any writer emits the new variant, and the compatibility contract must be stated, not inferred. |
+| D5 | the unreachable-host half of 1.2 | Fix the falsifiable contradiction; record the unverifiable one as unverified with a resolve-by condition. Documentation must separate what the manifest declares, what lowering can generate, and what the host actually invokes — a declaration is never evidence of runtime behaviour. |
+
+**The sequencing both seats required**, and the reason Phases 3 and 4 are not in
+this change:
+
+1. define the artifact inventory, ownership, provenance and failure policies;
+2. specify the new variant and make every reader backward- and forward-tolerant;
+3. introduce independent lifecycle handlers with independent kill switches;
+4. verify failure isolation and idempotent retries by fault injection;
+5. add the surviving capture endpoint and a safe installed-hook migration;
+6. run a non-authoritative comparison with outputs physically separated;
+7. switch producers only after parity and stale-hook gates pass;
+8. remove the retired commands and concerns;
+9. validate the end-state counts against source, package and an upgraded install.
+
+Steps 5 to 9 are not reachable from a session that cannot observe downstream
+installations or run an observation window. Step 2 is discharged by this change
+(the v4 contract on `ACCEPTED_CAPSULE_VERSIONS`).
+
+**Why Phase 3 is not landed alone, which is the non-obvious half.** Phase 3
+introduces a writer; Phase 4 removes the six surfaces it replaces. The council's
+own ordering puts a parity window between them, so they cannot be one change —
+and Phase 3 landing without Phase 4 is precisely **Risk 1 of this roadmap's own
+register**: the record is added and nothing is retired, the thirteenth layer
+that removes nothing. A shadow writer that nothing reads would add a concern to
+a ratcheted estate to buy a future parity run. The council did not ask for that
+and the risk register argues against it.
+
+**One further refinement neither the roadmap nor the question anticipated:** the
+`0 / 0 / 1 / 1 / 0` measure is gameable by naming unless the inventory rule is
+behavioural. Both seats: *any persisted state written for later session or run
+recovery, verification, or context restoration must be listed, whether or not it
+is labelled continuity.* Exclusions stay legitimate and must stay visible in the
+inventory. Step 4.2's check must publish that inventory, not only the five
+numbers — `run_checkpoint` is the worked example, since classifying it outside
+"continuity" is exactly how position 3 could be made to read 1 without anything
+being retired.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-06 | reviewer: claude/host -->
 
@@ -286,11 +356,11 @@ mechanism* in Phase 4 while the capture substrate stays.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Each of `envelope` and `handoff` resolves to one concept in the taxonomy, and no line attributes `HANDOFF.md` to the skill-link linter.
-- [ ] AC-2 — No document names a host slot the host does not have, and both context-ending slots say which concern writes what.
-- [ ] AC-3 — Two concurrent sessions in one checkout each leave their own record and neither observes the other's; ambiguity ends in a clean start with a stated reason.
-- [ ] AC-4 — Each of the owner's four questions maps to a named schema field or a stated proxy, the mapping is written down, and the schema gained fields at a bumped version rather than a second schema file.
-- [ ] AC-4b — A record names its predecessor or states it has none, and an absent named predecessor is refused rather than guessed past.
+- [x] AC-1 — Each of `envelope` and `handoff` resolves to one concept in the taxonomy, and no line attributes `HANDOFF.md` to the skill-link linter.
+- [x] AC-2 — No document names a host slot the host does not have, and both context-ending slots say which concern writes what.
+- [x] AC-3 — Two concurrent sessions in one checkout each leave their own record and neither observes the other's; ambiguity ends in a clean start with a stated reason.
+- [x] AC-4 — Each of the owner's four questions maps to a named schema field or a stated proxy, the mapping is written down, and the schema gained fields at a bumped version rather than a second schema file.
+- [x] AC-4b — A record names its predecessor or states it has none, and an absent named predecessor is refused rather than guessed past.
 - [ ] AC-5 — A session ending at a bound slot leaves a record without model spend; a session that did nothing substantive leaves none.
 - [ ] AC-6 — A record is consumed at most once, and a stale or foreign one is refused with its reason.
 - [ ] AC-7 — After Phase 4 the five end-state numbers in the goal read exactly `0 / 0 / 1 / 1 / 0`, re-derived by command rather than asserted.

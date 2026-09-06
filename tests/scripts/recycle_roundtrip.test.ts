@@ -22,6 +22,8 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { runSessionRecycle } from '../../src/scripts/_cli/cmd_session_recycle.js';
+import { recycle_envelope_rel } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { env_session_id } from '../../src/scripts/sessions_cli.js';
 import { consume_recycle_envelope } from '../../src/scripts/handoff_context_hook.js';
 
 // ── The deterministic task ──────────────────────────────────────────────
@@ -81,6 +83,8 @@ function sessionA(root: string): void {
         remaining: ALL_STEPS.slice(2).map((s) => `step:${s}`),
         not_carried_forward: ['the raw records — re-read from the fixture, not from memory'],
         failed_approaches: ['none'],
+        successful_approaches: ['none'],
+        predecessor: 'none',
         decisions: ['delimiter=| — pipe keeps the report grep-safe'],
         artifact_paths: ['work/partial.txt'],
     };
@@ -96,7 +100,7 @@ function sessionA(root: string): void {
 
 /** Session B: bootstraps from the INJECTED envelope alone and completes. */
 function sessionB(root: string): string {
-    const decision = consume_recycle_envelope(root);
+    const decision = consume_recycle_envelope(root, new Date(), null);
     if (decision.action !== 'inject' || !decision.context) {
         throw new Error(`session B received no envelope: ${decision.reason}`);
     }
@@ -157,7 +161,9 @@ describe('recycle round-trip (Phase 2.4)', () => {
         sessionA(root);
         // Corrupt the pending envelope: remove the decisions list (legal —
         // decisions is optional — but semantically lossy).
-        const target = path.join(root, 'agents', 'runtime', 'state', 'recycle-envelope.json');
+        // Phase 2.1: the producer keys the record by session, so the path is
+        // resolved with the same helper rather than spelled out here.
+        const target = path.join(root, recycle_envelope_rel(env_session_id()));
         const envelope = JSON.parse(fs.readFileSync(target, 'utf-8')) as Record<string, unknown>;
         delete envelope['decisions'];
         fs.writeFileSync(target, JSON.stringify(envelope, null, 2));
@@ -169,6 +175,6 @@ describe('recycle round-trip (Phase 2.4)', () => {
         const root = scratchRoot();
         sessionA(root);
         sessionB(root);
-        expect(consume_recycle_envelope(root).action).toBe('absent');
+        expect(consume_recycle_envelope(root, new Date(), null).action).toBe('absent');
     });
 });

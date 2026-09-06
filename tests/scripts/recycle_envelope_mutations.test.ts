@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    ACCEPTED_CAPSULE_VERSIONS,
     CAPSULE_SCHEMA_VERSION,
     validateRecycleEnvelope,
 } from '../../src/scripts/_lib/subagent_capsule.js';
@@ -39,6 +40,8 @@ function validEnvelope(): Record<string, unknown> {
         next_task: 'close 3.4',
         suggested_skills: ['roadmap-management'],
         failed_approaches: ['none'],
+        successful_approaches: ['none'],
+        predecessor: 'none',
     };
 }
 
@@ -50,19 +53,52 @@ describe('recycle envelope — the fixture itself', () => {
 });
 
 describe('recycle envelope — one mutation, one rejection', () => {
-    it('rejects a wrong capsule_version (the version check fires)', () => {
-        const e = { ...validEnvelope(), capsule_version: CAPSULE_SCHEMA_VERSION - 1 };
-        expect(validateRecycleEnvelope(e)).toContain(
-            `capsule_version must be ${CAPSULE_SCHEMA_VERSION}`,
-        );
+    const versionError = `capsule_version must be one of ${ACCEPTED_CAPSULE_VERSIONS.join(' | ')}`;
+
+    it('rejects a version outside the accepted set', () => {
+        const e = { ...validEnvelope(), capsule_version: 2 };
+        expect(validateRecycleEnvelope(e)).toContain(versionError);
     });
 
     it('rejects a missing capsule_version — absent is not a pass', () => {
         const e = validEnvelope();
         delete e['capsule_version'];
-        expect(validateRecycleEnvelope(e)).toContain(
-            `capsule_version must be ${CAPSULE_SCHEMA_VERSION}`,
+        expect(validateRecycleEnvelope(e)).toContain(versionError);
+    });
+
+    // The v4 compatibility contract, pinned in both directions. v4 is the first
+    // ADDITIVE bump, so a v3 record must keep validating — and it must keep
+    // validating WITHOUT the fields v4 added, because demanding them of an
+    // already-written record is the retroactive requirement the schema lock
+    // forbids. A test that only checked "v3 is accepted" would pass against a
+    // validator that had quietly made the new fields mandatory at every version.
+    it('accepts a v3 record that carries none of the v4 fields', () => {
+        const e = validEnvelope();
+        e['capsule_version'] = 3;
+        delete e['successful_approaches'];
+        delete e['predecessor'];
+        expect(validateRecycleEnvelope(e)).toEqual([]);
+    });
+
+    it('requires the v4 fields OF A v4 RECORD — the additive rule is version-conditional', () => {
+        const e = validEnvelope();
+        delete e['successful_approaches'];
+        delete e['predecessor'];
+        const errors = validateRecycleEnvelope(e);
+        expect(errors.some((v) => v.includes('successful_approaches'))).toBe(true);
+        expect(errors.some((v) => v.includes('predecessor'))).toBe(true);
+    });
+
+    it('rejects an EMPTY successful_approaches — "none" is written, never implied', () => {
+        const e = { ...validEnvelope(), successful_approaches: [] };
+        expect(validateRecycleEnvelope(e).some((v) => v.includes('successful_approaches'))).toBe(
+            true,
         );
+    });
+
+    it('rejects an EMPTY-STRING predecessor — a stated absence is the word "none"', () => {
+        const e = { ...validEnvelope(), predecessor: '' };
+        expect(validateRecycleEnvelope(e).some((v) => v.includes('predecessor'))).toBe(true);
     });
 
     it('rejects the wrong variant', () => {

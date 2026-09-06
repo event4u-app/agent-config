@@ -30,7 +30,7 @@ slot; each cell is the host's own name for it.
 
 | capability (slot) | augment | claude | cowork | cursor | cline | windsurf | gemini | copilot |
 |---|---|---|---|---|---|---|---|---|
-| `session_start` | `SessionStart` | `SessionStart` | `SessionStart` | `sessionStart` | `TaskResume` | `post_setup_worktree` | `SessionStart` | — |
+| `session_start` | `SessionStart` | `SessionStart` | `SessionStart` | `sessionStart` | `TaskStart` + `TaskResume` | `post_setup_worktree` | `SessionStart` | — |
 | `session_end` | `SessionEnd` | `SessionEnd` | `SessionEnd` | `sessionEnd` | `TaskComplete` | — | `SessionEnd` | — |
 | `stop` | `Stop` | `Stop` | `Stop` | `stop` | `TaskCancel` | `post_cascade_response` | `AfterAgent` | — |
 | `user_prompt_submit` | — | `UserPromptSubmit` | `UserPromptSubmit` | `beforeSubmitPrompt` | `UserPromptSubmit` | `pre_user_prompt` | `BeforeAgent` | — |
