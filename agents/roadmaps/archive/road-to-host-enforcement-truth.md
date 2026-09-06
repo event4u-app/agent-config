@@ -63,8 +63,8 @@ Every statement this package makes about which host can enforce a hook decision 
   verification. **No Copilot installation exists on the machine this ran on** —
   `command -v copilot` is empty and no Copilot CLI is on PATH (2026-09-06) — so
   no probe was run and none is reported. `host_lowering.yaml` carries
-  `verified: null` for copilot with `block_exit: null` on every slot, which is
-  the same state as before this round and is now machine-checked:
+  `verified: null` for copilot and binds no slot at all — the same state as
+  before this round, and now machine-checked rather than asserted:
   `lint_hook_manifest` refuses a blocking binding on an unverified row
   (`tests/scripts/host_lowering_expiry.test.ts` § never verified). Copilot stays
   advisory-only. Nothing here establishes that Copilot cannot enforce, and
