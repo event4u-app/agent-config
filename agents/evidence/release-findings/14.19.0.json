@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "release": "14.19.0",
+  "review_independence": "unknown",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "unreviewed",
+  "reviewers": [],
+  "no_findings_reason": "NOT REVIEWED — the finding set is empty because no review produced one, not because a review produced none. The self-review gate ran on release/14.19.0 as workflow run 34064367158 and its live-advisory job went NEUTRAL: the Anthropic call returned HTTP 400 `prompt is too long: 450336 tokens > 200000 maximum` (request_id req_011CenywEpYsmsgvvRq91Ggo), after which the upload step logged `No files were found with the provided path: /tmp/self-review-findings.json` and uploaded no artifact. PR #1886 carries no `release-findings-json` machine block, so there is nothing to ingest from either surface. THIRD CONSECUTIVE RELEASE with this cause and the prompt is GROWING: 14.18.0 measured 413191 tokens against the same 200000 cap, 14.19.0 measures 450336. Recording the reason is what the closed roadmap road-to-the-ledger-two-releases-skipped did; it does not shrink the prompt, so 14.20.0 will reproduce this unless the gate learns to chunk or scope the release-span diff. Falsifiable: if run 34064367158's log shows a completed model call, or an artifact or machine block for 14.19.0 is produced, this reason is wrong and the ledger must be re-ingested. Recorded 2026-09-07 while landing the release-preflight start-position fix; the two are unrelated defects from the same release run.",
+  "findings": []
+}
