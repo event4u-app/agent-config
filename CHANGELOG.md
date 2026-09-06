@@ -32,6 +32,26 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Fixed
 
+- **The curated-head refusal is recoverable again — its own remedy was refused
+  by the preflight.** `guard_release_curation` stops between step 2 and step 3,
+  leaving HEAD on the local `release/X.Y.Z` with the generated section
+  uncommitted, and tells the operator to curate the head and re-run
+  `task release`. Measured on 14.19.0, every spelling of that re-run died
+  *before step 1*: a plain run on `release must run from 'main'`, and
+  `--resume` on `working tree is not clean` — against the pipeline's own
+  step-2 output. The only way through was to hand-craft the `release: X.Y.Z`
+  commit the pipeline makes for itself one step later.
+  `docs/release-runbook.md` claimed this had been closed on 2026-09-03; that
+  fix landed in `checkout_release_branch`, which is step 1 and therefore
+  unreachable from the position the guard creates — the claim was not wrong
+  about step 1, it was wrong that step 1 was reachable. The start position is
+  now one pure verdict, `preflightPosition`: `release/{target}` is legal with
+  or without `--resume`, and a dirty tree is accepted **there only**, with the
+  swept files printed. A dirty `main` still refuses, because there the same
+  tree is an operator's unrelated work about to enter a release commit. Pinned
+  by `tests/scripts/release.test.ts` § `preflightPosition`, including a wiring
+  assertion so a pure verdict nobody calls cannot pass.
+
 - **Release gates now refuse before the push, not on the release PR.** 14.17.0
   (PR #1856) failed `check_release_highlights` on a missing
   `> **Governance mix:**` line — an assertion reproducible locally in under two

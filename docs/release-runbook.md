@@ -191,14 +191,34 @@ doing it, so a crash localises to a step.
 An existing `release/X.Y.Z` is checked out whether or not `--resume` was
 passed, and if it is behind `origin/main` the default branch is merged in
 right there. Both arms used to be gated on `resume`, so a plain re-run over an
-existing branch fell through to `git checkout -b` and died with exit 128 — the
-exact state the curated-head guard leaves behind, while its own message says to
-re-run `task release`. A branch cut from an older `main` also used to survive
-until the pre-push preflight reported `branch is BEHIND origin/main`, six steps
-after the cheapest moment to fix it. A NEW branch is now cut from current
-`origin/main` rather than from whatever the local ref happened to be, which is
-the same defect from its third side. Pinned by the drill scenarios
+existing branch fell through to `git checkout -b` and died with exit 128. A
+branch cut from an older `main` also used to survive until the pre-push
+preflight reported `branch is BEHIND origin/main`, six steps after the cheapest
+moment to fix it. A NEW branch is now cut from current `origin/main` rather
+than from whatever the local ref happened to be, which is the same defect from
+its third side. Pinned by the drill scenarios
 `plain-run-reuses-an-existing-branch` and `stale-branch-merges-main-at-step-1`.
+
+**Corrected 2026-09-07 — the paragraph above used to end by claiming this also
+closed the curated-head guard's remedy. It did not, and 14.19.0 measured it.**
+`guard_release_curation` stops between step 2 and step 3, leaving HEAD on the
+local `release/X.Y.Z` with the generated section uncommitted in the tree, and
+says to re-run `task release`. Every spelling of that re-run was refused by the
+**preflight**, which runs *before* step 1 and therefore never reached the code
+the 2026-09-03 fix had repaired:
+
+| re-run | refusal, before step 1 |
+|---|---|
+| `task release` | `release must run from 'main', currently on 'release/X.Y.Z'` |
+| `task release -- --resume` | `working tree is not clean; commit or stash first` |
+
+The only way through was to hand-craft the `release: X.Y.Z` commit the pipeline
+makes for itself one step later. The start position is now one pure function,
+`preflightPosition` in `src/scripts/release.ts`: `release/{target}` is a legal
+start with or without `--resume`, and a dirty tree is accepted **there only**,
+with the files printed — on `main` that same tree still refuses, because there
+it is an operator's unrelated work about to be swept into a release commit.
+Pinned by `tests/scripts/release.test.ts` § `preflightPosition`.
 
 `--resume` is still the right flag when a run left a COMMIT, a PR, a tag or a
 Release behind: those skips are what it is for. It is no longer the difference
@@ -213,6 +233,11 @@ between a re-run working and crashing.
 
 ## 6. What can go wrong (known checkpoints)
 
+- **`the X.Y.Z release highlights are still the generator's draft`** → the
+  curated-head / governance-mix obligation. Edit the `## [X.Y.Z]` section in
+  `CHANGELOG.md` **on the `release/X.Y.Z` branch you are already standing on**,
+  then re-run `task release`. Nothing has been committed or pushed; the dirty
+  tree is expected and is swept into the release commit by step 3.
 - **Release PR checks stuck "expected"** → the approve-workflows checkpoint in
   § 3.A step 3. Not a failure; click approve.
 - **Consistency check red on the release PR** → step 4's `task release-prepare`

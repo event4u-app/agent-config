@@ -49,8 +49,10 @@
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
  * Release) and skips work that is already done, instead of erroring out.
- * Without `--resume` the pipeline still mutates git/network state, so
- * re-running on a dirty tree needs `--resume` (or a manual cleanup). The
+ * Re-running from `release/{target}` needs neither the flag nor a clean
+ * tree — that position, dirty, is the state `guard_release_curation` leaves
+ * behind, and `preflightPosition` accepts it (a dirty `main` still refuses).
+ * The
  * two entry points guard against colliding with each other via these same
  * probes plus the CI workflow's concurrency group — whichever starts
  * second sees the other's in-progress state and skips or refuses cleanly.
@@ -781,20 +783,106 @@ export function assert_scheduled_deprecations_clear(
 
 // ─── preflight ────────────────────────────────────────────────────────────────
 
+export interface PositionVerdict {
+    proceed: boolean;
+    /** Printed before the run continues. Never a refusal. */
+    notice?: string;
+    /** Printed on refusal (no trailing newline). */
+    message?: string;
+}
+
+/**
+ * Where a release may START, resolved as a pure verdict (no I/O, so it is
+ * unit-testable — same shape as `confirmGate`).
+ *
+ * ## The deadlock this removes
+ *
+ * `guard_release_curation` refuses BETWEEN step 2 and step 3: step 1 has
+ * already created and checked out `release/{target}`, step 2 has already
+ * written the bump, the changelog section and every regenerated derived file,
+ * and nothing is committed yet. Its message says to curate the head and re-run
+ * `task release`. Measured on 14.19.0, neither re-run reached step 1:
+ *
+ *   - `task release`            → `release must run from 'main'` (this check)
+ *   - `task release --resume`   → `working tree is not clean` (this check)
+ *
+ * So the guard prescribed a remedy the preflight refused, in both spellings,
+ * and the only way through was to hand-craft the `release: X.Y.Z` commit the
+ * pipeline makes for itself one step later.
+ *
+ * `docs/release-runbook.md` already claimed this was closed on 2026-09-03 and
+ * the drill pins `plain-run-reuses-an-existing-branch` for it. Both were true
+ * of the fix that landed — in `checkout_release_branch`, which is STEP 1. The
+ * preflight runs before step 1, so from the release branch the run never
+ * arrived at the code that had been repaired. The claim was not wrong about
+ * step 1; it was wrong that step 1 was reachable from that position.
+ *
+ * ## Why `release/{target}` is a legitimate start, with or without `--resume`
+ *
+ * It is the position the pipeline itself leaves behind. `--resume` remains
+ * meaningful for what it was always for — skipping a COMMIT, a PR, a tag or a
+ * Release that already exists — and the `!resume` tag-exists check in
+ * `preflight` still refuses a plain re-run of an already-tagged version.
+ *
+ * ## Why a dirty tree is accepted THERE and nowhere else
+ *
+ * On `release/{target}` the dirt is this pipeline's own step-2 output, and
+ * step 3 sweeps it with `git add -A` regardless. Refusing it can therefore
+ * only ever fire against the tool's own state. On `main` the same tree is an
+ * operator's unrelated work about to be swept into a release commit, so the
+ * refusal stays exactly as it was. The accepted files are PRINTED rather than
+ * absorbed silently, and `check_release_pr_shape` still refuses anything
+ * outside the version-bump allowlist on the resulting PR — two nets under the
+ * one place this relaxes.
+ */
+export function preflightPosition(opts: {
+    branch: string;
+    mainBranch: string;
+    releaseBranch: string;
+    porcelain: string;
+}): PositionVerdict {
+    const { branch, mainBranch, releaseBranch, porcelain } = opts;
+    if (branch !== mainBranch && branch !== releaseBranch) {
+        return {
+            proceed: false,
+            message:
+                `release must run from '${mainBranch}' or '${releaseBranch}', ` +
+                `currently on '${branch}'`,
+        };
+    }
+    if (!porcelain.trim()) {
+        return { proceed: true };
+    }
+    if (branch === mainBranch) {
+        return { proceed: false, message: 'working tree is not clean; commit or stash first' };
+    }
+    return {
+        proceed: true,
+        notice:
+            `working tree is not clean, and on '${releaseBranch}' that is this pipeline's own ` +
+            'step-2 output — step 3 commits it with `git add -A`. Files that will be swept ' +
+            'into the release commit:\n' +
+            porcelain
+                .split('\n')
+                .filter((l) => l.trim())
+                .map((l) => `      ${l}`)
+                .join('\n'),
+    };
+}
+
 /**
  * Fail fast on conditions that would break the release mid-flight.
  *
- * In `--resume` mode two invariants are relaxed:
+ * The start position — which branch, and whether a dirty tree is tolerated —
+ * is `preflightPosition` above, and it is NO LONGER gated on `--resume`:
+ * `release/{target}` is where `guard_release_curation` leaves the operator, so
+ * refusing it there made the guard's own remedy unreachable. Read that
+ * function's header for the measurement.
  *
- * - The starting branch may be `release/{target}` in addition to `main` —
- *   both are valid resume positions (mid-pipeline crash after step 1 leaves
- *   you on the release branch).
- * - The target-tag-exists check is dropped — execute() probes for existing
- *   tags/releases and skips them.
+ * `--resume` still relaxes ONE invariant here: the target-tag-exists check is
+ * dropped, because execute() probes for existing tags/releases and skips them.
  *
- * Tree cleanliness, gh auth, and `main` in-sync with origin are still
- * enforced, so resuming has the same starting posture as a fresh run; only
- * step-level outcomes differ.
+ * gh auth and `main` in-sync with origin are enforced either way.
  *
  * `opts.ci` swaps the gh-auth probe (see below) for the CI-mode variant —
  * everything else is identical between the two entry points.
@@ -832,20 +920,17 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
 
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true });
     const release_branch = `release/${target}`;
-    const allowed = resume ? new Set([MAIN_BRANCH, release_branch]) : new Set([MAIN_BRANCH]);
-    if (!allowed.has(branch)) {
-        if (resume) {
-            die(
-                `resume must run from '${MAIN_BRANCH}' or '${release_branch}', ` +
-                    `currently on '${branch}'`,
-            );
-        }
-        die(`release must run from '${MAIN_BRANCH}', currently on '${branch}'`);
+    const position = preflightPosition({
+        branch,
+        mainBranch: MAIN_BRANCH,
+        releaseBranch: release_branch,
+        porcelain: git(['status', '--porcelain'], { capture: true }),
+    });
+    if (!position.proceed) {
+        die(position.message ?? `release cannot start from '${branch}'`);
     }
-
-    const porcelain = git(['status', '--porcelain'], { capture: true });
-    if (porcelain) {
-        die('working tree is not clean; commit or stash first');
+    if (position.notice) {
+        process.stdout.write(`\u26a0\ufe0f  ${position.notice}\n`);
     }
 
     // --force lets the remote's tag positions win over stale local tags.

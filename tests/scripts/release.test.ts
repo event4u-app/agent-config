@@ -54,6 +54,7 @@ import {
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
     confirmGate,
+    preflightPosition,
     resolve_split_decision,
 } from '../../src/scripts/release.js';
 import {
@@ -692,6 +693,93 @@ describe('confirmGate — pre-execute confirmation verdict', () => {
         expect(v.stream).toBe('stderr');
         expect(v.message).toContain('--yes');
         expect(v.message).not.toMatch(/^aborted\.?$/); // actionable, not a bare silent abort
+    });
+});
+
+// ─── preflight start position — the curated-head refusal must be recoverable ──
+// Regression lock for the deadlock measured on 14.19.0. `guard_release_curation`
+// stops BETWEEN step 2 (writes the bump + the changelog section) and step 3
+// (commits them), leaving HEAD on the local `release/X.Y.Z` with a dirty tree,
+// and its own message says to re-run `task release`. Both spellings of that
+// re-run were then refused by the preflight, before step 1:
+//
+//   task release           → "release must run from 'main'"
+//   task release --resume  → "working tree is not clean"
+//
+// `docs/release-runbook.md` claimed this was closed on 2026-09-03; that fix
+// landed in `checkout_release_branch`, which is step 1 — unreachable from the
+// position the guard creates. These cases pin the position rule itself, which
+// is what the guard's remedy actually depends on.
+describe('preflightPosition — where a release may start', () => {
+    const base = { mainBranch: 'main', releaseBranch: 'release/9.0.0' };
+
+    it('THE DEADLOCK: release branch + dirty tree proceeds, and names what gets swept', () => {
+        const v = preflightPosition({
+            ...base,
+            branch: 'release/9.0.0',
+            porcelain: ' M CHANGELOG.md\n M package.json',
+        });
+        expect(v.proceed).toBe(true);
+        expect(v.message).toBeUndefined();
+        // The files are printed, never absorbed silently — that is the whole
+        // reason this is a `notice` and not just a dropped check.
+        expect(v.notice).toContain('CHANGELOG.md');
+        expect(v.notice).toContain('package.json');
+    });
+
+    it('the same position with no --resume equivalent: the rule is not resume-gated', () => {
+        // `preflightPosition` takes no `resume` argument by construction. If a
+        // future edit reintroduces one, this case is what notices.
+        expect(preflightPosition({ ...base, branch: 'release/9.0.0', porcelain: '' })).toEqual({
+            proceed: true,
+        });
+    });
+
+    it('a dirty tree on main still refuses — that dirt is the operator\'s, not the pipeline\'s', () => {
+        const v = preflightPosition({ ...base, branch: 'main', porcelain: ' M src/foo.ts' });
+        expect(v.proceed).toBe(false);
+        expect(v.message).toBe('working tree is not clean; commit or stash first');
+    });
+
+    it('a clean main proceeds with no notice', () => {
+        expect(preflightPosition({ ...base, branch: 'main', porcelain: '' })).toEqual({
+            proceed: true,
+        });
+    });
+
+    it('any other branch refuses, and the message names both legal positions', () => {
+        const v = preflightPosition({ ...base, branch: 'feat/whatever', porcelain: '' });
+        expect(v.proceed).toBe(false);
+        expect(v.message).toContain("'main'");
+        expect(v.message).toContain("'release/9.0.0'");
+        expect(v.message).toContain("'feat/whatever'");
+    });
+
+    it('a release branch for a DIFFERENT target is not a start position', () => {
+        const v = preflightPosition({ ...base, branch: 'release/8.9.9', porcelain: '' });
+        expect(v.proceed).toBe(false);
+        expect(v.message).toContain("currently on 'release/8.9.9'");
+    });
+
+    it('whitespace-only porcelain is clean, not dirty', () => {
+        expect(preflightPosition({ ...base, branch: 'main', porcelain: '\n  \n' })).toEqual({
+            proceed: true,
+        });
+    });
+
+    // A pure verdict nothing calls is the failure mode this pair of assertions
+    // exists for: the seven cases above would stay green while `preflight` kept
+    // its own inline refusals. Structural rather than behavioural because the
+    // real `preflight` reaches `gh api user`, a network fetch and a tag probe,
+    // none of which belong in a unit test.
+    it('is WIRED — preflight delegates the position rule instead of re-implementing it', () => {
+        const src = fs.readFileSync(TS_SCRIPT, 'utf-8');
+        const body = src.slice(src.indexOf('function preflight(target: string'));
+        expect(body).toContain('preflightPosition({');
+        // The two refusals that produced the deadlock must live in the pure
+        // function only — never a second copy inside preflight.
+        expect(body).not.toContain("die('working tree is not clean");
+        expect(body).not.toContain('release must run from');
     });
 });
 
