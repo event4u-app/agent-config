@@ -153,7 +153,7 @@ export function claudePermissionDecision(
     decision: PermissionDecision,
     reason: string,
 ): string {
-    const hookEventName = CLAUDE_HOOK_EVENT_NAME[event] ?? event;
+    const hookEventName = nativeEventName("claude", event);
     return `${JSON.stringify({
         hookSpecificOutput: {
             hookEventName,
