@@ -123,9 +123,76 @@ declined by the recorded lock, which permits the same content as a variant. And
 the thirteen-phase shape is declined because its measurement half is already
 stubbed as not producible from a checkout; four phases carry what remains.
 
-## One owner decision
+## The owner decision, taken
 
-What may be retired. Adding the record without removing anything makes this the
-thirteenth layer that did not retire its predecessor, and retiring a
-consumer-visible command or verb is an interface change an agent may not take.
-Three options are carried on the roadmap's blocker, one of them cap-only.
+**Answered 2026-09-06: option 1, the full retirement set** — `HANDOFF.md`,
+`hot-context.md`, the `hot-context` and `session-eol` concerns,
+`session:recycle`, `/chat-history` and `/chat-history import`. The stated ground
+was that option 2 halves the effect and leaves standing exactly the commands
+named as bloat, and option 3 makes this roadmap the thirteenth layer that
+removes nothing. `handoff` and `/agent-handoff` survive as the one verb and the
+one command; `chat-history` **capture** survives as input substrate.
+
+Three things came back with the decision and are now in the roadmap.
+
+**The end state is numbers, not a sentence.** "One continuity surface exists" is
+satisfiable by a tree that carries one record and still leaves four competing
+mental models standing, so the goal now reads `public continuity commands: 0 ·
+session resume pickers: 0 · persistent continuity artefacts: 1 · continuity
+schemas: 1 · normal-path manual actions: 0`, and Phase 4.2 ratchets them. Hook
+concerns are deliberately absent from that list: multi-host adapters may make
+one physical concern impractical, and what must be singular is the semantic
+writer/reader contract rather than the file count.
+
+**Chat history narrows without being retired.** It stays as the only cross-host
+transcript source and stops being a recovery path: input and evidence, never
+continuity. `/chat-history import` goes as a *resume mechanism* while the
+capture substrate remains — a distinction neither proposal drew.
+
+**A rule the ratchet encodes rather than a count it enforces.** A new continuity
+mechanism may be introduced only if it replaces an existing one, or demonstrably
+covers a capability the one record cannot. Without it the tree grows
+`continuity-v2`, `resume-state`, `smart-handoff` and `session-memory-cache` side
+by side within six months — which is precisely what the twelve archived roadmaps
+already did once.
+
+## Three corrections this round accepted back
+
+The review returned three fixes to figures this round or its sources carried,
+each verified here before it entered the text:
+
+| correction | evidence |
+|---|---|
+| the schema bump is to **4**, not 3 | `CAPSULE_SCHEMA_VERSION = 3` (`subagent_capsule.ts:112`) — the roadmap now names the target number instead of saying "bump" |
+| the stale `lint_handoffs` attribution sits at **`:181`**, not `:180` | read at `src/domains/meta/agent-handoff/command.md:181`; the defect itself is unchanged |
+| `hot-context` writes at all three context-ending slots in one branch | `hot_context_hook.ts:472` — `stop`, `session_end` **and** `pre_compact`; this sharpens the round's own correction from "the slots are bound" to naming the line |
+
+## Four review findings, triaged
+
+The critical finding — that Phase 3.2 injects prior-session state with no data
+wrapper — is a **false positive in substance and a real gap in wording**. The
+step always said the shipped guards are reused; it did not name them, so a
+reader checking the step could not see which. It now names
+`wrapAsPriorSessionData` and `hasBoundaryMarker` (`handoff_context_hook.ts:70-84`,
+constants at `subagent_capsule.ts:482-486`), `scanEnvelopeDirectives`, the
+48-hour bound and the consume-once move, and its verify requires the existing
+refusal fixture to still pass and to be extended to the new record shape.
+
+The two high findings are closed the same way — by making the step say what it
+meant. A first session has no predecessor, so it writes `predecessor: none`, a
+stated absence rather than an empty field. And the write race exists only if a
+shared `latest` index is introduced, which Phase 2.1 now forbids in its own
+words: resolution is by register identity, workspace and branch, never by an
+index.
+
+Two verify lines were pulled into Phase 3 rather than becoming a phase of their
+own: the reader behaves by `session_start` source (`compact` re-injects the
+session's *own* record, `resume` and `fork` inject nothing, an unrecognised
+source injects nothing rather than guessing), and
+`continuity_written_per_substantive_session` is a counter in the concern's own
+state, never a file-presence check.
+
+One addition of this round's own is kept and named: `run_checkpoint` is **not**
+on the retirement list and is not retired blind — it is kept only if it carries
+semantics the record does not, and Phase 4.1 requires that question to be
+answered in writing before it is touched either way.
