@@ -44,14 +44,14 @@ them fired.
 
 ## Phase 1 — The fired condition is on the record
 
-- [ ] **1.1 Write the reproduction, not the assertion.** Record the twelve counts, the
+- [x] **1.1 Write the reproduction, not the assertion.** Record the twelve counts, the
       p95, the n, and the exact command that produced each, in
       `agents/evidence/analysis/skill-size-park-fired-2026-09-06.md`. Name which half of
       the disjunction fired and which did not — a record that says only "the park fired"
       cannot be checked against a later tree.
       verify: re-running the stated command reproduces the twelve names and counts, and
       the p95 line reproduces 2,367 at n=299.
-- [ ] **1.2 Name what moved.** Two of the twelve crossed 2,500 inside the 14.16→14.18
+- [x] **1.2 Name what moved.** Two of the twelve crossed 2,500 inside the 14.16→14.18
       window and one rose by 326 words. State for each crosser whether the growth was
       content the estate deliberately added or drift, with the commit that added it.
       verify: each named crosser carries a commit reference, and the classification is
