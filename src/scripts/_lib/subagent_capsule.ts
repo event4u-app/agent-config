@@ -115,7 +115,7 @@ export const CAPSULE_SCHEMA_VERSION = 4;
  * Versions a reader ACCEPTS. Version 4 is the first bump that is purely
  * ADDITIVE, and that is why it widens the accepted set instead of replacing it.
  *
- * ## The compatibility contract, stated rather than inferred
+ * The compatibility contract is stated here rather than inferred.
  *
  * - **Scope.** The version is ENVELOPE-WIDE, not per-variant. One number
  *   describes the whole schema module, so a variant added later does not
@@ -313,26 +313,28 @@ export function validateCapsule(input: unknown): string[] {
  * `handoff_context_hook`, so the module itself must be the strict gate.
  */
 /**
- * ## The four questions a resuming session asks, and the field that answers each
- *
- * Written down here rather than left implicit, because the gap that produced
- * `successful_approaches` was invisible for exactly as long as the mapping was
- * unwritten: three of the four had a field, the fourth had nothing, and no
+ * The four questions a resuming session asks, and the field that answers each —
+ * written down rather than left implicit, because the gap that produced
+ * `successful_approaches` stayed invisible for exactly as long as the mapping
+ * was unwritten: three of the four had a field, the fourth had nothing, and no
  * reader of the schema had a reason to notice.
  *
- * | Question | Field | Kind |
- * |---|---|---|
- * | What was it about? | `task`, with `summary` as the one-line outcome | direct |
- * | What was the goal? | `acceptance_criteria` | **proxy** — it states what *done* means, which is the goal expressed as a test rather than as an intention. `next_task` narrows it to the successor's first move. |
- * | What did NOT work? | `failed_approaches` | direct, required, explicit `none` |
- * | What DID work? | `successful_approaches` | direct, required at v4, explicit `none` |
+ * *What was it about?* is answered directly by `task`, with `summary` carrying
+ * the one-line outcome. *What was the goal?* is answered only by PROXY:
+ * `acceptance_criteria` states what **done** means, which is the goal expressed
+ * as a test rather than as an intention, and `next_task` narrows it to the
+ * successor's first move. *What did NOT work?* is `failed_approaches`, direct,
+ * required, explicit `none`. *What DID work?* is `successful_approaches`,
+ * direct, required at version 4, explicit `none`.
  *
- * Two answers are proxies and are labelled as such. `acceptance_criteria` is
- * not the goal — a goal can be met by criteria nobody wrote down — and reading
- * it as one is the error the label exists to prevent. Everything else the
- * schema carries (`remaining`, `not_carried_forward`, `constraints`,
- * `decisions`, `open_questions`, the drift anchor) answers a question the four
- * do not ask; it is not surplus, it is simply outside this mapping.
+ * The one proxy is labelled a proxy on purpose. A goal can be met by criteria
+ * nobody wrote down, so reading `acceptance_criteria` as the goal itself is the
+ * error the label exists to prevent.
+ *
+ * Everything else the schema carries — `remaining`, `not_carried_forward`,
+ * `constraints`, `decisions`, `open_questions`, the drift anchor — answers a
+ * question the four do not ask. That is not surplus; it is simply outside this
+ * mapping.
  */
 export interface MainSessionRecycleEnvelope {
     /** Must be {@link CAPSULE_SCHEMA_VERSION}. */
