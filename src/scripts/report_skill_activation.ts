@@ -44,7 +44,15 @@
  * count descriptions against bare names. Until that runs, "most skills reach the
  * model without a description" is a suspicion.
  *
- * Exit: 0 always, except a usage/IO error (1). Deliberate.
+ * Exit: the REPORT is 0 always, except a usage/IO error (1). Deliberate — it
+ * gates on nothing and must not acquire a threshold.
+ *
+ * Two later modes DO carry a verdict, and neither is a threshold on the census:
+ * `--check` compares the committed record against the sentence `docs/CLAIMS.md`
+ * publishes and exits 1 when they disagree, which is an assertion about two
+ * files rather than about the surface; `--self-test` proves that comparison
+ * still discriminates. `--emit` exits 1 rather than writing a record from an
+ * empty store.
  */
 
 import * as fs from 'node:fs';
