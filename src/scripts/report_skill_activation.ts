@@ -430,20 +430,45 @@ export function render(census: SkillCensus, usage: UsageReport[], published: Cen
     // only way to tell a fresh published figure from a rotted one is to open
     // the git log of `docs/CLAIMS.md`, which is exactly the thing 1.3 forbids.
     const live = buildRecord(census, usage, published.measured_at);
-    const drifted = (Object.keys(live) as Array<keyof CensusRecord>).filter(
-      (k) => k !== 'measured_at' && k !== 'stores' && live[k] !== published[k],
-    );
+    // The two halves drift for different reasons and a single verdict over both
+    // would be worthless: the store is rolling, so its counts move between any
+    // two runs — including a run in the session that is adding to it. A reader
+    // who is told STALE every time stops reading the line. Only the repository
+    // half is a defect when it moves, because the published population split
+    // then no longer describes the tree it claims to count.
+    const REPO_FIELDS: Array<keyof CensusRecord> = [
+      'skills_shipped',
+      'with_trigger_key',
+      'with_trigger_corpus',
+      'trigger_key_and_corpus',
+      'human_named_only',
+    ];
+    const STORE_FIELDS: Array<keyof CensusRecord> = [
+      'sessions',
+      'assistant_turns',
+      'invocations',
+      'distinct_skills_invoked',
+    ];
+    const repoDrift = REPO_FIELDS.filter((k) => live[k] !== published[k]);
+    const storeDrift = STORE_FIELDS.filter((k) => live[k] !== published[k]);
     lines.push(`  PUBLISHED RECORD (${RECORD_PATH}), measured ${published.measured_at}:`);
     lines.push(
       `    sessions=${String(published.sessions)} asst=${String(published.assistant_turns)} invocations=${String(published.invocations)} distinct=${String(published.distinct_skills_invoked)}`,
     );
-    if (sessionsRead === 0) {
-      lines.push('    STALENESS UNDECIDED: this run read no store, so it cannot say whether the');
-      lines.push('    published figure still holds. Re-run where the store lives.');
-    } else if (drifted.length === 0) {
-      lines.push('    FRESH: this run reproduces every published figure.');
+    if (repoDrift.length > 0) {
+      lines.push(`    STALE: the published population split no longer describes this tree —`);
+      lines.push(`    ${repoDrift.join(', ')} moved. Re-take with --emit.`);
     } else {
-      lines.push(`    STALE: this run disagrees on ${drifted.join(', ')}. Re-take with --emit.`);
+      lines.push('    population split still describes this tree.');
+    }
+    if (sessionsRead === 0) {
+      lines.push('    Store reading: UNDECIDED — this run read no store, so it cannot say whether');
+      lines.push('    the published figures still hold. Re-run where the store lives.');
+    } else if (storeDrift.length === 0) {
+      lines.push('    Store reading: reproduces the published figures exactly.');
+    } else {
+      lines.push(`    Store reading: moved since the record (${storeDrift.join(', ')}). Expected —`);
+      lines.push('    the store is rolling, not append-only, and a later reading can be lower.');
     }
     lines.push('');
   }
