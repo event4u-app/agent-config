@@ -101,6 +101,7 @@ import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
 import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import * as install_reach from '../_lib/install_reach_checks.js';
+import * as mcp_consent_residual from '../_lib/mcp_consent_residual.js';
 import * as runtime_checks from '../_lib/doctor_runtime_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
@@ -785,6 +786,7 @@ const CHECK_IDS = [
     'bridge-drift',
     'mcp-mode',
     'mcp-beta-readiness',
+    'mcp-consent-residual',
     'offline-readiness',
     'python-runtime',
     'humanizer-runtime',
@@ -815,6 +817,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'rule-scope-drift',
     'mcp-mode',
     'mcp-beta-readiness',
+    'mcp-consent-residual',
     'offline-readiness',
     'python-runtime',
     'humanizer-runtime',
@@ -1446,6 +1449,38 @@ function _check_mcp_mode(project_root: string): Dict {
         status: 'ok',
         message: `MCP config detected: ${found.join(', ')}`,
         remedy: '',
+    };
+}
+
+/**
+ * Step 3.2 — what remains non-automatic per host, and where that came from.
+ *
+ * Reports the residual, never a checklist of what worked: a list of successes
+ * is noise a reader has to filter, while a named residual is the one thing they
+ * can act on. Status is `warn` when something is genuinely left to do, `ok`
+ * otherwise — and an UNRECORDED host is a `warn` too, because "nobody checked"
+ * is a state a reader must not read as "nothing to do".
+ */
+function _check_mcp_consent_residual(): Dict {
+    const lines = mcp_consent_residual.residualReport(Object.keys(mcp_consent_residual.TOOL_TO_HOST));
+    if (lines.length === 0) {
+        return {
+            id: 'mcp-consent-residual',
+            status: 'ok',
+            message: 'no MCP consent residual recorded for any known host',
+            remedy: '',
+        };
+    }
+    const actionable = lines.filter((l) => l.state === 'residual');
+    const message = lines.map((l) => l.text).join(' · ');
+    return {
+        id: 'mcp-consent-residual',
+        status: 'warn',
+        message,
+        remedy:
+            actionable.length > 0
+                ? 'complete the step named above on each host you use'
+                : 'record an observation for the unchecked hosts, or ignore if you do not use them',
     };
 }
 
@@ -2896,6 +2931,7 @@ function _run_checks(
                 drift['tag_drift'] as Dict[],
             ),
         'mcp-mode': () => _check_mcp_mode(project_root),
+        'mcp-consent-residual': () => _check_mcp_consent_residual(),
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
         'python-runtime': () => _check_python_runtime(),
@@ -2980,6 +3016,7 @@ function _run_checks_no_manifest(
         'lockfile-freshness': () => _skipped_manifest_check('lockfile-freshness'),
         'bridge-drift': () => _check_bridge_drift_no_manifest(bridge_present),
         'mcp-mode': () => _check_mcp_mode(project_root),
+        'mcp-consent-residual': () => _check_mcp_consent_residual(),
         'mcp-beta-readiness': () => _check_mcp_beta_readiness(project_root),
         'offline-readiness': () => _check_offline_readiness(),
         'python-runtime': () => _check_python_runtime(),

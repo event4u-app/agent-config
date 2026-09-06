@@ -106,6 +106,99 @@ export function makeEnsureMcpBridge(
 }
 
 /**
+ * Where each host reads a PROJECT-scope MCP config, and which capability-manifest
+ * row gates writing to it (roadmap step 3.3).
+ *
+ * Keyed by the installer's `--tools` id; `hostId` is the SEPARATE
+ * platform identifier the capability manifest is keyed by (`claude`, not
+ * `claude-code`). Conflating the two namespaces is the mistake
+ * `host_capability.ts` warns about in its own registry doc, so the mapping is
+ * written out rather than derived.
+ *
+ * Presence in this table is NOT permission to write. It records where the file
+ * would go IF the axis said the host reads one; the axis decides, and it says
+ * `true` only once someone observed it.
+ */
+export const MCP_PROJECT_CONFIG: Readonly<Record<string, { hostId: string; relPath: string }>> = {
+    'claude-code': { hostId: 'claude', relPath: '.mcp.json' },
+    cursor: { hostId: 'cursor', relPath: '.cursor/mcp.json' },
+    'gemini-cli': { hostId: 'gemini', relPath: '.gemini/settings.json' },
+};
+
+/** One host to register, resolved from the `--tools` set and the capability axis. */
+export interface McpRegistrationTarget {
+    toolId: string;
+    hostId: string;
+    relPath: string;
+}
+
+/** Injectable capability reader — the installer passes the real probe. */
+export type ReadsProjectMcpConfig = (hostId: string) => boolean;
+
+/**
+ * The hosts an install may register the server on, beyond `claude-code`.
+ *
+ * TWO gates, both required. `--tools` is the consumer's selection; the
+ * capability axis is the evidence. A host is registered only where BOTH say so,
+ * so a config file this package already writes for hooks does not silently
+ * acquire an MCP entry on the strength of the file existing.
+ *
+ * `claude-code` is excluded here on purpose: its `.mcp.json` registration
+ * predates the axis and is written unconditionally by `makeEnsureMcpBridge`.
+ * Routing it through the axis would DELETE a working registration, because the
+ * axis reports `false` for every host today — "nobody answered", not "checked
+ * and absent". This function adds reach; it never removes any.
+ *
+ * MEASURED STATE, 2026-09-07: the capability registry carries one row
+ * (`claude`) and it does not set `reads_project_mcp_config`, so this returns an
+ * EMPTY list for every `--tools` set. That is the honest reading of the axis,
+ * not a defect in this function — and it is a recorded absence, never a finding
+ * that these hosts do not read such a file.
+ */
+export function mcpRegistrationTargets(
+    tools: ReadonlySet<string>,
+    readsConfig: ReadsProjectMcpConfig,
+): McpRegistrationTarget[] {
+    const out: McpRegistrationTarget[] = [];
+    for (const [toolId, spec] of Object.entries(MCP_PROJECT_CONFIG)) {
+        if (toolId === 'claude-code') continue;
+        if (!tools.has(toolId)) continue;
+        if (!readsConfig(spec.hostId)) continue;
+        out.push({ toolId, hostId: spec.hostId, relPath: spec.relPath });
+    }
+    return out;
+}
+
+/**
+ * Merge the server entry into every target's config file.
+ *
+ * Returns the merged keys per tool id, in the shape the installer's
+ * `merged_keys_by_tool` lockfile record expects. An empty map is the normal
+ * result today and is not an error.
+ */
+export function makeEnsureMcpRegistrations(
+    mergeJsonFile: MergeJsonFile,
+): (
+    projectRoot: string,
+    force: boolean,
+    packageRoot: string,
+    targets: readonly McpRegistrationTarget[],
+) => Record<string, Record<string, unknown>[]> {
+    return (projectRoot, force, packageRoot, targets) => {
+        const merged: Record<string, Record<string, unknown>[]> = {};
+        for (const t of targets) {
+            merged[t.toolId] = mergeJsonFile(
+                path.join(projectRoot, ...t.relPath.split('/')),
+                mcpBridgeEntry(packageRoot),
+                force,
+                t.relPath,
+            );
+        }
+        return merged;
+    };
+}
+
+/**
  * Rewrite a stale `.mcp.json` entry in place, touching only the key we own.
  *
  * Install writes the entry once; nothing re-read it afterwards, so a pin
