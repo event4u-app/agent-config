@@ -1,5 +1,9 @@
 {
-  "_note": "Shrink-only grandfather allowlist for check_trigger_eval_presence (road-to-composition-ratchet). Skills listed here predate the trigger-eval presence gate and may lack evals/triggers.json. Entries may ONLY be removed (when the skill gains a triggers.json or is deleted) \u2014 never added. Frozen 2026-07-08 at 221 of 264 skills.",
+  "_note": "Shrink-only grandfather allowlist for check_trigger_eval_presence (road-to-composition-ratchet). Skills listed here predate the trigger-eval presence gate and may lack evals/triggers.json. Entries may ONLY be removed (when the skill gains a triggers.json or is deleted) — never added. Frozen 2026-07-08 at 221 of 264 skills.",
+  "_no_obligation_note": "Entries in `_no_obligation` are on the `skills` allowlist for a DIFFERENT reason from the rest. The list above records skills that predate the gate and owe a triggers.json; these owe none, because their description says explicit-request-only and they publish no auto-trigger keywords — there is no trigger to evaluate. Listing them without this distinction reads as a waived obligation when the obligation is absent. Read by humans only: check_trigger_eval_presence parses `skills` and ignores every other key, so this changes no verdict. Removing one from `skills` WOULD change a verdict — the gate would then demand a triggers.json for a skill that has nothing to trigger on.",
+  "_no_obligation": [
+    "sequential-thinking"
+  ],
   "skills": [
     "accessibility-auditor",
     "activation-design",
