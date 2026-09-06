@@ -1,0 +1,185 @@
+# host_lowering — how each host lowers a dispatcher verdict into its own hook
+# contract, and what this tree has actually established about that lowering.
+#
+# WHY THIS FILE EXISTS. Before it, five facts about a host lived in five
+# places: `VERIFIED_PLATFORMS` and the block-capable event set in
+# `hooks/host_semantics.ts`, five private per-host binding constants in
+# `install.ts`, and prose in half a dozen docs. Three rounds of corrections to
+# that prose did not stop it drifting, because prose has no single reader. This
+# table is the single reader.
+#
+# WHAT A ROW IS. A row is keyed `(host, surface, slot)`. It describes what this
+# package does and what this package has established — never what the host is
+# capable of. `verified: null` means nobody established anything; it does NOT
+# mean the host cannot enforce.
+#
+# THE `surface` AXIS IS PRESENT AND DEGENERATE, DELIBERATELY. Every row today
+# is `any`, because nothing in this tree has measured an IDE-versus-CLI
+# difference in hook lowering on any host. The key carries the dimension so a
+# future measurement lands as a new row rather than as a rewrite; inventing
+# `ide:`/`cli:` rows nobody measured is the defect this roadmap exists to stop.
+#
+# CONSUMED BY:
+#   - src/scripts/hooks/host_semantics.ts   (VERIFIED_PLATFORMS, isBlockCapable, emission shape)
+#   - src/scripts/_lib/host_bindings.ts     (per-host bridge bindings + the install smoke probe)
+#   - src/scripts/lint_hook_manifest.ts     (schema + expiry gate)
+#
+# COLUMNS
+#   block_exit       exit code this host honours as a refusal on that slot;
+#                    `null` = this tree has not established that it honours one.
+#   json_shape       structured-output envelope the dispatcher may emit.
+#   entry_shape      shape of the bridge entry the installer writes.
+#   fail_policy      `propagate` = the dispatcher's exit code reaches the host;
+#                    `discard`   = the trampoline exits 0 regardless.
+#   timeout_unit     unit the host's own hook-timeout setting is expressed in.
+#   timeout_default  host default for that timeout. `null` = not established here.
+#   verified         provenance of the row, or `null`. `expires` is mandatory
+#                    when the block is present — see lint_hook_manifest.
+#   slots            ORDERED. Bridge entries are written in this order, so the
+#                    order is part of the generated output and must not be
+#                    sorted. `native` may be a list where one slot has two
+#                    native events (cline session_start).
+schema_version: 1
+
+hosts:
+  claude:
+    surfaces:
+      any:
+        entry_shape: claude-settings-hooks
+        json_shape: hook-specific-output
+        fail_policy: propagate
+        timeout_unit: seconds
+        timeout_default: null
+        # Transcribed from the behaviour host_semantics.ts already implements —
+        # this row is a description of the status quo, not a new claim.
+        # docs_at/host_version are null because the original read was never
+        # dated; that absence is the record, and the lint reports it.
+        verified:
+          docs_at: null
+          docs_url: https://docs.claude.com/en/docs/claude-code/hooks
+          probe_at: null
+          host_version: null
+          expires: 2027-09-06
+        slots:
+          session_start:      { native: SessionStart,      block_exit: null }
+          session_end:        { native: SessionEnd,        block_exit: null }
+          stop:               { native: Stop,              block_exit: 2 }
+          user_prompt_submit: { native: UserPromptSubmit,  block_exit: 2 }
+          pre_tool_use:       { native: PreToolUse,        block_exit: 2 }
+          post_tool_use:      { native: PostToolUse,       block_exit: null }
+          pre_compact:        { native: PreCompact,        block_exit: null }
+          subagent_start:     { native: SubagentStart,     block_exit: null }
+          subagent_stop:      { native: SubagentStop,      block_exit: null }
+
+  augment:
+    surfaces:
+      any:
+        entry_shape: augment-settings-hooks
+        json_shape: none
+        # augment-dispatcher.sh exits 0 unconditionally: a verdict reaches the
+        # trampoline and stops there.
+        fail_policy: discard
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots:
+          session_start:  { native: SessionStart,  block_exit: null }
+          session_end:    { native: SessionEnd,    block_exit: null }
+          stop:           { native: Stop,          block_exit: null }
+          pre_tool_use:   { native: PreToolUse,    block_exit: null }
+          post_tool_use:  { native: PostToolUse,   block_exit: null }
+
+  cursor:
+    surfaces:
+      any:
+        entry_shape: cursor-hooks-json
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots:
+          session_start:      { native: sessionStart,        block_exit: null }
+          session_end:        { native: sessionEnd,          block_exit: null }
+          stop:               { native: stop,                block_exit: null }
+          user_prompt_submit: { native: beforeSubmitPrompt,  block_exit: null }
+          post_tool_use:      { native: postToolUse,         block_exit: null }
+
+  cline:
+    surfaces:
+      any:
+        entry_shape: cline-per-event-script
+        json_shape: none
+        # The generated per-event script swallows the dispatcher's exit code
+        # and prints `{}`.
+        fail_policy: discard
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots:
+          session_start:      { native: [TaskStart, TaskResume], block_exit: null }
+          session_end:        { native: TaskComplete,            block_exit: null }
+          stop:               { native: TaskCancel,              block_exit: null }
+          user_prompt_submit: { native: UserPromptSubmit,        block_exit: null }
+          post_tool_use:      { native: PostToolUse,             block_exit: null }
+
+  windsurf:
+    surfaces:
+      any:
+        entry_shape: windsurf-hooks-json
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots:
+          session_start:      { native: post_setup_worktree,   block_exit: null }
+          user_prompt_submit: { native: pre_user_prompt,       block_exit: null }
+          stop:               { native: post_cascade_response, block_exit: null }
+
+  gemini:
+    surfaces:
+      any:
+        entry_shape: gemini-settings-hooks
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        # A live deny probe was attempted on 2026-09-06 against Gemini CLI
+        # 0.50.0 in an isolated scratch workspace and could not run: the CLI
+        # aborts with IneligibleTierError before any turn begins, so no tool
+        # call and therefore no BeforeTool hook is reachable. An unrunnable
+        # probe establishes nothing, so this stays null.
+        verified: null
+        slots:
+          session_start:      { native: SessionStart, block_exit: null, matcher: "" }
+          session_end:        { native: SessionEnd,   block_exit: null, matcher: "" }
+          stop:               { native: AfterAgent,   block_exit: null, matcher: "" }
+          user_prompt_submit: { native: BeforeAgent,  block_exit: null, matcher: "" }
+          post_tool_use:      { native: AfterTool,    block_exit: null, matcher: ".*" }
+
+  cowork:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        # cowork-dispatcher.sh exits 0 unconditionally, and the host is
+        # upstream-blocked from reading any settings source this package writes.
+        fail_policy: discard
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots: {}
+
+  copilot:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        fail_policy: discard
+        timeout_unit: unknown
+        timeout_default: null
+        # `fallback_only: true` in hook_manifest.yaml. This package binds
+        # nothing here and has measured nothing here.
+        verified: null
+        slots: {}

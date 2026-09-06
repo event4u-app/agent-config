@@ -6,9 +6,9 @@
 //      against a tmp project dir and assert the written bridge file CONTENTS
 //      match the expected per-platform strings (frozen INLINE as committed
 //      fixtures, ported from the python snapshot expectations).
-//   2. Drift guard — each platform's `*_DISPATCHER_BINDINGS` must cover the
-//      `scripts/hook_manifest.yaml` platform block (manifest events ⊆ binding
-//      ac_events), the silent-no-op failure mode the parser guards.
+//   2. Drift guard — each platform's `host_lowering.yaml` slot list must cover
+//      the `src/scripts/hook_manifest.yaml` platform block (manifest events ⊆
+//      table slots), the silent-no-op failure mode the parser guards.
 //
 // A breaking change to install.ts (renamed binding, dropped event, shifted CLI
 // flag) trips one of these with a useful diff.
@@ -21,6 +21,12 @@ import { parse as parseYaml } from 'yaml';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
+import {
+    _resetHostLoweringCache,
+    hostBindings,
+    loadHostLowering,
+    parseHostLowering,
+} from '../../src/scripts/hooks/host_lowering.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -56,9 +62,9 @@ describe('Cursor snapshot', () => {
         const data = readJson('.cursor/hooks.json');
         expect(data['version']).toBe(1);
         const hooks = data['hooks'];
-        const boundNative = new Set(inst.CURSOR_DISPATCHER_BINDINGS.map(([, n]) => n));
+        const boundNative = new Set(hostBindings('cursor').map((b) => b.native));
         expect(new Set(Object.keys(hooks))).toEqual(boundNative);
-        for (const [acEvent, native] of inst.CURSOR_DISPATCHER_BINDINGS) {
+        for (const { slot: acEvent, native } of hostBindings('cursor')) {
             expect(hooks[native]).toHaveLength(1);
             const cmd: string = hooks[native][0]['command'];
             expect(cmd).toContain('./agent-config dispatch:hook');
@@ -76,14 +82,14 @@ describe('Cline snapshot', () => {
     it('writes one executable script per binding, body invokes the dispatcher', () => {
         inst.ensure_cline_bridge(project, false);
         const hooksDir = path.join(project, '.clinerules', 'hooks');
-        const boundNative = new Set(inst.CLINE_DISPATCHER_BINDINGS.map(([, n]) => n));
+        const boundNative = new Set(hostBindings('cline').map((b) => b.native));
         const onDisk = new Set(
             fs
                 .readdirSync(hooksDir)
                 .filter((n) => fs.statSync(path.join(hooksDir, n)).isFile()),
         );
         expect(onDisk).toEqual(boundNative);
-        for (const [acEvent, native] of inst.CLINE_DISPATCHER_BINDINGS) {
+        for (const { slot: acEvent, native } of hostBindings('cline')) {
             const script = path.join(hooksDir, native);
             expect(fs.statSync(script).mode & 0o111).not.toBe(0);
             const body = fs.readFileSync(script, 'utf8');
@@ -102,9 +108,9 @@ describe('Windsurf snapshot', () => {
         inst.ensure_windsurf_bridge(project, false);
         const data = readJson('.windsurf/hooks.json');
         const hooks = data['hooks'];
-        const boundNative = new Set(inst.WINDSURF_DISPATCHER_BINDINGS.map(([, n]) => n));
+        const boundNative = new Set(hostBindings('windsurf').map((b) => b.native));
         expect(new Set(Object.keys(hooks))).toEqual(boundNative);
-        for (const [acEvent, native] of inst.WINDSURF_DISPATCHER_BINDINGS) {
+        for (const { slot: acEvent, native } of hostBindings('windsurf')) {
             const entries = hooks[native];
             expect(entries).toHaveLength(1);
             const entry = entries[0];
@@ -125,11 +131,11 @@ describe('Gemini snapshot', () => {
         inst.ensure_gemini_bridge(project, false);
         const data = readJson('.gemini/settings.json');
         const hooks = data['hooks'];
-        const boundNative = new Set(inst.GEMINI_DISPATCHER_BINDINGS.map(([, n]) => n));
+        const boundNative = new Set(hostBindings('gemini').map((b) => b.native));
         for (const n of boundNative) {
             expect(Object.keys(hooks)).toContain(n);
         }
-        for (const [acEvent, native, matcher] of inst.GEMINI_DISPATCHER_BINDINGS) {
+        for (const { slot: acEvent, native, matcher } of hostBindings('gemini')) {
             const groups = hooks[native];
             expect(groups).toHaveLength(1);
             const group = groups[0];
@@ -154,27 +160,52 @@ describe('Binding coverage snapshot', () => {
         const manifest = parseYaml(fs.readFileSync(MANIFEST, 'utf8')) as Record<string, any>;
         const platforms = (manifest['platforms'] ?? {}) as Record<string, any>;
 
-        const acEvents = (bindings: ReadonlyArray<readonly [string, ...string[]]>): Set<string> =>
-            new Set(bindings.map((b) => b[0]));
-
-        const cases: Array<[string, ReadonlyArray<readonly [string, ...string[]]>]> = [
-            ['cursor', inst.CURSOR_DISPATCHER_BINDINGS],
-            ['cline', inst.CLINE_DISPATCHER_BINDINGS],
-            ['windsurf', inst.WINDSURF_DISPATCHER_BINDINGS],
-            ['gemini', inst.GEMINI_DISPATCHER_BINDINGS],
-        ];
-
-        for (const [platform, bindings] of cases) {
+        for (const platform of ['augment', 'cursor', 'cline', 'windsurf', 'gemini']) {
             const manifestEvents = new Set(
                 Object.keys(platforms[platform] ?? {}).filter((e) => e !== 'fallback_only'),
             );
-            const bound = acEvents(bindings);
+            const bound = new Set(hostBindings(platform).map((b) => b.slot));
             for (const ev of manifestEvents) {
                 expect(
                     bound.has(ev),
-                    `${platform}: manifest event ${ev} not covered by install bindings ${[...bound].join(', ')}`,
+                    `${platform}: manifest event ${ev} not covered by host_lowering.yaml slots ${[...bound].join(', ')}`,
                 ).toBe(true);
             }
         }
+    });
+});
+
+describe('Install smoke probe derivation', () => {
+    // 1.4 / AC-6. The probe list used to be hand-written and named an event no
+    // bridge writes, so it could not fail on the regression it exists to catch.
+    afterEach(() => {
+        _resetHostLoweringCache();
+    });
+
+    it('probes only events the table actually binds', () => {
+        for (const [platform, native] of inst.smokeProbeEvents()) {
+            expect(
+                hostBindings(platform).map((b) => b.native),
+                `${platform}: probed native event ${native} is not bound`,
+            ).toContain(native);
+        }
+    });
+
+    it('fails when the probed binding is removed from the table', () => {
+        const raw = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.yaml'),
+            'utf8',
+        );
+        const sabotaged = parseHostLowering(raw);
+        sabotaged.get('cursor')!.get('any')!.slots.delete('session_start');
+        _resetHostLoweringCache(sabotaged);
+        expect(() => inst.smokeProbeEvents()).toThrow(/no `session_start` binding for `cursor`/);
+
+        _resetHostLoweringCache(parseHostLowering(raw));
+        expect(() => inst.smokeProbeEvents()).not.toThrow();
+    });
+
+    it('loads the committed table', () => {
+        expect(loadHostLowering().size).toBeGreaterThan(0);
     });
 });
