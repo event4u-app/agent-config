@@ -16,7 +16,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readAdrAxisCells, readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
+import { dated_trigger_day, readAdrAxisCells, readAdrFrontmatterScalars } from '../_lib/adr_frontmatter.js';
 import { generatedByItalic } from '../_lib/generated_by.js';
 
 // ^ADR-(\d{3})-([a-z0-9-]+)\.md$
@@ -262,6 +262,41 @@ export function scanOutside(repoRoot: string, roots: readonly string[] = OUTSIDE
     return out;
 }
 
+/**
+ * The rows whose `review_trigger` opens with a calendar date.
+ *
+ * WHY THIS SECTION CARRIES THE DATE AND NOT THE FIRED/NOT-FIRED STATE
+ * ------------------------------------------------------------------
+ * `regenerate_index --check` byte-compares this file in CI
+ * (`.github/workflows/rule-backstops.yml`), so anything rendered here has to be
+ * a function of the tree alone. A `fired` / `not-fired` column would be a
+ * function of the tree AND the day, which means the index would go stale on a
+ * calendar boundary nobody committed and red every open pull request until
+ * someone regenerated it. The date is the decidable half; the reader compares
+ * it to today, and `adr_cite_check` prints the comparison for a machine.
+ */
+export interface DatedTriggerRow {
+    label: string;
+    path: string;
+    day: string;
+    decision: string;
+}
+
+export function datedTriggerRows(rows: readonly Row[]): DatedTriggerRow[] {
+    const out: DatedTriggerRow[] = [];
+    for (const r of rows) {
+        const day = dated_trigger_day(r.review_trigger ?? '');
+        if (day === null) continue;
+        out.push({
+            label: 'num' in r ? `ADR-${r.num as string}` : (r.path as string).slice(0, -3),
+            path: r.path as string,
+            day,
+            decision: r.decision ?? r.slug ?? '—',
+        });
+    }
+    return out.sort((a, b) => a.day.localeCompare(b.day) || a.label.localeCompare(b.label));
+}
+
 /** Mirror `render(num, leg)`. */
 export function render(num: Row[], leg: Row[], outside: OutsideRow[] = []): string {
     const out = [
@@ -276,6 +311,24 @@ export function render(num: Row[], leg: Row[], outside: OutsideRow[] = []): stri
     out.push(HEAD, ...num.map(row));
     if (leg.length > 0) {
         out.push('', '## Unnumbered (legacy)', '', HEAD, ...leg.map(row));
+    }
+    const dated = datedTriggerRows([...num, ...leg]);
+    if (dated.length > 0) {
+        out.push(
+            '',
+            '## Dated review triggers',
+            '',
+            'A `review_trigger` that opens with a calendar date is the one reopen condition',
+            'this repository can decide without interpreting anything, so it is listed where a',
+            'reader meets it rather than only in a command they would have to know to run.',
+            'Compare the expiry to today; `./scripts-run src/scripts/adr_cite_check <ADR-NNN>`',
+            'prints `fired` or `not-fired` for the same date. Every other trigger is semantic',
+            'and reports `indeterminate` — a trigger that merely mentions a date is not listed.',
+            '',
+            '| Expiry | # | Decision |',
+            '|---|---|---|',
+            ...dated.map((d) => `| ${d.day} | [${d.label}](${d.path}) | ${d.decision} |`),
+        );
     }
     if (outside.length > 0) {
         out.push(

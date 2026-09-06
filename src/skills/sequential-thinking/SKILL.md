@@ -129,12 +129,22 @@ Explore alternatives when:
 1. Numbered reasoning steps with conclusions
 2. Final answer or recommendation with confidence level
 
-## Auto-trigger keywords
+## Tool availability — this is a procedure, not a tool call
 
-- problem solving
-- step-by-step
-- reasoning
-- decomposition
+Everything above runs **in-session**: it is a way of structuring reasoning, and
+it needs nothing installed.
+
+The wider MCP ecosystem carries a `sequentialthinking` server exposing a tool of
+that name. **This package registers no MCP server** — `mcp.json` ships
+`{"servers": {}}` — so on a default install that tool is not present, and
+nothing here tries to call it. Registering one is a consumer-side install
+decision this package deliberately does not make for you.
+
+So a reader on a default install can answer the question directly: the tool is
+not available to you, and none of this skill depends on it. If you have
+registered such a server yourself, the once-per-task limit below governs that
+call too — the limit is about looping, not about which mechanism does the
+thinking.
 
 ## Gotcha
 
@@ -145,9 +155,9 @@ Explore alternatives when:
 ## Do NOT
 
 - Do NOT use this for simple, well-understood tasks — it adds unnecessary overhead.
-- Do NOT call `sequentialthinking` more than **once per task**. If you're calling it repeatedly,
-  you're looping — stop and act directly instead.
-- Do NOT use `sequentialthinking` as a "thinking proxy" — if the task is "view a file" or
+- Do NOT run this procedure more than **once per task**. If you are reaching for it
+  repeatedly, you are looping — stop and act directly instead.
+- Do NOT use it as a "thinking proxy" — if the task is "view a file" or
   "run a command", just do it. No thinking step needed.
 - Do NOT skip the validation step — always check the solution against the original problem.
 - Do NOT ignore contradictions — they are signals, not noise.

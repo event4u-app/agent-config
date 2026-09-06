@@ -422,6 +422,52 @@ cannot run before the PR exists; the registry says which and why.
 with a human summary in `agents/evidence/reports/release-mix-baseline.md`. They
 are levels, not verdicts.
 
+## Previous-cycle promise read-back
+
+**The defect.** The response block above generates a promise — `Next cycle
+ships …` — and until 2026-09-06 nothing ever read it back. An unmet promise
+could therefore be restated at every release, indefinitely, at zero cost: the
+debt was booked and never called. A commitment nothing reads back is not a
+commitment; it is a sentence.
+
+**The obligation.** When the PREVIOUS section's response block carries a
+`Next cycle ships` promise, the section under release states what became of it.
+One line, immediately under the curated head, outside it, in the same place and
+for the same reason as the response block:
+
+```md
+> **Previous cycle:** the <promise> promised in <X.Y.Z> did not ship; <what happened>.
+```
+
+**Three outcomes, one of which must be chosen** — `shipped`, `did not ship`, or
+`withdrawn` with its reason. The third exists because a promise the project
+decided not to keep is a legitimate state, and without it an author is pushed
+toward restating a dead promise as still-outstanding.
+
+**What is enforced, and what is not.** `check_release_highlights` refuses a
+**missing** answer, never a particular outcome. It does not require the promise
+to have been kept, and it enforces no deadline and no count. A gate that refused
+an unkept promise would price honesty above silence and teach the next author to
+promise less rather than to answer truthfully. The answer must name an outcome
+and clear the same written-length floor the response block uses
+(`MIX_RESPONSE_MIN_CHARS`), so the outcome word alone is not an answer, and the
+writer's own placeholders are refused there as they are here.
+
+**Coverage, stated honestly — the asymmetry the section above closed is open
+here.** The read-back is read by `check_release_highlights` only. The local
+guards (`guard_release_curation`, `guard_release_branch_push`) do **not** carry
+it, so the earliest refusal for this one obligation is the PR, not the push —
+the exact shape that cost 14.17.0 a red release PR for the response block. It is
+written down rather than fixed because the roadmap that added the read-back
+(`road-to-a-dated-trigger-that-decides`, § 2.1) specifies one reader and no new
+script, and widening it is a change to the local guards' contract rather than to
+this one. The predicate is already shared (`promise_readback_blockers`), so
+closing it later is a call site, not a second copy of the rule.
+
+Scope is the same as everywhere else here: only the section under release, and
+only the previous section's response block. A product line that happens to
+contain the phrase is not a promise.
+
 ## What counts as breaking
 
 A change is **breaking** (and MUST appear under `### BREAKING CHANGES`

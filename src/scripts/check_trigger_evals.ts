@@ -150,7 +150,7 @@ function _check_one(p: string, today: PyDate): string[] {
         if (age > MAX_AGE_DAYS) {
             errors.push(
                 `${rel}: \`last_eval\` ${raw as string} is ${age}d old (> ${MAX_AGE_DAYS}d) ` +
-                    '— re-run skill_trigger_eval.py and bump it',
+                    '— re-run skill_trigger_eval and bump it',
             );
         }
     }

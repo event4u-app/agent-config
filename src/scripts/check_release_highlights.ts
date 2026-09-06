@@ -72,13 +72,17 @@ import {
     derive_categories,
     parse_git_log,
     mix_response_blockers,
+    previous_promise,
     previous_release_tag,
+    promise_readback_blockers,
     stale_draft_labels,
 } from './_lib/release_highlights.js';
 import { loadTaxonomy, measureRange } from './measure_release_mix.js';
 import {
     CURATED_HEAD_INSTRUCTION,
+    PROMISE_READBACK_MARKER,
     extract_changelog_section,
+    previous_changelog_version,
 } from './_lib/release_material.js';
 import { assertScanned, assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -207,7 +211,8 @@ export function main(argv: readonly string[]): number {
         }
         throw err;
     }
-    const section = extract_changelog_section(fs.readFileSync(changelogPath, 'utf-8'), version);
+    const changelogText = fs.readFileSync(changelogPath, 'utf-8');
+    const section = extract_changelog_section(changelogText, version);
     if (!section) {
         process.stderr.write(`CHANGELOG carries no section for ${version}\n`);
         return 2;
@@ -249,6 +254,11 @@ export function main(argv: readonly string[]): number {
     const mix = check_governance_mix_response(section.body, from, to, version);
     if (mix !== 0) {
         return mix;
+    }
+
+    const readback = check_previous_promise_readback(changelogText, section.body, version);
+    if (readback !== 0) {
+        return readback;
     }
 
     const curated = parse_curated_head(section.body);
@@ -411,6 +421,69 @@ export function check_governance_mix_response(
             '    versus-product response; the decline this replaces is ADR-253).\n' +
             '    Only that section is read; historical sections are out of scope. No ratio is\n' +
             '    enforced — this blocks a MISSING answer, never a particular number.\n' +
+            '    Reproduce locally, before any push:\n' +
+            `        ./scripts-run src/scripts/check_release_highlights --version ${version}\n`,
+    );
+    return 1;
+}
+
+/**
+ * The previous release's promise, read back at the next release.
+ *
+ * `_lib/release_material.ts` generates `Next cycle ships …` and, until this
+ * check existed, nothing ever asked what became of it: 14.18.0 promised the MCP
+ * bridge repair, and no gate in the tree would have noticed the same promise
+ * being reprinted in 14.19.0 and 14.20.0. A commitment nothing reads back is
+ * free to restate, and one that is free to restate is not a commitment.
+ *
+ * Only the section under release is read, and only the previous section's
+ * governance-response block — the same scope every other check here uses, so a
+ * historical section cannot red a future release.
+ *
+ * The check is about ANSWERING, never about having kept the promise. A gate
+ * that refused an unkept promise would price honesty above silence and teach
+ * the next author to promise nothing.
+ */
+export function check_previous_promise_readback(
+    changelogText: string,
+    body: string,
+    version: string,
+): number {
+    const previousVersion = previous_changelog_version(changelogText, version);
+    if (previousVersion === null) {
+        process.stdout.write(`✅  no previous CHANGELOG section before ${version} — no promise to read back\n`);
+        return 0;
+    }
+    const promise = previous_promise(changelogText, previousVersion);
+    if (promise === null) {
+        process.stdout.write(
+            `✅  the ${previousVersion} section made no next-cycle promise — nothing owed by ${version}\n`,
+        );
+        return 0;
+    }
+    const blockers = promise_readback_blockers(
+        body,
+        version,
+        previousVersion,
+        promise,
+        `\`release/${version}\``,
+    );
+    if (blockers.length === 0) {
+        process.stdout.write(`✅  ${version} answers the ${previousVersion} next-cycle promise\n`);
+        return 0;
+    }
+    process.stderr.write(
+        `❌  the ${version} section owes an answer to the ${previousVersion} next-cycle promise.\n` +
+            blockers.map((b) => `    - ${b}\n`).join('') +
+            `    The ${previousVersion} promise reads:\n` +
+            promise
+                .split('\n')
+                .map((l) => `        ${l}\n`)
+                .join('') +
+            `    Answering it is one blockquote line under the curated head, e.g.\n` +
+            `        > ${PROMISE_READBACK_MARKER} the <promise> did not ship; <what happened>.\n` +
+            '    Shipped, did not ship, or withdrawn with a reason — the check refuses a MISSING\n' +
+            '    answer, never a particular outcome. An unkept promise answered honestly passes.\n' +
             '    Reproduce locally, before any push:\n' +
             `        ./scripts-run src/scripts/check_release_highlights --version ${version}\n`,
     );

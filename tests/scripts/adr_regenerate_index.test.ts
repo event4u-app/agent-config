@@ -43,6 +43,46 @@ function writeAdr(dir: string, name: string, fm: Record<string, string>): void {
     fs.writeFileSync(path.join(dir, name), `---\n${lines.join('\n')}\n---\nbody\n`);
 }
 
+describe('regenerate_index — the dated review-trigger section', () => {
+    it('lists an ADR whose trigger opens with a date, and drops the row when the date goes', () => {
+        const d = mkTmp();
+        writeAdr(d, 'ADR-001-dated.md', {
+            adr: '1',
+            status: 'accepted',
+            date: '2026-01-01',
+            decision: 'dated',
+            review_trigger: 'Expiry 2026-09-15 — decide or supersede.',
+        });
+        const [num, leg] = rgi.scan(d);
+        expect(rgi.render(num, leg)).toContain('| 2026-09-15 | [ADR-001](ADR-001-dated.md) | dated |');
+
+        writeAdr(d, 'ADR-001-dated.md', {
+            adr: '1',
+            status: 'accepted',
+            date: '2026-01-01',
+            decision: 'dated',
+            review_trigger: 'Decide or supersede.',
+        });
+        const [num2, leg2] = rgi.scan(d);
+        expect(rgi.render(num2, leg2)).not.toContain('## Dated review triggers');
+    });
+
+    // The section must not become a second home for the trigger grammar two
+    // council seats rejected: a date inside a semantic condition is not one.
+    it('does not list a trigger that merely mentions a date', () => {
+        const d = mkTmp();
+        writeAdr(d, 'ADR-002-semantic.md', {
+            adr: '2',
+            status: 'accepted',
+            date: '2026-01-01',
+            decision: 'semantic',
+            review_trigger: 'Revisit at the 2026-11-10 review date, or earlier on either event.',
+        });
+        const [num, leg] = rgi.scan(d);
+        expect(rgi.render(num, leg)).not.toContain('## Dated review triggers');
+    });
+});
+
 describe('regenerate_index — pure helpers', () => {
     it('scan splits numbered vs legacy and parses frontmatter', () => {
         const d = mkTmp();

@@ -3,7 +3,7 @@
  *
  * Records a live trigger-eval result into a corpus manifest's `upstream`
  * block (the second half of the corpus-refresh DoD, ADR-061 §6). It does
- * NOT run the eval — `skill_trigger_eval.py`'s confirmation gate hard-aborts
+ * NOT run the eval — `skill_trigger_eval`'s confirmation gate hard-aborts
  * under automation by design, so the live run stays a human, interactive
  * step. This command is a *post-processor*: it reads the `EvalResult` JSON the
  * live run wrote (`--output`), enforces a precision/recall floor, and writes
@@ -39,7 +39,7 @@ import { logger } from '../log/logger.js';
 import { floor_for } from '../../scripts/_lib/trigger_eval_floors.js';
 
 export interface RecordTriggerEvalOptions {
-    /** Path to the EvalResult JSON written by skill_trigger_eval.py --output. */
+    /** Path to the EvalResult JSON written by skill_trigger_eval --output. */
     evalJson: string;
     /** Path to the corpus manifest.json to patch. */
     manifest: string;
@@ -53,7 +53,7 @@ export interface RecordTriggerEvalOptions {
     dryRun?: boolean;
 }
 
-/** Subset of `skill_trigger_eval.py`'s `EvalResult` we depend on. */
+/** Subset of `skill_trigger_eval`'s `EvalResult` we depend on. */
 const EvalResultSchema = z.object({
     skill: z.string().optional(),
     model: z.string().optional(),

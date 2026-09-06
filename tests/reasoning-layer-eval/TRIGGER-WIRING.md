@@ -1,6 +1,6 @@
 # RDP trigger-eval wiring — which disciplines the skill-runner can measure
 
-Resolves the gap surfaced 2026-06-16: `skill_trigger_eval.py` measures **skill
+Resolves the gap surfaced 2026-06-16: `skill_trigger_eval` measures **skill
 routing** (did a query route TO skill X?). RDP's 8 disciplines are a **mix of
 skills and rules**, so the skill-runner can only score the skill-backed ones.
 This file maps each discipline to its artifact + measurement path so the
@@ -10,7 +10,7 @@ billable Phase-1 run targets the right probe per discipline.
 
 | discipline | artifact | type | trigger probe | seeded? |
 |---|---|---|---|---|
-| `complexity_first` | `complexity-first-planning` | skill | `skill_trigger_eval.py --skill complexity-first-planning` | ✅ 5+5 |
+| `complexity_first` | `complexity-first-planning` | skill | `skill_trigger_eval --skill complexity-first-planning` | ✅ 5+5 |
 | `orchestrator` | `reasoning-orchestrator` | skill | `… --skill reasoning-orchestrator` | ✅ 5+5 |
 | `prediction` | `prediction-pool-optimizer` | skill | `… --skill prediction-pool-optimizer` | ✅ 9+5 |
 | `decision` | `decision-record` | skill | `… --skill decision-record` | ✅ 5+5 (this branch) |
@@ -40,7 +40,7 @@ refuses agent/piped invocation. The agent cannot run it; the operator does.)
 ## Rule disciplines (3/8) — NOT measurable by the skill-runner
 
 `grounding`, `intent`, `notes_first` are **always-on rules**, not skills — there
-is no skill to "route to", so `skill_trigger_eval.py` cannot score them. Two
+is no skill to "route to", so `skill_trigger_eval` cannot score them. Two
 honest options for their trigger signal, neither billable via the skill-runner:
 
 1. **Router-trigger matrix** — `build_rule_trigger_matrix.py` already inventories
