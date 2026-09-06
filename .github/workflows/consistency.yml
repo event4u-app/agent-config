@@ -175,6 +175,18 @@ jobs:
       - name: Verify the roadmap dashboard is not committed
         run: task roadmap-dashboard-untracked-check
 
+      # Both gates land in `task ci` AND here, for the reason the steps above
+      # give: no workflow invokes `task ci`, so a gate registered only there
+      # cannot fail a pull request. The corpus validator exists precisely
+      # because tests/reasoning-layer-eval/ ran unchecked after its two Python
+      # validators were deleted — registering its replacement somewhere nothing
+      # runs would reproduce that in one move.
+      - name: Verify the RDP trigger-fixture corpus is well-formed
+        run: task lint-reasoning-fixtures
+
+      - name: Verify no skill claims explicit-request-only and auto-triggers
+        run: task lint-skill-trigger-contradiction
+
       # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
       # no workflow invokes `task ci` — so the check that exists to keep harvest
       # sources out of the tracked tree could not fail a pull request. Same
