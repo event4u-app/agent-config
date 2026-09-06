@@ -2639,3 +2639,32 @@ gates:
       proven by `--self-test` (3 cases, 1 rejecting) covering both directions:
       the contradicting pair reds, and each half ALONE stays green, which is
       what stops a matcher that fired on the keyword section alone.
+
+  - id: report_skill_activation
+    argv: []
+    ci_invocation: .github/workflows/release-validation.yml
+    min_scanned: 250
+    corpus: >
+      every SKILL.md under src/skills/ — 299 at the time of writing, floored at
+      250 for the same reason as `lint_skill_trigger_contradiction`: the count
+      moves in both directions with ordinary work, and a reading far below it
+      means the walk lost the directory. The floor deliberately covers the
+      REPOSITORY half of what this census reads and not the transcript half.
+      The store is keyed on the directory the process runs in, so on a runner it
+      is empty and its session count is legitimately zero; a floor over it would
+      red every CI run, and a floor of zero would be vacuous. The census reports
+      the session and turn count it read in its own output instead, and prints
+      an EMPTY STORE banner when that count is zero, so the two zeros cannot be
+      confused for each other.
+    status: enforced
+    no_canary_reason: >-
+      the floor is a LOWER bound over a corpus a create-only canary can only
+      GROW. Planting a `src/skills/zz-canary/SKILL.md` raises the count, which
+      cannot red a minimum, and the plant would land inside a projected tree
+      where it reddens generator and count gates before this one is reached.
+      What this row actually buys is `ci_invocation` — the census had a Taskfile
+      target and no caller at all, so its removal would have been noticed by
+      nothing. Discrimination on the half that CAN fail was proven by direct
+      mutation instead: the published figure was edited three ways (turn count,
+      the human-named population count, the `last_verified` date) and
+      `report_skill_activation --check` went red on each, then green on restore.

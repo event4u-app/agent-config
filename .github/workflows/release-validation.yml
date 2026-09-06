@@ -464,3 +464,34 @@ jobs:
         env:
           BASELINE_TARBALL: ${{ github.workspace }}/baseline-9.7.0.tgz
         run: bash tests/test_release_install_e2e.sh
+
+  activation-census:
+    # The census is advisory and gates on nothing, so the re-take step below
+    # cannot fail. That is the point of pairing it with `--check`: a runner has
+    # no transcript store, so the re-take prints an EMPTY STORE reading and the
+    # only thing that CAN go red here is the published figure disagreeing with
+    # the record it was derived from. The reading that means something is the
+    # local half — `task release:verify`, on a machine that holds the store.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: Skill-activation census re-taken, published figure matches its record
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Re-take the census
+        run: ./scripts-run src/scripts/report_skill_activation
+
+      - name: Published census figure agrees with its record
+        run: ./scripts-run src/scripts/report_skill_activation --check

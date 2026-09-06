@@ -127,3 +127,15 @@ jobs:
     verify: false
     script: ~
     guard: ~
+
+  activation-census:
+    # The one row where the local command asserts MORE than the job it mirrors,
+    # not less, so `partial` does not apply: the transcript store the census
+    # reads is keyed on the directory it runs in and does not exist on a runner,
+    # so CI can only re-take an empty reading and check the published figure
+    # against its record. Run locally, the same command reads the real store,
+    # which is the only place the census means anything.
+    local: './scripts-run src/scripts/report_skill_activation && ./scripts-run src/scripts/report_skill_activation --check'
+    verify: true
+    script: src/scripts/report_skill_activation.ts
+    guard: ~
