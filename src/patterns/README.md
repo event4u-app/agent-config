@@ -18,7 +18,7 @@ runtime**. File-first, like `rules/` — markdown the agent reads, never a servi
 | `rules/` | always-active behavior constraints | every conversation (auto-loaded) |
 | `docs/guidelines/` | prose conventions ("how to write code in X") | on demand, for style |
 | **`patterns/`** | **a specific fix/refactor recipe with a verification step + reliability tag** | **on demand, when the matching problem is detected** |
-| `skills/` | executable workflows | matched by topic |
+| `skills/` | executable workflows | when named, or on a declared trigger |
 
 A pattern answers *"I have problem P — what is the proven recipe to fix it, and
 how reliable is it?"* — not *"how should I name things"* (guideline) and not
