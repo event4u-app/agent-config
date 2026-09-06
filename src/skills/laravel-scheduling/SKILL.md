@@ -118,7 +118,9 @@ Schedule::command('queue:work')->everyMinute()->evenInMaintenanceMode();
 ## Running the scheduler
 
 ```bash
-# The scheduler itself runs every minute via system cron
+# The scheduler itself runs every minute via system cron.
+# cron has no working directory to inherit, and artisan takes no directory
+# flag, so the `cd` is the shape here rather than a habit worth replacing.
 * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
 
 # Test locally
