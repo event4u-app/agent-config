@@ -61,6 +61,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { humanTypedThisTurn as _humanTypedThisTurn } from "./_lib/machine_wake.js";
 
+import {
+  CONSEQUENCE_PHRASES,
+  extractObjects,
+} from "./_lib/consequence_objects.js";
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
@@ -235,7 +239,36 @@ export type GitOp =
   /** Deleting a branch, locally or on the remote. */
   | "branch-delete"
   /** Closing a pull request or an issue. */
-  | "close";
+  | "close"
+
+  // ── Consequence operations, added 2026-09-06
+  // (`road-to-authorization-that-reaches-further` 2.1).
+  //
+  // The boundaries the owner named had NO vocabulary at all, so an
+  // authorization the user gave in plain words was invisible to the record and
+  // the matching operation was invisible to the count. These seven are NOT git
+  // operations, and the union's name is now narrower than its contents — a
+  // rename touches every consumer and buys nothing the doc comments do not.
+  //
+  // RECORDING AN AUTHORIZATION IS NOT GRANTING ONE. After ADR-254 there is no
+  // grantor left in this package: the ledger concern is advisory by manifest
+  // and the only consumer that acts on this vocabulary is the after-the-fact
+  // count in `conformance_scan`. Nothing here refuses, and nothing here may be
+  // read as a step toward refusing.
+  /** Deploying to a production environment. */
+  | "prod-deploy"
+  /** Destroying production data — a table, a bucket, a collection, rows. */
+  | "prod-data-destroy"
+  /** Changing production infrastructure — cluster, IAM, DNS, network. */
+  | "prod-infra-change"
+  /** Sending something outward that a third party receives. */
+  | "external-send"
+  /** Moving money — a charge, a refund, a payout, a transfer. */
+  | "money-movement"
+  /** Force-pushing a shared trunk, as distinct from a feature branch. */
+  | "trunk-force-push"
+  /** Destroying work outside the task's own scope. */
+  | "out-of-scope-destruction";
 
 export const ALL_OPS: readonly GitOp[] = [
   "commit",
@@ -264,6 +297,13 @@ export const ALL_OPS: readonly GitOp[] = [
   "stash-drop",
   "branch-delete",
   "close",
+  "prod-deploy",
+  "prod-data-destroy",
+  "prod-infra-change",
+  "external-send",
+  "money-movement",
+  "trunk-force-push",
+  "out-of-scope-destruction",
 ];
 
 /**
@@ -432,6 +472,8 @@ const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
     op: "pr-merge-auto",
     re: /\bauto[-\s]?merge\b|\bmerge\b[^.\n]{0,20}\bautomatisch\b|\bautomatisch\b[^.\n]{0,20}\bmerg(e|en)\b/i,
   },
+
+  ...CONSEQUENCE_PHRASES,
 ];
 
 /**
@@ -615,6 +657,25 @@ export interface Ledger extends JsonObject {
    * as "no grants", which is the pre-ADR-252 behaviour exactly.
    */
   grants?: MergeGrant[];
+  /**
+   * The objects a consequence authorization named, per operation.
+   *
+   * An authorization for one table, one environment or one recipient class is
+   * not an authorization for another, and until now the record could not
+   * express the difference for anything but pull-request numbers
+   * (`MergeGrant.targets`). This is that distinction generalised to the
+   * consequence vocabulary.
+   *
+   * IT IS A RECORDED FIELD, NOT A MATCHING CONDITION. Nothing consults it to
+   * refuse anything; the one consumer is `conformance_scan`, which counts
+   * after the fact when an executed operation's object is absent here. Making
+   * it a matching condition is the ledger item ADR-254 left to the owner, and
+   * it is deliberately not taken here.
+   *
+   * Optional, so a ledger written by an older build still parses. Absent reads
+   * as "no objects named", which is exactly the pre-2.2 behaviour.
+   */
+  objects?: { [op: string]: string[] };
 }
 
 /**
@@ -1281,6 +1342,7 @@ export function takePending(
  * file for the discriminator and the captured evidence behind it.
  */
 export { humanTypedThisTurn } from "./_lib/machine_wake.js";
+export { extractObjects, OBJECT_REQUIRED_OPS } from "./_lib/consequence_objects.js";
 
 export function run(stdin_text: string, options: { consumer_root: string }): number {
   let envelope: JsonObject = {};
@@ -1332,6 +1394,17 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
       `"${prompt.trim().slice(0, 40)}"`;
   }
 
+  // The objects the prose named, per authorized operation. Recorded for every
+  // consequence op that names one; `OBJECT_REQUIRED_OPS` is the subset whose
+  // ABSENCE the conformance count reads as a finding, and that reading lives in
+  // the scan rather than here — this side records what was said, and never
+  // decides what it permits.
+  const objects: { [op: string]: string[] } = {};
+  for (const op of authorized) {
+    const named = extractObjects(op, prompt);
+    if (named.length > 0) objects[op] = named;
+  }
+
   const now = new Date();
   const ledger: Ledger = {
     session_id: typeof envelope["session_id"] === "string" ? envelope["session_id"] : "",
@@ -1339,6 +1412,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     authorized,
     evidence,
     prompt_chars: prompt.length,
+    objects,
     // Grants survive this write; `authorized` does not. That asymmetry IS the
     // decision. A bare operation name stays one-shot exactly as `commit-policy`
     // requires, and only an authorization that also froze its objects earns a

@@ -48,7 +48,9 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
-import { emitFor, type Severity } from "./host_semantics.js";
+import { emitFor, type PermissionDecision, type Severity } from "./host_semantics.js";
+import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
+export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
@@ -254,20 +256,6 @@ interface ConcernDef extends JsonObject {
   name: string;
 }
 
-/**
- * The tool name the host reported for this event, or `""`.
- *
- * Only tool events carry one. Read defensively: the payload is host-shaped and
- * a missing / non-string field must degrade to "unknown tool", never throw.
- */
-export function _payload_tool_name(envelope: JsonObject): string {
-  const payload = envelope["payload"];
-  if (!_isObject(payload)) {
-    return "";
-  }
-  const raw = payload["tool_name"];
-  return typeof raw === "string" ? raw : "";
-}
 
 /**
  * Per-concern tool filter — the `tools:` key.
@@ -289,7 +277,7 @@ export function _payload_tool_name(envelope: JsonObject): string {
  * - A host matcher would only help the two hosts that support one (Claude,
  *   Gemini). The in-process skip helps all eight platforms in the manifest.
  *
- * ## What this does NOT claim
+ * What this does NOT claim:
  *
  * It does not claim a latency win. The measured hook cost that was fixed was
  * the *invocation path* (~370 of ~450–500 ms was eager CLI imports); nothing in
@@ -1280,6 +1268,11 @@ export function main(argv?: string[]): number {
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
   const concern_messages: ConcernMessage[] = [];
+  // Per-concern permission verdicts for the host's `permissionDecision` field.
+  // Separate from `rcs` because the two ladders are not the same: an advisory
+  // concern can ask for a confirmation without blocking, and a reduced `allow`
+  // must not become a grant when one of them did.
+  const permission_verdicts: PermissionDecision[] = [];
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
@@ -1339,6 +1332,7 @@ export function main(argv?: string[]): number {
     }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
+    permission_verdicts.push(_concern_permission_verdict(rc, reply));
     // A concern states its reason either as JSON {"reason": …} on stdout
     // (advisory concerns) or as a formatted stderr line (the block guards, e.g.
     // `block-no-verify: BLOCKED — …`). Both are captured here so the emission
@@ -1423,6 +1417,7 @@ export function main(argv?: string[]): number {
     _severity_for(final_rc) as Severity,
     decidingReasons,
     final_rc,
+    _permission_for(args.event, envelope, final_rc, permission_verdicts),
   );
   if (emission.stdout) {
     process.stdout.write(emission.stdout);

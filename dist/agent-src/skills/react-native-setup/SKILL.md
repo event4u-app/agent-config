@@ -113,8 +113,8 @@ Before installing or upgrading anything, inspect what's already there — modify
 - Stuck pods: `pod deintegrate && pod install`.
 
 **Build failures**
-- Clean iOS: `cd ios && rm -rf build Pods Podfile.lock && pod install && cd ..`.
-- Clean Android: `cd android && ./gradlew clean && cd ..`.
+- Clean iOS: `rm -rf ios/build ios/Pods ios/Podfile.lock` then `pod install --project-directory=ios`.
+- Clean Android: `./gradlew -p android clean`.
 - Clear Xcode derived data when stale build artefacts persist.
 
 **New Architecture issues**
@@ -142,7 +142,7 @@ echo $ANDROID_HOME      # non-empty
 ```bash
 npx @react-native-community/cli init MyProject
 cd MyProject
-cd ios && RCT_NEW_ARCH_ENABLED=1 pod install && cd ..
+RCT_NEW_ARCH_ENABLED=1 pod install --project-directory=ios
 npm start                # Metro
 npm run ios              # in a second terminal
 npm run android          # in a third terminal

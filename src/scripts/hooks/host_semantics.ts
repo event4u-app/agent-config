@@ -106,6 +106,64 @@ export function claudeAdditionalContext(event: string, text: string): string {
 }
 
 /**
+ * A host permission verdict for a `pre_tool_use` call.
+ *
+ * Probed against the running host on 2026-09-06 (Claude Code **2.1.263**,
+ * `/opt/homebrew/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe`):
+ * the binary's own strings read `` `permissionDecision` - "allow", "deny", or
+ * "ask" (PreToolUse only) ``. The pin is the point — an unpinned capability
+ * claim rots the way the one it replaces did.
+ */
+export type PermissionDecision = "allow" | "deny" | "ask";
+
+/**
+ * Compose the concerns' permission verdicts into the one the host receives.
+ *
+ * ONE `ask` OR `deny` BEATS EVERY `allow`. This is the composition policy the
+ * host contract left undecided, and leaving it undecided is what stalled the
+ * emission path before: a dispatcher that reduces many concerns to one exit
+ * code has to say what happens when they disagree, and the only answer that
+ * cannot lower a floor is the most restrictive one.
+ *
+ * `null` means emit no permission field at all — nobody voted, so the legacy
+ * `additionalContext` envelope stands. That is deliberately distinct from
+ * `"allow"`: an absent field leaves the host's own permission machinery in
+ * charge, while an `allow` asserts this package looked at the call and has
+ * nothing to stop. Collapsing the two would turn "no concern matched this tool"
+ * into an affirmative grant, which is the widening failure the category-A
+ * classifier exists to prevent.
+ */
+export function composePermissionDecision(
+    verdicts: readonly PermissionDecision[],
+): PermissionDecision | null {
+    if (verdicts.length === 0) return null;
+    if (verdicts.includes("deny")) return "deny";
+    if (verdicts.includes("ask")) return "ask";
+    return "allow";
+}
+
+/**
+ * Build the Claude Code `hookSpecificOutput.permissionDecision` envelope.
+ *
+ * Exit 0 carries it, like every other JSON reply — the host parses stdout only
+ * on exit 0, so a decision emitted with any other exit code is discarded.
+ */
+export function claudePermissionDecision(
+    event: string,
+    decision: PermissionDecision,
+    reason: string,
+): string {
+    const hookEventName = CLAUDE_HOOK_EVENT_NAME[event] ?? event;
+    return `${JSON.stringify({
+        hookSpecificOutput: {
+            hookEventName,
+            permissionDecision: decision,
+            permissionDecisionReason: reason,
+        },
+    })}\n`;
+}
+
+/**
  * Will `emitFor` actually put the reasons on a stream?
  *
  * The per-turn injection ceiling (`injection_budget.ts`) may only charge bytes
@@ -133,11 +191,25 @@ export function emissionCarriesReasons(platform: string, severity: Severity): bo
     return severity !== "allow";
 }
 
+/** An explicit permission verdict the dispatcher wants the host to receive. */
+export interface PermissionEmission {
+    decision: PermissionDecision;
+    reason: string;
+}
+
 /**
  * Translate (platform, event, severity, reasons) into a native emission.
  *
  * `legacyExit` is the internal reduced code; unverified platforms get it back
  * verbatim so their behaviour is byte-identical to before this module landed.
+ *
+ * `permission` is emitted ONLY on a `pre_tool_use` event whose reduced severity
+ * is already `allow`. Both halves of that guard are load-bearing. The event
+ * guard is the host's — the field is documented "(PreToolUse only)". The
+ * severity guard is this package's: a `warn` or `block` reaching here means a
+ * concern had something to say, and an `allow` alongside it would be exactly
+ * the case `composePermissionDecision` refuses. So an allow can never travel
+ * with a finding, by construction rather than by the caller remembering.
  */
 export function emitFor(
     platform: string,
@@ -145,6 +217,7 @@ export function emitFor(
     severity: Severity,
     reasons: readonly string[],
     legacyExit: number,
+    permission?: PermissionEmission | null,
 ): Emission {
     if (!VERIFIED_PLATFORMS.has(platform)) {
         return { exit: legacyExit, stdout: "", stderr: "" };
@@ -152,6 +225,13 @@ export function emitFor(
     const reason = _joinReasons(reasons);
 
     if (severity === "allow") {
+        if (permission && event === "pre_tool_use") {
+            return {
+                exit: 0,
+                stdout: claudePermissionDecision(event, permission.decision, permission.reason),
+                stderr: "",
+            };
+        }
         return { exit: 0, stdout: "", stderr: "" };
     }
 
