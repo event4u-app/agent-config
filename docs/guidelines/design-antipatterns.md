@@ -68,105 +68,128 @@ generation ships a visibly different default aesthetic. It is a *when-does-it-
 rotate* note, not a new pattern — never add a tell here that lacks a catalog
 entry in the sections below.
 
+### The three census columns — class, remediation, verification
+
+`Class` says what KIND of rule an entry is; **status** (§ Detector status) says
+how its enforcement is wired. The two axes are independent, and a reader who
+conflates them draws the wrong conclusion in both directions: a `floor` may be
+`judgment-only` because nothing can detect it yet, and a `style-preference` may
+be `backed` because it happens to be trivially greppable. Detectability is not
+authority.
+
+- **Class** — one of `floor` (an objective threshold, accessibility or
+  correctness) · `invariant` (a structural rule that must hold) ·
+  `craft-presumption` (a default a competent designer usually follows,
+  overridable on evidence) · `style-preference` (taste) ·
+  `reference-constraint` (bound to a supplied reference, brand, or `DESIGN.md`).
+  The two soft classes lose to a supplied reference artifact, a coherent
+  incumbent, and a project `DESIGN.md` — asserted on the resolver in
+  `src/scripts/_lib/ui_authority.ts` rather than stated here as prose.
+- **Remediation** — the order to try, worst-first: `delete` before `reduce`
+  before `retune`, with `replace` where the pattern has a direct substitute.
+- **Verification** — how a fix is checked: `static` (readable from the source)
+  · `render` (needs the rendered surface) · `feel` (perceptual, per the `feel`
+  evidence type in `docs/contracts/evidence-artifact-types.md`) · `judgment`.
+
 ### Consistency Locks & layout caps (taste-dials roadmap)
 
 Within-project invariants + repetition caps. Override = declare the value in
 `DESIGN.md` (`## Consistency Locks` / a brutalist or uniform-grid style note).
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| V8 | Shape Lock — ≥ 4 distinct corner-radius scales in one surface | A fragmented radius system reads as no shape decision | Declare the radius scale in `DESIGN.md`; a genuine multi-tier scale documents each tier |
-| C6 | Colour Lock — ≥ 3 distinct saturated accent hue families | No single accent identity; reads as default-palette sprawl | Brand genuinely uses a multi-accent system, declared in `DESIGN.md` / `brand-to-tokens` |
-| C7 | Theme inversion — a light island mid-dark surface (or vice versa) not driven by the theme system | Mid-surface inversion breaks the theme rhythm | Intentional inverted callout with a documented reason — **judgment-only**, design-review calls it (deterministic detection is unreliable) |
-| L9 | Section monotony — ≥ 8 sections, < 4 distinct layout families | Uniform section rhythm collapses scannability | Deliberately uniform grid (e.g. a gallery), declared as such |
-| L10 | Zigzag — > 2 consecutive image-left/text-right two-column sections | The alternating-zigzag landing-page tell | A genuinely sequenced walkthrough where alternation aids comprehension |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| V8 | Shape Lock — ≥ 4 distinct corner-radius scales in one surface | A fragmented radius system reads as no shape decision | Declare the radius scale in `DESIGN.md`; a genuine multi-tier scale documents each tier | invariant | reduce → retune | static |
+| C6 | Colour Lock — ≥ 3 distinct saturated accent hue families | No single accent identity; reads as default-palette sprawl | Brand genuinely uses a multi-accent system, declared in `DESIGN.md` / `brand-to-tokens` | invariant | reduce → retune | static |
+| C7 | Theme inversion — a light island mid-dark surface (or vice versa) not driven by the theme system | Mid-surface inversion breaks the theme rhythm | Intentional inverted callout with a documented reason — **judgment-only**, design-review calls it (deterministic detection is unreliable) | craft-presumption | delete → retune | judgment |
+| L9 | Section monotony — ≥ 8 sections, < 4 distinct layout families | Uniform section rhythm collapses scannability | Deliberately uniform grid (e.g. a gallery), declared as such | craft-presumption | retune | render |
+| L10 | Zigzag — > 2 consecutive image-left/text-right two-column sections | The alternating-zigzag landing-page tell | A genuinely sequenced walkthrough where alternation aids comprehension | craft-presumption | delete → retune | static |
 
 ---
 
 ## Visual
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| V1 | A colored accent border above 1px — the side stripe (`border-left` / `border-right`), a fully colored border on all four sides, or a gradient `border-image` | The single most recognizable AI-UI signature; every scaffold-default card uses it. Widened 2026-09-03: the side stripe was the 2024 form, the four-sided colored or gradient card border is the current one, and the entry as written reached only the first | Brand token explicitly defines the accent border; document the decision in the design brief. A 1px neutral border, a `border-color`-only focus treatment, and `transparent` / `currentColor` at any width are not accents and do not flag |
-| V2 | Glassmorphism as decoration (`backdrop-blur` + `bg-white/10`) with no functional depth hierarchy | Model defaults to it for "premium feel"; result looks like 2021 Material You clip-art | Element genuinely sits above a complex, blurred background layer; use sparingly and only for top-level floating surfaces |
-| V3 | Ghost card: `border: 1px solid` + box-shadow ≥ 16px spread together | The combination creates visual noise — the ghost card signals no confident decision about depth | Choose either border OR shadow to indicate depth; never both on the same surface |
-| V4 | Over-rounded small cards or badges: `border-radius` > 16px on elements < 200px wide | Excessive rounding on small surfaces looks toy-ish; standard cap is 12–16px | Pill shape (`border-radius: 9999px`) is intentional on single-line tags/chips only |
-| V5 | Hand-drawn or illustrated SVG icons mixed with crisp icon-system icons | Visual register collision; instantly reads as "generated asset" | Intentional illustrative section (hero illustration, empty-state art); isolate from the icon system |
-| V6 | Repeating diagonal stripes as a background texture | A cliché background default; reads as generated CSS art | Brand explicitly uses pattern backgrounds (e.g., a textile brand); document the stripe definition |
-| V7 | Nested cards: a card inside a card inside a card | Depth hierarchy collapses; user cannot parse elevation intent | A truly three-level hierarchy (e.g., project → board → card); ensure each level has distinct visual weight |
-| V9 | Noise or grain texture laid over a gradient as a "premium" surface default | The visual sibling of V6's diagonal stripes — a generated-CSS-art texture reached for to make a flat gradient look considered, applied because it is available rather than because the surface needed a texture | The texture is part of a documented brand surface treatment (a print-inspired or analog-photographic identity) with the grain opacity defined as a token, not chosen per surface |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| V1 | A colored accent border above 1px — the side stripe (`border-left` / `border-right`), a fully colored border on all four sides, or a gradient `border-image` | The single most recognizable AI-UI signature; every scaffold-default card uses it. Widened 2026-09-03: the side stripe was the 2024 form, the four-sided colored or gradient card border is the current one, and the entry as written reached only the first | Brand token explicitly defines the accent border; document the decision in the design brief. A 1px neutral border, a `border-color`-only focus treatment, and `transparent` / `currentColor` at any width are not accents and do not flag | craft-presumption | delete → retune | static |
+| V2 | Glassmorphism as decoration (`backdrop-blur` + `bg-white/10`) with no functional depth hierarchy | Model defaults to it for "premium feel"; result looks like 2021 Material You clip-art | Element genuinely sits above a complex, blurred background layer; use sparingly and only for top-level floating surfaces | craft-presumption | delete → reduce | static |
+| V3 | Ghost card: `border: 1px solid` + box-shadow ≥ 16px spread together | The combination creates visual noise — the ghost card signals no confident decision about depth | Choose either border OR shadow to indicate depth; never both on the same surface | invariant | delete → reduce | static |
+| V4 | Over-rounded small cards or badges: `border-radius` > 16px on elements < 200px wide | Excessive rounding on small surfaces looks toy-ish; standard cap is 12–16px | Pill shape (`border-radius: 9999px`) is intentional on single-line tags/chips only | craft-presumption | retune | static |
+| V5 | Hand-drawn or illustrated SVG icons mixed with crisp icon-system icons | Visual register collision; instantly reads as "generated asset" | Intentional illustrative section (hero illustration, empty-state art); isolate from the icon system | invariant | replace | render |
+| V6 | Repeating diagonal stripes as a background texture | A cliché background default; reads as generated CSS art | Brand explicitly uses pattern backgrounds (e.g., a textile brand); document the stripe definition | style-preference | delete | static |
+| V7 | Nested cards: a card inside a card inside a card | Depth hierarchy collapses; user cannot parse elevation intent | A truly three-level hierarchy (e.g., project → board → card); ensure each level has distinct visual weight | invariant | delete → reduce | render |
+| V9 | Noise or grain texture laid over a gradient as a "premium" surface default | The visual sibling of V6's diagonal stripes — a generated-CSS-art texture reached for to make a flat gradient look considered, applied because it is available rather than because the surface needed a texture | The texture is part of a documented brand surface treatment (a print-inspired or analog-photographic identity) with the grain opacity defined as a token, not chosen per surface | style-preference | delete | render |
 
 ---
 
 ## Typography
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| T1 | Flat type hierarchy: body and headings use the same optical weight and nearly the same size | Type hierarchy is invisible; user cannot scan the page | Deliberately minimal aesthetic where all text is body-weight; must be an explicit brand decision |
-| T2 | Oversized italic serif as the primary hero headline | The "AI startup landing page" template; seen on ~60% of AI-generated marketing pages | Brand adopts editorial-magazine aesthetic with a documented italic serif rationale |
-| T3 | Icon tile (small rounded-square container) above heading | The universal AI feature-card template; reads as scaffold | Listed features genuinely benefit from visual-icon-then-title affordance AND the icons are custom, not library defaults |
-| T4 | Eyebrow / ALL-CAPS label above every section heading | Overuse collapses the emphasis; maximum is 1 eyebrow per 3 sections (countable: grep tracking classes) | Used for genuine section-type differentiation with meaningful vocabulary (not just "FEATURES", "PRICING") |
-| T5 | Repeated section kickers ("Our mission", "What we offer", "Why choose us") | Filler vocabulary; every AI-generated page has the same three section titles | Every kicker is substantive and uses brand-specific vocabulary, not generic marketing speak |
-| T6 | Crushed letter-spacing on display text (`letter-spacing` < −0.04em) | Below −0.04em glyphs collide optically; reads as "designer-ish effect" with no grounding | Intentional tight display treatment with a documented minimum floor; verify at the actual render size |
-| T7 | Overused fonts without a stated reason: Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif | These are the default AI-coding-tool font picks; every generated UI uses one of them | **Register-scoped.** In the **brand** register: the brand has explicitly adopted one of these AND there is a documented reason. In the **product** register: a single reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers), so one of these is legitimate on a **stated** product-register choice — the register itself is the reason, and it must be stated (DESIGN.md, the surface brief, or `design-slop-disable`). Neither register admits an *undeclared* pick. |
-| T8 | Single typeface for everything | Missed typographic contrast opportunity; in the **brand** register an unexamined single family reads as "I did not think about fonts" | **Register-scoped like T7.** Intentional mono-typeface aesthetic (e.g., terminal-inspired), stated in the brief — *or* the **product** register, where one reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers) and contrast is carried by weight and scale rather than by a second family. |
-| T9 | All-caps body paragraphs or field labels | Reduces legibility below WCAG AA for sustained reading; reads as flair over function | Short UI labels (e.g., button text in a brutalist layout); never for body paragraphs |
-| T10 | Wide letter-spacing on body text (`letter-spacing` > 0.05em) | Reduces readability for sustained reading; reserved for display use | Display text (headlines, pull quotes) where intentional tracking is a brand element |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| T1 | Flat type hierarchy: body and headings use the same optical weight and nearly the same size | Type hierarchy is invisible; user cannot scan the page | Deliberately minimal aesthetic where all text is body-weight; must be an explicit brand decision | craft-presumption | retune | render |
+| T2 | Oversized italic serif as the primary hero headline | The "AI startup landing page" template; seen on ~60% of AI-generated marketing pages | Brand adopts editorial-magazine aesthetic with a documented italic serif rationale | style-preference | replace | render |
+| T3 | Icon tile (small rounded-square container) above heading | The universal AI feature-card template; reads as scaffold | Listed features genuinely benefit from visual-icon-then-title affordance AND the icons are custom, not library defaults | style-preference | delete | static |
+| T4 | Eyebrow / ALL-CAPS label above every section heading | Overuse collapses the emphasis; maximum is 1 eyebrow per 3 sections (countable: grep tracking classes) | Used for genuine section-type differentiation with meaningful vocabulary (not just "FEATURES", "PRICING") | craft-presumption | delete → reduce | static |
+| T5 | Repeated section kickers ("Our mission", "What we offer", "Why choose us") | Filler vocabulary; every AI-generated page has the same three section titles | Every kicker is substantive and uses brand-specific vocabulary, not generic marketing speak | craft-presumption | replace | judgment |
+| T6 | Crushed letter-spacing on display text (`letter-spacing` < −0.04em) | Below −0.04em glyphs collide optically; reads as "designer-ish effect" with no grounding | Intentional tight display treatment with a documented minimum floor; verify at the actual render size | floor | retune | static |
+| T7 | Overused fonts without a stated reason: Inter, Roboto, DM Sans, Geist, Space Grotesk, Instrument Serif | These are the default AI-coding-tool font picks; every generated UI uses one of them | **Register-scoped.** In the **brand** register: the brand has explicitly adopted one of these AND there is a documented reason. In the **product** register: a single reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers), so one of these is legitimate on a **stated** product-register choice — the register itself is the reason, and it must be stated (DESIGN.md, the surface brief, or `design-slop-disable`). Neither register admits an *undeclared* pick. | reference-constraint | replace | judgment |
+| T8 | Single typeface for everything | Missed typographic contrast opportunity; in the **brand** register an unexamined single family reads as "I did not think about fonts" | **Register-scoped like T7.** Intentional mono-typeface aesthetic (e.g., terminal-inspired), stated in the brief — *or* the **product** register, where one reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers) and contrast is carried by weight and scale rather than by a second family. | reference-constraint | retune | judgment |
+| T9 | All-caps body paragraphs or field labels | Reduces legibility below WCAG AA for sustained reading; reads as flair over function | Short UI labels (e.g., button text in a brutalist layout); never for body paragraphs | floor | delete → retune | static |
+| T10 | Wide letter-spacing on body text (`letter-spacing` > 0.05em) | Reduces readability for sustained reading; reserved for display use | Display text (headlines, pull quotes) where intentional tracking is a brand element | craft-presumption | retune | static |
 
 ---
 
 ## Color
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| C1 | Purple/violet + cyan-on-dark palette as the primary scheme | The most recognizable AI-UI color combination in 2024–2026; instantly signals "generated" | Brand color system genuinely defines a violet primary; must come from `brand-to-tokens`, not from model defaults |
-| C2 | Gradient text via `background-clip: text` as a primary accent | Overused to the point of invisibility; also has rendering edge cases on some platforms | Headline treatment in a brand that explicitly uses gradient identity (e.g., a product whose logo is a gradient) |
-| C3 | Glowing colored accents on dark mode (bright neon `box-shadow` or `text-shadow`) | Looks like a 2020 gaming UI; reads as an AI attempt at "moody" | Brand explicitly defines neon accents with a documented usage rule (e.g., error or alert states in a security product) |
-| C4 | Gray text on colored background without WCAG AA check | Muted gray chosen for "elegance" often fails 4.5:1 contrast; the failure is invisible until audited | Any use — always verify the contrast ratio; if it fails, either darken the text or lighten/darken the background |
-| C5 | Cream/sand body background (OKLCH L 0.84–0.97, C < 0.06) with brass/clay/oxblood accents | The 2025 "premium-consumer" AI palette; every generated "sophisticated" product uses this exact combination | Brand has an explicit warm-neutral design language documented in `brand-to-tokens`; the palette is first-party, not a default reach |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| C1 | Purple/violet + cyan-on-dark palette as the primary scheme | The most recognizable AI-UI color combination in 2024–2026; instantly signals "generated" | Brand color system genuinely defines a violet primary; must come from `brand-to-tokens`, not from model defaults | style-preference | replace | static |
+| C2 | Gradient text via `background-clip: text` as a primary accent | Overused to the point of invisibility; also has rendering edge cases on some platforms | Headline treatment in a brand that explicitly uses gradient identity (e.g., a product whose logo is a gradient) | style-preference | delete | static |
+| C3 | Glowing colored accents on dark mode (bright neon `box-shadow` or `text-shadow`) | Looks like a 2020 gaming UI; reads as an AI attempt at "moody" | Brand explicitly defines neon accents with a documented usage rule (e.g., error or alert states in a security product) | style-preference | delete → reduce | static |
+| C4 | Gray text on colored background without WCAG AA check | Muted gray chosen for "elegance" often fails 4.5:1 contrast; the failure is invisible until audited | Any use — always verify the contrast ratio; if it fails, either darken the text or lighten/darken the background | floor | retune | static |
+| C5 | Cream/sand body background (OKLCH L 0.84–0.97, C < 0.06) with brass/clay/oxblood accents | The 2025 "premium-consumer" AI palette; every generated "sophisticated" product uses this exact combination | Brand has an explicit warm-neutral design language documented in `brand-to-tokens`; the palette is first-party, not a default reach | style-preference | replace | static |
 
 ---
 
 ## Layout
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| L1 | Hero metric template: giant number, small label, 3–4 stats in a row, gradient | The default SaaS dashboard hero; appears on ~70% of AI-generated dashboard screens | Data storytelling genuinely requires a primary metric with supporting context; must vary the arrangement |
-| L2 | Three identical feature cards in a grid with the same visual weight | The scaffold-default; no visual rhythm, no hierarchy among features | Product genuinely has three equally weighted features; must still vary padding, or use a different composition |
-| L3 | Monotonous spacing: one spacing value (usually 24px) used for everything | Spacing is rhythm; uniform spacing collapses the hierarchy of proximity | Intentional grid where every element has equal weight; must document the grid definition |
-| L4 | Numbered section markers (01 / 02 / 03) as a primary section-order device | Universal AI-generated marketing page tell; seen on virtually every generated landing page | A genuinely numbered process or sequenced guide where the step number carries meaning beyond decoration |
-| L5 | Line length > 80ch in body copy without column constraint | Reduces readability; WCAG recommends 45–75 characters; beyond 80 the eye struggles to track | Data-dense dashboards where column width is driven by tabular data, not narrative text |
-| L6 | `position: absolute` dropdown inside `overflow: hidden` container | Dropdown clips; a common AI-generated layout bug | Refactor: use `<dialog>`, the Popover API, or `position: fixed` / portal to escape the stacking context |
-| L7 | Content that overflows its container | Text truncation or reflow failures at non-default viewport widths; reads as untested | Never acceptable in production output; test at 320px, 768px, 1280px minimally |
-| L8 | Z-index values of 99, 999, 9999 without a semantic z-index scale | Magic numbers; the first time two elements compete, the scale breaks | Establish a named semantic z-index scale (`--z-modal: 400`, `--z-toast: 500`, etc.) and use it |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| L1 | Hero metric template: giant number, small label, 3–4 stats in a row, gradient | The default SaaS dashboard hero; appears on ~70% of AI-generated dashboard screens | Data storytelling genuinely requires a primary metric with supporting context; must vary the arrangement | craft-presumption | retune | render |
+| L2 | Three identical feature cards in a grid with the same visual weight | The scaffold-default; no visual rhythm, no hierarchy among features | Product genuinely has three equally weighted features; must still vary padding, or use a different composition | craft-presumption | retune | render |
+| L3 | Monotonous spacing: one spacing value (usually 24px) used for everything | Spacing is rhythm; uniform spacing collapses the hierarchy of proximity | Intentional grid where every element has equal weight; must document the grid definition | craft-presumption | retune | static |
+| L4 | Numbered section markers (01 / 02 / 03) as a primary section-order device | Universal AI-generated marketing page tell; seen on virtually every generated landing page | A genuinely numbered process or sequenced guide where the step number carries meaning beyond decoration | style-preference | delete | static |
+| L5 | Line length > 80ch in body copy without column constraint | Reduces readability; WCAG recommends 45–75 characters; beyond 80 the eye struggles to track | Data-dense dashboards where column width is driven by tabular data, not narrative text | floor | retune | render |
+| L6 | `position: absolute` dropdown inside `overflow: hidden` container | Dropdown clips; a common AI-generated layout bug | Refactor: use `<dialog>`, the Popover API, or `position: fixed` / portal to escape the stacking context | invariant | replace | render |
+| L7 | Content that overflows its container | Text truncation or reflow failures at non-default viewport widths; reads as untested | Never acceptable in production output; test at 320px, 768px, 1280px minimally | invariant | retune | render |
+| L8 | Z-index values of 99, 999, 9999 without a semantic z-index scale | Magic numbers; the first time two elements compete, the scale breaks | Establish a named semantic z-index scale (`--z-modal: 400`, `--z-toast: 500`, etc.) and use it | invariant | replace | static |
 
 ---
 
 ## Motion
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| M1 | Bounce or elastic easing curves on UI elements | Bounce draws attention to the animation itself; UI motion should serve the action, not perform | Intentional playful affordance (game UI, onboarding celebration state); must be brief and non-repeating |
-| M2 | Animating layout properties (width, height, top, left, padding) | Triggers browser layout recalculation; janky on mid-range devices; always solvable with `transform` | Never — use `transform: scaleX()` for width-like effects, `transform: translateY()` for position |
-| M3 | Animating `<img>` element on hover (scale, filter, transform) | Triggers composite + image decode; often causes content shift | Animate the card's background, border, or shadow instead; leave the image static |
-| M4 | `transition: all` shorthand | Animates every property including layout, color, opacity simultaneously; unpredictable and expensive | Enumerate only the properties that should animate: `transition: transform 200ms ease-out, opacity 200ms` |
-| M5 | Missing `@media (prefers-reduced-motion: reduce)` alternative for any animation | Accessibility violation; vestibular disorders make animated UI unusable | Never acceptable; always add a `prefers-reduced-motion` variant — gentler animation (reduced distance/opacity) is preferred over `display: none` |
-| M6 | Every section fading and rising into view on scroll | The most recognisable interaction tell of the current generation; a reveal applied per section carries no information — the reader has already scrolled to the content, so the animation delays what they asked for | The reveal carries meaning: a stepped narrative where each beat must land before the next, or a long-form article using position to signal progress. A reveal on *every* section is a default, not a decision |
-| M7 | A radial highlight tracking the pointer across a dark hero | A `mousemove` handler feeding a radial gradient; it draws the eye to the cursor, which is the one thing on the page the user already knows the position of | The spotlight is the interaction — a genuine reveal mechanic, a canvas inspection tool, an accessibility magnifier. Ambience is not a purpose |
-| M8 | An interactive control that reduces its own opacity on hover | Reads as the element retreating from the pointer rather than responding to it, and a fade is the one hover treatment that *reduces* legibility at the moment the user is committing to the target — see the six interaction states in [`design-review`](../../src/skills/design-review/SKILL.md) | The fade communicates a real state change (an item being dismissed, a layer being peeled back). Hover must stay legible; brightness, background or border carry hover without spending contrast |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| M1 | Bounce or elastic easing curves on UI elements | Bounce draws attention to the animation itself; UI motion should serve the action, not perform | Intentional playful affordance (game UI, onboarding celebration state); must be brief and non-repeating | invariant | replace | feel |
+| M2 | Animating layout properties (width, height, top, left, padding) | Triggers browser layout recalculation; janky on mid-range devices; always solvable with `transform` | Never — use `transform: scaleX()` for width-like effects, `transform: translateY()` for position | floor | replace | static |
+| M3 | Animating `<img>` element on hover (scale, filter, transform) | Triggers composite + image decode; often causes content shift | Animate the card's background, border, or shadow instead; leave the image static | invariant | replace | render |
+| M4 | `transition: all` shorthand | Animates every property including layout, color, opacity simultaneously; unpredictable and expensive | Enumerate only the properties that should animate: `transition: transform 200ms ease-out, opacity 200ms` | invariant | replace | static |
+| M5 | Missing `@media (prefers-reduced-motion: reduce)` alternative for any animation | Accessibility violation; vestibular disorders make animated UI unusable | Never acceptable; always add a `prefers-reduced-motion` variant — gentler animation (reduced distance/opacity) is preferred over `display: none` | floor | delete → retune | static |
+| M6 | Every section fading and rising into view on scroll | The most recognisable interaction tell of the current generation; a reveal applied per section carries no information — the reader has already scrolled to the content, so the animation delays what they asked for | The reveal carries meaning: a stepped narrative where each beat must land before the next, or a long-form article using position to signal progress. A reveal on *every* section is a default, not a decision | craft-presumption | delete → reduce | feel |
+| M7 | A radial highlight tracking the pointer across a dark hero | A `mousemove` handler feeding a radial gradient; it draws the eye to the cursor, which is the one thing on the page the user already knows the position of | The spotlight is the interaction — a genuine reveal mechanic, a canvas inspection tool, an accessibility magnifier. Ambience is not a purpose | style-preference | delete | feel |
+| M8 | An interactive control that reduces its own opacity on hover | Reads as the element retreating from the pointer rather than responding to it, and a fade is the one hover treatment that *reduces* legibility at the moment the user is committing to the target — see the six interaction states in [`design-review`](../../src/skills/design-review/SKILL.md) | The fade communicates a real state change (an item being dismissed, a layer being peeled back). Hover must stay legible; brightness, background or border carry hover without spending contrast | craft-presumption | retune | feel |
 
 ---
 
 ## Copy
 
-| # | Pattern | Why it reads as AI-generated | Override condition |
-|---|---|---|---|
-| CP1 | Em-dash (`—`) overuse | The #1 syntactic LLM signature; appears in AI copy at 3–5× the frequency of human editorial copy; maximum 2 per 500 words | Specific editorial voice that uses em-dashes deliberately; count them before shipping |
-| CP2 | Marketing buzzwords: streamline, empower, supercharge, world-class, enterprise-grade, seamlessly, robust, leverage | These words carry no information; an AI-slop test: replace each with nothing — the sentence still communicates the same thing | No override; if a word can be deleted without loss, delete it |
-| CP3 | Aphoristic manufactured contrast ("We don't do X. We do Y." / "Not just A, but B.") | A generated sentence rhythm that sounds like brand writing but carries no specificity | Aphoristic copy is legitimate when the contrast reveals a genuine product distinction; test by asking whether the Y side says something concrete |
-| CP4 | "Theater" framing — copy that announces what the product does without saying how or why | "The platform for modern teams." communicates nothing; it is content-shaped noise | Every tagline must pass the "so what" test: can a skeptic follow it with "but how?" and get a concrete answer? |
-| CP5 | Emoji-decoration in UI markup — 🚀/✅/🎉 prepending headings, buttons, list items, or CTAs (`🚀 Get Started`) | Performative-enthusiasm coating; the default-startup-template tell. No emoji is better than decorative emoji | Brand/`DESIGN.md` declares a systematic emoji strategy, or the emoji is functional (status indicator, category marker tied to real meaning) |
-| CP6 | Stock render subject named instead of the product's own subject matter — "floating abstract shapes", "gradient mesh", "glowing orb", "particle field", "futuristic HUD" | These name the default thing a render becomes when nobody decided what it is about; same delete-test as CP2, applied to art direction — swap the phrase for what the product actually shows and the brief says more | The subject IS abstract by decision (a generative-art surface, a data-driven field whose data is named), and the brief says which decision and why |
+| # | Pattern | Why it reads as AI-generated | Override condition | Class | Remediation | Verification |
+|---|---|---|---|---|---|---|
+| CP1 | Em-dash (`—`) overuse | The #1 syntactic LLM signature; appears in AI copy at 3–5× the frequency of human editorial copy; maximum 2 per 500 words | Specific editorial voice that uses em-dashes deliberately; count them before shipping | craft-presumption | delete → reduce | static |
+| CP2 | Marketing buzzwords: streamline, empower, supercharge, world-class, enterprise-grade, seamlessly, robust, leverage | These words carry no information; an AI-slop test: replace each with nothing — the sentence still communicates the same thing | No override; if a word can be deleted without loss, delete it | craft-presumption | delete | static |
+| CP3 | Aphoristic manufactured contrast ("We don't do X. We do Y." / "Not just A, but B.") | A generated sentence rhythm that sounds like brand writing but carries no specificity | Aphoristic copy is legitimate when the contrast reveals a genuine product distinction; test by asking whether the Y side says something concrete | style-preference | delete → replace | judgment |
+| CP4 | "Theater" framing — copy that announces what the product does without saying how or why | "The platform for modern teams." communicates nothing; it is content-shaped noise | Every tagline must pass the "so what" test: can a skeptic follow it with "but how?" and get a concrete answer? | craft-presumption | replace | judgment |
+| CP5 | Emoji-decoration in UI markup — 🚀/✅/🎉 prepending headings, buttons, list items, or CTAs (`🚀 Get Started`) | Performative-enthusiasm coating; the default-startup-template tell. No emoji is better than decorative emoji | Brand/`DESIGN.md` declares a systematic emoji strategy, or the emoji is functional (status indicator, category marker tied to real meaning) | craft-presumption | delete | static |
+| CP6 | Stock render subject named instead of the product's own subject matter — "floating abstract shapes", "gradient mesh", "glowing orb", "particle field", "futuristic HUD" | These name the default thing a render becomes when nobody decided what it is about; same delete-test as CP2, applied to art direction — swap the phrase for what the product actually shows and the brief says more | The subject IS abstract by decision (a generative-art surface, a data-driven field whose data is named), and the brief says which decision and why | craft-presumption | replace | judgment |
 
 ---
 

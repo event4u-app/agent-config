@@ -341,3 +341,119 @@ export function operationConflicts(authority: UiAuthority, op: Operation): Confl
     }
     return out;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Antipattern signal classes against the precedence list                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The five classes a `design-antipatterns.md` catalog row may claim.
+ *
+ * Kept here, beside the precedence list, rather than in the catalog gate: the
+ * question "may this signal overrule what the user supplied" is a precedence
+ * question, and precedence lives in exactly one module by construction.
+ */
+export type SignalClass =
+    | 'floor'
+    | 'invariant'
+    | 'craft-presumption'
+    | 'style-preference'
+    | 'reference-constraint';
+
+/** The two classes that are opinions rather than thresholds. */
+export const SOFT_CLASSES = ['craft-presumption', 'style-preference'] as const;
+
+export interface SignalVerdict {
+    /**
+     * `blocks` — refuse the surface. `flags` — surface it as a rebuttable
+     * presumption. `yields` — say nothing: something with more authority has
+     * already decided this.
+     */
+    outcome: 'blocks' | 'flags' | 'yields';
+    /** The precedence level that outranked it, numbered as in this file's header. */
+    outranked_by: { level: number; source: ProvenanceSource; detail: string } | null;
+    reason: string;
+}
+
+/**
+ * Where a soft signal sits against the precedence list.
+ *
+ * A craft presumption is a good default and nothing more. When the run has a
+ * supplied reference (4), a coherent incumbent (5), or a project `DESIGN.md`
+ * register (6), that artifact has already decided the question the presumption
+ * would re-open, and re-opening it is the redesign-by-taste failure
+ * `design-fidelity` exists to stop.
+ *
+ * A `floor` or an `invariant` is NOT a taste call — an accessibility threshold
+ * or a structural correctness rule — so nothing on the list releases it, and a
+ * reference artifact that violates one is a finding about the reference.
+ *
+ * LEVELS 1–3 ARE DELIBERATELY NOT MECHANISED HERE. Explicit user authority, a
+ * registered hard constraint, and the surface brief all outrank a presumption a
+ * fortiori, but `Signals` carries them only as whole-surface fields
+ * (`surface_mode`, `register`, `change_intent`) with no per-pattern statement.
+ * Reading a brief's mere presence as blanket permission for every antipattern
+ * would silence the catalog on every briefed surface, which is the opposite of
+ * what those levels mean. A per-pattern override is `DESIGN.md`'s declared
+ * suppression, which is level 6 and IS handled.
+ */
+export function resolveSignal(signalClass: SignalClass, signals: Signals = {}): SignalVerdict {
+    if (signalClass === 'floor' || signalClass === 'invariant') {
+        return {
+            outcome: 'blocks',
+            outranked_by: null,
+            reason:
+                `a ${signalClass} is a threshold, not a preference — no supplied artifact releases it, `
+                + 'and an artifact that violates one is a finding about the artifact',
+        };
+    }
+
+    if (signalClass === 'reference-constraint') {
+        const present = signals.reference !== undefined || signals.design_md?.present === true;
+        return present
+            ? {
+                outcome: 'blocks',
+                outranked_by: null,
+                reason: 'the reference or DESIGN.md this constraint is bound to is present in this run, so it carries that artifact\'s own authority',
+            }
+            : {
+                outcome: 'flags',
+                outranked_by: null,
+                reason: 'the reference this constraint is bound to is not present in this run, so it has no artifact behind it',
+            };
+    }
+
+    if (signals.reference !== undefined) {
+        return {
+            outcome: 'yields',
+            outranked_by: { level: 4, source: 'reference-artifact', detail: signals.reference.path ?? signals.reference.maturity },
+            reason: `a ${signalClass} never outranks a supplied reference artifact`,
+        };
+    }
+    if (signals.incumbent?.coherent === true) {
+        return {
+            outcome: 'yields',
+            outranked_by: { level: 5, source: 'incumbent-scan', detail: 'coherent incumbent' },
+            reason: `a ${signalClass} never outranks a coherent incumbent`,
+        };
+    }
+    if (signals.design_md?.present === true) {
+        return {
+            outcome: 'yields',
+            outranked_by: { level: 6, source: 'design-md', detail: signals.design_md.register ?? 'register unstated' },
+            reason: `a ${signalClass} never outranks a project DESIGN.md register`,
+        };
+    }
+    if (signals.product_md?.present === true) {
+        return {
+            outcome: 'yields',
+            outranked_by: { level: 6, source: 'product-md', detail: signals.product_md.register ?? 'register unstated' },
+            reason: `a ${signalClass} never outranks a project PRODUCT.md register`,
+        };
+    }
+    return {
+        outcome: 'flags',
+        outranked_by: null,
+        reason: `a ${signalClass} with nothing above it on the precedence list is a rebuttable presumption`,
+    };
+}

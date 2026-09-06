@@ -60,6 +60,43 @@ const STATUS_ROW = /^\|\s*((?:V|C|T|L|M|CP)\d+)\s*\|\s*([a-z-]*)\s*\|([^|]*)\|/g
 const STATUS_SECTION = /^## Detector status$([\s\S]*?)(?=^## )/m;
 const CATALOG_ID = /^\s+catalogId:\s*"([A-Z]+\d+)"/gm;
 
+/** The five classes a catalog row may claim (road-to-one-motion-authority 2.1). */
+export const CLASSES = ['floor', 'invariant', 'craft-presumption', 'style-preference', 'reference-constraint'] as const;
+/** How a fix is checked. `feel` is the perceptual mode `evidence-artifact-types.md` adds. */
+export const VERIFICATIONS = ['static', 'render', 'feel', 'judgment'] as const;
+/** Remediation names an order, worst-first, drawn from these verbs. */
+export const REMEDIATION_VERBS = ['delete', 'reduce', 'retune', 'replace'] as const;
+
+export interface CensusCells { class: string; remediation: string; verification: string }
+
+const CENSUS_ROW = /^\|\s*((?:V|C|T|L|M|CP)\d+)\s*\|(.*)$/gm;
+
+/**
+ * The three census cells per catalog entry, read from the LAST three columns.
+ *
+ * Read positionally from the end rather than by header index because the four
+ * original columns carry free prose containing pipes inside inline code, and a
+ * header-indexed read would mis-align on exactly the rows whose prose is
+ * richest. The three census cells are short closed-vocabulary tokens, so the
+ * tail of the row is the one part that parses reliably.
+ */
+export function censusCells(catalogMd: string): Map<string, CensusCells> {
+    const section = STATUS_SECTION.exec(catalogMd)?.[0] ?? '';
+    const outside = section === '' ? catalogMd : catalogMd.replace(section, '');
+    const out = new Map<string, CensusCells>();
+    for (const m of outside.matchAll(CENSUS_ROW)) {
+        const cells = (m[2] ?? '').split('|').map((c) => c.trim());
+        while (cells.length > 0 && cells[cells.length - 1] === '') cells.pop();
+        if (cells.length < 6) continue;
+        out.set(m[1] as string, {
+            class: cells[cells.length - 3] ?? '',
+            remediation: cells[cells.length - 2] ?? '',
+            verification: cells[cells.length - 1] ?? '',
+        });
+    }
+    return out;
+}
+
 /** Catalog entry ids outside the § Detector status section. */
 export function catalogEntries(catalogMd: string): string[] {
     const section = STATUS_SECTION.exec(catalogMd)?.[0] ?? '';
@@ -129,6 +166,49 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
         if (row.status !== 'backed' && row.note === '') {
             out.push({ kind: 'missing-reason', id, msg: `${id}: status '${row.status}' carries no reason` });
         }
+    }
+
+    // F — the census columns: present, non-empty, and from the closed vocabularies.
+    const census = censusCells(catalogMd);
+    for (const id of seen) {
+        const cells = census.get(id);
+        if (cells === undefined) {
+            out.push({ kind: 'missing-census', id, msg: `${id}: catalog row carries no class / remediation / verification cells` });
+            continue;
+        }
+        if (!(CLASSES as readonly string[]).includes(cells.class)) {
+            out.push({ kind: 'bad-class', id, msg: `${id}: class '${cells.class || '(empty)'}' is not one of ${CLASSES.join(', ')}` });
+        }
+        if (!(VERIFICATIONS as readonly string[]).includes(cells.verification)) {
+            out.push({ kind: 'bad-verification', id, msg: `${id}: verification '${cells.verification || '(empty)'}' is not one of ${VERIFICATIONS.join(', ')}` });
+        }
+        const verbs = cells.remediation.split('→').map((v) => v.trim()).filter((v) => v !== '');
+        if (verbs.length === 0 || !verbs.every((v) => (REMEDIATION_VERBS as readonly string[]).includes(v))) {
+            out.push({ kind: 'bad-remediation', id, msg: `${id}: remediation '${cells.remediation || '(empty)'}' is not a → order over ${REMEDIATION_VERBS.join(', ')}` });
+        }
+    }
+
+    // G — the two axes are INDEPENDENT (road-to-one-motion-authority Risk 3).
+    // Class is a property of the rule, status a property of its enforcement.
+    // A `floor` that nothing can detect is legitimately `judgment-only`, and a
+    // `style-preference` that happens to be greppable is legitimately `backed`.
+    // This gate asserts the independence positively rather than merely allowing
+    // it: a run in which class turned out to determine status would mean the
+    // second axis had collapsed into the first and is carrying no information.
+    const pairs = [...seen]
+        .map((id) => ({ cls: census.get(id)?.class ?? '', status: rows.get(id)?.status ?? '' }))
+        .filter((p) => p.cls !== '' && p.status !== '');
+    const byClass = new Map<string, Set<string>>();
+    for (const p of pairs) {
+        const set = byClass.get(p.cls) ?? new Set<string>();
+        set.add(p.status);
+        byClass.set(p.cls, set);
+    }
+    if (pairs.length > 0 && [...byClass.values()].every((statuses) => statuses.size === 1)) {
+        out.push({
+            kind: 'axes-collapsed',
+            msg: 'every class maps to exactly one status — the class column is carrying no information the status column does not already carry. Class describes the rule, status describes its enforcement; if they have become the same axis, one of them is wrong.',
+        });
     }
 
     // C — backed set equals the registry set, both directions.

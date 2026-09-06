@@ -4,8 +4,12 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    CLASSES,
+    REMEDIATION_VERBS,
     STATUSES,
+    VERIFICATIONS,
     catalogEntries,
+    censusCells,
     parityFindings,
     registryCatalogIds,
     statusRows,
@@ -24,8 +28,8 @@ const REGISTRY = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'design_slop_
 const OK_CATALOG = [
     '## Visual',
     '',
-    '| V1 | side stripe | why | instead |',
-    '| V2 | glass | why | instead |',
+    '| V1 | side stripe | why | instead | floor | delete | static |',
+    '| V2 | glass | why | instead | floor | retune | render |',
     '',
     '---',
     '',
@@ -90,7 +94,10 @@ describe('parityFindings — it fails in both directions', () => {
     // Direction 2: a catalog entry classified as neither backed, floor,
     // judgment-only, deferred, nor candidate.
     it('a catalog entry missing from the status table', () => {
-        const withExtra = OK_CATALOG.replace('| V2 | glass | why | instead |', '| V2 | glass | why | instead |\n| V3 | ghost card | why | instead |');
+        const withExtra = OK_CATALOG.replace(
+            '| V2 | glass | why | instead | floor | retune | render |',
+            '| V2 | glass | why | instead | floor | retune | render |\n| V3 | ghost card | why | instead | invariant | delete | static |',
+        );
         const findings = parityFindings(withExtra, OK_REGISTRY);
         expect(findings.map((f) => f.kind)).toContain('unclassified');
         expect(findings.some((f) => f.msg.includes('V3'))).toBe(true);
@@ -123,7 +130,60 @@ describe('parityFindings — it fails in both directions', () => {
 
     // A gate that scans nothing exits green; this is the guard against that.
     it('a catalog with no status section at all', () => {
-        const findings = parityFindings('| V1 | side stripe | why | instead |', OK_REGISTRY);
+        const findings = parityFindings('| V1 | side stripe | why | instead | floor | delete | static |', OK_REGISTRY);
         expect(findings.map((f) => f.kind)).toEqual(['no-status-section']);
+    });
+});
+
+describe('the census columns — class, remediation, verification', () => {
+    it('every shipped catalog entry carries all three, from the closed vocabularies', () => {
+        const cells = censusCells(CATALOG);
+        const entries = catalogEntries(CATALOG);
+        expect(entries.length).toBeGreaterThan(0);
+        for (const id of entries) {
+            const c = cells.get(id);
+            expect(c, `${id} has no census cells`).toBeDefined();
+            expect(CLASSES as readonly string[]).toContain(c?.class);
+            expect(VERIFICATIONS as readonly string[]).toContain(c?.verification);
+            for (const verb of (c?.remediation ?? '').split('\u2192').map((v) => v.trim())) {
+                expect(REMEDIATION_VERBS as readonly string[]).toContain(verb);
+            }
+        }
+    });
+
+    it('a row with no census cells is a finding', () => {
+        const findings = parityFindings(
+            OK_CATALOG.replace('| V2 | glass | why | instead | floor | retune | render |', '| V2 | glass | why | instead |'),
+            OK_REGISTRY,
+        );
+        expect(findings.map((f) => f.kind)).toContain('missing-census');
+    });
+
+    it('a class outside the vocabulary is a finding', () => {
+        const findings = parityFindings(OK_CATALOG.replace('| floor | retune | render |', '| vibes | retune | render |'), OK_REGISTRY);
+        expect(findings.map((f) => f.kind)).toContain('bad-class');
+    });
+
+    it('a verification mode outside the vocabulary is a finding', () => {
+        const findings = parityFindings(OK_CATALOG.replace('| floor | retune | render |', '| floor | retune | eyeball |'), OK_REGISTRY);
+        expect(findings.map((f) => f.kind)).toContain('bad-verification');
+    });
+
+    it('a remediation verb outside the vocabulary is a finding', () => {
+        const findings = parityFindings(OK_CATALOG.replace('| floor | retune | render |', '| floor | ponder | render |'), OK_REGISTRY);
+        expect(findings.map((f) => f.kind)).toContain('bad-remediation');
+    });
+
+    // Risk 3 of road-to-one-motion-authority: the class column exists to say
+    // what KIND of rule an entry is, and the status column to say how its
+    // enforcement is wired. If class ever determines status the second axis has
+    // collapsed into the first and is carrying no information.
+    it('the two axes stay independent on the shipped catalog', () => {
+        expect(parityFindings(CATALOG, REGISTRY).map((f) => f.kind)).not.toContain('axes-collapsed');
+    });
+
+    it('a catalog where class determines status is a finding', () => {
+        const collapsed = OK_CATALOG.replace('| V2 | glass | why | instead | floor |', '| V2 | glass | why | instead | invariant |');
+        expect(parityFindings(collapsed, OK_REGISTRY).map((f) => f.kind)).toContain('axes-collapsed');
     });
 });
