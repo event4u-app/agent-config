@@ -21,6 +21,7 @@ import { parse as parseYaml } from 'yaml';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inst from '../../src/scripts/install.js';
+import type { JsonObject, JsonValue } from '../../src/scripts/hooks/dispatch_hook.js';
 import {
     _resetHostLoweringCache,
     hostBindings,
@@ -49,8 +50,19 @@ afterEach(() => {
     fs.rmSync(tmpRoot, { recursive: true, force: true });
 });
 
-function readJson(rel: string): Record<string, any> {
-    return JSON.parse(fs.readFileSync(path.join(project, rel), 'utf8'));
+/**
+ * Read a generated bridge. The shape differs per host, so the return type is
+ * the loose JSON record the dispatcher already defines rather than a per-host
+ * interface — these assertions exist to catch a drifted BRIDGE, and a hand-kept
+ * mirror of each host's shape would be a second thing to drift.
+ */
+function readJson(rel: string): JsonObject {
+    return JSON.parse(fs.readFileSync(path.join(project, rel), 'utf8')) as JsonObject;
+}
+
+/** Narrow one bridge entry group to the array of objects it always is here. */
+function groupsOf(v: JsonValue | undefined): JsonObject[] {
+    return (v ?? []) as JsonObject[];
 }
 
 describe('Cursor snapshot', () => {
@@ -61,12 +73,12 @@ describe('Cursor snapshot', () => {
         inst.ensure_cursor_bridge(project, false);
         const data = readJson('.cursor/hooks.json');
         expect(data['version']).toBe(1);
-        const hooks = data['hooks'];
+        const hooks = data['hooks'] as JsonObject;
         const boundNative = new Set(hostBindings('cursor').map((b) => b.native));
         expect(new Set(Object.keys(hooks))).toEqual(boundNative);
         for (const { slot: acEvent, native } of hostBindings('cursor')) {
-            expect(hooks[native]).toHaveLength(1);
-            const cmd: string = hooks[native][0]['command'];
+            expect(groupsOf(hooks[native])).toHaveLength(1);
+            const cmd = String(groupsOf(hooks[native])[0]?.['command']);
             expect(cmd).toContain('./agent-config dispatch:hook');
             expect(cmd).toContain('--platform cursor');
             expect(cmd).toContain(`--event ${acEvent}`);
@@ -107,15 +119,15 @@ describe('Windsurf snapshot', () => {
     it('writes one show_output:false dispatcher entry per binding', () => {
         inst.ensure_windsurf_bridge(project, false);
         const data = readJson('.windsurf/hooks.json');
-        const hooks = data['hooks'];
+        const hooks = data['hooks'] as JsonObject;
         const boundNative = new Set(hostBindings('windsurf').map((b) => b.native));
         expect(new Set(Object.keys(hooks))).toEqual(boundNative);
         for (const { slot: acEvent, native } of hostBindings('windsurf')) {
-            const entries = hooks[native];
+            const entries = groupsOf(hooks[native]);
             expect(entries).toHaveLength(1);
-            const entry = entries[0];
+            const entry = entries[0] as JsonObject;
             expect(entry['show_output']).toBe(false);
-            const cmd: string = entry['command'];
+            const cmd = String(entry['command']);
             expect(cmd).toContain('./agent-config dispatch:hook');
             expect(cmd).toContain('--platform windsurf');
             expect(cmd).toContain(`--event ${acEvent}`);
@@ -130,19 +142,19 @@ describe('Gemini snapshot', () => {
     it('writes the nested matcher/command group shape', () => {
         inst.ensure_gemini_bridge(project, false);
         const data = readJson('.gemini/settings.json');
-        const hooks = data['hooks'];
+        const hooks = data['hooks'] as JsonObject;
         const boundNative = new Set(hostBindings('gemini').map((b) => b.native));
         for (const n of boundNative) {
             expect(Object.keys(hooks)).toContain(n);
         }
         for (const { slot: acEvent, native, matcher } of hostBindings('gemini')) {
-            const groups = hooks[native];
+            const groups = groupsOf(hooks[native]);
             expect(groups).toHaveLength(1);
-            const group = groups[0];
+            const group = groups[0] as JsonObject;
             expect(group['matcher']).toBe(matcher);
-            const entry = group['hooks'][0];
+            const entry = (group['hooks'] as JsonObject[])[0] as JsonObject;
             expect(entry['type']).toBe('command');
-            const cmd: string = entry['command'];
+            const cmd = String(entry['command']);
             expect(cmd).toContain('./agent-config dispatch:hook');
             expect(cmd).toContain('--platform gemini');
             expect(cmd).toContain(`--event ${acEvent}`);
@@ -157,12 +169,12 @@ describe('Binding coverage snapshot', () => {
     // failure mode the orphan check guards on the manifest side; this layer
     // guards from the install side.
     it('bindings cover the manifest events', () => {
-        const manifest = parseYaml(fs.readFileSync(MANIFEST, 'utf8')) as Record<string, any>;
-        const platforms = (manifest['platforms'] ?? {}) as Record<string, any>;
+        const manifest = parseYaml(fs.readFileSync(MANIFEST, 'utf8')) as JsonObject;
+        const platforms = (manifest['platforms'] ?? {}) as JsonObject;
 
         for (const platform of ['augment', 'cursor', 'cline', 'windsurf', 'gemini']) {
             const manifestEvents = new Set(
-                Object.keys(platforms[platform] ?? {}).filter((e) => e !== 'fallback_only'),
+                Object.keys((platforms[platform] ?? {}) as JsonObject).filter((e) => e !== 'fallback_only'),
             );
             const bound = new Set(hostBindings(platform).map((b) => b.slot));
             for (const ev of manifestEvents) {
