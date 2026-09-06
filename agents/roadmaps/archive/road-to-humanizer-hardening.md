@@ -8,6 +8,15 @@ parent_roadmap: road-to-humanized-writing
 
 # Road to humanizer hardening — close the follow-up findings
 
+> **Arrivals:** the humanizer subject appears in **15** consumed inbox rounds
+> under `agents/tmp.old/` (measured 2026-09-06, `grep -rli humanizer`, distinct
+> round directories); the narrower tell phrasing in 5. Latest `inbox-2026-09-s`.
+> A floor on the recurrence, not a count of asks for this roadmap. Written on an
+> ARCHIVED file on purpose: the blocker `real-draft-lift-unmeasured` below is
+> still open — 2026-07-11 — and this is where a later round looks for it.
+> The feeder for it is carried by `agents/roadmaps/road-to-measured-prose-tells.md`,
+> which also holds the four detector defects that round reproduced.
+
 > Address the four adversarial-review findings that survived
 > `road-to-humanized-writing` as advisory-only (the fix commits there were
 > CI plumbing): untrusted-input handling on the `/humanize` ingestion path,
