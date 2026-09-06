@@ -105,7 +105,9 @@ Ask format:
 
 > 1. `.worktrees/` — project-local, hidden
 > 2. `worktrees/` — project-local, visible
-> 3. `~/.event4u/agent-config/worktrees/<project>/` — global
+> 3. `~/.event4u/agent-config/worktrees/<project>/` — global, **outside the
+>    repository root**: costs the persistent shell cwd (see below) and requires
+>    declaring the parent in the host's working-directory allowlist
 
 **Recommendation: 1 — `.worktrees/`** — project-local keeps the worktree next to the repo (easy cleanup), and the leading dot keeps it out of `ls`. Caveat: pick 3 if multiple repos must share a single worktree root.
 
@@ -135,8 +137,21 @@ passes. For the global location, skip — path is outside the repo.
 
 ```bash
 git worktree add .worktrees/<branch-name> -b <branch-name>
-cd .worktrees/<branch-name>
 ```
+
+**Then address the worktree by flag, not by `cd`.** Every tool that matters
+takes a directory flag, and the flag survives where a `cd` does not:
+
+```bash
+git -C .worktrees/<branch-name> status
+npm --prefix .worktrees/<branch-name> test
+composer -d .worktrees/<branch-name> install
+```
+
+A `cd X && …` compound re-enters the directory on every single call, and the
+one call that forgets it edits the main checkout silently — the failure is
+invisible because the command succeeds. Where a tool genuinely has no directory
+flag, use a subshell so the change cannot leak: `( cd <path> && <cmd> )`.
 
 Branch names must match the project convention — see
 `commit-conventions` rule.

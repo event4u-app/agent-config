@@ -55,6 +55,24 @@ Exempt — the file set is enumerated **before** the first read and each read is
 
 Not exempt, and still the failure this rule exists to catch: re-reading the *same* file hoping for a different answer, re-running a failing command unchanged, or widening a grep by one word at a time instead of thinking. The discriminator is **did the previous call change what I know** — not the tool name.
 
+## Address another directory by flag, not by `cd`
+
+```
+A `cd X && …` COMPOUND RE-ENTERS THE DIRECTORY ON EVERY CALL.
+THE ONE CALL THAT FORGETS RUNS IN THE WRONG TREE AND SUCCEEDS.
+USE THE TOOL'S DIRECTORY FLAG. WHERE THERE IS NONE, USE A SUBSHELL.
+```
+
+`git -C <path>`, `npm --prefix <path>`, `composer -d <path>`,
+`pytest --rootdir <path>`, `make -C <path>`. Where a tool genuinely has no
+directory flag, `( cd <path> && <cmd> )` keeps the change inside the subshell.
+
+Two costs, and the second is the reason this sits in a rule rather than in a
+skill. A host whose working-directory boundary excludes the target prints a
+cwd-reset line and runs the next command somewhere else, so the `cd` has to be
+repeated per call — that is the token cost. The silent one is worse: a command
+that omits the repeat does not fail, it edits the main checkout.
+
 ## Fresh Output Over Memory
 
 When a tool returns a value (branch name, file path, PR number), use that EXACT value in subsequent API calls. NEVER substitute a value from earlier in the conversation. Context decay causes silent mismatches — fresh output is the only source of truth.
