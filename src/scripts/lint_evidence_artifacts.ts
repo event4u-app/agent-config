@@ -55,14 +55,37 @@ import { parseHonestNull, parseMarkerLine, parseSkipDeclaration } from './check_
 
 export const EVIDENCE_ROOT = path.join('agents', 'evidence');
 
-/** The five types the contract defines. Anything else is an error, not a warning. */
+/** The types the contract defines. Anything else is an error, not a warning. */
 export const EVIDENCE_TYPES = [
     'original-review',
     'current-binding',
     'declared-skip',
     'honest-null',
     'analysis',
+    'feel',
 ] as const;
+
+/**
+ * The closed method vocabulary a `feel` artifact must name.
+ *
+ * Closed on purpose. An evidence class nothing can emit is a vocabulary entry,
+ * not a control, and the cheapest way to satisfy a perceptual floor is to write
+ * the word "feel" and move on. Requiring one of four named methods makes the
+ * claim falsifiable: each says how the motion was actually looked at.
+ */
+export const FEEL_METHODS = ['slow-motion', 'frame-step', 'device', 'next-day'] as const;
+export type FeelMethod = (typeof FEEL_METHODS)[number];
+
+const FEEL_LINE_RE = new RegExp(
+    String.raw`^\*\*Feel:\*\*\s+(${FEEL_METHODS.join('|')})\s+[\u2014-]\s+(\S.*)$`,
+);
+
+/** The method and outcome a `feel` line declares, or `null` when it declares neither. */
+export function parseFeelLine(line: string): { method: FeelMethod; outcome: string } | null {
+    const m = FEEL_LINE_RE.exec(line.trim());
+    if (m === null) return null;
+    return { method: m[1] as FeelMethod, outcome: (m[2] ?? '').trim() };
+}
 
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
 
@@ -201,6 +224,27 @@ export function checkFiles(root: string, files: readonly string[], ledger?: Gate
                     `${EVIDENCE_TYPES.join(' | ')}`,
             });
             continue;
+        }
+        // Risk 5 of road-to-one-motion-authority: the floor is the METHOD
+        // token, not the word. An outcome of `unbacked` is legal — a
+        // perceptual check that found nothing is still a check that ran — but
+        // an absent line is not, and neither is a method outside the four.
+        if (res.type === 'feel') {
+            const declared = contents
+                .split('\n')
+                .slice(0, MARKER_SCAN_LINES)
+                .some((l) => parseFeelLine(l) !== null);
+            if (!declared) {
+                ledger?.fail(rel, 'feel artifact with no method line');
+                findings.push({
+                    file: rel,
+                    reason:
+                        'declares `evidence-type: feel` but carries no `**Feel:** <method> — <outcome>` '
+                        + `line naming one of ${FEEL_METHODS.join(' | ')}. An outcome of \`unbacked\` is legal; `
+                        + 'an absent method is not',
+                });
+                continue;
+            }
         }
         if (res.type === null) {
             ledger?.fail(rel, 'no evidence type declared');
