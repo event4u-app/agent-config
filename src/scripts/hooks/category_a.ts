@@ -166,6 +166,45 @@ function _firstSubcommand(argv: readonly string[]): string {
     return "";
 }
 
+/**
+ * `git` global options that consume the NEXT token as their value.
+ *
+ * Without this, `git -C sub status` resolves its subcommand to `sub` and the
+ * whole directory-flag form — the shape the canon now teaches in place of
+ * `cd X && …` — falls out of category A. That defect was found by the friction
+ * corpus on its first run, which is the reason the corpus counts confirmations
+ * rather than gates: a gate count would have looked identical.
+ *
+ * The `--flag=value` spelling consumes no extra token and needs no entry.
+ */
+const GIT_VALUE_FLAGS: ReadonlySet<string> = new Set([
+    "-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path",
+]);
+
+/**
+ * The `git` subcommand, with global options skipped.
+ *
+ * Returns `""` when a global option's VALUE escapes the working tree — an
+ * absolute path or a `..` traversal. The check is textual rather than resolved
+ * against a root because this function is pure and receives no root; what it
+ * can decide is exactly the property that matters, and a relative path with no
+ * `..` cannot escape.
+ */
+function _gitSubcommand(argv: readonly string[]): string {
+    for (let i = 1; i < argv.length; i++) {
+        const token = argv[i] as string;
+        if (!_isFlag(token)) return token;
+        const [flag, inlineValue] = token.includes("=")
+            ? [token.slice(0, token.indexOf("=")), token.slice(token.indexOf("=") + 1)]
+            : [token, null];
+        const value = inlineValue ?? (GIT_VALUE_FLAGS.has(flag) ? argv[++i] : undefined);
+        if (value !== undefined && (path.isAbsolute(value) || value.split("/").includes(".."))) {
+            return "";
+        }
+    }
+    return "";
+}
+
 /** Non-flag token after the subcommand, or `""`. */
 function _secondSubcommand(argv: readonly string[]): string {
     const nonFlags = argv.slice(1).filter((t) => !_isFlag(t));
@@ -205,7 +244,7 @@ export function isCategoryABashCommand(command: string): boolean {
     if (SAFE_HEADS.has(head)) return true;
 
     if (head === "git") {
-        return GIT_READ_SUBCOMMANDS.has(_firstSubcommand(argv));
+        return GIT_READ_SUBCOMMANDS.has(_gitSubcommand(argv));
     }
 
     const allowed = RUNNER_SUBCOMMANDS[head];

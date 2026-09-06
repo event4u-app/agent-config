@@ -270,6 +270,28 @@ describe('category A over Bash commands', () => {
         expect(isCategoryABashCommand('git log --format=short')).toBe(true);
     });
 
+    it('parses git global options so the directory-flag form qualifies', () => {
+        // The shape the canon teaches in place of `cd X && …`. Found missing by
+        // the friction corpus on its first run: `_firstSubcommand` resolved
+        // `git -C sub status` to `sub`, so the replacement shape cost exactly
+        // as many confirmations as the shape it replaced.
+        expect(isCategoryABashCommand('git -C sub status')).toBe(true);
+        expect(isCategoryABashCommand('git -C sub log --oneline')).toBe(true);
+        expect(isCategoryABashCommand('git --git-dir=sub/.git status')).toBe(true);
+        expect(isCategoryABashCommand('git -c core.pager=cat diff')).toBe(true);
+    });
+
+    it('refuses a directory flag whose value escapes the working tree', () => {
+        expect(isCategoryABashCommand('git -C /etc status')).toBe(false);
+        expect(isCategoryABashCommand('git -C ../../other status')).toBe(false);
+        expect(isCategoryABashCommand('git --git-dir=/other/.git log')).toBe(false);
+    });
+
+    it('a directory flag does not smuggle a consequential subcommand through', () => {
+        expect(isCategoryABashCommand('git -C sub push')).toBe(false);
+        expect(isCategoryABashCommand('git -C sub reset --hard')).toBe(false);
+    });
+
     it('an empty command is not category A', () => {
         expect(isCategoryABashCommand('')).toBe(false);
         expect(isCategoryABashCommand('   ')).toBe(false);
