@@ -191,7 +191,7 @@ jobs:
       # budget registered only there cannot fail a pull request — which is how
       # this file's previous fix stopped holding for three months.
       - name: Verify README size, word and time-to-first-command budgets
-        run: task lint-readme-size --quiet
+        run: ./scripts-run src/scripts/lint_readme_size --quiet
 
       # The source-confidentiality gate ran in `task ci` and NOWHERE ELSE, and
       # no workflow invokes `task ci` — so the check that exists to keep harvest
