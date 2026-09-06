@@ -25,13 +25,36 @@
  *     (measured: ADR-035 still asserts a rejection ADR-232 reopened).
  *   - **review_trigger** — verbatim, plus a state.
  *
- * `indeterminate` is a FIRST-CLASS trigger result, not a failure. Every
+ * `indeterminate` is a FIRST-CLASS trigger result, not a failure. Almost every
  * `review_trigger` in the corpus is a semantic condition ("reopen when the
  * capacity premise changes", "if a fifth band appears"), so forcing them to a
  * boolean would convert uncertainty into either permission or blockage. Both
  * council seats (2026-08-19) independently rejected building a machine-readable
  * trigger grammar as a prerequisite for exactly this reason. An `indeterminate`
  * result means: this may not be presented as an unqualified lock — route it.
+ *
+ * THE DATED SUB-CLASS, AND WHY THE 2026-08-19 REJECTION DOES NOT REACH IT
+ * ----------------------------------------------------------------------
+ * The sentence above used to open "Every `review_trigger` in the corpus is a
+ * semantic condition"; it is weakened rather than deleted because the claim was
+ * true when written and one record has since falsified it.
+ *
+ * What those two seats rejected was forcing SEMANTIC conditions to a boolean.
+ * A trigger that OPENS with a calendar date is not one: `fired` / `not-fired`
+ * is decided by comparing that date to `asOf()`, which is arithmetic and
+ * carries no interpretation of the tree, so a second reader of the same commit
+ * gets the same answer. That is the entire carve-out — a leading
+ * `Expiry YYYY-MM-DD`, or a bare leading ISO date, and nothing else. A
+ * condition that merely MENTIONS a date somewhere in its prose ("revisit at the
+ * 2026-11-10 review date, or earlier on either observable event") is a semantic
+ * condition and stays `indeterminate`, which is what keeps this from being the
+ * rejected grammar by increments.
+ *
+ * `dated-unparsed` exists so the carve-out cannot fail silently. A trigger that
+ * announces itself as dated and whose date this parser cannot read is a defect
+ * in the record or in the parser; returning `indeterminate` for it would hide
+ * that defect behind the exact state every trigger had before the carve-out
+ * existed, where no test could ever see it as a regression.
  *
  * It also prints the two descriptive axes (`provenance`, `evidence`) and
  * `authority_basis`, and for an accepted E0/E1 record that does NOT carry
@@ -73,12 +96,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     type AdrFrontmatter,
     authorityBasisOf,
+    dated_trigger_day,
+    DATED_TRIGGER_PROBE,
+    iso_day,
     evidenceOf,
     isLowEvidenceAccepted,
     provenanceOf,
     readAdrFrontmatter,
     readAdrFrontmatterScalars,
 } from './_lib/adr_frontmatter.js';
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
@@ -149,8 +176,12 @@ export const SURFACES_NOT_SCANNED = [
  */
 export const PARTIAL_COVERAGE: readonly string[] = [];
 
-/** A trigger state. `none` means the ADR never recorded a reopen condition. */
-export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired';
+/**
+ * A trigger state. `none` means the ADR never recorded a reopen condition;
+ * `dated-unparsed` means it recorded one that announces a date this parser
+ * could not read, which is a defect and not an answer.
+ */
+export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired' | 'dated-unparsed';
 
 export interface CiteResult {
     ref: string;
@@ -469,12 +500,21 @@ export function amendment_blocks(body: string): string[] {
 /**
  * A trigger's state, from what is mechanically decidable and nothing else.
  *
- * There is no clause that returns `fired` or `not-fired` from prose, and that
- * absence is the design: every trigger in the corpus is semantic. The states
- * exist in the type because a future structured trigger can carry them; today
- * the honest answers are `none` and `indeterminate`.
+ * Two clauses return a decided answer, and both read a leading calendar date
+ * and nothing else — see `DATED_TRIGGER_RE` for why the anchor is the safety
+ * property. Every semantic trigger still returns `indeterminate`, which is a
+ * first-class result here and not a failure.
+ *
+ * The clock is read ONLY when a dated trigger is actually present — `asOf()`
+ * warns on stderr for an unpinned run, and a corpus with no dated trigger has
+ * no verdict that depends on the hour, so announcing one there would be noise
+ * on a stream other tools read beside the payload.
+ *
+ * @param asOfDate the "now" to compare against; defaults to the `asOf()` seam,
+ *                 so a CI run compares against the commit date and is
+ *                 reproducible from the commit alone.
  */
-export function trigger_state(fm: Record<string, string>): TriggerState {
+export function trigger_state(fm: Record<string, string>, asOfDate?: Date): TriggerState {
     const t = (fm['review_trigger'] ?? '').trim();
     if (t === '') return 'none';
     // The transitional migration value records that no condition has been
@@ -485,6 +525,9 @@ export function trigger_state(fm: Record<string, string>): TriggerState {
     // nobody has evaluated. Found in completion review; the field did not
     // exist in this file's corpus when the mapping was written.
     if (t.toLowerCase() === 'unclassified') return 'none';
+    const day = dated_trigger_day(t);
+    if (day !== null) return iso_day(asOfDate ?? asOf()) >= day ? 'fired' : 'not-fired';
+    if (DATED_TRIGGER_PROBE.test(t)) return 'dated-unparsed';
     return 'indeterminate';
 }
 
@@ -529,6 +572,15 @@ export function verdict_for(r: Omit<CiteResult, 'verdict'>): string {
     }
     if (r.trigger_state === 'none') {
         return 'LIVE, NO REOPEN CONDITION — the ADR records no `review_trigger`, so nothing would ever reopen it on its own. Treat that as a defect in the ADR, not as strength of the lock.';
+    }
+    if (r.trigger_state === 'fired') {
+        return 'LIVE, TRIGGER FIRED — the reopen condition is a date and that date has passed. The record still binds until someone acts on it, and citing it without naming the fired trigger presents a lapsed review as a current one.';
+    }
+    if (r.trigger_state === 'not-fired') {
+        return 'LIVE, TRIGGER NOT YET FIRED — the reopen condition is a date still in the future. This is the one state in which a trigger genuinely adds nothing to the citation, and it stops being true on a known day.';
+    }
+    if (r.trigger_state === 'dated-unparsed') {
+        return 'LIVE, DATED TRIGGER UNREADABLE — the reopen condition announces a date this tool could not parse. That is a defect in the record or in the parser, not a verdict: fix the trigger to open with `Expiry YYYY-MM-DD` rather than reading this as "unknown".';
     }
     return 'LIVE, TRIGGER INDETERMINATE — the reopen condition is semantic and this tool cannot decide it. Not an unqualified lock: evaluate the condition against the current tree and route the result.';
 }
@@ -823,21 +875,25 @@ export interface CorpusRow {
     /** Does the record carry a `review_trigger` at all? */
     has_trigger: boolean;
     /** Only meaningful when `has_trigger`; see `TRIGGER_VERDICTS`. */
-    trigger: 'fired' | 'not-fired' | 'indeterminate' | 'none';
+    trigger: TriggerState;
     reopen_policy: string;
     /** Cited anywhere OUTSIDE `docs/decisions/`. */
     cited_outside: boolean;
 }
 
 /**
- * The three states 2.2 requires, and why a fourth exists beside them.
+ * The states a record CARRYING a trigger can be in, and why `none` is not one.
  *
- * `none` is NOT one of the three. The step asks that fired + not-fired +
- * indeterminate sum to "the number of ADRs carrying a trigger", so a record
- * with no trigger is outside the denominator rather than a fourth bucket
- * inside it.
+ * `none` is outside the denominator, not a bucket inside it: the survey asks
+ * that these sum to "the number of ADRs carrying a trigger", and a record with
+ * no trigger carries none.
+ *
+ * `dated-unparsed` was added with the dated sub-class and belongs in the sum
+ * for the same reason `none` does not — a record in that state DOES carry a
+ * trigger. Leaving it out would have made the sum line report a mismatch, i.e.
+ * announced a defect in the survey where the defect is in the ADR.
  */
-export const TRIGGER_VERDICTS = ['fired', 'not-fired', 'indeterminate'] as const;
+export const TRIGGER_VERDICTS = ['fired', 'not-fired', 'indeterminate', 'dated-unparsed'] as const;
 
 /** Every ADR file, surveyed. */
 export function corpus_survey(repo_root: string = REPO_ROOT): CorpusRow[] {

@@ -483,3 +483,47 @@ export function readAdrAxisCells(text: string): AdrAxisCells {
                   : `${strength} (${discovery})`,
     };
 }
+
+/**
+ * The one shape this tool decides: a trigger whose condition IS a leading date.
+ *
+ * Deliberately anchored at the start of the string and deliberately narrow. The
+ * boundary is the whole safety property — the moment a trigger is matched on a
+ * date found anywhere in its prose, "reopens when N exceeds M" is one edit away
+ * and the machine-readable grammar two council seats rejected on 2026-08-19 has
+ * been built by increments.
+ */
+export const DATED_TRIGGER_RE = /^\s*(?:expir(?:y|es)\b\s*[:—-]?\s*)?(\d{4})-(\d{2})-(\d{2})(?!\d)/iu;
+
+/**
+ * A trigger that ANNOUNCES itself as dated, whether or not the date parses.
+ *
+ * The gap between this and `DATED_TRIGGER_RE` is the `dated-unparsed` state.
+ * Exactly one ADR in the corpus carries a dated expiry, so a parse tuned to its
+ * phrasing can fail on the second one — and the failure mode is silence,
+ * because the old answer for every trigger was `indeterminate`. This probe is
+ * what turns that silence into a reported defect.
+ */
+export const DATED_TRIGGER_PROBE = /^\s*(?:expir(?:y|es)\b|\d{4}-\d{1,2}-\d{1,2}\b)/iu;
+
+/** The UTC calendar day of an instant, as `YYYY-MM-DD`. */
+export function iso_day(d: Date): string {
+    return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The calendar day a dated trigger names, or null when there is none to read.
+ *
+ * Round-tripping through `Date.UTC` rejects `2026-13-45`, which matches the
+ * shape and is not a date.
+ */
+export function dated_trigger_day(trigger: string): string | null {
+    const m = DATED_TRIGGER_RE.exec(trigger);
+    if (m === null) return null;
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const at = new Date(Date.UTC(y, mo - 1, d));
+    if (at.getUTCFullYear() !== y || at.getUTCMonth() !== mo - 1 || at.getUTCDate() !== d) {
+        return null;
+    }
+    return iso_day(at);
+}
