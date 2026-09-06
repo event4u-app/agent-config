@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "release": "14.18.0",
+  "review_independence": "unknown",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "unreviewed",
+  "reviewers": [],
+  "no_findings_reason": "NOT REVIEWED — the finding set is empty because no review produced one, not because a review produced none. The self-review gate ran on release/14.18.0 as workflow run 34014843850 and went NEUTRAL: the Anthropic call returned HTTP 400 `prompt is too long: 413191 tokens > 200000 maximum`, after which the job logged `No files were found with the provided path: /tmp/self-review-findings.json` and uploaded no artifact. PR #1869 carries no `release-findings-json` machine block, so there is nothing to ingest from either surface. Falsifiable: if that run's log shows a completed model call, or an artifact or machine block for 14.18.0 is produced, this reason is wrong and the ledger must be re-ingested. Recorded 2026-09-06 by road-to-the-ledger-two-releases-skipped Phase 1.2; evidence in agents/evidence/analysis/release-ledger-absence-2026-09-06.md.",
+  "findings": []
+}

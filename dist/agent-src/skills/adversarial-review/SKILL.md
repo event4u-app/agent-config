@@ -142,14 +142,6 @@ logic, ≥ 3 explicit must/must-not constraints, stateful operations,
 irreversibility} **and** estimated work ≥ ~1k tokens. Token length alone never
 triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
 
-## Auto-trigger keywords
-
-- adversarial review
-- self-review
-- challenge plan
-- review my approach
-- sanity check
-
 ### Validate
 
 - Confirm each identified risk has a concrete mitigation or explicit acceptance.

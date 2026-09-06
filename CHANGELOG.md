@@ -30,6 +30,17 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+> **Previous cycle:** the 14.18.0 head promised the installed MCP bridge repair —
+> a version-pinned server entry instead of an `npx -y` resolution of `latest`, a
+> registration that migrates itself when the bridge shape changes, and setup docs
+> matching the command the installer writes. It **did not ship**. `MCP_BRIDGE_ENTRY`
+> still resolves `npx -y @event4u/agent-config`
+> (`src/scripts/_lib/mcp_bridge.ts:38-45`) and the roadmap carrying it,
+> `road-to-mcp-bridge-integrity-and-reach-truth`, stands at zero of its seventeen
+> steps. The promise is not withdrawn; it is outstanding, and from this release on
+> a head that leaves the previous head's promise unanswered is refused by
+> `check_release_highlights`.
+
 ### Fixed
 
 - **Release gates now refuse before the push, not on the release PR.** 14.17.0

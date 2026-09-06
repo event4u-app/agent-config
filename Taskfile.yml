@@ -413,6 +413,8 @@ tasks:
       - task: check-publish-surface
       - task: check-knowledge-sharing
       - task: check-augmentignore
+      - task: lint-reasoning-fixtures  # tests/reasoning-layer-eval/ corpus shape
+      - task: lint-skill-trigger-contradiction
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma

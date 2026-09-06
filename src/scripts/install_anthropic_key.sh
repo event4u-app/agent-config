@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Interactive Anthropic-API-key installer for scripts/skill_trigger_eval.py.
+# Interactive Anthropic-API-key installer for src/scripts/skill_trigger_eval.ts.
 #
 # Reads the key with `read -s` so it never echoes to the terminal and
 # never lands in shell history or scrollback. Writes atomically to
@@ -7,7 +7,7 @@
 # ~/.config/agent-config/anthropic.key is read as a fallback by the
 # loaders so pre-2.4 installs keep working until the namespace shim runs.
 #
-# Contract — companion to scripts/skill_trigger_eval.py:
+# Contract — companion to src/scripts/skill_trigger_eval.ts:
 #   - File path:  $HOME/.event4u/agent-config/anthropic.key
 #   - File mode:  0600 (owner read/write only)
 #   - Key format: must start with `sk-ant-`
