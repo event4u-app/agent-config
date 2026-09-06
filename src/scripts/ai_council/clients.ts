@@ -1,7 +1,7 @@
 // External-AI clients for the council — ported from the retired Python
 // `src/scripts/ai_council/clients.py` (ADR-200).
 //
-// Mirrors the contract from `scripts/skill_trigger_eval.py`:
+// Mirrors the contract from `src/scripts/skill_trigger_eval.ts`:
 // - Tokens come exclusively from `~/.event4u/agent-config/<provider>.key`
 //   (legacy `~/.config/agent-config/<provider>.key` is read as a fallback so
 //   pre-2.4 installs keep working until the user moves the files into the new
