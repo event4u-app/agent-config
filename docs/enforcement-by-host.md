@@ -23,7 +23,7 @@ depends on what that host exposes. We say so plainly rather than imply
 | Windsurf | ✅ `.windsurfrules` | — static only |
 | Copilot | ✅ `copilot-instructions.md` | — static only |
 | Gemini | ✅ `GEMINI.md` | — static only |
-| Augment | ✅ native rules | — no public hook API |
+| Augment | ✅ native rules | ⚠️ bound, verdict not honoured |
 
 **Why we lead with compile-time, not hooks.** Runtime hooks reach only a
 minority of supported hosts. Building the governance story on hooks would make

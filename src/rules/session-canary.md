@@ -157,8 +157,8 @@ audit should not re-open it.
 `user_prompt_submit` slot; its `stop` fires *after* the reply, so injecting
 there could not shape the reply the reminder is for, and counting it would be
 exactly the over-credit the frequency audit exists to remove. Augment therefore
-reports as an open gap rather than as covered. **Copilot** has no hook surface at
-all — this rule is the only carrier there; re-read it when the trigger fires.
+reports as an open gap rather than as covered. **Copilot** carries no binding here —
+this rule is the only carrier there; re-read it when the trigger fires.
 
 ## See also
 

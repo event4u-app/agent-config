@@ -1,8 +1,8 @@
 # Hook manifest — single source of truth for which concerns fire on which
 # (platform, event) tuples. Consumed by:
-#   - scripts/hooks/dispatch_hook.py   (runtime resolver)
-#   - scripts/lint_hook_manifest.py    (CI gate; Phase 7.10)
-#   - scripts/install.py               (per-platform config writer)
+#   - src/scripts/hooks/dispatch_hook.ts   (runtime resolver)
+#   - src/scripts/lint_hook_manifest.ts    (CI gate; Phase 7.10)
+#   - src/scripts/install.ts               (per-platform config writer)
 #
 # Schema and event vocabulary: docs/contracts/hook-architecture-v1.md.
 # Per-platform event-name mapping: agents/settings/contexts/chat-history-platform-hooks.md.
@@ -626,8 +626,9 @@ concerns:
   #
   # Correctness rests on heartbeat + TTL alone; deregistration only frees a claim
   # sooner. So Windsurf's missing session_end costs latency, not correctness.
-  # Declared non-carriers: copilot (no hook surface), cursor CLI (per-turn slots
-  # are IDE-only), cowork (slots wired, lifecycle events inert) — a session there
+  # Declared non-carriers: copilot (this package binds nothing there and has
+  # measured nothing there), cursor (per-turn reachability unestablished), cowork
+  # (slots wired, lifecycle events inert) — a session there
   # registers but expires by TTL rather than heartbeating, and the concern says so
   # on stderr rather than letting the coverage join read green.
   # Never blocks. fail_closed: false.
@@ -1256,11 +1257,12 @@ platforms:
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
-  # `install.py --cursor-user-hooks` and uses scripts/hooks/cursor-dispatcher.sh
+  # `agent-config install --cursor-user-hooks` and uses scripts/hooks/cursor-dispatcher.sh
   # to route into the active workspace. UserPromptSubmit maps to
-  # `beforeSubmitPrompt` (Cursor third-party-hooks table). Stop is
-  # IDE-only — CLI-only users fall back to /checkpoint per
-  # agents/settings/contexts/chat-history-platform-hooks.md.
+  # `beforeSubmitPrompt` (Cursor third-party-hooks table). Whether the CLI
+  # surface fires `stop` is not established here; the /checkpoint fallback
+  # covers a session where it does not. See
+  # agents/settings/contexts/chat-history-platform-hooks.md § Cursor.
   cursor:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
@@ -1319,8 +1321,9 @@ platforms:
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
-  # Phase 7.9 — Copilot has no hook surface. Concerns route through
-  # rule-only fallback; the dispatcher silently no-ops on --platform copilot.
+  # Phase 7.9 — this package binds no hook on Copilot and has measured none
+  # there. Concerns route through rule-only fallback; the dispatcher silently
+  # no-ops on --platform copilot.
   copilot:
     fallback_only: true
 

@@ -1,0 +1,15 @@
+# Fixture: a row that was never verified yet claims a blocking binding — the
+# over-claim this table exists to make impossible to write silently.
+schema_version: 1
+hosts:
+  fixturehost:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        verified: null
+        slots:
+          pre_tool_use: { native: PreToolUse, block_exit: 2 }

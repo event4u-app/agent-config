@@ -690,7 +690,7 @@ function renderHygieneSection(hygiene: HygieneReadResult): string[] {
     out.push(`_Source: tried ${hygiene.checkedPaths.map((p) => `\`${p}\``).join(', then ')}_`);
     out.push('');
     if (hygiene.state === null) {
-        out.push('no data — none of the candidate paths exist yet (no PostToolUse hook has run this session, or this host has no hook surface for it)');
+        out.push('no data — none of the candidate paths exist yet (no PostToolUse hook has run this session, or no PostToolUse hook is bound on this host)');
         return out;
     }
     const s = hygiene.state;

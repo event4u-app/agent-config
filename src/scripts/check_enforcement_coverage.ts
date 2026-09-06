@@ -118,7 +118,7 @@ export interface RuleCoverage {
     /**
      * Carrier period per hook-capable platform — never a single scalar.
      *
-     * A scalar is wrong twice over: copilot has no hook surface at all, so a
+     * A scalar is wrong twice over: this package binds nothing on copilot, so a
      * weakest-platform collapse turns one platform property into a finding on
      * every hook-carried rule; and cline maps `stop` from `TaskCancel`, so the
      * same slot means per-turn on six platforms and per-interruption there. Both

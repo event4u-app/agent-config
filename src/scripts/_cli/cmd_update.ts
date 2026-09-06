@@ -446,7 +446,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const installed_version = options.installed_version || _detect_installed_version();
     const state_path = options.state_path || update_check.DEFAULT_STATE_PATH;
 
-    // AGENT_CONFIG_OFFLINE=1 (set by `install.py --offline`) is honored as an
+    // AGENT_CONFIG_OFFLINE=1 (set by `agent-config install --offline`) is honored as an
     // env-level kill-switch. Mirrors cmd_versions.py.
     const offline = args.offline || process.env['AGENT_CONFIG_OFFLINE'] === '1';
 

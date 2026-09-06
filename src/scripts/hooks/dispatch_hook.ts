@@ -9,12 +9,10 @@
  * stdout/stderr split, and exit codes. Helper names keep snake_case for
  * fidelity (concern authors rely on the documented surface).
  *
- * Per `docs/contracts/hook-architecture-v1.md`. Reads the manifest at
- * `scripts/hook_manifest.yaml`, resolves which concerns fire on the given
- * (platform, event) tuple, and runs each concern sequentially with the
- * stdin envelope contract. Reduces concern exit codes per the spec
- * (0=allow, 1=block, 2=warn, ≥3=error → fail-open unless concern is
- * fail_closed).
+ * Per `docs/contracts/hook-architecture-v1.md`. Reads `src/scripts/hook_manifest.yaml`,
+ * resolves which concerns fire on the given (platform, event) tuple, and runs each
+ * sequentially with the stdin envelope contract. Reduces concern exit codes per the
+ * spec (0=allow, 1=block, 2=warn, ≥3=error → fail-open unless concern is fail_closed).
  *
  * Invocation:
  *
@@ -59,6 +57,7 @@ import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js'
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
+import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -497,6 +496,7 @@ export function _build_envelope(args: Args, payload_text: string): JsonObject {
       process.env["AGENT_SESSION_ID"] ||
       "",
     workspace_root: process.cwd(),
+    surface: detectSurface(payloadObj),
     payload: payloadObj,
     settings: {},
   };

@@ -17,7 +17,7 @@
  *                      file (legacy copy-paste mode)
  *   --launch <host>    spawn a fresh interactive host session after
  *                      generating (claude: hook-seeded; codex: handoff as
- *                      initial prompt — no hook surface there)
+ *                      initial prompt — this package binds no hook there)
  *   --llm              narrative-polish seam; v1: clear not-implemented error
  *   --root <path>      repo root override (default: cwd)
  *

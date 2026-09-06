@@ -150,21 +150,48 @@ against — a reader then cannot tell whether a capability was tested.
   exactly the distinction, readable from `routing:doctor` without opening the
   file.
 
-### The four-part citation — a row without all four is not admissible
+### The five-part citation — a row without all five is not admissible
 
 1. **the host** — the platform key from `hook_manifest.yaml`;
 2. **the host version** at the time of observation;
 3. **the transcript or artefact reference** the observation is read from;
-4. **the date**.
+4. **the date**;
+5. **the expiry** — the date after which the observation stops being admissible.
 
 Worked example, which a later row can be pattern-matched against:
 
 ```
-// subagent_spawn: OBSERVED — claude (Claude Code, Opus 5 1M session, 2026-08-22)
+// subagent_spawn: OBSERVED — claude (Claude Code, Opus 5 1M session, 2026-08-22,
+//   expires 2027-08-22)
 //   agents/runtime/state/subagent-ledger/2026-08.jsonl: 445 `subagent_start`
 //   records and 420 stops carrying a measured `duration_ms`, i.e. 420 child legs
 //   whose start and stop pair. A measurable child duration is the criterion.
 ```
+
+### Why an expiry, and not just a date
+
+```
+A HOST FACT WITHOUT AN EXPIRY IS A CLAIM NOBODY EVER RE-CHECKS.
+AN EXPIRED FACT IS TREATED EXACTLY AS AN UNOBSERVED ONE.
+```
+
+The date says when it was true. Only the expiry says when someone must look
+again — and a fact with no such date is one nobody looks at again, which is how
+the same stale host claims survived three correction rounds in this tree. An
+observation is about a host version that ships on its own cadence, so its
+shelf-life is a property of the observation and belongs beside it.
+
+The expiry is **not** a claim that the capability lapses on that date. It is the
+date after which this tree stops treating the observation as current, which is a
+statement about the record, never about the host.
+
+The machine-readable twin of this field is `verified.expires` in
+`src/scripts/hooks/host_lowering.yaml`, the same discipline applied to hook
+lowering: `lint_hook_manifest` refuses an expired row that still carries a
+blocking binding and warns on every other lapse, and `host_semantics.ts` reads
+an expired row exactly as `verified: null`. A registry row here has no such
+gate — the criteria are applied by a human, deliberately (see above), so the
+expiry here is a written obligation and its enforcement is the reviewer.
 
 ### Pre-state, pinned so the Phase 2 diff reads as an addition
 

@@ -28,7 +28,7 @@ not yet at all.
 |---|---|---|---|---|---|
 | Claude Code | CLI + IDE | **HOOK** | docs-verified | `SessionStart`, `Stop`, `UserPromptSubmit`, `PostToolUse` | 3 cadences (per session / per turn / per tool); most mature. `Stop` carries only `session_id` + `transcript_path`; dispatcher reads the JSONL and pulls the last assistant text-block. |
 | Cowork (Claude desktop) | local-agent-mode VM | **HOOK** (blocked upstream) · **MANUAL** (today) | docs-verified · upstream-blocked | `SessionStart`, `Stop`, `UserPromptSubmit`, `PostToolUse` | Claude Code under the hood — same vocabulary and payload shape. `anthropics/claude-code#40495`: Cowork sandbox ignores all three settings sources (user / project / env). `#27398`: `--setting-sources user` excludes plugin-scope `hooks/hooks.json`. Mapping + trampoline shipped (cowork-dispatcher.sh) but lifecycle events do not fire until upstream resolves. |
-| Cursor | IDE (full) · CLI (partial) | **HOOK** (IDE) · **CHECKPOINT** (CLI) | docs-verified | `sessionStart`, `stop`, `afterAgentResponse` | Beta since 1.7. CLI fires only `beforeShellExecution`/`afterShellExecution`. Dispatcher (`_extract_cursor_text`) parses the `transcript_path` JSONL on `afterAgentResponse`/`stop`; falls back to top-level `prompt` for `beforeSubmitPrompt`. |
+| Cursor | IDE (full) · CLI (partial) | **HOOK** (IDE) · **CHECKPOINT** (CLI) | docs-verified | `sessionStart`, `stop`, `afterAgentResponse` | Beta since 1.7. This package binds no shell-execution slot on cursor and has not established which slots the CLI fires — see § Cursor. Dispatcher (`_extract_cursor_text`) parses the `transcript_path` JSONL on `afterAgentResponse`/`stop`; falls back to top-level `prompt` for `beforeSubmitPrompt`. |
 | Cline | VS Code + JetBrains | **HOOK** (non-Windows) | docs-verified | `TaskStart`, `TaskComplete`, `UserPromptSubmit`, `PreCompact` | Hooks unsupported on Windows as of `cline/cline#8073`. Dispatcher (`_extract_cline_text`) reads top-level `prompt`/`userPrompt` on `UserPromptSubmit`; `TaskComplete` maps to `session_end`. |
 | Windsurf | Cascade | **HOOK** | docs-verified | `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree` | 12 events; shipped v1.12.41. Dispatcher (`_extract_windsurf_text`) reads `tool_info.response` on `post_cascade_response`, parses `transcript_path` JSONL on `post_cascade_response_with_transcript`. |
 | Gemini CLI | CLI | **HOOK** | docs-verified | `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent` | `SessionStart` is advisory (cannot block). Dispatcher (`_extract_gemini_text`) reads top-level `prompt_response` on `AfterAgent`; falls back to `transcript_path` JSONL when absent. |
@@ -211,7 +211,7 @@ to `transcript_path` parsing using the Claude walker.
 - **Execution model:** subprocess. Beta status as of 1.7 (Sept 2025), still beta in 2026-Q1.
 - **Failure semantics:** pre-hooks can block via exit code. Cursor watches the config file and reloads it on change.
 - **stdout reach:** observability-style; comparable to Claude's `additionalContext`.
-- **Known gap:** Cursor **CLI** only fires `beforeShellExecution`/`afterShellExecution`. `beforeSubmitPrompt`, `stop`, etc. only fire in the IDE — documented limitation as of 2026-01.
+- **Known gap — restated as a package-side fact, 2026-09-06.** This entry used to assert that the Cursor **CLI** fires only `beforeShellExecution`/`afterShellExecution` and that `beforeSubmitPrompt` / `stop` are IDE-only, sourced to a reading "as of 2026-01" that carried no expiry. That claim could not be re-verified in either direction from this tree, and a host limitation nobody can re-check is exactly the assertion class `road-to-host-enforcement-truth` removes. What this tree does establish: this package binds `sessionStart`, `sessionEnd`, `stop`, `beforeSubmitPrompt` and `postToolUse` on cursor and binds no shell-execution slot at all; whether the CLI surface fires the five it binds is **not established here**. `host_lowering.yaml` therefore carries `verified: null` for cursor, and nothing in this package treats a cursor slot as reachable. Re-establishing it needs a live observation on a named Cursor CLI version, dated, with an expiry — the five-part citation in `contexts/execution/host-capability-manifest.md`.
 - **Decision: HOOK (IDE) · CHECKPOINT (CLI).** For CLI users, fall back to the `/checkpoint` command from Phase 3.
 - **Sources:**
   - <https://cursor.com/docs/hooks>
@@ -274,7 +274,7 @@ to `transcript_path` parsing using the Claude walker.
 
 ## Open questions (unblocked, but tracked)
 
-1. **Cursor CLI parity** — `beforeSubmitPrompt`/`stop` are IDE-only as of 2026-01. Track the changelog and flip the CLI row when they ship.
+1. **Cursor CLI parity** — which slots the Cursor CLI fires is not established here; see § Cursor § Known gap. Establish it with a live observation on a named CLI version, dated and with an expiry, before any row treats a cursor slot as reachable.
 2. **Cline Windows parity** — patch landed in `cline/cline#8201`; verify before Phase 4 dogfooding on a Windows host.
 3. **Async vs sync semantics** — Windsurf's `post_cascade_response` is async; Gemini's `SessionEnd` is best-effort. Phase 2 wrapper must tolerate both (write-then-fsync, single-line append, no read-modify-write).
 

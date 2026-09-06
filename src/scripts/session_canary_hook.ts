@@ -16,7 +16,7 @@
  * rule alone is exactly the kind of surface that is dropped in fresh
  * conversations (found RED baseline on the reply-close PR-URL contract,
  * 2026-07-27); the session_start injection makes the contract present in every
- * new conversation on hook-capable hosts. Copilot (no hook surface) falls back
+ * new conversation on hook-capable hosts. Copilot (nothing bound here) falls back
  * to the rule alone.
  *
  * Gate + name resolution (first non-empty wins — the canary is a PERSONAL,

@@ -93,6 +93,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
+import { detectSurface, readSurface, type Surface } from '../_lib/surface.js';
 import {
     RECORDED_EVENTS,
     isJournalAvailable,
@@ -182,6 +183,8 @@ export interface JournalInput {
     task_id: string | null;
     prompt_id: string | null;
     capability: string;
+    /** Closed vocabulary. The dispatcher resolves it; re-derived only as a fallback. */
+    surface: Surface;
 }
 
 /**
@@ -208,6 +211,11 @@ export function reduceEnvelope(envelope: JsonObject): JournalInput | null {
         task_id: firstString(envelope, payload, ['task_id', 'taskId']),
         prompt_id: firstString(envelope, payload, ['prompt_id', 'promptId']),
         capability: capabilityFor(event, envelope, payload),
+        // The dispatcher writes it into the envelope; a direct invocation
+        // (`agent-config …:hook < event.json`) has no dispatcher, so fall back
+        // to the same detector rather than recording a field the caller never
+        // had a chance to set.
+        surface: readSurface(envelope['surface']) === 'unknown' ? detectSurface(payload) : readSurface(envelope['surface']),
     };
 }
 
@@ -248,6 +256,7 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
                 task_id: input.task_id,
                 prompt_id: input.prompt_id,
                 capability: input.capability,
+                surface: input.surface,
             });
         });
     } catch {
@@ -294,6 +303,7 @@ export function recordedFor(envelope: JsonValue, consumerRoot: string): SkipReas
                 task_id: input.task_id,
                 prompt_id: input.prompt_id,
                 capability: input.capability,
+                surface: input.surface,
             });
         });
     } catch {

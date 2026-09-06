@@ -174,6 +174,8 @@ import type { DatabaseSync } from 'node:sqlite';
 import { current_branch, git_common_dir, git_dir } from './git_common_dir.js';
 import type { TerminalState } from './outcome_envelope.js';
 import { readRunTerminalState, RUN_TERMINAL_STATES } from './outcome_vocabularies.js';
+import { addColumnIfMissing } from './sqlite_schema.js';
+import { readSurface, type Surface } from './surface.js';
 import {
     isSqliteAvailableSync,
     loadSqliteSync,
@@ -408,6 +410,14 @@ export interface JournalEvent {
     at: string;
     /** Bounded identifier: the hook or command name. Never free text. */
     capability: string;
+    /**
+     * IDE / CLI / cloud dimension of the dispatch. Closed vocabulary, and
+     * almost always `unknown`: no host observed here sends a distinguishing
+     * marker and the detector refuses to infer one. Recorded anyway because
+     * "did this come from the surface the lattice assumed" has no answer at
+     * all while the field is absent.
+     */
+    surface: Surface;
     /** Imported from `outcome_envelope.ts`; null until an episode terminates. */
     terminal_state: TerminalState | null;
     /** Repo-relative locator for the return. Never an absolute path. */
@@ -447,6 +457,7 @@ export const JOURNAL_RECORD_KEYS = Object.freeze([
     'worktree_id',
     'at',
     'capability',
+    'surface',
     'terminal_state',
     'return_ref',
     'verification_ref',
@@ -759,6 +770,7 @@ function createSchema(db: DatabaseSync): void {
             worktree_id TEXT NOT NULL,
             at TEXT NOT NULL,
             capability TEXT NOT NULL,
+            surface TEXT NOT NULL DEFAULT 'unknown',
             terminal_state TEXT,
             return_ref TEXT,
             verification_ref TEXT,
@@ -767,6 +779,9 @@ function createSchema(db: DatabaseSync): void {
             amends_seq INTEGER
         )`,
     );
+    // A pre-existing row takes the default, which is the honest value: that
+    // dispatch was never asked what surface it came from.
+    addColumnIfMissing(db, 'journal_event', 'surface', "TEXT NOT NULL DEFAULT 'unknown'");
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_episode ON journal_event(repository_id, episode_id, seq)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_session ON journal_event(repository_id, session_id, seq)');
     db.exec('CREATE INDEX IF NOT EXISTS idx_event_task ON journal_event(repository_id, task_id)');
@@ -984,6 +999,8 @@ export interface RecordEventInput {
     prompt_id?: string | null;
     episode_id?: string | null;
     terminal_state?: TerminalState | null;
+    /** Closed vocabulary; anything else (including absent) records `unknown`. */
+    surface?: Surface | null;
     return_ref?: string | null;
     verification_ref?: string | null;
     consumption?: Consumption | null;
@@ -1057,6 +1074,10 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
         worktree_id,
         at,
         capability: input.capability,
+        // Tolerant by design: a surface this build cannot place is `unknown`,
+        // never a throw. The field answers "which surface" and must not be able
+        // to fail a write that would otherwise have succeeded.
+        surface: readSurface(input.surface),
         terminal_state: input.terminal_state ?? null,
         return_ref: requireRef('return_ref', input.return_ref),
         verification_ref: requireRef('verification_ref', input.verification_ref),
@@ -1070,9 +1091,9 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
             `INSERT INTO journal_event
              (event, episode_id, session_id, task_id, prompt_id, boundary_status,
               boundary_rule_version, repository_id, worktree_id, at, capability,
-              terminal_state, return_ref, verification_ref, consumption, retain_until,
-              amends_seq)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              surface, terminal_state, return_ref, verification_ref, consumption,
+              retain_until, amends_seq)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
             row.event,
@@ -1086,6 +1107,7 @@ export function recordEvent(h: JournalHandle, input: RecordEventInput): JournalE
             row.worktree_id,
             row.at,
             row.capability,
+            row.surface,
             row.terminal_state,
             row.return_ref,
             row.verification_ref,
@@ -1111,6 +1133,7 @@ function toEvent(r: Record<string, unknown>): JournalEvent {
         worktree_id: String(r['worktree_id']),
         at: String(r['at']),
         capability: String(r['capability']),
+        surface: readSurface(r['surface']),
         // Tolerant, not a cast: a value this build cannot place reads as null.
         terminal_state: readRunTerminalState(r['terminal_state']),
         return_ref: (r['return_ref'] as string | null) ?? null,

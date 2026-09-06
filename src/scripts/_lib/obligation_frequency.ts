@@ -275,7 +275,7 @@ export function slot_frequency(platform: string, slot: Slot): Frequency {
 }
 
 /**
- * Platforms with no hook surface at all.
+ * Platforms this package binds nothing on.
  *
  * Copilot declares `fallback_only: true` in the manifest — concerns route
  * through rule-only fallback and the dispatcher no-ops. Every hook-declared
@@ -294,7 +294,7 @@ export function is_hook_capable(platform_block: Record<string, unknown>): boolea
 export interface PlatformBinding {
     /** Platform id → slot → concern ids bound in that slot. */
     slots: Map<string, Map<Slot, string[]>>;
-    /** Platform ids that carry no hook surface at all. */
+    /** Platform ids declared `fallback_only` — this package binds nothing there. */
     fallback_only: Set<string>;
 }
 

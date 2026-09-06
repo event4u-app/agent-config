@@ -4,7 +4,7 @@
  *
  * Ported from the retired Python `redact_hook_capture.py` (Phase 8 / Wave 8g).
  *
- * Reads JSON capture files written by `dispatch_hook.py` (when
+ * Reads JSON capture files written by `dispatch_hook.ts` (when
  * `AGENT_HOOK_CAPTURE_DIR` is set) and produces a redacted version
  * suitable for pasting into the verified-platforms roadmap.
  *

@@ -131,11 +131,11 @@ session.
 
 ## Hosts where the heartbeat does not run
 
-The per-turn timestamp needs a hook that fires every turn. Three hosts cannot
-provide one today, and their sessions therefore expire from the register after
-the TTL even while actively working:
+The per-turn timestamp needs a hook that fires every turn. Three hosts carry no
+such binding from this package today, and their sessions therefore expire from
+the register after the TTL even while actively working:
 
-- **Copilot** — no hook surface at all.
+- **Copilot** — nothing bound by this package at all.
 - **Cursor CLI** — the per-turn hooks exist only in the IDE; the CLI does not
   fire them. Cursor **in the IDE** is fine.
 - **Cowork** — the hooks are wired but the lifecycle events do not fire yet

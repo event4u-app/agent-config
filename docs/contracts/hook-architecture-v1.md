@@ -421,7 +421,7 @@ measured.
 | **Bound, cannot deny** | `augment`, `cowork` | a `pre_tool_use:` key, but outside `VERIFIED_PLATFORMS`, so the dispatcher falls through to the legacy pass-through whose own header documents `EXIT_BLOCK = 1` as *non-blocking*. Both trampolines (`augment-dispatcher.sh`, `cowork-dispatcher.sh`) additionally discard dispatcher output and `exit 0` unconditionally — "must never block the agent loop", in their own headers |
 | **Aliased but unbound** | `cursor`, `cline`, `gemini` | a native pre-tool event in `native_event_aliases` — `preToolUse`, `PreToolUse`, `BeforeTool` respectively — mapped onto `pre_tool_use`, with **no** `pre_tool_use:` key in the platform row |
 | **Bound-but-capability-limited** | `opencode` (upstream only — this package binds nothing) | the host honours a blocking result, but **invocation coverage or the availability of the canonical policy inputs is not guaranteed**. See below |
-| **No pre-tool surface** | `windsurf`, `copilot` | no pre-tool alias row at all; `copilot` is additionally `fallback_only` |
+| **Neither aliased nor bound** | `windsurf`, `copilot` | no pre-tool alias row at all and nothing bound; `copilot` is additionally `fallback_only`. What the tree records is what this package binds — it has measured neither host's surface |
 
 The two middle rows are the ones that get lost. Row 2: a concern bound on
 `augment` or `cowork` **runs and is then ignored** — the guard is real, the
@@ -552,12 +552,14 @@ build and a date deliberately — an unpinned capability claim rots exactly the 
 it replaces did.
 
 **Slot presence is not slot firing, and `cursor` is the recorded case.**
-`src/scripts/_lib/session_register.ts` notes that cursor's per-turn slots are
-IDE-only — the CLI fires shell-execution hooks alone — and that a slot-presence
-instrument "has no IDE/CLI dimension, so it reports cursor covered". The same
-comment records `cowork` as structurally wired with lifecycle events that do not
-fire. Read row 3 as "a binding could be written", never as "a binding would
-fire".
+`src/scripts/_lib/session_register.ts` excludes cursor from the heartbeat set
+because reachability there is **unestablished** — an earlier IDE-only claim was
+retracted on 2026-09-06 as unverifiable in either direction — and records that a
+slot-presence instrument "has no IDE/CLI dimension, so it would report cursor
+covered". The same comment records `cowork` as structurally wired with lifecycle
+events that do not fire. Read row 3 as "a binding could be written", never as "a
+binding would fire". The envelope's `surface` field (`_lib/surface.ts`) is where
+that dimension now lives; it answers `unknown` on cursor.
 
 `check_enforcement_coverage.ts` computes its `gap_platforms` from the **bound**
 set and skips every `fallback_only` platform before it starts, so it reports
@@ -792,7 +794,7 @@ the cost of **deciding not to act**, paid constantly.
    is not an accepted trade, it is an unmeasured defect.
 4. **Prefer a PATH prepend over a per-tool-call spawn where both are available.**
    A prepend costs nothing per call, works for any process the session starts —
-   including ones no hook surface observes — and is reversible by closing the
+   including ones no bound hook observes — and is reversible by closing the
    shell. A per-call hook is observable only where a slot exists and is bound.
 
 **The trade these rules do NOT make:** none of them permits a hook to skip work
@@ -854,7 +856,7 @@ observe-only, so blanket exit 0 is correct there).
 
 ## Copilot fallback pattern
 
-Copilot has no hook surface. Concerns whose source rule cites
+This package binds no hook on Copilot and has measured none there. Concerns whose source rule cites
 `agents/runtime/state/<concern>.json` MUST gain a "Copilot fallback" section
 that:
 

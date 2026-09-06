@@ -34,6 +34,8 @@
  * this module exists to remove.
  */
 
+import { blockExitFor, DEFAULT_SURFACE, loadHostLowering, surfaceRow, verifiedPlatforms } from "./host_lowering.js";
+
 /** Internal severity, mirroring dispatch_hook's EXIT_ALLOW / BLOCK / WARN. */
 export type Severity = "allow" | "warn" | "block";
 
@@ -50,53 +52,38 @@ export interface Emission {
 /**
  * Hosts with a documented, verified native hook contract. Anything absent
  * from this set falls through to the legacy pass-through.
+ *
+ * Read from `host_lowering.yaml`: a host is here when it carries a `verified`
+ * block whose `expires` has not passed. An expired row is therefore
+ * indistinguishable from `verified: null` at this boundary, which is what
+ * makes the expiry a real control rather than a comment.
  */
-export const VERIFIED_PLATFORMS: ReadonlySet<string> = new Set(["claude"]);
+export const VERIFIED_PLATFORMS: ReadonlySet<string> = verifiedPlatforms();
 
-/** Internal event name -> Claude Code `hookEventName` for JSON output. */
-const CLAUDE_HOOK_EVENT_NAME: Record<string, string> = {
-    pre_tool_use: "PreToolUse",
-    post_tool_use: "PostToolUse",
-    user_prompt_submit: "UserPromptSubmit",
-    session_start: "SessionStart",
-    session_end: "SessionEnd",
-    stop: "Stop",
-    pre_compact: "PreCompact",
-    subagent_start: "SubagentStart",
-    subagent_stop: "SubagentStop",
-};
-
-/**
- * Events where Claude Code honours exit 2 as a real block. Everywhere else
- * exit 2 either cannot block (PostToolUse: "the tool already ran";
- * SessionStart: "shows stderr to user only") or is far too blunt, so a block
- * degrades to visible advisory context instead of a silent no-op.
- */
-const CLAUDE_BLOCK_CAPABLE_EVENTS: ReadonlySet<string> = new Set([
-    "pre_tool_use",
-    "user_prompt_submit",
-    "stop",
-]);
+/** Internal event name -> host-native event name, for structured output. */
+function nativeEventName(platform: string, event: string): string {
+    return surfaceRow(platform, DEFAULT_SURFACE, loadHostLowering())?.slots.get(event)?.native[0] ?? event;
+}
 
 /**
  * Does this (platform, event) pair let a hook actually REFUSE the action?
  *
  * Exported because a second consumer now needs the same fact and must not
  * re-derive it: `dispatch_hook`'s stdin-read-failure policy denies only where a
- * deny is honoured (`b-stdin-read-failure-policy`, option (c)). A copy of
- * `CLAUDE_BLOCK_CAPABLE_EVENTS` one module away is a copy that drifts, and the
- * drift direction here is the dangerous one: a stale copy would deny on a slot
- * where the deny is discarded, refusing nothing while looking like enforcement.
+ * deny is honoured (`b-stdin-read-failure-policy`, option (c)). A second copy
+ * of the block-capable slot set would be a copy that drifts, and the drift
+ * direction here is the dangerous one: a stale copy would deny on a slot where
+ * the deny is discarded, refusing nothing while looking like enforcement. Both
+ * consumers now read `host_lowering.yaml`, so there is one set to drift from.
  *
  * An unverified platform is NOT block-capable by this predicate, and that is
  * deliberate rather than incidental: `emitFor` hands such a platform its legacy
  * exit code verbatim, so this tree has no evidence its host honours a deny at
- * all. Claiming capability without evidence is the over-claim the hook-coverage
+ * all. A row whose `verified` block has expired reads as unverified here. Claiming capability without evidence is the over-claim the hook-coverage
  * corrections in this estate exist to remove.
  */
 export function isBlockCapable(platform: string, event: string): boolean {
-    if (!VERIFIED_PLATFORMS.has(platform)) return false;
-    return CLAUDE_BLOCK_CAPABLE_EVENTS.has(event);
+    return blockExitFor(platform, event) !== null;
 }
 
 function _joinReasons(reasons: readonly string[]): string {
@@ -112,7 +99,7 @@ function _joinReasons(reasons: readonly string[]): string {
  * advisory path) always intended.
  */
 export function claudeAdditionalContext(event: string, text: string): string {
-    const hookEventName = CLAUDE_HOOK_EVENT_NAME[event] ?? event;
+    const hookEventName = nativeEventName("claude", event);
     return `${JSON.stringify({
         hookSpecificOutput: { hookEventName, additionalContext: text },
     })}\n`;
@@ -166,7 +153,7 @@ export function claudePermissionDecision(
     decision: PermissionDecision,
     reason: string,
 ): string {
-    const hookEventName = CLAUDE_HOOK_EVENT_NAME[event] ?? event;
+    const hookEventName = nativeEventName("claude", event);
     return `${JSON.stringify({
         hookSpecificOutput: {
             hookEventName,
@@ -249,11 +236,12 @@ export function emitFor(
     }
 
     if (severity === "block") {
-        if (CLAUDE_BLOCK_CAPABLE_EVENTS.has(event)) {
-            // Exit 2 + stderr: the ONLY documented way to make Claude Code
-            // refuse the action and feed the reason back to the model.
+        const blockExit = blockExitFor(platform, event);
+        if (blockExit !== null) {
+            // The host's own refusal code + stderr: the ONLY documented way to
+            // make it refuse the action and feed the reason back to the model.
             const label = reason || "blocked by agent-config hook policy";
-            return { exit: 2, stdout: "", stderr: `${label}\n` };
+            return { exit: blockExit, stdout: "", stderr: `${label}\n` };
         }
         // Not block-capable (post_tool_use, session_start, …). Exit 2 here
         // would discard stdout and still not block, so surface the reason as
