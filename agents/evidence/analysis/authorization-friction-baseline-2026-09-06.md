@@ -159,5 +159,5 @@ pre-registration with a new date, and the old one stays on the record.
 
 3.1 and 3.2 are complete and their evidence is above. 3.3's pre-registration is
 complete; its measurement is deferred to
-`agents/roadmaps/stubs/road-to-residual-interruption-measurement.md`, which
+`agents/roadmaps/later/road-to-residual-interruption-measurement.md`, which
 reopens on **observations, not on a date**.

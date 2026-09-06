@@ -17,7 +17,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-authorization-that-reaches-further.md
+    - agents/roadmaps/archive/road-to-authorization-that-reaches-further.md
     - docs/decisions/ADR-254-git-authorization-enforcement-removed.md
     - src/rules/non-destructive-by-default.md
     - src/rules/decision-revisit-gate.md
