@@ -417,9 +417,9 @@ function render(): string {
         // the half it is true of. `kernel_denied` rules cannot carry an
         // `enforced_by` field at all — `block_kernel_rule_writes` refuses the
         // write with no agent-accessible override — so publishing them as "not
-        // declared yet" promises a future that does not exist for them. The
-        // counting policy is unchanged (they still count as uncovered, argued at
-        // § 1); only the claim about their future is.
+        // declared yet" promises a future that does not exist for them. They
+        // still count as uncovered — the counting policy is unchanged; only the
+        // claim about their future is.
         L.push(
             `**Axis 1 — enforcement level per rule.** ${s.total} rules · ` +
                 `${s.blocking} blocking (${s.blocking_pct}%) · ${s.observer} observer · ` +
