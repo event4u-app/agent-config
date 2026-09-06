@@ -49,8 +49,8 @@ Reading the annotations:
   wrong: `pre_tool_use` is aliased on cursor, cline and gemini and bound on none
   of them, so a rule claiming "the guard has nowhere to bind" on those hosts is
   wrong — it is unbound, not unbindable.
-- **copilot has no row at all.** It carries no hook surface, so every slot is an
-  absence rather than a gap. A reader looking for why a guard does not fire there
+- **copilot has no row at all.** This package binds nothing there and has measured
+  nothing there, so every slot is an absence rather than a gap. A reader looking for why a guard does not fire there
   should find this line rather than infer a bug.
 
 Two further absences worth stating separately, because they change what a rule

@@ -19,7 +19,7 @@ at the end.
 Full per-host breakdown: [`enforcement-by-host.md`](enforcement-by-host.md).
 
 The point: a runtime-first competitor's strongest enforcement simply **does not
-exist** on a host that has no hook surface. The compile-time layer is there on
+exist** on a host where no hook is bound. The compile-time layer is there on
 *that same host* because it rides in the config the host already reads.
 
 ## Governance in action — three concrete traces

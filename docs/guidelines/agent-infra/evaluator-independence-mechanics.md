@@ -51,7 +51,7 @@ drew.** It said `pre_tool_use` "exists on three hosts" and that the guard has
 tree. **Downward:** the manifest's own `native_event_aliases` table already maps
 `preToolUse` (cursor), `PreToolUse` (cline) and `BeforeTool` (gemini) onto
 `pre_tool_use`, so there the guard is **unbound, not unbindable**; only windsurf
-and copilot carry no pre-tool surface at all. **Upward, and worse:**
+and copilot carry no pre-tool alias row at all. **Upward, and worse:**
 `host_semantics.ts` certifies **claude alone**, and the augment and cowork
 trampolines discard dispatcher output and `exit 0` unconditionally — so on two
 of the three "enforcing" hosts this guard runs and is then ignored. Nor may the

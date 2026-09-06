@@ -19,7 +19,7 @@ _Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` p
 >    stale dashboard even if local hooks were bypassed.
 >
 > Hook is primary; the prose below is the specification the hook
-> implements and the fallback when the platform has no hook surface.
+> implements and the fallback where no hook is bound on the platform.
 
 ## Iron Law — dashboard sync
 

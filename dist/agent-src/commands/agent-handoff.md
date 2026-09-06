@@ -65,9 +65,9 @@ exactly once, then deletes it). In a terminal-capable context, offer
 to spawn the fresh session directly:
 
 - `claude` — seeds via the session_start hook (clean first message).
-- `codex` — no hook surface there; the adapter passes the handoff as the
+- `codex` — this package binds no hook there; the adapter passes the handoff as the
   initial prompt instead. Same UX, different transport.
-- Bundle hosts without hooks (Antigravity, Copilot) → use `--print` and
+- Bundle hosts this package binds no hook on (Antigravity, Copilot) → use `--print` and
   copy-paste.
 
 ## Fallback mode — summarize the LIVE conversation (`--print`)

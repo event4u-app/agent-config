@@ -37,9 +37,10 @@
  *
  * ## Honest coverage
  *
- * The heartbeat is a per-turn obligation and does not reach every host. `copilot`
- * has no hook surface at all; `cursor`'s per-turn slots are IDE-only and do not
- * fire in its CLI; `cowork`'s lifecycle events are wired but inert. Those hosts
+ * The heartbeat is a per-turn obligation and does not reach every host. This
+ * package binds nothing on `copilot`; `cursor`'s per-turn reachability is not
+ * established here, so it is excluded rather than assumed; `cowork`'s lifecycle
+ * events are wired but inert. Those hosts
  * are named in `HEARTBEAT_REACHABLE_PLATFORMS` by their absence, and a session
  * there simply stops being visible after its TTL rather than being reported as
  * covered.
