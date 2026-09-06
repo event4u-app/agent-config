@@ -30,7 +30,7 @@ CI — points at something that exists. Four things reproduced at `6af83a64b` do
 not. First: `tests/reasoning-layer-eval/` holds 21 fixtures across 8 disciplines
 and **zero** validators — `find … -name '*.ts' -o -name '*.py'` returns nothing —
 while `README.md:18,22,56,57` and `trigger-fixtures.json:3` instruct a reader to
-run `validate_fixtures.py` and `src/scripts/skill_trigger_eval.py`, both deleted
+run `validate_fixtures.py` and `src/scripts/skill_trigger_eval.py`, both deleted <!-- ref-ignore -->
 with the Python retirement; `grep -rn reasoning-layer-eval Taskfile.yml
 .github/workflows/` returns zero, so nothing runs the corpus either. Second:
 `src/skills/sequential-thinking/SKILL.md:148-151` tells the model how often to
