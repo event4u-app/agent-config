@@ -1,0 +1,954 @@
+diff --git a/agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md b/agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md
+index 7506e0b68f52f679d55a64be6ec30e3f13481570..ab838904191aca156319cbd54e943efec6aeda7c 100644
+--- a/agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md
++++ b/agents/roadmaps/archive/road-to-the-hook-that-was-never-installed.md
+@@ -11,6 +11,15 @@ relates:
+       This one detects a stale COPY of a generated file — the installed git
+       hook against the installer that writes it. No detector is shared, and
+       neither changes the other's scan scope.
++# NOTE (added at archival, second R2 round finding 10): the two exempt fields
++# below were written when this roadmap was authored and their arithmetic is now
++# stale — step 1.3 records active_roadmaps 2, not twelve unstarted, and PR #1843
++# is merged so main's floor already reads concern_count 57 and the growth
++# exemption has nothing to spend. Left as authored rather than rewritten: they
++# are the record of what was claimed to pass the gate at authoring time, and the
++# live readings are in 1.3's DONE note. `status: ready` is likewise the
++# repository's archival convention (340 of the archived roadmaps carry it), not
++# a claim that work remains.
+ estate_offset_exempt: "Cannot be offset. All twelve active roadmaps are unstarted, so any archive would be archiving unfinished work. The nearest sibling by shape, road-to-deterministic-defect-detectors, detects defects in authored content; a staleness check on an installed copy of a generated file is a different subject, and folding it in would replace that roadmap's scope rather than extend it."
+ estate_growth_exempt: "Claims the one concern PR #1843 adds (push-settle, concern_count 56 → 57). That PR made a push refuse a stale base and report whether it finished; measured over the 50 PRs before 2026-09-04, 25 needed a base merge and 20 needed a CI-repair commit. The concern is the second half of that mechanism and has no offsetting retirement — no existing concern reads git's ref-advance report, and the nearest neighbour (pr-url-reminder) is silent on every push that does not create a PR."
+ ---
+@@ -53,11 +62,11 @@ not, and the copy is what runs.
+       <!-- DONE: src/scripts/check_installed_hooks_fresh.ts. CORRECTED THE
+       METHOD: it does NOT compare against the heredoc. install-hooks.sh writes
+       post-merge and post-checkout as a heredoc PLUS an appended auto-sync block
+-      (src/scripts/install-hooks.sh:435-499), and interpolates the hook name into
++      (src/scripts/install-hooks.sh:451-515), and interpolates the hook name into
+       both, so no slice of the source file equals an installed body — a
+       heredoc-slice comparison would have been wrong for two of six hooks. The
+       gate instead runs the real installer with a new AGENT_CONFIG_HOOKS_DIR seam
+-      (src/scripts/install-hooks.sh:16-27, seam at :23-24) pointed at a scratch dir and
++      (src/scripts/install-hooks.sh:16-38, seam + refusal at :23-32) pointed at a scratch dir and
+       byte-compares the six rendered files against .git/hooks. That also settles
+       risk-register row 2 structurally rather than by tolerance: anything the
+       installer does deterministically compares equal by construction.
+@@ -74,10 +83,21 @@ not, and the copy is what runs.
+       nothing and report a green meaning "no data" — the vacuous-pass class the
+       2026-07 gates-that-cannot-fail audit catalogued. Reasoning is in the script
+       docstring; correctness is covered by vitest, which does run in CI.
+-      12 tests in tests/scripts/check_installed_hooks_fresh.test.ts. Sensitivity
+-      proven by three sabotages, each restored: forcing state:'match' reds 4
+-      tests, removing either carrier reds 2, renaming the pre-push echo line reds
+-      the ordering test. -->
++      19 tests in tests/scripts/check_installed_hooks_fresh.test.ts. Sensitivity
++      proven by six sabotages, each restored: forcing state:'match' reds 4 tests,
++      removing either carrier reds 2, renaming the pre-push echo line reds the
++      ordering test, promoting the advisory back to a blocker reds 1, dropping
++      the executable-bit read reds 1, dropping the empty-seam guard reds 1.
++      REVISED AFTER THE R2 BLIND REVIEW (9 findings, all fixed, dispositions in
++      agents/evidence/reviews/): the comparison also reads the executable bit,
++      since git SKIPS a non-executable hook and a byte-identical file that lost
++      +x is exactly the installed-but-inert case this gate exists to find; an
++      unreadable hook is no longer reported as missing; `--hooks-dir --flag` is a
++      usage error rather than a staleness verdict; and the AGENT_CONFIG_HOOKS_DIR
++      seam now REFUSES a set-but-empty value instead of falling through to the
++      real .git/hooks. That last one is not preventive — the sabotage that
++      removed the guard let the test suite install over this repository's real
++      shared hooks dir, which is the finding reproduced live. -->
+ 
+ - [x] **1.2 Re-install from `post-merge` / `post-checkout`, where the trigger
+       already fires.** The first version of this step claimed the check had no
+@@ -106,7 +126,7 @@ not, and the copy is what runs.
+       untested in the direction that matters.
+       <!-- DONE, WITH THE RE-INSTALL REFUSED. The step's position was right and
+       its action was wrong. What shipped: the detector runs from inside the
+-      existing `if` in the auto-sync block (src/scripts/install-hooks.sh:476-494),
++      existing `if` in the auto-sync block (src/scripts/install-hooks.sh:492-510),
+       on the event that causes the staleness, and REPORTS on stderr. It does not
+       re-install. Two findings stopped the re-install, and both are recorded in
+       src/skills/git-workflow/references/push-closes-its-loop.md.
+@@ -142,7 +162,7 @@ not, and the copy is what runs.
+       triggering diff on a checkout that does not carry the gate script invokes
+       nothing and does not fail, because .git/hooks is shared and an older branch
+       in a sibling worktree must not have its push refused by a script that is not
+-      on it (guards at src/scripts/install-hooks.sh:116 and :491-492). -->
++      on it (guards at src/scripts/install-hooks.sh:176-177 and :507-508). -->
+ 
+ - [x] **1.3 Do not add a concern without paying its ledger.**
+       If 1.2 lands on a hook concern, it owes a row in
+@@ -181,31 +201,43 @@ not, and the copy is what runs.
+ ## Acceptance Criteria
+ 
+ - [x] AC-1 — A checkout whose `.git/hooks/pre-push` predates the current
+-      `install-hooks.sh` body produces a message naming the mismatch and the fix,
+-      from a carrier that is bound and named. A checkout that just ran the
+-      installer produces nothing.
++      `install-hooks.sh` body produces a message naming the mismatch and what to
++      do about it, from a carrier that is bound and named. A checkout that just
++      ran the installer produces nothing.
+       <!-- MET, on this repository's own stale hooks rather than a fixture. Two
+       carriers, both bound by the same installer and both named in
+       docs/development.md § "The installed hooks go stale, and now they say so":
+-      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:98-132) and
+-      the post-merge / post-checkout auto-sync block (:476-494).
+-      Positive direction, live: running the rendered pre-push in this worktree
+-      against the real shared hooks dir printed "the installed git hooks are
+-      stale", named pre-push / post-merge / post-checkout with installed-vs-source
+-      fingerprints, named `task install-hooks`, and exited 1 with
+-      "Push blocked — the hook that just ran is not the hook this tree ships."
+-      Negative direction, live: the same gate against a directory the installer
+-      had just written printed "6 installed hook(s) match" and exited 0 — and the
+-      pre-push block itself prints one status line and falls through. Both
+-      directions are also pinned in vitest against a real install, plus the
+-      one-byte-edit, deleted-hook, never-installed and unmanaged-file cases.
+-      Ordering is asserted, not incidental: the test fails if the gate is moved
+-      after base-freshness or preflight, because everything after it is answered
+-      by a hook that may not be the current one. -->
++      the pre-push body's FIRST gate (src/scripts/install-hooks.sh:149-194) and
++      the post-merge / post-checkout auto-sync block (:492-510).
++      Positive direction, live: the gate against the real shared hooks dir named
++      pre-push / post-merge / post-checkout with installed-vs-source fingerprints
++      and exited 1. Negative direction, live: against a directory the installer
++      had just written it printed "6 installed hook(s) match" and exited 0, and
++      the pre-push block prints one status line and falls through. Both
++      directions pinned in vitest against a real install, plus one-byte-edit,
++      deleted-hook, lost-executable-bit, unreadable, never-installed and
++      unmanaged-file cases.
++      CORRECTED AFTER THE R2 BLIND REVIEW: the pre-push carrier does NOT refuse,
++      and it runs AFTER base freshness rather than before it. As first shipped it
++      did both, and the reviewer showed that combination hands the contributor a
++      HARMFUL instruction: the commonest cause of a mismatch is a checkout behind
++      a base that moved the installer, and re-installing from there writes the
++      OLDER hook set over the shared .git/hooks — the exact regression 1.2 refuses
++      auto-repair to avoid — while preempting the gate that would have said
++      "merge". Base freshness now exits first. And the refusal is gone entirely:
++      the predicate is "installed == what THIS checkout renders", which across
++      eight worktrees sharing one .git/hooks has no unique referent, so a block
++      fires on ordinary parallel work until the skip variable becomes routine.
++      AI council round 3 (claude-sonnet-4-5 + codex-default, 2026-09-05, 2 of 2
++      seats) chose advisory unanimously, reversing its own round-1 choice on a
++      fact round 1 did not have. Both the ordering and the never-refuses property
++      are pinned by tests that red when either is undone. -->
+ - [x] AC-2 — Installed hooks that no longer match `src/scripts/install-hooks.sh`
+-      are reported at the pull or branch switch that caused it, on stderr,
+-      without anyone running a command — and refused at the next push. The repair
+-      itself stays a human command. One manual install is still required to
++      are reported at the merge-pull or branch switch that caused it, on stderr,
++      without anyone running a command — and at the next push regardless of how
++      the drift arrived. Both notices are advisory; the repair itself stays a
++      human command. A rebase-pull is reported at the push only, and the
++      exclusion is written down rather than left to be discovered. One manual install is still required to
+       bootstrap a fresh clone, and the developer documentation says so rather
+       than leaving it to be discovered.
+       <!-- MET AS REWRITTEN, AND THE ORIGINAL WORDING IS DESCOPED. It read:
+@@ -226,7 +258,18 @@ not, and the copy is what runs.
+       property is gone; the zero-UNNOTICED-staleness property is what shipped.
+       Reopen the original on either per-worktree hook isolation (core.hooksPath)
+       or a branch-independent dispatcher installed once in the common dir, plus
+-      atomic installer writes (measured prerequisite — see 1.2).
++      atomic installer writes (measured prerequisite — see 1.2). The same two
++      conditions gate restoring a BLOCKING push-time check: council round 3
++      (2026-09-05, 2 of 2 seats) found the block rests on the same non-unique
++      predicate as the repair, and the word "refused" left this AC in the first
++      draft with it.
++      SECOND R2 ROUND, finding 2: `git pull --rebase` fires neither post-merge
++      nor post-checkout — it fires post-rewrite, which carries no detector — so
++      the event half of this AC silently excluded rebase-pull users. Named in
++      docs/development.md and in the gate docstring rather than closed:
++      post-rewrite also fires on every `git commit --amend`, so wiring it there
++      trades a real gap for a notice on an operation that cannot have moved the
++      installer. The push-time carrier still catches it.
+       The bootstrap half is met at docs/development.md § "One manual install is
+       required, and nothing installs it for you", which states that `npm install`
+       in a git clone is the ONLY automatic path and names the three states that
+diff --git a/dist/agent-src/skills/git-workflow/references/push-closes-its-loop.md b/dist/agent-src/skills/git-workflow/references/push-closes-its-loop.md
+index 6747d7c3b51945ac9a5f79d721f2640b33eac21f..037906d08686e2a173fd8e726da1e6c278ae199a 100644
+--- a/dist/agent-src/skills/git-workflow/references/push-closes-its-loop.md
++++ b/dist/agent-src/skills/git-workflow/references/push-closes-its-loop.md
+@@ -104,11 +104,21 @@ recorded rather than papered over:
+ ### Closed 2026-09-05 — the contributor is now told
+ 
+ `check_installed_hooks_fresh` renders what `install-hooks.sh` would write into a
+-scratch directory and byte-compares it against `.git/hooks`. It runs as the
+-FIRST gate in the pre-push body, where it refuses the push and names the
+-re-install command shown above, and again from the `post-merge` /
+-`post-checkout` auto-sync block, where it reports on stderr at the moment a pull
+-causes the drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
++scratch directory and compares content AND the executable bit against
++`.git/hooks`. It runs in the pre-push body — advisory, and after the
++base-freshness gate — and again from the `post-merge` / `post-checkout`
++auto-sync block, at the moment a pull causes the drift.
++
++**It reports and never refuses, and the ordering is part of the answer.** The
++predicate is "installed == what THIS checkout renders", and `.git/hooks` is
++shared by every linked worktree, so with two worktrees whose installer bodies
++differ at most one satisfies it at a time — a refusal would fire on ordinary
++parallel work and the skip variable would become routine, which retires the
++check rather than enforcing it. And being behind a base that moved the installer
++is the commonest cause of a mismatch, whose repair is to MERGE: re-installing
++from a behind-base checkout writes the older hook set over the shared directory.
++Base freshness therefore answers first, and the notice never prescribes a
++re-install as universally correct. On the checkout that closed the gap it found `pre-push`, `post-merge` and
+ `post-checkout` all stale — the same drift, five days on and one hook wider.
+ 
+ It compares rendered output rather than slicing these heredocs, because
+@@ -151,7 +161,10 @@ and its generated trees — none of which exist in a consumer project — and a
+ dependency install should not establish persistent repository execution. *Revisit-if* a
+ consumer-native gate set is designed with its own opt-in command and consent
+ step; that is a product feature, not an extension of this installer. Stated for
+-consumers in [`docs/development.md`](../../../../docs/development.md).
++consumers in `docs/development.md` § "Git hooks are maintainer-only". Named
++rather than linked: this file is projected byte-identically into
++`dist/agent-src/`, which sits one level deeper, so a repo-root-relative link
++resolves in one copy and not in the other.
+ 
+ ## Revisit-if
+ 
+diff --git a/docs/development.md b/docs/development.md
+index d93b6beeb0dfd537388cb79d8758bb030d133cf7..d2427b26bddb8bfd9847f105c72f9d6951d70718 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -189,21 +189,36 @@ carriers, both installed by the same installer:
+ 
+ | Carrier | Behavior |
+ |---|---|
+-| `pre-push`, first gate | **Refuses the push**, names the stale hooks and `task install-hooks`. Bypass with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
+-| `post-merge` / `post-checkout` | **Reports on stderr, never repairs.** Fires on the pull or branch switch that caused the drift. |
+-
+-The second one reports and does not repair on purpose. Linked worktrees **share
+-one `.git/hooks`** through the common dir, so a checkout that re-ran the
+-installer would silently redefine the gates every other worktree runs, and a
+-checkout of an older branch would reinstall older hooks over newer ones. An AI
+-council (`claude-sonnet-4-5` + `codex-default`, 2026-09-05, 2 of 2 seats)
+-refused that mutation unanimously. Reopening it needs per-worktree hook
+-isolation (`core.hooksPath`) or a branch-independent dispatcher — see
++| `pre-push`, after the base-freshness gate | Prints the mismatch. **Advisory — it does not refuse.** Silence it with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
++| `post-merge` / `post-checkout` | Prints on stderr at the pull or branch switch that caused the drift. |
++
++**Neither carrier repairs, and neither refuses.** Linked worktrees **share one
++`.git/hooks`** through the common dir, so "the installed hooks match the
++checked-out tree" has no unique referent: a repair would let one checkout
++silently redefine the gates every other worktree runs, and a refusal would fire
++on ordinary parallel work until the skip variable became routine. An AI council
++(`claude-sonnet-4-5` + `codex-default`, 2026-09-05, three rounds, 2 of 2 seats)
++reached both conclusions unanimously. Either returns with a single-referent
++design — per-worktree hook isolation via `core.hooksPath`, or a
++branch-independent dispatcher installed once in the common dir — see
+ [`push-closes-its-loop`](../src/skills/git-workflow/references/push-closes-its-loop.md).
+ 
+-Both carriers skip themselves on a checkout that predates the gate, for the same
+-shared-`.git/hooks` reason: an older branch in a sibling worktree must not have
+-its push refused by a script that is not on it.
++The notice deliberately does **not** prescribe a re-install as universally
++correct. A mismatch proves difference, never which side is newer: from a
++behind-base checkout a re-install writes the OLDER hook set over the shared
++directory, and against a sibling worktree it only moves the mismatch. That is
++also why it runs AFTER base freshness, which exits first and names the merge.
++
++Both carriers skip themselves when the gate is not runnable on the checkout —
++no `node_modules`, no `./scripts-run`, or a branch that predates the gate —
++because the shared `.git/hooks` also runs on all of those.
++
++**One event is not covered:** `git pull --rebase` fires neither `post-merge`
++nor `post-checkout`. It fires `post-rewrite`, which carries no detector, so a
++rebase-pull that moves the installer is reported at your next push and not
++before. Named rather than closed: `post-rewrite` also fires on every
++`git commit --amend`, so wiring it there would trade a real gap for a notice on
++an operation that cannot have moved the installer.
+ 
+ #### Git hooks are maintainer-only — consumers get none
+ 
+diff --git a/src/scripts/check_installed_hooks_fresh.ts b/src/scripts/check_installed_hooks_fresh.ts
+index 8d4744d4d1ed0bb0727d0c6b2f84cc2c5a1fd60d..a117efaefe94ff8e87528acfd7867455697f9072 100755
+--- a/src/scripts/check_installed_hooks_fresh.ts
++++ b/src/scripts/check_installed_hooks_fresh.ts
+@@ -28,15 +28,27 @@
+  * by construction, which is what keeps this from being the too-strict check its
+  * roadmap's risk register warned about.
+  *
+- * WHERE IT IS BOUND, AND WHY NOT IN CI. The pre-push hook body calls it
+- * (blocking, with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1` to bypass), and the
+- * `post-merge` / `post-checkout` auto-sync block calls it advisory-only, which
+- * is the event that CAUSES the staleness. It is deliberately NOT in `task ci`
+- * or `task preflight`: CI cannot observe a contributor's `.git/hooks`, so a
+- * CI-registered run would scan nothing and report a green that means "no data"
+- * — the vacuous-pass class this repository audited in 2026-07. Its correctness
+- * is covered by `tests/scripts/check_installed_hooks_fresh.test.ts`, which does
+- * run in CI, and which asserts BOTH directions.
++ * WHERE IT IS BOUND. Two carriers, and NEITHER REFUSES. The pre-push hook body
++ * calls it after the base-freshness gate, advisory (silence it with
++ * `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`); the `post-merge` / `post-checkout`
++ * auto-sync block calls it at the event that CAUSES the staleness. The
++ * predicate is "installed == what THIS checkout renders", and `.git/hooks` is
++ * shared by every linked worktree, so it has no unique referent and a refusal
++ * would fire on ordinary parallel work — council 2026-09-05, 2 of 2 seats.
++ *
++ * WHAT THE EVENT CARRIER DOES NOT REACH. `git pull --rebase` fires neither
++ * `post-merge` nor `post-checkout` — it fires `post-rewrite`, which carries no
++ * detector. A rebase-pull that moves the installer is therefore reported at the
++ * next push and not before. Named rather than closed: `post-rewrite` also fires
++ * on every `git commit --amend`, so wiring it there trades a real gap for a
++ * notice on an operation that cannot have moved the installer.
++ *
++ * WHY NOT IN CI. Deliberately NOT in `task ci` or `task preflight`: CI cannot
++ * observe a contributor's `.git/hooks`, so a CI-registered run would scan
++ * nothing and report a green that means "no data" — the vacuous-pass class this
++ * repository audited in 2026-07. Its correctness is covered by
++ * `tests/scripts/check_installed_hooks_fresh.test.ts`, which does run in CI,
++ * and which asserts BOTH directions.
+  *
+  * EMPTY IS A REAL STATE. A checkout that never ran the installer has no managed
+  * hook to compare. That exits 0 and says so in one line, rather than pretending
+@@ -70,12 +82,27 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
+ const INSTALLER_REL = 'src/scripts/install-hooks.sh';
+ const FIX = 'task install-hooks';
+ const SKIP_ENV = 'AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH';
++// Both child processes run on the push path. Unbounded, a wedged `git` or an
++// unwritable TMPDIR leaves the push hanging with no diagnostic, and the
++// "could not render" branch is only reached if the child returns at all.
++const GIT_TIMEOUT_MS = 5_000;
++const INSTALLER_TIMEOUT_MS = 30_000;
+ 
+ export interface HookVerdict {
+     name: string;
+-    state: 'match' | 'differs' | 'missing';
++    /**
++     * `not-executable` is its own state rather than a flavour of `differs`:
++     * git SKIPS a hook without the executable bit, so a byte-identical file
++     * that lost +x is exactly the installed-but-inert case this gate exists
++     * to find, and it needs a different sentence than "the content drifted".
++     * `unreadable` is separated from `missing` for the same reason — EACCES
++     * and ENOENT need different fixes (#7).
++     */
++    state: 'match' | 'differs' | 'missing' | 'not-executable' | 'unreadable';
+     expectedSha: string;
+     installedSha: string | null;
++    /** Error code when `state` is `unreadable`. */
++    readError?: string;
+ }
+ 
+ export interface FreshnessReport {
+@@ -90,14 +117,30 @@ function sha(buf: Buffer): string {
+     return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 12);
+ }
+ 
+-/** The shared hooks dir, resolved the way the installer resolves it. */
++/**
++ * The hooks directory git will actually execute from.
++ *
++ * `--git-path hooks` rather than `--git-common-dir` + "/hooks": the two agree
++ * on the ordinary case AND on a linked worktree (verified here — from a
++ * worktree both resolve to the SHARED common-dir hooks, which is the property
++ * the whole shared-state argument rests on), and they diverge when
++ * `core.hooksPath` is set, where only `--git-path` follows it. Composing the
++ * path by hand would compare a directory git never runs and report a match over
++ * hooks that are unrelated — the vacuous green this gate exists to refuse.
++ *
++ * Honest limit: the `core.hooksPath` branch is git-documented and NOT exercised
++ * here. This repository's own `block-no-verify` guard refuses any command
++ * carrying `core.hooksPath`, read-only probes included, so it cannot be tested
++ * from inside a session. The worktree and default cases are verified.
++ */
+ export function resolveHooksDir(repoRoot: string): string {
+-    const res = spawnSync('git', ['-C', repoRoot, 'rev-parse', '--git-common-dir'], {
++    const res = spawnSync('git', ['-C', repoRoot, 'rev-parse', '--git-path', 'hooks'], {
+         encoding: 'utf-8',
++        timeout: GIT_TIMEOUT_MS,
+     });
+     const out = (res.stdout ?? '').trim();
+     if (res.status !== 0 || out === '') return path.join(repoRoot, '.git', 'hooks');
+-    return path.join(path.isAbsolute(out) ? out : path.join(repoRoot, out), 'hooks');
++    return path.isAbsolute(out) ? out : path.join(repoRoot, out);
+ }
+ 
+ /**
+@@ -109,12 +152,33 @@ export function resolveHooksDir(repoRoot: string): string {
+  */
+ export function renderExpected(repoRoot: string): Map<string, Buffer> {
+     const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'hookfresh-'));
++    // The seam FAILS OPEN by construction: install-hooks.sh treats an empty or
++    // absent AGENT_CONFIG_HOOKS_DIR as "install normally", so a redirect that
++    // does not take effect turns this read-only inspection into a real install
++    // over the pre-push that is currently executing it.
++    //
++    // THIS CHECK IS THE WEAKER HALF, and saying so matters on a path whose
++    // stated risk is that overwrite. It inspects `stage` — a value mkdtempSync
++    // produced two lines up — and therefore catches a caller that supplies an
++    // unusable path. It CANNOT observe whether the variable reached the child.
++    // The defence that can is the installer's own refusal of a set-but-empty
++    // value (install-hooks.sh), which is where the fall-through happens.
++    if (!path.isAbsolute(stage) || stage.trim() === '') {
++        throw new Error(
++            `refusing to run the installer: scratch dir ${JSON.stringify(stage)} is not an absolute path, ` +
++                'and an unredirected run would overwrite the real .git/hooks.',
++        );
++    }
+     try {
+         const res = spawnSync('bash', [path.join(repoRoot, INSTALLER_REL)], {
+             cwd: repoRoot,
+             encoding: 'buffer',
++            timeout: INSTALLER_TIMEOUT_MS,
+             env: { ...process.env, AGENT_CONFIG_HOOKS_DIR: stage },
+         });
++        if (res.error !== undefined) {
++            throw new Error(`${INSTALLER_REL} did not complete: ${res.error.message}`);
++        }
+         if (res.status !== 0) {
+             const err = res.stderr ? res.stderr.toString('utf-8') : '';
+             throw new Error(`${INSTALLER_REL} exited ${String(res.status)}\n${err}`);
+@@ -143,21 +207,49 @@ export function inspect(repoRoot: string, hooksDirOverride?: string): FreshnessR
+     for (const [name, body] of expected) {
+         const target = path.join(hooksDir, name);
+         let installed: Buffer | null = null;
++        let executable = false;
++        let readError: string | undefined;
+         try {
+             installed = fs.readFileSync(target);
+-        } catch {
++            // The installer chmod +x's every hook. Git silently skips one that
++            // is not executable, so mode is part of what "installed" means.
++            //
++            // POSIX only. Windows reports 0o666 / 0o444 and has no executable
++            // bit, so every hook would resolve `not-executable` and the gate
++            // would exit 1 forever — a permanent false red on the platform the
++            // test suite explicitly accommodates.
++            executable =
++                process.platform === 'win32' || (fs.statSync(target).mode & 0o111) !== 0;
++        } catch (e) {
++            const code = (e as NodeJS.ErrnoException).code ?? 'UNKNOWN';
+             installed = null;
++            // ENOENT is absence; anything else is a file that exists and could
++            // not be read, which a re-install will not fix on its own.
++            if (code !== 'ENOENT') readError = code;
+         }
++        const state: HookVerdict['state'] =
++            installed === null
++                ? readError === undefined
++                    ? 'missing'
++                    : 'unreadable'
++                : !installed.equals(body)
++                  ? 'differs'
++                  : executable
++                    ? 'match'
++                    : 'not-executable';
+         verdicts.push({
+             name,
+-            state: installed === null ? 'missing' : installed.equals(body) ? 'match' : 'differs',
++            state,
+             expectedSha: sha(body),
+             installedSha: installed === null ? null : sha(installed),
++            ...(readError === undefined ? {} : { readError }),
+         });
+     }
+     return {
+         hooksDir,
+         verdicts,
++        // "Never installed" means nothing is THERE. An unreadable hook is
++        // there, so it must not be swallowed by the fresh-clone branch.
+         neverInstalled: verdicts.every((v) => v.state === 'missing'),
+     };
+ }
+@@ -200,21 +292,37 @@ function render(report: FreshnessReport, quiet: boolean, write: (s: string) => v
+         return 0;
+     }
+ 
+-    write(`❌  check_installed_hooks_fresh: the installed git hooks are stale.\n`);
+-    write(`    hooks dir: ${report.hooksDir}\n`);
++    write(`⚠️  check_installed_hooks_fresh: .git/hooks does not match this checkout.\n`);
++    write(`    hooks dir: ${report.hooksDir}   (shared by every linked worktree)\n`);
+     write(`    worktree:  ${REPO}\n`);
+     for (const v of stale) {
+-        write(
+-            v.state === 'missing'
+-                ? `    ${v.name}  MISSING            (source ${v.expectedSha})\n`
+-                : `    ${v.name}  installed ${String(v.installedSha)}  ≠  source ${v.expectedSha}\n`,
+-        );
++        switch (v.state) {
++            case 'missing':
++                write(`    ${v.name}  MISSING                 (this checkout renders ${v.expectedSha})\n`);
++                break;
++            case 'unreadable':
++                write(`    ${v.name}  UNREADABLE (${String(v.readError)})   — exists but cannot be read\n`);
++                break;
++            case 'not-executable':
++                write(`    ${v.name}  NOT EXECUTABLE          — byte-identical, and git skips it\n`);
++                break;
++            default:
++                write(
++                    `    ${v.name}  installed ${String(v.installedSha)}  ≠  this checkout ${v.expectedSha}\n`,
++                );
++        }
+     }
+-    write(`    → ${FIX}\n`);
+-    write(
+-        `    Every gate those hooks carry is inert on this checkout until you run it.\n` +
+-            `    Bypass for a genuine WIP push with ${SKIP_ENV}=1.\n`,
+-    );
++    // Deliberately NOT "run the installer". A mismatch proves difference, never
++    // that THIS checkout is the newer side: linked worktrees share one hooks
++    // directory, so on a sibling-worktree mismatch a re-install only moves the
++    // mismatch to the other worktree, and on a behind-base checkout it writes
++    // the OLDER hook set over the shared one.
++    write(`\n    A mismatch does not by itself say which side is newer.\n`);
++    write(`    · behind the base?      merge it first — the installer moves with it\n`);
++    write(`    · sibling worktree on a different branch?  re-installing only moves the mismatch\n`);
++    write(`    · otherwise             ${FIX}\n`);
++    write(`    Gates the installed hooks are missing are inert on this checkout.\n`);
++    write(`    Silence this notice with ${SKIP_ENV}=1.\n`);
+     return 1;
+ }
+ 
+@@ -232,8 +340,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+         } else if (a === '--hooks-dir') {
+             i += 1;
+             const next = argv[i];
+-            if (next === undefined) {
+-                process.stderr.write('check_installed_hooks_fresh: --hooks-dir needs a path\n');
++            // `--hooks-dir --quiet` must be a usage error, not a hooks
++            // directory literally named "--quiet" — which would report every
++            // managed hook missing and exit 1 with a staleness verdict, the
++            // exact misdiagnosis the undefined check below was written against.
++            if (next === undefined || next.startsWith('--')) {
++                process.stderr.write(
++                    'check_installed_hooks_fresh: --hooks-dir needs a path, got ' +
++                        `${next === undefined ? 'nothing' : JSON.stringify(next)}\n`,
++                );
+                 return 2;
+             }
+             hooksDir = next;
+diff --git a/src/scripts/install-hooks.sh b/src/scripts/install-hooks.sh
+index 2f58edba6283e9badfa65677bc09e50817246070..30dda1673352a66cd528a0485e69ad2ee3bc2696 100755
+--- a/src/scripts/install-hooks.sh
++++ b/src/scripts/install-hooks.sh
+@@ -20,7 +20,15 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ # heredocs, which carry an appended block (post-merge / post-checkout) that no
+ # heredoc slice can reproduce. It is a test/inspection seam; a normal install
+ # never sets it.
+-if [ -n "${AGENT_CONFIG_HOOKS_DIR:-}" ]; then
++if [ -n "${AGENT_CONFIG_HOOKS_DIR+set}" ]; then
++    # SET-BUT-EMPTY is refused rather than ignored. A caller that meant to
++    # redirect an inspection run and passed an empty value would otherwise fall
++    # through to the real .git/hooks and INSTALL over it — including over a
++    # pre-push that is running the inspection, which truncates it silently.
++    if [ -z "$AGENT_CONFIG_HOOKS_DIR" ]; then
++        echo "❌  AGENT_CONFIG_HOOKS_DIR is set but empty — refusing to fall back to the real .git/hooks." >&2
++        exit 2
++    fi
+     HOOKS_DIR="$AGENT_CONFIG_HOOKS_DIR"
+ elif COMMON_GIT_DIR="$(git -C "$PROJECT_ROOT" rev-parse --git-common-dir 2>/dev/null)"; then
+     case "$COMMON_GIT_DIR" in /*) : ;; *) COMMON_GIT_DIR="$PROJECT_ROOT/$COMMON_GIT_DIR" ;; esac
+@@ -30,6 +38,12 @@ else
+ fi
+ 
+ mkdir -p "$HOOKS_DIR"
++# Name the destination. AGENT_CONFIG_HOOKS_DIR is a global override, and a
++# stray non-empty value would otherwise redirect a real `task install-hooks`
++# while it printed six "hook installed" lines that name no path at all — the
++# freshness check would then report every hook missing with nothing pointing at
++# the cause.
++echo "→  installing git hooks into $HOOKS_DIR" >&2
+ 
+ cat > "$HOOKS_DIR/pre-push" << 'EOF'
+ #!/usr/bin/env bash
+@@ -95,46 +109,7 @@ fi
+ 
+ fail=0
+ 
+-# INSTALLED-HOOK FRESHNESS — first, and it EXITS, for the same reason base
+-# freshness does: everything below is answered by THIS file, and if this file is
+-# stale the answers are from a gate set that no longer exists. Measured
+-# 2026-09-05, before this block existed: the installed pre-push in this
+-# repository was 146 lines against a 189-line source body, missing the entire
+-# base-freshness gate merged five days earlier — which read as live in the
+-# source, in CI, and in the skill documenting it, and did not run here.
+-#
+-# The check renders what install-hooks.sh WOULD write into a scratch directory
+-# and byte-compares; it does not re-parse these heredocs, two of which carry an
+-# appended block no slice of the source can reproduce.
+-#
+-# It is the LAST line of defence, not the first: post-merge / post-checkout
+-# already report the same staleness at the moment a pull causes it. This one
+-# catches the checkout that never pulled.
+-echo "🔍 Installed-hook freshness — do .git/hooks still match install-hooks.sh?"
+-if [ "${AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH:-}" = "1" ]; then
+-    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1"
+-elif [ ! -x ./scripts-run ] || [ ! -f src/scripts/check_installed_hooks_fresh.ts ]; then
+-    # Both guards matter, and the second is the one that is easy to miss.
+-    # .git/hooks is SHARED across linked worktrees through the common dir, so
+-    # this file also runs in a worktree standing on a branch that predates the
+-    # gate. Calling a script that is not on that checkout would refuse the push
+-    # with a message about the wrong thing — a hook made worse by a hook.
+-    echo "⚠️  check_installed_hooks_fresh not present on this checkout — skipping."
+-elif ! ./scripts-run src/scripts/check_installed_hooks_fresh --quiet; then
+-    echo ""
+-    echo "   Push blocked — the hook that just ran is not the hook this tree ships."
+-    echo "   Re-install, then push again; the gates you are missing will run."
+-    echo ""
+-    echo "     task install-hooks"
+-    echo ""
+-    echo "   Bypass a genuine WIP push with AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1."
+-    exit 1
+-fi
+-
+-# BASE FRESHNESS — second since 2026-09-05, and it EXITS rather than setting
+-# fail=1. It was first until the installed-hook check above took that slot: a
+-# stale hook is a fact about which gate set is running at all, so it has to be
+-# answered before any gate's verdict means anything.
++# BASE FRESHNESS — first, and it EXITS rather than setting fail=1.
+ #
+ # The header above has promised "when this hook refuses for staleness" since the
+ # hook was written, and nothing below ever asked. Measured over the 50 PRs
+@@ -177,6 +152,53 @@ elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
+     exit 1
+ fi
+ 
++# INSTALLED-HOOK FRESHNESS — ADVISORY, and deliberately AFTER base freshness.
++#
++# What it answers: are the hooks in .git/hooks still what THIS checkout's
++# install-hooks.sh would write? Measured 2026-09-05: the installed pre-push here
++# was 146 lines against a 189-line source body, missing the entire base-freshness
++# gate above, merged five days earlier. It read as live in the source, in CI and
++# in the skill documenting it, and did not run here.
++#
++# WHY IT DOES NOT REFUSE. The predicate is "installed == what this checkout
++# renders", and .git/hooks is SHARED by every linked worktree through the common
++# dir. With two worktrees whose installer bodies differ, at most one can satisfy
++# it at a time and each re-install flips which — so a refusal would fire on
++# ordinary parallel work, and the documented skip variable would become routine,
++# which retires the gate rather than enforcing it. An AI council (claude-sonnet-4-5
++# + codex-default, 2026-09-05, 2 of 2 seats) chose advisory unanimously after an
++# independent review raised exactly that. Blocking returns only with a
++# single-referent predicate — per-worktree hook isolation via core.hooksPath, or a
++# branch-independent dispatcher installed once in the common dir.
++#
++# WHY AFTER BASE FRESHNESS. Being behind a base that moved the installer is the
++# most common cause of a mismatch, and the repair for THAT is to merge, not to
++# re-install: re-installing from a behind-base checkout writes the OLDER hook set
++# over the shared directory. Base freshness exits first, so that contributor is
++# told the correct thing and never reaches this notice.
++echo "🔍 Installed-hook freshness — do .git/hooks still match this checkout?"
++if [ "${AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH:-}" = "1" ]; then
++    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1"
++elif [ ! -x ./scripts-run ] || [ ! -d node_modules ] \
++    || [ ! -f src/scripts/check_installed_hooks_fresh.ts ]; then
++    # Three guards, and each has been a real miss. `-d node_modules`: without
++    # dependencies ./scripts-run cannot start tsx and the non-zero exit would
++    # read as staleness. `-f`: .git/hooks is shared, so this file also runs in a
++    # worktree standing on a branch that predates the gate, and calling a script
++    # that is not on that checkout would report the wrong thing.
++    echo "⏭️  check_installed_hooks_fresh not runnable on this checkout — skipping."
++else
++    ./scripts-run src/scripts/check_installed_hooks_fresh --quiet
++    hookfresh_rc=$?
++    # The gate's three exit codes mean three different things, and collapsing
++    # them reports a false cause: 0 = match or nothing installed, 1 = mismatch,
++    # 2 = it could not render (installer failed, unwritable TMPDIR, usage error).
++    if [ "$hookfresh_rc" = "2" ]; then
++        echo "⚠️  could not compare the installed hooks (see above) — not a staleness verdict."
++    fi
++    # Advisory in both cases: nothing here sets fail=1 or exits.
++fi
++
+ if ! command -v task >/dev/null 2>&1; then
+     echo "⚠️  'task' (go-task) not found — cannot run the consistency gate locally."
+     echo "    Install it (https://taskfile.dev) so pre-push can mirror the CI check;"
+diff --git a/src/skills/git-workflow/references/push-closes-its-loop.md b/src/skills/git-workflow/references/push-closes-its-loop.md
+index 6747d7c3b51945ac9a5f79d721f2640b33eac21f..037906d08686e2a173fd8e726da1e6c278ae199a 100644
+--- a/src/skills/git-workflow/references/push-closes-its-loop.md
++++ b/src/skills/git-workflow/references/push-closes-its-loop.md
+@@ -104,11 +104,21 @@ recorded rather than papered over:
+ ### Closed 2026-09-05 — the contributor is now told
+ 
+ `check_installed_hooks_fresh` renders what `install-hooks.sh` would write into a
+-scratch directory and byte-compares it against `.git/hooks`. It runs as the
+-FIRST gate in the pre-push body, where it refuses the push and names the
+-re-install command shown above, and again from the `post-merge` /
+-`post-checkout` auto-sync block, where it reports on stderr at the moment a pull
+-causes the drift. On the checkout that closed the gap it found `pre-push`, `post-merge` and
++scratch directory and compares content AND the executable bit against
++`.git/hooks`. It runs in the pre-push body — advisory, and after the
++base-freshness gate — and again from the `post-merge` / `post-checkout`
++auto-sync block, at the moment a pull causes the drift.
++
++**It reports and never refuses, and the ordering is part of the answer.** The
++predicate is "installed == what THIS checkout renders", and `.git/hooks` is
++shared by every linked worktree, so with two worktrees whose installer bodies
++differ at most one satisfies it at a time — a refusal would fire on ordinary
++parallel work and the skip variable would become routine, which retires the
++check rather than enforcing it. And being behind a base that moved the installer
++is the commonest cause of a mismatch, whose repair is to MERGE: re-installing
++from a behind-base checkout writes the older hook set over the shared directory.
++Base freshness therefore answers first, and the notice never prescribes a
++re-install as universally correct. On the checkout that closed the gap it found `pre-push`, `post-merge` and
+ `post-checkout` all stale — the same drift, five days on and one hook wider.
+ 
+ It compares rendered output rather than slicing these heredocs, because
+@@ -151,7 +161,10 @@ and its generated trees — none of which exist in a consumer project — and a
+ dependency install should not establish persistent repository execution. *Revisit-if* a
+ consumer-native gate set is designed with its own opt-in command and consent
+ step; that is a product feature, not an extension of this installer. Stated for
+-consumers in [`docs/development.md`](../../../../docs/development.md).
++consumers in `docs/development.md` § "Git hooks are maintainer-only". Named
++rather than linked: this file is projected byte-identically into
++`dist/agent-src/`, which sits one level deeper, so a repo-root-relative link
++resolves in one copy and not in the other.
+ 
+ ## Revisit-if
+ 
+diff --git a/tests/scripts/check_installed_hooks_fresh.test.ts b/tests/scripts/check_installed_hooks_fresh.test.ts
+index 272a7279a1ee52ad8cd8b2dd5db57d5c21207567..680978cd009891175d01fe9018f7908bfde3d7a3 100644
+--- a/tests/scripts/check_installed_hooks_fresh.test.ts
++++ b/tests/scripts/check_installed_hooks_fresh.test.ts
+@@ -17,7 +17,11 @@ import * as os from "node:os";
+ import * as path from "node:path";
+ import { beforeAll, describe, expect, it } from "vitest";
+ 
+-import { inspect, renderExpected } from "../../src/scripts/check_installed_hooks_fresh.js";
++import {
++  inspect,
++  renderExpected,
++  resolveHooksDir,
++} from "../../src/scripts/check_installed_hooks_fresh.js";
+ 
+ const REPO = path.resolve(__dirname, "../..");
+ const GATE = path.join(REPO, "src/scripts/check_installed_hooks_fresh.ts");
+@@ -47,6 +51,16 @@ function installInto(dir: string): void {
+   });
+ }
+ 
++/** Run the gate's real CLI with arbitrary argv. */
++function runGateArgv(args: string[]): { code: number; out: string } {
++  const res = spawnSync(TSX, [GATE, ...args], {
++    cwd: REPO,
++    encoding: "utf8",
++    maxBuffer: 32 * 1024 * 1024,
++  });
++  return { code: res.status ?? 1, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
++}
++
+ /** Run the gate's real CLI against an arbitrary installed-hooks directory. */
+ function runGate(hooksDir: string): { code: number; out: string } {
+   const res = spawnSync(TSX, [GATE, "--hooks-dir", hooksDir], {
+@@ -92,9 +106,15 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+ 
+     const { code, out } = runGate(stale);
+     expect(code).toBe(1);
+-    expect(out).toContain("the installed git hooks are stale");
++    expect(out).toContain("does not match this checkout");
+     expect(out).toContain("pre-push");
+     expect(out).toContain("task install-hooks");
++    // A mismatch proves difference, never which side is newer, so the notice
++    // must not prescribe the re-install unconditionally: from a behind-base
++    // checkout it writes the OLDER hook set over the shared directory.
++    expect(out).toContain("does not by itself say which side is newer");
++    expect(out).toContain("behind the base");
++    expect(out).toContain("sibling worktree");
+     // The other five must NOT be named — a detector that flags everything is
+     // as useless as one that flags nothing.
+     for (const name of MANAGED.filter((n) => n !== "pre-push")) {
+@@ -122,6 +142,31 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+     expect(runGate(nudged).code).toBe(1);
+   });
+ 
++  it("reports a hook that lost its executable bit, byte-identical or not", () => {
++    // Git SKIPS a non-executable hook, so this is the installed-but-inert case
++    // the gate exists to find. Content-only comparison called it `match`.
++    const inert = tmp("hookfresh-noexec-");
++    installInto(inert);
++    fs.chmodSync(path.join(inert, "pre-push"), 0o644);
++    const { code, out } = runGate(inert);
++    expect(code).toBe(1);
++    expect(out).toContain("NOT EXECUTABLE");
++    expect(out).toContain("pre-push");
++  });
++
++  it("distinguishes an unreadable hook from a missing one", () => {
++    const unread = tmp("hookfresh-unreadable-");
++    installInto(unread);
++    // A directory where a file is expected: EISDIR on read, and a re-install
++    // will not fix it, so it must not be reported as MISSING.
++    fs.rmSync(path.join(unread, "post-commit"));
++    fs.mkdirSync(path.join(unread, "post-commit"));
++    const { code, out } = runGate(unread);
++    expect(code).toBe(1);
++    expect(out).toContain("UNREADABLE");
++    expect(out).not.toMatch(/post-commit\s+MISSING/);
++  });
++
+   it("exits 0 and says so when nothing is installed at all", () => {
+     const empty = tmp("hookfresh-empty-");
+     const { code, out } = runGate(empty);
+@@ -138,6 +183,69 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+     expect(runGate(extras).code).toBe(0);
+   });
+ 
++  it("treats `--hooks-dir --quiet` as a usage error, not as staleness", () => {
++    // Swallowing the flag as a path reports every hook missing and exits 1 —
++    // a staleness verdict for a typo. Exit 2 is what the contract reserves.
++    const { code, out } = runGateArgv(["--hooks-dir", "--quiet"]);
++    expect(code).toBe(2);
++    expect(out).toContain("needs a path");
++    expect(out).not.toContain("does not match this checkout");
++  });
++
++  it("refuses to run the installer without a real redirect", () => {
++    // The seam fails open: install-hooks.sh treats an EMPTY value as "install
++    // normally", which would overwrite the real .git/hooks — including the
++    // pre-push running the inspection.
++    const res = spawnSync("bash", [INSTALLER], {
++      cwd: REPO,
++      encoding: "utf8",
++      env: { ...process.env, AGENT_CONFIG_HOOKS_DIR: "" },
++    });
++    expect(res.status).toBe(2);
++    expect(`${res.stdout ?? ""}${res.stderr ?? ""}`).toContain("set but empty");
++  });
++
++  it("resolves the hooks dir with the primitive that honours core.hooksPath", () => {
++    // From THIS linked worktree, `--git-path hooks` and the old
++    // `--git-common-dir` + "/hooks" composition agree — both give the SHARED
++    // hooks dir, which is what the whole shared-state argument rests on. They
++    // diverge only when core.hooksPath is set, where composing by hand compares
++    // a directory git never executes. The divergent case is NOT exercised: this
++    // repository's block-no-verify guard refuses any command carrying
++    // core.hooksPath, read-only probes included.
++    const raw = execFileSync("git", ["rev-parse", "--git-path", "hooks"], {
++      cwd: REPO,
++      encoding: "utf8",
++    }).trim();
++    // `--git-path` answers RELATIVE in an ordinary checkout (CI) and ABSOLUTE
++    // in a linked worktree (this repo's normal workflow), so the assertion has
++    // to resolve it the way the function does. Comparing the raw string passed
++    // locally and failed on both CI runners.
++    const expected = path.isAbsolute(raw) ? raw : path.join(REPO, raw);
++    expect(resolveHooksDir(REPO)).toBe(expected);
++    expect(path.basename(resolveHooksDir(REPO))).toBe("hooks");
++    // The property that actually broke CI: an ordinary checkout answers
++    // RELATIVE (`.git/hooks`), a linked worktree answers absolute, and every
++    // caller joins this onto a hook name. It must be absolute either way.
++    expect(path.isAbsolute(resolveHooksDir(REPO))).toBe(true);
++
++    // And in a linked worktree specifically: it must be the SHARED hooks dir,
++    // not the worktree's private gitdir. That is the property every
++    // shared-state argument in this change rests on. Skipped in an ordinary
++    // checkout, where the two are the same directory and prove nothing.
++    const commonDir = execFileSync("git", ["rev-parse", "--git-common-dir"], {
++      cwd: REPO,
++      encoding: "utf8",
++    }).trim();
++    const gitDir = execFileSync("git", ["rev-parse", "--git-dir"], {
++      cwd: REPO,
++      encoding: "utf8",
++    }).trim();
++    if (path.resolve(REPO, commonDir) !== path.resolve(REPO, gitDir)) {
++      expect(resolveHooksDir(REPO)).toBe(path.join(path.resolve(REPO, commonDir), "hooks"));
++    }
++  });
++
+   it("exposes the same verdict through the library entry point", () => {
+     const report = inspect(REPO, fresh);
+     expect(report.neverInstalled).toBe(false);
+@@ -146,20 +254,59 @@ describe("check_installed_hooks_fresh — the detector, both directions", () =>
+ });
+ 
+ describe("carrier — the pre-push hook body", () => {
+-  it("calls the gate before any other content gate, and exits on a stale hook", () => {
+-    const rendered = renderExpected(REPO).get("pre-push")!.toString("utf8");
+-    expect(rendered).toContain("src/scripts/check_installed_hooks_fresh");
+-    expect(rendered).toContain("AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH");
+-    expect(rendered).toContain("task install-hooks");
+-    // Ordering is the load-bearing part: everything after this gate is answered
+-    // by a hook that may not be the current one.
+-    const hookFresh = rendered.indexOf("Installed-hook freshness");
+-    const baseFresh = rendered.indexOf("Base freshness");
+-    const preflight = rendered.indexOf("Preflight — the CI-only");
+-    expect(hookFresh).toBeGreaterThan(-1);
+-    expect(hookFresh).toBeLessThan(baseFresh);
++  const rendered = () => renderExpected(REPO).get("pre-push")!.toString("utf8");
++
++  it("calls the gate, guarded, and offers a way to silence it", () => {
++    const body = rendered();
++    expect(body).toContain("src/scripts/check_installed_hooks_fresh");
++    expect(body).toContain("AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH");
++    // All three guards, and -d node_modules is the one the blocking version
++    // omitted while its sibling carrier had it.
++    expect(body).toMatch(/-x \.\/scripts-run/);
++    expect(body).toMatch(/-d node_modules/);
++    expect(body).toMatch(/-f src\/scripts\/check_installed_hooks_fresh\.ts/);
++  });
++
++  it("runs AFTER base freshness and before preflight", () => {
++    // Being behind a base that moved the installer is the commonest cause of a
++    // mismatch, and its repair is to MERGE. Base freshness exits first, so that
++    // contributor is never handed a re-install that would write the OLDER hook
++    // set over the shared directory.
++    const body = rendered();
++    const hookFresh = body.indexOf("Installed-hook freshness");
++    const baseFresh = body.indexOf("Base freshness");
++    const preflight = body.indexOf("Preflight — the CI-only");
++    expect(baseFresh).toBeGreaterThan(-1);
++    expect(hookFresh).toBeGreaterThan(baseFresh);
+     expect(hookFresh).toBeLessThan(preflight);
+   });
++
++  it("is ADVISORY — it never sets fail or exits on a mismatch", () => {
++    // The predicate has no unique referent across linked worktrees sharing one
++    // .git/hooks, so a refusal fires on ordinary parallel work. Pinned so a
++    // future edit cannot quietly promote it back to a blocker.
++    const body = rendered();
++    const start = body.indexOf("# INSTALLED-HOOK FRESHNESS");
++    const end = body.indexOf("if ! command -v task", start);
++    expect(start).toBeGreaterThan(-1);
++    expect(end).toBeGreaterThan(start);
++    const block = body.slice(start, end);
++    // Deliberately token-level rather than form-specific. The earlier pin was
++    // /^\s*exit 1\s*$/m and /^\s*fail=1\s*$/m, which `exit 1  # blocked`,
++    // `exit "$hookfresh_rc"`, `return 1` and `fail=$hookfresh_rc` all slip
++    // past — so the property could have been undone with this test green.
++    // Every code line in the block is checked, comments excluded so the
++    // paragraph explaining why it does not refuse cannot trip its own pin.
++    const code = block
++        .split("\n")
++        .filter((l) => !l.trim().startsWith("#"))
++        .join("\n");
++    expect(code).not.toMatch(/\bexit\b/);
++    expect(code).not.toMatch(/\bfail\s*=/);
++    expect(code).not.toMatch(/\breturn\b/);
++    // …and it distinguishes "could not render" from "mismatch".
++    expect(block).toContain("not a staleness verdict");
++  });
+ });
+ 
+ /**
+@@ -188,7 +335,16 @@ function runPostMerge(touched: string, gatePresent = true): {
+   const prev = git("rev-parse", "HEAD").trim();
+ 
+   fs.mkdirSync(path.join(dir, path.dirname(touched)), { recursive: true });
+-  fs.writeFileSync(path.join(dir, touched), "changed\n");
++  // When the touched path IS the installer, make it a working stand-in that
++  // rewrites ./post-merge. Otherwise the carrier could gain a real re-install
++  // and this fixture would not notice: a `bash src/scripts/install-hooks.sh`
++  // over a file containing "changed" is a no-op behind `|| true`, so the
++  // byte-identical assertion below would pass over a live mutation.
++  const body =
++    touched === "src/scripts/install-hooks.sh"
++      ? '#!/usr/bin/env bash\nprintf "#!/usr/bin/env bash\\nREINSTALLED\\n" > ./post-merge\n'
++      : "changed\n";
++  fs.writeFileSync(path.join(dir, touched), body, { mode: 0o755 });
+   git("add", touched);
+   git("commit", "-qm", "second");
+ 
+@@ -256,6 +412,12 @@ describe("carrier — post-merge, both directions", () => {
+     // reason that .git/hooks is shared across linked worktrees.
+     const r = runPostMerge("src/scripts/install-hooks.sh");
+     expect(r.hookAfter).toBe(r.hookBefore);
+-    expect(r.hookAfter).not.toContain("AGENT_CONFIG_HOOKS_DIR");
++    // The previous second assertion here checked that the hook body does not
++    // contain "AGENT_CONFIG_HOOKS_DIR" — a string that lives in the installer
++    // PREAMBLE and never in a rendered hook, so it passed whether or not a
++    // repair had run. This one cannot: a re-install writes the installer's own
++    // success line, and the marker below is unique to a rendered hook body.
++    expect(r.hookAfter).not.toContain("REINSTALLED");
++    expect(r.out).not.toContain("installing git hooks into");
+   });
+ });

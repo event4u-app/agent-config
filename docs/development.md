@@ -189,21 +189,36 @@ carriers, both installed by the same installer:
 
 | Carrier | Behavior |
 |---|---|
-| `pre-push`, first gate | **Refuses the push**, names the stale hooks and `task install-hooks`. Bypass with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
-| `post-merge` / `post-checkout` | **Reports on stderr, never repairs.** Fires on the pull or branch switch that caused the drift. |
+| `pre-push`, after the base-freshness gate | Prints the mismatch. **Advisory — it does not refuse.** Silence it with `AGENT_CONFIG_SKIP_PREPUSH_HOOKFRESH=1`. |
+| `post-merge` / `post-checkout` | Prints on stderr at the pull or branch switch that caused the drift. |
 
-The second one reports and does not repair on purpose. Linked worktrees **share
-one `.git/hooks`** through the common dir, so a checkout that re-ran the
-installer would silently redefine the gates every other worktree runs, and a
-checkout of an older branch would reinstall older hooks over newer ones. An AI
-council (`claude-sonnet-4-5` + `codex-default`, 2026-09-05, 2 of 2 seats)
-refused that mutation unanimously. Reopening it needs per-worktree hook
-isolation (`core.hooksPath`) or a branch-independent dispatcher — see
+**Neither carrier repairs, and neither refuses.** Linked worktrees **share one
+`.git/hooks`** through the common dir, so "the installed hooks match the
+checked-out tree" has no unique referent: a repair would let one checkout
+silently redefine the gates every other worktree runs, and a refusal would fire
+on ordinary parallel work until the skip variable became routine. An AI council
+(`claude-sonnet-4-5` + `codex-default`, 2026-09-05, three rounds, 2 of 2 seats)
+reached both conclusions unanimously. Either returns with a single-referent
+design — per-worktree hook isolation via `core.hooksPath`, or a
+branch-independent dispatcher installed once in the common dir — see
 [`push-closes-its-loop`](../src/skills/git-workflow/references/push-closes-its-loop.md).
 
-Both carriers skip themselves on a checkout that predates the gate, for the same
-shared-`.git/hooks` reason: an older branch in a sibling worktree must not have
-its push refused by a script that is not on it.
+The notice deliberately does **not** prescribe a re-install as universally
+correct. A mismatch proves difference, never which side is newer: from a
+behind-base checkout a re-install writes the OLDER hook set over the shared
+directory, and against a sibling worktree it only moves the mismatch. That is
+also why it runs AFTER base freshness, which exits first and names the merge.
+
+Both carriers skip themselves when the gate is not runnable on the checkout —
+no `node_modules`, no `./scripts-run`, or a branch that predates the gate —
+because the shared `.git/hooks` also runs on all of those.
+
+**One event is not covered:** `git pull --rebase` fires neither `post-merge`
+nor `post-checkout`. It fires `post-rewrite`, which carries no detector, so a
+rebase-pull that moves the installer is reported at your next push and not
+before. Named rather than closed: `post-rewrite` also fires on every
+`git commit --amend`, so wiring it there would trade a real gap for a notice on
+an operation that cannot have moved the installer.
 
 #### Git hooks are maintainer-only — consumers get none
 

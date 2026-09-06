@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -25,7 +27,7 @@ estate_growth_exempt: "Claims the one concern PR #1843 adds (push-settle, concer
 ---
 # Road to the hook that was never installed
 
-> **Source:** PR #1843 (`feat: a push closes its own loop`) added a base-freshness
+> **Source:** [REDACTED:src-conf]
 > gate to the pre-push hook and, in writing it, measured the hook it was editing:
 > the INSTALLED `.git/hooks/pre-push` in this repository was **113 lines** against
 > a source body of ~146. It was missing header revisions merged on 2026-08-30, so
