@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: react-shadcn-ui
-description: "Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack; utility idiom from tailwind-engineer."
+description: "Building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack; idiom from tailwind-engineer."
 domain: engineering
 workspaces:
   - engineering

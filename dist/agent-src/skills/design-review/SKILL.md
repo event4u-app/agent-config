@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: design-review
-description: "When the user says \"review the design\", \"check the UI\", or wants a comprehensive UI/UX review. 7 phases: interaction, responsiveness, accessibility. Inventory via existing-ui-audit first."
+description: "When the user says \"review the design\", \"check the UI\", or wants a comprehensive UI/UX review. 7 phases: interaction, responsiveness, accessibility. Inventory via existing-ui-audit."
 domain: quality
 enforced_by:
   - "instruction-only: the Phase 4 sweep claims WCAG 2.1 AA and its criteria table is a deliberate SUBSET — depth is delegated to accessibility-auditor, which claims 2.2 AA and carries the resolver. No resolver checks this table against 2.1, so the claim is model-carried and the gap is recorded rather than implied."

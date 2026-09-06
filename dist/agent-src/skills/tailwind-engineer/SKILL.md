@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: tailwind-engineer
-description: "Writing or reviewing Tailwind CSS — utility-first, design tokens, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'. Pairs with react-shadcn-ui."
+description: "Writing or reviewing Tailwind CSS — utility-first, design tokens, no inline-style drift, responsive variants, dark mode — 'style this' or 'mach das hübsch'. Pairs with react-shadcn-ui."
 personas:
   - frontend-engineer
 domain: engineering
