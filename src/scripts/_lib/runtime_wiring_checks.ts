@@ -28,6 +28,10 @@ import process from 'node:process';
 import { parse as parseYaml } from 'yaml';
 
 import { inheritedGitOverrides } from './repo_root.js';
+import {
+    checkHostPermissionSettings,
+    defaultHostPermissionDeps,
+} from './host_permission_checks.js';
 
 /** The verdict shape `cmd_doctor` renders. Mirrors its internal `Dict` rows. */
 export interface WiringCheck {
@@ -291,7 +295,7 @@ export function checkInheritedGitEnv(env: NodeJS.ProcessEnv = process.env): Wiri
  * two spreads.
  */
 /** The four ids, in render order. Spread into `cmd_doctor`'s two id registries. */
-export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env', 'hooks-kill-switch'] as const;
+export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env', 'hooks-kill-switch', 'host-permission-settings'] as const;
 
 
 /**
@@ -333,6 +337,7 @@ export function checkHooksDisabled(env: NodeJS.ProcessEnv = process.env): Wiring
 
 export function wiringRunners(opts: {
     packageRoot: string;
+    projectRoot: string;
     iterOverrides: () => Iterable<[string, unknown, string]>;
 }): Record<string, () => WiringCheck> {
     return {
@@ -344,6 +349,12 @@ export function wiringRunners(opts: {
         'hook-resolution': () => checkHookResolution(opts.packageRoot).check,
         'inherited-git-env': () => checkInheritedGitEnv(),
         'hooks-kill-switch': () => checkHooksDisabled(),
+        // The host's own permission settings, which decide how often a call is
+        // confirmed. It lives with this family rather than its own because
+        // `checkHookWiring` below already reads the same `~/.claude/settings.json`
+        // for the same host — the question is the same surface, one key over.
+        'host-permission-settings': () =>
+            checkHostPermissionSettings(defaultHostPermissionDeps(opts.projectRoot)),
     };
 }
 

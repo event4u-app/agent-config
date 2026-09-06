@@ -101,7 +101,6 @@ import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
 import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
 import * as install_reach from '../_lib/install_reach_checks.js';
-import * as host_permissions from '../_lib/host_permission_checks.js';
 import * as runtime_checks from '../_lib/doctor_runtime_checks.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
@@ -778,7 +777,6 @@ const CHECK_IDS = [
     'hook-wiring',
     ...runtime_wiring.WIRING_CHECK_IDS,
     ...install_reach.REACH_CHECK_IDS,
-    ...host_permissions.HOST_PERMISSION_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -812,7 +810,6 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'hook-wiring',
     ...runtime_wiring.WIRING_CHECK_IDS,
     ...install_reach.REACH_CHECK_IDS,
-    ...host_permissions.HOST_PERMISSION_CHECK_IDS,
     'stale-orphans',
     'overrides',
     'rule-scope-drift',
@@ -2884,9 +2881,8 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
-        ...(host_permissions.hostPermissionRunners({ projectRoot: project_root }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         overrides: () => _check_overrides(project_root),
         'rule-scope-drift': () => _check_rule_scope_drift(project_root),
@@ -2971,9 +2967,8 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
+        ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
-        ...(host_permissions.hostPermissionRunners({ projectRoot: project_root }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
         // BOTH registries need the id. Registering only the first one crashed with
         // `runners[cid] is not a function` on a global-only consumer, which is the

@@ -249,14 +249,3 @@ export function checkHostPermissionSettings(deps: HostPermissionDeps): WiringChe
             permissionSnippet(deps.projectRoot).replace(/\s+/g, " "),
     };
 }
-
-export const HOST_PERMISSION_CHECK_IDS = ["host-permission-settings"] as const;
-
-export function hostPermissionRunners(opts: {
-    projectRoot: string;
-}): Record<string, () => WiringCheck> {
-    return {
-        "host-permission-settings": () =>
-            checkHostPermissionSettings(defaultHostPermissionDeps(opts.projectRoot)),
-    };
-}
