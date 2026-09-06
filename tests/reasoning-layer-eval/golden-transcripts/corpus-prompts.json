@@ -1,5 +1,5 @@
 {
-  "_comment": "Machine-readable form of corpus.md — the 12 quality-layer task prompts. band: standard|strong. Consumed by run_quality_eval.py. Editing this file changes what the eval runs.",
+  "_comment": "Machine-readable form of corpus.md — the 12 quality-layer task prompts. band: standard|strong. Consumed by src/scripts/rdp_quality_eval.ts. Editing this file changes what the eval runs.",
   "slots": [
     {"n": "01", "slug": "dashboard-activity-feature", "family": "ambiguous-discovery", "band": "standard", "discipline": "grounding", "prompt": "Add a feature to the dashboard so users can see their activity."},
     {"n": "02", "slug": "oauth-migration-token-map", "family": "ambiguous-discovery", "band": "standard", "discipline": "grounding+intent", "prompt": "We need to migrate auth to OAuth and we're not sure the legacy token format maps cleanly. How should we approach this?"},

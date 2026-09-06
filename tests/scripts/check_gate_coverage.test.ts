@@ -15,6 +15,9 @@ import { matchesGatePattern } from '../../src/scripts/_lib/gate_population.js';
 import {
     type CanaryResult,
     type GateSpec,
+    ci_invocation_problem,
+    ci_invocations,
+    ci_invocation_drift,
     classify,
     count_gate_scripts,
     ledgerOutcomeFor,
@@ -613,5 +616,73 @@ describe('ledgerOutcomeFor — inspected vs not inspected', () => {
         // newly added Verdict member as READ, with the switch and every test
         // above still green. The throw is the point.
         expect(() => ledgerOutcomeFor('timeout' as never)).toThrow(/unhandled verdict/);
+    });
+});
+
+
+/**
+ * Rule 2 of the manifest — CI-IDENTICAL INVOCATION — used to be enforced by
+ * nobody. The guard ran whatever `argv` said, so a row could keep reporting a
+ * healthy floor for a gate whose CI step had been deleted. That is not
+ * hypothetical: check_finding_dispositions had one caller, on a `release/*` head
+ * branch deleted after every merge, and two releases shipped with no findings
+ * ledger while this manifest said nothing.
+ */
+describe('ci_invocation — a row pinned to a workflow that stopped calling the gate', () => {
+    const WORKFLOW = [
+        'jobs:',
+        '  x:',
+        '    steps:',
+        '      - name: bare call',
+        '        run: ./scripts-run src/scripts/some_gate',
+        '      - name: call with args',
+        '        run: |',
+        '          ./scripts-run src/scripts/other_gate \\',
+        '            --release "$v" --pr 7',
+    ].join('\n');
+
+    it('reads a bare invocation as an empty argument list', () => {
+        expect(ci_invocations(WORKFLOW, 'some_gate')).toEqual([[]]);
+    });
+
+    it('folds a line continuation so a split call is still one invocation', () => {
+        expect(ci_invocations(WORKFLOW, 'other_gate')).toEqual([['--release', '"$v"', '--pr', '7']]);
+    });
+
+    it('does not match a gate whose name is a prefix of another', () => {
+        expect(ci_invocations(WORKFLOW, 'some')).toEqual([]);
+    });
+
+    it('accepts a row whose argv the workflow reproduces', () => {
+        expect(ci_invocation_problem(WORKFLOW, 'some_gate', [])).toBeNull();
+    });
+
+    it('rejects a row whose argv the workflow does not reproduce', () => {
+        expect(ci_invocation_problem(WORKFLOW, 'some_gate', ['--all'])).toMatch(/matches no invocation/u);
+    });
+
+    it('rejects a row whose workflow no longer calls the gate at all', () => {
+        expect(ci_invocation_problem(WORKFLOW, 'deleted_gate', [])).toMatch(/does not call this gate/u);
+    });
+
+    it('is silent for every row that pins no workflow — the field is opt-in', () => {
+        const spec = { id: 'some_gate', argv: [], min_scanned: 1, corpus: 'x', status: 'enforced' } as GateSpec;
+        expect(ci_invocation_drift([spec])).toEqual([]);
+    });
+
+    it('reports a pinned workflow that does not exist rather than passing over it', () => {
+        const spec = {
+            id: 'some_gate',
+            argv: [],
+            min_scanned: 1,
+            corpus: 'x',
+            status: 'enforced',
+            ci_invocation: '.github/workflows/no-such-file.yml',
+        } as GateSpec;
+        expect(ci_invocation_drift([spec])).toHaveLength(1);
+    });
+
+    it('the shipped manifest has no drift', () => {
+        expect(ci_invocation_drift(load_manifest())).toEqual([]);
     });
 });

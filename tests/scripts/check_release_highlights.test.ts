@@ -25,11 +25,16 @@ import {
 import {
     DERIVED_MARKER,
     derive_category_hits,
+    previous_promise,
+    promise_readback_blockers,
     render_derived_head_values,
     stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
-import { CURATED_HEAD_INSTRUCTION_COMMENT } from '../../src/scripts/_lib/release_material.js';
+import {
+    CURATED_HEAD_INSTRUCTION_COMMENT,
+    previous_changelog_version,
+} from '../../src/scripts/_lib/release_material.js';
 
 const SHA = 'a'.repeat(40);
 
@@ -507,6 +512,74 @@ describe('§ 1.3 — the read is scoped to the section under release', () => {
         // comment today. A gate that read them would be permanently red.
         expect(runWithSections(OLD_INSTRUCTED, TARGET_CLEAN)).toBe(0);
         expect(runWithSections(TARGET_CLEAN, OLD_INSTRUCTED)).toBe(0);
+    });
+});
+
+describe('the previous head\'s promise is read back', () => {
+    const PROMISE = [
+        '> **Governance mix:** governance-only 5 vs consumer-only 1 (taxonomy 1.0.0).',
+        '> Next cycle ships the widget repair, tracked in `road-to-widget`.',
+    ].join('\n');
+
+    function changelog(readback: string, previousBlock = PROMISE): string {
+        return [
+            '# Changelog',
+            '',
+            '## [9.9.9](https://example.invalid/c) (2026-09-09)',
+            '',
+            '### Release highlights',
+            '',
+            '- **Behaviour changes:** _none_',
+            readback,
+            '## [9.9.8](https://example.invalid/c) (2026-09-08)',
+            '',
+            '### Release highlights',
+            '',
+            '- **Behaviour changes:** _none_',
+            '',
+            previousBlock,
+            '',
+        ].join('\n');
+    }
+
+    it('refuses a head that leaves the previous promise unanswered', () => {
+        const blockers = promise_readback_blockers('- **Behaviour changes:** _none_', '9.9.9', '9.9.8', PROMISE);
+        expect(blockers).toHaveLength(1);
+        expect(blockers[0]).toContain('does not answer');
+    });
+
+    // All three outcomes pass. The check is about ANSWERING, never about having
+    // kept the promise — refusing an unkept one would price honesty above silence.
+    it.each([
+        ['shipped', 'the widget repair promised in 9.9.8 shipped, in the observer rewrite.'],
+        ['did not ship', 'the widget repair promised in 9.9.8 did not ship; its roadmap is still open.'],
+        ['withdrawn', 'the widget repair promised in 9.9.8 is withdrawn — the surface it repaired is gone.'],
+    ])('accepts the %s form', (_outcome, answer) => {
+        const body = `- **Behaviour changes:** _none_\n\n> **Previous cycle:** ${answer}`;
+        expect(promise_readback_blockers(body, '9.9.9', '9.9.8', PROMISE)).toEqual([]);
+    });
+
+    it('refuses an answer that names no outcome, and one shorter than a written answer', () => {
+        const vague = '> **Previous cycle:** the widget repair remains an open item we keep tracking.';
+        expect(promise_readback_blockers(vague, '9.9.9', '9.9.8', PROMISE)[0]).toContain('names no outcome');
+        expect(promise_readback_blockers('> **Previous cycle:** shipped.', '9.9.9', '9.9.8', PROMISE)[0]).toContain(
+            'shorter than a written answer',
+        );
+    });
+
+    it('owes nothing when the previous section made no promise', () => {
+        const text = changelog('', '> **Governance mix:** governance-only 5 vs consumer-only 1. Justified: the cycle was governance work.');
+        expect(previous_promise(text, '9.9.8')).toBeNull();
+        expect(promise_readback_blockers('body', '9.9.9', '9.9.8', null)).toEqual([]);
+    });
+
+    it('reads the previous version out of the changelog, not out of git', () => {
+        const text = changelog('');
+        expect(previous_changelog_version(text, '9.9.9')).toBe('9.9.8');
+        // A section still under authoring is not named by version; the newest
+        // released section is then the one that made the promise.
+        expect(previous_changelog_version(text, '9.10.0')).toBe('9.9.9');
+        expect(previous_promise(text, '9.9.8')).toContain('Next cycle ships');
     });
 });
 
