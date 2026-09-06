@@ -4,7 +4,7 @@
 # Replaces the four per-concern trampolines (augment-chat-history.sh,
 # augment-roadmap-progress.sh, augment-onboarding-gate.sh,
 # augment-context-hygiene.sh). One script, dispatched per (platform, event)
-# tuple via scripts/hooks/dispatch_hook.py reading scripts/hook_manifest.yaml.
+# tuple via src/scripts/hooks/dispatch_hook.ts reading src/scripts/hook_manifest.yaml.
 #
 # Augment requires hook scripts to use the .sh extension and live at user
 # scope (~/.augment/hooks/) — same constraint as the legacy trampolines.

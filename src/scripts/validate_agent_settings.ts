@@ -42,7 +42,7 @@ const SCHEMA_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'schemas', 'agent-set
 const TEMPLATE_PATH = path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.yml');
 const LOCAL_PATHS = [project_settings_path(REPO_ROOT)];
 
-// Installer-default substitutions, mirroring scripts/install.py so the
+// Installer-default substitutions, mirroring the installer so the
 // template validates as it would after a fresh `balanced` install.
 const PLACEHOLDERS: Record<string, string> = {
     __RULE_LOADING_TIER__: 'balanced',

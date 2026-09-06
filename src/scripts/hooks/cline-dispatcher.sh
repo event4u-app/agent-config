@@ -4,7 +4,7 @@
 # Routes user-scope `~/Documents/Cline/Hooks/<HookName>` events into
 # the active workspace's `./agent-config dispatch:hook`. Project-scope
 # `.clinerules/hooks/<HookName>` does NOT need this trampoline —
-# install.py `ensure_cline_bridge()` writes per-event scripts there
+# the installer's `ensure_cline_bridge()` writes per-event scripts there
 # that dispatch directly because Cline fires project hooks with the
 # workspace as cwd.
 #

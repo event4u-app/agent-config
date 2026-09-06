@@ -3,7 +3,7 @@
 #
 # Routes user-scope `~/.cursor/hooks.json` events into the active
 # workspace's `./agent-config dispatch:hook`. Project-scope
-# `.cursor/hooks.json` does NOT need this trampoline — install.py
+# `.cursor/hooks.json` does NOT need this trampoline — the installer
 # `ensure_cursor_bridge()` writes direct dispatch:hook commands there
 # because the project hooks fire with the workspace as cwd.
 #
@@ -20,10 +20,16 @@
 #   - Re-pipe the original JSON into
 #       ./agent-config dispatch:hook --platform cursor \
 #           --event $1 --native-event $2
-#   - Always exit 0 — Cursor's pre-hooks can block via exit code, but
-#     none of our concerns block; chat-history / roadmap-progress /
-#     context-hygiene are observe-only and onboarding-gate writes
-#     state without denying sessionStart.
+#   - Always exit 0 — Cursor's pre-hooks can block via exit code. The
+#     manifest declares 7 concerns at `severity: blocking`, and this host
+#     binds none of them: cursor's platform row carries session_start,
+#     session_end, stop, user_prompt_submit and post_tool_use, and every
+#     blocking concern sits in a slot or platform row outside that set.
+#     The count is a YAML parse of the concerns map, never `grep -c
+#     'severity: blocking'`, which returns 8 by also counting the prose
+#     line that quotes the key. What IS bound here — chat-history /
+#     roadmap-progress / context-hygiene — is observe-only, and
+#     onboarding-gate writes state without denying sessionStart.
 
 set -u
 

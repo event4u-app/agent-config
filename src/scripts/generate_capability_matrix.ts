@@ -136,7 +136,7 @@ const _FN_SPEC: Record<string, FnSpec> = {
 // Surfaces the INSTALLER provides outside generate_tools() (so the derivation
 // guard stays pure). Marked with a † footnote in the rendered matrix.
 const _INSTALL_TIME_CELLS: Record<string, Record<string, string>> = {
-    rules: { copilot: 'adapter' }, // .github/copilot-instructions.md (aggregated, install.py)
+    rules: { copilot: 'adapter' }, // .github/copilot-instructions.md (aggregated, the installer)
 };
 
 // Python: re.compile(r"\b(generate_[A-Za-z0-9_]+)\s*\(").

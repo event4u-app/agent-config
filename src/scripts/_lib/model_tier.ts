@@ -11,7 +11,7 @@
  * - the repo generator (`condense.py generate_claude_skills`), which
  *   builds the package's own `.claude/skills/` tree, and
  * - the consumer install finalizer
- *   (`install.py finalize_claude_model_tiers`), which rewrites the
+ *   (the installer's `finalize_claude_model_tiers`), which rewrites the
  *   installed `.claude/skills/` tree so Claude Code performs the
  *   per-turn model switch on a consumer with `model.auto_switch: auto`.
  *

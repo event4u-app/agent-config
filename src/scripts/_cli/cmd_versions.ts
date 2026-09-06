@@ -426,7 +426,7 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
     const err = options.err ?? _stderrSink();
     const opts = _parse(argv ?? process.argv.slice(2), out, err);
 
-    // AGENT_CONFIG_OFFLINE=1 (set by `install.py --offline`) is honored as a
+    // AGENT_CONFIG_OFFLINE=1 (set by `agent-config install --offline`) is honored as a
     // global kill-switch even when the per-command --offline flag is absent.
     const offline = opts.offline || process.env['AGENT_CONFIG_OFFLINE'] === '1';
 

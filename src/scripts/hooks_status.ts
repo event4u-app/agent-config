@@ -45,7 +45,9 @@ const MANIFEST_PATH = path.join(
   "hook_manifest.yaml",
 );
 
-// (label, project-relative bridge path, install hint).
+// (project-relative bridge path, one-line note shown when the bridge is not
+// live). The note is printed verbatim, so a note that is not a command must
+// not read as one.
 // Path may be a directory (cline) — existence => any file inside.
 //
 // Cowork has no project-scope bridge path: the Claude desktop app's
@@ -58,17 +60,17 @@ const MANIFEST_PATH = path.join(
 // Once upstream lands the fix and a stable settings location is
 // documented, swap the empty path here for that location.
 export const PLATFORM_BRIDGES: Record<string, [string, string]> = {
-  augment: [".augment/settings.json", "src/scripts/install.py"],
-  claude: [".claude/settings.json", "src/scripts/install.py"],
+  augment: [".augment/settings.json", "run `agent-config install`"],
+  claude: [".claude/settings.json", "run `agent-config install`"],
   cowork: [
     "",
     "upstream-blocked: anthropics/claude-code#40495 + #27398 (settings.json ignored in Cowork sandbox)",
   ],
-  cursor: [".cursor/hooks.json", "src/scripts/install.py"],
-  cline: [".clinerules/hooks", "src/scripts/install.py"],
-  windsurf: [".windsurf/hooks.json", "src/scripts/install.py"],
-  gemini: [".gemini/settings.json", "src/scripts/install.py"],
-  copilot: ["", "rule-only fallback (no hook surface)"],
+  cursor: [".cursor/hooks.json", "run `agent-config install`"],
+  cline: [".clinerules/hooks", "run `agent-config install`"],
+  windsurf: [".windsurf/hooks.json", "run `agent-config install`"],
+  gemini: [".gemini/settings.json", "run `agent-config install`"],
+  copilot: ["", "rule-only fallback — this package binds no hook here"],
 };
 
 export interface PlatformRow {
@@ -180,11 +182,11 @@ export function _render_table(matrix: StatusMatrix): string {
       lines.push(`    ${event.padEnd(22)} → ${concerns}`);
     }
     if (row.hint) {
-      lines.push(`    hint: run ${row.hint}`);
+      lines.push(`    hint: ${row.hint}`);
     }
   }
   lines.push("");
-  lines.push("Source of truth: scripts/hook_manifest.yaml");
+  lines.push("Source of truth: src/scripts/hook_manifest.yaml");
   lines.push("Contract: docs/contracts/hook-architecture-v1.md");
   return lines.join("\n");
 }

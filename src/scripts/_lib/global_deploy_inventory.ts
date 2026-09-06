@@ -356,7 +356,7 @@ function as_posix(p: string): string {
  *
  * `dry_run=true` computes and returns the would-delete set (only paths that
  * currently exist on disk) WITHOUT unlinking anything or pruning empty
- * directories — the preview surface for `install.py --dry-run`. The selection
+ * directories — the preview surface for `agent-config install --dry-run`. The selection
  * logic (orphan diff, containment proof, directory guard) is identical to the
  * live path, so the preview is exact.
  */
@@ -456,7 +456,7 @@ export function reap_stale(
  *
  * `dry_run=true` returns the would-delete set (tagged orphans actually present
  * on disk) WITHOUT unlinking or pruning — the preview surface for
- * `install.py --dry-run`. Selection logic is identical to the live path.
+ * `agent-config install --dry-run`. Selection logic is identical to the live path.
  */
 export function reap_tagged_orphans(
   anchor: string,
