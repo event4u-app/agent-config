@@ -24,6 +24,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
+
 import {
     RELEASE_HEAD_CAP_LINES,
     dedupe_commit_lines,
@@ -54,7 +56,6 @@ import {
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
     confirmGate,
-    preflightPosition,
     resolve_split_decision,
 } from '../../src/scripts/release.js';
 import {
@@ -774,6 +775,7 @@ describe('preflightPosition — where a release may start', () => {
     // none of which belong in a unit test.
     it('is WIRED — preflight delegates the position rule instead of re-implementing it', () => {
         const src = fs.readFileSync(TS_SCRIPT, 'utf-8');
+        expect(src).toContain("from './_lib/release_position.js'");
         const body = src.slice(src.indexOf('function preflight(target: string'));
         expect(body).toContain('preflightPosition({');
         // The two refusals that produced the deadlock must live in the pure
