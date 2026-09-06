@@ -17,9 +17,13 @@ review_trigger: >-
   axis reopens if a measurement shows the auto-tier corpus reaching the model
   eagerly on a host that the frontmatter says it should not — which would make
   the falsified premise true after the fact and is the one observation that
-  would change this record's answer. The parked skill-size ceiling reopens on
-  a number: p95 SKILL.md word count above 3,000, or more than ten skills above
-  2,500.
+  would change this record's answer. The skill-size park is ANSWERED by
+  Amendment 1 (2026-09-06) and its condition is retired: no ceiling ships, and
+  the absolute-count limb is withdrawn as non-scaling. What remains open is how
+  an upper-range skill discloses its size, and that transition reopens when p95
+  SKILL.md word count reaches 3,000, or when the estate settles whether
+  `token_budget_class` can represent a long-but-not-condensation-exempt skill.
+  Never again on a count of skills above a fixed word threshold.
 ---
 
 # ADR-225 — A cross-corpus proposal is adopted at the size its measurements survive
@@ -30,6 +34,11 @@ review_trigger: >-
 external comparison artifact found, which three defects it earned, and which
 four axes it did not — with the specific lock each rejection runs into, so a
 later proposal has to clear that lock rather than re-assert the claim.
+
+> **Amendment 1 (2026-09-06)** answers the parked skill-size ceiling: its count
+> limb fired, the council routed it, no ceiling ships, and the count limb is
+> retired. § *What is parked, with a number* is superseded by that amendment;
+> the four rejected axes are untouched.
 
 ## Context
 
@@ -84,6 +93,11 @@ named:
 
 ### What is parked, with a number
 
+> **Answered 2026-09-06 — read Amendment 1 below before citing this section.**
+> Its reopen condition fired, the council answered it, and the answer is that no
+> ceiling ships. The numbers below are the 2026-08-12 census and no longer
+> describe the estate.
+
 A word or token ceiling for the 285 skills that carry no `token_budget_class`.
 Three size gates already exist —
 [`lint_token_budget_discipline.ts`](../../src/scripts/lint_token_budget_discipline.ts)
@@ -94,9 +108,11 @@ day it ships. Measured distribution, so a future check is one command rather
 than a fresh census: n=289, mean 1,187, median 1,077, p90 1,867, p95 2,294,
 p99 3,851, max 7,094.
 
-**Reopen when** p95 crosses 3,000 words, or when more than ten skills exceed
-2,500. Not before: a gate whose finding set is six files trains its readers to
-skip it, which is the failure it would exist to prevent.
+~~**Reopen when** p95 crosses 3,000 words, or when more than ten skills exceed
+2,500.~~ **That condition fired on 2026-09-06 and Amendment 1 retires it.** It is
+struck through rather than deleted because the amendment's reasoning is about the
+way it fired. Not before: a gate whose finding set is six files trains its
+readers to skip it, which is the failure it would exist to prevent.
 
 ### What is rejected, and the lock each rejection runs into
 
@@ -145,6 +161,79 @@ skip it, which is the failure it would exist to prevent.
   repeatedly recorded that a gate measured before it is built either fires on
   a real population or is recorded as a decision instead. Six files is the
   second case.
+
+## Amendment 1 (2026-09-06) — the skill-size park is answered: no ceiling, and the count limb is retired
+
+The park above carried a two-term disjunction. **The count term fired and the
+p95 term did not.** Re-derived at `origin/main` @ `9b75231ed` over
+`src/skills/*/SKILL.md` with `wc -w`: **twelve** skills exceed 2,500 words,
+where this record measured six; p95 is **2,380** at n=299, 620 words below the
+3,000 threshold. Percentiles are nearest-rank — the convention recovered by
+reproducing this record's own four published percentile figures exactly at its
+pinned commit `26c575f66`, since the original did not name a method.
+Reproduction, with the command behind every number:
+[`skill-size-park-fired-2026-09-06`](../../agents/evidence/analysis/skill-size-park-fired-2026-09-06.md).
+
+Per `decision-revisit-gate`, a fired condition is not an unqualified lock: it is
+surfaced and routed, and the routing here was a council run — 2026-09-06,
+`anthropic/claude-sonnet-4-5` and `openai/codex-default`, 2 rounds, blind
+chairman, 2/2 present before and after, nothing billed. The prompt is recorded
+verbatim beside both verdicts in
+[`skill-size-park-council-2026-09-06`](../../agents/evidence/analysis/skill-size-park-council-2026-09-06.md),
+per `evaluator-independence`.
+
+### What is decided
+
+1. **No hard size ceiling ships.** The parked mechanism is rejected on the
+   numbers, not deferred again. Both seats reached this independently: a gate on
+   a dense boundary cluster — nine of the twelve sit between 2,500 and 2,800 —
+   trains the skip habit this record's park was written to prevent, and twelve
+   of 299 files is 4.0 % of the estate.
+
+2. **The absolute-count limb is withdrawn as structurally defective**, and never
+   returns in that shape. "More than ten" is 3.3 % of the estate at 299 skills,
+   2.0 % at 500 and 1.0 % at 1,000, so it gets easier to satisfy through growth
+   alone — the opposite of what a reopen condition should do. A percentile
+   scales with the population; a count does not.
+
+3. **The condition fired while the distribution got healthier**, which is the
+   fact a later reader is most likely to invert. Between the two censuses the
+   maximum fell 7,094 → 3,031, p99 fell 3,851 → 2,884, and skills above 3,000
+   went from four to two — `ai-council` and `skill-writing` were split into
+   `references/` sidecars by `b26128927`. The count rose because the body of the
+   distribution shifted up against a fixed line, not because a tail grew.
+
+4. **The upper range owes a reviewable justification of its size.** Disclosure,
+   not a ceiling, is the operative answer. Both seats reached it; neither
+   proposes shortening a skill on word count alone, and the three skills that
+   moved in the last two releases each added a named procedure or repaired a
+   defect a neutral review found.
+
+### What is not decided, and why it is not decided here
+
+**How that disclosure is represented.** The two seats split, and their proposals
+have an empty intersection rather than a gap between them: one requires a
+frontmatter note *without* forcing `token_budget_class`, the other forbids by
+name any note that bypasses the classification system, and they differ on the
+threshold (`min(p95, 2500)` — 2,380 today and scaling — versus a fixed 2,500).
+Both flag the same root cause: the evidence does not establish whether `rich`,
+which means *exempt from condensation*, is semantically right for a skill that
+is merely long. If the taxonomy cannot represent that skill, the taxonomy is
+what needs amending, and that is a decision this amendment does not take on the
+agent's own authority.
+
+Per `decision-revisit-gate`, a council split is an escalation condition for the
+transition it splits on, not for the record as a whole. The four points above
+carry; the disclosure vehicle escalates. **It reopens when p95 SKILL.md word
+count reaches 3,000, or when the estate settles whether `token_budget_class` can
+represent a long-but-not-condensation-exempt skill — whichever comes first.**
+That condition is deliberately not a count of skills above a word threshold.
+
+### What this amendment does not touch
+
+The four rejected axes (router, code-graph, instinct loop, attestation) and
+their locks are unchanged. Each carries its own condition, none of them fired,
+and reopening any of them needs its own evidence.
 
 ## References
 

@@ -59,7 +59,7 @@ them fired.
 
 ## Phase 2 — The council answers the park, not this file
 
-- [ ] **2.1 Put the park to the council with the reproduction as its input.** The question
+- [x] **2.1 Put the park to the council with the reproduction as its input.** The question
       is the ADR's own: a disclosure sweep for the heavy tail, a re-park with new numbers
       and a new condition, or a mechanism. `agent-config council:status` reports the seats;
       the prompt states the counts and asks for a verdict, and states no expectation of the
@@ -67,7 +67,7 @@ them fired.
       verify: a council artifact exists carrying the prompt verbatim alongside the verdict,
       per `evaluator-independence` — a recorded verdict whose prompt is not recoverable is
       not evidence.
-- [ ] **2.2 Record the answer as an amendment to ADR-225, with a new condition.** Whatever
+- [x] **2.2 Record the answer as an amendment to ADR-225, with a new condition.** Whatever
       the verdict, the park either ends or is re-parked on a number that is not the one
       that just fired — a re-park on the same threshold is a silent extension.
       verify: `./scripts-run src/scripts/adr_cite_check ADR-225` shows the amendment, and
@@ -75,12 +75,25 @@ them fired.
 
 ## Phase 3 — Execute only what was returned
 
-- [ ] **3.1 Implement the council's verdict at its stated size, and nothing beside it.** If
+- [x] **3.1 Implement the council's verdict at its stated size, and nothing beside it.** If
       the verdict is a re-park, the deliverable is the amendment from 2.2 and this phase is
       closed empty with that stated. If it is a sweep or a mechanism, it ships at the scope
       the verdict names.
       verify: the diff of this phase contains only what 2.2 records as the verdict, and a
       reader can map every changed file to a sentence in it.
+
+**Closed 2026-09-06 with an empty diff, and here is the reason.** The verdict is
+not a re-park and not a mechanism: both seats reject a hard ceiling outright, and
+both answer *disclosure* — but their disclosure proposals have an **empty
+intersection**, not a gap. One requires a frontmatter note *without* forcing
+`token_budget_class`; the other forbids by name any note that bypasses the
+classification system. Building either would be this run picking a side of a live
+split on its own authority, which is exactly risk 1 of the register below. Per
+`decision-revisit-gate` a council split is an escalation condition for the
+transition it splits on, so the vehicle is recorded in ADR-225 § Amendment 1 as an
+open transition with its own condition and escalated to the maintainer, and Phase 3
+adds no file. Everything the verdict *did* settle is recorded in that amendment,
+which is 2.2's deliverable.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-06 | reviewer: claude/host -->
@@ -94,8 +107,8 @@ them fired.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An evidence file reproduces the twelve skills above 2,500 words, the p95 at n=299, and the command behind each, and a later reader can re-run it.
-- [ ] AC-2 — Each of the crossers that moved inside the window carries the commit that moved it and a classification falsifiable from that diff.
-- [ ] AC-3 — A council artifact exists carrying its own prompt verbatim next to the verdict on ADR-225's skill-size park.
-- [ ] AC-4 — ADR-225 carries an amendment whose recorded condition is not `more than ten skills above 2,500`.
-- [ ] AC-5 — Every file this roadmap changed outside Phases 1 and 2 maps to a sentence in the recorded verdict, and no size gate exists that the verdict did not ask for.
+- [x] AC-1 — An evidence file reproduces the twelve skills above 2,500 words, the p95 at n=299, and the command behind each, and a later reader can re-run it.
+- [x] AC-2 — Each of the crossers that moved inside the window carries the commit that moved it and a classification falsifiable from that diff.
+- [x] AC-3 — A council artifact exists carrying its own prompt verbatim next to the verdict on ADR-225's skill-size park.
+- [x] AC-4 — ADR-225 carries an amendment whose recorded condition is not `more than ten skills above 2,500`.
+- [x] AC-5 — Every file this roadmap changed outside Phases 1 and 2 maps to a sentence in the recorded verdict, and no size gate exists that the verdict did not ask for.
