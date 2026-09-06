@@ -56,9 +56,11 @@ instruction. Every *executable* active roadmap was drained.
 | [#1864](https://github.com/event4u-app/agent-config/pull/1864) | `roadmap: close road-to-second-trigger-corpus-generation (W-NO)` | settled green, 6 checks | merged 13:49:54Z |
 | [#1862](https://github.com/event4u-app/agent-config/pull/1862) | `roadmap: complete road-to-the-hook-that-was-never-installed` | settled green | merged 13:56:35Z |
 | [#1863](https://github.com/event4u-app/agent-config/pull/1863) | `fix(roadmaps): land the AC-6 cancellation PR #1860 archived without` | settled green (6 checks) on its first run; re-running after two base updates | open at time of writing |
-| this PR | `docs(evidence): record the run-21 drain` | — | final PR of the run |
+| [#1866](https://github.com/event4u-app/agent-config/pull/1866) | `docs(evidence): record the run-21 autonomous roadmap drain` | settled green | merged 14:25:20Z |
+| [#1865](https://github.com/event4u-app/agent-config/pull/1865) | `fix: the installed-hook check reports, and stops prescribing a downgrade` | settled green, **42 checks** | open — repairs a defect #1862 put on the trunk |
+| this PR | `docs(evidence): correct the run-21 record` | — | final PR of the run |
 
-Six PRs for four roadmaps. The two extra are **not** scope creep and are
+Seven PRs for four roadmaps. The two extra are **not** scope creep and are
 explained where they arose: #1864 closes a roadmap this run itself created
 (D-4 → D-5), and #1863 repairs a defect this run itself shipped (see § The
 defect this run shipped).
@@ -371,3 +373,110 @@ subject. Flagged, not silently absorbed.
 - Council response artefacts live under gitignored, TTL-pruned
   `agents/runtime/council/responses/`, so every decision above is reproduced in
   the tree (roadmaps, evidence files, PR bodies) rather than linked.
+
+## Correction — added after this record first merged
+
+**This summary merged (14:25:20Z) before lane B's completion review finished, so
+its first version was wrong in one place and silent in several.** The corrections
+are appended rather than rewritten in place, so what the record claimed and what
+it now claims are both legible.
+
+### #1862 put a defect on the trunk, and this run hit it live
+
+Lane B's roadmap closed 3/3 steps and 3/3 ACs and merged as #1862 — but
+**automerge landed it before its completion review completed**, and that review
+found the change had shipped the freshness gate as **blocking**, placed **before**
+base-freshness, prescribing `task install-hooks` for every mismatch.
+
+That prescription is the bug. From a checkout standing **behind** the base,
+`task install-hooks` writes the **older** hook set over the shared `.git/hooks` —
+the exact regression the same change refuses auto-repair in order to avoid.
+Verified on `origin/main` at `src/scripts/install-hooks.sh:113-133`: the block
+ends `exit 1` and its remedy line is `task install-hooks`, ahead of the
+BASE FRESHNESS block that follows it.
+
+**[#1865](https://github.com/event4u-app/agent-config/pull/1865) repairs it**
+(settled green, 42 checks, `CLEAN`): base-freshness moves first, the freshness
+gate becomes **advisory** — *"nothing here sets fail=1 or exits"* — the three exit
+codes are separated so a render failure is no longer reported as staleness, and a
+third guard (`-d node_modules`) stops a missing-dependency exit from reading as a
+mismatch. **Until #1865 merges, `main` carries the defect.**
+
+### The hook revert named correctly
+
+The § Findings entry above says another session "overwritten the fresh hook with
+an older installer's output". That is true but stops one step short of the cause,
+and the missing step is the point: **the revert is what the trunk defect's own
+prescribed remedy does.** Lane B additionally records that the shared
+`.git/hooks` was written **three times** during its run — once by a sabotage
+probe whose neutralised guard let it install over the real shared directory, and
+twice to get pushes through.
+
+So the incident this run treated as an environmental race is better read as a
+**reproduction of the defect #1865 fixes**, observed from the other side by the
+lead lane. Both readings are kept because the sequence genuinely involved two
+sessions; what changed is that the mechanism now has a name instead of an
+attribution.
+
+### AC-2 was descoped, and the descope was missing from the table
+
+| # | Item | Disposition | Authority |
+|---|---|---|---|
+| 6 | AC-2, `road-to-the-hook-that-was-never-installed` — *"leaves the installed hooks matching it, without anyone running a command"* | **met as rewritten; original descoped** | lane B, reopen conditions named in the roadmap |
+
+The original wording has **no unique referent**: eight worktrees share one
+`.git/hooks`, so "the installed hooks" names no single object to leave matching.
+**Nothing repairs the hooks by itself** — a human still runs the installer. The
+run reports staleness and refuses to repair it, for two reasons, one of them
+measured: a bash script `cat >`-overwriting its own path **stops executing and
+exits 0** (probe: 3 of 5 lines lost, exit 0), so a repair placed in `post-merge`
+would truncate `post-merge`.
+
+Step 1.1 also **corrected its own method**: it does not compare against the
+installer's heredocs, because `install-hooks.sh` writes `post-merge` /
+`post-checkout` as a heredoc **plus** an appended block, so no heredoc slice
+equals an installed body — slicing would have been wrong for two of six hooks.
+It runs the real installer into a scratch directory through a new
+`AGENT_CONFIG_HOOKS_DIR` seam and compares content **and mode** (git silently
+*skips* a non-executable hook, so mode is load-bearing).
+
+### Lane B's council and review, which the first version did not record
+
+**Three council rounds**, 2/2 seats, $0.00. Round 1 blocked auto-repair and chose
+a blocking gate. Round 2, given counter-facts, **still** chose report-not-repair —
+on worktree arbitration rather than trust. Round 3, raised by the blind review,
+chose **advisory**, *reversing round 1's own blocking decision*. Worth recording
+plainly: **the council rejected two things the lane had already written**, one of
+them already pushed.
+
+**Blind review: 20 findings, 19 fixed, 1 accepted-risk.** Two fresh subagents,
+dispatcher-authored prompts committed beside their verdicts. Sharpest findings:
+`resolveHooksDir` ignored `core.hooksPath`; the executable bit was unchecked; two
+test assertions were weaker than the roadmap claimed (one tautological, one
+form-specific); and `git pull --rebase` reaches neither carrier — **named, not
+closed**. Sensitivity re-proven on every guard (9 sabotages, each reverted, 26/26
+restored green).
+
+### Also flagged, not fixed
+
+- **`dispatch_r2_reviewer` and `check_completion_review` disagree on the scope
+  hash** unless dispatched with `--base origin/main`. Cost three rounds; reported.
+- **The `core.hooksPath` branch of the new resolver is unverified.** This
+  repository's own `block-no-verify` guard refuses any command carrying
+  `core.hooksPath` — read-only probes included — and blocked the probe twice. The
+  limitation is stated in the code. An over-broad guard preventing verification of
+  a fix is worth its own look.
+- **A `Co-Authored-By` trailer** the environment mandates but
+  [`no-attribution-footers`](../../src/rules/no-attribution-footers.md) forbids
+  sits on lane B's pushed commits. PR-body footers were stripped; published
+  history was not rewritten to remove the trailers.
+- The **9 pre-existing reds on `main`** are lane B's count against the lead lane's
+  3. Both are un-reconciled readings of different task subsets, and neither is
+  reached by any workflow. Not reconciled here rather than silently averaged.
+
+### Still not claimed
+
+- `main` **carries the trunk defect** until #1865 merges.
+- **Nothing repairs the installed hooks automatically.** A human runs the
+  installer; the gate only reports.
+- The literal terminal condition remains **unmet** (§ Terminal state), unchanged.
