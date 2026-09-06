@@ -63,9 +63,11 @@ THE ONE CALL THAT FORGETS RUNS IN THE WRONG TREE AND SUCCEEDS.
 USE THE TOOL'S DIRECTORY FLAG. WHERE THERE IS NONE, USE A SUBSHELL.
 ```
 
-`git -C <path>`, `npm --prefix <path>`, `composer -d <path>`,
-`pytest --rootdir <path>`, `make -C <path>`. Where a tool genuinely has no
-directory flag, `( cd <path> && <cmd> )` keeps the change inside the subshell.
+Most tools carry one — `git -C <path>` and `make -C <path>` are the
+stack-agnostic pair; package managers, test runners and build tools each have
+their own spelling, and the project's own skills name it per stack. Where a tool
+genuinely has none, `( cd <path> && <cmd> )` keeps the change inside the
+subshell.
 
 Two costs, and the second is the reason this sits in a rule rather than in a
 skill. A host whose working-directory boundary excludes the target prints a
