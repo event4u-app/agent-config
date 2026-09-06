@@ -40,14 +40,14 @@ arithmetic.
 
 ## Phase 1 — The next lapse is visible before it lands
 
-- [ ] **1.1 Report the fresh-lapse horizon, not only the lapse.** The checker
+- [x] **1.1 Report the fresh-lapse horizon, not only the lapse.** The checker
       prints a contract as lapsed on the day it lapses. Make it also name contracts
       whose window closes within a stated horizon and which are absent from the
       baseline — the set that will become errors rather than warnings.
       verify: a run on 2026-09-06 names `reasoning-discipline-protocol.md` as due
       within the horizon and does not name any contract already in the baseline;
       exit code is unchanged for both.
-- [ ] **1.2 Say which of the two branches a contract is in, in the output.** Today a
+- [x] **1.2 Say which of the two branches a contract is in, in the output.** Today a
       reader cannot tell an inherited warning from a future error without opening
       `lapsed-beta-baseline.json`.
       verify: each reported line carries `inherited` or `fresh`, and moving a fixture
@@ -55,14 +55,14 @@ arithmetic.
 
 ## Phase 2 — The inherited baseline gets a named end
 
-- [ ] **2.1 Attach the 2026-11-23 clearance to something that will be read.** The date
+- [x] **2.1 Attach the 2026-11-23 clearance to something that will be read.** The date
       lives in the checker's message and in no plan. Record it where a run meets it —
       a blocker on this roadmap, a `review_by`, or a registry entry — so the day the
       baseline expires is not the day it is discovered.
       verify: `grep -rn "2026-11-23" agents/roadmaps/ docs/` returns at least one
       tracked, dated obligation naming the baseline, and removing the baseline file
       reddens a check rather than silently passing.
-- [ ] **2.2 Count the 84 by contract, not by line.** The figure is a violation count;
+- [x] **2.2 Count the 84 by contract, not by line.** The figure is a violation count;
       the decision needs the number of distinct contracts and how many are duplicated
       across surfaces.
       verify: the run prints both counts, and their relationship is stated rather than
@@ -70,7 +70,7 @@ arithmetic.
 
 ## Phase 3 — The eight-day contract is routed
 
-- [ ] **3.1 Put the reasoning-discipline-protocol window in front of its owner.** Three
+- [x] **3.1 Put the reasoning-discipline-protocol window in front of its owner.** Three
       actions are legal under the contract's own rules: promote to stable, extend with
       a stated reason and a new date at most 90 days out, or record it superseded. This
       roadmap takes none of them; it makes the choice dated and visible. Recorded as a
@@ -82,7 +82,26 @@ arithmetic.
 
 ### blocker: rdp-contract-beta-window
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome:** transferred — the substantive decision is NOT taken here. Roadmap
+  closure is not substantive resolution: the mechanism this roadmap was written
+  to build is built and tested, and the owner's choice between promoting,
+  extending and superseding the contract remains outstanding. It is carried by
+  `agents/roadmaps/stubs/road-to-fresh-beta-lapses-2026-09.md`, together with the
+  five further fresh lapses the new horizon report surfaced. The reasoning and
+  the accepted consequence are recorded at
+  `agents/evidence/analysis/rdp-beta-window-lapse-accepted-2026-09-06.md`.
+- **Resolution:** AI council, 2 seats, 2026-09-06, two rounds, under the
+  maintainer's standing delegation for that run. Both seats held unanimously
+  that promotion, extension and supersession are owner-reserved public
+  commitments. Round 2 split on the fallback: one seat proposed a minimal
+  one-month bridge to 2026-10-15 while conceding descope was available; the
+  other held that moving a published lapse date is itself a commitment change
+  and that urgency does not enlarge delegated authority. The disposition adopted
+  is the one neither seat calls unauthorized — descope, and no date is moved.
+  The lapse on 2026-09-15 is **accepted, not avoided**: on that date
+  `check_beta_review_markers` exits non-zero repository-wide until the owner
+  acts. Nothing here waives, extends, satisfies or defers the review obligation.
 - **Owner:** maintainer
 - **Asked:** 2026-09-06, in the round `inbox-2026-09-r` disposition and in the reply that carried it.
 - **Blocks:** Phase 3 only. Phases 1 and 2 are independent and agent-doable in full — the horizon report and the baseline's own end date are needed whichever way this contract goes.
@@ -106,8 +125,8 @@ arithmetic.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `check_beta_review_markers` names contracts whose window closes within a stated horizon and are absent from the baseline, and names no baselined contract in that set.
-- [ ] AC-2 — Every reported line says whether it is inherited or fresh, and the label moves together with the exit code.
-- [ ] AC-3 — The inherited baseline's clearance date exists as a tracked, dated obligation, and deleting the baseline file reddens a check.
-- [ ] AC-4 — The violation count and the distinct-contract count are both printed, with their relationship stated.
-- [ ] AC-5 — `docs/contracts/reasoning-discipline-protocol.md` is promoted, extended, or superseded — or a record names its lapse as accepted. Never none of the four.
+- [x] AC-1 — `check_beta_review_markers` names contracts whose window closes within a stated horizon and are absent from the baseline, and names no baselined contract in that set.
+- [x] AC-2 — Every reported line says whether it is inherited or fresh, and the label moves together with the exit code.
+- [x] AC-3 — The inherited baseline's clearance date exists as a tracked, dated obligation, and deleting the baseline file reddens a check.
+- [x] AC-4 — The violation count and the distinct-contract count are both printed, with their relationship stated.
+- [x] AC-5 — `docs/contracts/reasoning-discipline-protocol.md` is promoted, extended, or superseded — or a record names its lapse as accepted. Never none of the four.

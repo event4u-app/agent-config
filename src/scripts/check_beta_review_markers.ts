@@ -63,28 +63,34 @@ interface LapsedBaseline {
     contracts: string[];
 }
 
-let _baselineCache: Set<string> | null = null;
+// Keyed by root: an unkeyed cache returns the REPO baseline for a fixture root
+// whenever the repo was read first, which silently judges a fixture against
+// production data and is invisible in the result.
+const _baselineCache = new Map<string, Set<string>>();
 
 export function loadLapsedBaseline(root: string = ROOT): Set<string> {
-    if (_baselineCache !== null) {
-        return _baselineCache;
+    const hit = _baselineCache.get(root);
+    if (hit !== undefined) {
+        return hit;
     }
     const p = path.join(root, BASELINE_REL);
     if (!fs.existsSync(p)) {
         // The baseline reaching zero is the SUCCESS state: the file is deleted
         // in the same change that flips the severity. An absent file therefore
         // means "no inherited debt", i.e. every lapse is fresh and errors.
-        _baselineCache = new Set<string>();
-        return _baselineCache;
+        const empty = new Set<string>();
+        _baselineCache.set(root, empty);
+        return empty;
     }
     const parsed = JSON.parse(fs.readFileSync(p, 'utf-8')) as LapsedBaseline;
-    _baselineCache = new Set(parsed.contracts);
-    return _baselineCache;
+    const loaded = new Set(parsed.contracts);
+    _baselineCache.set(root, loaded);
+    return loaded;
 }
 
 /** Test seam — the module-level cache would otherwise outlive a fixture. */
 export function _resetLapsedBaseline(): void {
-    _baselineCache = null;
+    _baselineCache.clear();
 }
 
 /**
@@ -115,10 +121,41 @@ const SUPERSEDED_RE = /^superseded-by:\s*\S+\s*$/m;
 
 const MAX_REVIEW_WINDOW_DAYS = 90;
 
+/**
+ * Forward horizon for the upcoming-lapse report.
+ *
+ * The gate reports a contract on the day it lapses, which is the day it is
+ * already too late to decide anything: a FRESH lapse errors, and every pull
+ * request in the repository reds until someone edits a contract under time
+ * pressure. The horizon names the set that is ABOUT to enter that branch.
+ *
+ * The number is bounded on both sides: too wide and the report names most of
+ * the forward-dated corpus on every run, which is the same as naming none; too
+ * narrow and it arrives after the decision needed to be made.
+ */
+const HORIZON_DAYS = 14;
+
 interface Violation {
     file: string;
     reason: string;
     severity: 'error' | 'warning';
+}
+
+/**
+ * A contract whose window closes within {@link HORIZON_DAYS} and which is NOT
+ * in the frozen baseline — i.e. one that will enter the ERROR branch, not the
+ * inherited-warning one.
+ *
+ * Deliberately NOT a {@link Violation}: it carries no severity and never moves
+ * the exit code. A third severity class printed into the same stream as the 84
+ * standing warnings is the way this work changes nothing (risk 1 on the
+ * roadmap's own register), so the horizon is a separate, clearly-labelled
+ * section and the exit code stays a function of real violations alone.
+ */
+interface Upcoming {
+    file: string;
+    date: string;
+    daysOut: number;
 }
 
 function _exists(p: string): boolean {
@@ -184,7 +221,7 @@ function _ordinalToISO(ordinal: number): string {
     return `${y}-${m}-${d}`;
 }
 
-function check_one(p: string, todayOrdinal: number): Violation[] {
+function check_one(p: string, todayOrdinal: number, root: string = ROOT): Violation[] {
     const fm = read_frontmatter(p);
     if (fm === null) {
         return [];
@@ -199,7 +236,7 @@ function check_one(p: string, todayOrdinal: number): Violation[] {
         ['superseded-by', SUPERSEDED_RE.test(fm)],
     ];
     const setMarkers = markers.filter(([, present]) => present).map(([name]) => name);
-    const rel = _relPosix(p, ROOT);
+    const rel = _relPosix(p, root);
     if (setMarkers.length === 0) {
         return [
             {
@@ -231,7 +268,7 @@ function check_one(p: string, todayOrdinal: number): Violation[] {
         // bound because a lapsed date can never also exceed the forward window,
         // so the order is a readability choice rather than a precedence one.
         if (reviewOrdinal < todayOrdinal) {
-            const inherited = loadLapsedBaseline().has(rel);
+            const inherited = loadLapsedBaseline(root).has(rel);
             const age = todayOrdinal - reviewOrdinal;
             return [
                 {
@@ -263,6 +300,34 @@ function check_one(p: string, todayOrdinal: number): Violation[] {
     return [];
 }
 
+/**
+ * The upcoming-lapse finding for one contract, or `null`.
+ *
+ * Baselined contracts are excluded EXPLICITLY rather than by relying on the
+ * fact that a baselined contract is already lapsed and so cannot also carry a
+ * future date. That implication holds today and is not a property anything
+ * enforces; a guard that is merely vacuous cannot be distinguished from a
+ * guard that is absent, and the difference shows up the first time a baseline
+ * entry is re-dated forward.
+ */
+export function upcoming_one(
+    p: string,
+    todayOrdinal: number,
+    horizonDays: number = HORIZON_DAYS,
+    root: string = ROOT,
+): Upcoming | null {
+    const fm = read_frontmatter(p);
+    if (fm === null || !/^stability:\s*beta\s*$/m.test(fm)) return null;
+    const km = KEEP_RE.exec(fm);
+    if (!km) return null;
+    const rel = _relPosix(p, root);
+    if (loadLapsedBaseline(root).has(rel)) return null;
+    const [ry, rm, rd] = _parseISODate(km[1]!);
+    const reviewOrdinal = _dateOrdinal(ry, rm, rd);
+    const daysOut = reviewOrdinal - todayOrdinal;
+    if (daysOut < 0 || daysOut > horizonDays) return null;
+    return { file: rel, date: _ordinalToISO(reviewOrdinal), daysOut };
+}
 
 /**
  * STABILITY.md's own re-audit condition, as a command instead of as prose.
@@ -302,10 +367,16 @@ interface ParsedArgs {
     trigger: boolean;
     /** Fixture root, for `--self-test`. A fixture is never judged against the repo baseline. */
     root: string | null;
+    horizon: number;
 }
 
 function parse_args(argv: readonly string[]): ParsedArgs {
-    const args: ParsedArgs = { json: false, trigger: false, root: null };
+    const args: ParsedArgs = {
+        json: false,
+        trigger: false,
+        root: null,
+        horizon: HORIZON_DAYS,
+    };
     for (let i = 0; i < argv.length; i += 1) {
         const arg = argv[i] as string;
         if (arg === '--json') {
@@ -313,14 +384,27 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         } else if (arg === '--root') {
             args.root = argv[i + 1] ?? null;
             i += 1;
+        } else if (arg === '--horizon') {
+            const raw = argv[i + 1] ?? '';
+            const n = Number.parseInt(raw, 10);
+            if (!/^\d+$/.test(raw) || Number.isNaN(n)) {
+                process.stderr.write(
+                    `check_beta_review_markers: error: --horizon needs a non-negative integer, got: ${raw || '(nothing)'}\n`,
+                );
+                process.exit(2);
+            }
+            args.horizon = n;
+            i += 1;
         } else if (arg === '--trigger') {
             args.trigger = true;
         } else if (arg === '-h' || arg === '--help') {
             process.stdout.write(
-                'usage: check_beta_review_markers [-h] [--json] [--trigger]\n' +
+                'usage: check_beta_review_markers [-h] [--json] [--trigger] [--horizon N]\n' +
                     '  --trigger  print the lapsed percentage and whether STABILITY.md\n' +
                     '             re-audit condition (>= 25 %) has fired. Reports; never fails.\n' +
-                    '  --root DIR judge a fixture tree instead of the repo (self-test seam).\n',
+                    '  --root DIR judge a fixture tree instead of the repo (self-test seam).\n' +
+                    `  --horizon N  days ahead to report upcoming fresh lapses (default ${String(HORIZON_DAYS)}).\n` +
+                    '             Advisory: never changes the exit code.\n',
             );
             process.exit(0);
         } else {
@@ -400,11 +484,15 @@ function main(): number {
     const scanRoot = args.root ?? ROOT;
     const contracts = _globMdSorted(path.join(scanRoot, CONTRACTS_DIR));
     let betaContracts = 0;
+    const upcoming: Upcoming[] = [];
     for (const p of contracts) {
         const fm = read_frontmatter(p);
         if (fm !== null && /^stability:\s*beta\s*$/m.test(fm)) betaContracts += 1;
-        violations.push(...check_one(p, todayOrdinal));
+        violations.push(...check_one(p, todayOrdinal, scanRoot));
+        const due = upcoming_one(p, todayOrdinal, args.horizon, scanRoot);
+        if (due !== null) upcoming.push(due);
     }
+    upcoming.sort((a, b) => a.daysOut - b.daysOut || a.file.localeCompare(b.file));
     // Count every contract read, not the `stability: beta` subset: over a moved
     // `docs/contracts/` "no beta contracts" and "no contracts at all" produce
     // the same clean line, and only the second is a dead gate. Exit 1 is the
@@ -446,7 +534,9 @@ function main(): number {
         return 0;
     }
     if (args.json) {
-        process.stdout.write(JSON.stringify({ violations }, null, 2) + '\n');
+        process.stdout.write(
+            JSON.stringify({ violations, upcoming, horizonDays: args.horizon }, null, 2) + '\n',
+        );
     } else {
         if (violations.length === 0) {
             process.stdout.write('✅  All beta contracts carry a valid review marker.\n');
@@ -455,7 +545,39 @@ function main(): number {
                 const icon = v.severity === 'error' ? '❌' : '⚠️ ';
                 process.stdout.write(`${icon}  ${v.file}: ${v.reason}\n`);
             }
-            process.stdout.write(`\n${violations.length} violation(s).\n`);
+            // Both counts, and the relationship between them, because a
+            // violation count alone cannot answer "how many contracts is this".
+            // Today they are equal — check_one returns at most one finding per
+            // contract — and printing only one of them hides the fact that it
+            // is the size of the decision, not just the size of the output.
+            const distinct = new Set(violations.map((v) => v.file)).size;
+            const baselineSize = loadLapsedBaseline(scanRoot).size;
+            const reportedInherited = violations.filter((v) =>
+                loadLapsedBaseline(scanRoot).has(v.file),
+            ).length;
+            process.stdout.write(
+                `\n${String(violations.length)} violation(s) across ` +
+                    `${String(distinct)} distinct contract(s) — one line per finding, so the ` +
+                    'two differ only where a contract carries more than one.\n',
+            );
+            process.stdout.write(
+                `Frozen baseline: ${String(baselineSize)} entries · ` +
+                    `${String(reportedInherited)} still reported as lapsed · ` +
+                    `${String(baselineSize - reportedInherited)} inert ` +
+                    '(left the lapsed set by promotion, supersession, or re-dating).\n',
+            );
+        }
+        if (upcoming.length > 0) {
+            process.stdout.write(
+                `\nUpcoming FRESH lapses within ${String(args.horizon)} day(s) — advisory, ` +
+                    'exit code unchanged. These are absent from the frozen baseline, so each\n' +
+                    'becomes an ERROR on its date rather than an inherited warning:\n',
+            );
+            for (const u of upcoming) {
+                process.stdout.write(
+                    `   ${u.file}: keep-beta-until=${u.date} in ${String(u.daysOut)} day(s) [fresh]\n`,
+                );
+            }
         }
     }
     return violations.some((v) => v.severity === 'error') ? 1 : 0;
@@ -495,9 +617,11 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 
 export {
     type Violation,
+    type Upcoming,
     ROOT,
     CONTRACTS_DIR,
     MAX_REVIEW_WINDOW_DAYS,
+    HORIZON_DAYS,
     read_frontmatter,
     check_one,
     main,

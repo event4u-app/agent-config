@@ -181,3 +181,151 @@ describe('lapsed-beta baseline ratchet', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
+
+// --- Upcoming-lapse horizon + the inherited/fresh binding --------------------
+//
+// The horizon exists because the gate otherwise reports a contract on the day
+// it lapses, which is the day it is already too late. These cases pin the two
+// properties that make the report worth printing: it names a contract that is
+// about to enter the ERROR branch, and it names NO contract already carrying
+// the inherited warning.
+//
+// The baseline-exclusion case is deliberately impossible in the real tree — a
+// baselined contract is already lapsed, so it cannot also be forward-dated.
+// That is exactly why it is tested: without it the guard is indistinguishable
+// from no guard at all, and a vacuous guard silently stops holding the first
+// time a baseline entry is re-dated forward.
+describe('upcoming-lapse horizon', () => {
+    let root: string;
+    const CONTRACTS = 'docs/contracts';
+
+    function contract(name: string, body: string): string {
+        const p = path.join(root, CONTRACTS, name);
+        write(p, body);
+        return p;
+    }
+
+    function baseline(entries: readonly string[]): void {
+        write(
+            path.join(root, 'src', 'config', 'lapsed-beta-baseline.json'),
+            JSON.stringify({ schema_version: 'lapsed-beta-baseline-v1', contracts: entries }),
+        );
+        bm._resetLapsedBaseline();
+    }
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'beta-horizon-'));
+        bm._resetLapsedBaseline();
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+        bm._resetLapsedBaseline();
+    });
+
+    it('names a fresh contract whose window closes inside the horizon', () => {
+        baseline([]);
+        const p = contract('soon.md', '---\nstability: beta\nkeep-beta-until: 2026-01-08\n---\n');
+        const u = bm.upcoming_one(p, TODAY, 14, root);
+        expect(u).not.toBeNull();
+        expect(u!.file).toBe('docs/contracts/soon.md');
+        expect(u!.daysOut).toBe(7);
+    });
+
+    it('does NOT name a contract that is in the frozen baseline', () => {
+        const rel = 'docs/contracts/baselined.md';
+        baseline([rel]);
+        const p = contract(
+            'baselined.md',
+            '---\nstability: beta\nkeep-beta-until: 2026-01-08\n---\n',
+        );
+        // Same date, same horizon, same everything as the case above — only
+        // baseline membership differs, so a null here is the guard firing.
+        expect(bm.upcoming_one(p, TODAY, 14, root)).toBeNull();
+    });
+
+    it('does NOT name a contract beyond the horizon', () => {
+        baseline([]);
+        const p = contract('later.md', '---\nstability: beta\nkeep-beta-until: 2026-03-01\n---\n');
+        expect(bm.upcoming_one(p, TODAY, 14, root)).toBeNull();
+    });
+
+    it('does NOT name an already-lapsed contract — that is the violation branch', () => {
+        baseline([]);
+        const p = contract('past.md', '---\nstability: beta\nkeep-beta-until: 2025-12-01\n---\n');
+        expect(bm.upcoming_one(p, TODAY, 14, root)).toBeNull();
+    });
+
+    it('does NOT name a non-beta contract', () => {
+        baseline([]);
+        const p = contract(
+            'stable.md',
+            '---\nstability: stable\nkeep-beta-until: 2026-01-08\n---\n',
+        );
+        expect(bm.upcoming_one(p, TODAY, 14, root)).toBeNull();
+    });
+
+    it('a horizon of 0 names nothing', () => {
+        baseline([]);
+        const p = contract('soon.md', '---\nstability: beta\nkeep-beta-until: 2026-01-08\n---\n');
+        expect(bm.upcoming_one(p, TODAY, 0, root)).toBeNull();
+    });
+});
+
+// The label and the severity are one fact printed twice. A run that says
+// `inherited` while erroring, or `FRESH` while warning, would be worse than
+// printing neither — so these cases move a single contract across the baseline
+// boundary and assert BOTH move together. Without this, the label is prose.
+describe('inherited/fresh label moves with the exit-code severity', () => {
+    let root: string;
+    const REL = 'docs/contracts/moving.md';
+
+    function setup(entries: readonly string[]): string {
+        const p = path.join(root, REL);
+        write(p, '---\nstability: beta\nkeep-beta-until: 2025-12-01\n---\n');
+        write(
+            path.join(root, 'src', 'config', 'lapsed-beta-baseline.json'),
+            JSON.stringify({ schema_version: 'lapsed-beta-baseline-v1', contracts: entries }),
+        );
+        bm._resetLapsedBaseline();
+        return p;
+    }
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'beta-label-'));
+        bm._resetLapsedBaseline();
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+        bm._resetLapsedBaseline();
+    });
+
+    it('in the baseline: label says inherited AND severity is warning', () => {
+        const p = setup([REL]);
+        const v = bm.check_one(p, TODAY, root);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.reason).toContain('inherited');
+        expect(v[0]!.reason).not.toContain('FRESH');
+        expect(v[0]!.severity).toBe('warning');
+    });
+
+    it('out of the baseline: label says FRESH AND severity is error', () => {
+        const p = setup([]);
+        const v = bm.check_one(p, TODAY, root);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.reason).toContain('FRESH');
+        expect(v[0]!.reason).not.toContain('inherited');
+        expect(v[0]!.severity).toBe('error');
+    });
+
+    it('deleting the baseline file turns every inherited warning into an error', () => {
+        // AC-3's second half: the baseline is load-bearing, and removing it is
+        // not a silent pass. Sensitivity check — the assertion above would also
+        // hold if `loadLapsedBaseline` defaulted everything to fresh, so this
+        // case starts from the green state and removes only the file.
+        const p = setup([REL]);
+        expect(bm.check_one(p, TODAY, root)[0]!.severity).toBe('warning');
+        fs.rmSync(path.join(root, 'src', 'config', 'lapsed-beta-baseline.json'));
+        bm._resetLapsedBaseline();
+        expect(bm.check_one(p, TODAY, root)[0]!.severity).toBe('error');
+    });
+});
