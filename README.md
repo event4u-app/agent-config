@@ -18,7 +18,7 @@
 
 **A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more). **Resident processes are permitted only under the supervision contract ADR-249 establishes** — a policy this repository adopted on 2026-08-27, not a description of anything running today. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
-## Quickstart
+## Try it in 30 seconds
 
 **Try one thing in 30 seconds** — before the full suite, drop in a single
 self-contained subagent and see the discipline on your own repo:
@@ -32,38 +32,8 @@ curl -fsSL https://raw.githubusercontent.com/event4u-app/agent-config/main/docs/
 
 `production-validator` is read-only and installs nothing else — it gates "done"
 by hunting mocks/stubs on the shipped path and demanding real-system evidence
-([what it does](docs/wedge/production-validator/README.md)). Like it? Install the
-full suite:
-
-**One command. Detection-driven — your installed AI tools are found and
-pre-selected. Nothing is written until you click Finish. No YAML by hand.**
-
-Those four are structural — properties of the code path, not of your machine.
-How *long* it takes is not: that is dominated by network and registry latency.
-CI measures the install → `doctor` wall-clock on every umbrella run and
-publishes it with its conditions, as evidence rather than as a promise.
-
-```bash
-# 1. Install — on a terminal with a display, the browser wizard launches
-#    automatically; the same TypeScript installer runs the real install behind it.
-npx -y @event4u/agent-config init
-
-# 2. Pick your profile + tools in the wizard, click Finish.
-#    (Writes ~/.event4u/agent-config/, ~/.claude/, ~/.cursor/, …)
-
-# 3. First real task — agent refines, plans, verifies.
-/work "your first real task"
-```
-
-**Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host, or any CLI-mode flag, and runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
-
-**Pick specific AIs:** `--tools=claude-code,cursor,augment,…` (any subset). `--gui` forces the loopback-bound, CSRF-gated picker past the TTY and headless checks; it does **not** override `CI`, `AGENT_CONFIG_NO_UI` or a CLI-mode flag, and combining it with one of those exits non-zero rather than quietly running the CLI install.
-
-**Verify hook coverage:** `npx @event4u/agent-config hooks:status` (`--strict` for CI, `--format json` for tooling).
-
-> **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` only. `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
-
-Migrating from v1.x? `npx @event4u/agent-config migrate` — [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
+([what it does](docs/wedge/production-validator/README.md)). Like it? The full
+suite installs in one command — [Quickstart ↓](#quickstart).
 
 ---
 
@@ -182,6 +152,40 @@ opt-in measurement loop. Source-of-truth tree is
 `src/` (`src/skills`, `src/rules`, `src/agent-src/`); never hand-edit `.augment/` or `dist/agent-src/`.
 
 **Security.** Disclosure policy: [`SECURITY.md`](SECURITY.md). Threat model: [`docs/threat-model.md`](docs/threat-model.md).
+
+---
+
+## Quickstart
+
+**One command. Detection-driven — your installed AI tools are found and
+pre-selected. Nothing is written until you click Finish. No YAML by hand.**
+
+Those four are structural — properties of the code path, not of your machine.
+How *long* it takes is not: that is dominated by network and registry latency.
+CI measures the install → `doctor` wall-clock on every umbrella run and
+publishes it with its conditions, as evidence rather than as a promise.
+
+```bash
+# 1. Install — on a terminal with a display, the browser wizard launches
+#    automatically; the same TypeScript installer runs the real install behind it.
+npx -y @event4u/agent-config init
+
+# 2. Pick your profile + tools in the wizard, click Finish.
+#    (Writes ~/.event4u/agent-config/, ~/.claude/, ~/.cursor/, …)
+
+# 3. First real task — agent refines, plans, verifies.
+/work "your first real task"
+```
+
+**Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host, or any CLI-mode flag, and runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
+
+**Pick specific AIs:** `--tools=claude-code,cursor,augment,…` (any subset). `--gui` forces the loopback-bound, CSRF-gated picker past the TTY and headless checks; it does **not** override `CI`, `AGENT_CONFIG_NO_UI` or a CLI-mode flag, and combining it with one of those exits non-zero rather than quietly running the CLI install.
+
+**Verify hook coverage:** `npx @event4u/agent-config hooks:status` (`--strict` for CI, `--format json` for tooling).
+
+> **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` only. `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
+
+Migrating from v1.x? `npx @event4u/agent-config migrate` — [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
 
 ---
 ## What `agent-config` is — and what it isn't
