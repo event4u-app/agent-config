@@ -506,10 +506,10 @@ such field. Re-probed 2026-08-23 against **Claude Code 2.1.241**, that assertion
 | `claude` | **offered** (2.1.241) | binary strings document `` `updatedInput` - Modified tool input (PreToolUse only) ``, the shape `{behavior: 'allow', updatedInput?: object}`, **schema validation** on the value, and a fallback when it is absent or empty |
 | every other host | **unprobed** | no observation exists; absence of a claim, not a claim of absence |
 
-**This dispatcher does not emit it, and that is the load-bearing distinction.**
-`src/scripts/hooks/host_semantics.ts:107-117` builds exactly one envelope shape —
-`hookSpecificOutput: { hookEventName, additionalContext }` — and nothing in
-`src/scripts/hooks/` constructs an `updatedInput` or a `permissionDecision`. So:
+**This dispatcher does not emit `updatedInput`, and that is the load-bearing
+distinction.** `src/scripts/hooks/host_semantics.ts` builds the
+`hookSpecificOutput: { hookEventName, additionalContext }` envelope and no
+`updatedInput`. So:
 
 - *"our dispatcher cannot rewrite tool input"* — **true**, and fixable by us.
 - *"the host contract has no transparent rewrite"* — **false at 2.1.241**, and it was
@@ -521,6 +521,31 @@ per-concern rewrite can compose — the dispatcher reduces many concerns per eve
 exit code, and what happens when two want to rewrite the same input is undecided. That
 gap, not a missing host field, is why `rtk_wrap_hook` still only warns (AI council
 2026-08-23, 2/2 convergent).
+
+**`permissionDecision` is now emitted, and its composition question is closed.**
+Corrected 2026-09-06 (`road-to-authorization-that-reaches-further` 1.1): the
+paragraph above used to name `permissionDecision` alongside `updatedInput` as a
+field nothing in `src/scripts/hooks/` constructs. Re-probed against the running
+host — **Claude Code 2.1.263**, whose own strings read `` `permissionDecision` -
+"allow", "deny", or "ask" (PreToolUse only) `` — and the dispatcher now emits it
+for a **category-A** call: a read, a navigation, a build, a test or a lint inside
+the working tree with no consequence operation attached
+(`src/scripts/hooks/category_a.ts`).
+
+The composition policy is **one `ask` or `deny` beats every `allow`**
+(`composePermissionDecision`), and the emission additionally requires the reduced
+severity to already be `allow`, so an allow can never travel with a finding. This
+answers the permission half of the undecided-composition gap above and **not** the
+rewrite half, which stays open: two concerns rewriting one input still has no
+answer, and no allow-composition result may be read as one.
+
+An allow is not a grant. The host's own strings record
+`permissionDecision=allow ignored: a confined session takes grants only from its
+command line`, so a confined session ignores the field entirely, and no gate of
+this package is removed by emitting it — category A names calls that nothing here
+gated in the first place.
+
+Evidence: `agents/evidence/analysis/permission-decision-probe-2026-09-06.md`.
 
 Evidence: `agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`. Pinned to a
 build and a date deliberately — an unpinned capability claim rots exactly the way the one

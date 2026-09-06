@@ -101,10 +101,26 @@ describe("claude pre_tool_use — a blocking guard actually blocks", () => {
     });
 });
 
-describe("claude pre_tool_use — a clean call is silent", () => {
-    it("exits 0 and emits nothing on either stream", () => {
+describe("claude pre_tool_use — a clean call carries an explicit allow", () => {
+    it("exits 0 with an empty stderr and a permissionDecision on stdout", () => {
+        // This used to assert BOTH streams empty. A clean category-A call is no
+        // longer silent: the dispatcher emits `permissionDecision: allow` so the
+        // host stops prompting for a read this package does not gate. The exit
+        // code and the empty stderr are unchanged — only the added field is new.
         const ws = tmpDir("ac-hs-allow-");
         const r = runPreToolUse(ws, "Read", { file_path: path.join(ws, "x") });
+        expect(r.status, `stderr: ${r.stderr.slice(0, 400)}`).toBe(0);
+        expect(r.stderr).toBe("");
+        const parsed = JSON.parse(r.stdout);
+        expect(parsed.hookSpecificOutput.hookEventName).toBe("PreToolUse");
+        expect(parsed.hookSpecificOutput.permissionDecision).toBe("allow");
+    });
+
+    it("a call that is NOT category A stays silent", () => {
+        // The allow is scoped by the classifier, not by the absence of
+        // findings: a Write nobody objected to still gets no permission field.
+        const ws = tmpDir("ac-hs-allow-write-");
+        const r = runPreToolUse(ws, "Write", { file_path: path.join(ws, "x"), content: "y" });
         expect(r.status, `stderr: ${r.stderr.slice(0, 400)}`).toBe(0);
         expect(r.stdout).toBe("");
     });
