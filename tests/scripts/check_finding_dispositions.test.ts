@@ -6,9 +6,16 @@
  * dispositions green), the comment machine-block is only a trigger
  * (reported-but-unrecorded blocking finding red), and finding ids are stable.
  */
+import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import {
+    empty_ledger_problem,
     isBlocking,
     localTagHit,
     releaseStatus,
@@ -266,5 +273,103 @@ describe('renderReview — a finding id is legible as a finding id', () => {
 
     it('is sensitive — the no-findings comment carries no id note, having no ids', () => {
         expect(renderReview([], false)).not.toContain('is a FINDING id');
+    });
+});
+
+
+const _REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+/**
+ * The CLI, over a throwaway ledger directory.
+ *
+ * `--dir` is what makes these cases network-free: every one of them writes the
+ * ledger FILE, and the released-vs-unreleased probe (git tags, then the remote)
+ * only runs when the file is absent. A present ledger is decided entirely from
+ * its own contents.
+ */
+function runGate(dir: string, release: string): { code: number; out: string } {
+    const tsx = path.join(
+        _REPO_ROOT,
+        'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+    );
+    const res = spawnSync(
+        tsx,
+        [
+            path.join(_REPO_ROOT, 'src/scripts/check_finding_dispositions.ts'),
+            '--release',
+            release,
+            '--dir',
+            dir,
+        ],
+        { cwd: _REPO_ROOT, encoding: 'utf-8', maxBuffer: 32 * 1024 * 1024 },
+    );
+    return { code: res.status ?? 1, out: `${res.stdout ?? ''}${res.stderr ?? ''}` };
+}
+
+function ledgerDir(body: unknown): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfd-empty-'));
+    fs.writeFileSync(path.join(dir, '1.0.0.json'), JSON.stringify(body, null, 2) + '\n', 'utf-8');
+    return dir;
+}
+
+/**
+ * An empty ledger must say why it is empty.
+ *
+ * The released/unreleased split closed the missing-FILE half. This is the other
+ * half, and it was green before: `findings: []` passed while asserting nothing,
+ * so the cheapest way to satisfy the gate was to create an empty file — the same
+ * silence wearing the shape of a record. Both directions are pinned, because a
+ * test that only asserts the red half cannot catch the day the predicate inverts
+ * and every empty ledger passes again.
+ */
+describe('empty_ledger_problem — an unexplained empty ledger is not a record', () => {
+    it('an empty finding set with no reason is a problem', () => {
+        expect(empty_ledger_problem({ findings: [] })).not.toBeNull();
+    });
+
+    it('an empty finding set WITH a reason is fine', () => {
+        expect(
+            empty_ledger_problem({ findings: [], no_findings_reason: 'the review did not run' }),
+        ).toBeNull();
+    });
+
+    it('a whitespace-only reason is not a reason', () => {
+        expect(empty_ledger_problem({ findings: [], no_findings_reason: '   ' })).not.toBeNull();
+    });
+
+    it('a populated finding set never needs one', () => {
+        expect(
+            empty_ledger_problem({ findings: [finding({ ...COMPLETE })], no_findings_reason: '' }),
+        ).toBeNull();
+    });
+});
+
+describe('exit codes — a present-but-empty ledger is not the same state as an absent one', () => {
+    it('present + empty + reason exits 0', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [],
+            no_findings_reason: 'the self-review call did not complete; nothing was reviewed',
+        });
+        expect(runGate(dir, '1.0.0').code).toBe(0);
+    });
+
+    it('present + empty + NO reason exits 1 — red before this change, green after it regresses', () => {
+        const dir = ledgerDir({ schema_version: 1, release: '1.0.0', findings: [] });
+        const r = runGate(dir, '1.0.0');
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('no_findings_reason');
+    });
+
+    it('present + dispositioned findings exits 0 and needs no reason', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [finding({ ...COMPLETE })],
+        });
+        expect(runGate(dir, '1.0.0').code).toBe(0);
     });
 });

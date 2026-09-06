@@ -2,7 +2,7 @@
 complexity: structural
 status: later
 parent_roadmap: road-to-binding-findings
-review_by: 2026-10-03
+review_by: 2026-09-20
 relates:
   - slug: road-to-the-unwritten-ledger
     relation: disjoint
@@ -84,6 +84,31 @@ the sibling closed the post-tag read and not the in-workflow ordering this
 roadmap exists for. Recording the occurrence without moving the date would have
 left a falsified prediction standing; moving the date without recording the
 occurrence would have been a preference rather than a finding.
+
+### Third and fourth occurrences — 14.17.0 and 14.18.0
+
+Recorded 2026-09-06 by `road-to-the-ledger-two-releases-skipped`, which owns the
+post-tag half and touches nothing else here. Both releases shipped with no
+ledger; `check_finding_dispositions --release 14.17.0` and `--release 14.18.0`
+each exited 1 against `main@9b75231ed`. The recurrence is not "one day" — it is
+**every release since the mechanism landed**: 14.15.0, 14.16.0, 14.17.0, 14.18.0.
+
+Neither occurrence is the ordering shape this roadmap owns. Both are the
+absent-ledger shape, and the reason they went unseen is that the gate's only
+caller sat behind `startsWith(github.head_ref, 'release/')` on a branch deleted
+at merge. That sibling adds a caller on `main` and makes an unexplained empty
+ledger red, so a fifth skip is visible within one push rather than only by hand.
+
+**Why the date moved: 2026-10-03 → 2026-09-20.** The 29-day interval was set
+against two occurrences; there are now four, two of them inside the first two
+days of that window, which is the window's own prediction being falsified while
+it ran. Against that, the silence is now closed on the trunk — so the question
+the next review has to answer has changed, from "is this still recurring
+unseen" to "does the new trunk caller actually catch the next skip". Two weeks
+at the current cadence is roughly ten releases, which is enough observation to
+settle that. The date moves and nothing else does: `status: later` is unchanged,
+and AC-2 is still owed, because the in-workflow ordering barrier is untouched by
+anything recorded above.
 
 ## Why an autonomous run cannot finish it
 
