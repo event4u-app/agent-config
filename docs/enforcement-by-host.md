@@ -68,7 +68,7 @@ to avoid drift between two hand-maintained tables.
 ## Lifecycle slots — three different truths, kept apart
 
 A host×slot cell can be true in three independent senses, and collapsing them is
-how a declaration comes to read as evidence of runtime behaviour:
+how a declaration comes to read as evidence of runtime behavior:
 
 1. **Declared** — the manifest binds concerns there
    (`src/scripts/hook_manifest.yaml`, `platforms:` at `:1179`). A declaration is
