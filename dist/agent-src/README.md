@@ -17,7 +17,7 @@ it as `.augment/` (local projection).
 ├── contexts/       # Background context documents for the agent
 ├── guidelines/     # Coding guidelines by language (reference material)
 ├── rules/          # Always-active behavior rules (auto-loaded every conversation)
-├── skills/         # On-demand expertise (named, or trigger-matched)
+├── skills/         # On-demand expertise (named or trigger-matched)
 └── templates/      # File templates for roadmaps, features, skills, etc.
 ```
 

@@ -21,7 +21,7 @@ Coding guidelines live under `docs/guidelines/` organized by language. **Always 
 
 - **Guidelines** = detailed coding conventions (reference material, read on demand).
 - **Rules** = always-active behavior constraints (auto-loaded every conversation).
-- **Skills** = agent capabilities and workflows (named, or trigger-matched).
+- **Skills** = agent capabilities and workflows (named or trigger-matched).
 
 Guidelines are the "how to write code" docs. Rules enforce critical subsets automatically. Skills reference guidelines when performing related tasks.
 
