@@ -136,9 +136,21 @@ describe('the live corpus', () => {
         // routine. One token, again in the direction the ceiling wants, and a
         // re-derivation of the pin after a decided change rather than a
         // loosened bar.
+        //
+        // 11444 -> 11460 on 2026-09-06: the ten design-family descriptions each
+        // gained a named sibling (road-to-one-motion-authority Phase 5). The
+        // router reads the description and nothing else, so a family whose
+        // members never point at each other is one it cannot traverse. This is
+        // the first move here AGAINST the ceiling's direction, so it is priced
+        // rather than waved through: the first pass cost 44 tokens and reddened
+        // check-preamble-payload at 138301 against 138273, and the descriptions
+        // were compressed to +16 (138264, nine under) rather than the baseline
+        // raised. Sixteen tokens buys ten router edges; each description still
+        // sits under the 200-character cap, and the 32-query trigger corpus
+        // scores zero regressions after the compression.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(299);
-        expect(e.skill_description_tokens).toBe(11444);
+        expect(e.skill_description_tokens).toBe(11460);
         expect(e.deprecated_count).toBe(0);
     });
 

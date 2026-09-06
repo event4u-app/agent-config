@@ -23,20 +23,20 @@
     "recall_loss_pp": 35.659,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 44.703,
+      "1": 44.961,
       "3": 57.106,
       "5": 64.341,
       "10": 73.643,
       "20": 80.62
     },
     "false_activation_at_k": 13.66,
-    "context_cost_tokens": 235.8,
+    "context_cost_tokens": 235.6,
     "token_target_met": true,
     "benefit_unconditional": 64.341,
     "benefit_conditional_on_activation": 82.45,
     "adjudicated_deliveries": 302,
     "unadjudicated_deliveries": 3329,
-    "tie_decided_cut_pp": 78.927
+    "tie_decided_cut_pp": 79.319
   },
   "set_compatibility": {
     "shared_prompts": 10,
