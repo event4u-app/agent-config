@@ -14,6 +14,14 @@ execution:
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
 
+> **Arrivals:** the delivery/`eager-all` subject appears in **19** consumed inbox
+> rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "eager-all"`,
+> distinct round directories); `lean_projection` in **18**. Latest
+> `inbox-2026-09-r`, which proposed a delivery roadmap whose own decision packet
+> already exists. The figure counts rounds that RAISE the subject, not rounds
+> that demand this roadmap specifically — it is a floor on the recurrence, not
+> a count of asks. Written here so the next round meets a number.
+
 > **Blocked until:** the host exposes an `InstructionsLoaded` observer that a
 > session can read (step 3.3's instrument; absent from the 2.1.229 binary's token
 > extraction, so building against it today would be designing on an assumption).

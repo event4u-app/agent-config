@@ -16,6 +16,12 @@ review_by: 2026-12-24
 > automation can supply: another person's filesystem, and a write to a
 > per-machine settings file.
 
+> **Arrivals:** the standing-payload subject appears in **15** consumed inbox
+> rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "standing
+> payload\|138k\|138,273"`, distinct round directories). Latest
+> `inbox-2026-09-r`. A floor on the recurrence, not a count of asks for this
+> stub. Written here so the next round meets a number.
+
 ## The original criterion, verbatim
 
 > **0.1** Run the standing-rule-delivery dev task on the maintainer machine and

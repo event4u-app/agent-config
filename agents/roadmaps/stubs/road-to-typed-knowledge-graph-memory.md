@@ -18,6 +18,12 @@ review_by: 2026-09-25
 > org-mode stubs and **do not govern this stub**. It is governed by its own
 > four gates below.
 
+> **Arrivals:** shares the code-graph subject counted on
+> `agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md` — **72** consumed
+> inbox rounds under `agents/tmp.old/` (measured 2026-09-06). Latest
+> `inbox-2026-09-r`. A floor on the recurrence, not a count of asks for this
+> stub. Written here so the next round meets a number.
+
 ## Why a stub and not a roadmap
 
 No confirmed defect in this tree is fixed by it. Memory today has **no typed

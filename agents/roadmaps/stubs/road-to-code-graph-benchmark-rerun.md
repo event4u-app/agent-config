@@ -5,6 +5,15 @@ review_by: 2026-09-25
 
 # Stub: road to a code-graph benchmark re-run on the repaired extractor
 
+> **Arrivals:** the code-graph subject appears in **72** consumed inbox rounds
+> under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "code.graph\|code_graph"`,
+> distinct round directories) — the most-recurring subject in that store by a wide
+> margin. Latest `inbox-2026-09-r`, which proposed it again as a centrepiece. The
+> figure is a floor on the recurrence, not a count of asks for this stub.
+> **It is recorded on a stub that is CLOSED UNMET on purpose:** the recurrence is
+> real and the closure below explains why this environment cannot answer it, so a
+> seventy-third round meets both facts at once instead of re-deriving either.
+
 ## OUTCOME — CLOSED UNMET, 2026-08-28
 
 ```
