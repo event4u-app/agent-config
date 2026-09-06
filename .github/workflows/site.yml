@@ -3,8 +3,16 @@ name: Site
 # B4 — build the Starlight docs site and gate it on the internal-link checker.
 # Astro `build` completes even with dangling internal links, so the build alone
 # is not a link gate; check_site_links.ts scans the built dist for broken links.
-# Path-filtered to the site workspace + the checker (the site is not public yet;
-# widen the filter to the synced docs when a deploy target lands).
+#
+# Path filter, and how it differs from its sibling `deploy-site.yml`: this
+# workflow fires on the site workspace and on the checker itself. `deploy-site.yml`
+# — which has published the site to GitHub Pages on every push to `main` since
+# 2026-07-05 — additionally fires on the canonical docs that `site/sync-docs.mjs`
+# projects into the site (`docs/proof.md`, `docs/benchmark.md`, `docs/CLAIMS.md`,
+# `docs/catalog.md`, `docs/media/**`). That difference has a cost, stated rather
+# than implied: a change to one of those docs deploys without this link check
+# running, and is only link-checked on the next site-workspace push. Widening
+# this filter to match the deploy filter is the fix when that gap bites.
 on:
   pull_request:
     branches: [main, master]
