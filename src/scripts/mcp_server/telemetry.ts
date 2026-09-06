@@ -3,7 +3,9 @@
 // Per `agents/roadmaps/archive/road-to-mcp-full-coverage.md` §Phase 1 J4 +
 // `docs/contracts/mcp-tool-stub-envelope.md`, both transports log every
 // `tools/call` with `{tool_name, client_id_hash, ts, transport,
-// outcome}`. Payload bodies are never logged; the client identifier is
+// outcome}`. The stdio-lite surface (`src/cli/mcp/`) appends a sixth,
+// optional `host` field; callers that do not know their client omit it and
+// their records stay byte-identical to the frozen five-field envelope. Payload bodies are never logged; the client identifier is
 // hashed at the server boundary so the queryable store never sees raw
 // identity.
 //
@@ -107,15 +109,26 @@ export function build_record(options: {
     transport: string;
     client_id_hash_value?: string | null | undefined;
     ts?: string | null | undefined;
+    host?: string | null | undefined;
 }): Record<string, unknown> {
-    const { tool_name, outcome, transport, client_id_hash_value, ts } = options;
-    return {
+    const { tool_name, outcome, transport, client_id_hash_value, ts, host } = options;
+    const record: Record<string, unknown> = {
         tool_name,
         client_id_hash: client_id_hash_value || hash_client_id(),
         ts: ts || _now_iso(),
         transport,
         outcome,
     };
+    // `host` is APPENDED, and only when a caller supplies one, so a record
+    // written by a caller that does not know its client stays byte-identical
+    // to the five-field envelope the stub contract froze. It is a closed
+    // vocabulary resolved at the boundary (see `src/cli/mcp/telemetry.ts`),
+    // never a free-form string: a record type that cannot hold arbitrary text
+    // has no scrubber to fail.
+    if (typeof host === 'string' && host !== '') {
+        record.host = host;
+    }
+    return record;
 }
 
 /**
@@ -132,13 +145,15 @@ export function record_call(options: {
     transport: string;
     consumer_root?: string | null | undefined;
     client_id_hash_value?: string | null | undefined;
+    host?: string | null | undefined;
 }): Record<string, unknown> | null {
-    const { tool_name, outcome, transport, consumer_root, client_id_hash_value } = options;
+    const { tool_name, outcome, transport, consumer_root, client_id_hash_value, host } = options;
     const record = build_record({
         tool_name,
         outcome,
         transport,
         client_id_hash_value,
+        host,
     });
     const target = _resolve_log_path(consumer_root ?? undefined);
     try {
