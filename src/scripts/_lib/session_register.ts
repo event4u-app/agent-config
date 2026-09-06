@@ -175,14 +175,19 @@ export function stop_means_session_end(platform: string | null | undefined): boo
  * Deliberately **not** derived from the frequency lattice. That instrument
  * models *slot presence*, and two hosts have a slot that never fires:
  *
- * - `cursor` — `user_prompt_submit` and `stop` are **IDE-only**; the CLI fires
- *   only shell-execution hooks (`hook_manifest.yaml:365-366`,
- *   `chat-history-platform-hooks.md:214`). The lattice has no IDE/CLI dimension,
- *   so it reports cursor covered.
+ * - `cursor` — excluded because reachability there is UNESTABLISHED, not
+ *   because it is known absent. The earlier wording asserted the CLI fires only
+ *   shell-execution hooks, sourced to a 2026-01 reading that carried no expiry
+ *   and could not be re-verified in either direction. The safe direction is the
+ *   one taken: an unverified slot must not read as covered. The lattice has no
+ *   IDE/CLI dimension of its own, so it would report cursor covered; the
+ *   envelope now carries a `surface` field (`_lib/surface.ts`) that records
+ *   which surface a dispatch came from, and it answers `unknown` on cursor
+ *   because no marker distinguishes the two.
  * - `cowork` — slots are structurally wired but lifecycle events do not fire
  *   (`hook_manifest.yaml:346-351`).
- * - `copilot` — no hook surface at all (`hook_manifest.yaml:428-429`), excluded
- *   from the join by declaration.
+ * - `copilot` — nothing bound by this package (`fallback_only: true` in the
+ *   manifest), excluded from the join by declaration.
  *
  * A session on an excluded host still *registers* if a `session_start` reaches
  * it, and simply stops being visible after its TTL. It is never reported as

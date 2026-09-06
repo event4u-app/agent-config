@@ -1,0 +1,20 @@
+# Fixture: a row whose provenance lapsed yesterday while it still claims a
+# blocking binding. The lint must refuse this and name the row.
+schema_version: 1
+hosts:
+  fixturehost:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        verified:
+          docs_at: "2026-01-01"
+          docs_url: https://example.invalid/hooks
+          probe_at: "2026-01-01"
+          host_version: "0.0.1"
+          expires: __YESTERDAY__
+        slots:
+          pre_tool_use: { native: PreToolUse, block_exit: 2 }

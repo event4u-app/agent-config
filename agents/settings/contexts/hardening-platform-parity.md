@@ -96,8 +96,10 @@ Each issue is filed against this repo with label
 
 - **Title:** `[parity] Cursor CLI: CHECKPOINT fallback for postToolUse-bound rules`
 - **Labels:** `hardening-platform-parity`, `platform:cursor`, `tier:fallback`
-- **Body:** Cursor CLI does not fire `postToolUse` / `stop` /
-  `sessionStart`. Document the gap in
+- **Body:** whether the Cursor CLI fires `postToolUse` / `stop` /
+  `sessionStart` is not established here — the flat "does not fire" claim this
+  line carried was retracted on 2026-09-06 as unverifiable in either
+  direction. Document the gap in
   `chat-history-platform-hooks.md`, route Cursor-CLI users to the
   cooperative-rule fallback, and consider piggy-backing
   `onboarding-gate` on `beforeShellExecution`.

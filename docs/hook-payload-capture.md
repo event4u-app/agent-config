@@ -83,9 +83,10 @@ archive conversations.
   zero or more `postToolUse`.
 - **File pattern:** `cursor__afterAgentResponse__<ts>__<pid>.json` is
   the most useful one to paste.
-- **CLI vs IDE:** Cursor CLI fires only
-  `beforeShellExecution`/`afterShellExecution` — for the
-  per-turn payload you need the IDE.
+- **CLI vs IDE:** which slots the Cursor CLI fires is not established here
+  (claim retracted 2026-09-06). If a CLI capture yields no per-turn payload,
+  capture from the IDE — and record what the CLI did, dated, so the next
+  reader has an observation rather than a guess.
 
 ### Cline (~5 min)
 

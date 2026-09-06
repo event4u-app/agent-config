@@ -1,0 +1,20 @@
+# Fixture: the same lapsed row with no blocking binding. Nothing is degraded,
+# so the lint warns and passes.
+schema_version: 1
+hosts:
+  fixturehost:
+    surfaces:
+      any:
+        entry_shape: none
+        json_shape: none
+        fail_policy: propagate
+        timeout_unit: unknown
+        timeout_default: null
+        verified:
+          docs_at: "2026-01-01"
+          docs_url: https://example.invalid/hooks
+          probe_at: "2026-01-01"
+          host_version: "0.0.1"
+          expires: __YESTERDAY__
+        slots:
+          post_tool_use: { native: PostToolUse, block_exit: null }

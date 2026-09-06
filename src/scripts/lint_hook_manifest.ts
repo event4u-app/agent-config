@@ -13,8 +13,11 @@
  *   - a platform binding referencing an unknown event
  *   - a native_event_aliases block referencing an unknown event or platform
  *   - an orphan `<platform>-dispatcher.sh` trampoline without a manifest block
+ *   - a `host_lowering.yaml` row whose `verified.expires` has passed (or which
+ *     was never verified) while it still carries a blocking binding
  *
- * Soft-warns on placeholder platform blocks and dead concerns.
+ * Soft-warns on placeholder platform blocks, dead concerns, an expired row
+ * carrying no blocking binding, and an incomplete `verified` provenance block.
  *
  * Exit codes:
  *   0 — clean (warnings allowed)
@@ -29,6 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 
 // src/scripts/lint_hook_manifest.ts → two levels up is the repo root.
@@ -44,6 +48,7 @@ const DEFAULT_MANIFEST = path.join(
   "hook_manifest.yaml",
 );
 const HOOKS_DIR = path.join(REPO_ROOT, "src", "scripts", "hooks");
+const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
 
 // Canonical event vocabulary — keep in lock-step with
 // docs/contracts/hook-architecture-v1.md and dispatch_hook.EVENT_VOCABULARY.
@@ -635,7 +640,73 @@ export function _check_roles(
   }
 }
 
-export function lint(manifestPath: string, strict: boolean): number {
+/**
+ * A capability fact that cannot expire is a capability fact nobody re-checks.
+ *
+ * Three rounds of corrections to the same host claims is what this gate exists
+ * to stop, so the rule is mechanical rather than editorial: an unverified row —
+ * and an expired one is unverified, by the same definition `host_semantics`
+ * uses — may not carry a blocking binding. Everything softer warns, because a
+ * lapse on an advisory row must not red an unrelated pull request.
+ */
+export function _check_host_lowering(
+  tablePath: string,
+  errors: string[],
+  warnings: string[],
+  today: string = new Date().toISOString().slice(0, 10),
+): void {
+  let table: HostLowering;
+  try {
+    table = parseHostLowering(fs.readFileSync(tablePath, "utf-8"));
+  } catch (exc) {
+    errors.push(
+      `host_lowering: ${tablePath} could not be read or parsed: ` +
+        `${exc instanceof Error ? exc.message : String(exc)}`,
+    );
+    return;
+  }
+  for (const [host, surfaces] of table) {
+    for (const [surface, row] of surfaces) {
+      const blocking = [...row.slots.entries()]
+        .filter(([, s]) => s.block_exit !== null)
+        .map(([slot]) => slot);
+      const expired = row.verified !== null && row.verified.expires < today;
+      const where = `host_lowering ${host}/${surface}`;
+
+      if (row.verified === null) {
+        if (blocking.length > 0) {
+          errors.push(
+            `${where}: carries a blocking binding (${blocking.join(", ")}) with \`verified: null\`. ` +
+              "Establish the row with a live deny probe and a dated `verified` block, or set " +
+              "`block_exit: null` on those slots.",
+          );
+        }
+        continue;
+      }
+      if (expired && blocking.length > 0) {
+        errors.push(
+          `${where}: \`verified.expires\` was ${row.verified.expires} and today is ${today}, ` +
+            `while the row still carries a blocking binding (${blocking.join(", ")}). ` +
+            "Re-establish it with a live deny probe on that host and move `expires` forward, " +
+            "or set `block_exit: null` on those slots — an expired row reads as unverified.",
+        );
+      } else if (expired) {
+        warnings.push(
+          `${where}: \`verified.expires\` was ${row.verified.expires} and today is ${today}. ` +
+            "The row carries no blocking binding, so nothing is degraded; re-establish it " +
+            "before attaching one.",
+        );
+      }
+      for (const field of ["docs_at", "host_version"] as const) {
+        if (row.verified[field] === null) {
+          warnings.push(`${where}: \`verified.${field}\` is null — the row is admissible but not fully cited.`);
+        }
+      }
+    }
+  }
+}
+
+export function lint(manifestPath: string, strict: boolean, hostLoweringPath: string = DEFAULT_HOST_LOWERING): number {
   if (!_isFile(manifestPath)) {
     process.stderr.write(
       `lint_hook_manifest: file not found: ${manifestPath}\n`,
@@ -664,6 +735,7 @@ export function lint(manifestPath: string, strict: boolean): number {
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);
   _check_dead_concerns(concernNames, bound, warnings);
+  _check_host_lowering(hostLoweringPath, errors, warnings);
 
   for (const w of warnings) {
     process.stderr.write(`warn: ${w}\n`);
@@ -703,17 +775,21 @@ export function lint(manifestPath: string, strict: boolean): number {
 
 export function main(argv: string[]): number {
   let manifest = DEFAULT_MANIFEST;
+  let hostLowering = DEFAULT_HOST_LOWERING;
   let strict = false;
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === "--manifest") {
       manifest = argv[i + 1] ?? manifest;
       i += 1;
+    } else if (a === "--host-lowering") {
+      hostLowering = argv[i + 1] ?? hostLowering;
+      i += 1;
     } else if (a === "--strict") {
       strict = true;
     }
   }
-  return lint(manifest, strict);
+  return lint(manifest, strict, hostLowering);
 }
 
 function _isCliEntry(): boolean {
