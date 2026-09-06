@@ -2639,3 +2639,30 @@ gates:
       proven by `--self-test` (3 cases, 1 rejecting) covering both directions:
       the contradicting pair reds, and each half ALONE stays green, which is
       what stops a matcher that fired on the keyword section alone.
+
+  - id: check_skill_activation_claim
+    argv: []
+    ci_invocation: .github/workflows/release-validation.yml
+    min_scanned: 1
+    corpus: >
+      exactly one claim block — `skill-activation-census-zero` in
+      `docs/CLAIMS.md` — checked against the census record it was derived from,
+      so the floor is 1 and a scan of 0 means the claim was renamed or deleted
+      rather than that the gate found nothing to say. The gate deliberately does
+      NOT floor the census's own corpus: the report that reads it is
+      `report_skill_activation`, which is not a gate and must not become one, and
+      registering a `report_*` id here would fork the population
+      `_lib/gate_population.ts` classifies by prefix.
+    status: enforced
+    no_canary_reason: >-
+      the corpus is ONE claim block at a fixed id, and the canary contract is
+      create-only. A planted second `docs/CLAIMS.md` would have to overwrite the
+      real one to land in scope, and every violation this gate can have is a
+      MODIFICATION of that one block — a figure moved, a population redrawn, a
+      figure the sentence stops stating. Discrimination is proven by
+      `--self-test` instead (4 cases, 3 rejecting, one per class), and end to end
+      by hand: editing the published turn count, the human-named population count
+      and the `last_verified` date each exits 1, and restoring each exits 0.
+      What the ROW buys on top of that is `ci_invocation` — the census had a
+      Taskfile target and no caller at all, so its removal would have been
+      noticed by nothing.

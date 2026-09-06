@@ -47,16 +47,16 @@ name collision rather than a mechanism.
 
 ## Phase 1 — The census keeps being taken
 
-- [ ] **1.1 Give `report_skill_activation` a caller.** Add a Taskfile target and a
+- [x] **1.1 Give `report_skill_activation` a caller.** Add a Taskfile target and a
       release-time invocation so the census is re-taken rather than quoted. The script
       exists and needs no change for this step.
       verify: `task` exposes the target, it runs against the transcript store without
       arguments, and its output names the session count and turn count it actually read.
-- [ ] **1.2 Register it in `src/config/gate-coverage.yml` with a CI-identical `argv`.**
+- [x] **1.2 Register it in `src/config/gate-coverage.yml` with a CI-identical `argv`.**
       Without the row, removing the caller added in 1.1 is invisible.
       verify: `./scripts-run src/scripts/check_gate_coverage` passes with the row and
       fails when the row's `argv` and the caller's invocation disagree.
-- [ ] **1.3 Date the published claim from the run, not from prose.** `docs/CLAIMS.md:245`
+- [x] **1.3 Date the published claim from the run, not from prose.** `docs/CLAIMS.md:245`
       and `docs/proof.md:98` carry `<!-- count: dated -->` and a hand-written date. The
       figure and its date come from the census output.
       verify: re-running the census and regenerating the proof surface changes the date
@@ -65,13 +65,13 @@ name collision rather than a mechanism.
 
 ## Phase 2 — Say what a zero census means for the surface
 
-- [ ] **2.1 Separate the three populations, with counts.** The 299 skills split into: the
+- [x] **2.1 Separate the three populations, with counts.** The 299 skills split into: the
       12 that declare a machine-matchable trigger, the 100 that carry a `triggers.json`
       corpus, and the remainder that are reachable only by a human naming them. Publish
       the three counts and their overlap as one table.
       verify: the table's three counts are produced by commands stated beside them, and
       they reconcile to 299 with the overlap named.
-- [ ] **2.2 State, per population, what invocation would even look like.** For the
+- [x] **2.2 State, per population, what invocation would even look like.** For the
       human-named remainder, invocation is a reader opening a file — which is a
       legitimate answer and is currently unstated, so the census's zero reads as a
       failure of all 299 rather than of the subset where automatic selection was ever
@@ -79,7 +79,7 @@ name collision rather than a mechanism.
       verify: `docs/proof.md`'s census claim distinguishes the population where zero is a
       defect from the population where zero is the design, and neither is asserted
       without the count behind it.
-- [ ] **2.3 Correct any surface that implies automatic selection for the remainder.** A
+- [x] **2.3 Correct any surface that implies automatic selection for the remainder.** A
       claim that skills are selected for the agent, made about a population that has no
       selection mechanism, is a claim the census refutes.
       verify: `./scripts-run src/scripts/check_claims` passes and no surviving claim
@@ -87,7 +87,7 @@ name collision rather than a mechanism.
 
 ## Phase 3 — The framing decision reaches its owner
 
-- [ ] **3.1 Put the two options in front of the owner as one decision packet.** Either the
+- [~] **3.1 Put the two options in front of the owner as one decision packet.** Either the
       12 trigger-carrying skills get a host-side activation path built and measured, or the
       surface is reframed as human-named reference and the claims follow. This roadmap
       builds neither; it makes the choice concrete, dated, and costed from the Phase 2
@@ -95,12 +95,17 @@ name collision rather than a mechanism.
       verify: the packet names both options, the count each affects, and what would falsify
       the option chosen — and `adr_cite_check` on any resulting record reports a live
       status.
+      <!-- deferred-resolution: carried-to=road-to-the-skill-surface-framing-choice -->
+      Deferred, not done and not cancelled. The AI council of 2026-09-06 descoped Phase 3
+      out of this roadmap; the receiver holds the packet content — both options, the count
+      each affects, and each option's falsifier — and the choice itself is the owner's.
 
 ## Blockers
 
 ### blocker: skill-surface-framing-owner-choice
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome:** transferred
 - **Owner:** maintainer
 - **Asked:** 2026-09-06, in the round `inbox-2026-09-q` disposition and in the reply that carried it.
 - **Blocks:** Phase 3 only. Phases 1 and 2 are independent and agent-doable in full — keeping the census alive and counting the populations honestly is required under either option.
@@ -111,6 +116,7 @@ name collision rather than a mechanism.
   2. Or choose the reframing — declare the human-named remainder reference material by design, and let Phase 2.3 bring `docs/CLAIMS.md` into line with that.
   3. Or accept the zero as-is with a stated reason, recorded next to the claim in `docs/proof.md` so the next round meets an answer.
 - **Resolved when:** one of the three is recorded in `docs/decisions/` or beside the claim, and `./scripts-run src/scripts/check_claims` passes against the resulting text.
+- **Resolution, 2026-09-06:** this closes the ROADMAP, and it does not decide the question. An AI council polled under the maintainer's standing delegation returned a unanimous DESCOPE: Phases 1 and 2 are executed in full here, Phase 3 leaves this roadmap's scope. None of the three options above was chosen, and nothing recorded here narrows the menu — the "Resolved when" condition above is still unmet and remains the condition for a substantive resolution. What was done instead is mechanical: step 3.1 and AC-6 are `[~]`, carried to `agents/roadmaps/road-to-the-skill-surface-framing-choice.md`, which holds the packet — the options, the count each affects, each option's falsifier — and carries a `parent_roadmap:` back-link so the carry is verifiable from both ends. That receiver is `status: carrier`; a human flips it to `ready` when the choice is taken up. The measurement itself is unchanged by any of this: the census reads 0 Skill invocations over 30 sessions and 11,338 assistant turns, and the roadmap closing says nothing about that reading in either direction.
 - The choice changes what this package claims to be for its consumers, which is
   a public commitment and owner-reserved under `decision-revisit-gate`'s reserved
   set. Phases 1 and 2 are independent of it and agent-doable in full: keeping the
@@ -129,9 +135,12 @@ name collision rather than a mechanism.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `report_skill_activation` runs from a named Taskfile target and at release time, and its output states the session and turn count it read.
-- [ ] AC-2 — `src/config/gate-coverage.yml` carries a row for the census whose `argv` matches its invocation, and a deliberate mismatch fails `check_gate_coverage`.
-- [ ] AC-3 — The published census figure and its date are regenerated from a run, and a stale figure is distinguishable from a fresh one without reading git history.
-- [ ] AC-4 — Three population counts for the 299 skills are published with the commands that produced them, they reconcile to 299, and their overlap is named.
-- [ ] AC-5 — No surviving claim in `docs/CLAIMS.md` asserts automatic skill selection over a population larger than the one AC-4 counts.
-- [ ] AC-6 — A decision packet naming both framing options, their affected counts, and their falsifiers is in front of the owner, and no activation mechanism was built by this roadmap.
+- [x] AC-1 — `report_skill_activation` runs from a named Taskfile target and at release time, and its output states the session and turn count it read.
+- [x] AC-2 — `src/config/gate-coverage.yml` carries a row for the census whose `argv` matches its invocation, and a deliberate mismatch fails `check_gate_coverage`.
+- [x] AC-3 — The published census figure and its date are regenerated from a run, and a stale figure is distinguishable from a fresh one without reading git history.
+- [x] AC-4 — Three population counts for the 299 skills are published with the commands that produced them, they reconcile to 299, and their overlap is named.
+- [x] AC-5 — No surviving claim in `docs/CLAIMS.md` asserts automatic skill selection over a population larger than the one AC-4 counts.
+- [~] AC-6 — A decision packet naming both framing options, their affected counts, and their falsifiers is in front of the owner, and no activation mechanism was built by this roadmap.
+      <!-- deferred-resolution: carried-to=road-to-the-skill-surface-framing-choice -->
+      Carried with 3.1. No activation mechanism was built. The packet exists in the receiver;
+      what does not close here is Phase 3 as this roadmap's own scope.
