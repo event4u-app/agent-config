@@ -1,5 +1,228 @@
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-06 -->
 
+# Autonomous roadmap drain — run 20, 2026-09-07
+
+Autonomous drain under a written owner instruction: drive every active roadmap
+under `agents/roadmaps/*.md` to completion, route every decision that would
+reach the owner to the AI council instead, close gates only legitimately, one PR
+per roadmap, no user round-trips. Two lanes in isolated worktrees.
+
+Base `77acbf86e`, 11 active roadmaps. **Nine roadmaps dispositioned across ten
+PRs. The estate is not empty and this run does not claim it should be** — four
+of the remainders are provably unreachable by any repository run, and the
+reasons are stated below rather than dressed as progress.
+
+## The seed queue was stale again, in the same way
+
+The instruction carried a 36-roadmap queue "verified at commit `c536dbd`".
+**None of those 36 roadmaps exists**, exactly as in run 19. The live estate was
+11 roadmaps, all at **0 %** on `origin/main`, so the progress-descending half of
+the ordering rule selected nothing and the queue resolved entirely by the
+complexity-ascending tie-break. Recomputed rather than trusted.
+
+## Pull requests
+
+| PR | Roadmap | Outcome |
+|---|---|---|
+| #1888 | mcp-bridge-integrity-and-reach-truth | **merged** · 10 steps / 7 ACs / 4 blockers, archived · 61 checks green |
+| #1889 | one-continuity-record | **merged** · phases 1-2 closed, 6 steps + 3 ACs descoped to a carrier, archived · 17 gates green |
+| #1890 | admissible-council-seats | open · 22/22 (16 `[x]`, 6 `[~]`), 3 blockers, archived · 45 checks green |
+| #1891 | observed-learning-signal | **merged** · 24/24, archived · 48/48 green |
+| #1892 | asked-not-parked | open · 25/25, both blockers, archived · 48 checks green |
+| #1893 | measured-prose-tells | open · 25/25 boxes, 12/12 ACs, archived · 41 pass / 0 fail |
+| #1897 | council-topology-evidence-followups | **merged** · **0 of 38, deliberately** — see below |
+| #1898 | scan-that-fails-closed | **merged** · **25/26** — AC-6 genuinely unmet, roadmap stays active |
+| #1899 | bounded-reference-harvest-loop | **merged** · 28/28 (21 done, 7 carried), archived · 43/43 green |
+| #1902 | *(not a roadmap)* 14.20.0 findings ledger | open · unblocks a red required check on every open PR · 7 pass / 0 fail |
+
+**No PR was merged by this session.** `gh pr merge` was blocked by the host's
+auto-mode classifier, and merging a production trunk is a Hard-Floor action no
+standing instruction lifts. The owner merged #1884, #1885, #1888, #1889, #1891,
+#1897, #1898 and #1899 during the run; the four still open at writing went
+`DIRTY` as a consequence and were made mergeable again by two conflict lanes
+(merge, never rebase; generated trees regenerated rather than hand-resolved).
+
+## Council — the run-19 framework held, and was not re-run where it applied
+
+Every one of the 12 blockers across the seven queued roadmaps already carried a
+locked run-19 disposition. They were **applied, not re-litigated** — a
+per-roadmap sheet carried the ruling to each lane, and the council was convened
+only for genuinely new questions. Total spend across the run: **$0.0000** (CLI
+subscription transport, 2 seats, `billable=0`).
+
+New sessions this run:
+
+- **ADR-256** — four MCP blockers, quorum 2/2, each independently reproducing
+  run-19 precedent: reject the user-global write; ADR-054 stands; decline the
+  fourth measurement; keep the prompt catalogue on every host, because a newborn
+  instrument's zero cannot carry a removal.
+- **`road-to-one-continuity-record`** — option 1 directionally on all five
+  decisions, **implementation greenlight DENIED**. Both seats rejected moving
+  `run_checkpoint` production onto the new continuity concern as a category
+  error, and named a nine-step sequence whose steps 5-9 need downstream and
+  parity-window observations no session can make.
+- **`bounded-reference-harvest-loop` step 5.2 — the seats SPLIT.** Network
+  availability was established first (HTTP 200), so this was never a capability
+  claim. The lane landed the **intersection neither seat calls unauthorized**:
+  readiness work done, measured run deferred, shadow arm frozen by commit, blob
+  and sha256.
+- **`scan-that-fails-closed` AC-6 — refused, then split.** Both seats refused to
+  rewrite an AC inside the roadmap it governs (goalpost movement), then split on
+  whether "at zero" means the ratchet or the count. A split escalates, and the
+  relaxing reading is the *accepting* direction on a governance control — out of
+  an agent's reach. The box stays `[ ]`.
+
+## What is left in the estate, and why none of it is deferred work
+
+| File | Why no run closes it |
+|---|---|
+| `road-to-council-topology-evidence-followups.md` | 0/38. Every predicate is a fact about the world: 2 enabled seats of 5 against an `n >= 5` floor — and both read `qualification: unknown`, so **zero** qualify toward a quorum — no UTC-day capacity reservation exists or can be made, Group C's metric has zero hits and `StageOutput` has zero production importers. Locked by three prior council rounds; the lane evaluated the lock rather than citing it, and found the separable-doable-half split already performed item-by-item upstream. `archive_completed_roadmaps` correctly declines it. |
+| `road-to-scan-that-fails-closed.md` | 25/26. `binary 3` (shipped media-adapter dry-run PNGs), `unaccounted 0`. Deliberately **not** stubbed: manufacturing a carry-to receiver for archival convenience is the same shape as widening a ratchet for bookkeeping. Four owner options named in the entry. |
+| `road-to-the-skill-surface-framing-choice.md` | `status: carrier`, 0/3. Its own text: the decision "changes what the package claims to be for its consumers", a public commitment in the reserved set. Accepting a public-commitment change is categorically unreachable by council. Waits for a human to flip `status: ready`. |
+| `road-to-continuity-retirement-sequencing.md` | The carry receiver created by #1889. Reopening trigger is four observation-based readings (P1-P4), no calendar date. |
+
+`road-to-council-topology-evidence-followups` also records a tension rather than
+resolving it: **nothing there could be descoped.** `[~]` has no legal onward
+receiver — `deferralProblems` resolves `carried-to=` only under
+`agents/roadmaps/` or `later/`, `stubs/` is illegal, `later/` was
+council-refused on preservation grounds, and `[-]` is owner-reserved. So `[ ]`
+is the only mark the tree permits, and the council's own "no indefinite `[ ]`"
+floor cannot be satisfied there.
+
+## Descopes, each with an observation-based trigger
+
+| From | What moved | Reopens on |
+|---|---|---|
+| one-continuity-record | phases 3, 4, 4.2 and the `chat-history:checkpoint` half of 4.1b | four readings P1-P4: separate concern ids with kill switches + fault injection · every capsule reader dispatching on `variant` before version · a parity comparison with outputs physically separated · an upgraded downstream checkout showing the hook migration landed |
+| observed-learning-signal | `artefact-family-registry` | one recorded shared-rule propagation failure |
+| measured-prose-tells | the dash cap below ~250 words | a decision record or council session revisiting a 2026-07-11 cap this roadmap held no authority to move |
+| asked-not-parked | step 4.2's `count-only` definition | a future run must argue the definition change on its own evidence — relaxing it here would have made the baseline already-zero and the delta meaningless |
+| scan-that-fails-closed | `mcp-fingerprint-slot` implementation | a claim assuming fingerprint recording, the first non-test MCP execution, or 2026-12-07 |
+
+## Non-achievements published rather than buried
+
+- **Four pre-registered predictions falsified**, all published: two in
+  `measured-prose-tells` (7 rules non-zero against a stated 2-6; four clean
+  files still rejected on density alone) and two roadmap premises in
+  `bounded-reference-harvest-loop` (step 5.3 resolves **one** of two trust
+  boundaries, so its stub is not disposed of; AC-8's `last_verified` date
+  refused unanimously, claim left `unbacked`).
+- **An aggregate figure withheld on principle.** `measured-prose-tells`' cluster
+  mean moved 53.97 → 48.06 under two scoring changes pulling opposite ways, and
+  is explicitly **not** quoted as a recall figure: a number produced under two
+  scoring rules is not a before-and-after of the same thing.
+- **A guard that fires on nothing, said so on four surfaces.**
+  `asked-not-parked`' one-question concern has no observed picker on any host;
+  stated in the concern header, the manifest comment, the admission row and
+  `docs/enforcement-by-host.md`. `native` is a **measured** zero, which is the
+  point of the axis.
+- **MCP-lite call counts: 0**, published with its caveat. Step 3.3's
+  registration mechanism is live and probe-proved but has observed no host, and
+  is explicitly not claimed as a reach improvement.
+- **`structured_ask` recorded as an explicit `false`** for claude / Claude Code
+  2.1.263 / 2026-09-07 — "checked, absent", not "never looked". Seven other
+  platforms stay unreachable and carry **no row**.
+- **An AC amended in the open.** `mcp-bridge` AC-5's clause "and no other host
+  does" was false when written; the amendment preserves the original text
+  verbatim beside it.
+
+## Defects found while working, not asked for
+
+- `lint_confusables` **silently ignored `--root`** — the wiring had patched a
+  *comment* mentioning `sl.iter_corpus()` and left the call site alone, so it
+  reported 1655 files against an empty directory.
+- Bound pragmas **missed a whole surface**: one `_scan` has an early return for
+  artifacts with no `execution:` block, leaving `src/subagents/` unbound.
+- A **stale self-referential suppression** in `untrusted-input-defense.md` whose
+  literals appear on exactly one line — its own pragma. Deleting it took
+  `check_preamble_payload_budget` from **11 tokens over** the CI grace ceiling
+  to **50 under**. No ceiling was raised anywhere in this run.
+- `stripExempt` **was eating contractions**, silencing two prose-tell families
+  outright; an objective-only bench re-run was **unbacking a `backed` claim for
+  free**; and a bench called `main()` at import scope, so tests wrote tracked
+  files.
+- **A deferral trigger had been met for five days unnoticed.**
+  `stubs/road-to-carrier-transition-vocabulary.md` deferred on "there is exactly
+  one carrier", reopening on "a second carrier appears". A second landed
+  2026-09-07 (`a42179585`); the gate now reports `2 live carrier(s)` where its
+  2026-09-02 run reported one. Recorded with provenance, **nothing built** — the
+  authority is absent. This confirms a prediction the carrier itself made about
+  unmonitored triggers, now with a live instance.
+
+## The release reviewer is the run's largest unresolved finding
+
+`check_finding_dispositions` went red on `main` mid-run: **14.20.0 shipped with
+no findings ledger**, reddening the required `Consistency` check on every open
+PR. That is the **fourth consecutive release** with no reviewed finding set
+(14.17.0, 14.18.0, 14.19.0, 14.20.0).
+
+PR #1902 records the null with full provenance — run 34092974363, HTTP 400
+`prompt is too long: 260998 tokens > 200000 maximum`, request_id
+`req_011CeoeCHUdmHso14DuZDGJ3`, an artifact upload that found no file, and a
+release PR carrying no machine block.
+
+**And it corrects the mechanism the previous ledger recorded.** The 14.19.0
+ledger read the cause as a prompt "GROWING rather than incidental" on 413191
+then 450336 tokens. 14.20.0 measures **260998** — a 42 % drop against 14.19.0,
+below 14.18.0 as well. The prompt is **not** monotonically growing; what is
+stable is that every release-span diff so far exceeds the cap, varying with the
+span rather than trending. The prediction that ledger *did* make — that 14.20.0
+would reproduce unless the gate chunks or scopes the diff — is **confirmed**.
+
+Recording a null is not a repair, and #1902 does not present itself as one.
+There is no live owner: `road-to-the-ledger-two-releases-skipped` recorded the
+first two nulls and is archived. **14.21.0 reproduces this unless the reviewer's
+input is bounded**; waiting for the prompt to shrink is not a plan. A fourth
+occurrence means the earlier disposition did not hold — a finding about the
+mechanism, not about this release.
+
+## Verification posture
+
+Every new or changed gate was **seen RED under a sabotage probe** before it was
+trusted, and every probe was undone by the inverse edit — never `git checkout`.
+Across the run that is roughly 45 induced failures over the lanes' own gates,
+including two that caught the discipline failing: `lint_code_comments` flagged a
+duplicated block a probe-undo had left behind, and `lint_carrier_integrity` was
+confirmed red before a parent was archived and green after.
+
+## Two orchestration errors, recorded not hidden
+
+- **A worktree was reassigned under a lane that was still working.** A
+  task-notification fires whenever a subagent stops, and a stopped subagent can
+  resume; it is not proof the lane is free. The lane found its worktree on
+  another branch with foreign uncommitted work, verified its own commits were no
+  longer ancestors, left the other lane's tree untouched, and rebuilt on a fresh
+  worktree. Nothing was lost. Fix: never reassign a worktree until the lane's PR
+  has settled.
+- **Two waiters were briefly live on one PR's CI** — one inside the lane, one as
+  an orchestrator monitor. The orchestrator's was stopped; the lane owns the
+  settle.
+
+Also recorded, twice, to two different lanes: a `git stash pop` probe popped a
+**peer session's** pre-existing stash, because the stash stack is repo-wide.
+Conflicted pops do not drop, so nothing was lost, and both recovered by pathspec
+`git restore --source=HEAD`.
+
+## Tooling findings worth a fix
+
+- **`ci_settle`'s window is structurally mis-sized for this repo, not flaky.** It
+  reported "DID NOT SETTLE — no verdict is claimed" on three separate PRs, twice
+  stalling at exactly 39/42, because shard 3/4's own documented runtime is
+  360-520s plus queue against a 9-minute budget. It behaved **correctly** by
+  refusing a verdict; the defect is the window. A ~20-minute budget settles it.
+- **`ci_settle` counts concurrency-superseded duplicates as failures.** Cancelled
+  runs with a *later* successful run at the same SHA read as red.
+- **The council CLI silently returns nothing when backgrounded** — quorum
+  printed, `$0.0000`, no artefact, exit 0. It also validates `--output` *after*
+  spending, so a bad path burns quota.
+- **`carried-to=` cannot point at `stubs/`**, and `archive_completed_roadmaps`
+  pre-stages its rename from the *index* copy, so running it before the closure
+  edits are committed archives a file without them.
+- **Two regenerations red CI rather than the local gates**: a new ADR makes the
+  committed ADR evidence census stale, and a `docs/CLAIMS.md` edit makes
+  `docs/proof.md` stale — which reds both the demo job and the Node shard
+  carrying `build_proof.test.ts`.
+
 # Autonomous roadmap drain — run 19, 2026-09-06
 
 Autonomous drain under a written owner instruction: drive active roadmaps to
