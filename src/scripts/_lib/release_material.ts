@@ -319,9 +319,7 @@ export const MIX_RESPONSE_MARKER = '**Governance mix:**';
  * ONE line, and machine-written end to end. It reports what the span measured
  * and asks the releaser for nothing.
  *
- * ## The written-answer obligation is gone (2026-09-07, ADR-261)
- *
- * This used to emit a second line — `Next cycle ships <the consumer work>,
+ * The written-answer obligation is gone (ADR-261). This used to emit a second line — `Next cycle ships <the consumer work>,
  * tracked in <roadmap or issue>.` — a placeholder no generator was allowed to
  * fill, backed by four refusals, an interactive prompt, a staging channel under
  * `## [Unreleased]` and a read-back obligation on the following release. The

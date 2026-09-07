@@ -555,12 +555,7 @@ function render_changelog_entry(
 
     // The curated head sits above the generated log, which stays unchanged.
     const body_lines: string[] = [...render_release_head(opts.head ?? {})];
-    // Under the head and outside it, so it does not consume the head's ten-line
-    // cap. Rendered whenever the measurement RESOLVED, not only when the
-    // taxonomy's threshold was crossed: since ADR-261 the line is a report and
-    // nothing acts on it, so suppressing a consumer-heavy reading would publish
-    // the ratio only when it looks bad. `null` (shallow clone, missing tag)
-    // still omits it — that is an absent measurement, not a good one.
+    // Under the head, outside it; any resolved reading — see `MixObligation`.
     if (opts.mix) {
         body_lines.push('');
         body_lines.push(...render_mix_response(opts.mix.level));
