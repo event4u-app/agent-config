@@ -20,9 +20,14 @@ import {
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..', '..');
 
 describe('the helper that replaced the prose', () => {
-    it('names rules_applied as a producer constant', () => {
-        expect(isProducerConstantField('rules_applied')).toBe(true);
-        expect(constantFieldReason('rules_applied')).toMatch(/measures the writer rather than the work/);
+    it('no longer names rules_applied as a producer constant', () => {
+        // road-to-observed-learning-signal 4.2: removing the row IS the
+        // assertion that the field is observed, and the producers were changed
+        // in the same commit. The helper stays — it is the mechanism a FUTURE
+        // producer records the same honesty with — and it is now empty.
+        expect(isProducerConstantField('rules_applied')).toBe(false);
+        expect(constantFieldReason('rules_applied')).toBeNull();
+        expect(PRODUCER_CONSTANT_FIELDS.size).toBe(0);
     });
 
     it('does not claim a genuinely observed field is constant', () => {
@@ -30,6 +35,15 @@ describe('the helper that replaced the prose', () => {
             expect(isProducerConstantField(f)).toBe(false);
             expect(constantFieldReason(f)).toBeNull();
         }
+    });
+
+    it('still reports a constant when one is registered', () => {
+        // A registration-shaped SENSITIVITY check: an empty map would pass the
+        // two assertions above even if the helper were broken, so exercise the
+        // path that a future row would take.
+        const reason = constantFieldReason('rules_applied');
+        expect(reason).toBeNull();
+        expect(isProducerConstantField('anything-unregistered')).toBe(false);
     });
 });
 
@@ -42,12 +56,21 @@ describe('the claim is checked against the producers, not asserted', () => {
         'src/scripts/_lib/review_skipped_record.ts',
     ];
 
-    it('every producer still writes the literal this module records', () => {
-        const expected = PRODUCER_CONSTANT_FIELDS.get('rules_applied')!;
-        const literal = `rules_applied: [${expected.map((v) => `'${v}'`).join(', ')}]`;
+    it('every producer matches what this module records — now: no constant at all', () => {
+        // The check runs in the SAME direction as before, against the new
+        // shape: the module records no constant for `rules_applied`, so no
+        // producer may write one. A producer that reintroduced the literal
+        // while the row stayed absent is exactly the stale-in-the-other-
+        // direction failure the original test guarded against.
+        expect(PRODUCER_CONSTANT_FIELDS.has('rules_applied')).toBe(false);
         for (const p of PRODUCERS) {
             const src = fs.readFileSync(path.join(repoRoot, p), 'utf-8');
-            expect(src, `${p} no longer writes ${literal}`).toContain(literal);
+            expect(src, `${p} writes a rules_applied literal with no registration behind it`).not.toMatch(
+                /rules_applied: \['[^']+'/,
+            );
+            expect(src, `${p} does not compute rules_applied`).toContain(
+                'rules_applied: appliedIds(input.rules_applied)',
+            );
         }
     });
 });
@@ -57,6 +80,9 @@ describe('the prose was deleted, not softened', () => {
         const contract = fs.readFileSync(path.join(repoRoot, 'docs/contracts/audit-log-v1.md'), 'utf-8');
         expect(contract).not.toContain('Stable rule ids whose Iron Law fired this phase');
         expect(contract).toContain('isProducerConstantField');
+        // The cutover is stated, and the segmentation obligation with it.
+        expect(contract).toContain('Cutover 2026-09-07');
+        expect(contract).toMatch(/reader spanning the cutover MUST segment/);
     });
 
     it('the card that motivated it is ADMISSIBLE under the Phase 7 contract', async () => {
@@ -74,5 +100,10 @@ describe('the prose was deleted, not softened', () => {
         expect(card.kind).toBe('experience');
         expect(String(card.provenance && (card.provenance as Record<string, unknown>).pattern_ref)).toMatch(/count 914/);
         expect(checkCard(card as never)).toEqual([]);
+        // Retired in the same change that removed the registration row: a card
+        // left standing after its falsifier fires makes the tree assert
+        // something false about itself.
+        expect(card.retired).toBe('2026-09-07');
+        expect(String(card.retired_by)).toContain('road-to-observed-learning-signal');
     });
 });
