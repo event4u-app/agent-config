@@ -8,7 +8,7 @@ replaces: []
 visibility: visible
 skills: [agent-docs-writing]
 description: Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
-argument-hint: "[--print | --file | with tasks]"
+argument-hint: "[--print | with tasks]"
 suggestion:
   eligible: true
   trigger_description: "user asks for an agent handoff, to resume/continue a previous session in a fresh chat, or a context-summary to paste into a new chat"
@@ -142,7 +142,9 @@ would confirm or kill it. An unverifiable line of self-doubt is filler: it reads
 as diligence, costs the next session a read, and cannot be acted on. `none` is
 accepted as the whole body of a section — an honest "nothing here" is an answer
 — and blankness is not, exactly as `## Open questions` already treats the same
-distinction. `lint_handoffs.ts` enforces both directions.
+distinction. Nothing enforces either direction: the handoff artifact validator
+that would have was retired with `HANDOFF.md`, so the contract is model-carried
+here.
 
 ### Capture, do not chase
 
@@ -188,59 +190,6 @@ inner content is preserved verbatim. Add one short prose line above the
 block (e.g. *"Copy this into a new chat:"*) and nothing after — no follow-up
 questions, no numbered options. The picker in Step 2 is the one exception:
 it is the flow's single question, asked BEFORE any handoff is generated.
-
-## 2b. File-artifact mode — `HANDOFF.md` (optional, host-neutral)
-
-On `/agent-handoff --file` (or when a workflow skill's phase boundary asks
-for a standing handoff), ALSO write the contract to
-`agents/runtime/state/HANDOFF.md` (gitignored runtime state — plain
-Markdown, no host API). Required fields, in order:
-
-```
-# HANDOFF
-## Mode
-{current workflow mode/phase, e.g. Implement (TDD)}
-## Contract received
-{what the previous phase handed over}
-## Contract owed
-{what the current phase must produce before yielding}
-## Decisions
-- {decision taken, with one-line rationale} {optionally close the line with
-  `[reversible]` or `[irreversible]` — those two spellings exactly}
-## Open questions
-- {unresolved items the next session must not silently drop — each as a
-  question ending in `?`; write `none` when there genuinely are none}
-## Least confident
-- {claim you are least sure of} — verify: {command or observable state}
-## Biggest thing missed
-- {what a reviewer would most likely find} — verify: {command}
-## Breaks in three months because
-- {the assumption most likely to expire} — verify: {command}
-## Not done
-- {in-scope work that did not land} — verify: {command}
-## Next command
-{the single command or step to run first on resume}
-```
-
-The four self-critique sections carry the same contract as in the chat template
-above: every substantive line names a `verify:`, `none` is a legal whole-section
-answer, blankness is not.
-
-**Resume rule:** a workflow skill's step 0 checks for this file and resumes
-from its contract (mode-inference table) instead of re-deriving state; a
-long phase refreshes the file before yielding. Validated by
-`lint_handoffs.ts` when present — a missing required field is red, and so is an
-`## Open questions` section that answers neither way (blank, or a bare `TBD` /
-`TODO` / `...`). A `?`-terminated question passes; so does an explicit `none` —
-the check exists to stop a blank section reading as an all-clear, not to force a
-question where there is none. The same linter reds a self-critique section that
-is blank, and one whose lines carry no `verify:`.
-
-**Critical-planning-file safety protocol** (applies to HANDOFF.md and agent
-roadmap edits): read the current file FIRST; take a timestamped backup copy
-next to it (`HANDOFF.md.<ts>.bak`) before overwrite; duplicate-check before
-appending (never double-append a section); preserve the section structure;
-post-verify the write by re-reading the required fields.
 
 ## Detection — when natural-language triggers count as explicit
 

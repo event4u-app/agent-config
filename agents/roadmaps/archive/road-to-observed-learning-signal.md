@@ -59,11 +59,37 @@ Tagged `corrected-from-reproduction`: the round's drafts identified this gate as
 ## Phase 5 — Make the handoff carry falsifiable uncertainty
 
 - [x] **5.1 Add four self-critique sections to the handoff contract.** The template at `src/domains/meta/agent-handoff/command.md:94-127` carries Done, Open, Resume pointer, Repeatable workflow, Errors + fixes, Feedback history, Key decisions and Relevant files — every one of them a statement about what happened, none about what the outgoing session is least sure of. Add `Least confident`, `Biggest thing missed`, `Breaks in three months because` and `Not done`, and require every line in them to carry a `verify:` naming the command or observable state that would confirm or kill it. An unverifiable line of self-doubt is filler.
-      verify: a fixture handoff with a `## Not done` line and no `verify:` is rejected by `src/scripts/lint_handoffs.ts`; `none` is accepted as the whole section body and blankness is not, matching the existing treatment of `## Open questions` at `:895-928`.
+      verify: a fixture handoff with a `## Not done` line and no `verify:` is rejected by `src/scripts/lint_handoffs.ts`; `none` is accepted as the whole section body and blankness is not, matching the existing treatment of `## Open questions` at `:895-928`. **Superseded upstream after this step verified:** `origin/main` retired `HANDOFF.md` and its artifact validator wholesale at `ffd8dd754`, so the enforcement half of this step is gone and the contract half is model-carried — see the closing note.
 - [x] **5.2 Capture, do not chase.** A finding surfaced while writing a handoff becomes a `model-noticed` record from 2.1, never a fix inside the handoff turn — the handoff exists because the session is ending, and a fix started there is the least-verified change in the whole run.
       verify: the contract states this and names the record write as the destination.
 
 ## Closing notes
+
+### The enforcement half of 5.1 did not survive the merge
+
+`origin/main` commit `ffd8dd754` ("retire HANDOFF.md and decide the two
+colliding words") removed the handoff **artifact** — the file, its section
+contract in the command document, the artifact-validation block in
+`src/scripts/lint_handoffs.ts`, and `tests/scripts/lint_handoffs_artifact.test.ts`
+— on the reproduced finding that it had no producer and no reachable consumer.
+That retirement landed on trunk while this roadmap's Phase 5 was in review.
+
+Resolved toward the retired end-state, because a validator for a deleted
+artifact validates nothing:
+
+- **Kept** — the four self-critique sections and both prose subsections in the
+  *live* handoff template (`src/domains/meta/agent-handoff/command.md`), which
+  is the surviving surface the incoming session actually reads.
+- **Dropped** — `HANDOFF_SELF_CRITIQUE`, `validate_handoff_self_critique`, their
+  wiring in `main()`, and the fixture tests. They only ever validated
+  `HANDOFF.md`.
+
+So 5.1's contract obligation stands and nothing enforces it. That is stated in
+the command document itself rather than left for a reader to discover, and it is
+the honest reading: `verify:` on every self-critique line is now model-carried
+here, exactly like the neighbouring obligations the same document already marks
+as such.
+
 
 ### What a varying `rules_applied` does NOT establish (step 4.3)
 

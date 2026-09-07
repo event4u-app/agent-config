@@ -12,6 +12,7 @@ import {
     rank_artefacts,
 } from './aggregator.js';
 import { ALLOWED_OUTCOMES, check_id_redaction } from './engagement.js';
+import { mcp_lite_json, render_mcp_lite_markdown, type McpLiteAggregate } from './mcp_lite.js';
 
 export const QUARTILE_TOP_RATIO = 0.20;
 export const QUARTILE_BOTTOM_RATIO = 0.20;
@@ -57,6 +58,17 @@ export function bucketise(stats: ArtefactStat[]): BucketedStat[] {
 export interface RenderOptions {
     top?: number | null;
     since_label?: string | null;
+    /**
+     * The MCP-lite reading, when the caller resolved one (step 4.2).
+     *
+     * Optional, and ABSENT is the default: a caller that does not supply it
+     * gets exactly the report this renderer produced before, byte for byte.
+     * That matters concretely — the Python→TS parity goldens for this script
+     * are frozen snapshots of a `.py` that no longer exists and can never be
+     * re-captured, so a section that rendered unconditionally would break a
+     * pin that cannot be repaired.
+     */
+    mcp_lite?: McpLiteAggregate | null;
 }
 
 /** Render a markdown report. `top` truncates each bucket; null keeps all. */
@@ -137,6 +149,9 @@ export function render_markdown(aggregate: AggregateResult, opts: RenderOptions 
         }
         lines.push('');
     }
+    if (opts.mcp_lite) {
+        lines.push(render_mcp_lite_markdown(opts.mcp_lite));
+    }
     return `${_pyRStrip(lines.join('\n'))}\n`;
 }
 
@@ -181,6 +196,7 @@ export function render_json(aggregate: AggregateResult, opts: RenderOptions = {}
         },
         outcomes: outcomes_payload,
         buckets: grouped,
+        ...(opts.mcp_lite ? { mcp_lite: mcp_lite_json(opts.mcp_lite) } : {}),
     };
     return `${_py_json_dumps_indent2_sorted(payload)}\n`;
 }

@@ -37,10 +37,12 @@ import { fileURLToPath } from 'node:url';
 import { collectRepoAnchor, describeDrift } from './_lib/envelope_grounding.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import {
-    RECYCLE_CONSUMED_REL,
-    RECYCLE_ENVELOPE_REL,
     RECYCLE_MAX_AGE_HOURS,
+    predecessorTracePresent,
+    recycle_consumed_rel,
+    resolveContinuityRecord,
 } from './_lib/recycle_envelope_paths.js';
+import { env_session_id } from './sessions_cli.js';
 import {
     hasBoundaryMarker,
     scanEnvelopeDirectives,
@@ -153,8 +155,33 @@ export function consume_handoff_context(root: string, now: Date = new Date()): C
  *   - focus (Phase 3.4): `AGENT_RESUME_FOCUS` narrows what the successor
  *     attacks first — the consumer-side mirror of `next_task`.
  */
-export function consume_recycle_envelope(root: string, now: Date = new Date()): ConsumeDecision {
-    const target = process.env.AGENT_RECYCLE_ENVELOPE_FILE || path.join(root, RECYCLE_ENVELOPE_REL);
+export function consume_recycle_envelope(
+    root: string,
+    now: Date = new Date(),
+    session_id: string | null | undefined = undefined,
+): ConsumeDecision {
+    // Phase 2.1: which record belongs to THIS session is a resolution, not a
+    // path constant. `resolveContinuityRecord` returns `null` with a reason
+    // when it cannot tell — the reader then starts clean and says the reason
+    // out loud rather than resuming from whichever file is newest.
+    //
+    // The id is a PARAMETER with an env fallback, not an env read. The
+    // dispatcher already carries `session_id` in the envelope, and reading the
+    // ambient variable instead means any process that inherits a host's
+    // `CLAUDE_CODE_SESSION_ID` — a test runner in an agent session, most
+    // obviously — resolves a foreign identity and reports the record absent.
+    const sessionId = session_id === undefined ? env_session_id() : session_id;
+    const override = process.env.AGENT_RECYCLE_ENVELOPE_FILE;
+    let target: string;
+    if (override !== undefined && override !== '') {
+        target = override;
+    } else {
+        const resolved = resolveContinuityRecord(root, sessionId);
+        if (resolved.file === null) {
+            return { action: 'absent', reason: resolved.reason };
+        }
+        target = resolved.file;
+    }
     let text: string;
     try {
         text = fs.readFileSync(target, 'utf-8');
@@ -164,7 +191,10 @@ export function consume_recycle_envelope(root: string, now: Date = new Date()): 
 
     const consume = (): void => {
         try {
-            fs.renameSync(target, path.join(path.dirname(target), path.basename(RECYCLE_CONSUMED_REL)));
+            fs.renameSync(
+                target,
+                path.join(path.dirname(target), path.basename(recycle_consumed_rel(sessionId))),
+            );
         } catch {
             try {
                 fs.unlinkSync(target); // fallback — never let it survive
@@ -212,6 +242,19 @@ export function consume_recycle_envelope(root: string, now: Date = new Date()): 
         return { action: 'discard', reason: 'recycle envelope workspace does not resolve' };
     }
 
+    // Lineage (Phase 2.3): a record that NAMES a predecessor is claiming a
+    // chain. If nothing in this workspace corroborates that session, the claim
+    // is unverifiable and the record is refused — never resolved to whatever
+    // else is lying about.
+    const predecessor = String(envelope['predecessor'] ?? '').trim();
+    if (predecessor !== '' && !predecessorTracePresent(root, predecessor)) {
+        consume();
+        return {
+            action: 'discard',
+            reason: `recycle envelope names predecessor "${predecessor}", which has no trace in this workspace`,
+        };
+    }
+
     // Drift first: a stale resume against the wrong tree is the failure the
     // reader must see before anything else in the block.
     const drift = describeDrift(envelope, collectRepoAnchor(root));
@@ -221,7 +264,7 @@ export function consume_recycle_envelope(root: string, now: Date = new Date()): 
     const focus = (process.env.AGENT_RESUME_FOCUS ?? '').trim();
     const block = wrapAsPriorSessionData(JSON.stringify(envelope, null, 2), {
         kind: 'recycle-envelope',
-        source: RECYCLE_ENVELOPE_REL,
+        source: path.relative(root, target) || path.basename(target),
         warnings: [
             ...drift,
             ...(focus ? [`FOCUS: attack "${focus}" first — the rest of this envelope is context.`] : []),
@@ -265,7 +308,11 @@ export function main(): number {
         }
         if (event === 'session_start') {
             const handoff = consume_handoff_context(root);
-            const recycle = consume_recycle_envelope(root);
+            const recycle = consume_recycle_envelope(
+                root,
+                new Date(),
+                String(envelope['session_id'] ?? '').trim() || env_session_id(),
+            );
             const blocks: string[] = [];
             const reasons: string[] = [];
             // Recycle envelope first — it is the task-state restore the

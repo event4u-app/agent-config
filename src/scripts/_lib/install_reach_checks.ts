@@ -34,6 +34,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import type { WiringCheck } from './runtime_wiring_checks.js';
+import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 
 /**
  * Root agent-instruction files, as a multi-vendor ecosystem convention rather
@@ -477,11 +478,41 @@ export function checkOverrideSet(projectRoot: string): WiringCheck {
     };
 }
 
+/**
+ * Step 3.2 — what remains non-automatic per host, and where that came from.
+ *
+ * Belongs to reach rather than to a doctor-local check because that is what it
+ * measures: the gap between "installed" and "actually running". A residual is
+ * exactly the distance the install did not cover.
+ *
+ * Reports the residual, never a checklist of what worked — a list of successes
+ * is noise a reader has to filter, while a named residual is the one thing they
+ * can act on. An UNRECORDED host warns too, because "nobody checked" must not
+ * read as "nothing to do".
+ */
+export function checkMcpConsentResidual(): WiringCheck {
+    const id = 'mcp-consent-residual';
+    const lines = residualReport(Object.keys(TOOL_TO_HOST));
+    if (lines.length === 0) {
+        return { id, status: 'ok', message: 'no MCP consent residual recorded for any known host', remedy: '' };
+    }
+    const actionable = lines.filter((l) => l.state === 'residual');
+    return {
+        id,
+        status: 'warn',
+        message: lines.map((l) => l.text).join(' · '),
+        remedy:
+            actionable.length > 0
+                ? 'complete the step named above on each host you use'
+                : 'record an observation for the unchecked hosts, or ignore if you do not use them',
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Wiring — the shape `cmd_doctor` consumes
 // ---------------------------------------------------------------------------
 
-export const REACH_CHECK_IDS = ['instruction-path-reach', 'version-axis', 'override-set'] as const;
+export const REACH_CHECK_IDS = ['instruction-path-reach', 'version-axis', 'override-set', 'mcp-consent-residual'] as const;
 
 export function reachRunners(opts: {
     projectRoot: string;
@@ -491,5 +522,6 @@ export function reachRunners(opts: {
         'instruction-path-reach': () => checkInstructionPaths(opts.projectRoot),
         'version-axis': () => checkVersionAxis(opts.projectRoot, opts.resolvableVersion),
         'override-set': () => checkOverrideSet(opts.projectRoot),
+        'mcp-consent-residual': () => checkMcpConsentResidual(),
     };
 }
