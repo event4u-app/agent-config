@@ -48,12 +48,36 @@ for every non-Claude host.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/enforcement-by-host.md:18-28`, `docs/CLAIMS.md:365`,
+- [x] Read `AGENTS.md`, `docs/enforcement-by-host.md:18-28`, `docs/CLAIMS.md:365`,
       `src/config/hook-token-budget.json:33-34,39-40`.
-- [ ] Run `agent-config roadmap:context --roadmap road-to-delivery-for-every-host` and
+      Done 2026-09-07. The host table reads as the Context describes it — Claude Code is
+      the only host that refuses on a deny, Copilot is `fallback_only` with 0 slots, Codex
+      has no platform key. `CLAIMS.md:365` is `status: backed`, `last_verified: 2026-08-23`,
+      and the Context's `corrected-from-reproduction` holds: the row does **not** contain
+      the phrase "owner-reserved", so E1/E2 rest on the owner instruction alone.
+      `hook-token-budget.json:33` is the 20,480 `rule-inject` row and `:34` its reason,
+      which assigns the slot-row move to the flipping run verbatim; `:39-40` are the 4,096
+      `user_prompt_submit` and 2,048 `pre_tool_use` sum caps.
+- [x] Run `agent-config roadmap:context --roadmap road-to-delivery-for-every-host` and
       record the probe's `scanned:` line against the `relates:` block above.
-- [ ] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
+      Done 2026-09-07. `scanned:` lines: **1 PRs · 901 roadmap file(s) across
+      active/later/stubs/archive · 432 remote branch(es) · 2 live session record(s) · 0
+      inbox file name(s)**. Fingerprint `950eabcfa2391b53` (base `5776a659e`). Against the
+      `relates:` block: no remote branch carries either slug and the one open PR (#1916,
+      `drain/q1-scan-fails-closed`) has zero file overlap with this roadmap. The probe
+      surfaced one sibling the `relates:` block does NOT list — active
+      `road-to-delivery-on-hook-hosts` — which is a real adjacency rather than a defect
+      here: it is the next roadmap in the same drain queue and touches the hook-host axis,
+      not this file's projection axis.
+- [x] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
       before the first checkbox.
+      Done 2026-09-07, and the gate is **inert for this run**. Its own § When it fires
+      scopes it to plan-artifact *authoring* and lists `/roadmap:process-*` execution runs
+      under "Does NOT fire on" — execution is not authoring. This roadmap already exists,
+      was authored with its rulings decided, and this run flips checkboxes against it. No
+      marker line is emitted and no interview is owed; recorded rather than silently
+      skipped, because a gate that is inert for a stated reason and a gate nobody ran look
+      identical afterwards.
 
 ## Context
 
@@ -154,7 +178,7 @@ Defects this roadmap repairs:
 
 ## Phase 0: Freeze the baseline per host
 
-- [ ] **0.1 Write `agents/evidence/analysis/standing-payload-by-host-2026-09.md`** at one
+- [x] **0.1 Write `agents/evidence/analysis/standing-payload-by-host-2026-09.md`** at one
       commit: per host (`claude-code`, `cursor`, `cline`, `windsurf`, `gemini`, `copilot`,
       `augment`, `codex`, `cowork`) the rule files the host loads, byte and chars/4 token
       sums, and the writer of each file as `file:line` into `condense.ts` or
@@ -164,11 +188,71 @@ Defects this roadmap repairs:
       verify: artefact exists with a commit pin; re-run at the same pin is byte-identical;
       each host row names a writer with `file:line`;
       `./scripts-run src/scripts/lint_evidence_artifacts` green.
-- [ ] **0.2 List the 8 unlabelled `auto` rules (D3)** by name, with whether each has any
+      Done 2026-09-07. Generator `src/scripts/report_standing_payload_by_host.ts`,
+      artefact pinned to `5776a659e069ce208ee7621fc46f4dee90863956`. Verify limbs:
+      pin present on line 4; emitted twice, `diff -q` reports no difference; all nine host
+      rows carry a writer, and the eight that have one are **machine-checked** —
+      `assertWritersResolve` runs on every invocation and exits 1 if a cited line is
+      outside its file, so a drifted citation cannot be published;
+      `lint_evidence_artifacts --all` resolves the `<!-- evidence-type: analysis -->`
+      marker on line 1.
+      **The unit is the projection source, not this disk, and that is a correction to the
+      obvious reading of this step.** Walking `.claude/rules` here counts 13 files against
+      114 projectable ones, because user-scope dedup and workspace/pack scope both shrink a
+      maintainer checkout below a consumer install. Either filter makes the figure
+      machine-local, which the "byte-identical re-run" limb forbids. The artefact measures
+      `dist/agent-src/rules` minus the ADR-004 `type: manual` rules, which is the unscoped
+      upper bound; every scope narrowing moves a host down from it.
+      **Three writer citations in the first draft of the artefact were wrong and were
+      caught by spot-checking each cited line rather than by the linter:** `claude-code`
+      pointed at the symlink call instead of `_emit_claude_rule` (`condense.ts:1192`),
+      `cline`/`cursor` were one line past `fs.symlinkSync` (`:1194`), and `copilot` pointed
+      into an unrelated `.windsurfrules` list. The copilot row was the substantive one:
+      **nothing in `condense` writes `.github/copilot-instructions.md` at all** — the
+      installer aggregates it from `src/agent-src/templates/copilot-instructions.md`, which
+      is exactly why `generate_capability_matrix.ts:138` marks that cell `adapter` and
+      footnotes it as install-time. That is now the cited writer.
+      **Reconciliation, so two right numbers do not read as a contradiction:** the census
+      bucket reports 122,608 chars/4 tok over the projection directory, the artefact's
+      projected-set row reports 121,242. The 1,366-tok gap is exactly the 5 `type: manual`
+      rules (5,465 bytes) the census counts and no host tree receives.
+- [x] **0.2 List the 8 unlabelled `auto` rules (D3)** by name, with whether each has any
       `triggers:`.
       verify: `ls tests/eval/routing-matrix/*.yaml | wc -l` plus the listed names equals the
       `type: auto` count in `dist/agent-src/rules` — counting **both** the quoted and bare
       forms (102 + 3).
+      Done 2026-09-07, and **the count is 11, not 8** — `corrected-from-reproduction`, on
+      this roadmap's own arithmetic. D3 subtracts 94 labelled from the *quoted* 102 and
+      gets 8, but this step's own verify says to count both forms, and 102 + 3 = 105, so
+      105 − 94 = **11**. The magnitude of the defect is larger than D3 states, not smaller.
+      Measured: `ls dist/agent-src/rules/*.md | wc -l` = 119; quoted `type: "auto"` 102;
+      bare `type: auto` 3; `always` 9; `manual` 5; `ls tests/eval/routing-matrix/*.yaml |
+      wc -l` = 94. The set difference is empty in the other direction — every labelled
+      fixture names a real `auto` rule — so 94 + 11 = 105 reconciles exactly.
+      The 11, each with whether it declares a `triggers:` key and how many entries:
+
+      | Rule | `triggers:` | entries |
+      |---|:-:|---:|
+      | `council-availability` | yes | 6 |
+      | `evaluator-independence` | yes | 9 |
+      | `fix-what-you-see` | yes | 11 |
+      | `missing-skill-recovery` | yes | 6 |
+      | `no-roadmap-references` | **no** | 0 |
+      | `playbook-precedence` | yes | 7 |
+      | `recurring-criticism` | yes | 10 |
+      | `rule-type-governance` | **no** | 0 |
+      | `self-repair-loop` | yes | 6 |
+      | `skill-quality` | **no** | 0 |
+      | `source-confidentiality` | **no** | 0 |
+
+      **Four of them carry no `triggers:` key at all**, which is the 2.2 case and the
+      sharpest form of Risk 1: an `auto` rule with nothing to match on can never be
+      delivered, so under `delivery` its body would leave the standing corpus and no
+      trigger would ever bring it back. `source-confidentiality` is the one to read first —
+      its own body states it is "Delivered unconditionally by the PROJECT layer, with no
+      `paths:` triggers", i.e. the rule is deliberately trigger-less and depends on eager
+      projection to reach a session at all. 2.2's eager-fallback is therefore not a
+      belt-and-braces nicety; it is load-bearing for four shipped rules.
 
 ## Phase 1: Host-scoped delivery (repairs D1)
 
