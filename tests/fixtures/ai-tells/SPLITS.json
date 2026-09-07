@@ -1,0 +1,29 @@
+{
+  "_why": "loadPairs() read every pair into one array, so a rule tuned against the corpus was scored against the same corpus and overfitting was excluded by nothing. The split is declared here rather than derived from a hash so it is reviewable, stable across runs, and moving a pair between halves is a visible diff.",
+  "_rule": "Tune is where a pattern may be looked at while it is being written. Holdout is scored and never read during authoring. Both halves carry both languages; a language present on only one side would make its figures uncomparable.",
+  "_epoch": "Moving any pair between halves starts a new epoch. A holdout figure quoted across a split change is not a comparison.",
+  "tune": [
+    "en/01-gtm-post",
+    "en/02-readme-section",
+    "en/03-linkedin-draft",
+    "en/04-blog-paragraph",
+    "en/05-release-note",
+    "en/06-product-update",
+    "en/07-event-recap",
+    "en/08-case-study",
+    "en/09-founder-post",
+    "en/10-ghostwriter-draft",
+    "de/01-linkedin-de",
+    "de/02-blog-de"
+  ],
+  "holdout": [
+    "en/11-hiring-post",
+    "en/12-newsletter-intro",
+    "en/13-sales-email",
+    "en/14-product-philosophy",
+    "en/15-talk-recap",
+    "en/16-changelog-blurb",
+    "en/17-founder-reflection",
+    "de/03-release-de"
+  ]
+}

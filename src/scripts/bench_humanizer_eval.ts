@@ -37,9 +37,32 @@ const ROOT = process.cwd();
 const FIXTURES = join(ROOT, "tests", "fixtures", "ai-tells");
 const REPORT_DIR = join(ROOT, "internal", "bench", "reports");
 const LENGTH_TOLERANCE = 0.25;
+const SPLITS_FILE = join(FIXTURES, "SPLITS.json");
+
+export type Split = "tune" | "holdout";
+
+/**
+ * Tune / holdout membership, declared in `tests/fixtures/ai-tells/SPLITS.json`.
+ *
+ * Before this existed `loadPairs()` returned one array, so a rule tuned against
+ * the twenty pairs was measured against the same twenty pairs and overfitting
+ * was excluded by construction — of the measurement, not of the rule. Every
+ * figure this bench prints now names the half it came from, and a number that
+ * mixes the halves is not produced at all.
+ */
+export function loadSplits(file: string = SPLITS_FILE): Record<Split, string[]> {
+  const raw = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
+  const pick = (k: Split): string[] => {
+    const v = raw[k];
+    if (!Array.isArray(v)) throw new Error(`SPLITS.json: "${k}" is not an array`);
+    return v as string[];
+  };
+  return { tune: pick("tune"), holdout: pick("holdout") };
+}
 
 interface PairResult {
   name: string;
+  split: Split;
   language: "en" | "de";
   words_before: number;
   words_after: number;
@@ -63,8 +86,23 @@ function coin(seed: number): boolean {
   return ((seed * 1103515245 + 12345) >>> 16) % 2 === 0;
 }
 
-function loadPairs(): Array<{ name: string; language: "en" | "de"; before: string; after: string }> {
-  const out: Array<{ name: string; language: "en" | "de"; before: string; after: string }> = [];
+export interface LoadedPair {
+  name: string;
+  split: Split;
+  language: "en" | "de";
+  before: string;
+  after: string;
+}
+
+export function loadPairs(splits: Record<Split, string[]> = loadSplits()): LoadedPair[] {
+  const assigned = new Map<string, Split>();
+  for (const s of ["tune", "holdout"] as const) {
+    for (const key of splits[s]) {
+      if (assigned.has(key)) throw new Error(`SPLITS.json: ${key} is in both halves`);
+      assigned.set(key, s);
+    }
+  }
+  const out: LoadedPair[] = [];
   for (const language of ["en", "de"] as const) {
     const dir = join(FIXTURES, language);
     let names: string[] = [];
@@ -77,8 +115,15 @@ function loadPairs(): Array<{ name: string; language: "en" | "de"; before: strin
       continue;
     }
     for (const name of names) {
+      const split = assigned.get(`${language}/${name}`);
+      if (split === undefined) {
+        // Silence here would let a new pair join the tune half by default,
+        // which is the failure the split exists to prevent.
+        throw new Error(`SPLITS.json assigns no half to ${language}/${name}`);
+      }
       out.push({
         name,
+        split,
         language,
         before: readFileSync(join(dir, `${name}.before.md`), "utf8"),
         after: readFileSync(join(dir, `${name}.after.md`), "utf8"),
@@ -144,6 +189,7 @@ async function main(): Promise<void> {
     const controlled = Math.abs(1 - ratio) <= LENGTH_TOLERANCE;
     const row: PairResult = {
       name: p.name,
+      split: p.split,
       language: p.language,
       words_before: before.words,
       words_after: after.words,
@@ -173,31 +219,43 @@ async function main(): Promise<void> {
   };
   const show = (m: { value: number | null; n: number }): string =>
     m.value === null ? `not evaluated (n=0)` : `${m.value} (n=${m.n})`;
-  const agg = {
-    pairs: results.length,
-    length_controlled_pairs: results.filter((r) => r.length_controlled).length,
-    mean_hard_before: mean(results.map((r) => r.before.hard_total)),
-    mean_hard_after: mean(results.map((r) => r.after.hard_total)),
-    mean_cluster_before: meanDefined(results.map((r) => r.before.cluster_score_per_500)),
-    mean_cluster_after: meanDefined(results.map((r) => r.after.cluster_score_per_500)),
-    mean_dash_before: meanDefined(results.map((r) => r.before.dash_density_per_500)),
-    mean_dash_after: meanDefined(results.map((r) => r.after.dash_density_per_500)),
-    judge_model: undefined as string | undefined,
-    judged_pairs: 0,
-    prefers_after: 0,
-    prefers_before: 0,
+  const aggregateOver = (rows: PairResult[]) => {
+    const judgedRows = rows.filter((r) => r.judge);
+    return {
+      pairs: rows.length,
+      length_controlled_pairs: rows.filter((r) => r.length_controlled).length,
+      mean_hard_before: mean(rows.map((r) => r.before.hard_total)),
+      mean_hard_after: mean(rows.map((r) => r.after.hard_total)),
+      mean_cluster_before: meanDefined(rows.map((r) => r.before.cluster_score_per_500)),
+      mean_cluster_after: meanDefined(rows.map((r) => r.after.cluster_score_per_500)),
+      mean_dash_before: meanDefined(rows.map((r) => r.before.dash_density_per_500)),
+      mean_dash_after: meanDefined(rows.map((r) => r.after.dash_density_per_500)),
+      judged_pairs: judgedRows.length,
+      prefers_after: judgedRows.filter((r) => r.judge!.preferred === "after").length,
+      prefers_before: judgedRows.filter((r) => r.judge!.preferred === "before").length,
+      judge_model: undefined as string | undefined,
+    };
   };
-  const judged = results.filter((r) => r.judge);
-  agg.judged_pairs = judged.length;
-  agg.prefers_after = judged.filter((r) => r.judge!.preferred === "after").length;
-  agg.prefers_before = judged.filter((r) => r.judge!.preferred === "before").length;
+  const agg = aggregateOver(results);
+  const bySplit = {
+    tune: aggregateOver(results.filter((r) => r.split === "tune")),
+    holdout: aggregateOver(results.filter((r) => r.split === "holdout")),
+  };
   if (runJudge) {
     const { DEFAULT_ANTHROPIC_MODEL } = await import("./ai_council/clients.js");
     agg.judge_model = DEFAULT_ANTHROPIC_MODEL as string;
+    bySplit.tune.judge_model = agg.judge_model;
+    bySplit.holdout.judge_model = agg.judge_model;
   }
 
   const iso = new Date().toISOString().replace(/\.\d+Z$/, "Z").replace(/:/g, "-");
-  const payload = { generated: iso, corpus: "tests/fixtures/ai-tells", aggregate: agg, results };
+  const payload = {
+    generated: iso,
+    corpus: "tests/fixtures/ai-tells",
+    aggregate: agg,
+    by_split: bySplit,
+    results,
+  };
 
   const md = [
     "# Humanizer paired eval — v1",
@@ -207,17 +265,30 @@ async function main(): Promise<void> {
     "",
     "## Objective — AI-tell reduction (deterministic)",
     "",
-    "| Metric (mean) | Before | After |",
-    "|---|---|---|",
-    `| Hard hits | ${agg.mean_hard_before} | ${agg.mean_hard_after} |`,
-    `| Cluster score /500w | ${show(agg.mean_cluster_before)} | ${show(agg.mean_cluster_after)} |`,
-    `| Dash density /500w | ${show(agg.mean_dash_before)} | ${show(agg.mean_dash_after)} |`,
+    "Every figure names the split it came from. `tune` is the half a rule may be",
+    "looked at while it is being written; `holdout` is scored and never read",
+    "during authoring, so a gain that appears only in `tune` is overfitting and",
+    "says so on its face. Split membership: `tests/fixtures/ai-tells/SPLITS.json`.",
+    "",
+    `| Metric (mean) | tune before (n=${bySplit.tune.pairs}) | tune after | holdout before (n=${bySplit.holdout.pairs}) | holdout after | both before (n=${agg.pairs}) | both after |`,
+    "|---|---|---|---|---|---|---|",
+    `| Hard hits | ${bySplit.tune.mean_hard_before} | ${bySplit.tune.mean_hard_after} | ` +
+      `${bySplit.holdout.mean_hard_before} | ${bySplit.holdout.mean_hard_after} | ` +
+      `${agg.mean_hard_before} | ${agg.mean_hard_after} |`,
+    `| Cluster score /500w | ${show(bySplit.tune.mean_cluster_before)} | ${show(bySplit.tune.mean_cluster_after)} | ` +
+      `${show(bySplit.holdout.mean_cluster_before)} | ${show(bySplit.holdout.mean_cluster_after)} | ` +
+      `${show(agg.mean_cluster_before)} | ${show(agg.mean_cluster_after)} |`,
+    `| Dash density /500w | ${show(bySplit.tune.mean_dash_before)} | ${show(bySplit.tune.mean_dash_after)} | ` +
+      `${show(bySplit.holdout.mean_dash_before)} | ${show(bySplit.holdout.mean_dash_after)} | ` +
+      `${show(agg.mean_dash_before)} | ${show(agg.mean_dash_after)} |`,
     "",
     "## Blind preference (length-controlled)",
     "",
     agg.judged_pairs > 0
       ? `Judge ${agg.judge_model}: prefers the humanized text in **${agg.prefers_after}/${agg.judged_pairs}** ` +
-        `pairs (randomized A/B order, deterministic seed). An honest null here keeps the detector as a ` +
+        `pairs across both halves — **${bySplit.tune.prefers_after}/${bySplit.tune.judged_pairs}** on tune, ` +
+        `**${bySplit.holdout.prefers_after}/${bySplit.holdout.judged_pairs}** on holdout — ` +
+        `(randomized A/B order, deterministic seed). An honest null here keeps the detector as a ` +
         `hygiene gate; the claim ledger only carries what this table shows.`
       : "_Not run (objective-only invocation)._",
     "",
