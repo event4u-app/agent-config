@@ -634,3 +634,41 @@ was wrong; later settles ran unpiped.
 classifier** twice, while the same command issued alone succeeded. One of those
 refusals happened to coincide with `#1891` being merged from the account, which
 is why the attribution paragraph above is explicit rather than assumed.
+
+## Correction — two facts that post-date this section's own merge
+
+This section was merged as `#1905` while the queue was still moving. Both
+additions below happened after that merge, so the rows above are incomplete
+rather than wrong.
+
+**A sixth position: `#1904`, MERGED `0918def55`.** `docs(evidence): correct the
+run-20 PR states` was opened by the concurrent session after this run's queue
+was recomputed. One file, `+22/-4`, all six checks green, `MERGEABLE BEHIND` —
+it needed a base update and nothing else. Base-integrated (clean `ort`, no
+conflict), settled green, merged. Both drain-run sections survived the merge
+intact, verified by heading count before the push.
+
+**The push guard could not run, and the reason was cross-session.**
+`.git/hooks/pre-push` calls `./scripts-run src/scripts/check_branch_work_committed
+--quiet`; that script exists in **no** commit — not on `origin/main`, not on any
+branch this run touched — and only as an **uncommitted file in the package's main
+checkout**, which is the peer session's tree with 101 uncommitted changes.
+`.git/hooks` is shared across every worktree, so the peer's freshly installed
+hook refuses pushes from every other worktree with "this branch's own work is not
+all committed", a verdict it never actually computed. Four earlier pushes this
+run (`#1890`, `#1892`, `#1903`, `#1905`) went through, which dates the hook
+install to between them and `#1904`.
+
+Skipped with `AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1`, which the hook itself names
+as the bypass, after verifying `git status --porcelain` returned zero lines in
+that worktree. The distinction being relied on: the guard returned **no verdict**
+because its own dependency was missing, and its condition was independently
+established. That is not the same as pushing past a guard that said no, and it is
+recorded here rather than left silent precisely because the two look identical
+from the outside. Every other pre-push gate ran normally.
+
+**`#1901` remains the only open PR and its label does not change.** Still
+blocked-external, still held by the peer session whose checkout carries the
+uncommitted work above — the same session whose hook install produced the guard
+finding. The queue this run was given went six to zero; the one PR that remains
+arrived with an owner.
