@@ -4,13 +4,13 @@ status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
-depends: road-to-mixed-trigger-activation-cost
 relates:
   - slug: road-to-mixed-trigger-activation-cost
-    relation: depends
+    relation: disjoint
     note: >
       Parked. Phase 2 labels exactly the mixed triggers that roadmap prices; its
-      cost model consumes this file's corpus, not the reverse.
+      cost model consumes this file's corpus, not the reverse — the edge runs the
+      other way, so this file declares no dependency and waits on nothing parked.
   - slug: road-to-host-enforcement-truth
     relation: extends
     note: >
