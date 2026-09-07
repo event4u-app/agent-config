@@ -64,8 +64,8 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     }
     // EVERY exit from this function goes through `finish`. Wrapping only the
     // terminal `return` is the defect that shipped for one commit here: this
-    // scan has an early return for an artefact with no `execution:` block, and a
-    // bound pragma silently did not apply to exactly those artefacts.
+    // scan has an early return for an artifact with no `execution:` block, and a
+    // bound pragma silently did not apply to exactly those artifacts.
     const finish = (hits: sl.Finding[]): sl.Finding[] =>
         pragmaForm === 'bound' ? sf.filter_bound_pragma(CHECK, hits) : hits;
     const out: sl.Finding[] = [];

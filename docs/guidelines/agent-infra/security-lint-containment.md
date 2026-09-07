@@ -61,7 +61,7 @@ auditable, reasoned, content-bound marker placed anywhere in the file:
 - Each `sha256:<hex>` **binds the suppression to one accepted match**. Repeat the
   token once per accepted match; a file with three accepted matches carries three
   hashes. Anything the check finds that is not in that set is still reported.
-- The fingerprint covers the **check id**, the artefact's **source identity**, and
+- The fingerprint covers the **check id**, the artifact's **source identity**, and
   the **normalized text of the matched line** — ASCII whitespace runs collapse so
   a reflow does not break the binding, and nothing else is stripped, because the
   zero-width characters this suite hunts are exactly what a wider normalizer
@@ -69,7 +69,7 @@ auditable, reasoned, content-bound marker placed anywhere in the file:
   would break every pragma in the file) and NOT the whole file (every unrelated
   edit would re-fire it, which is how blanket suppressions get written).
   A `dist/agent-src/` path folds to its `src/` original first: the projection is
-  byte-exact by contract, so an artefact and its copy are one identity.
+  byte-exact by contract, so an artifact and its copy are one identity.
 - Compute one with the linter itself, never by hand — a hash typed from memory
   is a suppression nobody audited.
 

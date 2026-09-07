@@ -154,7 +154,7 @@ const PROJECTION_PREFIX = 'dist/agent-src/';
  * Fold a projected path back onto the source it was copied from.
  *
  * `dist/agent-src/` is a byte-for-byte copy of `src/` with paths rewritten
- * (ADR-201), so an artefact and its projection are the same artefact for the
+ * (ADR-201), so an artifact and its projection are the same artifact for the
  * purpose of "which evidence did a human accept". Two identities would mean two
  * fingerprints for one accepted line, and only one of them could be written
  * into the pragma the projection copies verbatim.

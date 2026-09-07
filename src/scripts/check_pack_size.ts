@@ -679,7 +679,7 @@ function selfTest(): number {
             {
                 // The property a COUNT ratchet cannot have. LICENSE is bound at
                 // its measured size; the same path at a different size is a
-                // different artefact and the exception stops applying.
+                // different artifact and the exception stops applying.
                 name: 'type/binding: a bound entry whose SIZE changed is refused again',
                 expect: 'reject',
                 run: () =>
