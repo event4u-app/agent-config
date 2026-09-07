@@ -196,13 +196,20 @@ async function callAnthropic(
 }
 
 const SCORER_SYSTEM = `You are a strict, impartial evaluator. Score one assistant transcript against a
-4-dimension rubric (0–3 each; 3 = excellent, 0 = absent/harmful). Dimensions:
+5-dimension rubric (0–3 each; 3 = excellent, 0 = absent/harmful). Dimensions:
 1 notes-first adherence — reasoning kept out of the answer proper; answer = conclusions + evidence (not a raw chain-of-thought dump).
 2 grounding — environment/constraints/info-gaps closed (or explicitly assumed) before designing; no jumping to a solution against assumptions.
 3 premature-solution avoidance — the hardest/load-bearing unknown resolved before dependent work; no over-production of code/answer before grounding.
 4 coherence / re-grounded summary — final answer readable by someone who saw none of the working thread; outcome-first; no arrow-chain shorthand.
+5 form-alternative surfacing — was a materially DIFFERENT SOLUTION FORM generated and discriminated BEFORE the choice, rather than the one form the transcript started with being verified afterwards? This is NOT dimension 3: dim 3 scores which unknown was resolved first INSIDE a chosen form; dim 5 scores whether a second form was ever on the table at all. A transcript can be perfectly risk-first inside the only shape it ever considered, and that scores 0 here.
+  0 = one form only. A single approach appears and everything after it is verification. Good execution does NOT raise this.
+  1 = a second form is mentioned but not discriminated — no axis it differs on, or no reason given for dropping it.
+  2 = a second form is named on a stated axis, but nothing observable decides between them; the choice reads as preference.
+  3 = a second form is named on a stated axis AND the observation that decided between them is stated. "Keep the current form / change nothing" counts as a form.
+  Forced-form carve-out: where exactly one form is admissible (a framework fixes the extension point, an existing contract fixes the location), a transcript that NAMES the constraint foreclosing the alternatives scores 3, not 0.
+  Materially different means differing on an AXIS, not in placement: three options that differ only in where a helper lives are one option.
 Also report reasoning_extraction_refusal: true ONLY if the model refused due to a meta/extraction instruction.
-Respond with STRICT JSON only, no prose: {"dim1":N,"dim2":N,"dim3":N,"dim4":N,"reasoning_extraction_refusal":false,"note":"<=120 chars"}`;
+Respond with STRICT JSON only, no prose: {"dim1":N,"dim2":N,"dim3":N,"dim4":N,"dim5":N,"reasoning_extraction_refusal":false,"note":"<=120 chars"}`;
 
 async function scoreTranscript(
     apiKey: string,
@@ -246,11 +253,118 @@ function parseArgs(argv: string[]): Record<string, string | boolean> {
     return a;
 }
 
+/**
+ * Mean over the dimensions the score actually carries.
+ *
+ * `dim5` is scored from 2026-09-07 and the 32 stored L6N transcripts predate
+ * it, so the divisor is the number of dimensions PRESENT, never a constant.
+ * A fixed `/5` would silently deflate every historical mean by a fifth and
+ * make the treatment-minus-baseline delta this eval exists to compute read as
+ * an improvement that is really an arithmetic artefact.
+ */
 function meanDims(score: Record<string, unknown> | undefined): number | null {
     if (!score) return null;
-    const ds = ['dim1', 'dim2', 'dim3', 'dim4'].map((k) => Number(score[k]));
+    const required = ['dim1', 'dim2', 'dim3', 'dim4'];
+    const ds = required.map((k) => Number(score[k]));
     if (ds.some((x) => Number.isNaN(x))) return null;
-    return ds.reduce((p, c) => p + c, 0) / 4;
+    if (score.dim5 !== undefined && !Number.isNaN(Number(score.dim5))) ds.push(Number(score.dim5));
+    return ds.reduce((p, c) => p + c, 0) / ds.length;
+}
+
+/** One stored run: the envelope `--score-only` reads and writes back. */
+interface StoredRun {
+    date?: string;
+    mode?: string;
+    scorer_model?: string | null;
+    results: Array<{
+        slot: string;
+        slug?: string;
+        band?: string;
+        prompt: string;
+        variants: Record<string, { text?: string; score?: Record<string, unknown> }>;
+    }>;
+}
+
+/**
+ * Re-score an existing results file with a rater, capturing nothing.
+ *
+ * The transcripts are read from disk and sent to the scorer; no assistant call
+ * is made, so the only spend is the rater. Every score the run already carried
+ * is REPLACED rather than merged: a half-updated score object where `dim5` came
+ * from one rater and `dim1`-`dim4` from another is not a reading of anything.
+ */
+async function scoreOnly(
+    sourcePath: string,
+    scorerModel: string,
+    outPath: string,
+    confirm: boolean,
+): Promise<number> {
+    if (!fs.existsSync(sourcePath)) {
+        process.stderr.write(`❌  --score-only: no such results file: ${sourcePath}\n`);
+        return 2;
+    }
+    const run = JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as StoredRun;
+    const transcripts: Array<{ slot: string; variant: string; prompt: string; text: string }> = [];
+    for (const r of run.results ?? []) {
+        for (const [variant, v] of Object.entries(r.variants ?? {})) {
+            if (typeof v.text === 'string' && v.text.length > 0) {
+                transcripts.push({ slot: r.slot, variant, prompt: r.prompt, text: v.text });
+            }
+        }
+    }
+    if (transcripts.length === 0) {
+        // Not "scored zero and passed" — an empty corpus is unreadable input.
+        process.stderr.write(
+            `❌  --score-only: ${sourcePath} carries no transcript text. ` +
+                `A re-score over nothing is not a baseline.\n`,
+        );
+        return 2;
+    }
+
+    const est = estimate_cost(scorerModel, 2000, 300) * transcripts.length;
+    out(
+        `rdp-eval · mode=score-only · ${String(transcripts.length)} stored transcript(s) ` +
+            `from ${sourcePath} · rater ${scorerModel} · 0 capture calls`,
+    );
+    out(`  EXPECTED TOTAL (worst-case): ~$${est.toFixed(4)}`);
+    if (!confirm) {
+        out('\nDRY-RUN — no spend. Re-run with --confirm to score.');
+        return 0;
+    }
+    // Score-only skips CAPTURE, not spend — the rater is billed per transcript.
+    // It therefore inherits the capture path's non-tty guard verbatim rather
+    // than becoming the unguarded way to bill the same account.
+    if (!process.stdin.isTTY && process.env.RDP_EVAL_ALLOW_NONTTY !== '1') {
+        throw new Error(
+            'Refusing a billable score-only run on non-tty stdin. Run interactively, or set ' +
+                'RDP_EVAL_ALLOW_NONTTY=1 if the caller has already confirmed the cost.',
+        );
+    }
+
+    const apiKey = load_anthropic_key();
+    let actual = 0;
+    let failed = 0;
+    for (const t of transcripts) {
+        console.error(`     scoring ${t.slot}/${t.variant} via ${scorerModel} …`);
+        const sc = await scoreTranscript(apiKey, scorerModel, t.prompt, t.text);
+        actual += estimate_cost(scorerModel, 2000, 300);
+        const target = run.results.find((r) => r.slot === t.slot)?.variants[t.variant];
+        if (target) {
+            // An unparsable reply DELETES the stale score rather than keeping
+            // it: a score from the previous rater sitting under this run's
+            // `scorer_model` would misattribute the reading.
+            if (sc === null) delete target.score;
+            else target.score = sc;
+        }
+        if (sc === null) failed += 1;
+    }
+    run.scorer_model = scorerModel;
+    run.mode = `${run.mode ?? 'unknown'}+score-only`;
+    fs.writeFileSync(outPath, `${JSON.stringify(run, null, 2)}\n`);
+    out(`\nscanned: ${String(transcripts.length)}`);
+    out(`rdp-eval · wrote ${outPath} · ~$${actual.toFixed(4)} · ${String(failed)} unparsable`);
+    // An unparsable rater reply is a hole in the reading, not a rounding error.
+    return failed > 0 ? 1 : 0;
 }
 
 async function main(): Promise<number> {
@@ -267,6 +381,22 @@ async function main(): Promise<number> {
     const resultsPath =
         (args.results as string) ??
         path.join(GT_DIR, mode === 'l6' ? 'l6-results.json' : 'results.json');
+
+    // ---- score-only: re-score transcripts that already exist -----------------
+    // A stored results file IS the baseline arm for a dimension added after it
+    // was captured. Re-scoring it costs the scorer calls and NOTHING for
+    // capture, which is the only way a baseline for `dim5` can exist at all:
+    // the 32 L6N transcripts predate the dimension, and re-capturing them would
+    // produce a *different* baseline under today's suite rather than the one
+    // the treatment must be compared against.
+    if (args['score-only']) {
+        const scoreOnlyPath = String(args['score-only']);
+        if (!scoreWith) {
+            process.stderr.write('❌  --score-only requires --score-with <model> (the rater).\n');
+            return 2;
+        }
+        return await scoreOnly(scoreOnlyPath, scoreWith, resultsPath, Boolean(args.confirm));
+    }
 
     const slots = loadSlots(corpusPath, selected);
     const arms = buildArms(mode);
