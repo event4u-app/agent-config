@@ -48,6 +48,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { collect, _keyword_vector, _cosine } from './audit_skill_overlap.js';
 import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
+import * as sl from './_lib/security_lint.js';
+import { _scan as _scanHiddenUnicode } from './lint_hidden_unicode.js';
+import { _scan as _scanConfusables } from './lint_confusables.js';
+import { _scan as _scanInstructionSmuggling } from './lint_instruction_smuggling.js';
+import { _scan as _scanMcpConfigSecurity } from './lint_mcp_config_security.js';
+import { _scan as _scanFrontmatterSafety } from './lint_skill_frontmatter_safety.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _DEFAULT_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -263,6 +269,60 @@ export function resolveCandidateDir(
 }
 
 /**
+ * The five content linters, by the check id each one reports under.
+ *
+ * The SAME functions the `lint_agent_security` umbrella spawns as processes.
+ * Called in-process here rather than shelled out: five `tsx` cold starts per
+ * candidate is a cost with no benefit, and the thing that must be identical is
+ * the DETECTION, which is these functions.
+ */
+const CONTENT_LINTERS: ReadonlyArray<readonly [string, (sf: sl.ScannedFile) => sl.Finding[]]> = [
+    ['hidden-unicode', _scanHiddenUnicode],
+    ['mixed-script-confusable', _scanConfusables],
+    ['instruction-smuggling', _scanInstructionSmuggling],
+    ['mcp-config-security', _scanMcpConfigSecurity],
+    ['dangerous-frontmatter', _scanFrontmatterSafety],
+];
+
+/**
+ * Read what a quarantined candidate SAYS, and refuse on a payload.
+ *
+ * `intake`'s other checks are properties of the file — symlink, extension, exec
+ * bit, size. Every one of them can be true of a file whose text tells an agent
+ * to hide its output from the user. "Inert" was a claim about the container that
+ * the gate read as a claim about the contents.
+ *
+ * TWO DELIBERATE DIFFERENCES FROM HOW THESE LINTERS RUN OVER THIS PACKAGE:
+ *
+ * 1. **Any HIGH refuses, whatever its weight.** The 0.25 confidence weighting is
+ *    a false-positive containment device for THIS repository's own corpus, where
+ *    a path containing `docs` or `examples` really is documentation somebody
+ *    here wrote. A quarantined third-party candidate carries no such provenance,
+ *    and a directory named `examples/` in it is an attacker's word for it. A
+ *    refusal is also cheaper than a false pass in exactly this direction: the
+ *    candidate is rejected and a human reads it.
+ * 2. **Every text extension is scanned, not just `.md`.** The candidate
+ *    allow-list already bounds what may be present; a payload in the `.yml` a
+ *    candidate ships is a payload.
+ *
+ * The refusal NAMES the linter, because "the content scan refused this" sends a
+ * reader to five detectors.
+ */
+export function scanCandidateContent(candidateDir: string): string[] {
+    const out: string[] = [];
+    for (const sf of sl.iter_corpus(['.'], [...ALLOWED_EXT], candidateDir)) {
+        for (const [check, scan] of CONTENT_LINTERS) {
+            for (const finding of scan(sf)) {
+                if (finding.severity !== 'HIGH') continue;
+                const loc = finding.line ? `${sf.rel}:${String(finding.line)}` : sf.rel;
+                out.push(`${loc}: flagged by ${check} — ${finding.message}`);
+            }
+        }
+    }
+    return out;
+}
+
+/**
  * Refuse a candidate that is not inert.
  *
  * Every check is a refusal, never a repair. A candidate that fails is reported
@@ -295,6 +355,15 @@ export function intake(candidateDir: string): IntakeResult {
     }
     if (files.length === 0) {
         refusals.push('candidate directory is empty');
+    }
+    // Content, after the file properties. Ordering is not cosmetic: a candidate
+    // that fails an inertness check may not be safe to READ (a symlink out of
+    // quarantine is the case the read-time re-check exists for), so the bytes
+    // are only opened once the container has been judged.
+    if (refusals.length === 0) {
+        for (const flagged of scanCandidateContent(candidateDir)) {
+            refusals.push(flagged);
+        }
     }
     return { accepted: refusals.length === 0, refusals, files_seen: files.length };
 }

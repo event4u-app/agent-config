@@ -126,6 +126,11 @@ add('artifact-engagement-recording.md', 'phase-step / task end', 'mechanical-alr
 add('model-recommendation.md', 'task-start / topic-shift', 'hook',
     'output', 'low', '2a', 'no',
     'Phase 5 prototype target. Marker injection at first user msg + topic-change detection.');
+// HISTORICAL row. `src/rules/capture-learnings.md` no longer exists, so this
+// classification is never emitted (the generator keys on files actually present
+// in src/rules/); the live rule for this trigger is `skill-improvement-trigger`,
+// classified two rows below. Kept rather than deleted so the inventory this
+// table records stays readable against the round it was taken in.
 add('capture-learnings.md', 'task completion', 'hook', 'output',
     'medium', '2a', 'no', 'Post-task marker; learning detection is fuzzy');
 add('skill-improvement-trigger.md', 'task completion (settings.skill_improvement)',

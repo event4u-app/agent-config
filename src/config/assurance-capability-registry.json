@@ -154,6 +154,15 @@
       "evidence": "src/scripts/grade_target_readiness.ts — 'semgrep' and 'bandit' tokens; the python fixture reports 'no SAST config'",
       "revisit_if": "the SAST probe stops distinguishing presence from absence on the fixtures"
     },
+    "self-security-scan": {
+      "axis": "self",
+      "owner_surface": "src/scripts/lint_agent_security.ts",
+      "projection": null,
+      "state": "available",
+      "rationale": "This package's own artifact tree is scanned for hidden-instruction payloads by an umbrella that spawns five child linters. Each child now has a closed terminal outcome — completed, failed or skipped(reason) — and a child that did not answer makes the aggregate name it and exit 1, so the umbrella's exit code establishes that all five ran rather than only that none of them spoke. Distinct from the target-axis security-scan entry: that one grades a consumer repository, this one grades this repository's scan of itself. Registered `degraded` on 2026-09-07 and moved here in the same change that repaired the defect; the degraded state is in this file's history rather than erased from it.",
+      "evidence": "tests/scripts/lint_agent_security_fail_closed.test.ts — five child-failure classes (non-zero with empty stdout, exit 0 with unparsable stdout, never spawned, a non-array payload, and the negative control of a non-zero exit WITH valid findings). The first four were written green against the pre-repair aggregation and flipped red-then-named by the repair; the negative control did not move in either direction. Sabotage probe on the real production path, 2026-09-07: a module-level throw in lint_confusables.ts made the umbrella print `mixed-script-confusable: did not complete` and exit 1, where the same sabotage previously printed the clean line and exited 0.",
+      "revisit_if": "a sixth child linter is added to the LINTERS watch list without a terminal outcome, or the aggregate stops failing on a non-completing child — either of which is caught by the failure corpus, so a revisit means that corpus was weakened first."
+    },
     "runtime-probe": {
       "axis": "target",
       "owner_surface": "agents/roadmaps/stubs/road-to-target-project-bootstrap-enforce.md",

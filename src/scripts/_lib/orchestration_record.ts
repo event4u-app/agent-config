@@ -16,6 +16,7 @@
  * add one. (Mirrors `domain-safety-pii` § Surface 2 / artifact-engagement.)
  */
 
+import { appliedIds } from './audit_field_provenance.js';
 import type { LookupClass } from './auto_dispatch.js';
 import type { EvidenceBasis } from './evidence_basis.js';
 // TYPE-ONLY on purpose. `runtime_journal.ts` imports `node:sqlite` at runtime,
@@ -104,6 +105,24 @@ export interface RecordInput {
      * the rules bound in the contract.
      */
     skills_applied?: string[] | null | undefined;
+    /**
+     * Stable rule ids the run ACTUALLY carried, as an observation.
+     *
+     * Until 2026-09-07 this producer wrote the literal `['delegation-policy']`
+     * on every line, and so did `review_skipped_record.ts`. Mining the real
+     * stream with `extract_audit_patterns --min-count 2` therefore minted
+     * exactly ONE pattern at count 1074 over 1104 lines: not a regularity, just
+     * arithmetic over a constant. Every per-asset reader downstream was
+     * aggregating over the writer rather than over the work.
+     *
+     * ABSENT now means an EMPTY list, not a fabricated one. An empty list is an
+     * honest absence — the same answer `activation_receipt_producer.ts` has
+     * always given — and it is what makes the field's variation, when a caller
+     * does supply ids, evidence about the run.
+     *
+     * Ids only, never bodies. Bounded to <= 32, mirroring the contract.
+     */
+    rules_applied?: string[] | null | undefined;
     /**
      * What this dispatch was supposed to produce. Drives the anti-forgery gate
      * in `envelopeOutcome`. Absent or `unknown` disables the gate for this
@@ -252,6 +271,7 @@ const ORIGIN_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
  * be checked against one another instead of against a literal.
  */
 const MAX_APPLIED_IDS = 32;
+
 
 /**
  * What THIS producer's lines carry. `ids-only` and not `counts-only` because
@@ -626,7 +646,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         risk_class: risk,
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
-        rules_applied: ['delegation-policy'],
+        // COMPUTED, never a producer constant. See `rules_applied` on the input
+        // interface for the measurement that retired the constant.
+        rules_applied: appliedIds(input.rules_applied),
         // MANDATORY, never optional and never derived by the reader. This line
         // carries `rules_applied` and may carry `skills_applied`, both of which
         // are stable artefact ids, so the class it declares is `ids-only`

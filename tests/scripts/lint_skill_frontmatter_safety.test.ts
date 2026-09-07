@@ -118,11 +118,13 @@ describe('lint_skill_frontmatter_safety — _scan over a built ScannedFile', () 
         expect(hits).toHaveLength(0);
     });
 
-    it('respects the allow pragma', () => {
+    it('respects an UNBOUND allow pragma, and reports it as legacy-pragma', () => {
         const hits = scanText(
             `---\npermissionMode: ${BYPASS}\n---\n<!-- security-lint: allow dangerous-frontmatter "teaching" -->\n`,
         );
-        expect(hits).toHaveLength(0);
+        expect(hits.filter((h) => h.check === 'dangerous-frontmatter')).toHaveLength(0);
+        expect(hits.map((h) => h.check)).toEqual([sl.LEGACY_PRAGMA_CHECK]);
+        expect(hits[0]!.is_fail).toBe(false);
     });
 });
 

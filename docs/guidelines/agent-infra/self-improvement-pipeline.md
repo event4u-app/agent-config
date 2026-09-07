@@ -4,10 +4,10 @@ Five-stage flow that turns real project experience into reviewed
 rule / skill / command / guideline changes. No autonomous self-edits;
 every upstream change ships via a human-reviewed PR.
 
-Referenced by `road-to-curated-self-improvement.md`. Consumed by the
-existing skills `capture-learnings`, `learning-to-rule-or-skill`,
-`skill-improvement-pipeline`, and `upstream-contribute` — each becomes
-a stage, not a standalone invocation.
+Referenced by `road-to-curated-self-improvement.md`. Consumed by the live
+artifacts — the `skill-improvement-trigger` rule and the existing skills
+`learning-to-rule-or-skill`, `skill-improvement-pipeline`, and
+`upstream-contribute` — each becomes a stage, not a standalone invocation.
 
 ## The five stages
 

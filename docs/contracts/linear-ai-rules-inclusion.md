@@ -89,12 +89,19 @@ and shipped from this repository. They have no meaning for a third-party
 agent that does not maintain `event4u/agent-config`.
 
 `agent-docs`, `architecture`, `artifact-drafting-protocol`,
-`augment-portability`, `source-of-truth`, `capture-learnings`,
+`augment-portability`, `source-of-truth`,
 `docs-sync`, `guidelines`, `package-ci-checks`, `preservation-guard`,
 `reviewer-awareness`, `roadmap-progress-sync`,
 `role-mode-adherence`, `rule-type-governance`, `runtime-safety`,
 `size-enforcement`, `skill-improvement-trigger`, `skill-quality`,
 `tool-safety`, `upstream-proposal`.
+
+The heading count is the figure measured when the classification was taken.
+**HISTORICAL:** the twentieth id at that measurement was `capture-learnings`,
+which has since been retired — `src/rules/capture-learnings.md` does not exist.
+It is struck from the enumeration above rather than renamed, because its live
+successor `skill-improvement-trigger` is already listed. Nineteen ids are
+enumerated against an as-measured twenty.
 
 ### Augment Code specifics (3)
 
