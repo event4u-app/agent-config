@@ -13,8 +13,12 @@
 //      skipped by every check. Grep-auditable, scoped to the block.
 //   2. Confidence weighting — a match in a doc / example / template / evals
 //      file scores at 0.25x; below the FAIL threshold it is a WARN.
-//   3. Per-file pragma — `<!-- security-lint: allow <check> "<reason>" -->`
-//      anywhere in the file suppresses one check for that file.
+//   3. Bound pragma — `<!-- security-lint: allow <check> "<reason>" sha256:<hex> -->`
+//      anywhere in the file suppresses ONE check for the specific evidence whose
+//      fingerprint is listed. Repeat `sha256:<hex>` once per accepted match. The
+//      unbound form (no hash) still suppresses the whole file and reports itself
+//      as a `legacy-pragma` finding, because a key lookup with no content
+//      binding accepts whatever that line is later changed to say.
 //
 // There is no global allowlist — that is the rejected pattern.
 //
@@ -27,6 +31,7 @@
 //   - `report()` reproduces the glyphs (🔴 / ⚠️), the `(-rank, path, line)`
 //     sort, the weight note `(weight 0.25)`, and every printed string verbatim.
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,11 +66,18 @@ export const DEFAULT_SCAN_ROOTS: readonly string[] = [
 const _EXAMPLE_PATH =
     /(^|\/)(docs|evals|tests?|fixtures?)(\/|$)|example|template|sample|\/_template/i;
 
-//   Python: re.compile(r'<!--\s*security-lint:\s*allow\s+(?P<check>[\w-]+)\s+"(?P<reason>[^"]+)"\s*-->')
+// Grammar: `<!-- security-lint: allow <check> "<reason>" [sha256:<hex>]... -->`
 // JS `\w` is ASCII-only by default (matches Python re's `[\w-]` for the ASCII
 // check ids used here). Global flag so finditer-style iteration works.
+//
+// The hash group is OPTIONAL and repeatable. Optional because the unbound form
+// must keep working — a grammar change that invalidates every existing pragma
+// at once turns a hardening into an outage, and the migration is what removes
+// the unbound population, not the parser. Repeatable because one file can
+// legitimately carry several accepted matches of the same check, and a single
+// hash would force either a second pragma line or a whole-file fallback.
 const _PRAGMA =
-    /<!--\s*security-lint:\s*allow\s+([A-Za-z0-9_-]+)\s+"([^"]+)"\s*-->/g;
+    /<!--\s*security-lint:\s*allow\s+([A-Za-z0-9_-]+)\s+"([^"]+)"((?:\s+sha256:[0-9a-f]{64})*)\s*-->/g;
 
 //   Python: re.compile(r"^(\s*)(`{3,}|~{3,})\s*([\w-]*)\s*$")
 const _FENCE = /^(\s*)(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)\s*$/;
@@ -136,6 +148,21 @@ export function path_weight(rel_path: string): number {
     return is_example_path(rel_path) ? 0.25 : 1.0;
 }
 
+const PROJECTION_PREFIX = 'dist/agent-src/';
+
+/**
+ * Fold a projected path back onto the source it was copied from.
+ *
+ * `dist/agent-src/` is a byte-for-byte copy of `src/` with paths rewritten
+ * (ADR-201), so an artefact and its projection are the same artefact for the
+ * purpose of "which evidence did a human accept". Two identities would mean two
+ * fingerprints for one accepted line, and only one of them could be written
+ * into the pragma the projection copies verbatim.
+ */
+export function source_identity(rel: string): string {
+    return rel.startsWith(PROJECTION_PREFIX) ? `src/${rel.slice(PROJECTION_PREFIX.length)}` : rel;
+}
+
 /** A file pre-split into lines with a fence/pragma mask the linters reuse. */
 export class ScannedFile {
     path: string; // absolute or as-given path
@@ -145,6 +172,8 @@ export class ScannedFile {
     in_example_fence: boolean[];
     in_any_fence: boolean[];
     pragmas: Record<string, string>; // check id → reason
+    /** check id → the sha256 fingerprints that pragma accepts. Empty = unbound. */
+    pragma_hashes: Record<string, readonly string[]>;
     weight: number;
 
     constructor(
@@ -155,6 +184,7 @@ export class ScannedFile {
         in_any_fence: boolean[],
         pragmas: Record<string, string>,
         weight: number,
+        pragma_hashes: Record<string, readonly string[]> = {},
     ) {
         this.path = pathArg;
         this.rel = rel;
@@ -163,10 +193,80 @@ export class ScannedFile {
         this.in_any_fence = in_any_fence;
         this.pragmas = pragmas;
         this.weight = weight;
+        this.pragma_hashes = pragma_hashes;
     }
 
     pragma_allows(check: string): boolean {
         return Object.prototype.hasOwnProperty.call(this.pragmas, check);
+    }
+
+    /**
+     * Which form of pragma this file carries for `check`.
+     *
+     * `absent`  — no pragma; scan normally.
+     * `legacy`  — a pragma with no fingerprint. Suppresses the whole file, as it
+     *             always did, and says so: a key lookup accepts whatever the
+     *             line is later changed to say, which is the defect being paid
+     *             down, not a mode anybody should choose.
+     * `bound`   — a pragma listing fingerprints. Suppresses exactly the matches
+     *             whose evidence hashes to one of them; anything else survives.
+     */
+    pragma_form(check: string): 'absent' | 'legacy' | 'bound' {
+        if (!this.pragma_allows(check)) return 'absent';
+        return (this.pragma_hashes[check] ?? []).length > 0 ? 'bound' : 'legacy';
+    }
+
+    /**
+     * The fingerprint one finding's evidence hashes to.
+     *
+     * WHAT IS HASHED, and each part earns its place:
+     *   check id      — the same line may legitimately be accepted for one check
+     *                   and not another.
+     *   rel path      — the location IDENTITY. Not the line NUMBER: an unrelated
+     *                   insert above would otherwise break every pragma in the
+     *                   file, and a suppression that breaks on unrelated edits
+     *                   gets deleted rather than re-derived. A `dist/agent-src/`
+     *                   path folds to its `src/` original first, because the
+     *                   projection is byte-exact by contract (ADR-201) and
+     *                   carries the pragma verbatim — without the fold, every
+     *                   migrated pragma would suppress the source and leave its
+     *                   own copy flagged, which is a gate that reds on a file
+     *                   nobody may edit.
+     *   matched line, — the evidence. ASCII whitespace runs collapse so a reflow
+     *   normalized      does not invalidate the binding, `sha256:<hex>` tokens are
+     *                   removed, and NOTHING else is stripped: the zero-width
+     *                   characters this suite hunts are exactly what a wider
+     *                   normalizer would erase.
+     *
+     * WHY THE HASH TOKENS COME OUT. A pragma's own reason string can be the
+     * matched evidence — two in this tree are, because they quote the very
+     * phrases their check detects in order to explain themselves. Without this
+     * the fingerprint would have to be computed over a line that already
+     * contains it, which has no fixed point: writing the hash changes the line,
+     * which changes the hash. Stripping the tokens makes the fingerprint stable
+     * under the act of recording it, and costs nothing elsewhere — a `sha256:`
+     * token in ordinary prose is not evidence of anything a linter here checks.
+     *
+     * Deliberately NOT the whole file: incidental content elsewhere would make
+     * every unrelated edit re-fire the pragma, which is the noise that produces
+     * blanket suppressions.
+     */
+    evidence_fingerprint(finding: Finding): string {
+        const text = finding.line > 0 ? (this.lines[finding.line - 1] ?? '') : '';
+        const normalized = text
+            .replace(/\s*sha256:[0-9a-f]{64}/g, '')
+            .replace(/[ \t]+/g, ' ')
+            .trim();
+        return createHash('sha256')
+            .update(`${finding.check}\n${source_identity(this.rel)}\n${normalized}`, 'utf-8')
+            .digest('hex');
+    }
+
+    /** Drop the findings this file's BOUND pragma for `check` accepts. */
+    filter_bound_pragma(check: string, findings: readonly Finding[]): Finding[] {
+        const accepted = new Set(this.pragma_hashes[check] ?? []);
+        if (accepted.size === 0) return [...findings];
+        return findings.filter((f) => !accepted.has(this.evidence_fingerprint(f)));
     }
 
     /** Yield [lineno, text] honouring the fence masks (mirrors iter_lines). */
@@ -286,11 +386,21 @@ export function scan_file(filePath: string): ScannedFile {
     // Pragmas are explicit, grep-auditable opt-out markers — honour them
     // anywhere in the file.
     const pragmas: Record<string, string> = {};
+    const pragmaHashes: Record<string, readonly string[]> = {};
     for (const text of lines) {
         _PRAGMA.lastIndex = 0;
         let m: RegExpExecArray | null;
         while ((m = _PRAGMA.exec(text)) !== null) {
-            pragmas[m[1] as string] = m[2] as string;
+            const check = m[1] as string;
+            pragmas[check] = m[2] as string;
+            const hashes = (m[3] ?? '').match(/sha256:([0-9a-f]{64})/g) ?? [];
+            // Union across repeated pragmas for one check rather than replace:
+            // two lines each accepting one match is a legitimate spelling, and
+            // a last-one-wins read would silently drop the first.
+            pragmaHashes[check] = [
+                ...(pragmaHashes[check] ?? []),
+                ...hashes.map((h) => h.slice('sha256:'.length)),
+            ];
             if (m.index === _PRAGMA.lastIndex) {
                 _PRAGMA.lastIndex += 1;
             }
@@ -305,6 +415,7 @@ export function scan_file(filePath: string): ScannedFile {
         in_any,
         pragmas,
         path_weight(rel),
+        pragmaHashes,
     );
 }
 
@@ -330,6 +441,7 @@ export function scan_path(filePath: string, base: string): ScannedFile {
         sf.in_any_fence,
         sf.pragmas,
         path_weight(rel),
+        sf.pragma_hashes,
     );
 }
 
@@ -430,6 +542,31 @@ export function* iter_corpus(
  * as another child still covered those paths, which is exactly the failure
  * `gate-coverage.yml` exists to catch.
  */
+/** The check id an unbound pragma reports itself under. */
+export const LEGACY_PRAGMA_CHECK = 'legacy-pragma';
+
+/**
+ * The finding an unbound pragma emits about itself.
+ *
+ * LOW, so it never blocks: the unbound form is legal and this is a
+ * migration signal, not a violation. It is a FINDING rather than a printed
+ * aside so it travels every path the linters already have — the human report,
+ * the `--json` payload the umbrella aggregates, and the SARIF file — without
+ * a second reporting channel that only one of them reads.
+ */
+export function legacy_pragma_finding(sf: ScannedFile, check: string): Finding {
+    return new Finding(
+        sf.rel,
+        0,
+        LEGACY_PRAGMA_CHECK,
+        'LOW',
+        `unbound \`security-lint: allow ${check}\` pragma suppresses this whole file — ` +
+            'it accepts whatever the matched text is later changed to say. Bind it with ' +
+            '`sha256:<hex>` per accepted match.',
+        sf.weight,
+    );
+}
+
 export const CHILD_SCANNED_PREFIX = 'scanned: ';
 
 /** Publish a child linter's inspected count on stderr. See {@link CHILD_SCANNED_PREFIX}. */

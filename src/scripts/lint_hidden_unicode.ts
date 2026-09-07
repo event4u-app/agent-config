@@ -220,9 +220,19 @@ function _cpName(cp: number): string {
 }
 
 export function _scan(sf: sl.ScannedFile): sl.Finding[] {
-    if (sf.pragma_allows(CHECK)) {
-        return [];
+    // A BOUND pragma suppresses only the matches it fingerprints, so the scan
+    // runs and its output is filtered at the end. An UNBOUND one keeps the old
+    // whole-file bail and reports itself.
+    const pragmaForm = sf.pragma_form(CHECK);
+    if (pragmaForm === 'legacy') {
+        return [sl.legacy_pragma_finding(sf, CHECK)];
     }
+    // EVERY exit from this function goes through `finish`. Wrapping only the
+    // terminal `return` is the defect that shipped for one commit here: this
+    // scan has an early return for an artefact with no `execution:` block, and a
+    // bound pragma silently did not apply to exactly those artefacts.
+    const finish = (hits: sl.Finding[]): sl.Finding[] =>
+        pragmaForm === 'bound' ? sf.filter_bound_pragma(CHECK, hits) : hits;
     const out: sl.Finding[] = [];
     for (const [lineno, text] of sf.iter_lines({ skip_example_fence: true })) {
         let vs_run = 0;
@@ -260,7 +270,7 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
             );
         }
     }
-    return out;
+    return finish(out);
 }
 
 // ---------------------------------------------------------------------------

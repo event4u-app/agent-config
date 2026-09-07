@@ -83,11 +83,13 @@ describe('lint_hidden_unicode — _scan over a built ScannedFile', () => {
         expect(hits[0]!.message).toBe('variation-selector run x3 (steganography signature)');
     });
 
-    it('respects the security-lint allow pragma (whole file exempt)', () => {
+    it('respects an UNBOUND allow pragma (whole file exempt), and reports it as legacy-pragma', () => {
         const hits = scanText(
             `<!-- security-lint: allow hidden-unicode "teaching" -->\nbad${ZW}here\n`,
         );
-        expect(hits).toHaveLength(0);
+        expect(hits.filter((h) => h.check === 'hidden-unicode')).toHaveLength(0);
+        expect(hits.map((h) => h.check)).toEqual([sl.LEGACY_PRAGMA_CHECK]);
+        expect(hits[0]!.is_fail).toBe(false);
     });
 
     it('skips a ```security-example fence but not ordinary text', () => {

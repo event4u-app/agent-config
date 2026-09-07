@@ -95,11 +95,11 @@ so the source round's rename-then-rename-back is dropped.
 pragma suppresses its check for the whole file with no location and no content binding,
 as `:16-17` documents.
 
-- [ ] **5.1 Extend the pragma grammar with a content fingerprint.** `<!-- security-lint: allow <check> "<reason>" sha256:<hex> -->`, hashing the normalized matched evidence and its location identity rather than incidental whole-file content. A pragma without a hash still works and reports itself as `legacy-pragma`.
+- [x] **5.1 Extend the pragma grammar with a content fingerprint.** `<!-- security-lint: allow <check> "<reason>" sha256:<hex> -->`, hashing the normalized matched evidence and its location identity rather than incidental whole-file content. A pragma without a hash still works and reports itself as `legacy-pragma`.
       verify: a mutation fixture — accept a benign match, then alter only the matched text into a malicious one, and the suppression stops applying while the reason string stays human-readable.
-- [ ] **5.2 Migrate the existing population and ratchet it to zero.** There are exactly 8 pragma instances across 8 files under `src/` and `docs/`; bind each by hand and read each reason as you go.
+- [x] **5.2 Migrate the existing population and ratchet it to zero.** There are exactly 8 pragma instances across 8 files under `src/` and `docs/`; bind each by hand and read each reason as you go.
       verify: `grep -rn '<!--\s*security-lint:\s*allow' src/ docs/ | grep -vc 'sha256:'` returns 0.
-- [ ] **5.3 Add no second suppression system.** No new allowlist file in any change belonging to this roadmap.
+- [x] **5.3 Add no second suppression system.** No new allowlist file in any change belonging to this roadmap.
       verify: `git diff --stat` across the roadmap's changes introduces no file matching `*_allowlist.json`.
 
 ## Phase 6 — The published surface is classified, not just measured
