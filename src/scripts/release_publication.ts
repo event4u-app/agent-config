@@ -731,8 +731,12 @@ export function guard_release_curation(version: string, prMerged = false): void 
                   marked.join('\n')
                 : '') +
             '\n    Stopped BEFORE committing — no release commit, no branch on ' +
-            `${REMOTE}, no pull request, no tag. Curate the ` +
-            '`### Release highlights` head, then re-run `task release`.',
+            `${REMOTE}, no pull request, no tag. HEAD is on the LOCAL ` +
+            `\`release/${version}\` branch and the generated section is in the working ` +
+            'tree: curate the `### Release highlights` head in `CHANGELOG.md` there, then ' +
+            're-run `task release`. That re-run works from this position — `preflightPosition` ' +
+            'accepts the release branch with the uncommitted step-2 output, which it did not ' +
+            'until 2026-09-07 (both spellings of the re-run were refused before step 1).',
     );
 }
 
