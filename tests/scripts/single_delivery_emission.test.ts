@@ -34,15 +34,16 @@ import {
 } from '../../src/scripts/condense.js';
 // The memo lives with the predicate, not with the generator — see
 // partitionEligibility.ts on why the wiring in condense.ts is one line per site.
-import { _resetPartitionVerdictForTest } from '../../src/install/partitionEligibility.js';
+import { _resetHostLayerVerdictForTest } from '../../src/install/partitionEligibility.js';
+import { _resetClaudeLayerMemoForTest } from '../../src/install/claudeLayerCarriage.js';
 
 const SKILL_WITH_COMMAND_NAME = 'estimate-ticket';
 /**
  * The tmp project's own version. Not read from the real `package.json`: the
- * predicate resolves the building version from `MODULE_STATE.PROJECT_ROOT`, so a
+ * diagnostic resolves the building version from `MODULE_STATE.PROJECT_ROOT`, so a
  * fixture that borrowed the repo's version would silently compare 14.6.0 against
- * `0.0.0` and land in `standalone/full` for the wrong reason — which is exactly
- * how this test first failed.
+ * `0.0.0` and report unverified for the wrong reason — which is exactly how this
+ * test first failed, back when that verdict also decided the withhold.
  */
 const FIXTURE_VERSION = '9.9.9';
 const PLAIN_SKILL = 'plain-skill';
@@ -70,17 +71,36 @@ function seedProject(root: string): void {
     fs.mkdirSync(path.join(root, '.claude', 'skills'), { recursive: true });
 }
 
-/** Point HOME at a host layer whose fingerprint the lockfile records — or does not. */
-function seedHost(home: string, verified: boolean): void {
+/**
+ * Point HOME at a host layer that CARRIES this fixture's two skill names — or at
+ * no host layer at all.
+ *
+ * Seeding the skill NAMES is the 2026-09-07 change: the withhold reads
+ * `~/.claude/skills` per name, so a layer holding an unrelated `demo.md` (which
+ * is what this fixture seeded while the lockfile verdict was the gate) withholds
+ * nothing and turns every `carried` assertion green for the wrong reason. The
+ * lockfile is still written so the diagnostic half stays exercised; no assertion
+ * below reads it.
+ */
+function seedHost(home: string, carried: boolean): void {
     const layers = ['rules', 'skills', 'commands'].map((label) => ({
         label,
         root: path.join(home, '.claude', label),
     }));
-    if (!verified) {
-        return; // no host layer at all → standalone/full
+    if (!carried) {
+        return; // no host layer at all → nothing is withheld
     }
     for (const l of layers) {
         fs.mkdirSync(l.root, { recursive: true });
+    }
+    for (const name of [PLAIN_SKILL, SKILL_WITH_COMMAND_NAME]) {
+        // With a real SKILL.md: a bare directory is NOT carriage (corrected
+        // 2026-09-07 — a name counts only when the artefact behind it resolves),
+        // so a bare-directory fixture would arm nothing and turn both `carried`
+        // assertions green for the wrong reason.
+        const d = path.join(home, '.claude', 'skills', name);
+        fs.mkdirSync(d, { recursive: true });
+        fs.writeFileSync(path.join(d, 'SKILL.md'), `---\nname: ${name}\n---\nbody\n`, 'utf-8');
     }
     fs.writeFileSync(path.join(layers[0]!.root, 'demo.md'), 'demo\n', 'utf-8');
     write_lockfile(FIXTURE_VERSION, ['claude-code'], {
@@ -99,12 +119,14 @@ beforeEach(() => {
     savedHome = process.env['HOME'];
     savedLock = process.env['AGENT_CONFIG_INSTALLED_LOCK'];
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sd-emit-'));
-    _resetPartitionVerdictForTest();
+    _resetHostLayerVerdictForTest();
+    _resetClaudeLayerMemoForTest();
 });
 
 afterEach(() => {
     _resetStateForTest(saved.PROJECT_ROOT);
-    _resetPartitionVerdictForTest();
+    _resetHostLayerVerdictForTest();
+    _resetClaudeLayerMemoForTest();
     if (savedHome === undefined) delete process.env['HOME'];
     else process.env['HOME'] = savedHome;
     if (savedLock === undefined) delete process.env['AGENT_CONFIG_INSTALLED_LOCK'];
@@ -133,33 +155,34 @@ describe('project-layer emission under the partition', () => {
         process.env['AGENT_CONFIG_INSTALLED_LOCK'] = path.join(home, 'installed.lock');
     });
 
-    function generate(verified: boolean): { skills: number; commands: number; onDisk: string[] } {
+    function generate(carried: boolean): { skills: number; commands: number; onDisk: string[] } {
         // The host layer is (re)built per generation so the same root can move
         // between modes, which is what a machine does when it installs.
         fs.rmSync(path.join(home, '.claude'), { recursive: true, force: true });
         fs.rmSync(path.join(home, 'installed.lock'), { force: true });
-        seedHost(home, verified);
-        _resetPartitionVerdictForTest();
+        seedHost(home, carried);
+        _resetHostLayerVerdictForTest();
+        _resetClaudeLayerMemoForTest();
         const skills = generate_claude_skills(null);
         const commands = generate_claude_commands(null);
         return { skills, commands, onDisk: projectSkillDirEntries() };
     }
 
-    it('standalone/full emits both skills and the command entry', () => {
+    it('an ABSENT host layer emits both skills and the command entry', () => {
         const r = generate(false);
         expect(r.skills).toBe(2);
         expect(r.onDisk).toContain(PLAIN_SKILL);
         expect(r.onDisk).toContain(SKILL_WITH_COMMAND_NAME);
     });
 
-    it('a fresh partitioned run leaves the directory EMPTY, not merely the counters at zero', () => {
+    it('a fresh CARRIED run leaves the directory EMPTY, not merely the counters at zero', () => {
         const r = generate(true);
         expect(r.skills).toBe(0);
         expect(r.commands).toBe(0);
         expect(r.onDisk).toEqual([]);
     });
 
-    it('full → partitioned CLEARS what the full run wrote, including a skill that shadows a command slug', () => {
+    it('absent → carried CLEARS what the full run wrote, including a skill that shadows a command slug', () => {
         const full = generate(false);
         expect(full.onDisk).toContain(SKILL_WITH_COMMAND_NAME);
 
@@ -167,12 +190,13 @@ describe('project-layer emission under the partition', () => {
         expect(partitioned.skills).toBe(0);
         expect(partitioned.commands).toBe(0);
         // This is the assertion the counters could not make. With the
-        // command-slug protection left unconditional, `estimate-ticket` survived
-        // here while both counters read zero.
+        // command-slug protection left unconditional — which is what it was until
+        // `_emitted_wrapper_slugs` narrowed it on 2026-09-07 — `estimate-ticket`
+        // survived here while both counters read zero.
         expect(partitioned.onDisk).toEqual([]);
     });
 
-    it('partitioned → full restores the full set, so the partition is not a one-way door', () => {
+    it('carried → absent restores the full set, so the partition is not a one-way door', () => {
         generate(true);
         const back = generate(false);
         expect(back.skills).toBe(2);

@@ -265,7 +265,7 @@ export {
 } from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
-import { commandsWithheld, partitionActive, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { claudeLayerHolds, commandWithheld, keepInProjectLayer, personaPartition } from '../install/partitionEligibility.js'; // ADR-236
 import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
@@ -320,7 +320,6 @@ function _deriveState(root: string): ModuleState {
 }
 
 export const MODULE_STATE: ModuleState = _deriveState(_DEFAULT_PROJECT_ROOT);
-setPartitionAnnounce(success); // ADR-236: the mode line must be visible at the default level
 
 /**
  * Test seam — reassign one or more module-state fields, mirroring the pytest
@@ -1628,23 +1627,22 @@ function _render_native_model_md(src_md: string, tier: string): string {
 }
 
 export function generate_claude_skills(active_skill_names: ReadonlySet<string> | null = null): number {
-    if (partitionActive(MODULE_STATE.PROJECT_ROOT)) active_skill_names = new Set<string>();
     if (!_exists(MODULE_STATE.SKILLS_SOURCE)) {
         process.stderr.write('  ⚠️  dist/agent-src/skills/ not found — skipping skills\n');
         return 0;
     }
 
-    let skills = _iterdirSorted(MODULE_STATE.SKILLS_SOURCE)
+    const all_skills = _iterdirSorted(MODULE_STATE.SKILLS_SOURCE)
         .filter((p) => _isDir(p))
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    // ADR-236: withhold every skill `~/.claude/skills` holds — see `keepInProjectLayer`.
+    let skills = keepInProjectLayer('skills', all_skills);
     if (active_skill_names !== null) {
         skills = skills.filter((s) => active_skill_names.has(s));
     }
     const skill_set = new Set(skills);
-    const command_slugs = partitionActive(MODULE_STATE.PROJECT_ROOT)
-        ? new Set<string>()
-        : new Set([...iterCommands()].map(([, slug]) => slug));
+    const command_slugs = _emitted_wrapper_slugs(new Set(all_skills));
 
     _mkdirp(MODULE_STATE.CLAUDE_SKILLS_DIR);
     const auto = _read_model_auto_switch() === 'auto';
@@ -1737,6 +1735,22 @@ function _nested_command_subpath(source_file: string): string | null {
     return sub.includes('/') ? sub : null;
 }
 
+/** The emitter's four skips, in one place — see `emittedWrapperSlugs`. */
+const _wrapper_is_emitted = (f: string, s: string, skills: ReadonlySet<string>): boolean =>
+    !skills.has(s) &&
+    _nested_command_subpath(f) === null &&
+    !is_claude_builtin_name(s) &&
+    !claudeLayerHolds('skills', s);
+
+/** Wrapper slugs the command emitter really writes — see `emittedWrapperSlugs`. */
+function _emitted_wrapper_slugs(skill_names: ReadonlySet<string>): Set<string> {
+    return new Set(
+        [...iterCommands()]
+            .filter(([f, s]) => _wrapper_is_emitted(f, s, skill_names))
+            .map(([, slug]) => slug),
+    );
+}
+
 /**
  * Project-scope `.claude/commands/<cluster>/<sub>.md` — the colon form.
  *
@@ -1749,7 +1763,7 @@ function _nested_command_subpath(source_file: string): string | null {
  *
  * Emitting the nested form here lets `generate_claude_commands` stop wrapping
  * the clustered commands: one listing, same reachability, and reachability no
- * longer depends on a global deploy. Dedup AND precedence: `commandsWithheld`.
+ * longer depends on a global deploy. Dedup AND precedence: `commandWithheld`.
  *
  * ADR-003 (colon canonical for clusters) and ADR-044 (flat commands stay
  * hyphenated) both hold: flat commands are untouched and keep their wrapper.
@@ -1757,8 +1771,6 @@ function _nested_command_subpath(source_file: string): string | null {
 export function generate_claude_project_commands(
     active_command_slugs: ReadonlySet<string> | null = null,
 ): number {
-    if (commandsWithheld(MODULE_STATE.PROJECT_ROOT)) active_command_slugs = new Set<string>();
-    // Returns before the stale sweep — invariant, see `commandsWithheld`.
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         return 0;
     }
@@ -1768,7 +1780,7 @@ export function generate_claude_project_commands(
             continue;
         }
         const sub = _nested_command_subpath(source_file);
-        if (sub !== null) {
+        if (sub !== null && !commandWithheld(`${sub}.md`)) {
             nested.push([source_file, sub]);
         }
     }
@@ -1805,7 +1817,6 @@ export function generate_claude_project_commands(
 }
 
 export function generate_claude_commands(active_command_slugs: ReadonlySet<string> | null = null): number {
-    if (partitionActive(MODULE_STATE.PROJECT_ROOT)) active_command_slugs = new Set<string>();
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         process.stderr.write('  ⚠️  src/domains/ not found — skipping commands\n');
         return 0;
@@ -1826,6 +1837,7 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     let count = 0;
     let skipped = 0;
     let reserved = 0;
+    let withheld = 0;
     let rendered = 0;
     const auto = _read_model_auto_switch() === 'auto';
     for (const [source_file, slug] of iterCommands()) {
@@ -1854,6 +1866,9 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
             reserved += 1;
             continue;
         }
+        // ADR-236 per-name: the INSTALLER re-projects visible flat commands as
+        // `~/.claude/skills/<slug>/SKILL.md` (install.ts:_apply_claude_flat_command_wrappers).
+        if (claudeLayerHolds('skills', slug)) { withheld += 1; continue; }
         current_slugs.add(slug);
 
         const skill_dir = path.join(MODULE_STATE.CLAUDE_SKILLS_DIR, slug);
@@ -1905,6 +1920,9 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     }
     if (reserved) {
         msg += ` (${reserved} withheld — Claude Code built-in name)`;
+    }
+    if (withheld > 0) {
+        msg += ` (${withheld} withheld — ~/.claude/skills carries the wrapper)`;
     }
     if (removed_dirs) {
         msg += ` (${removed_dirs} stale dirs removed)`;
@@ -2244,19 +2262,13 @@ export function generate_persona_symlinks(): number {
         _print('  ⚠️  dist/agent-src/personas/ not found — skipping personas');
         return 0;
     }
-    const personas = _rglobSorted(MODULE_STATE.PERSONAS_SOURCE, '*.md')
-        .filter((p) => _isFile(p) && path.basename(p, '.md') !== 'README')
-        .map((p) => path.basename(p))
-        // glob('*.md') is non-recursive in Python; mirror that — only top level.
-        .filter((name) => _isFile(path.join(MODULE_STATE.PERSONAS_SOURCE, name)));
     // Python uses PERSONAS_SOURCE.glob("*.md") (non-recursive). Re-derive
     // from a direct listing to match exactly.
     const direct = _iterdirSorted(MODULE_STATE.PERSONAS_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p) && path.basename(p, '.md') !== 'README')
         .map((p) => path.basename(p))
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    void personas;
-    const partition = personaPartition(MODULE_STATE.PROJECT_ROOT, direct);
+    const partition = personaPartition(direct);
     const tool_dirs = _filter_tool_dirs(PERSONA_TOOL_DIRS);
     let total = 0;
     for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {

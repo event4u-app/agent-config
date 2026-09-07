@@ -8,7 +8,7 @@
  * ADR-236 decided that a rule is delivered from exactly one layer: package-only
  * rules stay in the project tree, everything else arrives from the host's global
  * directory and is withheld from the project tree. Measured in a freshly
- * generated worktree with `partitionActive: true`, it holds for one host in five:
+ * generated worktree with a verified host layer, it holds for one host in five:
  *
  * ```
  *   .claude/rules      13 files, 13 package-only,   0 global-only
@@ -51,7 +51,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { isExclusivelyPackageOnly, resolvePartitionVerdict } from '../install/partitionEligibility.js';
+import { isExclusivelyPackageOnly } from '../install/partitionEligibility.js';
 import { PROJECT_RULE_DIRS, globalRuleLayerNames, globalRuleLayerPath } from '../install/globalRuleLayers.js';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -333,7 +333,7 @@ function selfTest(): number {
 /**
  * `--prune`: delete exactly the files this gate reports as duplicated.
  *
- * ## Why a gate ships a repair at all
+ * **Why a gate ships a repair at all.**
  *
  * The documented repair is `task generate-tools`, and on this repository's own main
  * checkout that command is **structurally inert**: `agents/.agent-tools.yml` is
@@ -381,17 +381,39 @@ function prune(audit: PartitionAudit, root: string): number {
 }
 
 /**
- * Does a duplication in this projection mode mean an emitter FAILED, or that the
- * partition deliberately did not run?
+ * Does THIS directory's duplication mean an emitter failed, or that the
+ * per-directory fail-safe legitimately kept the full projection?
  *
- * Split out of `main` so both directions are testable without a lockfile on disk:
- * the un-injected path can only assert whatever the machine happens to be, and this
- * one bit differs between a maintainer checkout mid-release and a partitioned one —
- * the same environment-dependence `ruleLayerPartition.ts` records for its own
- * `active` override.
+ * **The discriminator, corrected 2026-09-07 after a neutral review.**
+ *
+ * It used to be the repo-wide host-layer verdict — first a `PartitionMode`
+ * string, then the `verified` boolean the 2026-09-07 change reduced it to. Both
+ * were wrong in BOTH directions once the withhold stopped reading
+ * `installed.lock`:
+ *
+ *   - FALSE NEGATIVE: an install one release behind makes `verified === false`
+ *     for the whole release window, so a genuine emitter failure — the defect
+ *     this gate exists to catch — printed and returned 0.
+ *   - FALSE POSITIVE: a verified layer that legitimately lacks ONE rule makes
+ *     `partitionRulesForDir` keep all ~104 by design (rules are all-or-nothing,
+ *     `ruleLayerPartition.ts`), and the gate exited 1 on a correct tree.
+ *     `rule_partition_per_host.test.ts` pins that state as legal.
+ *
+ * The right signal was already computed and never asked: `soleCarrier` — the
+ * global-scope rules this directory projects that its host layer does NOT hold.
+ * Non-empty means the fail-safe fired for a reason a reader can check; empty
+ * means the layer carries every withheld name and the emitter simply did not
+ * withhold. Per directory, from data on hand, and independent of any lockfile —
+ * so the verdict no longer differs between a maintainer machine mid-release and
+ * a CI checkout.
+ *
+ * Also note what a stale layer can NOT do under per-name withholding: if the
+ * layer holds the name, the project copy is withheld whatever its CONTENT. So
+ * staleness never produces a duplicate, and the old message's second
+ * justification was keyed on the wrong fact.
  */
-export function partitionEnforces(mode: string): boolean {
-    return mode === 'dual-layer/partitioned';
+export function partitionEnforces(dir: Pick<DirAudit, 'soleCarrier'>): boolean {
+    return dir.soleCarrier.length === 0;
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -485,34 +507,32 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // partition gate and `check_bridge_derivation` deadlock, each red in the state
     // the other requires.
     //
-    // The block is structural rather than incidental: during ANY release the
-    // building version is ahead of the installed one, so `resolvePartitionVerdict`
-    // returns `standalone/full` on every maintainer machine for the whole release
-    // window. A gate that cannot be green while a release is in progress is not
-    // measuring the release.
+    // Split PER DIRECTORY, not on a repo-wide verdict — see `partitionEnforces` for
+    // why the verdict was wrong in both directions. A directory that is the sole
+    // carrier of at least one global-scope rule kept the full projection by design;
+    // one that carries none is an emitter that did not withhold.
     //
-    // Teeth are unchanged where the partition IS active: there a duplicate means an
-    // emitter failed to withhold what the partition selected, which is the defect
-    // this gate exists to catch. In CI both layers are absent, `offenders` is empty,
-    // and this branch is never reached — so nothing here relaxes the CI reading.
-    const verdict = resolvePartitionVerdict(root);
-    if (!partitionEnforces(verdict.mode)) {
-        for (const d of offenders) {
-            process.stdout.write(
-                `⚠️  ${d.dir}: ${String(d.duplicated.length)} rule(s) also present in ` +
-                    `${d.globalLayer ?? '(unknown)'}\n`,
-            );
-        }
+    // In CI both layers are absent, `offenders` is empty, and neither branch is
+    // reached — so nothing here changes the CI reading.
+    const failing = offenders.filter((d) => partitionEnforces(d));
+    for (const d of offenders.filter((d) => !partitionEnforces(d))) {
         process.stdout.write(
-            `⚠️  check_rule_layer_partition: partition INACTIVE (${verdict.reason}), so the ` +
-                `generators emit the full projection by design and this overlap is the fail-safe ` +
-                `working. Reported, not enforced — run \`agent-config install\` to activate the ` +
-                `partition here, then this gate has teeth again.\n`,
+            `⚠️  ${d.dir}: ${String(d.duplicated.length)} rule(s) also present in ` +
+                `${d.globalLayer ?? '(unknown)'} — kept by design: this directory is the sole ` +
+                `carrier of ${String(d.soleCarrier.length)} global-scope rule(s) ` +
+                `(e.g. ${d.soleCarrier.slice(0, 3).join(', ')}), and the rule partition is ` +
+                `all-or-nothing per directory.\n`,
+        );
+    }
+    if (failing.length === 0) {
+        process.stdout.write(
+            `✅  check_rule_layer_partition: every duplication is the per-directory fail-safe ` +
+                `working — no directory duplicates a rule its host layer fully carries.\n`,
         );
         return 0;
     }
 
-    for (const d of offenders) {
+    for (const d of failing) {
         process.stderr.write(
             `${report ? '⚠️ ' : '❌ '} ${d.dir}: ${String(d.duplicated.length)} rule(s) also present in ` +
                 `${d.globalLayer ?? '(unknown)'} — e.g. ${d.duplicated.slice(0, 5).join(', ')}\n`,

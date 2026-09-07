@@ -5,7 +5,7 @@
  * ## Why the decision moved from per-run to per-directory
  *
  * The filter used to sit in `condense.ts::_scoped_rule_basenames()`, which runs
- * once per generation, so `partitionActive` — a claude-only fingerprint against
+ * once per generation, so the then-current `partitionActive` — a claude-only fingerprint against
  * `installed.lock` — decided for every host at once. That contradicted
  * `partitionEligibility.ts`'s own fail-safe reasoning, which refuses to withhold a
  * cursor artefact on claude's evidence because it "would deliver it nowhere", and
@@ -32,7 +32,7 @@
  * Four call sites consume it — the symlink emit plan, the cursor `.mdc` emitter,
  * the windsurf emitter, the augment projector — and four sites deciding this
  * separately is exactly how three of them came to disagree. It is in `src/install/`
- * beside {@link partitionActive} and {@link hostLayerCarries}, the two predicates
+ * beside {@link hostLayerCarries}, the predicate
  * it composes, rather than in the 2,700-line generator that calls it.
  *
  * ## The classification source is the PROJECTION, not the authored tree
@@ -48,7 +48,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { isExclusivelyPackageOnly, partitionActive } from './partitionEligibility.js';
+import { isExclusivelyPackageOnly } from './partitionEligibility.js';
 import { hostLayerCarries, toolIdForProjectRuleDir } from './globalRuleLayers.js';
 
 export interface PartitionRulesOptions {
@@ -56,28 +56,21 @@ export interface PartitionRulesOptions {
     readonly toolDir: string;
     /** Candidate rule basenames, already scope- and manual-filtered. */
     readonly rules: readonly string[];
-    /** Absolute project root — what `partitionActive` verifies against. */
+    /**
+     * Absolute project root.
+     *
+     * Retained after the 2026-09-07 change removed the only reader that needed
+     * it (`partitionActive`, which verified it against `installed.lock`). It
+     * stays because every call site already passes it and because a rule
+     * partition that cannot name the tree it is partitioning is harder to debug,
+     * not because a branch below reads it. Stated rather than quietly dropped.
+     */
     readonly projectRoot: string;
     /** Absolute directory the basenames resolve against for classification. */
     readonly rulesSource: string;
     readonly userHome?: string;
     /** Where the kept-full notice goes. Silent when omitted. */
     readonly announce?: (message: string) => void;
-    /**
-     * Override the partition-active decision instead of reading `installed.lock`.
-     *
-     * Split out for the reason `partitionEligibility.ts` states about its own
-     * `personaWithheldFor`: "so the decision is testable in BOTH directions". A
-     * test over the un-injected path can only assert whatever the machine happens
-     * to be — and this one bit differs between a maintainer checkout (installed,
-     * so active) and CI (nothing installed, so inactive), which made the first
-     * version of `rule_partition_per_host.test.ts` green locally and red on every
-     * CI shard. That is the environment-dependent gate this whole change exists to
-     * remove, reproduced in its own test suite.
-     *
-     * Production callers omit it.
-     */
-    readonly active?: boolean;
 }
 
 /**
@@ -90,10 +83,13 @@ export interface PartitionRulesOptions {
  */
 export function partitionRulesForDir(opts: PartitionRulesOptions): string[] {
     const { toolDir, rules, projectRoot, rulesSource } = opts;
-    const active = opts.active ?? partitionActive(projectRoot);
-    if (!active) {
-        return [...rules];
-    }
+    void projectRoot;
+    // There is no repo-wide gate above this any more (owner decision, 2026-09-07).
+    // `partitionActive` used to run first and veto every directory on one
+    // claude-only version-and-fingerprint check against `installed.lock` — the
+    // exact borrowed-evidence extrapolation this module's own header refuses. The
+    // per-directory evidence below was always the stronger test; it is now the
+    // only one.
     const toolId = toolIdForProjectRuleDir(toolDir);
     if (toolId === null) {
         // An unmapped directory has no global layer this code can point at, so

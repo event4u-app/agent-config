@@ -54,12 +54,16 @@ const TYPES = ['rules', 'skills', 'commands', 'personas', 'user-types', 'agents'
 export function overlapFindings(homeDir: string, projectRoot: string): string[] {
     const findings: string[] = [];
     for (const type of TYPES) {
-        let g: string[];
-        let p: string[];
-        try {
-            g = fs.readdirSync(path.join(homeDir, '.claude', type));
-            p = fs.readdirSync(path.join(projectRoot, '.claude', type));
-        } catch {
+        // `commands` keys on the POSIX SUBPATH, matching
+        // `check_single_delivery`'s own key. Top-level names are the CLUSTER, and
+        // since per-name withholding (2026-09-07) the project layer holds exactly
+        // the commands the host lacks — which can share a cluster with commands the
+        // host has. Observed the same day: `analyze/` in both layers over two
+        // disjoint command sets, reported here as `commands=1`. This notice and
+        // that gate must not disagree about the same question.
+        const g = _entries(path.join(homeDir, '.claude', type), type === 'commands');
+        const p = _entries(path.join(projectRoot, '.claude', type), type === 'commands');
+        if (g === null || p === null) {
             continue;
         }
         const gset = new Set(g);
@@ -67,6 +71,46 @@ export function overlapFindings(homeDir: string, projectRoot: string): string[] 
         if (both > 0) findings.push(`${type}=${both}`);
     }
     return findings;
+}
+
+/**
+ * One layer's entry names — top level, or every `*.md` subpath when `recursive`.
+ *
+ * `null` means the directory is not readable, which the caller must treat as "skip
+ * this type": one layer absent means nothing is doubled there.
+ */
+function _entries(dir: string, recursive: boolean): string[] | null {
+    if (!recursive) {
+        try {
+            return fs.readdirSync(dir);
+        } catch {
+            return null;
+        }
+    }
+    let top: fs.Dirent[];
+    try {
+        top = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return null;
+    }
+    const out: string[] = [];
+    const walk = (kids: fs.Dirent[], abs: string, rel: string): void => {
+        for (const k of kids) {
+            const childRel = rel === '' ? k.name : `${rel}/${k.name}`;
+            if (k.isDirectory()) {
+                try {
+                    walk(fs.readdirSync(path.join(abs, k.name), { withFileTypes: true }), path.join(abs, k.name), childRel);
+                } catch {
+                    // An unreadable subdirectory contributes no names; the layer
+                    // itself was readable, so the type stays compared.
+                }
+            } else if (k.name.endsWith('.md') && k.name !== 'README.md') {
+                out.push(childRel);
+            }
+        }
+    };
+    walk(top, dir, '');
+    return out;
 }
 
 /** Render the notice, or `null` when there is nothing to say. */
