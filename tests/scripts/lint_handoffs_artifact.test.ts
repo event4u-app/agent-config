@@ -5,6 +5,7 @@ import {
     handoff_section_body,
     validate_handoff_artifact,
     validate_handoff_open_questions,
+    validate_handoff_self_critique,
 } from '../../src/scripts/lint_handoffs.js';
 
 const FULL = `# HANDOFF
@@ -18,6 +19,14 @@ green run output
 - kept current API
 ## Open questions
 - none
+## Least confident
+- the slug collision path is untested for Unicode — verify: npx vitest run tests/slugify.test.ts -t unicode
+## Biggest thing missed
+- none
+## Breaks in three months because
+- the upstream regex is pinned by version — verify: npm ls slugify | head -1
+## Not done
+- the CLI flag is unwired — verify: rg -n "--slug" src/cli | wc -l
 ## Next command
 npx vitest run tests/slugify.test.ts
 `;
@@ -91,5 +100,61 @@ describe('Open questions — shape, not just the heading', () => {
         expect(body).not.toBeNull();
         expect(body).toContain('none');
         expect(body).not.toContain('Next command');
+    });
+});
+
+
+// ── 5.1 — the four self-critique sections ─────────────────────────
+describe('self-critique sections carry falsifiable uncertainty', () => {
+    function withNotDone(body: string): string {
+        return FULL.replace(
+            '## Not done\n- the CLI flag is unwired — verify: rg -n "--slug" src/cli | wc -l\n',
+            `## Not done\n${body}`,
+        );
+    }
+
+    test('the shipped fixture passes — every line names how it would be killed', () => {
+        expect(validate_handoff_self_critique(FULL)).toEqual([]);
+    });
+
+    test('a `## Not done` line with no verify: is rejected', () => {
+        const findings = validate_handoff_self_critique(
+            withNotDone('- the CLI flag is unwired\n'),
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('## Not done');
+        expect(findings[0]).toContain('no `verify:`');
+    });
+
+    test('`none` is accepted as the whole section body', () => {
+        expect(validate_handoff_self_critique(withNotDone('- none\n'))).toEqual([]);
+    });
+
+    test('blankness is not — matching the `## Open questions` treatment', () => {
+        const findings = validate_handoff_self_critique(withNotDone('\n'));
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('is empty');
+    });
+
+    test('`none` beside a real unverified line does not launder it', () => {
+        const findings = validate_handoff_self_critique(
+            withNotDone('- none\n- the CLI flag is unwired\n'),
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('no `verify:`');
+    });
+
+    test('all four sections are required by the artifact validator', () => {
+        for (const heading of [
+            'Least confident',
+            'Biggest thing missed',
+            'Breaks in three months because',
+            'Not done',
+        ]) {
+            const body = handoff_section_body(FULL, heading);
+            expect(body, `${heading} missing from the fixture`).not.toBeNull();
+        }
+        const stripped = FULL.replace(/## Not done\n[^#]*/, '');
+        expect(validate_handoff_artifact(stripped)).toEqual(['Not done']);
     });
 });

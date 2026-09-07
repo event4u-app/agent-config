@@ -834,7 +834,33 @@ export const HANDOFF_ARTIFACT_REQUIRED = [
     'Contract owed',
     'Decisions',
     'Open questions',
+    'Least confident',
+    'Biggest thing missed',
+    'Breaks in three months because',
+    'Not done',
     'Next command',
+] as const;
+
+/**
+ * The four self-critique sections (road-to-observed-learning-signal 5.1).
+ *
+ * Every other section in the contract is a statement about what HAPPENED. None
+ * of them says what the outgoing session is least sure of, which is the one
+ * thing the incoming session cannot reconstruct and the one thing that decides
+ * where it should look first.
+ *
+ * Every substantive line in them MUST carry a `verify:` naming the command or
+ * observable state that would confirm or kill it. An unverifiable line of
+ * self-doubt is filler: it reads as diligence, costs the next session a read,
+ * and cannot be acted on. `none` is accepted as the whole body — an honest
+ * "nothing here" is an answer — and blankness is not, exactly as
+ * `## Open questions` already treats the same distinction.
+ */
+export const HANDOFF_SELF_CRITIQUE = [
+    'Least confident',
+    'Biggest thing missed',
+    'Breaks in three months because',
+    'Not done',
 ] as const;
 
 /** Returns missing required section headings ([] = valid). */
@@ -908,6 +934,45 @@ function _bareLine(line: string): string {
  * Returns a finding string, or null when the shape holds. A MISSING section is
  * not this check's business — `validate_handoff_artifact` already reports it.
  */
+/**
+ * Shape check on the four self-critique sections. Returns one finding per
+ * offending section, `[]` when they hold. A MISSING section is not this
+ * check's business — `validate_handoff_artifact` already reports it.
+ */
+export function validate_handoff_self_critique(text: string): string[] {
+    const out: string[] = [];
+    for (const heading of HANDOFF_SELF_CRITIQUE) {
+        const body = handoff_section_body(text, heading);
+        if (body === null) {
+            continue;
+        }
+        const lines = body
+            .split('\n')
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+        const bare = lines.map(_bareLine).filter((l) => l.length > 0);
+        if (bare.length === 0) {
+            out.push(
+                `section \`## ${heading}\` is empty — carry a line with a \`verify:\`, or state \`none\``,
+            );
+            continue;
+        }
+        // `none` answers the WHOLE section; it cannot sit beside a real line.
+        if (bare.length === 1 && _NO_OPEN_QUESTIONS.has(bare[0] as string)) {
+            continue;
+        }
+        const unverifiable = lines.filter((l) => !/verify:/i.test(l));
+        if (unverifiable.length > 0) {
+            out.push(
+                `section \`## ${heading}\` carries ${unverifiable.length} line(s) with no ` +
+                    '`verify:` — a line of self-doubt that names no command or observable ' +
+                    'state that would confirm or kill it is filler',
+            );
+        }
+    }
+    return out;
+}
+
 export function validate_handoff_open_questions(text: string): string | null {
     const body = handoff_section_body(text, 'Open questions');
     if (body === null) {
@@ -983,7 +1048,8 @@ export function main(argv?: readonly string[]): number {
         const text = fs.readFileSync(_resolve(args[0] as string), 'utf-8');
         const missing = validate_handoff_artifact(text);
         const shape = validate_handoff_open_questions(text);
-        if (missing.length === 0 && shape === null) {
+        const critique = validate_handoff_self_critique(text);
+        if (missing.length === 0 && shape === null && critique.length === 0) {
             if (!QUIET) process.stdout.write('✅  HANDOFF artifact: all required fields present\n');
             return 0;
         }
@@ -993,7 +1059,10 @@ export function main(argv?: readonly string[]): number {
         if (shape !== null) {
             process.stdout.write(`${args[0]}:1:handoff-artifact-empty-section: ${shape}\n`);
         }
-        const problems = missing.length + (shape === null ? 0 : 1);
+        for (const c of critique) {
+            process.stdout.write(`${args[0]}:1:handoff-artifact-unverifiable-critique: ${c}\n`);
+        }
+        const problems = missing.length + (shape === null ? 0 : 1) + critique.length;
         process.stderr.write(`❌  ${problems} HANDOFF artifact problem(s)\n`);
         return 1;
     }
