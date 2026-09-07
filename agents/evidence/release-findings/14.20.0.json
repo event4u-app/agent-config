@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "release": "14.20.0",
+  "review_independence": "unknown",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "unreviewed",
+  "reviewers": [],
+  "no_findings_reason": "NOT REVIEWED — the finding set is empty because no review produced one, not because a review produced none. The self-review gate ran on release/14.20.0 as workflow run 34092974363 (job `live-advisory`) and went NEUTRAL: the Anthropic call returned HTTP 400 `prompt is too long: 260998 tokens > 200000 maximum` (request_id req_011CeoeCHUdmHso14DuZDGJ3), the upload step logged `No files were found with the provided path: /tmp/self-review-findings.json`, and the run finished carrying no artifact. PR #1900 carries no `release-findings-json` machine block, so there is nothing to ingest from either surface. FOURTH CONSECUTIVE RELEASE with this cause (14.17.0, 14.18.0, 14.19.0, 14.20.0). CORRECTION TO THE 14.19.0 LEDGER, which recorded the prompt as GROWING and predicted that growth would carry into 14.20.0: it did not. The readings are 413191 (14.18.0), 450336 (14.19.0) and 260998 (14.20.0) against an unchanged 200000 cap, so the series is not monotonic and the growth claim was an extrapolation from two points. What the three readings DO establish is the load-bearing fact: prompt size tracks the release span, every span measured so far exceeds the cap, and the smallest of them still exceeds it by 30 percent — so no span size observed to date fits, and the failure is structural rather than a trend. NO LIVE OWNER: road-to-the-ledger-two-releases-skipped recorded the 14.17.0 and 14.18.0 nulls and is archived, and recording a reason does not shrink a prompt. 14.21.0 reproduces this unless the gate chunks or scopes the release-span diff. Falsifiable: if run 34092974363 is shown to contain a completed model call, or an artifact or machine block for 14.20.0 is produced, this reason is wrong and the ledger must be re-ingested. Recorded 2026-09-07 while landing the release-obligation-answerable fix; the two are unrelated defects from the same release run.",
+  "findings": []
+}
