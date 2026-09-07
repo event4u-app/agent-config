@@ -67,7 +67,7 @@ describe('hostLayerCarries — sabotage in both directions', () => {
     });
 
     it('is not memoised — two reads of a changing layer disagree', () => {
-        // partitionActive memoises per process by design (the fingerprint costs
+        // The host-layer VERDICT memoises per process by design (the fingerprint costs
         // ~100ms). This predicate must NOT, because a generator run can create the
         // layer it is asking about. Pinned so an optimisation cannot silently add a
         // cache that makes the sabotage test above pass for the wrong reason.

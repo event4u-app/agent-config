@@ -6,32 +6,39 @@
  * A neutral review of PR #1512 landed the same finding from both seats: the
  * partition's unit tests covered the pure predicate and nothing exercised the
  * stateful half. One of them reimplemented the production expression
- * (`personaWithheldFor(...) ? [] : [...]`) and called that a reconciliation
+ * (then `personaWithheldFor(...) ? [] : [...]`, today `personaListFor`) and called that a reconciliation
  * test — so it would stay green if the generator stopped applying the partition,
  * or applied it and left the stale symlinks standing. Reviewer B put it exactly:
  * "reconstructs the desired expression instead of calling the generator".
  *
  * So these tests drive `generate_persona_symlinks()` and
  * `generate_claude_project_commands()` over a temp project with a SYNTHETIC HOME
- * whose host layer really does satisfy `partitionVerdict` — version equality plus
- * a fingerprint computed from that HOME — and then assert what is on disk.
+ * whose `~/.claude` really does carry the fixture's own artefact NAMES, and then
+ * assert what is on disk.
+ *
+ * The seam changed on 2026-09-07 and it is the point of the change: the fixture
+ * used to arm a LOCKFILE — version equality plus a fingerprint — because the
+ * withhold was gated on one repo-wide verdict. It now seeds the artefacts
+ * themselves, because the withhold reads each host directory's own contents. The
+ * lockfile is still written, so the DIAGNOSTIC half stays exercised, but no
+ * assertion below depends on it any more.
  *
  * Three properties, none of which the predicate tests can reach:
  *
- * 1. partition ACTIVE → the Claude directories are empty and the non-Claude ones
- *    are populated. Withholding everywhere would deliver a cursor persona from
- *    NEITHER layer, which is the one outcome the fail-safe design forbids.
+ * 1. layer CARRIES the names → the Claude directories are empty and the
+ *    non-Claude ones are populated. Withholding everywhere would deliver a cursor
+ *    persona from NEITHER layer, the one outcome the fail-safe design forbids.
  * 2. A tree an EARLIER version populated is emptied by one run. A gate that only
  *    declines to write leaves the duplicate standing — the partition would stop
  *    new duplication and keep the old, which is not a partition.
- * 3. partition INACTIVE → everything is written, including the Claude side. The
- *    project copy is the only reachable one there.
+ * 3. layer ABSENT → everything is written, including the Claude side. The project
+ *    copy is the only reachable one there.
  *
- * `process.env.HOME` is the seam: `partitionActive` resolves the host layer
- * through `os.homedir()`, which prefers `$HOME` on POSIX. Windows is skipped
- * rather than guessed at — `os.homedir()` does not read `$HOME` there, so the
- * fixture would silently point at the real profile and the test would assert
- * against whatever that machine happens to hold.
+ * `process.env.HOME` is the seam: the carriage reader resolves the host layer
+ * through `$HOME`, falling back to `os.homedir()`. Windows is skipped rather than
+ * guessed at — `os.homedir()` does not read `$HOME` there, so the fixture would
+ * silently point at the real profile and the test would assert against whatever
+ * that machine happens to hold.
  */
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -40,7 +47,8 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { fingerprintLayers, hostLayerInputs } from '../../src/install/hostLayerFingerprint.js';
-import { _resetPartitionVerdictForTest } from '../../src/install/partitionEligibility.js';
+import { _resetHostLayerVerdictForTest } from '../../src/install/partitionEligibility.js';
+import { _resetClaudeLayerMemoForTest } from '../../src/install/claudeLayerCarriage.js';
 import * as condense from '../../src/scripts/condense.js';
 import { lockfile_path, read_lockfile, write_lockfile } from '../../src/scripts/_lib/installed_lock.js';
 
@@ -67,13 +75,19 @@ function project(root: string, personas: readonly string[]): void {
 }
 
 /**
- * A HOME whose host layer satisfies the verdict for `version`.
+ * A HOME whose `~/.claude` carries THIS fixture's own artefact names.
  *
- * The fingerprint is COMPUTED from the directories just written rather than
+ * `carried` is what the withhold now reads, so it is what the fixture must seed:
+ * the persona filenames and the colon-form command subpath the project tree
+ * below produces. Seeding a generic `seed.md` instead — which is what this
+ * fixture did while the verdict was the gate — would arm the lockfile and
+ * withhold nothing, turning both ACTIVE assertions green for the wrong reason.
+ *
+ * The fingerprint is still COMPUTED from the directories just written rather than
  * hardcoded — a literal would pass by construction and stop meaning anything the
  * moment `hostLayerInputs` changes which directories it reads.
  */
-function armedHome(version: string): string {
+function armedHome(version: string, carried: readonly string[]): string {
     const home = tmp('pdt-home-');
     // HOME FIRST, before anything that could resolve a default path. This is not
     // defensive style — it is the fix for real damage this file did: the first
@@ -86,9 +100,12 @@ function armedHome(version: string): string {
     // silently disabling the partition on the machine running the tests.
     process.env['HOME'] = home;
     for (const family of ['rules', 'skills', 'commands', 'personas']) {
-        const d = path.join(home, '.claude', family);
-        fs.mkdirSync(d, { recursive: true });
-        fs.writeFileSync(path.join(d, 'seed.md'), 'seed\n', 'utf-8');
+        fs.mkdirSync(path.join(home, '.claude', family), { recursive: true });
+    }
+    for (const rel of carried) {
+        const target = path.join(home, '.claude', rel);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, 'carried\n', 'utf-8');
     }
     const lock = path.join(home, '.event4u', 'agent-config', 'installed.lock');
     // Explicit override BEFORE the write, so the resolver cannot fall through to
@@ -141,7 +158,8 @@ describe.skipIf(WINDOWS)('partition delivery topology — through the generators
         else process.env['HOME'] = savedHome;
         if (savedLock === undefined) delete process.env['AGENT_CONFIG_INSTALLED_LOCK'];
         else process.env['AGENT_CONFIG_INSTALLED_LOCK'] = savedLock;
-        _resetPartitionVerdictForTest();
+        _resetHostLayerVerdictForTest();
+        _resetClaudeLayerMemoForTest();
         fs.rmSync(root, { recursive: true, force: true });
         if (home !== undefined) fs.rmSync(home, { recursive: true, force: true });
     });
@@ -170,37 +188,43 @@ describe.skipIf(WINDOWS)('partition delivery topology — through the generators
             .sort();
     }
 
-    /** Arm or disarm the partition, then point condense at the fixture. */
+    /** Make the host layer carry the fixture's artefacts, or nothing at all. */
     function activate(active: boolean): void {
         const v = projectVersion(root);
         if (active) {
-            home = armedHome(v); // sets HOME itself, deliberately — see its note
+            // sets HOME itself, deliberately — see its note
+            home = armedHome(v, [
+                'personas/alpha.md',
+                'personas/beta.md',
+                'commands/roadmap/process-full.md',
+            ]);
         } else {
             home = tmp('pdt-home-empty-');
-            // No host layer AND no install record — the two disqualifiers the
-            // fail-safe path is built on. Leaving a stale override here would
-            // make the "inactive" case depend on the previous one.
+            // No host layer AND no install record — an unreadable `~/.claude` is
+            // the no-evidence state the per-name fail-safe rests on. Leaving a
+            // stale override here would make this case depend on the previous one.
             delete process.env['AGENT_CONFIG_INSTALLED_LOCK'];
         }
         process.env['HOME'] = home;
-        _resetPartitionVerdictForTest();
+        _resetHostLayerVerdictForTest();
+        _resetClaudeLayerMemoForTest();
         condense._resetStateForTest(root);
     }
 
-    it('ACTIVE: withholds the Claude directories and still populates the others', () => {
+    it('CARRIED: withholds the Claude directories and still populates the others', () => {
         activate(true);
         condense.generate_persona_symlinks();
         condense.generate_claude_project_commands();
 
         expect(claudePersonas()).toEqual([]);
         expect(claudeCommands()).toEqual([]);
-        // The failure this pins: withholding everywhere. `partitionActive`
-        // verifies the CLAUDE host layer and says nothing about ~/.cursor, so a
-        // cursor persona withheld on a claude fingerprint is delivered nowhere.
+        // The failure this pins: withholding everywhere. The evidence is the
+        // CLAUDE layer and says nothing about ~/.cursor, so a cursor persona
+        // withheld on a claude directory listing is delivered nowhere.
         expect(cursorPersonas()).toEqual(['alpha.md', 'beta.md']);
     });
 
-    it('ACTIVE: RECONCILES a tree an earlier version populated, in one run', () => {
+    it('CARRIED: RECONCILES a tree an earlier version populated, in one run', () => {
         // Written the way a pre-partition generator left it, then one run.
         activate(false);
         condense.generate_persona_symlinks();
@@ -220,7 +244,7 @@ describe.skipIf(WINDOWS)('partition delivery topology — through the generators
         expect(cursorPersonas()).toEqual(['alpha.md', 'beta.md']);
     });
 
-    it('INACTIVE: writes the Claude directories — the project copy is the only one', () => {
+    it('ABSENT LAYER: writes the Claude directories — the project copy is the only one', () => {
         activate(false);
         condense.generate_persona_symlinks();
         condense.generate_claude_project_commands();

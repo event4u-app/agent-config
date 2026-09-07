@@ -166,3 +166,76 @@ reviewer has to untangle.
 
 - `minimal-safe-diff` (rule) — Iron Law, the rule, the pre-fix shared-path repair clause, own-orphan cleanup. The pre-diff checklist, the red-flag catalog and the when-in-doubt line live HERE since A1.
 - [`active-remediation-mechanics`](active-remediation-mechanics.md) — the fix-now / note+ask / follow-up-PR ladder detail.
+
+## Re-derive the requirement, don't inherit the shape
+
+```
+A REPAIR INHERITS THE SHAPE OF WHAT IT REPAIRS UNLESS YOU ASK OTHERWISE.
+STATE THE REQUIREMENT IN ONE LINE, THEN ASK WHETHER THE CURRENT FORM
+*CAN* EXPRESS IT. A FORM THAT CANNOT IS NOT A PARAMETER BUG.
+```
+
+Applies to a downstream repair — clearing a red, or fixing what your own diff
+broke — where the smallest change is a different VALUE and the form is
+unexamined.
+
+### Why this is a guideline section and not a rule clause
+
+It was drafted as a clause in `minimal-safe-diff` on 2026-09-07 and moved here
+the same day, on the gate's own evidence rather than on preference.
+`check_preamble_payload_budget` measured the clause at +460 delivered tokens,
+then +271, then +180 after two rounds of cutting — a floor set by the Iron-Law
+block itself. That payload is re-written on EVERY subagent spawn, and the rule it
+would have lived in is `type: auto`: it fires on prompt keywords, not on tool
+output, so a red test nobody mentioned never loads it.
+
+Certain per-spawn cost against an activation path that misses the case the clause
+was written for is a bad trade, and the deterministic half does not depend on it
+— see § Honest limit below. The rule already routes here
+(`routes_to: guideline:agent-infra/minimal-safe-diff-mechanics`), which is the
+same reachability every other migrated body in this repository has.
+
+### Worked failure — 2026-09-07
+
+A change emptied `<repo>/.claude/skills` of skills and left ~49 flat-command
+wrappers behind. `resolveSkillsRoot` tried two workspace-relative roots and took
+the first non-empty one, so it resolved the wrappers, and the skill ranker ranked
+49 command wrappers instead of 299 skills.
+
+The repair chosen was to swap the ORDER of the two roots. The requirement was
+*"rank every catalogue the session can reach"*, which **no ordering of a
+first-hit loop can satisfy** — and the host-global root the whole task was about
+appeared in neither position. The evidence had been measured an hour earlier and
+sat in the same session's own notes: `~/.claude/skills` 307, `.claude/skills` 49,
+`src/skills` 299.
+
+Two things made it easy to miss, and both are the shape of the trap rather than
+this instance of it:
+
+- **The docstring framed the question.** It read *"First existing catalogue root
+  … `.claude/skills` before `src/skills` because a CONSUMER install carries the
+  former"* — i.e. it asked *which root wins*, and that question was answered. A
+  docstring records what the code decided; it never records whether that was the
+  decision to make.
+- **The same docstring contained the premise of the correct answer.** If
+  consumers carry their own skills *and* the package ships skills, both must be
+  read. The sentence was read, used to justify an ordering, and its consequence
+  was not drawn.
+
+### Why the pre-work rules do not cover it
+
+[`improve-before-implement`](../../../src/rules/improve-before-implement.md) does
+not activate for bug fixes ("the problem is already defined") and
+[`invite-challenge`](../../../src/rules/invite-challenge.md) excludes "evidenced
+bug fixes". Both exclusions are right for the case they were written for and
+wrong for a downstream repair, which presents as a defined problem while its
+definition came from the broken code.
+
+### Honest limit
+
+The rule is `type: auto`, so it fires on prompt keywords and not on tool output:
+a red test nobody prompted about does not load it. The clause is the
+model-carried half. The deterministic half is a comparison of the two lists that
+diverged — `tests/contracts/catalogue_layer_parity.test.ts`, which reds when a
+directory the delivery side treats as an artifact source is not a root the reader
+reads, and which was measured to catch this exact defect on the pre-change tree.

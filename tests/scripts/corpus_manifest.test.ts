@@ -196,14 +196,16 @@ describe('captureUserScope', () => {
         expect(m.layer_digest.length).toBeGreaterThan(0);
     });
 
-    it('leaves partition_active null rather than reading the operator machine', () => {
+    it('leaves host_layer_verified null rather than reading the operator machine', () => {
         // Every other field in the struct is a function of the (repoRoot,
-        // userHome) pair. `partitionActive` reads os.homedir() and the install
-        // lockfile, ignores userHome, and memoises — so calling it here recorded
-        // the operator's real installed state under a temp tree's name, and the
-        // second capture in one process reused the first verdict.
+        // userHome) pair. `resolveHostLayerVerdict` reads os.homedir() and the
+        // install lockfile, ignores userHome, and memoises — so calling it here
+        // recorded the operator's real installed state under a temp tree's name,
+        // and the second capture in one process reused the first verdict.
         const root = fixture({ 'a.md': 'p' }, { 'a.md': 's' });
-        expect(captureProjectionDecision(root, home({ 'a.md': 's' })).partition_active).toBeNull();
+        expect(
+            captureProjectionDecision(root, home({ 'a.md': 's' })).host_layer_verified,
+        ).toBeNull();
         const m = captureManifest({
             repoRoot: root,
             userHome: home({}),
@@ -211,19 +213,19 @@ describe('captureUserScope', () => {
             enumerationRule: RULE,
             env: {},
         });
-        expect(m.projection.partition_active).toBeNull();
+        expect(m.projection.host_layer_verified).toBeNull();
     });
 
-    it('records an injected partition verdict, and passes it the captured repo root', () => {
+    it('records an injected host-layer verdict, and passes it the captured repo root', () => {
         const root = fixture({ 'a.md': 'p' }, { 'a.md': 's' });
         const seen: string[] = [];
         const decision = captureProjectionDecision(root, home({ 'a.md': 's' }), {
-            partitionActive: (r) => {
+            hostLayerVerified: (r: string) => {
                 seen.push(r);
                 return true;
             },
         });
-        expect(decision.partition_active).toBe(true);
+        expect(decision.host_layer_verified).toBe(true);
         expect(seen).toEqual([root]);
     });
 
@@ -389,7 +391,7 @@ describe('parseManifest', () => {
     it('refuses a pin of an empty subject, which would compare equivalent to any other', () => {
         expect(() =>
             parseManifest({
-                version: 'corpus-manifest-v1',
+                version: 'corpus-manifest-v2',
                 enumeration_rule: RULE,
                 included: [],
                 subject_digest: subjectDigest(RULE, []),

@@ -355,8 +355,13 @@ the explicit `dry-run` subcommand:
   `scripts/media/lib/fixtures/<adapter-id>/`.
 - Exit code 0.
 
-Fixtures are committed and cover one happy path per adapter.
-Phase 6 golden runs assert byte-identical stdout under
+Fixtures are committed and cover one happy path per adapter;
+committed media assets are **non-decodable ASCII placeholders**
+whose documented paths and presence, rather than encoded-media
+validity, form the fixture contract. The placeholder literal is
+`FIXTURE-<adapter-id>-<ext>`. A test that needs decodable media
+generates it at runtime — it must not read a fixture expecting
+one. Phase 6 golden runs assert byte-identical stdout under
 `AIV_DRYRUN=true`.
 
 ## Logging & redaction

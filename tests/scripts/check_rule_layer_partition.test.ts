@@ -132,23 +132,32 @@ describe('check_rule_layer_partition', () => {
     });
 });
 
-describe('partitionEnforces', () => {
-    it('enforces only where the partition actually ran', () => {
-        expect(partitionEnforces('dual-layer/partitioned')).toBe(true);
+describe('partitionEnforces — the per-directory discriminator', () => {
+    // Corrected 2026-09-07 after a neutral review. This used to take the repo-wide
+    // host-layer verdict, which was wrong in BOTH directions once the withhold
+    // stopped reading `installed.lock`: an install one release behind let a genuine
+    // emitter failure pass, and a verified layer legitimately missing ONE rule
+    // failed a correct tree. It now reads `soleCarrier`, which the audit already
+    // computed and nobody asked.
+    it('a directory carrying NO sole-carrier rule is an emitter failure', () => {
+        // The layer holds every global-scope rule this directory projects, so the
+        // full projection cannot be the fail-safe — the emitter simply did not
+        // withhold. This is the defect the gate exists to catch.
+        expect(partitionEnforces({ soleCarrier: [] })).toBe(true);
     });
 
-    it('does NOT enforce while the projection is standalone/full', () => {
-        // 2026-08-22: a release push was blocked here with no reachable repair.
-        // Building 14.8.0 against an installed 14.7.0 makes `resolvePartitionVerdict`
-        // return `standalone/full`, so the generators emit every rule by design —
-        // and `task generate-tools` re-writes exactly the files this gate demanded be
-        // gone, deadlocking it against `check_bridge_derivation`. Every release hits
-        // this by construction: the building version is always ahead of the installed
-        // one for the whole release window.
-        expect(partitionEnforces('standalone/full')).toBe(false);
+    it('a directory that is the SOLE CARRIER of a rule kept the projection by design', () => {
+        // Rules are all-or-nothing per directory (`ruleLayerPartition.ts`): one name
+        // the layer lacks keeps every other name too, and
+        // `rule_partition_per_host.test.ts` pins that state as legal. Failing here
+        // would red a correct tree.
+        expect(partitionEnforces({ soleCarrier: ['orphan.md'] })).toBe(false);
     });
 
-    it('treats an unrecognised mode as non-enforcing (fail-safe, not fail-loud)', () => {
-        expect(partitionEnforces('some-future-mode')).toBe(false);
-    });
+    // A third case here asserted "independent of any lockfile" as
+    // `partitionEnforces(a) === partitionEnforces({...a})`, which is a tautology for
+    // any pure function and would not catch an implementation that ALSO read a
+    // lockfile. Removed after a second neutral review rather than reworded: the
+    // property is one of the signature, and the two directional cases above are
+    // what this function has to get right.
 });

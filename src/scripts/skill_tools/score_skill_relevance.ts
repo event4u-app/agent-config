@@ -66,9 +66,16 @@ export const ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
  * start ranking different trees. `null` when no candidate root exists, and the
  * CLI turns that into a distinct exit code rather than an empty list.
  */
-import { DEFAULT_CATALOGUE_ROOTS, resolveSkillsRoot } from '../_lib/skill_catalogue.js';
+import { DEFAULT_CATALOGUE_ROOTS, resolveSkillCatalogueRoots } from '../_lib/skill_catalogue.js';
 
-export const DEFAULT_SKILLS_DIR: string | null = resolveSkillsRoot(ROOT);
+/**
+ * Every readable catalogue root, in precedence order — possibly empty.
+ *
+ * The default the CLI and the hook rank across. `DEFAULT_SKILLS_DIR` below is
+ * the first of them and stays exported for the surfaces that name one directory.
+ */
+export const DEFAULT_SKILLS_ROOTS: readonly string[] = resolveSkillCatalogueRoots(ROOT);
+export const DEFAULT_SKILLS_DIR: string | null = DEFAULT_SKILLS_ROOTS[0] ?? null;
 
 /** Mirror Python len(str) — count Unicode code points, not UTF-16 units. */
 function pyLen(s: string): number {
@@ -164,6 +171,27 @@ export interface Skill {
     triggerText: string[];
 }
 
+/**
+ * Load one root, or several with the FIRST occurrence of a name winning.
+ *
+ * Precedence by name, never by root: every root is read, and a collision
+ * resolves to the earliest root that carries it — `resolveSkillCatalogueRoots`
+ * owns what that order means. Reading only the first root is the defect this
+ * replaced; silently ranking one name twice would be the next one.
+ */
+function _load_skills_across(roots: readonly string[]): Skill[] {
+    const out: Skill[] = [];
+    const seen = new Set<string>();
+    for (const root of roots) {
+        for (const s of _load_skills(root)) {
+            if (seen.has(s.name)) continue;
+            seen.add(s.name);
+            out.push(s);
+        }
+    }
+    return out;
+}
+
 function _load_skills(skillsDir: string): Skill[] {
     const skills: Skill[] = [];
     for (const skillMd of _globSkillMd(skillsDir)) {
@@ -246,9 +274,16 @@ function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): n
 
 export type RankRow = [string, number, string[]];
 
-export function rank(task: string, skillsDir: string, opts: RankOptions = {}): RankRow[] {
+/**
+ * @param skillsDir one root, or several to rank across (see `_load_skills_across`).
+ */
+export function rank(
+    task: string,
+    skillsDir: string | readonly string[],
+    opts: RankOptions = {},
+): RankRow[] {
     const taskTerms = _tokenize(task);
-    const skills = _load_skills(skillsDir);
+    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir);
     const rows: RankRow[] = [];
     for (const s of skills) {
         const score = _score(taskTerms, s, opts);
@@ -384,6 +419,15 @@ interface Args {
     task: string;
     /** `null` when no catalogue root exists — a DIFFERENT answer from an empty ranking. */
     skills_dir: string | null;
+    /**
+     * Did the operator NAME the directory?
+     *
+     * An explicit `--skills-dir` means one root and only that root: an operator
+     * pointing at a tree is asking about that tree, and quietly unioning the
+     * host catalogue into their answer would make the flag mean something else.
+     * Absent, the default ranks across every readable root.
+     */
+    skills_dir_explicit: boolean;
     top: number;
     json: boolean;
     sample: boolean;
@@ -407,6 +451,7 @@ export function parse_args(argv: string[]): Args {
     const args: Args = {
         task: '',
         skills_dir: DEFAULT_SKILLS_DIR,
+        skills_dir_explicit: false,
         top: 0,
         json: false,
         sample: false,
@@ -431,8 +476,10 @@ export function parse_args(argv: string[]): Args {
                 _argError('argument --skills-dir: expected one argument');
             }
             args.skills_dir = v;
+            args.skills_dir_explicit = true;
         } else if (a.startsWith('--skills-dir=')) {
             args.skills_dir = a.slice('--skills-dir='.length);
+            args.skills_dir_explicit = true;
         } else if (a === '--top') {
             const v = argv[++i];
             if (v === undefined) {
@@ -497,7 +544,24 @@ export function main(argv: string[] | null = null): number {
     // operator who passes a wrong path is in exactly the position the silent
     // failure was about, and answering them with "(no relevant skills found)"
     // is the same wrong answer with a different cause.
-    const unreadable = catalogueDeficit(args.skills_dir);
+    // One root when the operator named it; otherwise every readable root, so the
+    // ranking covers what the session can actually reach.
+    const roots: readonly string[] = args.skills_dir_explicit
+        ? args.skills_dir === null
+            ? []
+            : [args.skills_dir]
+        : DEFAULT_SKILLS_ROOTS;
+    // An EXPLICIT directory is always deficit-checked, even when it resolved to a
+    // one-element list: a wrong path must not degrade to "(no relevant skills
+    // found)", which is the silent failure the check exists for and which the
+    // first draft of this branch reintroduced. For the DEFAULT, the deficit is
+    // "not one readable root anywhere" — a single empty candidate is no longer a
+    // deficit, because the others may still carry the catalogue.
+    const unreadable = args.skills_dir_explicit
+        ? catalogueDeficit(args.skills_dir)
+        : roots.length === 0
+          ? catalogueDeficit(null)
+          : null;
     if (unreadable !== null) {
         if (args.json) {
             process.stdout.write(
@@ -520,7 +584,7 @@ export function main(argv: string[] | null = null): number {
     }
     // Non-null past the deficit check above, which returns before this line
     // whenever the root cannot be ranked.
-    const rows = rank(task, args.skills_dir as string);
+    const rows = rank(task, roots);
     if (args.json) {
         const sliced = args.top ? rows.slice(0, args.top) : rows;
         const payload = sliced.map(([n, s, p]) => ({ name: n, score: s, personas: p }));
