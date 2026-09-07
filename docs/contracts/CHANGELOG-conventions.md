@@ -386,6 +386,40 @@ does not check the mix response — so the earliest refusal for this one
 obligation is the PR, not the push."* That was accurate and it was a defect
 written down rather than fixed.
 
+**Three ways to a written answer, added 2026-09-07.** The obligation above was
+discharged BY HAND, mid-release, in each of 14.18.0, 14.19.0 and 14.20.0 —
+`task release` bumped the version, refused over the placeholder, and a human
+typed the sentence into the aborted tree. At 14.19.0 the answer had already been
+staged in `## [Unreleased]` one commit earlier (`a9bd75d55`); nothing read it,
+so it was moved into the section by hand anyway. The answer was prepared and the
+pipeline still refused over it.
+
+So `guard_release_curation` now tries three routes, in cost order, and **none of
+them is the generator answering for itself** — the paragraph above is unchanged
+and still binding:
+
+1. **Staged.** A `> Next cycle ships …` line and/or a
+   `> **Previous cycle:** …` line under `## [Unreleased]` is consumed into the
+   section under release and removed from `[Unreleased]`. The measured level is
+   NOT staged — it stays the generator's, freshly measured, so a stale number
+   cannot ride in on a prepared block.
+2. **Asked.** With a terminal reachable and the answer still missing, the run
+   prompts for it and writes what the human types. An empty answer changes
+   nothing.
+3. **Refused.** Non-interactive with nothing staged — the original behaviour,
+   unchanged, which is what keeps CI and every scripted release honest.
+
+Every guard predicate still runs over the result: placeholders, the
+`MIX_RESPONSE_MIN_CHARS` floor and the read-back outcome vocabulary all apply to
+a staged or typed answer exactly as to a hand-edited one. What changed is *when*
+the human writes it, never *whether*.
+
+The read-back joined the mix response at this guard in the same change. Until
+then `check_release_highlights` was the earliest gate reading it, so a section
+that answered the mix and not the promise passed the local guard and died on the
+PR — the same "cheapest gate is the last one" shape the mix obligation was moved
+to fix, still open for its sibling.
+
 Three things now hold. The **writer emits the line**: `render_changelog_entry`
 measures the span it is already walking and writes the response block with the
 measured level and the `MIX_RESPONSE_PLACEHOLDER` sentinel — never a finished
