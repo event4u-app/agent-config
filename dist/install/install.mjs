@@ -9720,6 +9720,12 @@ function format_drift_report(entries) {
 // src/scripts/_lib/skill_catalogue.ts
 import * as fs11 from "node:fs";
 import * as path10 from "node:path";
+var PROJECT_CATALOGUE_ROOTS = ["src/skills", ".claude/skills"];
+var HOST_CATALOGUE_ROOT = ".claude/skills";
+var DEFAULT_CATALOGUE_ROOTS = [
+  ...PROJECT_CATALOGUE_ROOTS,
+  `~/${HOST_CATALOGUE_ROOT}`
+];
 var OBSERVATION_LOG = path10.join(
   "agents",
   "evidence",

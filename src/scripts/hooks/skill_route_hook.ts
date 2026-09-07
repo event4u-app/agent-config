@@ -140,7 +140,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { readHookStdin } from "./hook_stdin.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
-import { OBSERVATION_LOG, readObservationLog, resolveSkillsRoot } from "../_lib/skill_catalogue.js";
+import { OBSERVATION_LOG, readObservationLog, resolveSkillCatalogueRoots } from "../_lib/skill_catalogue.js";
 import { knownBareNames } from "../_lib/skill_catalogue_series.js";
 import { _tokenize, rank, type RankRow } from "../skill_tools/score_skill_relevance.js";
 
@@ -252,11 +252,15 @@ export interface RouteDecision {
  */
 export function routeDecision(
   prompt: string,
-  skillsDir: string | null,
+  // One root, or every readable root. `null` and `[]` are the same answer — no
+  // catalogue was read — and both must stay silent rather than rank nothing and
+  // call that a result.
+  skillsDir: string | readonly string[] | null,
   bareProvider?: () => Set<string> | null,
 ): RouteDecision {
   const silent: RouteDecision = { rows: [], suppressed: 0 };
   if (skillsDir === null) return silent;
+  if (Array.isArray(skillsDir) && skillsDir.length === 0) return silent;
   // Denominator floor BEFORE the catalogue read: a prompt too short to score
   // meaningfully cannot produce a pointer worth 337 file reads either.
   try {
@@ -346,7 +350,7 @@ export function main(): number {
   const root = _workspaceRoot(env);
   const platform = env["platform"];
   const host = typeof platform === "string" && platform ? platform : null;
-  const { rows, suppressed } = routeDecision(prompt, resolveSkillsRoot(root), () =>
+  const { rows, suppressed } = routeDecision(prompt, resolveSkillCatalogueRoots(root), () =>
     knownBareForHost(root, host),
   );
   if (rows.length === 0) return EXIT_ALLOW; // silence is the default

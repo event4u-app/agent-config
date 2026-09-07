@@ -17,8 +17,11 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { DEFAULT_SKILLS_DIR } from '../../src/scripts/skill_tools/score_skill_relevance.js';
-import { resolveSkillsRoot } from '../../src/scripts/_lib/skill_catalogue.js';
+import { DEFAULT_SKILLS_DIR, rank } from '../../src/scripts/skill_tools/score_skill_relevance.js';
+import {
+    resolveSkillCatalogueRoots,
+    resolveSkillsRoot,
+} from '../../src/scripts/_lib/skill_catalogue.js';
 
 const REPO = path.resolve(__dirname, '..', '..');
 const TSX = path.join(REPO, 'node_modules', '.bin', 'tsx');
@@ -53,45 +56,92 @@ describe('the default root', () => {
     });
 });
 
-describe('resolveSkillsRoot — the AUTHORED tree wins, and an empty root is skipped', () => {
-    const claude = (): string => path.join(tmp, '.claude', 'skills');
-    const authored = (): string => path.join(tmp, 'src', 'skills');
+describe('resolveSkillCatalogueRoots — the UNION, in precedence order', () => {
+    // A fixture HOME is not hygiene here, it is the subject: the resolver reads
+    // `~/.claude/skills` as a real candidate since 2026-09-07, so a test that let
+    // it see the developer's own home asserted whatever that machine installed.
+    const claude = (): string => path.join(tmp, 'ws', '.claude', 'skills');
+    const authored = (): string => path.join(tmp, 'ws', 'src', 'skills');
+    const hostLayer = (): string => path.join(tmp, 'home', '.claude', 'skills');
+    const ws = (): string => path.join(tmp, 'ws');
+    const home = (): string => path.join(tmp, 'home');
+    const skill = (root: string, name: string): void => {
+        fs.mkdirSync(path.join(root, name), { recursive: true });
+        fs.writeFileSync(path.join(root, name, 'SKILL.md'), `---\nname: ${name}\n---\nbody\n`, 'utf-8');
+    };
 
-    it('prefers src/skills even when .claude/skills is POPULATED', () => {
-        // The 2026-09-07 regression this pins, and it is not hypothetical. The
-        // ADR-236 amendment made `.claude/skills` hold only the ~49 flat-command
-        // WRAPPERS — non-empty, and each carries a `SKILL.md`, so the old
-        // projection-first order resolved it and nothing downstream could tell it
-        // was not the catalogue. Measured: the `skill-route` hook ranked over 49
-        // wrappers instead of 299 skills.
-        fs.mkdirSync(path.join(claude(), 'some-command-wrapper'), { recursive: true });
-        fs.mkdirSync(path.join(authored(), 'a-real-skill'), { recursive: true });
-        expect(resolveSkillsRoot(tmp)).toBe(authored());
+    it('reads EVERY readable root, authored first, host layer last', () => {
+        // The defect this replaced: first-hit-wins ranked one tree and reported it
+        // as the catalogue. A consumer can carry its own skills in the project
+        // layer while the shipped set sits in the host layer, and an answer over
+        // either half alone is partial without saying so.
+        skill(authored(), 'a');
+        skill(claude(), 'b');
+        skill(hostLayer(), 'c');
+        expect(resolveSkillCatalogueRoots(ws(), home())).toEqual([
+            authored(),
+            claude(),
+            hostLayer(),
+        ]);
     });
 
-    it('falls back to .claude/skills when there is no authored tree — the CONSUMER case', () => {
-        // A consumer carries the projection and no `src/`. Checking the authored
-        // tree first costs them one `existsSync` and must change nothing.
-        fs.mkdirSync(path.join(claude(), 'a'), { recursive: true });
-        expect(resolveSkillsRoot(tmp)).toBe(claude());
-    });
-
-    it('does not accept a directory that exists and holds nothing', () => {
-        fs.mkdirSync(claude(), { recursive: true });
-        expect(resolveSkillsRoot(tmp)).toBeNull();
-    });
-
-    it('skips an EMPTY authored tree and takes the populated projection', () => {
-        // The empty guard still earns its place in BOTH directions after the
-        // reorder — a maintainer checkout that has an empty `src/skills` must not
-        // resolve it and report an empty catalogue as an empty result.
+    it('skips an EMPTY root and keeps the order of the rest', () => {
+        // The empty guard has its own job, unchanged: an empty root read as a
+        // match made the ranker report an empty catalogue as an empty RESULT.
         fs.mkdirSync(authored(), { recursive: true });
-        fs.mkdirSync(path.join(claude(), 'a'), { recursive: true });
-        expect(resolveSkillsRoot(tmp)).toBe(claude());
+        skill(claude(), 'b');
+        skill(hostLayer(), 'c');
+        expect(resolveSkillCatalogueRoots(ws(), home())).toEqual([claude(), hostLayer()]);
     });
 
-    it('is null when no candidate exists at all', () => {
-        expect(resolveSkillsRoot(tmp)).toBeNull();
+    it('is the project roots only when the host layer is absent', () => {
+        skill(authored(), 'a');
+        expect(resolveSkillCatalogueRoots(ws(), home())).toEqual([authored()]);
+    });
+
+    it('never lists one directory twice when the workspace IS the home', () => {
+        // `<home>/.claude/skills` would otherwise appear as both the project and
+        // the host candidate, and every skill in it would be ranked twice.
+        skill(path.join(tmp, 'home', '.claude', 'skills'), 'a');
+        expect(resolveSkillCatalogueRoots(home(), home())).toEqual([hostLayer()]);
+    });
+
+    it('is EMPTY when no candidate exists at all, and resolveSkillsRoot is null', () => {
+        expect(resolveSkillCatalogueRoots(ws(), home())).toEqual([]);
+        expect(resolveSkillsRoot(ws(), home())).toBeNull();
+    });
+
+    it('resolveSkillsRoot is the FIRST root, not a second resolver', () => {
+        skill(claude(), 'b');
+        skill(hostLayer(), 'c');
+        expect(resolveSkillsRoot(ws(), home())).toBe(claude());
+    });
+});
+
+describe('rank across roots — precedence resolves a name collision', () => {
+    const mk = (root: string, name: string, desc: string): void => {
+        fs.mkdirSync(path.join(root, name), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, name, 'SKILL.md'),
+            `---\nname: ${name}\ndescription: ${desc}\n---\nbody\n`,
+            'utf-8',
+        );
+    };
+
+    it('ranks the union, and one name appears exactly ONCE', () => {
+        const first = path.join(tmp, 'r1');
+        const second = path.join(tmp, 'r2');
+        mk(first, 'shared', 'merge conflict resolution');
+        mk(second, 'shared', 'merge conflict resolution');
+        mk(second, 'only-there', 'merge conflict resolution');
+        const rows = rank('merge conflict resolution', [first, second]);
+        expect(rows.map(([n]) => n).sort()).toEqual(['only-there', 'shared']);
+    });
+
+    it('a single string root still works — the old signature is untouched', () => {
+        const first = path.join(tmp, 'r1');
+        mk(first, 'solo', 'merge conflict resolution');
+        expect(rank('merge conflict resolution', first).map(([n]) => n)).toEqual(['solo']);
     });
 });
 

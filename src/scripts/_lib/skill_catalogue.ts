@@ -75,62 +75,126 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
-/** Catalogue roots tried in order; the first that exists wins. */
-export const DEFAULT_CATALOGUE_ROOTS = ['src/skills', '.claude/skills'] as const;
+/**
+ * Catalogue roots under the WORKSPACE, in precedence order.
+ *
+ * `src/skills` is the authored tree and exists only in a maintainer checkout.
+ * `.claude/skills` is the project-scope projection — a consumer's own skills
+ * live there, and so do this repository's flat-command wrappers.
+ */
+export const PROJECT_CATALOGUE_ROOTS = ['src/skills', '.claude/skills'] as const;
 
 /**
- * First existing catalogue root under `workspaceRoot`, or `null`.
+ * The catalogue root under the user's HOME — what the host itself delivers.
+ *
+ * Home-relative rather than workspace-relative, which is why it cannot live in
+ * the list above: `~/.claude/skills` is one directory for every project on the
+ * machine, and on a consumer machine it is where `agent-config install` puts the
+ * shipped skills.
+ */
+export const HOST_CATALOGUE_ROOT = '.claude/skills';
+
+/**
+ * Every root the resolver looks at, as human-readable labels.
+ *
+ * For the `searched:` / `tried:` fields of the no-catalogue answers only — a
+ * reader needs to know `~` was consulted, and an absolute home path in a
+ * machine-readable payload is both noise and a small privacy leak.
+ */
+export const DEFAULT_CATALOGUE_ROOTS = [
+    ...PROJECT_CATALOGUE_ROOTS,
+    `~/${HOST_CATALOGUE_ROOT}`,
+] as const;
+
+/**
+ * EVERY readable, non-empty catalogue root, in precedence order.
  *
  * Shared by the `skill-route` concern and the `suggest_skill_for_task` MCP
  * handler on purpose: two resolvers over one catalogue is how a ranker and the
  * tool that exposes it start ranking different trees.
  *
- * ## Order: `src/skills` FIRST, and that was reversed on 2026-09-07
+ * ## Why a LIST, and not the first hit — owner decision, 2026-09-07
  *
- * It used to be `.claude/skills` first, "because a CONSUMER install carries the
- * former and only a maintainer checkout carries the latter". The premise is
+ * This returned one root and stopped at the first match, which made the ranker
+ * see one tree and the session see another. A consumer project can carry its own
+ * skills in `<project>/.claude/skills` while the shipped catalogue sits in
+ * `~/.claude/skills`; first-hit-wins ranked the smaller of the two and reported
+ * the result as if it were the catalogue. Ranking the UNION ranks what the
+ * session can actually reach, which is the only set the answer is about.
+ *
+ * ## The order, and what it is for
+ *
+ * Precedence applies to a NAME COLLISION, never to which roots are read:
+ *
+ *   1. `src/skills` — the authored tree. In this repository it is the truth, and
+ *      a maintainer editing a skill must see their edit ranked, not the
+ *      projection of the last `generate-tools` run.
+ *   2. `<project>/.claude/skills` — project scope beats machine scope, the same
+ *      direction every other per-project override in this suite takes.
+ *   3. `~/${HOST_CATALOGUE_ROOT}` — the host-global catalogue.
+ *
+ * ## The two defects this replaced, both real
+ *
+ * It used to try `.claude/skills` FIRST, "because a CONSUMER install carries the
+ * former and only a maintainer checkout carries the latter". The premise was
  * right and the conclusion did not follow: a consumer has no `src/skills`, so
- * checking it first costs them one `existsSync` and changes nothing — while in a
- * maintainer checkout `.claude/skills` is a GENERATED PROJECTION whose contents
- * depend on when `generate-tools` last ran and on what the host-global layer
- * holds.
+ * reading it first costs one `existsSync`.
  *
- * The ADR-236 amendment of 2026-09-07 turned that dependency into a live defect.
- * The project layer now withholds every skill `~/.claude/skills` carries, so
- * `.claude/skills` holds only the ~49 flat-command WRAPPERS — non-empty, so the
- * old order resolved it, and each wrapper carries a `SKILL.md`, so nothing
- * downstream could tell it was not the catalogue. Measured the same day: the
- * `skill-route` hook ranked over 49 command wrappers instead of 299 skills.
+ * The ADR-236 amendment of 2026-09-07 turned that order into a live defect. The
+ * project layer now withholds every skill `~/.claude/skills` carries, so this
+ * repository's `.claude/skills` holds only the ~49 flat-command WRAPPERS —
+ * non-empty, so the old order resolved it, and each wrapper carries a `SKILL.md`,
+ * so nothing downstream could tell it was not the catalogue. Measured the same
+ * day: the `skill-route` hook ranked over 49 command wrappers instead of 299
+ * skills. Under the union those wrappers are still ranked, which is correct —
+ * they are reachable — but they no longer displace the catalogue.
  *
- * The non-empty guard below was the previous repair for the neighbouring case
- * (an EMPTY projection read as an empty RESULT) and it cannot reach this one:
- * the wrong tree was populated, just with the wrong things. Preferring the
- * authored tree removes the whole class — the resolver no longer depends on
- * generator state in the one checkout that has an authored tree.
+ * The non-empty guard keeps its own separate job: an EMPTY root read as a match
+ * made the ranker report an empty catalogue as an empty RESULT, the silent
+ * failure `road-to-inbox-harvest-2026-08-f-skill-selection-evidence` is about.
+ * Measured in that run: a worktree that had never run `generate-tools` ranked
+ * zero skills and exited 0 on a task that scores 47 against `src/skills`.
+ *
+ * @param home override for the user's home; production callers omit it.
  */
-export function resolveSkillsRoot(workspaceRoot: string): string | null {
-    for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
-        const abs = path.join(workspaceRoot, candidate);
+export function resolveSkillCatalogueRoots(workspaceRoot: string, home?: string): string[] {
+    const userHome = home ?? process.env['HOME'] ?? os.homedir();
+    const candidates = [
+        ...PROJECT_CATALOGUE_ROOTS.map((c) => path.join(workspaceRoot, c)),
+        path.join(userHome, HOST_CATALOGUE_ROOT),
+    ];
+    const roots: string[] = [];
+    const seen = new Set<string>();
+    for (const abs of candidates) {
+        // A workspace that IS the home directory would offer `~/.claude/skills`
+        // twice and rank every skill in it twice. Cheap to exclude, and the
+        // duplicate would be invisible in the output.
+        if (seen.has(abs)) continue;
+        seen.add(abs);
         try {
             if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) continue;
-            // NON-EMPTY, and the qualifier still earns its place for the
-            // CONSUMER candidate. `.claude/skills` is a gitignored projection, so
-            // in a fresh worktree it EXISTS and holds nothing — and an empty root
-            // resolved as a match makes the ranker report an empty catalogue as an
-            // empty RESULT, the silent failure
-            // `road-to-inbox-harvest-2026-08-f-skill-selection-evidence` is about.
-            // Measured in that run: a worktree that had never run
-            // `generate-tools` ranked zero skills and exited 0 on a task that
-            // scores 47 against `src/skills`.
             if (fs.readdirSync(abs).length === 0) continue;
-            return abs;
+            roots.push(abs);
         } catch {
             // Unreadable candidate is not a match; try the next.
         }
     }
-    return null;
+    return roots;
+}
+
+/**
+ * The highest-precedence root, or `null` when none is readable.
+ *
+ * Kept for the surfaces that genuinely name ONE directory — a report line, a
+ * `skills_root` field. Anything that RANKS should take
+ * {@link resolveSkillCatalogueRoots} instead: ranking the first root only is the
+ * defect that function exists to remove.
+ */
+export function resolveSkillsRoot(workspaceRoot: string, home?: string): string | null {
+    return resolveSkillCatalogueRoots(workspaceRoot, home)[0] ?? null;
 }
 
 /** Where observations accumulate. Append-only, one JSON object per line. */
