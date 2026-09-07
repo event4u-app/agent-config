@@ -38,9 +38,16 @@ import {
 } from '../../src/scripts/_lib/release_material.js';
 import { check_surface_equality } from '../../src/scripts/check_release_surface_equality.js';
 import {
+    apply_mix_answer,
+    apply_readback,
+    drop_staged_response,
+    mix_response_block,
     mix_response_blockers,
+    promise_readback_blockers,
     publication_blockers,
     section_publication_blockers,
+    staged_response,
+    unreleased_body,
 } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
@@ -570,5 +577,137 @@ describe('governance-mix response', () => {
     it('refuses a section that lost its Tests footer', () => {
         const out = section_publication_blockers(head, V);
         expect(out.some((b) => b.includes('Tests: N'))).toBe(true);
+    });
+});
+
+// ─── staged answers — the obligation becomes answerable, not just refusable ──
+// Regression lock for the defect measured across 14.18.0, 14.19.0 and 14.20.0:
+// `task release` bumps the version, refuses over the governance placeholder, and
+// the maintainer discharges the obligation BY HAND mid-release. At 14.19.0 the
+// answer had already been written into `## [Unreleased]` one commit earlier
+// (a9bd75d55) and nothing read it, so it was moved into the section by hand
+// anyway — a prepared answer the pipeline still refused over.
+//
+// ADR-253 is untouched by these cases: every answer here is authored by a human
+// and every guard predicate still runs over it. What is tested is only WHEN it
+// is read.
+describe('staged release answers', () => {
+    const LEVEL = 'governance-only 9 vs consumer-only 2 (taxonomy 1.0.0)';
+    const staged = (mix: string, readback: string): string =>
+        [
+            '# Changelog',
+            '',
+            '## [Unreleased]',
+            '',
+            mix,
+            '',
+            readback,
+            '',
+            '### Fixed',
+            '',
+            '- an entry that must survive',
+            '',
+            '## [9.1.0](x) (2026-01-01)',
+            '',
+            '### Release highlights',
+            '',
+            '- **Behaviour changes:** _none_',
+            '',
+            `> **Governance mix:** ${LEVEL}.`,
+            '> Next cycle ships <the consumer work>, tracked in <roadmap or issue>.',
+            '',
+            '### Features',
+            '',
+            '* a: b',
+            '',
+        ].join('\n');
+
+    const MIX = '> Next cycle ships the ask surface, tracked in `road-to-asked-not-parked.md`.';
+    const RB = '> **Previous cycle:** the 9.0.0 head promised the bridge repair. It **shipped**.';
+
+    it('reads a staged block out of [Unreleased] only', () => {
+        const text = staged(MIX, RB);
+        expect(unreleased_body(text)).toContain('an entry that must survive');
+        expect(staged_response(text, 'Next cycle ships')).toBe(MIX);
+        expect(staged_response(text, '**Previous cycle:**')).toBe(RB);
+    });
+
+    // THIS is the scope guard, and the placement is deliberate. The obvious
+    // place for it is the case above — assert the staged read does not contain
+    // `<the consumer work>` — and that assertion CANNOT fail: `[Unreleased]`
+    // sits above the release section by convention, so an unscoped `indexOf`
+    // still finds the staged line first. Measured by neutralising the scope and
+    // watching that case stay green while this one went red.
+    //
+    // With nothing staged there is no earlier match, so an unscoped reader falls
+    // through to the section's own placeholder line and stages the GENERATOR's
+    // draft as the human answer — the one outcome ADR-253 exists to prevent.
+    it('nothing staged → null, so the guard refuses exactly as before', () => {
+        const text = staged('', '').replace(/\n\n\n+/gu, '\n\n');
+        expect(staged_response(text, 'Next cycle ships')).toBeNull();
+        expect(staged_response(text, '**Previous cycle:**')).toBeNull();
+    });
+
+    it('THE FIX: applying both answers clears both obligations', () => {
+        const text = staged(MIX, RB);
+        const sec = extract_changelog_section(text, '9.1.0');
+        expect(sec).not.toBeNull();
+        let body = apply_mix_answer(sec!.body, [MIX]);
+        body = apply_readback(body, RB);
+
+        expect(
+            mix_response_blockers(body, '9.1.0', 'x', { triggered: true, level: LEVEL }),
+        ).toEqual([]);
+        expect(
+            promise_readback_blockers(body, '9.1.0', '9.0.0', '> Next cycle ships something', 'x'),
+        ).toEqual([]);
+    });
+
+    it('keeps the measured level as the generator rendered it', () => {
+        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
+        const body = apply_mix_answer(sec!.body, [MIX]);
+        expect(body).toContain(`> **Governance mix:** ${LEVEL}.`);
+        expect(body).not.toContain('<the consumer work>');
+        expect(body).not.toContain('<roadmap or issue>');
+    });
+
+    it('separates the two blocks, so neither swallows the other', () => {
+        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
+        let body = apply_mix_answer(sec!.body, [MIX]);
+        body = apply_readback(body, RB);
+        const mi = body.indexOf('**Governance mix:**');
+        const block = mix_response_block(body, body.lastIndexOf('\n', mi) + 1);
+        // Without the blank line the read-back rides inside the mix block, where
+        // `human_answer` would count it toward the mix length floor.
+        expect(block).not.toContain('Previous cycle');
+    });
+
+    it('never overwrites a read-back a human put in the section directly', () => {
+        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
+        const withOwn = `${sec!.body}\n\n> **Previous cycle:** hand-written, keep me.`;
+        expect(apply_readback(withOwn, RB)).toBe(withOwn);
+    });
+
+    it('a staged answer still carrying a placeholder is returned, not filtered', () => {
+        // Dropping it silently would turn a half-finished answer into a MISSING
+        // one — a different defect with a different message.
+        const text = staged('> Next cycle ships <the consumer work>, tracked in x.', RB);
+        expect(staged_response(text, 'Next cycle ships')).toContain('<the consumer work>');
+    });
+
+    it('consuming a block empties it from [Unreleased] and keeps the entries', () => {
+        let text = staged(MIX, RB);
+        text = drop_staged_response(text, MIX);
+        text = drop_staged_response(text, RB);
+        const rest = unreleased_body(text);
+        expect(rest).not.toContain('Next cycle ships');
+        expect(rest).not.toContain('Previous cycle');
+        expect(rest).toContain('an entry that must survive');
+        expect(text).toContain('* a: b');
+    });
+
+    it('no [Unreleased] section at all → null, never a throw', () => {
+        expect(unreleased_body('# Changelog\n\n## [9.1.0](x)\n\nbody\n')).toBeNull();
+        expect(staged_response('# Changelog\n', 'Next cycle ships')).toBeNull();
     });
 });

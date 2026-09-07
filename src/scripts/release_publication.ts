@@ -19,10 +19,17 @@ import { spawnSync } from 'node:child_process';
 import {
     DERIVED_MARKER,
     type MixObligation,
+    apply_mix_answer,
+    apply_readback,
+    drop_staged_response,
+    previous_promise,
     previous_release_tag,
+    promise_readback_blockers,
     publication_blockers,
     section_publication_blockers,
+    staged_response,
 } from './_lib/release_highlights.js';
+import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { loadTaxonomy, measureRange } from './measure_release_mix.js';
 import * as fs from 'node:fs';
 import process from 'node:process';
@@ -30,7 +37,11 @@ import process from 'node:process';
 import { gh_argv_label, gh_retry } from './_lib/gh_transient.js';
 import {
     NEXT_SECTION_RE,
+    PROMISE_OUTCOMES,
+    PROMISE_PHRASE,
+    PROMISE_READBACK_MARKER,
     extract_changelog_section,
+    previous_changelog_version,
     tag_message_from_section,
     pr_body_from_section,
 } from './_lib/release_material.js';
@@ -45,6 +56,7 @@ import {
     SystemExitError,
     _cap_body,
     read_changelog_text,
+    write_changelog_text,
     reEscape,
 } from './release_env.js';
 
@@ -685,6 +697,184 @@ export function integrate_main_if_behind(branch: string, say: (msg: string) => v
     run(['git', 'merge', `${REMOTE}/${MAIN_BRANCH}`, '--no-edit']);
 }
 
+/**
+ * Everything this site refuses over: the head-level blockers plus BOTH written
+ * obligations.
+ *
+ * The read-back joins the mix response here, one release after the mix response
+ * itself moved. Until now `check_release_highlights` was the earliest gate that
+ * read it, so a section answering the mix and not the promise passed this guard
+ * and died on the PR — the same "cheapest gate is the last one" shape the mix
+ * obligation was moved to fix, still open for its sibling. Measured on 14.20.0:
+ * the local checker reported both, this guard reported one.
+ */
+function curation_blockers(version: string): string[] {
+    const text = read_changelog_text();
+    const section = extract_changelog_section(text, version);
+    if (section === null) return [];
+    const where = `\`release/${version}\``;
+    const out = publication_blockers(
+        section.body,
+        version,
+        where,
+        measure_mix_obligation(version),
+    );
+    const previousVersion = previous_changelog_version(text, version);
+    if (previousVersion !== null) {
+        out.push(
+            ...promise_readback_blockers(
+                section.body,
+                version,
+                previousVersion,
+                previous_promise(text, previousVersion),
+                where,
+            ),
+        );
+    }
+    return out;
+}
+
+/** Move a staged block out of `## [Unreleased]` and into the section. */
+function _consume(
+    version: string,
+    marker: string,
+    apply: (body: string, block: string) => string,
+): boolean {
+    const text = read_changelog_text();
+    const staged = staged_response(text, marker);
+    if (staged === null) return false;
+    const section = extract_changelog_section(text, version);
+    if (section === null) return false;
+    const updated = apply(section.body, staged);
+    if (updated === section.body) return false;
+    const withSection = _replace_section_body(text, section, updated);
+    if (withSection === null) return false;
+    write_changelog_text(drop_staged_response(withSection, staged));
+    process.stdout.write(
+        `        · consumed the staged \`${marker}\` answer from \`## [Unreleased]\`\n`,
+    );
+    return true;
+}
+
+/**
+ * Way 1 — consume whatever the maintainer staged, before anything is measured.
+ *
+ * Ordered before the prompt so a prepared answer never produces a question,
+ * and before the blocker computation so a consumed answer is simply not a
+ * blocker. Both blocks are attempted independently: staging one and typing the
+ * other is a legitimate mix.
+ */
+function consume_staged_answers(version: string): void {
+    _consume(version, PROMISE_PHRASE, (body, block) =>
+        apply_mix_answer(
+            body,
+            block.split('\n').filter((l) => l.trim() !== ''),
+        ),
+    );
+    _consume(version, PROMISE_READBACK_MARKER, apply_readback);
+}
+
+/**
+ * Way 2 — ask for what is still missing, when a terminal can answer.
+ *
+ * Returns whether anything was written, so the caller re-measures rather than
+ * trusting this function's own view of what it fixed.
+ *
+ * The prompt is deliberately NOT a confirmation: there is no default to accept,
+ * an empty answer changes nothing, and a typed answer is refused by the same
+ * predicates as a hand-edited one — placeholders, the length floor and the
+ * outcome vocabulary all still apply. What a human types here is a human
+ * answer; that is the whole distinction ADR-253 draws, and this is the side of
+ * it the generator never crosses.
+ */
+function collect_curation_answers(version: string, blockers: readonly string[]): boolean {
+    if (!canPrompt()) return false;
+    const text = read_changelog_text();
+    const section = extract_changelog_section(text, version);
+    if (section === null) return false;
+
+    let wrote = false;
+    const owesMix = blockers.some((b) => b.includes('governance-versus-product'));
+    const owesReadback = blockers.some((b) => b.includes('next-cycle promise'));
+    if (!owesMix && !owesReadback) return false;
+
+    process.stdout.write(
+        `\n    The ${version} section owes a written answer. Typing it here is the same\n` +
+            '    obligation the abort would hand back — the generator never fills these in.\n' +
+            '    Empty answer = leave it unanswered and stop.\n\n',
+    );
+
+    if (owesMix) {
+        const answer = promptLine(
+            `    Next cycle ships … (name the consumer work + where it is tracked)\n    > `,
+        );
+        if (answer !== null && answer.trim() !== '') {
+            const body = extract_changelog_section(read_changelog_text(), version)?.body ?? '';
+            wrote =
+                _write_section(
+                    version,
+                    apply_mix_answer(body, [`> ${PROMISE_PHRASE} ${answer.trim()}`]),
+                ) || wrote;
+        }
+    }
+
+    if (owesReadback) {
+        const t = read_changelog_text();
+        const previousVersion = previous_changelog_version(t, version);
+        process.stdout.write(
+            `\n    The ${previousVersion ?? 'previous'} head promised:\n` +
+                (previous_promise(t, previousVersion ?? '') ?? '(none)')
+                    .split('\n')
+                    .map((l) => `        ${l}\n`)
+                    .join(''),
+        );
+        const answer = promptLine(
+            `\n    What became of it? (say ${PROMISE_OUTCOMES.join(' / ')}, and what happened)\n    > `,
+        );
+        if (answer !== null && answer.trim() !== '') {
+            const body = extract_changelog_section(read_changelog_text(), version)?.body ?? '';
+            wrote =
+                _write_section(
+                    version,
+                    apply_readback(body, `> ${PROMISE_READBACK_MARKER} ${answer.trim()}`),
+                ) || wrote;
+        }
+    }
+    if (wrote) process.stdout.write('\n');
+    return wrote;
+}
+
+/** Write one section body back into the changelog. */
+function _write_section(version: string, body: string): boolean {
+    const text = read_changelog_text();
+    const section = extract_changelog_section(text, version);
+    if (section === null || section.body === body) return false;
+    const next = _replace_section_body(text, section, body);
+    if (next === null) return false;
+    write_changelog_text(next);
+    return true;
+}
+
+/**
+ * Swap one section's body inside the whole file.
+ *
+ * `ChangelogSection` carries no offsets, so the body is located THROUGH its
+ * heading rather than by a bare `indexOf` — a body substring can legitimately
+ * repeat across sections (two releases whose head says `_none_` five times),
+ * and the first match would then rewrite the wrong release.
+ */
+function _replace_section_body(
+    text: string,
+    section: { heading: string; body: string },
+    body: string,
+): string | null {
+    const h = text.indexOf(section.heading);
+    if (h === -1) return null;
+    const at = text.indexOf(section.body, h + section.heading.length);
+    if (at === -1) return null;
+    return text.slice(0, at) + body + text.slice(at + section.body.length);
+}
+
 export function guard_release_curation(version: string, prMerged = false): void {
     if (prMerged) {
         return;
@@ -707,18 +897,30 @@ export function guard_release_curation(version: string, prMerged = false): void 
     //
     // `guard_release_branch_push` carries it instead: by then the section is
     // committed and editable on the branch, and nothing has left the machine.
-    const blockers = [
-        ...publication_blockers(
-            section.body,
-            version,
-            `\`release/${version}\``,
-            measure_mix_obligation(version),
-        ),
-    ];
+    // THREE WAYS TO A WRITTEN ANSWER, in cost order — and none of them is the
+    // generator answering for itself (ADR-253 is untouched; see
+    // `staged_response`).
+    //
+    // 1. STAGED. The maintainer wrote it into `## [Unreleased]` whenever it was
+    //    actually known. Consumed here, silently, because a prepared answer
+    //    being read is not an event.
+    // 2. ASKED. A terminal is reachable and the answer is still missing, so the
+    //    human types it now rather than after an abort. This is where the three
+    //    measured releases lost their run: the obligation was discharged by
+    //    hand at exactly this moment anyway, with a dead pipeline either side
+    //    of it.
+    // 3. REFUSED. Non-interactive and nothing staged — the original behaviour,
+    //    unchanged, which is what keeps CI and every scripted release honest.
+    consume_staged_answers(version);
+    let blockers = curation_blockers(version);
+    if (blockers.length > 0 && collect_curation_answers(version, blockers)) {
+        blockers = curation_blockers(version);
+    }
     if (blockers.length === 0) {
         return;
     }
-    const marked = section.body
+    const current = extract_changelog_section(read_changelog_text(), version);
+    const marked = (current?.body ?? section.body)
         .split('\n')
         .filter((l) => l.includes(DERIVED_MARKER))
         .map((l) => `      ${l.trim()}`);
@@ -736,7 +938,12 @@ export function guard_release_curation(version: string, prMerged = false): void 
             'tree: curate the `### Release highlights` head in `CHANGELOG.md` there, then ' +
             're-run `task release`. That re-run works from this position — `preflightPosition` ' +
             'accepts the release branch with the uncommitted step-2 output, which it did not ' +
-            'until 2026-09-07 (both spellings of the re-run were refused before step 1).',
+            'until 2026-09-07 (both spellings of the re-run were refused before step 1).' +
+            '\n    Two cheaper ways exist and neither was reachable here: run `task release` ' +
+            'from a TERMINAL and it ASKS for these answers instead of stopping, or STAGE them ' +
+            `under \`## [Unreleased]\` in \`CHANGELOG.md\` (a \`> ${PROMISE_PHRASE} …\` line, ` +
+            `a \`> ${PROMISE_READBACK_MARKER} …\` line) whenever they are known — this run ` +
+            'consumes them and removes them from `[Unreleased]`.',
     );
 }
 
