@@ -158,16 +158,10 @@
       "axis": "self",
       "owner_surface": "src/scripts/lint_agent_security.ts",
       "projection": null,
-      "state": "degraded",
-      "rationale": "This package's own artifact tree is scanned for hidden-instruction payloads by an umbrella that spawns five child linters and aggregates their findings. The capability exists and the children work; what is degraded is the AGGREGATE's ability to tell a child that ran and found nothing from a child that never answered, which is what makes its exit code weaker evidence than docs/CLAIMS.md reads it as. Distinct from the target-axis security-scan entry: that one grades a consumer repository, this one grades this repository's scan of itself.",
-      "evidence": "src/scripts/lint_agent_security.ts:209 discards each child's return code (`const [, findings] = _run(script)`); :67 turns an unparsable child payload into an empty findings array; docs/CLAIMS.md offers `exec:lint_agent_security -> 0` as the evidence for shipped-artifacts-hidden-instruction-scanned, and that entry now carries a non_inference line naming this same gap. Read 2026-09-07.",
-      "limitations": [
-        "Child exit codes are discarded at src/scripts/lint_agent_security.ts:209, so a child that exits non-zero with no findings contributes nothing to the aggregate and the umbrella still exits 0.",
-        "An unparsable child stdout is swallowed as zero findings at src/scripts/lint_agent_security.ts:67, so a crashed child that printed a stack trace is indistinguishable from a clean run.",
-        "A child that fails to spawn returns `proc.status === null`, which the same line coerces to 1 and then drops — the umbrella never reports that the child was not executed.",
-        "The umbrella publishes no count of artifacts inspected and is absent from src/config/gate-coverage.yml, so a collapsed corpus reports the same clean line as a full scan."
-      ],
-      "revisit_if": "road-to-scan-that-fails-closed Phase 2.2 lands — each child gains a closed terminal outcome (completed | failed | skipped) and a failed one makes the umbrella name the child and exit 1. At that point this entry moves to `available`; step 2.4 owns the move, and until it happens this entry is the generated surface that keeps the weakness visible."
+      "state": "available",
+      "rationale": "This package's own artifact tree is scanned for hidden-instruction payloads by an umbrella that spawns five child linters. Each child now has a closed terminal outcome — completed, failed or skipped(reason) — and a child that did not answer makes the aggregate name it and exit 1, so the umbrella's exit code establishes that all five ran rather than only that none of them spoke. Distinct from the target-axis security-scan entry: that one grades a consumer repository, this one grades this repository's scan of itself. Registered `degraded` on 2026-09-07 and moved here in the same change that repaired the defect; the degraded state is in this file's history rather than erased from it.",
+      "evidence": "tests/scripts/lint_agent_security_fail_closed.test.ts — five child-failure classes (non-zero with empty stdout, exit 0 with unparsable stdout, never spawned, a non-array payload, and the negative control of a non-zero exit WITH valid findings). The first four were written green against the pre-repair aggregation and flipped red-then-named by the repair; the negative control did not move in either direction. Sabotage probe on the real production path, 2026-09-07: a module-level throw in lint_confusables.ts made the umbrella print `mixed-script-confusable: did not complete` and exit 1, where the same sabotage previously printed the clean line and exited 0.",
+      "revisit_if": "a sixth child linter is added to the LINTERS watch list without a terminal outcome, or the aggregate stops failing on a non-completing child — either of which is caught by the failure corpus, so a revisit means that corpus was weakened first."
     },
     "runtime-probe": {
       "axis": "target",

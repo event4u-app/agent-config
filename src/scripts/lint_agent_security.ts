@@ -60,7 +60,8 @@ const LINTERS: ReadonlyArray<[string, string]> = [
  * the tree. The four ways are not reproducible any other way: a real child that
  * crashes on demand is a child that has to be able to crash in production.
  */
-export type ChildRunner = (script: string) => ProbeResult;
+export type ChildRunResult = ProbeResult | { readonly skipped: SkipReason };
+export type ChildRunner = (script: string) => ChildRunResult;
 
 // Spawn the child linter's `.ts` twin via the repo-local tsx binary
 // (capture_output=True, text=True equivalent). Mirrors the retired Python implementation's
@@ -72,19 +73,103 @@ export type ChildRunner = (script: string) => ProbeResult;
 const _spawnChild: ChildRunner = (script) =>
   runCountedProbe(tsxBin, [path.join(_HERE, script), "--json"]);
 
-function _run(script: string, runChild: ChildRunner): [number, Finding[]] {
-  const proc = runChild(script);
-  let findings: Finding[];
-  try {
-    const parsed: unknown = JSON.parse((proc.stdout ?? "") || "[]");
-    findings = Array.isArray(parsed) ? (parsed as Finding[]) : [];
-  } catch {
-    findings = [];
+/**
+ * The closed set of terminal outcomes a child run can have.
+ *
+ * Closed is the whole point. Before this, a child had one outcome — "here are
+ * its findings" — and every way of not answering collapsed into an empty
+ * findings array indistinguishable from a clean run. Three states make the
+ * distinction expressible, and `failed` is the one that blocks.
+ */
+export type ChildOutcome =
+  | { readonly kind: "completed"; readonly findings: Finding[]; readonly exitCode: number }
+  | { readonly kind: "failed"; readonly detail: string; readonly exitCode: number | null }
+  | { readonly kind: "skipped"; readonly reason: SkipReason };
+
+/**
+ * Skip reasons, as a RUNNER CONSTANT rather than configuration.
+ *
+ * A configurable skip list is a fail-open switch with a settings file in front
+ * of it: whoever can add a reason can silence a child. Keeping the set here
+ * means adding one is a reviewed code change in the gate itself.
+ *
+ * NO CHILD PRODUCES A SKIP TODAY, and that is stated rather than implied — all
+ * five apply on every platform this suite runs on. The state exists because the
+ * alternative to having it is the pressure this repair creates: once a
+ * non-completing child blocks, a genuinely non-applicable child would have to
+ * be expressed as `failed`, and the fix for that would be to weaken `failed`.
+ * A legal non-failing terminal state is what stops that. It is exercised
+ * through the runner seam in the failure corpus, so the branch is not dead.
+ */
+export const SKIP_REASONS = {
+  PLATFORM_NOT_APPLICABLE: "not applicable on this platform",
+} as const;
+export type SkipReason = (typeof SKIP_REASONS)[keyof typeof SKIP_REASONS];
+
+/**
+ * The child `--json` contract, stated so a violation of it is nameable:
+ *
+ *   exit 0  — ran, here is the findings array (possibly empty)
+ *   exit 1  — ran, here is the findings array (non-empty)
+ *   anything else, or a non-array payload, or unparsable stdout, or no run at
+ *   all — the child did not answer.
+ *
+ * Exit 1 with an EMPTY array is a violation and not a nit: every child returns
+ * its dead-scope code (1 or 2) with nothing on stdout, which is precisely the
+ * "the corpus moved and I read nothing" case that used to score as clean.
+ */
+function _classify(res: ChildRunResult): ChildOutcome {
+  // The execution layer decides WHETHER a child applies here; the reason it may
+  // give comes from `SKIP_REASONS` above, so a new reason is a reviewed code
+  // change in this file rather than a value someone can supply.
+  if ("skipped" in res) {
+    return { kind: "skipped", reason: res.skipped };
   }
-  // Python returncode of a normally-exited process is its exit code; spawnSync
-  // reports null when the process was signalled / failed to spawn.
-  const returncode = proc.status ?? 1;
-  return [returncode, findings];
+  const proc = res;
+  // spawnSync reports null when the process was signalled or never spawned.
+  if (proc.status === null) {
+    return {
+      kind: "failed",
+      exitCode: null,
+      detail: `the child never ran (${proc.failure ?? "no exit status reported"})`,
+    };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse((proc.stdout ?? "") || "[]");
+  } catch {
+    return {
+      kind: "failed",
+      exitCode: proc.status,
+      detail:
+        `exited ${String(proc.status)} and its stdout was not JSON — a crashed child that ` +
+        "printed a diagnostic used to be read as zero findings",
+    };
+  }
+  if (!Array.isArray(parsed)) {
+    return {
+      kind: "failed",
+      exitCode: proc.status,
+      detail:
+        `exited ${String(proc.status)} and its stdout parsed but was not a findings array — ` +
+        "a JSON error object used to be read as zero findings",
+    };
+  }
+  const findings = parsed as Finding[];
+  if (proc.status !== 0 && !(proc.status === 1 && findings.length > 0)) {
+    return {
+      kind: "failed",
+      exitCode: proc.status,
+      detail:
+        `exited ${String(proc.status)} with ${String(findings.length)} finding(s), which is outside ` +
+        "the --json contract (0 = clean, 1 = findings; every other code means it could not run)",
+    };
+  }
+  return { kind: "completed", findings, exitCode: proc.status };
+}
+
+function _run(script: string, runChild: ChildRunner): ChildOutcome {
+  return _classify(runChild(script));
 }
 
 function _is_fail(f: Finding): boolean {
@@ -99,7 +184,7 @@ interface SarifReport {
   runs: unknown[];
 }
 
-function _sarif(all_findings: Finding[]): SarifReport {
+function _sarif(all_findings: Finding[], outcomes: ReadonlyArray<[string, string, ChildOutcome]>): SarifReport {
   const results: unknown[] = [];
   for (const f of all_findings) {
     const lineRaw = f["line"];
@@ -124,6 +209,21 @@ function _sarif(all_findings: Finding[]): SarifReport {
       ],
     });
   }
+  // Execution state rides in SARIF's OWN `invocations` array — the schema
+  // already models "did this tool run and with what exit code", so a parallel
+  // metadata block beside it would be a second, unread copy of the same fact.
+  // One invocation per child, in the order the children ran.
+  //
+  // `executionSuccessful` is the field a SARIF consumer reads to decide whether
+  // an empty `results` array means "clean" or "never looked". That is exactly
+  // the question this whole repair is about, so it is the field that carries it.
+  const invocations = outcomes.map(([, script, outcome]) => ({
+    commandLine: `${script} --json`,
+    executionSuccessful: outcome.kind === "completed",
+    ...(outcome.kind === "skipped" || outcome.exitCode === null
+      ? {}
+      : { exitCode: outcome.exitCode }),
+  }));
   return {
     $schema: "https://json.schemastore.org/sarif-2.1.0.json",
     version: "2.1.0",
@@ -136,6 +236,7 @@ function _sarif(all_findings: Finding[]): SarifReport {
             rules: LINTERS.map(([cid]) => ({ id: cid })),
           },
         },
+        invocations,
         results,
       },
     ],
@@ -225,9 +326,24 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
   }
 
   const all_findings: Finding[] = [];
+  const outcomes: Array<[string, string, ChildOutcome]> = [];
+  const notCompleted: string[] = [];
   let blocking = 0;
   for (const [check, script] of LINTERS) {
-    const [, findings] = _run(script, runChild);
+    const outcome = _run(script, runChild);
+    outcomes.push([check, script, outcome]);
+    if (outcome.kind === "failed") {
+      // Named on the line, because "one child failed" sends a reader to five
+      // linters. The exit code stays on the line for the same reason.
+      notCompleted.push(check);
+      process.stdout.write(`  ❌ ${check}: did not complete — ${outcome.detail}\n`);
+      continue;
+    }
+    if (outcome.kind === "skipped") {
+      process.stdout.write(`  ⏭️ ${check}: skipped — ${outcome.reason}\n`);
+      continue;
+    }
+    const findings = outcome.findings;
     all_findings.push(...findings);
     const fails = findings.filter((f) => _is_fail(f)).length;
     const warns = findings.length - fails;
@@ -239,11 +355,28 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
   if (args.sarif) {
     const out = args.sarif;
     fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, _pyJsonDumpsIndent2(_sarif(all_findings)), "utf-8");
+    fs.writeFileSync(out, _pyJsonDumpsIndent2(_sarif(all_findings, outcomes)), "utf-8");
     process.stdout.write(`  SARIF → ${args.sarif}\n`);
   }
 
   process.stdout.write("\n");
+  // A child that did not answer is reported BEFORE findings and fails on its
+  // own. The two are independent verdicts: findings say the corpus is dirty,
+  // a non-completing child says the verdict is unknown, and an unknown verdict
+  // is not a pass. Both can hold at once, and both print.
+  if (notCompleted.length > 0) {
+    process.stdout.write(
+      `❌  agent-security: ${notCompleted.length} of ${LINTERS.length} child linter(s) did not complete ` +
+        `(${notCompleted.join(", ")}). A child that did not answer is not a clean scan — ` +
+        "run it directly for its own diagnostic.\n",
+    );
+    if (blocking) {
+      process.stdout.write(
+        `❌  agent-security: ${blocking} blocking finding(s) from the children that did complete.\n`,
+      );
+    }
+    return 1;
+  }
   if (blocking) {
     process.stdout.write(
       `❌  agent-security: ${blocking} blocking finding(s). ` +

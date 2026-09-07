@@ -253,7 +253,6 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge.
 - kind: qual
 - evidence: exec:lint_agent_security -> 0
-- non_inference: The cited exit code does NOT establish that all five child linters ran. `lint_agent_security` spawns five children and discards every child's return code (`src/scripts/lint_agent_security.ts:209`), and an unparsable child payload is swallowed as zero findings (`:67`), so a child that crashed, failed to spawn, or printed a stack trace is indistinguishable from a child that ran and found nothing: the umbrella prints the clean line and exits 0 either way. Until the child-completion gap is closed, `exec:lint_agent_security -> 0` licenses "no child reported a blocking finding", never "every shipped artifact was scanned". The umbrella also publishes no count of what it inspected and is absent from `src/config/gate-coverage.yml`, so a scan whose corpus collapsed would report the same 0. This limitation is stated rather than the claim withdrawn because the three named payload classes ARE checked whenever the children do run; the residual is the unobserved case, not an absent check.
 - status: backed
 - last_verified: 2026-07-09
 
