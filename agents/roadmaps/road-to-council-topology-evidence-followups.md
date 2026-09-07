@@ -727,3 +727,36 @@ parked would be the error this roadmap exists to describe.
 No item was checked, nothing was archived, promoted, cancelled or transferred,
 no mechanism was built, no capacity was reserved, and no work here is claimed
 complete. Every one of the 38 obligations stands exactly where it stood.
+
+## Estate placement — `road-to-admissible-council-seats` stays standalone (2026-09-07)
+
+Folded in here because that roadmap's `free-seat-estate-slot` blocker named this
+file as the alternative home for the seat work, and the standalone-vs-fold-in
+question had to be answered somewhere durable rather than left to the next
+estate review.
+
+**Decision: standalone. It keeps its own trunk and is NOT folded into this file.**
+Resolved by an AI council (2 seats, run 19, 2026-09-06) under the maintainer's
+standing delegation.
+
+**The measured growth figure, not the prediction.** The blocker predicted
+`active_roadmaps` 1 → 2. That prediction was wrong about the levels, which is
+exactly why the disposition required a measurement on the actual adopting
+commit rather than a number written at authoring time:
+
+- Adopting commit `708b57545` ("docs(roadmaps): add road-to-admissible-council-seats",
+  2026-09-05). Top-level roadmaps under `agents/roadmaps/`: **7 → 8, delta +1.**
+- `./scripts-run src/scripts/check_estate_count` on the branch that completes and
+  archives it reports the estate **within its ratchet**, and the archival is a
+  net **−1** active roadmap — the roadmap pays back the slot it took.
+
+**Why standalone rather than folded in.** This file is a `status: carrier`
+receiver for 38 deferred items from one specific parent roadmap; its purpose is
+to give those deferrals a verifiable destination. Absorbing an unrelated,
+independently-scoped roadmap into it would make the carrier's own inventory
+unreadable and would put a completed body of work inside a file whose whole
+reason to exist is that its items are NOT done.
+
+**Scope.** This settles the placement question and nothing else. It creates no
+obligation for this file, adds no item to its 38, and does not change this
+roadmap's status.

@@ -47,6 +47,12 @@ import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor } from './cli_agency_bounds.js';
+import {
+    curlJsonPost as _curlJsonPost,
+    geminiRestClient,
+    openAiCompatibleClient,
+    type JsonPost,
+} from './api_transport.js';
 import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
 
@@ -163,9 +169,8 @@ export const DEFAULT_OPENAI_CLI_MODEL = OPENAI_CLI_VENDOR_DEFAULT;
 export const DEFAULT_ANTHROPIC_CLI_MODEL = 'sonnet';
 export const DEFAULT_GEMINI_CLI_MODEL = 'gemini-2.5-pro';
 
-// OpenAI-API-compatible endpoints. xAI and Perplexity both expose the
-// `/v1/chat/completions` shape, so their clients reuse the `openai` SDK with a
-// custom `base_url`. Gemini has its own SDK (`google-genai`).
+// OpenAI-API-compatible endpoints — xAI and Perplexity both expose the
+// `/v1/chat/completions` shape, reached by one curl shim in `api_transport.ts`.
 export const XAI_BASE_URL = 'https://api.x.ai/v1';
 export const PERPLEXITY_BASE_URL = 'https://api.perplexity.ai';
 
@@ -461,6 +466,12 @@ interface ApiClientOptions {
     // Phase 4). Default '5m' when omitted — see `DEFAULT_PROMPT_CACHE_TTL`.
     // Only meaningful when `enable_prompt_cache` is true.
     prompt_cache_ttl?: PromptCacheTtl | undefined;
+    /**
+     * HTTP seam. Omitted → the live `curl` post. A test passes a double
+     * TOGETHER with a real `api_key`, which exercises the shim-building
+     * path that an injected `client:` object skips entirely.
+     */
+    transport?: JsonPost | undefined;
 }
 
 /** Shared ctor-options shape for the CLI clients. */
@@ -477,47 +488,6 @@ interface CliClientOptions {
      * `CLI_CONSUMER_UNKNOWN`, which is a finding rather than a default.
      */
     consumer?: string | undefined;
-}
-
-/**
- * Synchronous JSON POST via `curl` (no Node SDK, no Python). Matches the
- * council's `spawnSync` transport model so the live-call clients stay
- * synchronous. Returns the parsed response JSON (the provider HTTP APIs return
- * exactly the SDK response shape `ask()` reads). Throws on transport failure or
- * a non-2xx status so `ask()`'s catch surfaces it as a member error.
- */
-function _curlJsonPost(url: string, extraHeaders: string[], body: unknown): unknown {
-    const args = ['-sS', '-X', 'POST', url, '-H', 'content-type: application/json'];
-    for (const h of extraHeaders) {
-        args.push('-H', h);
-    }
-    // `--connect-timeout` fast-fails a dead host; `--max-time` lets curl abort
-    // itself cleanly (surfacing a real `curl exited` error with stderr) ~10s
-    // before the `spawnSync` timeout would kill it with an opaque ETIMEDOUT.
-    // A full 16k-token generation legitimately runs several minutes, so the
-    // ceiling is 300s, not 120s (the old value timed out long Anthropic calls).
-    args.push('--connect-timeout', '30', '--max-time', '290');
-    args.push('-w', '\n%{http_code}', '--data-binary', '@-');
-    const r = spawnSync('curl', args, {
-        input: JSON.stringify(body),
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-        timeout: 300_000,
-    });
-    if (r.error) {
-        throw new Error(`curl spawn failed: ${(r.error as Error).message}`);
-    }
-    if (r.status !== 0) {
-        throw new Error(`curl exited ${r.status ?? 'null'}: ${(r.stderr ?? '').toString().slice(0, 500)}`);
-    }
-    const out = (r.stdout ?? '').toString();
-    const nl = out.lastIndexOf('\n');
-    const httpCode = (nl >= 0 ? out.slice(nl + 1) : out).trim();
-    const bodyText = nl >= 0 ? out.slice(0, nl) : out;
-    if (!/^2\d\d$/.test(httpCode)) {
-        throw new Error(`HTTP ${httpCode}: ${bodyText.slice(0, 500)}`);
-    }
-    return JSON.parse(bodyText);
 }
 
 export class AnthropicClient extends ExternalAIClient {
@@ -824,13 +794,12 @@ export class OpenAIClient extends ExternalAIClient {
 // ── Gemini / xAI / Perplexity (Phase 0 — Step 6) ─────────────────────
 
 /**
- * Google Gemini via the `google-genai` SDK.
- *
- * Lazy-imports `google.genai` on first `ask()` so disabled members do not
- * require the SDK to be installed. Tests inject a mock client shaped like
- * `genai.Client(api_key=...)` — `self._client.models.generate_content(...)`
- * returns an object with `.text` and
- * `.usage_metadata.{prompt_token_count, candidates_token_count}`.
+ * Google Gemini over the REST API (1.1 — there is no SDK dependency; the old
+ * `google-genai` lazy-import never existed in the TS port and the constructor
+ * simply threw). `ask()` still reads the SDK RESPONSE shape — `.text`,
+ * `.model_version`, `.usage_metadata.{prompt_token_count,
+ * candidates_token_count}` — which `geminiRestClient` normalises to, so every
+ * injected-mock test is unaffected.
  */
 export class GeminiClient extends ExternalAIClient {
     override name = 'gemini';
@@ -851,7 +820,12 @@ export class GeminiClient extends ExternalAIClient {
                     'Use `api_key_ref: env:GEMINI_API_KEY` in ~/.event4u/agent-config/settings/.ai-council.yml.',
             );
         }
-        throw new Error('google-genai package not installed. `pip install google-genai`.');
+        // Live transport (1.1). Was an unconditional `pip install google-genai`
+        // throw, which made `mode: api` dead for this provider however the key
+        // was configured. `geminiRestClient` normalises the REST envelope into
+        // the SDK shape `ask()` below already reads, so `ask()` is untouched
+        // and every existing injected-mock test keeps passing.
+        this._client = geminiRestClient(api_key, opts.transport ?? _curlJsonPost);
     }
 
     override ask(
@@ -901,19 +875,26 @@ export class GeminiClient extends ExternalAIClient {
 }
 
 /**
- * Shared shape for OpenAI-API-compatible providers (xAI, Perplexity).
- *
- * Both vendors implement `/v1/chat/completions` and accept the `openai` Python
- * SDK with a custom `base_url`. The reasoning-model branch from `OpenAIClient`
- * is intentionally omitted — neither xAI nor Perplexity ships a reasoning model
- * that requires `max_completion_tokens` as of 2026-05-14.
+ * Shared shape for OpenAI-API-compatible providers (xAI, Perplexity): both
+ * implement `/v1/chat/completions`, so 1.1 reaches them with one curl shim and
+ * a base URL. The reasoning-model branch from `OpenAIClient` is intentionally
+ * omitted — neither ships a reasoning model that requires
+ * `max_completion_tokens` as of 2026-05-14.
  */
 export class _OpenAICompatibleClient extends ExternalAIClient {
     override billable = true;
     base_url = '';
     protected _client: unknown;
 
-    constructor(opts: { model: string; client?: unknown; api_key?: string | null | undefined }) {
+    constructor(opts: {
+        model: string;
+        client?: unknown;
+        api_key?: string | null | undefined;
+        transport?: JsonPost | undefined;
+        // Passed, never read off `this.base_url`: a subclass field initializer
+        // runs AFTER this constructor, so the field is still '' right here.
+        base_url: string;
+    }) {
         super();
         this.model = opts.model;
         if (opts.client !== undefined && opts.client !== null) {
@@ -926,7 +907,13 @@ export class _OpenAICompatibleClient extends ExternalAIClient {
                 `${this.constructor.name} requires explicit api_key or injected client.`,
             );
         }
-        throw new Error('openai package not installed. `pip install openai`.');
+        // Live transport (1.1) — replaces an unconditional `pip install openai`
+        // throw that made `mode: api` dead for xai and perplexity.
+        this._client = openAiCompatibleClient(
+            opts.base_url,
+            api_key,
+            opts.transport ?? _curlJsonPost,
+        );
     }
 
     override ask(
@@ -989,7 +976,13 @@ export class XAIClient extends _OpenAICompatibleClient {
     override base_url = XAI_BASE_URL;
 
     constructor(opts: ApiClientOptions = {}) {
-        super({ model: opts.model ?? DEFAULT_XAI_MODEL, client: opts.client, api_key: opts.api_key });
+        super({
+            model: opts.model ?? DEFAULT_XAI_MODEL,
+            client: opts.client,
+            api_key: opts.api_key,
+            transport: opts.transport,
+            base_url: XAI_BASE_URL,
+        });
     }
 }
 
@@ -1003,6 +996,8 @@ export class PerplexityClient extends _OpenAICompatibleClient {
             model: opts.model ?? DEFAULT_PERPLEXITY_MODEL,
             client: opts.client,
             api_key: opts.api_key,
+            transport: opts.transport,
+            base_url: PERPLEXITY_BASE_URL,
         });
     }
 }
@@ -1028,8 +1023,8 @@ export {
 //
 // Raised 120 → 300 (2026-08-13) to match the API transport, which has carried
 // `--max-time 290` / `timeout: 300_000` since the 2026-06-24 repair of the same
-// symptom. That repair landed in `_curlJsonPost` only, so when a member resolves
-// to `cli · subscription` the old cap was still live — and a deep design run
+// symptom. That repair landed in `api_transport.ts::curlJsonPost` only, so with
+// a member on `cli · subscription` the old cap was still live — a deep run
 // reproduced it exactly: both members returned `error: timeout` at
 // `latency_ms: 122921` with `timeout_seconds: 120`, and the run reported
 // `0/2 present — INCONCLUSIVE`.

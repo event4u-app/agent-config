@@ -51,6 +51,9 @@ function mem(name: string, enabled = true, pli = true): MemberConfig {
         model_ladder: [],
         prompt_cache_ttl: '5m',
     verified_at: null,
+    disabled_reason: null,
+    policy_exclusion: null,
+    content_ceiling: 'project-content' as const,
     };
 }
 
