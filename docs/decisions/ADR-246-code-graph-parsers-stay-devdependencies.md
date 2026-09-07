@@ -1,10 +1,10 @@
 ---
 adr: 246
-status: accepted
+status: superseded
 date: 2026-08-26
 decision: code-graph-parsers-stay-devdependencies
 supersedes: —
-superseded_by: —
+superseded_by: 259
 phase: road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh · Phase 3.3
 type: structural
 provenance:
