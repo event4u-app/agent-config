@@ -1,6 +1,7 @@
 import {
     classifyContentClass as _classifyContentClass,
     DEFAULT_SEAT_CEILING as _DEFAULT_SEAT_CEILING,
+    type ContentClass,
 } from './content_ceiling.js';
 
 /**
@@ -107,7 +108,7 @@ export function policyExclusionReason(p: PolicyExclusion, provider?: string): st
 export interface SeatFields {
     readonly disabled_reason: string | null;
     readonly policy_exclusion: PolicyExclusion | null;
-    readonly content_ceiling: import('./content_ceiling.js').ContentClass;
+    readonly content_ceiling: ContentClass;
 }
 
 export function parseSeatFields(

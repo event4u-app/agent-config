@@ -80,7 +80,6 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
 import {
-    NO_DISABLED_REASON,
     disabledSeats as _disabledSeats,
     resolvedTransportFor as _resolvedTransportFor,
 } from './ai_council/status_surface.js';
