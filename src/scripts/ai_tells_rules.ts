@@ -130,6 +130,83 @@ export function isAbstractNoun(word: string, language: "en" | "de"): boolean {
   return ABSTRACT_SUFFIX_EN.test(lower) || ABSTRACT_STEMS_EN.has(lower);
 }
 
+/** A declarative short enough to read as a staccato beat. */
+const STACCATO_MAX_WORDS = 5;
+/** A run of this many consecutive staccato beats is the tell. */
+const STACCATO_RUN = 4;
+/** A run of this many identically-shaped bold-header bullets is the tell. */
+const UNIFORM_BULLET_RUN = 4;
+
+/**
+ * `tell-staccato-run` — the `anti-aiisms.md` bound "≤ 3 short declaratives in a
+ * row", implemented rather than merely claimed (step 1.4). Four or more
+ * consecutive declaratives of at most five words each is the manufactured
+ * punchline rhythm; three is ordinary emphasis and scores nothing.
+ *
+ * Questions and exclamations break a run: a short question is a rhetorical
+ * device the catalog does not treat as a beat.
+ */
+export function matchStaccatoRun(text: string): { count: number; samples: string[] } {
+  let count = 0;
+  const samples: string[] = [];
+  for (const para of text.split(/\n\s*\n/)) {
+    const flat = para.replace(/\n/g, " ");
+    let run: string[] = [];
+    const flush = (): void => {
+      if (run.length >= STACCATO_RUN) {
+        count += 1;
+        if (samples.length < 3) samples.push(run.join(" ").slice(0, 60).trim());
+      }
+      run = [];
+    };
+    for (const raw of flat.split(/(?<=[.!?])\s+/)) {
+      const sentence = raw.trim();
+      if (sentence === "") continue;
+      const words = sentence.split(/\s+/).filter(Boolean).length;
+      const isBeat = /\.$/.test(sentence) && words > 0 && words <= STACCATO_MAX_WORDS;
+      if (isBeat) run.push(sentence);
+      else flush();
+    }
+    flush();
+  }
+  return { count, samples };
+}
+
+/**
+ * `tell-uniform-bullet-run` — the `anti-aiisms.md` bound "merge a run of ≥ 4
+ * identically-shaped `- **X:** …` bullets", implemented rather than claimed
+ * (step 1.4). Distinct from `tell-bold-header-list`, which fires on a SINGLE
+ * such bullet: the bound is about a run, and a three-item definition list is
+ * ordinary reference prose.
+ */
+export function matchUniformBulletRun(text: string): { count: number; samples: string[] } {
+  let count = 0;
+  const samples: string[] = [];
+  let run = 0;
+  let first = "";
+  const flush = (): void => {
+    if (run >= UNIFORM_BULLET_RUN) {
+      count += 1;
+      if (samples.length < 3) samples.push(first.slice(0, 60).trim());
+    }
+    run = 0;
+    first = "";
+  };
+  for (const line of text.split("\n")) {
+    if (/^\s*[-*]\s+\*\*[^*\n]{2,60}:?\*\*:?/.test(line)) {
+      if (run === 0) first = line.trim();
+      run += 1;
+    } else if (line.trim() === "") {
+      // A blank line inside a list does not end the run — the shape survives it.
+      continue;
+    } else {
+      flush();
+    }
+  }
+  flush();
+  return { count, samples };
+}
+
 const TRIPLET_RE = /\b([\p{L}][\p{L}'’-]*), ([\p{L}][\p{L}'’-]*), (?:and|und) ([\p{L}][\p{L}'’-]*)\b/gu;
 
 /**
@@ -464,6 +541,26 @@ export const TELL_RULES: TellRule[] = [
     1,
     "Vertical list items opening with a bolded header + colon",
     [/^\s*[-*]\s+\*\*[^*\n]{2,60}:?\*\*:?\s/m],
+  ),
+  w(
+    "tell-staccato-run",
+    "style",
+    "cluster",
+    "any",
+    1,
+    "Four or more consecutive declaratives of five words or fewer (manufactured punchline rhythm)",
+    [],
+    matchStaccatoRun,
+  ),
+  w(
+    "tell-uniform-bullet-run",
+    "style",
+    "cluster",
+    "any",
+    1,
+    "A run of four or more identically-shaped bold-header bullets",
+    [],
+    matchUniformBulletRun,
   ),
   w(
     "tell-title-case-heading",

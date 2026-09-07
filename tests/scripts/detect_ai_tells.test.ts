@@ -115,7 +115,12 @@ describe("density + cluster mechanics", () => {
   });
 
   it("isolated low-weight cluster hits do not trip the gate", () => {
-    const text = "The report is thorough. " + "plain filler text. ".repeat(50) + "It has “one” curly quote pair.";
+    // The filler only supplies word count. It is a full sentence rather than a
+    // repeated three-word one because fifty consecutive short declaratives are
+    // themselves a tell (`tell-staccato-run`), which would make this test about
+    // the filler instead of about the isolated curly-quote hit it is checking.
+    const filler = "The team reviewed the plan on Monday and agreed to keep the current cadence. ";
+    const text = "The report is thorough. " + filler.repeat(10) + "It has “one” curly quote pair.";
     const r = analyzeText(text, "en");
     expect(exceedsThresholds(r, THRESHOLDS)).toEqual([]);
   });
