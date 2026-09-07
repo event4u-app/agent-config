@@ -47,6 +47,11 @@ export function curlJsonPost(url: string, extraHeaders: string[], body: unknown)
     // before the `spawnSync` timeout would kill it with an opaque ETIMEDOUT.
     // A full 16k-token generation legitimately runs several minutes, so the
     // ceiling is 300s, not 120s (the old value timed out long Anthropic calls).
+    // Both ceilings are PER CALL, never a run total. Members are iterated
+    // serially, so a run's worst case is members x passes x 290s, and nothing
+    // cancels a call mid-flight: `spawnSync` takes no signal, which is the
+    // synchronous contract the module docblock states. The only run-level bound
+    // is the USD cap, and it is checked AFTER a call returns.
     args.push('--connect-timeout', '30', '--max-time', '290');
     args.push('-w', '\n%{http_code}', '--data-binary', '@-');
     const r = spawnSync('curl', args, {
