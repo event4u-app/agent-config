@@ -90,9 +90,10 @@ jobs:
     guard: ~
 
   highlight-plausibility:
-    # The job that failed 14.17.0. All four sub-checks (authoring instruction,
-    # unrewritten derived marker, `_none_` contradiction, governance-mix
-    # response) run locally from local tags alone — no origin, no HEAD_REF.
+    # The job that failed 14.17.0. All three sub-checks (authoring instruction,
+    # unrewritten derived marker, `_none_` contradiction) run locally from local
+    # tags alone — no origin, no HEAD_REF. It was four until ADR-261 deleted the
+    # governance-mix written answer and its promise read-back.
     local: './scripts-run src/scripts/check_release_highlights --version ${VERSION}'
     verify: true
     script: src/scripts/check_release_highlights.ts

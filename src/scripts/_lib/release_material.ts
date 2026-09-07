@@ -300,94 +300,46 @@ function _first_diff(a: string, b: string): string {
  * a branch, a PR and a CI run — the exact cost `guard_release_branch_push` was
  * added to avoid for the sibling obligation two releases earlier.
  *
- * This module has no imports on purpose (see `CURATED_HEAD_INSTRUCTION`), which
- * is what lets the writer, the local push guard and the CI gate all reach one
- * definition instead of three copies.
+ * This module has no imports on purpose (see `CURATED_HEAD_INSTRUCTION`).
+ *
+ * **One reader left, as of ADR-261 (2026-09-07).** This paragraph used to say
+ * the definition was shared by "the writer, the local push guard and the CI
+ * gate", which was true while `mix_response_blockers` and
+ * `check_governance_mix_response` scanned a section for this marker. Both are
+ * deleted, and with them every search for it: the only consumer now is
+ * `render_mix_response` in this same file, which WRITES the line. Nothing reads
+ * a changelog looking for it, so do not assume a guard notices when it is
+ * missing — none does.
  */
 export const MIX_RESPONSE_MARKER = '**Governance mix:**';
 
 /**
- * The sentinel that marks an EMITTED-BUT-UNANSWERED response.
+ * Render the measured governance-versus-product line the writer emits.
  *
- * A generator that emits the measured level alone would satisfy the gate's
- * length floor (`MIX_RESPONSE_MIN_CHARS`, 40) with a number the machine
- * produced, turning a written-answer obligation into a formality the tool
- * discharges for itself. That is a smuggled auto-approval, not a fix.
+ * ONE line, and machine-written end to end. It reports what the span measured
+ * and asks the releaser for nothing.
  *
- * So the writer emits the level AND this sentinel, and every gate refuses the
- * sentinel — the same discipline `CURATED_HEAD_INSTRUCTION` and
- * `DERIVED_MARKER` already follow. The net effect is only that the obligation
- * moves from CI to the moment the section is written, where the fix is an edit
- * to a file already open in the working tree.
- */
-export const MIX_RESPONSE_PLACEHOLDER = '<the consumer work>';
-
-/**
- * Every placeholder token the writer emits, so none of them can ship.
+ * ## The written-answer obligation is gone (2026-09-07, ADR-261)
  *
- * The block carries two, and refusing only the first would leave
- * `<roadmap or issue>` publishable — `CHANGELOG.md` is in `package.json`
- * `files`, so that is the same "the generator's own scaffolding reached npm"
- * failure `CURATED_HEAD_INSTRUCTION` exists for, one token to the right.
+ * This used to emit a second line — `Next cycle ships <the consumer work>,
+ * tracked in <roadmap or issue>.` — a placeholder no generator was allowed to
+ * fill, backed by four refusals, an interactive prompt, a staging channel under
+ * `## [Unreleased]` and a read-back obligation on the following release. The
+ * releaser had to type prose into a running pipeline to get a version out.
  *
- * A named list rather than a shape match over angle brackets, for the reason
- * that constant already states: a pattern such as `/<[a-z ]+>/` rejects
- * unrelated legitimate prose and misses a reworded placeholder. Adding a token
- * to `render_mix_response` means adding it here.
- */
-export const MIX_RESPONSE_PLACEHOLDERS: readonly string[] = [
-    MIX_RESPONSE_PLACEHOLDER,
-    '<roadmap or issue>',
-];
-
-/**
- * Render the response block the writer emits when the obligation triggers.
+ * The owner ended it: this package exists to make the maintainer's work
+ * cheaper, and a release gate that stops a green pipeline until a human writes
+ * a sentence about a FUTURE cycle is the opposite. The measurement stays
+ * because it is free and true; the homework does not.
  *
- * Two blockquote lines, immediately under the curated head and outside it, per
- * `docs/contracts/CHANGELOG-conventions.md` § Governance-versus-product
- * response — the head's ten-line cap is for product lines, and a sixth label
- * would make every historical section retroactively incomplete.
+ * The removed placeholder constants (`MIX_RESPONSE_PLACEHOLDER(S)`) and promise
+ * sentinels (`PROMISE_PHRASE`, `PROMISE_READBACK_MARKER`, `PROMISE_OUTCOMES`)
+ * are deleted rather than deprecated — a sentinel nothing writes and nothing
+ * refuses is dead weight that reads as live policy.
  */
 export function render_mix_response(level: string): string[] {
-    return [
-        `> ${MIX_RESPONSE_MARKER} ${level}.`,
-        `> ${PROMISE_PHRASE} ${MIX_RESPONSE_PLACEHOLDER}, tracked in <roadmap or issue>.`,
-    ];
+    return [`> ${MIX_RESPONSE_MARKER} ${level}.`];
 }
-
-/**
- * The words that turn a governance response into a PROMISE about a later cycle.
- *
- * Named rather than inlined because two sides now read it: the writer emits it,
- * and the next release reads the previous section for it to decide whether a
- * read-back is owed. A promise nothing reads back costs nothing to restate, so
- * it can be restated for as many cycles as there are cycles — the defect this
- * constant exists to make addressable.
- */
-export const PROMISE_PHRASE = 'Next cycle ships';
-
-/**
- * The marker under which a release head answers the PREVIOUS head's promise.
- *
- * A named sentinel, on the same discipline as `MIX_RESPONSE_MARKER` and
- * `DERIVED_MARKER`: a shape match over prose would accept a sentence that
- * happens to mention last cycle and reject a reworded answer.
- */
-export const PROMISE_READBACK_MARKER = '**Previous cycle:**';
-
-/**
- * The three outcomes a read-back may report, and the reason there are exactly
- * three.
- *
- * `shipped` and `did not ship` are the honest halves of the fact. `withdrawn`
- * exists because a promise the project decided not to keep is a legitimate
- * third state — but only WITH a reason, which is why the answer also has to
- * clear a written-length floor rather than being one of these three words on
- * its own. Without the third state the mechanism would push an author toward
- * restating a dead promise as still-outstanding, which is the failure it is
- * built to stop.
- */
-export const PROMISE_OUTCOMES: readonly string[] = ['shipped', 'did not ship', 'withdrawn'];
 
 /** Every `## X.Y.Z` release version in the file, in document order (newest first). */
 export function changelog_versions(text: string): string[] {
