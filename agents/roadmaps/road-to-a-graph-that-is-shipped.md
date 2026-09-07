@@ -574,15 +574,49 @@ exists, so the gate was already red by ~1.9x this step's addition. -->
 
 ## Acceptance Criteria
 
-- [ ] AC-0 ADR-259 accepted; `package.json` carries the parser pair in `dependencies`.
-- [ ] AC-1 A fresh consumer install builds a graph with no manual step (1.1).
-- [ ] AC-2 The nudge hook and its flag are gone; `code_graph_context` is in the manifest with
+- [x] AC-0 ADR-259 accepted; `package.json` carries the parser pair in `dependencies`.
+      <!-- 2026-09-07, AS AMENDED. `web-tree-sitter@0.24.7` is in `dependencies`;
+      `tree-sitter-wasms` deliberately is NOT, because the three loadable grammars are
+      vendored instead and depending on the pack would deliver all 36 (49 MiB) — the
+      outcome ADR-259's own Alternatives rejects. The criterion's INTENT (a consumer
+      receives the engine) is met and verified end-to-end by AC-1; the amendment is
+      recorded at ADR-259 § "Amendment — 2026-09-07 · vendored-wired-set". -->
+- [x] AC-1 A fresh consumer install builds a graph with no manual step (1.1).
+      <!-- 2026-09-07: real tarball, throwaway install, `code-graph build --root .` exit 0
+      on a PHP+TS fixture — "4 files · 12 nodes · 15 edges, languages: php, typescript".
+      `tree-sitter-wasms` absent from the consumer's node_modules. -->
+- [x] AC-2 The nudge hook and its flag are gone; `code_graph_context` is in the manifest with
       per-host `enforced_by` resolved from the platform table (1.2).
-- [ ] AC-3 Queries above 50k edges read SQLite through a per-node/per-edge API and parse no
+      <!-- 2026-09-07: `grep -c code_graph_nudge` on the manifest (yaml and compiled json)
+      → 0; `hooks.code_graph.enabled` → 0 in both settings templates;
+      check_enforcement_coverage ratchet holds. -->
+- [x] AC-3 Queries above 50k edges read SQLite through a per-node/per-edge API and parse no
       JSON (2.1); every edge carries `resolved_via` and `provider` (2.2).
+      <!-- 2026-09-07: traced — zero `JSON.parse` calls on a 60k-edge `affected`, with the
+      canonical JSON chmod 000 for the duration; 4.9 ms / 190.7 MB RSS against 9,809.6 ms /
+      349.0 MB on the blob path. Both fields are REQUIRED on `CodeEdge`, so the type system
+      enforces the second half at every construction site. -->
 - [ ] AC-4 `impact --diff`, `tests-for`, `dead` exist with golden fixtures;
       `regression_neighbourhood` reads the native graph (3.x).
+      <!-- NOT STARTED 2026-09-07. Phase 3 is untouched. Scoped here so the next run does
+      not re-derive it: the three verbs share ONE verify block, so none can be ticked
+      alone, and 3.2 additionally needs a new `tests` RELATION (test file → subject via
+      import), which is a `Relation` union change plus extractor work — i.e. a fourth
+      schema bump. 3.3 needs the declared entry-point sources enumerated (routes, exports,
+      `src/cli/registry.ts`, the hook manifest) or it will report entry points as dead,
+      which the Risk Register ranks fourth. The `resolved_via` axis 3.1 filters on
+      (`not in {name-lookup, dynamic}`) now exists and is populated, so the input Phase 3
+      needs is in place. -->
 - [ ] AC-5 Five graph tools are in the MCP catalogue, taking it to 36, and emit telemetry;
       the install hint is pinned (4.x).
+      <!-- NOT STARTED 2026-09-07. Phase 4 is untouched. 4.2 is independent of 4.1 and
+      cheap — `consumer_tool_catalog.json:4` still reads `npx -y`. -->
 - [ ] AC-6 The v2 benchmark rerun after all phases is byte-identical on every class — this
       roadmap moved delivery, not measurement.
+      <!-- HOLDING, not yet dischargeable: "after all phases" cannot be evaluated while
+      Phases 3 and 4 are open. Measured twice so far and byte-identical BOTH times, after
+      2.2 and again after 2.3, against `code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`:
+      callers R 1/1 +0 P 0.611/0.667 · transitive-impact R 0.611/0.611 +0 P 1/1 ·
+      path-between R 0.917/1 +8.3 P 0.722/1 · references R 1/1 +0 P 0.722/1 · macro grep
+      P 0.764 R 0.882 · macro graph P 0.917 R 0.903. Zero of four classes met the +10 pp
+      bar; every class TIE. -->
