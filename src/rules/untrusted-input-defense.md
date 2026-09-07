@@ -27,8 +27,6 @@ evidence:
   normative_level: recommended
 ---
 
-<!-- security-lint: allow instruction-smuggling "defense rule: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" sha256:a96684e2bb0394995646b02315846c7dd1ecd773d41581ac8bd288540914236b -->
-
 # Untrusted-Input Defense
 
 Supersedes the placeholder `untrusted-input-defense` slot in
