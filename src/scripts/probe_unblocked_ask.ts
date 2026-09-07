@@ -47,18 +47,40 @@
  * Both edges are printed. A reader who cannot see the bracket cannot judge the
  * number.
  *
+ * The `form` dimension (road-to-asked-not-parked 1.1)
+ *
+ * Every unblocked ask is additionally partitioned by the FORM the ask took:
+ *
+ *   - `native` — the same assistant turn carries a tool call whose name is a
+ *     structured-ask tool (`_lib/structured_ask.ts`, `isStructuredAskTool`).
+ *   - `text`   — everything else, i.e. the ask was prose.
+ *
+ * The two are exhaustive and disjoint by construction, so `text + native`
+ * always equals `unblockedAsks`. That identity is asserted in `--self-test`
+ * rather than left to a reader to check.
+ *
+ * Expect `native` to be **0** on every corpus this repo can scan today: no host
+ * in the capability registry carries an observed structured-ask tool, and
+ * `structured_ask.ts` states why matching on a name-shape pattern is not a claim
+ * that any host ships one. A measured zero and an uninstrumented zero look the
+ * same in a report and are not the same fact — this axis is what makes them
+ * distinguishable later.
+ *
  * Usage:
  *   ./scripts-run src/scripts/probe_unblocked_ask [--limit N] [--store PATH] [--json]
  *   ./scripts-run src/scripts/probe_unblocked_ask --self-test
+ *   ./scripts-run src/scripts/probe_unblocked_ask --help
  *
  * Exit codes: 0 always — a measurement, not a gate. `--self-test` exits 1 when
  * the detector fails to fire on its fixtures.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { defaultStore, HARNESS_TEXT, isInjectedBody } from './conformance_scan.js';
+import { isStructuredAskTool } from './_lib/structured_ask.js';
 import { isSyntheticPrompt } from './_lib/prompt_shape.js';
 
 /** A numbered-options block — the surface `check_reply_consistency` already reads. */
@@ -88,6 +110,8 @@ interface Turn {
     role: 'user' | 'assistant';
     text: string;
     at: string;
+    /** Tool names invoked in this turn — empty for a user turn. */
+    tools: string[];
 }
 
 function turns(lines: string[]): Turn[] {
@@ -116,10 +140,16 @@ function turns(lines: string[]): Turn[] {
                         .map((b: { text?: string }) => b.text ?? '')
                         .join('\n')
                   : '';
+        const tools = Array.isArray(c)
+            ? c
+                  .filter((b: { type?: string }) => b?.type === 'tool_use')
+                  .map((b: { name?: string }) => String(b?.name ?? ''))
+                  .filter((n: string) => n !== '')
+            : [];
         if (!text.trim()) continue;
         if (role === 'assistant' && HARNESS_TEXT.test(text.trim())) continue;
         if (role === 'user' && (isSyntheticPrompt(text) || isInjectedBody(text))) continue;
-        out.push({ role, text, at: String(e['timestamp'] ?? '') });
+        out.push({ role, text, at: String(e['timestamp'] ?? ''), tools });
     }
     return out;
 }
@@ -139,16 +169,39 @@ export function classifyTail(tail: string): AskVerdict {
     return { unblockedAsk: true, malformed: !RECOMMENDATION.test(tail) };
 }
 
+/** The ask FORM partition. Exhaustive and disjoint: `text + native === unblockedAsks`. */
+export interface FormBreakdown {
+    text: number;
+    native: number;
+}
+
+/**
+ * Which FORM an ask took. `native` iff the turn carried a structured-ask tool
+ * call; `text` otherwise. Exported so the partition is one function rather than
+ * an inline condition a later edit can quietly make non-exhaustive.
+ */
+export function askForm(tools: readonly string[]): 'text' | 'native' {
+    return tools.some((n) => isStructuredAskTool(n)) ? 'native' : 'text';
+}
+
 export interface Result {
     handbacks: number;
     withBlock: number;
     unblockedAsks: number;
     malformed: number;
+    form: FormBreakdown;
     samples: { session: string; at: string; span: string }[];
 }
 
 export function measure(store: string, limit: number): Result {
-    const r: Result = { handbacks: 0, withBlock: 0, unblockedAsks: 0, malformed: 0, samples: [] };
+    const r: Result = {
+        handbacks: 0,
+        withBlock: 0,
+        unblockedAsks: 0,
+        malformed: 0,
+        form: { text: 0, native: 0 },
+        samples: [],
+    };
     let files: string[];
     try {
         files = fs.readdirSync(store).filter((f) => f.endsWith('.jsonl'));
@@ -179,6 +232,7 @@ export function measure(store: string, limit: number): Result {
             const v = classifyTail(tail);
             if (!v.unblockedAsk) continue;
             r.unblockedAsks += 1;
+            r.form[askForm(t.tools)] += 1;
             if (v.malformed) {
                 r.malformed += 1;
                 if (r.samples.length < 5) {
@@ -221,6 +275,52 @@ export function selfTest(): number {
         );
         if (!ok) failed += 1;
     }
+    for (const [tools, want] of [
+        [[], 'text'],
+        [['Bash', 'Read'], 'text'],
+        [['AskUserQuestion'], 'native'],
+        [['ask_user_question'], 'native'],
+    ] as Array<[string[], 'text' | 'native']>) {
+        const got = askForm(tools);
+        const ok = got === want;
+        process.stdout.write(
+            `${ok ? '✅' : '❌'}  form of [${tools.join(', ')}] — ${got}` +
+                (ok ? '\n' : ` (wanted ${want})\n`),
+        );
+        if (!ok) failed += 1;
+    }
+    const fx = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-ask-form-'));
+    try {
+        const mk = (role: string, blocks: unknown): string =>
+            JSON.stringify({ type: role, timestamp: '2026-01-01T00:00:00Z', message: { role, content: blocks } });
+        fs.writeFileSync(
+            path.join(fx, 'fixture.jsonl'),
+            [
+                mk('assistant', [{ type: 'text', text: 'Done.\n\nSoll ich das so umsetzen?' }]),
+                mk('user', 'ja'),
+                mk('assistant', [
+                    { type: 'text', text: 'Done.\n\nShall I take the second half too?' },
+                    { type: 'tool_use', name: 'AskUserQuestion' },
+                ]),
+                mk('user', 'ja'),
+            ].join('\n'),
+            'utf8',
+        );
+        const r = measure(fx, 10);
+        const sums = r.form.text + r.form.native === r.unblockedAsks;
+        process.stdout.write(
+            `${sums ? '✅' : '❌'}  form partition is exhaustive — text ${String(r.form.text)} + ` +
+                `native ${String(r.form.native)} = unblocked ${String(r.unblockedAsks)}\n`,
+        );
+        if (!sums) failed += 1;
+        const split = r.form.text === 1 && r.form.native === 1;
+        process.stdout.write(
+            `${split ? '✅' : '❌'}  the fixture's two asks split one per class\n`,
+        );
+        if (!split) failed += 1;
+    } finally {
+        fs.rmSync(fx, { recursive: true, force: true });
+    }
     const positives = cases.filter((c) => c[3]).length;
     if (positives < 3) {
         process.stderr.write('❌  probe_unblocked_ask --self-test: fewer than 3 positive cases — a truncated suite must fail.\n');
@@ -232,6 +332,32 @@ export function selfTest(): number {
     );
     return failed > 0 ? 1 : 0;
 }
+
+const HELP = `probe_unblocked_ask — the unblocked-ask rate, and the FORM each ask took.
+
+Usage:
+  probe_unblocked_ask [--limit N] [--store PATH] [--json]
+  probe_unblocked_ask --self-test
+  probe_unblocked_ask --help
+
+Dimensions reported:
+  hand-back turns    assistant turns immediately followed by a user turn
+  unblocked asks     …that hand a decision with no numbered-options block
+  malformed          …of those, carrying no Recommendation:/Empfehlung: label
+  form               the ask FORM partition of the unblocked asks:
+                       native  the turn carried a structured-ask tool call
+                       text    the ask was prose
+                     text + native always equals the unblocked-ask total.
+                     native is 0 wherever no host has an observed structured-ask
+                     tool — a measured zero, not an uninstrumented one.
+
+Options:
+  --limit N     most recent N sessions (default 60)
+  --store PATH  transcript store (default: the host's own)
+  --json        emit the Result object instead of the report
+  --self-test   run the detector fixtures, incl. the form-partition identity
+  --help        this text
+`;
 
 export function main(argv: string[]): number {
     let limit = 60;
@@ -246,6 +372,10 @@ export function main(argv: string[]): number {
         // in-process, and resolving a transcript store that may not exist here
         // would make the sensitivity proof depend on the host having one.
         else if (a === '--self-test') return selfTest();
+        else if (a === '--help' || a === '-h') {
+            process.stdout.write(HELP);
+            return 0;
+        }
         else {
             process.stderr.write(`probe_unblocked_ask: unrecognized argument: ${a}\n`);
             return 0;
@@ -264,6 +394,9 @@ export function main(argv: string[]): number {
             `  …with a numbered block   ${String(r.withBlock)}  (excluded — check_reply_consistency reads that surface)\n` +
             `  …unblocked asks          ${String(r.unblockedAsks)}  ${pct(r.unblockedAsks, r.handbacks)} of hand-backs\n` +
             `  …of those, malformed     ${String(r.malformed)}  ${pct(r.malformed, r.unblockedAsks)} of unblocked asks\n` +
+            `  form: text               ${String(r.form.text)}  ${pct(r.form.text, r.unblockedAsks)} of unblocked asks\n` +
+            `  form: native             ${String(r.form.native)}  ${pct(r.form.native, r.unblockedAsks)} of unblocked asks\n` +
+            `  form: text + native      ${String(r.form.text + r.form.native)}  (must equal unblocked asks: ${String(r.unblockedAsks)})\n` +
             '\n  CEILING, not a point estimate: "hands a decision" is a heuristic and a\n' +
             '  rhetorical question can match it. A recommendation is matched on its LABEL,\n' +
             '  which is the rule\'s own bar but a bar on form.\n',
