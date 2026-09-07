@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "release": "14.21.0",
+  "findings": [
+    {
+      "finding_id": "02f9eb18e534",
+      "severity": "critical",
+      "kind": "correctness",
+      "title": "Self-review gate has reviewed nothing for four consecutive releases",
+      "file": null
+    },
+    {
+      "finding_id": "72a89dbe7366",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "The 14.19.0 start-position fix shipped incomplete",
+      "file": null
+    },
+    {
+      "finding_id": "8802d952c1cd",
+      "severity": "high",
+      "kind": "claim",
+      "title": "The estate is not empty and nothing claims it should be",
+      "file": null
+    },
+    {
+      "finding_id": "88b31b490567",
+      "severity": "high",
+      "kind": "security",
+      "title": "Push guard scans branch's own work but exists where neither neighbour's pin breaks",
+      "file": null
+    },
+    {
+      "finding_id": "6d46db03d6d2",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "ADR-253 citation retargeted but section name changed",
+      "file": null
+    },
+    {
+      "finding_id": "9f7a2af01db9",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MIX_RESPONSE_MARKER docblock claims shared consumption but only writer remains",
+      "file": null
+    },
+    {
+      "finding_id": "94017b8dcb12",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MixObligation.triggered became write-only",
+      "file": null
+    },
+    {
+      "finding_id": "bdbc7d23480c",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Read-back regression block had no discriminating power",
+      "file": null
+    },
+    {
+      "finding_id": "882e01c005c6",
+      "severity": "low",
+      "kind": "style",
+      "title": "guard_release_curation re-read changelog unnecessarily",
+      "file": null
+    },
+    {
+      "finding_id": "e2b82250b927",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Unbounded HTTP timeout allows indefinite resource exhaustion",
+      "file": "src/scripts/ai_council/api_transport.ts"
+    },
+    {
+      "finding_id": "088acabcd7a6",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Decrypted reference URLs logged to transcript before redaction",
+      "file": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md"
+    },
+    {
+      "finding_id": "d71084696fc2",
+      "severity": "high",
+      "kind": "security",
+      "title": "Archive URL ingestion bypasses repository identity validation",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "1d0598d1688c",
+      "severity": "high",
+      "kind": "security",
+      "title": "`--deep` clone parses attacker-controlled git objects before read ceiling",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "caa59adf108c",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Pre-registration timing claim for reference-loop is not verified in release span",
+      "file": "agents/roadmaps/road-to-first-reference-analysis-observation.md"
+    },
+    {
+      "finding_id": "75d15da837bc",
+      "severity": "high",
+      "kind": "claim",
+      "title": "free-jury-judge-agreement claim filed with no route to measurement",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "138f5b51777f",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Seat policy unknown-exclusion fallback creates undetected authorization gap",
+      "file": "src/scripts/ai_council/seat_policy.ts"
+    },
+    {
+      "finding_id": "c1dcd91df801",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Loop halt-on-spin tripwire fires on metric delta, but metric is never decremented",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "cd4de997fcf9",
+      "severity": "medium",
+      "kind": "security",
+      "title": "TTY prompt reads controlling terminal with no timeout",
+      "file": "src/scripts/_lib/tty_prompt.ts"
+    },
+    {
+      "finding_id": "b60acdec2328",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Encrypted reference tokens decrypted in memory with no zeroization",
+      "file": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md"
+    },
+    {
+      "finding_id": "82911d08c426",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Humanizer claim wording does not match measured corpus",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "ac776f64b24b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Command count in messaging (204) not verified in release",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "e85d44e4f643",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Blocked-by marker grammar allows missing reason but linter requires it only for user-decision class",
+      "file": "src/scripts/_lib/blocked_by_marker.ts"
+    },
+    {
+      "finding_id": "be9a73a44c08",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Skill-menu census (Phase 1.1) output is marked evidence but schema requires analysis",
+      "file": "src/domains/meta/pack.yaml"
+    },
+    {
+      "finding_id": "6c8b77c09434",
+      "severity": "medium",
+      "kind": "style",
+      "title": "Inconsistent hyphenation in command descriptions",
+      "file": "docs/catalog.md"
+    },
+    {
+      "finding_id": "8b693b0d3c1e",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Release highlights obligation removed but historical sections not updated",
+      "file": "docs/contracts/CHANGELOG-conventions.md"
+    },
+    {
+      "finding_id": "2a9d3619e376",
+      "severity": "low",
+      "kind": "style",
+      "title": "PROMPT_BUDGET_CHARS derivation in self-review-gate.md uses stale column name",
+      "file": "docs/self-review-gate.md"
+    },
+    {
+      "finding_id": "68a67b228d37",
+      "severity": "high",
+      "kind": "security",
+      "title": "Pre-push gate introduces new tracked file changes without review",
+      "file": "src/scripts/install-hooks.sh"
+    },
+    {
+      "finding_id": "a03ef5ce59b5",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Self-review partitioning loses coverage on non-finite chunk boundary",
+      "file": "src/scripts/self_review_gate.ts"
+    },
+    {
+      "finding_id": "f505880fef0b",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Humanizer claim depends on carried-forward measurement without date bound",
+      "file": "tests/scripts/humanizer_attribution.test.ts"
+    },
+    {
+      "finding_id": "3d8a5268753b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Council transport doubles use mocked post() but constructors throw on missing transport",
+      "file": "tests/scripts/ai_council/api_transport.test.ts"
+    },
+    {
+      "finding_id": "2cfa8aa7cb9e",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Harvest manifest writes resolved URLs to gitignored local area without encryption",
+      "file": "src/scripts/harvest_reference_tokens.ts"
+    },
+    {
+      "finding_id": "c252cb7a4196",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent exit code documentation between function signature and error messages",
+      "file": "src/scripts/ask_block_census.ts"
+    },
+    {
+      "finding_id": "3cd8d055e313",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Density floor test uses fabricated long sentence but doesn't verify it exceeds floor",
+      "file": "tests/scripts/detect_ai_tells.test.ts"
+    },
+    {
+      "finding_id": "cb2cc0895b83",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Test suite simulates defect conditions but does not verify the gate actually refused them in production",
+      "file": "tests/scripts/self_review_prompt_budget.test.ts"
+    },
+    {
+      "finding_id": "4225c2d1669a",
+      "severity": "high",
+      "kind": "claim",
+      "title": "CHANGELOG.md headline 'Governance-mix line now purely measured' unbacked by architectural evidence",
+      "file": "tests/scripts/release_material.test.ts"
+    },
+    {
+      "finding_id": "006655606e79",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Deleted mix_response_blockers predicate is asserted absent but downstream callers are not verified removed",
+      "file": "tests/scripts/release_material.test.ts"
+    },
+    {
+      "finding_id": "fb5c38d2ea7e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MEASURED_SPAN_CHARS literals are trusted inputs to a measurement-validation suite",
+      "file": "tests/scripts/self_review_prompt_budget.test.ts"
+    },
+    {
+      "finding_id": "369b40ff14bf",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Corpus-based epoch gate trusts bench/corpora/prose-tells-epochs.md without verifying file integrity",
+      "file": "tests/scripts/tell_family_epochs.test.ts"
+    },
+    {
+      "finding_id": "5bf631d4a417",
+      "severity": "low",
+      "kind": "style",
+      "title": "Hard-coded spawn timeout 60000 ms in epoch gate tests risks flake on slow CI runners",
+      "file": "tests/scripts/tell_family_epochs.test.ts"
+    },
+    {
+      "finding_id": "35e21c392c66",
+      "severity": "low",
+      "kind": "style",
+      "title": "Sensitivity assertion 'a typo cannot make every case vacuous' is a meta-test that itself has no guard",
+      "file": "tests/scripts/release_material.test.ts"
+    }
+  ]
+}
