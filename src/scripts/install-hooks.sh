@@ -133,8 +133,48 @@ fail=0
 # on a detached HEAD, or standing on the base itself it returns 0 and says so.
 # So an unreachable network cannot block a push, and a stale local tracking ref
 # cannot fake a green.
-# BRANCH WORK COMMITTED — first, because it is the cheapest and because every
-# gate below answers against the working tree.
+echo "🔍 Base freshness — is this branch behind the base it will merge into?"
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
+elif [ ! -x ./scripts-run ]; then
+    echo "⚠️  ./scripts-run not found — skipping the freshness check for this push."
+elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
+    echo ""
+    echo "   Push blocked — the branch is behind its base, and the gates you just"
+    echo "   passed were answered against a base that no longer exists."
+    echo ""
+    echo "     task push-ready         # fetch → integrate the base SET → regenerate"
+    echo "                             # → verify → re-check freshness, then push"
+    echo "     task push-ready DRY=1   # the same steps, read-only"
+    echo ""
+    echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
+    echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
+    exit 1
+fi
+
+# BRANCH WORK COMMITTED — after base freshness, before everything else.
+#
+# Ordering is deliberate in BOTH directions. It runs AFTER base freshness
+# because the remedy there (`task push-ready`) merges, and a merge changes the
+# working tree this gate reads — checking first would answer against a tree the
+# operator is about to replace. It runs BEFORE the remaining gates because they
+# all answer against the working tree, and a tree carrying unfinished work
+# makes their verdicts describe something that is not being pushed.
+#
+# Measured twice, and both placements were wrong for a different reason.
+# Placing it FIRST reded tests/scripts/prepush_base_freshness.test.ts, which
+# executes the whole hook and asserts the freshness block is reached. Placing
+# it between the next block's comment header and that block's `echo` reded
+# check_installed_hooks_fresh's advisory pin, whose extraction runs from that
+# header to the following task-availability check and so swallowed this block's
+# `exit 1`. A block goes BEFORE a neighbour's comment header, never between the
+# header and its code.
+#
+# And this paragraph may NOT name that header literally: the pin locates it with
+# a plain indexOf over the rendered hook, so a comment quoting the string
+# becomes the first match and truncates the block to nothing. An anchor that is
+# also content is not an anchor — spelled out here because the obvious edit to
+# this comment is to put the string back in for clarity.
 #
 # The defect it exists for, measured 2026-09-07: a reconciled baseline was
 # written into gate-violation-baselines.json AFTER `git add`, so
@@ -161,25 +201,6 @@ elif ! ./scripts-run src/scripts/check_branch_work_committed --quiet; then
     echo ""
     echo "   This hook refuses; it never commits for you. Bypass a genuine WIP"
     echo "   push with AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1."
-    exit 1
-fi
-
-echo "🔍 Base freshness — is this branch behind the base it will merge into?"
-if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
-    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
-elif [ ! -x ./scripts-run ]; then
-    echo "⚠️  ./scripts-run not found — skipping the freshness check for this push."
-elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
-    echo ""
-    echo "   Push blocked — the branch is behind its base, and the gates you just"
-    echo "   passed were answered against a base that no longer exists."
-    echo ""
-    echo "     task push-ready         # fetch → integrate the base SET → regenerate"
-    echo "                             # → verify → re-check freshness, then push"
-    echo "     task push-ready DRY=1   # the same steps, read-only"
-    echo ""
-    echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
-    echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
     exit 1
 fi
 
