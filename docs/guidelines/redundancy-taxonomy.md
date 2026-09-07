@@ -86,6 +86,34 @@ translation frequently denote different mechanisms — here `route`, `dispatch`,
 five ways — so a sweep over them destroys information the echo classes exist to
 protect.
 
+## The avoid-list — one term, one concept
+
+A homonym collision is only half-diagnosed when it is classified. The other
+half is the **decision**: which concept keeps the word, and what every other
+sense is called instead. This list carries the decided ones. A word is added
+here when the same term has been observed denoting more than one shipped
+mechanism; it is removed only when the collision is gone from the tree, never
+because the entry became inconvenient.
+
+Read the columns as a rename instruction for **prose you write from now on**.
+The identifier layer is decided separately and per cluster, exactly as the
+prose/identifier split above requires — a term may be `canonicalize-term` in
+prose and `keep-distinct` in identifiers, and both verdicts are recorded.
+
+| Term | Concept that keeps the word | Other senses, and what to call them | Identifier verdict |
+|---|---|---|---|
+| `envelope` | The **transport wrapper** around a payload — `OutcomeEnvelope` (a run's terminal outcome, `src/scripts/_lib/outcome_envelope.ts`) and the `CHECKPOINT` envelope a worker capsule rides in. | The **session continuity record** is a **capsule**. The word is not chosen for readability — it is the shipped discriminator (`CAPSULE_SCHEMA_VERSION`, `CAPSULE_VARIANTS = ['worker','main_session']`, `src/scripts/_lib/subagent_capsule.ts`), so the surviving term is read off what ships rather than off what reads best. | `keep-distinct` for now. `MainSessionRecycleEnvelope` and `RECYCLE_ENVELOPE_*` keep their names until a rename is costed on its own; the prose rule binds immediately and the symbols are a separate blast radius. |
+| `handoff` | The **session-to-session continuity handover** a developer invokes — the `handoff` verb and the `/agent-handoff` command. | The lint over senior-tier skills' `## Related Skills` edges is a **cross-wing skill link**, never "a handoff". | `keep-distinct`, recorded reason: `lint_handoffs.ts` mirrors a ported CLI contract (ADR-200) whose name is an external surface. Its module docstring already says "cross-wing", which is the disambiguation the prose rule now requires everywhere else. |
+
+**Why a list and not a linter.** `lint_canonical_terms` decides *spelling*
+pairs, where one side is mechanically wrong. A homonym is not mechanically
+wrong anywhere — every occurrence is a legitimate word for a legitimate
+concept, and only the reader's inability to tell them apart is the defect. A
+gate that flagged `envelope` would flag the entry that is supposed to survive.
+So this list is enforced at review, by citation, and its cost of being ignored
+is the cost the taxonomy already names: the model telling you it has not
+decided.
+
 ## Why any of this is worth a gate at all
 
 Generated code trends toward duplication rather than reuse: measured
