@@ -62,6 +62,8 @@ import {
     query,
     type QueryResult,
 } from './query.js';
+import { openGraphIndex, sqliteTwinPath } from './sqlite_store.js';
+import type { CodeGraph } from './types.js';
 import { validateGraph } from './validate.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -150,13 +152,57 @@ function cmdValidate(argv: string[]): number {
         return 1;
     }
     const r = validateGraph(parsed);
-    if (r.ok) {
-        process.stdout.write(`✅  graph schema valid: ${path.relative(REPO_ROOT, p)}\n`);
-        return 0;
+    if (!r.ok) {
+        process.stderr.write(`❌  graph schema invalid (${r.errors.length}):\n`);
+        for (const e of r.errors) process.stderr.write(`  ${e}\n`);
+        return 1;
     }
-    process.stderr.write(`❌  graph schema invalid (${r.errors.length}):\n`);
-    for (const e of r.errors) process.stderr.write(`  ${e}\n`);
-    return 1;
+
+    // Twin ⇔ JSON, by checksum (road-to-a-graph-that-is-shipped 2.1).
+    //
+    // The schema check above says the JSON is well-formed. It says nothing
+    // about the derived store that now ANSWERS most queries, and since 2.1 the
+    // twin is read as an index rather than replayed as a blob — so a twin that
+    // disagreed with the JSON would produce different answers rather than a
+    // parse error. The comparison is `source_checksum`, which is the JSON's own
+    // content-addressed cache key, so agreement here means the twin was emitted
+    // from THIS graph and not merely from a graph.
+    const twinState = twinChecksumState(p, (parsed as CodeGraph).source_checksum);
+    const rel = path.relative(REPO_ROOT, p);
+    if (twinState.kind === 'mismatch') {
+        process.stderr.write(
+            `❌  SQLite twin disagrees with the canonical JSON: twin ${twinState.twin} ≠ json ${twinState.json}\n` +
+                '    The twin is derived and disposable — delete it and re-run `code-graph build`.\n' +
+                `    ${path.relative(REPO_ROOT, sqliteTwinPath(p))}\n`,
+        );
+        return 1;
+    }
+    process.stdout.write(`✅  graph schema valid: ${rel}  ·  twin: ${twinState.kind}\n`);
+    return 0;
+}
+
+/**
+ * Compare the twin's stored `source_checksum` against the canonical JSON's.
+ *
+ * `absent` covers every state in which there is nothing to disagree WITH — no
+ * twin, no `node:sqlite`, a stale or corrupt twin the reader would refuse
+ * anyway. Those are not validation failures: the JSON is canonical and a
+ * missing accelerator changes no answer. Only a twin that is present, fresh,
+ * readable AND carrying a different checksum is a real contradiction.
+ */
+function twinChecksumState(
+    jsonPath: string,
+    jsonChecksum: string,
+): { kind: 'absent' | 'match' } | { kind: 'mismatch'; twin: string; json: string } {
+    const index = openGraphIndex(jsonPath);
+    if (!index) return { kind: 'absent' };
+    try {
+        const twin = index.sourceChecksum;
+        if (twin && twin !== jsonChecksum) return { kind: 'mismatch', twin, json: jsonChecksum };
+        return { kind: 'match' };
+    } finally {
+        index.close();
+    }
 }
 
 function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err: string } {
@@ -205,8 +251,9 @@ function changedNodeSeeds(g: LoadedGraph, root: string, ref: string): string[] {
     } catch {
         return [];
     }
-    const set = new Set(files);
-    return g.graph.nodes.filter((n) => set.has(n.source_file) && n.kind !== 'file').map((n) => n.id);
+    // Served by the `nodes_source_file` index on the SQLite path, so a wide
+    // diff does not force the whole node table into memory to answer it.
+    return g.idsInFiles(files);
 }
 
 function cmdQuery(kind: 'query' | 'explain' | 'affected' | 'path', argv: string[]): number {

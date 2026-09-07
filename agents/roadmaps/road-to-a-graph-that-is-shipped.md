@@ -286,7 +286,7 @@ built for.
 
 ## Phase 2 — Indexed store
 
-- [ ] **2.1 SQLite becomes the read store above 50k edges — as a queryable index, not a
+- [x] **2.1 SQLite becomes the read store above 50k edges — as a queryable index, not a
       blob.** Tables `nodes(id, kind, label, file)`, `edges(src, dst, relation, confidence,
       resolved_via, provider)`, indexes on `id`, `label`, `src`, `dst`. Add the per-node and
       per-edge read API `sqlite_store.ts` lacks today (D7), and route `affected`/`query`
@@ -295,6 +295,47 @@ built for.
       verify: `affected` on a ≥50k-edge build parses no JSON (traced); wall time and RSS
       before/after recorded in the commit; `code-graph validate` asserts twin ⇔ JSON by
       checksum.
+
+      <!-- verified 2026-09-07.
+
+      MEASURED — `affected` 2 hops, 60,000-edge graph (14,131,489 B of JSON), each arm in
+      its OWN process because RSS is cumulative within one:
+
+        | arm     | wall     | RSS      | heap    | graph materialized |
+        |---------|----------|----------|---------|--------------------|
+        | indexed |     4.9 ms | 190.7 MB |  59.9 MB | no                |
+        | blob    | 9,809.6 ms | 349.0 MB | 163.0 MB | yes               |
+
+      Both arms return the same 2 lines. The blob arm's 9.8 s is dominated by
+      `validateGraph` over 120k items plus a `LexicalIndex` built across 60,001 nodes —
+      work the indexed path does not do at all, because the BM25 corpus is lazy and an
+      exact-id seed never asks for it.
+
+      TRACED, not asserted — tests/scripts/code_graph_indexed_read.test.ts → 7 passed:
+        · `JSON.parse` is wrapped and counted: ZERO calls on the indexed arm.
+        · the canonical JSON is chmod 000 for the duration, so a read is impossible
+          rather than merely observed (`statSync` still works, which is all the freshness
+          check needs). `fs.readFileSync` could not be spied: under ESM `node:fs` is a
+          frozen module namespace.
+        · SENSITIVITY: the same query below the threshold parses (>0) and materializes.
+        · both paths return identical `lines` and `recommended_reads`.
+
+      FINDING, recorded because it corrects the obvious test design: below the threshold
+      `loadGraph` STILL succeeds with the canonical JSON unreadable, because
+      `loadSerializedFromTwin` sources bytes from the twin and only falls back to the file
+      when the twin is absent or stale. So a FILE READ never discriminated the two paths —
+      which is exactly D6's corrected finding that the twin was a cheaper blob transport
+      and not an index. The parse is the discriminator, and it is what is measured.
+
+      `code-graph validate` now compares the twin's stored `source_checksum` against the
+      JSON's, with three outcomes proven by fixture: `match` (exit 0), `absent` (exit 0 —
+      a missing accelerator changes no answer), `mismatch` (exit 1). The mismatch case is
+      the teeth: `emitSqliteTwin` stats the real file, so an impostor twin is FRESH by
+      size and mtime and nothing in the freshness path catches it.
+
+      GRAPH_STORE_VERSION 1 → 2, so a v1 twin is refused and re-emitted rather than being
+      read through columns it does not have. `resolved_via` / `provider` columns exist and
+      are nullable here; 2.2 populates and enforces them. -->
 - [ ] **2.2 Two fields on every edge.** `resolved_via ∈ {same-file, import-specifier,
       path-alias, psr4, route-table, test-import, name-lookup, dynamic}` and `provider`
       (`native`). Schema version bumps; `build` prints the `resolved_via` histogram.
