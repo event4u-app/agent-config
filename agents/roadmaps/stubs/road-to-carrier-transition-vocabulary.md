@@ -58,6 +58,56 @@ could agree on.
 **Resumption trigger:** a second carrier appears, OR any of the five refusing
 transitions above is genuinely needed and is currently being worked around.
 
+## The resumption trigger has FIRED — 2026-09-07, and the premise above is stale
+
+> **This section adds a dated observation and builds nothing.** No transition
+> was declared, no vocabulary was designed, no gate was written. It is here
+> because the trigger one section above is a promise to notice, and it fired
+> without anything noticing.
+
+**A second carrier exists.** `agents/roadmaps/road-to-the-skill-surface-framing-choice.md`
+declares `status: carrier` with `parent_roadmap: road-to-the-activation-census-consequence`,
+and landed on `main` on **2026-09-07** in `a42179585` (PR #1884,
+`drain/the-activation-census-consequence`). Measured, not inferred:
+`grep -rIln '^status: carrier' agents/roadmaps/` returns two paths, and
+`lint_carrier_integrity` reports `2 live carrier(s) justified` where its own
+2026-09-02 run reported one.
+
+**So § Why it is not built now rests on a premise that is no longer true.** That
+section's stated reason was *"There is exactly **one** carrier in the tree. A
+vocabulary designed against a single instance encodes that instance's shape."*
+The sentence is left standing above and corrected here rather than rewritten,
+because the deferral was honest when written and the record of *why* it was taken
+is worth more than a tidy file. This stub was last touched on 2026-09-02
+(`6641d4719`, #1810); the second carrier arrived five days later.
+
+**What is NOT claimed.** That the vocabulary is now justified — one additional
+instance answers the "framework for one instance" objection and answers nothing
+about which of the four capabilities is needed; that any of the seven
+transitions has been attempted or worked around; that two carriers constitute a
+population; or that the council's "deliberately immobile first version" has been
+superseded. The `n = 2` here is a count, not a trend.
+
+**Why nothing was built.** Designing a carrier-identity scheme, an atomic
+transfer, a per-item resolution record, or a split declaration means shipping
+repository-wide lifecycle infrastructure and, for any of them to bind, a CI gate.
+That authority was found absent by an AI council on 2026-09-01 (drain 14, verdict
+**3A**: *"adding a CI gate is a governance act whose authority this run has not
+established"*) and the seats **diverged** on it again on 2026-09-01 (drain 15),
+so no mandate exists. A divergent council carries none. The trigger's condition
+being met supplies the *engineering* premise and not the *authority*, and those
+are different questions.
+
+**The trigger stays fired.** It is not reset, downgraded, or re-dated, and no
+calendar date is attached to it. The next authorised run — or the owner — inherits
+a met condition plus this record of what met it. Recording it is the whole of
+this lane's discharge, and the sibling carrier's own § What still does not guard
+it names why the recording was needed at all: *"No mechanism monitors the 38
+resumption triggers, so an item whose trigger fires stays `[~]` until a human
+looks."* This is that failure with a live instance attached — a fired trigger on
+a sibling artefact, unnoticed for five days, found only because a human-directed
+run happened to read the file.
+
 ## See also
 
 - `src/scripts/lint_carrier_integrity.ts` — the standing validator whose
