@@ -51,6 +51,11 @@ Stop.
 ### 2. Load and display the feature
 
 - Read the selected feature file completely.
+- **Ask first, then summarise.** Any question the feature file still carries in
+  its `## Open Questions` section is owed to the user: put each one, one per
+  turn, before drawing the screen below. The block reports what remains
+  **unanswered after asking** — it never renders a number in place of a
+  question, which is the shape that lets a decision be filed instead of put.
 - Display a summary:
 
 ```
@@ -75,11 +80,11 @@ Out of Scope:
   • {deferred item 1}
 
 ───────────────────────────────────────────────
-OPEN QUESTIONS: {count}
+STILL OWED TO YOU — asked, not yet answered:
 ───────────────────────────────────────────────
 
-  • {question 1}
-  • {question 2}
+  • {unanswered question 1}
+  • {unanswered question 2}
 
 ───────────────────────────────────────────────
 ROADMAPS: {linked roadmaps or "keine"}

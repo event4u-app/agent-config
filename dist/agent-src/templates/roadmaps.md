@@ -288,6 +288,21 @@ that was never a judgement call.
     step gated by a specific blocker may cross-reference it inline:
     `- [ ] … <!-- blocked-by: <blocker-id> -->`.
 
+    **A user-decision blocker's annotation records whether the question
+    was actually put.** Where the blocker's `Owner:` is the maintainer,
+    the user or the owner, the marker carries an `asked:` field —
+    `<!-- blocked-by: <id> | asked: yes -->` when the question reached
+    the user, `<!-- blocked-by: <id> | asked: no — <reason> -->` when it
+    did not. `lint_roadmap_blockers` fails on a missing field and on an
+    `asked: no` with no reason. Without it a decision only the user can
+    make can be filed, correctly labelled, in a file nobody is watching,
+    and a later reader cannot tell a declined decision from one that was
+    never offered. On an interactive host the question is put FIRST;
+    only a decline, a timeout, or a non-interactive context writes the
+    marker, and a timeout is never consent — see
+    [`roadmap-process-loop`](../contexts/execution/roadmap-process-loop.md)
+    § Ask before park.
+
     **A blocker is a decision the owner can make in one sitting, or it
     is not finished being written.** The five original fields describe
     the *situation*; they do not make it decidable, and a blocker that
