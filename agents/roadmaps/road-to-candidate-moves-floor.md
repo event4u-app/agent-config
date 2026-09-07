@@ -73,7 +73,7 @@ played.
 ## Prerequisites
 
 - `tests/reasoning-layer-eval/` — the corpus, the rubric and the runner all
-  exist. 16 L6N slots, `rubric.md` with four dimensions, published metric bars
+  exist. 16 L6N slots, `rubric.md` with five dimensions (four until 1.2), published metric bars
   (trigger ≥ 60 %, rubric mean ≥ 70 %, treatment − baseline ≥ +15 pp standard
   host / ≥ 0 strong host).
 - `src/scripts/rdp_quality_eval.ts` — reproduced dry-run at HEAD: `--mode l6`
@@ -85,7 +85,7 @@ played.
 
 ## Phase 1 — Take the calendar and the free baseline
 
-- [ ] **1.1 Extend the RDP beta window before it errors.**
+- [x] **1.1 Extend the RDP beta window before it errors.**
       `docs/contracts/reasoning-discipline-protocol.md` carries
       `keep-beta-until: 2026-09-14`. `check_beta_review_markers` reports it as
       `[fresh]`, i.e. absent from the frozen 2026-08-25 baseline, so on that
@@ -94,7 +94,7 @@ played.
       is a one-line edit; leaving it is the only wrong answer.
       verify: `./scripts-run src/scripts/check_beta_review_markers` no longer
       lists `reasoning-discipline-protocol.md` under upcoming fresh lapses.
-- [ ] **1.2 Split the rubric dimension that cannot see this defect.**
+- [x] **1.2 Split the rubric dimension that cannot see this defect.**
       `tests/reasoning-layer-eval/rubric.md:33-35` dim 3
       `Premature-solution avoidance` anchors on
       `0 = built easy parts first, reworked later` — it scores sequencing
@@ -105,14 +105,27 @@ played.
       its own anchors unchanged.
       verify: `rubric.md` lists five dimensions and its scoring sheet has a
       `dim5` column.
-- [ ] **1.3 Score the baseline off the stored transcripts, at zero spend.**
+- [x] **1.3 Score the baseline off the stored transcripts, at zero spend.**
       The 32 transcripts in `l6n-results.json` predate every change in this
       roadmap, so they *are* the baseline arm for dim 5. Score them on dim 5
       only, with `rdp_quality_eval --score-with` for the rater, and publish the
       rate in `tests/reasoning-layer-eval/RESULTS-candidates-baseline-<date>.md`.
       verify: the results file exists, names the rater model, and reports a
       dim-5 rate per slot with zero API calls attributable to capture.
-- [ ] **1.4 Record what the stored corpus cannot answer.**
+      Done 2026-09-07 — `tests/reasoning-layer-eval/RESULTS-candidates-baseline-2026-09-07.md`,
+      rater `claude-sonnet-4-5`, 32 transcripts, **0 capture calls** (~$0.336 of
+      rater spend), 0 unparsable replies. **dim5 mean 0.875/3 (29.2 %); 18 of 32
+      score `0`, i.e. one form only.** The reading needed a new `--score-only`
+      mode on `rdp_quality_eval`: the tool could capture-and-score but not score
+      what already existed, and re-capturing would have produced a different
+      corpus rather than this one's baseline. That mode inherits the capture
+      path's non-tty billing guard verbatim rather than becoming an unguarded
+      way to bill the same account.
+      The finding worth carrying into Phase 3: dim1 scores `3` on 29 of 32 and
+      dim3 on 27 of 32 while dim5 sits at 29 %. If dim 3 could see this defect
+      the two could not diverge like that — the roadmap's premise is now
+      measured rather than argued.
+- [x] **1.4 Record what the stored corpus cannot answer.**
       All 32 transcripts are `band: standard`. The published bar includes
       `no regression (≥ 0) on a strong-reasoning host`, and no strong-band
       transcript exists — so that half is unmeasured and stays unmeasured until
@@ -120,9 +133,93 @@ played.
       rather than letting a standard-band-only reading stand in for both.
       verify: the results file carries the limitation in one sentence naming
       the missing band.
+      Done 2026-09-07 — the results file's § What this corpus cannot answer
+      states it in bold and names the band: all 32 transcripts are
+      `band: standard`, so the bar's "no regression (≥ 0) on a strong-reasoning
+      host" half is unmeasured and stays so until a strong-band capture is paid
+      for. Recorded there rather than here because the file is what a later
+      reader of the delta opens, and the case that produced this roadmap was
+      maintainer reasoning on a strong host — the exact band this reading does
+      not cover.
 
 ## Phase 2 — The one artifact, owed by decision class and not by file count
 
+> **RE-SCOPED 2026-09-07 by a split AI council. Read this before 2.1.**
+>
+> **The lock nobody in this roadmap noticed.** `mandated-lines.md` § Honest
+> scope ends: *"That observation costs one counter and is **the first thing to
+> look at before adding a sixth line.**"* The observation is the count of intent
+> lines whose three slots **disagree** — the file's own test for whether a
+> mandated line is decorating decisions already made. **That counter does not
+> exist anywhere in the tree.** Step 2.1 adds the sixth line, so following this
+> roadmap literally walks through a lock recorded in the very file it edits.
+>
+> **Council, 2 seats, SPLIT.**
+> - Seat 1 → **(c) both**: the roadmap's measurement authorizes *this* line, and
+>   the counter is still owed because it answers a different question — whether
+>   the five EXISTING lines earn their place, which nothing here measures.
+> - Seat 2 → **(a) the lock blocks**, on an argument this roadmap must record
+>   because it is correct and it corrects the request that was put to them:
+>   **the published baseline measures the DEFECT, not the EFFICACY of the fix.**
+>   It was taken *before the line exists*. Calling it a direct measurement of
+>   non-ceremony "conflates evidence of a problem with evidence that a
+>   particular intervention solves it". The delete branch is real governance but
+>   it operates *after* the prohibited addition, and a reversible violation of a
+>   recorded ordering is still a violation of it.
+>
+> **A split escalates, and this run reaches no user, so the disposition is the
+> intersection neither seat calls unauthorized** — the same rule
+> `road-to-first-reference-analysis-observation` records for its own split. Seat
+> 2 names that intersection itself: *"If such an experiment can be conducted
+> without first making the line globally mandatory … That supports an
+> experimental trial — not immediate adoption."* Seat 1 authorises proceeding
+> outright and therefore authorises the narrower form a fortiori.
+>
+> **The disposition, binding on the steps below:**
+>
+> 1. **The counter is built first.** It is the lock's stated precondition and
+>    both seats want it. It counts intent lines whose three slots disagree, and
+>    what threshold means "ceremony" is read off its distribution — **not set in
+>    advance**, which both seats flagged as the invented number in the request.
+> 2. **`Candidates:` may be instructed to the model under test in the eval's
+>    TREATMENT ARM**, where it can be measured without being a shipped
+>    obligation on anyone.
+> 3. **No sixth line ships in `mandated-lines.md` § The five lines, and
+>    `lint_mandated_lines` gains no third obligation, in this phase.** That is
+>    the "globally mandatory" step seat 2 blocks, and it is what Phase 3.3's
+>    KEEP branch would authorise — as a further decision, not automatically.
+> 4. **`direct-answers` Iron Law 3 is not suspended.** Both seats read six as at
+>    or over the ceiling for the set; seat 2 named `Sibling search` as the most
+>    plausible retirement candidate if a sixth ever does ship. Recorded, not
+>    decided — retiring a line is its own change.
+>
+> Steps 2.1 and 2.4 are therefore **deferred, not descoped**: their content is
+> unchanged and their gate moved behind Phase 3's reading. 2.2, 2.3, 2.5 and 2.6
+> define the line's SHAPE and are executable now, because a shape the treatment
+> arm instructs must exist before the treatment arm can instruct it.
+>
+> *Reopening:* the counter's distribution is read, or Phase 3.3 returns a KEEP
+> verdict. Either reopens items 2 and 3 above on their own terms.
+>
+> Council record: `2026-09-07-sixth-mandated-line-lock.md` under
+> `agents/runtime/council/responses/` — local-only (`agents/runtime/` is
+> gitignored), so the substance is transcribed here rather than linked.
+
+- [ ] **2.0 Build the counter the lock asks for, and read it before 2.1.**
+      Added 2026-09-07 by the split council above; it is the lock's own stated
+      precondition and both seats want it. Count the emitted intent lines whose
+      three slots **disagree** — `mandated-lines.md` § Honest scope defines
+      disagreement as the finding that stops the edit, so a run where the three
+      slots always agree is a run writing the line after deciding. The counter
+      answers a question **nothing else in this roadmap measures**: whether the
+      five EXISTING lines earn their place, as opposed to whether a sixth would.
+      **No threshold is set in advance.** Both seats flagged the "≥ 80 % zero
+      disagreement = ceremony" figure put to them as invented; what counts as
+      ceremony is read off the distribution once one exists. Setting the number
+      first is how a measurement gets its answer chosen for it.
+      verify: the counter exists, reports a disagreement rate over a real
+      population of emitted intent lines, and the roadmap records the rate — not
+      a verdict derived from a number picked beforehand.
 - [ ] **2.1 Add the sixth mandated line.**
       `src/agent-src/contexts/execution/mandated-lines.md` carries five lines
       and the argument for why a line beats a clause. Add `Candidates:` on the
@@ -132,7 +229,13 @@ played.
       it.
       verify: `./scripts-run src/scripts/lint_mandated_lines --stdin` reports a
       third obligation and a report owing `Candidates:` without it exits 2.
-- [ ] **2.2 Make `K0` a candidate, not a courtesy.**
+      DEFERRED 2026-09-07, not descoped — the content above is unchanged and its
+      gate moved behind Phase 3's reading. This is the step the split council's
+      seat 2 blocks: shipping the line into § The five lines and giving the
+      linter a third obligation is what "globally mandatory" means, and the
+      published baseline measures the DEFECT rather than the EFFICACY of the
+      fix. Phase 3.3's KEEP branch is what authorises it, as a further decision
+      and not automatically. The lock's counter is built first — see 2.0.
       `K0` is `keep the current form / change nothing`. It is owed wherever the
       line is owed, and it is dropped in exactly one case: the user prescribed
       the form, which is an authorization of that form rather than a choice the
