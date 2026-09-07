@@ -22,7 +22,7 @@ packs:
 Turn a file someone dropped in `agents/tmp/` into either a roadmap this repo can
 execute, or a written reason it was dropped.
 
-The sibling [`/analyze:reference-repo`](reference-repo.md) does this for an
+The sibling [`/analyze:repo`](repo.md) does this for an
 **external** repository. This does it for a **local artifact** — a review, a
 prompt, a feature spec, a transcript, a persona, a competitor teardown — and the
 difference matters: an inbox file is a **frozen snapshot of an opinion about a
