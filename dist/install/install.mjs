@@ -8141,6 +8141,7 @@ var SAFE_DEFAULT = {
   separate_quota_pool: false,
   agent_teams: false,
   worker_respawn: false,
+  structured_ask: false,
   reads_project_mcp_config: false,
   // `true` because the safe answer here is "there is still a step", not
   // "there is nothing to do" — see the field's own note.
@@ -8162,6 +8163,7 @@ function normalizeHostManifest(input) {
     separate_quota_pool: asBool(src.separate_quota_pool),
     agent_teams: asBool(src.agent_teams),
     worker_respawn: asBool(src.worker_respawn),
+    structured_ask: asBool(src.structured_ask),
     reads_project_mcp_config: asBool(src.reads_project_mcp_config),
     // Inverted coercion, matching the inverted default: only an explicit
     // `false` clears the residual, so an absent or malformed value keeps
@@ -8170,7 +8172,7 @@ function normalizeHostManifest(input) {
   };
 }
 var HOST_CAPABILITY_REGISTRY = {
-  claude: { subagent_spawn: true, parallel_spawn: true }
+  claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: false }
 };
 function resolveHostCapabilities(hostId, override) {
   if (override !== void 0 && override !== null && typeof override === "object" && !Array.isArray(override)) {
@@ -8195,6 +8197,7 @@ var CAPABILITY_FIELDS = [
   "separate_quota_pool",
   "agent_teams",
   "worker_respawn",
+  "structured_ask",
   "reads_project_mcp_config",
   "mcp_needs_manual_activation"
 ];
