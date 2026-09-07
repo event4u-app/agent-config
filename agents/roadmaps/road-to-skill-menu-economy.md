@@ -40,11 +40,44 @@ pre-registered comparison shows equal-or-better hit rate at equal-or-lower stand
 
 - [ ] Predecessor Phase 4 merged (the baseline this file measures against is the post-flip
       one).
-- [ ] Read `src/scripts/_lib/preamble_byte_census.ts:290` (`censusSkillsCatalog`) and
-      `src/scripts/schemas/skill.schema.json:28` (the description cap and its recorded
+      NOT MET 2026-09-07. Every step of `road-to-delivery-for-every-host` Phase 4 —
+      4.0 through 4.5 — is unticked at this commit. This is what blocks 1.2, Phase 2
+      and Phase 3 below; it does **not** block 1.1 or 1.3, whose output is a
+      classification of entry paths and carries no byte baseline at all.
+- [x] Read `src/scripts/preamble_byte_census.ts:290` (`censusSkillsCatalog`) and
+      `src/scripts/schemas/skill.schema.json:25-29` (the description cap and its recorded
       distribution).
-- [ ] Run `agent-config roadmap:context --roadmap road-to-skill-menu-economy` and record the
+      Done 2026-09-07, with a path `corrected-from-reproduction`: this line said
+      `src/scripts/_lib/preamble_byte_census.ts:290`, and there is no file at that
+      path — the census lives at `src/scripts/preamble_byte_census.ts`, where
+      `censusSkillsCatalog` is at line 290 exactly as cited. Read and confirmed: it
+      walks `skillsDir`, and per skill adds `- ${name}: ${description}\n`.length to a
+      char total, reading **no body byte**, which is why a 299-file corpus reports as
+      ~14.8k standing. The schema's `description` cap is `maxLength: 200` at line 28,
+      and its own docstring at line 29 records the distribution the Context cites
+      (median 181 / p75 189 / max 200, zero over 200). Both halves of K2 verified at
+      source rather than quoted.
+- [x] Run `agent-config roadmap:context --roadmap road-to-skill-menu-economy` and record the
       probe's `scanned:` line against the `relates:` block above.
+      Done 2026-09-07 via `./scripts-run src/scripts/roadmap_context --roadmap
+      road-to-skill-menu-economy` (the CLI verb and the script are the same probe).
+      Recorded `scanned:` lines: **0 PRs · 900 roadmap file(s) across
+      active/later/stubs/archive · 430 remote branch(es) · 3 live session record(s) ·
+      0 inbox file name(s)**. Context fingerprint `ddeb6ad5a89ea2bf` (base
+      `5776a659e069ce208ee7621fc46f4dee90863956`). Against the `relates:` block: the
+      probe reports no open PR, no remote branch carrying either declared slug, and no
+      sibling roadmap on the topic — so nothing contradicts `depends` on
+      `road-to-delivery-for-every-host` or `disjoint` on
+      `road-to-the-skill-surface-framing-choice`, and both files exist. The probe
+      resolved its base against `origin/main` at `5776a659e`, which is CURRENT: the
+      branch started from `04a9af594` and PR #1914 then moved `origin/main` forward, so
+      a ratchet reading `origin/main` in this worktree is reading the right base.
+      Corrected 2026-09-07 — this line first said the opposite, that `origin/main` was
+      stale and the ratchets overstated what is new. That was a wrong inference from a
+      single `git merge-base --is-ancestor` result: a base ref that is not an ancestor of
+      HEAD means the two have diverged, and says nothing about which side moved. The
+      practical consequence is the reverse of what was written: an inherited-red count
+      read against `origin/main` here is real, not inflated.
 
 ## Context
 
@@ -75,21 +108,76 @@ invariant holds either way: no skill leaves the install.
 
 ## Phase 1: Menu census and marking
 
-- [ ] **1.1 Census every skill's entry paths:** model-routed (description match),
+- [x] **1.1 Census every skill's entry paths:** model-routed (description match),
       command-only (`src/domains/**/command.md` references), flow-only (`src/flows`), or
       both. Publish the classification in
       `agents/evidence/analysis/skill-menu-census-2026-09.md` pinned to the commit, first
       line `<!-- evidence-type: analysis -->`.
       verify: 299 rows; every row has ≥ 1 entry path or is flagged `orphan`; re-run at the
       same pin is byte-identical; `./scripts-run src/scripts/lint_evidence_artifacts` green.
+      Done 2026-09-07. Generator: `src/scripts/report_skill_menu_census.ts`, pinned to
+      `f1d5f3f3adebc67844d5aee845f9cfb657e6c17b`. Every limb of the verify, with its
+      output:
+      · **299 rows** — `grep -c '^| \`[a-z0-9-]*\` | \`' <census>` returns 299, and the
+        generator's own `scanned: 299 skill(s)` agrees.
+      · **Every row has an entry path or is `orphan`** — the classifier is total by
+        construction (`classify()` returns one of five labels for every input), and the
+        tally reconciles: both 17 + command-only 101 + flow-only 4 + model-routed 177 +
+        orphan 0 = 299.
+      · **Byte-identical on re-run at the same pin** — emitted twice, `diff -q` between
+        the two files reports no difference. The pin is an argument rather than `now`,
+        and rows sort by name, so nothing time-varying reaches the output.
+      · **`lint_evidence_artifacts` green** — `--all` resolves the artifact's
+        `<!-- evidence-type: analysis -->` marker, which is line 1.
+      **The first pass published a false zero and it was caught before publication.**
+      Running the command-shaped reference regex over `src/flows/*.yaml` returned
+      `flow_refs = 0` for all 299 skills. Flows do not use those shapes; they carry YAML
+      name lists (`skills: [code-review, adversarial-review]`). `flowSkillNames` parses
+      that key instead, and the flow figure moved 0 → 4 flow-only plus 17 both. Recorded
+      because a zero that was wrong for a mechanical reason is exactly the shape Risk 4
+      warns about.
+      **A second regex defect, found by probing rather than by a run.** The
+      `skill:<name>` shape was closed with `\\b`, which sits between `w` and `-`, so
+      `skill:code-review-lens` counted as a reference to `code-review` — a skill would
+      have inherited a longer sibling's entry paths. Closed with a negative lookahead and
+      pinned in all three shapes by
+      `tests/scripts/report_skill_menu_census.test.ts`. **It moved no figure in this
+      corpus** — 105 candidates before and after — and that is recorded rather than left
+      implied, because a fix with no visible effect is exactly the one a later reader
+      would suspect was never needed.
+      **What the census refuses to decide, stated in the artifact itself:** it does not
+      establish *sole* entry path. A command reference proves a command CAN reach a
+      skill; nothing static proves the menu never does. So `command-only` and `flow-only`
+      name **105 candidates**, never 105 marking decisions — which is Risk 1, and 1.2's
+      per-skill invocation fixture is where it is discharged.
 - [ ] **1.2 Mark command-only and flow-only skills `user-invocable: false`** in frontmatter;
       the projector drops them from the model menu but leaves the skill directory installed.
       verify: skill count on disk 299; `check_preamble_payload_budget` catalog bucket drops
       by the marked skills' name+description bytes; a fixture invokes each marked skill via
       its command successfully.
-- [ ] **1.3 Orphans are reported, not deleted.** Any `orphan` row is listed in the PR body
+      BLOCKED 2026-09-07, on two independent things and neither is a scheduling excuse.
+      (a) The Prerequisites' first line is unmet — `road-to-delivery-for-every-host`
+      Phase 4 is entirely unticked, and this file's own header says it runs after that
+      Phase so the measurement lands on the post-flip baseline. Marking now would measure
+      a bucket drop against a baseline about to move.
+      (b) 1.1 deliberately produces **candidates, not decisions**: it cannot establish
+      sole entry path, and Risk 1 is the silent capability loss that follows from marking
+      on a static scan. The verify's own third limb — a fixture that invokes each marked
+      skill via its command — is the mitigation, and building a 105-skill invocation
+      fixture is the substance of this step rather than a formality around it.
+      Closes when Phase 4 of the predecessor is merged and that fixture exists.
+- [x] **1.3 Orphans are reported, not deleted.** Any `orphan` row is listed in the PR body
       with its last command reference; no removal.
       verify: `grep -c orphan <census>` equals the PR-body count.
+      Done 2026-09-07 — **0 orphan rows**, so there is nothing to list and nothing to
+      remove; K3 had no occasion to fire. Nothing was deleted.
+      The verify is `corrected-from-reproduction`: the literal
+      `grep -c orphan <census>` returns **3**, not 0, because the artifact explains the
+      `orphan` class in prose and names it in the totals table. Counting prose as rows
+      would have made a true zero look like three findings. The row-scoped instrument is
+      `grep -c '^| \`[a-z0-9-]*\` | \`orphan\`' <census>`, which returns **0** and is the
+      figure this step means. Both numbers are recorded so a later reader can reproduce
+      the correction rather than take it.
 
 ## Phase 2: Skill-MCP comparison (E5)
 
@@ -98,17 +186,26 @@ invariant holds either way: no skill leaves the install.
       against the existing skill MCP surface, metrics = hit rate and standing bytes, the E5
       criterion verbatim.
       verify: file exists before any run artefact; `--selftest` rejects a planted defect.
+      BLOCKED 2026-09-07. The arms are defined as "post-Phase-1 catalog against the
+      existing skill MCP surface", and the post-Phase-1 catalog does not exist while 1.2
+      is blocked. Pre-registering a comparison whose baseline arm is unbuilt would fix a
+      criterion against a number nobody can produce, which is the failure Risk 2 names
+      from the other direction. Closes when 1.2 closes.
 - [ ] **2.2 Run both arms; write the artefact; apply E5.** If adopted: the catalog carrier
       flips to MCP for Claude Code only (hosts per the predecessor's `hosts` axis). If not:
       the artefact records the numbers and the catalog stays.
       verify: artefact with both arms' numbers and a one-line verdict citing E5; no catalog
       line removed before the artefact exists.
+      BLOCKED 2026-09-07 — depends on 2.1, and K1 forbids the wholesale swap in the
+      meantime. Nothing was removed from the catalog.
 
 ## Phase 3: Truth surfaces
 
 - [ ] **3.1 Update the census-driven per-host cost table** (predecessor Phase 7.2) with the
       catalog bucket after Phases 1 and 2.
       verify: table equals census.
+      BLOCKED 2026-09-07 — the predecessor's Phase 7.2 generates the table this step
+      updates, and that Phase is unticked too. Closes after Phases 1 and 2 here.
 
 ## Kill register
 
@@ -146,5 +243,17 @@ invariant holds either way: no skill leaves the install.
 
 - [ ] Catalog bucket ≤ 10,000 tok on Claude Code after Phase 1, or the census proves fewer
       than 100 skills are command-only or flow-only.
+      OPEN 2026-09-07, and the second limb is now answered in the negative: the census
+      measures **105** command-only-or-flow-only skills (101 + 4), which is not fewer
+      than 100, so the escape hatch does **not** fire and the byte limb is the live one.
+      That limb needs Phase 1.2, which is blocked. Recorded here because a later reader
+      would otherwise re-derive it, and because 105 sits close enough to 100 that a small
+      change in the reference rule could flip the hatch — the rule the number came from
+      is published in the artifact for exactly that reason.
 - [ ] 299 skills installed; every marked skill callable by its command.
+      OPEN 2026-09-07. First limb holds and was checked: 299 skill directories with a
+      `SKILL.md` on disk, unchanged by this work — nothing was marked, moved or removed.
+      Second limb is vacuously true today (no skill is marked) and becomes real with 1.2.
 - [ ] Skill-MCP decision recorded against the pre-registered criterion.
+      OPEN 2026-09-07 — nothing pre-registered, nothing decided, no catalog line removed.
+      See 2.1.

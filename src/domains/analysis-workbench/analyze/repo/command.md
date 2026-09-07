@@ -254,8 +254,10 @@ exceptions; unanchored discoveries stay allowed but land in the
 
 **Bound-claim collision gate.** For every ADOPT/ADAPT row, extract the
 **concrete surface identifier** it would touch — file path, config key, schema
-field, settings key — and match it against the `consequence` field of every
-`docs/CLAIMS.md` entry. On a hit the row cites the claim id and either routes
+field, settings key — and match it against the `claim` and `non_inference`
+fields of every `docs/CLAIMS.md` entry; the ledger's entry schema has no
+`consequence` field, so a probe looking for one finds nothing and reports no
+collision. On a hit the row cites the claim id and either routes
 through that claim's own reopen / amendment clause, saying so, or is
 reclassified REJECT. A shared topic word is **not** a collision: matching
 identifiers rather than prose is what stops this firing on every row that
