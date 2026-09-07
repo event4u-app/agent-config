@@ -30,6 +30,40 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Fixed
+
+- **The self-review gate reviews again — it had reviewed nothing for four
+  consecutive releases.** 14.17.0, 14.18.0, 14.19.0 and 14.20.0 each returned
+  `HTTP 400 prompt is too long` and each recorded an honest null in
+  `agents/evidence/release-findings/`. The release path sets the analysis base
+  to the previous tag, so the whole release span went into **one** request:
+  413191, 450336 and 260998 input tokens against a 200000 cap on the three
+  releases that recorded a figure. The smallest still exceeded the cap by 30 %,
+  which is what made it structural rather than a run of large releases —
+  `buildPlan` already computed `promptChars` and only *reported* it, so nothing
+  consulted the number before spending the call.
+  The diff is now partitioned **per file** into requests under a character
+  budget, each is reviewed, and findings are merged and deduplicated on the
+  finding id the ledger already uses. Verified against the live span that had
+  been failing: 505087 estimated input tokens across 4 requests, no path left
+  out.
+  **Nothing is truncated**, and that is the load-bearing decision: a silently
+  shortened diff yields findings about a fragment while reading as a review of
+  the whole change, which is the false green this repository's honest-null
+  discipline exists to prevent. So a single file larger than one request is
+  **named as unreviewed** rather than cut mid-hunk, a per-run request ceiling
+  bounds the spend and reports its remainder, a chunk whose call fails no longer
+  discards the chunks that succeeded, and the rendered PR comment carries a
+  **Coverage** block stating what was not read — including the sentence that
+  absence of a finding for an unreviewed path is not evidence about that path.
+  `--dry-run` now prints the request count rather than only a token estimate,
+  because this gate spends per request, and it warns when a span sits at the
+  ceiling, where the next slightly larger one would start losing its remainder.
+  The budget factor is a deliberately pessimistic character proxy and says so:
+  the cap is enforced by the provider's tokenizer, which this repository cannot
+  run, so a call that still overflows a budgeted chunk falsifies the factor
+  rather than the partitioning.
+
 ### Added
 
 - **A push no longer ships a branch whose tree contradicts its own commits.**

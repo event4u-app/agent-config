@@ -125,6 +125,23 @@ function diffText(baseRef: string, files: string[], cwd: string = REPO_ROOT): st
 }
 
 /** Sum of added+deleted lines across `files` (binary files count 0). */
+/**
+ * The diff split per file, so it can be packed into budgeted requests.
+ *
+ * One `git diff` per file rather than one call parsed apart: a `diff --git`
+ * split over the combined output has to re-derive path boundaries from the
+ * text, and a path containing the separator (or a rename header) breaks that
+ * parse silently. N cheap subprocesses cost milliseconds and cannot mis-parse.
+ */
+function perFileDiffs(baseRef: string, files: readonly string[], cwd: string = REPO_ROOT): FileDiff[] {
+    const out: FileDiff[] = [];
+    for (const path of files) {
+        const diff = diffText(baseRef, [path], cwd);
+        if (diff !== '') out.push({ path, diff });
+    }
+    return out;
+}
+
 function changedLineCount(baseRef: string, files: string[], cwd: string = REPO_ROOT): number {
     if (files.length === 0) return 0;
     const r = spawnSync('git', ['diff', '--numstat', `${baseRef}...HEAD`, '--', ...files], {
@@ -241,10 +258,132 @@ function buildSystemPrompt(release?: ReleaseInfo, baseRef?: string): string {
     return release && baseRef ? base + releaseNoteText(release, baseRef) : base;
 }
 
+// Prompt budget and partitioning.
+//
+// Measured across FOUR consecutive releases (14.17.0, 14.18.0, 14.19.0,
+// 14.20.0): the live call returned `HTTP 400 prompt is too long` every time and
+// the gate reviewed nothing. The release path sets `analysisBase` to the
+// previous tag, so the whole release span goes into one request — 413191,
+// 450336 and 260998 input tokens against a 200000 cap on the three releases
+// that recorded a figure. The smallest of them still exceeds the cap by 30 %,
+// so this is structural: no release span observed to date fits in one call, and
+// waiting for smaller spans is not a fix.
+//
+// `promptChars` was already computed and only REPORTED. Nothing consulted it
+// before spending the call.
+//
+// What this deliberately does NOT do is truncate. A silently shortened diff
+// produces findings about a fragment while reading as a review of the whole
+// change, which is a false green — the failure mode this repository's
+// honest-null discipline exists to prevent. Instead the diff is partitioned per
+// FILE, each chunk is reviewed, findings are merged, and whatever did not fit
+// is NAMED as unreviewed.
+
+/**
+ * Input budget for one request, in characters.
+ *
+ * A character proxy, and the reason it is a proxy rather than a measurement:
+ * the cap is enforced by the provider's own tokenizer, which this repository
+ * cannot run — `js-tiktoken` is a DIFFERENT tokenizer and agreeing with it
+ * would prove nothing. So the factor is deliberately pessimistic. Diff text is
+ * dense in punctuation and short tokens, where 3 chars/token is a conservative
+ * floor rather than the ~4 that prose averages; 190000 leaves headroom under
+ * the 200000 cap for the system prompt and for the tokenizer disagreeing with
+ * this estimate.
+ *
+ * A call that still returns `prompt is too long` for a chunk built under this
+ * budget falsifies the factor, not the partitioning.
+ */
+export const PROMPT_BUDGET_CHARS = 190_000 * 3;
+
+/**
+ * Cost ceiling, in requests per run.
+ *
+ * The gate is advisory and single-maintainer-funded, so an unbounded chunk
+ * count would turn one failed call into an arbitrary bill. Four is chosen
+ * against the measured span sizes: the largest recorded (450336 tokens) needs
+ * three chunks at this budget, so four covers every span measured with one to
+ * spare. A span that needs more is reviewed up to the ceiling and the remainder
+ * is reported unreviewed — a partial review that says so, never a silent one.
+ */
+export const MAX_REVIEW_CHUNKS = 4;
+
+export interface FileDiff {
+    path: string;
+    diff: string;
+}
+
+export interface DiffPartition {
+    /** Each chunk is the concatenated diff text for one request. */
+    chunks: string[];
+    /** Files no chunk carries, with the reason — rendered into the review. */
+    unreviewed: { path: string; reason: string }[];
+}
+
+/**
+ * Pack per-file diffs into as few chunks as fit the budget.
+ *
+ * Deterministic: input order is preserved and the fill is greedy, so the same
+ * span always partitions the same way and a finding's chunk is reproducible.
+ *
+ * A single file larger than the whole budget is NOT split. A diff cut at an
+ * arbitrary byte offset produces half a hunk, and a reviewer reading half a
+ * hunk reports on code that does not exist — worse than not reading it, because
+ * the finding looks authoritative. Such a file is reported unreviewed instead.
+ */
+export function partitionDiff(
+    files: readonly FileDiff[],
+    budgetChars: number = PROMPT_BUDGET_CHARS,
+    maxChunks: number = MAX_REVIEW_CHUNKS,
+): DiffPartition {
+    const chunks: string[] = [];
+    const unreviewed: { path: string; reason: string }[] = [];
+    let current = '';
+
+    for (const f of files) {
+        if (f.diff.length > budgetChars) {
+            unreviewed.push({
+                path: f.path,
+                reason:
+                    `single-file diff of ${String(f.diff.length)} chars exceeds the ` +
+                    `${String(budgetChars)}-char request budget; not split, because a diff cut ` +
+                    'mid-hunk yields findings about code that does not exist',
+            });
+            continue;
+        }
+        if (current !== '' && current.length + f.diff.length > budgetChars) {
+            chunks.push(current);
+            current = '';
+        }
+        current += f.diff;
+    }
+    if (current !== '') chunks.push(current);
+
+    if (chunks.length > maxChunks) {
+        // Which FILES fall outside the ceiling cannot be recovered from the
+        // packed strings, so the dropped chunks are reported as a count and the
+        // renderer says so — naming a file it cannot identify would be worse
+        // than an honest aggregate.
+        const dropped = chunks.length - maxChunks;
+        chunks.length = maxChunks;
+        unreviewed.push({
+            path: `(${String(dropped)} further chunk(s))`,
+            reason:
+                `the span needs ${String(dropped + maxChunks)} requests at this budget and the ` +
+                `per-run ceiling is ${String(maxChunks)}; the remainder was not sent`,
+        });
+    }
+    return { chunks, unreviewed };
+}
+
 // ── Plan (dry-run) ────────────────────────────────────────────────────
 export interface ReviewPlan {
     skills: string[];
     files: string[];
+    /** Model calls the live run will make — one per budgeted chunk. */
+    requests: number;
+    /** Files no request will carry, with the reason. */
+    unreviewed: { path: string; reason: string }[];
     promptChars: number;
     note: string;
     escalation: string[];
@@ -277,7 +416,14 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
     const diff = diffText(analysisBase, files, cwd);
     const escalation = escalationReasons(files, changedLineCount(analysisBase, files, cwd));
     const systemPrompt = buildSystemPrompt(release, baseRef);
+    // The same partition the live path will use, so `--dry-run` previews the
+    // REQUEST COUNT rather than only a token estimate. This gate spends money
+    // per request, and a plan that reports "~N tokens" without saying how many
+    // calls that becomes hides the number the maintainer is deciding about.
+    const partition = partitionDiff(perFileDiffs(analysisBase, files, cwd));
     return {
+        requests: partition.chunks.length,
+        unreviewed: partition.unreviewed,
         skills: [...REVIEW_SKILLS],
         files,
         analysisBase,
@@ -289,7 +435,10 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
                 ? 'No reviewable (non-generated) files changed — the live review would no-op.'
                 : `${files.length} reviewable file(s); live review would send ~${Math.ceil(
                       (systemPrompt.length + diff.length) / 4,
-                  )} input tokens.`,
+                  )} input tokens across ${partition.chunks.length} request(s)` +
+                  (partition.unreviewed.length > 0
+                      ? `, leaving ${partition.unreviewed.length} path(s) UNREVIEWED.`
+                      : '.'),
     };
 }
 
@@ -320,6 +469,28 @@ function parseFindings(text: string): Finding[] {
         }));
 }
 
+/**
+ * Collapse findings that two chunks both reported.
+ *
+ * Chunks are disjoint by file, so a duplicate means the same defect was
+ * described from two files' diffs — a shared helper and one of its callers, for
+ * instance. `findingId` is sha256(kind|title|file), already the identity the
+ * ledger and the rendered table use, so deduplicating on it keeps the id in the
+ * comment matching the id in the artifact. First occurrence wins, which keeps
+ * the order deterministic for a given partition.
+ */
+export function dedupeFindings(findings: readonly Finding[]): Finding[] {
+    const seen = new Set<string>();
+    const out: Finding[] = [];
+    for (const f of findings) {
+        const id = findingId(f);
+        if (seen.has(id)) continue;
+        seen.add(id);
+        out.push(f);
+    }
+    return out;
+}
+
 /** Advisory escalation banner, appended when a diff warrants full ai-council. */
 function escalationBlock(reasons: readonly string[]): string {
     if (reasons.length === 0) return '';
@@ -332,14 +503,46 @@ function escalationBlock(reasons: readonly string[]): string {
     );
 }
 
-export function renderReview(findings: Finding[], enforce: boolean, escalation: readonly string[] = []): string {
+/**
+ * What the review did NOT read, stated in the comment itself.
+ *
+ * Without this line a chunked review is indistinguishable from a whole-span
+ * one, which is the false green the partitioning exists to avoid — the reader
+ * of the PR comment is the person who has to know the coverage, and they never
+ * see the workflow log.
+ */
+export function coverageBlock(coverage?: ReviewCoverage): string {
+    if (!coverage) return '';
+    const parts = [
+        `\n\n**Coverage.** ${String(coverage.chunks)} request(s) over ` +
+            `${String(coverage.filesReviewed)} file(s).`,
+    ];
+    if (coverage.unreviewed.length > 0) {
+        parts.push(
+            ` **NOT reviewed (${String(coverage.unreviewed.length)}):**\n` +
+                coverage.unreviewed.map((u) => `- \`${u.path}\` — ${u.reason}`).join('\n') +
+                '\nFindings above cover the reviewed part only; absence of a finding for an ' +
+                'unreviewed path is not evidence about that path.',
+        );
+    }
+    return parts.join('');
+}
+
+export interface ReviewCoverage {
+    chunks: number;
+    filesReviewed: number;
+    unreviewed: { path: string; reason: string }[];
+}
+
+export function renderReview(findings: Finding[], enforce: boolean, escalation: readonly string[] = [], coverage?: ReviewCoverage): string {
     const banner =
         '> HUMAN REVIEW REQUIRED — dogfooded AI adversarial-review + security gate. ' +
         'Findings are decision support, not a guarantee; detection is probabilistic. ' +
         'This is a floor, **not** independent human review.';
     const esc = escalationBlock(escalation);
+    const cov = coverageBlock(coverage);
     if (findings.length === 0) {
-        return `${banner}\n\n✅ Self-review gate: no findings.${esc}`;
+        return `${banner}\n\n✅ Self-review gate: no findings.${cov}${esc}`;
     }
     const blocking = findings.filter(classifyBlocking);
     // Each row carries an explicit (Blocking)/(Advisory) marker so a
@@ -372,7 +575,7 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     const machine = `\n\n<!-- release-findings-json: ${JSON.stringify(
         findings.map((f) => ({ finding_id: findingId(f), severity: f.severity, kind: f.kind, title: f.title, file: f.file ?? null })),
     )} -->`;
-    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${idNote}${esc}${machine}`;
+    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${idNote}${cov}${esc}${machine}`;
 }
 
 function postReview(body: string): void {
@@ -417,6 +620,20 @@ export function main(argv: string[]): 0 | 2 {
                       `packaging diff ${plan.release.packagingFiles.length} file(s))\n`
                     : '') +
                 `  files:  ${plan.files.length}\n` +
+                `  calls:  ${plan.requests} (budget ${String(PROMPT_BUDGET_CHARS)} chars/request, ` +
+                `ceiling ${String(MAX_REVIEW_CHUNKS)})\n` +
+                (plan.unreviewed.length > 0
+                    ? `  UNREVIEWED: ${plan.unreviewed.map((u) => u.path).join(', ')}\n`
+                    : '') +
+                // At the ceiling nothing is lost YET, and the next slightly
+                // larger span loses its remainder silently apart from the
+                // coverage line. Saying so while it is still a warning is the
+                // only cheap moment: the alternative is reading it in a
+                // published review's coverage block.
+                (plan.requests >= MAX_REVIEW_CHUNKS && plan.unreviewed.length === 0
+                    ? `  ⚠️  at the per-run ceiling (${String(MAX_REVIEW_CHUNKS)}) — a larger span ` +
+                      'would leave its remainder unreviewed\n'
+                    : '') +
                 `  ${plan.note}\n` +
                 (plan.escalation.length
                     ? `  escalation: ${plan.escalation.join('; ')} → recommend /council:pr (run-time authorized)\n`
@@ -455,15 +672,58 @@ export function main(argv: string[]): 0 | 2 {
     // findings returns 2 — an error is not a finding.)
     try {
         const client = new AnthropicClient({ api_key: key });
-        const resp = client.ask(buildSystemPrompt(plan.release, baseRef), diffText(plan.analysisBase, plan.files), 4096);
-        if (resp.error) {
+        const systemPrompt = buildSystemPrompt(plan.release, baseRef);
+        const partition = partitionDiff(perFileDiffs(plan.analysisBase, plan.files));
+
+        if (partition.chunks.length === 0) {
+            // Every file individually over budget. Reviewing nothing while
+            // saying nothing is the state four releases were already in, so it
+            // is reported as NEUTRAL with the reason rather than as a pass.
             process.stdout.write(
-                `::warning::self-review-gate NEUTRAL — model call did not complete (${resp.error}); ` +
-                    'nothing was reviewed, not a blocker.\n',
+                '::warning::self-review-gate NEUTRAL — every changed file exceeds the per-request ' +
+                    'budget, nothing was reviewed, not a blocker.\n',
             );
-            return 0; // no credit / transport / API error → never blocks the merge
+            return 0;
         }
-        const findings = parseFindings(resp.text);
+
+        // One request per chunk, findings merged. A chunk that fails does NOT
+        // discard the chunks that succeeded: four releases produced no review at
+        // all because one failure was the whole review, and a partial review
+        // that names its coverage is worth more than another honest null.
+        const findings: Finding[] = [];
+        const unreviewed = [...partition.unreviewed];
+        let reviewedChunks = 0;
+        for (const [i, chunk] of partition.chunks.entries()) {
+            const resp = client.ask(systemPrompt, chunk, 4096);
+            if (resp.error) {
+                process.stdout.write(
+                    `::warning::self-review-gate — chunk ${String(i + 1)}/` +
+                        `${String(partition.chunks.length)} did not complete (${resp.error}); ` +
+                        'continuing with the remaining chunks.\n',
+                );
+                unreviewed.push({
+                    path: `(chunk ${String(i + 1)} of ${String(partition.chunks.length)})`,
+                    reason: `the model call did not complete: ${resp.error}`,
+                });
+                continue;
+            }
+            reviewedChunks += 1;
+            findings.push(...parseFindings(resp.text));
+        }
+
+        if (reviewedChunks === 0) {
+            process.stdout.write(
+                '::warning::self-review-gate NEUTRAL — no chunk completed, nothing was reviewed, ' +
+                    'not a blocker.\n',
+            );
+            return 0;
+        }
+
+        const coverage: ReviewCoverage = {
+            chunks: reviewedChunks,
+            filesReviewed: plan.files.length - partition.unreviewed.length,
+            unreviewed,
+        };
         const outIdx = argv.indexOf('--findings-out');
         if (outIdx >= 0 && argv[outIdx + 1]) {
             // Durable ingestion input for the disposition ledger (release-truth
@@ -478,17 +738,21 @@ export function main(argv: string[]): 0 | 2 {
                     {
                         schema_version: 1,
                         ...independenceFields(['anthropic']),
-                        findings: findings.map((f) => ({ finding_id: findingId(f), ...f })),
+                        coverage,
+                        findings: dedupeFindings(findings).map((f) => ({
+                            finding_id: findingId(f),
+                            ...f,
+                        })),
                     },
                     null,
                     2,
                 ) + '\n',
             );
         }
-        const body = renderReview(findings, enforce, plan.escalation);
+        const body = renderReview(dedupeFindings(findings), enforce, plan.escalation, coverage);
         postReview(body);
 
-        const code = gateVerdict(findings, { enforce });
+        const code = gateVerdict(dedupeFindings(findings), { enforce });
         if (code === 2) {
             process.stdout.write('::error::self-review-gate — merge-blocking findings under enforce mode.\n');
         }
