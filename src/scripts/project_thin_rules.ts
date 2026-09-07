@@ -196,6 +196,21 @@ function _title(s: string): string {
     return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
+/**
+ * The marker that makes a projected entry recognisable as a stub.
+ *
+ * Exported so the WRITER and every DETECTOR share one definition. A gate that
+ * re-spelled this string would drift from the writer silently, and the failure
+ * would be invisible in exactly the direction that matters: a stub the gate
+ * fails to recognise reads as a complete rule body.
+ */
+export const THIN_ENTRY_MARKER = '> Routed rule — load the body on trigger-match.';
+
+/** Is this projected entry a pointer stub rather than a rule body? */
+export function is_thin_entry(text: string): boolean {
+    return text.includes(THIN_ENTRY_MARKER);
+}
+
 /** Build the minimal progressive-disclosure pointer for a non-kernel rule. */
 export function thin_entry(rule_id: string, text: string): string {
     const [fm] = split_frontmatter(text);
@@ -205,7 +220,7 @@ export function thin_entry(rule_id: string, text: string): string {
     const fires = hint ? ` Fires on: ${hint}.` : '';
     return (
         `## ${title}\n` +
-        `> Routed rule — load the body on trigger-match.${fires} ${desc} ` +
+        `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
         `Body: [\`${rule_id}\`](../../.agent-src.uncondensed/rules/${rule_id}.md)\n`
     );
 }
@@ -214,6 +229,17 @@ export function thin_entry(rule_id: string, text: string): string {
 export function build_thin(
     rules_dir: string = RULES_SOURCE,
     scope: readonly string[] | null = null,
+    /**
+     * Optional sink for the D3 diagnostic
+     * (road-to-delivery-for-every-host 2.2).
+     *
+     * An `auto` rule the router gives NO trigger is already kept full-bodied by
+     * `noTrigger` below, which is the substantive protection and predates this
+     * roadmap. What did not exist is any way to SEE it happen: the rule is
+     * silently exempted, so an author who removes a rule's last trigger gets a
+     * silently eager rule and no signal. The line makes the exemption audible.
+     */
+    announce: ((message: string) => void) | null = null,
 ): Map<string, string> {
     const kernel = kernel_ids();
     const noTrigger = no_trigger_ids();
@@ -226,6 +252,9 @@ export function build_thin(
             continue; // out of workspace scope — no body, no pointer line
         }
         const full = kernel.has(stem) || noTrigger.has(stem);
+        if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
+            announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
+        }
         out.set(path.basename(p), full ? text : thin_entry(stem, text));
     }
     return out;

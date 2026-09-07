@@ -98,6 +98,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { _resetStateForTest as _pointCondenseAt, projected_rule_trees } from './condense.js';
+import { leanProjectionHostsRaw, leanProjectionModeRaw } from './_lib/hook_settings.js';
+import {
+    normalizeLeanProjectionMode,
+    resolveLeanProjectionHosts,
+    writesThinFiles,
+} from './_lib/lean_projection_mode.js';
+import { is_thin_entry } from './project_thin_rules.js';
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -105,7 +112,24 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 /** Where the projected rules are condensed to — the freshness comparison's left side. */
 const DIST_RULES = path.join('dist', 'agent-src', 'rules');
 
-export type ProjectionFindingKind = 'missing' | 'stale' | 'dangling';
+export type ProjectionFindingKind = 'missing' | 'stale' | 'dangling' | 'thinned';
+
+/**
+ * Tool dir → the host id whose tree it is.
+ *
+ * Mirrors `condense._DIR_TOOL_ID` for the three dirs this gate covers. It is a
+ * second spelling of a mapping `condense` already owns, which is a real cost —
+ * accepted because `_DIR_TOOL_ID` is module-private and exporting it would widen
+ * `condense`'s surface for one consumer, in a file already ~1,200 lines past the
+ * source-size ceiling where every added line is one unit of ratchet debt.
+ * `thinnedTreeFindings` fails CLOSED on an unmapped dir (see there), so a dir
+ * added upstream and missed here is reported rather than silently exempted.
+ */
+export const TREE_HOST_ID: Readonly<Record<string, string>> = {
+    '.claude/rules': 'claude-code',
+    '.cursor/rules': 'cursor',
+    '.clinerules': 'cline',
+};
 
 export interface ProjectionFinding {
     /** Repo-relative tool dir, e.g. `.claude/rules`. */
@@ -138,9 +162,59 @@ function _lstatOrNull(p: string): fs.Stats | null {
  * computed here so the caller controls which root the generator's emit plan was
  * derived from, and so a test can pin an expectation without a settings file.
  */
+/**
+ * The host axis (road-to-delivery-for-every-host 1.3).
+ *
+ * A stub is a COMPLETE projection for a host inside `lean_projection.hosts` —
+ * that is what delivery mode means, and failing it there would make the mode
+ * unusable. For every other host a stub is the D1 defect: the body left the
+ * tree and no concern is bound to bring it back, so the rule reaches that host
+ * at no scope at all while every file-count check still passes.
+ *
+ * Fails CLOSED in two directions, both deliberate:
+ *   · a tool dir absent from `TREE_HOST_ID` maps to `''`, which is in no host
+ *     list, so an unmapped dir is treated as NOT a delivery host and its stubs
+ *     are reported. A new dir is then a loud finding rather than a silent
+ *     exemption.
+ *   · an unreadable entry is skipped rather than guessed at — `missing` and
+ *     `dangling` already own that case, and inventing a third verdict from a
+ *     failed read would double-report one defect.
+ */
+export function thinnedTreeFindings(
+    repoRoot: string,
+    expected: Readonly<Record<string, readonly string[]>>,
+    deliveryHosts: readonly string[],
+): ProjectionFinding[] {
+    const out: ProjectionFinding[] = [];
+    for (const [tree, rules] of Object.entries(expected)) {
+        const hostId = TREE_HOST_ID[tree] ?? '';
+        if (deliveryHosts.includes(hostId)) continue;
+        for (const rule of rules) {
+            let text: string;
+            try {
+                text = fs.readFileSync(path.join(repoRoot, tree, rule), 'utf-8');
+            } catch {
+                continue;
+            }
+            if (!is_thin_entry(text)) continue;
+            out.push({
+                tree,
+                rule,
+                kind: 'thinned',
+                message:
+                    `pointer stub in a tree whose host (${hostId === '' ? 'unmapped' : hostId}) is not in ` +
+                    `lean_projection.hosts — the body reaches this host at no scope, and no concern ` +
+                    `is bound to deliver it back`,
+            });
+        }
+    }
+    return out;
+}
+
 export function auditRuleProjection(
     repoRoot: string,
     expected: Readonly<Record<string, readonly string[]>>,
+    deliveryHosts: readonly string[] = [],
 ): ProjectionAudit {
     const ledger = new GateLedger('check_rule_projection_integrity');
     const findings: ProjectionFinding[] = [];
@@ -248,7 +322,32 @@ export function auditRuleProjection(
         }
     }
 
+    // Appended after the completeness/freshness pass rather than folded into it:
+    // a stub entry EXISTS and is FRESH, so it is legitimately `complete` on the
+    // ledger. The host axis is a separate question about the entry's CONTENT,
+    // and conflating the two would make a delivery host's stub a ledger failure.
+    findings.push(...thinnedTreeFindings(repoRoot, expected, deliveryHosts));
+
     return { findings, treePresent, ledger };
+}
+
+/**
+ * The `lean_projection` block as it stands under `root`.
+ *
+ * Read with the HOOK-side indentation reader rather than a YAML parse, on
+ * purpose: this gate runs first in the pre-push chain and on a fresh CI
+ * checkout, and a parser failure there must not fail a rule audit for a reason
+ * unrelated to rules. `_lib/lean_projection_mode.ts` owns what the values MEAN,
+ * so this gate and the projector cannot disagree.
+ *
+ * `mode` is checked before `hosts`: with the mode off no host is a delivery
+ * host, so a `hosts:` list left behind after a rollback exempts nothing and
+ * every stub in every tree is reported.
+ */
+function _lean_projection_settings_for(root: string): { hosts: readonly string[] } {
+    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
+    if (!writesThinFiles(mode)) return { hosts: [] };
+    return { hosts: resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts };
 }
 
 /** Group findings by tree, preserving rule order, for a report a reader can act on. */
@@ -297,7 +396,8 @@ export function main(argv?: readonly string[]): number {
 
     let audit: ProjectionAudit;
     try {
-        audit = auditRuleProjection(root, projected_rule_trees());
+        const lean = _lean_projection_settings_for(root);
+        audit = auditRuleProjection(root, projected_rule_trees(), lean.hosts);
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
             process.stderr.write(`❌  ${exc.message}\n`);

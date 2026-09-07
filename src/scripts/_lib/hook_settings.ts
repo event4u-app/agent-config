@@ -110,3 +110,71 @@ export function leanProjectionModeRaw(root: string): string {
     }
     return '';
 }
+
+/**
+ * Raw `lean_projection.hosts` list out of `.agent-settings.yml`, or `[]`.
+ *
+ * Same indentation-shaped discipline as `leanProjectionModeRaw` above and for
+ * the same reason — a hook must never fail a tool call because a YAML parser
+ * could not load — extended to the two list shapes a human writes:
+ *
+ *     lean_projection:
+ *       hosts: [claude-code]          # inline
+ *     lean_projection:
+ *       hosts:                        # block
+ *         - claude-code
+ *
+ * Interpretation is NOT done here. `[]` means "nothing was written", and
+ * `_lib/lean_projection_mode.ts::resolveLeanProjectionHosts` decides that this
+ * means the default rather than "no host" — keeping that decision in one place
+ * is what stops the projector and the delivery concern from disagreeing, which
+ * is the whole reason the mode reader is split this way.
+ */
+export function leanProjectionHostsRaw(root: string): string[] {
+    const file = path.join(root, SETTINGS_FILE);
+    let text: string;
+    try {
+        if (!fs.statSync(file).isFile()) return [];
+        text = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return [];
+    }
+    const strip = (s: string): string => s.trim().replace(/^["']|["']$/g, '');
+    let inSection = false;
+    let inBlock = false;
+    let blockIndent = -1;
+    const out: string[] = [];
+    for (const raw of text.split(/\r\n|\r|\n/)) {
+        const line = raw.replace(/\s+$/, '');
+        if (!line || line.replace(/^\s+/, '').startsWith('#')) continue;
+        if (!(line.startsWith(' ') || line.startsWith('\t'))) {
+            inSection = /^lean_projection\s*:\s*$/.test(line);
+            inBlock = false;
+            continue;
+        }
+        if (!inSection) continue;
+        const indent = (/^\s*/.exec(line) as RegExpExecArray)[0].length;
+        if (inBlock) {
+            const item = /^\s*-\s*(\S.*)$/.exec(line);
+            if (item !== null && indent > blockIndent) {
+                const v = strip(item[1] ?? '');
+                if (v !== '') out.push(v);
+                continue;
+            }
+            inBlock = false;
+        }
+        const inline = /^\s+hosts\s*:\s*\[([^\]]*)\]\s*$/.exec(line);
+        if (inline !== null) {
+            for (const part of (inline[1] ?? '').split(',')) {
+                const v = strip(part);
+                if (v !== '') out.push(v);
+            }
+            continue;
+        }
+        if (/^\s+hosts\s*:\s*$/.test(line)) {
+            inBlock = true;
+            blockIndent = indent;
+        }
+    }
+    return out;
+}

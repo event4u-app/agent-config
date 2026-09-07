@@ -31,6 +31,29 @@
  * uses. State lives under `agents/runtime/state/`, the class
  * `context-hygiene.json` already occupies; no new state convention is created.
  *
+ * WHAT IS RE-DELIVERED AFTER A COMPACTION, EXACTLY
+ * (road-to-delivery-for-every-host 2.4 — stated because a rule lost at a
+ * compaction boundary is lost for the rest of the session, and "re-armed" alone
+ * does not say what a reader may rely on):
+ *
+ *   · `pre_compact` clears the WHOLE seen-set for that session, not the rules
+ *     matched on the compacted turn. There is no per-rule bookkeeping to be
+ *     partially wrong about.
+ *   · Nothing is delivered BY the compaction itself. The slot emits zero bytes
+ *     and exits allow; re-arming is silent.
+ *   · A rule's body returns on the NEXT turn whose trigger matches it — which
+ *     means a rule whose trigger does not fire again is NOT restored. Delivery
+ *     is trigger-driven on both sides of the boundary; compaction resets the
+ *     de-duplication, it does not replay a transcript.
+ *   · The seen-set is per session, so a compaction in one session re-arms only
+ *     that session.
+ *
+ * Held by three fixtures in `tests/scripts/rule_inject_hook.test.ts` under
+ * "once per session per rule, re-armed on compaction": the dedup case, the
+ * matched-rule → compaction → matching-turn → body-present case, and the
+ * per-session case. All three predate this roadmap; 2.4 adds the contract
+ * above, not the coverage, and says so rather than claiming new tests.
+ *
  * NEVER BLOCKS. Every failure path returns 0: unreadable stdin, malformed JSON,
  * missing router, unreadable body, unwritable state. The one non-zero exit is
  * the host's advisory context channel (exit 2 + `decision: "warn"`), the same

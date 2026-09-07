@@ -48,7 +48,8 @@ import {
 // bundled-CLI-entry-guard landmine. Verified before wiring, not assumed.
 import { build_thin } from './project_thin_rules.js';
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
-import { normalizeLeanProjectionMode, writesThinFiles, type LeanProjectionMode } from './_lib/lean_projection_mode.js';
+import { describeDroppedHosts, normalizeLeanProjectionMode, resolveLeanProjectionHosts, thinsHost,
+    writesThinFiles, type LeanProjectionHosts, type LeanProjectionMode } from './_lib/lean_projection_mode.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
@@ -458,14 +459,17 @@ function _read_projection_scope_dedup(): boolean {
 }
 
 
-function _lean_projection_mode(): LeanProjectionMode {
+function _lean_projection_settings(): { mode: LeanProjectionMode; hosts: LeanProjectionHosts } {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const lean = data['lean_projection'];
-    const raw =
+    const obj =
         typeof lean === 'object' && lean !== null && !Array.isArray(lean)
-            ? (lean as Record<string, unknown>)['mode']
-            : '';
-    return normalizeLeanProjectionMode(raw);
+            ? (lean as Record<string, unknown>)
+            : {};
+    return {
+        mode: normalizeLeanProjectionMode(obj['mode'] ?? ''),
+        hosts: resolveLeanProjectionHosts(obj['hosts']),
+    };
 }
 
 // --- hashing -----------------------------------------------------------------
@@ -1119,21 +1123,17 @@ export function generate_rule_symlinks(): number {
     const rules = _scoped_rule_basenames();
     const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
 
+    const lean = _lean_projection_settings();
+    for (const warning of describeDroppedHosts(lean.hosts)) _print(`  ⚠️  ${warning}`);
     let thin_files: Record<string, string> | null = null;
-    if (writesThinFiles(_lean_projection_mode())) {
-        // DEAD-SWITCH REPAIR (road-to-renewal-foundation Phase 2). This branch
-        // used to THROW: the port was skipped as "out of scope, not exercised by
-        // golden parity", which left a documented, settings-selectable mode that
-        // could only ever crash. `build_thin` was ported and has been present the
-        // whole time — the wiring was the only thing missing.
-        //
-        // Scope note: this repairs the SWITCH only. The default stays
-        // `eager-all`. Flipping it is parked behind the thin-projection honest
-        // null (thin win-rate 36.2% < the 48% pre-registered threshold), and
-        // nothing here disturbs that verdict — but a mode that throws cannot
-        // even be re-measured, which is why the repair earns its place alone.
+    if (writesThinFiles(lean.mode)) {
+        // `thin` stays parked behind the thin-projection honest null (win-rate
+        // 36.2% against a 48% pre-registered threshold, ADR-202). `delivery` is
+        // NOT gated by that null and citing it as one is K7: delivery re-delivers
+        // identical bytes, is licensed by `docs/CLAIMS.md:365` on delivery
+        // equivalence and cost, and needs a recall floor rather than a judge.
         thin_files = Object.fromEntries(
-            build_thin(MODULE_STATE.RULES_SOURCE, _read_rule_workspaces()),
+            build_thin(MODULE_STATE.RULES_SOURCE, _read_rule_workspaces(), (m) => _print(`  ⚠️  ${m}`)),
         );
     }
 
@@ -1183,7 +1183,7 @@ export function generate_rule_symlinks(): number {
             if (_existsOrSymlink(link)) {
                 fs.unlinkSync(link);
             }
-            if (thin_files !== null) {
+            if (thin_files !== null && thinsHost(lean.mode, lean.hosts.hosts, _DIR_TOOL_ID[tool_dir] ?? '')) {
                 _writeText(link, thin_files[rule] as string);
             } else if (tool_dir === '.claude/rules') {
                 // Host-native activation (P3.1): emit the rule with the host's

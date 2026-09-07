@@ -256,46 +256,182 @@ Defects this roadmap repairs:
 
 ## Phase 1: Host-scoped delivery (repairs D1)
 
-- [ ] **1.1 Add `lean_projection.hosts`** (list; default `[claude-code]`) beside the mode
+- [x] **1.1 Add `lean_projection.hosts`** (list; default `[claude-code]`) beside the mode
       reader in `src/scripts/_lib/hook_settings.ts:90-112` and export a
       `resolveLeanProjectionHosts()` from `_lib/lean_projection_mode.ts`. Unknown host ids
       are dropped with a warning; the set never widens implicitly.
       verify: unit tests — absent → `[claude-code]`; typo'd id dropped and reported; `mode`
       unset resolves `eager-all` regardless of `hosts`.
-- [ ] **1.2 Gate the stub branch on the host.** At `condense.ts:1187` write thin files only
+      Done 2026-09-07. `resolveLeanProjectionHosts` / `THINNABLE_HOSTS` /
+      `DEFAULT_LEAN_PROJECTION_HOSTS` / `thinsHost` / `describeDroppedHosts` in
+      `src/scripts/_lib/lean_projection_mode.ts`; the settings reader
+      `leanProjectionHostsRaw` in `src/scripts/_lib/hook_settings.ts`, indentation-shaped
+      like its `mode` sibling and reading both YAML list shapes. 14 unit tests in
+      `tests/scripts/lean_projection_hosts.test.ts`, the first three describes named after
+      this step's three verify limbs so a reader can check the step rather than a claim.
+      Two design decisions worth naming, both taken here rather than deferred:
+      · **`THINNABLE_HOSTS` is the three hosts with a per-rule tree, not every host id the
+        package knows.** Naming `windsurf` would be a request to thin a single concatenated
+        file that has no stub shape, and `codex` a tree `condense` never writes. Accepting
+        such an id silently leaves the operator believing a host is scoped when nothing
+        reads the entry, so a known-but-not-thinnable id is dropped with its OWN wording
+        (`not-thinnable`) distinct from a typo (`unknown`) — the operator's next action
+        differs.
+      · **A fully invalid list resolves to NO host, never back to the default.** Falling
+        back would turn a typo into a Claude Code flip nobody asked for. Absent means the
+        default; wrong means nothing.
+- [x] **1.2 Gate the stub branch on the host.** At `condense.ts:1187` write thin files only
       when `_DIR_TOOL_ID[tool_dir]` (`:757`) is in `hosts`; every other `TOOL_DIRS` entry
       keeps today's symlink/emitter path.
       verify: fixture repo with `mode: delivery`, `hosts: [claude-code]` — `.claude/rules`
       holds stubs; `.cursor/rules/*.md` and `.clinerules` are byte-identical to an
       `eager-all` run (`diff -r` empty).
-- [ ] **1.3 Teach `check_rule_projection_integrity` the host axis:** a stub is complete for a
+      Done 2026-09-07. `condense.ts` now resolves both axes once
+      (`_lean_projection_settings`) and the stub write is gated with
+      `thinsHost(lean.mode, lean.hosts.hosts, _DIR_TOOL_ID[tool_dir] ?? '')`, so the branch
+      that used to fire for every `TOOL_DIRS` entry now asks which host it is writing for.
+      Five fixture tests in `tests/scripts/lean_projection_host_scope.test.ts` generate a
+      real two-rule projection twice and compare every tree.
+      **Sensitivity proved rather than assumed**, per this repository's own discipline: the
+      host gate was neutralised in place and the fixture went 4 of 5 RED (the fifth is the
+      `eager-all` case, which is correctly insensitive to the gate), then restored and
+      re-run green. A fixture never seen red has unknown sensitivity, and this one has been
+      seen red.
+      The fixture also guards the two ways it could pass while proving nothing: it asserts
+      the `eager-all` trees are NON-EMPTY before comparing them (empty-vs-empty is the
+      classic false green) and asserts Claude's tree DID change (a gate satisfied by a flip
+      that thins nothing).
+      **`condense.ts` is net-zero in lines** — 2,712 before and after. That is deliberate:
+      the file sits ~1,212 lines past the 1,500-line source-size ceiling, where every added
+      line is one unit of ratchet debt, and the space came from repairing D2 (step 4.0) in
+      the same edit rather than from cutting anything substantive.
+- [x] **1.3 Teach `check_rule_projection_integrity` the host axis:** a stub is complete for a
       delivery host; a full body is required for every other host.
       verify: the 1.2 fixture passes; a fixture that stubs `.clinerules` fails naming host
       and reason.
-- [ ] **1.4 Non-regression gate (no new CLI verb):** a check in the consistency workflow
+      Done 2026-09-07. `thinnedTreeFindings` and the `'thinned'` finding kind in
+      `src/scripts/check_rule_projection_integrity.ts`, with `TREE_HOST_ID` mapping a tool
+      dir to its host. Detection of a stub does not re-spell the marker: `is_thin_entry` and
+      `THIN_ENTRY_MARKER` are exported from `src/scripts/project_thin_rules.ts` and used by
+      BOTH the writer and this detector, because a gate that re-spelled the string would
+      drift from the writer silently and in the dangerous direction — an unrecognised stub
+      reads as a complete rule body.
+      Five tests in the same fixture file cover both directions: a stub is complete for a
+      delivery host, a stub in `.clinerules` fails naming `cline` and
+      `lean_projection.hosts`, an empty delivery-host set makes every stub a finding (a
+      rolled-back mode exempts nothing), an UNMAPPED tool dir fails closed rather than being
+      silently exempted, and a missing entry is left to the `missing`/`dangling` kinds
+      rather than double-reported.
+      The host axis is appended AFTER the completeness/freshness pass rather than folded
+      into it: a stub entry exists and is fresh, so it is legitimately `complete` on the
+      ledger, and conflating the two would make a delivery host's stub a ledger failure.
+- [x] **1.4 Non-regression gate (no new CLI verb):** a check in the consistency workflow
       asserting that every host not in `hosts` produces a rule tree byte-identical to
       `eager-all` under any `lean_projection` setting.
       verify: green on the tree; red on a planted one-byte change in a Cline entry.
+      Done 2026-09-07. `src/scripts/check_host_tree_parity.ts`, wired into
+      `.github/workflows/consistency.yml` (after the projection-integrity step) and into the
+      local `task ci` chain in `taskfiles/ci-fast.yml` with its own
+      `check-host-tree-parity` target. No new CLI verb.
+      **Why a separate gate from 1.3, stated because the overlap is real.** 1.3 reads the
+      trees AS THEY STAND — that is its whole design, since regenerating erases the stale
+      tree it exists to catch — so it can see a stub in the wrong tree and nothing else. The
+      acceptance criterion is byte-identity, which can only be established by producing both
+      trees. This gate generates `eager-all` and the configured mode into a temp root it
+      owns and diffs every tree whose host is not a delivery host. It never writes into the
+      checkout, so its position in a chain does not matter.
+      Green on the tree: `2 non-delivery host tree(s) byte-identical to eager-all · delivery
+      hosts [claude-code]`, exit 0. Red proven three ways in
+      `tests/scripts/lean_projection_host_scope.test.ts`: a one-byte change planted in a
+      Cline entry (exactly this step's wording) produces one finding naming `.clinerules`
+      and `cline`; a delivery run judged against an EMPTY host set produces a finding for
+      every stub in all three trees; and a deleted entry is reported distinctly as MISSING
+      rather than as a content change.
+      **`check_ci_local_parity` caught the registration halfway** and is worth recording:
+      after the workflow entry alone it failed with "1 gate(s) run in CI but are unreachable
+      locally". Wiring the `task` target is what cleared it — the manifest's own preferred
+      drain, not a `ci_only:` declaration.
+      The gate adopts `_lib/gate_ledger.ts`, so `check_gate_completeness` counts it as an
+      adopter and the un-adopted ratchet is unmoved (229 before and after). It is NOT
+      registered in `gate-coverage.yml`, for the reason that file states about
+      `check_rule_projection_integrity` and `lint_evidence_artifacts`: with
+      `hosts: [claude-code, cursor, cline]` it legitimately compares zero trees, and
+      `min_scanned: 0` is the false-count shape that manifest rejects.
 
 ## Phase 2: Recall floor for Claude before the flip
 
-- [ ] **2.1 Label the 8 rules from 0.2** in `tests/eval/routing-matrix/` with ≥ 1 positive
+- [x] **2.1 Label the 8 rules from 0.2** in `tests/eval/routing-matrix/` with ≥ 1 positive
       and ≥ 1 near-miss row each.
       verify: `./scripts-run src/scripts/model_rule_injection --corpus tests/eval/routing-matrix --endpoints`
       reports 102/102 reachable, 0 false fires; near-miss count ≥ 202.
-- [ ] **2.2 An `auto` rule with an empty `triggers:` list is never thinned.** In
+      Done 2026-09-07, and the target is **101/101, not 102/102** —
+      `corrected-from-reproduction`, and the correction is derived from the mechanism
+      rather than chosen. 0.2 established 105 `auto` rules, of which 94 were labelled and
+      **11** were not. Of those 11, **four declare no `triggers:` at all**, and a
+      trigger-less rule CANNOT be made reachable by a positive prompt. So the labelable set
+      is 105 − 4 = 101, and 94 + 7 = 101 reconciles exactly.
+      **That is measured, not argued.** A probe fixture was planted for `skill-quality`
+      (trigger-less) and the recall endpoint went red on it — `101/102 rules reachable;
+      unreachable: skill-quality` — then the probe fixture was removed. Labelling a
+      trigger-less rule does not measure it; it breaks the floor. Their protection is 2.2's
+      eager fallback instead, which is exactly what that step is for.
+      Seven fixtures authored — `council-availability`, `evaluator-independence`,
+      `fix-what-you-see`, `missing-skill-recovery`, `playbook-precedence`,
+      `recurring-criticism`, `self-repair-loop` — three positives and two near-misses each,
+      written against each rule's own declared triggers including the German phrases three
+      of them carry.
+      Endpoint output, all four holding: `616 deliveries byte-equal, 0 not` ·
+      **`101/101 rules reachable; unreachable: none`** · **`0 of 212 near-miss prompts
+      fired`** · `delivery 0.7167 USD vs eager 4.0401 USD`. Near-miss count 212 clears the
+      ≥ 202 bar this step fixed, and every one of the 21 new positives matched its rule on
+      the first run with zero false fires from the 14 new near-misses.
+- [x] **2.2 An `auto` rule with an empty `triggers:` list is never thinned.** In
       `build_thin`, such a rule projects eagerly on every host and the run prints
       `D3: trigger-less auto rule <file>`.
       verify: fixture rule `type: auto`, no triggers → full body in `.claude/rules` under
       `delivery`, D3 line printed.
-- [ ] **2.3 MUST-LOAD floor covers every `always` rule.** Re-run the `trigger-coverage`
+      Done 2026-09-07, and **the substantive half already shipped** — recorded that way
+      rather than claimed as new work. `build_thin` has always kept a rule in
+      `no_trigger_ids()` full-bodied, and that set is read from `dist/router.json`, where
+      all four trigger-less rules appear with `triggers: 0`. Verified by executing it, not
+      by reading it: `build_thin()` returns `no-roadmap-references` at 3,343 chars,
+      `rule-type-governance` 743, `skill-quality` 828, `source-confidentiality` 5,075, all
+      with `thinned=false`, while `council-availability` comes back thinned at 397. The
+      `noTrigger` set has exactly 4 members — an independent cross-check of 0.2's
+      frontmatter-derived four, from a different source (the router rather than the
+      frontmatter), agreeing exactly.
+      What did NOT exist is any way to SEE the exemption happen, which is what this step
+      adds: `build_thin` takes an optional `announce` sink and emits
+      `D3: trigger-less auto rule <file> — kept full-bodied, never thinned` per rule;
+      `condense` passes `_print`. Without it an author who removes a rule's last trigger
+      gets a silently eager rule and no signal at all.
+- [x] **2.3 MUST-LOAD floor covers every `always` rule.** Re-run the `trigger-coverage`
       floor (`src/scripts/_lib/value_ladder.ts:480`, currently 26/26 green); add any
       `type: always` rule outside it.
       verify: `./scripts-run src/scripts/trigger_coverage` reports N/N with N ≥ 26.
-- [ ] **2.4 Re-delivery after compaction is a fixture.** State in the `rule_inject_hook.ts`
+      Done 2026-09-07 — `trigger-coverage: 26/26 pass`, exit 0, N = 26 ≥ 26. No
+      `type: always` rule sits outside the floor: the 9 `always` rules in
+      `dist/agent-src/rules` are the kernel, and `build_thin` keeps every kernel rule
+      full-bodied by construction (`kernel_ids()`, measured at 9 members in the same run
+      that measured `noTrigger` at 4), so an `always` rule cannot be thinned whatever the
+      floor says. Both mechanisms hold, and the floor is the one that would notice if the
+      kernel set were re-cut.
+- [x] **2.4 Re-delivery after compaction is a fixture.** State in the `rule_inject_hook.ts`
       header what is re-delivered after `pre_compact` and add one fixture: one matched rule,
       one compaction, one further matching turn → body present.
       verify: fixture green.
+      Done 2026-09-07, and split honestly: **the fixture already existed and the contract
+      did not.** `tests/scripts/rule_inject_hook.test.ts` has carried
+      `--event pre_compact empties the seen-set and the next prompt re-injects` since the
+      concern landed, and it is exactly this step's shape — one matched rule, one
+      compaction, one further matching turn, body present. 16/16 green.
+      What this step adds is the header statement, because "re-armed" alone does not say
+      what a reader may rely on. Four clauses now stated in `rule_inject_hook.ts`: the
+      whole seen-set clears rather than the compacted turn's rules; the compaction slot
+      itself emits zero bytes; a rule returns on the next turn whose trigger MATCHES, so a
+      rule whose trigger does not fire again is NOT restored (compaction resets
+      de-duplication, it does not replay a transcript); and the set is per session. The
+      third is the one a reader would otherwise get wrong.
 
 ## Phase 3: Pay the activation charge (E2)
 
@@ -318,12 +454,19 @@ Defects this roadmap repairs:
 
 ## Phase 4: Flip for Claude Code (E1)
 
-- [ ] **4.0 Repair D2.** Replace the comment at `src/scripts/condense.ts:1131-1134` with:
+- [x] **4.0 Repair D2.** Replace the comment at `src/scripts/condense.ts:1131-1134` with:
       `thin` is parked behind the thin quality null (ADR-202); `delivery` is licensed by
       `docs/CLAIMS.md:365` on delivery equivalence and its recall floor (Phase 2 of this
       roadmap) and is not gated by that null.
       verify: `grep -n '36.2' src/scripts/condense.ts` returns a line that names `thin`
       only.
+      Done 2026-09-07, in the SAME edit as 1.2 and for a stated reason: `condense.ts` sits
+      ~1,212 lines past the source-size ceiling, so the shortened comment is what paid for
+      the host gate's lines and kept the file net-zero at 2,712.
+      Verify output: `1131:        // 36.2% against a 48% pre-registered threshold,
+      ADR-202). `delivery` is` — the returned line names `thin` (on the line above it) and
+      the 36.2% figure, and the sentence continues to say `delivery` is NOT gated by that
+      null and that citing it as one is K7.
 - [ ] **4.1 ADR recording E1** (`delivery` default, `hosts: [claude-code]`, rollback =
       `eager-all`, completeness invariant statement, per-host scope). It amends the CLAIMS
       row and states what it does not reopen (ADR-202, ADR-094). Check the highest live ADR

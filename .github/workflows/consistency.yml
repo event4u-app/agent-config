@@ -246,6 +246,16 @@ jobs:
         # which runs it before anything regenerates.
         run: ./scripts-run src/scripts/check_rule_projection_integrity
 
+      - name: Host tree parity — a host outside lean_projection.hosts gets exactly eager-all
+        # road-to-delivery-for-every-host 1.4, and the gate behind its AC-2. The
+        # step above reads the trees as they stand and can see a STUB in the
+        # wrong tree; it cannot see any other divergence, and the AC is
+        # byte-identity. This one generates both projections into a temporary
+        # root it owns and diffs every tree whose host is not a delivery host.
+        # It never writes into the checkout, so it is safe to run before or
+        # after generate-tools.
+        run: ./scripts-run src/scripts/check_host_tree_parity
+
       - name: Rule layer partition — no rule is delivered from both layers
         # road-to-single-rule-layer Phase 4. Companion to the step above, asking the
         # opposite question: that gate audits the trees against the generator's own
