@@ -61,42 +61,6 @@ would touch: repairing once is both smaller and complete.
 the construct, grep the tree, report the count, AFTER the fix. Enumerate
 before, sweep after; the two run over different sets.
 
-## Re-derive the requirement, don't inherit the shape
-
-```
-A REPAIR INHERITS THE SHAPE OF WHAT IT REPAIRS UNLESS YOU ASK OTHERWISE.
-BEFORE CHANGING A MECHANISM'S PARAMETER, STATE THE REQUIREMENT IN ONE LINE
-AND CHECK THE SHAPE AGAINST IT — NOT AGAINST THE DOCSTRING THAT FRAMED IT.
-A DOCSTRING TELLS YOU WHAT THE CODE DECIDED. IT NEVER TELLS YOU WHETHER
-THAT WAS THE DECISION TO MAKE.
-```
-
-Fires on a **downstream repair** — a fix to something your own diff broke, or a
-red you are clearing — where the smallest change is a different VALUE and the
-thing being fixed has an unexamined FORM: a first-hit loop that should be a
-union, a single field that should be a list, one root where the requirement
-names three.
-
-**This is the gap the pre-work rules leave open, by their own terms.**
-[`improve-before-implement`](improve-before-implement.md) does not activate for
-bug fixes ("the problem is already defined") and
-[`invite-challenge`](invite-challenge.md) excludes "evidenced bug fixes" — which
-is right for the case they were written for and wrong here, because a downstream
-repair *looks* like a defined problem while its definition came from the broken
-code.
-
-**Worked failure, 2026-09-07.** A change emptied `.claude/skills` of skills and
-left ~49 command wrappers. `resolveSkillsRoot` tried two workspace-relative roots
-and took the first non-empty one, so it resolved the wrappers. The repair chosen
-was to swap the ORDER; the requirement was *"rank every catalogue the session can
-reach"*, which no ordering of a first-hit loop can satisfy, and the host-global
-root the whole task was about appeared in neither position. The evidence had been
-measured an hour earlier and was in the same session's own notes.
-
-**The one-line check that would have caught it:** name the requirement, then ask
-whether the current form *can* express it. A form that cannot is not a parameter
-bug.
-
 ## Own-orphan cleanup
 
 Your diff cleans up exactly the mess it made — nothing more:
