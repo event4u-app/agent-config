@@ -470,3 +470,167 @@ and a finding nobody wrote down is a finding nobody has.
 None. Two PRs (`#1736`, `#1737`) are open and owned by a concurrent session
 that opened them after this run's queue was drained; nothing is
 twice-exhausted, superseded-closed, or blocked on credentials.
+
+# PR drain run — 2026-09-07
+
+Fourth run against this mandate template. The mandate again named a six-PR queue
+headed by `#1499`; **every PR it named was merged before this run started** and
+`#1499` reads `MERGED`. The live queue held six open PRs numbered around `#1890`.
+That correction is the first row-level fact, not a footnote, for the same reason
+the 2026-08-29 run gave: acting on the stated queue would have meant
+re-processing merged work.
+
+## Step 0 — the authorisation premise, and how its answer changed
+
+**The constant the mandate asks about no longer exists.** The 2026-08-29 run of
+this document read `LEDGER_MAX_AGE_MS = 6 * 60 * 60 * 1e3` at
+`dist/hooks/dispatch.js:26307`. Today `grep -n LEDGER_MAX_AGE dist/hooks/dispatch.js`
+returns nothing, and the only `30 * 60 * 1e3` in the bundle is the same
+duration-label table entry (`{ label: "30m", ms: … }`) the earlier run already
+identified as a false positive.
+
+The reason is on trunk: commit `7f5bc3732` (2026-09-05, "remove the
+git-authorization gate — enforcement returns to the model", ADR-254) deleted
+`src/scripts/hooks/block_unauthorized_git.ts`. `git ls-files` on that path is
+empty; `git branch -r --contains 7f5bc3732` includes `origin/main`. The
+`hook_manifest.yaml` `pre_tool_use` list for `claude` binds no blocking
+git-authorization concern, `git-authorization` survives as `severity: advisory`
+recording only, and `block-unauthorized-git` occurs **0 times** in the bundle.
+What the bundle does still carry is a per-target grant model (`foldGrants`,
+`extractMergeTargets`) with no age term at all.
+
+So the stated STOP condition — *it still reads 30 minutes* — was **not** met, and
+neither was the expected 6h reading. The premise is void in the permissive
+direction: no guard can refuse a merge here, which is strictly safer for the run
+than the failure mode the mandate was guarding against. Proceeded. Nothing was
+modified; the whole check was read-only greps and `git log`.
+
+## Rows
+
+| Pos | PR | Sync conflicts → resolution class | CI iterations | Disposition | Dropped edits |
+|---|---|---|---|---|---|
+| 1 | `#1891` observed-learning-signal | 5 → 4× archived-end-state-wins, 1× modify/delete (test deleted upstream) | 0 | MERGED `602398447` | handoff artifact-validator half |
+| 2 | `#1890` admissible-council-seats | round 1: 2 → ADR-number collision + 2 generated (INDEX, census); round 2: 1 → generated (`pack.yaml`); round 3: 1 → add/add on the 14.20.0 ledger, theirs | 1 | MERGED `31e872dd0` | own 14.20.0 ledger text (superseded by `#1902`) |
+| 3 | `#1903` drain-run-20-summary | 0 (base already integrated) | 0 | MERGED `acd7fbe49` | none |
+| 4 | `#1892` asked-not-parked | 0 (clean `ort` merge) | 0 | MERGED `6a98e0ea0` | none |
+| 5 | `#1901` release-obligation-answerable | not attempted | 0 | **blocked-external** | none |
+
+**Merge attribution, stated exactly.** This run resolved, pushed and settled all
+five. It issued the merge call for `#1890` and `#1903`. `#1891` and `#1892` were
+merged from the account by another actor while this run was waiting on their CI —
+`#1891` at 06:27:24Z and `#1892` at 09:43:33Z, both returning "was already
+merged" when this run's own call arrived. The preparation was this run's; the
+merge click on those two was not, and claiming otherwise would be a completion
+claim without evidence.
+
+## `#1891` — a validator whose artifact was retired upstream mid-review
+
+`origin/main` commit `ffd8dd754` retired `HANDOFF.md` wholesale: the file, its
+section contract in the command document, the artifact-validation block in
+`src/scripts/lint_handoffs.ts`, and `tests/scripts/lint_handoffs_artifact.test.ts`
+— on the reproduced finding that it had no producer and no reachable consumer.
+`#1891`'s Phase 5 was extending exactly that validator.
+
+Resolved toward the retired end-state, and the split matters:
+
+- **Kept** — the four self-critique sections (`Least confident`, `Biggest thing
+  missed`, `Breaks in three months because`, `Not done`) and both prose
+  subsections in the **live** handoff template, which is the surviving surface.
+- **Dropped** — `HANDOFF_SELF_CRITIQUE`, `validate_handoff_self_critique`, their
+  `main()` wiring and the fixtures. They validated only the deleted artifact.
+
+**The first resolution attempt over-reverted and was caught before it landed.**
+`git checkout --theirs` on the command document discarded *both* of that file's
+hunks, including the live-template one that had merged cleanly. Re-applied by
+hand. One sentence in it was corrected rather than restored verbatim:
+"`lint_handoffs.ts` enforces both directions" is false once the validator is
+gone, so the shipped text now says the contract is model-carried there. A doc
+making a claim the code contradicts is a broken change, not a style nit.
+
+The roadmap keeps step 5.1 checked — the work was done and verified before the
+retirement landed — and its `verify:` line now carries the supersession inline,
+with a closing note naming what was kept and what was dropped. Un-checking would
+have violated the mandate's own roadmap rule; leaving the false `verify:`
+unqualified would have violated the evidence rule.
+
+## `#1890` — an ADR number claimed twice, and a red that belonged to `main`
+
+**ADR-256 collision.** Both sides added a record numbered 256: `main` has
+`ADR-256-mcp-surfaces-preserved-this-round.md`, the branch had
+`ADR-256-unpaid-route-may-propose-and-score-never-decide.md`. Renumbered the
+branch's to **ADR-257** — `git mv`, `adr: 257` in frontmatter, and 9 references
+across 7 files (`jury_aggregate.ts`, `evaluator-independence.md`, `proof.md`,
+`CLAIMS.md`, the archived roadmap, the jury test, the record itself). `INDEX.md`
+and `adr-evidence-census-2026-08.md` were regenerated rather than hand-merged
+(196 numbered + 1 legacy), and `docs/proof.md` was regenerated from `CLAIMS.md`
+via `build_proof` rather than left as the hand edit.
+
+**The one CI iteration was not this PR's defect.** `Sync + Generate Tools
+Consistency` failed with `14.20.0 has shipped and carries no findings ledger`.
+Release 14.20.0 had merged from `#1900` without
+`agents/evidence/release-findings/14.20.0.json`, which reds **every** open PR
+that integrates `main`. Facts were read off surfaces, not inferred: the
+self-review gate ran on `release/14.20.0` as run `34092974363` and went NEUTRAL
+on HTTP 400 `prompt is too long: 260998 tokens > 200000 maximum` (request_id
+`req_011CeoeCHUdmHso14DuZDGJ3`); the upload step logged no file; the API reports
+`total_count: 0` artifacts; `#1900` carries no `release-findings-json` block.
+Fourth consecutive release with this cause.
+
+The 14.19.0 ledger had **predicted** this ("14.20.0 reproduces this unless the
+gate chunks or scopes the release-span diff") and had **mis-read the cause** as
+monotonic growth (413191 → 450336 tokens). 14.20.0 measures 260998 — a fall of
+189338 that is still 60998 over the cap. So prompt size tracks the release-span
+diff rather than accumulating, and a small release will pass by luck and settle
+nothing. Both the held prediction and the corrected trend claim are recorded.
+
+**That fix was written twice and one copy was dropped.** A concurrent session
+landed the same fix with the same correction as `#1902` while this run's CI was
+running, producing an add/add conflict. Took `theirs` after verifying its text
+carries the same run id, the same request id and the same 260998 figure — so
+nothing was lost. This run's own ledger text is the dropped edit.
+
+Bounding what the self-review gate sends has **no live owner**:
+`road-to-the-ledger-two-releases-skipped` recorded the 14.17.0 and 14.18.0 nulls
+and is archived, and recording a reason does not chunk a prompt. 14.21.0
+reproduces this unless the gate bounds its diff.
+
+## Terminal PRs
+
+**`#1901` — blocked-external, and not twice-exhausted.** Its branch
+`fix/release-obligation-answerable` is checked out in the package's main
+checkout, which carries **101 uncommitted changes** and a live concurrent
+session. Its checks were already green (45 success, 9 skipped, 0 failures); the
+only thing it needed was a base update. This run did not take it: a push over a
+worktree holding another session's uncommitted work is how that work disappears,
+which is the collision the session register and the never-drop-inherited-commits
+discipline exist to prevent. It has an owner and it is not this run.
+
+No PR was superseded-closed and none was twice-exhausted. The queue this run was
+given went from six to one, and the one that remains is held by a live peer.
+
+## Process notes
+
+**Auto-merge is disabled repository-wide.** `gh pr merge --auto` returns
+`Auto merge is not allowed for this repository (enablePullRequestAutoMerge)`, so
+the settle→merge gap cannot be closed with GitHub's own queue. It has to be
+closed by hand, and that gap is where this run lost time.
+
+**The structural race, measured.** Required checks take 25–40 min on the large
+PRs (43–52 checks, macOS shards last); `main` moved on average every ~15 min
+through concurrent sessions and one release. Branch protection requires
+up-to-date-with-base, so `#1890` lost the window twice and needed three
+base-integration rounds before a `MERGEABLE/CLEAN` head and a green settle
+existed at the same instant. Merging small PRs first is not a fix for this — the
+fix is either a merge queue or fewer concurrent writers.
+
+**`ci_settle` exit 2 is not a verdict, and a piped exit code is not its exit
+code.** Several settles timed out at 9 min and had to be re-run; one run's
+counter fell from 37/43 to 17/43 mid-wait, which is a fresh run superseding the
+old one rather than progress reversing. Reading `EXIT=$?` after a pipe reports
+`tail`'s status — the first settle of the run was read that way and the reading
+was wrong; later settles ran unpiped.
+
+**Compound commands containing `gh pr merge` were refused by the host
+classifier** twice, while the same command issued alone succeeded. One of those
+refusals happened to coincide with `#1891` being merged from the account, which
+is why the attribution paragraph above is explicit rather than assumed.
