@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-07T04-01-35Z",
+  "generated": "2026-09-07T04-06-51Z",
   "corpus": "tests/fixtures/ai-tells",
   "aggregate": {
     "pairs": 20,
@@ -7,7 +7,7 @@
     "mean_hard_before": 0.9,
     "mean_hard_after": 0,
     "mean_cluster_before": {
-      "value": 58.46,
+      "value": 48.06,
       "n": 20
     },
     "mean_cluster_after": {
@@ -33,7 +33,7 @@
       "mean_hard_before": 1.08,
       "mean_hard_after": 0,
       "mean_cluster_before": {
-        "value": 59.69,
+        "value": 44.09,
         "n": 12
       },
       "mean_cluster_after": {
@@ -58,7 +58,7 @@
       "mean_hard_before": 0.63,
       "mean_hard_after": 0,
       "mean_cluster_before": {
-        "value": 56.62,
+        "value": 54.02,
         "n": 8
       },
       "mean_cluster_after": {
@@ -238,7 +238,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 2,
-        "cluster_score_per_500": 94.04,
+        "cluster_score_per_500": 57.34,
         "dash_density_per_500": 9.17
       },
       "after": {
@@ -265,7 +265,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 2,
-        "cluster_score_per_500": 60.68,
+        "cluster_score_per_500": 16.99,
         "dash_density_per_500": 4.85
       },
       "after": {
@@ -327,7 +327,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 0,
-        "cluster_score_per_500": 93.14,
+        "cluster_score_per_500": 53.92,
         "dash_density_per_500": 4.9
       },
       "after": {
@@ -411,7 +411,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 1,
-        "cluster_score_per_500": 54.05,
+        "cluster_score_per_500": 18.02,
         "dash_density_per_500": 4.5
       },
       "after": {
@@ -494,7 +494,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 1,
-        "cluster_score_per_500": 51.8,
+        "cluster_score_per_500": 20.27,
         "dash_density_per_500": 4.5
       },
       "after": {
@@ -521,7 +521,7 @@
       "length_controlled": true,
       "before": {
         "hard_total": 1,
-        "cluster_score_per_500": 59.03,
+        "cluster_score_per_500": 38.19,
         "dash_density_per_500": 6.94
       },
       "after": {

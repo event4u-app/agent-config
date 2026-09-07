@@ -40,10 +40,28 @@ export type TellLanguage = "en" | "de" | "any";
  * the same `{count, samples}` shape `countMatches` produces, so the caller does
  * not branch on rule kind beyond choosing the source.
  */
-export type TellMatcher = (
-  text: string,
-  language: "en" | "de",
-) => { count: number; samples: string[] };
+export interface RawOccurrence {
+  /** Character offset into the scanned text. */
+  index: number;
+  text: string;
+}
+
+export interface MatchResult {
+  count: number;
+  samples: string[];
+  occurrences: RawOccurrence[];
+}
+
+export type TellMatcher = (text: string, language: "en" | "de") => MatchResult;
+
+/**
+ * A pattern is USED CONSISTENTLY, not repeated by accident, when it occurs at
+ * least this many times and spans at least `MIN_CONSISTENT_SPREAD` of the
+ * document. Two occurrences in adjacent sentences is a repetition; four spread
+ * from the opening to the close is a habit, and a habit is evidence of style.
+ */
+export const MIN_CONSISTENT_OCCURRENCES = 3;
+export const MIN_CONSISTENT_SPREAD = 0.6;
 
 export interface TellRule {
   id: string;
@@ -146,30 +164,42 @@ const UNIFORM_BULLET_RUN = 4;
  * Questions and exclamations break a run: a short question is a rhetorical
  * device the catalog does not treat as a beat.
  */
-export function matchStaccatoRun(text: string): { count: number; samples: string[] } {
-  let count = 0;
-  const samples: string[] = [];
+export function matchStaccatoRun(text: string): MatchResult {
+  const occurrences: RawOccurrence[] = [];
+  let offset = 0;
   for (const para of text.split(/\n\s*\n/)) {
     const flat = para.replace(/\n/g, " ");
     let run: string[] = [];
+    let runStart = 0;
+    let cursor = 0;
     const flush = (): void => {
       if (run.length >= STACCATO_RUN) {
-        count += 1;
-        if (samples.length < 3) samples.push(run.join(" ").slice(0, 60).trim());
+        occurrences.push({ index: offset + runStart, text: run.join(" ") });
       }
       run = [];
     };
     for (const raw of flat.split(/(?<=[.!?])\s+/)) {
+      const at = flat.indexOf(raw, cursor);
+      cursor = at + raw.length;
       const sentence = raw.trim();
       if (sentence === "") continue;
       const words = sentence.split(/\s+/).filter(Boolean).length;
       const isBeat = /\.$/.test(sentence) && words > 0 && words <= STACCATO_MAX_WORDS;
-      if (isBeat) run.push(sentence);
-      else flush();
+      if (isBeat) {
+        if (run.length === 0) runStart = at;
+        run.push(sentence);
+      } else {
+        flush();
+      }
     }
     flush();
+    offset += para.length + 2;
   }
-  return { count, samples };
+  return {
+    count: occurrences.length,
+    samples: occurrences.slice(0, 3).map((o) => o.text.slice(0, 60).trim()),
+    occurrences,
+  };
 }
 
 /**
@@ -179,32 +209,36 @@ export function matchStaccatoRun(text: string): { count: number; samples: string
  * such bullet: the bound is about a run, and a three-item definition list is
  * ordinary reference prose.
  */
-export function matchUniformBulletRun(text: string): { count: number; samples: string[] } {
-  let count = 0;
-  const samples: string[] = [];
+export function matchUniformBulletRun(text: string): MatchResult {
+  const occurrences: RawOccurrence[] = [];
   let run = 0;
   let first = "";
+  let firstIndex = 0;
+  let offset = 0;
   const flush = (): void => {
-    if (run >= UNIFORM_BULLET_RUN) {
-      count += 1;
-      if (samples.length < 3) samples.push(first.slice(0, 60).trim());
-    }
+    if (run >= UNIFORM_BULLET_RUN) occurrences.push({ index: firstIndex, text: first });
     run = 0;
     first = "";
   };
   for (const line of text.split("\n")) {
     if (/^\s*[-*]\s+\*\*[^*\n]{2,60}:?\*\*:?/.test(line)) {
-      if (run === 0) first = line.trim();
+      if (run === 0) {
+        first = line.trim();
+        firstIndex = offset;
+      }
       run += 1;
-    } else if (line.trim() === "") {
+    } else if (line.trim() !== "") {
       // A blank line inside a list does not end the run — the shape survives it.
-      continue;
-    } else {
       flush();
     }
+    offset += line.length + 1;
   }
   flush();
-  return { count, samples };
+  return {
+    count: occurrences.length,
+    samples: occurrences.slice(0, 3).map((o) => o.text.slice(0, 60).trim()),
+    occurrences,
+  };
 }
 
 const TRIPLET_RE = /\b([\p{L}][\p{L}'’-]*), ([\p{L}][\p{L}'’-]*), (?:and|und) ([\p{L}][\p{L}'’-]*)\b/gu;
@@ -230,23 +264,27 @@ const TRIPLET_RE = /\b([\p{L}][\p{L}'’-]*), ([\p{L}][\p{L}'’-]*), (?:and|und
  * abstractness test qualifies both arms and the cluster arm escalates rather
  * than admits.
  */
-export function matchRuleOfThree(
-  text: string,
-  language: "en" | "de",
-): { count: number; samples: string[] } {
-  let count = 0;
-  const samples: string[] = [];
+export function matchRuleOfThree(text: string, language: "en" | "de"): MatchResult {
+  const occurrences: RawOccurrence[] = [];
+  let offset = 0;
   for (const para of text.split(/\n\s*\n/)) {
-    const abstract: string[] = [];
+    const abstract: RawOccurrence[] = [];
     for (const m of para.matchAll(TRIPLET_RE)) {
       const members = [m[1] ?? "", m[2] ?? "", m[3] ?? ""];
-      if (members.every((x) => isAbstractNoun(x, language))) abstract.push(m[0]);
+      if (members.every((x) => isAbstractNoun(x, language))) {
+        abstract.push({ index: offset + (m.index ?? 0), text: m[0] });
+      }
     }
-    if (abstract.length === 0) continue;
-    count += abstract.length;
-    for (const a of abstract) if (samples.length < 3) samples.push(a.slice(0, 60).trim());
+    occurrences.push(...abstract);
+    // `+2` restores the blank line the split consumed; an offset off by two
+    // characters would misreport a column, which is the whole point of these.
+    offset += para.length + 2;
   }
-  return { count, samples };
+  return {
+    count: occurrences.length,
+    samples: occurrences.slice(0, 3).map((o) => o.text.slice(0, 60).trim()),
+    occurrences,
+  };
 }
 
 export const TELL_RULES: TellRule[] = [

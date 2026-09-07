@@ -76,10 +76,28 @@ the widening is visible, but they do not consume an epoch.
 
 ## Measured effect on the seeded corpus
 
-Mean cluster score on the `before` side rose **53.97 → 58.46 per 500 words**
-across both halves (tune 55.54 → 59.69, holdout 51.61 → 56.62). The `after`
-side stayed at **0** on all three metrics, so no landed family fires on
-humanized prose. Figures: `internal/bench/reports/humanizer-v1.md`.
+**Per family**, which is the figure that means something here. Six of the
+sixteen promoted families find an instance in the twenty seeded pairs:
+`tell-throat-clearing` in 5, `tell-de-negative-parallelism` in 3,
+`tell-emphasis-crutch` in 2, `tell-de-generic-conclusion` in 1. The other ten
+find none, because the fixtures were authored for the July register — a zero is
+a statement about this corpus, and those families are measured by their own
+probes in `tests/scripts/tell_family_epochs.test.ts` instead.
+
+**The aggregate cluster score is deliberately NOT quoted as the recall figure.**
+It moved 53.97 → 48.06 per 500 words across this roadmap, and two changes pushed
+it in opposite directions: thirteen new families raised it, and step 4.2's
+consistency discount (a pattern used uniformly through a document is charged
+once, not N times) lowered it further than that. A number produced under two
+different scoring rules is not a before-and-after of the same thing, and
+reporting the fall as a recall loss — or the rise as a recall gain — would be
+wrong in both directions.
+
+What the aggregate does still establish: the `after` side is **0** on all three
+metrics in both halves, so no landed family fires on humanized prose, and every
+seeded `before` fixture still exceeds the thresholds (asserted per fixture in
+`tests/scripts/detect_ai_tells.test.ts`). Figures, per split:
+`internal/bench/reports/humanizer-v1.md`.
 
 ## What this ledger does not claim
 
