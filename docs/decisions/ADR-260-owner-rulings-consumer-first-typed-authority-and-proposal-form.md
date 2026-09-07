@@ -3,16 +3,15 @@ adr: 260
 status: accepted
 date: 2026-09-07
 decision: owner-rulings-consumer-first-typed-authority-and-proposal-form
-supersedes: ADR-255
+supersedes: ADR-255 (§§ 1 · 2 · 3 · 5 only)
 superseded_by: —
 type: structural
 reopen_policy: owner
 protected_dimensions: governance
 provenance:
-  kind: owner
+  kind: human
   decision_makers: [owner]
   human_directed: true
-  agentic_mode: none
 evidence:
   strength: E1
   basis:
@@ -150,6 +149,22 @@ not apply to a named test subject whose questions, truth and traces are tracked 
   does not exist — which is the defect § 4 above closes. Authoring it is the owner's next
   scheduling call, and the PR that lands this record carries it as an open owner question
   rather than as a silent gap.
+
+## Not reopened
+
+- **ADR-255 § 4** — the kernel and governance self-amendment refusals. All four deletions
+  it refused stay refused, and this record does not ask
+  `src/scripts/hooks/block_kernel_rule_writes.ts` to yield on any of them. That is why the
+  supersession above is scoped rather than whole-document, and why ADR-255 keeps
+  `status: accepted`.
+- **ADR-249** — the supervised-resident-process permission. Not reopened in either
+  direction.
+- **ADR-254's reopen text** — stands verbatim. § 2 above is the typed-transition
+  replacement that text asked for, not a restoration of the natural-language parser it
+  removed, and no such parser participates in enforcement.
+- **ADR-253** — the per-PR user-artifact gate stays declined. § 1's ratio is a release
+  guard, not a per-PR gate.
+- **ADR-202** — untouched. Nothing here concerns the thin-projection quality instrument.
 
 ## Alternatives
 

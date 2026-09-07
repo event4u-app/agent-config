@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-06
 decision: authorization-floors-preserved-this-round
 supersedes: —
-superseded_by: —
+superseded_by: 260 (§§ 1 · 2 · 3 · 5 only)
 phase: road-to-authorization-that-reaches-further · Blockers
 type: structural
 reopen_policy: owner

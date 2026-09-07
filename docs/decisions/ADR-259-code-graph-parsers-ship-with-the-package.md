@@ -9,10 +9,9 @@ phase: road-to-a-graph-that-is-shipped · Phase 0.1
 type: structural
 reopen_policy: owner
 provenance:
-  kind: owner
+  kind: human
   decision_makers: [owner]
   human_directed: true
-  agentic_mode: none
 evidence:
   strength: E1
   basis:
