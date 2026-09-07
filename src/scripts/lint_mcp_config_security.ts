@@ -170,11 +170,13 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
 }
 
 interface Args {
+    /** Scan base for the bounded root mode; absent = the package root. */
+    root?: string;
     json: boolean;
 }
 
 function _argError(msg: string): never {
-    process.stderr.write('usage: lint_mcp_config_security [-h] [--json]\n');
+    process.stderr.write('usage: lint_mcp_config_security [-h] [--json] [--root DIR]\n');
     process.stderr.write(`lint_mcp_config_security: error: ${msg}\n`);
     process.exit(2);
 }
@@ -182,12 +184,28 @@ function _argError(msg: string): never {
 function parse_args(argv: readonly string[]): Args {
     const out: Args = { json: false };
     const extra: string[] = [];
+    let rootPending = false;
     for (const a of argv) {
+        if (rootPending) {
+            out.root = a;
+            rootPending = false;
+            continue;
+        }
         if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: lint_mcp_config_security [-h] [--json]\n');
+            process.stdout.write('usage: lint_mcp_config_security [-h] [--json] [--root DIR]\n');
             process.exit(0);
         } else if (a === '--json') {
             out.json = true;
+        } else if (a === '--root' || a.startsWith('--root=')) {
+            // Bounded root mode. Absent, this linter's own default roots stand;
+            // present, the same relative roots resolve against DIR instead. Used by
+            // the scout to scan a quarantined candidate, and by --self-test fixtures.
+            const eq = a.indexOf('=');
+            if (eq !== -1) {
+                out.root = a.slice(eq + 1);
+            } else {
+                rootPending = true;
+            }
         } else {
             extra.push(a);
         }
@@ -200,13 +218,14 @@ function parse_args(argv: readonly string[]): Args {
 
 export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+    const scanBase = args.root === undefined ? sl.ROOT : path.resolve(args.root);
 
     const findings: sl.Finding[] = [];
     // scan .md (fenced examples) under the default roots PLUS named MCP configs
     // under src/templates (where the shipped claude_desktop_config template lives).
     const roots = [...sl.DEFAULT_SCAN_ROOTS, 'src/templates'];
     let corpusFiles = 0;
-    for (const sf of sl.iter_corpus(roots, ['.md', '.json', '.template'])) {
+    for (const sf of sl.iter_corpus(roots, ['.md', '.json', '.template'], scanBase)) {
         corpusFiles += 1;
         for (const h of _scan(sf)) {
             findings.push(h);
@@ -232,6 +251,13 @@ export function main(argv: readonly string[] | null = null): number {
             return 1;
         }
         throw exc;
+    }
+
+    // Publish what this child inspected so the umbrella can aggregate a real
+    // corpus size rather than a count of children. Same number the assertion
+    // above just accepted, so the published figure cannot drift from it.
+    if (args.json) {
+        sl.report_child_scanned(corpusFiles);
     }
 
     if (args.json) {

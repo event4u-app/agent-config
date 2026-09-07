@@ -69,11 +69,11 @@ source round asserts; `lint_mcp_config_security` is the fifth (`src/scripts/lint
 reported success and were believed. `lint_agent_security` is absent from it and emits no
 count, so the same failure is open on the security gate specifically.
 
-- [ ] **3.1 Emit a machine-readable scan count.** One line `scanned: <N>` on stdout or stderr, N being the artifacts the children actually inspected — not the number of children. The manifest's rule 1 is explicit that the guard never parses human output.
+- [x] **3.1 Emit a machine-readable scan count.** One line `scanned: <N>` on stdout or stderr, N being the artifacts the children actually inspected — not the number of children. The manifest's rule 1 is explicit that the guard never parses human output.
       verify: `./scripts-run src/scripts/lint_agent_security 2>&1 | grep -c '^scanned: [0-9]\+$'` returns 1 and N is greater than the number of children.
-- [ ] **3.2 Register the gate with a CI-identical invocation and a real floor.** Add the row to `src/config/gate-coverage.yml` with `argv` matching how the Taskfile and CI call it, and `min_scanned` set below the true corpus but far above a collapse, per the manifest's rule 3.
+- [x] **3.2 Register the gate with a CI-identical invocation and a real floor.** Add the row to `src/config/gate-coverage.yml` with `argv` matching how the Taskfile and CI call it, and `min_scanned` set below the true corpus but far above a collapse, per the manifest's rule 3.
       verify: `./scripts-run src/scripts/check_gate_coverage` exits 0 and reports the umbrella's count above its floor.
-- [ ] **3.3 Prove the floor can fail.** A new coverage row owes a negative control: point the gate at an empty scope and confirm `check_gate_coverage` fails rather than passing on a zero count.
+- [x] **3.3 Prove the floor can fail.** A new coverage row owes a negative control: point the gate at an empty scope and confirm `check_gate_coverage` fails rather than passing on a zero count.
       verify: a self-test or fixture drives the count below the floor and the guard exits non-zero, naming the gate.
 
 ## Phase 4 — The scout's security gate actually reads content
@@ -82,7 +82,7 @@ count, so the same failure is open on the security gate specifically.
 name throughout: it is already called `security_licence` (`src/scripts/skill_scout.ts:82,86,401`),
 so the source round's rename-then-rename-back is dropped.
 
-- [ ] **4.1 Give all five children a bounded root mode.** A `--root` flag that scopes the scan, with each linter's current default root retained when the flag is absent.
+- [x] **4.1 Give all five children a bounded root mode.** A `--root` flag that scopes the scan, with each linter's current default root retained when the flag is absent.
       verify: `grep -c -- '--root' src/scripts/lint_{hidden_unicode,confusables,instruction_smuggling,mcp_config_security,skill_frontmatter_safety}.ts` returns a non-zero count for each of the five; a run with no flag scans the same corpus it scans today.
 - [ ] **4.2 Build the candidate corpus before wiring the scout.** Quarantine fixtures carrying a zero-width injection, a disclosure-suppression imperative, and a dangerous frontmatter key, plus one clean candidate.
       verify: against today's `intake()` all four are accepted, reproducing the gap — `src/scripts/skill_scout.ts:272-299` refuses only on symlink, extension, exec-bit and size.

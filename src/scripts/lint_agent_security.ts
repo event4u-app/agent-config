@@ -27,7 +27,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runCountedProbe, type ProbeResult } from "./_lib/counted_probe.js";
-import { assertWatchlistResolves, DeadScopeError } from "./_lib/scan_scope.js";
+import { assertWatchlistResolves, DeadScopeError, reportScanned } from "./_lib/scan_scope.js";
+import { runGateCli, runSelfTest } from "./_lib/gate_self_test.js";
+import os from "node:os";
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -70,8 +72,14 @@ export type ChildRunner = (script: string) => ChildRunResult;
 // Bounded read: a truncated `--json` payload would fail to parse and be
 // swallowed as zero findings — a security aggregate reporting clean because
 // it lost the answer. `runCountedProbe` throws on overflow instead.
-const _spawnChild: ChildRunner = (script) =>
-  runCountedProbe(tsxBin, [path.join(_HERE, script), "--json"]);
+function _spawnChild(root: string | null): ChildRunner {
+  return (script) =>
+    runCountedProbe(tsxBin, [
+      path.join(_HERE, script),
+      "--json",
+      ...(root === null ? [] : ["--root", root]),
+    ]);
+}
 
 /**
  * The closed set of terminal outcomes a child run can have.
@@ -82,7 +90,13 @@ const _spawnChild: ChildRunner = (script) =>
  * distinction expressible, and `failed` is the one that blocks.
  */
 export type ChildOutcome =
-  | { readonly kind: "completed"; readonly findings: Finding[]; readonly exitCode: number }
+  | {
+      readonly kind: "completed";
+      readonly findings: Finding[];
+      readonly exitCode: number;
+      /** Artifacts this child reported inspecting. See `CHILD_SCANNED` below. */
+      readonly scanned: number;
+    }
   | { readonly kind: "failed"; readonly detail: string; readonly exitCode: number | null }
   | { readonly kind: "skipped"; readonly reason: SkipReason };
 
@@ -165,7 +179,31 @@ function _classify(res: ChildRunResult): ChildOutcome {
         "the --json contract (0 = clean, 1 = findings; every other code means it could not run)",
     };
   }
-  return { kind: "completed", findings, exitCode: proc.status };
+  // A child that ran but did not say what it read leaves the aggregate unable to
+  // publish a real corpus size — the same class of unknown as a crashed child,
+  // so it gets the same verdict rather than a silent zero.
+  const scanned = _childScanned(proc.stderr ?? "");
+  if (scanned === null) {
+    return {
+      kind: "failed",
+      exitCode: proc.status,
+      detail:
+        `exited ${String(proc.status)} without reporting what it inspected — an aggregate ` +
+        "corpus size cannot be published from a child that did not state one",
+    };
+  }
+  return { kind: "completed", findings, exitCode: proc.status, scanned };
+}
+
+/** Read a child's `scanned: <N>` line off its stderr. `null` = it printed none. */
+function _childScanned(stderr: string): number | null {
+  for (const line of stderr.split("\n")) {
+    const m = /^scanned: (\d+)$/.exec(line.trim());
+    if (m) {
+      return Number.parseInt(m[1] as string, 10);
+    }
+  }
+  return null;
 }
 
 function _run(script: string, runChild: ChildRunner): ChildOutcome {
@@ -265,10 +303,13 @@ function _pyJsonDumpsIndent2(obj: unknown): string {
 interface ParsedArgs {
   sarif: string | null;
   quiet: boolean;
+  /** Bounded scan base, forwarded verbatim to every child. Null = the package root. */
+  root: string | null;
+  selfTest: boolean;
 }
 
 function parse_args(argv: string[]): ParsedArgs {
-  const out: ParsedArgs = { sarif: null, quiet: false };
+  const out: ParsedArgs = { sarif: null, quiet: false, root: null, selfTest: false };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i] as string;
     if (a === "--sarif" || a.startsWith("--sarif=")) {
@@ -286,11 +327,28 @@ function parse_args(argv: string[]): ParsedArgs {
         i += 1;
         out.sarif = next;
       }
+    } else if (a === "--root" || a.startsWith("--root=")) {
+      const eq = a.indexOf("=");
+      if (eq !== -1) {
+        out.root = a.slice(eq + 1);
+      } else {
+        const next = argv[i + 1];
+        if (next === undefined) {
+          process.stderr.write(
+            "lint_agent_security: error: argument --root: expected one argument\n",
+          );
+          process.exit(2);
+        }
+        i += 1;
+        out.root = next;
+      }
+    } else if (a === "--self-test") {
+      out.selfTest = true;
     } else if (a === "--quiet") {
       out.quiet = true;
     } else if (a === "-h" || a === "--help") {
       process.stdout.write(
-        "usage: lint_agent_security [-h] [--sarif PATH] [--quiet]\n",
+        "usage: lint_agent_security [-h] [--sarif PATH] [--quiet] [--root DIR] [--self-test]\n",
       );
       process.exit(0);
     }
@@ -305,7 +363,10 @@ export interface MainOptions {
 
 export function main(argv: string[] | null = null, opts: MainOptions = {}): number {
   const args = parse_args(argv ?? process.argv.slice(2));
-  const runChild = opts.runChild ?? _spawnChild;
+  if (args.selfTest) {
+    return _selfTest();
+  }
+  const runChild = opts.runChild ?? _spawnChild(args.root);
 
   // This runner owns no corpus of its own — it guards five named child linters,
   // so its scope is that watch list. `_run` swallows an unparseable child
@@ -329,6 +390,7 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
   const outcomes: Array<[string, string, ChildOutcome]> = [];
   const notCompleted: string[] = [];
   let blocking = 0;
+  let totalScanned = 0;
   for (const [check, script] of LINTERS) {
     const outcome = _run(script, runChild);
     outcomes.push([check, script, outcome]);
@@ -344,6 +406,7 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
       continue;
     }
     const findings = outcome.findings;
+    totalScanned += outcome.scanned;
     all_findings.push(...findings);
     const fails = findings.filter((f) => _is_fail(f)).length;
     const warns = findings.length - fails;
@@ -358,6 +421,28 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
     fs.writeFileSync(out, _pyJsonDumpsIndent2(_sarif(all_findings, outcomes)), "utf-8");
     process.stdout.write(`  SARIF → ${args.sarif}\n`);
   }
+
+  // Publish what the scan actually read, on EVERY path including the red one.
+  // The umbrella owns no corpus of its own — this number is the SUM of the five
+  // children's own reported counts, so it is artifact INSPECTIONS rather than
+  // distinct artifacts (a file two children read counts twice). That is the
+  // stronger collapse detector: a distinct-union figure would stay high while
+  // one child's corpus went missing, which is the failure this line exists to
+  // make visible. `src/config/gate-coverage.yml` carries the floor.
+  reportScanned({
+    gate: "lint_agent_security",
+    scanned: totalScanned,
+    units: "artifact inspection(s) across the five child linters",
+    roots: LINTERS.map(([cid]) => cid),
+    ...(notCompleted.length > 0
+      ? {
+          allowEmpty:
+            "WATCHLIST_DRIVEN: a child that did not complete reports no count. Zero here means " +
+            "every child failed, which this run is already exiting 1 for and naming — the scope " +
+            "is not dead, the children are.",
+        }
+      : {}),
+  });
 
   process.stdout.write("\n");
   // A child that did not answer is reported BEFORE findings and fails on its
@@ -389,6 +474,58 @@ export function main(argv: string[] | null = null, opts: MainOptions = {}): numb
     `✅  agent-security: clean (0 blocking, ${warn_total} warning(s)).\n`,
   );
   return 0;
+}
+
+/**
+ * `--self-test` — prove, on demand, that the shipped binary still rejects.
+ *
+ * The two rejecting cases are the two ways this gate is supposed to go red, and
+ * they are different failures rather than one failure twice:
+ *
+ *  - EMPTY SCOPE. Every child asserts its own corpus is non-empty, so an empty
+ *    root makes all five exit non-zero with nothing on stdout — which, since the
+ *    fail-closed repair, is a run failure the umbrella names. This is also the
+ *    negative control the coverage floor owes: the run publishes `scanned: 0`,
+ *    and 0 is below any floor above zero, so `check_gate_coverage` reds on it.
+ *  - A PLANTED PAYLOAD. A zero-width joiner inside a `.md` file under an
+ *    otherwise clean root, which a child must flag as a blocking finding.
+ *
+ * The accepting case is the same root without the payload. Without it, a gate
+ * that returned non-zero unconditionally would score two rejections and look
+ * healthy.
+ */
+function _selfTest(): number {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lint-agent-security-selftest-"));
+  const mk = (name: string, body: string): string => {
+    const dir = path.join(tmp, name, "src", "skills", "candidate");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "SKILL.md"), body, "utf-8");
+    return path.join(tmp, name);
+  };
+  const cleanRoot = mk("clean", "---\ntitle: candidate\n---\n\nOrdinary prose with nothing hidden in it.\n");
+  // U+200D ZERO WIDTH JOINER between two words — invisible, and exactly the
+  // hidden-instruction carrier class this umbrella exists to catch.
+  const payloadRoot = mk("payload", "---\ntitle: candidate\n---\n\nOrdinary\u200dprose with something hidden in it.\n");
+  const emptyRoot = path.join(tmp, "empty");
+  fs.mkdirSync(emptyRoot, { recursive: true });
+
+  const run = (root: string): number =>
+    runGateCli(REPO_ROOT, "src/scripts/lint_agent_security.ts", ["--root", root], REPO_ROOT);
+
+  try {
+    return runSelfTest({
+      gate: "lint_agent_security",
+      minCases: 3,
+      minRejectCases: 2,
+      cases: [
+        { name: "empty scope — every child reads nothing and the aggregate refuses", expect: "reject", run: () => run(emptyRoot) },
+        { name: "planted zero-width joiner — a child flags it and the aggregate blocks", expect: "reject", run: () => run(payloadRoot) },
+        { name: "clean root — the same scope without the payload still passes", expect: "accept", run: () => run(cleanRoot) },
+      ],
+    });
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 }
 
 function _isCliEntry(): boolean {

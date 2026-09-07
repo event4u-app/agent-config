@@ -379,12 +379,23 @@ function _pathCmp(a: string, b: string): number {
 }
 
 /** Yield ScannedFile for every matching file under the given roots. */
+/**
+ * Walk a corpus.
+ *
+ * `scanBase` exists for the bounded-root mode every child linter now carries
+ * (`--root DIR`): the roots stay relative, the base they resolve against moves.
+ * Absent, it is the package root and the walk is exactly what it always was —
+ * `scan_path(p, ROOT)` computes the same `rel` and the same `path_weight` as the
+ * `scan_file(p)` this used to call, so a flagless run reads the identical corpus
+ * with identical finding paths.
+ */
 export function* iter_corpus(
     roots: readonly string[] = DEFAULT_SCAN_ROOTS,
     exts: readonly string[] = ['.md'],
+    scanBase: string = ROOT,
 ): Generator<ScannedFile> {
     for (const root of roots) {
-        const base = path.join(ROOT, root);
+        const base = path.join(scanBase, root);
         if (!fs.existsSync(base)) {
             continue;
         }
@@ -396,10 +407,34 @@ export function* iter_corpus(
                 continue;
             }
             if (st.isFile() && exts.includes(path.extname(p))) {
-                yield scan_file(p);
+                yield scan_path(p, scanBase);
             }
         }
     }
+}
+
+/**
+ * The prefix a child linter uses to publish what it inspected, under `--json`.
+ *
+ * WHY STDERR, AND WHY ONLY UNDER `--json`. Under `--json` a child's STDOUT is a
+ * findings array with one consumer — `lint_agent_security`, which parses it.
+ * A count printed there would corrupt the payload. Stderr is free on that path
+ * and already carries the dead-scope diagnostic, so the umbrella reads the
+ * count from the same stream it would read a failure on.
+ *
+ * The umbrella SUMS these across its five children and publishes the total as
+ * its own `scanned:` line. The sum counts artifact INSPECTIONS, not distinct
+ * artifacts: a file in more than one child's corpus is counted once per child
+ * that read it. That is deliberate and is the stronger collapse detector — a
+ * distinct-union count would stay high when one child's corpus moved, as long
+ * as another child still covered those paths, which is exactly the failure
+ * `gate-coverage.yml` exists to catch.
+ */
+export const CHILD_SCANNED_PREFIX = 'scanned: ';
+
+/** Publish a child linter's inspected count on stderr. See {@link CHILD_SCANNED_PREFIX}. */
+export function report_child_scanned(count: number): void {
+    process.stderr.write(`${CHILD_SCANNED_PREFIX}${String(count)}\n`);
 }
 
 /**
