@@ -186,7 +186,7 @@ the check exists to stop a blank section reading as an all-clear, not to force a
 question where there is none.
 
 **Resume obligation — every open question is put to the user, one at a time,
-BEFORE the first work step.** `## Open questions` is a hand-off channel, not a
+BEFORE the first work step.** `## Open questions` is a handoff channel, not a
 storage location: a `?`-terminated line satisfies every gate above while never
 reaching the person who can answer it, which is exactly the parking the section
 must not become. So a resuming session, before it touches the first step of
