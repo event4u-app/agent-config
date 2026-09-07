@@ -1,4 +1,4 @@
-<!-- security-lint: allow instruction-smuggling "defense guideline: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" -->
+<!-- security-lint: allow instruction-smuggling "defense guideline: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" sha256:d84759534e0fd3ebc5a66533b4a9f52364ef5286eaf3674a611c9c2adf89b969 sha256:f08c68182232149c7ecd881e88ca81dc98a9313c06ba6d010b065f9feef2c149 sha256:4f5936bb0a57de8ff3ce590fb12607cdcb046a31262b5e4d40377c6e6184f494 -->
 
 # untrusted-input spotlighting + least-agency mapping
 

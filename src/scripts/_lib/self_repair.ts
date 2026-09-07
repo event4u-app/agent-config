@@ -30,14 +30,27 @@ import { createHash } from 'node:crypto';
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
 import { is_kernel_rule } from './kernel_rules.js';
 
-/** Where a record came from. */
-export type DefectSource = 'user-reported' | 'self-detected';
+/**
+ * Where a record came from.
+ *
+ * `user-reported` and `self-detected` both require something to have FIRED — a
+ * user complaint, or a deterministic detector. `model-noticed` is the third
+ * intake: a model notices an edge case in a rule, or a methodology the user
+ * just explained that no skill carries. Nothing fired, and before this source
+ * existed such an observation had no record type at all and was handed to a
+ * host-native memory tool no reader of this repository can query.
+ *
+ * It is a SOURCE and not a second store: the record shape, the fingerprint
+ * derivation, the noclobber path and the creation cap are all unchanged.
+ */
+export type DefectSource = 'user-reported' | 'self-detected' | 'model-noticed';
 
 /** The defect classes a record can carry. One class = one detector. */
 export type DefectClass =
     | 'user-reported'
     | 'council-availability-claim'
-    | 'language-mirror';
+    | 'language-mirror'
+    | 'model-noticed';
 
 /**
  * Runtime mirror of `DefectClass`, in declaration order. The upstream issue
@@ -49,6 +62,7 @@ export const DEFECT_CLASSES: readonly DefectClass[] = [
     'user-reported',
     'council-availability-claim',
     'language-mirror',
+    'model-noticed',
 ];
 
 /** How far a record may travel outward. */
@@ -61,14 +75,94 @@ export interface DefectFinding {
     evidence: string;
     /** One line naming what the fix should change. */
     suggested_surface: string;
+    /**
+     * The assets this record is ABOUT, drawn from a closed vocabulary and
+     * resolved against the tree at write time (see `partitionTargets`).
+     *
+     * `suggested_surface` is free text, so no record could ever be JOINED to
+     * the asset it describes — two records about one rule's weakness were two
+     * unrelated strings. A target is machine-addressable, which is what makes
+     * the per-target occurrence count in `targetCounts` possible at all.
+     *
+     * An EMPTY list stays legal: a real observation with no identified home is
+     * information, not an error. That is deliberately different from an
+     * UNRESOLVABLE entry, which lands in `proposes` instead.
+     */
+    target?: string[];
+    /**
+     * Target-shaped strings that do not resolve in the tree — a rule that does
+     * not exist yet, a skill the record is proposing. Kept rather than
+     * rejected, because "this should exist" is a legitimate observation; kept
+     * SEPARATE from `target`, because a silently accepted unresolvable id is
+     * worse than free text — it looks joined and joins to nothing.
+     */
+    proposes?: string[];
 }
+
+/** The four asset kinds a `target` entry may address. */
+export const TARGET_KINDS = ['rule', 'skill', 'command', 'hook'] as const;
+export type TargetKind = (typeof TARGET_KINDS)[number];
+
+/** `<kind>:<id>` — closed prefix, id-shaped remainder. Never free text. */
+export const TARGET_RE = /^(rule|skill|command|hook):([a-z0-9][a-z0-9._-]*)$/;
+
+/** Shape only — says nothing about whether the id exists. */
+export function isWellFormedTarget(value: string): boolean {
+    return TARGET_RE.test(value);
+}
+
+/** Split a well-formed target into its kind and id, or null. */
+export function parseTarget(value: string): { kind: TargetKind; id: string } | null {
+    const m = TARGET_RE.exec(value);
+    return m === null ? null : { kind: m[1] as TargetKind, id: m[2] as string };
+}
+
+/**
+ * What a record is doing now.
+ *
+ * The pair `open | released` could express neither a DECLINED record (which
+ * stayed `open` in the queue line for ever) nor a partially actioned one, so
+ * the only way a record left the queue was to be released. Six states, closed:
+ *
+ *   - `open`       — queued, nothing decided.
+ *   - `candidate`  — accepted as worth acting on, not yet acted on.
+ *   - `actioned`   — a fix or a decision landed.
+ *   - `declined`   — deliberately not acted on. Terminal, and NOT a failure.
+ *   - `superseded` — another record covers it.
+ *   - `parked`     — waiting on a named condition; REQUIRES `parked_until`,
+ *                    because a park with no wake condition is a deferral
+ *                    wearing a condition's clothes.
+ */
+export type DefectStatus =
+    | 'open'
+    | 'candidate'
+    | 'actioned'
+    | 'declined'
+    | 'superseded'
+    | 'parked';
+
+export const DEFECT_STATUSES: readonly DefectStatus[] = [
+    'open',
+    'candidate',
+    'actioned',
+    'declined',
+    'superseded',
+    'parked',
+];
+
+/** Statuses that keep a record in the queue line. */
+export const ACTIVE_STATUSES: readonly DefectStatus[] = ['open', 'candidate'];
 
 export interface DefectRecord extends DefectFinding {
     fingerprint: string;
     first_seen: string;
     last_seen: string;
     occurrences: number;
-    status: 'open' | 'released';
+    status: DefectStatus;
+    /** MANDATORY when `status === 'parked'`: when the record comes back. */
+    parked_until?: string;
+    /** One line saying why the record reached a terminal status. */
+    resolution?: string;
     /**
      * Failed egress attempts from the most recent `release` call, sanitized at
      * write time. Local-only bookkeeping: `renderReport` never includes them,
@@ -617,6 +711,38 @@ export function creationCapReached(
     return recentCreations(existing, finding.source, now) >= NEW_RECORDS_PER_SOURCE_PER_WINDOW;
 }
 
+/**
+ * Shape validation for a stored record. Returns the problems, `[]` when valid.
+ *
+ * The one obligation that is NOT a style nit: a `parked` record without a
+ * `parked_until` is a deferral nothing can wake. Everything else here is the
+ * closed-vocabulary check the free-text era could not perform.
+ */
+export function validateRecord(record: DefectRecord): string[] {
+    const out: string[] = [];
+    if (!(DEFECT_STATUSES as readonly string[]).includes(record.status)) {
+        out.push(`status '${String(record.status)}' is outside the closed enum`);
+    }
+    if (record.status === 'parked' && (record.parked_until ?? '').trim() === '') {
+        out.push('status is `parked` but `parked_until` is missing — a park with no wake condition is a deferral, not a park');
+    }
+    for (const value of record.target ?? []) {
+        if (!isWellFormedTarget(value)) {
+            out.push(`target '${value}' is not \`<rule|skill|command|hook>:<id>\``);
+        }
+    }
+    return out;
+}
+
+/** Union of two id lists, order-stable and de-duplicated. */
+function _mergeIds(a: readonly string[] | undefined, b: readonly string[] | undefined): string[] {
+    const out: string[] = [];
+    for (const v of [...(a ?? []), ...(b ?? [])]) {
+        if (!out.includes(v)) out.push(v);
+    }
+    return out;
+}
+
 export function mergeRecord(
     existing: DefectRecord | null,
     finding: DefectFinding,
@@ -624,13 +750,22 @@ export function mergeRecord(
 ): DefectRecord {
     const fp = fingerprint(finding.defect_class, finding.evidence);
     if (existing !== null && existing.fingerprint === fp) {
-        return {
+        const target = _mergeIds(existing.target, finding.target);
+        const proposes = _mergeIds(existing.proposes, finding.proposes);
+        const merged: DefectRecord = {
             ...existing,
             last_seen: now,
             occurrences: existing.occurrences + 1,
-            // A record the user re-reports after a release is open again.
+            // A record re-reported after it left the queue is open again. The
+            // widened enum does not change this: a recurrence refutes whatever
+            // disposition was taken, which is exactly `recurring-criticism`.
             status: 'open',
+            ...(target.length > 0 ? { target } : {}),
+            ...(proposes.length > 0 ? { proposes } : {}),
         };
+        // `open` carries no wake condition; a stale one would read as a park.
+        delete merged.parked_until;
+        return merged;
     }
     return {
         ...finding,

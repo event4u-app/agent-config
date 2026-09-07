@@ -190,6 +190,9 @@ jobs:
       # Same reason as the two steps above: no workflow invokes `task ci`, so a
       # budget registered only there cannot fail a pull request — which is how
       # this file's previous fix stopped holding for three months.
+      - name: Verify the documented MCP snippets match the installer entry
+        run: ./scripts-run src/scripts/check_mcp_doc_drift --quiet
+
       - name: Verify README size, word and time-to-first-command budgets
         run: ./scripts-run src/scripts/lint_readme_size --quiet
 

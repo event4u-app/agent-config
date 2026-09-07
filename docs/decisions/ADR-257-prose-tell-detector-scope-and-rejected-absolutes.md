@@ -1,5 +1,5 @@
 ---
-adr: 256
+adr: 257
 status: accepted
 date: 2026-09-07
 decision: prose-tell-detector-scope-and-rejected-absolutes
@@ -38,7 +38,7 @@ review_trigger: >-
   premise change.
 ---
 
-# ADR-256 — the prose-tell detector's scope, and the absolute rules that were rejected
+# ADR-257 — the prose-tell detector's scope, and the absolute rules that were rejected
 
 ## Status
 

@@ -19,6 +19,7 @@ import { aggregate } from './telemetry/aggregator.js';
 import { EngagementSchemaError } from './telemetry/engagement.js';
 import { render_json, render_markdown } from './telemetry/report_renderer.js';
 import { read_settings } from './telemetry/settings.js';
+import { MCP_LITE_LOG_REL, aggregate_mcp_lite } from './telemetry/mcp_lite.js';
 
 const _DURATION_RE = /^\s*(\d+)\s*([dhm])\s*$/u;
 
@@ -59,6 +60,7 @@ interface ReportArgs {
     format: string;
     log_path: string | null;
     settings: string;
+    mcp_log_path: string | null;
 }
 
 class ArgError extends Error {}
@@ -70,6 +72,7 @@ function _parseArgs(argv: string[]): ReportArgs {
         format: 'markdown',
         log_path: null,
         settings: '.agent-settings.yml',
+        mcp_log_path: null,
     };
     const formatChoices = ['markdown', 'json'];
     for (let i = 0; i < argv.length; i += 1) {
@@ -104,6 +107,7 @@ function _parseArgs(argv: string[]): ReportArgs {
             }
             a.format = v;
         } else if (tok === '--log-path') a.log_path = next();
+        else if (tok === '--mcp-log-path') a.mcp_log_path = next();
         else if (tok === '--settings') a.settings = next();
         else throw new ArgError(`unrecognized arguments: ${argv[i]}`);
     }
@@ -155,13 +159,29 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
+    // The MCP-lite section (step 4.2) renders in the DEFAULT, settings-driven
+    // invocation — which is what `agent-config telemetry:report` is — and when
+    // a caller names the sink explicitly. It does NOT render when the caller
+    // pointed `--log-path` at one specific engagement log and named no MCP
+    // sink: in that mode the report is scoped to the file it was handed and
+    // does not go looking for other stores on the machine. That rule also keeps
+    // the frozen Python-parity goldens intact, since every pinned invocation
+    // passes `--log-path`; the goldens cannot be re-captured, the `.py` having
+    // been retired, so an unconditional section would break a pin permanently.
+    const want_mcp = args.mcp_log_path !== null || args.log_path === null;
+    const mcp_lite = want_mcp
+        ? aggregate_mcp_lite(args.mcp_log_path ?? path.join(process.cwd(), MCP_LITE_LOG_REL), {
+              since: cutoff,
+          })
+        : null;
+
     const top = args.top <= 0 ? null : args.top;
     let rendered: string;
     try {
         if (args.format === 'json') {
-            rendered = render_json(result, { top, since_label });
+            rendered = render_json(result, { top, since_label, mcp_lite });
         } else {
-            rendered = render_markdown(result, { top, since_label });
+            rendered = render_markdown(result, { top, since_label, mcp_lite });
         }
     } catch (exc) {
         if (exc instanceof EngagementSchemaError) {

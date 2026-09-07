@@ -12,7 +12,10 @@ known_manifest_rows: 23
 unknown_manifest_identities: 9
 affected_acceptance_criteria: [AC-1, AC-2, AC-3, AC-4]
 downstream_execution: unaffected
-entry_condition: "The authoritative rubric review is restored at a tracked, stable path AND agents/evidence/ac-capability-scorecard.yaml can declare state: complete with authority naming that path — at which point check_score_contract stops refusing the redeclaration and AC-1 becomes evaluable for the first time. Nothing else resumes this file: no amount of downstream track progress closes a manifest the tree does not hold. <!-- ref-ignore -->"
+entry_condition:
+  what: "The authoritative rubric review is restored at a tracked, stable path AND agents/evidence/ac-capability-scorecard.yaml can declare state: complete with authority naming that path — at which point check_score_contract stops refusing the redeclaration and AC-1 becomes evaluable for the first time. Nothing else resumes this file: no amount of downstream track progress closes a manifest the tree does not hold. <!-- ref-ignore -->"
+  when: "Whenever the authoritative rubric review is restored at a tracked, stable path. Unscheduled: the artefact is absent from the tracked tree and its inbox copy is gone, so no date can be named without inventing one."
+  who: "Whoever restores the rubric review to a tracked path, and then whoever redeclares agents/evidence/ac-capability-scorecard.yaml as state: complete with authority naming that path."
 pin: "fd42264a998e4ec66ba4fd397d9c37b801d045ba"
 ---
 # Road to ten across the board (program roadmap, v2 council-merged)

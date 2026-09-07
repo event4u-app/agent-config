@@ -23,6 +23,7 @@ body:
         - user-reported
         - council-availability-claim
         - language-mirror
+        - model-noticed
     validations:
       required: true
   - type: input

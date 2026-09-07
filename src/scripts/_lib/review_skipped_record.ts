@@ -34,6 +34,7 @@
  */
 export type MutationMeasure = 'exact' | 'capped_approximation';
 
+import { appliedIds } from './audit_field_provenance.js';
 import type { NoFreeForm } from './runtime_journal.js';
 import { type PrivacyClass } from './privacy_class.js';
 
@@ -55,6 +56,20 @@ export interface ReviewSkippedInput {
     /** Stable id (ULID, UUID, or content hash); caller supplies. */
     id: string;
     work_id?: string | undefined;
+    /**
+     * Stable rule ids the run ACTUALLY carried. Absent means `[]`, an honest
+     * absence — this writer observes a review that did NOT happen, so it
+     * usually has no rules observation to offer in either direction.
+     *
+     * It wrote the literal `['delegation-policy']` on every line until
+     * 2026-09-07, which made the whole audit stream's most frequent "pattern" a
+     * property of the writer. See `_lib/audit_field_provenance.ts` for the
+     * measurement, and note the difference from `skills_applied` below: that
+     * field is OMITTED because audit-log-v1 lets absence mean "not recorded",
+     * while `rules_applied` is mandatory on every line and `[]` is how absence
+     * is spelled there.
+     */
+    rules_applied?: string[] | null | undefined;
 }
 
 export interface BuiltReviewSkippedLine {
@@ -102,7 +117,8 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
         risk_class: input.diff_lines >= HIGH_RISK_DIFF_LINES ? 'high' : 'medium',
         memory: { asks: 0, hits: 0 },
         verify: { claims: 0, first_try_passes: 0 },
-        rules_applied: ['delegation-policy'],
+        // COMPUTED, never a producer constant.
+        rules_applied: appliedIds(input.rules_applied),
         // MANDATORY on every audit line, same as the orchestration producer.
         privacy_class: PRODUCER_PRIVACY_CLASS,
         // `skills_applied` is OMITTED here, deliberately and not by oversight.
