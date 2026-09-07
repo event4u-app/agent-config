@@ -1,9 +1,9 @@
 ---
 stability: beta
-keep-beta-until: 2026-12-14
+keep-beta-until: 2026-12-06
 ---
 
-<!-- keep-beta-until extended 2026-09-14 -> 2026-12-14 on 2026-09-07, with the
+<!-- keep-beta-until extended 2026-09-14 -> 2026-12-06 on 2026-09-07, with the
      reason rather than as a bare re-date. The contract is not promotable yet
      because the measurement that decides one of its own obligations has not
      run: `road-to-candidate-moves-floor` Phase 3 scores whether generating a
