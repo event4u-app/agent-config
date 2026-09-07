@@ -667,6 +667,61 @@ function runTs(args: string[]): RunOut {
     return { stdout: r.stdout, stderr: r.stderr, status: r.status };
 }
 
+// In-flight target is a STATE, not a flag.
+// Regression lock for the second half of the 14.19.0 start-position fix, which
+// shipped incomplete and was measured on 14.20.0.
+//
+// `guard_release_curation` refuses AFTER step 2 has bumped `package.json`. A
+// plain re-run then computed the bump from the already-bumped version, landed
+// on the NEXT version, and refused its own branch:
+//
+//   error: release must run from 'main' or 'release/14.21.0',
+//          currently on 'release/14.20.0'
+//
+// `preflightPosition` had already been taught to accept the release branch —
+// it was asked about the wrong target. `_detect_in_flight_target` needs no flag
+// for either of its branches, so the fix is to stop gating it on `--resume`.
+// These cases pin the wiring, because the probe's own unit tests passed
+// throughout: they never asked whether anything called it unconditionally.
+describe('in-flight target detection is not resume-gated', () => {
+    it('is WIRED — the target computation calls the probe with no resume gate', () => {
+        const src = fs.readFileSync(TS_SCRIPT, 'utf-8');
+        expect(src).toContain('const in_flight = _detect_in_flight_target();');
+        // The exact shape that produced the 14.20.0 refusal.
+        expect(src).not.toContain('args.resume ? _detect_in_flight_target()');
+    });
+
+    it('THE DEADLOCK: a bumped package.json with no published tag IS the target', () => {
+        expect(
+            _detect_in_flight_target({
+                head_branch: () => 'main',
+                package_version: () => '14.20.0',
+                tag_published: () => false,
+            }),
+        ).toBe('14.20.0');
+    });
+
+    it('a completed release does not look in-flight — a fresh run is unaffected', () => {
+        expect(
+            _detect_in_flight_target({
+                head_branch: () => 'main',
+                package_version: () => '14.20.0',
+                tag_published: () => true,
+            }),
+        ).toBeNull();
+    });
+
+    it('standing on the release branch names that branch, whatever the manifest says', () => {
+        expect(
+            _detect_in_flight_target({
+                head_branch: () => 'release/14.20.0',
+                package_version: () => '14.20.0',
+                tag_published: () => true,
+            }),
+        ).toBe('14.20.0');
+    });
+});
+
 // ─── confirm-gate — non-interactive must fail fast, never auto-abort/hang ─────
 // Regression lock for `task release` exiting 1 at "[y/N]" without waiting:
 // go-task / scripts-run spawn the script with stdin detached from the terminal,
@@ -776,7 +831,14 @@ describe('preflightPosition — where a release may start', () => {
     it('is WIRED — preflight delegates the position rule instead of re-implementing it', () => {
         const src = fs.readFileSync(TS_SCRIPT, 'utf-8');
         expect(src).toContain("from './_lib/release_position.js'");
-        const body = src.slice(src.indexOf('function preflight(target: string'));
+        // Bounded to preflight's OWN body, not to the rest of the file. The
+        // unbounded slice this replaces reported a false positive the moment a
+        // comment elsewhere in `release.ts` QUOTED the refusal text (the
+        // 14.20.0 in-flight-target record does exactly that) — it was asserting
+        // "this string appears nowhere below preflight", which was never the
+        // claim. A top-level `}` at column 0 ends the function.
+        const from = src.indexOf('function preflight(target: string');
+        const body = src.slice(from, src.indexOf('\n}\n', from) + 3);
         expect(body).toContain('preflightPosition({');
         // The two refusals that produced the deadlock must live in the pure
         // function only — never a second copy inside preflight.
