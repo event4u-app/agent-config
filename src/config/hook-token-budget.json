@@ -36,7 +36,8 @@
  "per_slot_sum_caps_bytes": {
   "_comment": "Cross-concern per-fire sum per slot (roadmap 3.1). session_start is one-time and may carry the restore payloads; per-turn slots stay tight.",
   "session_start": 16384,
-  "user_prompt_submit": 4096,
+  "user_prompt_submit": 16384,
+  "user_prompt_submit_reason": "RAISED 4096 -> 16384 on 2026-09-07 by road-to-delivery-for-every-host 3.2, under owner ruling E2, which assigns this move to the run that flips `lean_projection.mode: delivery` and is the activation charge the `rule-inject` row below defers to it. THE NUMBER IS MEASURED, NOT CHOSEN: 16,384 is the p90 gate-open fire size of the delivery concern over the frozen `tests/eval/routing-matrix` corpus rounded UP to 512 bytes, exactly as E2 specifies. Distribution over 318 gate-open fires: p50 6,674 B, p90 16,188 B, max 20,406 B. Reproduce it from `_lib/rule_injection.ts::matchTierRules` + `selectForInjection` at `hooks/rule_inject_hook.ts::CAP_BYTES` over that corpus. NOT config weakening, and the guard agrees by its own classification: `hooks/block_config_weakening.ts:96-98` classifies `*-budget.json` as `advisory`, so its decide() path returns `warn` and never a block — treat that warning as expected and documented. `pre_tool_use` is deliberately NOT raised alongside it: the concern's binding on that slot was REMOVED in the same change, so nothing new emits there and its 2,048 stands.",
   "pre_tool_use": 2048,
   "post_tool_use": 2048,
   "stop": 2048,

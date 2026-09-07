@@ -34,13 +34,26 @@ describe('project_thin_rules — pure surface', () => {
         expect(fm).toBe('');
         expect(body).toBe('no frontmatter\n');
     });
-    it('thin_entry carries the verbatim legacy-path Body link', () => {
+    it('thin_entry points its Body link at a directory that EXISTS', () => {
+        // Renamed and re-pointed 2026-09-07 (road-to-delivery-for-every-host).
+        // This assertion used to pin the link "verbatim" at
+        // `../../.agent-src.uncondensed/rules/`, faithful to the Python port and
+        // dead in every checkout since ADR-051 retired that tree. Under
+        // `delivery` the hook loads the body from `dist/agent-src/rules` and
+        // never follows the link, which is why nothing noticed; under `thin`
+        // the link is the ONLY path to the body there is.
+        //
+        // Pinning a port's verbatim output is a real discipline, and it is the
+        // wrong one here: what it preserved was a broken user-facing link, and
+        // the repository already ratchets `.agent-src.uncondensed` references
+        // down as debt.
         const text = '---\ndescription: A short desc\ntriggers:\n  - keyword: foo\n---\nBODY\n';
         const entry = ptr.thin_entry('my-rule', text);
         expect(entry).toContain('## My Rule\n');
         expect(entry).toContain('Fires on: foo.');
         expect(entry).toContain('A short desc');
-        expect(entry).toContain('Body: [`my-rule`](../../.agent-src.uncondensed/rules/my-rule.md)');
+        expect(entry).toContain('Body: [`my-rule`](../../dist/agent-src/rules/my-rule.md)');
+        expect(entry).not.toContain('.agent-src.uncondensed');
     });
     it('thin_entry omits the Fires-on clause when no trigger hint', () => {
         const text = '---\ndescription: Desc only\n---\nBODY\n';
@@ -58,11 +71,16 @@ describe('project_thin_rules — pure surface', () => {
         let kernelFull = 0;
         let thinned = 0;
         const noTrigger = ptr.no_trigger_ids();
+        const pathOnly = ptr.path_only_ids();
         for (const [name, text] of map) {
             const stem = name.replace(/\.md$/, '');
-            if (kernel.has(stem) || noTrigger.has(stem)) {
-                // Kernel AND the no-trigger residue keep their full body: a rule
-                // the router cannot fire is a rule no hook can put back.
+            if (kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem)) {
+                // Three eager classes, not two. Kernel; the no-trigger residue,
+                // because a rule the router cannot fire is a rule no hook can
+                // put back; and since 2026-09-07 the PATH-ONLY residue, whose
+                // only triggers are path-shaped while the delivery concern is
+                // unbound on `pre_tool_use` — same failure one step out, a rule
+                // with nothing to match ON rather than nothing to match on.
                 kernelFull += 1;
             } else {
                 // thinned entries are the one-line pointer

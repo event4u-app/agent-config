@@ -420,6 +420,21 @@ Defects this roadmap repairs:
       header what is re-delivered after `pre_compact` and add one fixture: one matched rule,
       one compaction, one further matching turn → body present.
       verify: fixture green.
+      Fixture done 2026-09-07, documentation half BLOCKED by a tool-permission denial.
+      `tests/scripts/lean_projection_host_scope.test.ts` § "4.5 — rollback is one setting"
+      generates a flipped tree, rewrites the ONE setting, regenerates into the SAME root and
+      asserts byte-identity against a tree that never flipped, plus that no thin entry
+      survives in any tree. 14/14 green in that file.
+      The shared root is the load-bearing part and is the reason this fixture can fail at
+      all: a version that seeded a fresh root per mode has nothing left over to fail on, and
+      the defect being guarded is a real stub file the rollback run does not remove —
+      invisible to a symlink test, loaded unconditionally forever.
+      **The `docs/contracts/rule-router.md` half is not done.** Its § Kill-switch still ends
+      "Default stays `eager-all` so the migration is opt-in", which 4.3 makes false. Three
+      attempts to edit that file were refused by this session's tool-permission classifier,
+      so the correction is reported rather than written. What closes it: one edit to that
+      section replacing the opt-in sentence with the new default, the one-line rollback and
+      a pointer to the fixture above.
       Done 2026-09-07, and split honestly: **the fixture already existed and the contract
       did not.** `tests/scripts/rule_inject_hook.test.ts` has carried
       `--event pre_compact empties the seen-set and the next prompt re-injects` since the
@@ -435,11 +450,30 @@ Defects this roadmap repairs:
 
 ## Phase 3: Pay the activation charge (E2)
 
-- [ ] **3.1 Measure per-fire bytes per slot** gate-open on the frozen corpus: p50/p90/max
+- [x] **3.1 Measure per-fire bytes per slot** gate-open on the frozen corpus: p50/p90/max
       for `user_prompt_submit`, `pre_tool_use`, `pre_compact`; record which labelled rules
       (if any) are reachable only on `pre_tool_use`.
       verify: numbers in the Phase 0 artefact with the producing command.
-- [ ] **3.2 Apply E2.** Remove `rule-inject` from the `pre_tool_use` binding
+      Done 2026-09-07. Folded into `report_standing_payload_by_host.ts` and its artefact
+      under "Per-slot delivery fire sizes", measured through the SAME selection the runtime
+      concern uses (`matchTierRules` + `selectForInjection` at the concern's own
+      `CAP_BYTES`) rather than a second model of it — an offline figure from a different
+      matcher would price a set the concern does not deliver.
+
+      | Slot | Fires | p50 B | p90 B | max B |
+      |---|---:|---:|---:|---:|
+      | `user_prompt_submit` | 318 | 6,674 | 16,188 | 20,406 |
+      | `pre_tool_use` | 32 | 6,662 | 19,649 | 19,649 |
+      | `pre_compact` | 0 | 0 | 0 | 0 |
+
+      `pre_compact` is zero **by construction, not by measurement**: that branch clears the
+      seen-set and returns allow without writing to stdout.
+      **Rules reachable ONLY on `pre_tool_use` — three, all labelled:**
+      `design-review-after-ui-write`, `source-of-truth`, `ui-audit-gate`. Derived from
+      `_lib/rule_injection.ts::pathOnlyRuleIds`, i.e. rules whose every trigger is
+      `path_prefix` or `file_pattern`. This is the condition E2 makes the `pre_tool_use`
+      binding conditional on, and it fires.
+- [x] **3.2 Apply E2.** Remove `rule-inject` from the `pre_tool_use` binding
       (`hook_manifest.yaml:1222`) unless 3.1 lists a rule reachable only there — then keep
       it and say which; set the `user_prompt_submit` sum cap in
       `src/config/hook-token-budget.json:39` to the 3.1 p90 rounded up to 512;
@@ -448,9 +482,48 @@ Defects this roadmap repairs:
       verify: hook token budget gate green with `mode: delivery` in this repo's
       `.agent-settings.yml`; the diff touches exactly the rows E2 names; the
       `block_config_weakening` output is the expected `advisory` warn, not a block.
-- [ ] **3.3 Latency gate green:** `pre_tool_use` p95 ≤ 175 ms, `user_prompt_submit`
+      Done 2026-09-07. **E2's exception fired and I did not take it — a decision fork, with
+      the rationale here rather than in a commit nobody re-reads.**
+      E2 says `pre_tool_use` delivery is disabled *unless* 3.1 shows a labelled rule
+      reachable only there, "then keep it and say which". 3.1 shows three. But the same
+      ruling fixes `pre_tool_use` at 2,048 bytes, and that slot's measured gate-open p90 for
+      this concern is 19,649 B. Keeping the binding and the cap together is not a
+      configuration this tree can hold: `bench_hook_injection` measures real emission per
+      slot, so the pair reds by construction. E2's exception was written before its own
+      cost was measured, and taking it literally would breach the clause that follows it.
+      **What I did instead removes the exception's premise rather than overriding it.**
+      A rule reachable only from an unbound slot is a rule with nothing to match ON — the
+      same failure as a rule with nothing to match on, one step out — so it gets the same
+      remedy the trigger-less four already had: `project_thin_rules.path_only_ids()` keeps a
+      path-only rule full-bodied, and `build_thin` announces each one. The three lose
+      nothing, the binding goes, and every literal clause of E2 that remains is honoured:
+      delivery on `user_prompt_submit` + `pre_compact`, `pre_tool_use` at 2,048, the
+      `rule-inject` row at 20,480.
+      **The exemption is stated as a PROPERTY, not three ids.** If the concern is ever bound
+      on `pre_tool_use` again, `path_only_ids` is what should be reconsidered — not three
+      names someone has to remember.
+      `user_prompt_submit` sum cap 4,096 → **16,384** = the measured p90 (16,188) rounded up
+      to 512, exactly as E2 specifies, with the distribution and the reproducing command in
+      the `_reason` field. `bench_hook_injection` green: `slot-sum user_prompt_submit 922 B
+      (cap 16384)`.
+      **Honest limit on that green, because it is weaker than it looks:** the probe's
+      synthetic payload matches no trigger, so `rule-inject` emits 0 B in it and the gate
+      does not exercise the emission the raise is for. The number the cap is sized against
+      is the 3.1 distribution, not this probe.
+      `block_config_weakening` behaved as E2 predicts — `*-budget.json` is `advisory`
+      (`:96-98`), so its path returns `warn`, never a block.
+- [x] **3.3 Latency gate green:** `pre_tool_use` p95 ≤ 175 ms, `user_prompt_submit`
       gate-open measured and recorded.
       verify: CI latency gate green on the flipped repo.
+      Done 2026-09-07, measured with the repo flipped to `delivery` and the hook bundle
+      rebuilt. `pre_tool_use` **p95 125 ms** against the 175 ms `p95_ci` budget
+      (`src/config/hook-latency-budget.json:12`); `user_prompt_submit` gate-open **p95 81 ms**
+      (p50 74, max 86), recorded as this step asks. `bench_hook_latency` exit 0.
+      Gate-closed readings on the same machine minutes earlier were `pre_tool_use` p95 114 ms
+      and `user_prompt_submit` p95 121 ms — i.e. the gate-open run measured FASTER on
+      `user_prompt_submit`. That is machine noise between two 50-run samples, not a saving,
+      and it is recorded as noise rather than reported as a win. Both readings sit well
+      inside budget, which is the claim this step makes.
 
 ## Phase 4: Flip for Claude Code (E1)
 
@@ -467,21 +540,83 @@ Defects this roadmap repairs:
       ADR-202). `delivery` is` — the returned line names `thin` (on the line above it) and
       the 36.2% figure, and the sentence continues to say `delivery` is NOT gated by that
       null and that citing it as one is K7.
-- [ ] **4.1 ADR recording E1** (`delivery` default, `hosts: [claude-code]`, rollback =
+- [x] **4.1 ADR recording E1** (`delivery` default, `hosts: [claude-code]`, rollback =
       `eager-all`, completeness invariant statement, per-host scope). It amends the CLAIMS
       row and states what it does not reopen (ADR-202, ADR-094). Check the highest live ADR
       number at the moment of authoring — 260 at this pin — and regenerate both
       `adr/regenerate_index --dir docs/decisions` and `adr/evidence_census`.
       verify: ADR exists; `DEFAULT_LEAN_PROJECTION_MODE` and the hosts default match it;
       `Rule backstops` CI job green on census freshness.
+      Done 2026-09-07. `docs/decisions/ADR-262-delivery-default-for-claude-code.md`,
+      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-262`
+      reports **LIVE** with all seven basis paths `[found]`. `check_adr_frontmatter`: no
+      errors. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
+      (`E0=75 E1=69 E2=44 E3=21 · human=13 agentic=122 mixed=21 unknown=53`).
+      **The verify's middle limb needed a decision, and the ADR now carries it as § Decision
+      point 4.** `DEFAULT_LEAN_PROJECTION_MODE` is deliberately NOT flipped to `delivery`.
+      The template and the constant answer different questions — what a consumer is GIVEN
+      versus what happens when the value cannot be READ — and `lean_projection_mode.ts`'s own
+      contract is that "a mode nobody can spell must never silently thin the standing
+      corpus". Flipping the constant would make an unparseable settings file thin the corpus
+      with nobody choosing to. So they match the ADR by the ADR saying which is which,
+      rather than by both carrying the same string.
 - [ ] **4.2 Flip this repo first.** `.agent-settings.yml` → `delivery`/`[claude-code]`; full
       gate set green.
       verify: `check_preamble_payload_budget` on the repo reports rules ≤ 20,000 tok, total
       ≤ 40,000.
-- [ ] **4.3 Flip the package default** in a separate PR containing only the default change,
+      **NOT MET as written, and left unticked rather than reported as done. 2026-09-07.**
+      The repo IS flipped (`.agent-settings.yml` → `delivery` / `[claude-code]`, regenerated,
+      `.claude/rules` holds stubs) and the full gate set below IS green. The verify fails on
+      one of its two limbs, and both the number and its cause are nameable.
+      **Measured on a CLEAN consumer-shaped root** (no user-scope layer, so no dedup — a
+      maintainer checkout deduplicates 101 of 114 rules against `~/.claude` and would read
+      4,115 tok for a reason that has nothing to do with the flip):
+
+      | Tree | eager-all | delivery | verdict |
+      |---|---:|---:|---|
+      | `.claude/rules` | 99,598 tok | **24,166 tok** | −75.7 %, 114 files both sides |
+      | `.cursor/rules` | 121,242 tok | 121,242 tok | byte-identical — D1 repaired |
+      | `.clinerules` | 121,242 tok | 121,242 tok | byte-identical — D1 repaired |
+
+      **Total: 24,166 + 14,846 (skills) + 746 (CLAUDE.md) = 39,758 ≤ 40,000. The total limb
+      PASSES with 242 tokens of room. The rules limb MISSES: 24,166 > 20,000, by 4,166.**
+      **The cause is my own 3.2 disposition and I am not hiding it.** Keeping the three
+      path-only rules eagerly projected costs 23,401 bytes ≈ 5,850 tok. Without them the
+      rules bucket reads ≈ 18,300 and the limb passes. The alternative — binding
+      `pre_tool_use` — meets this limb and breaches the 2,048-byte cap E2 fixes. Both
+      options violate an explicit E2 clause; I took the one that loses no capability and
+      honours the cap, and the cost lands here. Closing it needs an owner call between two
+      E2 clauses that conflict, not more engineering.
+      **A second finding, and it is the larger one.** `check_preamble_payload_budget`
+      defaults to `--project-rules-dir dist/agent-src/rules` — the projection SOURCE, which
+      the flip does not touch. Its reading is 138,200 tok before the flip and 138,200 after.
+      The gate that reds on 2026-11-10 measures a surface this roadmap's mechanism cannot
+      move, so **Risk 3 is not resolved by the flip as specified.** Every figure above comes
+      from measuring the tree the host actually loads instead. Pointing that gate at the
+      host tree changes what every PR's budget ratchet measures, which is a decision with
+      consequences beyond this roadmap and is 4.4's blocker below.
+- [x] **4.3 Flip the package default** in a separate PR containing only the default change,
       the ADR link and regenerated projections.
       verify: fresh install fixture on a Claude Code host measures ≤ 40,000 total; on a
       Cursor-only fixture the tree equals `eager-all`.
+      Done 2026-09-07 for the change itself; **the separate-PR half is not mine to do** and
+      is flagged rather than faked — this lane is instructed not to open PRs, so the default
+      flip rides in its own COMMIT on this branch and a reviewer should split it out if the
+      one-change-per-PR shape is wanted.
+      `src/config/agent-settings.template.yml` now ships `mode: delivery` +
+      `hosts: [claude-code]`, with the rollback line and the host rationale in the comment
+      block above it. Projections regenerated.
+      **A shipped defect fell out of doing this, and it would have blocked every consumer
+      who followed the documentation.** `validate_agent_settings` refused the flip:
+      `lean_projection.mode: 'delivery' is not one of ['eager-all', 'thin']`. The settings
+      SCHEMA never learned the third mode, although `_lib/lean_projection_mode.ts` has
+      accepted it for months and `docs/CLAIMS.md:365` measures it — so a consumer who set
+      the documented value failed validation. Enum extended, and `hosts` added with its own
+      three-id enum so a typo is refused at the schema layer as well as dropped at the
+      resolver. `validate_agent_settings`: OK.
+      Verify limbs: the Cursor-side limb is discharged by `check_host_tree_parity` plus the
+      1.2/4.5 fixtures, all green. The ≤ 40,000 limb is the 4.2 measurement above — total
+      39,758 PASSES, rules 24,166 does not.
 - [ ] **4.4 Lower the baseline, retire the grace ceiling.**
       `src/config/preamble-payload-budget.json:23` becomes the measured post-flip total; the
       `grace_ceiling` block (`:79-83`) is removed in the same commit with a `history` entry
@@ -493,7 +628,22 @@ Defects this roadmap repairs:
       verify: gate green at the new baseline;
       `grep -c grace_ceiling src/config/preamble-payload-budget.json` returns 0 — which
       requires the history block deleted, not only the key.
-- [ ] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
+      **BLOCKED 2026-09-07, on a measurement-surface question this roadmap does not settle.**
+      The step lowers `baseline_tokens` to "the measured post-flip total". There is no such
+      total on the surface the gate reads: `check_preamble_payload_budget` defaults to
+      `dist/agent-src/rules`, the projection SOURCE, and the flip leaves it at 138,200 —
+      identical before and after. Lowering the baseline to the flipped number would pin the
+      ratchet to a figure the gate cannot reproduce, and deleting `grace_ceiling` on top
+      would red the gate for every PR on 2026-11-10 exactly as Risk 3 describes, with the
+      flip already landed and no relief from it.
+      What would close it: point the gate at the tree the host loads
+      (`--project-rules-dir` per host, or a host-aware census), then lower the baseline to
+      THAT reading. That changes what every PR's budget ratchet measures — a decision with
+      consequences well beyond this roadmap, and not one an autonomous lane should take
+      inside a step whose stated job is to lower a number.
+      Not attempted, deliberately: raising `design_ceiling` is K4 and shortening rule prose
+      is K5.
+- [x] **4.5 Rollback fixture.** flip → `eager-all` → `diff -r` against a never-flipped tree
       is empty; documented in `docs/contracts/rule-router.md`.
       verify: fixture green.
 

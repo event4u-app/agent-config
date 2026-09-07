@@ -48,6 +48,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+    loadRouter,
+    matchTierRules,
+    pathOnlyRuleIds,
+    selectForInjection,
+} from './_lib/rule_injection.js';
+import { CAP_BYTES } from './hooks/rule_inject_hook.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const ARTIFACT_REL = path.join(
@@ -290,6 +298,31 @@ export function renderArtifact(root: string, pin: string): string {
     L.push(`= ${String(tokensChars4(manualChars))} tok, and ${String(tokensChars4(perTreeChars))} + ${String(tokensChars4(manualChars))} = ${String(tokensChars4(perTreeChars) + tokensChars4(manualChars))}. A manual rule reaches no host tree`);
     L.push('by ADR-004, so excluding it is correct here and including it is correct there.');
     L.push('');
+    L.push('## Per-slot delivery fire sizes — the activation charge (3.1)');
+    L.push('');
+    L.push('Gate-open per-fire emission of the `rule-inject` concern over the frozen');
+    L.push('`tests/eval/routing-matrix` corpus, measured through the SAME selection the runtime');
+    L.push('concern uses (`_lib/rule_injection.ts::matchTierRules` + `selectForInjection` at the');
+    L.push('concern\'s own `CAP_BYTES`), never through a second model of it.');
+    L.push('');
+    L.push('| Slot | Fires | p50 B | p90 B | max B |');
+    L.push('|---|---:|---:|---:|---:|');
+    for (const r of slotFireSizes(root)) {
+        L.push(
+            `| \`${r.slot}\` | ${String(r.fires)} | ${String(r.p50)} | ${String(r.p90)} | ${String(r.max)} |`,
+        );
+    }
+    L.push('');
+    L.push('`pre_compact` is zero **by construction, not by measurement**: that branch of');
+    L.push('`rule_inject_hook` clears the seen-set and returns allow without writing to stdout, so');
+    L.push('there is no emission to sample.');
+    L.push('');
+    const pathOnly = [...pathOnlyRuleIds(loadRouter(root))].sort();
+    L.push('**Rules reachable ONLY on `pre_tool_use`**, which is the condition owner ruling E2');
+    L.push(`makes the \`pre_tool_use\` binding conditional on — ${String(pathOnly.length)} of them, all labelled:`);
+    L.push('');
+    for (const id of pathOnly) L.push(`- \`${id}\``);
+    L.push('');
     L.push('## What the flip must move, and what it must not');
     L.push('');
     L.push('`claude-code` is the only host in the default `lean_projection.hosts`. Its row above is');
@@ -298,6 +331,101 @@ export function renderArtifact(root: string, pin: string): string {
     L.push('rather than as one total.');
     L.push('');
     return L.join('\n');
+}
+
+/** One positive prompt of the frozen corpus, with the open files it declares. */
+interface CorpusPrompt {
+    prompt: string;
+    openFiles: string[] | null;
+}
+
+/** Every positive prompt in the frozen routing-matrix corpus. Near-misses are not fires. */
+export function readCorpusPositives(root: string): CorpusPrompt[] {
+    const dir = path.join(root, 'tests', 'eval', 'routing-matrix');
+    const out: CorpusPrompt[] = [];
+    if (!fs.existsSync(dir)) return out;
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yaml')).sort()) {
+        let inPositives = false;
+        let cur: CorpusPrompt | null = null;
+        for (const raw of fs.readFileSync(path.join(dir, f), 'utf-8').split('\n')) {
+            if (/^positives:/u.test(raw)) { inPositives = true; continue; }
+            if (/^near_misses:/u.test(raw)) { inPositives = false; continue; }
+            if (!inPositives) continue;
+            const p = /^\s*-\s*prompt:\s*"(.*)"\s*$/u.exec(raw);
+            if (p !== null) {
+                cur = { prompt: p[1] as string, openFiles: null };
+                out.push(cur);
+                continue;
+            }
+            const of = /^\s*open_files:\s*\[(.*)\]\s*$/u.exec(raw);
+            if (of !== null && cur !== null) {
+                cur.openFiles = (of[1] as string)
+                    .split(',')
+                    .map((x) => x.trim().replace(/^["']|["']$/gu, ''))
+                    .filter((x) => x !== '');
+            }
+        }
+    }
+    return out;
+}
+
+/** Nearest-rank percentile over an unsorted sample. Empty sample → 0. */
+export function percentile(xs: readonly number[], q: number): number {
+    if (xs.length === 0) return 0;
+    const s = [...xs].sort((a, b) => a - b);
+    return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))] as number;
+}
+
+export interface SlotFireSizes {
+    readonly slot: string;
+    readonly fires: number;
+    readonly p50: number;
+    readonly p90: number;
+    readonly max: number;
+}
+
+/**
+ * Gate-open per-fire emission sizes for the delivery concern, per slot
+ * (road-to-delivery-for-every-host 3.1).
+ *
+ * Measured through the SAME selection the runtime concern uses —
+ * `matchTierRules` + `selectForInjection` at the concern's own `CAP_BYTES` —
+ * rather than through a second model of it. An offline figure computed by a
+ * different matcher would price a set the concern does not deliver.
+ *
+ * `pre_compact` is 0 by construction rather than by measurement: that branch of
+ * `rule_inject_hook` clears the seen-set and returns allow without writing to
+ * stdout, so there is no emission to sample.
+ */
+export function slotFireSizes(root: string): SlotFireSizes[] {
+    const router = loadRouter(root);
+    const prompts = readCorpusPositives(root);
+    const sample = (mode: 'prompt' | 'file'): number[] => {
+        const out: number[] = [];
+        for (const r of prompts) {
+            if (mode === 'file' && (r.openFiles === null || r.openFiles.length === 0)) continue;
+            const matches =
+                mode === 'prompt'
+                    ? matchTierRules(router, r.prompt, null, null)
+                    : matchTierRules(router, '', r.openFiles, null);
+            if (matches.length === 0) continue;
+            const sel = selectForInjection(root, matches, CAP_BYTES);
+            if (sel.selected.length > 0) out.push(sel.bytes);
+        }
+        return out;
+    };
+    const row = (slot: string, xs: number[]): SlotFireSizes => ({
+        slot,
+        fires: xs.length,
+        p50: percentile(xs, 0.5),
+        p90: percentile(xs, 0.9),
+        max: xs.length === 0 ? 0 : Math.max(...xs),
+    });
+    return [
+        row('user_prompt_submit', sample('prompt')),
+        row('pre_tool_use', sample('file')),
+        row('pre_compact', []),
+    ];
 }
 
 function headSha(root: string): string {

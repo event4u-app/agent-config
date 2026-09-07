@@ -313,3 +313,64 @@ describe('1.4 — byte-identity parity for every non-delivery host', () => {
         expect(findings[0]?.reason).toContain('MISSING under the thinning mode');
     });
 });
+
+describe('4.5 — rollback is one setting', () => {
+    /**
+     * flip → `eager-all` → the tree equals a NEVER-flipped tree.
+     *
+     * The shared root is the point, exactly as the single-delivery fixture found
+     * for its own transition defect: a test that seeded a fresh root per mode has
+     * nothing left over to fail on and would pass with the cleanup reverted. The
+     * failure this guards is a stub file written by the flipped run that the
+     * rollback run does not remove — a real file, invisible to a symlink test,
+     * loaded unconditionally forever.
+     */
+    it('a flipped-then-rolled-back tree is byte-identical to one that never flipped', () => {
+        const virgin = path.join(tmp, 'r-virgin');
+        seed(virgin, 'lean_projection:\n  mode: eager-all\n');
+        _resetStateForTest(virgin);
+        generate_rule_symlinks();
+
+        const rolled = path.join(tmp, 'r-rolled');
+        seed(rolled, 'lean_projection:\n  mode: delivery\n  hosts: [claude-code]\n');
+        _resetStateForTest(rolled);
+        generate_rule_symlinks();
+        const flipped = treeContentsLocal(rolled, path.join('.claude', 'rules'));
+        expect(Object.values(flipped).some((t) => is_thin_entry(t))).toBe(true);
+
+        // The rollback: one setting, then regenerate into the SAME root.
+        fs.writeFileSync(
+            path.join(rolled, '.agent-settings.yml'),
+            'lean_projection:\n  mode: eager-all\n',
+            'utf-8',
+        );
+        _resetStateForTest(rolled);
+        generate_rule_symlinks();
+
+        for (const tree of ['.claude/rules', '.cursor/rules', '.clinerules']) {
+            expect(treeContentsLocal(rolled, tree)).toEqual(treeContentsLocal(virgin, tree));
+        }
+        // And nothing thin survives anywhere.
+        for (const tree of ['.claude/rules', '.cursor/rules', '.clinerules']) {
+            for (const body of Object.values(treeContentsLocal(rolled, tree))) {
+                expect(is_thin_entry(body)).toBe(false);
+            }
+        }
+    });
+});
+
+/** Local reader — the module-level one is scoped to the generateInto harness. */
+function treeContentsLocal(root: string, rel: string): Record<string, string> {
+    const dir = path.join(root, rel);
+    const out: Record<string, string> = {};
+    if (!fs.existsSync(dir)) return out;
+    for (const name of fs.readdirSync(dir).sort()) {
+        if (name === 'README.md') continue;
+        try {
+            out[name] = fs.readFileSync(path.join(dir, name), 'utf-8');
+        } catch {
+            out[name] = '<unreadable>';
+        }
+    }
+    return out;
+}

@@ -19,7 +19,7 @@
  * `.augment/` projections.
  *
  * NOTE (faithful literal): the thin-entry pointer keeps the verbatim
- * `Body: [`{rule_id}`](../../.agent-src.uncondensed/rules/{rule_id}.md)`
+ * `Body: [`{rule_id}`](../../dist/agent-src/rules/{rule_id}.md)`
  * Markdown link from the retired Python implementation. The same-basename `.py` twin
  * carries that literal, so the ADR-051 legacy-path guard exempts this `.ts`
  * file by twin-parity.
@@ -77,6 +77,38 @@ export function kernel_ids(): Set<string> {
  * visible instead of being absorbed into the pointer count
  * (road-to-trigger-delivered-rule-bodies 1.3).
  */
+/**
+ * Rules whose ONLY triggers are path-shaped — reachable from `pre_tool_use`
+ * and from no other slot (road-to-delivery-for-every-host 3.2).
+ *
+ * They must never be thinned while the delivery concern is NOT bound on
+ * `pre_tool_use`, because a stub plus a slot nobody listens on is a rule that
+ * reaches the model at no scope at all. This is the same failure the
+ * `no_trigger_ids` exemption prevents, one step out: there the rule has nothing
+ * to match on, here it has nothing to match ON.
+ *
+ * Stated as a PROPERTY rather than a list of ids. If the concern is ever bound
+ * on `pre_tool_use` again, this exemption is what should be reconsidered — not
+ * three names someone has to remember.
+ */
+export function path_only_ids(): Set<string> {
+    const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
+    const pathKinds = new Set(['path_prefix', 'file_pattern']);
+    const out = new Set<string>();
+    for (const tier of ['tier_1', 'tier_2']) {
+        const entries = data[tier];
+        if (!Array.isArray(entries)) continue;
+        for (const e of entries) {
+            const obj = e as Record<string, unknown>;
+            const t = obj.triggers;
+            if (!Array.isArray(t) || t.length === 0) continue;
+            const kinds = t.flatMap((x) => Object.keys(x as Record<string, unknown>));
+            if (kinds.every((k) => pathKinds.has(k))) out.add(String(obj.id));
+        }
+    }
+    return out;
+}
+
 export function no_trigger_ids(): Set<string> {
     const data = JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Record<string, unknown>;
     const out = new Set<string>();
@@ -211,6 +243,27 @@ export function is_thin_entry(text: string): boolean {
     return text.includes(THIN_ENTRY_MARKER);
 }
 
+/**
+ * Where a stub tells a reader the body actually is.
+ *
+ * FIXED 2026-09-07: this was `../../.agent-src.uncondensed/rules/`, a directory
+ * ADR-051 retired. It exists in no checkout, so EVERY stub's fallback pointer
+ * resolved to nothing — invisible under `delivery`, where the hook loads the
+ * body from `dist/agent-src/rules` and never follows this link, and total under
+ * `thin`, where the pointer is the only path to the body there is.
+ *
+ * KNOWN LIMIT, stated rather than discovered later: one relative prefix cannot
+ * be right for every tree, because they sit at different depths — `.claude/rules`
+ * and `.cursor/rules` are two levels below the repo root and `.clinerules` is
+ * one. `../../` is correct for the first two, which are the only trees the
+ * shipped `lean_projection.hosts` default can thin. A stub in `.clinerules`
+ * needs an operator to have added `cline` to that list, and its pointer is off
+ * by one level. That is strictly better than the previous state, where the
+ * pointer was dead in all three, and it is recorded here so the remaining case
+ * is a known limit rather than a surprise.
+ */
+const BODY_LINK_PREFIX = '../../dist/agent-src/rules/';
+
 /** Build the minimal progressive-disclosure pointer for a non-kernel rule. */
 export function thin_entry(rule_id: string, text: string): string {
     const [fm] = split_frontmatter(text);
@@ -221,7 +274,7 @@ export function thin_entry(rule_id: string, text: string): string {
     return (
         `## ${title}\n` +
         `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
-        `Body: [\`${rule_id}\`](../../.agent-src.uncondensed/rules/${rule_id}.md)\n`
+        `Body: [\`${rule_id}\`](${BODY_LINK_PREFIX}${rule_id}.md)\n`
     );
 }
 
@@ -243,6 +296,7 @@ export function build_thin(
 ): Map<string, string> {
     const kernel = kernel_ids();
     const noTrigger = no_trigger_ids();
+    const pathOnly = path_only_ids();
     const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
     const out = new Map<string, string>();
     for (const p of _globSortedMd(rules_dir)) {
@@ -251,9 +305,15 @@ export function build_thin(
         if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
             continue; // out of workspace scope — no body, no pointer line
         }
-        const full = kernel.has(stem) || noTrigger.has(stem);
+        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem);
         if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
             announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
+        }
+        if (announce !== null && pathOnly.has(stem) && !kernel.has(stem) && !noTrigger.has(stem)) {
+            announce(
+                `E2: path-only auto rule ${path.basename(p)} — kept full-bodied; its only triggers ` +
+                    `are path-shaped and the delivery concern is not bound on pre_tool_use`,
+            );
         }
         out.set(path.basename(p), full ? text : thin_entry(stem, text));
     }
