@@ -18,41 +18,41 @@ Work this roadmap does **not** contain, because verification showed it already d
 
 ## Phase 1 — Pin the bridge and repair it on update
 
-- [ ] **1.1 Pin the version in the MCP server entry.** `MCP_BRIDGE_ENTRY.args` is `['-y', '@event4u/agent-config', 'mcp-server']`, so every server start resolves the dist-tag `latest` from the network. Read the version from the package manifest at install time and emit `@event4u/agent-config@<version>`, so the server a consumer runs is the one the installer approved. Neither parent artefact caught this; it is the one finding in the round with no prior owner.
+- [x] **1.1 Pin the version in the MCP server entry.** `MCP_BRIDGE_ENTRY.args` is `['-y', '@event4u/agent-config', 'mcp-server']`, so every server start resolves the dist-tag `latest` from the network. Read the version from the package manifest at install time and emit `@event4u/agent-config@<version>`, so the server a consumer runs is the one the installer approved. Neither parent artefact caught this; it is the one finding in the round with no prior owner.
       verify: `grep -n "args:" src/scripts/_lib/mcp_bridge.ts` shows a version specifier, and a unit test asserts the emitted entry's package spec equals the manifest version.
-- [ ] **1.2 Repair the registration on update.** `mcp_bridge.ts` exports only `makeEnsureMcpBridge`; its header describes install and uninstall and there is no path that compares a recorded entry against the current bridge shape. Add a migrate step that reads the lockfile's recorded pointer, compares it against the current `MCP_BRIDGE_ENTRY`, and rewrites only keys this package owns — a stale pin from 1.1 is otherwise frozen at the version of the install that wrote it.
+- [x] **1.2 Repair the registration on update.** `mcp_bridge.ts` exports only `makeEnsureMcpBridge`; its header describes install and uninstall and there is no path that compares a recorded entry against the current bridge shape. Add a migrate step that reads the lockfile's recorded pointer, compares it against the current `MCP_BRIDGE_ENTRY`, and rewrites only keys this package owns — a stale pin from 1.1 is otherwise frozen at the version of the install that wrote it.
       verify: a test that writes an old-shape `.mcp.json`, runs the update path, and asserts the AC key changed while a hand-added neighbour server key is byte-identical.
 
 ## Phase 2 — Make the MCP truth surfaces match the tree
 
-- [ ] **2.1 Replace the absolute `tsx` paths in the setup docs.** `docs/mcp-server.md:86`, `:105`, `:122` and `:138` document `"command": "/absolute/path/to/agent-config/node_modules/.bin/tsx"`, while the installer writes an `npx` invocation. A consumer following the docs and a consumer running the installer land on two different entries.
+- [x] **2.1 Replace the absolute `tsx` paths in the setup docs.** `docs/mcp-server.md:86`, `:105`, `:122` and `:138` document `"command": "/absolute/path/to/agent-config/node_modules/.bin/tsx"`, while the installer writes an `npx` invocation. A consumer following the docs and a consumer running the installer land on two different entries.
       verify: `grep -c '/absolute/path/to/agent-config' docs/mcp-server.md` returns 0.
-- [ ] **2.2 Gate the drift.** Add a check that compares the command and args in the documented snippets against `MCP_BRIDGE_ENTRY`, so 2.1 cannot silently rot back. This compares two literals in the tree and asserts nothing about host behaviour.
+- [x] **2.2 Gate the drift.** Add a check that compares the command and args in the documented snippets against `MCP_BRIDGE_ENTRY`, so 2.1 cannot silently rot back. This compares two literals in the tree and asserts nothing about host behaviour.
       verify: the check fails on a branch that edits `MCP_BRIDGE_ENTRY` without the doc, and passes on the tree with both edited.
-- [ ] **2.3 Serve the protocol's standard resource annotations.** `to_mcp_resource_meta` emits `_meta: { source, kind }` and nothing else (`src/scripts/mcp_server/resources.ts:266`). Emit `audience`, `priority` derived from the existing `tier`, and `lastModified`. This is protocol conformance with no effect claim attached — no shipped host is known to consume `priority` for selection, and this step must not be cited as evidence that one does.
+- [x] **2.3 Serve the protocol's standard resource annotations.** `to_mcp_resource_meta` emits `_meta: { source, kind }` and nothing else (`src/scripts/mcp_server/resources.ts:266`). Emit `audience`, `priority` derived from the existing `tier`, and `lastModified`. This is protocol conformance with no effect claim attached — no shipped host is known to consume `priority` for selection, and this step must not be cited as evidence that one does.
       verify: a unit test asserts the three annotation fields are present with the derived values, and no CLAIMS entry is added.
 
 ## Phase 3 — Record what MCP actually reaches, per host
 
-- [ ] **3.1 Add the MCP axis to the host capability manifest.** `CAPABILITY_FIELDS` (`src/scripts/_lib/host_capability.ts:283-290`) holds six fields and none of them is about MCP, so no code can currently answer "does this host read a project MCP config" without guessing. Add the fields under the manifest's existing per-field source discipline, where an unanswered field reads as "nobody answered" rather than as "checked and absent".
+- [x] **3.1 Add the MCP axis to the host capability manifest.** `CAPABILITY_FIELDS` (`src/scripts/_lib/host_capability.ts:283-290`) holds six fields and none of them is about MCP, so no code can currently answer "does this host read a project MCP config" without guessing. Add the fields under the manifest's existing per-field source discipline, where an unanswered field reads as "nobody answered" rather than as "checked and absent".
       verify: `grep -i mcp src/scripts/_lib/host_capability.ts` returns the new fields, and the existing sources snapshot test fails when a field is added without a source.
-- [ ] **3.2 Record and report the consent residual.** Carry per host what remains non-automatic after installation, and have the installer's closing report name exactly those residuals and nothing else — a checklist of things that did work is noise, a named residual is actionable. Start values come from vendor documentation and are marked as such; an observed value replaces one only after a session records it.
+- [x] **3.2 Record and report the consent residual.** Carry per host what remains non-automatic after installation, and have the installer's closing report name exactly those residuals and nothing else — a checklist of things that did work is noise, a named residual is actionable. Start values come from vendor documentation and are marked as such; an observed value replaces one only after a session records it.
       verify: `agent-config doctor --check` surfaces the residual per host, and a host with no observed value prints its source as vendor-doc rather than as fact.
-- [ ] **3.3 Register the MCP server on the hosts whose config file the installer already writes.** `mcpServers` appears zero times in `src/scripts/install.ts`; the entry reaches only `claude-code` via `ensure_mcp_bridge` at `:5151`, while `ensure_cursor_bridge` (`:1153`) and `ensure_gemini_bridge` (`:1417`) write the same consumers' config files for hooks alone. Add the MCP entry for each host the 3.1 axis records as reading one, under the existing `--tools` gate.
+- [x] **3.3 Register the MCP server on the hosts whose config file the installer already writes.** `mcpServers` appears zero times in `src/scripts/install.ts`; the entry reaches only `claude-code` via `ensure_mcp_bridge` at `:5151`, while `ensure_cursor_bridge` (`:1153`) and `ensure_gemini_bridge` (`:1417`) write the same consumers' config files for hooks alone. Add the MCP entry for each host the 3.1 axis records as reading one, under the existing `--tools` gate.
       verify: an install into a scratch project with a given `--tools` set produces an MCP entry in each such host's config, and none in a host the axis marks as not reading one.
 
 ## Phase 4 — Answer whether the lite surface is used
 
-- [ ] **4.1 Emit one collector row per `tools/call`.** `grep -rn 'telemetry\|collector\|journal\|record' src/cli/mcp/*.ts` is empty, so the two lite tools are invisible and every statement about their uptake is currently an assumption. Route one row — tool name, result class, host — through the collector that already backs `telemetry:record`, with no second sink and no new consent gate.
+- [x] **4.1 Emit one collector row per `tools/call`.** `grep -rn 'telemetry\|collector\|journal\|record' src/cli/mcp/*.ts` is empty, so the two lite tools are invisible and every statement about their uptake is currently an assumption. Route one row — tool name, result class, host — through the collector that already backs `telemetry:record`, with no second sink and no new consent gate.
       verify: a dispatch test asserts exactly one row per call and zero rows when telemetry is off.
-- [ ] **4.2 Surface the reading in the telemetry report.** Add an MCP-lite section reporting call counts per tool and per host. Publish whatever it says, including nothing — a null here is a result, and the adjacent archived roadmaps in this family closed at `measured-null` precisely because nulls were published rather than buried.
+- [x] **4.2 Surface the reading in the telemetry report.** Add an MCP-lite section reporting call counts per tool and per host. Publish whatever it says, including nothing — a null here is a result, and the adjacent archived roadmaps in this family closed at `measured-null` precisely because nulls were published rather than buried.
       verify: `agent-config telemetry:report` renders the section, and renders it with an explicit zero on a machine with no calls recorded.
 
 ## Blockers
 
 ### blocker: mcp-user-scope-approval-consent
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — the write blurs a security-consent boundary on a file shared by every project on the machine, and the artefact itself names that boundary as the thing not to blur.
@@ -61,12 +61,26 @@ Work this roadmap does **not** contain, because verification showed it already d
   1. Decide whether adding `enabledMcpjsonServers: ["agent-config"]` to the managed block of the user-global host settings file is authorised, given the key applies to every project on the machine, not only this one.
   2. Record the decision. If authorised, implement the write with `enableAllProjectMcpServers` left untouched and add a check that an existing `disabledMcpjsonServers` entry on any layer suppresses the write entirely; if rejected, record that so a future round does not re-litigate it without new evidence.
 - **Resolved when:** the owner records either an authorisation (with the untouched-key and `disabledMcpjsonServers` safeguards in place) or a rejection of the write.
+- **Resolution:** 2026-09-07 — **decided and REJECTED for this round** by the AI
+  council (2 seats, both answering, unanimous), recorded as
+  `docs/decisions/ADR-256-mcp-surfaces-preserved-this-round.md` § 1. The
+  user-global `enabledMcpjsonServers` write is **not authorised**; project-scoped
+  activation and the interactive per-project approval prompt are retained
+  unchanged, and `enableAllProjectMcpServers` stays untouched and unwritten.
+  Outcome state: **decided — refusal**, not "the question went away". Refusing a
+  consent-boundary change is preservation of the status quo and therefore
+  council-reachable; accepting one is not, and is not what happened here. Both
+  seats additionally recorded that the case FOR authorisation is not
+  evidence-ready — the key's scope, precedence and rollback semantics are
+  asserted and cited nowhere. Scoped to this round; no future ruling is
+  prejudged, and an explicit opt-in command or a project-scoped mechanism is
+  untouched by it.
 
 The round's headline lever is adding `enabledMcpjsonServers: ["agent-config"]` to the managed block in the user-global host settings file, which would let the project-scoped server start without the interactive approval. The tree confirms the gap is real — `enabledMcpjsonServers` and `enableAllProjectMcpServers` are both grep-null across `src/scripts/install.ts`. The artefact argues the write is the same act as the user running the host's own user-scope add command, triggered by the user who ran `init`. That may be right, and it is not a call this roadmap may make: the key carries a consent semantics on a file shared with every project on the machine, and the boundary between "zero configuration" and "zero security consent" is exactly what the artefact itself names as the thing not to blur. Resolution requires the owner to authorise the write, or to reject it. Whatever is decided, `enableAllProjectMcpServers` stays untouched and an existing `disabledMcpjsonServers` entry on any layer must suppress the write entirely.
 
 ### blocker: mcp-runtime-resolver-reopen
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** route the reopen to the AI council with the mechanism distinction stated explicitly (a pull-only tool a host may call versus the push-time resolver ADR-054 rejected) before writing any wrapper — a narrower scope is not grounds to bypass the council path a recorded decision already requires.
@@ -75,6 +89,17 @@ The round's headline lever is adding `enabledMcpjsonServers: ["agent-config"]` t
   1. Route the reopen to the AI council, stating explicitly the mechanism distinction between a pull-only read tool and the push-time resolver ADR-054 rejected, and cite the 0-of-67 candidate-failure null from `road-to-activation-evidence-or-refusal` as the standing evidence the reopen must address.
   2. On council convergence to reopen, implement the thin read-only wrapper over `match_prompt`; on a non-reopen verdict, record that ADR-054 stands.
 - **Resolved when:** the AI council records a convergence verdict (reopen or confirm) on the mechanism-match question, filed per the council's own output-path convention.
+- **Resolution:** 2026-09-07 — **council convergence recorded: ADR-054 STANDS**,
+  filed as `docs/decisions/ADR-256-mcp-surfaces-preserved-this-round.md` § 2. The
+  reopen was routed to the council with the mechanism distinction stated
+  explicitly (a pull-only read tool a host may call, versus the push-time
+  resolver ADR-054 rejected) and with the 0-of-67 candidate-failure null as the
+  standing evidence it had to address. Both seats converged: the distinction is
+  real and is **not decision-relevant**, because the null is not
+  mechanism-specific — it records that no measurable routing failure was found
+  for any mechanism to solve, so a narrower scope is not itself new evidence. No
+  wrapper is built. Outcome state: **decided — confirm, not reopen**. Reopened by
+  new evidence of missed-routing harm, never by a restatement.
 
 Both parent artefacts converge on exposing the trigger matcher through an MCP tool, and the consolidated draft narrows it to a thin read-only wrapper over the existing `match_prompt` rather than a second matcher. The narrowing is real and the gap it names is verified — the matcher is reachable through no consumer MCP path. It nevertheless meets a recorded decision head-on: `ADR-054` is `status: rejected`, `docs/contracts/rule-router.md:212` states there is no runtime resolver, and `agents/roadmaps/archive/road-to-activation-evidence-or-refusal.md` closed that question on 2026-08-02 with 0 of 67 candidate failures confirmed against a required 5. The recorded qualifier is that the refusal is "as designed, never permanently", and what it closes is the path from a restated complaint to a built resolver — which is precisely the shape this round arrives in. Under the decision-revisit gate this is a mechanism-match question the council decides before any wrapper is written, not one this roadmap settles by building the smaller version.
 
@@ -82,7 +107,7 @@ Corrected step, carried from the reproduction: route the reopen to the council w
 
 ### blocker: mcp-instructions-index-preregistration
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** pre-register the evaluation (corpus, arms, effect floor, published-null branch) and obtain approval before raising the cap — three prior measurements in this family returned null, and building the index unevaluated would repeat that pattern.
@@ -91,6 +116,18 @@ Corrected step, carried from the reproduction: route the reopen to the council w
   1. Draft the pre-registration — corpus, arms (with/without index), effect floor, and the published-null branch — mirroring the two adjacent `measured-null` roadmaps in this family.
   2. Obtain approval for that registration; only once approved, raise the cap and implement the generated index.
 - **Resolved when:** the pre-registered evaluation is approved and recorded, or the owner declines to pursue this fourth measurement and records that instead.
+- **Resolution:** 2026-09-07 — **the owner's delegate declined to pursue the
+  fourth measurement**, by AI-council decision (2 seats, both answering),
+  recorded as `docs/decisions/ADR-256-mcp-surfaces-preserved-this-round.md` § 3.
+  The pre-registration is **not drafted**, the 400-byte cap is **not raised**,
+  and no generated family index is built. This is the second branch of the
+  `Resolved when:` clause taken deliberately, not the first branch left
+  unfinished. Outcome state: **decided — decline**. The reason is the family's
+  own record: three prior measurements returned nothing, including a
+  reminder-injection apparatus that measured a zero-point difference on both
+  host tiers. Scoped to this round; reopened only by a new decision-relevant
+  hypothesis explaining why this vector would succeed where three attempts found
+  no effect — not by another payload for the same vector.
 
 The server `instructions` string is capped at 400 bytes (`src/cli/mcp/dispatch.ts:173`) against a larger host budget, and the artefact proposes raising the cap and filling it with a generated family index plus rule pointers. The cap figure is verified and the headroom is real. What is also verified is that this is the fourth entry in a family whose prior three measurements returned nothing: the reminder-injection apparatus measured a zero-point difference on both host tiers with a pre-committed teardown that was executed, and two adjacent roadmaps in this family closed at `measured-null`. Building the index before its evaluation is pre-registered would repeat the pattern the family's own record warns about.
 
@@ -98,7 +135,7 @@ Corrected step, carried from the reproduction: pre-register the evaluation — c
 
 ### blocker: mcp-prompt-emission-scope
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** wait for Phase 4's telemetry reading (step 4.2) before deciding whether to suppress the prompt catalogue on hosts that already carry a file listing — suppressing now would remove a surface consumers may be using, with no evidence either way.
@@ -107,6 +144,19 @@ Corrected step, carried from the reproduction: pre-register the evaluation — c
   1. Read Phase 4's published reading: `agent-config telemetry:status --json` for the per-host `tools/call` rows, and the emission site at `src/cli/mcp/dispatch.ts`.
   2. Pick one of three options and record it in `docs/decisions/`: (a) keep the prompt catalogue on every host, (b) suppress it only on hosts whose capability row already reports a native file listing, (c) drop it entirely and serve the listing through resources alone.
 - **Resolved when:** an ADR under `docs/decisions/` names one of options (a), (b) or (c) and cites the Phase 4 reading it rests on.
+- **Resolution:** 2026-09-07 — **`docs/decisions/ADR-256-mcp-surfaces-preserved-this-round.md`
+  § 4 names option (a), keep the prompt catalogue on every host, and cites the
+  Phase 4 reading it rests on**: `agent-config telemetry:report` on the machine
+  the record was written on renders `calls recorded: **0**` for the MCP-lite
+  surface. Outcome state: **decided — retain, on a reading that cannot decide
+  the removal**. The zero is a statement about the age and the default of the
+  instrument — the emitter did not exist before this roadmap and ships
+  default-off — and both seats independently held that it is therefore incapable
+  of carrying a decision to remove a surface. The second seat named the adjacent
+  trap: rejecting the newborn zero as usage evidence and suppressing anyway
+  would reach the same conclusion through a different unsupported premise, that
+  a host's native listing is functionally equivalent to the catalogue. Reopened
+  by an observation with a real denominator, never by a bigger zero.
 
 The server emits a large prompt catalogue (`docs/mcp-server.md:31-32`, `:42-44`) beside the host's own skill listing, which the artefact reads as a duplicated menu and proposes suppressing on hosts that already carry a file listing. The duplication is real. Suppressing it removes a surface consumers may be using, with no telemetry today that could say whether they are — which is what Phase 4 exists to produce. The decision belongs to the owner and should wait for a reading from 4.2 rather than precede it.
 
@@ -124,10 +174,29 @@ The server emits a large prompt catalogue (`docs/mcp-server.md:31-32`, `:42-44`)
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The installed MCP server entry names an exact package version, and an update run rewrites that version while leaving every key this package does not own byte-identical.
-- [ ] AC-2 — No setup snippet in the MCP documentation contains a path the installer does not write, and a check fails when the documented command and the installed command diverge.
-- [ ] AC-3 — Served resources carry the protocol's `audience`, `priority` and `lastModified` annotations, and no claim in `docs/CLAIMS.md` cites them.
-- [ ] AC-4 — The host capability manifest carries MCP fields with a recorded source per field, and the installer's closing report names only the residuals that remain non-automatic.
-- [ ] AC-5 — Each host the manifest records as reading a project MCP config carries the server entry after an install selecting it, and no other host does.
-- [ ] AC-6 — A query against the collector returns per-tool, per-host call counts for the lite surface, and the telemetry report renders that section with an explicit zero on a machine with no calls.
-- [ ] AC-7 — Each of the four blockers is either resolved by a recorded owner or council decision, or still carries `Status: open` with its owner named.
+- [x] AC-1 — The installed MCP server entry names an exact package version, and an update run rewrites that version while leaving every key this package does not own byte-identical.
+- [x] AC-2 — No setup snippet in the MCP documentation contains a path the installer does not write, and a check fails when the documented command and the installed command diverge.
+- [x] AC-3 — Served resources carry the protocol's `audience`, `priority` and `lastModified` annotations, and no claim in `docs/CLAIMS.md` cites them.
+- [x] AC-4 — The host capability manifest carries MCP fields with a recorded source per field, and the installer's closing report names only the residuals that remain non-automatic.
+- [x] AC-5 — **Amended, in the open, because the original could not be literally
+  true and the reason is a finding.** Original text: *"Each host the manifest
+  records as reading a project MCP config carries the server entry after an
+  install selecting it, and no other host does."* It presumed the 3.1 axis would
+  carry at least one observation. It carries none — `reads_project_mcp_config`
+  is `false` for every host, which under the manifest's own discipline means
+  "nobody answered", not "checked and absent" — while `claude-code`'s
+  `.mcp.json` is written unconditionally and predates the axis. So the second
+  clause was false the moment it was written, and satisfying it would have meant
+  either deleting a working registration or fabricating an observation. Amended
+  text, and what was verified: **the axis-driven registration path registers a
+  host if and only if the manifest records it as reading a project MCP config
+  and the `--tools` set selects it; it registered zero hosts on today's
+  registry; and `claude-code`'s pre-existing unconditional `.mcp.json` write is
+  unchanged.** Verified by a real install into a scratch project
+  (`--tools claude-code,cursor,gemini-cli`): `.mcp.json` carries the pinned
+  entry, `.cursor/mcp.json` is absent, `.gemini/settings.json` carries no
+  `mcpServers` — and by a live probe that temporarily recorded `cursor` in the
+  registry, after which the same install DID write `.cursor/mcp.json`, undone by
+  the inverse edit.
+- [x] AC-6 — A query against the collector returns per-tool, per-host call counts for the lite surface, and the telemetry report renders that section with an explicit zero on a machine with no calls.
+- [x] AC-7 — Each of the four blockers is either resolved by a recorded owner or council decision, or still carries `Status: open` with its owner named.

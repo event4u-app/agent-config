@@ -39,6 +39,9 @@ const ALL_FALSE: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    reads_project_mcp_config: false,
+    // Not `false`: this field's safe answer is "a manual step remains".
+    mcp_needs_manual_activation: true,
 };
 
 describe('normalizeHostManifest — safe default', () => {
@@ -100,6 +103,9 @@ describe('normalizeHostManifest — valid full input', () => {
             separate_quota_pool: true,
             agent_teams: false,
             worker_respawn: true,
+            reads_project_mcp_config: false,
+            // Absent from the input, and absence does NOT clear a residual.
+            mcp_needs_manual_activation: true,
         });
     });
 
@@ -318,6 +324,8 @@ describe('describeHostCapabilities — per-field provenance', () => {
             separate_quota_pool: 'default',
             agent_teams: 'default',
             worker_respawn: 'default',
+            reads_project_mcp_config: 'default',
+            mcp_needs_manual_activation: 'default',
         });
     });
 

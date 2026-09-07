@@ -33,7 +33,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ORIGIN_CWD_FALLBACK, resolve_project_root } from '../_lib/agent_settings.js';
 import {
     RECYCLE_ENVELOPE_MAX_BYTES,
-    RECYCLE_ENVELOPE_REL,
+    recycle_consumed_rel,
+    recycle_envelope_rel,
 } from '../_lib/recycle_envelope_paths.js';
 import {
     CAPSULE_SCHEMA_VERSION,
@@ -72,7 +73,40 @@ export function templateEnvelope(): Record<string, unknown> {
         next_task: '<the ONE task this envelope is written for — select content for it>',
         suggested_skills: ['<skill the successor should invoke>'],
         failed_approaches: ['<tried X, failed because Y — or the single entry "none">'],
+        successful_approaches: ['<did X, it worked because Y — or the single entry "none">'],
+        open_questions: ['<question the successor must not silently drop>'],
+        // Producer-owned, like `written_at` and `workspace`: `runSessionRecycle`
+        // deletes and re-derives it, so a value written here is discarded. It
+        // ships in the skeleton anyway so the template is a VALID record on its
+        // own — a template that cannot pass its own validator teaches the wrong
+        // shape to everyone who copies it.
+        predecessor: 'none',
     };
+}
+
+/**
+ * Which session this one continues — read, never composed.
+ *
+ * The chain is derivable without any new artifact: when this session started,
+ * its reader consumed the predecessor's record and MOVED it to this session's
+ * consumed path (`recycle_consumed_rel`). So the file sitting there is, by
+ * construction, the record this session resumed from, and its `session_id` is
+ * the predecessor.
+ *
+ * Returns the explicit string `none` when there is nothing there. `none` is a
+ * CLAIM — "this session starts a chain" — and is deliberately not an empty
+ * value: a reader must be able to tell "no predecessor" from "nobody wrote the
+ * field", because only the second one is a reason to go looking.
+ */
+export function resolvePredecessor(projectRoot: string, sessionId: string | null): string {
+    try {
+        const consumed = path.join(projectRoot, recycle_consumed_rel(sessionId));
+        const raw = JSON.parse(fs.readFileSync(consumed, 'utf-8')) as { session_id?: unknown };
+        const prior = String(raw.session_id ?? '').trim();
+        return prior === '' ? 'none' : prior;
+    } catch {
+        return 'none';
+    }
 }
 
 interface ParsedArgv {
@@ -193,7 +227,18 @@ export function runSessionRecycle(
     // order would drift from the one a test covers. A host that exports neither
     // yields `null`, and `last_verify` is then simply absent from the envelope
     // (the delete-then-set below already treats an unreadable fact as absent).
-    const grounding = collectGrounding(projectRoot, env_session_id());
+    const sessionId = env_session_id();
+    const grounding = collectGrounding(projectRoot, sessionId);
+
+    // Identity and lineage are READ, exactly like the git anchors below, and for
+    // the same reason: a model-composed predecessor is a guess about which
+    // session came before, and a wrong one hands the successor a stranger's
+    // chain. Both keys are dropped before being set so a composer cannot
+    // supply either.
+    delete envelope['session_id'];
+    delete envelope['predecessor'];
+    if (sessionId !== null && sessionId !== '') envelope['session_id'] = sessionId;
+    envelope['predecessor'] = resolvePredecessor(projectRoot, sessionId);
     // Drop the composer's factual keys UNCONDITIONALLY first. Guarding each
     // assignment on `!== null` would leave a model-composed branch or head
     // standing whenever the git read fails — the consumer would then compare
@@ -236,7 +281,10 @@ export function runSessionRecycle(
     // Absolute, not `RECYCLE_ENVELOPE_REL`: the relative form is identical for
     // every root, so it cannot tell the reader WHICH tree was written — the
     // one thing in doubt at the moment this line is read.
-    const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
+    // Phase 2.1 — keyed by session, so two sessions in one checkout no longer
+    // overwrite each other. No id resolvable falls back to the shared name,
+    // which is exactly the pre-key behaviour rather than a lost record.
+    const target = path.join(projectRoot, recycle_envelope_rel(env_session_id()));
 
     // `--verify` stops HERE: every rejection above has already run, and the
     // only thing skipped is the write. Validating through a different path

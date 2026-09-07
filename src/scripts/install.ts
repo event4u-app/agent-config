@@ -75,6 +75,7 @@ import { build_merge_entries } from './_lib/json_pointers.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
 import * as mcp_bridge from './_lib/mcp_bridge.js';
+import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
@@ -5121,11 +5122,9 @@ function _main_project_install(
             ...ensure_augment_bridge(project_root, opts.force),
         ];
         if (_is_tool_enabled(tools, 'claude-code')) {
-            merged_keys_by_tool['claude-code'] = [
-                ...ensure_claude_bridge(project_root, opts.force),
-                ...ensure_mcp_bridge(project_root, opts.force),
-            ];
+            merged_keys_by_tool['claude-code'] = ensure_claude_bridge(project_root, opts.force);
         }
+        mcp_bridge.registerMcpHosts(merge_json_file, project_root, opts.force, package_root, tools, merged_keys_by_tool);
         if (_is_tool_enabled(tools, 'cursor')) {
             merged_keys_by_tool['cursor'] = ensure_cursor_bridge(project_root, opts.force);
         }
@@ -5226,6 +5225,7 @@ function _main_project_install(
             );
             process.stdout.write('\n');
         }
+        mcp_consent.printResiduals(tools, state.QUIET);
         if (_is_tool_enabled(tools, 'claude-code')) {
             const team_hint = _team_setup_hint_line(project_root);
             if (team_hint !== null) {
