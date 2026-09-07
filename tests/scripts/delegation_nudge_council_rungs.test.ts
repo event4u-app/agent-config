@@ -3,8 +3,7 @@
 // `classifyPrompt` collapsed every non-`subagent` verdict into one `return
 // null`, and its own comment named "rung-3/4 team/council" among what it
 // discarded. So a RESOLVED council verdict produced no output on the only
-// runtime carrier this package ships — recorded independently at
-// `agents/evidence/analysis/council-intelligence-baseline.md:103-111`.
+// runtime carrier this package ships.
 //
 // The fix is a POINTER, never a spawn (this roadmap's Risk 2). Every case below
 // asserts both halves: the line exists, AND it does not read as an

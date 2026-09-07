@@ -9,7 +9,7 @@
  * exact transition this roadmap's Risk 5 names — "scoring quietly becomes
  * deciding".
  *
- * ## Two rules, both refusals
+ * Two rules, and both are refusals.
  *
  * 1. **At least two model families, or the panel is ABSENT.** Not a warning, a
  *    refusal: `docs/CLAIMS.md` records that a same-posture second vendor's
@@ -19,9 +19,7 @@
  * 2. **The aggregate is a trimmed statistic, never a vote count.** For the same
  *    reason: counting agreeing voices rewards a panel for being correlated.
  *
- * ## What "trimmed" means here, exactly
- *
- * With n >= 3 the single lowest and single highest score are dropped and the
+ * What "trimmed" means here, exactly: with n >= 3 the single lowest and single highest score are dropped and the
  * rest averaged — which at n = 3 IS the median, and is why one corrupted score
  * in a three-judge panel cannot move the result the way it moves an arithmetic
  * mean. With n = 2 there is nothing to trim; the mean is returned with

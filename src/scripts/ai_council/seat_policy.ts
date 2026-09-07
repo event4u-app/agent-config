@@ -16,8 +16,7 @@ import {
  * branches return `available: true` unconditionally, so anything the four
  * reachability reasons could not express resolved OPEN.
  *
- * ## Fail closed on the unknown, which is the whole point
- *
+ * Fail closed on the unknown, which is the whole point.
  * `classifyPolicyExclusion` maps anything it does not recognise to
  * `policy_unknown`, and `policy_unknown` is an ABSENT reason like every other
  * member of this union. An unrecognised policy token is the case where the
@@ -25,9 +24,7 @@ import {
  * to "available" would make a typo an authorisation. This is the roadmap's own
  * Risk 3 — "a new refusal vocabulary defaults open instead of closed".
  *
- * ## What this is NOT
- *
- * It is not a secrets floor. Redaction (`skills/ai-council/references/
+ * What this is NOT. It is not a secrets floor. Redaction (`skills/ai-council/references/
  * cost-and-redaction.md`) still runs underneath and is not replaced. It is not
  * an authorisation either: nothing here ever makes a seat available that was
  * not already available — every value in the union only ever subtracts.
@@ -93,8 +90,6 @@ export function policyExclusionReason(p: PolicyExclusion, provider?: string): st
             return `${who} is excluded by policy: an exclusion this build does not understand (failing closed)`;
     }
 }
-
-// ── the three per-seat fields config.ts parses ───────────────────────────
 
 /**
  * Parsed together because they are one question — "what may this seat do, and

@@ -16,9 +16,7 @@
  *    package actually reaches a provider over HTTP", rather than four
  *    copies of the same curl call inside four constructors.
  *
- * ## The injectable seam
- *
- * Every shim takes a `JsonPost` rather than calling `curlJsonPost` directly.
+ * The injectable seam. Every shim takes a `JsonPost` rather than calling `curlJsonPost` directly.
  * A test can then construct a REAL client with a REAL api_key — exercising
  * the shim-building path a mock `client:` object skips entirely — and still
  * make no network call. That is the difference between testing the transport

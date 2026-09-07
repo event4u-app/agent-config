@@ -464,30 +464,15 @@ export function classifyPrompt(
     // surfaces. Silence here also guarantees a question-shaped prompt can
     // never produce a spawn nudge ("the carrier stops nudging full spawns
     // for question-shaped slices").
-    // Rung 3/4 (road-to-admissible-council-seats 1.3). These used to be
-    // discarded by the same `verdict !== "subagent"` return as rung 0/0.5, so a
-    // RESOLVED council verdict produced no output on the only runtime carrier —
-    // recorded independently at
-    // `agents/evidence/analysis/council-intelligence-baseline.md:103-111`.
+    // Rung 3/4: these used to be discarded by the same `verdict !== "subagent"`
+    // return as rung 0/0.5, so a RESOLVED council verdict produced no output on
+    // the only runtime carrier.
     //
     // What they emit is a POINTER, and every field here is chosen so it cannot
     // read as a spawn authorisation: `delegable` stays false, the action stays
     // `ask` (the existing token for "a verdict, never a speculative spawn"),
     // the slice count is 0, and buildNudgeLine's rung-3/4 branch names an
-    // entry point rather than a dispatch. Risk 2 of this roadmap is exactly
-    // the misreading this paragraph exists to foreclose.
-    // Rung 3/4 (road-to-admissible-council-seats 1.3). These used to be
-    // discarded by the same `verdict !== "subagent"` return as rung 0/0.5, so a
-    // RESOLVED council verdict produced no output on the only runtime carrier —
-    // recorded independently at
-    // `agents/evidence/analysis/council-intelligence-baseline.md:103-111`.
-    //
-    // What they emit is a POINTER, and every field here is chosen so it cannot
-    // read as a spawn authorisation: `delegable` stays false, the action stays
-    // `ask` (the existing token for "a verdict, never a speculative spawn"),
-    // the slice count is 0, and buildNudgeLine's rung-3/4 branch names an
-    // entry point rather than a dispatch. Risk 2 of this roadmap is exactly
-    // the misreading this paragraph exists to foreclose.
+    // entry point rather than a dispatch.
     if (ladder.verdict === "team" || ladder.verdict === "council") {
       return {
         classification: { delegable: false, action: "ask", mode: null, reason: ladder.reason },
