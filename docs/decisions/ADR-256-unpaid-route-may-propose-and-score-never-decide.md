@@ -17,7 +17,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-admissible-council-seats.md
+    - agents/roadmaps/archive/road-to-admissible-council-seats.md
     - agents/roadmaps/later/road-to-governed-evidence-production.md
     - src/rules/evaluator-independence.md
     - src/scripts/ai_council/seat_policy.ts
