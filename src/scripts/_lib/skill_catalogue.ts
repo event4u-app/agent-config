@@ -329,6 +329,35 @@ function descriptionOf(frontmatter: string): string {
  * the order a host listing follows and therefore the order a positional
  * hypothesis is measured against.
  */
+/**
+ * The catalogue as the RANKER sees it — every readable root, first name winning.
+ *
+ * Added 2026-09-07 after a second neutral review. `capture_skill_catalogue`'s D-4
+ * join says it reads "the catalogue the runtime ranker reads", and once the ranker
+ * moved to the union a single-root read stopped being that. Worse, the root the
+ * capture had been pointed at — `.claude/skills` — is the one the ADR-236
+ * amendment EMPTIED of skills: the join then read 49 command wrappers as the
+ * catalogue and published `pointableBare: 0` against `unpointableBare: 16`, a
+ * clean-looking verdict off the wrong tree, with the empty-guard silent because
+ * 49 is not 0.
+ *
+ * Positions are re-derived over the merged list, because a position is a property
+ * of the catalogue the host is shown, not of the root a name came from.
+ */
+export function readCatalogueAcross(roots: readonly string[]): CatalogueEntry[] {
+    const seen = new Set<string>();
+    const merged: CatalogueEntry[] = [];
+    for (const root of roots) {
+        for (const entry of readProjectedCatalogue(root)) {
+            if (seen.has(entry.name)) continue;
+            seen.add(entry.name);
+            merged.push(entry);
+        }
+    }
+    merged.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    return merged.map((e, i) => ({ ...e, position: i + 1 }));
+}
+
 export function readProjectedCatalogue(root: string): CatalogueEntry[] {
     // Membership is decided by "does <name>/SKILL.md resolve", never by
     // `Dirent.isDirectory()`. The host-facing projection is a tree of SYMLINKS

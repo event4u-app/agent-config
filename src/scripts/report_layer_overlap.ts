@@ -78,13 +78,27 @@ export function main(argv?: readonly string[]): number {
     // remediation text below. One line, the useful one.
     setPartitionAnnounce(() => undefined);
     const verdict = resolveHostLayerVerdict(projectRoot);
+    // Three states, not two. Corrected after a second neutral review: the
+    // unverified branch printed "a stale global layer is fixed by
+    // `agent-config install`" on a machine with NO global layer at all — a fresh
+    // checkout, where nothing is withheld, nothing is stale, and the remediation
+    // named does not apply. It fired on every `task generate-tools` there.
+    //
+    // What this line reports is the VERIFICATION state of the layer withheld
+    // against. The per-artefact withhold COUNTS are the generator's own summary
+    // one line above (`skills=N`, `command_skills=N (M withheld …)`), which is
+    // where a reader sees what was actually held back.
+    const noLayer = verdict.reason.includes('no host-global layer');
     process.stdout.write(
         verdict.verified
             ? `  ℹ️  project layer carries only what ~/.claude lacks — ${verdict.reason}\n`
-            : `  ⚠️  host layer UNVERIFIED — ${verdict.reason}\n` +
-              '      The project layer still carries only what ~/.claude lacks (per-artefact,\n' +
-              '      ADR-236 amendment 2026-09-07). A stale global layer is fixed by\n' +
-              '      `agent-config install`, not by re-running generate-tools.\n',
+            : noLayer
+              ? '  ℹ️  no host-global layer on this machine — nothing is withheld, so the\n' +
+                '      project layer carries the full projection by construction.\n'
+              : `  ⚠️  host layer UNVERIFIED — ${verdict.reason}\n` +
+                '      The project layer still carries only what ~/.claude lacks (per-artefact,\n' +
+                '      ADR-236 amendment 2026-09-07). A stale global layer is fixed by\n' +
+                '      `agent-config install`, not by re-running generate-tools.\n',
     );
     warnLayerOverlap(projectRoot, (m) => process.stdout.write(`${m}\n`));
     return 0;

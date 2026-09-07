@@ -154,11 +154,10 @@ describe('partitionEnforces — the per-directory discriminator', () => {
         expect(partitionEnforces({ soleCarrier: ['orphan.md'] })).toBe(false);
     });
 
-    it('is independent of any lockfile, so it reads the same in CI and on a maintainer machine', () => {
-        // The property the old signature could not have: the verdict is a function
-        // of the directory audit alone. Same input, same answer, every environment.
-        const audit = { soleCarrier: ['a.md', 'b.md'] };
-        expect(partitionEnforces(audit)).toBe(partitionEnforces({ ...audit }));
-        expect(partitionEnforces({ soleCarrier: [] })).not.toBe(partitionEnforces(audit));
-    });
+    // A third case here asserted "independent of any lockfile" as
+    // `partitionEnforces(a) === partitionEnforces({...a})`, which is a tautology for
+    // any pure function and would not catch an implementation that ALSO read a
+    // lockfile. Removed after a second neutral review rather than reworded: the
+    // property is one of the signature, and the two directional cases above are
+    // what this function has to get right.
 });

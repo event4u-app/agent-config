@@ -58,6 +58,14 @@
  * name. The withhold is a removal with no repair path, which is what makes it
  * worth naming rather than filing.
  *
+ * **A NEIGHBOURING defect that WAS fixed, 2026-09-07.** This paragraph claimed
+ * "the skill is still delivered, under the right name, from one layer" — and that
+ * was false while `_readLayer` returned every directory name without checking
+ * that `SKILL.md` resolved: an empty `~/.claude/skills/<name>/` withheld the
+ * project copy and the artefact came from neither layer. A name now counts as
+ * carried only when the artefact behind it resolves, so the sentence above is
+ * true as written.
+ *
  * NOT FIXED here, deliberately: distinguishing a package artefact from a foreign
  * one needs a provenance marker the installer does not write today, and inventing
  * one in this module would be a guess dressed as a check. What IS true is that
@@ -128,7 +136,36 @@ function _readLayer(family, dir) {
         return null;
     }
     if (family !== 'commands') {
-        return new Set(entries.map((e) => e.name).filter((n) => n !== 'README.md'));
+        // A name is only CARRIED when the artefact behind it resolves. Corrected
+        // 2026-09-07 after a second neutral review: this returned every dirent
+        // name, so an empty `~/.claude/skills/<name>/` — no `SKILL.md` — made
+        // `claudeLayerHolds` true, the project layer withheld its copy, and the
+        // artefact was then delivered from NEITHER layer. That is the
+        // removal-with-no-repair-path this module's own limits section says it
+        // avoids, and the first fixture written for the wrapper gate created
+        // exactly that state and called the withhold correct.
+        //
+        // Reachable without a crash: a skill directory holding some other file
+        // survives `reap_stale`, and `install.ts` mkdirs before it writes.
+        // `readProjectedCatalogue` already keys on `SKILL.md` for this reason;
+        // the `commands` branch below already required a real `.md`. This is the
+        // same requirement for the two families that lacked it.
+        const carries = (name) => {
+            const abs = path.join(dir, name);
+            try {
+                if (fs.statSync(abs).isDirectory()) {
+                    return fs.statSync(path.join(abs, 'SKILL.md')).isFile();
+                }
+                return name.endsWith('.md');
+            }
+            catch {
+                return false;
+            }
+        };
+        return new Set(entries
+            .map((e) => e.name)
+            .filter((n) => n !== 'README.md')
+            .filter(carries));
     }
     const out = new Set();
     const walk = (abs, rel) => {

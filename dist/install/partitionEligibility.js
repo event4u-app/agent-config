@@ -267,6 +267,14 @@ export function _resetHostLayerVerdictForTest() {
  * generator in the same chain — see the comment there for why it lives in that
  * file rather than in the 2,700-line generator.
  *
+ * **What that line does and does not carry**, since a second review asked: it
+ * reports the VERIFICATION state of the layer being withheld against, not a
+ * withhold count, and this verdict decides nothing. The counts are the
+ * generator's own summary one line above (`skills=N`,
+ * `command_skills=N (M withheld …)`). So the council requirement is met by the
+ * pair of lines rather than by this one — stated that way instead of claiming
+ * the line alone honours it.
+ *
  * The caller still supplies `announce`, and the level still matters — the first
  * implementation used an `info()` that prints only at `verbose`. Residual,
  * stated: at an explicitly silent output level the line is dropped.

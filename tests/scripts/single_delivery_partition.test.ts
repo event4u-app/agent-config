@@ -380,9 +380,28 @@ describe('claudeLayerCarriage — the evidence the withhold decision actually re
         // The distinction the null return exists for: an empty directory is
         // readable and holds nothing, so it withholds nothing. Collapsing it to
         // "no names present ⇒ withhold all" is the inversion that loses artefacts.
+        //
+        // `.keep` is not a carried name: a name counts only when the artefact
+        // behind it resolves (`SKILL.md` for a skill directory, `.md` for a file).
+        // So the set is READABLE and EMPTY — which is a different answer from the
+        // `null` the absent case returns, and both keep every name.
         const home = claudeHome({ '.claude/skills/.keep': '' });
-        expect(claudeLayerNames('skills', home)?.size).toBe(1);
+        expect(claudeLayerNames('skills', home)).not.toBeNull();
+        expect(claudeLayerNames('skills', home)?.size).toBe(0);
         expect(keepInProjectLayer('skills', ['a', 'b'], home)).toEqual(['a', 'b']);
+    });
+
+    it('a directory WITHOUT SKILL.md is not carriage — the both-layers-lose defect', () => {
+        // Found by a second neutral review, 2026-09-07. `_readLayer` returned every
+        // dirent name, so an empty `~/.claude/skills/<name>/` made the withhold fire
+        // and the artefact was delivered from NEITHER layer.
+        const home = claudeHome({
+            '.claude/skills/real/SKILL.md': 'x',
+            '.claude/skills/hollow/other.txt': 'x',
+        });
+        expect(claudeLayerHolds('skills', 'real', home)).toBe(true);
+        expect(claudeLayerHolds('skills', 'hollow', home)).toBe(false);
+        expect(keepInProjectLayer('skills', ['real', 'hollow'], home)).toEqual(['hollow']);
     });
 
     it('withholds PER NAME — one absent name does not rescue the others', () => {
@@ -420,6 +439,7 @@ describe('claudeLayerCarriage — the evidence the withhold decision actually re
         const home = claudeHome({ '.claude/skills/one/SKILL.md': 'x' });
         expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual(['two']);
         fs.mkdirSync(path.join(home, '.claude/skills/two'), { recursive: true });
+        fs.writeFileSync(path.join(home, '.claude/skills/two/SKILL.md'), 'x', 'utf-8');
         expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual(['two']);
         _resetClaudeLayerMemoForTest();
         expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual([]);

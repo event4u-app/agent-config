@@ -94,7 +94,13 @@ function seedHost(home: string, carried: boolean): void {
         fs.mkdirSync(l.root, { recursive: true });
     }
     for (const name of [PLAIN_SKILL, SKILL_WITH_COMMAND_NAME]) {
-        fs.mkdirSync(path.join(home, '.claude', 'skills', name), { recursive: true });
+        // With a real SKILL.md: a bare directory is NOT carriage (corrected
+        // 2026-09-07 — a name counts only when the artefact behind it resolves),
+        // so a bare-directory fixture would arm nothing and turn both `carried`
+        // assertions green for the wrong reason.
+        const d = path.join(home, '.claude', 'skills', name);
+        fs.mkdirSync(d, { recursive: true });
+        fs.writeFileSync(path.join(d, 'SKILL.md'), `---\nname: ${name}\n---\nbody\n`, 'utf-8');
     }
     fs.writeFileSync(path.join(layers[0]!.root, 'demo.md'), 'demo\n', 'utf-8');
     write_lockfile(FIXTURE_VERSION, ['claude-code'], {

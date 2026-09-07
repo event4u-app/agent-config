@@ -217,7 +217,11 @@ function readLayer(dir: string, recursive = false): LayerReading | null {
         return null;
     }
     const shape: LayerShape = { symlinks: 0, dirs: 0, files: 0 };
-    for (const e of entries) {
+    // README.md is excluded from BOTH the names and the shape. Counting it in the
+    // shape while filtering it from the names printed a self-contradicting line
+    // (`personas global 31 · shape (l0/d2/f30)` — 32 entries, 31 names), caught by
+    // a second neutral review.
+    for (const e of entries.filter((x) => x.name !== 'README.md')) {
         // isSymbolicLink() is checked FIRST and deliberately: readdir with
         // withFileTypes does not follow links, but a reader who tested isDirectory
         // first would classify a symlink-to-directory as a directory and lose the

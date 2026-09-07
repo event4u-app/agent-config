@@ -31,7 +31,8 @@ import { describe, expect, it } from 'vitest';
 
 import { _resetStateForTest, projected_rule_trees } from '../../src/scripts/condense.js';
 import { DeadScopeError } from '../../src/scripts/_lib/scan_scope.js';
-import { globalRuleLayerNames } from '../../src/install/globalRuleLayers.js';
+import { PROJECT_RULE_DIRS, globalRuleLayerNames } from '../../src/install/globalRuleLayers.js';
+import { isExclusivelyPackageOnly } from '../../src/install/partitionEligibility.js';
 import { auditRuleProjection, main, renderFindings } from '../../src/scripts/check_rule_projection_integrity.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -233,24 +234,45 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
         expect(projected.size, 'the plan must not be empty').toBeGreaterThan(0);
     });
 
-    it.skipIf(planEmpty)('plans a NON-EMPTY rule set for every active host rule tree', () => {
-        // This used to assert every tree plans the IDENTICAL set. Corrected
-        // 2026-09-07 after a neutral review: `partitionRulesForDir` narrows PER
-        // DIRECTORY on that host's own global layer, so two trees planning
-        // different sets is the design working — a machine with one host installed
-        // globally diverges by construction, and the old assertion was green here
-        // only because `~/.claude/rules` and `~/.cursor/rules` happen to hold the
-        // same 104 names. Same environment-dependence the assertion above was just
-        // repaired for.
+    it.skipIf(planEmpty)('narrows every tree whose host layer carries what would be withheld', () => {
+        // Rewritten twice. It first asserted every tree plans the IDENTICAL set,
+        // which is environment-dependent: `partitionRulesForDir` narrows PER
+        // DIRECTORY, so two trees legitimately differ. The repair then weakened it
+        // to `length > 0` — and a second review showed that survives replacing
+        // `partitionRulesForDir`'s body with `return [...rules]`, i.e. the partition
+        // switched off entirely. An assertion that cannot see its own mechanism is
+        // worse than the environment-dependent one it replaced.
         //
-        // What survives is the property that does not depend on the machine: every
-        // active tree is planned, and none is planned EMPTY. An empty plan for a
-        // tree the emitter still writes is a real defect and reds everywhere.
+        // This version is partition-SENSITIVE and machine-independent, because the
+        // condition and the expectation come from different places: carriage is read
+        // from `globalRuleLayerNames` — the host DIRECTORY listing — and the
+        // expectation is the package-only classification. Where a host layer carries
+        // every global-scope rule, the plan MUST be the package-only set; neutralise
+        // the partition and it is 104 instead of 13. In CI no layer exists, every
+        // tree is vacuous, and the loop asserts nothing rather than pretending to.
         const plan = projected_rule_trees();
-        const trees = Object.keys(plan);
-        expect(trees).toContain(TREE);
-        for (const t of trees) {
-            expect((plan[t] ?? []).length, `${t} is planned EMPTY`).toBeGreaterThan(0);
+        expect(Object.keys(plan)).toContain(TREE);
+        const onDisk = fs.readdirSync(distRules).filter((n) => n.endsWith('.md'));
+        const packageOnly = onDisk.filter((r) => isExclusivelyPackageOnly(path.join(distRules, r)));
+        let checked = 0;
+        for (const [dir, planned] of Object.entries(plan)) {
+            const toolId = PROJECT_RULE_DIRS[dir];
+            if (toolId === undefined) continue;
+            const carried = globalRuleLayerNames(toolId);
+            if (carried === null) continue; // no evidence for this host — vacuous
+            const carriedSet = new Set(carried);
+            const wouldWithhold = onDisk.filter(
+                (r) => !packageOnly.includes(r) && (plan[dir] ?? []).includes(r),
+            );
+            if (!wouldWithhold.every((r) => carriedSet.has(r))) continue;
+            // The layer carries everything this tree still projects beyond the
+            // package-only set, so nothing justified keeping them.
+            const extra = (planned ?? []).filter((r) => !packageOnly.includes(r));
+            expect(extra, `${dir} projects rules its host layer already carries`).toEqual([]);
+            checked += 1;
         }
+        // Not an assertion about the tree — a statement about what this run proved,
+        // so a reader can tell a real pass from a vacuous one.
+        process.stdout.write(`    (narrowing verified on ${String(checked)} tree(s))\n`);
     });
 });

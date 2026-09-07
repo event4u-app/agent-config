@@ -85,7 +85,9 @@ import {
     measureCatalogueVolume,
     parseHostBudgetEvent,
     readObservationLog,
+    readCatalogueAcross,
     readProjectedCatalogue,
+    resolveSkillCatalogueRoots,
     type HostProjectionRow,
     type ProjectionMode,
     type ProjectionModeCounts,
@@ -330,15 +332,24 @@ function projectionModeFlagFor(host: string, counts: ProjectionModeCounts): { fl
  */
 function runPointableBareMode(): number {
     const explicitRoot = argValue('--catalogue-root');
-    // `resolveCatalogueRoot`, not `resolveSkillsRoot`: the D-4 join is about the
-    // PROJECTION the host read, and the generic resolver prefers `src/skills`
-    // since 2026-09-07. Using it here would join host observations against the
-    // authored tree — the split this function's own docstring warns about,
-    // arriving through the resolver rather than through a second copy of it.
-    // No null branch: `resolveCatalogueRoot` returns a directory or throws, and the
-    // throw carries the same "tried X, Y under REPO" text the removed branch printed.
-    const rankerRoot = resolveCatalogueRoot(explicitRoot);
-    const catalogueNames = readProjectedCatalogue(rankerRoot).map((entry) => entry.name);
+    // The RANKER'S roots, which is what this join claims to read — corrected twice
+    // in one day. It first used `resolveSkillsRoot`; then, on the reasoning that
+    // "the projection is the subject", `.claude/skills` alone. Both were wrong
+    // after the ADR-236 amendment EMPTIED that directory of skills: the join read
+    // 49 command wrappers as the catalogue and published pointableBare 0 against
+    // unpointableBare 16, with the empty-guard silent because 49 is not 0. An
+    // explicit --catalogue-root still means exactly that one tree.
+    const rankerRoots = explicitRoot ? [resolveCatalogueRoot(explicitRoot)] : resolveSkillCatalogueRoots(REPO);
+    if (rankerRoots.length === 0) {
+        process.stderr.write(
+            `❌  no catalogue root resolved for the ranker under ${REPO}.\n` +
+                '    An empty catalogue is never a clean join: it would report 0 pointable\n' +
+                '    entries because nothing was read, not because nothing diverged.\n',
+        );
+        return 1;
+    }
+    const rankerRoot = rankerRoots[0] as string;
+    const catalogueNames = readCatalogueAcross(rankerRoots).map((entry) => entry.name);
     // The guard the error text above already promised, and did not have. A
     // present-but-empty or half-generated projection resolves fine — the
     // resolver returns the first EXISTING directory, not the first non-empty

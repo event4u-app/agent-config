@@ -126,7 +126,15 @@ describe('claude command de-duplication', () => {
         expect(condense.generate_claude_project_commands()).toBe(0);
     });
 
-    it('withholds a FLAT wrapper the host layer already carries, and only that one', () => {
+    /** A host-layer wrapper as `install.ts` writes it: a directory WITH a SKILL.md. */
+    function hostWrapper(slug: string): void {
+        const dir = path.join(home, '.claude', 'skills', slug);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'SKILL.md'), `---\nname: ${slug}\n---\nbody\n`, 'utf-8');
+        _resetClaudeLayerMemoForTest();
+    }
+
+    it('withholds a FLAT wrapper the host layer carries — the only flat command here', () => {
         // Corrected 2026-09-07 after a neutral review. The wrapper emitter was left
         // ungated on the claim that `~/.claude/skills` carries no wrappers and
         // "nothing else delivers them". Both are false:
@@ -138,8 +146,16 @@ describe('claude command de-duplication', () => {
         // This fixture is the only place the mechanism is seen to FIRE: on a
         // maintainer machine whose last install skipped that pass, the host layer
         // carries no wrapper and the gate is correctly inert.
-        fs.mkdirSync(path.join(home, '.claude', 'skills', 'standalone'), { recursive: true });
-        _resetClaudeLayerMemoForTest();
+        //
+        // It writes a real SKILL.md, corrected after a second neutral review: the
+        // first version created an EMPTY directory, which is precisely the state in
+        // which withholding is WRONG (the artefact would come from neither layer).
+        // The only fixture for the gate asserted the one case it must not do.
+        //
+        // `standalone` is the fixture's only FLAT command; the other two are
+        // clustered and get no wrapper either way, so the title says "the only flat
+        // command here" rather than claiming a selectivity this tree cannot show.
+        hostWrapper('standalone');
 
         condense.generate_claude_project_commands();
         condense.generate_claude_commands();
@@ -149,7 +165,18 @@ describe('claude command de-duplication', () => {
     it('keeps a flat wrapper the host layer does NOT carry — the fail-safe direction', () => {
         // Withholding is a removal with no repair path: a wrapper absent globally is
         // the command's only access path, so it must survive.
-        fs.mkdirSync(path.join(home, '.claude', 'skills', 'something-else'), { recursive: true });
+        hostWrapper('something-else');
+
+        condense.generate_claude_project_commands();
+        condense.generate_claude_commands();
+        expect(fs.existsSync(skillWrapper('standalone'))).toBe(true);
+    });
+
+    it('keeps a flat wrapper whose host entry has NO SKILL.md — a name is not an artefact', () => {
+        // The defect the review found in the fixture above: an empty
+        // `~/.claude/skills/standalone/` used to satisfy the carriage check, so the
+        // wrapper was withheld and the command was delivered from neither layer.
+        fs.mkdirSync(path.join(home, '.claude', 'skills', 'standalone'), { recursive: true });
         _resetClaudeLayerMemoForTest();
 
         condense.generate_claude_project_commands();
