@@ -336,11 +336,66 @@ built for.
       GRAPH_STORE_VERSION 1 → 2, so a v1 twin is refused and re-emitted rather than being
       read through columns it does not have. `resolved_via` / `provider` columns exist and
       are nullable here; 2.2 populates and enforces them. -->
-- [ ] **2.2 Two fields on every edge.** `resolved_via ∈ {same-file, import-specifier,
+- [x] **2.2 Two fields on every edge.** `resolved_via ∈ {same-file, import-specifier,
       path-alias, psr4, route-table, test-import, name-lookup, dynamic}` and `provider`
       (`native`). Schema version bumps; `build` prints the `resolved_via` histogram.
       verify: no edge lacks either field; the v2 corpus rerun is byte-identical on recall and
       precision.
+
+      <!-- verified 2026-09-07.
+
+      NO EDGE LACKS EITHER FIELD, and it is the TYPE SYSTEM that guarantees it: both are
+      REQUIRED on `CodeEdge`, so every construction site must supply them or the build does
+      not compile. That is stronger than a linter pass after the fact — adding the fields
+      broke `sqlite_store.ts` and a test fixture at compile time, which is the check
+      working. Measured on a 3-file PHP+TS fixture: 18 edges, 0 missing `resolved_via`,
+      0 missing `provider`, 0 values outside the enum, `provider` ∈ {native}.
+      `validate` gained presence-AND-membership checks for both — SENSITIVITY proven by
+      stripping one field from one edge: "❌ graph schema invalid (1): edge[0].resolved_via
+      is required".
+
+      HISTOGRAM on every build: `resolved_via: same-file 13 · name-lookup 3 ·
+      import-specifier 2`. Printed unconditionally because it is the number that says
+      whether 2.3 worked, and the confidence split does not.
+
+      FOUR OF EIGHT values occur today, stated rather than implied: `same-file`,
+      `import-specifier`, `name-lookup`, `dynamic`. `path-alias` and `psr4` arrive with
+      2.3; `route-table` and `test-import` with Phase 3's relations. They are in the union
+      now so adding them is a build change, not a schema change.
+      Mapping decisions, recorded because they were judgement calls: an UNRESOLVED
+      `symbol:` target is `name-lookup` (a name lookup is what was performed and what
+      failed — `confidence` already carries that it failed); a `member` edge is `same-file`
+      because the member id is DERIVED from its own source node's id; a hierarchy walk is
+      `name-lookup`, not `same-file`, because the declaring class need not be local.
+
+      V2 CORPUS RERUN — BYTE-IDENTICAL on recall and precision against the reference the
+      roadmap cites (`code-graph-vs-grep-inrepo-v2-rerun-2026-09-04.md`):
+
+        | class              | rerun 2026-09-04            | this run 2026-09-07 |
+        |--------------------|-----------------------------|---------------------|
+        | callers            | R 1/1 +0 · P 0.611/0.667 TIE | identical          |
+        | transitive-impact  | R 0.611/0.611 +0 · P 1/1 TIE | identical          |
+        | path-between       | R 0.917/1 +8.3 · P 0.722/1 TIE | identical        |
+        | references         | R 1/1 +0 · P 0.722/1 TIE     | identical          |
+        | macro grep         | P 0.764 · R 0.882            | identical          |
+        | macro graph        | P 0.917 · R 0.903            | identical          |
+
+      Zero of four classes met the +10 pp bar; every class TIE. This roadmap moved
+      delivery, not measurement — which is AC-6, and it now has evidence rather than an
+      intention.
+
+      SCHEMA_VERSION 2 → 3 and GRAPH_STORE_VERSION 2 → 3. Both are needed and for
+      different reasons: a v2 SIDECAR carries untagged edges, so `--update` would mix
+      tagged and untagged and under-count the histogram; a v2 TWIN has the columns but may
+      have written them NULL, which reads back as a valid edge carrying a fabricated
+      mechanism.
+
+      FOUND, not fixed, and outside this step: `run_bench_inrepo_v2.ts` writes its report
+      to a filename stamped with the CORPUS date (`…-v2-2026-08-29.md`), not the run date,
+      so any rerun OVERWRITES a dated historical artifact in place — this run clobbered the
+      2026-08-29 report with 2026-09-07 content and it was restored with `git checkout`.
+      The 2026-09-04 rerun evidently hit the same thing and worked around it by writing to
+      a `-rerun-` filename by hand. -->
 - [ ] **2.3 Resolution tiers before name lookup:** `tsconfig` `paths` and composer PSR-4.
       verify: INFERRED count on `src/scripts/ai_council` falls; EXTRACTED does not regress.
 

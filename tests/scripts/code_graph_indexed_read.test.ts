@@ -59,10 +59,12 @@ function makeGraph(edgeCount: number): CodeGraph {
             target: `src/f${i + 1}.ts#fn${i + 1}`,
             relation: 'calls',
             confidence: 'EXTRACTED',
+            resolved_via: 'import-specifier',
+            provider: 'native',
         });
     }
     return {
-        schema_version: 2,
+        schema_version: 3,
         source_checksum: `synthetic-${edgeCount}`,
         languages: ['typescript'],
         grammar_abi: 14,

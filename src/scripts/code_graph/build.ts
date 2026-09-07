@@ -24,6 +24,7 @@ import {
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
     type Lang,
+    type ResolvedVia,
     SCHEMA_VERSION,
 } from './types.js';
 
@@ -327,13 +328,20 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         want: Capability,
         lang: Lang,
         scopeOnly = false,
-    ): { target: string; confidence: EdgeConfidence } | null => {
+    ): { target: string; confidence: EdgeConfidence; via: ResolvedVia } | null => {
         const scope = scopes.get(file) ?? emptyScope;
+        // The ladder's rungs ARE the mechanism taxonomy, so `via` is read off
+        // the branch that succeeded rather than inferred afterwards.
         for (const id of scope.locals.get(name) ?? [])
-            if (satisfies(nodeKind.get(id), want)) return { target: id, confidence: 'EXTRACTED' };
+            if (satisfies(nodeKind.get(id), want))
+                return { target: id, confidence: 'EXTRACTED', via: 'same-file' };
         const bound = scope.imports.get(name);
         if (bound && satisfies(nodeKind.get(bound.target), want))
-            return { target: bound.target, confidence: bound.exact ? 'EXTRACTED' : 'INFERRED' };
+            return {
+                target: bound.target,
+                confidence: bound.exact ? 'EXTRACTED' : 'INFERRED',
+                via: 'import-specifier',
+            };
         if (scopeOnly) return null;
         const wide =
             want === 'constructible'
@@ -344,9 +352,18 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
         // Reached only by matching a name across the whole repository, with no
         // binding in this file to justify it. That is not a syntactic fact and
         // no longer claims to be one.
-        if (wide) return { target: wide, confidence: 'INFERRED' };
+        if (wide) return { target: wide, confidence: 'INFERRED', via: 'name-lookup' };
         return null;
     };
+
+/**
+ * The mechanism for an edge whose target did not resolve.
+ *
+ * A `symbol:` pseudo-target is the residue of a name lookup that found
+ * nothing, so `name-lookup` is what actually happened. `confidence` already
+ * carries whether it resolved; this field carries what was tried.
+ */
+    const UNRESOLVED_VIA: ResolvedVia = 'name-lookup';
 
     // Deduped the same way emitted edges are, so the count is comparable to
     // `edges.length` rather than being a raw call-site tally that reads as a
@@ -372,6 +389,8 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 target: hit?.target ?? `symbol:${inh.parentName}`,
                 relation: 'inherits',
                 confidence: hit?.confidence ?? 'EXTRACTED',
+                resolved_via: hit?.via ?? UNRESOLVED_VIA,
+                provider: 'native',
             });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
@@ -386,6 +405,11 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 target: nodeIds.has(target) ? target : `symbol:${r.targetName}`,
                 relation: 'member',
                 confidence: 'EXTRACTED',
+                // A member id is DERIVED from its own source node's id, so the
+                // declaration is in the same file by construction — no lookup
+                // of any kind happens here.
+                resolved_via: nodeIds.has(target) ? 'same-file' : UNRESOLVED_VIA,
+                provider: 'native',
             });
             return;
         }
@@ -400,6 +424,8 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 target: bound?.target ?? `symbol:${r.targetName}`,
                 relation: 'imports',
                 confidence: bound ? (bound.exact ? 'EXTRACTED' : 'INFERRED') : 'EXTRACTED',
+                resolved_via: bound ? 'import-specifier' : UNRESOLVED_VIA,
+                provider: 'native',
             });
             return;
         }
@@ -416,6 +442,8 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 target: hit?.target ?? `symbol:${r.targetName}`,
                 relation: 'uses',
                 confidence: hit?.confidence ?? 'EXTRACTED',
+                resolved_via: hit?.via ?? UNRESOLVED_VIA,
+                provider: 'native',
             });
             return;
         }
@@ -433,13 +461,25 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 // EXTRACTED is a claim about a SPECIFIC in-repo node reached by
                 // name alone.
                 confidence: hit?.confidence ?? 'EXTRACTED',
+                resolved_via: hit?.via ?? UNRESOLVED_VIA,
+                provider: 'native',
             });
             return;
         }
         if (r.callStyle === 'this' || r.callStyle === 'self' || r.callStyle === 'static' || r.callStyle === 'parent') {
             const hit = r.enclosingClassId ? resolveHierMethod(r.enclosingClassId, r.targetName) : null;
             if (hit) {
-                emit({ source: r.sourceId, target: hit, relation: 'calls', confidence: 'INFERRED' });
+                emit({
+                    source: r.sourceId,
+                    target: hit,
+                    relation: 'calls',
+                    confidence: 'INFERRED',
+                    // Walked the class hierarchy, which is same-file only when
+                    // the declaring class is; the honest mechanism for a
+                    // hierarchy walk is the repo-wide method table.
+                    resolved_via: 'name-lookup',
+                    provider: 'native',
+                });
             } else {
                 // enclosing class extends an out-of-repo base → honest AMBIGUOUS
                 const cands = methodCandidates(r.targetName, ex.lang);
@@ -448,6 +488,8 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                     target: ambiguousTarget(cands, r.targetName),
                     relation: 'calls',
                     confidence: 'AMBIGUOUS',
+                    resolved_via: 'dynamic',
+                    provider: 'native',
                     // The enclosing class extends a base outside this
                     // repository, so the method is not findable HERE — a
                     // different cause from a call whose receiver is unknown,
@@ -486,6 +528,8 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
             target: ambiguousTarget(cands, r.targetName),
             relation: 'calls',
             confidence: 'AMBIGUOUS',
+            resolved_via: 'dynamic',
+            provider: 'native',
             // Receiver type unknown: `$obj->m()` or an unresolved `C::m()`.
             // Resolving this needs type inference the extractor does not do,
             // which is exactly what 1.2 has to decide about rather than assume.
@@ -583,6 +627,11 @@ export function serializeGraph(g: CodeGraph): string {
             target: e.target,
             relation: e.relation,
             confidence: e.confidence,
+            // Unconditional, unlike the two optional fields below: these are
+            // required on every edge, so emitting them conditionally would make
+            // an absent field mean "not set" instead of being impossible.
+            resolved_via: e.resolved_via,
+            provider: e.provider,
         };
         // Ordered before `candidates` deliberately: the reason is the coarser
         // axis and a reader scanning the serialized graph sees WHY before HOW

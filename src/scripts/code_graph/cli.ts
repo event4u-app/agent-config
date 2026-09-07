@@ -132,10 +132,31 @@ async function cmdBuild(argv: string[]): Promise<number> {
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
             `    languages: ${graph.languages.join(', ') || '(none)'} · grammar ABI ${graph.grammar_abi}\n` +
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
+            `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
             (out ? `    cache: ${path.relative(REPO_ROOT, out)}\n` : ''),
     );
     return 0;
+}
+
+/**
+ * The `resolved_via` histogram, descending by count.
+ *
+ * Printed on every build because it is the number that says whether the graph
+ * is getting BETTER, and the confidence split does not: 2.3's whole target is
+ * moving edges off `name-lookup` onto a real binding, and a reader who cannot
+ * see the starting distribution cannot tell whether it moved. Only non-zero
+ * buckets appear — a row of zeroes for the four mechanisms nothing emits yet
+ * would be noise on every build.
+ */
+function resolvedViaHistogram(graph: CodeGraph): string {
+    const counts = new Map<string, number>();
+    for (const e of graph.edges) counts.set(e.resolved_via, (counts.get(e.resolved_via) ?? 0) + 1);
+    if (counts.size === 0) return '(no edges)';
+    return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+        .map(([via, n]) => `${via} ${n}`)
+        .join(' · ');
 }
 
 function cmdValidate(argv: string[]): number {

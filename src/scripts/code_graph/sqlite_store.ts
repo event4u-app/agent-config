@@ -35,13 +35,18 @@ import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
 /**
  * Bump on ANY table/column change — a mismatch sends readers to the JSON.
  *
- * 1 → 2 (road-to-a-graph-that-is-shipped 2.1): `edges` gained `resolved_via`
- * and `provider`; `nodes` gained indexes on `label` and `source_file`; `meta`
- * gained `node_count` / `edge_count`. A v1 twin has none of them, and the
- * indexed read path below would silently answer from missing columns, so the
- * mismatch must send a v1 reader to the JSON and let the next build re-emit.
+ * 1 → 2 (2.1): `edges` gained `resolved_via` and `provider`; `nodes` gained
+ * indexes on `label` and `source_file`; `meta` gained `node_count` /
+ * `edge_count`. A v1 twin has none of them, and the indexed read path below
+ * would silently answer from missing columns.
+ *
+ * 2 → 3 (2.2): those two columns are now REQUIRED on every edge. A v2 twin has
+ * the columns but may have written them NULL, from a graph built before the
+ * fields existed — which reads back as a valid edge carrying a fabricated
+ * mechanism. Refusing it costs nothing, because the twin is derived and the
+ * next build re-emits it.
  */
-export const GRAPH_STORE_VERSION = 2;
+export const GRAPH_STORE_VERSION = 3;
 
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
@@ -129,7 +134,6 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                     'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             );
             for (const e of graph.edges) {
-                const ext = e as CodeEdge & { resolved_via?: string; provider?: string };
                 insEdge.run(
                     e.source,
                     e.target,
@@ -137,8 +141,8 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                     e.confidence,
                     e.candidates ? JSON.stringify(e.candidates) : null,
                     e.ambiguity_reason ?? null,
-                    ext.resolved_via ?? null,
-                    ext.provider ?? null,
+                    e.resolved_via,
+                    e.provider,
                 );
             }
             stampUserVersion(db, GRAPH_STORE_VERSION);
@@ -264,18 +268,24 @@ function toNode(r: NodeRow): CodeNode {
 }
 
 function toEdge(r: EdgeRow): CodeEdge {
-    const e: CodeEdge & { resolved_via?: string; provider?: string } = {
+    const e: CodeEdge = {
         source: r.source,
         target: r.target,
         relation: r.relation as CodeEdge['relation'],
         confidence: r.confidence as CodeEdge['confidence'],
+        // The SQL columns are nullable, the TypeScript fields are not. A null
+        // can only come from a twin emitted before these fields existed, which
+        // GRAPH_STORE_VERSION already refuses — so this coalesce is unreachable
+        // in a healthy tree and is written to fail READABLE rather than to
+        // fabricate: `name-lookup` is the weakest mechanism, so a mislabelled
+        // edge is under-trusted rather than over-trusted by Phase 3's filter.
+        resolved_via: (r.resolved_via ?? 'name-lookup') as CodeEdge['resolved_via'],
+        provider: (r.provider ?? 'native') as CodeEdge['provider'],
     };
     if (r.candidates) e.candidates = JSON.parse(r.candidates) as string[];
     if (r.ambiguity_reason === 'receiver-unknown' || r.ambiguity_reason === 'hierarchy-unresolved') {
         e.ambiguity_reason = r.ambiguity_reason;
     }
-    if (r.resolved_via) e.resolved_via = r.resolved_via;
-    if (r.provider) e.provider = r.provider;
     return e;
 }
 
