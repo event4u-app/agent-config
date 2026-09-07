@@ -306,19 +306,22 @@ export function payloadFingerprint(entryPath: string, size: number): string {
 }
 
 /**
- * Measured on the BUILT payload, 2026-09-07: 3041 entries, of which 3026 are
- * text and these 15 are not. `archive` is empty and stays a hard zero.
+ * Bound exceptions exist for `dotfile` and `no-extension` ONLY.
  *
- * The roadmap step that added this expected `binary` to be zero too. It is not:
- * three 69-byte PNG placeholders ship as media-adapter fixtures. Recorded as a
- * correction rather than resolved by redefining the class — they are genuinely
- * binary, they genuinely ship, and dropping them from the published surface is
- * a consumer-visible change that belongs to whoever owns those adapters.
+ * `binary` and `archive` are not exceptable: `classifyPayloadTypes` never
+ * consults this table for either class, so both are the OBSERVED count and
+ * cannot be excepted to zero. That is AC-6 of
+ * `road-to-scan-that-fails-closed` read literally, after an AI council
+ * (2026-09-07, 2 seats, unanimous over two rounds) resolved the split between
+ * reading "at zero" as the ratchet and as the observed count. It chose the
+ * observed count, and chose disposition 3 — ship a textual representation —
+ * over generating fixtures at dry-run time, on the measurement that 12 of the
+ * 15 asset-bearing media fixtures ALREADY ship an ASCII placeholder at their
+ * documented path (`FIXTURE-<adapter-id>-<ext>`). The three 69-byte PNGs that
+ * used to sit here were the outliers, not the norm; they now carry the sibling
+ * convention and the class is empty by observation.
  */
 const BOUND_PAYLOAD_EXCEPTIONS: readonly BoundPayloadException[] = [
-    { fingerprint: '955b5da399e14fb39cfe1f3279044061043e64e2bd1576871514db927e56d701', path: 'src/scripts/media/lib/fixtures/flux/asset-0001.png', size: 69, why: 'media-adapter response fixture — a 69-byte placeholder PNG the flux adapter test decodes; binary by construction' },
-    { fingerprint: 'c2dd9743367ece8ffe0deef5e798d39967c22245749fd7f798edd8aa78b70f59', path: 'src/scripts/media/lib/fixtures/gemini-image/asset-0001.png', size: 69, why: 'media-adapter response fixture — same class as the flux placeholder' },
-    { fingerprint: 'cbac44d021a1dc41b938e798eb9be4147fc9d35194c348dfe9acaa0596bc83a5', path: 'src/scripts/media/lib/fixtures/ideogram/asset-0001.png', size: 69, why: 'media-adapter response fixture — same class as the flux placeholder' },
     { fingerprint: '47e4328e71652a0375ade7eb4dac8a3e4b6df1c6e4e74caa75287266676cc9a6', path: 'agents/templates/.ai-council.yml.example', size: 30561, why: 'shipped council config TEMPLATE — a dotfile because the file it is copied to is one. RE-PINNED 2026-09-07, 29,872 -> 30,561 bytes: the exception is path-AND-size-bound by design, so this branch adding a `disabled_reason` honest-null block to the gemini seat in the template invalidated it and the gate refused the entry as unaccounted. The re-pin excepts the SAME path for the SAME reason at its measured new size — it does not widen the class, raise a cap, or except anything the gate was not already carrying.' },
     { fingerprint: 'd36a53951c184db7481139235056e90b53a853714b3a68b31ba1349ecb95ac1d', path: 'agents/templates/.ai-video.xml.example', size: 9209, why: 'shipped video-provider config template — same reason as the council template' },
     { fingerprint: 'f83229412cf8cceaadd0cb1934140a0c7c8277df43edc590f370572f6df6da98', path: 'dist/agent-src/templates/agents/.gitattributes.fragment', size: 2140, why: 'gitattributes fragment the installer appends to a consumer repo' },
@@ -363,11 +366,11 @@ export interface TypeClassification {
 /**
  * Classify the whole payload by type and report what is not accounted for.
  *
- * Every entry outside `text` needs a bound exception. `archive` has none and is
- * meant to stay that way; `binary` has three, named; the dotfile and
- * extensionless entries are each bound to a path AND a size, so replacing one
- * with different content re-fires the check on that entry rather than passing
- * inside a count.
+ * `archive` and `binary` are closed classes: no exception is consulted for
+ * either, so each is the observed count and an entry in one is always a
+ * violation. Dotfile and extensionless entries are each bound to a path AND a
+ * size, so replacing one with different content re-fires the check on that
+ * entry rather than passing inside a count.
  */
 export function classifyPayloadTypes(
     files: readonly PackFile[],
@@ -390,7 +393,8 @@ export function classifyPayloadTypes(
         counts[type] += 1;
         if (type === 'text') continue;
         const fingerprint = payloadFingerprint(f.path, f.size);
-        if (byFingerprint.has(fingerprint)) {
+        // `binary` and `archive` have no exception path — see BOUND_PAYLOAD_EXCEPTIONS.
+        if (type !== 'binary' && type !== 'archive' && byFingerprint.has(fingerprint)) {
             used.add(fingerprint);
             continue;
         }
@@ -417,10 +421,12 @@ export function typeClassViolations(c: TypeClassification): string[] {
         (u) =>
             `payload type \`${u.type}\`: ${u.path} (${String(u.size)} bytes) is not accounted for. ` +
             (u.type === 'archive' || u.type === 'binary'
-                ? 'This class is meant to be empty. '
-                : 'Every dotfile and extensionless entry is carried by a path-and-size-bound exception. ') +
-            `If it belongs in the published surface, add a BoundPayloadException with ` +
-            `fingerprint sha256:${u.fingerprint} and a reason; otherwise exclude it from package.json files[].`,
+                ? 'This class is empty by observation and carries no exception path. ' +
+                  'Exclude it from package.json files[], or ship a textual placeholder at the same path ' +
+                  '(the media fixtures use `FIXTURE-<adapter-id>-<ext>`).'
+                : 'Every dotfile and extensionless entry is carried by a path-and-size-bound exception. ' +
+                  `If it belongs in the published surface, add a BoundPayloadException with ` +
+                  `fingerprint sha256:${u.fingerprint} and a reason; otherwise exclude it from package.json files[].`),
     );
 }
 
@@ -662,6 +668,40 @@ function selfTest(): number {
                     typeClassViolations(
                         classifyPayloadTypes(packFiles('src/scripts/helper.ts'), REPO_ROOT, () =>
                             Uint8Array.from([0x7f, 0x45, 0x4c, 0x46, 0x02, 0x00, 0x00]),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                // THE CLOSED-CLASS SENSITIVITY PROOF. `LICENSE` at 1064 bytes
+                // carries a real bound exception, so under the pre-2026-09-07
+                // code this entry passed. It is fed binary head bytes here, and
+                // binary outranks no-extension in `classifyEntry`, so a
+                // still-exceptable `binary` class would accept it. It must not:
+                // AC-6 of road-to-scan-that-fails-closed reads "at zero" as the
+                // OBSERVED count, and this row is what would go red if the
+                // exception path were ever reopened for the class.
+                name: 'type/binary: an entry with a VALID bound exception is still refused once it reads binary',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes([{ path: 'LICENSE', size: 1064 }], REPO_ROOT, () =>
+                            Uint8Array.from([0x7f, 0x45, 0x4c, 0x46, 0x02, 0x00, 0x00]),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                // The negative control for the row above: the SAME exceptable
+                // path with ordinary text still passes on its exception.
+                name: 'type/extensionless: the same bound entry with text content still passes',
+                expect: 'accept',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes([{ path: 'LICENSE', size: 1064 }], REPO_ROOT, () =>
+                            new TextEncoder().encode('Apache License\n'),
                         ),
                     ).length > 0
                         ? 1

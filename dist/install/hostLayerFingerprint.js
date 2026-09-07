@@ -4,7 +4,7 @@
  * ## Why a fingerprint and not a version number
  *
  * The single-delivery partition is a *removal*: after it, `task generate-tools`
- * writes 16 rules and zero skills into `<repo>/.claude/` and every other
+ * writes 13 rules and zero skills (15 package-only, 2 byte-identically deduped at user scope) plus 49 flat-command wrappers into `<repo>/.claude/` and every other
  * artefact is delivered ONLY by the host-global layer. That removes the build's
  * own repair path — regeneration can no longer heal a stale global layer,
  * because it stops writing the affected files at all.

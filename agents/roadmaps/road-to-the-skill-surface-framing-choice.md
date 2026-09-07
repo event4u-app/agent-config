@@ -89,12 +89,54 @@ what to publish, not a decision that anything about the surface is settled.
 
 ## Phase 1 — the owner chooses
 
-- [ ] **1.1 Record the choice.** One of A, B or C, written into `docs/decisions/`
+- [x] **1.1 Record the choice.** One of A, B or C, written into `docs/decisions/`
       or beside the claim in `docs/proof.md`.
       verify: `./scripts-run src/scripts/check_claims` passes against the resulting
       text, and `adr_cite_check` on any ADR the choice produces reports a live status.
+      Done 2026-09-07 — **Option C**, recorded beside the claim rather than in
+      `docs/decisions/`. The reason recorded is appended to the
+      `skill-activation-census-zero` entry at `docs/CLAIMS.md:245`, which is the only
+      writable route to "beside the claim in `docs/proof.md`": that page is generated
+      (`src/scripts/build_proof.ts:13`, "Generated, never hand-maintained") and its
+      claim column renders the ledger's `claim:` field, while `non_inference` renders
+      nowhere. `docs/proof.md:98` carries the text after `build_proof` re-ran.
+      The choice produced **no ADR**, so the `adr_cite_check` half of the verify is
+      vacuous by construction rather than skipped.
+
+## Decision, 2026-09-07 — what was recorded and what was NOT
+
+Recorded: **Option C**, in the narrowest form the option describes — the surface is
+left as it is and the zero is published with its reason, so a later review meets an
+answer instead of re-deriving the argument a fourth time.
+
+Not recorded, and deliberately: **A and B stay open.** Both change what the package
+claims to be for its consumers, which is a public commitment and owner-reserved under
+[`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md); an autonomous lane
+may not take either. The routing unit there is the transition, not the document, and
+the three transitions differ: A commits the package to building and measuring a
+host-side mechanism, B reclassifies 189 shipped artifacts in consumer-facing prose,
+and C adds a reversible explanatory sentence to an already-published claim while
+narrowing neither of the other two. Only the third is inside an agent's authority, and
+recording it does not consume the owner's choice — the menu is unchanged.
+
+**C's falsifier, as stated in the option and now in the ledger:** the recorded reason
+stops holding the moment the store the census reads stops being the only one available.
+A consumer install, a second host, or a CI-visible corpus each ends it, and the choice
+returns.
+
+`status:` stays `carrier`. This file remains the live destination the parent's `[~]`
+step 3.1 and AC-6 carry to, which `deferralProblems`
+(`src/agent-src/scripts/archive_completed_roadmaps.ts:414`) verifies from both ends;
+archiving it would make that destination dead. A human flips it to `ready` if and when
+A or B is taken up.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One of the three options is recorded, with the count it affects and its falsifier.
-- [ ] AC-2 — `./scripts-run src/scripts/check_claims` passes against the resulting text.
+- [x] AC-1 — One of the three options is recorded, with the count it affects and its falsifier.
+      Option C, recorded 2026-09-07 at `docs/CLAIMS.md:245`. Affected count: the published
+      claim only; the 299 are untouched, which is the count Option C names above. Falsifier
+      recorded verbatim beside the claim.
+- [x] AC-2 — `./scripts-run src/scripts/check_claims` passes against the resulting text.
+      Green 2026-09-07: `check_claims: 9 markered claim(s) bound · ledger 99 entries
+      (60 backed, 31 unbacked inventory)`, exit 0. `check_skill_activation_claim` also
+      re-run and green — the appended prose does not shadow the figure regexes it parses.

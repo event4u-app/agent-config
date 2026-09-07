@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { resolveHostLayerVerdict, setPartitionAnnounce } from '../install/partitionEligibility.js';
 import { warnLayerOverlap } from './_lib/layer_overlap_notice.js';
 
 // ledger-exempt: this is a REPORTER, not a gate — it always exits 0 by construction
@@ -59,6 +60,46 @@ export function main(argv?: readonly string[]): number {
             return 1;
         }
     }
+    // The projection line, and where it lives is a correction. **Both council seats
+    // (2026-08-20, 2/2) required that generation PRINT the mode it selected** rather
+    // than partition silently. The 2026-09-07 change moved the withhold off
+    // `installed.lock` and, in doing so, removed `condense.ts`'s only call into the
+    // resolver — so the emitter it installed became dead and generation withheld
+    // ~299 skills and 29 personas while printing nothing about the layer it
+    // withheld against. A neutral review found it the same day.
+    //
+    // It prints from HERE rather than from `condense.ts` because that file is ~1,200
+    // lines past the source-size ceiling, where the ratchet counts every added line
+    // and its test blocks on `baseline == live`. This step already runs in the same
+    // `generate-tools` chain, one line below the generator, so the operator sees the
+    // two lines together.
+    // Silence the resolver's OWN one-liner first: it writes to stdout by default,
+    // and leaving it on printed the verdict twice — once bare, once with the
+    // remediation text below. One line, the useful one.
+    setPartitionAnnounce(() => undefined);
+    const verdict = resolveHostLayerVerdict(projectRoot);
+    // Three states, not two. Corrected after a second neutral review: the
+    // unverified branch printed "a stale global layer is fixed by
+    // `agent-config install`" on a machine with NO global layer at all — a fresh
+    // checkout, where nothing is withheld, nothing is stale, and the remediation
+    // named does not apply. It fired on every `task generate-tools` there.
+    //
+    // What this line reports is the VERIFICATION state of the layer withheld
+    // against. The per-artefact withhold COUNTS are the generator's own summary
+    // one line above (`skills=N`, `command_skills=N (M withheld …)`), which is
+    // where a reader sees what was actually held back.
+    const noLayer = verdict.reason.includes('no host-global layer');
+    process.stdout.write(
+        verdict.verified
+            ? `  ℹ️  project layer carries only what ~/.claude lacks — ${verdict.reason}\n`
+            : noLayer
+              ? '  ℹ️  no host-global layer on this machine — nothing is withheld, so the\n' +
+                '      project layer carries the full projection by construction.\n'
+              : `  ⚠️  host layer UNVERIFIED — ${verdict.reason}\n` +
+                '      The project layer still carries only what ~/.claude lacks (per-artefact,\n' +
+                '      ADR-236 amendment 2026-09-07). A stale global layer is fixed by\n' +
+                '      `agent-config install`, not by re-running generate-tools.\n',
+    );
     warnLayerOverlap(projectRoot, (m) => process.stdout.write(`${m}\n`));
     return 0;
 }

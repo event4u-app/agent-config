@@ -98,8 +98,23 @@ describe('installer and build fingerprint the SAME layers', () => {
     // what actually makes the drift impossible rather than merely unlikely.
     const LAYER_OWNER = path.join(REPO, 'src', 'install', 'hostLayerFingerprint.ts');
     const SOLE_CONSUMER = path.join(REPO, 'src', 'install', 'partitionEligibility.ts');
+    /**
+     * The one read-only VERIFIER allowed to import the list.
+     *
+     * Added 2026-09-07 with a distinction the first form of this assertion did not
+     * draw: what makes drift impossible is that only one module PRODUCES a layer
+     * list, and a module that imports the single definition to compare it against
+     * another list cannot produce a divergent one — it can only report. The teeth
+     * are in the sibling assertion below, which forbids RE-LISTING the directories
+     * inline; that is the shape a second producer takes.
+     *
+     * Named files, never a pattern, so a third importer still reds and has to
+     * argue its case here.
+     */
+    const LEGAL_VERIFIER = path.join(REPO, 'src', 'scripts', '_lib', 'catalogue_layer_parity.ts');
+    const EXEMPT = new Set([LAYER_OWNER, SOLE_CONSUMER, LEGAL_VERIFIER]);
 
-    /** Every `src/**` TS file except the definition and its one legal consumer. */
+    /** Every `src/**` TS file except the definition, its consumer and the verifier. */
     function otherSources(): string[] {
         const out: string[] = [];
         const walk = (dir: string): void => {
@@ -108,7 +123,7 @@ describe('installer and build fingerprint the SAME layers', () => {
                 if (e.isDirectory()) {
                     if (e.name === 'node_modules' || e.name === 'ui') continue;
                     walk(p);
-                } else if (e.isFile() && p.endsWith('.ts') && p !== LAYER_OWNER && p !== SOLE_CONSUMER) {
+                } else if (e.isFile() && p.endsWith('.ts') && !EXEMPT.has(p)) {
                     out.push(p);
                 }
             }
@@ -117,9 +132,12 @@ describe('installer and build fingerprint the SAME layers', () => {
         return out;
     }
 
-    it('the layer list is defined once and consumed by exactly one module', () => {
+    it('the layer list is defined once, produced by one module, verified by one more', () => {
         expect(fs.readFileSync(LAYER_OWNER, 'utf-8')).toContain('export function hostLayerInputs');
         expect(fs.readFileSync(SOLE_CONSUMER, 'utf-8')).toContain('hostLayerInputs');
+        // The verifier must actually verify — an exemption for a file that stopped
+        // importing the list would be a hole kept open for nothing.
+        expect(fs.readFileSync(LEGAL_VERIFIER, 'utf-8')).toContain('hostLayerInputs');
 
         const leaks = otherSources().filter((f) =>
             fs.readFileSync(f, 'utf-8').includes('hostLayerInputs'),
