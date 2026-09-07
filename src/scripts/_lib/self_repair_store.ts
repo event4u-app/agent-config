@@ -239,7 +239,7 @@ export function attachReleaseErrors(
     return next;
 }
 
-// ── target resolution ──────────────────────────────────────────────
+// target resolution
 //
 // `suggested_surface` is free text, so nothing could join a record to the asset
 // it is about. A `target` entry is `<kind>:<id>` from a closed vocabulary AND it
@@ -338,7 +338,7 @@ export function partitionTargets(
     return { target, proposes };
 }
 
-// ── per-target occurrence index ────────────────────────────────────
+// per-target occurrence index
 //
 // `occurrences` counts a FINGERPRINT, which is class plus normalised evidence
 // shape — so two different manifestations of one rule's weakness are two
@@ -400,7 +400,7 @@ export function writeTargetIndex(root: string): TargetCount[] {
     return counts;
 }
 
-// ── status transitions ─────────────────────────────────────────────
+// status transitions
 
 /**
  * Migrate `released` records — the retired status — to `actioned`, carrying a

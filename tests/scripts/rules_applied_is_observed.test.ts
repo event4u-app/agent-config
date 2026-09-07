@@ -68,7 +68,7 @@ function mine(dir: string): Array<Record<string, unknown>> {
     return JSON.parse(out) as Array<Record<string, unknown>>;
 }
 
-// ── 4.1 ───────────────────────────────────────────────────────────
+// 4.1
 describe('4.1 — both shipped producers compute the field', () => {
     it('an omitted rules_applied is an EMPTY list, never a fabricated id', () => {
         const orch = buildOrchestrationLine(BASE).line as Record<string, unknown>;
@@ -134,7 +134,7 @@ describe('4.1 — both shipped producers compute the field', () => {
     });
 });
 
-// ── 4.2 ───────────────────────────────────────────────────────────
+// 4.2
 describe('4.2 — the constant registration and the card are retired together', () => {
     it('rules_applied is absent from PRODUCER_CONSTANT_FIELDS', () => {
         expect(PRODUCER_CONSTANT_FIELDS.has('rules_applied')).toBe(false);

@@ -47,7 +47,7 @@ function finding(over: Partial<DefectFinding> = {}): DefectFinding {
     };
 }
 
-// ── 2.1 ───────────────────────────────────────────────────────────
+// 2.1
 describe('2.1 — model-noticed is a third source, not a second store', () => {
     it('round-trips through the existing store reader with its source intact', () => {
         const tmp = mkTmp();
@@ -68,7 +68,7 @@ describe('2.1 — model-noticed is a third source, not a second store', () => {
     });
 });
 
-// ── 2.2 ───────────────────────────────────────────────────────────
+// 2.2
 describe('2.2 — targets are a closed vocabulary resolved against the tree', () => {
     it('rejects an unresolvable target into `proposes` and keeps a real one', () => {
         const tmp = mkTmp();
@@ -125,7 +125,7 @@ describe('2.2 — targets are a closed vocabulary resolved against the tree', ()
     });
 });
 
-// ── 2.3 ───────────────────────────────────────────────────────────
+// 2.3
 describe('2.3 — the widened status enum and the parked wake condition', () => {
     it('a parked record without parked_until fails validation', () => {
         const rec: DefectRecord = {
@@ -173,7 +173,7 @@ describe('2.3 — the widened status enum and the parked wake condition', () => 
     });
 });
 
-// ── 2.4 ───────────────────────────────────────────────────────────
+// 2.4
 describe('2.4 — occurrences counted per target, not only per fingerprint', () => {
     it('three distinct fingerprints sharing one target report a count of three', () => {
         const tmp = mkTmp();

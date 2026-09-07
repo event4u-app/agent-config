@@ -23,7 +23,7 @@
  *      sitting in the active tree silently counts as backlog the dashboard and
  *      ``/roadmap:process-*`` would try to execute.
  *
- *   B. Every roadmap under ``agents/roadmaps/later/`` MUST record a **wake
+ *   B. Every parked roadmap MUST record a **wake
  *      condition** so it never rots without a "when does it come back".
  *
  *      Until 2026-09-07 this rule short-circuited on the frontmatter STATUS
@@ -59,7 +59,7 @@
  *      finding and is never baselined: it is a defect the author introduced in
  *      the change that wrote it, not inherited debt.
  *
- *   C. Every roadmap under ``agents/roadmaps/later/`` MUST carry ``review_by``
+ *   C. Every parked roadmap MUST carry ``review_by``
  *      in its frontmatter. Ratcheted from the measured count, same reasoning.
  *
  *      Both ratchets live in ``src/config/gate-violation-baselines.json`` under

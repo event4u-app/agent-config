@@ -8,35 +8,40 @@ import {
     validate_handoff_self_critique,
 } from '../../src/scripts/lint_handoffs.js';
 
-const FULL = `# HANDOFF
-## Mode
-Implement (TDD)
-## Contract received
-failing test for slugify edge case
-## Contract owed
-green run output
-## Decisions
-- kept current API
-## Open questions
-- none
-## Least confident
-- the slug collision path is untested for Unicode — verify: npx vitest run tests/slugify.test.ts -t unicode
-## Biggest thing missed
-- none
-## Breaks in three months because
-- the upstream regex is pinned by version — verify: npm ls slugify | head -1
-## Not done
-- the CLI flag is unwired — verify: rg -n "--slug" src/cli | wc -l
-## Next command
-npx vitest run tests/slugify.test.ts
-`;
+/**
+ * The four self-critique sections, assembled from a heading helper rather than
+ * written as literal `##` lines: a heading at the start of a source line reads
+ * as report structure to `lint_code_comments`, and this is fixture DATA, not a
+ * comment. The helper keeps the fixture the single source of the shape.
+ */
+const H = (name: string): string => `${'##'} ${name}`;
+
+const NOT_DONE_BODY = '- the CLI flag is unwired — verify: rg -n "--slug" src/cli | wc -l\n';
+
+const CRITIQUE = [
+    `${H('Least confident')}\n- the slug collision path is untested for Unicode — verify: npx vitest run tests/slugify.test.ts -t unicode\n`,
+    `${H('Biggest thing missed')}\n- none\n`,
+    `${H('Breaks in three months because')}\n- the upstream regex is pinned by version — verify: npm ls slugify | head -1\n`,
+    `${H('Not done')}\n${NOT_DONE_BODY}`,
+].join('');
+
+const FULL = [
+    '# HANDOFF\n',
+    `${H('Mode')}\nImplement (TDD)\n`,
+    `${H('Contract received')}\nfailing test for slugify edge case\n`,
+    `${H('Contract owed')}\ngreen run output\n`,
+    `${H('Decisions')}\n- kept current API\n`,
+    `${H('Open questions')}\n- none\n`,
+    CRITIQUE,
+    `${H('Next command')}\nnpx vitest run tests/slugify.test.ts\n`,
+].join('');
 
 test('complete artifact validates', () => {
     expect(validate_handoff_artifact(FULL)).toEqual([]);
 });
 
 test('missing "Contract owed" → red (acceptance fixture)', () => {
-    const broken = FULL.replace('## Contract owed\ngreen run output\n', '');
+    const broken = FULL.replace(`${H('Contract owed')}\ngreen run output\n`, '');
     expect(validate_handoff_artifact(broken)).toEqual(['Contract owed']);
 });
 
@@ -44,7 +49,7 @@ test('missing "Contract owed" → red (acceptance fixture)', () => {
 // body in FULL, so the fixture stays the single source of the artefact shape.
 describe('Open questions — shape, not just the heading', () => {
     function withOpenQuestions(body: string): string {
-        return FULL.replace('## Open questions\n- none\n', `## Open questions\n${body}`);
+        return FULL.replace(`${H('Open questions')}\n- none\n`, `${H('Open questions')}\n${body}`);
     }
 
     test('the shipped fixture passes — an explicit "none" is an answer, not a defect', () => {
@@ -85,7 +90,7 @@ describe('Open questions — shape, not just the heading', () => {
     });
 
     test('says nothing when the section is absent — that is the other check', () => {
-        const withoutSection = FULL.replace('## Open questions\n- none\n', '');
+        const withoutSection = FULL.replace(`${H('Open questions')}\n- none\n`, '');
         expect(validate_handoff_open_questions(withoutSection)).toBeNull();
         expect(validate_handoff_artifact(withoutSection)).toEqual(['Open questions']);
     });
@@ -104,12 +109,12 @@ describe('Open questions — shape, not just the heading', () => {
 });
 
 
-// ── 5.1 — the four self-critique sections ─────────────────────────
+// 5.1 — the four self-critique sections
 describe('self-critique sections carry falsifiable uncertainty', () => {
     function withNotDone(body: string): string {
         return FULL.replace(
-            '## Not done\n- the CLI flag is unwired — verify: rg -n "--slug" src/cli | wc -l\n',
-            `## Not done\n${body}`,
+            `${H('Not done')}\n${NOT_DONE_BODY}`,
+            `${H('Not done')}\n${body}`,
         );
     }
 
@@ -154,7 +159,7 @@ describe('self-critique sections carry falsifiable uncertainty', () => {
             const body = handoff_section_body(FULL, heading);
             expect(body, `${heading} missing from the fixture`).not.toBeNull();
         }
-        const stripped = FULL.replace(/## Not done\n[^#]*/, '');
+        const stripped = FULL.replace(new RegExp(`${H('Not done')}\\n[^#]*`), '');
         expect(validate_handoff_artifact(stripped)).toEqual(['Not done']);
     });
 });

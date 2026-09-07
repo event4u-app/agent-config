@@ -94,7 +94,7 @@ describe('lint_roadmap_later_disposition — check()', () => {
         expect(v[0]!.reason).toContain('must be parked in `later/`');
     });
 
-    // ── 3.1 ───────────────────────────────────────────────────────
+    // 3.1
     it('3.1 — `status: later` alone no longer satisfies the gate', () => {
         park('road-to-b.md', `status: later\n${REVIEW_BY}`, 'no wake condition anywhere in here');
         _setRoadmapRootForTest(tmp);
@@ -103,7 +103,7 @@ describe('lint_roadmap_later_disposition — check()', () => {
         expect(v[0]!.reason).toContain('the frontmatter `status` word no longer satisfies this gate');
     });
 
-    // ── 3.2 ───────────────────────────────────────────────────────
+    // 3.2
     it('3.2 — a body that merely mentions `trigger` is rejected', () => {
         park('road-to-b.md', `status: later\n${REVIEW_BY}`, 'the trigger fires on push');
         _setRoadmapRootForTest(tmp);
@@ -122,7 +122,7 @@ describe('lint_roadmap_later_disposition — check()', () => {
         expect(check(tmp)).toEqual([]);
     });
 
-    // ── 3.3 ───────────────────────────────────────────────────────
+    // 3.3
     it('3.3 — a one-word entry_condition is rejected, naming the missing parts', () => {
         park(
             'road-to-b.md',
@@ -166,7 +166,7 @@ describe('lint_roadmap_later_disposition — check()', () => {
         expect(hard[0]!.reason).toContain('missing or blank in: who');
     });
 
-    // ── 3.4 ───────────────────────────────────────────────────────
+    // 3.4
     it('3.4 — a parked roadmap without review_by is a ratcheted finding', () => {
         park('road-to-b.md', `status: later\n${GOOD_CONDITION}`, 'parked');
         _setRoadmapRootForTest(tmp);
