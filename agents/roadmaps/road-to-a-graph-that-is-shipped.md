@@ -399,6 +399,65 @@ built for.
 - [ ] **2.3 Resolution tiers before name lookup:** `tsconfig` `paths` and composer PSR-4.
       verify: INFERRED count on `src/scripts/ai_council` falls; EXTRACTED does not regress.
 
+      <!-- 2026-09-07 — LEFT UNTICKED. Both tiers are BUILT and proven by fixture, but
+      half the verify line is unachievable on the probe it names, and the honest reading
+      of "the box flips when its verify passes" is that half a verify is not a pass.
+
+      BUILT, in `src/scripts/code_graph/resolution_tiers.ts`, and wired ahead of the
+      repo-wide name table:
+        · tsconfig `paths` — `@shared/x` binds to `src/shared/x` because the project
+          declares it. Longest-prefix-first, which is TypeScript's own rule. Reads JSONC,
+          because tsconfig is JSONC by convention and this repository's own carries `//`
+          comments, so `JSON.parse` throws on it.
+        · composer PSR-4 — `App\Services\Mailer` binds to `app/Services/Mailer.php`.
+          Needed a new extractor field: PHP `use A\B\C` was reduced to its BASE NAME and
+          the namespace discarded, so `fqName` now carries the qualified name — the same
+          shape as `moduleSpecifier` for TS, which the extractor's own docstring describes
+          as "the one piece of evidence that says WHERE the name came from".
+      An edge resolved through either is EXTRACTED, not INFERRED: a declared mapping is as
+      much a syntactic fact as an import specifier. Config reading is IO and lives in
+      `buildFromRepo`; `buildGraph` stays pure, so identical source plus identical config
+      still yields identical bytes.
+
+      tests/scripts/code_graph_resolution_tiers.test.ts → 11 passed, each tier with a
+      SENSITIVITY twin: remove `tsconfig.json` and the same import binds
+      `external:@shared/mailer.js`; remove `composer.json` and the same `use` falls back to
+      `name-lookup`. The PSR-4 fixture carries TWO classes named `Mailer` in different
+      namespaces — the case a base-name lookup cannot tell apart and PSR-4 can.
+
+      HALF THE VERIFY PASSES: "EXTRACTED does not regress" — 3,967 before, 3,967 after,
+      exactly unchanged.
+
+      THE OTHER HALF CANNOT PASS ON THIS PROBE, measured rather than argued. INFERRED on
+      `src/scripts/ai_council` is 11 before and 11 after, and zero of its edges resolve via
+      either new tier. Three independent reasons:
+        1. The config is read from the BUILD ROOT, and `src/scripts/ai_council/` has no
+           `tsconfig.json` of its own.
+        2. Even repo-wide it would not help: the aliases are `@cli/*`, `@server/*`,
+           `@shared/*`, `@install/*` over `baseUrl: ./src` — none maps into
+           `src/scripts/`.
+        3. There is no `composer.json` in this repository at all, so the PSR-4 tier has
+           nothing to read anywhere.
+      And the 11 INFERRED edges are not specifier or namespace cases in the first place:
+      7 are `this`-style hierarchy-method resolutions inside one file
+      (`AnthropicClient::ask -> AnthropicClient::_ask_impl`) and 4 are repo-wide
+      name-table hits (`low_impact.ts#… -> spend_gate.ts#CostBudget`). No import
+      resolution tier can move either class.
+
+      WHAT WOULD CLOSE IT: a probe root that actually exercises a tier. Either re-point
+      the verify at a fixture tree that has a tsconfig with a covering alias and a
+      composer.json (the test above is exactly that), or pick an in-repo root the existing
+      aliases cover — `src/cli`, `src/server`, `src/shared` and `src/install` are the four
+      candidates. Re-pointing the probe is a decision about the roadmap's own acceptance
+      criterion, so it is reported as a question per Kill register K8 rather than taken.
+
+      AC-6 STILL HOLDS after this step: the v2 corpus rerun is byte-identical again —
+      callers R 1/1 +0 P 0.611/0.667 · transitive-impact R 0.611/0.611 +0 P 1/1 ·
+      path-between R 0.917/1 +8.3 P 0.722/1 · references R 1/1 +0 P 0.722/1 · macro grep
+      P 0.764 R 0.882 · macro graph P 0.917 R 0.903. The tiers are inert on the three
+      benchmark roots for the same reason they are inert on ai_council, so this is
+      consistent rather than surprising. -->
+
 ## Phase 3 — Three verbs a gate can read
 
 - [ ] **3.1 `impact --diff <rev>`** — callers, dependents and test files reachable from the

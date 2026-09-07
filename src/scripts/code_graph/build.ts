@@ -16,6 +16,17 @@ import * as path from 'node:path';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
+import {
+    ALIAS_VIA,
+    aliasRulesFrom,
+    EMPTY_RESOLUTION_CONFIG,
+    parseJsonc,
+    PSR4_VIA,
+    psr4RulesFrom,
+    type ResolutionConfig,
+    resolveAlias,
+    resolvePsr4,
+} from './resolution_tiers.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -146,7 +157,9 @@ function satisfies(kind: string | undefined, want: Capability): boolean {
  */
 interface FileScope {
     locals: Map<string, string[]>;
-    imports: Map<string, { target: string; exact: boolean }>;
+    /** `via` records WHICH tier produced the binding, so an edge built from it
+     * reports the mechanism instead of assuming `import-specifier`. */
+    imports: Map<string, { target: string; exact: boolean; via: ResolvedVia }>;
 }
 
 const REL_EXTS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
@@ -201,10 +214,39 @@ function push(map: Map<string, string[]>, k: string, v: string): void {
 }
 
 /**
+ * Read the project's declared resolution tiers from `root` (2.3).
+ *
+ * IO lives here rather than in `buildGraph`, which stays pure so identical
+ * source plus identical config yields identical bytes. A missing or
+ * unparseable config is not an error — it degrades to no tiers, which is the
+ * behaviour every build had before this existed.
+ *
+ * `tsconfig.json` is read as JSONC: it is JSONC by convention and this
+ * repository's own carries `//` comments, so `JSON.parse` on it throws.
+ */
+export function readResolutionConfig(root: string): ResolutionConfig {
+    const read = (name: string): unknown | null => {
+        try {
+            return parseJsonc(fs.readFileSync(path.join(root, name), 'utf-8'));
+        } catch {
+            return null;
+        }
+    };
+    return {
+        aliases: aliasRulesFrom(read('tsconfig.json')),
+        psr4: psr4RulesFrom(read('composer.json')),
+    };
+}
+
+/**
  * Pure, deterministic graph build over an in-memory file set. Exposed for
  * tests (no IO). `buildFromRepo` is the IO wrapper.
  */
-export function buildGraph(files: readonly SourceFile[], extracts: readonly FileExtract[]): CodeGraph {
+export function buildGraph(
+    files: readonly SourceFile[],
+    extracts: readonly FileExtract[],
+    resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
+): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
 
@@ -278,7 +320,7 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
-        const imports = new Map<string, { target: string; exact: boolean }>();
+        const imports = new Map<string, { target: string; exact: boolean; via: ResolvedVia }>();
         for (const r of ex.rawEdges) {
             if (r.relation !== 'imports') continue;
             const local = r.localName ?? r.targetName;
@@ -286,29 +328,58 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
             const spec = r.moduleSpecifier;
             if (spec === undefined) {
                 // PHP `use A\B\C` — a fully-qualified NAME, not a module path.
-                // Resolved by base name without checking the namespace, so the
-                // binding is a lookup, not a syntactic fact: `exact: false`.
+                //
+                // TIER 1 (2.3): composer PSR-4 maps the NAMESPACE to a
+                // directory, so the class file is named outright. That is a
+                // declared mapping, hence `exact: true` — and it is the only
+                // rung that can tell two same-named classes in different
+                // namespaces apart.
+                const fq = r.fqName ?? r.targetName;
+                const psr4File = resolvePsr4(fq, resolution, fileIds);
+                if (psr4File !== null) {
+                    const member = `${psr4File}#${r.targetName}`;
+                    imports.set(local, {
+                        target: nodeKind.has(member) ? member : psr4File,
+                        exact: true,
+                        via: PSR4_VIA,
+                    });
+                    continue;
+                }
+                // TIER 2: base name, namespace discarded. A lookup, not a
+                // syntactic fact: `exact: false`.
                 const hit =
                     sym.classByName.get(k(ex.lang, r.targetName)) ??
                     (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
-                if (hit) imports.set(local, { target: hit, exact: false });
+                if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
                 continue;
             }
-            const file = resolveSpecifier(ex.file, spec, fileIds);
+            // TIER 0: a relative specifier — the file says where it points.
+            // TIER 1 (2.3): tsconfig `paths`. `@shared/x` IS `src/shared/x`
+            // because the project declares it, so this is a fact and not a
+            // guess. Without it the specifier is non-relative, `resolveSpecifier`
+            // returns null, and the import binds to `external:@shared/x` — a
+            // real module, correctly named, and the wrong one.
+            const relFile = resolveSpecifier(ex.file, spec, fileIds);
+            const aliasFile = relFile === null ? resolveAlias(spec, resolution, fileIds) : null;
+            const file = relFile ?? aliasFile;
             if (file === null) {
                 // Bare (`node:path`, `zod`) or relative-but-out-of-root. Either
                 // way the module is real and NAMED, and it is not this
                 // repository's same-named symbol. `import * as path from
                 // 'node:path'` ends here, which is the whole of 1.1.
                 const named = r.importKind === 'named';
-                imports.set(local, { target: named ? `external:${spec}#${r.targetName}` : `external:${spec}`, exact: true });
+                imports.set(local, {
+                    target: named ? `external:${spec}#${r.targetName}` : `external:${spec}`,
+                    exact: true,
+                    via: 'import-specifier',
+                });
                 continue;
             }
             // A namespace or default import binds the MODULE, never a
             // same-named export inside it.
             const member = `${file}#${r.targetName}`;
             const target = r.importKind === 'named' && nodeKind.has(member) ? member : file;
-            imports.set(local, { target, exact: true });
+            imports.set(local, { target, exact: true, via: aliasFile === null ? 'import-specifier' : ALIAS_VIA });
         }
         scopes.set(ex.file, { locals, imports });
     }
@@ -340,7 +411,10 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
             return {
                 target: bound.target,
                 confidence: bound.exact ? 'EXTRACTED' : 'INFERRED',
-                via: 'import-specifier',
+                // The binding knows how it was made — a tsconfig alias and a
+                // PSR-4 namespace are not import specifiers and must not be
+                // reported as ones.
+                via: bound.via,
             };
         if (scopeOnly) return null;
         const wide =
@@ -424,7 +498,7 @@ export function buildGraph(files: readonly SourceFile[], extracts: readonly File
                 target: bound?.target ?? `symbol:${r.targetName}`,
                 relation: 'imports',
                 confidence: bound ? (bound.exact ? 'EXTRACTED' : 'INFERRED') : 'EXTRACTED',
-                resolved_via: bound ? 'import-specifier' : UNRESOLVED_VIA,
+                resolved_via: bound ? bound.via : UNRESOLVED_VIA,
                 provider: 'native',
             });
             return;
@@ -733,7 +807,7 @@ export async function buildFromRepo(
         nextSidecar.files[f.path] = { hash, extract };
     }
 
-    const graph = buildGraph(files, extracts);
+    const graph = buildGraph(files, extracts, readResolutionConfig(root));
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

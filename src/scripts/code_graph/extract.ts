@@ -67,6 +67,16 @@ export interface RawEdge {
      * searched for the remote one.
      */
     localName?: string;
+    /**
+     * `imports` only, PHP: the FULLY-QUALIFIED name as written (`App\\Svc\\Mailer`).
+     *
+     * `targetName` carries only the base name, because that is all the
+     * repo-wide lookup could use. Composer PSR-4 maps the NAMESPACE to a
+     * directory, so it needs the part `baseName()` discards — the same shape as
+     * `moduleSpecifier` for TS: the one piece of evidence that says where the
+     * name comes from, and it is right there in the source text.
+     */
+    fqName?: string;
 }
 
 export interface FileExtract {
@@ -137,6 +147,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
                             relation: 'imports',
                             targetName: baseName(nameNode.text),
                             confidenceHint: 'EXTRACTED',
+                            fqName: nameNode.text,
                         });
                     }
                 }
