@@ -2675,6 +2675,29 @@ gates:
       the contradicting pair reds, and each half ALONE stays green, which is
       what stops a matcher that fired on the keyword section alone.
 
+  - id: check_mcp_doc_drift
+    argv: ["--quiet"]
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 4
+    corpus: >
+      the fenced client-configuration snippets in docs/mcp-server.md — four at
+      the time of writing, one per documented host. The floor is the live count
+      because each snippet is a hand-written block that changes only by a
+      deliberate edit; a reading below 4 means a documented client lost its
+      snippet, which is the drift this gate exists to catch rather than
+      something to pass over. The gate exists because those four documented an
+      absolute tsx path while the installer wrote an npx invocation, so a
+      consumer following the docs and a consumer running the installer landed on
+      two different servers.
+    no_canary_reason: >-
+      the corpus is one committed markdown file, and the canary contract is
+      create-only. A planted file lands in no snippet; every violation this gate
+      can have is a MODIFICATION of docs/mcp-server.md or of the installer entry
+      it is compared against. Discrimination is proven by `--self-test` (4 cases,
+      3 rejecting) covering each way the two literals drift — an absolute tsx
+      path, a different package, a different subcommand — plus an end-to-end
+      probe by hand: changing the entry's subcommand without the doc exits 1,
+      restoring it exits 0.
   - id: check_skill_activation_claim
     argv: []
     ci_invocation: .github/workflows/release-validation.yml

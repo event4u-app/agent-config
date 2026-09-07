@@ -23,9 +23,10 @@ import {
 } from '../../src/scripts/_cli/cmd_session_recycle.js';
 import {
     RECYCLE_ENVELOPE_MAX_BYTES,
-    RECYCLE_ENVELOPE_REL,
+    recycle_envelope_rel,
 } from '../../src/scripts/_lib/recycle_envelope_paths.js';
 import { consume_recycle_envelope } from '../../src/scripts/handoff_context_hook.js';
+import { env_session_id } from '../../src/scripts/sessions_cli.js';
 import {
     CAPSULE_SCHEMA_VERSION,
     DECISION_REVERSIBILITY_TAGS,
@@ -67,6 +68,8 @@ function minimalEnvelope(): Record<string, unknown> {
         remaining: ['phase 3'],
         not_carried_forward: ['diff bodies — re-read from the branch'],
         failed_approaches: ['tried a shallow scan — it missed the sidechain records'],
+        successful_approaches: ['walked the full transcript once and cached — one pass, no misses'],
+        predecessor: 'none',
     };
 }
 
@@ -81,7 +84,7 @@ describe('runSessionRecycle', () => {
         expect(result.code).toBe(0);
 
         const written = JSON.parse(
-            fs.readFileSync(path.join(cwd, RECYCLE_ENVELOPE_REL), 'utf-8'),
+            fs.readFileSync(path.join(cwd, recycle_envelope_rel(env_session_id())), 'utf-8'),
         ) as Record<string, unknown>;
         expect(written['capsule_version']).toBe(CAPSULE_SCHEMA_VERSION);
         expect(written['variant']).toBe('main_session');
@@ -99,7 +102,7 @@ describe('runSessionRecycle', () => {
         const result = runSessionRecycle(JSON.stringify(bad), { cwd });
         expect(result.code).toBe(1);
         expect(result.err.join('\n')).toContain('transcript_summary');
-        expect(fs.existsSync(path.join(cwd, RECYCLE_ENVELOPE_REL))).toBe(false);
+        expect(fs.existsSync(path.join(cwd, recycle_envelope_rel(env_session_id())))).toBe(false);
     });
 
     it('refuses a missing required field', () => {
@@ -135,7 +138,7 @@ describe('runSessionRecycle', () => {
         expect(result.err.join('\n')).toContain('no project anchor');
         expect(result.err.join('\n')).toContain('--project');
         expect(result.err.join('\n')).toContain('AGENT_CONFIG_PROJECT_ROOT');
-        expect(fs.existsSync(path.join(cwd, RECYCLE_ENVELOPE_REL))).toBe(false);
+        expect(fs.existsSync(path.join(cwd, recycle_envelope_rel(env_session_id())))).toBe(false);
         // The resume instruction is the expensive half — it must not appear on
         // a path that wrote nothing.
         expect(result.out.join('\n')).not.toContain('/clear');
@@ -158,7 +161,7 @@ describe('runSessionRecycle', () => {
         });
         expect(result.err).toEqual([]);
         expect(result.code).toBe(0);
-        expect(fs.existsSync(path.join(repo, RECYCLE_ENVELOPE_REL))).toBe(true);
+        expect(fs.existsSync(path.join(repo, recycle_envelope_rel(env_session_id())))).toBe(true);
     });
 
     it('refuses a --project that does not exist, without throwing', () => {
@@ -195,7 +198,7 @@ describe('runSessionRecycle', () => {
         expect(result.code).toBe(0);
         // A relative path reads identically for every root; the one thing in
         // doubt when this line is read is WHICH tree was written.
-        expect(result.out[0]).toContain(path.join(cwd, RECYCLE_ENVELOPE_REL));
+        expect(result.out[0]).toContain(path.join(cwd, recycle_envelope_rel(env_session_id())));
     });
 });
 
