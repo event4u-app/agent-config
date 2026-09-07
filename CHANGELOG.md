@@ -36,17 +36,19 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   consecutive releases.** 14.17.0, 14.18.0, 14.19.0 and 14.20.0 each returned
   `HTTP 400 prompt is too long` and each recorded an honest null in
   `agents/evidence/release-findings/`. The release path sets the analysis base
-  to the previous tag, so the whole release span went into **one** request:
-  413191, 450336 and 260998 input tokens against a 200000 cap on the three
-  releases that recorded a figure. The smallest still exceeded the cap by 30 %,
-  which is what made it structural rather than a run of large releases —
-  `buildPlan` already computed `promptChars` and only *reported* it, so nothing
-  consulted the number before spending the call.
+  to the previous tag, so the whole release span went into **one** request.
+  **All four** recorded a figure against the 200000 cap — 235472 (14.17.0),
+  413191 (14.18.0), 450336 (14.19.0), 260998 (14.20.0) — and the smallest
+  exceeded it by 17.7 %. (An earlier draft of this entry said three releases
+  recorded a figure and put the smallest at 30 % over; both were wrong, and the
+  omitted reading was the one nearest the cap — the one that most constrains
+  the budget. The conclusion does not depend on the error: every span observed
+  exceeds the cap.) `buildPlan` already computed `promptChars` and only
+  *reported* it, so nothing consulted the number before spending the call.
   The diff is now partitioned **per file** into requests under a character
   budget, each is reviewed, and findings are merged and deduplicated on the
   finding id the ledger already uses. Verified against the live span that had
-  been failing: 505087 estimated input tokens across 4 requests, no path left
-  out.
+  been failing: 5 requests, no path left out.
   **Nothing is truncated**, and that is the load-bearing decision: a silently
   shortened diff yields findings about a fragment while reading as a review of
   the whole change, which is the false green this repository's honest-null
@@ -57,12 +59,29 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   **Coverage** block stating what was not read — including the sentence that
   absence of a finding for an unreviewed path is not evidence about that path.
   `--dry-run` now prints the request count rather than only a token estimate,
-  because this gate spends per request, and it warns when a span sits at the
-  ceiling, where the next slightly larger one would start losing its remainder.
-  The budget factor is a deliberately pessimistic character proxy and says so:
-  the cap is enforced by the provider's tokenizer, which this repository cannot
-  run, so a call that still overflows a budgeted chunk falsifies the factor
-  rather than the partitioning.
+  because this gate spends per request, and warns when a span sits at the
+  ceiling. The budget factor is a character proxy **derived from those four
+  failures** (measured diff chars / reported tokens = 3.13 and 3.18) and set
+  below them, because the ratio is content-dependent — cl100k over this repo's
+  own diffs reads ~3.9 for `src/`, ~4.1 for prose and ~2.75 for a lockfile. A
+  call that still overflows a budgeted chunk falsifies that number, not the
+  partitioning.
+  **A neutral reviewer on the first version found three defects that are fixed
+  here rather than shipped.** The coverage line counted every file in a dropped
+  chunk as reviewed — 59 of 60 for a run that read 4, because the partition
+  packed to opaque strings and reported one aggregate row; it ignored chunks
+  whose call had failed, computing the number before those were appended; and a
+  non-ASCII filename was silently skipped **and** counted as read, because
+  `git diff --name-only` renders it quoted and the quoted form then matches no
+  pathspec. Coverage is now summed from the chunks that actually returned, every
+  dropped chunk names its own files, and paths are read with
+  `core.quotePath=false`. Correcting the budget ratio shrank each request, so
+  the same span needed five: the request ceiling moved from four to six rather
+  than paying for tokenizer safety with silent coverage loss.
+  Known limits, stated rather than implied: coverage lives in prose, so an
+  `--enforce` run over a partial review still returns 0, and
+  `check_finding_dispositions --ingest` reads only `.findings`, so the durable
+  ledger does not record the coverage the artifact now carries.
 
 ### Added
 
