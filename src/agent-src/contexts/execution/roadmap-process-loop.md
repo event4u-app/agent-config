@@ -320,12 +320,45 @@ the owner.
 **No citation → work**, and the default direction is unchanged: the failure this
 screen must not have is declining work an agent could have done.
 
+### Ask before park — a user decision is put to the user, then parked
+
+```
+A STEP BLOCKED ON A DECISION ONLY THE USER CAN MAKE IS PUT TO THE USER FIRST.
+ONLY A DECLINE, A TIMEOUT, OR A NON-INTERACTIVE CONTEXT WRITES THE MARKER.
+A TIMEOUT IS NOT CONSENT. A NON-INTERACTIVE CONTEXT IS NOT CONSENT.
+NEVER ADOPT THE CONSERVATIVE DEFAULT WITHOUT AN ANSWER.
+```
+
+`terminal-states.md` defines `blocked` to include "a decision only the user can
+make", and the marker below used to be written with no ask in between — so the
+decision ended up filed, correctly labelled, in a file nobody is watching. The
+ordering is the fix, not the label.
+
+- **Interactive host** — put the question, one at a time, per
+  [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). An answer ends the
+  block and nothing is parked.
+- **The user declines to decide** — park with `| asked: yes`. The question WAS
+  put; the decline is why the step stays blocked.
+- **The ask times out** — the run ends `approval-required` (a state
+  `terminal-states.md` already defines), carrying the unanswered question
+  verbatim and its conservative option named as **not adopted**. Asked-and-
+  unanswered is not could-not-ask, so the marker still records `asked: yes`.
+- **Non-interactive context** (CI, a pipe, a hook, a headless run) — park with
+  `| asked: no — <reason>`. The reason is required: without it a later reader
+  cannot tell a declined decision from one that was never offered.
+
+The decision itself is `src/scripts/_lib/blocked_by_marker.ts` (`decideAsk`),
+so the ordering is testable rather than only described; `lint_roadmap_blockers`
+fails a user-decision annotation carrying no `asked:` field, and one saying
+`asked: no` with no reason.
+
 **A step this screen judges externally impossible carries a `blocked-by:` marker
 on its own line.** The obligation is unchanged and its reason is unchanged: two
 mechanisms read blockedness from two different places and only one reads this
 section — `run-continuation`, the stop-slot concern that re-engages an autonomous
-run, decides open-vs-blocked from the inline `<!-- blocked-by: <id> -->` marker
-and never parses `## Blockers`. Without the marker a step that IS impossible
+run, decides open-vs-blocked from the inline
+`<!-- blocked-by: <id> [| asked: yes|no — <reason>] -->` marker and never parses
+`## Blockers`. Without the marker a step that IS impossible
 still counts as open work to the concern, which re-engages the agent into it
 every stop fire until the stall rung fires — the mechanism whose job is to detect
 a stall manufacturing one. **The residual is real and is not papered over:**

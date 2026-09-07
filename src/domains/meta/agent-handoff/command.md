@@ -169,8 +169,9 @@ Markdown, no host API). Required fields, in order:
 - {decision taken, with one-line rationale} {optionally close the line with
   `[reversible]` or `[irreversible]` — those two spellings exactly}
 ## Open questions
-- {unresolved items the next session must not silently drop — each as a
-  question ending in `?`; write `none` when there genuinely are none}
+- {each is a question the next session must PUT TO THE USER, one at a time,
+  before its first work step — never a storage line. End each with `?`; write
+  `none` when there genuinely are none. Answers move to `## Decisions`.}
 ## Next command
 {the single command or step to run first on resume}
 ```
@@ -183,6 +184,28 @@ long phase refreshes the file before yielding. Validated by
 `TODO` / `...`). A `?`-terminated question passes; so does an explicit `none` —
 the check exists to stop a blank section reading as an all-clear, not to force a
 question where there is none.
+
+**Resume obligation — every open question is put to the user, one at a time,
+BEFORE the first work step.** `## Open questions` is a hand-off channel, not a
+storage location: a `?`-terminated line satisfies every gate above while never
+reaching the person who can answer it, which is exactly the parking the section
+must not become. So a resuming session, before it touches the first step of
+`## Next command`:
+
+1. Reads `## Open questions`. `none` → nothing owed, proceed.
+2. Puts each remaining question to the user **separately** — one question per
+   turn, per [`ask-when-uncertain`](../../../rules/ask-when-uncertain.md)'s Iron
+   Law. Two questions never become one batched prompt.
+3. Moves each answer into `## Decisions` with its one-line rationale, and
+   removes the answered line from `## Open questions`.
+4. Cannot reach the user (non-interactive resume)? The run reports
+   `approval-required` with the questions verbatim — it does not start work
+   against an assumed answer, and it does not silently keep them parked. Same
+   rule as [`roadmap-process-loop § Ask before park`](../../../contexts/execution/roadmap-process-loop.md):
+   a context that cannot ask is not consent.
+
+This obligation is on the ASK, never on the count: a resume that reports "3 open
+questions" and proceeds has satisfied nothing.
 
 **Critical-planning-file safety protocol** (applies to HANDOFF.md and agent
 roadmap edits): read the current file FIRST; take a timestamped backup copy

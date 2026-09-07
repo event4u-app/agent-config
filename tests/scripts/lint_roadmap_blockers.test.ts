@@ -205,15 +205,60 @@ describe('lint_roadmap_blockers — _scan', () => {
     });
 
     it('a valid blocked-by reference — no violations', () => {
+        // `kernel-budget` is owned by the maintainer, so its annotation is in
+        // the user-decision class and carries the `asked:` field
+        // road-to-asked-not-parked 3.1 added.
         const text = [
             '# Roadmap: X',
             '',
             '## Phase 1 — Ship',
-            '- [ ] step <!-- blocked-by: kernel-budget -->',
+            '- [ ] step <!-- blocked-by: kernel-budget | asked: yes -->',
             '',
             VALID_BLOCKER,
         ].join('\n');
         expect(_scan(text)).toEqual([]);
+    });
+
+    // road-to-asked-not-parked 3.1 / AC-5. A decision only the user can make,
+    // filed in a roadmap without ever being put, is what the field prevents —
+    // so both refusal branches are asserted, not just the happy path.
+    describe('the asked: field on a user-decision annotation', () => {
+        const withMarker = (marker: string, owner = 'maintainer'): string =>
+            [
+                '# Roadmap: X',
+                '',
+                '## Phase 1 — Ship',
+                `- [ ] step ${marker}`,
+                '',
+                VALID_BLOCKER.replace('- **Owner:** maintainer', `- **Owner:** ${owner}`),
+            ].join('\n');
+
+        it('is required when the owner is the maintainer, the user or the owner', () => {
+            for (const owner of ['maintainer', 'user', 'owner']) {
+                const v = _scan(withMarker('<!-- blocked-by: kernel-budget -->', owner));
+                expect(v).toHaveLength(1);
+                expect(v[0]?.message).toMatch(/carries no asked: field/);
+            }
+        });
+
+        it('is NOT required for a council, implementer or agent owner', () => {
+            for (const owner of ['council', 'implementer', 'agent']) {
+                expect(_scan(withMarker('<!-- blocked-by: kernel-budget -->', owner))).toEqual([]);
+            }
+        });
+
+        it('refuses `asked: no` with no reason', () => {
+            const v = _scan(withMarker('<!-- blocked-by: kernel-budget | asked: no -->'));
+            expect(v).toHaveLength(1);
+            expect(v[0]?.message).toMatch(/asked: no with no reason/);
+        });
+
+        it('accepts `asked: no` with a reason, and `asked: yes`', () => {
+            expect(
+                _scan(withMarker('<!-- blocked-by: kernel-budget | asked: no — no TTY in CI -->')),
+            ).toEqual([]);
+            expect(_scan(withMarker('<!-- blocked-by: kernel-budget | asked: yes -->'))).toEqual([]);
+        });
     });
 
     it('deliberately broken fixture — missing fields + dangling blocked-by reported with line numbers', () => {
