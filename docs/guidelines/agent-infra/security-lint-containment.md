@@ -70,6 +70,17 @@ auditable, reasoned, content-bound marker placed anywhere in the file:
   edit would re-fire it, which is how blanket suppressions get written).
   A `dist/agent-src/` path folds to its `src/` original first: the projection is
   byte-exact by contract, so an artifact and its copy are one identity.
+- **A pair pinned equal by a parity test carries ONE HASH PER IDENTITY.** The
+  fold above covers `dist/agent-src/` and nothing else, so where a second
+  hand-maintained copy exists and a test asserts the two are byte-identical —
+  `src/subagents/<stem>.md` and `docs/wedge/<stem>/<stem>.md`, pinned by
+  `tests/scripts/subagent_distribution.test.ts` — one hash cannot satisfy both:
+  giving each file its own makes the lines differ and reds the parity test,
+  which is exactly how this was found. Put BOTH hashes in BOTH files. That is
+  what the repeatable token is for, and it is why the grammar has one. A purely
+  GENERATED third copy (`.claude/agents/<stem>.md`) needs no hash of its own:
+  nothing scans it and nobody edits it, so binding it would be a fingerprint
+  for an identity no finding can arise at.
 - Compute one with the linter itself, never by hand — a hash typed from memory
   is a suppression nobody audited.
 
