@@ -88,6 +88,49 @@ authorization. The gate is the authority itself, exercised by a named human,
 plus a clock. Promote when the probe's two conjuncts are both true, and delete
 this stub when its single item is gone.
 
+## Ruling of 2026-09-07 — DECLINED for this round
+
+`road-to-asked-not-parked` reached this stub through its own
+`kernel-ask-form-authority` blocker, which asked the same authority question one
+step wider: whether ask-FORM authority may move out of
+[`user-interaction`](../../../src/rules/user-interaction.md) and
+[`ask-when-uncertain`](../../../src/rules/ask-when-uncertain.md) at all.
+
+**Ruling: declined. Not authorized in this round; current behaviour unchanged;
+no future ruling is prejudged.** Recorded 2026-09-07 by the AI council under the
+standing drain delegation (2 seats, anthropic + openai; framework of record
+[`drain-blocker-dispositions-a.md`](../../evidence/council/drain-blocker-dispositions-a.md)).
+A refusal preserves the status quo and is council-decidable on that framework;
+an authorization would lower a locked-kernel floor and is categorically outside
+it. The stub therefore stays open on its original criterion — nothing here
+promotes or deletes it.
+
+What the ruling covers, precisely:
+
+1. **The `ask-when-uncertain` batch-elicitation carve-out** this stub already
+   holds — unchanged, still parked, still gated on the same two conjuncts.
+2. **The wider ask-form-authority delta** — moving the form prescription out of
+   either kernel rule, into a contract, a host capability, or anywhere else.
+   Declined for this round. Both files are retained verbatim; no file under
+   `src/rules/` was modified by that roadmap.
+3. **Five proposed new Iron Laws** from the source drafts. Refused with it:
+   adding an Iron Law to a kernel rule is the same class of edit, and one of the
+   five duplicates obligations
+   [`no-cheap-questions`](../../../src/rules/no-cheap-questions.md) already
+   carries — so at least one of the five is redundant on its own terms, before
+   the authority question is reached.
+
+**The option-`B` contradiction is resolved, on the sheet's side.**
+[`contract-decision-sheet`](../../../src/agent-src/contexts/execution/contract-decision-sheet.md)
+option `B` asked for the answer shape `"1=x, 2=y"`, which `user-interaction`'s
+Pre-Send Self-Check names as a violation. `B` now takes a single row NUMBER, so
+the sheet's answer domain is one token in every branch. That is the repair the
+blocker named for the declined case, and it needed no kernel edit.
+
+**Authorization records for this delta remain zero** — this ruling is a
+refusal, not an authorization, and must not be read as one when the probe above
+is next evaluated.
+
 ## The residual, stated rather than papered over
 
 Everything the carve-out would authorize **already works** without it, and that
