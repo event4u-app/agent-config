@@ -30,11 +30,15 @@
  */
 
 import { readFileSync } from "node:fs";
+import type { MatchResult, RawOccurrence } from "./ai_tells_rules.js";
 import {
   ALL_TELL_RULES,
   DEFAULT_MAX_CLUSTER_SCORE,
   DEFAULT_MAX_DASH_DENSITY,
   DEFAULT_MAX_HARD,
+  MIN_CONSISTENT_OCCURRENCES,
+  MIN_CONSISTENT_SPREAD,
+  MIN_DENSITY_WORDS,
   sniffLanguage,
 } from "./ai_tells_rules.js";
 import { _classify } from "./lint_hidden_unicode.js";
@@ -48,6 +52,15 @@ import { _classify } from "./lint_hidden_unicode.js";
  */
 export const MAX_SCAN_CHARS = 100_000;
 
+/** Where one match sits, so a finding can be located rather than only counted. */
+export interface Occurrence {
+  /** 1-based. */
+  line: number;
+  /** 1-based, in characters. */
+  column: number;
+  text: string;
+}
+
 export interface RuleHit {
   id: string;
   group: string;
@@ -55,6 +68,18 @@ export interface RuleHit {
   count: number;
   weight: number;
   samples: string[];
+  /** Every match, located. `count` is `occurrences.length`. */
+  occurrences: Occurrence[];
+  /**
+   * `uniform` when the pattern is used at least
+   * `MIN_CONSISTENT_OCCURRENCES` times across at least
+   * `MIN_CONSISTENT_SPREAD` of the document: a habit the author carries
+   * through the whole piece, which is evidence of style rather than of N
+   * independent tells. A uniform cluster pattern contributes its weight ONCE.
+   */
+  consistency: "uniform" | "scattered";
+  /** What the cluster score actually charged for this rule. */
+  scored_count: number;
 }
 
 /**
@@ -77,9 +102,16 @@ export interface TellReport {
   cluster_hits: RuleHit[];
   hard_total: number;
   cluster_score: number;
-  cluster_score_per_500: number;
+  /**
+   * `null` below `MIN_DENSITY_WORDS`: a per-500-words rate extrapolated from a
+   * handful of words is an artifact of the denominator, not a reading of the
+   * prose. `null` says "not evaluated" where a `0` would say "measured clean".
+   */
+  cluster_score_per_500: number | null;
   dash_count: number;
-  dash_density_per_500: number;
+  dash_density_per_500: number | null;
+  /** False when the text is under the floor and neither density was applied. */
+  density_evaluated: boolean;
   per_pattern: Record<string, number>;
   truncated: boolean;
   hidden_unicode: HiddenUnicodeFinding[];
@@ -220,27 +252,82 @@ export function stripExempt(text: string): { base: string; forQuotes: string } {
   const base = t
     .replace(/"[^"\n]{1,300}"/g, " ")
     .replace(/“[^”\n]{1,300}”/g, " ")
-    .replace(/'[^'\n]{1,120}'/g, (m) => (m.includes(" ") ? " " : m));
+    // A single-quoted SPAN, never a pair of contractions. The previous form
+    // matched any two apostrophes on a line with a space between them, so
+    // "In today's fast-paced world, let's be honest" was read as a quotation
+    // and stripped whole — which silently removed two tell families from the
+    // scan. An opening quote must start a token and a closing quote must end
+    // one; an apostrophe inside a word is never either.
+    .replace(
+      /(^|[\s([{"“])'([^'\n]{1,120})'(?=[\s)\]},.!?;:"”]|$)/g,
+      (m, lead: string, inner: string) => (inner.includes(" ") ? `${lead} ` : m),
+    );
   return { base, forQuotes };
 }
 
-function countMatches(text: string, patterns: RegExp[]): { count: number; samples: string[] } {
-  let count = 0;
-  const samples: string[] = [];
+function countMatches(text: string, patterns: RegExp[]): MatchResult {
+  const occurrences: RawOccurrence[] = [];
   for (const p of patterns) {
     const flags = p.flags.includes("g") ? p.flags : p.flags + "g";
     const re = new RegExp(p.source, flags);
     for (const m of text.matchAll(re)) {
-      count += 1;
-      if (samples.length < 3) samples.push(m[0].slice(0, 60).trim());
+      occurrences.push({ index: m.index ?? 0, text: m[0] });
     }
   }
-  return { count, samples };
+  occurrences.sort((a, b) => a.index - b.index);
+  return {
+    count: occurrences.length,
+    samples: occurrences.slice(0, 3).map((o) => o.text.slice(0, 60).trim()),
+    occurrences,
+  };
+}
+
+/** Offset → 1-based line and column, computed once per scan text. */
+function lineIndex(text: string): (index: number) => { line: number; column: number } {
+  const starts = [0];
+  for (let i = 0; i < text.length; i += 1) if (text[i] === "\n") starts.push(i + 1);
+  return (index: number) => {
+    let lo = 0;
+    let hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((starts[mid] as number) <= index) lo = mid;
+      else hi = mid - 1;
+    }
+    return { line: lo + 1, column: index - (starts[lo] as number) + 1 };
+  };
+}
+
+/**
+ * Is this pattern a habit the author carries through the document, or a local
+ * repetition? Without a captured voice sample the skill falls back to defaults,
+ * so consistency is the only intent signal available from the text itself.
+ */
+export function classifyConsistency(
+  occurrences: ReadonlyArray<RawOccurrence>,
+  textLength: number,
+): "uniform" | "scattered" {
+  if (occurrences.length < MIN_CONSISTENT_OCCURRENCES) return "scattered";
+  const first = occurrences[0]?.index ?? 0;
+  const last = occurrences[occurrences.length - 1]?.index ?? 0;
+  const spread = (last - first) / Math.max(textLength, 1);
+  return spread >= MIN_CONSISTENT_SPREAD ? "uniform" : "scattered";
+}
+
+export interface AnalyzeOptions {
+  /**
+   * Rule ids to leave out of the scan entirely — not merely out of the
+   * reported vector. Used by the paired bench to ask what a family was
+   * contributing: a metric that changes when the rule is removed is one the
+   * rule was carrying, and a metric that does not is one it was not.
+   */
+  exclude?: ReadonlySet<string>;
 }
 
 export function analyzeText(
   text: string,
   languageOpt: "en" | "de" | "auto" = "auto",
+  options: AnalyzeOptions = {},
 ): TellReport {
   // Scan the RAW text for hidden-instruction vectors before any stripping —
   // the smuggling layer is invisible and must be reported (untrusted-input).
@@ -253,16 +340,29 @@ export function analyzeText(
   const words = base.split(/\s+/).filter(Boolean).length || 1;
   const language = languageOpt === "auto" ? sniffLanguage(base) : languageOpt;
 
+  const locateBase = lineIndex(base);
+  const locateQuotes = lineIndex(forQuotes);
   const hardHits: RuleHit[] = [];
   const clusterHits: RuleHit[] = [];
   const perPattern: Record<string, number> = {};
 
   for (const rule of ALL_TELL_RULES) {
     if (rule.language !== "any" && rule.language !== language) continue;
+    if (options.exclude?.has(rule.id)) continue;
     const scanText = rule.id === "tell-curly-quotes" ? forQuotes : base;
-    const { count, samples } = countMatches(scanText, rule.patterns);
+    const result: MatchResult = rule.match
+      ? rule.match(scanText, language)
+      : countMatches(scanText, rule.patterns);
+    const { count, samples, occurrences } = result;
     if (count === 0) continue;
     perPattern[rule.id] = count;
+    const locate = scanText === forQuotes ? locateQuotes : locateBase;
+    const consistency = classifyConsistency(occurrences, scanText.length);
+    // A uniform pattern is charged once. A HARD rule is never discounted: its
+    // members are chat artifacts and cutoff disclaimers, and repeating one
+    // through a document makes it more of a defect, not less of one.
+    const scoredCount =
+      rule.severity === "cluster" && consistency === "uniform" ? 1 : count;
     const hit: RuleHit = {
       id: rule.id,
       group: rule.group,
@@ -270,14 +370,19 @@ export function analyzeText(
       count,
       weight: rule.weight,
       samples,
+      occurrences: occurrences.map((o) => ({ ...locate(o.index), text: o.text.slice(0, 120) })),
+      consistency,
+      scored_count: scoredCount,
     };
     (rule.severity === "hard" ? hardHits : clusterHits).push(hit);
   }
 
   const hardTotal = hardHits.reduce((s, h) => s + h.count, 0);
-  const clusterScore = clusterHits.reduce((s, h) => s + h.count * h.weight, 0);
+  const clusterScore = clusterHits.reduce((s, h) => s + h.scored_count * h.weight, 0);
   const dashCount = (forQuotes.match(/[—–]/g) ?? []).length;
-  const per500 = (n: number) => Math.round((n / words) * 500 * 100) / 100;
+  const densityEvaluated = words >= MIN_DENSITY_WORDS;
+  const per500 = (n: number) =>
+    densityEvaluated ? Math.round((n / words) * 500 * 100) / 100 : null;
 
   return {
     words,
@@ -289,6 +394,7 @@ export function analyzeText(
     cluster_score_per_500: per500(clusterScore),
     dash_count: dashCount,
     dash_density_per_500: per500(dashCount),
+    density_evaluated: densityEvaluated,
     per_pattern: perPattern,
     truncated,
     hidden_unicode: hiddenUnicode,
@@ -299,9 +405,9 @@ export function exceedsThresholds(r: TellReport, t: Thresholds): string[] {
   const reasons: string[] = [];
   if (r.hard_total > t.maxHard)
     reasons.push(`hard hits ${r.hard_total} > ${t.maxHard}`);
-  if (r.cluster_score_per_500 > t.maxScore)
+  if (r.cluster_score_per_500 !== null && r.cluster_score_per_500 > t.maxScore)
     reasons.push(`cluster score ${r.cluster_score_per_500}/500w > ${t.maxScore}`);
-  if (r.dash_density_per_500 > t.maxDashDensity)
+  if (r.dash_density_per_500 !== null && r.dash_density_per_500 > t.maxDashDensity)
     reasons.push(`dash density ${r.dash_density_per_500}/500w > ${t.maxDashDensity}`);
   return reasons;
 }
@@ -309,15 +415,31 @@ export function exceedsThresholds(r: TellReport, t: Thresholds): string[] {
 function humanSummary(name: string, r: TellReport, reasons: string[]): string {
   const lines: string[] = [];
   const verdict = reasons.length === 0 ? "✅" : "❌";
+  const density = r.density_evaluated
+    ? `cluster ${r.cluster_score_per_500}/500w · dashes ${r.dash_density_per_500}/500w`
+    : `density not evaluated (${r.words} words < ${MIN_DENSITY_WORDS}-word floor; ` +
+      `${r.cluster_score} cluster weight, ${r.dash_count} dash(es) counted)`;
   lines.push(
-    `${verdict} ${name} — ${r.words} words (${r.language}) · hard ${r.hard_total} · ` +
-      `cluster ${r.cluster_score_per_500}/500w · dashes ${r.dash_density_per_500}/500w`,
+    `${verdict} ${name} — ${r.words} words (${r.language}) · hard ${r.hard_total} · ${density}`,
   );
   for (const h of [...r.hard_hits, ...r.cluster_hits]) {
-    lines.push(
-      `   ${h.severity === "hard" ? "‼" : "·"} ${h.id} ×${h.count}` +
-        (h.samples.length ? `  (${h.samples.join(" | ")})` : ""),
-    );
+    const where = h.occurrences
+      .slice(0, 3)
+      .map((o) => `${o.line}:${o.column}`)
+      .join(", ");
+    if (h.consistency === "uniform") {
+      lines.push(
+        `   ≡ ${h.id} — used consistently throughout (${h.count} occurrences, ` +
+          `${where}${h.occurrences.length > 3 ? ", …" : ""}); read as style, ` +
+          `charged once, not as ${h.count} independent tells`,
+      );
+    } else {
+      lines.push(
+        `   ${h.severity === "hard" ? "‼" : "·"} ${h.id} ×${h.count}` +
+          (where ? ` @ ${where}${h.occurrences.length > 3 ? ", …" : ""}` : "") +
+          (h.samples.length ? `  (${h.samples.join(" | ")})` : ""),
+      );
+    }
   }
   for (const reason of reasons) lines.push(`   → over threshold: ${reason}`);
   for (const h of r.hidden_unicode) {

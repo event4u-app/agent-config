@@ -80,17 +80,33 @@ runs over repo documentation — see SKILL.md § When NOT to use.
 ## Self-validation thresholds (U4 — deterministic self-check bounds)
 
 Read after a rewrite; each bound is a **default, not a suite measurement**.
-The deterministic subset is enforced by
-[`detect_ai_tells.ts`](../../../scripts/detect_ai_tells.ts) when a runtime is
-available; without one, the step-3 audit checks these by eye.
 
-| Bound | Default | Source |
-|---|---|---|
-| Em/en-dash density | ≤ ~2 per 500 words | patterns.md 3.1 (CP1 parity with design-antipatterns) |
-| Consecutive staccato fragments | ≤ 3 short declaratives in a row | patterns.md 3.8 |
-| Uniform-shape bullets | merge a run of ≥ 4 identically-shaped `- **X:** …` bullets into prose or real sentences | patterns.md 3.3 |
-| Hedge stack | ≤ 1 hedge per claim | patterns.md 5.2 |
-| Stock-vocabulary density | ≤ 2 Tier-Medium AI-vocabulary words per 100 words | patterns.md 2.1 |
+Two columns, because "enforced by the scanner" was one word doing two jobs and
+three of these bounds were attributed to code that did not implement them. A
+**mechanical signal** is something [`detect_ai_tells.ts`](../../../scripts/detect_ai_tells.ts)
+actually counts. **Bound applied by** says who compares that count against the
+number in the Default column — the scanner, when a runtime is available, or the
+step-3 audit by eye. A row can have a signal and still be eye-checked: the
+count exists, the threshold is not machine-applied.
+
+`tests/scripts/tell_bound_attribution.test.ts` reads this table and probes the
+scanner for every row, so a bound claimed here and absent from the code fails
+the suite.
+
+| Bound | Default | Mechanical signal | Bound applied by | Source |
+|---|---|---|---|---|
+| Em/en-dash density | ≤ ~2 per 500 words; not evaluated below a 50-word floor | `dash_density_per_500` | scanner | patterns.md 3.1 (CP1 parity with design-antipatterns) |
+| Consecutive staccato fragments | ≤ 3 short declaratives in a row | `tell-staccato-run` | scanner | patterns.md 3.8 |
+| Uniform-shape bullets | merge a run of ≥ 4 identically-shaped `- **X:** …` bullets into prose or real sentences | `tell-uniform-bullet-run` | scanner | patterns.md 3.3 |
+| Hedge stack | ≤ 1 hedge per claim | `tell-hedging-stack` | step-3 eye-check | patterns.md 5.2 |
+| Stock-vocabulary density | ≤ 2 Tier-Medium AI-vocabulary words per 100 words | `tell-ai-vocabulary` | step-3 eye-check | patterns.md 2.1 |
+
+The two eye-checked rows are eye-checked for the same reason: their signal is a
+count of fixed phrases or words, and their bound is stated per *claim* and per
+*100 words* — neither of which the scanner segments. `tell-hedging-stack`
+matches four stacked-hedge phrases, not one-hedge-per-claim;
+`tell-ai-vocabulary` contributes occurrences to a per-500-words cluster score,
+which is a different denominator from the per-100-words bound above.
 
 **Did the rewrite clear the flagged tells without introducing new ones?** A
 re-run over already-clean prose is a no-op. If a bound is intentionally

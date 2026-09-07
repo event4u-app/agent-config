@@ -31,6 +31,9 @@ function member(name: string, enabled: boolean, model = 'm'): MemberConfig {
         participate_low_impact: true,
         prompt_cache_ttl: '5m',
     verified_at: null,
+    disabled_reason: null,
+    policy_exclusion: null,
+    content_ceiling: 'project-content' as const,
     };
 }
 
