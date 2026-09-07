@@ -406,7 +406,7 @@ and still binding:
 2. **Asked.** With a terminal reachable and the answer still missing, the run
    prompts for it and writes what the human types. An empty answer changes
    nothing.
-3. **Refused.** Non-interactive with nothing staged — the original behaviour,
+3. **Refused.** Non-interactive with nothing staged — the original behavior,
    unchanged, which is what keeps CI and every scripted release honest.
 
 Every guard predicate still runs over the result: placeholders, the
