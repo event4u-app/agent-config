@@ -234,10 +234,25 @@ between a re-run working and crashing.
 ## 6. What can go wrong (known checkpoints)
 
 - **`the X.Y.Z release highlights are still the generator's draft`** → the
-  curated-head / governance-mix obligation. Edit the `## [X.Y.Z]` section in
-  `CHANGELOG.md` **on the `release/X.Y.Z` branch you are already standing on**,
-  then re-run `task release`. Nothing has been committed or pushed; the dirty
-  tree is expected and is swept into the release commit by step 3.
+  curated-head / governance-mix obligation. **From a terminal this no longer
+  aborts:** the run asks for the answers and writes them. You reach this message
+  only in a non-interactive run (CI, a pipe, a background job) with nothing
+  staged. Two fixes, either one:
+  - **stage it** — put a `> Next cycle ships …` line and/or a
+    `> **Previous cycle:** …` line under `## [Unreleased]` whenever the answer
+    is known; the next release consumes both and clears them from
+    `[Unreleased]`. The measured level is never staged, only the answer;
+  - **or edit the `## [X.Y.Z]` section** on the `release/X.Y.Z` branch you are
+    already standing on and re-run `task release`. Nothing has been committed or
+    pushed; the dirty tree is expected and is swept into the release commit by
+    step 3.
+- **`release must run from 'main' or 'release/<NEXT>.0'` while you are standing
+  on `release/<THIS>.0`** → fixed 2026-09-07, and worth recognising if you see
+  it in an older shell. Step 2 had already bumped `package.json`, so a plain
+  re-run computed the bump from the bumped version and asked the preflight about
+  a version one higher than the one in flight. `_detect_in_flight_target` now
+  runs unconditionally instead of only under `--resume`, so the target is read
+  off the repository state.
 - **Release PR checks stuck "expected"** → the approve-workflows checkpoint in
   § 3.A step 3. Not a failure; click approve.
 - **Consistency check red on the release PR** → step 4's `task release-prepare`

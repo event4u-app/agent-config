@@ -152,6 +152,58 @@ elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
     exit 1
 fi
 
+# BRANCH WORK COMMITTED — after base freshness, before everything else.
+#
+# Ordering is deliberate in BOTH directions. It runs AFTER base freshness
+# because the remedy there (`task push-ready`) merges, and a merge changes the
+# working tree this gate reads — checking first would answer against a tree the
+# operator is about to replace. It runs BEFORE the remaining gates because they
+# all answer against the working tree, and a tree carrying unfinished work
+# makes their verdicts describe something that is not being pushed.
+#
+# Measured twice, and both placements were wrong for a different reason.
+# Placing it FIRST reded tests/scripts/prepush_base_freshness.test.ts, which
+# executes the whole hook and asserts the freshness block is reached. Placing
+# it between the next block's comment header and that block's `echo` reded
+# check_installed_hooks_fresh's advisory pin, whose extraction runs from that
+# header to the following task-availability check and so swallowed this block's
+# `exit 1`. A block goes BEFORE a neighbour's comment header, never between the
+# header and its code.
+#
+# And this paragraph may NOT name that header literally: the pin locates it with
+# a plain indexOf over the rendered hook, so a comment quoting the string
+# becomes the first match and truncates the block to nothing. An anchor that is
+# also content is not an anchor — spelled out here because the obvious edit to
+# this comment is to put the string back in for clarity.
+#
+# The defect it exists for, measured 2026-09-07: a reconciled baseline was
+# written into gate-violation-baselines.json AFTER `git add`, so
+# `git commit --no-edit` captured the staged side, the edit stayed in the tree,
+# and the push shipped a branch whose commits contradicted it. CI cannot see
+# this class at all — it checks out the commit, not the tree the edit is in.
+#
+# It blocks only what it can attribute to THIS branch (staged paths, and dirty
+# paths this branch's own commits touch). A gate script's report output and a
+# parallel session's edit are named and waved through, which is what keeps this
+# from becoming the blanket clean-tree rule that would train the operator to
+# set the skip variable.
+echo "🔍 Branch work committed — is any of this branch's own work still uncommitted?"
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_WORKTREE:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1"
+elif [ ! -x ./scripts-run ]; then
+    echo "⚠️  ./scripts-run not found — skipping the worktree check for this push."
+elif ! ./scripts-run src/scripts/check_branch_work_committed --quiet; then
+    echo ""
+    echo "   Push blocked — this branch's own work is not all committed, so the"
+    echo "   pushed branch would carry commits its own tree contradicts."
+    echo ""
+    echo "   Commit them, or 'git restore' whatever was not meant to land."
+    echo ""
+    echo "   This hook refuses; it never commits for you. Bypass a genuine WIP"
+    echo "   push with AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1."
+    exit 1
+fi
+
 # INSTALLED-HOOK FRESHNESS — ADVISORY, and deliberately AFTER base freshness.
 #
 # What it answers: are the hooks in .git/hooks still what THIS checkout's
