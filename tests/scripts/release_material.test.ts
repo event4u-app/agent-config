@@ -22,7 +22,6 @@ import {
     CURATED_HEAD_INSTRUCTION,
     CURATED_HEAD_INSTRUCTION_COMMENT,
     MIX_RESPONSE_MARKER,
-    MIX_RESPONSE_PLACEHOLDER,
     extract_changelog_section,
     normalize_release_text,
     render_mix_response,
@@ -38,16 +37,8 @@ import {
 } from '../../src/scripts/_lib/release_material.js';
 import { check_surface_equality } from '../../src/scripts/check_release_surface_equality.js';
 import {
-    apply_mix_answer,
-    apply_readback,
-    drop_staged_response,
-    mix_response_block,
-    mix_response_blockers,
-    promise_readback_blockers,
     publication_blockers,
     section_publication_blockers,
-    staged_response,
-    unreleased_body,
 } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
@@ -456,258 +447,92 @@ describe('publication integrity — acceptance over npm pack', () => {
 });
 
 /**
- * The governance-versus-product obligation, read by the SAME predicate on both
- * sides of the push.
+ * The governance-versus-product line is a MEASUREMENT, and this pins that it
+ * asks the releaser for nothing (ADR-261).
  *
- * 14.17.0 (PR #1856) failed `check_release_highlights` on a missing
- * `> **Governance mix:**` line. Nothing emitted the line and no local guard
- * asked for it, so the earliest possible discovery was the release PR — a
- * property `docs/contracts/CHANGELOG-conventions.md` had recorded as an
- * accepted gap. These specs pin the three pieces that close it: the writer
- * emits, the predicate refuses the writer's own placeholder, and the predicate
- * is the one both guards call.
+ * The deleted mechanism is the subject here, so the assertions are denials.
+ * That is deliberate: a removal tested only by the absence of its old specs is
+ * a removal nothing can stop from being reinstated by accident. Each case below
+ * fails if any part of the written-answer obligation comes back.
+ *
+ * History, kept because the reversal is the point. 14.17.0 (PR #1856) failed
+ * `check_release_highlights` on a missing `> **Governance mix:**` line, and the
+ * fix chain that followed — emit it, refuse a placeholder in it, share the
+ * predicate across guards, stage an answer under `## [Unreleased]`, prompt for
+ * one from a terminal — ended with a release run that cut two sentences out of
+ * an unrelated `[Unreleased]` entry and pasted them into the release head. The
+ * obligation is gone; the measurement stays.
  */
-describe('governance-mix response', () => {
+describe('governance-mix line — measured, never demanded', () => {
     const V = '9.9.9';
     const LEVEL = 'governance-only 31 vs consumer-only 13 (taxonomy 1.0.0)';
     const head = '### Release highlights\n\n- **Fixes:** x';
 
-    it('is not owed when the obligation did not trigger', () => {
-        expect(mix_response_blockers(head, V, '`main`', null)).toEqual([]);
-        expect(mix_response_blockers(head, V, '`main`', { triggered: false, level: LEVEL })).toEqual(
-            [],
-        );
+    it('the writer emits exactly one line, and it is fully machine-written', () => {
+        const lines = render_mix_response(LEVEL);
+        expect(lines).toEqual([`> ${MIX_RESPONSE_MARKER} ${LEVEL}.`]);
     });
 
-    it('refuses a triggered obligation the section does not answer', () => {
-        const out = mix_response_blockers(head, V, '`main`', { triggered: true, level: LEVEL });
-        expect(out).toHaveLength(1);
-        expect(out[0]).toContain(MIX_RESPONSE_MARKER);
-        expect(out[0]).toContain(LEVEL);
+    it('emits no placeholder a human would have to replace', () => {
+        const rendered = render_mix_response(LEVEL).join('\n');
+        // The two tokens the deleted obligation shipped, as literals: importing
+        // them is impossible now, and that is what this case is asserting.
+        expect(rendered).not.toContain('<the consumer work>');
+        expect(rendered).not.toContain('<roadmap or issue>');
+        expect(rendered).not.toContain('Next cycle ships');
     });
 
-    it('refuses the second placeholder too — CHANGELOG.md is published to npm', () => {
-        // Deleting only the first token would leave `<roadmap or issue>` in a
-        // file `package.json` `files` ships, which is the same failure
-        // CURATED_HEAD_INSTRUCTION exists for, one token to the right.
-        const half =
-            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
-            '> Next cycle ships the install flow, tracked in <roadmap or issue>.';
-        expect(half).not.toContain(MIX_RESPONSE_PLACEHOLDER);
-        const out = mix_response_blockers(half, V, '`main`', { triggered: true, level: LEVEL });
-        expect(out).toHaveLength(1);
-        expect(out[0]).toContain('<roadmap or issue>');
+    it('a section with no written answer is publishable', () => {
+        // The whole deletion, in one assertion. Before ADR-261 a section
+        // carrying the measured level and nothing else was refused as a
+        // "smuggled auto-approval"; now it is simply a released section.
+        const section = `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n\nTests: 100 (+1 since 9.9.8)`;
+        expect(publication_blockers(section, V)).toEqual([]);
+        expect(section_publication_blockers(section, V)).toEqual([]);
     });
 
-    it('refuses the writer’s placeholder — an emitted line is not an answer', () => {
-        // The measured level alone clears the 40-character floor, so without
-        // this the generator would discharge a written-answer obligation for
-        // itself. That is the smuggled auto-approval the placeholder prevents.
-        const emitted = `${head}\n\n${render_mix_response(LEVEL).join('\n')}`;
-        expect(emitted).toContain(MIX_RESPONSE_PLACEHOLDER);
-        const out = mix_response_blockers(emitted, V, '`main`', { triggered: true, level: LEVEL });
-        expect(out).toHaveLength(1);
-        expect(out[0]).toContain(MIX_RESPONSE_PLACEHOLDER);
-    });
-
-    it('refuses a section whose placeholder line was simply deleted', () => {
-        // The measured level alone is 54 characters, so a floor that read only
-        // the first line after the marker ACCEPTED this — the machine
-        // discharging the obligation on the author's behalf, which is exactly
-        // what the placeholder exists to prevent. Reproduced before the fix.
-        const machineOnly = `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.`;
-        expect(machineOnly).not.toContain(MIX_RESPONSE_PLACEHOLDER);
-        const out = mix_response_blockers(machineOnly, V, '`main`', { triggered: true, level: LEVEL });
-        expect(out).toHaveLength(1);
-        expect(out[0]).toContain('no written answer beyond the measured level');
-    });
-
-    it('accepts the answer on the second line — the writer’s own template shape', () => {
-        // `render_mix_response` puts the level on line 1 and the answer on
-        // line 2, so a first-line-only read refused the format the tool itself
-        // emits. Reproduced before the fix.
-        const onLineTwo =
-            `${head}\n\n> ${MIX_RESPONSE_MARKER}\n` +
-            '> Next cycle ships the installer UX rewrite, tracked in road-to-install-ux.';
-        expect(
-            mix_response_blockers(onLineTwo, V, '`main`', { triggered: true, level: LEVEL }),
-        ).toEqual([]);
-    });
-
-    it('does not read a placeholder out of unrelated changelog prose', () => {
-        // The scan used to run over the whole section body, so an ordinary
-        // entry mentioning the token blocked the release.
-        const elsewhere =
-            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
-            '> Next cycle ships the installer UX rewrite, tracked in road-to-install-ux.\n\n' +
-            '### Features\n\n* docs: explain the `<roadmap or issue>` placeholder (abc1234)';
-        expect(
-            mix_response_blockers(elsewhere, V, '`main`', { triggered: true, level: LEVEL }),
-        ).toEqual([]);
-    });
-
-    it('accepts a written answer', () => {
-        const answered =
-            `${head}\n\n> ${MIX_RESPONSE_MARKER} ${LEVEL}.\n` +
-            '> Next cycle ships the consumer-facing install flow, tracked in road-to-install-ux.';
-        expect(mix_response_blockers(answered, V, '`main`', { triggered: true, level: LEVEL })).toEqual(
-            [],
-        );
-    });
-
-    it('refuses a bare marker with no answer after it', () => {
-        const bare = `${head}\n\n> ${MIX_RESPONSE_MARKER}\n`;
-        const out = mix_response_blockers(bare, V, '`main`', { triggered: true, level: LEVEL });
-        expect(out).toHaveLength(1);
-    });
-
-    it('reaches the section-level predicate the guards call', () => {
-        // The head-level predicate stays usable with a bare head (the prefill
-        // specs pass fragments); the section level is what the three guard
-        // sites read, and it is where the tests footer joins the mix response.
+    it('a section with no mix line at all is publishable', () => {
         const section = `${head}\n\nTests: 100 (+1 since 9.9.8)`;
         expect(publication_blockers(section, V)).toEqual([]);
-        const blocked = section_publication_blockers(section, V, '`main`', {
-            triggered: true,
-            level: LEVEL,
-        });
-        expect(blocked.some((b) => b.includes(MIX_RESPONSE_MARKER))).toBe(true);
+        expect(section_publication_blockers(section, V)).toEqual([]);
     });
 
-    it('refuses a section that lost its Tests footer', () => {
+    it('the removed predicates and sentinels are gone from the module surface', async () => {
+        const highlights = await import('../../src/scripts/_lib/release_highlights.js');
+        const material = await import('../../src/scripts/_lib/release_material.js');
+        for (const name of [
+            'mix_response_blockers',
+            'promise_readback_blockers',
+            'previous_promise',
+            'readback_answer',
+            'human_answer',
+            'mix_response_block',
+            'staged_response',
+            'drop_staged_response',
+            'apply_mix_answer',
+            'apply_readback',
+            'unreleased_body',
+            'MIX_RESPONSE_MIN_CHARS',
+        ]) {
+            expect(highlights, name).not.toHaveProperty(name);
+        }
+        for (const name of [
+            'MIX_RESPONSE_PLACEHOLDER',
+            'MIX_RESPONSE_PLACEHOLDERS',
+            'PROMISE_PHRASE',
+            'PROMISE_READBACK_MARKER',
+            'PROMISE_OUTCOMES',
+        ]) {
+            expect(material, name).not.toHaveProperty(name);
+        }
+        // Sensitivity: the same shape over a name that IS still exported must
+        // fail, so a typo in the list above cannot make every case vacuous.
+        expect(material).toHaveProperty('MIX_RESPONSE_MARKER');
+        expect(highlights).toHaveProperty('publication_blockers');
+    });
+
+    it('still refuses a section that lost its Tests footer', () => {
         const out = section_publication_blockers(head, V);
         expect(out.some((b) => b.includes('Tests: N'))).toBe(true);
-    });
-});
-
-// ─── staged answers — the obligation becomes answerable, not just refusable ──
-// Regression lock for the defect measured across 14.18.0, 14.19.0 and 14.20.0:
-// `task release` bumps the version, refuses over the governance placeholder, and
-// the maintainer discharges the obligation BY HAND mid-release. At 14.19.0 the
-// answer had already been written into `## [Unreleased]` one commit earlier
-// (a9bd75d55) and nothing read it, so it was moved into the section by hand
-// anyway — a prepared answer the pipeline still refused over.
-//
-// ADR-253 is untouched by these cases: every answer here is authored by a human
-// and every guard predicate still runs over it. What is tested is only WHEN it
-// is read.
-describe('staged release answers', () => {
-    const LEVEL = 'governance-only 9 vs consumer-only 2 (taxonomy 1.0.0)';
-    const staged = (mix: string, readback: string): string =>
-        [
-            '# Changelog',
-            '',
-            '## [Unreleased]',
-            '',
-            mix,
-            '',
-            readback,
-            '',
-            '### Fixed',
-            '',
-            '- an entry that must survive',
-            '',
-            '## [9.1.0](x) (2026-01-01)',
-            '',
-            '### Release highlights',
-            '',
-            '- **Behaviour changes:** _none_',
-            '',
-            `> **Governance mix:** ${LEVEL}.`,
-            '> Next cycle ships <the consumer work>, tracked in <roadmap or issue>.',
-            '',
-            '### Features',
-            '',
-            '* a: b',
-            '',
-        ].join('\n');
-
-    const MIX = '> Next cycle ships the ask surface, tracked in `road-to-asked-not-parked.md`.';
-    const RB = '> **Previous cycle:** the 9.0.0 head promised the bridge repair. It **shipped**.';
-
-    it('reads a staged block out of [Unreleased] only', () => {
-        const text = staged(MIX, RB);
-        expect(unreleased_body(text)).toContain('an entry that must survive');
-        expect(staged_response(text, 'Next cycle ships')).toBe(MIX);
-        expect(staged_response(text, '**Previous cycle:**')).toBe(RB);
-    });
-
-    // THIS is the scope guard, and the placement is deliberate. The obvious
-    // place for it is the case above — assert the staged read does not contain
-    // `<the consumer work>` — and that assertion CANNOT fail: `[Unreleased]`
-    // sits above the release section by convention, so an unscoped `indexOf`
-    // still finds the staged line first. Measured by neutralising the scope and
-    // watching that case stay green while this one went red.
-    //
-    // With nothing staged there is no earlier match, so an unscoped reader falls
-    // through to the section's own placeholder line and stages the GENERATOR's
-    // draft as the human answer — the one outcome ADR-253 exists to prevent.
-    it('nothing staged → null, so the guard refuses exactly as before', () => {
-        const text = staged('', '').replace(/\n\n\n+/gu, '\n\n');
-        expect(staged_response(text, 'Next cycle ships')).toBeNull();
-        expect(staged_response(text, '**Previous cycle:**')).toBeNull();
-    });
-
-    it('THE FIX: applying both answers clears both obligations', () => {
-        const text = staged(MIX, RB);
-        const sec = extract_changelog_section(text, '9.1.0');
-        expect(sec).not.toBeNull();
-        let body = apply_mix_answer(sec!.body, [MIX]);
-        body = apply_readback(body, RB);
-
-        expect(
-            mix_response_blockers(body, '9.1.0', 'x', { triggered: true, level: LEVEL }),
-        ).toEqual([]);
-        expect(
-            promise_readback_blockers(body, '9.1.0', '9.0.0', '> Next cycle ships something', 'x'),
-        ).toEqual([]);
-    });
-
-    it('keeps the measured level as the generator rendered it', () => {
-        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
-        const body = apply_mix_answer(sec!.body, [MIX]);
-        expect(body).toContain(`> **Governance mix:** ${LEVEL}.`);
-        expect(body).not.toContain('<the consumer work>');
-        expect(body).not.toContain('<roadmap or issue>');
-    });
-
-    it('separates the two blocks, so neither swallows the other', () => {
-        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
-        let body = apply_mix_answer(sec!.body, [MIX]);
-        body = apply_readback(body, RB);
-        const mi = body.indexOf('**Governance mix:**');
-        const block = mix_response_block(body, body.lastIndexOf('\n', mi) + 1);
-        // Without the blank line the read-back rides inside the mix block, where
-        // `human_answer` would count it toward the mix length floor.
-        expect(block).not.toContain('Previous cycle');
-    });
-
-    it('never overwrites a read-back a human put in the section directly', () => {
-        const sec = extract_changelog_section(staged(MIX, RB), '9.1.0');
-        const withOwn = `${sec!.body}\n\n> **Previous cycle:** hand-written, keep me.`;
-        expect(apply_readback(withOwn, RB)).toBe(withOwn);
-    });
-
-    it('a staged answer still carrying a placeholder is returned, not filtered', () => {
-        // Dropping it silently would turn a half-finished answer into a MISSING
-        // one — a different defect with a different message.
-        const text = staged('> Next cycle ships <the consumer work>, tracked in x.', RB);
-        expect(staged_response(text, 'Next cycle ships')).toContain('<the consumer work>');
-    });
-
-    it('consuming a block empties it from [Unreleased] and keeps the entries', () => {
-        let text = staged(MIX, RB);
-        text = drop_staged_response(text, MIX);
-        text = drop_staged_response(text, RB);
-        const rest = unreleased_body(text);
-        expect(rest).not.toContain('Next cycle ships');
-        expect(rest).not.toContain('Previous cycle');
-        expect(rest).toContain('an entry that must survive');
-        expect(text).toContain('* a: b');
-    });
-
-    it('no [Unreleased] section at all → null, never a throw', () => {
-        expect(unreleased_body('# Changelog\n\n## [9.1.0](x)\n\nbody\n')).toBeNull();
-        expect(staged_response('# Changelog\n', 'Next cycle ships')).toBeNull();
     });
 });

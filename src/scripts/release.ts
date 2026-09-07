@@ -555,8 +555,8 @@ function render_changelog_entry(
 
     // The curated head sits above the generated log, which stays unchanged.
     const body_lines: string[] = [...render_release_head(opts.head ?? {})];
-    // Under the head and outside it — rationale on `MIX_RESPONSE_PLACEHOLDER`.
-    if (opts.mix?.triggered) {
+    // Under the head, outside it; any resolved reading — see `MixObligation`.
+    if (opts.mix) {
         body_lines.push('');
         body_lines.push(...render_mix_response(opts.mix.level));
     }

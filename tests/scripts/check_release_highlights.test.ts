@@ -25,8 +25,6 @@ import {
 import {
     DERIVED_MARKER,
     derive_category_hits,
-    previous_promise,
-    promise_readback_blockers,
     render_derived_head_values,
     stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
@@ -515,71 +513,99 @@ describe('§ 1.3 — the read is scoped to the section under release', () => {
     });
 });
 
-describe('the previous head\'s promise is read back', () => {
-    const PROMISE = [
-        '> **Governance mix:** governance-only 5 vs consumer-only 1 (taxonomy 1.0.0).',
-        '> Next cycle ships the widget repair, tracked in `road-to-widget`.',
-    ].join('\n');
-
-    function changelog(readback: string, previousBlock = PROMISE): string {
-        return [
-            '# Changelog',
-            '',
-            '## [9.9.9](https://example.invalid/c) (2026-09-09)',
-            '',
-            '### Release highlights',
-            '',
-            '- **Behaviour changes:** _none_',
-            readback,
-            '## [9.9.8](https://example.invalid/c) (2026-09-08)',
-            '',
-            '### Release highlights',
-            '',
-            '- **Behaviour changes:** _none_',
-            '',
-            previousBlock,
-            '',
-        ].join('\n');
+/**
+ * The read-back obligation is deleted (ADR-261) — pinned as a denial.
+ *
+ * The mechanism it replaced: the previous section's `Next cycle ships …`
+ * promise had to be answered by the next release with `shipped` / `did not
+ * ship` / `withdrawn`. It refused a MISSING answer at the release PR, which
+ * meant a version could not ship until a human wrote prose about a cycle that
+ * had already gone by. The owner removed it; this case exists so a
+ * reinstatement is a visible test change rather than a silent one.
+ *
+ * `previous_changelog_version` survives the deletion and keeps its own case —
+ * it is section arithmetic used elsewhere, not part of the obligation.
+ */
+describe('no promise read-back is owed (ADR-261)', () => {
+    /**
+     * Driven through `main()`, not through a helper predicate.
+     *
+     * The first version of this block asserted only that
+     * `previous_changelog_version` still finds the previous section and that
+     * the fixture string contains the promise phrase. A neutral review caught
+     * that it had no discriminating power: a partial revert that re-added a
+     * read-back refusal inside `main()` — re-implemented, unexported — would
+     * leave those assertions green while the CLI blocked a real release. The
+     * exit code is the only thing that decides whether the gate refuses, so
+     * that is what is asserted here.
+     */
+    function runGate(text: string, target: string): number {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'release-readback-'));
+        const changelog = path.join(dir, 'CHANGELOG.md');
+        fs.writeFileSync(changelog, text);
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            return main(['--version', target, '--from', 'HEAD', '--to', 'HEAD', '--changelog', changelog]);
+        } finally {
+            spy.mockRestore();
+            errSpy.mockRestore();
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     }
 
-    it('refuses a head that leaves the previous promise unanswered', () => {
-        const blockers = promise_readback_blockers('- **Behaviour changes:** _none_', '9.9.9', '9.9.8', PROMISE);
-        expect(blockers).toHaveLength(1);
-        expect(blockers[0]).toContain('does not answer');
+    const CLEAN = render_release_head({
+        'Behaviour changes': 'the port branch now refuses on an unrewritten head.',
+    }).join('\n');
+
+    /** 9.9.8 promises; 9.9.9 says nothing about it. The refused state, before ADR-261. */
+    const UNANSWERED = [
+        '# Changelog',
+        '',
+        `## [9.9.9](https://example.invalid) (2026-09-09)`,
+        '',
+        CLEAN,
+        '',
+        `## [9.9.8](https://example.invalid) (2026-09-08)`,
+        '',
+        CLEAN,
+        '',
+        '> **Governance mix:** governance-only 5 vs consumer-only 1 (taxonomy 1.0.0).',
+        '> Next cycle ships the widget repair, tracked in `road-to-widget`.',
+        '',
+    ].join('\n');
+
+    it('the gate exits 0 on a head that leaves the previous promise unanswered', () => {
+        expect(runGate(UNANSWERED, '9.9.9')).toBe(0);
     });
 
-    // All three outcomes pass. The check is about ANSWERING, never about having
-    // kept the promise — refusing an unkept one would price honesty above silence.
-    it.each([
-        ['shipped', 'the widget repair promised in 9.9.8 shipped, in the observer rewrite.'],
-        ['did not ship', 'the widget repair promised in 9.9.8 did not ship; its roadmap is still open.'],
-        ['withdrawn', 'the widget repair promised in 9.9.8 is withdrawn — the surface it repaired is gone.'],
-    ])('accepts the %s form', (_outcome, answer) => {
-        const body = `- **Behaviour changes:** _none_\n\n> **Previous cycle:** ${answer}`;
-        expect(promise_readback_blockers(body, '9.9.9', '9.9.8', PROMISE)).toEqual([]);
-    });
-
-    it('refuses an answer that names no outcome, and one shorter than a written answer', () => {
-        const vague = '> **Previous cycle:** the widget repair remains an open item we keep tracking.';
-        expect(promise_readback_blockers(vague, '9.9.9', '9.9.8', PROMISE)[0]).toContain('names no outcome');
-        expect(promise_readback_blockers('> **Previous cycle:** shipped.', '9.9.9', '9.9.8', PROMISE)[0]).toContain(
-            'shorter than a written answer',
+    it('SENSITIVITY: the same run still refuses an unrewritten draft head', () => {
+        // Without this, "exits 0" above is equally satisfied by a gate that
+        // reads nothing at all — which is exactly what the removal must NOT
+        // have produced.
+        const marked = UNANSWERED.replace(
+            CLEAN,
+            render_release_head({
+                'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
+            }).join('\n'),
         );
+        expect(runGate(marked, '9.9.9')).toBe(1);
     });
 
-    it('owes nothing when the previous section made no promise', () => {
-        const text = changelog('', '> **Governance mix:** governance-only 5 vs consumer-only 1. Justified: the cycle was governance work.');
-        expect(previous_promise(text, '9.9.8')).toBeNull();
-        expect(promise_readback_blockers('body', '9.9.9', '9.9.8', null)).toEqual([]);
+    it('the gate exports no read-back or governance-mix check at all', async () => {
+        const gate = await import('../../src/scripts/check_release_highlights.js');
+        expect(gate).not.toHaveProperty('check_previous_promise_readback');
+        expect(gate).not.toHaveProperty('check_governance_mix_response');
+        // Sensitivity: a name that IS still exported, so a rename above cannot
+        // make both assertions vacuous.
+        expect(gate).toHaveProperty('highlight_contradictions');
     });
 
-    it('reads the previous version out of the changelog, not out of git', () => {
-        const text = changelog('');
-        expect(previous_changelog_version(text, '9.9.9')).toBe('9.9.8');
-        // A section still under authoring is not named by version; the newest
-        // released section is then the one that made the promise.
-        expect(previous_changelog_version(text, '9.10.0')).toBe('9.9.9');
-        expect(previous_promise(text, '9.9.8')).toContain('Next cycle ships');
+    it('previous_changelog_version still reads the section order, not git', () => {
+        // Survives the deletion — it is section arithmetic used elsewhere, not
+        // part of the removed obligation.
+        expect(previous_changelog_version(UNANSWERED, '9.9.9')).toBe('9.9.8');
+        expect(previous_changelog_version(UNANSWERED, '9.10.0')).toBe('9.9.9');
     });
 });
 

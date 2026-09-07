@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-04
 decision: per-pr-user-artifact-gate-declined
 supersedes: —
-superseded_by: —
+superseded_by: 261 (§ the response obligation only)
 phase: road-to-meta-ratio-measured · Phase 1.1
 type: structural
 reopen_policy: directional
@@ -200,6 +200,9 @@ above, and it is the reason no threshold is set here.
 ## References
 
 - `agents/roadmaps/archive/road-to-meta-ratio-measured.md` — the roadmap this record closes.
-- [`CHANGELOG-conventions`](../contracts/CHANGELOG-conventions.md) § Governance-versus-product response — the obligation's text.
+- [`CHANGELOG-conventions`](../contracts/CHANGELOG-conventions.md) § Governance-versus-product line — where the
+  obligation's text stood. The section was renamed and rewritten on 2026-09-07 by
+  [`ADR-261`](ADR-261-release-written-answer-obligation-removed.md), which deletes the written answer this
+  record introduced; the measurement and this record's own decline of the per-PR gate both stand.
 - `src/scripts/measure_release_mix.ts`, `src/scripts/release_mix_taxonomy.json` — the mechanism.
 - `agents/evidence/reports/release-mix-baseline.md` — the two published readings.
