@@ -281,11 +281,12 @@ function render(topics: TopicCensus[], write: (s: string) => unknown): void {
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const rootIdx = argv.indexOf('--root');
-    if (rootIdx === -1 || argv[rootIdx + 1] === undefined) {
+    const rootArg = rootIdx === -1 ? undefined : argv[rootIdx + 1];
+    if (rootArg === undefined) {
         process.stderr.write('usage: inbox_source_census --root <dir> [--json]\n');
         return 2;
     }
-    const root = path.resolve(REPO_ROOT, argv[rootIdx + 1]);
+    const root = path.resolve(REPO_ROOT, rootArg);
     let stat: fs.Stats;
     try {
         stat = fs.statSync(root);
