@@ -34,15 +34,31 @@
  * fix, which teaches readers to ignore it — the exact failure this estate has
  * recorded twice already.
  *
- * The reason used to be that `road-to-single-delivery` Phase 2 was HALTED on
- * blocker `partition-current-layer-undecidable`. That is no longer true and the
- * sentence is corrected rather than left standing: the blocker reads
- * `**Status:** resolved`, its roadmap is archived, and the partition shipped
- * under ADR-236 Phase 2. What replaced the halt is a per-machine activation —
- * the partition withholds artefacts only where the host layer is verified
- * against `installed.lock`, so a machine whose install predates the fingerprint
- * keeps the full projection BY DESIGN and the overlap this gate reports there is
- * the fail-safe working, not a regression.
+ * The reason has been corrected twice rather than left standing. It was first
+ * that `road-to-single-delivery` Phase 2 was HALTED on blocker
+ * `partition-current-layer-undecidable` — no longer true; that blocker reads
+ * `**Status:** resolved` and the partition shipped under ADR-236 Phase 2. It was
+ * then a per-machine activation: the partition withheld only where the host layer
+ * verified against `installed.lock`, so an install one release behind kept the
+ * FULL projection by design and the overlap here was the fail-safe working.
+ *
+ * That second reason is void as of the ADR-236 amendment of 2026-09-07. The
+ * withhold no longer reads `installed.lock` at all — it reads each host
+ * directory's own contents, per NAME. An overlap this gate reports is therefore
+ * one of exactly two things now, and neither is a repo-wide fail-safe:
+ *
+ *   - an artefact the host layer genuinely does NOT hold, kept on its own merits
+ *     (the per-name fail-safe, and the right answer);
+ *   - an emitter that failed to withhold what the evidence said to withhold
+ *     (a defect).
+ *
+ * It still reports rather than enforcing, for the unchanged reason above. The
+ * second reason an earlier draft of this note gave — that the `commands` row's
+ * cluster-DIRECTORY key could read a correct tree as a collision — was true when
+ * written and was fixed in the same change: that row keys on the posix subpath
+ * now (see TYPES). Left recorded rather than deleted, because the argument is
+ * what justified `--enforce` staying opt-in and a reader should see that it no
+ * longer applies.
  *
  * WHERE THIS CHECK IS MEANINGFUL — read this before quoting one of its numbers
  * (road-to-session-closeout 3.3). It is a DEVELOPER-MACHINE check. It reads two
@@ -100,13 +116,23 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
  * (`commands/<cluster>/<sub>.md`), so this gate's `commands` row compares cluster
  * DIRECTORY names — a coarser key than the thing the host registers.
  *
- * That gap is recorded rather than closed, and the reason is a measurement: since
- * `commandsWithheld` gates the colon-form generator, a machine with a verified
- * host layer projects ZERO commands, so there is no project-side name for the
- * coarse key to be wrong about. On a machine WITHOUT one, the project layer is
- * the only layer and there is nothing to compare. The key is therefore imprecise
- * exactly where it has no work to do. Closing it would mean reading each command
- * file's own slug — real work for a row whose overlap is 0 in both topologies.
+ * That gap USED to be recorded rather than closed, on a measurement: while the
+ * colon-form generator was gated by one repo-wide verdict, a machine with a
+ * verified host layer projected ZERO commands and a machine without one had
+ * nothing to compare — so the coarse key was imprecise exactly where it had no
+ * work to do.
+ *
+ * **The ADR-236 amendment of 2026-09-07 falsified that, and it was OBSERVED, not
+ * predicted.** Withholding per name leaves the project layer holding exactly the
+ * commands the host lacks, and those can share a cluster with commands the host
+ * has: measured the same day, `.claude/commands/analyze/` held `repo.md` and
+ * `roadmap-repos.md` while `~/.claude/commands/analyze/` held `inbox.md` and
+ * seven others. Zero duplication, and the directory key reported a collision.
+ *
+ * So the `commands` row now keys on the POSIX SUBPATH (`<cluster>/<sub>.md`),
+ * which is the host's own unit. `readLayer` takes a `recursive` flag for it;
+ * `shape` stays a top-level reading so the shape-mismatch line keeps comparing
+ * the same thing it always did.
  *
  * `personas` and `user-types` were added 2026-08-21 (closure correction). See
  * `unknownProjectFamilies` for what now prevents the next omission.
@@ -182,7 +208,7 @@ interface LayerReading {
     shape: LayerShape;
 }
 
-function readLayer(dir: string): LayerReading | null {
+function readLayer(dir: string, recursive = false): LayerReading | null {
     let entries: fs.Dirent[];
     try {
         if (!fs.statSync(dir).isDirectory()) return null;
@@ -191,7 +217,11 @@ function readLayer(dir: string): LayerReading | null {
         return null;
     }
     const shape: LayerShape = { symlinks: 0, dirs: 0, files: 0 };
-    for (const e of entries) {
+    // README.md is excluded from BOTH the names and the shape. Counting it in the
+    // shape while filtering it from the names printed a self-contradicting line
+    // (`personas global 31 · shape (l0/d2/f30)` — 32 entries, 31 names), caught by
+    // a second neutral review.
+    for (const e of entries.filter((x) => x.name !== 'README.md')) {
         // isSymbolicLink() is checked FIRST and deliberately: readdir with
         // withFileTypes does not follow links, but a reader who tested isDirectory
         // first would classify a symlink-to-directory as a directory and lose the
@@ -200,7 +230,41 @@ function readLayer(dir: string): LayerReading | null {
         else if (e.isDirectory()) shape.dirs += 1;
         else shape.files += 1;
     }
-    return { names: entries.map((e) => e.name).sort(), shape };
+    if (!recursive) {
+        // README.md excluded for EVERY family, not only commands. It was excluded
+        // on the recursive path from the start and nowhere else, so a README in
+        // both layers would have counted as one duplicated artefact for rules,
+        // skills, personas, user-types and agents and not for commands — a latent
+        // asymmetry a neutral review caught on 2026-09-07. It names no artefact in
+        // any family.
+        return { names: entries.map((e) => e.name).filter((n) => n !== 'README.md').sort(), shape };
+    }
+    return { names: _mdSubpaths(dir).sort(), shape };
+}
+
+/**
+ * Every `*.md` under `dir`, as a posix path relative to it.
+ *
+ * The identity key for the `commands` row — see the note on TYPES. `README.md` is
+ * excluded because both layers carry one and it names no command.
+ */
+function _mdSubpaths(dir: string): string[] {
+    const out: string[] = [];
+    const walk = (abs: string, rel: string): void => {
+        let kids: fs.Dirent[];
+        try {
+            kids = fs.readdirSync(abs, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const k of kids) {
+            const childRel = rel === '' ? k.name : `${rel}/${k.name}`;
+            if (k.isDirectory()) walk(path.join(abs, k.name), childRel);
+            else if (k.name.endsWith('.md') && k.name !== 'README.md') out.push(childRel);
+        }
+    };
+    walk(dir, '');
+    return out;
 }
 
 /**
@@ -230,8 +294,9 @@ export function declaresPaths(file: string): 'yes' | 'no' | 'unreadable' {
 export function readType(type: ArtefactType, globalRoot: string, projectRoot: string): TypeReading {
     const gDir = path.join(globalRoot, type);
     const pDir = path.join(projectRoot, type);
-    const gLayer = readLayer(gDir);
-    const pLayer = readLayer(pDir);
+    const recursive = type === 'commands';
+    const gLayer = readLayer(gDir, recursive);
+    const pLayer = readLayer(pDir, recursive);
     const globalNames = gLayer?.names ?? null;
     const projectNames = pLayer?.names ?? null;
     const globalShape = gLayer?.shape ?? null;
@@ -500,11 +565,12 @@ export function main(argv?: readonly string[]): number {
             process.stdout.write(
                 'usage: check_single_delivery [--global DIR] [--project DIR] [--enforce] [--quiet]\n' +
                     '\n' +
-                    'Reports by default and exits 0: the partition SHIPPED (ADR-236, Phase 2)\n' +
-                    'but activates per machine — only where a verified host layer exists, so a\n' +
-                    'checkout without one keeps the full projection BY DESIGN and reports overlap.\n' +
-                    '--enforce exits 1 on any overlap; registering it would fail every machine\n' +
-                    'that has not re-run `agent-config install`, which is why it stays opt-in.\n',
+                    'Reports by default and exits 0: since the ADR-236 amendment of\n' +
+                    '2026-09-07 the project layer withholds per ARTEFACT NAME on each host\n' +
+                    "directory's own contents, so an artefact the host layer does not hold is\n" +
+                    'kept BY DESIGN and reads as overlap here. --enforce exits 1 on any\n' +
+                    'overlap. It stays opt-in because a machine whose global layer is stale\n' +
+                    'cannot fix the overlap by regenerating — only by `agent-config install`.\n',
             );
             return 0;
         } else if (a !== undefined) {
@@ -626,11 +692,11 @@ export function main(argv?: readonly string[]): number {
     }
     process.stdout.write(
         `⚠️  check_single_delivery: ${detail}. Reported, not enforced — ` +
-            'the partition shipped (ADR-236 Phase 2) but activates per machine: it withholds ' +
-            'artefacts only where the host layer is verified against `installed.lock`, so a ' +
-            'machine whose install predates the fingerprint keeps the full projection BY DESIGN ' +
-            'and this overlap is the fail-safe working. Run `agent-config install` to enable it ' +
-            'here; use --enforce where every machine is known to be verified.\n',
+            'since the ADR-236 amendment of 2026-09-07 the project layer withholds per ' +
+            "ARTEFACT NAME on each host directory's own contents, never on a version in " +
+            '`installed.lock`. So an artefact the host layer does not hold is kept BY DESIGN ' +
+            'and appears here; a stale global layer is fixed by `agent-config install`. Use ' +
+            '--enforce where every layer is known current.\n',
     );
     return 0;
 }

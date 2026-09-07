@@ -23,7 +23,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { partitionActive } from '../install/partitionEligibility.js';
+import { resolveHostLayerVerdict } from '../install/partitionEligibility.js';
 import {
     type CorpusManifest,
     captureManifest,
@@ -126,9 +126,9 @@ export function parseArgs(argv: readonly string[]): Parsed | string {
 /**
  * One real capture over the real tree.
  *
- * This is the one caller for which the process globals `partitionActive` reads
- * — the host layer under the running user's home, and the install lockfile —
- * ARE this run's own host, so it is the one caller that passes the predicate.
+ * This is the one caller for which the process globals `resolveHostLayerVerdict`
+ * reads — the host layer under the running user's home, and the install lockfile
+ * — ARE this run's own host, so it is the one caller that passes the predicate.
  * Everywhere else the field stays `null` rather than recording some other
  * machine's state under this tree's name.
  */
@@ -138,7 +138,7 @@ function capture(limit: number): CorpusManifest {
         userHome: process.env['HOME'] ?? os.homedir(),
         limit,
         enumerationRule: ENUMERATION_RULE_ID,
-        partitionActive,
+        hostLayerVerified: (root) => resolveHostLayerVerdict(root).verified,
     });
 }
 

@@ -44,22 +44,24 @@ const packageOnly = (): string[] =>
     allRules().filter((f) => isExclusivelyPackageOnly(path.join(DIST_RULES, f)));
 
 /**
- * The call under test, with the partition-active bit INJECTED.
+ * The call under test. `userHome` is the ONLY seam, and that is the 2026-09-07
+ * change: there is no `active` bit to inject any more.
  *
- * Not a convenience: reading it from `installed.lock` makes the suite assert
- * whatever this machine happens to be, and that bit differs between a maintainer
- * checkout (installed → active) and CI (nothing installed → inactive). The first
- * version of this file did exactly that and was green here and red on every CI
- * shard — the environment-dependent verdict this change exists to remove.
+ * It used to take one, because `partitionRulesForDir` first consulted a
+ * repo-wide `partitionActive` read off `installed.lock` — a fact about the
+ * machine, which differed between a maintainer checkout (installed → active) and
+ * CI (nothing installed → inactive) and made the first version of this file green
+ * here and red on every CI shard. That veto is gone; the per-directory evidence
+ * below was always the stronger test and is now the only one, so the fixture home
+ * fully determines the answer on every machine.
  */
-const narrow = (dir: string, rules: readonly string[], home: string, active = true): string[] =>
+const narrow = (dir: string, rules: readonly string[], home: string): string[] =>
     partitionRulesForDir({
         toolDir: dir,
         rules,
         projectRoot: REPO,
         rulesSource: DIST_RULES,
         userHome: home,
-        active,
     });
 
 describe('per-host rule partition', () => {
@@ -80,12 +82,15 @@ describe('per-host rule partition', () => {
         return home;
     };
 
-    it('an inactive partition narrows nothing, whatever the layers hold', () => {
-        // The off direction, pinned. Previously this slot asserted
-        // `partitionActive(REPO) === true`, which is a fact about the machine and
-        // not about the code — and it was false on every CI shard.
-        const home = seedAllLayers(allRules());
-        expect(narrow('.cursor/rules', allRules(), home, false)).toEqual(allRules());
+    it('an EMPTY layer narrows nothing — the off direction, pinned', () => {
+        // This slot used to pass `active: false` and assert that the repo-wide veto
+        // suppressed every directory. With the veto gone, the off direction is a
+        // property of the EVIDENCE: a readable layer holding none of the rules
+        // about to be withheld carries nothing, so nothing is withheld. Asserting
+        // it through the home rather than through an injected bit is what makes the
+        // result machine-independent.
+        const home = seedAllLayers([]);
+        expect(narrow('.cursor/rules', allRules(), home)).toEqual(allRules());
     });
 
     it.each(Object.keys(PROJECT_RULE_DIRS))('%s narrows to package-only when its layer carries', (dir) => {

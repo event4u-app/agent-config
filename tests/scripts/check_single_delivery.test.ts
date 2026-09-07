@@ -55,14 +55,56 @@ describe('evaluate', () => {
 
     it('does NOT count a different-shape overlap as duplicated', () => {
         // The commands case that produced the false "40 duplicated" headline:
-        // one layer holds regular files, the other holds directories.
+        // one layer holds regular files, the other holds symlinks into dist/.
+        //
+        // The fixture names `.md` files deliberately. Since 2026-09-07 the
+        // `commands` row keys on the POSIX SUBPATH of every `*.md` — the host's own
+        // `/cluster:sub` unit — so a fixture writing extension-less entries (which
+        // this one did) yields no names on either side and the assertion below
+        // passes with zero comparison behind it.
         const g = layer('g', 'commands');
-        writeFileSync(join(g, 'thing'), 'x', 'utf8');
-        mkdirSync(join(layer('p', 'commands'), 'thing'), { recursive: true });
+        writeFileSync(join(g, 'thing.md'), 'x', 'utf8');
+        const target = join(root, 'cmd-target.md');
+        writeFileSync(target, 'x', 'utf8');
+        symlinkSync(target, join(layer('p', 'commands'), 'thing.md'));
         const v = evaluate(join(root, 'g'), join(root, 'p'));
         expect(v.duplicated).toBe(0);
         expect(v.nameOverlapDifferentShape).toBe(1);
         expect(v.readings.find((r) => r.type === 'commands')?.shapeMismatch).toBe(true);
+    });
+
+    it('keys commands on the cluster SUBPATH, so a shared cluster is not a collision', () => {
+        // Observed 2026-09-07 and the reason the key changed: per-name withholding
+        // leaves the project layer holding exactly the commands the host lacks, and
+        // those can share a cluster with commands the host HAS. Under the old
+        // directory key `analyze` was in both layers and read as a collision over
+        // two disjoint command sets.
+        const g = join(layer('g', 'commands'), 'analyze');
+        const p = join(layer('p', 'commands'), 'analyze');
+        mkdirSync(g, { recursive: true });
+        mkdirSync(p, { recursive: true });
+        writeFileSync(join(g, 'inbox.md'), 'x', 'utf8');
+        writeFileSync(join(p, 'repo.md'), 'x', 'utf8');
+        const v = evaluate(join(root, 'g'), join(root, 'p'));
+        expect(v.duplicated).toBe(0);
+        expect(v.nameOverlapDifferentShape).toBe(0);
+        const cmds = v.readings.find((r) => r.type === 'commands');
+        expect(cmds?.globalOnly).toEqual(['analyze/inbox.md']);
+        expect(cmds?.projectOnly).toEqual(['analyze/repo.md']);
+    });
+
+    it('STILL reports a genuinely duplicated command, subpath and all', () => {
+        // The direction the change must not weaken: the same `/cluster:sub` in both
+        // layers, same shape, is duplication and is counted.
+        const g = join(layer('g', 'commands'), 'analyze');
+        const p = join(layer('p', 'commands'), 'analyze');
+        mkdirSync(g, { recursive: true });
+        mkdirSync(p, { recursive: true });
+        writeFileSync(join(g, 'inbox.md'), 'x', 'utf8');
+        writeFileSync(join(p, 'inbox.md'), 'x', 'utf8');
+        const v = evaluate(join(root, 'g'), join(root, 'p'));
+        expect(v.duplicated).toBe(1);
+        expect(v.readings.find((r) => r.type === 'commands')?.both).toEqual(['analyze/inbox.md']);
     });
 
     it('classifies a symlink as a symlink, not as its target kind', () => {

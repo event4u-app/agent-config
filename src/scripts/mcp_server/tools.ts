@@ -47,6 +47,7 @@ import {
     slice_around as _chSliceAround,
     read_header as _chReadHeaderImpl,
 } from '../chat_history.js';
+import { suggestSkillForTask } from './suggest_skill.js';
 import {
     type CatalogEntry,
     install_hint as _catalog_install_hint,
@@ -1210,61 +1211,6 @@ async function _readResourceBodyHandler(
 // unlisted tool. Boot-time stderr log enumerates the registered set.
 // ---------------------------------------------------------------------
 
-/**
- * `suggest_skill_for_task` — the recovery path for a truncated catalogue.
- *
- * Promoted from a discovery stub because the defect it answers is measured, not
- * hypothetical: on the one host that publishes its own truncation, a default
- * install had 402 entries dropped from the model-visible skills list — the
- * host's own count against its own denominator, not a subtraction over ours
- * (`agents/evidence/analysis/scoped-projection-host-delivery.md`). An agent
- * that cannot see a skill also cannot ask for it by name, so the only reachable
- * question is "what fits this task" — which is what the deterministic ranker
- * answers, over the TREE rather than over the host's catalogue.
- *
- * Read-only and shell-free by construction: it reads SKILL.md frontmatter and
- * returns names, scores and declared personas. No skill BODY is returned — the
- * caller opens what it picked, so a wrong rank costs one read rather than a
- * context payload.
- */
-async function _suggestSkillForTaskHandler(
-    args: Record<string, unknown>,
-    consumerRoot: string,
-): Promise<Record<string, unknown>> {
-    const task = typeof args['task'] === 'string' ? args['task'] : '';
-    if (task.trim() === '') {
-        return { status: 'error', error: 'task must be a non-empty string', suggestions: [] };
-    }
-    // `limit`, not `top` — the stub published `limit` and a consumer may have
-    // read that contract already. Renaming it on promotion would break a
-    // caller for cosmetic reasons.
-    const limitRaw = args['limit'];
-    const limit =
-        typeof limitRaw === 'number' && Number.isFinite(limitRaw) ? Math.floor(limitRaw) : 5;
-
-    const catalogue = await import('../_lib/skill_catalogue.js');
-    const skillsDir = catalogue.resolveSkillsRoot(consumerRoot);
-    if (skillsDir === null) {
-        // A missing catalogue is UNKNOWN, never "no skill fits this task". The
-        // second reads as a ranked answer and would be a confident empty list —
-        // the same zero-from-silence failure `capture_skill_catalogue` refuses.
-        return {
-            status: 'no_catalogue',
-            searched: [...catalogue.DEFAULT_CATALOGUE_ROOTS],
-            consumer_root: consumerRoot,
-            suggestions: [],
-        };
-    }
-
-    const { rank } = await import('../skill_tools/score_skill_relevance.js');
-    const rows = rank(task, skillsDir).slice(0, Math.max(1, limit));
-    return {
-        status: 'ok',
-        skills_root: skillsDir,
-        suggestions: rows.map(([name, score, personas]) => ({ skill: name, score, personas })),
-    };
-}
-
 export const ALLOWLIST: Record<string, BuiltinTool> = {
     suggest_skill_for_task: {
         name: 'suggest_skill_for_task',
@@ -1296,7 +1242,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             },
             additionalProperties: false,
         },
-        handler: _suggestSkillForTaskHandler,
+        handler: suggestSkillForTask,
     },
     lint_skills: {
         name: 'lint_skills',

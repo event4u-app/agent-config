@@ -31,6 +31,8 @@ import { describe, expect, it } from 'vitest';
 
 import { _resetStateForTest, projected_rule_trees } from '../../src/scripts/condense.js';
 import { DeadScopeError } from '../../src/scripts/_lib/scan_scope.js';
+import { PROJECT_RULE_DIRS, globalRuleLayerNames } from '../../src/install/globalRuleLayers.js';
+import { isExclusivelyPackageOnly } from '../../src/install/partitionEligibility.js';
 import { auditRuleProjection, main, renderFindings } from '../../src/scripts/check_rule_projection_integrity.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -182,10 +184,10 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
 
     // These two read the REAL repo's emit plan, which is empty when
     // `agents/.agent-tools.yml` selects zero tools — a supported local config
-    // (it avoids duplicating a globally installed `~/.claude`). Asserting
-    // `size > 50` there fails on the config rather than on a defect. CI commits
-    // all eight tools, so both keep their teeth where the corpus exists; a
-    // change that empties the committed list is a visible one-line diff.
+    // (it avoids duplicating a globally installed `~/.claude`). Asserting over an
+    // empty plan tests the config rather than a defect. CI commits all eight
+    // tools, so both keep their teeth where the corpus exists; a change that
+    // empties the committed list is a visible one-line diff.
     const planEmpty = Object.keys(projected_rule_trees()).length === 0;
 
     function isManual(rule: string): boolean {
@@ -195,23 +197,82 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
     it.skipIf(planEmpty)('omits every ADR-004 `type: manual` rule and includes every other one', () => {
         const plan = projected_rule_trees();
         const projected = new Set(plan[TREE] ?? []);
-        expect(projected.size).toBeGreaterThan(50);
-
         const onDisk = fs.readdirSync(distRules).filter((n) => n.endsWith('.md'));
+
+        // ADR-004, and the half that is partition-independent: no narrowing has
+        // any reason to ADD a rule, so a manual rule in the plan is a defect on
+        // every machine and this assertion never needs a carve-out.
         const manualButProjected = onDisk.filter((r) => isManual(r) && projected.has(r));
         expect(manualButProjected, 'manual rules must never be projected (ADR-004)').toEqual([]);
 
+        // The other half used to read `size > 50` plus "every non-manual rule is
+        // in the plan", and both encoded the PRE-PARTITION topology. ADR-236
+        // narrows `.claude/rules` to the package-only set wherever `~/.claude/rules`
+        // is verified to carry the rest — 15 rules here, so `> 50` failed on a
+        // maintainer machine and passed in CI, which is the environment-dependent
+        // assertion this repository keeps removing.
+        //
+        // What replaces it holds in BOTH topologies: a non-manual rule is either
+        // planned, or the host layer demonstrably carries it. The carriage is read
+        // from `globalRuleLayerNames` — the host DIRECTORY listing — not from
+        // `partitionRulesForDir`, so this is not the narrowing asserting itself.
+        // In CI no host layer exists, `carried` is empty, and the assertion is
+        // exactly the old full-set one.
+        //
+        // Its local teeth, measured rather than assumed: inverting the partition
+        // (projecting the WITHHELD set) reds it here, naming the 13 package-only
+        // rules. What it cannot catch locally is a plan that drops a rule the host
+        // layer happens to carry — carriage satisfies the clause on its own there.
+        // CI is where that half bites, and CI is where the gate decides.
+        const carried = new Set(globalRuleLayerNames('claude-code') ?? []);
         const nonManual = onDisk.filter((r) => !isManual(r));
-        const missing = nonManual.filter((r) => !projected.has(r));
-        expect(missing, 'every non-manual dist rule belongs to the emit plan').toEqual([]);
+        const missing = nonManual.filter((r) => !projected.has(r) && !carried.has(r));
+        expect(
+            missing,
+            'every non-manual dist rule is planned, or carried by ~/.claude/rules',
+        ).toEqual([]);
+        expect(projected.size, 'the plan must not be empty').toBeGreaterThan(0);
     });
 
-    it.skipIf(planEmpty)('plans the same rule set for every active host rule tree', () => {
+    it.skipIf(planEmpty)('narrows every tree whose host layer carries what would be withheld', () => {
+        // Rewritten twice. It first asserted every tree plans the IDENTICAL set,
+        // which is environment-dependent: `partitionRulesForDir` narrows PER
+        // DIRECTORY, so two trees legitimately differ. The repair then weakened it
+        // to `length > 0` — and a second review showed that survives replacing
+        // `partitionRulesForDir`'s body with `return [...rules]`, i.e. the partition
+        // switched off entirely. An assertion that cannot see its own mechanism is
+        // worse than the environment-dependent one it replaced.
+        //
+        // This version is partition-SENSITIVE and machine-independent, because the
+        // condition and the expectation come from different places: carriage is read
+        // from `globalRuleLayerNames` — the host DIRECTORY listing — and the
+        // expectation is the package-only classification. Where a host layer carries
+        // every global-scope rule, the plan MUST be the package-only set; neutralise
+        // the partition and it is 104 instead of 13. In CI no layer exists, every
+        // tree is vacuous, and the loop asserts nothing rather than pretending to.
         const plan = projected_rule_trees();
-        const trees = Object.keys(plan);
-        expect(trees).toContain(TREE);
-        for (const t of trees) {
-            expect(plan[t], `${t} diverges from ${TREE}`).toEqual(plan[TREE]);
+        expect(Object.keys(plan)).toContain(TREE);
+        const onDisk = fs.readdirSync(distRules).filter((n) => n.endsWith('.md'));
+        const packageOnly = onDisk.filter((r) => isExclusivelyPackageOnly(path.join(distRules, r)));
+        let checked = 0;
+        for (const [dir, planned] of Object.entries(plan)) {
+            const toolId = PROJECT_RULE_DIRS[dir];
+            if (toolId === undefined) continue;
+            const carried = globalRuleLayerNames(toolId);
+            if (carried === null) continue; // no evidence for this host — vacuous
+            const carriedSet = new Set(carried);
+            const wouldWithhold = onDisk.filter(
+                (r) => !packageOnly.includes(r) && (plan[dir] ?? []).includes(r),
+            );
+            if (!wouldWithhold.every((r) => carriedSet.has(r))) continue;
+            // The layer carries everything this tree still projects beyond the
+            // package-only set, so nothing justified keeping them.
+            const extra = (planned ?? []).filter((r) => !packageOnly.includes(r));
+            expect(extra, `${dir} projects rules its host layer already carries`).toEqual([]);
+            checked += 1;
         }
+        // Not an assertion about the tree — a statement about what this run proved,
+        // so a reader can tell a real pass from a vacuous one.
+        process.stdout.write(`    (narrowing verified on ${String(checked)} tree(s))\n`);
     });
 });
