@@ -17,7 +17,8 @@ A single JSON object, `schema_version: 1`:
   "status_polling": false,
   "separate_quota_pool": false,
   "agent_teams": false,
-  "worker_respawn": false
+  "worker_respawn": false,
+  "structured_ask": false
 }
 ```
 
@@ -66,6 +67,7 @@ to in-session execution rather than attempting an unsupported primitive.
 | `separate_quota_pool` | bool | Quota-arbitrage bonus (Phase 2) — subagents draw from a distinct quota pool than the session. `false` → assume shared quota. |
 | `agent_teams` | bool | Claude Code's experimental multi-instance Agent Teams primitive (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`). `false` → the [judgment ladder](auto-dispatch-classification.md#judgment-ladder-phase-2--road-to-always-on-orchestration)'s rung 3 (team) degrades to parallel subagents, recorded as `degraded_from: 3`. |
 | `worker_respawn` | bool | The host can kill a running worker and spawn a fresh one that continues the SAME task mid-flight. `false` on every host today, deliberately — set `true` only once OBSERVED, never by inference from spawning and killing existing separately. `false` → degrade to stop-loss behaviour, loudly. |
+| `structured_ask` | bool | The host exposes its own structured-ask tool — a native question picker the agent can call instead of rendering a numbered-options block as prose. The per-host SHAPE (tool name, question and option ceilings, free-text availability) lives in `_lib/structured_ask.ts`, never here: every field of this manifest is a strict boolean and a nested object would normalize silently to `false`. `false` → the ask degrades to text, and no call is fired into a host that has no such tool. |
 
 A field being `true` is a **precondition**, not a mandate: `parallel_spawn:
 true` permits concurrency but the dispatch cap still applies (see
@@ -80,7 +82,7 @@ A default FIELD MEANS NOBODY ANSWERED — RENDERED AS false BECAUSE THAT IS THE
 SAFE DEGRADATION, NOT BECAUSE ANYTHING WAS MEASURED.
 ```
 
-The six booleans look alike and are not. `HOST_CAPABILITY_REGISTRY` holds
+The seven booleans look alike and are not. `HOST_CAPABILITY_REGISTRY` holds
 exactly one row today, so on every other host **all six** fields are the safe
 default — and `agent_teams` is the only field any live check touches. The name
 `probeHostCapabilities` says "detected" about values that were mostly asserted
@@ -126,6 +128,7 @@ A prober that decides for itself what counts as evidence is the inference
 | `status_polling` | a **completed poll returning a state the parent did not already hold**. A poll that returns what the parent knew is not an observation of polling |
 | `separate_quota_pool` | a **child leg continuing across a parent quota condition** — the parent constrained, the child proceeding |
 | `worker_respawn` | **one task continuing across a killed and re-spawned worker, same task id.** Never inferred from the fact that spawning and killing both exist separately |
+| `structured_ask` | **the host's delivered tool surface, in a real session, carrying (or not carrying) a question-picker tool.** The delivered surface is the observation — never the vendor's documentation, and never another host by analogy. A `false` written from an observed surface is "checked, absent"; omitting the field is "never looked" |
 
 ### `agent_teams` is out of scope for a row, by construction
 

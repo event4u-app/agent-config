@@ -39,6 +39,7 @@ const ALL_FALSE: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    structured_ask: false,
 };
 
 describe('normalizeHostManifest — safe default', () => {
@@ -91,6 +92,7 @@ describe('normalizeHostManifest — valid full input', () => {
                 status_polling: true,
                 separate_quota_pool: true,
                 worker_respawn: true,
+                structured_ask: true,
             }),
         ).toEqual({
             schema_version: 1,
@@ -100,6 +102,7 @@ describe('normalizeHostManifest — valid full input', () => {
             separate_quota_pool: true,
             agent_teams: false,
             worker_respawn: true,
+            structured_ask: true,
         });
     });
 
@@ -122,6 +125,10 @@ describe('resolveHostCapabilities — registry hit', () => {
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
+            // `structured_ask: false` in the row is an OBSERVATION (Claude Code
+            // 2.1.263, 2026-09-07: the delivered tool surface carried no such
+            // tool), not the safe default — see the provenance block below.
+            structured_ask: false,
         });
     });
 
@@ -285,6 +292,21 @@ describe('probeHostCapabilities — registry merged with live environment facts'
         });
     });
 
+    it('structured_ask resolves false for an unknown host and for a non-boolean', () => {
+        // road-to-asked-not-parked 2.1. An unknown host degrades to a TEXT ask;
+        // a nested object — the shape the source draft proposed — must not
+        // survive as a truthy capability, which is the whole reason the field
+        // is a strict boolean and the per-host shape lives elsewhere.
+        expect(resolveHostCapabilities('some-unrecognized-host').structured_ask).toBe(false);
+        expect(
+            resolveHostCapabilities('claude', { structured_ask: { tool: 'AskUserQuestion' } })
+                .structured_ask,
+        ).toBe(false);
+        expect(normalizeHostManifest({ structured_ask: 'yes' }).structured_ask).toBe(false);
+        expect(normalizeHostManifest({ structured_ask: 1 }).structured_ask).toBe(false);
+        expect(normalizeHostManifest({ structured_ask: true }).structured_ask).toBe(true);
+    });
+
     it('takes NO settings-derived override — probeHostCapabilities has no such parameter', () => {
         // Type-level proof: probeHostCapabilities(hostId) is single-arity.
         expect(probeHostCapabilities.length).toBe(1);
@@ -318,6 +340,7 @@ describe('describeHostCapabilities — per-field provenance', () => {
             separate_quota_pool: 'default',
             agent_teams: 'default',
             worker_respawn: 'default',
+            structured_ask: 'registry',
         });
     });
 

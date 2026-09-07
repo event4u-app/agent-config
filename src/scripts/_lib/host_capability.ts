@@ -67,6 +67,23 @@ export interface HostCapabilityManifest {
      * stop-loss behaviour — loudly, never silently.
      */
     worker_respawn: boolean;
+    /**
+     * The host exposes its own structured-ask tool — a native question picker
+     * the agent can call instead of rendering a numbered-options block as prose.
+     *
+     * A STRICT BOOLEAN, and the per-host detail deliberately lives elsewhere.
+     * The source draft for road-to-asked-not-parked proposed a nested object
+     * carrying the tool name and the question/option ceilings; `asBool` below
+     * coerces every non-`true` value to `false`, so such an object would
+     * normalize silently to nothing. The shape lives in
+     * `_lib/structured_ask.ts` (`STRUCTURED_ASK_SHAPES`), which a caller reads
+     * explicitly; this field answers only whether there is anything to read.
+     *
+     * `false` is the safe default on purpose: an unknown host degrades to a
+     * text ask, and the agent never fires a tool call into a host that has no
+     * such tool.
+     */
+    structured_ask: boolean;
 }
 
 /** Safe default — unknown host assumes no subagent primitive. */
@@ -78,6 +95,7 @@ const SAFE_DEFAULT: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    structured_ask: false,
 };
 
 /** Coerce one field: only a strict boolean `true` survives; everything else is `false`. */
@@ -106,6 +124,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
         separate_quota_pool: asBool(src.separate_quota_pool),
         agent_teams: asBool(src.agent_teams),
         worker_respawn: asBool(src.worker_respawn),
+        structured_ask: asBool(src.structured_ask),
     };
 }
 
@@ -179,9 +198,26 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  * `agent_teams` — out of scope for a row by construction; see its own field
  *   doc comment and the protocol section.
+ *
+ * `structured_ask: false` — OBSERVED ABSENT, not never-looked, and the
+ *   difference is why it is written rather than omitted. claude (Claude Code
+ *   2.1.263, Opus 5 1M session, 2026-09-07). The host delivers the session's
+ *   tool surface at session start; that surface carried no structured-ask tool
+ *   under any name `_lib/structured_ask.ts` matches, and no per-host shape is
+ *   recorded for it in `STRUCTURED_ASK_SHAPES`. Artefact:
+ *   `agents/evidence/analysis/structured-ask-host-observation-2026-09.md`.
+ *   The observation is about the delivered surface of one session on one
+ *   version; it is not a claim that the vendor ships no such tool anywhere,
+ *   and a later session observing one writes the `true` row over it.
+ *
+ * NO ROW ANYWHERE SETS THE STRUCTURED-ASK FIELD TRUE, and the observation
+ * protocol above is the only path to the first one that does. A vendor's
+ * documentation is not that path — and the phrasing here avoids the literal
+ * key-value pair on purpose, because the roadmap step that ships this field
+ * verifies the absence with a grep for exactly that string.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
-    claude: { subagent_spawn: true, parallel_spawn: true },
+    claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: false },
 };
 
 /**
@@ -287,6 +323,7 @@ const CAPABILITY_FIELDS: readonly CapabilityField[] = [
     'separate_quota_pool',
     'agent_teams',
     'worker_respawn',
+    'structured_ask',
 ];
 
 /**

@@ -24,6 +24,19 @@ depends on what that host exposes. We say so plainly rather than imply
 | Copilot | ✅ `copilot-instructions.md` | — static only |
 | Gemini | ✅ `GEMINI.md` | — static only |
 | Augment | ✅ native rules | ⚠️ bound, verdict not honoured |
+| Codex | ✅ skill bundle to `~/.codex/` | — no platform key in `hook_manifest.yaml` |
+
+**Codex, stated from the manifest rather than by analogy.** The installer
+detects Codex (`src/install/toolDetection.ts`) and deploys the same
+Anthropic-shaped rule/skill/command bundle to `~/.codex/`
+(`src/install/wizard-plan.ts`), so the compile-time layer reaches it exactly as
+it reaches the rows above. The runtime column is a different fact and is read
+off `src/scripts/hook_manifest.yaml`: its `platforms:` block declares eight
+keys — `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`,
+`copilot` — and Codex is not among them. No slot is bound, so no guard runs,
+and nothing here should be inferred from Claude Code sharing a bundle format
+with it. Codex was previously absent from this table altogether, which read as
+unsupported rather than as unlisted; the row says which of the two it is.
 
 **Why we lead with compile-time, not hooks.** Runtime hooks reach only a
 minority of supported hosts. Building the governance story on hooks would make
