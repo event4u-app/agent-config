@@ -133,6 +133,37 @@ fail=0
 # on a detached HEAD, or standing on the base itself it returns 0 and says so.
 # So an unreachable network cannot block a push, and a stale local tracking ref
 # cannot fake a green.
+# BRANCH WORK COMMITTED — first, because it is the cheapest and because every
+# gate below answers against the working tree.
+#
+# The defect it exists for, measured 2026-09-07: a reconciled baseline was
+# written into gate-violation-baselines.json AFTER `git add`, so
+# `git commit --no-edit` captured the staged side, the edit stayed in the tree,
+# and the push shipped a branch whose commits contradicted it. CI cannot see
+# this class at all — it checks out the commit, not the tree the edit is in.
+#
+# It blocks only what it can attribute to THIS branch (staged paths, and dirty
+# paths this branch's own commits touch). A gate script's report output and a
+# parallel session's edit are named and waved through, which is what keeps this
+# from becoming the blanket clean-tree rule that would train the operator to
+# set the skip variable.
+echo "🔍 Branch work committed — is any of this branch's own work still uncommitted?"
+if [ "${AGENT_CONFIG_SKIP_PREPUSH_WORKTREE:-}" = "1" ]; then
+    echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1"
+elif [ ! -x ./scripts-run ]; then
+    echo "⚠️  ./scripts-run not found — skipping the worktree check for this push."
+elif ! ./scripts-run src/scripts/check_branch_work_committed --quiet; then
+    echo ""
+    echo "   Push blocked — this branch's own work is not all committed, so the"
+    echo "   pushed branch would carry commits its own tree contradicts."
+    echo ""
+    echo "   Commit them, or 'git restore' whatever was not meant to land."
+    echo ""
+    echo "   This hook refuses; it never commits for you. Bypass a genuine WIP"
+    echo "   push with AGENT_CONFIG_SKIP_PREPUSH_WORKTREE=1."
+    exit 1
+fi
+
 echo "🔍 Base freshness — is this branch behind the base it will merge into?"
 if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
     echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
