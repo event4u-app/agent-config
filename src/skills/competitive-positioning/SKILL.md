@@ -25,7 +25,7 @@ install:
 - A pattern from another package is being considered for adoption and the trade-off needs to land in writing.
 - Positioning prose for a README / launch / pricing page needs an ours-vs-theirs decisions table to anchor on.
 
-Do NOT use for general repo audits (route to `analyze-reference-repo`),
+Do NOT use for general repo audits (route to `analyze-repo`),
 upstream-contribution decisions (route to `upstream-contribute`), or
 DCF-style valuation work (route to `dcf-modeling`).
 
@@ -114,7 +114,7 @@ to [`upstream-contribute`](../upstream-contribute/SKILL.md).
 **WHEN NOT to use this**
 
 - The peer repo needs a generic walk-through first — route to
-  [`analyze-reference-repo`](../../commands/analyze/reference-repo.md);
+  [`analyze-repo`](../../commands/analyze/repo.md);
   this skill consumes its output, never duplicates it.
 - The decision is to contribute back upstream — route to
   [`upstream-contribute`](../upstream-contribute/SKILL.md).

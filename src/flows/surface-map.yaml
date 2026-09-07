@@ -35,7 +35,7 @@ platform_surfaces: [product, agent-admin, session, media, marketing, fun]
 commands:
   discovery:
     - analyze
-    - analyze/reference-repo
+    - analyze/repo
     - analyze/inbox
     - analyze/conformance
     - analyze/decision
