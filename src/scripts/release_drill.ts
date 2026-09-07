@@ -244,17 +244,13 @@ export function defaultChangelogFixture(target: string): string {
         '',
         '- fixture entry for the release drill',
         '',
-        // Both lines are section-level publication obligations
-        // (`section_publication_blockers`), so a fixture without them refuses
-        // at the curation guard and every sequencing scenario dies at step 2 —
-        // the same "fixture trips the guard the drill exists to sequence"
-        // failure this builder's docstring already warns about, for the two
-        // obligations added 2026-09-05. The mix answer is written OUT rather
-        // than measured: measuring would couple every scenario to the live
-        // repository's commit span, which is the coupling `changelog` was
-        // introduced to remove.
+        // The mix line is written OUT rather than measured: measuring would
+        // couple every scenario to the live repository's commit span, which is
+        // the coupling `changelog` was introduced to remove. It is no longer a
+        // publication obligation (ADR-261 deleted the written answer it used to
+        // carry) — it stays because the drill exercises the shape the writer
+        // actually renders.
         '> **Governance mix:** governance-only 2 vs consumer-only 1 (taxonomy 1.0.0).',
-        '> Next cycle ships the fixture consumer work, tracked in the drill.',
         '',
         'Tests: 1000 (+0 since 0.0.0)',
         '',

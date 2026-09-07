@@ -125,28 +125,6 @@ function read_changelog_text(): string {
     return _changelog_reader ? _changelog_reader(CHANGELOG) : fs.readFileSync(CHANGELOG, 'utf-8');
 }
 
-/**
- * Symmetric write seam, so a caller that CONSUMES a staged answer writes back
- * through the same indirection it read through.
- *
- * Without it, `guard_release_curation` would read the drill's fixture and write
- * the repository's real `CHANGELOG.md` — a test mutating the tree it is meant
- * to simulate, which is the exact failure the reader seam above exists to stop,
- * one direction over.
- */
-let _changelog_writer: ((file: string, text: string) => void) | null = null;
-
-function _set_changelog_writer(fn: ((file: string, text: string) => void) | null): void {
-    _changelog_writer = fn;
-}
-
-function write_changelog_text(text: string): void {
-    if (_changelog_writer) {
-        _changelog_writer(CHANGELOG, text);
-        return;
-    }
-    fs.writeFileSync(CHANGELOG, text, 'utf-8');
-}
 const MAIN_BRANCH = 'main';
 const REMOTE = 'origin';
 const REPO_SLUG = 'event4u-app/agent-config';
@@ -369,8 +347,6 @@ export {
     CalledProcessError,
     _set_changelog_reader,
     read_changelog_text,
-    _set_changelog_writer,
-    write_changelog_text,
     GH_PR_BODY_LIMIT,
     GH_RELEASE_NOTES_LIMIT,
     MAIN_BRANCH,

@@ -36,17 +36,19 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   consecutive releases.** 14.17.0, 14.18.0, 14.19.0 and 14.20.0 each returned
   `HTTP 400 prompt is too long` and each recorded an honest null in
   `agents/evidence/release-findings/`. The release path sets the analysis base
-  to the previous tag, so the whole release span went into **one** request:
-  413191, 450336 and 260998 input tokens against a 200000 cap on the three
-  releases that recorded a figure. The smallest still exceeded the cap by 30 %,
-  which is what made it structural rather than a run of large releases —
-  `buildPlan` already computed `promptChars` and only *reported* it, so nothing
-  consulted the number before spending the call.
+  to the previous tag, so the whole release span went into **one** request.
+  **All four** recorded a figure against the 200000 cap — 235472 (14.17.0),
+  413191 (14.18.0), 450336 (14.19.0), 260998 (14.20.0) — and the smallest
+  exceeded it by 17.7 %. (An earlier draft of this entry said three releases
+  recorded a figure and put the smallest at 30 % over; both were wrong, and the
+  omitted reading was the one nearest the cap — the one that most constrains
+  the budget. The conclusion does not depend on the error: every span observed
+  exceeds the cap.) `buildPlan` already computed `promptChars` and only
+  *reported* it, so nothing consulted the number before spending the call.
   The diff is now partitioned **per file** into requests under a character
   budget, each is reviewed, and findings are merged and deduplicated on the
   finding id the ledger already uses. Verified against the live span that had
-  been failing: 505087 estimated input tokens across 4 requests, no path left
-  out.
+  been failing: 5 requests, no path left out.
   **Nothing is truncated**, and that is the load-bearing decision: a silently
   shortened diff yields findings about a fragment while reading as a review of
   the whole change, which is the false green this repository's honest-null
@@ -57,12 +59,29 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   **Coverage** block stating what was not read — including the sentence that
   absence of a finding for an unreviewed path is not evidence about that path.
   `--dry-run` now prints the request count rather than only a token estimate,
-  because this gate spends per request, and it warns when a span sits at the
-  ceiling, where the next slightly larger one would start losing its remainder.
-  The budget factor is a deliberately pessimistic character proxy and says so:
-  the cap is enforced by the provider's tokenizer, which this repository cannot
-  run, so a call that still overflows a budgeted chunk falsifies the factor
-  rather than the partitioning.
+  because this gate spends per request, and warns when a span sits at the
+  ceiling. The budget factor is a character proxy **derived from those four
+  failures** (measured diff chars / reported tokens = 3.13 and 3.18) and set
+  below them, because the ratio is content-dependent — cl100k over this repo's
+  own diffs reads ~3.9 for `src/`, ~4.1 for prose and ~2.75 for a lockfile. A
+  call that still overflows a budgeted chunk falsifies that number, not the
+  partitioning.
+  **A neutral reviewer on the first version found three defects that are fixed
+  here rather than shipped.** The coverage line counted every file in a dropped
+  chunk as reviewed — 59 of 60 for a run that read 4, because the partition
+  packed to opaque strings and reported one aggregate row; it ignored chunks
+  whose call had failed, computing the number before those were appended; and a
+  non-ASCII filename was silently skipped **and** counted as read, because
+  `git diff --name-only` renders it quoted and the quoted form then matches no
+  pathspec. Coverage is now summed from the chunks that actually returned, every
+  dropped chunk names its own files, and paths are read with
+  `core.quotePath=false`. Correcting the budget ratio shrank each request, so
+  the same span needed five: the request ceiling moved from four to six rather
+  than paying for tokenizer safety with silent coverage loss.
+  Known limits, stated rather than implied: coverage lives in prose, so an
+  `--enforce` run over a partial review still returns 0, and
+  `check_finding_dispositions --ingest` reads only `.findings`, so the durable
+  ledger does not record the coverage the artifact now carries.
 
 ### Added
 
@@ -90,26 +109,42 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Fixed
 
-- **The release's written obligation is now answerable, not only refusable.**
-  Across 14.18.0, 14.19.0 and 14.20.0 the governance-versus-product response was
-  discharged **by hand, mid-release**: `task release` bumped the version, refused
-  over the placeholder sentinel, and a human typed the sentence into the aborted
-  tree. At 14.19.0 the answer had already been staged in `## [Unreleased]` one
-  commit earlier (`a9bd75d55`) — nothing read it, so it was moved into the
-  section by hand anyway. The answer was prepared and the pipeline still refused
-  over it; that, not a missing answer, is the defect. `guard_release_curation`
-  now tries three routes in cost order: a `> Next cycle ships …` and/or
-  `> **Previous cycle:** …` line **staged** under `## [Unreleased]` is consumed
-  into the section and cleared from `[Unreleased]`; failing that, a reachable
-  terminal is **asked** and what the human types is written; failing that, the
-  run refuses exactly as before, which is what keeps CI and scripted releases
-  honest. `ADR-253` is untouched — the generator still never writes the answer,
-  the measured level is never staged (it stays freshly measured so a stale
-  number cannot ride in), and every guard predicate still runs over a staged or
-  typed answer. The read-back obligation joined the mix response at this guard in
-  the same change: until now `check_release_highlights` was the earliest gate
-  reading it, so a section answering the mix and not the promise passed locally
-  and died on the PR.
+- **`task release` no longer asks the releaser to write anything, and the
+  written-answer obligation is deleted (ADR-261).** This entry replaces the one
+  that stood here — *"the release's written obligation is now answerable, not
+  only refusable"* — because that mechanism landed and was removed in the same
+  cycle, and shipping its description would be a false claim about 14.21.0.
+
+  The obligation: when governance-only commits outnumbered consumer-only ones
+  over the release span, the section had to carry human prose naming the next
+  cycle's consumer work, and the following release had to read that promise back
+  as `shipped` / `did not ship` / `withdrawn`. Four refusal sites, two
+  placeholder sentinels, a length floor, an outcome vocabulary, a
+  `## [Unreleased]` staging channel and an interactive prompt stood behind two
+  sentences. Across 14.18.0, 14.19.0 and 14.20.0 it was discharged **by hand,
+  mid-release**, after the pipeline had bumped the version and aborted.
+
+  The mechanism built to fix that ran for the first time on 14.21.0 and made it
+  worse: `staged_response` located its markers with an unanchored
+  `body.indexOf(marker)` over the whole `## [Unreleased]` body, so it matched
+  the **prose of the changelog entry describing itself**, cut two sentences out
+  of the middle of that entry, pasted them into the 14.21.0 release head as
+  orphan fragments, and prompted for the answer anyway. A `task release` run
+  corrupted both sections of the file it was governing. Both are repaired here.
+
+  The owner removed the obligation rather than the bug: this package exists to
+  make the maintainer's work cheaper, and a gate that halts a green pipeline
+  until a human types prose about a cycle that has not happened yet moves cost
+  onto the person the tool is for. `> **Governance mix:** …` stays as a
+  one-line measurement the generator renders end to end.
+
+  **Untouched:** every honesty control about a claim *this* release makes —
+  `_auto-derived, rewrite before merge:_` still blocks, the authoring-instruction
+  sentinel still blocks, the `_none_` contradiction check still blocks, the
+  `Tests: N` footer is still required. Those refuse an unreviewed statement about
+  the release being published; the deleted one refused the absence of a statement
+  about a future one. ADR-253's actual decision — the decline of the per-PR
+  user-artifact gate — stands.
 
 - **The 14.19.0 start-position fix shipped incomplete; this is its other half.**
   It taught `preflightPosition` to accept `release/{target}`, and 14.20.0 then
@@ -161,6 +196,13 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   two sides cannot drift; and the missing `Tests: N` footer joins it as a
   section-level publication blocker, which until now also existed only inside
   `release-validation.yml`.
+
+  **Superseded within the same cycle — read the ADR-261 entry above.** The
+  placeholder sentinel, `mix_response_blockers` and the whole written-answer
+  obligation this entry describes are deleted; the `> **Governance mix:**` line
+  survives as a pure measurement. What still holds from this entry: the
+  locality registry, the `Tests: N` footer as a section-level blocker, and the
+  push-time refusal for the curated head.
 
 ### Added
 
@@ -614,6 +656,113 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > The drift test caps this era at 250 lines of entry body; growth past
 > that forces a new era split (`# Era: 14.21.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
+
+## [14.21.0](https://github.com/event4u-app/agent-config/compare/14.20.0...14.21.0) (2026-09-07)
+
+### Release highlights
+
+- **Behaviour changes:** `task release` no longer asks the releaser to write prose about the next cycle — the governance-versus-product written answer, its promise read-back, the `## [Unreleased]` staging channel and the interactive prompt are deleted, and `> **Governance mix:**` is a pure measurement (ADR-261); one repo-analysis engine with a bounded three-lens loop (8488bf0); record that an unpaid route may propose and score, never decide (10c8c16).
+- **Default changes + migration:** _none_
+- **Security and correctness:** place the worktree gate where neither neighbour's pin breaks (e4ff296); harden the scan scope through the shared reporter (80514a3); read the in-flight target off state, not off --resume (9dafbc7); re-pin the council-template payload exception at its measured size (23dc5bd); guard the humanizer bench entry point (e998ce5); make the bound table say what the scanner does (20fd4c0); +4 more.
+- **Honest nulls:** record the 14.20.0 findings null, and correct the growth claim (065aeba); re-pin the council-template payload exception at its measured size (23dc5bd); disarm the rule-of-three over ordinary lists, floor the densities (ee2fb2f); pre-register the jury claim and build its aggregator (3b3c7e0); report a disabled seat and why it ships off (47a1d1c).
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 31 vs consumer-only 10 (taxonomy 1.0.0).
+
+### Features
+
+* **gates:** refuse a push that leaves this branch's own work uncommitted ([e64d35f](https://github.com/event4u-app/agent-config/commit/e64d35fce403f665035f55eee16a70d22a30c81f))
+* **release:** make the written obligation answerable, not only refusable ([d61cab7](https://github.com/event4u-app/agent-config/commit/d61cab76ab46f5dea883b7664bd040948116aed3))
+* **scripts:** add harvest_reference_tokens, the one discovery pass ([22eed08](https://github.com/event4u-app/agent-config/commit/22eed08890e33f83479343871e81d3be86218530))
+* **analyze:** add the roadmap-repos harvester as a thin orchestrator ([64da6d4](https://github.com/event4u-app/agent-config/commit/64da6d43fd61e68e851c2a49dbf5d58a260cd7be))
+* **analyze:** one repo-analysis engine with a bounded three-lens loop ([8488bf0](https://github.com/event4u-app/agent-config/commit/8488bf078d484028f280e6a8df6a41307da019e5))
+* **humanizer:** locate findings, read a consistent pattern as intent, add --audit ([288f451](https://github.com/event4u-app/agent-config/commit/288f451a59b4a0b4f193bd1135e46ea738bc3f68))
+* **humanizer:** attribute the blind preference, and decline real-draft collection ([89fa350](https://github.com/event4u-app/agent-config/commit/89fa350b34bb2ab99956c73fecf3308d9a847f72))
+* **ai-tells:** land six English and seven German families, one epoch each ([40c77ed](https://github.com/event4u-app/agent-config/commit/40c77ed28d7498444ddb0bcf78b46d5035f848fa))
+* **hooks:** one question per structured-ask call, where a deny is honoured ([f9ee563](https://github.com/event4u-app/agent-config/commit/f9ee5638a37ad7e9791712fb1db06cc9d32d859d))
+* **feature-plan:** one decision per ask, and a summary that follows the asking ([b7222ea](https://github.com/event4u-app/agent-config/commit/b7222ea864482e7ddfb621771caa92b41644bcc2))
+* **roadmap:** ask before park, and stop Open questions reading as storage ([5442cbd](https://github.com/event4u-app/agent-config/commit/5442cbde880117da5300e4d5cd491caa329c26d9))
+* **host-capability:** make the structured-ask capability a recorded fact ([de33df2](https://github.com/event4u-app/agent-config/commit/de33df2e0f424b84013d6077bd57fa655ea52aeb))
+* **ask:** record the native-ask rate in the census artefact ([0ea82ea](https://github.com/event4u-app/agent-config/commit/0ea82eadd5df1df58d64ae50959d242aacb08bec))
+* **ask:** measure the ask surface before changing it ([1b27f7a](https://github.com/event4u-app/agent-config/commit/1b27f7a944d4cfb4031f58311620d760cf8c5340))
+* **council:** pre-register the jury claim and build its aggregator ([3b3c7e0](https://github.com/event4u-app/agent-config/commit/3b3c7e0c7d4c1c77b51af888b83974a18b63b2be))
+* **council:** make a policy refusal sayable, and fail closed on it ([f52115d](https://github.com/event4u-app/agent-config/commit/f52115d5931e349de035409559c6d7c1729ce9ba))
+* **council:** report a disabled seat and why it ships off ([47a1d1c](https://github.com/event4u-app/agent-config/commit/47a1d1cc2424c5f66f2f32fd17ffb09269a45ae4))
+* **council:** give gemini, xai and perplexity a live api transport ([92193b8](https://github.com/event4u-app/agent-config/commit/92193b8c0c1d2c8f06dc0761fdebdb17124a718e))
+
+### Bug Fixes
+
+* **decisions:** disclose ADR-260 evidence ([458ab51](https://github.com/event4u-app/agent-config/commit/458ab5148d61acc88c573341a7e933af8224c1af))
+* **decisions:** repair the provenance kind and scope the ADR-255 supersession ([df0057c](https://github.com/event4u-app/agent-config/commit/df0057cc51fa7bc72e1905f471c54a570e4d7b6e))
+* **evidence:** scrub the speaking round name the drafts cited ([fa8a8bf](https://github.com/event4u-app/agent-config/commit/fa8a8bf98771988a77b0d2d08dd4bc9e428af676))
+* **hooks:** place the worktree gate where neither neighbour's pin breaks ([e4ff296](https://github.com/event4u-app/agent-config/commit/e4ff2969f598397fd36a2a4c58870ee28065c44c))
+* **gates:** harden the scan scope through the shared reporter ([80514a3](https://github.com/event4u-app/agent-config/commit/80514a3fe81a3b1d6aee7a566b6e206059fdc35c))
+* **evidence:** give shipped 14.20.0 the findings ledger it shipped without ([182d84c](https://github.com/event4u-app/agent-config/commit/182d84cb2bb48d1df7d4fe9e7797f3c0da71beed))
+* **release:** record the 14.20.0 findings null, and correct the growth claim ([065aeba](https://github.com/event4u-app/agent-config/commit/065aeba595c887b23c2a82288bb49036f0b91f3a))
+* **gates:** pay the two ratchets this branch moved ([ff6c84d](https://github.com/event4u-app/agent-config/commit/ff6c84d8bc7306d2cf7cbf0a6766c56cfc9732ed))
+* **release:** read the in-flight target off state, not off --resume ([9dafbc7](https://github.com/event4u-app/agent-config/commit/9dafbc72419517607d4e523faab37652814bba4e))
+* **gates:** re-pin the council-template payload exception at its measured size ([23dc5bd](https://github.com/event4u-app/agent-config/commit/23dc5bde2be254b55173de68f65c3ce76dc8cb06))
+* **analyze:** keep the repo argument-hint inside the 120-char schema cap ([3862664](https://github.com/event4u-app/agent-config/commit/38626642214cd223a5ab93d8abb3959e114883b0))
+* **bench:** guard the humanizer bench entry point ([e998ce5](https://github.com/event4u-app/agent-config/commit/e998ce5a154ae25b66c38922100888ca887b72f4))
+* **humanizer:** make the bound table say what the scanner does ([20fd4c0](https://github.com/event4u-app/agent-config/commit/20fd4c0a802c982d1e3136c2b3da4225e979c64c))
+* **ai-tells:** disarm the rule-of-three over ordinary lists, floor the densities ([ee2fb2f](https://github.com/event4u-app/agent-config/commit/ee2fb2f03ab4a79c8741b1219f37954c23b9767b))
+* **handoff:** use the house dialect for handoff ([ffd42f0](https://github.com/event4u-app/agent-config/commit/ffd42f0445a877e56ebfc502b944e9e2014636f9))
+* **comments:** drop report structure and evidence paths from source ([b346418](https://github.com/event4u-app/agent-config/commit/b346418b12c47d5ab422f92c95a81a47c0f26fbd))
+* **claims:** use the house dialect in the jury claim ([dc82a5c](https://github.com/event4u-app/agent-config/commit/dc82a5caae2230cdf02444a9a49d3de330400894))
+* **lint:** satisfy the two eslint rules the new council modules tripped ([162056e](https://github.com/event4u-app/agent-config/commit/162056e2bfd63fcb5fd4e1219b4882343a2acf29))
+* **hooks:** carry rung-3 and rung-4 verdicts on the runtime carrier ([1a1f57a](https://github.com/event4u-app/agent-config/commit/1a1f57ae5e1e8352bced0b212a51af63410fea14))
+
+### Documentation
+
+* **evidence:** declare the completion-review skip for this docs-only diff ([b273d3f](https://github.com/event4u-app/agent-config/commit/b273d3f6bd0428d1b06e311bd13e632631522fda))
+* **evidence:** the inbox-2026-09-u verification and reproduction ledger ([3927a27](https://github.com/event4u-app/agent-config/commit/3927a27c224b9f6c828aec47e888c5748e690853))
+* **roadmaps:** land the standing-payload and code-graph plans, corrected against the tree ([165c154](https://github.com/event4u-app/agent-config/commit/165c1545b9a7ff40e14d735982f987ac1988d78d))
+* **decisions:** record the two owner rulings as ADR-259 and ADR-260 ([b53b182](https://github.com/event4u-app/agent-config/commit/b53b18202e1242e2492437df454aa1d481c0366c))
+* **evidence:** add the sixth drain position and the cross-session guard finding ([cb809ed](https://github.com/event4u-app/agent-config/commit/cb809ed2ec8f400b5f7e2d0bb594db498e5031c7))
+* **changelog:** record the pre-push worktree gate ([ad04f23](https://github.com/event4u-app/agent-config/commit/ad04f2363997b336d4fe56f4bb962fa68458de29))
+* **evidence:** record the 2026-09-07 PR drain run ([f5cad4c](https://github.com/event4u-app/agent-config/commit/f5cad4cfd6803c14513d629a0bbf8ad6d241668b))
+* **evidence:** correct the run-20 PR states, and record how the shared red cleared ([5bcc8b8](https://github.com/event4u-app/agent-config/commit/5bcc8b840c6c9bd236179a689cd20fb5b6c1c73d))
+* **evidence:** record the run-20 autonomous roadmap drain ([6aedb31](https://github.com/event4u-app/agent-config/commit/6aedb311a297281ce6de50c994132f1a63d73540))
+* **release:** record the three answer routes and the in-flight target fix ([c7e320b](https://github.com/event4u-app/agent-config/commit/c7e320bac67aa2ebbc3571efc000bdc083804409))
+* **roadmap:** close road-to-bounded-reference-harvest-loop, carry the observation ([1f1df17](https://github.com/event4u-app/agent-config/commit/1f1df17ceb0e49428ecce3f6c7fa8ef0c55f7684))
+* **adr:** record the 2026-07-11 prose-tell verdicts as ADR-256 ([8dcc259](https://github.com/event4u-app/agent-config/commit/8dcc259b1d9541c38149f9379550617df6b97d07))
+* **decisions:** record the one-question-per-ask concern admission ([03b865f](https://github.com/event4u-app/agent-config/commit/03b865fd8517604d8e81acd7ca8439e58f84dee9))
+* **evidence:** the post-change ask-block census ([1390aa7](https://github.com/event4u-app/agent-config/commit/1390aa7502d1fc8f00f0aa3528c052540f2ef83e))
+* **evidence:** freeze the ask-block census baseline ([27c7d40](https://github.com/event4u-app/agent-config/commit/27c7d4051241e44d716d500a8cb7b06e254ebdcd))
+* **adr:** disclose ADR-256's evidence in the body, not only its frontmatter ([a37a12e](https://github.com/event4u-app/agent-config/commit/a37a12ebf497b542dcfb290e6dbf4dfcc935ee34))
+* **proof:** regenerate after the jury claim landed in the ledger ([0753cb8](https://github.com/event4u-app/agent-config/commit/0753cb8d43fd86a396129a47c415534696b19913))
+* **roadmaps:** resolve three blockers on admissible-council-seats ([bb8cef5](https://github.com/event4u-app/agent-config/commit/bb8cef53fe4814c94b25f0fe3926a06e127c74b9))
+* **adr:** record that an unpaid route may propose and score, never decide ([10c8c16](https://github.com/event4u-app/agent-config/commit/10c8c169c4c6c2c76f0aeea4e57dd925b81e789c))
+
+### Chores
+
+* **evidence:** refresh the ADR evidence census after the main merge ([a2544fc](https://github.com/event4u-app/agent-config/commit/a2544fc61d45d9c90578633b49e84398269f28c9))
+* **baselines:** carry the merge reconciliation that was never committed ([33e811f](https://github.com/event4u-app/agent-config/commit/33e811f330ba41f9e81dafeda2bba9d047ab427c))
+* **evidence:** record the 14.20.0 findings ledger ([3bfb9b5](https://github.com/event4u-app/agent-config/commit/3bfb9b540e588358b06182bad3e60694b557d24f))
+* **install:** rebuild the install bundle for the merged capability field ([395c0b6](https://github.com/event4u-app/agent-config/commit/395c0b61d61a492b0a0b2bba9368521ccea879de))
+* **roadmap:** archive road-to-bounded-reference-harvest-loop ([0b3d0a8](https://github.com/event4u-app/agent-config/commit/0b3d0a8af6bad3f76f44b8c7857a8807c405bd50))
+* **generated:** regenerate projections, catalogs and artefact counts ([1187cd6](https://github.com/event4u-app/agent-config/commit/1187cd6932b28d42ebea49b576ba4edb885b1138))
+* **proof:** regenerate docs/proof.md for the re-scoped humanizer claim ([86951f2](https://github.com/event4u-app/agent-config/commit/86951f26bab10dfd83b8955e137b273c6c5608bd))
+* **adr:** regenerate the evidence census for ADR-256 ([f3b0054](https://github.com/event4u-app/agent-config/commit/f3b00549b87b7f04f82849738233c211655d15e5))
+* **index:** regenerate for the /humanize description change ([97d1b1d](https://github.com/event4u-app/agent-config/commit/97d1b1d61a2857166b7e2f755018979038e39613))
+* **estate:** claim the one dimension this change grows ([8203323](https://github.com/event4u-app/agent-config/commit/8203323a620c1a7a855ae62cd6f38c6292e3c26d))
+* **roadmap:** archive road-to-asked-not-parked ([952a011](https://github.com/event4u-app/agent-config/commit/952a01120d29eab49091e087b5921dfbd0c3e202))
+* **host-capability:** project the contract edit and escape the artefact pointer ([9331bbf](https://github.com/event4u-app/agent-config/commit/9331bbf59e872983ada34cfeb34e41894abe191b))
+* **census:** refresh the ADR evidence census for ADR-256 ([9379a5b](https://github.com/event4u-app/agent-config/commit/9379a5b278e5a33469ec7e3a017afc50c5f6c1bb))
+* **baselines:** lower check_source_size_budget 18,062 -> 18,061 ([51708b1](https://github.com/event4u-app/agent-config/commit/51708b18f7f06853ca5936eaf6b7ce4c8d28f596))
+* **roadmaps:** archive road-to-admissible-council-seats ([9a7ac52](https://github.com/event4u-app/agent-config/commit/9a7ac524922d65bfc85a476a0afdab039dfb415c))
+
+### Other
+
+* **measured-prose-tells:** archive, and correct the parent's stale note ([5c1baf5](https://github.com/event4u-app/agent-config/commit/5c1baf5cc78fdaf8747cae55601f6da3ad5b8f7b))
+* **measured-prose-tells:** close all 25 boxes and resolve the blocker ([224de7f](https://github.com/event4u-app/agent-config/commit/224de7f7b7ed814894830a36ab0ba41fce0406b3))
+* **humanizer:** split the fixture corpus into tune and holdout ([1c6f4ea](https://github.com/event4u-app/agent-config/commit/1c6f4eae62453d90d19086c97601c6d277be1bbf))
+* **prose-tells:** publish run 1 and run 2, including two falsified predictions ([fb03dba](https://github.com/event4u-app/agent-config/commit/fb03dba730b86980e81203a3d3c16ee10100fa89))
+* **prose-tells:** build the clean corpus and the per-rule FP instrument ([b1c95eb](https://github.com/event4u-app/agent-config/commit/b1c95eb4d9aabca793d52feb4d7679429e30d4d7))
+* **prose-tells:** pre-register the false-positive instrument before measuring ([822b5b2](https://github.com/event4u-app/agent-config/commit/822b5b2ddcfc7f4f7de225b803941373d78d2e60))
+* **asked-not-parked:** resolve both blockers and close every step ([1a8cb04](https://github.com/event4u-app/agent-config/commit/1a8cb04709314b7c19a4c7e2339e4901a062ad80))
+
+Tests: 21855 (+249 since 14.20.0)
 
 ## [14.20.0](https://github.com/event4u-app/agent-config/compare/14.19.0...14.20.0) (2026-09-07)
 

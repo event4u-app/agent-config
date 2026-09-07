@@ -17,10 +17,55 @@ AI-reviewed" — that is only true once the maintainer arms it (below).
 | Job | Runs | Spend | Blocks merge |
 |---|---|---|---|
 | `gate-dry-run` | every PR | none (no API) | never — prints the review plan only |
-| `live-advisory` | every PR **iff** `ANTHROPIC_API_KEY` is set | one review call | never — posts findings, records what *would* block |
+| `live-advisory` | every PR **iff** `ANTHROPIC_API_KEY` is set | up to `MAX_REVIEW_CHUNKS` review calls (see § Prompt budget) | never — posts findings, records what *would* block |
 
 Without the `ANTHROPIC_API_KEY` repo secret, `live-advisory` is a **logged
 no-op** (never a failing check) — exactly the `cross-model-canary.yml` pattern.
+
+
+## Prompt budget and coverage
+
+The release path analyses the whole span since the previous tag, and that span
+does not fit one request. Measured on four consecutive releases, all four of
+which returned `HTTP 400 prompt is too long` and reviewed nothing:
+
+| release | input tokens reported | cap |
+|---|---:|---:|
+| 14.17.0 | 235,472 | 200,000 |
+| 14.18.0 | 413,191 | 200,000 |
+| 14.19.0 | 450,336 | 200,000 |
+| 14.20.0 | 260,998 | 200,000 |
+
+The smallest exceeds the cap by 17.7 %, so no observed span fits and waiting for
+smaller releases is not a remedy.
+
+**What the gate does now.** The diff is split per file and packed into requests
+under `PROMPT_BUDGET_CHARS`; each is reviewed and the findings merged and
+deduplicated on the finding id. `--dry-run` prints the request count before
+anything is spent, and warns when a span sits at `MAX_REVIEW_CHUNKS`.
+
+**Nothing is truncated.** A silently shortened diff yields findings about a
+fragment while reading as a review of the whole change. So a single file larger
+than one request is reported unreviewed rather than cut mid-hunk, a chunk whose
+call fails does not discard the chunks that succeeded, and the posted comment
+carries a **Coverage** block naming every file that was not read — with the
+statement that absence of a finding for an unreviewed path is not evidence
+about that path.
+
+**The budget is a character proxy.** The cap is enforced by the provider's
+tokenizer, which this repository cannot run. `BUDGET_CHARS_PER_TOKEN` is
+derived from the failures above (measured diff chars ÷ reported tokens ≈ 3.13
+and 3.18) and set BELOW them, because the ratio is content-dependent: cl100k
+over this repo's own diffs reads ~3.9 for `src/`, ~4.1 for `agents/` prose and
+~2.75 for a lockfile. A call that still overflows a budgeted chunk falsifies
+that number, not the partitioning — and fails gracefully, marking the chunk
+unreviewed and continuing.
+
+**What this does NOT fix.** Coverage is stated in prose; the exit code does not
+fail closed on incomplete coverage, so an `--enforce` run over a partial review
+can still return 0. The findings artifact carries `coverage`, but
+`check_finding_dispositions --ingest` reads only `.findings`, so the durable
+ledger does not yet record it.
 
 ## The teeth (defined + wired, not yet armed)
 

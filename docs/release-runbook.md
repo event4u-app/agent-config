@@ -234,18 +234,19 @@ between a re-run working and crashing.
 ## 6. What can go wrong (known checkpoints)
 
 - **`the X.Y.Z release highlights are still the generator's draft`** → the
-  curated-head / governance-mix obligation. **From a terminal this no longer
-  aborts:** the run asks for the answers and writes them. You reach this message
-  only in a non-interactive run (CI, a pipe, a background job) with nothing
-  staged. Two fixes, either one:
-  - **stage it** — put a `> Next cycle ships …` line and/or a
-    `> **Previous cycle:** …` line under `## [Unreleased]` whenever the answer
-    is known; the next release consumes both and clears them from
-    `[Unreleased]`. The measured level is never staged, only the answer;
-  - **or edit the `## [X.Y.Z]` section** on the `release/X.Y.Z` branch you are
-    already standing on and re-run `task release`. Nothing has been committed or
-    pushed; the dirty tree is expected and is swept into the release commit by
-    step 3.
+  curated head still carries `_auto-derived, rewrite before merge:_` (or the
+  generator's authoring comment). Rewrite those head lines — the message prints
+  them — in the `## [X.Y.Z]` section on the `release/X.Y.Z` branch you are
+  already standing on, then re-run `task release`. Nothing has been committed or
+  pushed; the dirty tree is expected and is swept into the release commit by
+  step 3.
+
+  **This no longer asks you to write anything about a FUTURE cycle.** Until
+  2026-09-07 the same message also covered a governance-versus-product written
+  answer and a read-back of the previous release's promise, with an interactive
+  prompt and a `## [Unreleased]` staging channel behind them. ADR-261 deleted
+  all of it: the `> **Governance mix:** …` line is now a pure measurement the
+  writer renders, and no release stops over it.
 - **`release must run from 'main' or 'release/<NEXT>.0'` while you are standing
   on `release/<THIS>.0`** → fixed 2026-09-07, and worth recognising if you see
   it in an older shell. Step 2 had already bumped `package.json`, so a plain

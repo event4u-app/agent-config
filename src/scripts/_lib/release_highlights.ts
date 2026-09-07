@@ -25,16 +25,7 @@
  */
 import { spawnSync } from 'node:child_process';
 
-import {
-    CURATED_HEAD_INSTRUCTION,
-    MIX_RESPONSE_MARKER,
-    MIX_RESPONSE_PLACEHOLDERS,
-    NEXT_SECTION_RE,
-    PROMISE_OUTCOMES,
-    PROMISE_PHRASE,
-    PROMISE_READBACK_MARKER,
-    extract_changelog_section,
-} from './release_material.js';
+import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
 
 /** The five curated labels, in the order an operator reads them. */
 export const HEAD_LABELS: readonly string[] = [
@@ -407,7 +398,6 @@ export function publication_blockers(
     sectionBody: string,
     version: string,
     where = '`main`',
-    mix: MixObligation | null = null,
 ): string[] {
     const out: string[] = [];
     if (sectionBody.includes(DERIVED_MARKER)) {
@@ -424,13 +414,15 @@ export function publication_blockers(
                 'comment line from the section and re-run.',
         );
     }
-    out.push(...mix_response_blockers(sectionBody, version, where, mix));
     return out;
 }
 
 /**
  * Everything that makes a whole SECTION unpublishable — the head-level
- * blockers above plus the two obligations that only exist for a full section.
+ * blockers above plus the tests footer, which only exists for a full section.
+ *
+ * It was "the two obligations" until 2026-09-07: the governance-versus-product
+ * written answer was the other, and ADR-261 deleted it. One remains.
  *
  * Two levels and not one, because `publication_blockers` is legitimately called
  * with a bare curated head (the prefill tests do exactly that), and a head
@@ -451,9 +443,8 @@ export function section_publication_blockers(
     sectionBody: string,
     version: string,
     where = '`main`',
-    mix: MixObligation | null = null,
 ): string[] {
-    const out = publication_blockers(sectionBody, version, where, mix);
+    const out = publication_blockers(sectionBody, version, where);
     if (!TEST_FOOTER_RE.test(sectionBody)) {
         out.push(
             `the ${version} section carries no \`Tests: N (+M since PREV)\` footer. ` +
@@ -480,206 +471,22 @@ export function section_publication_blockers(
 const TEST_FOOTER_RE = /^Tests: \d+/mu;
 
 /**
- * The measured governance-versus-product level, as the writer and the guards
- * both receive it.
+ * The measured governance-versus-product level, as the writer receives it.
  *
- * A plain record and not the measurement itself: this module is reached by the
- * push guard, the pre-commit ask and the CI gate, and only the callers have git
- * to measure with. Passing the reading in keeps the predicate pure and keeps
- * `measure_release_mix`'s git access out of a module three guards import.
+ * A plain record and not the measurement itself: only the callers have git to
+ * measure with, and keeping `measure_release_mix`'s git access out of this
+ * module keeps it importable by the guards.
+ *
+ * It carried a `triggered` boolean until ADR-261, when the obligation that
+ * boolean gated was deleted. It was removed rather than kept with a rationale:
+ * the first attempt at this docblock claimed a reader of the published line
+ * could see the verdict, and a neutral review falsified that — `triggered` was
+ * set once and read nowhere, and `render_mix_response` never received it. The
+ * two counts in `level` are what the line publishes, and the taxonomy's own
+ * verdict stays where it is computed and printed, in `measure_release_mix`.
  */
 export interface MixObligation {
-    triggered: boolean;
     level: string;
-}
-
-/** Minimum written characters after the marker — a bare marker is not an answer. */
-export const MIX_RESPONSE_MIN_CHARS = 40;
-
-/**
- * The ONE predicate for the governance-versus-product obligation.
- *
- * `check_release_highlights` refuses this from the CI side and
- * `guard_release_branch_push` from the local side, and until 2026-09-05 only
- * the first of the two knew the obligation existed. That asymmetry is what the
- * contract itself recorded — *"the earliest refusal for this one obligation is
- * the PR, not the push"* (`docs/contracts/CHANGELOG-conventions.md`) — and what
- * cost 14.17.0 a red release PR. Both sides now read this function, so a change
- * to the obligation cannot reach one guard and miss the other.
- *
- * `null` means the measurement did not run (shallow clone, missing tag). That
- * degrades to no blocker, matching the gate's documented stance: this is a
- * governance signal, not a correctness control, and an environment fact must
- * not block a release.
- */
-export function mix_response_blockers(
-    sectionBody: string,
-    version: string,
-    where = '`main`',
-    mix: MixObligation | null = null,
-): string[] {
-    if (!mix || !mix.triggered) {
-        return [];
-    }
-    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
-    if (idx === -1) {
-        return [
-            `the ${version} section owes a governance-versus-product response ` +
-                `(${mix.level}) and carries none. Add one \`> ${MIX_RESPONSE_MARKER}\` line ` +
-                `immediately under the curated head on ${where}, naming the next cycle's ` +
-                'consumer work or a maintainer justification.',
-        ];
-    }
-    const block = mix_response_block(sectionBody, idx);
-    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => block.includes(t));
-    if (left.length > 0) {
-        return [
-            `the ${version} governance-versus-product response still carries the writer's ` +
-                `placeholder(s) (${left.map((t) => `\`${t}\``).join(', ')}) — the measured level ` +
-                'is the generator\'s, the answer is not, and `CHANGELOG.md` is published to npm. ' +
-                `Name the next cycle's consumer work (or the justification) on ${where} and re-run.`,
-        ];
-    }
-    if (human_answer(block, mix.level).length < MIX_RESPONSE_MIN_CHARS) {
-        return [
-            `the ${version} governance-versus-product response carries no written answer ` +
-                `beyond the measured level (${mix.level}). The level is the generator's; the ` +
-                `response has to name the next cycle's consumer work or a maintainer ` +
-                `justification. Write it on ${where}, in the \`> \` block under the marker.`,
-        ];
-    }
-    return [];
-}
-
-/**
- * The promise the PREVIOUS release head made, or null when it made none.
- *
- * Scoped to that section's governance-response block, not to its whole body: a
- * product line that happens to contain the phrase is not a promise the project
- * made about the next cycle.
- */
-export function previous_promise(changelogText: string, previousVersion: string): string | null {
-    const section = extract_changelog_section(changelogText, previousVersion);
-    if (section === null) return null;
-    const idx = section.body.indexOf(MIX_RESPONSE_MARKER);
-    if (idx === -1) return null;
-    const block = mix_response_block(section.body, idx);
-    return block.includes(PROMISE_PHRASE) ? block : null;
-}
-
-/**
- * The ONE predicate for "did this head answer the previous head's promise?".
- *
- * The defect: `_lib/release_material.ts` generates a `Next cycle ships …` line
- * and nothing has ever read the previous one back, so an unmet promise can be
- * restated indefinitely at zero cost — the debt is booked and never called. A
- * promise nobody reads is not a commitment, it is a sentence.
- *
- * Three outcomes are accepted and one of them must be chosen, which is the
- * whole mechanism: it does not require the promise to have been KEPT, and no
- * ratio, deadline or count is enforced here. Refusing an unkept promise would
- * make the honest answer the expensive one and teach an author to promise less
- * rather than to answer truthfully.
- *
- * Length floor and placeholder scan reuse the governance-response discipline
- * for the same reason it exists there: a bare marker, or the writer's own
- * scaffolding, is not an answer a human wrote.
- */
-export function promise_readback_blockers(
-    sectionBody: string,
-    version: string,
-    previousVersion: string,
-    promise: string | null,
-    where = '`main`',
-): string[] {
-    if (promise === null) return [];
-    const idx = sectionBody.indexOf(PROMISE_READBACK_MARKER);
-    if (idx === -1) {
-        return [
-            `the ${version} section does not answer the ${previousVersion} head's ` +
-                `\`${PROMISE_PHRASE}\` promise. Add one \`> ${PROMISE_READBACK_MARKER}\` line ` +
-                `immediately under the curated head on ${where}, naming the promise and whether ` +
-                `it ${PROMISE_OUTCOMES.join(', ')} (the last one with its reason).`,
-        ];
-    }
-    const block = mix_response_block(sectionBody, idx);
-    const left = MIX_RESPONSE_PLACEHOLDERS.filter((t) => block.includes(t));
-    if (left.length > 0) {
-        return [
-            `the ${version} previous-cycle answer still carries the writer's placeholder(s) ` +
-                `(${left.map((t) => `\`${t}\``).join(', ')}). \`CHANGELOG.md\` is published to npm. ` +
-                `Write the outcome on ${where} and re-run.`,
-        ];
-    }
-    const lower = block.toLowerCase();
-    const named = PROMISE_OUTCOMES.filter((o) => lower.includes(o));
-    if (named.length === 0) {
-        return [
-            `the ${version} previous-cycle answer names no outcome. It has to say which of ` +
-                `${PROMISE_OUTCOMES.join(', ')} applies to the ${previousVersion} promise — an ` +
-                'answer that restates the promise without resolving it is the failure this reads ' +
-                'back for.',
-        ];
-    }
-    if (readback_answer(block).length < MIX_RESPONSE_MIN_CHARS) {
-        return [
-            `the ${version} previous-cycle answer is shorter than a written answer ` +
-                `(${String(MIX_RESPONSE_MIN_CHARS)} characters after the marker). Name what was ` +
-                `promised and what became of it on ${where}, not the outcome word alone.`,
-        ];
-    }
-    return [];
-}
-
-/** What the author wrote under the read-back marker, marker and quoting removed. */
-export function readback_answer(block: string): string {
-    return block
-        .replace(PROMISE_READBACK_MARKER, '')
-        .replace(/^[>\s.]+|[>\s.]+$/gu, '')
-        .replace(/[>\s]+/gu, ' ')
-        .trim();
-}
-
-/**
- * The whole response block: the marker's line plus every blockquote line under it.
- *
- * Reading only the FIRST line after the marker was wrong in both directions, and
- * both were reproduced before this was written. It **accepted** a section whose
- * placeholder line had simply been deleted, because the machine-written level
- * alone is 54 characters and cleared the floor — the smuggled auto-approval the
- * placeholder exists to prevent. And it **refused** the writer's own two-line
- * template, where the level sits on line 1 and the answer on line 2.
- *
- * Scoping to the block also fixes the placeholder scan, which searched the
- * entire section body: a legitimate changelog line containing
- * `<roadmap or issue>` blocked the release.
- */
-export function mix_response_block(sectionBody: string, markerIdx: number): string {
-    const lines = sectionBody.slice(markerIdx).split('\n');
-    const out: string[] = [lines[0] ?? ''];
-    for (const line of lines.slice(1)) {
-        if (!line.trimStart().startsWith('>')) break;
-        out.push(line);
-    }
-    return out.join('\n');
-}
-
-/**
- * What is left of the response block once the generator's own contribution is
- * removed — i.e. the part a human had to write.
- *
- * The measured level is stripped because the writer emitted it; a floor that
- * counted it would be satisfied by the tool on the author's behalf, which is
- * the whole failure this obligation guards against.
- */
-export function human_answer(block: string, level: string): string {
-    return block
-        .replace(MIX_RESPONSE_MARKER, '')
-        .split(level)
-        .join('')
-        .replace(/^[>\s.]+|[>\s.]+$/gu, '')
-        .replace(/[>\s]+/gu, ' ')
-        .trim();
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */
@@ -687,109 +494,6 @@ export function stale_draft_labels(
     curated: Readonly<Record<string, string>>,
 ): string[] {
     return HEAD_LABELS.filter((l) => (curated[l] ?? '').includes(DERIVED_MARKER));
-}
-
-// Prepared answers, staged by the maintainer under `## [Unreleased]`.
-
-/**
- * The `## [Unreleased]` body, or null when the file carries no such section.
- *
- * Bounded by `NEXT_SECTION_RE`, the same terminator `extract_changelog_section`
- * uses, so an era banner ends the section exactly as a version heading does.
- */
-export function unreleased_body(changelogText: string): string | null {
-    const m = /^##\s+\[Unreleased\]\s*$/mu.exec(changelogText);
-    if (m === null) return null;
-    const after = changelogText.slice(m.index + m[0].length);
-    const next = NEXT_SECTION_RE.exec(after);
-    return next === null ? after : after.slice(0, next.index);
-}
-
-/**
- * A response the maintainer STAGED for the next release, read back at release
- * time instead of demanded during it.
- *
- * Why this exists, and why it is not the generator answering itself:
- *
- * `ADR-253` and `CHANGELOG-conventions.md` require a HUMAN sentence, and the
- * placeholder sentinel exists so a generator cannot discharge its own
- * written-answer obligation — a rule this function does not touch and must not
- * be read as touching. What it changes is WHEN the human writes it.
- *
- * Measured across three consecutive releases (14.18.0, 14.19.0, 14.20.0): the
- * obligation was discharged by hand, mid-release, after `task release` had
- * already bumped the version and aborted — and at 14.19.0 the maintainer had
- * ALREADY written the read-back into `## [Unreleased]` one commit earlier
- * (`a9bd75d55`), which nothing read, so it was moved into the section by hand
- * anyway. The answer was prepared and the pipeline still refused over it. That
- * is the defect: not a missing answer, an unread one.
- *
- * So the staging ground is `## [Unreleased]`, where the entries this release
- * ships are already being written, and the shape is the shape the section
- * wants — no second syntax to learn, and no second place for the measured
- * level to live (the level stays the generator's, always freshly measured).
- *
- * Returns the blockquote lines verbatim; a staged block containing a
- * placeholder is returned unchanged rather than filtered, so the guards refuse
- * it exactly as they refuse an unedited one. Silently dropping it would turn a
- * half-finished answer into a missing one, which reads as a different defect.
- */
-export function staged_response(changelogText: string, marker: string): string | null {
-    const body = unreleased_body(changelogText);
-    if (body === null) return null;
-    const idx = body.indexOf(marker);
-    if (idx === -1) return null;
-    const lineStart = body.lastIndexOf('\n', idx) + 1;
-    const block = mix_response_block(body, lineStart);
-    return block.trim() === '' ? null : block;
-}
-
-/** Remove a staged block from `## [Unreleased]` once it has been consumed. */
-export function drop_staged_response(changelogText: string, block: string): string {
-    const at = changelogText.indexOf(block);
-    if (at === -1) return changelogText;
-    let end = at + block.length;
-    // Absorb the blank line the block was separated by, so consuming one of two
-    // staged blocks does not leave a widening gap behind.
-    if (changelogText.startsWith('\n\n', end)) end += 1;
-    return changelogText.slice(0, at) + changelogText.slice(end);
-}
-
-/**
- * Replace the writer's placeholder line(s) under the governance marker with a
- * human answer, keeping the generator's measured level line untouched.
- *
- * The level stays where it was rendered, always freshly measured, so a staged
- * answer can never carry a stale number into the published section — the one
- * thing a maintainer editing a whole block by hand could get wrong.
- */
-export function apply_mix_answer(sectionBody: string, answerLines: readonly string[]): string {
-    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
-    if (idx === -1) return sectionBody;
-    const lineStart = sectionBody.lastIndexOf('\n', idx) + 1;
-    const existing = mix_response_block(sectionBody, lineStart);
-    const levelLine = existing.split('\n')[0] as string;
-    return (
-        sectionBody.slice(0, lineStart) +
-        [levelLine, ...answerLines].join('\n') +
-        sectionBody.slice(lineStart + existing.length)
-    );
-}
-
-/**
- * Add a read-back block under the governance response, separated by a blank
- * line so `mix_response_block` does not swallow one into the other.
- *
- * A section that already answers is returned unchanged: this consumes a staged
- * answer, it never overwrites one a human wrote into the section directly.
- */
-export function apply_readback(sectionBody: string, block: string): string {
-    if (sectionBody.includes(PROMISE_READBACK_MARKER)) return sectionBody;
-    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
-    if (idx === -1) return sectionBody;
-    const lineStart = sectionBody.lastIndexOf('\n', idx) + 1;
-    const end = lineStart + mix_response_block(sectionBody, lineStart).length;
-    return sectionBody.slice(0, end) + '\n\n' + block.trimEnd() + sectionBody.slice(end);
 }
 
 // ─── git span collection ────────────────────────────────────────────────────
