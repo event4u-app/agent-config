@@ -53,16 +53,41 @@ describe('the default root', () => {
     });
 });
 
-describe('resolveSkillsRoot skips an EMPTY root', () => {
+describe('resolveSkillsRoot — the AUTHORED tree wins, and an empty root is skipped', () => {
+    const claude = (): string => path.join(tmp, '.claude', 'skills');
+    const authored = (): string => path.join(tmp, 'src', 'skills');
+
+    it('prefers src/skills even when .claude/skills is POPULATED', () => {
+        // The 2026-09-07 regression this pins, and it is not hypothetical. The
+        // ADR-236 amendment made `.claude/skills` hold only the ~49 flat-command
+        // WRAPPERS — non-empty, and each carries a `SKILL.md`, so the old
+        // projection-first order resolved it and nothing downstream could tell it
+        // was not the catalogue. Measured: the `skill-route` hook ranked over 49
+        // wrappers instead of 299 skills.
+        fs.mkdirSync(path.join(claude(), 'some-command-wrapper'), { recursive: true });
+        fs.mkdirSync(path.join(authored(), 'a-real-skill'), { recursive: true });
+        expect(resolveSkillsRoot(tmp)).toBe(authored());
+    });
+
+    it('falls back to .claude/skills when there is no authored tree — the CONSUMER case', () => {
+        // A consumer carries the projection and no `src/`. Checking the authored
+        // tree first costs them one `existsSync` and must change nothing.
+        fs.mkdirSync(path.join(claude(), 'a'), { recursive: true });
+        expect(resolveSkillsRoot(tmp)).toBe(claude());
+    });
+
     it('does not accept a directory that exists and holds nothing', () => {
-        fs.mkdirSync(path.join(tmp, '.claude', 'skills'), { recursive: true });
+        fs.mkdirSync(claude(), { recursive: true });
         expect(resolveSkillsRoot(tmp)).toBeNull();
     });
 
-    it('accepts the next candidate when the first is empty', () => {
-        fs.mkdirSync(path.join(tmp, '.claude', 'skills'), { recursive: true });
-        fs.mkdirSync(path.join(tmp, 'src', 'skills', 'a'), { recursive: true });
-        expect(resolveSkillsRoot(tmp)).toBe(path.join(tmp, 'src', 'skills'));
+    it('skips an EMPTY authored tree and takes the populated projection', () => {
+        // The empty guard still earns its place in BOTH directions after the
+        // reorder — a maintainer checkout that has an empty `src/skills` must not
+        // resolve it and report an empty catalogue as an empty result.
+        fs.mkdirSync(authored(), { recursive: true });
+        fs.mkdirSync(path.join(claude(), 'a'), { recursive: true });
+        expect(resolveSkillsRoot(tmp)).toBe(claude());
     });
 
     it('is null when no candidate exists at all', () => {

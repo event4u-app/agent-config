@@ -78,30 +78,52 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 /** Catalogue roots tried in order; the first that exists wins. */
-export const DEFAULT_CATALOGUE_ROOTS = ['.claude/skills', 'src/skills'] as const;
+export const DEFAULT_CATALOGUE_ROOTS = ['src/skills', '.claude/skills'] as const;
 
 /**
  * First existing catalogue root under `workspaceRoot`, or `null`.
  *
- * `.claude/skills` before `src/skills` because a CONSUMER install carries the
- * former and only a maintainer checkout carries the latter. Shared by the
- * `skill-route` concern and the `suggest_skill_for_task` MCP handler on
- * purpose: two resolvers over one catalogue is how a ranker and the tool that
- * exposes it start ranking different trees.
+ * Shared by the `skill-route` concern and the `suggest_skill_for_task` MCP
+ * handler on purpose: two resolvers over one catalogue is how a ranker and the
+ * tool that exposes it start ranking different trees.
+ *
+ * ## Order: `src/skills` FIRST, and that was reversed on 2026-09-07
+ *
+ * It used to be `.claude/skills` first, "because a CONSUMER install carries the
+ * former and only a maintainer checkout carries the latter". The premise is
+ * right and the conclusion did not follow: a consumer has no `src/skills`, so
+ * checking it first costs them one `existsSync` and changes nothing — while in a
+ * maintainer checkout `.claude/skills` is a GENERATED PROJECTION whose contents
+ * depend on when `generate-tools` last ran and on what the host-global layer
+ * holds.
+ *
+ * The ADR-236 amendment of 2026-09-07 turned that dependency into a live defect.
+ * The project layer now withholds every skill `~/.claude/skills` carries, so
+ * `.claude/skills` holds only the ~49 flat-command WRAPPERS — non-empty, so the
+ * old order resolved it, and each wrapper carries a `SKILL.md`, so nothing
+ * downstream could tell it was not the catalogue. Measured the same day: the
+ * `skill-route` hook ranked over 49 command wrappers instead of 299 skills.
+ *
+ * The non-empty guard below was the previous repair for the neighbouring case
+ * (an EMPTY projection read as an empty RESULT) and it cannot reach this one:
+ * the wrong tree was populated, just with the wrong things. Preferring the
+ * authored tree removes the whole class — the resolver no longer depends on
+ * generator state in the one checkout that has an authored tree.
  */
 export function resolveSkillsRoot(workspaceRoot: string): string | null {
     for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
         const abs = path.join(workspaceRoot, candidate);
         try {
             if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) continue;
-            // NON-EMPTY, and that qualifier is the whole fix. `.claude/skills`
-            // is a gitignored projection, so in a fresh worktree it EXISTS and
-            // holds nothing — and an empty root resolved as a match makes the
-            // ranker report an empty catalogue as an empty RESULT, which is the
-            // silent failure `road-to-inbox-harvest-2026-08-f-skill-selection-evidence`
-            // is about, arriving through a second door. Measured in that run: a
-            // worktree that had never run `generate-tools` ranked zero skills
-            // and exited 0 on a task that scores 47 against `src/skills`.
+            // NON-EMPTY, and the qualifier still earns its place for the
+            // CONSUMER candidate. `.claude/skills` is a gitignored projection, so
+            // in a fresh worktree it EXISTS and holds nothing — and an empty root
+            // resolved as a match makes the ranker report an empty catalogue as an
+            // empty RESULT, the silent failure
+            // `road-to-inbox-harvest-2026-08-f-skill-selection-evidence` is about.
+            // Measured in that run: a worktree that had never run
+            // `generate-tools` ranked zero skills and exited 0 on a task that
+            // scores 47 against `src/skills`.
             if (fs.readdirSync(abs).length === 0) continue;
             return abs;
         } catch {
