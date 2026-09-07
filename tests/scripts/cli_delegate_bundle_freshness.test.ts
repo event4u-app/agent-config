@@ -2,10 +2,19 @@
  * A `dist/cli-delegate/` bundle must not outrank the source it was built from.
  *
  * `exec_ts` prefers the precompiled bundle over the `.ts` entry (ADR-204, ~5.7x
- * faster). That is right in a consumer install, which ships no `src/` and no
- * tsx. In a DEV tree it is a trap: the compiled copy keeps running while the
- * source next to it changes, so an edit is silently ignored and the developer
- * tests a file nobody executes.
+ * faster). That is right in a consumer install. In a DEV tree it is a trap: the
+ * compiled copy keeps running while the source next to it changes, so an edit is
+ * silently ignored and the developer tests a file nobody executes.
+ *
+ * The discriminator is package-local **tsx**, not the presence of `src/`. This
+ * file used to assert the latter, on the premise that a consumer install "ships
+ * no `src/`" — it does: files[] carries `src/scripts/` and
+ * `src/agent-src/scripts/`. Measured 2026-09-07 on a global 14.21.0 install,
+ * 1348 shipped `src/**\/*.ts` were newer than `dist/cli-delegate/cmd_versions.js`,
+ * so the guard fired on every consumer command and ADR-204's fast path reached
+ * nobody. Where no local tsx exists the fallback is `npx tsx` against the
+ * consumer's own npm config — strictly worse than a compile that may lag a
+ * source edit no consumer can make.
  *
  * Measured failure, 2026-08-14: a dev-tree bundle built before a
  * `projectStoreSlug` fix carried the old character class (`/[/.]/g`, which
@@ -52,8 +61,14 @@ interface Fixture {
  * `dist/cli-delegate/<name>.js`. `devTree: false` omits `src/` entirely — that
  * is what a consumer install looks like.
  */
-function makeFixture(devTree: boolean): Fixture {
+function makeFixture(devTree: boolean, withTsx = true): Fixture {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'delegate-freshness-'));
+    if (withTsx) {
+        // The dev-tree marker the guard actually reads.
+        const binDir = path.join(root, 'node_modules', '.bin');
+        fs.mkdirSync(binDir, { recursive: true });
+        fs.writeFileSync(path.join(binDir, 'tsx'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+    }
     const bundleDir = path.join(root, 'dist', 'cli-delegate');
     fs.mkdirSync(bundleDir, { recursive: true });
     const bundle = path.join(bundleDir, 'cmd_probe.js');
@@ -123,9 +138,21 @@ describe('cli_delegate_bundle freshness guard', () => {
     });
 
     it('keeps the consumer fast path — no src/ means no staleness scan', () => {
-        const f = track(makeFixture(false));
+        const f = track(makeFixture(false, false));
         setOrder(f, 'bundle');
         expect(fs.existsSync(path.join(f.root, 'src'))).toBe(false);
+        expect(resolveBundle(f.root)).toBe(f.bundle);
+    });
+
+    it('keeps the consumer fast path when src/ IS shipped and newer than the bundle', () => {
+        // The shape of a real npm install: `src/` present (files[] ships it),
+        // sources newer than the prepack-built bundle, and NO package-local tsx.
+        // Before the tsx discriminator this returned '' — every delegate command
+        // in every published install fell through to `npx tsx`.
+        const f = track(makeFixture(true, false));
+        setOrder(f, 'source');
+        expect(fs.existsSync(path.join(f.root, 'src'))).toBe(true);
+        expect(fs.existsSync(path.join(f.root, 'node_modules', '.bin', 'tsx'))).toBe(false);
         expect(resolveBundle(f.root)).toBe(f.bundle);
     });
 
