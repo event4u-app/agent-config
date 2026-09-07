@@ -26,14 +26,14 @@ complexity-ascending tie-break. Recomputed rather than trusted.
 |---|---|---|
 | #1888 | mcp-bridge-integrity-and-reach-truth | **merged** · 10 steps / 7 ACs / 4 blockers, archived · 61 checks green |
 | #1889 | one-continuity-record | **merged** · phases 1-2 closed, 6 steps + 3 ACs descoped to a carrier, archived · 17 gates green |
-| #1890 | admissible-council-seats | open · 22/22 (16 `[x]`, 6 `[~]`), 3 blockers, archived · 45 checks green |
+| #1890 | admissible-council-seats | **merged** · 22/22 (16 `[x]`, 6 `[~]`), 3 blockers, archived · 45 checks green |
 | #1891 | observed-learning-signal | **merged** · 24/24, archived · 48/48 green |
-| #1892 | asked-not-parked | open · 25/25, both blockers, archived · 48 checks green |
-| #1893 | measured-prose-tells | open · 25/25 boxes, 12/12 ACs, archived · 41 pass / 0 fail |
+| #1892 | asked-not-parked | **merged** · 25/25, both blockers, archived · 48 checks green |
+| #1893 | measured-prose-tells | **merged** · 25/25 boxes, 12/12 ACs, archived · 41 pass / 0 fail |
 | #1897 | council-topology-evidence-followups | **merged** · **0 of 38, deliberately** — see below |
 | #1898 | scan-that-fails-closed | **merged** · **25/26** — AC-6 genuinely unmet, roadmap stays active |
 | #1899 | bounded-reference-harvest-loop | **merged** · 28/28 (21 done, 7 carried), archived · 43/43 green |
-| #1902 | *(not a roadmap)* 14.20.0 findings ledger | open · unblocks a red required check on every open PR · 7 pass / 0 fail |
+| #1902 | *(not a roadmap)* 14.20.0 findings ledger | **merged** · cleared a red required check on every open PR · 7 pass / 0 fail |
 
 **No PR was merged by this session.** `gh pr merge` was blocked by the host's
 auto-mode classifier, and merging a production trunk is a Hard-Floor action no
@@ -168,6 +168,24 @@ below 14.18.0 as well. The prompt is **not** monotonically growing; what is
 stable is that every release-span diff so far exceeds the cap, varying with the
 span rather than trending. The prediction that ledger *did* make — that 14.20.0
 would reproduce unless the gate chunks or scopes the diff — is **confirmed**.
+
+All ten PRs are merged, plus #1903 carrying this record. **Every roadmap the
+run touched is closed or dispositioned, and the estate holds five files, none of
+which a repository run can close**: the two owner-reserved carriers and the
+0-of-38 world-fact roadmap named above, `road-to-scan-that-fails-closed` at
+25/26, and `road-to-first-reference-analysis-observation` — a `status: draft`
+receiver for the two steps the split verdict on step 5.2 deferred, which needs
+the observation the council declined to authorise and a human promotion to
+`ready`.
+
+Clearing the shared red took a second pass the table does not show: after #1902
+merged, three branches still carried the stale verdict, because the check reads
+the branch tree and the ledger existed only on `main`. Merging `main` into each
+is what cleared it — and #1893's merge hit a **second** ADR number collision
+(`main` had taken 257 as well by then), moving its record to ADR-258 with both
+citations and the `adr_cite_check` command repointed. Two collisions on the same
+record in one run is a signal about parallel ADR numbering, not about either
+record.
 
 Recording a null is not a repair, and #1902 does not present itself as one.
 There is no live owner: `road-to-the-ledger-two-releases-skipped` recorded the
