@@ -10,6 +10,12 @@
  * a single stray stdout byte breaks the JSON-RPC stream for the client.
  *
  * Notifications (no `id`) receive no response, per JSON-RPC 2.0.
+ *
+ * This shell is also where call telemetry is emitted (roadmap step 4.1):
+ * `dispatch` is pure — no I/O, no clock — and stays that way, so the one row
+ * per `tools/call` is written here, from the impure side, after the response
+ * has been produced. The recorder is default-off and never throws; see
+ * `./telemetry.js` for the gate and the closed host vocabulary.
  */
 
 import { createInterface } from 'node:readline';
@@ -17,6 +23,7 @@ import type { Readable, Writable } from 'node:stream';
 import type { ContentTree } from './content.js';
 import {
     dispatch,
+    isLiteTool,
     rpcError,
     RPC_PARSE_ERROR,
     RPC_INVALID_REQUEST,
@@ -24,10 +31,19 @@ import {
     type JsonRpcResponse,
     type ServerIdentity,
 } from './dispatch.js';
+import { HOST_UNKNOWN, normalizeHost, recordLiteCall } from './telemetry.js';
 
 export interface StdioOptions {
     input?: Readable;
     output?: Writable;
+    /**
+     * Root the telemetry sink is resolved against. Defaults to the process CWD,
+     * which is the consumer project the client launched the server in. Present
+     * so a test can point the sink at a scratch directory without chdir.
+     */
+    consumerRoot?: string;
+    /** Settings file the telemetry gate is read from. Defaults to `<cwd>/.agent-settings.yml`. */
+    settingsPath?: string;
 }
 
 function isNotification(value: unknown): boolean {
@@ -46,6 +62,11 @@ export function runStdioServer(
 ): Promise<void> {
     const input = opts.input ?? process.stdin;
     const output = opts.output ?? process.stdout;
+
+    // The client's own name, learned at `initialize` and resolved onto the
+    // closed host vocabulary. A client that calls a tool before initializing
+    // records `unknown` — which is the truth, not a guess.
+    let host = HOST_UNKNOWN;
 
     const write = (resp: JsonRpcResponse): void => {
         output.write(`${JSON.stringify(resp)}\n`);
@@ -79,7 +100,29 @@ export function runStdioServer(
                 return;
             }
 
-            write(dispatch(tree, identity, parsed as JsonRpcRequest));
+            const req = parsed as JsonRpcRequest;
+            if (req.method === 'initialize') {
+                const p = (req.params ?? {}) as Record<string, unknown>;
+                const info = (p.clientInfo ?? {}) as Record<string, unknown>;
+                host = normalizeHost(info.name);
+            }
+
+            write(dispatch(tree, identity, req));
+
+            // Exactly one row per `tools/call` that named a tool. A call with
+            // no `name` is a malformed request, not a call to a tool, and has
+            // nothing to attribute a row to.
+            if (req.method === 'tools/call') {
+                const p = (req.params ?? {}) as Record<string, unknown>;
+                const name = typeof p.name === 'string' ? p.name : '';
+                recordLiteCall({
+                    toolName: name,
+                    isLiteTool: isLiteTool(name),
+                    host,
+                    consumerRoot: opts.consumerRoot,
+                    settingsPath: opts.settingsPath,
+                });
+            }
         });
 
         rl.on('close', () => {

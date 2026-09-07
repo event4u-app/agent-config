@@ -145,7 +145,7 @@ four host states, the two corrections this section has taken, and the
 
 - [`verify-before-complete`](verify-before-complete.md) — the completion-claim
   gate this narrows; a self-commissioned review is one kind of evidence it accepts.
-- **ADR-256** — which seat may hold the pen: an unpaid route may propose and
+- **ADR-257** — which seat may hold the pen: an unpaid route may propose and
   score, never decide. (By number; `docs/` is unprojected.)
 - [`adversarial-review`](../skills/adversarial-review/SKILL.md) — how to ask for a
   real critique.

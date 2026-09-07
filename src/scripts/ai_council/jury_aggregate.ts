@@ -3,7 +3,7 @@
  *
  * BESIDE `consensus.ts`, not inside it, and the separation is the design.
  * `consensus.ts` aggregates a COUNCIL, whose members carry verdicts.
- * A jury does not: per ADR-256 a route this package did not pay for may propose
+ * A jury does not: per ADR-257 a route this package did not pay for may propose
  * and may score, never decide. Folding jury scoring into the consensus path
  * would put a scorer on the code path that produces verdicts, which is the
  * exact transition this roadmap's Risk 5 names — "scoring quietly becomes

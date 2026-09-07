@@ -7373,7 +7373,7 @@ import * as crypto3 from "node:crypto";
 import * as fs24 from "node:fs";
 import * as os8 from "node:os";
 import * as path21 from "node:path";
-import process3 from "node:process";
+import process4 from "node:process";
 import { fileURLToPath as fileURLToPath6, pathToFileURL as pathToFileURL2 } from "node:url";
 
 // src/scripts/_lib/json_pointers.ts
@@ -8130,17 +8130,170 @@ function current_package_version(repo_root) {
 // src/scripts/_lib/mcp_bridge.ts
 import * as fs3 from "node:fs";
 import * as path3 from "node:path";
-var MCP_SERVER_KEY = "agent-config";
-var MCP_BRIDGE_ENTRY = {
-  mcpServers: {
-    [MCP_SERVER_KEY]: {
-      command: "npx",
-      args: ["-y", "@event4u/agent-config", "mcp-server"]
+
+// src/scripts/_lib/host_capability.ts
+import process2 from "node:process";
+var SAFE_DEFAULT = {
+  schema_version: 1,
+  subagent_spawn: false,
+  parallel_spawn: false,
+  status_polling: false,
+  separate_quota_pool: false,
+  agent_teams: false,
+  worker_respawn: false,
+  reads_project_mcp_config: false,
+  // `true` because the safe answer here is "there is still a step", not
+  // "there is nothing to do" — see the field's own note.
+  mcp_needs_manual_activation: true
+};
+function asBool(value) {
+  return value === true;
+}
+function normalizeHostManifest(input) {
+  if (input === null || typeof input !== "object") {
+    return { ...SAFE_DEFAULT };
+  }
+  const src = input;
+  return {
+    schema_version: 1,
+    subagent_spawn: asBool(src.subagent_spawn),
+    parallel_spawn: asBool(src.parallel_spawn),
+    status_polling: asBool(src.status_polling),
+    separate_quota_pool: asBool(src.separate_quota_pool),
+    agent_teams: asBool(src.agent_teams),
+    worker_respawn: asBool(src.worker_respawn),
+    reads_project_mcp_config: asBool(src.reads_project_mcp_config),
+    // Inverted coercion, matching the inverted default: only an explicit
+    // `false` clears the residual, so an absent or malformed value keeps
+    // the manual step visible instead of silently dropping it.
+    mcp_needs_manual_activation: src.mcp_needs_manual_activation !== false
+  };
+}
+var HOST_CAPABILITY_REGISTRY = {
+  claude: { subagent_spawn: true, parallel_spawn: true }
+};
+function resolveHostCapabilities(hostId, override) {
+  if (override !== void 0 && override !== null && typeof override === "object" && !Array.isArray(override)) {
+    return normalizeHostManifest(override);
+  }
+  const row = hostId !== null && hostId !== void 0 ? HOST_CAPABILITY_REGISTRY[hostId] : void 0;
+  if (row === void 0) {
+    return { ...SAFE_DEFAULT };
+  }
+  return { ...SAFE_DEFAULT, ...row, schema_version: 1 };
+}
+function probeHostCapabilities(hostId) {
+  const base = resolveHostCapabilities(hostId);
+  const flag = process2.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+  const probedAgentTeams = typeof flag === "string" && flag !== "";
+  return { ...base, agent_teams: base.agent_teams || probedAgentTeams };
+}
+var CAPABILITY_FIELDS = [
+  "subagent_spawn",
+  "parallel_spawn",
+  "status_polling",
+  "separate_quota_pool",
+  "agent_teams",
+  "worker_respawn",
+  "reads_project_mcp_config",
+  "mcp_needs_manual_activation"
+];
+function describeHostCapabilities(hostId) {
+  const manifest = probeHostCapabilities(hostId);
+  const row = hostId !== null && hostId !== void 0 ? HOST_CAPABILITY_REGISTRY[hostId] : void 0;
+  const flag = process2.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+  const probedAgentTeams = typeof flag === "string" && flag !== "";
+  const sources = {};
+  for (const field of CAPABILITY_FIELDS) {
+    if (row !== void 0 && typeof row[field] === "boolean") {
+      sources[field] = "registry";
+    } else if (field === "agent_teams" && probedAgentTeams) {
+      sources[field] = "live-probe";
+    } else {
+      sources[field] = "default";
     }
   }
-};
+  return { manifest, sources };
+}
+
+// src/scripts/_lib/mcp_bridge.ts
+var MCP_SERVER_KEY = "agent-config";
+var MCP_PACKAGE_NAME = "@event4u/agent-config";
+function mcpBridgeEntry(packageRoot) {
+  const version = readPackageVersion(packageRoot);
+  const spec = version === null ? MCP_PACKAGE_NAME : `${MCP_PACKAGE_NAME}@${version}`;
+  return {
+    mcpServers: {
+      [MCP_SERVER_KEY]: {
+        command: "npx",
+        args: ["-y", spec, "mcp-server"]
+      }
+    }
+  };
+}
+function readPackageVersion(packageRoot) {
+  try {
+    const raw = fs3.readFileSync(path3.join(packageRoot, "package.json"), "utf-8");
+    const v = JSON.parse(raw).version;
+    return typeof v === "string" && v.trim() !== "" ? v : null;
+  } catch {
+    return null;
+  }
+}
 function makeEnsureMcpBridge(mergeJsonFile) {
-  return (projectRoot, force) => mergeJsonFile(path3.join(projectRoot, ".mcp.json"), MCP_BRIDGE_ENTRY, force, ".mcp.json");
+  return (projectRoot, force, packageRoot = projectRoot) => mergeJsonFile(
+    path3.join(projectRoot, ".mcp.json"),
+    mcpBridgeEntry(packageRoot),
+    force,
+    ".mcp.json"
+  );
+}
+var MCP_PROJECT_CONFIG = {
+  "claude-code": { hostId: "claude", relPath: ".mcp.json" },
+  cursor: { hostId: "cursor", relPath: ".cursor/mcp.json" },
+  "gemini-cli": { hostId: "gemini", relPath: ".gemini/settings.json" }
+};
+function mcpRegistrationTargets(tools, readsConfig) {
+  const out = [];
+  for (const [toolId, spec] of Object.entries(MCP_PROJECT_CONFIG)) {
+    if (toolId === "claude-code") continue;
+    if (!tools.has(toolId)) continue;
+    if (!readsConfig(spec.hostId)) continue;
+    out.push({ toolId, hostId: spec.hostId, relPath: spec.relPath });
+  }
+  return out;
+}
+function makeEnsureMcpRegistrations(mergeJsonFile) {
+  return (projectRoot, force, packageRoot, targets) => {
+    const merged = {};
+    for (const t of targets) {
+      merged[t.toolId] = mergeJsonFile(
+        path3.join(projectRoot, ...t.relPath.split("/")),
+        mcpBridgeEntry(packageRoot),
+        force,
+        t.relPath
+      );
+    }
+    return merged;
+  };
+}
+function readsProjectMcpConfig(hostId) {
+  return probeHostCapabilities(hostId).reads_project_mcp_config;
+}
+function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools, into, readsConfig = readsProjectMcpConfig) {
+  const ensure = makeEnsureMcpRegistrations(mergeJsonFile);
+  const claude = MCP_PROJECT_CONFIG["claude-code"];
+  if (tools.has("claude-code") && claude !== void 0) {
+    const merged = ensure(projectRoot, force, packageRoot, [
+      { toolId: "claude-code", hostId: claude.hostId, relPath: claude.relPath }
+    ]);
+    (into["claude-code"] ??= []).push(...merged["claude-code"] ?? []);
+  }
+  for (const [toolId, keys] of Object.entries(
+    ensure(projectRoot, force, packageRoot, mcpRegistrationTargets(tools, readsConfig))
+  )) {
+    (into[toolId] ??= []).push(...keys);
+  }
 }
 function projectionModeOf(raw) {
   return raw === "scoped" ? "scoped" : raw === "tiered" ? "tiered" : "legacy-all";
@@ -8182,6 +8335,79 @@ function applyTieredPrune(deployResults, packageRoot, pruneBy) {
     level: "info",
     message: `\u{1F9F9} Tiered install: pruned ${pruned} Tier-B skill artefact(s) \u2014 still reachable via the MCP server's suggest_skill_for_task / read_skill. Set projection.mode: legacy-all to restore the full surface.`
   };
+}
+
+// src/scripts/_lib/mcp_consent_residual.ts
+var SEEDED = {
+  claude: {
+    hostId: "claude",
+    residual: "Approve the project-scoped `agent-config` server the first time the host prompts \u2014 the installer writes `.mcp.json` but does not pre-approve it.",
+    source: "vendor-doc",
+    cite: "Host documentation: a project-scope MCP server requires explicit approval, suppressible only through the user-global `enabledMcpjsonServers` key, which this package deliberately does not write (blocker `mcp-user-scope-approval-consent`)."
+  }
+};
+var TOOL_TO_HOST = {
+  "claude-code": "claude",
+  cursor: "cursor",
+  "gemini-cli": "gemini",
+  windsurf: "windsurf",
+  cline: "cline",
+  copilot: "copilot",
+  augment: "augment"
+};
+function residualFor(hostId) {
+  const { manifest, sources } = describeHostCapabilities(hostId);
+  if (sources.mcp_needs_manual_activation === "registry" && !manifest.mcp_needs_manual_activation) {
+    return null;
+  }
+  return SEEDED[hostId] ?? null;
+}
+function isRecorded(hostId) {
+  const { sources } = describeHostCapabilities(hostId);
+  return hostId in SEEDED || sources.mcp_needs_manual_activation === "registry";
+}
+function residualLine(hostId) {
+  const r = residualFor(hostId);
+  if (r !== null) {
+    return {
+      hostId,
+      state: "residual",
+      text: `${hostId}: ${r.residual} (source: ${r.source} \u2014 not observed here)`
+    };
+  }
+  if (isRecorded(hostId)) {
+    return {
+      hostId,
+      state: "cleared",
+      text: `${hostId}: nothing left to do (source: observed)`
+    };
+  }
+  return {
+    hostId,
+    state: "unrecorded",
+    text: `${hostId}: no residual recorded \u2014 nobody checked this host, which is not the same as nothing to do`
+  };
+}
+function residualReport(toolIds) {
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const toolId of toolIds) {
+    const hostId = TOOL_TO_HOST[toolId];
+    if (hostId === void 0 || seen.has(hostId)) continue;
+    seen.add(hostId);
+    const line = residualLine(hostId);
+    if (line.state !== "cleared") out.push(line);
+  }
+  return out;
+}
+function printResiduals(toolIds, quiet, write = (s) => process.stdout.write(s)) {
+  if (quiet) return;
+  const lines = residualReport(toolIds);
+  if (lines.length === 0) return;
+  write("  Still needs you (MCP):\n");
+  for (const line of lines) write(`    \u2022 ${line.text}
+`);
+  write("\n");
 }
 
 // src/scripts/_lib/scoped_projection.ts
@@ -17278,7 +17504,7 @@ function render_native_model_md(text, tier) {
 import { spawnSync } from "node:child_process";
 import * as fs23 from "node:fs";
 import * as path20 from "node:path";
-import process2 from "node:process";
+import process3 from "node:process";
 import { fileURLToPath as fileURLToPath5, pathToFileURL } from "node:url";
 
 // src/scripts/_lib/package_root.ts
@@ -17339,10 +17565,10 @@ var ArgparseExit = class extends Error {
   }
 };
 function _stdoutSink() {
-  return { write: (t) => process2.stdout.write(t) };
+  return { write: (t) => process3.stdout.write(t) };
 }
 function _stderrSink() {
-  return { write: (t) => process2.stderr.write(t) };
+  return { write: (t) => process3.stderr.write(t) };
 }
 function _print(out, line = "") {
   out.write(line + "\n");
@@ -17684,7 +17910,7 @@ function _load_state_migrator() {
   if (driver === null) {
     return null;
   }
-  const binName = process2.platform === "win32" ? "tsx.cmd" : "tsx";
+  const binName = process3.platform === "win32" ? "tsx.cmd" : "tsx";
   let tsxBin = null;
   for (let dir = pkg_root; ; ) {
     const cand = path20.join(dir, "node_modules", ".bin", binName);
@@ -17955,7 +18181,7 @@ function _parse2(argv, out, err) {
 function main(argv = null, options = {}) {
   const out = options.out ?? _stdoutSink();
   const err = options.err ?? _stderrSink();
-  const args = _parse2(argv ?? process2.argv.slice(2), out, err);
+  const args = _parse2(argv ?? process3.argv.slice(2), out, err);
   const [project] = resolve_project_root(null, { cwd: options.cwd ?? null });
   if (args.from_major) {
     _print(out, `\u2139\uFE0F  declared source major: ${args.from_major}.x`);
@@ -17983,32 +18209,32 @@ function main(argv = null, options = {}) {
 var _inForeignBundle = !(typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__);
 var _HERE = fileURLToPath5(import.meta.url);
 function _isCliEntry() {
-  if (process2.argv[1] === void 0) {
+  if (process3.argv[1] === void 0) {
     return false;
   }
   if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__) {
-    if (path20.basename(process2.argv[1], ".js") === "cmd_migrate") {
+    if (path20.basename(process3.argv[1], ".js") === "cmd_migrate") {
       return true;
     }
   }
-  const argvUrl = pathToFileURL(path20.resolve(process2.argv[1])).href;
+  const argvUrl = pathToFileURL(path20.resolve(process3.argv[1])).href;
   if (import.meta.url === argvUrl) {
     return true;
   }
   try {
     const here = fs23.realpathSync(fileURLToPath5(import.meta.url));
-    const argv = fs23.realpathSync(path20.resolve(process2.argv[1]));
+    const argv = fs23.realpathSync(path20.resolve(process3.argv[1]));
     return here === argv;
   } catch {
     return false;
   }
 }
-if (!_inForeignBundle && (_isCliEntry() || process2.argv[1] === _HERE)) {
+if (!_inForeignBundle && (_isCliEntry() || process3.argv[1] === _HERE)) {
   try {
-    process2.exitCode = main(process2.argv.slice(2));
+    process3.exitCode = main(process3.argv.slice(2));
   } catch (exc) {
     if (exc instanceof ArgparseExit) {
-      process2.exitCode = exc.code;
+      process3.exitCode = exc.code;
     } else {
       throw exc;
     }
@@ -18148,7 +18374,7 @@ function atomicWrite0644(target, body, prefix) {
   const dir = path21.dirname(target);
   const tmpName = path21.join(
     dir,
-    `${prefix}${process3.pid}.${crypto3.randomBytes(6).toString("hex")}.yml.tmp`
+    `${prefix}${process4.pid}.${crypto3.randomBytes(6).toString("hex")}.yml.tmp`
   );
   let fd = null;
   try {
@@ -18324,7 +18550,7 @@ var state = {
 };
 function _emit_progress(obj) {
   if (!state.PROGRESS_NDJSON) return;
-  process3.stdout.write(jsonDumpsCompact(obj) + "\n");
+  process4.stdout.write(jsonDumpsCompact(obj) + "\n");
 }
 function _emit_progress_terminal(rc) {
   if (!state.PROGRESS_NDJSON) return;
@@ -18335,25 +18561,25 @@ function _emit_progress_terminal(rc) {
   }
 }
 function info(msg) {
-  if (!state.QUIET) process3.stdout.write(`  ${msg}
+  if (!state.QUIET) process4.stdout.write(`  ${msg}
 `);
 }
 function success(msg) {
-  if (!state.QUIET) process3.stdout.write(`  \u2705  ${msg}
+  if (!state.QUIET) process4.stdout.write(`  \u2705  ${msg}
 `);
 }
 function skip(msg) {
-  if (!state.QUIET) process3.stdout.write(`  \u23ED\uFE0F  ${msg}
+  if (!state.QUIET) process4.stdout.write(`  \u23ED\uFE0F  ${msg}
 `);
 }
 function warn(msg) {
-  process3.stderr.write(`  \u26A0\uFE0F  ${msg}
+  process4.stderr.write(`  \u26A0\uFE0F  ${msg}
 `);
 }
 function fail(msg) {
-  process3.stderr.write(`  \u274C  ${msg}
+  process4.stderr.write(`  \u274C  ${msg}
 `);
-  process3.stderr.write(
+  process4.stderr.write(
     "      Diagnose: `./agent-config doctor` (or `--check <id>` for a single category)\n"
   );
   throw new SystemExitError(1);
@@ -18382,7 +18608,7 @@ function detect_package_type_for_project(project_root, package_root) {
 }
 function _is_interactive() {
   try {
-    return Boolean(process3.stdin.isTTY) && Boolean(process3.stdout.isTTY);
+    return Boolean(process4.stdin.isTTY) && Boolean(process4.stdout.isTTY);
   } catch {
     return false;
   }
@@ -19355,7 +19581,7 @@ function dirHasEntries(p) {
   }
 }
 function _resolve_tsx_invocation(scriptPath, scriptArgs) {
-  const binName = process3.platform === "win32" ? "tsx.cmd" : "tsx";
+  const binName = process4.platform === "win32" ? "tsx.cmd" : "tsx";
   let dir = path21.dirname(scriptPath);
   for (; ; ) {
     const candidate = path21.join(dir, "node_modules", ".bin", binName);
@@ -19588,7 +19814,7 @@ function _validate_scope(tools, scope, was_all) {
   if (scope !== "project" && scope !== "global") {
     fail(`_validate_scope: unknown scope '${scope}'`);
   }
-  if (process3.env["AGENT_CONFIG_DEV_MODE"] === "1") return tools;
+  if (process4.env["AGENT_CONFIG_DEV_MODE"] === "1") return tools;
   const incompatible = [...tools].filter((t) => {
     const sup = SCOPE_SUPPORT[t] ?? "both";
     return sup !== "both" && sup !== scope;
@@ -19602,14 +19828,14 @@ function _validate_scope(tools, scope, was_all) {
 }
 function _enforce_consumer_global_only(scope) {
   if (scope !== "project") return;
-  if (process3.env["AGENT_CONFIG_DEV_MODE"] === "1") return;
+  if (process4.env["AGENT_CONFIG_DEV_MODE"] === "1") return;
   fail(
     "--scope=project is reserved for maintainers (ADR-020 \u2014 consumer installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. See docs/maintainers/dev-mode.md."
   );
 }
 function _enforce_not_source_repo(scope, project_root) {
   if (scope === "global") return;
-  if (process3.env["AGENT_CONFIG_ALLOW_SELF_INSTALL"] === "1") return;
+  if (process4.env["AGENT_CONFIG_ALLOW_SELF_INSTALL"] === "1") return;
   const [is_source, signature] = _is_agent_config_source_repo(project_root);
   if (!is_source) return;
   fail(
@@ -19713,7 +19939,7 @@ function _resolve_scope(opts, detected, detect_reason, custom_path) {
   return "project";
 }
 function _run_scope_prompt(opts, reason, custom_path) {
-  if (!process3.stdin.isTTY && custom_path === null) {
+  if (!process4.stdin.isTTY && custom_path === null) {
     fail(
       "Ambiguous install scope detected and stdin is not a TTY. Pass --scope=project|global (or --custom-path=<dir>) to override."
     );
@@ -19762,7 +19988,7 @@ function _read_line(prompt_text) {
   return line.trim();
 }
 function readLineSyncRaw(promptText) {
-  process3.stdout.write(promptText);
+  process4.stdout.write(promptText);
   const buf = Buffer.alloc(1);
   const bytes = [];
   let sawAny = false;
@@ -19793,13 +20019,13 @@ function readLineSyncRaw(promptText) {
   return Buffer.from(bytes).toString("utf-8");
 }
 function prompt_scope_choice(reason) {
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   info(`Ambiguous install scope: ${reason}.`);
   info("Choose where to install:");
-  process3.stdout.write("  1) Project \u2014 install into the current directory\n");
-  process3.stdout.write("  2) User    \u2014 install into ~/ (recommended; one install per machine)\n");
-  process3.stdout.write("  3) Custom  \u2014 specify an explicit destination path\n");
-  process3.stdout.write("\n");
+  process4.stdout.write("  1) Project \u2014 install into the current directory\n");
+  process4.stdout.write("  2) User    \u2014 install into ~/ (recommended; one install per machine)\n");
+  process4.stdout.write("  3) Custom  \u2014 specify an explicit destination path\n");
+  process4.stdout.write("\n");
   let attempts = 0;
   while (attempts < 3) {
     const reply = _read_line("Choose [1/2/3]: ");
@@ -19908,7 +20134,7 @@ var MIGRATE_LEGACY_YAML_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var MIGRATE_LEGACY_TOOL_DIRS = [".augment", ".claude", ".cursor"];
 var AGENT_CONFIG_PACKAGE_NAME = "@event4u/agent-config";
 function _is_agent_config_source_repo(project_root) {
-  if (process3.env["AGENT_CONFIG_CONSUMER_MODE"] === "1") {
+  if (process4.env["AGENT_CONFIG_CONSUMER_MODE"] === "1") {
     return [false, "consumer-mode-override"];
   }
   const pkg_json = path21.join(project_root, "package.json");
@@ -19937,7 +20163,7 @@ function _is_agent_config_source_repo(project_root) {
   return [false, ""];
 }
 function _detect_legacy_for_migration(project_root) {
-  if (process3.env["AGENT_CONFIG_DEV_MODE"] === "1") return [];
+  if (process4.env["AGENT_CONFIG_DEV_MODE"] === "1") return [];
   const [is_source, signature] = _is_agent_config_source_repo(project_root);
   if (is_source) {
     if (!state.QUIET) {
@@ -19966,7 +20192,7 @@ function _detect_legacy_for_migration(project_root) {
 }
 function _prompt_migrate_to_global(project_root, artefacts) {
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     warn("Legacy project-local artefacts detected \u2014 pre-ADR-020 layout:");
     for (const rel of artefacts) {
       info(`  ${path21.join(project_root, rel)}`);
@@ -20007,7 +20233,7 @@ function _format_global_root_for_marker(global_root) {
   return `~/${rel.split(path21.sep).join("/")}`;
 }
 function _remove_legacy_consumer_bridge_marker(project_root, env = null) {
-  const env_map = env ?? process3.env;
+  const env_map = env ?? process4.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return null;
   if (isDir(path21.join(project_root, ".agent-src.uncondensed"))) return null;
   const target = path21.join(project_root, CONSUMER_BRIDGE_MARKER_RELPATH);
@@ -20025,7 +20251,7 @@ var PROJECT_ANCHOR_TOOLS = {
   "gemini-cli": ".gemini/agent-config.bridge.yml"
 };
 function _write_per_tool_project_anchors(project_root, tools, env = null, now = null) {
-  const env_map = env ?? process3.env;
+  const env_map = env ?? process4.env;
   if (env_map["AGENT_CONFIG_DEV_MODE"] === "1") return [];
   if (isDir(path21.join(project_root, ".agent-src.uncondensed"))) return [];
   const global_root_str = _format_global_root_for_marker(
@@ -20561,13 +20787,13 @@ function install_global(tools, force, project_root = null, core_only = false) {
   const classification = classify_mismatch(installed_version, recorded);
   if (classification === "downgrade" && !force) {
     if (!state.QUIET) {
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
       warn("Refusing global install: lockfile records a newer version.");
       info(`  Lockfile:           ${read_path}`);
       info(`  Recorded version:   ${recorded}`);
       info(`  Current package:    ${installed_version}`);
       info("  Fix:                upgrade the package, or re-run with `--force`");
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
     }
     return 1;
   }
@@ -20581,13 +20807,13 @@ function install_global(tools, force, project_root = null, core_only = false) {
     );
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     info("Agent Config \u2014 Global (user-scope) install [ADR-007]");
     info("Per-tool anchor paths:");
     for (const tool_id of [...tools].sort()) {
       const anchor = USER_SCOPE_PATHS[tool_id];
       if (anchor === void 0) continue;
-      process3.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${anchor}
+      process4.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${anchor}
 `);
     }
   }
@@ -20596,7 +20822,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   const merged_tools = [.../* @__PURE__ */ new Set([...existing_tools, ...tools])].sort();
   const written = write_lockfile(installed_version, merged_tools, { path: write_path });
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     info(`Lockfile written: ${written}`);
     info(`  schema_version=1, agent_config_version=${installed_version}`);
     info(`  tools=${merged_tools.join(",")}`);
@@ -20604,7 +20830,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
   if (project_root !== null && pathExists(_resolve_settings_read(project_root)) && !isDir(path21.join(project_root, ".agent-src.uncondensed"))) {
     const drift = collect_drift(project_root);
     if (!state.QUIET) {
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
       for (const line of format_drift_report(drift).replace(/\n$/, "").split("\n")) {
         info(line);
       }
@@ -20685,30 +20911,30 @@ function install_global(tools, force, project_root = null, core_only = false) {
     });
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     info("Deployed per-tool content:");
     for (const tool_id of Object.keys(deploy_results).sort()) {
       const [w, s, status] = deploy_results[tool_id];
       const anchor = USER_SCOPE_PATHS[tool_id] ?? "";
       if (status === "deployed" && tool_id === "claude-desktop") {
         const bundles_dir = _claude_desktop_bundles_dir();
-        process3.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${bundles_dir} (${w} bundles)
+        process4.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${bundles_dir} (${w} bundles)
 `);
       } else if (status === "deployed") {
-        process3.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${anchor} (${w} files, ${s} skipped)
+        process4.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${anchor} (${w} files, ${s} skipped)
 `);
       } else if (status === "marker") {
-        process3.stdout.write(
+        process4.stdout.write(
           `      ${tool_id.padEnd(15)} \u2192 ${anchor}agent-config.md (${w ? "written" : "skipped"})
 `
         );
       } else if (status === "hint") {
-        process3.stdout.write(
+        process4.stdout.write(
           `      ${tool_id.padEnd(15)} \u2192 no user-scope convention; use \`agent-config export --tool=${tool_id}\`
 `
         );
       } else {
-        process3.stdout.write(
+        process4.stdout.write(
           `      ${tool_id.padEnd(15)} \u2192 no global-scope content yet (project-scope install supported)
 `
         );
@@ -20743,21 +20969,21 @@ function install_global(tools, force, project_root = null, core_only = false) {
         warn(line);
       }
       const notice = _scoped_migration_notice(deploy_results, project_root, package_root, {
-        env: process3.env,
-        stdinTty: process3.stdin.isTTY === true,
-        stdoutTty: process3.stdout.isTTY === true
+        env: process4.env,
+        stdinTty: process4.stdin.isTTY === true,
+        stdoutTty: process4.stdout.isTTY === true
       });
       if (notice.length > 0) {
-        process3.stdout.write("\n");
+        process4.stdout.write("\n");
         for (const line of notice) info(line);
       }
     } catch {
     }
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     success(`Global install completed (v${installed_version}).`);
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
   }
   return 0;
 }
@@ -20914,8 +21140,8 @@ var _VALUE_FLAGS = {
   "--layer": "layer"
 };
 function _argError(msg) {
-  process3.stderr.write(USAGE);
-  process3.stderr.write(`${PROG}: error: ${msg}
+  process4.stderr.write(USAGE);
+  process4.stderr.write(`${PROG}: error: ${msg}
 `);
   throw new ArgparseExit2(2);
 }
@@ -20954,7 +21180,7 @@ function parse_options(argv) {
   while (i < argv.length) {
     const a = argv[i];
     if (a === "-h" || a === "--help") {
-      process3.stdout.write(USAGE);
+      process4.stdout.write(USAGE);
       throw new ArgparseExit2(0);
     }
     const eq = a.startsWith("--") ? a.indexOf("=") : -1;
@@ -21158,12 +21384,12 @@ personal:
   }
   _write_install_mode_marker(target_root, "minimal");
   if (!state.QUIET) {
-    process3.stderr.write(
+    process4.stderr.write(
       "\u2139\uFE0F   Minimal install \u2014 run `agent-config install --force` to add AGENTS.md, bridges, and tool integrations.\n"
     );
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     info("Next steps:");
     info("  \u2022 Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config");
     info("  \u2022 Drop project-scoped overrides under `agents/overrides/{rules,skills,commands}/`.");
@@ -21195,14 +21421,14 @@ var _INTERACTIVE_VERBOSITIES = [
 ];
 var _LOCAL_CONFIG_FILE = ".agent-config.local.json";
 function _interactive_prompt_choice(label, options) {
-  process3.stdout.write("\n");
-  process3.stdout.write(`  ${label}
+  process4.stdout.write("\n");
+  process4.stdout.write(`  ${label}
 `);
   options.forEach(([key, blurb], idx) => {
-    process3.stdout.write(`    ${idx + 1}. ${key}  \u2014 ${blurb}
+    process4.stdout.write(`    ${idx + 1}. ${key}  \u2014 ${blurb}
 `);
   });
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   for (; ; ) {
     const raw = _read_line(`  Choice [1-${options.length}, default 1]: `);
     if (raw === null) return options[0][0];
@@ -21214,14 +21440,14 @@ function _interactive_prompt_choice(label, options) {
     for (const [key] of options) {
       if (raw.toLowerCase() === key) return key;
     }
-    process3.stdout.write(
+    process4.stdout.write(
       `  \u26A0\uFE0F  Pick a number 1-${options.length} or one of: ${options.map(([k]) => k).join(", ")}.
 `
     );
   }
 }
 function run_interactive_init(project_root, force) {
-  if (!process3.stdin.isTTY) {
+  if (!process4.stdin.isTTY) {
     warn(
       `--interactive requested but stdin is not a TTY; skipping the prompt. Re-run interactively or hand-edit ${_LOCAL_CONFIG_FILE}.`
     );
@@ -21234,7 +21460,7 @@ function run_interactive_init(project_root, force) {
     );
     return 0;
   }
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   info("Interactive init \u2014 captures user-type / stack / verbosity");
   info("(forward-compatible stub; runtime filtering activates with step-9)");
   const user_type = _interactive_prompt_choice("Primary user type:", _INTERACTIVE_USER_TYPES);
@@ -21261,10 +21487,10 @@ var _WIZARD_READY_RE = /^WIZARD_READY (http:\/\/(?:127\.0\.0\.1|localhost):\d+\/
 var _WIZARD_TIMEOUTS = [10, 20, 40, 80];
 function _wizard_should_launch(opts) {
   if (opts.no_ui) return [false, "--no-ui flag set"];
-  const env_no_ui = (process3.env["AGENT_CONFIG_NO_UI"] ?? "").trim();
+  const env_no_ui = (process4.env["AGENT_CONFIG_NO_UI"] ?? "").trim();
   if (env_no_ui && env_no_ui !== "0") return [false, "AGENT_CONFIG_NO_UI env set"];
-  if ((process3.env["CI"] ?? "").trim()) return [false, "CI environment detected"];
-  if (!process3.stdout.isTTY) return [false, "stdout is not a TTY"];
+  if ((process4.env["CI"] ?? "").trim()) return [false, "CI environment detected"];
+  if (!process4.stdout.isTTY) return [false, "stdout is not a TTY"];
   const tools_raw = opts.tools;
   if (tools_raw && !_tools_was_all(tools_raw)) {
     return [false, "explicit --tools= selection (headless install)"];
@@ -21300,7 +21526,7 @@ function unlinkMissingOk(p) {
 }
 function pidAlive(pid) {
   try {
-    process3.kill(pid, 0);
+    process4.kill(pid, 0);
     return true;
   } catch (err) {
     return err.code === "EPERM";
@@ -21325,7 +21551,7 @@ function _kill_stale_wizard_server() {
   }
   if (!_pid_is_agent_config(pid)) return;
   try {
-    process3.kill(pid, "SIGTERM");
+    process4.kill(pid, "SIGTERM");
   } catch {
     unlinkMissingOk(p);
     return;
@@ -21340,12 +21566,12 @@ function _kill_stale_wizard_server() {
   }
   if (!exited) {
     try {
-      process3.kill(pid, "SIGKILL");
+      process4.kill(pid, "SIGKILL");
     } catch {
     }
   }
   unlinkMissingOk(p);
-  process3.stdout.write("(Stopped the previous wizard server.)\n");
+  process4.stdout.write("(Stopped the previous wizard server.)\n");
 }
 function sleepMs(ms) {
   const end = Date.now() + ms;
@@ -21358,7 +21584,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
   _kill_stale_wizard_server();
   const cli = _wizard_cli_dist(project_root);
   if (cli === null) {
-    process3.stdout.write(
+    process4.stdout.write(
       "(Wizard not available \u2014 CLI bundle not built. Run 'npm run build' at the package root to produce dist/cli/.)\n"
     );
     return 0;
@@ -21367,14 +21593,14 @@ function _wizard_spawn(project_root, pass_project_root = true) {
   if (pass_project_root) {
     cmd.push("--project-root", project_root);
   }
-  const env = { ...process3.env };
+  const env = { ...process4.env };
   return _wizard_run_sync(cmd, env, cli);
 }
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
   const log_path = path21.join(
     os8.tmpdir(),
-    `agent-config-wizard-${process3.pid}-${Date.now()}.log`
+    `agent-config-wizard-${process4.pid}-${Date.now()}.log`
   );
   let child;
   let log_fd = null;
@@ -21389,7 +21615,7 @@ function _wizard_run_sync(cmd, env, cli) {
     });
     child.unref();
   } catch (exc) {
-    process3.stdout.write(
+    process4.stdout.write(
       `(Wizard failed to start: ${String(exc)}; run 'node ${cli} install --no-open' manually.)
 `
     );
@@ -21428,7 +21654,7 @@ function _wizard_run_sync(cmd, env, cli) {
   if (matched_url === null) {
     const logLines = read_log().split("\n").filter((l) => l !== "");
     const tail = logLines.length ? logLines.slice(-20).join("\n  ") : "(no output captured)";
-    process3.stdout.write(
+    process4.stdout.write(
       `(Wizard server did not report ready within ${Math.trunc(total)}s; run 'node ${cli} install --no-open' manually.)
   Last output:
   ${tail}
@@ -21436,49 +21662,49 @@ function _wizard_run_sync(cmd, env, cli) {
     );
     return 0;
   }
-  process3.stdout.write("\n");
-  process3.stdout.write(`Setup wizard ready: ${matched_url}
+  process4.stdout.write("\n");
+  process4.stdout.write(`Setup wizard ready: ${matched_url}
 `);
   _openBrowser(matched_url);
-  process3.stdout.write(
+  process4.stdout.write(
     "(Wizard server keeps running in the background \u2014 finish the wizard in the browser tab; the next install run stops any stale server.)\n"
   );
   return 0;
 }
 function _openBrowser(url) {
   try {
-    const opener = process3.platform === "darwin" ? ["open", [url]] : process3.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : ["xdg-open", [url]];
+    const opener = process4.platform === "darwin" ? ["open", [url]] : process4.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : ["xdg-open", [url]];
     spawnSync2(opener[0], opener[1], { stdio: "ignore" });
   } catch {
   }
 }
 function _dry_run_summary(opts) {
   const target = resolvePath(
-    opts.custom_path || opts.project || process3.env["PROJECT_ROOT"] || process3.cwd()
+    opts.custom_path || opts.project || process4.env["PROJECT_ROOT"] || process4.cwd()
   );
   const [will_launch, why_not] = _wizard_should_launch(opts);
-  process3.stdout.write("\n");
-  process3.stdout.write("[dry-run] Plan summary \u2014 no files written, no subprocesses spawned:\n");
-  process3.stdout.write(`  profile:     ${opts.profile}
+  process4.stdout.write("\n");
+  process4.stdout.write("[dry-run] Plan summary \u2014 no files written, no subprocesses spawned:\n");
+  process4.stdout.write(`  profile:     ${opts.profile}
 `);
-  process3.stdout.write(`  user-type:   ${opts.user_type || "(none)"}
+  process4.stdout.write(`  user-type:   ${opts.user_type || "(none)"}
 `);
-  process3.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? "global" : "auto")}
+  process4.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? "global" : "auto")}
 `);
-  process3.stdout.write(`  tools:       ${opts.tools || "all"}
+  process4.stdout.write(`  tools:       ${opts.tools || "all"}
 `);
-  process3.stdout.write(`  target:      ${target}
+  process4.stdout.write(`  target:      ${target}
 `);
-  process3.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
+  process4.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
 `);
-  process3.stdout.write(`  force:       ${pyBool(opts.force)}
+  process4.stdout.write(`  force:       ${pyBool(opts.force)}
 `);
-  process3.stdout.write(`  offline:     ${pyBool(opts.offline)}
+  process4.stdout.write(`  offline:     ${pyBool(opts.offline)}
 `);
   if (will_launch) {
-    process3.stdout.write("  wizard:      Would auto-launch (pass --no-ui to suppress).\n");
+    process4.stdout.write("  wizard:      Would auto-launch (pass --no-ui to suppress).\n");
   } else {
-    process3.stdout.write(`  wizard:      Suppressed (${why_not}).
+    process4.stdout.write(`  wizard:      Suppressed (${why_not}).
 `);
   }
   if (opts.global_install) {
@@ -21492,21 +21718,21 @@ function _dry_run_summary(opts) {
       preview = {};
     }
     const total = Object.values(preview).reduce((a, v) => a + v.length, 0);
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     if (total === 0) {
-      process3.stdout.write("  reap (cleanup): nothing to reap \u2014 no stale deployed files.\n");
+      process4.stdout.write("  reap (cleanup): nothing to reap \u2014 no stale deployed files.\n");
     } else {
-      process3.stdout.write(`  reap (cleanup): would remove ${total} stale file(s):
+      process4.stdout.write(`  reap (cleanup): would remove ${total} stale file(s):
 `);
       for (const tool_id of Object.keys(preview).sort()) {
         for (const p of preview[tool_id]) {
-          process3.stdout.write(`      ${tool_id}: ${p}
+          process4.stdout.write(`      ${tool_id}: ${p}
 `);
         }
       }
     }
   }
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   return 0;
 }
 function pyBool(v) {
@@ -21515,45 +21741,45 @@ function pyBool(v) {
 function _apply_payload_preview(payload, opts) {
   const schema_version = payload["schema_version"] ?? "<missing>";
   const target = resolvePath(
-    opts.custom_path || opts.project || process3.env["PROJECT_ROOT"] || process3.cwd()
+    opts.custom_path || opts.project || process4.env["PROJECT_ROOT"] || process4.cwd()
   );
-  process3.stdout.write("\n");
-  process3.stdout.write(
+  process4.stdout.write("\n");
+  process4.stdout.write(
     "[apply-payload] Plan summary \u2014 no files written, no subprocesses spawned:\n"
   );
-  process3.stdout.write(`  schema:      ${schema_version}
+  process4.stdout.write(`  schema:      ${schema_version}
 `);
   if (schema_version === "wizard-v2") {
     const tools = payload["tools"] || [];
     const packs = payload["packs"] || [];
     const settings = payload["settings"] || {};
     const scope_to_project = Boolean(payload["scope_to_project_only"] ?? false);
-    process3.stdout.write(`  tools:       ${tools.length ? tools.join(",") : "(none)"}
+    process4.stdout.write(`  tools:       ${tools.length ? tools.join(",") : "(none)"}
 `);
-    process3.stdout.write(`  packs:       ${packs.length ? packs.join(",") : "(base)"}
+    process4.stdout.write(`  packs:       ${packs.length ? packs.join(",") : "(base)"}
 `);
-    process3.stdout.write(`  settings:    ${Object.keys(settings).length} top-level key(s)
+    process4.stdout.write(`  settings:    ${Object.keys(settings).length} top-level key(s)
 `);
-    process3.stdout.write(`  scope:       ${scope_to_project ? "project" : "global"}
+    process4.stdout.write(`  scope:       ${scope_to_project ? "project" : "global"}
 `);
   } else if (schema_version === "installer-v1") {
     const ai_tools = payload["ai_tools"] || [];
     const configs = payload["configs"] || {};
-    process3.stdout.write(`  ai_tools:    ${ai_tools.length ? ai_tools.join(",") : "(none)"}
+    process4.stdout.write(`  ai_tools:    ${ai_tools.length ? ai_tools.join(",") : "(none)"}
 `);
-    process3.stdout.write(`  configs:     ${Object.keys(configs).length} tool config(s)
+    process4.stdout.write(`  configs:     ${Object.keys(configs).length} tool config(s)
 `);
   } else {
-    process3.stdout.write(`  error:       unsupported schema_version: ${pyRepr(schema_version)}
+    process4.stdout.write(`  error:       unsupported schema_version: ${pyRepr(schema_version)}
 `);
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     return 2;
   }
-  process3.stdout.write(`  target:      ${target}
+  process4.stdout.write(`  target:      ${target}
 `);
-  process3.stdout.write(`  dry_run:     ${pyBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
+  process4.stdout.write(`  dry_run:     ${pyBool(Boolean(payload["dry_run"] ?? opts.dry_run))}
 `);
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   return 0;
 }
 function pyRepr(v) {
@@ -21626,8 +21852,8 @@ function main2(argv) {
     state.QUIET = true;
   }
   if (opts.offline) {
-    process3.env["AGENT_CONFIG_OFFLINE"] = "1";
-    process3.env["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1";
+    process4.env["AGENT_CONFIG_OFFLINE"] = "1";
+    process4.env["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1";
   }
   if (!SUPPORTED_PROFILES.includes(opts.profile)) {
     fail(`Unsupported profile: ${opts.profile}. Supported: ${SUPPORTED_PROFILES.join(", ")}`);
@@ -21645,7 +21871,7 @@ function main2(argv) {
   }
   if (opts.minimal) {
     const target_root = resolvePath(
-      opts.custom_path || opts.project || process3.env["PROJECT_ROOT"] || process3.cwd()
+      opts.custom_path || opts.project || process4.env["PROJECT_ROOT"] || process4.cwd()
     );
     const minimal_package_root = path21.dirname(
       path21.dirname(path21.dirname(_minimal_templates_root()))
@@ -21653,7 +21879,7 @@ function main2(argv) {
     const validated_user_type = _validate_user_type(minimal_package_root, opts.user_type);
     return install_minimal(target_root, opts.force, validated_user_type);
   }
-  const detect_root = resolvePath(opts.project || process3.env["PROJECT_ROOT"] || process3.cwd());
+  const detect_root = resolvePath(opts.project || process4.env["PROJECT_ROOT"] || process4.cwd());
   const [detected, detect_reason] = detect_scope(detect_root);
   const custom_path = opts.custom_path ? resolvePath(opts.custom_path) : null;
   const scope = _resolve_scope(opts, detected, detect_reason, custom_path);
@@ -21679,7 +21905,7 @@ function main2(argv) {
     }
     return rc2;
   }
-  const project_root = custom_path || resolvePath(opts.project || process3.env["PROJECT_ROOT"] || process3.cwd());
+  const project_root = custom_path || resolvePath(opts.project || process4.env["PROJECT_ROOT"] || process4.cwd());
   const is_first_run = !pathExists(path21.join(project_root, SETTINGS_FILE));
   const rc = _main_project_install(opts, project_root, parsed_tools, is_first_run);
   if (rc === 0 && opts.interactive) {
@@ -21689,7 +21915,7 @@ function main2(argv) {
   return rc;
 }
 function _propose_modules_config(project_root, is_first_run) {
-  if (!is_first_run || state.QUIET || !process3.stdin.isTTY || !process3.stdout.isTTY) return;
+  if (!is_first_run || state.QUIET || !process4.stdin.isTTY || !process4.stdout.isTTY) return;
   let candidates;
   try {
     candidates = detect_module_roots(project_root);
@@ -21697,21 +21923,21 @@ function _propose_modules_config(project_root, is_first_run) {
     return;
   }
   if (!candidates || candidates.length === 0) return;
-  process3.stdout.write("\n");
+  process4.stdout.write("\n");
   info("Module-root candidates detected \u2014 propose `modules:` block");
   info("Paste into .agent-project-settings.yml to enable module-aware skills (or skip; the block stays opt-in).");
-  process3.stdout.write("\n");
-  process3.stdout.write("  modules:\n");
-  process3.stdout.write("    enabled: true\n");
-  process3.stdout.write("    root_paths: [" + candidates.map((c) => c.path).join(", ") + "]\n");
+  process4.stdout.write("\n");
+  process4.stdout.write("  modules:\n");
+  process4.stdout.write("    enabled: true\n");
+  process4.stdout.write("    root_paths: [" + candidates.map((c) => c.path).join(", ") + "]\n");
   const primary_ns = candidates.find((c) => c.namespace_template_guess)?.namespace_template_guess ?? "";
   if (primary_ns) {
-    process3.stdout.write(`    namespace_template: '${primary_ns}'
+    process4.stdout.write(`    namespace_template: '${primary_ns}'
 `);
   }
-  process3.stdout.write("    agent_folder: agents\n");
-  process3.stdout.write("    skip_dirs: [.module-template, .example]\n");
-  process3.stdout.write("\n");
+  process4.stdout.write("    agent_folder: agents\n");
+  process4.stdout.write("    skip_dirs: [.module-template, .example]\n");
+  process4.stdout.write("\n");
   info(
     "Re-run anytime via `./scripts-run src/scripts/propose_modules_config` (installed under <package>/src/scripts/)."
   );
@@ -21804,14 +22030,14 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
     package_type = detect_package_type(package_root);
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     info("Agent Config \u2014 Project Bridge Installer");
     info(`Project:  ${project_root}`);
     info(`Package:  ${package_root}`);
     info(`Type:     ${package_type}`);
     info(`Profile:  ${opts.profile}`);
     if (opts.user_type) info(`UserType: ${opts.user_type}`);
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
   }
   ensure_agent_settings(project_root, package_root, opts.profile, opts.force, opts.user_type, opts.packs ?? null);
   _write_install_mode_marker(project_root, "full");
@@ -21823,11 +22049,9 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
       ...ensure_augment_bridge(project_root, opts.force)
     ];
     if (_is_tool_enabled(tools, "claude-code")) {
-      merged_keys_by_tool["claude-code"] = [
-        ...ensure_claude_bridge(project_root, opts.force),
-        ...ensure_mcp_bridge(project_root, opts.force)
-      ];
+      merged_keys_by_tool["claude-code"] = ensure_claude_bridge(project_root, opts.force);
     }
+    registerMcpHosts(merge_json_file, project_root, opts.force, package_root, tools, merged_keys_by_tool);
     if (_is_tool_enabled(tools, "cursor")) {
       merged_keys_by_tool["cursor"] = ensure_cursor_bridge(project_root, opts.force);
     }
@@ -21877,7 +22101,7 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   }
   if (!opts.skip_bridges && !opts.no_smoke) {
     if (!state.QUIET) {
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
       info("Smoke-testing installed hook bridges (dry-run)");
     }
     _smoke_test_hooks(project_root, package_root);
@@ -21898,34 +22122,35 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
     finalize_claude_model_tiers(project_root);
   }
   if (!state.QUIET) {
-    process3.stdout.write("\n");
+    process4.stdout.write("\n");
     success("Done.");
     if (is_first_run) {
-      process3.stdout.write("\n");
-      process3.stdout.write("  Try these 3 prompts with your agent:\n");
-      process3.stdout.write('    1. "Refactor this function"   \u2192 agent analyzes first\n');
-      process3.stdout.write('    2. "Add caching to this"      \u2192 agent asks instead of guessing\n');
-      process3.stdout.write('    3. "Implement this feature"   \u2192 agent respects your codebase\n');
-      process3.stdout.write("\n");
-      process3.stdout.write("  Next steps:\n");
-      process3.stdout.write("    \u2022 Commit .agent-settings.yml and bridge files to your repo\n");
-      process3.stdout.write("    \u2022 New team members run `npx @event4u/agent-config init` \u2014 done\n");
-      process3.stdout.write("    \u2022 Inspect hook coverage: ./agent-config hooks:status\n");
-      process3.stdout.write(
+      process4.stdout.write("\n");
+      process4.stdout.write("  Try these 3 prompts with your agent:\n");
+      process4.stdout.write('    1. "Refactor this function"   \u2192 agent analyzes first\n');
+      process4.stdout.write('    2. "Add caching to this"      \u2192 agent asks instead of guessing\n');
+      process4.stdout.write('    3. "Implement this feature"   \u2192 agent respects your codebase\n');
+      process4.stdout.write("\n");
+      process4.stdout.write("  Next steps:\n");
+      process4.stdout.write("    \u2022 Commit .agent-settings.yml and bridge files to your repo\n");
+      process4.stdout.write("    \u2022 New team members run `npx @event4u/agent-config init` \u2014 done\n");
+      process4.stdout.write("    \u2022 Inspect hook coverage: ./agent-config hooks:status\n");
+      process4.stdout.write(
         "    \u2022 Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md\n"
       );
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
     } else {
-      process3.stdout.write(
+      process4.stdout.write(
         "  Re-run complete. Walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md\n"
       );
-      process3.stdout.write("\n");
+      process4.stdout.write("\n");
     }
+    printResiduals(tools, state.QUIET);
     if (_is_tool_enabled(tools, "claude-code")) {
       const team_hint = _team_setup_hint_line(project_root);
       if (team_hint !== null) {
-        process3.stdout.write(team_hint + "\n");
-        process3.stdout.write("\n");
+        process4.stdout.write(team_hint + "\n");
+        process4.stdout.write("\n");
       }
     }
   }
@@ -21937,21 +22162,21 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   return 0;
 }
 function _resolvedArgv1() {
-  if (process3.argv[1] === void 0) return void 0;
+  if (process4.argv[1] === void 0) return void 0;
   try {
-    return fs24.realpathSync(path21.resolve(process3.argv[1]));
+    return fs24.realpathSync(path21.resolve(process4.argv[1]));
   } catch {
-    return path21.resolve(process3.argv[1]);
+    return path21.resolve(process4.argv[1]);
   }
 }
 var _argv1 = _resolvedArgv1();
 var _isCliEntry2 = _argv1 !== void 0 && import.meta.url === pathToFileURL2(_argv1).href;
 if (_isCliEntry2 || _argv1 === _HERE2) {
   try {
-    process3.exitCode = main2(process3.argv.slice(2));
+    process4.exitCode = main2(process4.argv.slice(2));
   } catch (e) {
     if (e instanceof SystemExitError || e instanceof ArgparseExit2) {
-      process3.exitCode = e.code;
+      process4.exitCode = e.code;
     } else {
       throw e;
     }

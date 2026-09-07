@@ -1,5 +1,5 @@
 ---
-adr: 256
+adr: 257
 status: accepted
 date: 2026-09-07
 decision: unpaid-route-may-propose-and-score-never-decide
@@ -33,7 +33,7 @@ review_trigger: >-
   arrival of a gateway or free seat, which is the class this record anticipates.
 ---
 
-# ADR-256 — a route this package did not pay for may propose and may score, never decide
+# ADR-257 — a route this package did not pay for may propose and may score, never decide
 
 ## Status
 

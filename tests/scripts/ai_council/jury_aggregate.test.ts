@@ -186,7 +186,7 @@ describe('AC-9 — no production surface consumes a jury score', () => {
     it('the aggregator is imported by tests only', () => {
         // Shadow-only means shadow-only. A gate, a CLI subcommand, or a hook
         // that reads `juryAggregate` would turn an evaluation aid into a
-        // verdict carrier — this roadmap's Risk 5, and ADR-256's boundary.
+        // verdict carrier — this roadmap's Risk 5, and ADR-257's boundary.
         let out = '';
         try {
             out = execFileSync(

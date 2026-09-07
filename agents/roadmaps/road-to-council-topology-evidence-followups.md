@@ -193,8 +193,16 @@ frozen beforehand (1B.4).
 
 > **This section changes `status:` and nothing else about the obligations.** All
 > 38 items stay exactly where they are, with the same triggers and the same
-> `[~]`. What changed is that three mechanisms now stand between this file and
-> its own removal, and `status: draft` became `status: carrier`.
+> deferred disposition. What changed is that three mechanisms now stand between
+> this file and its own removal, and `status: draft` became `status: carrier`.
+>
+> *(Corrected 2026-09-07: this sentence read "and the same `[~]`". The glyph is
+> wrong for **this** file — the 38 items here are marked `[ ]`, and `[~]` is
+> their mark in the archived parent, where each one carries a
+> `carried-to=` annotation. The disposition is unchanged and is what the
+> sentence meant; the glyph naming it was not this file's. Why `[ ]` is the only
+> mechanically available mark here, and the tension that creates with the
+> council's own "no indefinite `[ ]`" floor, is § Drain run 20.)*
 
 *AI council 2026-09-02 (drain run 16), members `anthropic/claude-sonnet-4-5` +
 `openai/codex-default`, 2 rounds each over two rounds of questions, depth deep,
@@ -267,6 +275,158 @@ resolution, carrier-to-carrier transfer — does not exist; every one of those
 transitions fails closed today, which both seats asked for as a deliberately
 immobile first version. `agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md`
 records it.
+
+## Drain run 20 (2026-09-07) — 0 of 38 closed, and every trigger re-measured rather than assumed
+
+> **Nothing was checked, nothing was archived, and this roadmap does not close.**
+> That is the finding, not a shortfall against it. The 38 obligations' resumption
+> predicates are facts about the world, and a repository run cannot move a fact
+> about the world. What a new run *can* add is fresh measurement, and everything
+> below is measured at this commit rather than carried over from 2026-09-03.
+
+**The council was NOT re-run, and that is the discipline.** Three rounds already
+answered this file's question — drain 14 (verdict **3A**), drain 15 (verdict
+**2b-i**, convergent 2/2), drain 16 (re-affirmed after re-reading the lock) —
+each under an owner instruction materially identical to this run's. The recorded
+boundary was re-read before being relied on: *preserve all 38 obligations in
+place · preserve the three measurable resumption triggers · do not archive,
+cancel, promote or transfer the carrier · do not claim its work is complete.*
+Re-asking a settled question after an unwelcome verdict is verdict shopping.
+
+**The one check that could have unsettled it was run and did not.** Before
+citing the lock, this run looked for a genuinely new decision the earlier rounds
+had not seen — specifically for a separable "doable half" of any deferred item,
+the split that resolves a time-gated step elsewhere in this estate. There is
+none left: the separation has already been performed item by item upstream. 6.5
+banks its recorded-gate half and carries only the against-the-arms half; 1B.1
+banks its reproduced `codex-default` contract miss at `n = 2`; 5.4's remaining
+scope was narrowed on 2026-09-03 from three synthesis elements to one. The single
+place a prose-only half was plausible was refused by both seats in terms that
+still apply — *"merely adding prose to four templates would create another
+indefinitely parked baseline"*. A question whose entire option set is
+mechanically foreclosed is not a question worth a seat.
+
+### The three triggers, measured at this commit
+
+| Group | Trigger | Measured 2026-09-07 | Moved? |
+|---|---|---|---|
+| A | `n >= 5` independent eligible seats | `council:status` → **2 enabled of 5** (anthropic, openai) | no |
+| A | verified 20-consecutive-UTC-day reservation | no such action exists in this environment | no |
+| B | two consecutive reserved UTC-day windows, 30 calls/provider against a 50/provider/day cap | no reservation exists or can be made | no |
+| C | guarded population enters an integration branch or release candidate | the guarded features are unbuilt (below) | no |
+
+**One Group A fact is new, and it moves the trigger further from met rather than
+closer.** `council:status` additionally reports both seats at
+`qualification: unknown` — *"no exchange with this provider has ever been
+recorded"* — and states the consequence itself: they *"are not counted toward a
+quorum"*. So the seat position at this commit is 2 configured of 5 **and zero
+qualified**, where the earlier record established only the 2-of-5 shortfall. The
+`n >= 5` floor is short by three seats before qualification is even reached.
+
+**Group C's two repository-side facts were re-verified and came back stricter,
+not looser.** Step 10.3's metric is still absent in every form — a search for
+`zero_marginal|marginal_value|marginalValue|zmv` across `src/` and `tests/`
+returns zero hits. Step 10.2's stage-output vocabulary still has **zero
+production importers**: `StageOutput` occurs only at its own definition site,
+`src/scripts/ai_council/replay_route.ts` lines 49, 74 and 175, and the two test
+files reach it through the `stageOutputs` property rather than the type name. Its
+trigger asks for production code that *emits* stage records; nothing emits them.
+
+### The seven committed guards are green, and that is still not closure
+
+All seven test files named in the Group C stub are present, and running them
+together gives **83 passed of 83** — matching the stub's per-file counts exactly
+(7 · 13 · 11 · 13 · 11 · 15 · 13). So that stub's *"everything already built
+stays built"* is re-verified true at this commit rather than assumed.
+
+It closes nothing. The stub's forbidden-claims list names this exact temptation
+twice, and it governs: **sabotage sensitivity is not positive runtime
+validation.** The only permitted claim is that the defensive tests exist and
+detect the planted violation. Seven green guards over an absent population are
+seven green guards over an absent population.
+
+### Archival is refused mechanically, and the refusal was measured this run
+
+The boundary forbids archiving; so does the tree, and the second fact was probed
+rather than quoted. Moving this file out and re-running
+`src/scripts/lint_carrier_integrity` produces **`❌ 38 broken deferral carries`
+and exit 1**, naming the archived parent for every one. Restoring the file
+returns exit 0, verified byte-identical by `sha256`
+(`0e1b2efb4882a7626431ce43de0874f70a7ad556a86453cd43f6314e95f7c2ed`) with a
+clean working tree before and after.
+
+The descope route was re-checked and is still closed: `deferralProblems`
+resolves `carried-to=` only against `agents/roadmaps/<slug>.md` or
+`agents/roadmaps/later/<slug>.md`, so `stubs/` is not a legal destination;
+`later/` was refused by a council in this family on preservation grounds; and
+`[-]` is owner-reserved. Every mark other than `[ ]` is therefore either
+unavailable or a false green.
+
+**One header figure had gone stale and is corrected here.** The header records
+`check_estate_count` reporting `active_roadmaps 4 (floor 4, +0)` with this file
+present. At this commit it reports **`active_roadmaps 10 (floor 10 at
+origin/main, +0)`** and the estate is within its ratchet. The 2026-09-03 reading
+was true when taken; the estate grew around it. The mechanism the header credits
+— `countActiveCarriers`, added into `active_roadmaps` so a status flip is
+count-neutral — is unchanged, so the disposition it supported is unchanged with
+it. Only the number moved.
+
+### The glyph tension, recorded because it is resolved nowhere
+
+The 38 items here are `[ ]`. The council floor carried in the Group C stub says
+**"no indefinite `[ ]` parking — 'mechanism built, waiting for population' is a
+deferred state, not an active one"**, and its floor 2 forbids *"no indefinite
+`[ ]` without a scheduled execution path"*. Both describe these 38 exactly.
+
+The floor was satisfied **at the parent**, which converted its steps to `[~]`
+with a `carried-to=` annotation apiece. It cannot be satisfied *here*: a `[~]`
+in this file would need its own onward receiver, and there is no legal one — the
+same wall § Disposition 2026-09-01 (drain run 15) hit. So `[ ]` is not a
+judgement that this work is active; it is the only mark the tree permits, and the
+floor and the mechanism are in genuine conflict at this one spot.
+
+This is recorded rather than resolved, and deliberately not sent to a seat: the
+option set is empty, so there is nothing for a council to choose between. It
+belongs to whoever holds the transition vocabulary, and that stub now carries a
+fired trigger of its own (next section).
+
+### A sibling stub's resumption trigger fired, and nothing noticed for five days
+
+`agents/roadmaps/stubs/road-to-carrier-transition-vocabulary.md` deferred its
+work on an explicit premise — *"There is exactly **one** carrier in the tree"* —
+and set its reopening condition as *"a second carrier appears"*. **A second
+carrier appeared on 2026-09-07:**
+`agents/roadmaps/road-to-the-skill-surface-framing-choice.md`, `status: carrier`,
+parent `road-to-the-activation-census-consequence`, landed in `a42179585`
+(PR #1884). `lint_carrier_integrity` now reports `2 live carrier(s) justified`
+where its 2026-09-02 run reported one.
+
+That stub has been updated with the dated observation, the provenance, and an
+explicit statement that nothing was built — designing a carrier-identity scheme
+or a transfer declaration means repository-wide lifecycle infrastructure plus a
+CI gate to bind it, and that authority was found absent by drain 14's verdict 3A
+and left divergent by drain 15. The engineering premise changed; the authority
+did not.
+
+**It is worth naming what this instance demonstrates,** because this file
+predicted it. § What still does not guard it says: *"No mechanism monitors the 38
+resumption triggers, so an item whose trigger fires stays `[~]` until a human
+looks."* A sibling artefact's trigger fired, was met for five days, and was
+found only because a directed run happened to read the file. The prediction is
+confirmed with a live instance, on a neighbour rather than on the 38 — which is
+the same gap either way.
+
+### What this run did NOT do
+
+No checkbox was flipped. Nothing was archived, promoted, cancelled or
+transferred. No mechanism was built, no gate was written, no capacity was
+reserved, no seat was spent (`$0.0000`, no council call made), and no work here
+is claimed complete. Every one of the 38 obligations stands exactly where it
+stood, under the same triggers, with the same forbidden-claims lists governing.
+The changes are three factual repairs and two dated observations — the class of
+edit drain 16 established as inside the boundary, for the reason it gave: a
+carrier whose whole subject is a mechanism keyed on something that moved is the
+worst possible place to leave a stale claim standing.
 
 ## Where the governing Blockers and Acceptance Criteria live
 

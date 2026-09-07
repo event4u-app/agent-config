@@ -41,6 +41,10 @@ export interface Resource {
     readonly source: string;
     readonly mime_type: string;
     readonly kind: ResourceKind;
+    /** Frontmatter `type:` (`always` / `auto` / `manual`) where the asset has one. */
+    readonly rule_type?: string;
+    /** File mtime, ISO-8601, for the protocol's `lastModified` annotation. */
+    readonly last_modified?: string;
 }
 
 // Python: re.compile(r"^#\s+(.+?)\s*$", re.MULTILINE)
@@ -160,7 +164,18 @@ function _load(
         source: meta.source ?? 'package',
         mime_type: MIME_MARKDOWN,
         kind,
+        ...(meta.type === undefined ? {} : { rule_type: meta.type.trim() }),
+        ...(_mtimeIso(p) === null ? {} : { last_modified: _mtimeIso(p) as string }),
     };
+}
+
+/** File mtime as ISO-8601, or `null` when it cannot be read. */
+function _mtimeIso(p: string): string | null {
+    try {
+        return fs.statSync(p).mtime.toISOString();
+    } catch {
+        return null;
+    }
 }
 
 export function scan_rules(root?: string | null): [Resource[], string[]] {
@@ -256,6 +271,25 @@ function _strCmp(a: string, b: string): number {
     return 0;
 }
 
+/**
+ * Priority in the protocol's 0..1 range.
+ *
+ * The roadmap that asked for this said to derive it "from the existing `tier`".
+ * There is no `tier` on a Resource — measured, not assumed — so it derives from
+ * what does exist: the frontmatter `type:` an always-loaded rule carries, then
+ * the asset kind. A rule the host loads on every turn outranks one it loads on
+ * a trigger, which outranks reference material.
+ *
+ * PROTOCOL CONFORMANCE ONLY. No shipped host is known to consume `priority` for
+ * selection, and this function must not be cited as evidence that one does.
+ */
+export function resourcePriority(resource: Resource): number {
+    if (resource.rule_type === 'always') return 1;
+    if (resource.rule_type === 'auto') return 0.7;
+    if (resource.rule_type === 'manual') return 0.3;
+    return resource.kind === 'rule' ? 0.7 : resource.kind === 'context' ? 0.5 : 0.3;
+}
+
 /** Project a Resource into MCP `Resource` constructor kwargs. */
 export function to_mcp_resource_meta(resource: Resource): Record<string, unknown> {
     return {
@@ -263,6 +297,13 @@ export function to_mcp_resource_meta(resource: Resource): Record<string, unknown
         name: resource.name,
         description: resource.description,
         mimeType: resource.mime_type,
+        // `audience` is the model, not the end user: these are governance
+        // assets a host injects, never something a person reads in a client.
+        audience: ['assistant'],
+        priority: resourcePriority(resource),
+        ...(resource.last_modified === undefined
+            ? {}
+            : { lastModified: resource.last_modified }),
         _meta: { source: resource.source, kind: resource.kind },
     };
 }
