@@ -39,12 +39,31 @@
  *
  * ## Honest limits
  *
- * Presence of a NAME, never equality of CONTENT. A stale `~/.claude/skills/foo`
- * satisfies this check, so an install that lags a release delivers that
- * release's older copy of `foo` rather than two copies. That is the trade the
+ * Presence of a NAME, never equality of CONTENT — and never PROVENANCE either.
+ * Two consequences, the second added 2026-09-07 after a neutral review named it.
+ *
+ * **Staleness.** A stale `~/.claude/skills/foo` satisfies this check, so an
+ * install that lags a release delivers that release's older copy of `foo` rather
+ * than two copies. That is the trade the
  * owner chose on 2026-09-07, stated rather than implied: the remedy for a stale
  * global layer is `agent-config install`, and {@link verifyHostLayer} still
  * reports the staleness so a run says so out loud.
+ *
+ * **Shared namespace.** `~/.claude/skills` is not this package's directory. On
+ * the machine this was written, 307 entries = 299 package skills + 8 Cloudflare
+ * PLUGIN skills. No name collides today, but the mechanism needs no collision to
+ * be real: a plugin — or a hand-made `~/.claude/skills/<name>` — whose name
+ * matches a package skill makes this function withhold the package's project-layer
+ * copy, and the session then loads the foreign body under the package's skill
+ * name. The withhold is a removal with no repair path, which is what makes it
+ * worth naming rather than filing.
+ *
+ * NOT FIXED here, deliberately: distinguishing a package artefact from a foreign
+ * one needs a provenance marker the installer does not write today, and inventing
+ * one in this module would be a guess dressed as a check. What IS true is that
+ * the failure is loud in the direction that matters — the skill is still
+ * delivered, under the right name, from one layer — and silent only about whose
+ * body it is.
  *
  * Contract, same as its siblings in this directory: no `process.exit`, no CLI
  * entry, node builtins only — it ships inside the consumer installer bundle.

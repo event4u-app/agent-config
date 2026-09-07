@@ -46,7 +46,19 @@ import {
 import { isExclusivelyPackageOnly } from '../../install/partitionEligibility.js';
 import { dedupableRules } from '../../install/ruleLayerPartition.js';
 
-export const CORPUS_MANIFEST_VERSION = 'corpus-manifest-v1';
+/**
+ * Bumped to v2 on 2026-09-07 with the `partition_active` -> `host_layer_verified`
+ * rename, after a neutral review named the alternative: `parseManifest` accepts
+ * any object carrying the declared version and validates three fields, and
+ * `diffManifests` compares with `String(e) !== String(a)`. So a v1 manifest
+ * (which has `partition_active` and no `host_layer_verified`) compared against
+ * another v1 yields `"undefined" === "undefined"` on the renamed field — NO
+ * difference reported, on a field neither side has. That is verbatim the failure
+ * `parseManifest`'s own error text says the version check exists to prevent:
+ * "comparing it partially would report equivalence from the fields that happened
+ * to survive". A rename inside a frozen version is exactly that.
+ */
+export const CORPUS_MANIFEST_VERSION = 'corpus-manifest-v2';
 
 /** The tool directory the experiment's corpus is enumerated from. */
 export const CORPUS_TOOL_DIR = '.claude/rules';

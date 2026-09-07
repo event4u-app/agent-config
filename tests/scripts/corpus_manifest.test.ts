@@ -391,7 +391,7 @@ describe('parseManifest', () => {
     it('refuses a pin of an empty subject, which would compare equivalent to any other', () => {
         expect(() =>
             parseManifest({
-                version: 'corpus-manifest-v1',
+                version: 'corpus-manifest-v2',
                 enumeration_rule: RULE,
                 included: [],
                 subject_digest: subjectDigest(RULE, []),

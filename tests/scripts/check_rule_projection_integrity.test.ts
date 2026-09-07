@@ -233,12 +233,24 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
         expect(projected.size, 'the plan must not be empty').toBeGreaterThan(0);
     });
 
-    it.skipIf(planEmpty)('plans the same rule set for every active host rule tree', () => {
+    it.skipIf(planEmpty)('plans a NON-EMPTY rule set for every active host rule tree', () => {
+        // This used to assert every tree plans the IDENTICAL set. Corrected
+        // 2026-09-07 after a neutral review: `partitionRulesForDir` narrows PER
+        // DIRECTORY on that host's own global layer, so two trees planning
+        // different sets is the design working — a machine with one host installed
+        // globally diverges by construction, and the old assertion was green here
+        // only because `~/.claude/rules` and `~/.cursor/rules` happen to hold the
+        // same 104 names. Same environment-dependence the assertion above was just
+        // repaired for.
+        //
+        // What survives is the property that does not depend on the machine: every
+        // active tree is planned, and none is planned EMPTY. An empty plan for a
+        // tree the emitter still writes is a real defect and reds everywhere.
         const plan = projected_rule_trees();
         const trees = Object.keys(plan);
         expect(trees).toContain(TREE);
         for (const t of trees) {
-            expect(plan[t], `${t} diverges from ${TREE}`).toEqual(plan[TREE]);
+            expect((plan[t] ?? []).length, `${t} is planned EMPTY`).toBeGreaterThan(0);
         }
     });
 });

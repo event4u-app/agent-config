@@ -11,16 +11,23 @@
  * 203,873 tokens against a 110,000 cap (185.3 %).
  *
  * ADR-236 partitions them: an artefact that exists ONLY for this package stays
- * in the project layer; everything else is delivered only globally. That takes
- * `<repo>/.claude/` from 111 rules and 338 skills to **16 rules and zero
- * skills**.
+ * in the project layer; everything else is delivered only globally.
+ *
+ * The figure this note carried — "16 rules and zero skills" — was the 2026-08-19
+ * projection of the design. Measured 2026-09-07 on the amended implementation:
+ * **13 rules** (15 package-only, 2 of them byte-identically deduped at user
+ * scope) and **zero skills**, plus 49 flat-command wrappers, which are a
+ * different family and are withheld per name like everything else.
  *
  * ## Why the predicate is fail-safe and never fails the build
  *
  * The partition is a removal, so the build loses its repair path: it can no
  * longer heal a stale global layer by regenerating, because it stops writing
- * those files. Every uncertainty therefore resolves to `standalone/full` — the
- * pre-partition behaviour — and **never** to a refusal:
+ * those files. **How that fail-safe is expressed changed on 2026-09-07** and the
+ * sentence below is the OLD form, kept because the constraint it records still
+ * binds: uncertainty used to resolve to a repo-wide `standalone/full`, a mode
+ * this file no longer has. It now resolves PER ARTEFACT — an unreadable host
+ * layer withholds nothing — and still never to a refusal:
  *
  * `.github/workflows/consistency.yml:169` runs `task generate-tools` on a fresh
  * checkout where, by that workflow's own comment at `:172-174`, the host rule
@@ -38,8 +45,12 @@
  *
  * ## Contract
  *
- * Side-effect-free, no I/O of its own (callers supply the facts), no CLI entry,
- * no `process.exit`. Ships inside the consumer installer bundle, same
+ * `verifyHostLayer` itself is side-effect-free and takes its facts from the
+ * caller. The MODULE is not: `resolveHostLayerVerdict` reads the filesystem and
+ * the lockfile, and since 2026-09-07 it re-exports `keepInProjectLayer` /
+ * `claudeLayerHolds`, which read directories. The earlier blanket "no I/O of its
+ * own" was true of the pure predicate and false of the file. No CLI entry, no
+ * `process.exit`. Ships inside the consumer installer bundle, same
  * constraint as `ruleInScope.ts`.
  */
 import * as fs from 'node:fs';
@@ -59,10 +70,21 @@ import { claudeLayerHolds, keepInProjectLayer } from './claudeLayerCarriage.js';
  * over-protection became a leak — precisely the one
  * `tests/scripts/single_delivery_emission.test.ts` exists for. A command-named
  * skill survives in `.claude/skills/` while both counters read zero, because the
- * skill sweep spares it and the command prune skips symlinks. So the set now
- * mirrors the emitter's own two skips exactly: a slug that is also a skill name,
- * and every CLUSTERED command (those reach the host as `/cluster:sub` and need
- * no wrapper). `condense.ts::_emitted_wrapper_slugs` is that set.
+ * skill sweep spares it and the command prune skips symlinks.
+ *
+ * So the set mirrors the emitter's own skips — **all of them**, which a neutral
+ * review found it did not on 2026-09-07: the note said "two" and named two while
+ * the emitter had three, so up to 8 builtin-reserved slugs (`bug`, `review`,
+ * `worktree`, `agents`, `context`, `cost`, `memory`, `skills`) were protected
+ * from a sweep that should reach them. Benign in the shipped pipeline order,
+ * because the command emitter's own stale-dir sweep cleans them afterwards — but
+ * the invariant the note asserted did not hold, and it reopens for any run that
+ * calls `generate_claude_skills` without `generate_claude_commands`.
+ *
+ * The four skips: a slug that is also a skill name · every CLUSTERED command
+ * (those reach the host as `/cluster:sub` and need no wrapper) · a Claude Code
+ * built-in name · a slug `~/.claude/skills` already carries.
+ * `condense.ts::_emitted_wrapper_slugs` is that set.
  *
  * ## The re-export below
  *
@@ -73,7 +95,7 @@ import { claudeLayerHolds, keepInProjectLayer } from './claudeLayerCarriage.js';
  * import statement there is a blocking gate failure, while the same line here
  * (535 lines, under the cap) costs nothing.
  */
-export { keepInProjectLayer } from './claudeLayerCarriage.js';
+export { claudeLayerHolds, keepInProjectLayer } from './claudeLayerCarriage.js';
 import { parseFrontmatter } from './ruleInScope.js';
 import { fingerprintLayers, hostLayerInputs } from './hostLayerFingerprint.js';
 import { current_package_version, read_lockfile, write_lockfile, } from '../scripts/_lib/installed_lock.js';
@@ -231,12 +253,21 @@ export function _resetHostLayerVerdictForTest() {
  * artefact, and using it as one delivered 261 skills and 29 personas twice per
  * session for as long as an install lagged a release.
  *
- * So what survives is the DIAGNOSTIC, and it still prints. **Both council seats
- * (2026-08-20, 2/2) required that generation print the mode it selected** rather
- * than partition silently, and the requirement is honoured in its stronger form:
- * the line now names the host layer's verification state, and an unverified layer
- * gets a warning naming the remedy instead of a silent fallback to double
- * delivery. The caller supplies `announce`, and the level matters — the first
+ * So what survives is the DIAGNOSTIC. **Both council seats (2026-08-20, 2/2)
+ * required that generation print the mode it selected** rather than partition
+ * silently, and that requirement is still live — but this function is no longer
+ * where it is met, and the first version of this note claimed otherwise.
+ *
+ * **Corrected 2026-09-07 after a neutral review.** The note read "it still
+ * prints". It did not: removing `partitionActive` removed `condense.ts`'s only
+ * call into this resolver, so the emitter that file installed became dead and
+ * `task generate-tools` withheld ~299 skills and 29 personas while printing
+ * nothing about the layer it withheld against. The line is now emitted by
+ * `report_layer_overlap`, the step that already runs immediately after the
+ * generator in the same chain — see the comment there for why it lives in that
+ * file rather than in the 2,700-line generator.
+ *
+ * The caller still supplies `announce`, and the level still matters — the first
  * implementation used an `info()` that prints only at `verbose`. Residual,
  * stated: at an explicitly silent output level the line is dropped.
  *
@@ -449,29 +480,37 @@ export function personaListFor(toolDir, all, claudeList) {
  * pin the host version this measurement was taken against and re-probe when it
  * moves — not built here, and named as absent rather than implied away.
  *
- * ## Flat wrappers are NOT withheld, and the asymmetry is measured
+ * ## Flat wrappers ARE withheld — corrected 2026-09-07 after a neutral review
  *
  * A CLUSTERED command reaches Claude Code as `/cluster:sub` from a `.md` under
  * `commands/`, and `~/.claude/commands/` carries 41 such cluster directories — so
  * the project copy has somewhere to lose to, and this predicate withholds it.
  *
- * A FLAT command reaches the host as a hyphen-named wrapper under `skills/`
- * (`generate_claude_commands`), because — per that function's own note — the host
- * does not register flat command FILES. `~/.claude/skills` carries **none** of
- * those wrappers: measured 2026-09-07, 307 global skills = the 299 projected
- * skills plus 8 unrelated ones, and zero of the 153 wrappers. So withholding a
- * flat wrapper on the strength of `~/.claude/commands/<slug>.md` would deliver
- * that command NOWHERE — the one failure the fail-safe design exists to prevent.
- * `generate_claude_commands` therefore has no gate at all, and the 153 wrappers
- * are not duplication: nothing else delivers them.
+ * A FLAT command reaches the host as a hyphen-named wrapper under `skills/`,
+ * because the host does not register flat command FILES (probed ≤ 2.1.204).
  *
- * **What is NOT established:** whether the host registers `~/.claude/commands/<slug>.md`
- * for a flat command. If it does, those 53 global files make 53 of the wrappers
- * redundant and the catalog could shrink further. That is a HOST-BEHAVIOUR claim,
- * the class this file has already been wrong about once (the withdrawn
- * double-listing claim below), so it is named as unmeasured rather than assumed
- * in either direction. Closing it needs a `claude -p` probe of the same shape as
- * the 2026-08-21 dedup measurement, not a reading of this comment.
+ * **The first version of this note then claimed `~/.claude/skills` carries NONE
+ * of those wrappers, that "nothing else delivers them", and left
+ * `generate_claude_commands` ungated on that basis. All three were wrong.**
+ * `install.ts::_apply_claude_flat_command_wrappers`, wired for every
+ * `claude-code` deploy, writes `~/.claude/skills/<slug>/SKILL.md` for every
+ * VISIBLE flat command and deletes the flat file. The claim was a snapshot of one
+ * machine whose last install had not run that pass — 53 flat `.md` files still
+ * sat in `~/.claude/commands` — presented as a property of the installer.
+ *
+ * What it would have cost: the next `agent-config install` writes ~17 wrappers
+ * globally while the generator keeps writing all 49 project wrappers, so 17 flat
+ * commands arrive TWICE per session — the duplication class ADR-236 exists to
+ * remove — and `check_single_delivery` reports a `skills` overlap the same note
+ * said could not happen.
+ *
+ * So the wrapper emitter now applies the same per-name rule as everything else:
+ * `claudeLayerHolds('skills', slug)` withholds a wrapper the host layer carries,
+ * and keeps one it does not. Fail-safe per artefact, no repo-wide switch.
+ *
+ * A number in that note was wrong too, and is corrected here rather than left to
+ * be quoted: the project layer carries **49** wrappers, not 153. `153` was
+ * transplanted from the 153-skill measurement in `hostLayerFingerprint.ts`.
  *
  * @param globalName the host-side name — `<cluster>/<sub>.md` or `<slug>.md`.
  */

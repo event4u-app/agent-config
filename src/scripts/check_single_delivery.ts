@@ -52,12 +52,13 @@
  *   - an emitter that failed to withhold what the evidence said to withhold
  *     (a defect).
  *
- * It still reports rather than enforcing, for the unchanged reason above plus one
- * more this gate cannot resolve: its `commands` row compares CLUSTER DIRECTORY
- * names, a coarser key than the host's `<cluster>/<sub>.md` unit (see TYPES), so
- * a cluster directory whose files differ between layers reads as a collision
- * without being duplication. `--enforce` over a key that coarse would fail on a
- * correct tree.
+ * It still reports rather than enforcing, for the unchanged reason above. The
+ * second reason an earlier draft of this note gave — that the `commands` row's
+ * cluster-DIRECTORY key could read a correct tree as a collision — was true when
+ * written and was fixed in the same change: that row keys on the posix subpath
+ * now (see TYPES). Left recorded rather than deleted, because the argument is
+ * what justified `--enforce` staying opt-in and a reader should see that it no
+ * longer applies.
  *
  * WHERE THIS CHECK IS MEANINGFUL — read this before quoting one of its numbers
  * (road-to-session-closeout 3.3). It is a DEVELOPER-MACHINE check. It reads two
@@ -226,7 +227,13 @@ function readLayer(dir: string, recursive = false): LayerReading | null {
         else shape.files += 1;
     }
     if (!recursive) {
-        return { names: entries.map((e) => e.name).sort(), shape };
+        // README.md excluded for EVERY family, not only commands. It was excluded
+        // on the recursive path from the start and nowhere else, so a README in
+        // both layers would have counted as one duplicated artefact for rules,
+        // skills, personas, user-types and agents and not for commands — a latent
+        // asymmetry a neutral review caught on 2026-09-07. It names no artefact in
+        // any family.
+        return { names: entries.map((e) => e.name).filter((n) => n !== 'README.md').sort(), shape };
     }
     return { names: _mdSubpaths(dir).sort(), shape };
 }
@@ -558,8 +565,8 @@ export function main(argv?: readonly string[]): number {
                     '2026-09-07 the project layer withholds per ARTEFACT NAME on each host\n' +
                     "directory's own contents, so an artefact the host layer does not hold is\n" +
                     'kept BY DESIGN and reads as overlap here. --enforce exits 1 on any\n' +
-                    "overlap; the `commands` row's cluster-directory key is coarser than the\n" +
-                    'host unit, so enforcement can fail a correct tree — hence opt-in.\n',
+                    'overlap. It stays opt-in because a machine whose global layer is stale\n' +
+                    'cannot fix the overlap by regenerating — only by `agent-config install`.\n',
             );
             return 0;
         } else if (a !== undefined) {
@@ -685,8 +692,7 @@ export function main(argv?: readonly string[]): number {
             "ARTEFACT NAME on each host directory's own contents, never on a version in " +
             '`installed.lock`. So an artefact the host layer does not hold is kept BY DESIGN ' +
             'and appears here; a stale global layer is fixed by `agent-config install`. Use ' +
-            '--enforce where every layer is known current — note the `commands` row keys on ' +
-            'cluster DIRECTORY names, which can read as a collision without being one.\n',
+            '--enforce where every layer is known current.\n',
     );
     return 0;
 }

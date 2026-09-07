@@ -32,7 +32,7 @@ import { audit, type PersonaRow } from './audit_persona_coverage.js';
 /** Sentinel for "no catalogue root resolved" — never a readable path. */
 const NO_CATALOGUE = '<no-skills-catalogue>';
 
-import { DEFAULT_SKILLS_DIR, rank } from './score_skill_relevance.js';
+import { DEFAULT_SKILLS_DIR, DEFAULT_SKILLS_ROOTS, rank } from './score_skill_relevance.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/skill_tools/suggest_skill_for_task.ts → parents[3] of the .py
@@ -78,13 +78,27 @@ export interface Combo {
     why: string;
 }
 
+/**
+ * @param skillsDir the root the PERSONA audit reads — one directory by necessity.
+ * @param rankRoots roots to RANK across; defaults to `[skillsDir]`.
+ *
+ * The two parameters are separate because the two questions are. Ranking wants
+ * every catalogue the session can reach (`resolveSkillCatalogueRoots`); the
+ * persona-coverage audit walks one tree and pairs it with one persona directory.
+ * Collapsing them was the state a neutral review found on 2026-09-07: the MCP
+ * handler ranked the union while this CLI ranked the first root, so a consumer
+ * carrying its own project skills got a different answer from each — exactly the
+ * two-resolvers-over-one-catalogue split the resolver's docstring warns about,
+ * reproduced by the change that claimed to fix it.
+ */
 export function suggest(
     task: string,
     skillsDir: string,
     personasDir: string,
     top = 3,
+    rankRoots: readonly string[] = [skillsDir],
 ): Combo[] {
-    const ranked = rank(task, skillsDir).slice(0, top);
+    const ranked = rank(task, rankRoots).slice(0, top);
     const personaRows = audit(skillsDir, personasDir);
     const status = _persona_status(personaRows);
     return ranked.map(([name, score, personas]) => ({
@@ -279,7 +293,13 @@ export function main(argv: string[] | null = null): number {
     if (!task) {
         _argError('--task is required (or pass --sample)');
     }
-    const combos = suggest(task, args.skills_dir, args.personas_dir, args.top);
+    // Rank across every readable root; audit personas against the first. An
+    // explicit --skills-dir names one tree and is honoured as one tree.
+    const rankRoots =
+        args.skills_dir === DEFAULT_SKILLS_DIR && DEFAULT_SKILLS_ROOTS.length > 0
+            ? DEFAULT_SKILLS_ROOTS
+            : [args.skills_dir];
+    const combos = suggest(task, args.skills_dir, args.personas_dir, args.top, rankRoots);
     if (args.json) {
         process.stdout.write(pyJsonDumpsIndent2({ task, suggestions: combos }));
         process.stdout.write('\n');

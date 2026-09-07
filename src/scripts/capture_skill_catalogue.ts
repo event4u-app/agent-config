@@ -71,7 +71,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-    DEFAULT_CATALOGUE_ROOTS,
+    PROJECTION_CATALOGUE_ROOT,
     OBSERVATION_LOG,
     analyzeSelector,
     buildHostEventRecord,
@@ -86,7 +86,6 @@ import {
     parseHostBudgetEvent,
     readObservationLog,
     readProjectedCatalogue,
-    resolveSkillsRoot,
     type HostProjectionRow,
     type ProjectionMode,
     type ProjectionModeCounts,
@@ -118,13 +117,18 @@ function resolveCatalogueRoot(explicit: string | null): string {
         }
         return explicit;
     }
-    for (const candidate of DEFAULT_CATALOGUE_ROOTS) {
+    // The PROJECTION first, then the authored tree — deliberately NOT the generic
+    // ranker order, and deliberately not `DEFAULT_CATALOGUE_ROOTS`, which became a
+    // label list on 2026-09-07 (its `~/` entry joins to `<repo>/~/.claude/skills`,
+    // a path that can never exist). This module compares what a host DELIVERED
+    // against what was PROJECTED, so the projection is the subject; ranking it
+    // against `src/skills` would answer a different question with the same words.
+    const CANDIDATES = [PROJECTION_CATALOGUE_ROOT, 'src/skills'] as const;
+    for (const candidate of CANDIDATES) {
         const abs = path.join(REPO, candidate);
         if (fs.existsSync(abs)) return abs;
     }
-    throw new Error(
-        `no catalogue root found — tried ${DEFAULT_CATALOGUE_ROOTS.join(', ')} under ${REPO}`,
-    );
+    throw new Error(`no catalogue root found — tried ${CANDIDATES.join(', ')} under ${REPO}`);
 }
 
 function argValue(flag: string): string | null {
@@ -326,16 +330,14 @@ function projectionModeFlagFor(host: string, counts: ProjectionModeCounts): { fl
  */
 function runPointableBareMode(): number {
     const explicitRoot = argValue('--catalogue-root');
-    const rankerRoot = explicitRoot ? resolveCatalogueRoot(explicitRoot) : resolveSkillsRoot(REPO);
-    if (rankerRoot === null) {
-        process.stderr.write(
-            '❌  no catalogue root resolved for the ranker — tried ' +
-                `${DEFAULT_CATALOGUE_ROOTS.join(', ')} under ${REPO}.\n` +
-                '    An empty catalogue is never a clean join: it would report 0 pointable\n' +
-                '    entries because nothing was read, not because nothing diverged.\n',
-        );
-        return 1;
-    }
+    // `resolveCatalogueRoot`, not `resolveSkillsRoot`: the D-4 join is about the
+    // PROJECTION the host read, and the generic resolver prefers `src/skills`
+    // since 2026-09-07. Using it here would join host observations against the
+    // authored tree — the split this function's own docstring warns about,
+    // arriving through the resolver rather than through a second copy of it.
+    // No null branch: `resolveCatalogueRoot` returns a directory or throws, and the
+    // throw carries the same "tried X, Y under REPO" text the removed branch printed.
+    const rankerRoot = resolveCatalogueRoot(explicitRoot);
     const catalogueNames = readProjectedCatalogue(rankerRoot).map((entry) => entry.name);
     // The guard the error text above already promised, and did not have. A
     // present-but-empty or half-generated projection resolves fine — the

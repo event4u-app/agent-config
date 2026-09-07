@@ -265,7 +265,7 @@ export {
 } from '../install/claudePathsPlan.js';
 import { rule_in_scope } from '../install/ruleInScope.js';
 import { pruneEmptyDirs } from './_lib/prune_empty_dirs.js';
-import { commandWithheld, keepInProjectLayer, personaPartition, setPartitionAnnounce } from '../install/partitionEligibility.js'; // ADR-236
+import { claudeLayerHolds, commandWithheld, keepInProjectLayer, personaPartition } from '../install/partitionEligibility.js'; // ADR-236
 import { dedupableRules, partitionRulesForDir } from '../install/ruleLayerPartition.js'; // ADR-236, per-host evidence
 import { _claude_paths_plan, derive_trigger_globs } from '../install/claudePathsPlan.js';
 
@@ -320,7 +320,6 @@ function _deriveState(root: string): ModuleState {
 }
 
 export const MODULE_STATE: ModuleState = _deriveState(_DEFAULT_PROJECT_ROOT);
-setPartitionAnnounce(success); // ADR-236: the mode line must be visible at the default level
 
 /**
  * Test seam — reassign one or more module-state fields, mirroring the pytest
@@ -1736,11 +1735,18 @@ function _nested_command_subpath(source_file: string): string | null {
     return sub.includes('/') ? sub : null;
 }
 
+/** The emitter's four skips, in one place — see `emittedWrapperSlugs`. */
+const _wrapper_is_emitted = (f: string, s: string, skills: ReadonlySet<string>): boolean =>
+    !skills.has(s) &&
+    _nested_command_subpath(f) === null &&
+    !is_claude_builtin_name(s) &&
+    !claudeLayerHolds('skills', s);
+
 /** Wrapper slugs the command emitter really writes — see `emittedWrapperSlugs`. */
 function _emitted_wrapper_slugs(skill_names: ReadonlySet<string>): Set<string> {
     return new Set(
         [...iterCommands()]
-            .filter(([f, s]) => !skill_names.has(s) && _nested_command_subpath(f) === null)
+            .filter(([f, s]) => _wrapper_is_emitted(f, s, skill_names))
             .map(([, slug]) => slug),
     );
 }
@@ -1811,7 +1817,6 @@ export function generate_claude_project_commands(
 }
 
 export function generate_claude_commands(active_command_slugs: ReadonlySet<string> | null = null): number {
-    // No partition gate here, deliberately — see `commandWithheld` § Flat wrappers.
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         process.stderr.write('  ⚠️  src/domains/ not found — skipping commands\n');
         return 0;
@@ -1832,6 +1837,7 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     let count = 0;
     let skipped = 0;
     let reserved = 0;
+    let withheld = 0;
     let rendered = 0;
     const auto = _read_model_auto_switch() === 'auto';
     for (const [source_file, slug] of iterCommands()) {
@@ -1860,6 +1866,9 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
             reserved += 1;
             continue;
         }
+        // ADR-236 per-name: the INSTALLER re-projects visible flat commands as
+        // `~/.claude/skills/<slug>/SKILL.md` (install.ts:_apply_claude_flat_command_wrappers).
+        if (claudeLayerHolds('skills', slug)) { withheld += 1; continue; }
         current_slugs.add(slug);
 
         const skill_dir = path.join(MODULE_STATE.CLAUDE_SKILLS_DIR, slug);
@@ -1911,6 +1920,9 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
     }
     if (reserved) {
         msg += ` (${reserved} withheld — Claude Code built-in name)`;
+    }
+    if (withheld > 0) {
+        msg += ` (${withheld} withheld — ~/.claude/skills carries the wrapper)`;
     }
     if (removed_dirs) {
         msg += ` (${removed_dirs} stale dirs removed)`;

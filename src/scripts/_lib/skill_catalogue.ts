@@ -98,7 +98,27 @@ export const PROJECT_CATALOGUE_ROOTS = ['src/skills', '.claude/skills'] as const
 export const HOST_CATALOGUE_ROOT = '.claude/skills';
 
 /**
- * Every root the resolver looks at, as human-readable labels.
+ * The PROJECTION root, on its own, for the consumers that need exactly it.
+ *
+ * `capture_skill_catalogue` compares what a host DELIVERED against what was
+ * PROJECTED, so the authored tree is the wrong answer for it even though the
+ * ranker wants the authored tree first. Both questions were sharing
+ * `DEFAULT_CATALOGUE_ROOTS` and the 2026-09-07 reorder silently changed the
+ * second one — the finding a neutral review returned the same day. One constant
+ * for two questions is the defect; this is the second question, named.
+ */
+export const PROJECTION_CATALOGUE_ROOT = '.claude/skills';
+
+/**
+ * Every root the resolver looks at, as human-readable LABELS.
+ *
+ * ## Labels, never path inputs — this changed on 2026-09-07
+ *
+ * It used to be the resolver's own candidate list and callers joined it onto a
+ * root. It now carries a `~/`-prefixed entry, which `path.join(repo, ...)` turns
+ * into `<repo>/~/.claude/skills` — a candidate that can never exist. Use
+ * {@link resolveSkillCatalogueRoots} to RESOLVE and this list only to REPORT
+ * what was searched.
  *
  * For the `searched:` / `tried:` fields of the no-catalogue answers only — a
  * reader needs to know `~` was consulted, and an absolute home path in a

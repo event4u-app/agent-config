@@ -6,6 +6,15 @@ roadmap_ref: road-to-governed-evidence-production.md
 
 # Corpus manifest v1 — the equivalence-preserving subject pin
 
+> **Version is `corpus-manifest-v2` as of 2026-09-07.** The
+> `partition_active` -> `host_layer_verified` rename below is a field rename, and
+> `parseManifest` validates three fields and then blind-casts while
+> `diffManifests` compares stringified values — so a rename inside a frozen
+> version makes two old manifests compare EQUAL on a field neither of them has.
+> That is the partial-comparison failure the version check exists to prevent, so
+> the version moved with the field. The filename still reads `v1`; renaming it
+> would break every inbound link and buys nothing this banner does not.
+
 **Purpose.** Make the metered-proposer experiment's subject reproducible from a
 recorded artifact, so two captures can be shown to have measured the same thing.
 It exists because a recorded commit demonstrably does not pin that subject.

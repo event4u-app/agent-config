@@ -138,6 +138,24 @@ describe('rank across roots — precedence resolves a name collision', () => {
         expect(rows.map(([n]) => n).sort()).toEqual(['only-there', 'shared']);
     });
 
+    it('the EARLIEST root wins a name collision — asserted by score, not by name', () => {
+        // Corrected 2026-09-07 after a neutral review: the test above gives both
+        // copies of `shared` the same description, so which root won is invisible
+        // and the first-occurrence-wins property was untested. Here the two copies
+        // score differently, so the winning root is observable.
+        const first = path.join(tmp, 'p1');
+        const second = path.join(tmp, 'p2');
+        mk(first, 'shared', 'merge conflict resolution');
+        mk(second, 'shared', 'totally unrelated subject matter');
+        const won = rank('merge conflict resolution', [first, second]);
+        const lost = rank('merge conflict resolution', [second, first]);
+        expect(won).toHaveLength(1);
+        // First root carries the matching description -> it scores; reversed, the
+        // non-matching copy wins the name and scores 0, so it drops out entirely.
+        expect(won[0]?.[1]).toBeGreaterThan(0);
+        expect(lost).toEqual([]);
+    });
+
     it('a single string root still works — the old signature is untouched', () => {
         const first = path.join(tmp, 'r1');
         mk(first, 'solo', 'merge conflict resolution');

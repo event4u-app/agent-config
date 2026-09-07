@@ -132,24 +132,33 @@ describe('check_rule_layer_partition', () => {
     });
 });
 
-describe('partitionEnforces', () => {
-    it('enforces where the host layer is VERIFIED', () => {
-        expect(partitionEnforces(true)).toBe(true);
+describe('partitionEnforces — the per-directory discriminator', () => {
+    // Corrected 2026-09-07 after a neutral review. This used to take the repo-wide
+    // host-layer verdict, which was wrong in BOTH directions once the withhold
+    // stopped reading `installed.lock`: an install one release behind let a genuine
+    // emitter failure pass, and a verified layer legitimately missing ONE rule
+    // failed a correct tree. It now reads `soleCarrier`, which the audit already
+    // computed and nobody asked.
+    it('a directory carrying NO sole-carrier rule is an emitter failure', () => {
+        // The layer holds every global-scope rule this directory projects, so the
+        // full projection cannot be the fail-safe — the emitter simply did not
+        // withhold. This is the defect the gate exists to catch.
+        expect(partitionEnforces({ soleCarrier: [] })).toBe(true);
     });
 
-    it('does NOT enforce while the host layer is unverified', () => {
-        // 2026-08-22: a release push was blocked here with no reachable repair.
-        // Building 14.8.0 against an installed 14.7.0 read as `standalone/full`, the
-        // generators emitted every rule by design, and `task generate-tools` re-wrote
-        // exactly the files this gate demanded be gone — deadlocking it against
-        // `check_bridge_derivation` for the whole release window.
-        //
-        // The 2026-09-07 change removed the version from the WITHHOLD decision, so
-        // that deadlock is gone. This branch is kept for a narrower reason, and the
-        // reason is why the argument is now a boolean rather than a mode string: an
-        // unverified host layer may be STALE, so a duplicate the per-directory
-        // evidence let through need not be an emitter bug, and reporting beats
-        // failing there.
-        expect(partitionEnforces(false)).toBe(false);
+    it('a directory that is the SOLE CARRIER of a rule kept the projection by design', () => {
+        // Rules are all-or-nothing per directory (`ruleLayerPartition.ts`): one name
+        // the layer lacks keeps every other name too, and
+        // `rule_partition_per_host.test.ts` pins that state as legal. Failing here
+        // would red a correct tree.
+        expect(partitionEnforces({ soleCarrier: ['orphan.md'] })).toBe(false);
+    });
+
+    it('is independent of any lockfile, so it reads the same in CI and on a maintainer machine', () => {
+        // The property the old signature could not have: the verdict is a function
+        // of the directory audit alone. Same input, same answer, every environment.
+        const audit = { soleCarrier: ['a.md', 'b.md'] };
+        expect(partitionEnforces(audit)).toBe(partitionEnforces({ ...audit }));
+        expect(partitionEnforces({ soleCarrier: [] })).not.toBe(partitionEnforces(audit));
     });
 });

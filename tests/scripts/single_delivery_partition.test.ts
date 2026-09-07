@@ -331,17 +331,22 @@ describe('personaListFor — the family the partition never reached until 2026-0
         // reconciliation itself is exercised through the real generators in
         // `partition_delivery_topology.test.ts`, which reds when the gating is
         // removed.
-        const p = personaPartition(['a.md', 'b.md']);
-        for (const dir of ['.claude/personas', '.cursor/personas']) {
-            const got = p.listFor(dir);
-            // Shape only, deliberately: which of the two values comes back is a
-            // property of THIS machine's install state, so asserting it here
-            // would pass either way. The value is asserted where it can be
-            // forced — the topology test above.
-            expect(Array.isArray(got)).toBe(true);
-            expect(got.length === 0 || got.length === 2).toBe(true);
-            expect(p.countFor(dir)).toBe(got.length);
-        }
+        // A fixture HOME, not the operator's. Corrected 2026-09-07 after a neutral
+        // review: this called `personaPartition` WITHOUT the `home` seam the same
+        // change added, so it read the real `~/.claude/personas` — and the old
+        // assertion `length === 0 || length === 2` encoded the pre-amendment
+        // all-or-nothing topology. Under per-name withholding length 1 is
+        // reachable (a layer holding exactly one of the two names), so the
+        // assertion was both environment-dependent and a latent red.
+        const carried = path.join(tmp, 'persona-home', '.claude', 'personas');
+        fs.mkdirSync(carried, { recursive: true });
+        fs.writeFileSync(path.join(carried, 'a.md'), 'x', 'utf-8');
+        const p = personaPartition(['a.md', 'b.md'], path.join(tmp, 'persona-home'));
+        // `a.md` is carried, `b.md` is not — the length-1 case the old assertion
+        // could not express.
+        expect(p.listFor('.claude/personas')).toEqual(['b.md']);
+        expect(p.countFor('.claude/personas')).toBe(1);
+        expect(p.countFor('.cursor/personas')).toBe(2);
         // `.cursor/` is never withheld, whatever the install state — this one IS
         // machine-independent and is the assertion that would catch a helper
         // withholding everywhere.

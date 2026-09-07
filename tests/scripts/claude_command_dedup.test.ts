@@ -126,6 +126,37 @@ describe('claude command de-duplication', () => {
         expect(condense.generate_claude_project_commands()).toBe(0);
     });
 
+    it('withholds a FLAT wrapper the host layer already carries, and only that one', () => {
+        // Corrected 2026-09-07 after a neutral review. The wrapper emitter was left
+        // ungated on the claim that `~/.claude/skills` carries no wrappers and
+        // "nothing else delivers them". Both are false:
+        // `install.ts::_apply_claude_flat_command_wrappers` writes
+        // `~/.claude/skills/<slug>/SKILL.md` for every VISIBLE flat command on every
+        // claude-code deploy. Ungated, ~17 flat commands would arrive twice per
+        // session after the next install.
+        //
+        // This fixture is the only place the mechanism is seen to FIRE: on a
+        // maintainer machine whose last install skipped that pass, the host layer
+        // carries no wrapper and the gate is correctly inert.
+        fs.mkdirSync(path.join(home, '.claude', 'skills', 'standalone'), { recursive: true });
+        _resetClaudeLayerMemoForTest();
+
+        condense.generate_claude_project_commands();
+        condense.generate_claude_commands();
+        expect(fs.existsSync(skillWrapper('standalone'))).toBe(false);
+    });
+
+    it('keeps a flat wrapper the host layer does NOT carry — the fail-safe direction', () => {
+        // Withholding is a removal with no repair path: a wrapper absent globally is
+        // the command's only access path, so it must survive.
+        fs.mkdirSync(path.join(home, '.claude', 'skills', 'something-else'), { recursive: true });
+        _resetClaudeLayerMemoForTest();
+
+        condense.generate_claude_project_commands();
+        condense.generate_claude_commands();
+        expect(fs.existsSync(skillWrapper('standalone'))).toBe(true);
+    });
+
     it('withholds a colon command the HOST layer already carries, and only that one', () => {
         // ADR-236 amendment, 2026-09-07. The host deduplicates `/cluster:sub` and
         // the GLOBAL copy wins (measured 2026-08-21), so a project copy of a
