@@ -108,9 +108,9 @@ as `:16-17` documents.
 (`:60`, `:83`) but classifies nothing by type — greps for `binary`, `archive`, `dotfile`
 and `magic` return zero. The plumbing exists; only the classification is missing.
 
-- [ ] **6.1 Classify each packed entry by type.** Extend the existing parse to bucket entries as `text | dotfile | no-extension | binary | archive`, deciding binary and archive by magic bytes rather than by extension.
+- [x] **6.1 Classify each packed entry by type.** Extend the existing parse to bucket entries as `text | dotfile | no-extension | binary | archive`, deciding binary and archive by magic bytes rather than by extension.
       verify: the check prints a per-class count for the real tarball, and a fixture containing a planted archive is classified `archive` rather than `text`.
-- [ ] **6.2 Ratchet the classes that should be empty.** `binary` and `archive` at zero, with any dotfile or extensionless entry carried by a path-and-size-bound pragma in the Phase 5 grammar rather than a generic allowlist.
+- [x] **6.2 Ratchet the classes that should be empty.** `binary` and `archive` at zero, with any dotfile or extensionless entry carried by a path-and-size-bound pragma in the Phase 5 grammar rather than a generic allowlist.
       verify: adding a binary file to the packed surface makes the check fail and name the file; removing it makes the check pass again.
 
 ## Blockers
