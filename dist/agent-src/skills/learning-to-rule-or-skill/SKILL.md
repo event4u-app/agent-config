@@ -35,7 +35,7 @@ Use this skill when:
   [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
 * A comparative analysis handed over a **`### SEED —` block** from its
-  `## Seeds` section ([`/analyze:reference-repo`](../../agent-src/commands/analyze/reference-repo.md)
+  `## Seeds` section ([`/analyze:repo`](../../agent-src/commands/analyze/repo.md)
   § 6). This is an accepted intake shape: the block already carries the
   proposed name, kind, target template, one-line description, and the
   `Extends instead?` answer, so step 4's overlap search starts from a stated
