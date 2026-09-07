@@ -1,6 +1,15 @@
 ---
 complexity: structural
 status: later
+relates:
+  - slug: road-to-admissible-council-seats
+    relation: depends
+    note: >
+      That roadmap's Phase 4 (base_url config layer, provider-table fold, the
+      supersession sweep) IS M1 below. Its gateway-seat-admission blocker was
+      resolved DECLINED on 2026-09-07 — the slot stays unspent — so those three
+      steps were merged back into this file rather than implemented there. The
+      capability is planned in exactly one place, and that place is M1.
 ---
 
 # Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B)
@@ -19,6 +28,24 @@ status: later
 > event to wait for. Per-item evidence discipline is untouched — ADR-211
 > Amendment C (the cited failure finding must predate the borrow) and Amendment D
 > (red test committed first) still apply to each item on resume.
+
+> **M1 SLOT NOT SPENT — dated refusal, 2026-09-07.** `road-to-admissible-council-seats`
+> Phase 4 would have admitted a council seat pointing at a route this package does not
+> own, which is M1 below. That roadmap's `gateway-seat-admission` blocker was resolved
+> **declined** by an AI council (2 seats, run 19, 2026-09-06) under the maintainer's
+> standing delegation: the slot is **preserved, not spent**, and M1 stays parked and
+> undisturbed exactly as written.
+>
+> Scope of the refusal, stated precisely so it is not over-read: it declines to spend
+> the slot **in that round**. Current behaviour is unchanged, nothing here is deleted or
+> superseded, and **no future ruling is prejudged** — this is not "the project will never
+> admit a gateway seat". The one remaining condition above ("the maintainer decides to
+> spend a slot on it") is unchanged and still the only thing holding M1.
+>
+> What the refusal closed is the *dependency*, not the question: Phase 4 of
+> `road-to-admissible-council-seats` stays unopened and its three steps are carried
+> back to this file rather than implemented there, so the capability is planned in
+> exactly one place.
 
 > **Parked per
 > [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)

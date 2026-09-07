@@ -277,8 +277,8 @@ Every figure below was produced by running the named command in this branch.
   disjoint by name, both languages both sides. A pair in neither half or in
   both throws rather than defaulting. The report prints tune, holdout and
   both-halves columns.
-- **1.6** — `docs/decisions/ADR-257-prose-tell-detector-scope-and-rejected-absolutes.md`.
-  `./scripts-run src/scripts/adr_cite_check ADR-257` → `LIVE, TRIGGER
+- **1.6** — `docs/decisions/ADR-258-prose-tell-detector-scope-and-rejected-absolutes.md`.
+  `./scripts-run src/scripts/adr_cite_check ADR-258` → `LIVE, TRIGGER
   INDETERMINATE`, 4 evidence refs, 0 unresolved.
   `check_new_adr_evidence --base origin/main` → 1 accepted and disclosing, 0
   violations. `agents/roadmaps/archive/road-to-humanized-writing.md` § Council

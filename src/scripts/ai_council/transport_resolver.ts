@@ -49,6 +49,12 @@ import {
     type EnvironmentReport,
 } from '../_lib/environment_detector.js';
 import { resolve_mode } from './modes.js';
+import {
+    admitsContent,
+    DEFAULT_SEAT_CEILING,
+    type ContentClass,
+} from './content_ceiling.js';
+import { policyExclusionReason, type PolicyExclusion } from './seat_policy.js';
 
 /** A concrete transport a member can actually run on. `auto` is not one. */
 export type Transport = 'api' | 'manual' | 'cli';
@@ -62,7 +68,17 @@ export type Transport = 'api' | 'manual' | 'cli';
  * `absentReasonFromCliFailure` below for the mapping FROM the mid-flight
  * `CliFailureClass` a caller already classifies its errors into.
  */
-export type AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota';
+/** The four REACHABILITY reasons. Each means "the route cannot be run". */
+export type UnreachableReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota';
+
+/**
+ * Reachability OR policy. The policy half (2.1) names the case the four
+ * original values could not: a route that IS reachable and must not be used.
+ * Both halves mean the same thing to a caller — the member is absent — which
+ * is why they share one union rather than sitting in two fields a caller could
+ * forget to check.
+ */
+export type AbsentReason = UnreachableReason | PolicyExclusion;
 
 /** The accepted values of the `mode` key, including the resolver-only `auto`. */
 export const VALID_TRANSPORT_MODES: ReadonlySet<string> = new Set([
@@ -110,6 +126,19 @@ export interface ResolveTransportOptions {
      * env-key auth record exists for this provider" from the report.
      */
     readonly apiKeyPresent?: boolean;
+    /**
+     * A configured policy exclusion for this seat (2.1). Non-null resolves
+     * ABSENT whatever the mode says — a reachable route that must not be used
+     * is not made usable by being reachable.
+     */
+    readonly policyExclusion?: PolicyExclusion | null;
+    /** The seat's content ceiling (2.2). Defaults to `project-content`. */
+    readonly seatCeiling?: ContentClass | null;
+    /**
+     * The class of what this pass would send. Omitted → no content check runs,
+     * which is what keeps every existing caller's behaviour identical.
+     */
+    readonly contentClass?: ContentClass | null;
 }
 
 /** Auth sources that mean "the provider CLI can authenticate". */
@@ -160,6 +189,28 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
     const auth = strongestAuth(report, provider);
     const authSource = auth?.source ?? null;
     const billing = classifyBilling(provider, authSource);
+
+    // Policy first (2.1). Before the mode dispatch, because `api` and `cli`
+    // below return `available: true` UNCONDITIONALLY — a refusal placed after
+    // them would be unreachable for exactly the seats it exists to stop.
+    const exclusion = opts.policyExclusion ?? null;
+    if (exclusion !== null) {
+        return unavailable(provider, billing, policyExclusionReason(exclusion, provider), exclusion);
+    }
+    // Content ceiling (2.2). Only runs when the caller declared what it would
+    // send; an undeclared pass is unchanged, not silently refused.
+    const contentClass = opts.contentClass ?? null;
+    if (contentClass !== null) {
+        const verdict = admitsContent(opts.seatCeiling ?? DEFAULT_SEAT_CEILING, contentClass);
+        if (!verdict.admitted) {
+            return unavailable(
+                provider,
+                billing,
+                `${provider}: ${verdict.reason ?? 'content ceiling refused the payload'}`,
+                'policy_content_ceiling',
+            );
+        }
+    }
 
     if (mode === 'manual') {
         return {
@@ -246,6 +297,10 @@ export interface ResolveMemberTransportOptions {
     readonly globalMode?: string | null;
     readonly binaryOverride?: string | null;
     readonly apiKeyPresent?: boolean;
+    /** Forwarded to `resolveTransport` (2.1 / 2.2). */
+    readonly policyExclusion?: PolicyExclusion | null;
+    readonly seatCeiling?: ContentClass | null;
+    readonly contentClass?: ContentClass | null;
 }
 
 export interface ResolvedMemberTransport extends ResolvedTransport {
@@ -287,6 +342,9 @@ export function resolveMemberTransport(
         // optional-boolean field, so the key is omitted entirely rather than
         // forwarded as `apiKeyPresent: undefined`.
         ...(opts.apiKeyPresent !== undefined ? { apiKeyPresent: opts.apiKeyPresent } : {}),
+        policyExclusion: opts.policyExclusion ?? null,
+        seatCeiling: opts.seatCeiling ?? null,
+        contentClass: opts.contentClass ?? null,
     });
     return { ...resolved, configuredMode };
 }

@@ -123,11 +123,9 @@ NEVER CITE A GUARD THAT WARNS AS ONE THAT BLOCKS.
 `pre_tool_use` concern reading the prompt the agent is about to send.
 
 - **Item 1 (pre-loaded verdict) BLOCKS** — `EXIT_BLOCK` at `:253`, on the one
-  host that honours a deny. Bound on augment, claude and cowork; only `claude`
-  denies. `agent-config hooks:status` answers it for the host you are on.
+  host that honours a deny.
 - **Item 4 (second self-scoped evaluation) WARNS** — `EXIT_ALLOW` with
-  `decision: "warn"` (`:301-324`). The turn-budget clause is advisory, and the
-  manifest's `severity: blocking` is true of the item-1 path only.
+  `decision: "warn"` (`:301-324`). The turn-budget clause is advisory.
 - **Item 2 (an honestly chosen scope) is enforced by nothing.** A narrowed scope
   is not decidable from the prompt alone.
 - **Item 3 (recording the prompt with the verdict) IS enforced** by
@@ -147,6 +145,8 @@ four host states, the two corrections this section has taken, and the
 
 - [`verify-before-complete`](verify-before-complete.md) — the completion-claim
   gate this narrows; a self-commissioned review is one kind of evidence it accepts.
+- **ADR-257** — which seat may hold the pen: an unpaid route may propose and
+  score, never decide. (By number; `docs/` is unprojected.)
 - [`adversarial-review`](../skills/adversarial-review/SKILL.md) — how to ask for a
   real critique.
 - [`delegation-policy`](delegation-policy.md) — the orchestrator never adopts a

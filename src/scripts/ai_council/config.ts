@@ -83,6 +83,8 @@ import * as budget from './cli_call_budget.js';
 // Converting it to a value import — or adding any other runtime import from
 // quorum into config — creates a real ESM cycle in the loader's init path.
 import { OPENAI_CLI_VENDOR_DEFAULT } from './clients.js';
+import { parseSeatFields, type PolicyExclusion } from './seat_policy.js';
+import type { ContentClass } from './content_ceiling.js';
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
 const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
@@ -330,6 +332,12 @@ export interface MemberConfig {
      * demanding a date nobody would refresh.
      */
     readonly verified_at: string | null;
+    /** Seat policy — parsed and documented by `seat_policy.ts::parseSeatFields`.
+     *  All three are NOTES or REFUSALS: none can make a seat available that was
+     *  not already available. */
+    readonly disabled_reason: string | null;
+    readonly policy_exclusion: PolicyExclusion | null;
+    readonly content_ceiling: ContentClass;
 }
 
 /**
@@ -1875,6 +1883,10 @@ function _build_member(
         }
         verified_at = coerced;
     }
+    const seat = parseSeatFields(name, cfg as Record<string, unknown>);
+    if ('error' in seat) {
+        throw new CouncilConfigError(seat.error);
+    }
     const prompt_cache_raw = _get(cfg, 'prompt_cache', null);
     let prompt_cache_ttl: '5m' | '1h' = '5m';
     if (prompt_cache_raw !== null && prompt_cache_raw !== undefined && !_isBool(prompt_cache_raw)) {
@@ -1907,6 +1919,7 @@ function _build_member(
         tier,
         prompt_cache_ttl,
         verified_at,
+        ...seat.fields,
     };
 }
 
