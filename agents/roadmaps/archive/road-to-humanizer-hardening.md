@@ -12,10 +12,14 @@ parent_roadmap: road-to-humanized-writing
 > under `agents/tmp.old/` (measured 2026-09-06, `grep -rli humanizer`, distinct
 > round directories); the narrower tell phrasing in 5. Latest `inbox-2026-09-s`.
 > A floor on the recurrence, not a count of asks for this roadmap. Written on an
-> ARCHIVED file on purpose: the blocker `real-draft-lift-unmeasured` below is
-> still open — 2026-07-11 — and this is where a later round looks for it.
-> The feeder for it is carried by `agents/roadmaps/road-to-measured-prose-tells.md`,
-> which also holds the four detector defects that round reproduced.
+> ARCHIVED file on purpose: the blocker `real-draft-lift-unmeasured` below was
+> opened 2026-07-11 and this is where a later round looks for it. **It is no
+> longer open** — resolved 2026-09-07 by declining collection for this round,
+> which is a scoped refusal and not a measurement; the outcome state and the
+> reasoning are on the blocker itself. Its feeder was carried by
+> `agents/roadmaps/archive/road-to-measured-prose-tells.md`, now also archived,
+> which holds the four detector defects that round reproduced and the same
+> disposition.
 
 > Address the four adversarial-review findings that survived
 > `road-to-humanized-writing` as advisory-only (the fix commits there were
@@ -176,14 +180,32 @@ real-world question is explicitly open behind the live-usage blocker;
 
 ### blocker: real-draft-lift-unmeasured
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome state:** **declined for this round** — a scoped refusal, not a
+  measurement and not a permanent boundary. The roadmap step that depended on
+  this blocker is closed as a documentation step; the substantive question is
+  unchanged and un-prejudged.
 - **Owner:** maintainer
 - **Blocks:** any public claim of real-draft (non-fixture) preference lift
-- **What to do:** accumulate real `/ghostwriter:write` / step-4b drafts and run
-  a paired, length-controlled eval on that real corpus (not the self-seeded
-  fixtures).
-- **Resolved when:** ≥ N real drafts (maintainer picks N) have a recorded
-  paired-eval; only then may the claim widen beyond "on the fixture corpus".
+- **What to do:** nothing further in this round. Should the owner authorize
+  collection later, the path is unchanged: accumulate real
+  `/ghostwriter:write` / step-4b drafts and run a paired, length-controlled
+  eval on that real corpus (`npx tsx src/scripts/bench_humanizer_eval.ts
+  --judge --confirm-spend`), not on the self-seeded fixtures.
+- **Resolved when:** — resolved 2026-09-07 by declining collection for this
+  round. Both collecting forms were considered and both were declined for the
+  same reason: retaining a real draft, and retaining metrics *derived from* a
+  real draft, each create a new retention practice beyond the fixture-only
+  data-handling floor this package currently records. "Safer" was not the
+  dispositive test; "does this create collection that does not exist today"
+  was, and both answered yes. `docs/CLAIMS.md` § `claim:humanizer-tell-reduction`
+  now states fixture-only evaluation as **the declared scope of the current
+  roadmap phase**, and states explicitly that future authorization is neither
+  granted nor refused. Reopening needs an owner authorization naming what may
+  be stored, plus a measurement — neither alone widens the claim. Recorded via
+  `road-to-measured-prose-tells`, whose own
+  `real-draft-lift-unmeasured-feeder` blocker carries the same disposition and
+  the constraints a text-free form would have to meet if it is ever revisited.
 
 ## Non-goals
 

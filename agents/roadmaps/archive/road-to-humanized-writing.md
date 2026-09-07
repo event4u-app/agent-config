@@ -26,7 +26,14 @@ adopts the pass.
 ## Council notes (2026-07-11, debate, 2 rounds)
 
 Council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-07-11) converged;
-verdicts encoded below — don't relitigate without new evidence:
+verdicts encoded below — don't relitigate without new evidence.
+
+> **Recorded as a decision record:** these six verdicts now live in
+> `docs/decisions/ADR-258-prose-tell-detector-scope-and-rejected-absolutes.md`,
+> with their reopen conditions attached. Cite the ADR, not this section — an
+> archived roadmap is not a surface an inbound proposal reads, and two
+> independent sessions have already paid for that.
+
 
 - **Q1 shape:** standalone skill **plus** an opt-out write-engine hook
   (option d). A guideline alone is not executable; the write-engine's

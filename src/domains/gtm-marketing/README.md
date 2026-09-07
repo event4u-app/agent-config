@@ -11,7 +11,7 @@ Positioning, messaging, editorial, content funnel.
 
 ## Commands (1)
 
-- **`humanize`** — Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary.
+- **`humanize`** — Remove AI-writing tells from pasted text or a file — runs the humanizer skill's draft→audit→final loop and prints the rewrite plus a detector summary; --audit locates the tells without rewriting.
 
 ## Skills (9)
 
