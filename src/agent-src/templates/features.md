@@ -90,6 +90,11 @@ Reference existing code where helpful.}
 
 ## Open Questions
 
+> Every entry here is a question still **owed to the user** — not a permanent
+> section and not a place to file a decision. Each one is put to the user in the
+> chat, one at a time, and the answer moves out of this list into the section it
+> belongs to. A question that stays here across a session was parked, not asked.
+
 - [ ] {Unresolved question 1}
 - [ ] {Unresolved question 2}
 

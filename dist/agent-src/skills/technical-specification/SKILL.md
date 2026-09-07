@@ -79,6 +79,8 @@ For complex features or systems. Stored in `agents/features/` or module `agents/
 |---|---|---|---|
 
 ## Open Questions
+{Each line is a question still owed to the user — ask one at a time and move
+the answer into the section it belongs to. Not a storage section.}
 - [ ] {Unresolved question}
 
 ## References
@@ -123,6 +125,8 @@ technical spec, not here.}
 - **{Module name}** — {one-sentence responsibility}
 
 ## Open Questions
+{Each line is a question still owed to the user — ask one at a time and move
+the answer into the section it belongs to. Not a storage section.}
 - [ ] {Unresolved product question — pricing, permission, copy, edge case}
 
 ## References

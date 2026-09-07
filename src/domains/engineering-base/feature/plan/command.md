@@ -35,14 +35,18 @@ and is counted.
 
 ### 1. Gather the idea
 
-If the user provided a description, use it. Otherwise ask:
+If the user provided a description, use it. Otherwise ask — **one question per
+turn, waiting for the answer before the next**, per
+[`ask-when-uncertain`](../../../../rules/ask-when-uncertain.md)'s Iron Law:
 
 ```
-📋 Which feature do you want to plan?
+📋 Which feature do you want to plan, and what should it do?
+```
 
-Describe briefly:
-- What should the feature do?
-- What problem does it solve?
+Then, once that is answered:
+
+```
+📋 What problem does it solve?
 ```
 
 ### 2. Gather external context
@@ -192,20 +196,41 @@ If project-wide:
 ### 5c. Interactive planning
 
 Walk through the feature plan sections **conversationally** — not as a form.
-Ask 1–2 questions at a time, building on previous answers.
 
-**Round 1 — Problem & Proposal:**
 ```
-Do I understand correctly: {restate the problem}?
+ONE DECISION PER ASK. PUT ONE QUESTION, WAIT FOR THE ANSWER, THEN THE NEXT.
+NEVER LIST N OPEN QUESTIONS AND CLOSE WITH ONE COLLECTIVE QUESTION —
+THAT IS ONE ASK CARRYING N DECISIONS, AND THE USER CANNOT ANSWER IT WITH ONE
+REPLY WITHOUT LOSING TRACK OF WHICH ANSWER WENT WHERE.
+```
 
+This is [`ask-when-uncertain`](../../../../rules/ask-when-uncertain.md)'s Iron
+Law applied to a planning interview: the rounds below are **sequences** of
+single-decision asks, not four batched prompts. A round's later questions build
+on the earlier answers, which is exactly why they cannot all be asked at once.
+
+**Round 1 — Problem & Proposal.** Three asks, three turns:
+
+```
+Do I understand the problem correctly: {restate the problem}?
+```
+
+```
 And the solution would be: {restate the proposal}?
-
-What's missing or incorrect?
 ```
 
-**Round 2 — Scope:**
+```
+What's missing or incorrect in that reading?
+```
+
+**Round 2 — Scope.** Two asks, two turns — the second is sharper once the
+first is answered:
+
 ```
 What definitely belongs in scope?
+```
+
+```
 And what can we consciously leave out or defer?
 ```
 
@@ -220,15 +245,21 @@ Option B: {approach} — {pros/cons}
 Was passt besser?
 ```
 
-**Round 4 — Open Questions:**
-```
-Mir sind noch ein paar offene Fragen aufgefallen:
-- {question 1}
-- {question 2}
+**Round 4 — Open Questions.** One turn **per open question**, never a list with
+a collective closer. Name the question, put it, wait:
 
-Hast du dazu schon eine Meinung?
+```
+One open question before I write the plan: {question 1}?
 ```
 
+```
+Next one: {question 2}?
+```
+
+Repeat for each remaining question. A question that gets no answer is **not**
+resolved by the plan file — it goes into the plan's `## Open Questions` section,
+which the template marks as still owed to the user rather than as a place to
+file it.
 ### 5d. Offer council idea-validation (B4 hook, verbosity-gated)
 
 Once rounds 1–4 have converged but **before** step 6 writes the file,
@@ -290,6 +321,11 @@ Suggestion: {suggested-kebab-case-name}
 
 ### 7. Show the result
 
+**Ask first, then summarise.** Every open question was put to the user in
+Round 4 — one per turn — before this screen is drawn. The block below reports
+what remains **unanswered after asking**; it never renders a number in place of
+a question, which is the shape that lets a decision be filed instead of put.
+
 Display a summary:
 
 ```
@@ -308,7 +344,10 @@ Problem:    {one sentence}
 Solution:   {one sentence}
 Scope:      {in-scope summary}
 Module:     {affected modules}
-Open questions: {count}
+
+Still owed to you (asked, not yet answered — omit this block when none):
+  • {unanswered question 1}
+  • {unanswered question 2}
 
 ═══════════════════════════════════════════════
 ```

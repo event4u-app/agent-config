@@ -449,6 +449,9 @@ omit the section entirely when every row extends something that exists.}
   does not fit — a seed that skipped this line is not ready to hand over}
 
 ## Open questions for the maintainer
+{Each line is a question to ask the maintainer directly, one at a time, when
+this report is handed over — the section records what is owed, it does not
+discharge it.}
 ```
 
 The `## Seeds` section is the handoff shape

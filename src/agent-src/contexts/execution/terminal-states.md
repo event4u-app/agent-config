@@ -102,7 +102,10 @@ state is not `success` it names what would change it:
 - `premise-invalidated` — which fingerprint was claimed, which was observed, and
   that the next act is a re-probe rather than another iteration.
 - `blocked` — the missing thing, by name.
-- `approval-required` — the exact action awaiting approval.
+- `approval-required` — the exact action awaiting approval. Where it is a
+  question that went unanswered, the question appears verbatim and its
+  conservative option is named as **not adopted** — a timeout is not consent
+  ([`roadmap-process-loop § Ask before park`](roadmap-process-loop.md)).
 - `clean-no-op` — what was scanned, so "nothing to do" is distinguishable from
   "nothing was read".
 

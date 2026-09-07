@@ -25,6 +25,7 @@ depends on what that host exposes. We say so plainly rather than imply
 | Gemini | ✅ `GEMINI.md` | 5 | ❌ no `pre_tool_use` binding |
 | Windsurf | ✅ `.windsurfrules` | 3 | ❌ no tool-lifecycle surface at all |
 | Copilot | ✅ `copilot-instructions.md` | 0 | — `fallback_only`, nothing bound |
+| Codex | ✅ skill bundle to `~/.codex/` | 0 | — no platform key in `hook_manifest.yaml` |
 
 **This table was wrong until 2026-09-07 and the correction is worth naming**,
 because the old shape is the one a reader reconstructs from memory. It said
@@ -41,6 +42,18 @@ no refusal — which is exactly what `cowork` and `augment` do — so "does it h
 hooks" and "can it stop me" are two questions, and the old single column
 answered neither reliably. The last column is the one that carries the
 enforcement claim.
+
+**Codex, stated from the manifest rather than by analogy.** The installer
+detects Codex (`src/install/toolDetection.ts`) and deploys the same
+Anthropic-shaped rule/skill/command bundle to `~/.codex/`
+(`src/install/wizard-plan.ts`), so the compile-time layer reaches it exactly as
+it reaches the rows above. The two runtime columns are a different fact, read
+off `src/scripts/hook_manifest.yaml`: its `platforms:` block declares eight
+keys — `augment`, `claude`, `cowork`, `cursor`, `cline`, `windsurf`, `gemini`,
+`copilot` — and Codex is not among them. No slot is bound, so no guard runs,
+and nothing here should be inferred from Claude Code sharing a bundle format
+with it. Codex was previously absent from this table altogether, which read as
+unsupported rather than as unlisted; the row says which of the two it is.
 
 **Why we lead with compile-time, not hooks.** Runtime hooks reach only a
 minority of supported hosts. Building the governance story on hooks would make
@@ -167,6 +180,33 @@ The ladder is descriptive vocabulary. The measured stance stands: lead
 with compile-time prose everywhere, bind deterministic checks where a host
 supports them, and never delete the prose from static-host projections —
 that is where the measured discipline lift lives.
+
+## `one-question-per-ask` — reach, stated on the manifest's terms
+
+The `one-question-per-ask` PreToolUse guard (road-to-asked-not-parked 5.1)
+denies a structured-ask tool call carrying more than one question. Its reach is
+the narrowest sentence the manifest supports and no wider:
+
+- **Bound on `claude` only.** `hook_manifest.yaml` lists it in that platform's
+  `pre_tool_use` array and nowhere else. `agent-config hooks:status` prints the
+  binding for the host actually running, and it is the answer to prefer over
+  this paragraph.
+- **A deny only where the host honours one.** `claude` is the platform this
+  repository has verified both binds `pre_tool_use` and acts on the
+  dispatcher's verdict. Where a trampoline discards dispatcher output — augment
+  and cowork both `exit 0` unconditionally — a bound guard runs and is ignored,
+  which is why it is not bound there: dead weight wearing a guard's name is
+  worse than an honest absence.
+- **On every other host the constraint is prose**, carried by
+  [`ask-when-uncertain`](../src/rules/ask-when-uncertain.md)'s one-question
+  Iron Law and [`user-interaction`](../src/rules/user-interaction.md)'s
+  one-decision-point clause. That is L5 on the ladder above, and it is the
+  floor everywhere.
+- **It fires on nothing today, on every host.** No host in the capability
+  registry carries an OBSERVED structured-ask tool
+  (`src/scripts/_lib/structured_ask.ts`), so there is no such call to intercept.
+  The guard exists so the first host to ship a picker meets the rule already in
+  force. A reader must not take its presence as evidence that any host has one.
 
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md).
 Its `hooks` row records which host consumes the `hooks/` **artifact** — that is a
