@@ -52,7 +52,7 @@ would have recorded zero explanation for every skip that actually happened.
 |---|---|
 | Commit and generator | `commit`, `tree_dirty`, `package_version`, `generator[]` (path + sha256 of `condense.ts`, `ruleLayerPartition.ts`, `claudePathsPlan.ts`) |
 | The subject | `enumeration_rule`, `included[]` (ordered: path, sha256, bytes, projection-source provenance and its hash), `excluded[]` with the reason |
-| The projection decision | `projection.partition_active` (**nullable**, see below), `tool_id`, `layer_dir`, `carries`, `reason`, `missing[]`, `package_only_count`, `layer_inventory[]` (name + sha256), `layer_digest` |
+| The projection decision | `projection.host_layer_verified` (**nullable**, see below), `tool_id`, `layer_dir`, `carries`, `reason`, `missing[]`, `package_only_count`, `layer_inventory[]` (name + sha256), `layer_digest` |
 | The byte-identity dedup | `user_scope[]` (home-relative path, sha256, `byte_identical`, `causes_skip`), `user_scope_population` |
 | Configuration and runtime | `generator_config` (a closed allowlist of non-secret keys plus the resolved `projection.scope_dedup`), `runtime` (node, platform, arch) |
 | What was produced | `produced[]` (every `*.md` in the corpus directory, with hashes) |
@@ -80,17 +80,24 @@ re-implementation this module refuses everywhere else, so the population is
 **recorded** rather than silently narrowed. A caller holding the generator's own
 basename list passes it and gets `caller-supplied`.
 
-**`projection.partition_active` is nullable, and `null` is the default.** Every
+**`projection.host_layer_verified` is nullable, and `null` is the default.** Every
 other field in that struct is a function of the `(repoRoot, userHome)` pair the
-capture was given. This one is not: `partitionActive` resolves through
-`resolvePartitionVerdict` (`src/install/partitionEligibility.ts:274-297`), which
-reads the host layer at `os.homedir()` and the install lockfile at its own fixed
-location — ignoring `userHome` entirely — and memoises the answer for the life of
-the process. A capture over a temporary tree that called it would record the
-operator's machine under that tree's name, and a second capture in one process
-would reuse the first verdict. So the library records `null` and the **CLI**,
-for which those globals are genuinely this run's own host, supplies the
-predicate.
+capture was given. This one is not: `resolveHostLayerVerdict`
+(`src/install/partitionEligibility.ts`) reads the host layer at `os.homedir()` and
+the install lockfile at its own fixed location — ignoring `userHome` entirely —
+and memoises the answer for the life of the process. A capture over a temporary
+tree that called it would record the operator's machine under that tree's name,
+and a second capture in one process would reuse the first verdict. So the library
+records `null` and the **CLI**, for which those globals are genuinely this run's
+own host, supplies the predicate.
+
+**Renamed from `partition_active` on 2026-09-07** (ADR-236 amendment). The old
+name described what the value decided: whether the project layer would be
+partitioned at all. It decides nothing now — the project layer withholds per
+artifact name on each host directory's own contents, and this field records only
+whether the layer being withheld against is the one this checkout's installer
+stamped. A field named for a decision it no longer makes is the drift this
+contract exists to prevent, so the name moved with the meaning.
 
 ## Two refusals, not one
 
@@ -169,9 +176,11 @@ occurrence of the home path.
   manual type first). Measured: 15 here against 13 files produced. `produced` is
   the authoritative inventory. `user_scope[]` is built over the same superset
   unless a caller supplies the population — see `user_scope_population` above.
-- It does **not** establish whether the per-host partition is active from the
-  captured pair. `projection.partition_active` is `null` unless a caller for
-  which the process globals apply supplied the predicate.
+- It does **not** establish whether the host layer is verified from the captured
+  pair. `projection.host_layer_verified` is `null` unless a caller for which the
+  process globals apply supplied the predicate. Note what it never established
+  even when non-null: since the 2026-09-07 amendment this value does not
+  determine what the project layer carries.
 
 ## Cross-references
 

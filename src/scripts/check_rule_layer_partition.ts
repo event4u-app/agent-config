@@ -8,7 +8,7 @@
  * ADR-236 decided that a rule is delivered from exactly one layer: package-only
  * rules stay in the project tree, everything else arrives from the host's global
  * directory and is withheld from the project tree. Measured in a freshly
- * generated worktree with `partitionActive: true`, it holds for one host in five:
+ * generated worktree with a verified host layer, it holds for one host in five:
  *
  * ```
  *   .claude/rules      13 files, 13 package-only,   0 global-only
@@ -51,7 +51,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { isExclusivelyPackageOnly, resolvePartitionVerdict } from '../install/partitionEligibility.js';
+import { isExclusivelyPackageOnly, resolveHostLayerVerdict } from '../install/partitionEligibility.js';
 import { PROJECT_RULE_DIRS, globalRuleLayerNames, globalRuleLayerPath } from '../install/globalRuleLayers.js';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -390,8 +390,8 @@ function prune(audit: PartitionAudit, root: string): number {
  * the same environment-dependence `ruleLayerPartition.ts` records for its own
  * `active` override.
  */
-export function partitionEnforces(mode: string): boolean {
-    return mode === 'dual-layer/partitioned';
+export function partitionEnforces(hostLayerVerified: boolean): boolean {
+    return hostLayerVerified;
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -485,18 +485,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // partition gate and `check_bridge_derivation` deadlock, each red in the state
     // the other requires.
     //
-    // The block is structural rather than incidental: during ANY release the
-    // building version is ahead of the installed one, so `resolvePartitionVerdict`
-    // returns `standalone/full` on every maintainer machine for the whole release
-    // window. A gate that cannot be green while a release is in progress is not
-    // measuring the release.
+    // The block used to be structural: during ANY release the building version is
+    // ahead of the installed one, so the verdict was `standalone/full` on every
+    // maintainer machine for the whole release window, and a gate that cannot be
+    // green while a release is in progress is not measuring the release.
+    //
+    // That cause is GONE as of 2026-09-07 — the withhold no longer reads the
+    // version at all, it reads each host directory's own contents. What remains is
+    // narrower and still real: an UNVERIFIED host layer may be stale, so a
+    // duplicate here need not be an emitter bug, and this branch keeps reporting
+    // rather than failing in that state.
     //
     // Teeth are unchanged where the partition IS active: there a duplicate means an
     // emitter failed to withhold what the partition selected, which is the defect
     // this gate exists to catch. In CI both layers are absent, `offenders` is empty,
     // and this branch is never reached — so nothing here relaxes the CI reading.
-    const verdict = resolvePartitionVerdict(root);
-    if (!partitionEnforces(verdict.mode)) {
+    const verdict = resolveHostLayerVerdict(root);
+    if (!partitionEnforces(verdict.verified)) {
         for (const d of offenders) {
             process.stdout.write(
                 `⚠️  ${d.dir}: ${String(d.duplicated.length)} rule(s) also present in ` +
@@ -504,10 +509,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             );
         }
         process.stdout.write(
-            `⚠️  check_rule_layer_partition: partition INACTIVE (${verdict.reason}), so the ` +
-                `generators emit the full projection by design and this overlap is the fail-safe ` +
-                `working. Reported, not enforced — run \`agent-config install\` to activate the ` +
-                `partition here, then this gate has teeth again.\n`,
+            `⚠️  check_rule_layer_partition: host layer UNVERIFIED (${verdict.reason}), so a ` +
+                `stale global layer cannot be ruled out as the cause and this overlap may be the ` +
+                `per-directory fail-safe working. Reported, not enforced — run ` +
+                `\`agent-config install\`, then this gate has teeth again.\n`,
         );
         return 0;
     }

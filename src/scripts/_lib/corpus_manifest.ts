@@ -142,7 +142,7 @@ export interface ProjectionDecision {
      * `null` is the default and is the honest value for a capture that cannot
      * establish it. Every other field in this struct is a function of the
      * `(repoRoot, userHome)` pair the capture was given; this one is not.
-     * `partitionActive` resolves through `resolvePartitionVerdict`, which reads
+     * `hostLayerVerified` resolves through `resolveHostLayerVerdict`, which reads
      * the host layer at `os.homedir()` and the install lockfile at its own
      * fixed location — ignoring `userHome` entirely — and memoises the answer
      * for the life of the process. So a capture over a temporary tree that
@@ -150,7 +150,7 @@ export interface ProjectionDecision {
      * one process would reuse the first verdict. A caller for which those
      * globals ARE the run's own host supplies the predicate; nobody else does.
      */
-    readonly partition_active: boolean | null;
+    readonly host_layer_verified: boolean | null;
     readonly tool_id: string | null;
     /** The global layer directory, home-relative; `null` when this host has none. */
     readonly layer_dir: string | null;
@@ -365,7 +365,7 @@ export interface ProjectionDecisionOptions {
      * The host partition verdict, supplied by a caller for which the process
      * globals it reads are this run's own host. Omitted → `null`.
      */
-    readonly partitionActive?: ((repoRoot: string) => boolean) | undefined;
+    readonly hostLayerVerified?: ((repoRoot: string) => boolean) | undefined;
 }
 
 export function captureProjectionDecision(
@@ -401,7 +401,8 @@ export function captureProjectionDecision(
             sha256: layerPath === null ? null : sha256OfFile(path.join(layerPath, n)),
         }));
     return {
-        partition_active: opts.partitionActive === undefined ? null : opts.partitionActive(repoRoot),
+        host_layer_verified:
+            opts.hostLayerVerified === undefined ? null : opts.hostLayerVerified(repoRoot),
         tool_id: toolId,
         layer_dir: layerPath === null ? null : homeRelative(layerPath, userHome),
         carries: verdict.carries,
@@ -451,8 +452,8 @@ export interface CaptureOptions {
     readonly limit: number;
     readonly enumerationRule: string;
     readonly env?: Readonly<Record<string, string | undefined>> | undefined;
-    /** See {@link ProjectionDecisionOptions.partitionActive}. Omitted → `null`. */
-    readonly partitionActive?: ((repoRoot: string) => boolean) | undefined;
+    /** See {@link ProjectionDecisionOptions.hostLayerVerified}. Omitted → `null`. */
+    readonly hostLayerVerified?: ((repoRoot: string) => boolean) | undefined;
     /** See {@link UserScopeOptions.ruleNames}. Omitted → the projection-source superset. */
     readonly ruleNames?: readonly string[] | undefined;
 }
@@ -531,7 +532,7 @@ export function captureManifest(opts: CaptureOptions): CorpusManifest {
         user_scope_population:
             opts.ruleNames === undefined ? 'projection-source-superset' : 'caller-supplied',
         projection: captureProjectionDecision(repoRoot, userHome, {
-            partitionActive: opts.partitionActive,
+            hostLayerVerified: opts.hostLayerVerified,
         }),
         generator_config: generatorConfig,
         runtime: { node: process.version, platform: os.platform(), arch: os.arch() },
@@ -656,7 +657,11 @@ export function diffManifests(expected: CorpusManifest, actual: CorpusManifest):
     // The partition half, which is where the observed skips actually came from.
     // Diffed by digest rather than by name list because the inventory runs to
     // three figures and a diff nobody reads is a diff that does not exist.
-    push('projection.partition_active', expected.projection.partition_active, actual.projection.partition_active);
+    push(
+        'projection.host_layer_verified',
+        expected.projection.host_layer_verified,
+        actual.projection.host_layer_verified,
+    );
     push('projection.carries', expected.projection.carries, actual.projection.carries);
     push('projection.reason', expected.projection.reason, actual.projection.reason);
     push('projection.layer_digest', expected.projection.layer_digest, actual.projection.layer_digest);

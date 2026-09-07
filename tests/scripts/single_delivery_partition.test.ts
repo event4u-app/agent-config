@@ -1,17 +1,25 @@
-// The single-delivery partition predicate — ADR-236, roadmap Phase 2 step 2.0.
+// The single-delivery partition — ADR-236 and its 2026-09-07 amendment.
 //
-// The partition withholds artefacts from the project layer on the strength of a
-// verified host layer. Because it is a REMOVAL, the build loses its own repair
-// path: it can no longer heal a stale global layer by regenerating, since it
-// stops writing the affected files. Every property below therefore pins the
-// FAIL-SAFE direction — an uncertainty must resolve to `standalone/full`, never
-// to a partition and never to a refusal.
+// The partition withholds an artefact from the project layer when the host-global
+// layer demonstrably carries it. Because it is a REMOVAL, the build loses its own
+// repair path: it can no longer heal a stale global layer by regenerating, since
+// it stops writing the affected files. So the fail-safe direction is still pinned
+// here — but PER ARTEFACT, which is the amendment. An unreadable layer withholds
+// nothing; a layer missing one name withholds every other name and keeps that one.
 //
-// The refusal half matters as much as the partition half:
+// What these properties no longer pin, deliberately: `verifyHostLayer` used to
+// DECIDE the withhold by comparing `installed.lock`'s version and fingerprint
+// against the checkout, and any mismatch fell back to writing the full projection.
+// Measured 2026-09-07, that veto delivered 261 skills and 29 personas twice per
+// session for as long as an install lagged a release. It is now a DIAGNOSTIC: it
+// reports whether the layer being withheld against is the one this checkout's
+// installer stamped, and a `false` produces a warning, not a duplicate.
+//
 // `.github/workflows/consistency.yml:169` runs `task generate-tools` on a fresh
-// checkout whose host layers are absent by that workflow's own comment. A
-// predicate that failed there would break the pipeline, which is what eliminated
-// the refuse-option in the 2026-08-19 council round.
+// checkout whose host layers are absent by that workflow's own comment. Under the
+// per-name rule that checkout withholds nothing at all — the layer is unreadable
+// — so the pipeline property the 2026-08-19 council round protected still holds,
+// by a narrower route than a repo-wide veto.
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -22,11 +30,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fingerprintLayers, hostLayerInputs } from '../../src/install/hostLayerFingerprint.js';
 import {
     isExclusivelyPackageOnly,
-    partitionVerdict,
+    personaListFor,
     personaPartition,
-    personaWithheldFor,
+    verifyHostLayer,
     MAINTAINER_WORKSPACE,
 } from '../../src/install/partitionEligibility.js';
+import {
+    _resetClaudeLayerMemoForTest,
+    claudeLayerHolds,
+    claudeLayerNames,
+    keepInProjectLayer,
+} from '../../src/install/claudeLayerCarriage.js';
 import { read_lockfile, write_lockfile } from '../../src/scripts/_lib/installed_lock.js';
 
 let tmp: string;
@@ -36,6 +50,7 @@ beforeEach(() => {
 });
 afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
+    _resetClaudeLayerMemoForTest();
 });
 
 function layer(name: string, files: Record<string, string>): { label: string; root: string } {
@@ -115,70 +130,70 @@ describe('hostLayerInputs — the layer list the whole partition rests on', () =
     });
 });
 
-describe('partitionVerdict — every uncertainty falls back to the full projection', () => {
+describe('verifyHostLayer — the diagnostic, and every uncertainty reads as unverified', () => {
     const fp = 'a'.repeat(64);
     const never = (): string => {
         throw new Error('expectedFingerprint must not be reached on a disqualified path');
     };
 
-    it('no host layer → standalone/full, and the fingerprint is never computed', () => {
-        const v = partitionVerdict({
+    it('no host layer → unverified, and the fingerprint is never computed', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: { agent_config_version: '14.6.0', host_layer_fingerprint: fp },
             hostLayerPresent: false,
             expectedFingerprint: never,
         });
-        expect(v.mode).toBe('standalone/full');
+        expect(v.verified).toBe(false);
         expect(v.reason).toContain('no host-global layer');
     });
 
-    it('host layer but no install record → standalone/full', () => {
-        const v = partitionVerdict({
+    it('host layer but no install record → unverified', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: null,
             hostLayerPresent: true,
             expectedFingerprint: never,
         });
-        expect(v.mode).toBe('standalone/full');
+        expect(v.verified).toBe(false);
     });
 
-    it('version mismatch → standalone/full, in BOTH directions', () => {
+    it('version mismatch → unverified, in BOTH directions', () => {
         for (const recorded of ['14.5.0', '14.7.0']) {
-            const v = partitionVerdict({
+            const v = verifyHostLayer({
                 projectVersion: '14.6.0',
                 lockfile: { agent_config_version: recorded, host_layer_fingerprint: fp },
                 hostLayerPresent: true,
                 expectedFingerprint: never,
             });
-            expect(v.mode).toBe('standalone/full');
+            expect(v.verified).toBe(false);
             expect(v.reason).toContain(recorded);
         }
     });
 
-    it('a legacy record with no fingerprint → standalone/full, and says how to fix it', () => {
-        const v = partitionVerdict({
+    it('a legacy record with no fingerprint → unverified, and says how to fix it', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: { agent_config_version: '14.6.0' },
             hostLayerPresent: true,
             expectedFingerprint: never,
         });
-        expect(v.mode).toBe('standalone/full');
+        expect(v.verified).toBe(false);
         expect(v.reason).toContain('agent-config install');
     });
 
-    it('content drift → standalone/full', () => {
-        const v = partitionVerdict({
+    it('content drift → unverified', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: { agent_config_version: '14.6.0', host_layer_fingerprint: fp },
             hostLayerPresent: true,
             expectedFingerprint: () => 'b'.repeat(64),
         });
-        expect(v.mode).toBe('standalone/full');
+        expect(v.verified).toBe(false);
         expect(v.reason).toContain('differs');
     });
 
-    it('a throwing fingerprint → standalone/full, never an exception', () => {
-        const v = partitionVerdict({
+    it('a throwing fingerprint → unverified, never an exception', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: { agent_config_version: '14.6.0', host_layer_fingerprint: fp },
             hostLayerPresent: true,
@@ -186,17 +201,17 @@ describe('partitionVerdict — every uncertainty falls back to the full projecti
                 throw new Error('boom');
             },
         });
-        expect(v.mode).toBe('standalone/full');
+        expect(v.verified).toBe(false);
     });
 
-    it('version equal AND content equal → dual-layer/partitioned', () => {
-        const v = partitionVerdict({
+    it('version equal AND content equal → verified', () => {
+        const v = verifyHostLayer({
             projectVersion: '14.6.0',
             lockfile: { agent_config_version: '14.6.0', host_layer_fingerprint: fp },
             hostLayerPresent: true,
             expectedFingerprint: () => fp,
         });
-        expect(v.mode).toBe('dual-layer/partitioned');
+        expect(v.verified).toBe(true);
     });
 });
 
@@ -267,33 +282,39 @@ describe('installed.lock carries the fingerprint across a round trip', () => {
     });
 });
 
-describe('personaWithheldFor — the family the partition never reached until 2026-08-21', () => {
+describe('personaListFor — the family the partition never reached until 2026-08-21', () => {
     // `.claude/personas` was written unconditionally while `~/.claude/personas` was
     // installed from `_CLAUDE_SKILL_BUNDLE`: 29 shared names on a freshly
     // regenerated tree, measured by neither delivery surface because `personas` was
-    // in neither's TYPES.
-    it('withholds a Claude tool directory when the partition is active', () => {
-        expect(personaWithheldFor('.claude/personas', true)).toBe(true);
+    // in neither's TYPES. From 2026-08-21 it was gated on the repo-wide verdict,
+    // which an install one release behind turned off — so the 29 duplicates
+    // survived the fix. From 2026-09-07 the narrowed list is the evidence itself.
+    it('gives a Claude tool directory the narrowed list', () => {
+        expect(personaListFor('.claude/personas', ['a.md', 'b.md'], ['b.md'])).toEqual(['b.md']);
     });
 
-    it('withholds NOTHING when the partition is inactive', () => {
-        // The fail-safe direction: no verified host layer means the project layer
-        // is the only one, so withholding would deliver the persona nowhere.
-        expect(personaWithheldFor('.claude/personas', false)).toBe(false);
-        expect(personaWithheldFor('.cursor/personas', false)).toBe(false);
+    it('narrows nothing when the claude layer supplied no evidence', () => {
+        // The fail-safe direction, now per name: an unreadable `~/.claude/personas`
+        // makes `keepInProjectLayer` return every name, so the narrowed list IS the
+        // full list and withholding cannot deliver a persona nowhere.
+        const all = ['a.md', 'b.md'];
+        expect(personaListFor('.claude/personas', all, all)).toEqual(all);
+        expect(personaListFor('.cursor/personas', all, all)).toEqual(all);
     });
 
-    it('never withholds a non-Claude tool directory, even when active', () => {
-        // `partitionActive` verifies the CLAUDE host layer against installed.lock.
-        // It says nothing about ~/.cursor, so withholding a cursor persona on the
-        // strength of a claude fingerprint is the one outcome that loses an
-        // artefact outright.
-        expect(personaWithheldFor('.cursor/personas', true)).toBe(false);
-        expect(personaWithheldFor('.windsurf/personas', true)).toBe(false);
+    it('never narrows a non-Claude tool directory, whatever the claude layer holds', () => {
+        // The evidence is `~/.claude/personas`. It says nothing about ~/.cursor, so
+        // narrowing a cursor persona on the strength of a claude directory listing
+        // is the one outcome that loses an artefact outright.
+        const all = ['a.md', 'b.md'];
+        for (const dir of ['.cursor/personas', '.windsurf/personas', '.augment/personas']) {
+            expect(personaListFor(dir, all, [])).toEqual(all);
+        }
+        expect(personaListFor('.claude/personas', all, [])).toEqual([]);
     });
 
     it('exposes the full list unchanged, so the caller can still report the count', () => {
-        expect(personaPartition(process.cwd(), ['a.md', 'b.md']).all).toEqual(['a.md', 'b.md']);
+        expect(personaPartition(['a.md', 'b.md']).all).toEqual(['a.md', 'b.md']);
     });
 
     it('listFor returns an EMPTY ARRAY for a withheld directory, not null', () => {
@@ -303,13 +324,14 @@ describe('personaWithheldFor — the family the partition never reached until 20
         // leave the existing symlinks standing.
         //
         // This asserts the CONTRACT only. An earlier version of this test
-        // reimplemented `personaWithheldFor(...) ? [] : ['a.md']` and called that
+        // reimplemented the production expression (`personaListFor`'s predecessor,
+        // then `personaWithheldFor(...) ? [] : ['a.md']`) and called that
         // a reconciliation test — both seats of a neutral review named it: it
         // would stay green if the generator stopped applying the partition. The
         // reconciliation itself is exercised through the real generators in
         // `partition_delivery_topology.test.ts`, which reds when the gating is
         // removed.
-        const p = personaPartition(process.cwd(), ['a.md', 'b.md']);
+        const p = personaPartition(['a.md', 'b.md']);
         for (const dir of ['.claude/personas', '.cursor/personas']) {
             const got = p.listFor(dir);
             // Shape only, deliberately: which of the two values comes back is a
@@ -324,5 +346,77 @@ describe('personaWithheldFor — the family the partition never reached until 20
         // machine-independent and is the assertion that would catch a helper
         // withholding everywhere.
         expect(p.listFor('.cursor/personas')).toEqual(['a.md', 'b.md']);
+    });
+});
+
+describe('claudeLayerCarriage — the evidence the withhold decision actually reads', () => {
+    // These are the properties the repo-wide veto had no way to express. Each one
+    // is a direction the old gate got wrong on a real machine: a stale lockfile
+    // withheld nothing (261 duplicates), and a single absent name would have
+    // withheld everything had the gate ever been on.
+    function claudeHome(files: Record<string, string>): string {
+        const home = path.join(tmp, `home-${String(Object.keys(files).length)}-${Math.random().toString(36).slice(2)}`);
+        for (const [rel, body] of Object.entries(files)) {
+            const target = path.join(home, rel);
+            fs.mkdirSync(path.dirname(target), { recursive: true });
+            fs.writeFileSync(target, body, 'utf-8');
+        }
+        return home;
+    }
+
+    it('an ABSENT layer is no evidence — every name is kept', () => {
+        const home = claudeHome({ 'unrelated.txt': 'x' });
+        expect(claudeLayerNames('skills', home)).toBeNull();
+        expect(keepInProjectLayer('skills', ['a', 'b'], home)).toEqual(['a', 'b']);
+        expect(claudeLayerHolds('skills', 'a', home)).toBe(false);
+    });
+
+    it('an EMPTY layer is evidence of nothing carried — also every name kept', () => {
+        // The distinction the null return exists for: an empty directory is
+        // readable and holds nothing, so it withholds nothing. Collapsing it to
+        // "no names present ⇒ withhold all" is the inversion that loses artefacts.
+        const home = claudeHome({ '.claude/skills/.keep': '' });
+        expect(claudeLayerNames('skills', home)?.size).toBe(1);
+        expect(keepInProjectLayer('skills', ['a', 'b'], home)).toEqual(['a', 'b']);
+    });
+
+    it('withholds PER NAME — one absent name does not rescue the others', () => {
+        const home = claudeHome({
+            '.claude/skills/carried/SKILL.md': 'x',
+            '.claude/skills/also-carried/SKILL.md': 'x',
+        });
+        expect(keepInProjectLayer('skills', ['carried', 'orphan', 'also-carried'], home)).toEqual([
+            'orphan',
+        ]);
+    });
+
+    it('reads commands as a POSIX SUBPATH, so the colon form is comparable', () => {
+        // A clustered command's host-side name is `<cluster>/<sub>.md`. Comparing
+        // basenames would make `roadmap/next.md` and `worktree/next.md` the same
+        // name and withhold one of them on the other's evidence.
+        const home = claudeHome({
+            '.claude/commands/roadmap/next.md': 'x',
+            '.claude/commands/agent-status.md': 'x',
+        });
+        const names = claudeLayerNames('commands', home);
+        expect([...(names ?? [])].sort()).toEqual(['agent-status.md', 'roadmap/next.md']);
+        expect(claudeLayerHolds('commands', 'roadmap/next.md', home)).toBe(true);
+        expect(claudeLayerHolds('commands', 'worktree/next.md', home)).toBe(false);
+    });
+
+    it('never treats README.md as a carried artefact', () => {
+        const home = claudeHome({ '.claude/personas/README.md': 'x', '.claude/personas/a.md': 'x' });
+        expect(keepInProjectLayer('personas', ['README.md', 'a.md'], home)).toEqual(['README.md']);
+    });
+
+    it('memoises per home, and the reset seam clears it', () => {
+        // The memo is what keeps a per-NAME question from re-walking the commands
+        // tree hundreds of times. It must not outlive a test that changes the layer.
+        const home = claudeHome({ '.claude/skills/one/SKILL.md': 'x' });
+        expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual(['two']);
+        fs.mkdirSync(path.join(home, '.claude/skills/two'), { recursive: true });
+        expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual(['two']);
+        _resetClaudeLayerMemoForTest();
+        expect(keepInProjectLayer('skills', ['one', 'two'], home)).toEqual([]);
     });
 });

@@ -133,22 +133,23 @@ describe('check_rule_layer_partition', () => {
 });
 
 describe('partitionEnforces', () => {
-    it('enforces only where the partition actually ran', () => {
-        expect(partitionEnforces('dual-layer/partitioned')).toBe(true);
+    it('enforces where the host layer is VERIFIED', () => {
+        expect(partitionEnforces(true)).toBe(true);
     });
 
-    it('does NOT enforce while the projection is standalone/full', () => {
+    it('does NOT enforce while the host layer is unverified', () => {
         // 2026-08-22: a release push was blocked here with no reachable repair.
-        // Building 14.8.0 against an installed 14.7.0 makes `resolvePartitionVerdict`
-        // return `standalone/full`, so the generators emit every rule by design —
-        // and `task generate-tools` re-writes exactly the files this gate demanded be
-        // gone, deadlocking it against `check_bridge_derivation`. Every release hits
-        // this by construction: the building version is always ahead of the installed
-        // one for the whole release window.
-        expect(partitionEnforces('standalone/full')).toBe(false);
-    });
-
-    it('treats an unrecognised mode as non-enforcing (fail-safe, not fail-loud)', () => {
-        expect(partitionEnforces('some-future-mode')).toBe(false);
+        // Building 14.8.0 against an installed 14.7.0 read as `standalone/full`, the
+        // generators emitted every rule by design, and `task generate-tools` re-wrote
+        // exactly the files this gate demanded be gone — deadlocking it against
+        // `check_bridge_derivation` for the whole release window.
+        //
+        // The 2026-09-07 change removed the version from the WITHHOLD decision, so
+        // that deadlock is gone. This branch is kept for a narrower reason, and the
+        // reason is why the argument is now a boolean rather than a mode string: an
+        // unverified host layer may be STALE, so a duplicate the per-directory
+        // evidence let through need not be an emitter bug, and reporting beats
+        // failing there.
+        expect(partitionEnforces(false)).toBe(false);
     });
 });
