@@ -34,6 +34,17 @@ export type TellGroup =
 /** "any" = language-agnostic (typography / structure tells). */
 export type TellLanguage = "en" | "de" | "any";
 
+/**
+ * A rule whose decision is not expressible as "this regex matched". Receives
+ * the already-exempt-stripped scan text plus the resolved language, and returns
+ * the same `{count, samples}` shape `countMatches` produces, so the caller does
+ * not branch on rule kind beyond choosing the source.
+ */
+export type TellMatcher = (
+  text: string,
+  language: "en" | "de",
+) => { count: number; samples: string[] };
+
 export interface TellRule {
   id: string;
   group: TellGroup;
@@ -43,6 +54,8 @@ export interface TellRule {
   weight: number;
   description: string;
   patterns: RegExp[];
+  /** When present, REPLACES `patterns` — a rule too context-dependent for one. */
+  match?: TellMatcher;
 }
 
 /** Em/en-dash density cap per 500 words (CP1 parity). */
@@ -60,7 +73,104 @@ const w = (
   weight: number,
   description: string,
   patterns: RegExp[],
-): TellRule => ({ id, group, severity, language, weight, description, patterns });
+  match?: TellMatcher,
+): TellRule => ({
+  id, group, severity, language, weight, description, patterns,
+  ...(match ? { match } : {}),
+});
+
+/**
+ * Minimum word count below which a per-500-words density is not computed.
+ *
+ * `cluster_score_per_500` and `dash_density_per_500` are ratios extrapolated to
+ * 500 words. Under a small denominator the extrapolation is the artifact: six
+ * words carrying one em dash score 83.33 per 500 and fail a cap of 2, which
+ * says nothing about the prose. Below this floor both densities are reported as
+ * `null` and neither threshold is applied; hard rules are unaffected, because a
+ * hard hit is a count and not a rate.
+ *
+ * 50 is the largest floor compatible with the bound the repair was specified
+ * against — a 60-word text carrying three dashes must still be evaluated and
+ * must still fail. It does NOT make the metric meaningful everywhere above it:
+ * at a cap of 2 per 500 words no document under ~250 words can carry a single
+ * dash and pass. That residual is measured and published in
+ * `internal/bench/reports/prose-tells-fp-v1.md` rather than repaired here — the
+ * cap itself is a council decision of 2026-07-11 and is not this floor's to move.
+ */
+export const MIN_DENSITY_WORDS = 50;
+
+/** Morphology that marks a common noun as abstract, per language. */
+const ABSTRACT_SUFFIX_EN =
+  /(?:tions?|sions?|ities|ity|ness(?:es)?|ments?|ances?|ences?|isms?|ships?|hoods?|ancy|ency|ics|ures?|ologies|ology|th|ings?|acy)$/;
+const ABSTRACT_SUFFIX_DE =
+  /(?:ungen|ung|heiten|heit|keiten|keit|schaften|schaft|tionen|tion|itäten|ität|ismus|tum|nis|barkeit)$/;
+
+/**
+ * Common abstract nouns this repo authored by hand because they carry no
+ * abstract morphology. Deliberately short: every entry is a word whose
+ * abstractness a suffix test cannot see, never a convenience list of tells.
+ * Authored here — no word list is imported from any external source.
+ */
+const ABSTRACT_STEMS_EN = new Set([
+  "speed", "trust", "scale", "impact", "focus", "value", "risk", "craft",
+  "reach", "vision", "care", "rigor", "rigour", "worth", "pace", "flair",
+]);
+
+/** A member is abstract when it is a common noun with abstract morphology. */
+export function isAbstractNoun(word: string, language: "en" | "de"): boolean {
+  if (/\d/.test(word)) return false;
+  const lower = word.toLowerCase();
+  if (language === "de") {
+    // German commons are capitalised, so capitalisation cannot separate a name
+    // from a noun; the morphology has to carry the whole decision.
+    return ABSTRACT_SUFFIX_DE.test(lower);
+  }
+  // A capitalised member is a name (or sentence-initial), never counted.
+  if (/^[A-Z]/.test(word)) return false;
+  return ABSTRACT_SUFFIX_EN.test(lower) || ABSTRACT_STEMS_EN.has(lower);
+}
+
+const TRIPLET_RE = /\b([\p{L}][\p{L}'’-]*), ([\p{L}][\p{L}'’-]*), (?:and|und) ([\p{L}][\p{L}'’-]*)\b/gu;
+
+/**
+ * `tell-rule-of-three`, disarmed (road-to-measured-prose-tells step 1.2).
+ *
+ * The shipped pattern matched every Oxford-comma triplet, so three ordinary
+ * sentences of English scored 39.47 per 500 words and failed a cap of 3. The
+ * rule stays and loses its solo effect over ordinary lists:
+ *
+ * - a triplet counts only when **all three members are abstract common nouns**
+ *   — never names, never numbers, never a list of concrete things;
+ * - when two or more such abstract triplets share a paragraph, every one of
+ *   them counts, because the repeated rhetorical move inside one paragraph is
+ *   the tell the rule was written for.
+ *
+ * A single concrete triplet, and any number of concrete triplets in one
+ * paragraph, score zero. Recorded deviation: the step specified the
+ * paragraph-cluster arm over "three-item lists" without qualification; applied
+ * that way it would fire on the step's own worked example (three ordinary lists
+ * in one paragraph, which its acceptance criterion requires to pass), so the
+ * abstractness test qualifies both arms and the cluster arm escalates rather
+ * than admits.
+ */
+export function matchRuleOfThree(
+  text: string,
+  language: "en" | "de",
+): { count: number; samples: string[] } {
+  let count = 0;
+  const samples: string[] = [];
+  for (const para of text.split(/\n\s*\n/)) {
+    const abstract: string[] = [];
+    for (const m of para.matchAll(TRIPLET_RE)) {
+      const members = [m[1] ?? "", m[2] ?? "", m[3] ?? ""];
+      if (members.every((x) => isAbstractNoun(x, language))) abstract.push(m[0]);
+    }
+    if (abstract.length === 0) continue;
+    count += abstract.length;
+    for (const a of abstract) if (samples.length < 3) samples.push(a.slice(0, 60).trim());
+  }
+  return { count, samples };
+}
 
 export const TELL_RULES: TellRule[] = [
   // ── hard: communication artifacts pasted into a deliverable ──────────────
@@ -211,8 +321,10 @@ export const TELL_RULES: TellRule[] = [
     "cluster",
     "any",
     0.5,
-    "Forced triplet groupings (innovation, inspiration, and insights)",
-    [/\b\w+(?:ity|ion|ness|ing|s)?, \w+(?:ity|ion|ness|ing|s)?, and \w+/],
+    "Forced abstract triplets (innovation, inspiration, and collaboration) — " +
+      "ordinary lists of names, numbers or concrete things do not count",
+    [],
+    matchRuleOfThree,
   ),
 
   // ── cluster: filler, hedging, endings, openers ───────────────────────────

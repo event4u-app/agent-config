@@ -12,6 +12,7 @@ import {
   DEFAULT_MAX_CLUSTER_SCORE,
   DEFAULT_MAX_DASH_DENSITY,
   DEFAULT_MAX_HARD,
+  MIN_DENSITY_WORDS,
 } from "../../src/scripts/ai_tells_rules.js";
 
 const THRESHOLDS = {
@@ -238,5 +239,97 @@ describe("scan-what-you-ingest invariant (Phase 1 regression lock)", () => {
     const r = analyzeText(far, "en");
     expect(r.truncated).toBe(true); // tell scan is bounded...
     expect(r.hidden_unicode.length).toBeGreaterThan(0); // ...but the guard still saw it
+  });
+});
+
+// ── step 1.2 — tell-rule-of-three is disarmed over ordinary lists ────────────
+
+const FILLER =
+  "The import job runs at four in the morning and writes its summary to the " +
+  "same bucket every single day without any change at all. ";
+
+describe("tell-rule-of-three (disarmed)", () => {
+  it("three ordinary Oxford-comma lists in one paragraph score zero", () => {
+    const text =
+      "We shipped apples, pears, and plums. We track revenue, churn, and margin. " +
+      "The team is Alice, Bob, and Carol. " + FILLER.repeat(3);
+    const report = analyzeText(text, "en");
+    expect(report.per_pattern["tell-rule-of-three"]).toBeUndefined();
+    expect(exceedsThresholds(report, THRESHOLDS)).toEqual([]);
+  });
+
+  it("a list of names alone scores zero", () => {
+    const report = analyzeText("The team is Alice, Bob, and Carol. " + FILLER.repeat(3), "en");
+    expect(report.per_pattern["tell-rule-of-three"]).toBeUndefined();
+  });
+
+  it("a forced abstract triplet still counts", () => {
+    const report = analyzeText(
+      "A platform for analytics, automation, and collaboration. " + FILLER.repeat(3),
+      "en",
+    );
+    expect(report.per_pattern["tell-rule-of-three"]).toBe(1);
+  });
+
+  it("two abstract triplets in one paragraph both count", () => {
+    const report = analyzeText(
+      "A platform for analytics, automation, and collaboration, built on a " +
+        "culture of curiosity, generosity, and collaboration. " + FILLER.repeat(3),
+      "en",
+    );
+    expect(report.per_pattern["tell-rule-of-three"]).toBe(2);
+  });
+
+  it("every seeded fixture that carried the tell still carries it", () => {
+    // The precision repair must not be bought with recall; these five are the
+    // `before` fixtures whose forced triplet is the seeded tell.
+    for (const name of [
+      "01-gtm-post",
+      "04-blog-paragraph",
+      "07-event-recap",
+      "11-hiring-post",
+      "15-talk-recap",
+    ]) {
+      const report = analyzeText(load("en", name, "before"), "en");
+      expect(
+        report.per_pattern["tell-rule-of-three"],
+        `${name} lost its seeded rule-of-three hit`,
+      ).toBeGreaterThan(0);
+    }
+  });
+});
+
+// ── step 1.3 — a density is not extrapolated from a tiny denominator ─────────
+
+describe("density floor", () => {
+  it("reports both densities as null below the floor and applies neither", () => {
+    const report = analyzeText("Not a tool — a system.", "en");
+    expect(report.words).toBeLessThan(MIN_DENSITY_WORDS);
+    expect(report.density_evaluated).toBe(false);
+    expect(report.cluster_score_per_500).toBeNull();
+    expect(report.dash_density_per_500).toBeNull();
+    expect(exceedsThresholds(report, THRESHOLDS)).toEqual([]);
+  });
+
+  it("still counts the raw dash under the floor — suppressed, not unseen", () => {
+    const report = analyzeText("Not a tool — a system.", "en");
+    expect(report.dash_count).toBe(1);
+  });
+
+  it("hard rules still apply below the floor", () => {
+    const report = analyzeText("I hope this helps -- let me know.", "en");
+    expect(report.density_evaluated).toBe(false);
+    expect(exceedsThresholds(report, THRESHOLDS).join(" ")).toContain("hard hits");
+  });
+
+  it("a 60-word text with three dashes still fails on density", () => {
+    const text =
+      "Not a tool — a system, and not a product — a promise, and not a plan — a habit. " +
+      "We ship on Friday and we review on Monday and nothing else about the cadence " +
+      "has changed since the team agreed it. We ship on Friday and we review on Monday " +
+      "and nothing else about the cadence has changed since the team agreed it.";
+    const report = analyzeText(text, "en");
+    expect(report.words).toBeGreaterThanOrEqual(MIN_DENSITY_WORDS);
+    expect(exceedsThresholds(report, THRESHOLDS).join(" ")).toContain("dash density");
   });
 });

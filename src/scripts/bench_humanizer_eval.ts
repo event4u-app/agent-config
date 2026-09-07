@@ -161,15 +161,27 @@ async function main(): Promise<void> {
 
   const mean = (xs: number[]) =>
     Math.round((xs.reduce((s, x) => s + x, 0) / Math.max(xs.length, 1)) * 100) / 100;
+  /**
+   * A density is `null` when the text sits under the detector's word floor, so
+   * the rate was never computed. Averaging those as zero would report "measured
+   * clean" for text nobody measured; they are dropped and the surviving
+   * denominator is published beside the mean.
+   */
+  const meanDefined = (xs: Array<number | null>): { value: number | null; n: number } => {
+    const defined = xs.filter((x): x is number => x !== null);
+    return { value: defined.length === 0 ? null : mean(defined), n: defined.length };
+  };
+  const show = (m: { value: number | null; n: number }): string =>
+    m.value === null ? `not evaluated (n=0)` : `${m.value} (n=${m.n})`;
   const agg = {
     pairs: results.length,
     length_controlled_pairs: results.filter((r) => r.length_controlled).length,
     mean_hard_before: mean(results.map((r) => r.before.hard_total)),
     mean_hard_after: mean(results.map((r) => r.after.hard_total)),
-    mean_cluster_before: mean(results.map((r) => r.before.cluster_score_per_500)),
-    mean_cluster_after: mean(results.map((r) => r.after.cluster_score_per_500)),
-    mean_dash_before: mean(results.map((r) => r.before.dash_density_per_500)),
-    mean_dash_after: mean(results.map((r) => r.after.dash_density_per_500)),
+    mean_cluster_before: meanDefined(results.map((r) => r.before.cluster_score_per_500)),
+    mean_cluster_after: meanDefined(results.map((r) => r.after.cluster_score_per_500)),
+    mean_dash_before: meanDefined(results.map((r) => r.before.dash_density_per_500)),
+    mean_dash_after: meanDefined(results.map((r) => r.after.dash_density_per_500)),
     judge_model: undefined as string | undefined,
     judged_pairs: 0,
     prefers_after: 0,
@@ -198,8 +210,8 @@ async function main(): Promise<void> {
     "| Metric (mean) | Before | After |",
     "|---|---|---|",
     `| Hard hits | ${agg.mean_hard_before} | ${agg.mean_hard_after} |`,
-    `| Cluster score /500w | ${agg.mean_cluster_before} | ${agg.mean_cluster_after} |`,
-    `| Dash density /500w | ${agg.mean_dash_before} | ${agg.mean_dash_after} |`,
+    `| Cluster score /500w | ${show(agg.mean_cluster_before)} | ${show(agg.mean_cluster_after)} |`,
+    `| Dash density /500w | ${show(agg.mean_dash_before)} | ${show(agg.mean_dash_after)} |`,
     "",
     "## Blind preference (length-controlled)",
     "",

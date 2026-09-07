@@ -35,6 +35,7 @@ import {
   DEFAULT_MAX_CLUSTER_SCORE,
   DEFAULT_MAX_DASH_DENSITY,
   DEFAULT_MAX_HARD,
+  MIN_DENSITY_WORDS,
   sniffLanguage,
 } from "./ai_tells_rules.js";
 import { _classify } from "./lint_hidden_unicode.js";
@@ -77,9 +78,16 @@ export interface TellReport {
   cluster_hits: RuleHit[];
   hard_total: number;
   cluster_score: number;
-  cluster_score_per_500: number;
+  /**
+   * `null` below `MIN_DENSITY_WORDS`: a per-500-words rate extrapolated from a
+   * handful of words is an artifact of the denominator, not a reading of the
+   * prose. `null` says "not evaluated" where a `0` would say "measured clean".
+   */
+  cluster_score_per_500: number | null;
   dash_count: number;
-  dash_density_per_500: number;
+  dash_density_per_500: number | null;
+  /** False when the text is under the floor and neither density was applied. */
+  density_evaluated: boolean;
   per_pattern: Record<string, number>;
   truncated: boolean;
   hidden_unicode: HiddenUnicodeFinding[];
@@ -260,7 +268,9 @@ export function analyzeText(
   for (const rule of ALL_TELL_RULES) {
     if (rule.language !== "any" && rule.language !== language) continue;
     const scanText = rule.id === "tell-curly-quotes" ? forQuotes : base;
-    const { count, samples } = countMatches(scanText, rule.patterns);
+    const { count, samples } = rule.match
+      ? rule.match(scanText, language)
+      : countMatches(scanText, rule.patterns);
     if (count === 0) continue;
     perPattern[rule.id] = count;
     const hit: RuleHit = {
@@ -277,7 +287,9 @@ export function analyzeText(
   const hardTotal = hardHits.reduce((s, h) => s + h.count, 0);
   const clusterScore = clusterHits.reduce((s, h) => s + h.count * h.weight, 0);
   const dashCount = (forQuotes.match(/[—–]/g) ?? []).length;
-  const per500 = (n: number) => Math.round((n / words) * 500 * 100) / 100;
+  const densityEvaluated = words >= MIN_DENSITY_WORDS;
+  const per500 = (n: number) =>
+    densityEvaluated ? Math.round((n / words) * 500 * 100) / 100 : null;
 
   return {
     words,
@@ -289,6 +301,7 @@ export function analyzeText(
     cluster_score_per_500: per500(clusterScore),
     dash_count: dashCount,
     dash_density_per_500: per500(dashCount),
+    density_evaluated: densityEvaluated,
     per_pattern: perPattern,
     truncated,
     hidden_unicode: hiddenUnicode,
@@ -299,9 +312,9 @@ export function exceedsThresholds(r: TellReport, t: Thresholds): string[] {
   const reasons: string[] = [];
   if (r.hard_total > t.maxHard)
     reasons.push(`hard hits ${r.hard_total} > ${t.maxHard}`);
-  if (r.cluster_score_per_500 > t.maxScore)
+  if (r.cluster_score_per_500 !== null && r.cluster_score_per_500 > t.maxScore)
     reasons.push(`cluster score ${r.cluster_score_per_500}/500w > ${t.maxScore}`);
-  if (r.dash_density_per_500 > t.maxDashDensity)
+  if (r.dash_density_per_500 !== null && r.dash_density_per_500 > t.maxDashDensity)
     reasons.push(`dash density ${r.dash_density_per_500}/500w > ${t.maxDashDensity}`);
   return reasons;
 }
@@ -309,9 +322,12 @@ export function exceedsThresholds(r: TellReport, t: Thresholds): string[] {
 function humanSummary(name: string, r: TellReport, reasons: string[]): string {
   const lines: string[] = [];
   const verdict = reasons.length === 0 ? "✅" : "❌";
+  const density = r.density_evaluated
+    ? `cluster ${r.cluster_score_per_500}/500w · dashes ${r.dash_density_per_500}/500w`
+    : `density not evaluated (${r.words} words < ${MIN_DENSITY_WORDS}-word floor; ` +
+      `${r.cluster_score} cluster weight, ${r.dash_count} dash(es) counted)`;
   lines.push(
-    `${verdict} ${name} — ${r.words} words (${r.language}) · hard ${r.hard_total} · ` +
-      `cluster ${r.cluster_score_per_500}/500w · dashes ${r.dash_density_per_500}/500w`,
+    `${verdict} ${name} — ${r.words} words (${r.language}) · hard ${r.hard_total} · ${density}`,
   );
   for (const h of [...r.hard_hits, ...r.cluster_hits]) {
     lines.push(
