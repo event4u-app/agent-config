@@ -50,6 +50,8 @@ import process from 'node:process';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -152,11 +154,29 @@ export function main(argv: readonly string[]): number {
     const porcelain = git(['status', '--porcelain']);
     const verdict = classifyBranchWork({ porcelain, branchFiles: branchOwnFiles(baseRef) });
 
-    // `scanned:` is this gate's own emptiness discriminator — a clean tree and
-    // an unreadable one both produce no findings, and only this line separates
-    // them.
-    const rows = parsePorcelain(porcelain).length;
-    process.stdout.write(`scanned: ${String(rows)}\n`);
+    // Through the shared reporter, not a hand-written line: `check_gate_coverage`
+    // reads the CALL, and a printed `scanned:` string satisfies the eye while
+    // leaving the gate unhardened (measured — this gate reded that ratchet on
+    // its first CI run for exactly that reason).
+    //
+    // Zero rows is the GOOD state here, which inverts the usual dead-scope
+    // reasoning: for every other gate an empty corpus may mean the root moved,
+    // while for this one it means the operator has nothing outstanding. The
+    // scope cannot go dead either — `git status` is the corpus, and a reading it
+    // could not produce comes back as an empty string from a non-zero exit,
+    // which is indistinguishable from clean and is why the reason below is
+    // stated rather than left implicit.
+    reportScanned({
+        gate: 'check_branch_work_committed',
+        scanned: parsePorcelain(porcelain).length,
+        units: 'dirty path(s)',
+        roots: ['git status --porcelain'],
+        allowEmpty:
+            'EMPTY_VALID: a clean working tree is this gate\'s PASSING state, not a dead scope. ' +
+            'The corpus is git\'s own status output over the whole repository, so there is no ' +
+            'root to move; zero rows means the operator has committed everything, which is the ' +
+            'outcome the gate exists to produce.',
+    });
 
     if (verdict.ok) {
         if (!quiet) {
