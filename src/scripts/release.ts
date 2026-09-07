@@ -49,8 +49,10 @@
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
  * Release) and skips work that is already done, instead of erroring out.
- * Without `--resume` the pipeline still mutates git/network state, so
- * re-running on a dirty tree needs `--resume` (or a manual cleanup). The
+ * Re-running from `release/{target}` needs neither the flag nor a clean
+ * tree — that position, dirty, is the state `guard_release_curation` leaves
+ * behind, and `preflightPosition` accepts it (a dirty `main` still refuses).
+ * The
  * two entry points guard against colliding with each other via these same
  * probes plus the CI workflow's concurrency group — whichever starts
  * second sees the other's in-progress state and skips or refuses cleanly.
@@ -124,6 +126,7 @@ import {
     derive_category_hits,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
+import { preflightPosition } from './_lib/release_position.js';
 import {
     RELEASE_HEAD_DEFAULT,
     extract_changelog_section,
@@ -784,17 +787,17 @@ export function assert_scheduled_deprecations_clear(
 /**
  * Fail fast on conditions that would break the release mid-flight.
  *
- * In `--resume` mode two invariants are relaxed:
+ * The start position — which branch, and whether a dirty tree is tolerated —
+ * is `preflightPosition` in `_lib/release_position.ts`, and it is NO LONGER
+ * gated on `--resume`:
+ * `release/{target}` is where `guard_release_curation` leaves the operator, so
+ * refusing it there made the guard's own remedy unreachable. Read that
+ * function's header for the measurement.
  *
- * - The starting branch may be `release/{target}` in addition to `main` —
- *   both are valid resume positions (mid-pipeline crash after step 1 leaves
- *   you on the release branch).
- * - The target-tag-exists check is dropped — execute() probes for existing
- *   tags/releases and skips them.
+ * `--resume` still relaxes ONE invariant here: the target-tag-exists check is
+ * dropped, because execute() probes for existing tags/releases and skips them.
  *
- * Tree cleanliness, gh auth, and `main` in-sync with origin are still
- * enforced, so resuming has the same starting posture as a fresh run; only
- * step-level outcomes differ.
+ * gh auth and `main` in-sync with origin are enforced either way.
  *
  * `opts.ci` swaps the gh-auth probe (see below) for the CI-mode variant —
  * everything else is identical between the two entry points.
@@ -832,20 +835,17 @@ function preflight(target: string, opts: { resume?: boolean; ci?: boolean } = {}
 
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true });
     const release_branch = `release/${target}`;
-    const allowed = resume ? new Set([MAIN_BRANCH, release_branch]) : new Set([MAIN_BRANCH]);
-    if (!allowed.has(branch)) {
-        if (resume) {
-            die(
-                `resume must run from '${MAIN_BRANCH}' or '${release_branch}', ` +
-                    `currently on '${branch}'`,
-            );
-        }
-        die(`release must run from '${MAIN_BRANCH}', currently on '${branch}'`);
+    const position = preflightPosition({
+        branch,
+        mainBranch: MAIN_BRANCH,
+        releaseBranch: release_branch,
+        porcelain: git(['status', '--porcelain'], { capture: true }),
+    });
+    if (!position.proceed) {
+        die(position.message ?? `release cannot start from '${branch}'`);
     }
-
-    const porcelain = git(['status', '--porcelain'], { capture: true });
-    if (porcelain) {
-        die('working tree is not clean; commit or stash first');
+    if (position.notice) {
+        process.stdout.write(`\u26a0\ufe0f  ${position.notice}\n`);
     }
 
     // --force lets the remote's tag positions win over stale local tags.
