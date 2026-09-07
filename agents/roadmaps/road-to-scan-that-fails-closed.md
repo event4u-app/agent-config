@@ -54,7 +54,7 @@ still being designed.
 `corrected-from-reproduction` — the child count in this phase is five, not the four the
 source round asserts; `lint_mcp_config_security` is the fifth (`src/scripts/lint_agent_security.ts:45-51`).
 
-- [ ] **2.1 Freeze the failure corpus first.** Fixtures for each way a child can fail to answer: exit non-zero with empty stdout, exit 0 with unparsable stdout, failure to spawn (`proc.status === null`), and — as the negative control — exit non-zero with valid findings, which must still be reported as findings and not as a run failure.
+- [x] **2.1 Freeze the failure corpus first.** Fixtures for each way a child can fail to answer: exit non-zero with empty stdout, exit 0 with unparsable stdout, failure to spawn (`proc.status === null`), and — as the negative control — exit non-zero with valid findings, which must still be reported as findings and not as a run failure.
       verify: each fixture runs green against today's code, proving it reproduces the current fail-open; the negative control is the one that must stay green afterwards.
 - [ ] **2.2 Give each child a closed terminal outcome and make a failed one block.** `completed | failed | skipped(reason)`, with the skip reasons a constant in the runner rather than configuration. Stop discarding the return code at `:209`; a child that is missing, unspawnable, exits outside the finding contract, or emits unparsable stdout makes the umbrella print the child's name and exit 1.
       verify: the Phase 2.1 fixtures flip from green to red, each naming its child; `./scripts-run src/scripts/lint_agent_security` still exits 0 on the real tree.

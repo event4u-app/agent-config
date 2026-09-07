@@ -26,7 +26,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { runCountedProbe } from "./_lib/counted_probe.js";
+import { runCountedProbe, type ProbeResult } from "./_lib/counted_probe.js";
 import { assertWatchlistResolves, DeadScopeError } from "./_lib/scan_scope.js";
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -50,15 +50,30 @@ const LINTERS: ReadonlyArray<[string, string]> = [
   ["dangerous-frontmatter", "lint_skill_frontmatter_safety.ts"],
 ];
 
-function _run(script: string): [number, Finding[]] {
-  // Spawn the child linter's `.ts` twin via the repo-local tsx binary
-  // (capture_output=True, text=True equivalent). Mirrors the retired Python implementation's
-  // `subprocess.run([sys.executable, HERE/<child>.py, "--json"])`, now that the
-  // children are TypeScript and the `.py` originals are deleted.
-  // Bounded read: a truncated `--json` payload would fail to parse and be
-  // swallowed as zero findings — a security aggregate reporting clean because
-  // it lost the answer. `runCountedProbe` throws on overflow instead.
-  const proc = runCountedProbe(tsxBin, [path.join(_HERE, script), "--json"]);
+/**
+ * How one child linter is executed.
+ *
+ * A seam, not a policy: the production runner is `_spawnChild` below and is the
+ * default everywhere. It exists so the failure corpus can drive each way a
+ * child can fail to ANSWER — non-zero with empty stdout, zero with unparsable
+ * stdout, and a spawn that never happened — without planting a broken linter in
+ * the tree. The four ways are not reproducible any other way: a real child that
+ * crashes on demand is a child that has to be able to crash in production.
+ */
+export type ChildRunner = (script: string) => ProbeResult;
+
+// Spawn the child linter's `.ts` twin via the repo-local tsx binary
+// (capture_output=True, text=True equivalent). Mirrors the retired Python implementation's
+// `subprocess.run([sys.executable, HERE/<child>.py, "--json"])`, now that the
+// children are TypeScript and the `.py` originals are deleted.
+// Bounded read: a truncated `--json` payload would fail to parse and be
+// swallowed as zero findings — a security aggregate reporting clean because
+// it lost the answer. `runCountedProbe` throws on overflow instead.
+const _spawnChild: ChildRunner = (script) =>
+  runCountedProbe(tsxBin, [path.join(_HERE, script), "--json"]);
+
+function _run(script: string, runChild: ChildRunner): [number, Finding[]] {
+  const proc = runChild(script);
   let findings: Finding[];
   try {
     const parsed: unknown = JSON.parse((proc.stdout ?? "") || "[]");
@@ -182,8 +197,14 @@ function parse_args(argv: string[]): ParsedArgs {
   return out;
 }
 
-export function main(argv: string[] | null = null): number {
+export interface MainOptions {
+  /** Override how child linters are executed. Test seam; production uses `_spawnChild`. */
+  readonly runChild?: ChildRunner;
+}
+
+export function main(argv: string[] | null = null, opts: MainOptions = {}): number {
   const args = parse_args(argv ?? process.argv.slice(2));
+  const runChild = opts.runChild ?? _spawnChild;
 
   // This runner owns no corpus of its own — it guards five named child linters,
   // so its scope is that watch list. `_run` swallows an unparseable child
@@ -206,7 +227,7 @@ export function main(argv: string[] | null = null): number {
   const all_findings: Finding[] = [];
   let blocking = 0;
   for (const [check, script] of LINTERS) {
-    const [, findings] = _run(script);
+    const [, findings] = _run(script, runChild);
     all_findings.push(...findings);
     const fails = findings.filter((f) => _is_fail(f)).length;
     const warns = findings.length - fails;
