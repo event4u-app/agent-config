@@ -2,7 +2,7 @@
 /**
  * inbox_source_census — the denominator an inbox run cannot shrink by reading badly.
  *
- * ## The gap this closes
+ * THE GAP THIS CLOSES.
  *
  * `/analyze:inbox` already ends with a **point ledger**: points extracted in its
  * Phase 3 against points dispositioned in Phases 4–5b, per bucket, as counts
@@ -17,7 +17,7 @@
  * revisions look like six sources; read as a set, they are one argument whose
  * later revisions silently drop items the earlier ones carried.
  *
- * ## What this counts — and what it deliberately does not
+ * WHAT THIS COUNTS — AND WHAT IT DELIBERATELY DOES NOT.
  *
  * Only what is **mechanical and genre-independent**:
  *
@@ -37,7 +37,7 @@
  * one — a census that needed judgement would be as shrinkable as the reading it
  * is supposed to bound.
  *
- * ## Honest limit
+ * HONEST LIMIT.
  *
  * An anchor count is a floor on what must be accounted for, never a target and
  * never a quality measure. A 400-anchor source can carry three demands and a
@@ -45,7 +45,7 @@
  * reporting "41 anchors → 41 accounted" can be challenged by anyone holding the
  * folder, where a prose summary cannot.
  *
- * ## Usage
+ * USAGE.
  *
  *   ./scripts-run src/scripts/inbox_source_census --root agents/tmp/<round-id>
  *   ./scripts-run src/scripts/inbox_source_census --root <dir> --json

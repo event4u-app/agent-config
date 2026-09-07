@@ -127,7 +127,7 @@ Reconciled, not ignored:
 
 ```
 PASS 1 EXTRACTS. PASS 2 RE-READS THE SOURCE AGAINST PASS 1 AND HUNTS ONLY FOR
-WHAT IS MISSING. PASS 3 READS THE DRAFTED ARTEFACTS BACK AGAINST THE LEDGER.
+WHAT IS MISSING. PASS 3 READS THE DRAFTED ARTIFACTS BACK AGAINST THE LEDGER.
 A PASS-2 THAT ADDS NOTHING IS A CLAIM, AND IT OWES ITS ANCHOR CENSUS.
 NEVER CLOSE THE RUN BEFORE PASS 3 HAS RUN.
 ```
@@ -144,7 +144,7 @@ in it proves the run read what arrived.**
 |---|---|---|---|
 | 1 | the source set | what does this say? | the point ledger (Phase 3) + the anchor census |
 | 2 | the source set **and** pass 1's ledger | what does this say that my ledger does **not**? | the delta — rows added, per source |
-| 3 | the drafted artefacts **and** the ledger | is every row findable in an artefact or a decline line? | the coverage table (Phase 6b) |
+| 3 | the drafted artifacts **and** the ledger | is every row findable in an artifact or a decline line? | the coverage table (Phase 6b) |
 
 Three rules keep these three reads from collapsing into the same read done
 three times:
@@ -160,7 +160,7 @@ three times:
    **say which** — "converged at pass 2" and "stopped at the cap with six rows
    still arriving" are different findings, and the second is the one worth
    reading.
-3. **Pass 3 checks the artefact, not the label.** A row marked `adopted` is a
+3. **Pass 3 checks the artifact, not the label.** A row marked `adopted` is a
    claim that some emitted text carries the point. Pass 3 opens that text and
    finds it. `adopted` with nothing findable is what "I mapped it" produces when
    the mapping happened in the reply instead of in the file.
@@ -1028,17 +1028,17 @@ actually processed — never sweep the rest of the inbox.
 Files dispositioned `delete` in Phase 2 are reported, **not** deleted — say what
 each one is and why it is spent, and let the user remove it.
 
-### Phase 6b — Pass 3: read the artefacts back against the ledger
+### Phase 6b — Pass 3: read the artifacts back against the ledger
 
 The three-pass contract's last pass, and the only one that runs after something
 has been written. Passes 1 and 2 settle what the source said; this settles
-whether the artefacts carry it.
+whether the artifacts carry it.
 
 Per ledger row, in every bucket:
 
 | The row says | Pass 3 proves it by |
 |---|---|
-| `adopted` | opening the named artefact and finding the row's content in it — quote the line. A path with no matching line is **not** adopted. |
+| `adopted` | opening the named artifact and finding the row's content in it — quote the line. A path with no matching line is **not** adopted. |
 | `already-satisfied` | the cited `file:line` still resolving in the current tree |
 | `declined` | the decline sentence existing in the run's output |
 | `owner-decision` | the item appearing in the escalation block |
@@ -1046,9 +1046,9 @@ Per ledger row, in every bucket:
 
 **`adopted-not-found` is the verdict this phase exists to produce**, and it is a
 defect in the run rather than in the source. Two legal repairs, and no third:
-write the item into the artefact, or change the disposition to `declined` with
+write the item into the artifact, or change the disposition to `declined` with
 its one sentence. Never leave the label standing. A ledger claiming `adopted`
-over an artefact that does not carry the point is worse than one that says
+over an artifact that does not carry the point is worse than one that says
 `declined` — it reports coverage the tree does not have, so the next round
 arrives with the same demand and no record of why the last one dropped it.
 
@@ -1089,7 +1089,7 @@ read-back against a moved file is a read-back nobody will redo.
    sources   N files in K source sets (revision sets named, transcripts named)
    anchors   N counted → rows produced / no-demand / unaccounted
    passes    pass 1: N rows · pass 2: +N rows · pass 3: N adopted-not-found
-   topics    K topic folders in → per topic, the artefact(s) or the one-line reason
+   topics    K topic folders in → per topic, the artifact(s) or the one-line reason
    ```
 
    `unaccounted` must be zero. A non-zero pass-2 delta is not a defect — it is
@@ -1167,7 +1167,7 @@ prompted this section could not be given.
 - Treat a transcript as background for the plan beside it. The plan is a
   proposal; the transcript is where the constraint governing it was stated, and
   it is usually stated exactly once.
-- Close the run before pass 3. A disposition written before the artefact exists
+- Close the run before pass 3. A disposition written before the artifact exists
   is a plan to carry the point, not a record that it was carried.
 - Report a balanced point ledger as coverage. It balances whether the run
   extracted forty points or four, and the anchor census is the half that tells
@@ -1175,5 +1175,5 @@ prompted this section could not be given.
 - Let a subagent's returned section stand as the reading. It is that agent's
   pass 1 over its slice; passes 2 and 3 run against the sources, by the
   orchestrator.
-- Collapse a multi-topic round into fewer artefacts than it had topics without
+- Collapse a multi-topic round into fewer artifacts than it had topics without
   saying, per topic, where its content went.
