@@ -56,10 +56,12 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 import { collect } from './update_roadmap_progress.js';
 import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
+
+import { isCliEntry } from './_cli_entry.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -638,6 +640,16 @@ function _regen_dashboard(root: string, dry_run: boolean): void {
     if (dry_run) {
         return;
     }
+    // Inside `dist/cli-delegate/` the twin sits next to us as a precompiled
+    // bundle, and plain `node` runs it — the tsx walk below would otherwise
+    // reach `npx tsx`, which resolves against the CONSUMER's npm config and
+    // hard-fails on a mismatched `engines`/`devEngines` pin (the very class
+    // ADR-204 removed from the dispatcher and left standing here).
+    const bundledTwin = path.join(path.dirname(_HERE), 'update_roadmap_progress.js');
+    if (_isFile(bundledTwin)) {
+        spawnSync(process.execPath, [bundledTwin], { cwd: root, encoding: 'utf-8' });
+        return;
+    }
     const script = path.join(path.dirname(_HERE), 'update_roadmap_progress.ts');
     // Python: `_run([sys.executable, str(script)], root)`; the twin spawns the
     // dashboard generator twin through the same `tsx` runtime, cwd=root.
@@ -800,28 +812,7 @@ function main(argv?: readonly string[]): number {
     return 0;
 }
 
-function _isCliEntry(): boolean {
-    if (process.argv[1] === undefined) {
-        return false;
-    }
-    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
-    if (import.meta.url === argvUrl) {
-        return true;
-    }
-    // A symlinked invocation (e.g. via `.augment/scripts` → `dist/agent-src/scripts`,
-    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
-    // import.meta.url is the resolved real path while argv[1] keeps the symlink
-    // path. Compare realpaths so the entry guard still fires (without this the
-    // archival sweep silently no-ops when run through the symlink).
-    try {
-        const here = fs.realpathSync(fileURLToPath(import.meta.url));
-        const argv = fs.realpathSync(path.resolve(process.argv[1]));
-        return here === argv;
-    } catch {
-        return false;
-    }
-}
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (isCliEntry(import.meta.url, 'archive_completed_roadmaps')) {
     try {
         process.exitCode = main();
     } catch (exc) {
