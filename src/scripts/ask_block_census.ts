@@ -46,6 +46,14 @@
  * would score `/feature:plan` Round 1 — which the roadmap describes as asking
  * three — as three separate singles, i.e. as already fixed.
  *
+ * THE NATIVE-ASK RATE is carried IN, not computed here. It is a transcript
+ * measurement (`probe_unblocked_ask --limit N --store …`), and a transcript
+ * store is a property of the machine, not of the commit — computing it inside
+ * this script would make the artefact non-reproducible on any other checkout
+ * and quietly break the byte-identity the pin promises. So it arrives as three
+ * explicit flags carrying the numerator, the denominator and the source they
+ * were read from, and the artefact records all three. Same flags, same bytes.
+ *
  * WHAT IT IS NOT: a gate. It exits 0 whatever it counts. Its output is a frozen
  * artefact pinned to a commit, and the only legitimate use of a later run is to
  * diff two artefacts — never to quote a number in prose.
@@ -53,6 +61,7 @@
  * Usage:
  *   ./scripts-run src/scripts/ask_block_census [--root PREFIX]... [--file PATH]
  *   ./scripts-run src/scripts/ask_block_census --write [--out PATH]
+ *        [--native-asks N --unblocked-asks M --native-source TEXT]
  *   ./scripts-run src/scripts/ask_block_census --json
  *   ./scripts-run src/scripts/ask_block_census --file PATH --regions
  *   ./scripts-run src/scripts/ask_block_census --self-test
@@ -225,6 +234,13 @@ export interface FileCensus {
     readonly counts: Record<AskClass, number>;
 }
 
+/** The native-ask rate, carried in from a transcript probe with its source. */
+export interface NativeRate {
+    readonly native: number;
+    readonly unblocked: number;
+    readonly source: string;
+}
+
 export interface Census {
     readonly roots: readonly string[];
     readonly totals: Record<AskClass, number>;
@@ -272,7 +288,7 @@ function pin(): { sha: string; date: string } {
     }
 }
 
-export function render(c: Census): string {
+export function render(c: Census, native: NativeRate | null): string {
     const p = pin();
     const lines: string[] = [];
     lines.push('<!-- evidence-type: analysis -->');
@@ -298,6 +314,35 @@ export function render(c: Census): string {
     lines.push('|---|---|');
     for (const cls of ASK_CLASSES) {
         lines.push(`| \`${cls}\` | ${String(c.totals[cls])} |`);
+    }
+    lines.push('');
+    lines.push('## Native-ask rate');
+    lines.push('');
+    if (native === null) {
+        lines.push(
+            'NOT MEASURED in this run. The rate is a transcript measurement carried in via',
+        );
+        lines.push(
+            '`--native-asks` / `--unblocked-asks` / `--native-source`; absent, it is recorded as',
+        );
+        lines.push('absent rather than as zero.');
+    } else {
+        const pct =
+            native.unblocked === 0
+                ? 'n/a'
+                : `${((100 * native.native) / native.unblocked).toFixed(1)}%`;
+        lines.push(
+            `- **Native asks:** ${String(native.native)} of ${String(native.unblocked)} unblocked asks (${pct})`,
+        );
+        lines.push(`- **Source:** ${native.source}`);
+        lines.push('');
+        lines.push(
+            'A native ask is a hand-back carrying a structured-ask tool call. No host in the',
+        );
+        lines.push(
+            'capability registry has an observed structured-ask tool, so a zero here is a',
+        );
+        lines.push('MEASURED zero, not an uninstrumented one.');
     }
     lines.push('');
     lines.push('## Per file');
@@ -388,6 +433,9 @@ export function main(argv: string[]): number {
     let write = false;
     let json = false;
     let regions = false;
+    let nativeAsks: number | null = null;
+    let unblockedAsks: number | null = null;
+    let nativeSource: string | null = null;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
         if (a === '--self-test') return selfTest();
@@ -397,6 +445,9 @@ export function main(argv: string[]): number {
         else if (a === '--write') write = true;
         else if (a === '--json') json = true;
         else if (a === '--regions') regions = true;
+        else if (a === '--native-asks') nativeAsks = Number(argv[++i]);
+        else if (a === '--unblocked-asks') unblockedAsks = Number(argv[++i]);
+        else if (a === '--native-source') nativeSource = String(argv[++i]);
         else {
             process.stderr.write(`ask_block_census: unrecognized argument: ${a}\n`);
             return 0;
@@ -422,7 +473,11 @@ export function main(argv: string[]): number {
             out ?? 'agents/evidence/analysis/ask-block-census-baseline.md',
         );
         fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, render(c), 'utf8');
+        const native: NativeRate | null =
+            nativeAsks !== null && unblockedAsks !== null && nativeSource !== null
+                ? { native: nativeAsks, unblocked: unblockedAsks, source: nativeSource }
+                : null;
+        fs.writeFileSync(target, render(c, native), 'utf8');
         process.stdout.write(`ask_block_census: wrote ${path.relative(REPO_ROOT, target)}\n`);
         return 0;
     }
