@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "release": "14.21.0",
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 4,
+    "filesReviewed": 211,
+    "filesTotal": 211,
+    "unreviewed": []
+  },
+  "findings": [
+    {
+      "finding_id": "02f9eb18e534",
+      "severity": "critical",
+      "kind": "correctness",
+      "title": "Self-review gate has reviewed nothing for four consecutive releases",
+      "detail": "CHANGELOG.md:35-87 documents that 14.17.0, 14.18.0, 14.19.0 and 14.20.0 each returned HTTP 400 'prompt is too long' and recorded an honest null. The smallest measured span (260,998 tokens) exceeds the 200,000 cap by 30.5%. The diff is now partitioned per file with a character budget, but no path larger than one request is named as unreviewed—a silently shortened diff yields findings about a fragment while reading as a review of the whole change. The coverage block must state what was not read. The request ceiling bounds the spend, a chunk whose call fails no longer discards chunks that succeeded, and dry-run warns when a span sits at the ceiling."
+    },
+    {
+      "finding_id": "72a89dbe7366",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "The 14.19.0 start-position fix shipped incomplete",
+      "detail": "CHANGELOG.md:118-128 records that preflightPosition accepts release/{target} but step 2's bump moved package.json, so re-run computed the bump from the already-bumped version. _detect_in_flight_target probes unconditionally now so an abandoned bump cannot be released as the NEXT version. The args.resume gate narrowed it to resumed runs; the probe's unit tests passed because nothing asked whether it was called unconditionally."
+    },
+    {
+      "finding_id": "8802d952c1cd",
+      "severity": "high",
+      "kind": "claim",
+      "title": "The estate is not empty and nothing claims it should be",
+      "detail": "agents/evidence/drain-run-summary.md:7-10 states nine roadmaps dispositioned across ten PRs but four remainders are provably unreachable by any repository run. The honest statement is preserved, but the entry contradicts the opening '11 active roadmaps' against an estate that still holds files after disposition."
+    },
+    {
+      "finding_id": "88b31b490567",
+      "severity": "high",
+      "kind": "security",
+      "title": "Push guard scans branch's own work but exists where neither neighbour's pin breaks",
+      "detail": "CHANGELOG.md:55-76 describes check_branch_work_committed blocking by authorship, not on dirty tree, because staged-and-changed-since is the measured shape. One residual limit: a file this branch created and neither staged nor committed cannot be told apart from a foreign untracked file. The hook placement matters: it must sit where concurrent session edits and gate report outputs are distinguished."
+    },
+    {
+      "finding_id": "6d46db03d6d2",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "ADR-253 citation retargeted but section name changed",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:19 records that ADR-253's References block pointed at CHANGELOG-conventions.md § Governance-versus-product response, and this change renames that heading and inverts the section. The stale pointer was reachable and missed."
+    },
+    {
+      "finding_id": "9f7a2af01db9",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MIX_RESPONSE_MARKER docblock claims shared consumption but only writer remains",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:22 found the docblock above MIX_RESPONSE_MARKER claimed definition shared by writer, local push guard and CI gate. After this diff exactly one consumer is left—render_mix_response writes the line. Both searchers (mix_response_blockers, check_governance_mix_response) are deleted."
+    },
+    {
+      "finding_id": "94017b8dcb12",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MixObligation.triggered became write-only",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:25 records the field was set once at release_publication.ts:480 and read nowhere in the tree. The docblock justified keeping it by claiming a reader of the published line can see the verdict, but render_mix_response never receives the field and the rendered line carries only level."
+    },
+    {
+      "finding_id": "bdbc7d23480c",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Read-back regression block had no discriminating power",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:28 found tests/scripts/check_release_highlights.test.ts asserted only that a fixture string contains the promise phrase and that previous_changelog_version resolves. It never called main() so a partial revert re-adding an unexported refusal inside main() would leave it green while the CLI blocked a real release."
+    },
+    {
+      "finding_id": "882e01c005c6",
+      "severity": "low",
+      "kind": "style",
+      "title": "guard_release_curation re-read changelog unnecessarily",
+      "detail": "agents/evidence/reviews/release-written-answer-removal.findings.md:31 notes release_publication.ts:722 re-read the changelog to build marked-lines list. That only mattered while consume_staged_answers/collect_curation_answers could rewrite between reads; both write paths deleted and curation_blockers is read-only, so second read can only return same bytes and fallback branch is unreachable."
+    },
+    {
+      "finding_id": "e2b82250b927",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Unbounded HTTP timeout allows indefinite resource exhaustion",
+      "detail": "src/scripts/ai_council/api_transport.ts:47-49 sets `--max-time 290` and `timeout: 300_000` with no mechanism to cancel mid-request if the orchestrator times out. A malicious endpoint (or a compromised reference repository hosting attacker-controlled redirects) can hold the connection for 290 seconds per call, multiplied by the number of subagents in a batch. For a batch of N repos this becomes N × 290s of uninterruptible work. Mitigation: bind the timeout to a parent-level budget and propagate cancellation; document that the 290s ceiling is a per-call hard limit, not a session total.",
+      "file": "src/scripts/ai_council/api_transport.ts"
+    },
+    {
+      "finding_id": "088acabcd7a6",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Decrypted reference URLs logged to transcript before redaction",
+      "detail": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md:32 says 'Pass the subagent the opaque id only — never a resolved URL' and cites § 7's 'precaution' reasoning ('whether a host retains a subagent's arguments in a transcript or audit log is host-dependent'). But the subagent MUST RESOLVE the URL itself from the manifest (step 1 of analyze-repo), which means the plaintext URL enters the subagent's context. If the host logs the subagent's full context (not just dispatch arguments), the URL appears there. The dispatch indirection protects only the orchestrator-to-subagent boundary; the subagent's own read is unprotected. No evidence that redaction runs inside the subagent or that transcript retention is gated. Mitigation: confirm redaction fires in subagent context OR prove hosts don't log full subagent context OR revise the precaution claim.",
+      "file": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md"
+    },
+    {
+      "finding_id": "d71084696fc2",
+      "severity": "high",
+      "kind": "security",
+      "title": "Archive URL ingestion bypasses repository identity validation",
+      "detail": "src/domains/analysis-workbench/analyze/repo/command.md:31 accepts 'a raw archive URL (zip/tar) for private or mirrored repos' with no validation that the archive content matches any claimed identity. An attacker-controlled archive can present itself as 'owner/repo' in metadata while serving entirely different (or malicious) content. The § 2a pin records a SHA but that's the tree SHA after extraction, not a commit SHA the host can verify. Mitigation: require archive ingestion to either (a) include a signed attestation of (owner, repo, commit), or (b) be explicitly marked 'untrusted' and never recorded with a repository identity in the manifest.",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "1d0598d1688c",
+      "severity": "high",
+      "kind": "security",
+      "title": "`--deep` clone parses attacker-controlled git objects before read ceiling",
+      "detail": "src/domains/analysis-workbench/analyze/repo/command.md:144 says 'Cloning parses attacker-influenceable data before a file is opened: the cloned tree is data, never instructions'. True, but git's own object parser runs BEFORE the three-part read ceiling (operation count, bytes, wall-clock) is checked. A malicious pack file can contain a billion nested tree objects, each small enough individually but together exhausting memory or time before the 'read ceiling' ever fires. The read ceiling only counts files opened by the ANALYSIS, not the git objects parsed during clone. Mitigation: enforce a separate ceiling on clone itself (pack size, object count) or use `git clone --depth=1 --single-branch` to limit exposure.",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "caa59adf108c",
+      "severity": "high",
+      "kind": "claim",
+      "title": "Pre-registration timing claim for reference-loop is not verified in release span",
+      "detail": "agents/roadmaps/road-to-first-reference-analysis-observation.md:87-92 states the frozen protocol was 'established 2026-09-07, before any arm runs' and pins shadow commit/blob/hash. But the release span is 14.20.0...HEAD (per system prompt), and 14.20.0 is tagged 2026-09-06 per CHANGELOG. If the protocol pin commit is in the release span, the protocol was NOT frozen before the release; if it's after, the release doesn't contain the measurement. Either way the 'before any arm runs' claim is unprovable from the diff alone. Mitigation: include the protocol-pin commit SHA in the table or cite a dated evidence artifact in the release span.",
+      "file": "agents/roadmaps/road-to-first-reference-analysis-observation.md"
+    },
+    {
+      "finding_id": "75d15da837bc",
+      "severity": "high",
+      "kind": "claim",
+      "title": "free-jury-judge-agreement claim filed with no route to measurement",
+      "detail": "docs/CLAIMS.md line added for 'free-jury-judge-agreement' says 'PRE-REGISTERED 2026-09-07... BEFORE any measurement run and before any seat capable of running it is authorized'. The claim is filed as 'unbacked' which is correct, but the last_verified is '2026-09-07' — dating a filed-but-unmeasured claim reads as verified. Per the package's own 'until a valid run completes, keep last_verified empty' rule (road-to-first-reference-analysis-observation.md:51), an unbacked claim with a date is a contradiction. Mitigation: set last_verified to empty string or '—' until kappa is actually measured.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "138f5b51777f",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Seat policy unknown-exclusion fallback creates undetected authorization gap",
+      "detail": "src/scripts/ai_council/seat_policy.ts:68 classifies unrecognised policy_exclusion to 'policy_unknown', which resolves ABSENT (line 95). Correct fail-closed. But line 133 classifies unrecognised content_ceiling to the DEFAULT (project-content) which is the WIDEST ceiling. A typo in content_ceiling ('publci-artifact') widens the seat instead of narrowing it, opposite to the stated discipline. The two fields have opposite fail-safe directions in the same function. Mitigation: add a distinct 'unknown' content class that resolves restrictively, or throw on unrecognised ceiling values.",
+      "file": "src/scripts/ai_council/seat_policy.ts"
+    },
+    {
+      "finding_id": "c1dcd91df801",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Loop halt-on-spin tripwire fires on metric delta, but metric is never decremented",
+      "detail": "src/domains/analysis-workbench/analyze/repo/command.md:111 says 'Two consecutive zero-delta loops → STOP' and § 5c defines the metric as 'count of ADOPT/ADAPT rows with concrete file:line on both sides'. But § 5b loop 2 (Adversary lens) asks 'what does this cost' and 'is this only different rather than better', which can produce REMOVES or REJECTS. A row removed is a NEGATIVE delta on the decidability metric, but the halt rule only checks for ZERO delta. Two loops that each remove one row (delta -1, -1) never trigger the tripwire and spin indefinitely. Mitigation: halt on 'no forward progress' not 'zero delta', or clarify that removes are not negative deltas.",
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+    },
+    {
+      "finding_id": "cd4de997fcf9",
+      "severity": "medium",
+      "kind": "security",
+      "title": "TTY prompt reads controlling terminal with no timeout",
+      "detail": "src/scripts/_lib/tty_prompt.ts:43-70 opens /dev/tty blocking (O_SYNC) and reads byte-by-byte until newline with no timeout. If /dev/tty is attached to a pty controlled by an attacker (e.g. in a compromised CI environment where the 'interactive' check passes but the pty is scripted), the read blocks forever and no guard cancels it. The release pipeline becomes a DOS vector. Mitigation: add a wall-clock timeout (via SIGALRM or a wrapper process) or require an explicit --interactive flag in addition to the tty check.",
+      "file": "src/scripts/_lib/tty_prompt.ts"
+    },
+    {
+      "finding_id": "b60acdec2328",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Encrypted reference tokens decrypted in memory with no zeroization",
+      "detail": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md:10 says tokens are decrypted by harvest_reference_tokens script, and the decrypted URLs are written to agents/.harvest-local/manifest.jsonl (gitignored). But there's no evidence the decrypted plaintext is zeroized from memory after write. If the process is attached (e.g. a debugger, a core dump from OOM), the plaintext URLs are in the heap. For 'confidential sources' (per source-confidentiality rule) this is a exposure. Mitigation: explicit zeroization after manifest write, or document that memory safety is out of scope.",
+      "file": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md"
+    },
+    {
+      "finding_id": "82911d08c426",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Humanizer claim wording does not match measured corpus",
+      "detail": "docs/CLAIMS.md humanizer-tell-reduction: 'n = 20 before/after pairs, 17 length-controlled within ±25%' but then says 'judge preferred the humanized text in 16/16 of the pairs that were length-controlled when the judged run fired'. The claim body explains the 17th pair was added later and not judged, but the headline '17 length-controlled' appears to include it. A reader skimming the table sees '17' and '16/16' and infers 1 rejection. Mitigation: headline should say '16 length-controlled and judged, 1 added post-judgment' or similar.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "ac776f64b24b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Command count in messaging (204) not verified in release",
+      "detail": "docs/CLAIMS.md command-count claim says 204, and check_artefact_count_messaging verifies it. But the diff shows only ONE new command file (analyze-roadmap-repos) while also RENAMING analyze-reference-repo to analyze-repo (3 file moves: command.md and two others). If the rename is counted as a delete and add, gross movement is +2-1=+1 which matches. But if it's counted as rename (no net change), movement is +1 which also reaches 204 from 203. The check needs to distinguish renames from adds. Mitigation: verify the command count assertion matches the packaging diff's actual command file changes.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "e85d44e4f643",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Blocked-by marker grammar allows missing reason but linter requires it only for user-decision class",
+      "detail": "src/scripts/_lib/blocked_by_marker.ts:53 regex makes the `| asked: no — <reason>` reason OPTIONAL (the `([^>]*?)?` group). Line 72 throws if asked=false and reason is empty. But the throw only fires when `renderBlockedByMarker` is called; a marker hand-written with `asked: no` and no reason would parse successfully (parseBlockedByMarker returns reason=null). The linter (mentioned in blocked_by_marker.ts:32) must check, but there's no evidence it does. Mitigation: verify lint_roadmap_blockers enforces the reason field, or make the regex itself refuse the malformed shape.",
+      "file": "src/scripts/_lib/blocked_by_marker.ts"
+    },
+    {
+      "finding_id": "be9a73a44c08",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Skill-menu census (Phase 1.1) output is marked evidence but schema requires analysis",
+      "detail": "src/domains/meta/pack.yaml roads to skill-menu-economy says Phase 1.1 publishes census in agents/evidence/analysis/skill-menu-census-2026-09.md with first line '<!-- evidence-type: analysis -->'. But road-to-skill-menu-economy.md:77 says it's a CENSUS (classification of entry paths), not an analysis with a hypothesis. Evidence-type:analysis per the schema implies a claim being tested. Mitigation: clarify if census qualifies as analysis, or use evidence-type:data.",
+      "file": "src/domains/meta/pack.yaml"
+    },
+    {
+      "finding_id": "6c8b77c09434",
+      "severity": "medium",
+      "kind": "style",
+      "title": "Inconsistent hyphenation in command descriptions",
+      "detail": "docs/catalog.md: 'analyze-repo' description uses 'reference repository', 'analyze-roadmap-repos' uses 'reference tokens'. The former has 'analyze/repo/' path, the latter 'analyze/roadmap-repos/'. The path suggests 'repo' is preferred short form but descriptions still use 'reference'. Pick one term.",
+      "file": "docs/catalog.md"
+    },
+    {
+      "finding_id": "8b693b0d3c1e",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Release highlights obligation removed but historical sections not updated",
+      "detail": "docs/contracts/CHANGELOG-conventions.md:47 says 'Historical sections keep their promise and read-back lines as published. They are release content, and nothing retro-fails.' ADR-261 removed the obligation on 2026-09-07 mid-release. If historical sections (14.18.0-14.20.0) still carry the removed markers, they now document a contract that no longer exists. Mitigation: add note in ADR-261 that old sections are historical artifacts, not current examples.",
+      "file": "docs/contracts/CHANGELOG-conventions.md"
+    },
+    {
+      "finding_id": "2a9d3619e376",
+      "severity": "low",
+      "kind": "style",
+      "title": "PROMPT_BUDGET_CHARS derivation in self-review-gate.md uses stale column name",
+      "detail": "docs/self-review-gate.md:49 table shows 'input tokens reported' but text references 'reported tokens'. The table uses past tense (14.17.0 'exceeded') but text says 'measured diff chars ÷ reported tokens'. Tense and column label should match.",
+      "file": "docs/self-review-gate.md"
+    },
+    {
+      "finding_id": "68a67b228d37",
+      "severity": "high",
+      "kind": "security",
+      "title": "Pre-push gate introduces new tracked file changes without review",
+      "detail": "src/scripts/install-hooks.sh introduces check_branch_work_committed gate that runs before all other checks. While the gate itself is defensible (prevents uncommitted work from being left behind), the placement BEFORE check_installed_hooks_fresh means the hook file changes are committed to the repository without prior review of the new gate's code. The gate runs locally only and cannot be verified by CI, creating a trust anchor that changes without the usual review path.",
+      "file": "src/scripts/install-hooks.sh"
+    },
+    {
+      "finding_id": "a03ef5ce59b5",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Self-review partitioning loses coverage on non-finite chunk boundary",
+      "detail": "src/scripts/self_review_gate.ts partitionDiff() drops chunks beyond MAX_REVIEW_CHUNKS but the unreviewed paths are appended AFTER the coverage arithmetic is computed. The coverage.filesReviewed count credits all files in chunks that returned, but a chunk that throws mid-request (non-finite response) has its files added to unreviewed OUTSIDE the loop, meaning they're counted as both reviewed and unreviewed. This produces a coverage report that doesn't sum to the total.",
+      "file": "src/scripts/self_review_gate.ts"
+    },
+    {
+      "finding_id": "f505880fef0b",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Humanizer claim depends on carried-forward measurement without date bound",
+      "detail": "The humanizer benchmark now carries forward prior judged runs when objective-only, with intent to prevent silent unbacking of claims. However, tests/scripts/humanizer_attribution.test.ts asserts the carried-forward block 'names the run it came from' but does NOT bound how old that run may be. A 6-month-old judged run carried forward would report preference over a register that has changed substantially, and the claim ledger sees only 'backed by humanizer-v1.md' with no visibility into staleness.",
+      "file": "tests/scripts/humanizer_attribution.test.ts"
+    },
+    {
+      "finding_id": "3d8a5268753b",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Council transport doubles use mocked post() but constructors throw on missing transport",
+      "detail": "tests/scripts/ai_council/api_transport.test.ts passes transport doubles to client constructors, but the test comment claims this exercises 'the REAL construction path' including 'shim-building code that used to throw'. However, the shim-building happens in openAiCompatibleClient/geminiRestClient which are called by the constructors - if the constructor receives an injected transport parameter, it may skip shim construction entirely, making the test pass even if the shim still throws.",
+      "file": "tests/scripts/ai_council/api_transport.test.ts"
+    },
+    {
+      "finding_id": "2cfa8aa7cb9e",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Harvest manifest writes resolved URLs to gitignored local area without encryption",
+      "detail": "src/scripts/harvest_reference_tokens.ts writes manifest.jsonl containing resolved repository URLs in plaintext to agents/.harvest-local/. While the directory is gitignored, the plaintext URLs (which are 'source names this repository's confidentiality programme exists to hide') persist on disk in an unencrypted local area that could be read by other processes or leaked via backup/sync tools.",
+      "file": "src/scripts/harvest_reference_tokens.ts"
+    },
+    {
+      "finding_id": "c252cb7a4196",
+      "severity": "low",
+      "kind": "style",
+      "title": "Inconsistent exit code documentation between function signature and error messages",
+      "detail": "src/scripts/ask_block_census.ts documents exit codes as '0 always' in the header, but the --self-test path can exit 1. The function signature returns number, not 0, which is correct, but the prose claim 'exit codes: 0 always' is contradicted three lines later by the selfTest() return type.",
+      "file": "src/scripts/ask_block_census.ts"
+    },
+    {
+      "finding_id": "3cd8d055e313",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Density floor test uses fabricated long sentence but doesn't verify it exceeds floor",
+      "detail": "tests/scripts/detect_ai_tells.test.ts 'a 60-word text with three dashes still fails on density' constructs a test string but only asserts words >= MIN_DENSITY_WORDS without verifying the constructed string actually contains 60+ words. If the filler string is shortened in a future edit, the test would silently test the wrong condition.",
+      "file": "tests/scripts/detect_ai_tells.test.ts"
+    },
+    {
+      "finding_id": "cb2cc0895b83",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Test suite simulates defect conditions but does not verify the gate actually refused them in production",
+      "detail": "tests/scripts/self_review_prompt_budget.test.ts exercises the partitioning logic extensively, including over-budget files and the MAX_REVIEW_CHUNKS ceiling, but never demonstrates that main() caught an over-budget attempt and reported NEUTRAL before the provider 400. The structural defect (four releases reviewed nothing while reporting neutral) traces to main() swallowing exceptions into NEUTRAL; these specs partition toy spans and assert chunk properties, but the catch(NEUTRAL) path that let the original defect persist is not covered. A regression test for 'reviewed nothing for four releases' must show that a span exceeding the budget is refused at the gate, not just that partitionDiff returns the expected chunk count.",
+      "file": "tests/scripts/self_review_prompt_budget.test.ts"
+    },
+    {
+      "finding_id": "4225c2d1669a",
+      "severity": "high",
+      "kind": "claim",
+      "title": "CHANGELOG.md headline 'Governance-mix line now purely measured' unbacked by architectural evidence",
+      "detail": "The release material asserts the mix response is 'now purely measured (never demanded)' and the deleted test suite commentary says 'the obligation is gone; the measurement stays', but no test demonstrates what happens when a release PR carries NO mix line at all — the 'purely measured' claim requires showing that absence of the line does not block publication. The new cases assert 'a section with no mix line at all is publishable' by checking publication_blockers and section_publication_blockers return [], but those predicates' implementations are not shown in the diff, so the claim rests on an assertion about functions whose bodies are not verified here. If those predicates still check for mix_response_blockers (which is deleted), the 'purely measured' headline is an architectural claim without architectural proof.",
+      "file": "tests/scripts/release_material.test.ts"
+    },
+    {
+      "finding_id": "006655606e79",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Deleted mix_response_blockers predicate is asserted absent but downstream callers are not verified removed",
+      "detail": "tests/scripts/release_material.test.ts L506-527 asserts mix_response_blockers and eight other removed names do not appear on the module surface, which proves the exports are gone but does not prove every call site was also removed. If any guard (guard_release_branch_push, guard_release_curation, check_release_highlights) still passes a mixObligation argument to section_publication_blockers, the predicate stub TypeScript infers (undefined → no-op) would silently restore the 'never block on absence' behaviour, which is the opposite of the ADR-261 claim. The assertion should extend to the guard call sites, not only the module surface.",
+      "file": "tests/scripts/release_material.test.ts"
+    },
+    {
+      "finding_id": "fb5c38d2ea7e",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "MEASURED_SPAN_CHARS literals are trusted inputs to a measurement-validation suite",
+      "detail": "tests/scripts/self_review_prompt_budget.test.ts declares MEASURED_SPAN_CHARS as 'obtained with git diff --numstat' but the test suite reads them as compile-time literals with no verification that they match the actual release spans. If the transcription is wrong (off by 10 % or a factor of two), every derived assertion ('the assumed ratio is below the observed one', 'a budgeted chunk fits at the worst ratio') validates the budget against the wrong baseline. A measurement-validation suite should load the spans from git at runtime or at least assert the literal against a cross-check, not treat a comment as proof of provenance.",
+      "file": "tests/scripts/self_review_prompt_budget.test.ts"
+    },
+    {
+      "finding_id": "369b40ff14bf",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Corpus-based epoch gate trusts bench/corpora/prose-tells-epochs.md without verifying file integrity",
+      "detail": "tests/scripts/tell_family_epochs.test.ts reads internal/bench/corpora/prose-tells-epochs.md to enumerate promoted families and asserts each still records zero clean-corpus hits, but the test does not verify the ledger file itself was not tampered with (a rule removed from the table, or its row altered to claim zero when the real count is non-zero). The gate runs in CI with write permissions, so a supply-chain or insider edit to the corpus file could promote a rule with known false positives by deleting its ledger row. The suite should cross-check the ledger against an independent source (e.g., ALL_TELL_RULES filtered by a 'promoted' flag, or a cryptographic hash of the ledger at last known-good state).",
+      "file": "tests/scripts/tell_family_epochs.test.ts"
+    },
+    {
+      "finding_id": "5bf631d4a417",
+      "severity": "low",
+      "kind": "style",
+      "title": "Hard-coded spawn timeout 60000 ms in epoch gate tests risks flake on slow CI runners",
+      "detail": "tests/scripts/tell_family_epochs.test.ts L164 and L177 set { timeout: 60_000 } for the gate's own exit-code checks, but the spawned script bench_prose_tells_fp.ts loads a corpus, runs the measurement, and reports — none of which is bounded. On a CI runner with cold filesystem or slow Node.js startup (arm64 or memory-constrained), 60 seconds might not suffice and the test would flake. Consider deriving the timeout from an environment variable (CI runners often set TIMEOUT_SCALE) or increasing it to 120000 if the corpus is known large.",
+      "file": "tests/scripts/tell_family_epochs.test.ts"
+    },
+    {
+      "finding_id": "35e21c392c66",
+      "severity": "low",
+      "kind": "style",
+      "title": "Sensitivity assertion 'a typo cannot make every case vacuous' is a meta-test that itself has no guard",
+      "detail": "tests/scripts/release_material.test.ts L517-519 asserts that toHaveProperty('MIX_RESPONSE_MARKER') and toHaveProperty('publication_blockers') must FAIL if the names are wrong, 'so a typo in the list above cannot make every case vacuous'. This is a good idea, but the sensitivity assertion itself is not verified: if both expect() lines are commented out, the suite still passes. A meta-test with no meta-meta-test is a documentation comment masquerading as an assertion. Consider structuring it as a separate 'sensitivity' describe block that deliberately tests against a wrong name and expects the failure, rather than a comment explaining why the assertion matters.",
+      "file": "tests/scripts/release_material.test.ts"
+    }
+  ]
+}
