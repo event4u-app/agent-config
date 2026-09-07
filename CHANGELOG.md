@@ -30,6 +30,30 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Added
+
+- **A push no longer ships a branch whose tree contradicts its own commits.**
+  `check_branch_work_committed` runs first in the pre-push hook, and it exists
+  because this branch produced the defect it guards: a merge-reconciled baseline
+  was written into `gate-violation-baselines.json` **after** `git add`, so
+  `git commit --no-edit` captured the staged side, the reconciled number stayed
+  in the working tree, and the push went out asserting a baseline the tree
+  contradicted. The operator found it, not the pipeline — and **no CI gate
+  could have**: CI checks out the pushed commit, and the working tree holding
+  the lost edit does not exist there. That is why this gate is pre-push and
+  local-only, the same reach `check_branch_freshness` has.
+  It blocks by **authorship**, not on a dirty tree, because a blanket
+  clean-tree rule would fire on every gate script's own report output and train
+  the operator to set the skip variable: staged-and-changed-since (the measured
+  shape), staged at all (`git add` is recorded intent, and a push carries
+  commits rather than the index), and dirty files this branch's own commits
+  touch. A parallel session's edit and a gate's report output are named and
+  waved through. One residual limit is stated in the header rather than hidden:
+  a file this branch created and neither staged nor committed cannot be told
+  apart from a foreign untracked file; the staged rule closes it at the first
+  `git add`, and that rule exists because testing the gate against the live
+  tree put its own source file in the advisory class.
+
 ### Fixed
 
 - **The release's written obligation is now answerable, not only refusable.**
