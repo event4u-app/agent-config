@@ -176,3 +176,20 @@ not apply to a named test subject whose questions, truth and traces are tracked 
 - Land §§ 2–3 together with a receiver roadmap in this change — rejected for scope: the
   ruling is what was asked for, and a roadmap authored to satisfy a template is the shape
   § 4 rejects.
+
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| Three stubs route the same question to the owner | `agents/roadmaps/stubs/road-to-consumer-capability-share.md`, `.../road-to-owner-authority-decisions.md` (§ Unresolved decisions 9-12), `.../road-to-a-proposal-that-can-be-adopted.md` (three named options; § 4 above adopts option 3 with 2 as its check) |
+| 14.18.0 shipped 55 governance-only against 16 consumer-only commits | `docs/archive/CHANGELOG-pre-14.19.0.md:26`, under the 14.18.0 heading. Re-verified 2026-09-07; the era split moved this line out of the live `CHANGELOG.md`, whose current release row carries a different mix |
+| Eleven prepared proposals verified, none adoptable, 48 slugs of which 35 absent | `agents/evidence/analysis/inbox-2026-09-r-verification.md:4-13,44-45` |
+| ADR-254 asks for typed transitions rather than a prompt regex | `docs/decisions/ADR-254-git-authorization-enforcement-removed.md:25-34`, restated `:149` |
+| ADR-255 has real `§ 1`-`§ 5` sections, and § 4's refusals are denied at tool-call time | `docs/decisions/ADR-255-authorization-floors-preserved-this-round.md:89,108,118,131,143`; `src/scripts/hooks/block_kernel_rule_writes.ts` |
+| The receiver check § 4 requires is not the check the tree has | `src/scripts/lint_consolidation_lineage.ts:45-46` (`missing-parent`, emitted `:344-348`), honest-limit note `:566-585` |
+| The wildcard findings § 3 demotes | `src/scripts/lint_skill_frontmatter_safety.ts:228,266,328` |
+| The release-mix taxonomy § 1 counts against | `src/scripts/release_mix_taxonomy.json` |
+
+Every row was re-derived at `0918def55` before this record was written; the round's
+full ledger, including the eleven claims that did not survive re-measurement, is
+`agents/evidence/analysis/inbox-2026-09-u-verification.md`.
