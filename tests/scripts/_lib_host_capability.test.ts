@@ -40,6 +40,9 @@ const ALL_FALSE: HostCapabilityManifest = {
     agent_teams: false,
     worker_respawn: false,
     structured_ask: false,
+    reads_project_mcp_config: false,
+    // Not `false`: this field's safe answer is "a manual step remains".
+    mcp_needs_manual_activation: true,
 };
 
 describe('normalizeHostManifest — safe default', () => {
@@ -103,6 +106,9 @@ describe('normalizeHostManifest — valid full input', () => {
             agent_teams: false,
             worker_respawn: true,
             structured_ask: true,
+            reads_project_mcp_config: false,
+            // Absent from the input, and absence does NOT clear a residual.
+            mcp_needs_manual_activation: true,
         });
     });
 
@@ -341,6 +347,8 @@ describe('describeHostCapabilities — per-field provenance', () => {
             agent_teams: 'default',
             worker_respawn: 'default',
             structured_ask: 'registry',
+            reads_project_mcp_config: 'default',
+            mcp_needs_manual_activation: 'default',
         });
     });
 

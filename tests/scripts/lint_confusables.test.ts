@@ -91,9 +91,16 @@ describe('lint_confusables — _scan over a built ScannedFile', () => {
         expect(hits.length).toBe(1);
         expect(hits[0]!.check).toBe(lc.CHECK);
     });
-    it('respects the allow pragma', () => {
+    it('respects an UNBOUND allow pragma, and reports it as legacy-pragma', () => {
+        // The unbound form still exempts the whole file, as it always did. What
+        // changed is that it says so: a key lookup accepts whatever the matched
+        // text is later changed to, so the file gets one LOW marker instead of
+        // silence. The check's own findings are gone; that is the old property.
         const sf = mkFile(['ign' + CYR_O + 're'], { [lc.CHECK]: 'teaching example' });
-        expect(lc._scan(sf).length).toBe(0);
+        const hits = lc._scan(sf);
+        expect(hits.filter((h) => h.check === lc.CHECK)).toHaveLength(0);
+        expect(hits.map((h) => h.check)).toEqual([sl.LEGACY_PRAGMA_CHECK]);
+        expect(hits[0]!.is_fail).toBe(false);
     });
     it('clean body produces no findings', () => {
         const sf = mkFile(['Ordinary English text with no smuggling.']);

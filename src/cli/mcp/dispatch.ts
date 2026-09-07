@@ -212,6 +212,17 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
 
 const LITE_TOOL_NAMES: ReadonlySet<string> = new Set(LITE_TOOLS.map((t) => t.name as string));
 
+/**
+ * Is this name one of the two tools this surface actually runs?
+ *
+ * Exported so the impure transport shell can classify a call's outcome without
+ * re-deriving the tool list — one reader of one fact, the same discipline
+ * `describeHostCapabilities` applies to the capability manifest.
+ */
+export function isLiteTool(name: string): boolean {
+    return LITE_TOOL_NAMES.has(name);
+}
+
 /** Chars/4 over the served `tools/list` payload — the figure the cap is on. */
 export function liteToolsTokenCost(): number {
     return Math.round(JSON.stringify({ tools: LITE_TOOLS }).length / 4);

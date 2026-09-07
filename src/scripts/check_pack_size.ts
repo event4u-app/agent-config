@@ -23,6 +23,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -206,6 +207,220 @@ export function classifyPayload(files: readonly PackFile[]): string[] {
     return out;
 }
 
+/**
+ * Payload TYPE classification — what an entry IS, not where it sits.
+ *
+ * `CONTENT_CLASSES` above matches PATHS. That catches the shapes with a naming
+ * convention (a `.pem`, a `.test.js`, a `.vscode/` directory) and is blind to
+ * everything else: a compiled binary named `helper`, an archive named
+ * `data.md`, an extensionless script nobody looked at. Extension is the
+ * attacker's choice; the first bytes are not.
+ *
+ * Priority is archive > binary > dotfile > no-extension > text, so each entry
+ * lands in exactly one class and a count is a partition of the payload.
+ */
+export type PayloadType = 'text' | 'dotfile' | 'no-extension' | 'binary' | 'archive';
+
+export const PAYLOAD_TYPES: readonly PayloadType[] = [
+    'archive',
+    'binary',
+    'dotfile',
+    'no-extension',
+    'text',
+];
+
+/** Leading magic bytes for the archive container formats worth naming. */
+const ARCHIVE_MAGIC: ReadonlyArray<readonly number[]> = [
+    [0x50, 0x4b, 0x03, 0x04], // zip / jar / docx / xlsx
+    [0x1f, 0x8b], // gzip
+    [0x42, 0x5a, 0x68], // bzip2
+    [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00], // xz
+    [0x04, 0x22, 0x4d, 0x18], // lz4
+    [0x28, 0xb5, 0x2f, 0xfd], // zstd
+    [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c], // 7z
+    [0x52, 0x61, 0x72, 0x21], // rar
+];
+
+/** How many leading bytes are read to decide. */
+export const MAGIC_BYTES_READ = 512;
+
+function startsWith(buf: Uint8Array, sig: readonly number[]): boolean {
+    if (buf.length < sig.length) return false;
+    return sig.every((b, i) => buf[i] === b);
+}
+
+/**
+ * Classify one entry from its name and its first bytes.
+ *
+ * `head` is null when the file could not be read. That is NOT text: an entry
+ * the check could not open is an entry it did not classify, and the caller
+ * treats it as a failure rather than letting it fall through to the class that
+ * needs no exception.
+ */
+export function classifyEntry(entryPath: string, head: Uint8Array | null): PayloadType | 'unreadable' {
+    if (head === null) return 'unreadable';
+    if (ARCHIVE_MAGIC.some((sig) => startsWith(head, sig))) return 'archive';
+    if (head.length > 0) {
+        // A NUL byte is decisive. Short of that, a high proportion of C0
+        // control bytes outside tab/newline/CR is what separates a compiled
+        // object from prose that happens to contain an unusual character.
+        if (head.includes(0)) return 'binary';
+        let control = 0;
+        for (const b of head) {
+            if (b < 0x09 || (b > 0x0d && b < 0x20)) control += 1;
+        }
+        if (control / head.length > 0.1) return 'binary';
+    }
+    const base = entryPath.split('/').pop() ?? entryPath;
+    if (base.startsWith('.')) return 'dotfile';
+    if (!base.includes('.')) return 'no-extension';
+    return 'text';
+}
+
+/**
+ * An entry admitted into a class that would otherwise be empty.
+ *
+ * BOUND, not allow-listed, and the distinction is the whole point. A count
+ * ratchet ("8 extensionless entries are fine") is satisfied by ANY eight
+ * extensionless entries, so swapping one for something else passes silently —
+ * the same key-lookup weakness the Phase 5 pragma work removed one layer up.
+ * Here the binding is `sha256(path + "\n" + size)`: change the file and the
+ * exception stops applying, which re-fires the check on the entry that changed.
+ *
+ * NOT a `*_allowlist.json`. There is no file to grow, each entry states its own
+ * reason next to the class it excepts, and adding one is a reviewed code change
+ * in the gate — the same shape `CONTENT_CLASSES` already uses for its ratchets.
+ *
+ * Recompute a fingerprint with:
+ *   ./scripts-run src/scripts/check_pack_size   (the failure names path and size)
+ */
+export interface BoundPayloadException {
+    readonly fingerprint: string;
+    readonly path: string;
+    readonly size: number;
+    readonly why: string;
+}
+
+export function payloadFingerprint(entryPath: string, size: number): string {
+    return createHash('sha256').update(`${entryPath}\n${String(size)}`).digest('hex');
+}
+
+/**
+ * Measured on the BUILT payload, 2026-09-07: 3041 entries, of which 3026 are
+ * text and these 15 are not. `archive` is empty and stays a hard zero.
+ *
+ * The roadmap step that added this expected `binary` to be zero too. It is not:
+ * three 69-byte PNG placeholders ship as media-adapter fixtures. Recorded as a
+ * correction rather than resolved by redefining the class — they are genuinely
+ * binary, they genuinely ship, and dropping them from the published surface is
+ * a consumer-visible change that belongs to whoever owns those adapters.
+ */
+const BOUND_PAYLOAD_EXCEPTIONS: readonly BoundPayloadException[] = [
+    { fingerprint: '955b5da399e14fb39cfe1f3279044061043e64e2bd1576871514db927e56d701', path: 'src/scripts/media/lib/fixtures/flux/asset-0001.png', size: 69, why: 'media-adapter response fixture — a 69-byte placeholder PNG the flux adapter test decodes; binary by construction' },
+    { fingerprint: 'c2dd9743367ece8ffe0deef5e798d39967c22245749fd7f798edd8aa78b70f59', path: 'src/scripts/media/lib/fixtures/gemini-image/asset-0001.png', size: 69, why: 'media-adapter response fixture — same class as the flux placeholder' },
+    { fingerprint: 'cbac44d021a1dc41b938e798eb9be4147fc9d35194c348dfe9acaa0596bc83a5', path: 'src/scripts/media/lib/fixtures/ideogram/asset-0001.png', size: 69, why: 'media-adapter response fixture — same class as the flux placeholder' },
+    { fingerprint: 'fdf6334f2342a48faaea708fd43853066f7057e528dfd1dd6fb5dcf8c0f67845', path: 'agents/templates/.ai-council.yml.example', size: 29872, why: 'shipped council config TEMPLATE — a dotfile because the file it is copied to is one' },
+    { fingerprint: 'd36a53951c184db7481139235056e90b53a853714b3a68b31ba1349ecb95ac1d', path: 'agents/templates/.ai-video.xml.example', size: 9209, why: 'shipped video-provider config template — same reason as the council template' },
+    { fingerprint: 'f83229412cf8cceaadd0cb1934140a0c7c8277df43edc590f370572f6df6da98', path: 'dist/agent-src/templates/agents/.gitattributes.fragment', size: 2140, why: 'gitattributes fragment the installer appends to a consumer repo' },
+    { fingerprint: 'a4f51dba3a66c0f2c3548e77961271ed4d7b5ec8a6661ea359ff044758f0d921', path: 'src/templates/minimal/.agent-settings.yml', size: 1042, why: 'the minimal-install settings template; the dot is the consumer-side filename' },
+    { fingerprint: 'a9cb828c7f3e6ac62d3c55c2fd215779307bf695a065498b1d1e1188210ebea8', path: 'LICENSE', size: 1064, why: 'the licence npm requires in the tarball; extensionless by convention' },
+    { fingerprint: 'e89a3d025a838e295838db68d0d832c701eeca01bb7e6c3983d3a48950f80017', path: 'NOTICE', size: 472, why: 'attribution notice shipped with the licence; extensionless by convention' },
+    { fingerprint: 'c9da3c6e2476a6d2b9610a1fbf638ba9bb78ddd76fc0f799631d601774c32cab', path: 'dist/agent-src/templates/hooks/pre-commit-frontmatter', size: 2537, why: 'git hook template — git requires a hook file to carry no extension' },
+    { fingerprint: 'aeffa474df3f805de07cdc9c6960c4918aa8e51e317fa1c30906d2f0267b7a16', path: 'dist/agent-src/templates/hooks/pre-commit-roadmap-progress', size: 3988, why: 'git hook template — same reason' },
+    { fingerprint: '914f9c34551c5f4c42a70cd8bb0cd7b73078b0c4e7815b551833a3c64c8476d3', path: 'src/scripts/agent-config', size: 2391, why: 'the CLI entry script; an executable entry point carries no extension by convention' },
+    { fingerprint: '0bb1cdd48ac2e9b6a2a56cde25de9fc221d75d42683680284c43118cff796e92', path: 'src/scripts/hooks/shims/php', size: 4439, why: 'shim invoked as the command name `php`; an extension would break the lookup' },
+    { fingerprint: 'b14bdd3cd589848ad8e6d7e5f4ee633dc9005a2a97abba327a9426ce556714da', path: 'src/scripts/install', size: 22049, why: 'the installer entry script; same reason as the CLI entry' },
+    { fingerprint: '1fb564019de468368e34941dffd5eb8bc994364313e02f476ff354ac0da464d7', path: 'src/templates/minimal/overrides-gitkeep', size: 164, why: 'placeholder that becomes .gitkeep on install; extensionless on purpose' },
+];
+
+/** Read the first bytes of a payload entry from the tree it was packed from. */
+function readHead(entryPath: string, root: string): Uint8Array | null {
+    try {
+        const fd = fs.openSync(path.join(root, entryPath), 'r');
+        try {
+            const buf = Buffer.alloc(MAGIC_BYTES_READ);
+            const read = fs.readSync(fd, buf, 0, MAGIC_BYTES_READ, 0);
+            return buf.subarray(0, read);
+        } finally {
+            fs.closeSync(fd);
+        }
+    } catch {
+        return null;
+    }
+}
+
+export interface TypeClassification {
+    readonly counts: Record<PayloadType | 'unreadable', number>;
+    /** Entries in a non-`text` class with no bound exception. */
+    readonly unbound: Array<{ path: string; size: number; type: PayloadType | 'unreadable'; fingerprint: string }>;
+    /** Bound exceptions matching no entry in this payload. */
+    readonly unusedExceptions: string[];
+}
+
+/**
+ * Classify the whole payload by type and report what is not accounted for.
+ *
+ * Every entry outside `text` needs a bound exception. `archive` has none and is
+ * meant to stay that way; `binary` has three, named; the dotfile and
+ * extensionless entries are each bound to a path AND a size, so replacing one
+ * with different content re-fires the check on that entry rather than passing
+ * inside a count.
+ */
+export function classifyPayloadTypes(
+    files: readonly PackFile[],
+    root = REPO_ROOT,
+    head: (p: string) => Uint8Array | null = (p) => readHead(p, root),
+): TypeClassification {
+    const counts: Record<PayloadType | 'unreadable', number> = {
+        archive: 0,
+        binary: 0,
+        dotfile: 0,
+        'no-extension': 0,
+        text: 0,
+        unreadable: 0,
+    };
+    const byFingerprint = new Map(BOUND_PAYLOAD_EXCEPTIONS.map((e) => [e.fingerprint, e]));
+    const used = new Set<string>();
+    const unbound: TypeClassification['unbound'] = [];
+    for (const f of files) {
+        const type = classifyEntry(f.path, head(f.path));
+        counts[type] += 1;
+        if (type === 'text') continue;
+        const fingerprint = payloadFingerprint(f.path, f.size);
+        if (byFingerprint.has(fingerprint)) {
+            used.add(fingerprint);
+            continue;
+        }
+        unbound.push({ path: f.path, size: f.size, type, fingerprint });
+    }
+    return {
+        counts,
+        unbound,
+        unusedExceptions: BOUND_PAYLOAD_EXCEPTIONS.filter((e) => !used.has(e.fingerprint)).map((e) => e.path),
+    };
+}
+
+/** One line naming every type class and its count. */
+export function payloadTypeLine(c: TypeClassification): string {
+    const parts = [...PAYLOAD_TYPES, 'unreadable' as const]
+        .filter((t) => t !== 'unreadable' || c.counts.unreadable > 0)
+        .map((t) => `${t} ${String(c.counts[t])}`);
+    return `${parts.join(' · ')} — ${String(c.unbound.length)} unaccounted`;
+}
+
+/** Violations from the type classification, as human-readable lines. */
+export function typeClassViolations(c: TypeClassification): string[] {
+    return c.unbound.map(
+        (u) =>
+            `payload type \`${u.type}\`: ${u.path} (${String(u.size)} bytes) is not accounted for. ` +
+            (u.type === 'archive' || u.type === 'binary'
+                ? 'This class is meant to be empty. '
+                : 'Every dotfile and extensionless entry is carried by a path-and-size-bound exception. ') +
+            `If it belongs in the published surface, add a BoundPayloadException with ` +
+            `fingerprint sha256:${u.fingerprint} and a reason; otherwise exclude it from package.json files[].`,
+    );
+}
+
 /** Per-class counts, for the green-path report. */
 export function payloadClassCounts(
     files: readonly PackFile[],
@@ -377,8 +592,8 @@ function selfTest(): number {
         Array.from({ length: n }, (_, i) => `dist/hooks/chunk-${String(i)}.js.map`);
     return runSelfTest({
         gate: 'check_pack_size',
-        minCases: 9,
-        minRejectCases: 5,
+        minCases: 14,
+        minRejectCases: 9,
         cases: [
             {
                 name: 'credential-shaped: a .pem in the payload is refused',
@@ -409,6 +624,95 @@ function selfTest(): number {
                 name: 'source-map: the ratchet boundary itself passes',
                 expect: 'accept',
                 run: () => (classifyPayload(builtPayload(...maps(120))).length > 0 ? 1 : 0),
+            },
+            {
+                // MAGIC BYTES, NOT THE EXTENSION. This is the whole reason the
+                // type pass exists beside the path pass above: an archive named
+                // `.md` is invisible to every path pattern in CONTENT_CLASSES.
+                name: 'type/archive: a zip planted under a .md name is classified archive, not text',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(packFiles('src/skills/x/SKILL.md'), REPO_ROOT, () =>
+                            Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00]),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                name: 'type/archive: the SAME path with ordinary text is classified text and passes',
+                expect: 'accept',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(packFiles('src/skills/x/SKILL.md'), REPO_ROOT, () =>
+                            new TextEncoder().encode('# An ordinary skill\n'),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                name: 'type/binary: a NUL-bearing entry is refused however it is named',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(packFiles('src/scripts/helper.ts'), REPO_ROOT, () =>
+                            Uint8Array.from([0x7f, 0x45, 0x4c, 0x46, 0x02, 0x00, 0x00]),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                name: 'type/extensionless: an unbound extensionless entry is refused',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(packFiles('src/scripts/newtool'), REPO_ROOT, () =>
+                            new TextEncoder().encode('#!/bin/sh\n'),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                // The property a COUNT ratchet cannot have. LICENSE is bound at
+                // its measured size; the same path at a different size is a
+                // different artifact and the exception stops applying.
+                name: 'type/binding: a bound entry whose SIZE changed is refused again',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes([{ path: 'LICENSE', size: 999999 }], REPO_ROOT, () =>
+                            new TextEncoder().encode('MIT\n'),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                name: 'type/binding: that same entry at its recorded size passes',
+                expect: 'accept',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes([{ path: 'LICENSE', size: 1064 }], REPO_ROOT, () =>
+                            new TextEncoder().encode('MIT\n'),
+                        ),
+                    ).length > 0
+                        ? 1
+                        : 0,
+            },
+            {
+                // An entry the check could not open is one it did not classify.
+                name: 'type/unreadable: an entry that cannot be read is refused, never assumed text',
+                expect: 'reject',
+                run: () =>
+                    typeClassViolations(
+                        classifyPayloadTypes(packFiles('src/scripts/gone.ts'), REPO_ROOT, () => null),
+                    ).length > 0
+                        ? 1
+                        : 0,
             },
             {
                 name: 'a plain payload passes — the classes are not firing on everything',
@@ -477,13 +781,27 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // still knows the population it was red over.
     process.stdout.write(`scanned: ${String(pack.files.length)}\n`);
 
-    const errors = [...evaluate(budget, pack), ...classifyPayload(pack.files)];
+    const types = classifyPayloadTypes(pack.files);
+    const errors = [
+        ...evaluate(budget, pack),
+        ...classifyPayload(pack.files),
+        ...typeClassViolations(types),
+    ];
     const { perSkill, total } = skillBytes(pack.files);
     if (argv.includes('--json')) {
         process.stdout.write(
             `${JSON.stringify({ packed_mb: pack.size / 1e6, skills_total_bytes: total, skills: Object.keys(perSkill).length, errors }, null, 2)}\n`,
         );
         return errors.length > 0 ? 1 : 0;
+    }
+    // Printed BEFORE the verdict and on EVERY path, red included. The counts are
+    // what a reader needs to judge a violation: "one unaccounted binary" reads
+    // very differently against a payload of 3 binaries than against one of 0.
+    process.stdout.write(`    payload types: ${payloadTypeLine(types)}\n`);
+    for (const unused of types.unusedExceptions) {
+        // Not an error: an unbuilt tree legitimately packs fewer files. Named
+        // so a stale exception is visible rather than accumulating unread.
+        process.stdout.write(`    bound exception matched no entry: ${unused}\n`);
     }
     if (errors.length > 0) {
         for (const e of errors) process.stderr.write(`❌  pack size: ${e}\n`);

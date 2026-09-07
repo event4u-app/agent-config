@@ -56,7 +56,7 @@ For each learning, apply ALL of these checks. ALL must be YES to promote:
 |---|---|
 | All YES | **Promote** — continue to Step 3 |
 | One-off, never seen before | **Reject** — do nothing |
-| Seen once, but generalizable | **Note** — use `remember` tool, act on second occurrence |
+| Seen once, but generalizable | **Record** — write a `model-noticed` self-repair record naming the asset it is about; act on the second occurrence |
 | Already covered | **Update existing** — skip to Step 4 with the existing skill/rule |
 | Vague | **Reject** — not actionable |
 
@@ -66,8 +66,25 @@ Show the user:
 > Category: {category-tag}
 > Repeated: {yes/no} | Prevents failure: {yes/no} | Not covered: {yes/no} | Actionable: {yes/no}
 >
-> → {Promote / Reject / Note / Update existing}
+> → {Promote / Reject / Record / Update existing}
 ```
+
+### Where a seen-once learning goes — and why not a host-native memory tool
+
+The **Record** branch writes a `model-noticed` defect record through
+`upsertFinding` in `src/scripts/_lib/self_repair_store.ts`, carrying a `target`
+drawn from the closed `rule: | skill: | command: | hook:` vocabulary and
+resolved against the tree at write time.
+
+It used to route to a host-native memory tool, and that destination could not
+work for this branch by construction: it is not target-addressed, nothing in
+this repository can read it, it appears in no corroboration counter, and it is
+simply absent on hosts that do not ship it. So the ≥2-origin counter at
+`src/scripts/learning_sidecar.ts:39` restarted at one every time, and the second
+occurrence could never be recognised AS the second — which is the whole
+mechanism this branch exists to feed. A record is readable, joinable, and
+counted per target, so a third manifestation against one asset is a fact the
+tree can establish rather than one that depends on a human recalling it.
 
 #### Cross-project promotion signal (surfacing only — never an auto-writer)
 
@@ -82,10 +99,15 @@ to the user — do **not** auto-write it:
 > → surface for promotion (human decides; no auto-write)
 ```
 
-This is a *signal*, not a store: there is no auto-write, no decay, no runtime
-(the writable per-project learning store stays rejected —
-[[council-agent-memory-sunset]]). The human decides whether the cross-project
-recurrence justifies promotion.
+This is a *signal*, not a promotion: there is **no auto-write and no
+auto-promotion** — that half is the live boundary and is unchanged. The other
+two clauses this sentence used to carry are retired, because the tree
+contradicts them: `src/scripts/learning_sidecar.ts:37` sets
+`HALF_LIFE_DAYS = 30` and decays a signal's weight over a per-project intake
+store, and ADR-249 permits a **supervised** resident process in core,
+superseding the blanket no-daemon clause this sentence inherited. Decay and
+runtime are therefore **governed, not prohibited**. The human still decides
+whether the cross-project recurrence justifies promotion.
 
 ### Step 3: Classify
 

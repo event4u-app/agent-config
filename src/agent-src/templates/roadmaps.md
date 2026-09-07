@@ -43,7 +43,20 @@ that was never a judgement call.
     - `agents/roadmaps/` — active (in progress or planned **and workable now**)
     - `agents/roadmaps/archive/` — work happened (fully or partially); no further work planned
     - `agents/roadmaps/skipped/` — decision against pursuit; typically 0 items `[x]` (superseded, scope rejected)
-    - `agents/roadmaps/later/` — open work remains but is **blocked-for-later** (gated on an external trigger or a decision); **will resume**. Set `status: later` + a `Blocked until` / `Trigger` line. Roadmaps with open tasks deferred for later are **always** moved here, never left active. Excluded from the dashboard and `/roadmap:process-*`; enforced by `lint_roadmap_later_disposition`.
+    - `agents/roadmaps/later/` — open work remains but is **blocked-for-later** (gated on an external condition or a decision); **will resume**. Roadmaps with open tasks deferred for later are **always** moved here, never left active. Excluded from the dashboard and `/roadmap:process-*`; enforced by `lint_roadmap_later_disposition`. Two frontmatter obligations, both in force **regardless of `status`** — the status word alone stopped satisfying this gate on 2026-09-07, and so did the bare word `trigger`:
+
+        - **A wake condition.** Preferred form is a structured `entry_condition:` mapping naming all three parts:
+
+          ```yaml
+          entry_condition:
+            what: what would change the decision
+            when: when that could arrive
+            who:  who would have to act   # `none` is a legal answer; blank is not
+          ```
+
+          A condition that cannot be observed is a deferral wearing a condition's clothes, which is why all three are required and why a **scalar** `entry_condition` or a blank part fails hard rather than being baselined. The legacy body-line form (`Blocked until` / `Resume when`) still passes and is what the shrink-only ratchet is walking down from.
+
+        - **`review_by:`** — a date. A park with no review date is indistinguishable from an abandonment. Ratcheted from the count measured when the obligation landed; a **newly** parked roadmap must carry it.
 
     See the `roadmap-management` skill for the exact trigger matrix and user-confirmation flow.
 13. **No tags, releases, or version numbers.** Roadmaps describe work, not shipping.
