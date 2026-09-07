@@ -1,7 +1,7 @@
 /**
  * The two lists that name `~/.claude/<family>` must agree.
  *
- * ## Why this test exists, stated as the defect rather than as a principle
+ * **Why this test exists, stated as the defect rather than as a principle.**
  *
  * On 2026-09-07 a session spent an hour reasoning about the two layers Claude
  * Code loads — `~/.claude/**` and `<repo>/.claude/**` — measured both, and
@@ -23,7 +23,7 @@
  * lists of strings. This file compares them, so the next omission reds instead of
  * waiting to be noticed.
  *
- * ## Polarity is asserted, not assumed
+ * **Polarity is asserted, not assumed.**
  *
  * Every branch of `catalogueLayerParity` is driven in BOTH directions through its
  * injection points. A test that only ran the real constants would pass today and

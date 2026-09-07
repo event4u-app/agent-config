@@ -1,7 +1,7 @@
 /**
  * The single-delivery partition predicate — one artefact, one layer.
  *
- * ## What it decides
+ * **What it decides.**
  *
  * Two layers deliver agent artefacts: a machine-local project layer at
  * `<repo>/.claude/` (gitignored, 0 tracked files, rewritten by every
@@ -19,7 +19,7 @@
  * scope) and **zero skills**, plus 49 flat-command wrappers, which are a
  * different family and are withheld per name like everything else.
  *
- * ## Why the predicate is fail-safe and never fails the build
+ * **Why the predicate is fail-safe and never fails the build.**
  *
  * The partition is a removal, so the build loses its repair path: it can no
  * longer heal a stale global layer by regenerating, because it stops writing
@@ -37,13 +37,13 @@
  * exists to prevent; breaking the Consistency pipeline is the other. Full
  * projection is the only branch that does neither.
  *
- * ## Why content and not a version number
+ * **Why content and not a version number.**
  *
  * Rationale and the 153-skill measurement that decided it: see
  * `hostLayerFingerprint.ts`. Version equality is checked too, but as a cheap
  * pre-filter — it is necessary, never sufficient.
  *
- * ## Contract
+ * **Contract.**
  *
  * `verifyHostLayer` itself is side-effect-free and takes its facts from the
  * caller. The MODULE is not: `resolveHostLayerVerdict` reads the filesystem and
@@ -60,7 +60,7 @@ import * as os from 'node:os';
 import { claudeLayerHolds, keepInProjectLayer } from './claudeLayerCarriage.js';
 
 /**
- * ## `emittedWrapperSlugs` — why the skill sweep's protected set narrowed
+ * **`emittedWrapperSlugs` — why the skill sweep's protected set narrowed.**
  *
  * `generate_claude_skills` sweeps `.claude/skills/` of anything absent from the
  * set it is about to write, and it spares command-wrapper slugs so the command
@@ -89,7 +89,7 @@ import { claudeLayerHolds, keepInProjectLayer } from './claudeLayerCarriage.js';
  * built-in name · a slug `~/.claude/skills` already carries.
  * `condense.ts::_emitted_wrapper_slugs` is that set.
  *
- * ## The re-export below
+ * **The re-export below.**
  *
  * `keepInProjectLayer` is re-exported so `condense.ts` reaches both halves of
  * the partition through ONE import line. Not stylistic: that file sits ~1,200 lines past the 1,500-line
@@ -238,7 +238,7 @@ export function verifyHostLayer(inputs: HostLayerInputs): HostLayerVerdict {
  * the project layer. Both defaults resolve toward "the artefact is generally
  * useful"; only one of them is about withholding.
  *
- * ## The state space, MEASURED rather than enumerated defensively (2026-08-21)
+ * **The state space, MEASURED rather than enumerated defensively (2026-08-21).**
  *
  * Three of this function's branches — unreadable file, absent `workspaces:`,
  * empty list — all resolve to `false`, and the closure review asked whether one
@@ -301,7 +301,7 @@ export function _resetHostLayerVerdictForTest(): void {
 /**
  * Verify the host layer once per generation, and say so once.
  *
- * ## What this no longer does
+ * **What this no longer does.**
  *
  * It used to answer `partitionActive(projectRoot)`, and every generator gated its
  * withhold on that one boolean. **That entry point is deleted** (owner decision,
@@ -442,7 +442,7 @@ export function stampHostLayerFingerprint(
  * names**, and neither `check_single_delivery` nor `_lib/layer_overlap_notice`
  * looked, because `personas` was in neither's `TYPES`.
  *
- * ## Three properties the caller depends on
+ * **Three properties the caller depends on.**
  *
  * **Scoped to `.claude/` only.** The evidence is `~/.claude/personas`. It says
  * nothing about `~/.cursor`, so withholding a cursor persona on the strength of
@@ -517,7 +517,7 @@ export function personaListFor(
 /**
  * Does the project layer withhold the colon-form `/cluster:sub` commands?
  *
- * ## The claim this replaces, and the measurement that revised it
+ * **The claim this replaces, and the measurement that revised it.**
  *
  * `generate_claude_project_commands` was written on the reasoning that "Claude
  * Code dedupes project and user scope by name, so the two copies of
@@ -539,7 +539,7 @@ export function personaListFor(
  * exists, those 40 symlinks are written, deduped away, and LOSE. They are dead
  * weight there — not a second listing, and not a reachability guarantee either.
  *
- * ## Why the predicate is the DIRECTORY, not `installed.lock`
+ * **Why the predicate is the DIRECTORY, not `installed.lock`.**
  *
  * This used to be `partitionActive` — true only when a global layer was present
  * AND verified against `installed.lock` by version and fingerprint. That gets
@@ -556,7 +556,7 @@ export function personaListFor(
  * Unreadable layer → nothing is withheld. The fail-safe direction is unchanged;
  * it is now per artefact rather than per repository.
  *
- * ## Honest limits
+ * **Honest limits.**
  *
  * Self-report, n=1 per condition, one host version, one machine. What is NOT
  * claimed: that older or newer hosts dedupe the same way, or that precedence is
@@ -578,7 +578,7 @@ export function personaListFor(
  * pin the host version this measurement was taken against and re-probe when it
  * moves — not built here, and named as absent rather than implied away.
  *
- * ## Flat wrappers ARE withheld — corrected 2026-09-07 after a neutral review
+ * **Flat wrappers ARE withheld — corrected 2026-09-07 after a neutral review.**
  *
  * A CLUSTERED command reaches Claude Code as `/cluster:sub` from a `.md` under
  * `commands/`, and `~/.claude/commands/` carries 41 such cluster directories — so
@@ -617,7 +617,7 @@ export function commandWithheld(globalName: string, home?: string): boolean {
 }
 
 /**
- * ## The caller's early return, flagged by review and kept
+ * **The caller's early return, flagged by review and kept.**
  *
  * `generate_claude_project_commands` applies this predicate and then returns
  * early when `src/domains/` is absent — BEFORE its stale-link sweep. So a tree

@@ -112,7 +112,7 @@ export const PROJECTION_CATALOGUE_ROOT = '.claude/skills';
 /**
  * Every root the resolver looks at, as human-readable LABELS.
  *
- * ## Labels, never path inputs — this changed on 2026-09-07
+ * **Labels, never path inputs — this changed on 2026-09-07.**
  *
  * It used to be the resolver's own candidate list and callers joined it onto a
  * root. It now carries a `~/`-prefixed entry, which `path.join(repo, ...)` turns
@@ -136,7 +136,7 @@ export const DEFAULT_CATALOGUE_ROOTS = [
  * handler on purpose: two resolvers over one catalogue is how a ranker and the
  * tool that exposes it start ranking different trees.
  *
- * ## Why a LIST, and not the first hit — owner decision, 2026-09-07
+ * **Why a LIST, and not the first hit — owner decision, 2026-09-07.**
  *
  * This returned one root and stopped at the first match, which made the ranker
  * see one tree and the session see another. A consumer project can carry its own
@@ -145,7 +145,7 @@ export const DEFAULT_CATALOGUE_ROOTS = [
  * the result as if it were the catalogue. Ranking the UNION ranks what the
  * session can actually reach, which is the only set the answer is about.
  *
- * ## The order, and what it is for
+ * **The order, and what it is for.**
  *
  * Precedence applies to a NAME COLLISION, never to which roots are read:
  *
@@ -156,7 +156,7 @@ export const DEFAULT_CATALOGUE_ROOTS = [
  *      direction every other per-project override in this suite takes.
  *   3. `~/${HOST_CATALOGUE_ROOT}` — the host-global catalogue.
  *
- * ## The two defects this replaced, both real
+ * **The two defects this replaced, both real.**
  *
  * It used to try `.claude/skills` FIRST, "because a CONSUMER install carries the
  * former and only a maintainer checkout carries the latter". The premise was

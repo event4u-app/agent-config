@@ -333,7 +333,7 @@ function selfTest(): number {
 /**
  * `--prune`: delete exactly the files this gate reports as duplicated.
  *
- * ## Why a gate ships a repair at all
+ * **Why a gate ships a repair at all.**
  *
  * The documented repair is `task generate-tools`, and on this repository's own main
  * checkout that command is **structurally inert**: `agents/.agent-tools.yml` is
@@ -384,7 +384,7 @@ function prune(audit: PartitionAudit, root: string): number {
  * Does THIS directory's duplication mean an emitter failed, or that the
  * per-directory fail-safe legitimately kept the full projection?
  *
- * ## The discriminator, corrected 2026-09-07 after a neutral review
+ * **The discriminator, corrected 2026-09-07 after a neutral review.**
  *
  * It used to be the repo-wide host-layer verdict — first a `PartitionMode`
  * string, then the `verified` boolean the 2026-09-07 change reduced it to. Both

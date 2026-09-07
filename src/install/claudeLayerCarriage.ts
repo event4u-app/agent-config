@@ -1,7 +1,7 @@
 /**
  * Does the CLAUDE host-global layer already carry a given artefact?
  *
- * ## Why this module exists — the veto it replaces
+ * **Why this module exists — the veto it replaces.**
  *
  * ADR-236 partitions artefacts between `~/.claude/**` and `<repo>/.claude/**`.
  * Its first implementation asked ONE question for the whole run: does
@@ -29,7 +29,7 @@
  * This module supplies the evidence the other three families were missing, in
  * the shape rules already use: read the host directory, and answer per NAME.
  *
- * ## Why per-name rather than per-family
+ * **Why per-name rather than per-family.**
  *
  * A partition is a removal and has no repair path — withholding a name the
  * surviving layer does not hold deletes it from every session. Asking per name
@@ -37,7 +37,7 @@
  * project layer on its own, and one absent name no longer keeps 300 duplicates
  * alive with it. That is the property the repo-wide veto could not express.
  *
- * ## Honest limits
+ * **Honest limits.**
  *
  * Presence of a NAME, never equality of CONTENT — and never PROVENANCE either.
  * Two consequences, the second added 2026-09-07 after a neutral review named it.

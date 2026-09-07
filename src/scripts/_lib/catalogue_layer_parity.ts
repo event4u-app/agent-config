@@ -1,7 +1,7 @@
 /**
  * Do the two lists that name `~/.claude/<family>` agree?
  *
- * ## The defect this exists to make visible
+ * **The defect this exists to make visible.**
  *
  * Two independently authored constants name the SAME directories and, until
  * 2026-09-07, referenced each other nowhere:
@@ -24,7 +24,7 @@
  * `~/.claude/skills` got an answer over half its catalogue, with no signal that
  * it was half.
  *
- * ## Why a comparison and not an instruction
+ * **Why a comparison and not an instruction.**
  *
  * The reasoning failure behind it — repairing a mechanism's PARAMETER while
  * inheriting its SHAPE — is model-carried and nothing can observe it. But the
@@ -32,7 +32,7 @@
  * module is that comparison, so the omission stops being a thing someone has to
  * notice and becomes a thing that reds.
  *
- * ## What it does NOT claim
+ * **What it does NOT claim.**
  *
  * It compares the directories the two sides NAME. It does not establish that a
  * reader ranks well, that a family needs a reader, or that the host actually

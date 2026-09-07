@@ -18,8 +18,8 @@
  * Promoted from a discovery stub because the defect it answers is measured, not
  * hypothetical: on the one host that publishes its own truncation, a default
  * install had 402 entries dropped from the model-visible skills list — the
- * host's own count against its own denominator, not a subtraction over ours
- * (`agents/evidence/analysis/scoped-projection-host-delivery.md`). An agent
+ * host's own count against its own denominator, not a subtraction over ours.
+ * An agent
  * that cannot see a skill also cannot ask for it by name, so the only reachable
  * question is "what fits this task" — which is what the deterministic ranker
  * answers, over the TREE rather than over the host's catalogue.
