@@ -85,5 +85,32 @@ with compile-time prose everywhere, bind deterministic checks where a host
 supports them, and never delete the prose from static-host projections —
 that is where the measured discipline lift lives.
 
+## `one-question-per-ask` — reach, stated on the manifest's terms
+
+The `one-question-per-ask` PreToolUse guard (road-to-asked-not-parked 5.1)
+denies a structured-ask tool call carrying more than one question. Its reach is
+the narrowest sentence the manifest supports and no wider:
+
+- **Bound on `claude` only.** `hook_manifest.yaml` lists it in that platform's
+  `pre_tool_use` array and nowhere else. `agent-config hooks:status` prints the
+  binding for the host actually running, and it is the answer to prefer over
+  this paragraph.
+- **A deny only where the host honours one.** `claude` is the platform this
+  repository has verified both binds `pre_tool_use` and acts on the
+  dispatcher's verdict. Where a trampoline discards dispatcher output — augment
+  and cowork both `exit 0` unconditionally — a bound guard runs and is ignored,
+  which is why it is not bound there: dead weight wearing a guard's name is
+  worse than an honest absence.
+- **On every other host the constraint is prose**, carried by
+  [`ask-when-uncertain`](../src/rules/ask-when-uncertain.md)'s one-question
+  Iron Law and [`user-interaction`](../src/rules/user-interaction.md)'s
+  one-decision-point clause. That is L5 on the ladder above, and it is the
+  floor everywhere.
+- **It fires on nothing today, on every host.** No host in the capability
+  registry carries an OBSERVED structured-ask tool
+  (`src/scripts/_lib/structured_ask.ts`), so there is no such call to intercept.
+  The guard exists so the first host to ship a picker meets the rule already in
+  force. A reader must not take its presence as evidence that any host has one.
+
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md)
 (its `hooks` row already shows hooks are native to the Claude plugin only).

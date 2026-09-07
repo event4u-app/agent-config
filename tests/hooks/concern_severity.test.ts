@@ -73,6 +73,26 @@ const BLOCKING_ALLOWLIST = new Set([
     //   a fabricated NO-FINDINGS committed as binding gate evidence over a
     //   delta an unsteered pass then found a live critical in.
     'evidence-independence',
+    // road-to-asked-not-parked Phase 5.1. It refuses ONE thing: a call to a
+    // host's native question picker whose payload carries more than one
+    // question, which `ask-when-uncertain`'s Iron Law and `user-interaction`'s
+    // one-decision-point clause already forbid in prose. Three answers on this
+    // concern's own terms:
+    //
+    //   · SCOPE. Filtered by the manifest's `tools:` key to structured-ask
+    //     tool names only, so it never sees an ordinary call. It fires on
+    //     nothing on every host measured today — no host has an OBSERVED
+    //     picker, and the filter lists candidate names rather than claiming
+    //     one.
+    //   · fail_closed: FALSE, like block-speaking-inbox-dir and unlike the
+    //     three above it. An unrecognised payload shape is ALLOWED: blocking
+    //     what it cannot parse would wedge a session over a SHAPE defect.
+    //     The guarantee is only about the case the guard actually decided.
+    //   · WHY REFUSAL RATHER THAN A NUDGE. The alternative to a deny is
+    //     truncating to the first question, and a truncation hides exactly the
+    //     decisions the user was owed — invisibly, at the moment they were
+    //     asked for.
+    'one-question-per-ask',
     // road-to-conformance-round5 Phase 3. The FIRST concern that refuses a
     // turn-END rather than a tool call, so it is the first entry here whose
     // blast radius is every session rather than one command. Three things
