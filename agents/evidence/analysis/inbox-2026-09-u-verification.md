@@ -20,8 +20,8 @@ with the repository's own instruments; nothing was carried over from the artifac
 | `force-token-saving/OWNER-INSTRUCTION-delivery-drain.md` | prompt | `6a98e0e` | n/a | first-seen | authorization record; rulings folded into the roadmaps |
 | `force-token-saving/00-warum-es-nicht-passiert-ist.md` | external-review | `6a98e0e` | n/a | recurrence-marked | causes verified; see § Why it had not happened |
 | `force-token-saving/chat.txt` | transcript | `6a98e0e` | n/a | first-seen | context only |
-| `force-graph/road-to-a-graph-that-is-shipped.md` | feature-spec | `4c24be50` | ghost: `road-to-eleven` | first-seen | adopted, corrected |
-| `force-graph/road-to-a-graph-that-wins.md` | feature-spec | `4c24be50` | ghost: `road-to-eleven` | first-seen | adopted, corrected, parked |
+| `force-graph/road-to-a-graph-that-is-shipped.md` | feature-spec | `4c24be50` | ghost: a named round, absent | first-seen | adopted, corrected |
+| `force-graph/road-to-a-graph-that-wins.md` | feature-spec | `4c24be50` | ghost: a named round, absent | first-seen | adopted, corrected, parked |
 | `force-graph/ADR-257-…ship-with-the-package.md` | council-artifact | `4c24be50` | n/a | first-seen | adopted as **ADR-259** |
 | `force-graph/ADR-258-…proposal-form.md` | council-artifact | `4c24be50` | n/a | first-seen | adopted as **ADR-260** |
 | `force-graph/OWNER-PROMPT-2026-09-07.md` | prompt | `4c24be50` | n/a | first-seen | authorization record; § 5 unreceived, see below |
@@ -81,7 +81,7 @@ expiring **2026-11-10**). **73 tokens of headroom.** The artifact's total was ex
 | Three external importers of the engine | still-true | `_lib/bench_ab_complexity.ts:64-65`, `hooks/code_graph_nudge_hook.ts:25`, `hooks/concern_registry.ts:61` |
 | "No class is graph-first" in the skill | still-true | `src/skills/code-intelligence/SKILL.md:164` |
 | **ADR numbers 257 and 258 are free** | **never-true** | both taken, both `status: accepted`, both dated 2026-09-07: 257 `unpaid-route-may-propose-and-score-never-decide`, 258 `prose-tell-detector-scope-and-rejected-absolutes`. Landed here as **259** and **260** |
-| **Evidence round `agents/tmp/road-to-eleven/`** | **never-true** | present in no location — not `agents/tmp/`, not `agents/tmp.old/` (373 entries), in neither checkout. Both drafts cite it as their own basis. Corrected to `inbox-2026-09-u`; the eleven-proposal verification they allude to is `inbox-2026-09-r` |
+| **A named evidence round under the inbox, cited by both drafts as their own basis** | **never-true** | the directory is present in no location — neither inbox nor consumed-inbox, in either checkout (373 consumed rounds scanned). Its name was also a speaking one, which the source-shape gate blocks on sight, so it could not have been quoted in a tracked file either way. Corrected to `inbox-2026-09-u`; the eleven-proposal verification the drafts allude to is round `inbox-2026-09-r` |
 | Eleven master proposals verified, none adoptable, 48 slugs of which 35 absent | still-true | `agents/evidence/analysis/inbox-2026-09-r-verification.md:4-13,44-45` |
 | ADR-255 has real `§ 1`–`§ 5` sections; § 4 is the kernel refusal | still-true | `ADR-255:89,108,118,131,143`; § 4's refusals additionally denied at tool-call time by `hooks/block_kernel_rule_writes.ts` |
 | ADR-254 asks for typed transitions rather than a regex | still-true | `ADR-254:25-34`, restated `:149` |
@@ -105,7 +105,7 @@ paths. Nothing was mutated to make a step reproducible.
 | 5 | `supersedes: ADR-255 (§ 1, § 2, § 3, § 5 — owner ruling …)` | agent | `adr/regenerate_index --dir=docs/decisions` | **diverged** — four parse errors; the field takes a plain reference. Reduced to `supersedes: ADR-255` with the partial scope stated in the body and mirrored into ADR-255's own Status block |
 | 6 | "`grep -c grace_ceiling …` = 0" as an exit condition | user | read `preamble-payload-budget.json:79-83` | **reproduced** — one `grace_ceiling` key plus a `grace_ceiling_history` block; the grep as written counts both, so Phase 4.4 must delete the history entry too or the check never reaches 0. Recorded in the step |
 | 7 | "`./scripts-run src/scripts/check_preamble_payload_budget`" as the measurement of record | user | ran it | **reproduced** — 138,200 tok total, exactly the artifact's figure. Local exit 1 against the design ceiling; the grace ceiling is a CI-only `--ceiling` argument |
-| 8 | "`agents/tmp/road-to-eleven/docs/decisions/ADR-257-*.md`" as the source path | user | `find` across both checkouts and `tmp.old/` | **unexecutable** — the path exists nowhere |
+| 8 | a `docs/decisions/ADR-257-*.md` path inside the named evidence round above | user | `find` across both checkouts and the consumed inbox | **unexecutable** — the path exists nowhere |
 | 9 | "der v2-Benchmark bleibt byte-identisch" (AC-6) | agent | read the v2 rerun report | **reproduced** — the corpus and its bars are in-tree and re-runnable; AC-6 is checkable as written |
 | 10 | "`npm install @event4u/agent-config` in einem leeren Verzeichnis … baut einen Graphen" | user | not attempted | **out-of-bound** — a real install plus a build writes outside the repo and takes network. It is Phase 1.1's own verify line, which is where it belongs |
 | 11 | "`impact --diff` antwortet aus SQLite" | user | not attempted | **out-of-bound** — the verb does not exist yet; that is the work, not a probe |
