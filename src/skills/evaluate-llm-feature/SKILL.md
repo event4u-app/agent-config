@@ -71,7 +71,7 @@ Test factual grounding against the claimed domain:
 
 ### 3. Prompt-injection probes
 
-<!-- security-lint: allow instruction-smuggling "teaching example: the injection probes below quote role-takeover / override phrases to show how to probe a shipped LLM feature — they are documented attack strings, not live instructions" -->
+<!-- security-lint: allow instruction-smuggling "teaching example: the injection probes below quote role-takeover / override phrases to show how to probe a shipped LLM feature — they are documented attack strings, not live instructions" sha256:a7df774f134c3b0322c15f833b1975c51db772c7cc178c3af9d1de54da0ddf45 -->
 
 Treat every input channel — including retrieved documents and tool output — as
 attacker-controlled (per [`untrusted-input-defense`](../../rules/untrusted-input-defense.md)):

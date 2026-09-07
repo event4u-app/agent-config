@@ -77,11 +77,13 @@ describe('lint_mcp_config_security — _scan over a built ScannedFile', () => {
         expect(hits).toHaveLength(0);
     });
 
-    it('respects the allow pragma', () => {
+    it('respects an UNBOUND allow pragma, and reports it as legacy-pragma', () => {
         const hits = scanFile(
             '.mcp.json',
             `<!-- security-lint: allow mcp-config-security "teaching" -->\n{ "k": "${FAKE_SECRET}" }\n`,
         );
-        expect(hits).toHaveLength(0);
+        expect(hits.filter((h) => h.check === 'mcp-config-security')).toHaveLength(0);
+        expect(hits.map((h) => h.check)).toEqual([sl.LEGACY_PRAGMA_CHECK]);
+        expect(hits[0]!.is_fail).toBe(false);
     });
 });

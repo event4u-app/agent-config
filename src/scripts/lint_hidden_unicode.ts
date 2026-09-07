@@ -220,9 +220,19 @@ function _cpName(cp: number): string {
 }
 
 export function _scan(sf: sl.ScannedFile): sl.Finding[] {
-    if (sf.pragma_allows(CHECK)) {
-        return [];
+    // A BOUND pragma suppresses only the matches it fingerprints, so the scan
+    // runs and its output is filtered at the end. An UNBOUND one keeps the old
+    // whole-file bail and reports itself.
+    const pragmaForm = sf.pragma_form(CHECK);
+    if (pragmaForm === 'legacy') {
+        return [sl.legacy_pragma_finding(sf, CHECK)];
     }
+    // EVERY exit from this function goes through `finish`. Wrapping only the
+    // terminal `return` is the defect that shipped for one commit here: this
+    // scan has an early return for an artifact with no `execution:` block, and a
+    // bound pragma silently did not apply to exactly those artifacts.
+    const finish = (hits: sl.Finding[]): sl.Finding[] =>
+        pragmaForm === 'bound' ? sf.filter_bound_pragma(CHECK, hits) : hits;
     const out: sl.Finding[] = [];
     for (const [lineno, text] of sf.iter_lines({ skip_example_fence: true })) {
         let vs_run = 0;
@@ -260,7 +270,7 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
             );
         }
     }
-    return out;
+    return finish(out);
 }
 
 // ---------------------------------------------------------------------------
@@ -464,12 +474,14 @@ export function _sanitize(filePath: string): string {
 }
 
 interface Args {
+    /** Scan base for the bounded root mode; absent = the package root. */
+    root?: string;
     json: boolean;
     fix: boolean;
 }
 
 function _argError(msg: string): never {
-    process.stderr.write('usage: lint_hidden_unicode [-h] [--json] [--fix]\n');
+    process.stderr.write('usage: lint_hidden_unicode [-h] [--json] [--fix] [--root DIR]\n');
     process.stderr.write(`lint_hidden_unicode: error: ${msg}\n`);
     process.exit(2);
 }
@@ -477,14 +489,30 @@ function _argError(msg: string): never {
 function parse_args(argv: readonly string[]): Args {
     const out: Args = { json: false, fix: false };
     const extra: string[] = [];
+    let rootPending = false;
     for (const a of argv) {
+        if (rootPending) {
+            out.root = a;
+            rootPending = false;
+            continue;
+        }
         if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: lint_hidden_unicode [-h] [--json] [--fix]\n');
+            process.stdout.write('usage: lint_hidden_unicode [-h] [--json] [--fix] [--root DIR]\n');
             process.exit(0);
         } else if (a === '--json') {
             out.json = true;
         } else if (a === '--fix') {
             out.fix = true;
+        } else if (a === '--root' || a.startsWith('--root=')) {
+            // Bounded root mode. Absent, this linter's own default roots stand;
+            // present, the same relative roots resolve against DIR instead. Used by
+            // the scout to scan a quarantined candidate, and by --self-test fixtures.
+            const eq = a.indexOf('=');
+            if (eq !== -1) {
+                out.root = a.slice(eq + 1);
+            } else {
+                rootPending = true;
+            }
         } else {
             extra.push(a);
         }
@@ -497,11 +525,12 @@ function parse_args(argv: readonly string[]): Args {
 
 export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+    const scanBase = args.root === undefined ? sl.ROOT : path.resolve(args.root);
 
     const findings: sl.Finding[] = [];
     const flagged = new Set<string>();
     let corpusFiles = 0;
-    for (const sf of sl.iter_corpus()) {
+    for (const sf of sl.iter_corpus(sl.DEFAULT_SCAN_ROOTS, ['.md'], scanBase)) {
         corpusFiles += 1;
         const hits = _scan(sf);
         for (const h of hits) {
@@ -540,7 +569,12 @@ export function main(argv: readonly string[] | null = null): number {
     // corpus) and a narrower codepoint set (C0 only). `--fix` does not touch
     // these — rewriting a source file's bytes is the author's call, and the
     // finding names the escape to use.
-    const sourceFiles = _eligibleSourceFiles();
+    // The source pass enumerates TRACKED files via `git ls-files`, which is a
+    // property of the repository and not of the scan base. Under `--root` it
+    // would import this repository's own files into a scan of somebody else's
+    // directory and attribute the findings to it, so bounded mode skips it and
+    // the `.md` corpus under DIR is the whole scan.
+    const sourceFiles = args.root === undefined ? _eligibleSourceFiles() : [];
     for (const h of _scanSourceControlBytes(sourceFiles)) {
         findings.push(h);
     }
@@ -564,6 +598,14 @@ export function main(argv: readonly string[] | null = null): number {
             const rel = path.relative(path.resolve(sl.ROOT), path.resolve(sanitized));
             process.stdout.write(`  fixed → ${rel.split(path.sep).join('/')}\n`);
         }
+    }
+
+    // Publish what this child inspected so the umbrella can aggregate a real
+    // corpus size rather than a count of children. BOTH passes count: the `.md`
+    // corpus and the raw-control-byte pass over tracked source files, which is a
+    // separate scope this linter genuinely reads.
+    if (args.json) {
+        sl.report_child_scanned(corpusFiles + (sourceFiles === null ? 0 : sourceFiles.length));
     }
 
     if (args.json) {

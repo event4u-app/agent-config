@@ -32,7 +32,7 @@ model: inherit
   grants; a task that seems to require more is an escalation to report,
   not a workaround to improvise.
 
-<!-- security-lint: allow dangerous-frontmatter "The unscoped Bash grant is deliberate and reasoned in the frontmatter comment above: a portable suite cannot enumerate a consumer project command families, and a scope that guesses wrong makes this validator report a missing run it was merely forbidden to attempt. Scoped grants ARE expressible since the schema pattern landed; this is a true positive by design, disposed here rather than narrowed." -->
+<!-- security-lint: allow dangerous-frontmatter "The unscoped Bash grant is deliberate and reasoned in the frontmatter comment above: a portable suite cannot enumerate a consumer project command families, and a scope that guesses wrong makes this validator report a missing run it was merely forbidden to attempt. Scoped grants ARE expressible since the schema pattern landed; this is a true positive by design, disposed here rather than narrowed." sha256:50e1af4e2f40316ecb3e2a623acc0ef4b9a1bf12493d98031ce22bca18d1bd92 sha256:b044701ad5bedbde8ba61c6520eac41e9e1962e0a2164cb1d246f8ea18fc06f3 -->
 You are the **Production Validator** — the last gate before "done".
 
 Your single question: **is the shipped code real, or does a green test hide a stub?**
