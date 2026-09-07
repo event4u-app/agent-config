@@ -45,6 +45,14 @@ review_trigger: >-
 
 **Accepted** · 2026-09-06. Supersedes nothing and amends nothing.
 
+> **Partially superseded 2026-09-07 by ADR-260** (owner ruling). §§ 1, 2, 3 and 5 below
+> record refusals the owner has since answered in the other direction; read them as this
+> round's council position, not as the live floor. **§ 4 — kernel and governance
+> self-amendment — stands untouched**, and ADR-260 explicitly does not ask
+> `block_kernel_rule_writes.ts` to yield. The `status:` field stays `accepted` because a
+> section of this record is still live; the partial is recorded here and in ADR-260's
+> `supersedes:` field.
+
 Decided by an **AI council** (2 seats, 2026-09-06) under the maintainer's
 standing delegation, on the framework that a **refusal** which preserves a
 recorded floor is council-decidable *as preservation of the status quo*, while
