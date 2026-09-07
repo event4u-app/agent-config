@@ -276,10 +276,10 @@ describe('self-repair — record identity', () => {
         expect(second.last_seen).toBe(LATER);
     });
 
-    it('reopens a released record when the defect recurs', () => {
+    it('reopens an actioned record when the defect recurs', () => {
         const f = detectUserReport('du hast das falsch gemacht')!;
-        const released: DefectRecord = { ...mergeRecord(null, f, NOW), status: 'released' };
-        expect(mergeRecord(released, f, LATER).status).toBe('open');
+        const actioned: DefectRecord = { ...mergeRecord(null, f, NOW), status: 'actioned' };
+        expect(mergeRecord(actioned, f, LATER).status).toBe('open');
     });
 });
 
@@ -612,7 +612,10 @@ describe('self-repair — egress ladder', () => {
         const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW)!;
         attachReleaseErrors(tmp, rec.fingerprint, ['push-upstream: permission denied'], NOW);
         const released = markReleased(tmp, rec.fingerprint, LATER);
-        expect(released?.status).toBe('released');
+        // `released` is the CALLER's event; the stored status is `actioned` —
+        // the widened enum has no separate slot for a release, because
+        // releasing IS the action.
+        expect(released?.status).toBe('actioned');
         expect(released?.release_errors).toBeUndefined();
         fs.rmSync(tmp, { recursive: true, force: true });
     });

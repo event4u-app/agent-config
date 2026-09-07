@@ -48,6 +48,7 @@ import {
     attachReleaseErrors,
     listRecords,
     markReleased,
+    writeTargetIndex,
     openRecords,
     readOverflow,
     readRecord,
@@ -503,6 +504,30 @@ function releaseCmd(root: string, argv: string[]): number {
     return EXIT_OK;
 }
 
+/**
+ * Rebuild the per-target occurrence index and print it.
+ *
+ * A DERIVED read: the record files are the source, the index is regenerable
+ * and gitignored with the rest of `agents/runtime/`. It exists because
+ * `occurrences` counts a fingerprint (class + normalised evidence shape), so a
+ * rule's weakness showing up in three different shapes was three records with
+ * one occurrence each — and the third-recurrence escalation had nothing that
+ * could ever establish its own precondition.
+ */
+function targetsCmd(root: string): number {
+    const counts = writeTargetIndex(root);
+    if (counts.length === 0) {
+        process.stdout.write('self-repair: no record carries a resolved target yet.\n');
+        return EXIT_OK;
+    }
+    for (const c of counts) {
+        process.stdout.write(
+            `  ${c.target}  ${c.occurrences} occurrence(s) across ${c.records.length} record(s)\n`,
+        );
+    }
+    return EXIT_OK;
+}
+
 export function main(argv: readonly string[]): number {
     const root = process.cwd();
     const sub = argv[0] ?? 'status';
@@ -512,7 +537,12 @@ export function main(argv: readonly string[]): number {
     if (sub === 'release') {
         return releaseCmd(root, [...argv.slice(1)]);
     }
-    process.stderr.write(`self-repair: unknown subcommand '${sub}' (status | release).\n`);
+    if (sub === 'targets') {
+        return targetsCmd(root);
+    }
+    process.stderr.write(
+        `self-repair: unknown subcommand '${sub}' (status | release | targets).\n`,
+    );
     return EXIT_FAIL;
 }
 
