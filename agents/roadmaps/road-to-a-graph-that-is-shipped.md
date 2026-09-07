@@ -219,9 +219,70 @@ built for.
       journal as `fresh | behind:N | absent`.
       verify: `check_installed_hooks_fresh` covers both hooks; a two-branch fixture merges
       without conflict markers; two concurrent commits produce one refresh.
-- [ ] **1.4 Ignore hint** for the index path in the installed ignore surfaces
+
+      <!-- 2026-09-07 — LEFT UNTICKED DELIBERATELY. All three verify conditions pass, but
+      one clause of the step body is unbuilt and another is refuted, so ticking would
+      overstate it. What landed, what did not, and what closes it:
+
+      LANDED, and verified:
+        · post-commit and post-checkout run `code-graph refresh --budget-seconds 60`
+          detached, single-flight, never building a graph that does not already exist.
+          Single-flight is an atomic `mkdir`, not a lock FILE — two processes can both
+          truncate-and-write a path, and only one can create a directory.
+        · `core.hooksPath` is now honoured by the installer. It was not before: HOOKS_DIR
+          resolved through `--git-common-dir` only, so on a repo that sets core.hooksPath
+          the installer wrote six hooks git never reads, and the freshness gate then
+          compared the copy nothing executes.
+        · tests/scripts/code_graph_git_freshness.test.ts → 6 passed. These execute the
+          REAL rendered hooks through the installer's `AGENT_CONFIG_HOOKS_DIR` seam, not a
+          reimplementation. Includes a SENSITIVITY case: with the `mkdir` guard
+          neutralised the same two calls produce 2 refreshes instead of 1, so the
+          single-flight assertion is known to have teeth.
+        · `check_installed_hooks_fresh` names both `post-commit` and `post-checkout` in
+          its report — it renders the installer and compares whatever it writes, so
+          coverage of the two hooks is by construction.
+
+      REFUTED — "a union merge driver for the index" cannot be built, because it has no
+      object. `agents/runtime/` is gitignored (`.gitignore:196`) and ADR-129 makes the
+      cache a derived, disposable accelerator whose rollback is `rm`. Git never sees the
+      file, so it can never conflict on it and a driver would never be invoked. The
+      fixture asserts the PROPERTY the driver was meant to deliver (a two-branch merge
+      leaves no conflict markers in the index) and pins the reason — `git ls-files` on the
+      cache path returns empty. Closing this differently would mean TRACKING the index,
+      which contradicts ADR-129's invariant and is an owner decision, not a wiring fix.
+
+      NOT BUILT — "staleness exported to the runtime journal as `fresh | behind:N |
+      absent`". The three-state value is computed and already reaches the agent: it is the
+      `GraphState` union in `code_graph_context_hook.ts`, delivered as additionalContext by
+      1.2. What is missing is the JOURNAL sink. `_lib/runtime_journal.ts` is a SQLite,
+      append-only store with a closed field vocabulary and a `NoFreeForm` type guard —
+      `JournalEvent` has no field this value fits, so the export needs a schema addition
+      plus a migration on a surface that is default-OFF (`hooks.runtime_journal.enabled`)
+      and would therefore produce no data for almost every consumer. That is a governed
+      schema change with its own contract, not a line of wiring, and doing it inside this
+      step would be scope creep.
+      WHAT CLOSES IT: a decision on whether the journal is the right sink at all given it
+      is default-OFF, and — if yes — a typed field or event-kind addition to
+      `EVENT_VOCABULARY` with its migration. Reported as a question per Kill register K8;
+      the step stays `[ ]` until it is answered. -->
+- [x] **1.4 Ignore hint** for the index path in the installed ignore surfaces
       (prompt-cache invalidation on hosts that hash the workspace).
       verify: `sync_gitignore` output contains the path.
+
+      <!-- verified 2026-09-07: `sync_gitignore --path <rig> --dry-run` emits
+        +/agents/runtime/state/code-graph-v1.json
+        +/agents/runtime/state/code-graph-v1.sqlite3
+        +/agents/runtime/state/code-graph-refresh.lock/
+      sync_gitignore.test.ts + sync_gitignore_fix_fixtures.test.ts → 33 passed;
+      check_tracked_but_ignored → clean.
+
+      The entries are REDUNDANT with the existing `/agents/runtime/` catch-all, and the
+      template says so in place so a future reader does not delete them as duplication.
+      They are named anyway for the reason the step gives: a host that keys a prompt cache
+      on a workspace file-list hash pays for the index on every commit now that 1.3
+      rewrites it from post-commit and post-checkout, and an entry findable by grepping the
+      index's own name is what makes that cost traceable. The twin and the refresh lock are
+      listed with it because the same machinery creates them beside it. -->
 
 ## Phase 2 — Indexed store
 
