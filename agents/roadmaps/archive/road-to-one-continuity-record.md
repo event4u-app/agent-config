@@ -186,7 +186,7 @@ mechanism* in Phase 4 while the capture substrate stays.
 
 ## Phase 3 — Written where context dies, read once at the start
 
-- [ ] **3.1 One concern writes the record at the moments context ends.** Today the
+- [~] **3.1 One concern writes the record at the moments context ends.** Today the
       only automatic producer is threshold-gated and its output is not read at the
       next start. The writer runs without model spend and writes only what it can
       derive. **The barrier is in the code and is not skipped here:**
@@ -202,7 +202,8 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify: a session that ends at any of the bound slots leaves a record, a
       session that did nothing substantive leaves none, and the count comes from the
       concern's own state rather than from file presence.
-- [ ] **3.2 The reader consumes once, under the guards that already exist.** The
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
+- [~] **3.2 The reader consumes once, under the guards that already exist.** The
       consume-once, age-bound, workspace-identity, drift-line and
       data-never-instruction guards are shipped and are **reused by name, not
       reimplemented**: `wrapAsPriorSessionData` and `hasBoundaryMarker`
@@ -216,18 +217,20 @@ mechanism* in Phase 4 while the capture substrate stays.
       branch still passes and is extended to the new record shape; a record is
       consumed at most once; a stale or foreign one is refused with its reason; and
       the injected text is data with a drift line leading.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
 
-- [ ] **3.3 Behave by how the session started.** `session_start` carries a `source`.
+- [~] **3.3 Behave by how the session started.** `session_start` carries a `source`.
       On `compact` the session is the same one continuing, so its **own** record is
       re-injected rather than a predecessor's; on `resume` and `fork` the host has
       already restored context and nothing is injected. Reading the wrong one is how
       a continuation acquires a stranger's state.
       verify: each of `compact`, `resume` and `fork` produces the stated behaviour,
       and an unrecognised `source` injects nothing rather than guessing.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
 
 ## Phase 4 — Retire, and prove the surface shrank
 
-- [ ] **4.1 Retire the authorised set, one artifact at a time.** The owner
+- [~] **4.1 Retire the authorised set, one artifact at a time.** The owner
       authorised the full set on 2026-09-06 (blocker below, option 1):
       `HANDOFF.md`, `hot-context.md`, the `hot-context` and `session-eol` concerns,
       `session:recycle`, `/chat-history` and `/chat-history import`. `handoff` and
@@ -240,7 +243,8 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify: after each retirement the tree contains no reader of the retired
       artifact, the five end-state numbers are re-derived and lower, and the
       `run_checkpoint` question carries a written answer.
-- [ ] **4.1b Start with the two that cost nothing.** `HANDOFF.md` has no producer
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
+- [~] **4.1b Start with the two that cost nothing.** `HANDOFF.md` has no producer
       and no consumer — **retired 2026-09-07**, together with the artifact-mode
       validator inside `lint_handoffs.ts` and its test; `grep -rn "HANDOFF.md"
       src/` now returns nothing, which also discharges 1.1's attribution clause.
@@ -262,7 +266,8 @@ mechanism* in Phase 4 while the capture substrate stays.
       verify (`HANDOFF.md` half, met): gone; `grep -rn "HANDOFF.md" src/`
       returns nothing; no test or command references it; `lint_handoffs` green
       at its unchanged 18-violation baseline and its 13 tests pass.
-- [ ] **4.2 Ratchet the surface count so it cannot grow back.** Twelve archived
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
+- [~] **4.2 Ratchet the surface count so it cannot grow back.** Twelve archived
       roadmaps built these layers and none retired its predecessor; a count that is
       not gated returns.
       The rule the ratchet encodes: **a new continuity mechanism may be introduced
@@ -274,6 +279,7 @@ mechanism* in Phase 4 while the capture substrate stays.
       retiring one reddens a check; the check reports the five end-state numbers from
       this roadmap's goal; and the rule is stated where the check fails, not only
       here.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
 
 ## Blockers
 
@@ -289,6 +295,20 @@ mechanism* in Phase 4 while the capture substrate stays.
 - **Resolved when:** — resolved 2026-09-06. The owner authorised **option 1, the full retirement set**, on the stated ground that option 2 halves the effect and leaves standing exactly the commands named as bloat, and option 3 makes this roadmap the thirteenth layer that removes nothing. The consumer path survives intact because `handoff` and `/agent-handoff` remain the single verb and command, and `chat-history` capture is out of scope.
 
 ## Council disposition — Phases 3 and 4 are sequenced behind this change
+
+```
+THIS ROADMAP CLOSES AS BOOKKEEPING, NOT AS SUBSTANTIVE RESOLUTION.
+SIX STEPS AND THREE ACCEPTANCE CRITERIA WERE TRANSFERRED, NOT ACHIEVED.
+THE SURFACE COUNT IS UNCHANGED EXCEPT FOR `HANDOFF.md`, AND RISK 1 —
+THE RECORD IS ADDED AND NOTHING IS RETIRED — IS STILL LIVE FOR THE
+TRANSFERRED HALF. A COMPLETED ROADMAP HERE IS NOT AN ACHIEVED GOAL.
+```
+
+Receiver: `agents/roadmaps/road-to-continuity-retirement-sequencing.md`
+(`status: carrier`, paid for by archiving this roadmap in the same change).
+Disposition record, promoting probe and the refuted premise:
+`agents/roadmaps/stubs/road-to-continuity-retirement-sequencing.md`.
+
 
 AI council, 2026-09-07, 2 seats of 2 present (anthropic, openai), design mode,
 deep depth, subscription transport, nothing billed. Asked because executing the
@@ -361,7 +381,18 @@ being retired.
 - [x] AC-3 — Two concurrent sessions in one checkout each leave their own record and neither observes the other's; ambiguity ends in a clean start with a stated reason.
 - [x] AC-4 — Each of the owner's four questions maps to a named schema field or a stated proxy, the mapping is written down, and the schema gained fields at a bumped version rather than a second schema file.
 - [x] AC-4b — A record names its predecessor or states it has none, and an absent named predecessor is refused rather than guessed past.
-- [ ] AC-5 — A session ending at a bound slot leaves a record without model spend; a session that did nothing substantive leaves none.
-- [ ] AC-6 — A record is consumed at most once, and a stale or foreign one is refused with its reason.
-- [ ] AC-7 — After Phase 4 the five end-state numbers in the goal read exactly `0 / 0 / 1 / 1 / 0`, re-derived by command rather than asserted.
-- [ ] AC-8 — A change adding a continuity artifact, concern, command or verb without retiring one reddens a check.
+- [~] AC-5 — A session ending at a bound slot leaves a record without model spend; a session that did nothing substantive leaves none.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
+- [x] AC-6 — A record is consumed at most once, and a stale or foreign one is refused with its reason.
+      **Ticked against shipped evidence rather than carried**, and the choice is deliberate:
+      the criterion is satisfied by the reader as it stands today and is pinned by
+      `tests/scripts/recycle_envelope_consumer.test.ts`, which covers consume-once (moved,
+      not copied), a stale record refused with its age, and a foreign-workspace record
+      refused with the two paths named — and Phase 2 kept every one of those guards. It
+      belongs to step 3.2's end state only in the sense that 3.2 re-uses the same guards for
+      the new record; carrying a criterion that is already true and already tested would
+      have understated what ships here as badly as ticking AC-5 would have overstated it.
+- [~] AC-7 — After Phase 4 the five end-state numbers in the goal read exactly `0 / 0 / 1 / 1 / 0`, re-derived by command rather than asserted.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
+- [~] AC-8 — A change adding a continuity artifact, concern, command or verb without retiring one reddens a check.
+      <!-- deferred-resolution: carried-to=road-to-continuity-retirement-sequencing -->
