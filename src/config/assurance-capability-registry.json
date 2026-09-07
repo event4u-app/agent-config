@@ -154,6 +154,21 @@
       "evidence": "src/scripts/grade_target_readiness.ts — 'semgrep' and 'bandit' tokens; the python fixture reports 'no SAST config'",
       "revisit_if": "the SAST probe stops distinguishing presence from absence on the fixtures"
     },
+    "self-security-scan": {
+      "axis": "self",
+      "owner_surface": "src/scripts/lint_agent_security.ts",
+      "projection": null,
+      "state": "degraded",
+      "rationale": "This package's own artifact tree is scanned for hidden-instruction payloads by an umbrella that spawns five child linters and aggregates their findings. The capability exists and the children work; what is degraded is the AGGREGATE's ability to tell a child that ran and found nothing from a child that never answered, which is what makes its exit code weaker evidence than docs/CLAIMS.md reads it as. Distinct from the target-axis security-scan entry: that one grades a consumer repository, this one grades this repository's scan of itself.",
+      "evidence": "src/scripts/lint_agent_security.ts:209 discards each child's return code (`const [, findings] = _run(script)`); :67 turns an unparsable child payload into an empty findings array; docs/CLAIMS.md offers `exec:lint_agent_security -> 0` as the evidence for shipped-artifacts-hidden-instruction-scanned, and that entry now carries a non_inference line naming this same gap. Read 2026-09-07.",
+      "limitations": [
+        "Child exit codes are discarded at src/scripts/lint_agent_security.ts:209, so a child that exits non-zero with no findings contributes nothing to the aggregate and the umbrella still exits 0.",
+        "An unparsable child stdout is swallowed as zero findings at src/scripts/lint_agent_security.ts:67, so a crashed child that printed a stack trace is indistinguishable from a clean run.",
+        "A child that fails to spawn returns `proc.status === null`, which the same line coerces to 1 and then drops — the umbrella never reports that the child was not executed.",
+        "The umbrella publishes no count of artifacts inspected and is absent from src/config/gate-coverage.yml, so a collapsed corpus reports the same clean line as a full scan."
+      ],
+      "revisit_if": "road-to-scan-that-fails-closed Phase 2.2 lands — each child gains a closed terminal outcome (completed | failed | skipped) and a failed one makes the umbrella name the child and exit 1. At that point this entry moves to `available`; step 2.4 owns the move, and until it happens this entry is the generated surface that keeps the weakness visible."
+    },
     "runtime-probe": {
       "axis": "target",
       "owner_surface": "agents/roadmaps/stubs/road-to-target-project-bootstrap-enforce.md",
