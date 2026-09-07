@@ -262,7 +262,10 @@ export function routeDecision(
   if (skillsDir === null) return silent;
   if (Array.isArray(skillsDir) && skillsDir.length === 0) return silent;
   // Denominator floor BEFORE the catalogue read: a prompt too short to score
-  // meaningfully cannot produce a pointer worth 337 file reads either.
+  // meaningfully cannot produce a pointer worth the read either. The count is
+  // deliberately not stated — it used to say "337 file reads", which was one
+  // root; the union reads every readable root and the figure depends on the
+  // machine's install.
   try {
     if (_tokenize(prompt).size < MIN_TASK_TERMS) return silent;
   } catch {

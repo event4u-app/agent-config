@@ -155,16 +155,26 @@ instead of a silent fallback to double delivery. It decides nothing.
 
 ### Two things this amendment does NOT do, named rather than implied
 
-**Flat command wrappers are not withheld.** A flat command reaches the host as a
-hyphen-named wrapper under `skills/`, because the host does not register flat
-command FILES (probed ≤ 2.1.204, recorded at `condense.ts::_nested_command_subpath`).
-`~/.claude/skills` carries **none** of those wrappers — measured the same day, 307
-global skills = the 299 projected skills plus 8 unrelated — so withholding one
-would deliver that command nowhere. They are not duplication: nothing else
-delivers them. 49 remain in the project layer, and the open question is whether the
-host registers `~/.claude/commands/<slug>.md`; if it does, those 53 global files
-make 49 of the wrappers redundant. That is a host-behaviour claim and needs a probe,
-not a reading of this paragraph.
+**Flat command wrappers ARE withheld — corrected 2026-09-07.** The first version
+of this amendment claimed they are not, on three assertions that a neutral review
+the same day showed to be false: that `~/.claude/skills` carries none of them,
+that "nothing else delivers them", and that withholding one would deliver the
+command nowhere. `install.ts::_apply_claude_flat_command_wrappers`, wired for
+every `claude-code` deploy, writes `~/.claude/skills/<slug>/SKILL.md` for every
+VISIBLE flat command and deletes the flat file. The claim was a snapshot of one
+machine whose last install had not run that pass — 53 flat `.md` files still sat
+in `~/.claude/commands` — presented as a property of the installer.
+
+Ungated, the next `agent-config install` would have written ~17 wrappers globally
+while the generator kept writing all 49 project wrappers: 17 flat commands
+arriving twice per session, the duplication class this record exists to remove,
+and a `skills` overlap in `check_single_delivery` that the same paragraph said
+could not happen. The wrapper emitter now applies the same per-name rule as
+everything else. A wrapper the host layer does NOT carry still stays — that is the
+per-artefact fail-safe, and it is what makes withholding safe here at all.
+
+The project layer carries **49** wrappers. The earlier text said 153; that figure
+was transplanted from the 153-skill measurement in `hostLayerFingerprint.ts`.
 
 **Package-only SKILLS are still installed globally.** The Decision's table records
 `skills (290) | 0 | 290` on a measurement that no skill declared
