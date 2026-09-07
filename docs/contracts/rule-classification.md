@@ -107,7 +107,7 @@ existing skills under `.agent-src.uncondensed/skills/`.
 |---|---:|---|---|
 | agent-docs | 2575 | `agent-docs-writing` | Procedural: how to author agent-docs |
 | analysis-skill-routing | 1325 | `analysis-skill-router` | Routing procedure |
-| capture-learnings | 2820 | `learning-to-rule-or-skill` | Capture procedure |
+| capture-learnings | 2820 | `learning-to-rule-or-skill` | Capture procedure. **HISTORICAL — this row records the rule corpus as measured when the classification was taken.** `src/rules/capture-learnings.md` no longer exists; the live rule carrying this trigger is `skill-improvement-trigger`, routing to `skill-improvement-pipeline`. |
 | cli-output-handling | 1801 | `rtk-output-filtering` | Tool-wrapping procedure |
 | commit-conventions | 1938 | `conventional-commits-writing` | Format procedure |
 | docker-commands | 1830 | `docker` | Stack-specific procedure |
