@@ -447,7 +447,18 @@ async function main(): Promise<void> {
   process.stdout.write(md + "\n");
 }
 
-main().catch((err) => {
-  console.error(String(err));
-  process.exit(2);
-});
+/**
+ * Guarded, because this module is now IMPORTED — `loadPairs`, `loadSplits` and
+ * `familyDelta` are the split and attribution surface the suite tests. Without
+ * the guard an import ran the whole bench as a side effect and overwrote the
+ * canonical report, so the test suite silently wrote tracked files.
+ */
+const invokedDirectly =
+  process.argv[1] !== undefined &&
+  import.meta.url.endsWith(process.argv[1].split("/").pop() ?? "");
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error(String(err));
+    process.exit(2);
+  });
+}
