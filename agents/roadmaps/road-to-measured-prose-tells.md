@@ -77,7 +77,7 @@ with the humanizer installed would not have them.
 
 ## Phase 1 — Measurement truth before any growth
 
-- [ ] **1.1 Build the clean prose corpus on the template the design side already ships.**
+- [x] **1.1 Build the clean prose corpus on the template the design side already ships.**
       `internal/bench/corpora/design-slop-clean/` holds **32** files with a
       pre-registration at `internal/bench/corpora/design-slop-fp-PREREG.md`; the
       prose side has no equivalent. Build `tests/fixtures/ai-tells/clean/{en,de}/`
@@ -90,7 +90,7 @@ with the humanizer installed would not have them.
       verify: a per-rule false-positive count over `clean/` is reported by a
       command, the pre-registration predates the first measurement, and adding a
       file to the corpus changes the count.
-- [ ] **1.2 Disarm `tell-rule-of-three` (D3).** The rule stays and loses solo
+- [x] **1.2 Disarm `tell-rule-of-three` (D3).** The rule stays and loses solo
       effect: a hit counts only when two or more three-item lists share a paragraph,
       or when all three members are abstract nouns rather than names or numbers.
       *`corrected-from-reproduction`* — the proposal cited 32.61/500w for its own
@@ -98,13 +98,13 @@ with the humanizer installed would not have them.
       correction is the mechanism, not the number.
       verify: `Alice, Bob, and Carol` alone scores 0; the seeded fixture that
       legitimately carries this tell keeps its hit.
-- [ ] **1.3 Add a density floor (D4).** Below a minimum word count,
+- [x] **1.3 Add a density floor (D4).** Below a minimum word count,
       `cluster_score_per_500` and `dash_density_per_500` are reported as `null`
       and their thresholds are not applied; hard rules still apply, and `--fail`
       says the density was not evaluated.
       verify: `Not a tool — a system.` passes with that note; a 60-word text with
       three dashes still fails.
-- [ ] **1.4 Bring the bound table and the scanner into step (D2).** Either the
+- [x] **1.4 Bring the bound table and the scanner into step (D2).** Either the
       three unimplemented bounds are implemented — all three are deterministic — or
       the table at `anti-aiisms.md:87-93` stops attributing them to the scanner and
       says which are eye-checked in step 3.
@@ -112,13 +112,13 @@ with the humanizer installed would not have them.
       probe of the scanner does, and a fixture reddens if a bound is claimed and
       absent.
 
-- [ ] **1.5 Split the fixture corpus into tune and holdout.** `loadPairs()`
+- [x] **1.5 Split the fixture corpus into tune and holdout.** `loadPairs()`
       (`src/scripts/bench_humanizer_eval.ts:66-89`) reads every file under `en/` and
       `de/` into one array, so a rule tuned against the 20 pairs is measured against
       the same 20 pairs and overfitting is not excluded by construction.
       verify: a rule tuned on the tune split is scored on the holdout split, the two
       sets are disjoint by name, and the bench reports which split each figure came from.
-- [ ] **1.6 Record the 2026-07-11 decision as a decision record.** There are 198 ADRs
+- [x] **1.6 Record the 2026-07-11 decision as a decision record.** There are 198 ADRs
       under `docs/decisions/` and **zero** mention this subject — a grep for
       `humaniz|prose.tell|anti-slop|em.dash` over all of them returns nothing. The
       verdicts that govern a shipped, default-on surface live in one archived roadmap
@@ -132,13 +132,13 @@ with the humanizer installed would not have them.
 
 ## Phase 2 — The register grows in epochs, under a measured floor
 
-- [ ] **2.1 One family per epoch, promoted only at a zero false-positive count.**
+- [x] **2.1 One family per epoch, promoted only at a zero false-positive count.**
       The interaction-layer sibling already runs this discipline; borrow it rather
       than inventing a second one. A family enters as a weighted cluster rule, not
       a hard rule, and its promotion requires zero hits across `clean/`.
       verify: the promotion of any family is refused while its clean-corpus count is
       above zero, and the refusal names the file that hit.
-- [ ] **2.2 Close the recall gap the source exposed, in that order.** The families
+- [x] **2.2 Close the recall gap the source exposed, in that order.** The families
       the source's own examples slipped past — throat-clearing openers, emphasis
       crutches, false agency, narrator-at-a-distance, vague declaratives, binary
       contrasts beyond `not just` — each as its own epoch under 2.1. Patterns are
@@ -146,7 +146,7 @@ with the humanizer installed would not have them.
       word-list import would carry a licence obligation and a plaintext pin.
       verify: each landed family raises recall on the seeded corpus without raising
       any clean-corpus count above zero.
-- [ ] **2.3 Reach German parity (D6).** `tell-de-negative-parallelism` matches the
+- [x] **2.3 Reach German parity (D6).** `tell-de-negative-parallelism` matches the
       `nicht um … sondern` form as well as `nicht nur`, and the DE register covers
       the families 2.2 lands for English.
       verify: the six-tell German paragraph in the goal scores above zero, and the
@@ -154,21 +154,21 @@ with the humanizer installed would not have them.
 
 ## Phase 3 — The claim stops being fixture-scoped
 
-- [ ] **3.1 Make step 4b emit one event per run.** `docs/CLAIMS.md:467` states its
+- [x] **3.1 Make step 4b emit one event per run.** `docs/CLAIMS.md:467` states its
       own limit — the measurement is seeded-tell removal on a self-constructed
       corpus, and real-draft lift is unmeasured. The blocker naming that has been
       open since 2026-07-11. Nothing in the tree moves it because no run is
       recorded: `grep humaniz src/scripts/_lib/` finds no event.
       verify: a step-4b run appends one record through the existing collector, and
       no second instrument was built to hold it.
-- [ ] **3.2 Give the blind judge an attribution vector.** The paired bench returns a
+- [x] **3.2 Give the blind judge an attribution vector.** The paired bench returns a
       binary preference, so a family landed in Phase 2 cannot be tied to an effect.
       verify: a bench run reports which family or families the preference tracked,
       and a run with one family disabled changes that report.
 
 ## Phase 4 — Finding is not the same act as rewriting
 
-- [ ] **4.1 Add an audit-only form to `/humanize`.** The command has no such
+- [x] **4.1 Add an audit-only form to `/humanize`.** The command has no such
       form: `src/domains/gtm-marketing/humanize/command.md` step 4 always prints
       "the final rewrite", and a grep for `audit-only`, `--audit`, `dry-run` or
       `findings-only` over that file returns **0**. On someone else's text — a
@@ -176,7 +176,7 @@ with the humanizer installed would not have them.
       the wrong action and locating is the right one.
       verify: the audit-only form prints located findings and no rewrite, the
       default form is unchanged, and the disclosure-footer rule still holds in both.
-- [ ] **4.2 Let a consistently used pattern count as intent.** A pattern the author
+- [x] **4.2 Let a consistently used pattern count as intent.** A pattern the author
       uses consistently through one document is evidence of style, not of a tell;
       without a voice sample the skill falls back to defaults
       (`src/skills/humanizer/SKILL.md:60-63`), and the detector's `per_pattern`
@@ -189,17 +189,180 @@ with the humanizer installed would not have them.
 
 ### blocker: real-draft-lift-unmeasured-feeder
 
-- **Status:** open
+- **Status:** resolved
+- **Outcome state:** **decided — option 2, declined for this round, with the word
+  "permanent" removed from it.** A scoped refusal, not a measurement. The
+  substantive owner-facing question is unchanged and explicitly un-prejudged;
+  Phase 3.1 closed as a documentation step and 3.2 stood alone, exactly as the
+  option predicted.
 - **Owner:** maintainer
 - **Asked:** 2026-09-06, in the round `inbox-2026-09-s` disposition and in the reply that carried it.
-- **Blocks:** Phase 3 only. Phases 1 and 2 are independent and agent-doable in full — precision, the floor, the documentation and the epochs need no real-draft corpus.
-- **Recommendation:** none; this is the owner's call — it turns on whether real drafts written through step 4b may be collected at all, which is a data-handling decision about the maintainer's own writing.
-- **If you do nothing:** `docs/CLAIMS.md:466-471` keeps its honest scope note and the blocker on `agents/roadmaps/archive/road-to-humanizer-hardening.md:168` stays open past 57 days, so no register growth from Phase 2 can ever be tied to real-draft improvement.
-- **What to do:**
-  1. Authorise full collection — set the retention in `src/config/agent-settings.template.yml`, record what is stored in `docs/contracts/write-engine.md`, and flip the blocker at `agents/roadmaps/archive/road-to-humanizer-hardening.md:168` to `resolved`. Phase 3.1 is then unblocked as written.
-  2. Or decline it — edit the scope note at `docs/CLAIMS.md:467` to say the fixture scope is permanent rather than provisional, and mark the same blocker `resolved` with that reason. Phase 3.1 becomes a documentation step and 3.2 stands alone.
-  3. Or authorise the text-free form — counts and scores per run only, no draft retained, recorded through the existing collector; confirm with `grep -rn "humaniz" src/scripts/_lib/` returning the one new event and nothing that holds text.
-- **Resolved when:** the blocker at `archive/road-to-humanizer-hardening.md:168` carries one of the three outcomes, and `docs/CLAIMS.md` agrees with whichever was chosen.
+- **Blocks:** nothing further. Phase 3 is closed. Phases 1 and 2 were independent and were completed in full.
+- **Recommendation:** — superseded by the decision below.
+- **If you do nothing:** — no longer applicable; the decision landed.
+- **What to do:** nothing further in this round. If the owner authorizes
+  collection later, the three options below are unchanged and the path in
+  option 1 or 3 is still the path. Reopening also needs a measurement:
+  `npx tsx src/scripts/bench_humanizer_eval.ts --judge --confirm-spend` over a
+  real corpus, not the seeded fixtures.
+  1. Authorise full collection — set the retention in `src/config/agent-settings.template.yml`, record what is stored in `docs/contracts/write-engine.md`, and flip the blocker at `agents/roadmaps/archive/road-to-humanizer-hardening.md` to `resolved`.
+  2. Or decline it — the option taken, minus its "permanent" wording. See below.
+  3. Or authorise the text-free form — counts and scores per run only, no draft retained, recorded through the existing collector.
+- **Resolved when:** — resolved 2026-09-07 by taking option 2 **with its
+  "permanent" wording struck**. Recorded so the reasoning survives the closure:
+
+  Both collecting options were held **categorically unreachable at this level**,
+  and for the same reason rather than on a balance of risk. Option 1 creates new
+  retention of the maintainer's own prose, which lowers the fixture-only
+  data-handling floor this package currently records. Option 3 avoids retaining
+  the *draft* and still retains *metrics derived from* real drafts, which is
+  itself a collection practice that does not exist today. "Safer" was not the
+  dispositive test; "does this create collection beyond the recorded floor" was,
+  and both answered yes.
+
+  Option 2's own wording was amended before it was taken. Writing **"permanent"**
+  into a published scope note prejudges a future owner ruling, which a scoped
+  refusal may not do — a refusal says *not this round*, never *not ever*. So
+  `docs/CLAIMS.md` § `claim:humanizer-tell-reduction` now describes fixture-only
+  evaluation as **the declared scope of the current roadmap phase** and states
+  explicitly that **future authorization is neither granted nor refused**.
+  Widening the claim needs an authorization AND a measurement; neither alone.
+
+  If option 3 is ever revisited, a genuinely text-incapable schema requires all
+  of: a closed schema of bounded numeric or enumerated values, rejection of
+  unknown fields, no free-form identifiers and no error context, no serialization
+  of source objects, no debug logging of inputs or outputs, and tests inspecting
+  every persistence and telemetry sink. A `grep` for one keyword is explicitly
+  too weak to establish it.
+
+  The parent blocker at `agents/roadmaps/archive/road-to-humanizer-hardening.md`
+  carries the same disposition with its own outcome state named, and
+  `docs/CLAIMS.md` agrees with it. Decided by the AI council (2 seats,
+  run-19 session 5, unanimous, 2026-09-06) under the maintainer's standing
+  delegation; owner-reserved dimensions were the reason both collecting options
+  were unreachable rather than merely disfavoured.
+
+## Evidence
+
+Every figure below was produced by running the named command in this branch.
+
+### Steps 1.1-1.6
+
+- **1.1** — `tests/fixtures/ai-tells/clean/{en,de}/`, **35** files, each opening
+  with an exempt blockquote label. Pre-registration
+  `internal/bench/corpora/prose-tells-fp-PREREG.md` committed at `822b5b2dd`,
+  **before** the corpus, the bench and every number. Command:
+  `npx tsx src/scripts/bench_prose_tells_fp.ts` → per-rule M1 plus corpus pin.
+  `tests/scripts/bench_prose_tells_fp.test.ts` asserts adding a file moves both
+  the count and the pin, and that counting is per file rather than per hit.
+  Run 1 and run 2, including **two falsified predictions**:
+  `internal/bench/reports/prose-tells-fp-v1.md`.
+- **1.2** — `matchRuleOfThree` in `src/scripts/ai_tells_rules.ts`. Measured:
+  the goal's nineteen-word sample scores 0; the same three lists padded past
+  the word floor score 0; an abstract triplet still scores 1; all five seeded
+  fixtures keep their hit (asserted per fixture). M1 for the rule: 1 → **0**.
+- **1.3** — `MIN_DENSITY_WORDS = 50`. Measured: `Not a tool — a system.`
+  passes with `density not evaluated (6 words < 50-word floor; … 1 dash(es)
+  counted)`; a 64-word text with three dashes still fails on dash density;
+  a hard hit below the floor still fails. Clean files rejected: 15 → **10**.
+- **1.4** — `anti-aiisms.md` gains a mechanical-signal column and a
+  bound-applied-by column. Two claimed bounds implemented
+  (`tell-staccato-run`, `tell-uniform-bullet-run`); two re-attributed to the
+  step-3 eye-check with the reason stated (their denominators are *per claim*
+  and *per 100 words*, which the scanner does not segment).
+  `tests/scripts/tell_bound_attribution.test.ts` parses the shipped table and
+  probes the scanner per row. Probed red two ways: a signal that resolves to no
+  rule, and a `scanner` attribution on a bound stated per claim.
+- **1.5** — `tests/fixtures/ai-tells/SPLITS.json`: 12 tune / 8 holdout,
+  disjoint by name, both languages both sides. A pair in neither half or in
+  both throws rather than defaulting. The report prints tune, holdout and
+  both-halves columns.
+- **1.6** — `docs/decisions/ADR-256-prose-tell-detector-scope-and-rejected-absolutes.md`.
+  `./scripts-run src/scripts/adr_cite_check ADR-256` → `LIVE, TRIGGER
+  INDETERMINATE`, 4 evidence refs, 0 unresolved.
+  `check_new_adr_evidence --base origin/main` → 1 accepted and disclosing, 0
+  violations. `agents/roadmaps/archive/road-to-humanized-writing.md` § Council
+  notes now points at it.
+
+### Steps 2.1-2.3
+
+- **2.1** — `internal/bench/corpora/prose-tells-epochs.md` plus
+  `bench_prose_tells_fp --gate <rule-id…>`. The refusal path is exercised
+  against a rule that really hits: `--gate tell-de-connector-stack` exits **1**
+  with `promotion refused: tell-de-connector-stack has 2 clean-corpus false
+  positive(s) — …de/01-konnektor.md, …de/02-darueber-hinaus.md`.
+  `tests/scripts/tell_family_epochs.test.ts` re-measures every ledger family at
+  zero and probed red when one was widened.
+- **2.2** — six English families, each M1 = 0 at promotion. Three clean files
+  were added first so they have a near-miss to survive. Recall per family on
+  the seeded corpus: `tell-throat-clearing` 5 pairs,
+  `tell-emphasis-crutch` 2, others 0 — a zero there is a statement about a
+  corpus authored for the July register, and those families are measured by
+  their own probe and counter-probe instead.
+- **2.3** — seven German families plus the `nicht um … sondern um` extension,
+  all M1 = 0. The goal's six-tell German paragraph goes from `hard 0 ·
+  cluster 0` to five families firing and 6 cluster weight. The German half of
+  `clean/` did not gain a single count from anything this roadmap promoted; the
+  pre-existing `tell-de-connector-stack` count of 2 was measured in run 1
+  before Phase 2 began and is published in the FP report.
+- Also repaired here because it silenced two of these families outright:
+  `stripExempt` matched any two apostrophes on a line as a quoted span, so
+  `In today's fast-paced world, let's be honest` was read as a quotation and
+  stripped whole. An opening quote must now start a token and a closing quote
+  must end one. No new false positive on the clean corpus.
+
+### Steps 3.1-3.2
+
+- **3.1** — closed as a **documentation step** per the blocker disposition
+  above. `docs/CLAIMS.md` scopes fixture-only evaluation to the current phase,
+  never permanently, and says future authorization is neither granted nor
+  refused. `check_claims` green. No collector, no event, no retention.
+- **3.2** — per-pair `families_removed` vector, an attribution table in the
+  report, and `--disable-family <rule-id>` which excludes a family from the
+  **scan** rather than from the table. Measured: disabling
+  `tell-ai-vocabulary` moves the both-halves cluster mean from 48.06 to 33.88
+  and drops the family from the table. The judge column is labelled a
+  co-occurrence, never an isolated effect.
+- Also repaired here: an objective-only re-run overwrote the canonical report
+  with a `Not run` placeholder, which unbacked `claim:humanizer-tell-reduction`
+  for free and announced nothing. The judged block is carried forward, dated,
+  and labelled as not a measurement of the current register.
+  `tests/scripts/humanizer_attribution.test.ts` guards the anchor and probed
+  red — both the test and `check_claims`.
+
+### Steps 4.1-4.2
+
+- **4.1** — `src/domains/gtm-marketing/humanize/command.md` § 2a. The audit
+  form locates and stops; the default form is unchanged and the command never
+  selects the audit form itself; the disclosure rule holds in both.
+  `tests/scripts/humanize_audit_form.test.ts` asserts all four on the source
+  **and** on the projection, and probed red when the default-form clause was
+  weakened.
+- **4.2** — every finding carries `line:column` per occurrence, asserted to
+  resolve to the text it points at. A pattern used ≥ 3 times across ≥ 60 % of
+  the document is reported `used consistently throughout` and charged **once**;
+  a local repetition stays `scattered` and is charged N times; a **hard** rule
+  is never discounted, and that carve-out probed red.
+
+### Figures that moved, and what they do not mean
+
+The both-halves seeded cluster mean went **53.97 → 48.06**. Two scoring changes
+pulled it in opposite directions — thirteen new families raised it, 4.2's
+consistency discount lowered it further — so the number is not a
+before-and-after of the same thing and is **not** quoted as a recall result in
+either direction. `docs/CLAIMS.md` and the epoch ledger both say so. The
+after-side stayed **0** on all three metrics in both halves, and every seeded
+`before` fixture still exceeds the thresholds.
+
+### Not done, and named rather than implied
+
+Four clean files carrying a single em dash in 78–125 words are still rejected
+on dash density. At a cap of 2 per 500 words no document under ~250 words can
+carry one dash and pass, and a floor high enough to clear them would break step
+1.3's own verify. The cap is a council decision of 2026-07-11; this roadmap
+holds no authority to move it. Published with a reopening condition in
+`internal/bench/reports/prose-tells-fp-v1.md` rather than repaired or edited
+away.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-06 | reviewer: claude/host -->
@@ -215,15 +378,15 @@ with the humanizer installed would not have them.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `tests/fixtures/ai-tells/clean/{en,de}/` exists with at least 30 files and a near-miss per rule family, and a per-rule false-positive count over it is produced by a command.
-- [ ] AC-2 — Three ordinary Oxford-comma lists in one paragraph pass, and the seeded fixture that legitimately carries that tell still fails.
-- [ ] AC-3 — A text below the density floor reports its densities as not evaluated and passes, while hard rules still apply to it.
-- [ ] AC-4 — Every bound in the `anti-aiisms.md` table is either implemented in the scanner or attributed to the eye-check, and a claimed-but-absent bound reddens a fixture.
-- [ ] AC-5 — No rule family was promoted while its clean-corpus false-positive count was above zero.
-- [ ] AC-6 — The German paragraph in the goal scores above zero and the German clean corpus stays at zero.
-- [ ] AC-7 — The blocker on the archived parent carries one of its three named outcomes, and `docs/CLAIMS.md` agrees with it.
-- [ ] AC-8 — No absolute rule from the source entered the register, and no pattern list was copied from it.
-- [ ] AC-9 — The tune and holdout splits are disjoint by name and the bench reports which split each figure came from.
-- [ ] AC-10 — A decision record exists for the 2026-07-11 verdicts, `adr_cite_check` reports it live, and the archived roadmap points at it.
-- [ ] AC-11 — `/humanize` has an audit-only form that locates without rewriting, and the default form is unchanged.
-- [ ] AC-12 — The detector reports per-occurrence locations, and a uniformly used flagged pattern is reported as consistent rather than as N hits.
+- [x] AC-1 — `tests/fixtures/ai-tells/clean/{en,de}/` exists with at least 30 files and a near-miss per rule family, and a per-rule false-positive count over it is produced by a command.
+- [x] AC-2 — Three ordinary Oxford-comma lists in one paragraph pass, and the seeded fixture that legitimately carries that tell still fails.
+- [x] AC-3 — A text below the density floor reports its densities as not evaluated and passes, while hard rules still apply to it.
+- [x] AC-4 — Every bound in the `anti-aiisms.md` table is either implemented in the scanner or attributed to the eye-check, and a claimed-but-absent bound reddens a fixture.
+- [x] AC-5 — No rule family was promoted while its clean-corpus false-positive count was above zero.
+- [x] AC-6 — The German paragraph in the goal scores above zero and the German clean corpus stays at zero.
+- [x] AC-7 — The blocker on the archived parent carries one of its three named outcomes, and `docs/CLAIMS.md` agrees with it.
+- [x] AC-8 — No absolute rule from the source entered the register, and no pattern list was copied from it.
+- [x] AC-9 — The tune and holdout splits are disjoint by name and the bench reports which split each figure came from.
+- [x] AC-10 — A decision record exists for the 2026-07-11 verdicts, `adr_cite_check` reports it live, and the archived roadmap points at it.
+- [x] AC-11 — `/humanize` has an audit-only form that locates without rewriting, and the default form is unchanged.
+- [x] AC-12 — The detector reports per-occurrence locations, and a uniformly used flagged pattern is reported as consistent rather than as N hits.
