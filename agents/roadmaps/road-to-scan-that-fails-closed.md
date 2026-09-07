@@ -117,7 +117,7 @@ and `magic` return zero. The plumbing exists; only the classification is missing
 
 ### blocker: capability-inventory-second-consumer
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — it turns on whether a per-skill capability manifest is worth building before a real non-security consumer exists to read it, which is a scope decision, not a technical one.
@@ -126,6 +126,40 @@ and `magic` return zero. The plumbing exists; only the classification is missing
   1. Find or name a concrete non-security consumer for the manifest and state which fields it reads and what decision they feed.
   2. If none exists, leave `agents/roadmaps/later/road-to-capability-native-execution.md` parked and revisit only when one appears.
 - **Resolved when:** a named non-security consumer states which manifest fields it reads and what decision they feed.
+- **Resolution (2026-09-07) — outcome state: `narrowed`.** Disposition (b)
+  RE-SCOPE: the criterion is answerable by a bounded factual observation, and the
+  observation was made rather than the decision taken. **The survey found no such
+  consumer, and the dated absence is the resolution.** Absence is not
+  authorization: nothing here licenses building the manifest, and
+  `agents/roadmaps/later/road-to-capability-native-execution.md` is left parked
+  and untouched. Framework of record: AI council 2026-09-06, disposition (b).
+
+  **The survey, run over `src/` at `d08656dfe` on 2026-09-07.** No per-skill
+  capability manifest exists to consume: the three `src/config/*capab*` files are
+  different artifacts — `assurance-capability-registry.json` inventories assurance
+  capabilities by axis, `capability-native-outcome-bars.json` is the parked
+  roadmap's own pre-registered bars (and is read by nothing outside its test), and
+  `host-capabilities.yml` describes HOSTS, not skills. Of the four field classes
+  the source round proposed (component digests, declared tools, observed
+  capability classes, script sinks), **exactly one has any reader at all**:
+
+  | Surface reading a per-skill `execution.allowed_tools` | Is it a non-security consumer? |
+  |---|---|
+  | `lint_skill_frontmatter_safety.ts` | No — this IS the security detector the criterion excludes. |
+  | `tool_registry.ts` | No — the tool allowlist, i.e. the same security surface. |
+  | `skill_linter.ts`, `lint_host_portability.ts`, `schemas/skill.schema.json`, `schemas/subagent.schema.json` | No — VALIDATORS. They check the declaration's shape; they do not read it to feed a decision, which is what the criterion asks for. |
+  | `runtime_registry.ts`, `runtime_dispatcher.ts` | No — the dispatcher's own docstring says it "enforce[s] safety", which puts it on the security side of the line. Both are ADR-200 ports declaring `No behaviour changes`. |
+  | `skill_preview.ts` | No — it RENDERS declared intent for a human and explicitly "NOT a sandbox". It feeds no decision. |
+  | component digests · observed capability classes · script sinks | **Zero readers.** The middle one is the proposed detector's own output, so it could not have one. |
+
+  Measured at the same commit: **52 of 299** skills declare an `execution:` block,
+  so **247 declare none** — the roadmap's figure, re-derived rather than quoted.
+  An underdeclaration finding still has no defined meaning for five sixths of the
+  corpus, which is the condition that made this blocker exist.
+
+  *Reopening condition, unchanged and observation-based:* a named non-security
+  surface states which manifest fields it reads and what decision they feed. Not a
+  date, and not "someone proposes a manifest".
 - The source round's largest proposal is a generated per-skill manifest carrying component
   digests, declared tools, observed capability classes and script sinks. Its own final
   draft gates promotion on a second, non-security consumer existing — otherwise a security
@@ -138,7 +172,7 @@ and `magic` return zero. The plumbing exists; only the classification is missing
 
 ### blocker: mcp-fingerprint-slot
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — pre-use interception changes the tool invocation path in a way that observe-only recording does not, and that trade-off belongs to the owner.
@@ -147,6 +181,58 @@ and `magic` return zero. The plumbing exists; only the classification is missing
   1. Choose pre-use interception (a `pre_tool_use` binding) or observe-only recording (a `post_tool_use` binding) for `mcp_tool_fingerprint.ts`.
   2. Wire the chosen slot in `src/scripts/hook_manifest.yaml` and confirm `grep -c mcp_tool_fingerprint src/scripts/hook_manifest.yaml` returns a non-zero count.
 - **Resolved when:** the owner picks a slot and `mcp_tool_fingerprint.ts` is bound in `hook_manifest.yaml`.
+- **Resolution (2026-09-07) — outcome state: `decision resolved, implementation
+  transferred`. The clause above was NOT satisfied as literally written, and this
+  entry does not claim it was.** Step 1 (pick the slot) is closed. Step 2 (wire it)
+  moved to
+  [`agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md`](stubs/road-to-mcp-fingerprint-slot-binding.md).
+  `grep -c mcp_tool_fingerprint src/scripts/hook_manifest.yaml` still returns **0**
+  and the store's protection level is still zero; a reader must not infer otherwise
+  from `Status: resolved`, which is the only token the archival gate accepts.
+
+  **The decision, closed.** Slot `post_tool_use`, mode observe-only, authorization
+  granted **none**, pre-use interception **no**. AI council 2026-09-06, 2 seats,
+  unanimous.
+
+  **Why the wiring did not land here — and this is a decision, not an omission.**
+  This blocker's own `Blocks:` field says it gates "work deliberately excluded from
+  this roadmap", while its `Resolved when:` requires that excluded work to be done.
+  Those are mutually unsatisfiable, and AC-8 of this roadmap decides which one
+  gives: *"No new gate script, no new hook concern, no new CLI verb … exists in the
+  tree as a result of this roadmap."* Binding the store adds a new hook concern to
+  the per-host `post_tool_use` lists, so executing the settled decision inside this
+  change would make AC-8 false. AI council 2026-09-07 (2 seats, convergent) ruled
+  that amending AC-8 inside the roadmap AC-8 governs, solely so the binding may
+  land and the roadmap still be called complete, has the shape of goalpost movement
+  — and that the honest disposition is to close the decision half, transfer the
+  implementation, preserve AC-8, and say plainly that the original condition was
+  superseded rather than met. Question and both responses:
+  `agents/runtime/council/{questions,responses}/mcp-fingerprint-slot-vs-ac8.md`
+  (gitignored and auto-pruned; the substance is carried here and in the stub).
+
+  **This is not a silent downgrade, and the check was run rather than assumed.**
+  `road-to-mcp-runtime-integrity` § "The no-silent-downgrade rule" does not forbid
+  the post-use variant — *"The variant stays a legitimate option; what is forbidden
+  is choosing it without the owner recording that they chose it."* It requires a
+  recorded trade-off, which this entry and the stub are. Two measured facts at
+  `d08656dfe`: nothing is being substituted, because the store is bound to no slot
+  at all, so the move is zero → observation rather than pre-use → post-use; and
+  pre-use is unavailable on its own gate independent of this decision, because
+  `check_composite_arming` reports "no composite store … NOT the same as armable"
+  and `hook-latency-budget.json` carries `observe_only: true` with `p50_ci: null`.
+  That rule's own reopening condition has therefore not fired.
+
+  **Observe-only must never be cited as satisfying a preventive runtime-integrity
+  guarantee.** It detects a rug-pull after the first call; for a tool with
+  irreversible side effects that is a post-mortem, not a control. The prevention
+  floor is zero before and zero after.
+
+  *Reopening conditions, two and separate:* the wiring trigger in the stub
+  (before any claim or dependent surface assumes fingerprint recording, or before
+  the first non-test MCP tool execution relies on the store, or 2026-12-07); and,
+  unchanged, the parent lock's own — `check_composite_arming` reports armable AND
+  the latency ceiling carries a number, at which point the slot choice is reopened
+  on that roadmap's terms and nothing here prejudges it.
 - `src/scripts/mcp_tool_fingerprint.ts` is complete and bound to no hook slot —
   `grep -c mcp_tool_fingerprint src/scripts/hook_manifest.yaml` returns 0, and its only
   importer is its own test. Its protection level is therefore zero. Choosing the slot is a
@@ -168,11 +254,64 @@ and `magic` return zero. The plumbing exists; only the classification is missing
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No terminal outcome of any of the five umbrella children other than a completed run can produce an aggregate pass; each failure class has a fixture that was green before the repair and names its child after it.
-- [ ] AC-2 — `lint_agent_security` emits one `scanned: <N>` line counting inspected artifacts, is listed in `src/config/gate-coverage.yml` with a CI-identical `argv`, and a negative control drives its count below the floor and reddens `check_gate_coverage`.
-- [ ] AC-3 — `src/config/assurance-capability-registry.json` carries a `self-security-scan` entry whose `state` is `available`, and it reached `available` only after the fail-closed repair merged.
-- [ ] AC-4 — A quarantined candidate carrying a zero-width injection, a disclosure-suppression imperative, or a dangerous frontmatter key is refused by the scout with the flagging linter named, and a clean candidate is still accepted.
-- [ ] AC-5 — Every `security-lint: allow` pragma under `src/` and `docs/` carries a content fingerprint, altering the matched content stops the suppression from applying, and no allowlist file was added.
+- [x] AC-1 — No terminal outcome of any of the five umbrella children other than a completed run can produce an aggregate pass; each failure class has a fixture that was green before the repair and names its child after it.
+- [x] AC-2 — `lint_agent_security` emits one `scanned: <N>` line counting inspected artifacts, is listed in `src/config/gate-coverage.yml` with a CI-identical `argv`, and a negative control drives its count below the floor and reddens `check_gate_coverage`.
+- [x] AC-3 — `src/config/assurance-capability-registry.json` carries a `self-security-scan` entry whose `state` is `available`, and it reached `available` only after the fail-closed repair merged.
+- [x] AC-4 — A quarantined candidate carrying a zero-width injection, a disclosure-suppression imperative, or a dangerous frontmatter key is refused by the scout with the flagging linter named, and a clean candidate is still accepted.
+- [x] AC-5 — Every `security-lint: allow` pragma under `src/` and `docs/` carries a content fingerprint, altering the matched content stops the suppression from applying, and no allowlist file was added.
 - [ ] AC-6 — The packed tarball is classified by type with `binary` and `archive` at zero, and any dotfile or extensionless entry is carried by a path-and-size-bound pragma rather than a generic allowlist.
-- [ ] AC-7 — `docs/CLAIMS.md` and `docs/threat-model.md` assert nothing about dependency auditing, Python pinning, or runtime posture that a grep of `.github/` and the repo root contradicts.
-- [ ] AC-8 — No new gate script, no new hook concern, no new CLI verb, and no second suppression system exists in the tree as a result of this roadmap.
+
+  **AC-6 disposition, 2026-09-07 — NOT MET, and the criterion is deliberately
+  left unchanged.** Both AI-council seats refused to rewrite this sentence
+  inside the roadmap it governs, on the ruling this run had already applied to
+  the `mcp-fingerprint-slot` blocker: relaxing a criterion so the roadmap may be
+  called complete has the shape of goalpost movement. Evidence is appended here;
+  the sentence above is verbatim as authored.
+
+  **The mechanism is built and proven; the raw count is not zero.** Measured on
+  the built payload at `d08656dfe` (3033 entries): `archive 0` · **`binary 3`** ·
+  `dotfile 4` · `no-extension 8` · `text 3018` · **unaccounted 0**. Every entry
+  outside `text` carries a path-and-size-bound exception —
+  `sha256(path + "\n" + size)`, a written reason each, no allowlist file tracked
+  or untracked. Step 6.2's own `verify` passes literally: an ELF header written
+  to `src/scripts/zz-probe-binary.ts` made the check fail and NAME the file, the
+  `.ts` extension buying it nothing; removing the file restored green.
+
+  **The three binaries**, each with its bound digest recorded in
+  `src/scripts/check_pack_size.ts`, are 69-byte placeholder PNGs at
+  `src/scripts/media/lib/fixtures/{flux,gemini-image,ideogram}/asset-0001.png`.
+  They are part of a shipped consumer surface, not stray artifacts:
+  `src/scripts/media/lib/adapter-contract.md:7,355` declares
+  `scripts/media/lib/fixtures/<adapter-id>/` as the location media adapters emit
+  dry-run output into, and each directory's `result.json` names its PNG by that
+  path.
+
+  **The council split, and the split is recorded rather than resolved by the
+  agent.** Seat 1 read "at zero" as the RATCHET ("zero unaccounted", which is
+  how this file's pre-existing `CONTENT_CLASSES` already uses `limit: 0`
+  alongside `measured_in` provenance) and would tick the box with this note.
+  Seat 2 read it as the observed COUNT, noting that the exception clause names
+  only dotfile and extensionless entries and that step 6.2 calls binary and
+  archive "classes that should be empty" — so inserting the absent word
+  "unaccounted" materially relaxes an observable requirement. A split escalates;
+  and adopting the relaxing reading is the ACCEPTING direction on a governance
+  control, which the run's own framework puts out of the agent's reach. **So the
+  conservative reading stands and this box stays open.**
+
+  **What closes it — an owner decision among four, none of them this agent's to
+  take:** (1) remove the PNG fixtures from `package.json` `files[]`; (2)
+  generate equivalent fixtures during tests or dry runs instead of shipping
+  them; (3) ship a textual representation and materialize the PNG where needed,
+  if the adapter contract permits; or (4) formally amend the requirement to
+  permit individually bound binary exceptions — outside this roadmap's own
+  self-certification. Options 1-3 are changes to a shipped consumer-facing
+  surface owned by whoever owns the media adapters.
+
+  *This roadmap keeps responsibility.* The work is NOT transferred to a stub:
+  seat 2's condition for `[~]` is a real follow-on roadmap that explicitly
+  accepts the work and its estate cost, and manufacturing one for archival
+  convenience is the same shape as widening a ratchet for bookkeeping. The
+  roadmap therefore does not archive, and that visible open state is the
+  accountability mechanism.
+- [x] AC-7 — `docs/CLAIMS.md` and `docs/threat-model.md` assert nothing about dependency auditing, Python pinning, or runtime posture that a grep of `.github/` and the repo root contradicts.
+- [x] AC-8 — No new gate script, no new hook concern, no new CLI verb, and no second suppression system exists in the tree as a result of this roadmap.
