@@ -84,9 +84,9 @@ so the source round's rename-then-rename-back is dropped.
 
 - [x] **4.1 Give all five children a bounded root mode.** A `--root` flag that scopes the scan, with each linter's current default root retained when the flag is absent.
       verify: `grep -c -- '--root' src/scripts/lint_{hidden_unicode,confusables,instruction_smuggling,mcp_config_security,skill_frontmatter_safety}.ts` returns a non-zero count for each of the five; a run with no flag scans the same corpus it scans today.
-- [ ] **4.2 Build the candidate corpus before wiring the scout.** Quarantine fixtures carrying a zero-width injection, a disclosure-suppression imperative, and a dangerous frontmatter key, plus one clean candidate.
+- [x] **4.2 Build the candidate corpus before wiring the scout.** Quarantine fixtures carrying a zero-width injection, a disclosure-suppression imperative, and a dangerous frontmatter key, plus one clean candidate.
       verify: against today's `intake()` all four are accepted, reproducing the gap — `src/scripts/skill_scout.ts:272-299` refuses only on symlink, extension, exec-bit and size.
-- [ ] **4.3 Make the scout run the rooted scan on the quarantine directory.** The gate refuses a candidate whose content a child linter flags, and the refusal names the linter.
+- [x] **4.3 Make the scout run the rooted scan on the quarantine directory.** The gate refuses a candidate whose content a child linter flags, and the refusal names the linter.
       verify: the three payload fixtures from 4.2 are refused with the linter named; the clean fixture is still accepted; the existing scout rejection tests are unchanged.
 
 ## Phase 5 — Suppressions bound to the evidence they accept
