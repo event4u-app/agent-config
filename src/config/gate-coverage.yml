@@ -68,9 +68,14 @@
 # security umbrella, which until this change was the one gate in the tree whose
 # exit code `docs/CLAIMS.md` cites as evidence while publishing no count at all.
 # Recomputed on this tree rather than incremented: `count_gate_scripts()` returns
-# **319** and `grep -c '^  - id:'` returns **91** (90 before this row), so
-# 91/319 = 28.5 %. One script arrived since the 2026-09-06 block below without a
-# recount in between — the same drift every block here keeps describing.
+# **320** and `grep -c '^  - id:'` returns **92** (91 with this row before the
+# merge below), so 92/320 = 28.8 %. Re-measured a second time after merging
+# `origin/main`, which landed `check_mcp_doc_drift` and one further row: the
+# first reading on this branch was 319/91 = 28.5 %, and publishing that would
+# have described a tree the merge had already replaced. Two scripts and two rows
+# arrived since the 2026-09-06 block below without a recount in between — the
+# same drift every block here keeps describing, and the reason this branch
+# recounted twice rather than once.
 
 # RECOUNTED 2026-09-06, on the change that adds `lint_motion_authority_drift`.
 # Recomputed on this tree rather than incremented, because the block below
