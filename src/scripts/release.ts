@@ -126,6 +126,7 @@ import {
     derive_category_hits,
     render_derived_head_values,
 } from './_lib/release_highlights.js';
+import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import { preflightPosition } from './_lib/release_position.js';
 import {
     RELEASE_HEAD_DEFAULT,
@@ -933,72 +934,10 @@ function print_preview(plan: Plan): void {
 }
 
 function confirm(prompt: string): boolean | null {
-    const ans = _input(`${prompt} [y/N] `);
+    const ans = promptLine(`${prompt} [y/N] `);
     if (ans === null) return null; // no usable controlling terminal
     const norm = ans.trim().toLowerCase();
     return norm === 'y' || norm === 'yes';
-}
-
-/** Can we prompt at all — is fd 0 a TTY, or is a controlling terminal openable? */
-function _canPrompt(): boolean {
-    if (process.env.CI) return false; // CI is non-interactive by contract → require --yes
-    if (process.stdin.isTTY) return true;
-    try {
-        const fd = fs.openSync('/dev/tty', 'r');
-        fs.closeSync(fd);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-/**
- * Mirror of Python `input(prompt)` — write the prompt, read one line from the
- * controlling terminal. Returns `null` when no terminal is reachable.
- *
- * The answer is ALWAYS read from a freshly opened, blocking `/dev/tty`
- * (`openSync(..., 'rs')`), NEVER from fd 0. `task release` / `./scripts-run`
- * run this under go-task's `interactive: true`, which leaves fd 0 a TTY
- * (`process.stdin.isTTY === true`) but one Node treats as NON-blocking — so a
- * bare `readSync(0)` throws `EAGAIN`, the catch swallows it, and the `[y/N]`
- * prompt "auto-aborts" without ever waiting (the exact failure this fixes;
- * reproduced with `isTTY === true`). A fresh blocking `/dev/tty` descriptor
- * blocks for real input regardless of how the script was invoked — the proven
- * synchronous-prompt pattern.
- */
-function _input(prompt: string): string | null {
-    process.stdout.write(prompt);
-    let fd: number;
-    try {
-        // 'rs' → O_RDONLY | O_SYNC: a fresh, blocking descriptor on the
-        // controlling terminal, unaffected by Node's non-blocking fd 0.
-        fd = fs.openSync('/dev/tty', 'rs');
-    } catch {
-        return null; // no controlling terminal (true non-interactive)
-    }
-    try {
-        const buf = Buffer.alloc(1);
-        const chars: number[] = [];
-        for (;;) {
-            let bytesRead: number;
-            try {
-                bytesRead = fs.readSync(fd, buf, 0, 1, null);
-            } catch (e) {
-                const code = (e as NodeJS.ErrnoException).code;
-                // A blocking /dev/tty should not yield these, but inherited
-                // descriptor flags can — retry rather than abort the prompt.
-                if (code === 'EAGAIN' || code === 'EINTR') continue;
-                break; // EOF / EIO → EOFError analogue; return what we have.
-            }
-            if (bytesRead === 0) break;
-            const b = buf[0] as number;
-            if (b === 0x0a) break; // newline terminates the line (stripped, like input()).
-            chars.push(b);
-        }
-        return Buffer.from(chars).toString('utf-8');
-    } finally {
-        fs.closeSync(fd);
-    }
 }
 
 export interface ConfirmVerdict {
@@ -1024,7 +963,7 @@ export function confirmGate(target: string, yes: boolean): ConfirmVerdict {
             'No terminal available for the [y/N] confirmation (non-interactive shell). ' +
             'Re-run with --yes to confirm, e.g. `task release -- --yes`.',
     };
-    if (!_canPrompt()) return noTerminal;
+    if (!canPrompt()) return noTerminal;
     const answer = confirm(`Proceed with release ${target}?`);
     // null = the controlling terminal vanished between the probe and the read;
     // surface the actionable --yes guidance, never a bare silent "aborted.".
@@ -1684,17 +1623,33 @@ function main(argv: readonly string[] | null = null): number {
 
     const bump = resolve_bump(args.bump_override, commits);
 
-    // Resume mode: prefer an existing `release/X.Y.Z` over computed bump,
-    // so we don't accidentally start a 1.16.0 release while 1.15.0 is
-    // still in flight. Explicit --version still wins.
-    const in_flight = args.resume ? _detect_in_flight_target() : null;
+    // An in-flight release is a STATE, never a flag — so the probe runs
+    // unconditionally and `--resume` no longer decides what is being released.
+    //
+    // The comment this replaces already stated the right intent ("so we don't
+    // accidentally start a 1.16.0 release while 1.15.0 is still in flight") and
+    // the `args.resume ?` gate narrowed it to resumed runs only. Measured on
+    // 14.20.0: `guard_release_curation` refuses after step 2 has bumped
+    // `package.json`, so a plain re-run computed the bump from the ALREADY
+    // BUMPED version, landed on 14.21.0, and then refused its own branch with
+    // `release must run from 'main' or 'release/14.21.0', currently on
+    // 'release/14.20.0'`. The 2026-09-07 start-position fix could not help: it
+    // was asked about the wrong target.
+    //
+    // Neither branch of `_detect_in_flight_target` needs the flag — HEAD
+    // sitting on `release/X.Y.Z`, and a `package.json` version whose tag is not
+    // PUBLISHED, are both facts about the repository. On a clean `main` after a
+    // completed release the second branch returns null (the tag is published),
+    // so a fresh release is unaffected; what changes is that an abandoned bump
+    // can no longer be silently released as the NEXT version.
+    const in_flight = _detect_in_flight_target();
     let target: string;
     if (args.explicit) {
         target = args.explicit;
     } else if (in_flight) {
         target = in_flight;
         process.stdout.write(
-            `(resume) in-flight target ${in_flight} (package.json version with no tag yet)\n`,
+            `in-flight target ${in_flight} (package.json version with no published tag yet)\n`,
         );
     } else {
         target = bump_version(current, bump);

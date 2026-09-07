@@ -30,7 +30,67 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Added
+
+- **A push no longer ships a branch whose tree contradicts its own commits.**
+  `check_branch_work_committed` runs first in the pre-push hook, and it exists
+  because this branch produced the defect it guards: a merge-reconciled baseline
+  was written into `gate-violation-baselines.json` **after** `git add`, so
+  `git commit --no-edit` captured the staged side, the reconciled number stayed
+  in the working tree, and the push went out asserting a baseline the tree
+  contradicted. The operator found it, not the pipeline — and **no CI gate
+  could have**: CI checks out the pushed commit, and the working tree holding
+  the lost edit does not exist there. That is why this gate is pre-push and
+  local-only, the same reach `check_branch_freshness` has.
+  It blocks by **authorship**, not on a dirty tree, because a blanket
+  clean-tree rule would fire on every gate script's own report output and train
+  the operator to set the skip variable: staged-and-changed-since (the measured
+  shape), staged at all (`git add` is recorded intent, and a push carries
+  commits rather than the index), and dirty files this branch's own commits
+  touch. A parallel session's edit and a gate's report output are named and
+  waved through. One residual limit is stated in the header rather than hidden:
+  a file this branch created and neither staged nor committed cannot be told
+  apart from a foreign untracked file; the staged rule closes it at the first
+  `git add`, and that rule exists because testing the gate against the live
+  tree put its own source file in the advisory class.
+
 ### Fixed
+
+- **The release's written obligation is now answerable, not only refusable.**
+  Across 14.18.0, 14.19.0 and 14.20.0 the governance-versus-product response was
+  discharged **by hand, mid-release**: `task release` bumped the version, refused
+  over the placeholder sentinel, and a human typed the sentence into the aborted
+  tree. At 14.19.0 the answer had already been staged in `## [Unreleased]` one
+  commit earlier (`a9bd75d55`) — nothing read it, so it was moved into the
+  section by hand anyway. The answer was prepared and the pipeline still refused
+  over it; that, not a missing answer, is the defect. `guard_release_curation`
+  now tries three routes in cost order: a `> Next cycle ships …` and/or
+  `> **Previous cycle:** …` line **staged** under `## [Unreleased]` is consumed
+  into the section and cleared from `[Unreleased]`; failing that, a reachable
+  terminal is **asked** and what the human types is written; failing that, the
+  run refuses exactly as before, which is what keeps CI and scripted releases
+  honest. `ADR-253` is untouched — the generator still never writes the answer,
+  the measured level is never staged (it stays freshly measured so a stale
+  number cannot ride in), and every guard predicate still runs over a staged or
+  typed answer. The read-back obligation joined the mix response at this guard in
+  the same change: until now `check_release_highlights` was the earliest gate
+  reading it, so a section answering the mix and not the promise passed locally
+  and died on the PR.
+
+- **The 14.19.0 start-position fix shipped incomplete; this is its other half.**
+  It taught `preflightPosition` to accept `release/{target}`, and 14.20.0 then
+  failed with `release must run from 'main' or 'release/14.21.0', currently on
+  'release/14.20.0'`. Step 2 had already bumped `package.json`, so a plain
+  re-run computed the bump from the **already bumped** version and asked the
+  preflight about a version one higher than the one in flight — the start-position
+  fix could not help, it was asked about the wrong target.
+  `_detect_in_flight_target` needed no flag for either of its branches (HEAD on a
+  release branch; a manifest version whose tag is not published), and the comment
+  at the call site already stated that intent — the `args.resume ?` gate narrowed
+  it to resumed runs. The probe now runs unconditionally, so an abandoned bump can
+  no longer be silently released as the NEXT version either. A wiring assertion
+  pins it, because the probe's own unit tests passed throughout: they never asked
+  whether anything called it unconditionally.
 
 - **The curated-head refusal is recoverable again — its own remedy was refused
   by the preflight.** `guard_release_curation` stops between step 2 and step 3,

@@ -29,6 +29,7 @@ import {
     CURATED_HEAD_INSTRUCTION,
     MIX_RESPONSE_MARKER,
     MIX_RESPONSE_PLACEHOLDERS,
+    NEXT_SECTION_RE,
     PROMISE_OUTCOMES,
     PROMISE_PHRASE,
     PROMISE_READBACK_MARKER,
@@ -686,6 +687,109 @@ export function stale_draft_labels(
     curated: Readonly<Record<string, string>>,
 ): string[] {
     return HEAD_LABELS.filter((l) => (curated[l] ?? '').includes(DERIVED_MARKER));
+}
+
+// Prepared answers, staged by the maintainer under `## [Unreleased]`.
+
+/**
+ * The `## [Unreleased]` body, or null when the file carries no such section.
+ *
+ * Bounded by `NEXT_SECTION_RE`, the same terminator `extract_changelog_section`
+ * uses, so an era banner ends the section exactly as a version heading does.
+ */
+export function unreleased_body(changelogText: string): string | null {
+    const m = /^##\s+\[Unreleased\]\s*$/mu.exec(changelogText);
+    if (m === null) return null;
+    const after = changelogText.slice(m.index + m[0].length);
+    const next = NEXT_SECTION_RE.exec(after);
+    return next === null ? after : after.slice(0, next.index);
+}
+
+/**
+ * A response the maintainer STAGED for the next release, read back at release
+ * time instead of demanded during it.
+ *
+ * Why this exists, and why it is not the generator answering itself:
+ *
+ * `ADR-253` and `CHANGELOG-conventions.md` require a HUMAN sentence, and the
+ * placeholder sentinel exists so a generator cannot discharge its own
+ * written-answer obligation — a rule this function does not touch and must not
+ * be read as touching. What it changes is WHEN the human writes it.
+ *
+ * Measured across three consecutive releases (14.18.0, 14.19.0, 14.20.0): the
+ * obligation was discharged by hand, mid-release, after `task release` had
+ * already bumped the version and aborted — and at 14.19.0 the maintainer had
+ * ALREADY written the read-back into `## [Unreleased]` one commit earlier
+ * (`a9bd75d55`), which nothing read, so it was moved into the section by hand
+ * anyway. The answer was prepared and the pipeline still refused over it. That
+ * is the defect: not a missing answer, an unread one.
+ *
+ * So the staging ground is `## [Unreleased]`, where the entries this release
+ * ships are already being written, and the shape is the shape the section
+ * wants — no second syntax to learn, and no second place for the measured
+ * level to live (the level stays the generator's, always freshly measured).
+ *
+ * Returns the blockquote lines verbatim; a staged block containing a
+ * placeholder is returned unchanged rather than filtered, so the guards refuse
+ * it exactly as they refuse an unedited one. Silently dropping it would turn a
+ * half-finished answer into a missing one, which reads as a different defect.
+ */
+export function staged_response(changelogText: string, marker: string): string | null {
+    const body = unreleased_body(changelogText);
+    if (body === null) return null;
+    const idx = body.indexOf(marker);
+    if (idx === -1) return null;
+    const lineStart = body.lastIndexOf('\n', idx) + 1;
+    const block = mix_response_block(body, lineStart);
+    return block.trim() === '' ? null : block;
+}
+
+/** Remove a staged block from `## [Unreleased]` once it has been consumed. */
+export function drop_staged_response(changelogText: string, block: string): string {
+    const at = changelogText.indexOf(block);
+    if (at === -1) return changelogText;
+    let end = at + block.length;
+    // Absorb the blank line the block was separated by, so consuming one of two
+    // staged blocks does not leave a widening gap behind.
+    if (changelogText.startsWith('\n\n', end)) end += 1;
+    return changelogText.slice(0, at) + changelogText.slice(end);
+}
+
+/**
+ * Replace the writer's placeholder line(s) under the governance marker with a
+ * human answer, keeping the generator's measured level line untouched.
+ *
+ * The level stays where it was rendered, always freshly measured, so a staged
+ * answer can never carry a stale number into the published section — the one
+ * thing a maintainer editing a whole block by hand could get wrong.
+ */
+export function apply_mix_answer(sectionBody: string, answerLines: readonly string[]): string {
+    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
+    if (idx === -1) return sectionBody;
+    const lineStart = sectionBody.lastIndexOf('\n', idx) + 1;
+    const existing = mix_response_block(sectionBody, lineStart);
+    const levelLine = existing.split('\n')[0] as string;
+    return (
+        sectionBody.slice(0, lineStart) +
+        [levelLine, ...answerLines].join('\n') +
+        sectionBody.slice(lineStart + existing.length)
+    );
+}
+
+/**
+ * Add a read-back block under the governance response, separated by a blank
+ * line so `mix_response_block` does not swallow one into the other.
+ *
+ * A section that already answers is returned unchanged: this consumes a staged
+ * answer, it never overwrites one a human wrote into the section directly.
+ */
+export function apply_readback(sectionBody: string, block: string): string {
+    if (sectionBody.includes(PROMISE_READBACK_MARKER)) return sectionBody;
+    const idx = sectionBody.indexOf(MIX_RESPONSE_MARKER);
+    if (idx === -1) return sectionBody;
+    const lineStart = sectionBody.lastIndexOf('\n', idx) + 1;
+    const end = lineStart + mix_response_block(sectionBody, lineStart).length;
+    return sectionBody.slice(0, end) + '\n\n' + block.trimEnd() + sectionBody.slice(end);
 }
 
 // ─── git span collection ────────────────────────────────────────────────────
