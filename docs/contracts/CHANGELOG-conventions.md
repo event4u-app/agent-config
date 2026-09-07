@@ -338,169 +338,61 @@ every introduced or substantially reworked subsystem — required by
 `src/scripts/lint_changelog_rollback.ts` for versions above the current
 `package.json` version (historical sections never retro-fail).
 
-## Governance-versus-product response
+## Governance-versus-product line
 
-> **In force from the first reading — not from a threshold.** Added 2026-09-04
-> by [`ADR-253`](../decisions/ADR-253-per-pr-user-artifact-gate-declined.md),
-> which declines the per-PR user-artifact gate an external reviewer asked for
-> twice and replaces it with a release-level measurement. Read that record
-> before proposing the per-PR shape again; it is declined on mechanism, so a
-> worse ratio does not revive it.
-
-`src/scripts/measure_release_mix.ts` classifies a release span from the files
-its commits touch — never from commit subjects — into `consumer`,
-`governance`, `maintenance`, `mixed` and `unclassified`, using the versioned
-mapping in `src/scripts/release_mix_taxonomy.json`. Generated projections and
-lockfiles are excluded from both views by name.
-
-**The obligation.** When governance-only commits **strictly outnumber**
-consumer-only commits over the release span, the section under release carries
-a written response naming either the next cycle's consumer work or a maintainer
-justification. One line, immediately under the curated head, outside it:
+The writer renders one machine-measured line immediately under the curated
+head, outside it:
 
 ```md
-> **Governance mix:** governance-only 16 vs consumer-only 6 (taxonomy 1.0.0).
-> Next cycle ships <the consumer work>, tracked in <roadmap or issue>.
+> **Governance mix:** governance-only 31 vs consumer-only 10 (taxonomy 1.0.0).
 ```
 
-It sits outside the `### Release highlights` head on purpose: the head's
-ten-line cap (`RELEASE_HEAD_CAP_LINES`) is for operator-relevant product
-lines, and a sixth label would make every historical section retroactively
-incomplete.
+It is a **report**, produced end to end by `measure_release_mix` via
+`measure_mix_obligation`. It asks the releaser for nothing, no gate reads it,
+and no release stops over it. A measurement failure (shallow clone, missing
+tag) simply omits the line.
 
-**What is enforced, and what is not.** `check_release_highlights` refuses a
-release whose section owes a response and does not carry one — a **missing
-answer**, never a particular number. No threshold is committed to this
-repository, and none may be until at least two readings exist; both council
-seats refused to pick one on a single cycle and the reviewer's "more than half
-the cycle" carries no denominator. Read the measurement command yourself with:
+### The written-answer obligation is deleted — 2026-09-07, ADR-261
 
-```bash
-./scripts-run src/scripts/measure_release_mix --from <prev-tag> --to <tag> --label <tag>
-```
+From 2026-09-04 to 2026-09-07 this section carried a **written** obligation:
+when governance-only commits outnumbered consumer-only commits over the release
+span, the section had to carry human prose naming the next cycle's consumer
+work, and the following release had to read that promise back and report
+`shipped` / `did not ship` / `withdrawn`. It was enforced at four sites, backed
+by placeholder sentinels, a length floor, an outcome vocabulary, a staging
+channel under `## [Unreleased]` and an interactive prompt inside `task release`.
 
-**Coverage, stated honestly.** Corrected 2026-09-05, after the paragraph this
-replaces described the gap and 14.17.0 then fell into it (PR #1856). It read:
-*"the local push guard reads `publication_blockers`, a different function, and
-does not check the mix response — so the earliest refusal for this one
-obligation is the PR, not the push."* That was accurate and it was a defect
-written down rather than fixed.
+The owner ended it on 2026-09-07, mid-release, and the reasoning is the
+package's own purpose: **agent-config exists to make the maintainer's work
+cheaper.** A gate that halts a green pipeline until a human types a sentence
+about a cycle that has not happened yet moves cost onto the person the tool is
+for. Three consecutive releases (14.18.0, 14.19.0, 14.20.0) discharged it by
+hand mid-run; the mechanism built to fix that added a staging channel and a
+prompt, and the prompt fired anyway on the fourth (14.21.0) — this time after
+`staged_response`'s unanchored `indexOf` had cut two sentences out of an
+unrelated `## [Unreleased]` entry that merely *described* the mechanism, and
+pasted them into the release head. A control that corrupts the file it governs
+has answered the question of whether it earns its place.
 
-**Three ways to a written answer, added 2026-09-07.** The obligation above was
-discharged BY HAND, mid-release, in each of 14.18.0, 14.19.0 and 14.20.0 —
-`task release` bumped the version, refused over the placeholder, and a human
-typed the sentence into the aborted tree. At 14.19.0 the answer had already been
-staged in `## [Unreleased]` one commit earlier (`a9bd75d55`); nothing read it,
-so it was moved into the section by hand anyway. The answer was prepared and the
-pipeline still refused over it.
+**What is gone:** `mix_response_blockers`, `promise_readback_blockers`,
+`previous_promise`, `readback_answer`, `human_answer`, `mix_response_block`,
+`MIX_RESPONSE_MIN_CHARS`, `MIX_RESPONSE_PLACEHOLDER(S)`, `PROMISE_PHRASE`,
+`PROMISE_READBACK_MARKER`, `PROMISE_OUTCOMES`, the `## [Unreleased]` staging
+channel (`staged_response`, `drop_staged_response`, `apply_mix_answer`,
+`apply_readback`, `unreleased_body`), the changelog writer seam that existed
+only to serve it, `check_governance_mix_response` and
+`check_previous_promise_readback`.
 
-So `guard_release_curation` now tries three routes, in cost order, and **none of
-them is the generator answering for itself** — the paragraph above is unchanged
-and still binding:
+**What is untouched:** every honesty control that is about a claim the *release
+itself* makes. `DERIVED_MARKER` (the generator's unrewritten draft head) still
+blocks, `CURATED_HEAD_INSTRUCTION` still blocks, the `_none_` contradiction
+check still blocks, and the `Tests: N` footer is still required. Those refuse a
+statement about **this** release that no human has stood behind. The deleted
+obligation refused the absence of a statement about a **future** one, which is a
+different thing and is not this package's business to demand.
 
-1. **Staged.** A `> Next cycle ships …` line and/or a
-   `> **Previous cycle:** …` line under `## [Unreleased]` is consumed into the
-   section under release and removed from `[Unreleased]`. The measured level is
-   NOT staged — it stays the generator's, freshly measured, so a stale number
-   cannot ride in on a prepared block.
-2. **Asked.** With a terminal reachable and the answer still missing, the run
-   prompts for it and writes what the human types. An empty answer changes
-   nothing.
-3. **Refused.** Non-interactive with nothing staged — the original behavior,
-   unchanged, which is what keeps CI and every scripted release honest.
-
-Every guard predicate still runs over the result: placeholders, the
-`MIX_RESPONSE_MIN_CHARS` floor and the read-back outcome vocabulary all apply to
-a staged or typed answer exactly as to a hand-edited one. What changed is *when*
-the human writes it, never *whether*.
-
-The read-back joined the mix response at this guard in the same change. Until
-then `check_release_highlights` was the earliest gate reading it, so a section
-that answered the mix and not the promise passed the local guard and died on the
-PR — the same "cheapest gate is the last one" shape the mix obligation was moved
-to fix, still open for its sibling.
-
-Three things now hold. The **writer emits the line**: `render_changelog_entry`
-measures the span it is already walking and writes the response block with the
-measured level and the `MIX_RESPONSE_PLACEHOLDER` sentinel — never a finished
-answer, because a generator that discharged a written-answer obligation for
-itself would turn it into a formality. **One predicate** (`mix_response_blockers`)
-is read by the CI gate and by the two local guards, so the two sides cannot
-drift. And the earliest refusal is now `guard_release_curation`, which runs
-before anything is committed, with `guard_release_branch_push` behind it before
-anything is pushed.
-
-**Where the line ends up, stated because it is not obvious.** The section is the
-single source for four published surfaces — the release-PR body, the annotated
-tag message, the GitHub Release notes, and the `CHANGELOG.md` that
-`package.json` `files` ships to npm. So the response is not an internal
-governance note: writing it, a reader outside the project sees this project's
-governance ratio and its answer to it. That is a deliberate consequence of
-single-sourcing the section, not an accident, and it is why the line is one
-sentence of plain prose rather than a metrics dump.
-
-A measurement that cannot run (shallow clone, missing tag) still degrades to a
-printed warning rather than to a refusal: this is a governance signal, not a
-correctness control, and turning an environment fact into a blocked release
-would be the wrong trade.
-
-The general form of that defect — a release-validation assertion with no local
-counterpart — is now registered rather than remembered:
-[`src/config/release-gate-locality.yml`](../../src/config/release-gate-locality.yml)
-relates every job in `release-validation.yml` to the command that reproduces it
-locally, `tests/scripts/release_gate_locality.test.ts` fails when a job has no
-row, and `task release:verify` runs the reproducible set. Three jobs genuinely
-cannot run before the PR exists; the registry says which and why.
-
-**Published readings** live in `agents/evidence/reports/release-mix-*.json`
-with a human summary in `agents/evidence/reports/release-mix-baseline.md`. They
-are levels, not verdicts.
-
-## Previous-cycle promise read-back
-
-**The defect.** The response block above generates a promise — `Next cycle
-ships …` — and until 2026-09-06 nothing ever read it back. An unmet promise
-could therefore be restated at every release, indefinitely, at zero cost: the
-debt was booked and never called. A commitment nothing reads back is not a
-commitment; it is a sentence.
-
-**The obligation.** When the PREVIOUS section's response block carries a
-`Next cycle ships` promise, the section under release states what became of it.
-One line, immediately under the curated head, outside it, in the same place and
-for the same reason as the response block:
-
-```md
-> **Previous cycle:** the <promise> promised in <X.Y.Z> did not ship; <what happened>.
-```
-
-**Three outcomes, one of which must be chosen** — `shipped`, `did not ship`, or
-`withdrawn` with its reason. The third exists because a promise the project
-decided not to keep is a legitimate state, and without it an author is pushed
-toward restating a dead promise as still-outstanding.
-
-**What is enforced, and what is not.** `check_release_highlights` refuses a
-**missing** answer, never a particular outcome. It does not require the promise
-to have been kept, and it enforces no deadline and no count. A gate that refused
-an unkept promise would price honesty above silence and teach the next author to
-promise less rather than to answer truthfully. The answer must name an outcome
-and clear the same written-length floor the response block uses
-(`MIX_RESPONSE_MIN_CHARS`), so the outcome word alone is not an answer, and the
-writer's own placeholders are refused there as they are here.
-
-**Coverage, stated honestly — the asymmetry the section above closed is open
-here.** The read-back is read by `check_release_highlights` only. The local
-guards (`guard_release_curation`, `guard_release_branch_push`) do **not** carry
-it, so the earliest refusal for this one obligation is the PR, not the push —
-the exact shape that cost 14.17.0 a red release PR for the response block. It is
-written down rather than fixed because the roadmap that added the read-back
-(`road-to-a-dated-trigger-that-decides`, § 2.1) specifies one reader and no new
-script, and widening it is a change to the local guards' contract rather than to
-this one. The predicate is already shared (`promise_readback_blockers`), so
-closing it later is a call site, not a second copy of the rule.
-
-Scope is the same as everywhere else here: only the section under release, and
-only the previous section's response block. A product line that happens to
-contain the phrase is not a promise.
+Historical sections keep their promise and read-back lines as published. They
+are release content, and nothing retro-fails.
 
 ## What counts as breaking
 
