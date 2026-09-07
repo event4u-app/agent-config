@@ -103,6 +103,81 @@ decision rather than derived as a conclusion, because the measurement alone does
 not select it — the measurement rules out `--layer`, and an owner chose partition
 over the alternatives.
 
+## Amendment — 2026-09-07 · the withhold reads the directory, not `installed.lock`
+
+The Decision above says **"No artefact appears in both. Overlap is zero by
+construction, not by suppression."** The first implementation did not deliver
+that, and this amendment is what makes the sentence true rather than a change to
+what it says.
+
+**What the implementation actually did.** `partitionActive` withheld only where
+the claude host layer verified against `installed.lock` — exact version equality
+plus a content fingerprint. Any mismatch fell back to the FULL projection, and
+every generator gated on that one boolean. So the partition was off for the whole
+of any release window by construction (the building version is always ahead of the
+installed one) and off on any machine whose install lagged a release.
+
+**Measured 2026-09-07** on the maintainer machine, `installed.lock` at 14.19.0
+against a 14.21.0 checkout:
+
+```
+rules     global 104 · project  15 · BOTH   0     ← correct: partitioned per host directory
+skills    global 307 · project 414 · BOTH 261     ← the veto's cost
+personas  global  32 · project  29 · BOTH  29     ← the veto's cost
+commands  global  94 · project   0 · BOTH   0
+```
+
+The rules row was right because rules were **already** partitioned per host
+directory on that directory's own contents (`hostLayerCarries`, added 2026-08-22
+for a different reason). Skills, personas and the colon-form commands hung off the
+version veto and were delivered twice, in every session, indefinitely.
+
+**The decision, taken by the owner on 2026-09-07 in their own framing:** the
+project layer carries only what exists solely for this package; everything the
+global layer holds is delivered from there and nowhere else; the version-based
+fallback that reintroduced duplicates is revoked.
+
+**What replaces it.** The withhold is per ARTEFACT NAME, on each host directory's
+own contents — the shape rules already used, extended to the other three families
+(`src/install/claudeLayerCarriage.ts`). An artefact `~/.claude/<family>` holds is
+withheld whatever `installed.lock` says; one it lacks stays, on its own, without
+keeping the rest alive with it. An unreadable layer withholds nothing, so a fresh
+CI checkout — which has no host layer at all — is unaffected, which is the property
+the 2026-08-19 council round protected by refusing a hard failure there.
+
+`verifyHostLayer` (né `partitionVerdict`) survives as a **diagnostic**: it reports
+whether the layer being withheld against is the one this checkout's installer
+stamped, and an unverified layer produces a warning naming `agent-config install`
+instead of a silent fallback to double delivery. It decides nothing.
+
+**Result, same machine, same day:** `check_single_delivery` reports
+`duplicated=0 name_overlap_different_shape=0` — down from 261 and 29.
+
+### Two things this amendment does NOT do, named rather than implied
+
+**Flat command wrappers are not withheld.** A flat command reaches the host as a
+hyphen-named wrapper under `skills/`, because the host does not register flat
+command FILES (probed ≤ 2.1.204, recorded at `condense.ts::_nested_command_subpath`).
+`~/.claude/skills` carries **none** of those wrappers — measured the same day, 307
+global skills = the 299 projected skills plus 8 unrelated — so withholding one
+would deliver that command nowhere. They are not duplication: nothing else
+delivers them. 49 remain in the project layer, and the open question is whether the
+host registers `~/.claude/commands/<slug>.md`; if it does, those 53 global files
+make 49 of the wrappers redundant. That is a host-behaviour claim and needs a probe,
+not a reading of this paragraph.
+
+**Package-only SKILLS are still installed globally.** The Decision's table records
+`skills (290) | 0 | 290` on a measurement that no skill declared
+`workspaces: [agent-config-maintainer]` alone. On 2026-09-07 **73 do**, and the
+installer ships all 299 skills globally — it excludes package-only RULES
+(`single_delivery_global_exclusion.test.ts`) and has no equivalent for skills. So a
+package-only skill reaches a consumer's global layer, which the Decision's second
+bullet says it should not. Per-name carriage makes that harmless for DUPLICATION
+(the project layer withholds all 73, so delivery is single either way) and does not
+address the scope question at all. Left open deliberately: closing it changes what
+the installer ships to consumers, which is a separate decision with its own blast
+radius.
+
 ## What ADR-226 got right, and is kept
 
 Superseding it is not a claim that it was wrong. Both halves of its reasoning were
