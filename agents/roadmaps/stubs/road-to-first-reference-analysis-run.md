@@ -18,6 +18,36 @@ review_by: 2026-12-24
 > `source-confidentiality` keeps local-only unless anonymised. Nothing here is
 > half-shipped and nothing was rejected on merit.
 
+## Status 2026-09-07 — PARTIALLY RESOLVED, one boundary of two
+
+**Not disposable yet, and the reason is specific rather than cautious.**
+[`road-to-bounded-reference-harvest-loop`](../road-to-bounded-reference-harvest-loop.md)
+proposed disposing of this stub on the ground that its Phases 3 and 4 resolve
+both trust boundaries above. Reproduction shows they resolve **one**:
+
+- **Raw named evidence — RESOLVED.** Phase 3 landed the opaque id derived from
+  identity plus pinned revision, moved every pass and loop artefact under the
+  gitignored `agents/.harvest-local/`, replaced the plaintext document header
+  with `opaque:<id>`, made the landed roadmap's filename derive from the
+  capability gap with a mechanical guard against a source identity appearing in
+  it, and stopped any plaintext URL reaching a subagent argument.
+- **Outbound third-party fetch — NOT RESOLVED.** Phases 3 and 4 contain nothing
+  that addresses it. A fetch is still a fetch, and no structural change in this
+  package can make it otherwise.
+
+Both AI-council seats (anthropic, openai — record
+`../../evidence/council/bounded-harvest-observation-slot.md`) held that this stub
+may **not** be disposed of on the parent's stated ground, and that when it is
+eventually disposed of, the record must attribute the fetch boundary's
+resolution to a **run-specific authorization** rather than structurally to
+Phases 3-4.
+
+**Receiver:**
+[`road-to-first-reference-analysis-observation`](../road-to-first-reference-analysis-observation.md)
+now owns the run, carries the frozen shadow-arm protocol, and holds the
+observation-based reopening trigger. This stub is disposed of by that roadmap's
+step 1.6, not before.
+
 ## Transferred work — quoted as it stood
 
 Phase 2 Step 1, verbatim from `road-to-distillation-followups.md` at the

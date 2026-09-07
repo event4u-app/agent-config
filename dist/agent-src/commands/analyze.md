@@ -2,13 +2,13 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo|inbox] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|repo|roadmap-repos|inbox] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo, analyze-inbox, analyze-conformance]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-repo, analyze-roadmap-repos, analyze-inbox, analyze-conformance]
 replaces: []
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, or inbox-artifact analysis.
+description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, repo, or inbox-artifact analysis.
 cluster: analyze
 type: orchestrator
 suggestion:
@@ -37,7 +37,8 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:decision` | `analyze/decision/command.md` | Audit a past architectural decision (did it hold?) |
 | `/analyze:near-miss` | `analyze/near-miss/command.md` | Post-mortem for a near-miss (same flow, lighter severity framing) |
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
-| `/analyze:reference-repo` | `analyze/reference-repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
+| `/analyze:repo` | `analyze/repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
+| `/analyze:roadmap-repos` | `analyze/roadmap-repos/command.md` | Walk the estate's encrypted reference tokens and feed each unique repo through `repo`, one subagent at a time |
 | `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 
@@ -63,7 +64,7 @@ match:
 | "pre-mortem", "what could go wrong", "imagine failure", "vor dem Start" | `premortem` |
 | "decision review", "ADR", "did this hold up", "rückblick Architektur" | `decision` |
 | "production is down", "active incident", "Vorfall", "Prod ist down" | `incident` |
-| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor" | `reference-repo` |
+| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor" | `repo` |
 
 Assign a confidence level (high / medium / low) per framework based on
 signal count. A framework with zero signals gets `low`.
@@ -81,7 +82,7 @@ escape:
 > 3. [low] Pre-mortem (`/analyze:premortem`) — imagined-failure analysis before committing
 > 4. [low] Decision review (`/analyze:decision`) — did a past architectural decision hold up?
 > 5. [low] Incident (`/analyze:incident`) — full live-incident coordination + RCA + post-mortem
-> 6. [low] Reference repo (`/analyze:reference-repo`) — deep-dive an external repo → comparison + adoption plan
+> 6. [low] Reference repo (`/analyze:repo`) — deep-dive an external repo → comparison + adoption plan
 > 7. Describe in your own words — I'll re-classify
 
 **Empfehlung:** 1
@@ -113,7 +114,11 @@ and ask which one was intended. One question, no guessing.
   this turn.
 - **Do NOT commit, push, or open a PR** unless a sub-command
   explicitly authorizes it.
-- **Do NOT chain sub-commands.** One `/analyze <sub>` per turn.
+- **Do NOT chain sub-commands.** One `/analyze <sub>` per turn. **Exactly one
+  exception:** `roadmap-repos` invokes `repo` once per repository, each in its
+  own subagent, sequentially — never in the orchestrator's own turn and never as
+  a fan-out. It is the only sub-command permitted to invoke another, and it may
+  invoke only `repo`.
 - **Memory loop applies** — every sub-command that produces an
   analysis output MUST draft a memory candidate via
   `/memory propose` per

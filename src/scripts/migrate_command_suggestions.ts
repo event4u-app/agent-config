@@ -73,7 +73,7 @@ export const ELIGIBLE: Record<string, [string, string]> = {
         'audit my agent docs, check the state of the agents/ directory',
         'stale files under agents/ or recent edits to .augment/ without doc updates',
     ],
-    'analyze-reference-repo': [
+    'analyze-repo': [
         "look at how X does this, compare with that other repo, study this competitor's approach",
         'external repo URL or path mentioned in the prompt',
     ],
