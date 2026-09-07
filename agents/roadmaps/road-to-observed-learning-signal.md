@@ -16,58 +16,116 @@ The experience loop's machinery already exists and is starved. `road-to-experien
 
 ## Phase 1 — Correct the two documents that mislead the next reader
 
-- [ ] **1.1 Remove the retired no-decay / no-runtime doctrine from the pipeline skill.** `src/skills/skill-improvement-pipeline/SKILL.md:84-86` states "no auto-write, no decay, no runtime (the writable per-project learning store stays rejected)". Both halves are contradicted in the tree: `src/scripts/learning_sidecar.ts:37` sets `HALF_LIFE_DAYS = 30` and computes a decay over a per-project intake store, and ADR-249 `:85-87` permits a supervised resident process in core, superseding the no-daemon clause it inherited. Rewrite the sentence to say what is actually true — no auto-write and no auto-promotion, decay and runtime governed rather than prohibited — and keep the no-auto-write half, which is still the live boundary.
+- [x] **1.1 Remove the retired no-decay / no-runtime doctrine from the pipeline skill.** `src/skills/skill-improvement-pipeline/SKILL.md:84-86` states "no auto-write, no decay, no runtime (the writable per-project learning store stays rejected)". Both halves are contradicted in the tree: `src/scripts/learning_sidecar.ts:37` sets `HALF_LIFE_DAYS = 30` and computes a decay over a per-project intake store, and ADR-249 `:85-87` permits a supervised resident process in core, superseding the no-daemon clause it inherited. Rewrite the sentence to say what is actually true — no auto-write and no auto-promotion, decay and runtime governed rather than prohibited — and keep the no-auto-write half, which is still the live boundary.
       verify: `grep -n "no decay\|no runtime" src/skills/skill-improvement-pipeline/SKILL.md` returns nothing, and the surviving sentence names `learning_sidecar.ts` or ADR-249 as the reason.
-- [ ] **1.2 Retire the `capture-learnings` name from the four documents that assert it exists.** `docs/contracts/rule-classification.md:110`, `docs/contracts/linear-ai-rules-inclusion.md:92`, `docs/guidelines/agent-infra/self-improvement-pipeline.md:8` and `docs/guidelines/agent-infra/naming.md:37` name it as a current artefact. Neither `src/rules/capture-learnings.md` nor `src/skills/capture-learnings/` exists; the live rule is `src/rules/skill-improvement-trigger.md` and the live skill is `skill-improvement-pipeline`. Replace each with the live name, or mark the line historical where it is describing a past state. Leave the string literal in `src/scripts/build_rule_trigger_matrix.ts:129` alone unless that matrix row is itself dead.
+- [x] **1.2 Retire the `capture-learnings` name from the four documents that assert it exists.** `docs/contracts/rule-classification.md:110`, `docs/contracts/linear-ai-rules-inclusion.md:92`, `docs/guidelines/agent-infra/self-improvement-pipeline.md:8` and `docs/guidelines/agent-infra/naming.md:37` name it as a current artefact. Neither `src/rules/capture-learnings.md` nor `src/skills/capture-learnings/` exists; the live rule is `src/rules/skill-improvement-trigger.md` and the live skill is `skill-improvement-pipeline`. Replace each with the live name, or mark the line historical where it is describing a past state. Leave the string literal in `src/scripts/build_rule_trigger_matrix.ts:129` alone unless that matrix row is itself dead. <!-- ref-ignore -->
       verify: for every remaining match of `grep -rn "capture-learnings" docs src`, the line either names a live artefact or is explicitly marked historical.
 
 ## Phase 2 — Give the first model-noticed observation a target-addressed waiting room
 
-- [ ] **2.1 Add `model-noticed` as a third `DefectSource`.** `src/scripts/_lib/self_repair.ts:34` admits only `user-reported` and `self-detected`, both of which require a detector to have fired. A model that notices an edge case in a rule, or a methodology the user just explained that no skill carries, has no record type. Widen the union in place; the store, the fingerprint derivation at `:548-557` and the noclobber path are unchanged, and no second store is introduced.
+- [x] **2.1 Add `model-noticed` as a third `DefectSource`.** `src/scripts/_lib/self_repair.ts:34` admits only `user-reported` and `self-detected`, both of which require a detector to have fired. A model that notices an edge case in a rule, or a methodology the user just explained that no skill carries, has no record type. Widen the union in place; the store, the fingerprint derivation at `:548-557` and the noclobber path are unchanged, and no second store is introduced.
       verify: a unit test writes a `model-noticed` finding, reads it back through the existing store reader, and the record round-trips with its source intact.
-- [ ] **2.2 Add a closed `target` field and validate it against the tree at write time.** `suggested_surface` at `:62-63` is free text the agent writes, so no record can be joined to the asset it is about. Add `target: string[]` whose entries match `rule:<id> | skill:<id> | command:<id> | hook:<concern>`, validated against the tree when the record is written; an unresolvable target is written to a `proposes` field instead of being silently accepted. An empty target list stays legal — a real observation with no identified home is information, not an error.
+- [x] **2.2 Add a closed `target` field and validate it against the tree at write time.** `suggested_surface` at `:62-63` is free text the agent writes, so no record can be joined to the asset it is about. Add `target: string[]` whose entries match `rule:<id> | skill:<id> | command:<id> | hook:<concern>`, validated against the tree when the record is written; an unresolvable target is written to a `proposes` field instead of being silently accepted. An empty target list stays legal — a real observation with no identified home is information, not an error.
       verify: a fixture with `target: ["rule:does-not-exist"]` is rejected and lands in `proposes`; a fixture with `target: ["rule:scope-control"]` is accepted.
-- [ ] **2.3 Widen the status enum and require a wake condition on the parked state.** `:71` admits only `open | released`, so a declined record stays `open` in the queue line for ever and a partially actioned one cannot be expressed. Move to `open | candidate | actioned | declined | superseded | parked`, with `parked_until` required whenever the status is `parked`, and migrate existing `released` records to `actioned` carrying a resolution line that says the migration is why.
+- [x] **2.3 Widen the status enum and require a wake condition on the parked state.** `:71` admits only `open | released`, so a declined record stays `open` in the queue line for ever and a partially actioned one cannot be expressed. Move to `open | candidate | actioned | declined | superseded | parked`, with `parked_until` required whenever the status is `parked`, and migrate existing `released` records to `actioned` carrying a resolution line that says the migration is why.
       verify: a `parked` record without `parked_until` fails validation; the migration is idempotent, proven by running it twice over a fixture store and diffing.
-- [ ] **2.4 Count occurrences per target, not only per fingerprint.** `:70` counts occurrences against the fingerprint, which is class plus normalised evidence shape — so two different manifestations of one rule's weakness are two records with one occurrence each, and the escalation rule at `src/skills/skill-improvement-pipeline/SKILL.md:196-199` ("a third recurrence of the same violation class converts an observation into a deterministic gate") has nothing that could ever establish a third recurrence. Aggregate occurrences by target as a derived read over the record files, regenerable and gitignored.
+- [x] **2.4 Count occurrences per target, not only per fingerprint.** `:70` counts occurrences against the fingerprint, which is class plus normalised evidence shape — so two different manifestations of one rule's weakness are two records with one occurrence each, and the escalation rule at `src/skills/skill-improvement-pipeline/SKILL.md:196-199` ("a third recurrence of the same violation class converts an observation into a deterministic gate") has nothing that could ever establish a third recurrence. Aggregate occurrences by target as a derived read over the record files, regenerable and gitignored.
       verify: three records with distinct fingerprints and one shared target report a per-target count of three; deleting the derived index and rebuilding it is byte-stable.
-- [ ] **2.5 Replace the `remember` routing in the pipeline skill with the record write.** `src/skills/skill-improvement-pipeline/SKILL.md:59` sends the seen-once-but-generalizable learning to a host-native `remember` tool. That tool is not target-addressed, is not readable by anything in this repository, appears in no corroboration counter, and is simply absent on hosts that do not ship it — so the ≥2 counter at `src/scripts/learning_sidecar.ts:39` restarts at one every time and the second occurrence can never be recognised as the second. Route that branch to the `model-noticed` record from 2.1 instead.
+- [x] **2.5 Replace the `remember` routing in the pipeline skill with the record write.** `src/skills/skill-improvement-pipeline/SKILL.md:59` sends the seen-once-but-generalizable learning to a host-native `remember` tool. That tool is not target-addressed, is not readable by anything in this repository, appears in no corroboration counter, and is simply absent on hosts that do not ship it — so the ≥2 counter at `src/scripts/learning_sidecar.ts:39` restarts at one every time and the second occurrence can never be recognised as the second. Route that branch to the `model-noticed` record from 2.1 instead.
       verify: `grep -n "remember" src/skills/skill-improvement-pipeline/SKILL.md` returns no routing instruction, and the replacement line names the record write.
 
 ## Phase 3 — Make the park gate read a condition instead of a status word
 
 Tagged `corrected-from-reproduction`: the round's drafts identified this gate as accepting the bare word `trigger` in 11 of 82 files. Reproducing the gate's own control flow showed a larger hole one branch earlier, and the steps below carry the corrected wording.
 
-- [ ] **3.1 Remove the status short-circuit that lets a parked roadmap carry no wake condition at all.** `src/scripts/lint_roadmap_later_disposition.ts:179` reads `if (status !== 'later' && !RESUME_RE.test(body))`, so a file whose frontmatter says `status: later` passes without any resume text being present. Measured over the current tree: 62 of 81 parked roadmaps pass on the status word alone, 8 on a real `Blocked until` / `Resume when`, and 11 on the bare word `trigger` — so 73 of 81 carry no machine-readable wake condition. Require a wake condition regardless of status.
+- [x] **3.1 Remove the status short-circuit that lets a parked roadmap carry no wake condition at all.** `src/scripts/lint_roadmap_later_disposition.ts:179` reads `if (status !== 'later' && !RESUME_RE.test(body))`, so a file whose frontmatter says `status: later` passes without any resume text being present. Measured over the current tree: 62 of 81 parked roadmaps pass on the status word alone, 8 on a real `Blocked until` / `Resume when`, and 11 on the bare word `trigger` — so 73 of 81 carry no machine-readable wake condition. Require a wake condition regardless of status.
       verify: a fixture carrying `status: later` and no resume text is rejected; the current tree's violation count is reported and becomes the ratchet's starting floor rather than a silent pass.
-- [ ] **3.2 Read the structured `entry_condition` field and stop accepting the bare word `trigger`.** Three files already carry `entry_condition:` and the lint reads none of them (`check()` at `:150-192` consults only `status:` and `RESUME_RE` over the body). Make `entry_condition` the field the gate reads; drop `trigger` from `RESUME_RE`, keeping the four unambiguous phrases, so a body that merely mentions the word in passing no longer satisfies a governance gate.
+- [x] **3.2 Read the structured `entry_condition` field and stop accepting the bare word `trigger`.** Three files already carry `entry_condition:` and the lint reads none of them (`check()` at `:150-192` consults only `status:` and `RESUME_RE` over the body). Make `entry_condition` the field the gate reads; drop `trigger` from `RESUME_RE`, keeping the four unambiguous phrases, so a body that merely mentions the word in passing no longer satisfies a governance gate.
       verify: a fixture whose body says "the trigger fires on push" and carries no `entry_condition` is rejected; a fixture carrying `entry_condition` and no resume phrase passes.
-- [ ] **3.3 Require the wake condition to name what would change the decision, when it could arrive, and who would have to act.** A condition that cannot be observed is a deferral wearing a condition's clothes. Specify the three parts in the field's contract and check that all three are present and non-empty; `none` is a legal answer for the third and blankness is not.
+- [x] **3.3 Require the wake condition to name what would change the decision, when it could arrive, and who would have to act.** A condition that cannot be observed is a deferral wearing a condition's clothes. Specify the three parts in the field's contract and check that all three are present and non-empty; `none` is a legal answer for the third and blankness is not.
       verify: a fixture with a one-word `entry_condition` is rejected with a message naming the missing part.
-- [ ] **3.4 Require `review_by` in the frontmatter of every parked roadmap.** Measured: 13 of 81 carry it, 68 do not. Ratchet from the current count rather than failing the tree in one change.
+- [x] **3.4 Require `review_by` in the frontmatter of every parked roadmap.** Measured: 13 of 81 carry it, 68 do not. Ratchet from the current count rather than failing the tree in one change.
       verify: the gate reports 68 as its starting floor and refuses any increase.
 
 ## Phase 4 — Make one field in the audit stream an observation
 
-- [ ] **4.1 Compute `rules_applied` from rules that actually fired, in both shipped producers.** `src/scripts/_lib/audit_field_provenance.ts:31-35` registers `rules_applied` as a producer constant with the value `['delegation-policy']`, and `agents/knowledge/experience-rules-applied-is-a-producer-constant.md` records the same as the tree's only experience card, with the falsifier "a producer computes `rules_applied` from rules that actually fired, and the mined pattern's count falls below the audit line count". The falsifier has not fired and the situation has worsened: mining the stream now returns exactly one pattern at count 1074 over 1104 lines, against 914 over 935 when the card was written. Every per-asset reader downstream — `src/scripts/_lib/experience_report.ts:116` included — is aggregating over a constant, so the corroboration and escalation machinery built in the previous roadmap has no varying input to work on. Change `_lib/orchestration_record.ts` and `_lib/review_skipped_record.ts` to write the rules the run actually carried; where a producer genuinely cannot know, write an empty list, which is an honest absence and is what `_lib/activation_receipt_producer.ts:300` already does.
+- [x] **4.1 Compute `rules_applied` from rules that actually fired, in both shipped producers.** `src/scripts/_lib/audit_field_provenance.ts:31-35` registers `rules_applied` as a producer constant with the value `['delegation-policy']`, and `agents/knowledge/experience-rules-applied-is-a-producer-constant.md` records the same as the tree's only experience card, with the falsifier "a producer computes `rules_applied` from rules that actually fired, and the mined pattern's count falls below the audit line count". The falsifier has not fired and the situation has worsened: mining the stream now returns exactly one pattern at count 1074 over 1104 lines, against 914 over 935 when the card was written. Every per-asset reader downstream — `src/scripts/_lib/experience_report.ts:116` included — is aggregating over a constant, so the corroboration and escalation machinery built in the previous roadmap has no varying input to work on. Change `_lib/orchestration_record.ts` and `_lib/review_skipped_record.ts` to write the rules the run actually carried; where a producer genuinely cannot know, write an empty list, which is an honest absence and is what `_lib/activation_receipt_producer.ts:300` already does.
       verify: `./scripts-run src/scripts/extract_audit_patterns --min-count 2` over a fixture stream of mixed runs returns more than one pattern, and the top pattern's count is strictly below the fixture's line count.
-- [ ] **4.2 Retire the constant registration and the card together, in the same change, only once the falsifier has fired.** Removing the `PRODUCER_CONSTANT_FIELDS` row is the assertion that the field is now observed, and `:27-30` of that module says as much. Leaving the card standing after its falsifier fires would make the tree assert something false about itself, which is the failure the card exists to prevent.
+- [x] **4.2 Retire the constant registration and the card together, in the same change, only once the falsifier has fired.** Removing the `PRODUCER_CONSTANT_FIELDS` row is the assertion that the field is now observed, and `:27-30` of that module says as much. Leaving the card standing after its falsifier fires would make the tree assert something false about itself, which is the failure the card exists to prevent.
       verify: the row is absent from `PRODUCER_CONSTANT_FIELDS`, the card is marked retired with the run that falsified it, and the module's own test asserting that the named producers still match the registered value passes on the new shape.
-- [ ] **4.3 State plainly what does not follow.** A varying `rules_applied` does not make the loop productive; it makes it measurable. Record the residual honestly: whether the corroboration gate then mints anything at all is a question for the parked operational-proof roadmap, which is blocked on elapsed time rather than on effort, and this roadmap must not claim its criterion.
+- [x] **4.3 State plainly what does not follow.** A varying `rules_applied` does not make the loop productive; it makes it measurable. Record the residual honestly: whether the corroboration gate then mints anything at all is a question for the parked operational-proof roadmap, which is blocked on elapsed time rather than on effort, and this roadmap must not claim its criterion.
       verify: the closing note names `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md` as the holder of the operational criterion and claims nothing about it.
 
 ## Phase 5 — Make the handoff carry falsifiable uncertainty
 
-- [ ] **5.1 Add four self-critique sections to the handoff contract.** The template at `src/domains/meta/agent-handoff/command.md:94-127` carries Done, Open, Resume pointer, Repeatable workflow, Errors + fixes, Feedback history, Key decisions and Relevant files — every one of them a statement about what happened, none about what the outgoing session is least sure of. Add `Least confident`, `Biggest thing missed`, `Breaks in three months because` and `Not done`, and require every line in them to carry a `verify:` naming the command or observable state that would confirm or kill it. An unverifiable line of self-doubt is filler.
+- [x] **5.1 Add four self-critique sections to the handoff contract.** The template at `src/domains/meta/agent-handoff/command.md:94-127` carries Done, Open, Resume pointer, Repeatable workflow, Errors + fixes, Feedback history, Key decisions and Relevant files — every one of them a statement about what happened, none about what the outgoing session is least sure of. Add `Least confident`, `Biggest thing missed`, `Breaks in three months because` and `Not done`, and require every line in them to carry a `verify:` naming the command or observable state that would confirm or kill it. An unverifiable line of self-doubt is filler.
       verify: a fixture handoff with a `## Not done` line and no `verify:` is rejected by `src/scripts/lint_handoffs.ts`; `none` is accepted as the whole section body and blankness is not, matching the existing treatment of `## Open questions` at `:895-928`.
-- [ ] **5.2 Capture, do not chase.** A finding surfaced while writing a handoff becomes a `model-noticed` record from 2.1, never a fix inside the handoff turn — the handoff exists because the session is ending, and a fix started there is the least-verified change in the whole run.
+- [x] **5.2 Capture, do not chase.** A finding surfaced while writing a handoff becomes a `model-noticed` record from 2.1, never a fix inside the handoff turn — the handoff exists because the session is ending, and a fix started there is the least-verified change in the whole run.
       verify: the contract states this and names the record write as the destination.
+
+## Closing notes
+
+### What a varying `rules_applied` does NOT establish (step 4.3)
+
+Phase 4 makes the field an observation. That is necessary and it is not
+sufficient, and the round's temptation is to read a fixed field as the whole
+cause of an empty loop. A varying `rules_applied` does not make the experience
+loop productive; it makes it **measurable**. Whether the corroboration gate then
+mints anything at all is a different question, and this roadmap does not answer
+it, does not predict it, and must not be read as evidence either way.
+
+The operational criterion belongs to
+`agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md`. That
+file holds it; this one claims nothing about it — not that it will be met, not
+that it is now closer, not that it is now reachable. It is parked on elapsed
+time rather than on effort, and nothing here shortens that.
+
+Two further residuals, stated rather than implied away:
+
+- **The historical stream is unchanged.** Audit lines are append-only, so every
+  line written before 2026-09-07 still carries the constant. Mining the real
+  stream will keep surfacing `implement:success:delegation-policy` until new
+  lines accumulate. The falsifier's second half is demonstrated over a fixture
+  stream built through the changed producers, which is the only stream where it
+  can be demonstrated on the day the change lands. The experience card is
+  marked retired rather than deleted for exactly this reason: it remains correct
+  about the lines it was written from.
+- **`rules_applied` varies only when a caller supplies ids.** Both producers now
+  write `[]` when nothing was observed, which is an honest absence and not a
+  fabrication — but an absence is not a signal. The supply path exists
+  (`--rules-applied` on `orchestration_record`, and the `rules_applied` input on
+  both builders); whether callers use it is not something this roadmap measured
+  or can claim.
+
+### The reading AC-1 was closed under
+
+AC-1's first clause is closed against the **retired doctrine**, which is what
+step 1.1 names and is its only producer: the pipeline skill's claim that there
+is "no decay, no runtime", contradicted in the tree by
+`src/scripts/learning_sidecar.ts:37` and ADR-249. That sentence is gone and the
+surviving one cites both.
+
+Three classes of `no runtime` string survive under `docs/` and `src/`, and none
+of them is that doctrine. Named rather than swept, so a later reader does not
+have to re-derive the distinction:
+
+1. `docs/contracts/no-runtime-boundary.md` — already carries
+   `stability: superseded` and `superseded_by: resident-process-governance.md`.
+   A document that says it no longer holds is not asserting a doctrine.
+2. Module-local descriptions of a specific script ("no runtime Python
+   validator", "no runtime file resolution", "no runtime model→band lookup").
+   These describe one implementation, not a tree-wide prohibition.
+3. `src/patterns/README.md` and ADR-099's file-first constraint on the pattern
+   library, and `project-intelligence.md`'s "no runtime self-modifying trusted
+   store". ADR-249's `supersedes_scope` names ADR-124 `:111` and ADR-109 `:28`
+   and nothing wider, so neither of these was superseded — and the second is the
+   live no-auto-write boundary step 1.1 was explicitly told to keep.
 
 ## Blockers
 
 ### blocker: estate-placement-of-this-roadmap
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — Correct the two documents that mislead the next reader
 - **Recommendation:** keep it as one standalone roadmap rather than folding into either parked receiver — folding into a parked carrier is outside the carry semantics the archival contract grants it and would silently unpark work waiting on elapsed time; splitting across three files to dodge a threshold is the alternative nobody should take silently.
@@ -76,12 +134,13 @@ Tagged `corrected-from-reproduction`: the round's drafts identified this gate as
   1. Decide standalone vs. fold vs. split, reading `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md` and `agents/roadmaps/later/road-to-experience-loop-owner-decisions.md` first to confirm neither is a legal receiver.
   2. Run `./scripts-run src/scripts/check_estate_count` to confirm the chosen placement holds against the measured floor before Phase 1 lands.
 - **Resolved when:** the owner records which placement (standalone / fold / split) this roadmap takes, and `check_estate_count` is green under that placement.
+- **Resolution (decided — AI council, drain run 19, 2026-09-06):** **standalone**, as one roadmap. The two candidate receivers were read first, as the blocker's own step 1 requires, and neither is a legal receiver: `later/road-to-experience-lifecycle-operational-proof.md` and `later/road-to-experience-loop-owner-decisions.md` are parked carriers of their *parent's* criteria, and adding unrelated work to a parked carrier is outside the carry semantics the archival contract grants them — reopening either would also unpark work deliberately waiting on elapsed time. Splitting the five phases across three files to keep each under a threshold was named and refused: it dodges a measurement rather than answering it. `./scripts-run src/scripts/check_estate_count` on the adopting change is GREEN, and the figures below are the gate's own output on this branch rather than a prediction — `active_roadmaps 10 (floor 10 at origin/main, +0)`, `later_roadmaps 82 (floor 82, +0)`, `open_blockers 42 (floor 46, -4)`, `skill_count 299 (+0)`, `concern_count 56 (+0)`, `this change +0 active / -0 disposed`. The file was already in the estate, so standing alone costs no new slot; the only movement is `open_blockers`, which falls by exactly the four this change resolves. Archiving this roadmap in the same branch takes `active_roadmaps` to 9, a further improvement against a floor that is a maximum. A gate failure here would have meant the resolution had not landed; the gate passes.
 
 Whether these five phases stand as one active roadmap or fold into an existing file is not a decision the analysis can take. The round's drafts recommend folding, on a premise that has since expired — they counted four active roadmaps at their pin and there is one at `93d63073e`. The two candidate receivers, `agents/roadmaps/later/road-to-experience-lifecycle-operational-proof.md` and `agents/roadmaps/later/road-to-experience-loop-owner-decisions.md`, are parked carriers of their parent's own criteria; adding unrelated work to a parked carrier is outside the carry semantics the archival contract grants them, and reopening either would also unpark work that is deliberately waiting on elapsed time. Standing alone costs one estate slot against a floor measured on the base ref per ADR-243 `:90-94`. The alternative nobody should take silently is splitting the five phases across three files to keep each below a threshold.
 
 ### blocker: per-turn-injection-budget-for-record-overlay
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — it turns on how much of the `skill-route` concern's per-turn budget the owner is willing to spend on a second payload, which is a policy trade-off, not a technical one.
@@ -90,12 +149,13 @@ Whether these five phases stand as one active roadmap or fold into an existing f
   1. Decide whether the `skill-route` concern's threshold at `src/scripts/hook_manifest.yaml:755-758` may carry a second payload alongside its 30/100 floor, or whether record visibility must reach the agent through a separate, lower-frequency carrier.
   2. Record the decision (e.g. in `docs/decisions/` or an update to this blocker); if approved, adjust the threshold math to account for the added payload.
 - **Resolved when:** the owner states either that the `skill-route` slot may carry the overlay, or that record visibility routes through a different mechanism.
+- **Resolution (decided — AI council, drain run 19, 2026-09-06):** the `skill-route` concern is left **unchanged** — the 30/100 floor at `src/scripts/hook_manifest.yaml:755-758` is untouched, and no second payload is added to that slot. Record visibility, if it is ever built, routes through a **separate once-per-session `record-overlay` carrier** with its own budget and **no authorization effect**. This roadmap builds nothing here and none of its steps touches the manifest: what is recorded is the routing decision only. The evidence-firewall argument that motivated the blocker survives the decision intact and is the reason the carrier is specified as once-per-session rather than per-turn — a run that has already seen a record's overlay is not an independent second observation of it, and a per-turn surface would make that failure the default rather than the exception.
 
 The round's drafts propose surfacing open records at routing time, as an extra line on the `skill-route` concern. That concern's threshold is already tuned against a measured corpus — `src/scripts/hook_manifest.yaml:755-758` records a 30/100 floor at the p90 of 496 prompt lines, firing on 13.9 % of them, chosen explicitly because "a median floor would speak on half of all turns, which is the per-turn-reminder shape this estate has already measured failing". Adding a second payload to the same slot spends budget the owner set, and the retrieval it enables is also the mechanism the drafts' own evidence-firewall argument warns about: a run that has already seen a record's overlay is not an independent second observation of it. No step in this roadmap builds the overlay, and none should until the budget question is answered.
 
 ### blocker: live-harness-evaluation-of-promoted-changes
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — live multi-turn harness evaluation was already refused once in this estate's scouting work, and reopening it turns on evaluator-independence exposure only the owner can accept.
@@ -104,12 +164,13 @@ The round's drafts propose surfacing open records at routing time, as an extra l
   1. Decide whether a live-harness, multi-turn evaluation path is worth reopening given the prior refusal, and if so, whether it wraps a third-party evaluator CLI or extends `src/scripts/_lib/paired_verdict.ts` in-house.
   2. If approved, name the harness and cite the evaluator-independence guardrail (`src/rules/evaluator-independence.md`) it runs under before any roadmap schedules it.
 - **Resolved when:** the owner records either that live-harness evaluation stays out of scope, or the harness + guardrail choice that would let a future roadmap schedule it.
+- **Resolution (decided — AI council, drain run 19, 2026-09-06):** **ADR-106 stands for this round.** Live multi-turn harness evaluation stays out of scope; the single-turn half (`bench_ab_*`, `src/scripts/_lib/paired_verdict.ts`) remains the shipped mechanism and is unchanged. The refusal is scoped to this round: it is not authorized now, current behaviour is unchanged, and no future ruling is prejudged. The reopening condition is evidence — specifically, evidence that static or paired evaluation **misses material failures**; the prior refusal plus the evaluator-independence exposure is not re-argued here. No step in this roadmap schedules such a harness, and none should until that evidence exists.
 
 Both parent drafts want every behavioural change validated in a real agent harness before promotion, one of them by wrapping external evaluation CLIs. Live evaluation floors are parked on evaluator independence, and shelling out to a third-party evaluator was already refused in this estate's scouting work. The single-turn half of the ask is not missing — `bench_ab_*` and `src/scripts/_lib/paired_verdict.ts` are the shipped mechanism — so what is blocked is specifically the multi-turn, live-harness half. This roadmap does not schedule it.
 
 ### blocker: artefact-family-registry
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** nothing in this roadmap — it gates work deliberately excluded from it.
 - **Recommendation:** none; this is the owner's call — building the registry now would produce a measurement tool with no consumer, since `src/scripts/audit_skill_overlap.ts` already surfaces the clusters it would enumerate.
@@ -118,6 +179,7 @@ Both parent drafts want every behavioural change validated in a real agent harne
   1. Wait for one recorded instance of a shared-rule propagation failure (a change landed in one family member and not its siblings), or decide to build the registry preemptively without waiting for one.
   2. If a real instance occurs, cite it in this blocker and open a roadmap that reads `audit_skill_overlap.ts`'s cluster output as the registry's seed data.
 - **Resolved when:** either a propagation-failure instance is recorded here, or the owner decides to build the registry without waiting for one.
+- **Resolution (descoped to a stub — AI council, drain run 19, 2026-09-06):** transferred to `agents/roadmaps/stubs/road-to-artefact-family-registry.md`. **This is a descope, not a decision on the merits, and not an abandonment.** The blocker's own `Resolved when:` requires either a recorded propagation-failure instance or an owner decision to build without one; neither exists, and an *absence search* does not satisfy "an instance is recorded" — searching and finding nothing is not the same fact as observing one. The reopening condition is preserved verbatim in the stub and is **observation-based, never calendar-based**: one recorded case of a shared rule changed in one family member and not its siblings. Ownership and the mechanical trigger stay named there, which is the difference between a descope and bookkeeping that quietly ends the work. `src/scripts/audit_skill_overlap.ts` remains the registry's seed data whenever that instance arrives.
 
 The drafts propose a declared family registry with shared and member-specific columns, so that a change to one member's shared rule is checked against its siblings. `src/scripts/audit_skill_overlap.ts` already surfaces the clusters a registry would enumerate, and nothing in the tree reads a registry today, so building one produces a measurement rather than a gate. It is recorded here rather than declined outright because the propagation failure it guards against is real and simply has no recorded instance yet; the condition that would reopen it is one recorded case of a shared rule being changed in one member and not its siblings.
 
@@ -135,11 +197,11 @@ The drafts propose a declared family registry with shared and member-specific co
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No document in `docs/` or `src/` asserts a no-decay or no-runtime doctrine, and no document names `capture-learnings` as a current artefact.
-- [ ] AC-2 — A record written from a model's own noticing carries a source, a validated target or an explicit `proposes`, and a status drawn from a six-value closed enum, and it survives a round trip through the existing store with no second store present in the tree.
-- [ ] AC-3 — A per-target occurrence count exists as a regenerable derived read, so the third-recurrence escalation stated at `src/skills/skill-improvement-pipeline/SKILL.md:196-199` has a counter that could establish its own precondition.
-- [ ] AC-4 — The pipeline skill routes a seen-once generalizable learning to a record this repository can read, and no routing instruction in it names a host-native memory tool.
-- [ ] AC-5 — A roadmap under `agents/roadmaps/later/` cannot pass its gate on a frontmatter status word alone, on the bare word `trigger`, or on a wake condition that omits what would change the decision, when it could arrive, or who would act.
-- [ ] AC-6 — `rules_applied` is absent from `PRODUCER_CONSTANT_FIELDS`, the experience card asserting it is a constant is retired against the run that falsified it, and mining a mixed fixture stream returns more than one pattern.
-- [ ] AC-7 — A handoff carries four self-critique sections in which every substantive line names the command or observable state that would confirm or kill it, and an empty section is rejected while `none` is accepted.
-- [ ] AC-8 — The estate carries no new skill and no new hook concern as a result of this roadmap.
+- [x] AC-1 — No document in `docs/` or `src/` asserts a no-decay or no-runtime doctrine, and no document names `capture-learnings` as a current artefact.
+- [x] AC-2 — A record written from a model's own noticing carries a source, a validated target or an explicit `proposes`, and a status drawn from a six-value closed enum, and it survives a round trip through the existing store with no second store present in the tree.
+- [x] AC-3 — A per-target occurrence count exists as a regenerable derived read, so the third-recurrence escalation stated at `src/skills/skill-improvement-pipeline/SKILL.md:196-199` has a counter that could establish its own precondition.
+- [x] AC-4 — The pipeline skill routes a seen-once generalizable learning to a record this repository can read, and no routing instruction in it names a host-native memory tool.
+- [x] AC-5 — A roadmap under `agents/roadmaps/later/` cannot pass its gate on a frontmatter status word alone, on the bare word `trigger`, or on a wake condition that omits what would change the decision, when it could arrive, or who would act.
+- [x] AC-6 — `rules_applied` is absent from `PRODUCER_CONSTANT_FIELDS`, the experience card asserting it is a constant is retired against the run that falsified it, and mining a mixed fixture stream returns more than one pattern.
+- [x] AC-7 — A handoff carries four self-critique sections in which every substantive line names the command or observable state that would confirm or kill it, and an empty section is rejected while `none` is accepted.
+- [x] AC-8 — The estate carries no new skill and no new hook concern as a result of this roadmap.
