@@ -2,19 +2,29 @@
  * WASM tree-sitter loader for the code-graph engine.
  *
  * Pinned pair (ABI-verified 2026-07-23): `web-tree-sitter@0.24.7` +
- * `tree-sitter-wasms@0.1.13` → grammar ABI 14. The ABI smoke test lives in
- * `tests/scripts/code_graph.test.ts`; it runs in this repo because the pair is
- * a devDependency. Consumers install neither (see `INSTALL_HINT` below). No
- * network, no node-gyp — grammars load from `node_modules` via the resolved
- * path.
+ * grammar ABI 14. The ABI smoke test lives in
+ * `tests/scripts/code_graph.test.ts`.
+ *
+ * SHIPPED TO CONSUMERS (ADR-259, amended 2026-09-07). `web-tree-sitter` is a
+ * runtime `dependency`, and the three loadable grammars are vendored at
+ * `src/vendor/grammars/` and listed in `package.json` `files`. So a consumer
+ * install resolves both halves with no manual step. `tree-sitter-wasms` stays a
+ * devDependency — it is the source the vendored copies are refreshed from, and
+ * the fallback below keeps this repo's own dev flow (and any consumer holding
+ * the full 36-grammar pack) working unchanged.
+ *
+ * No network, no node-gyp, and no runtime grammar download — Kill register K1:
+ * both lookups below are filesystem reads of already-installed bytes.
  *
  * web-tree-sitter 0.24.x is CJS with a single default export (the Parser
  * class) and the classic `Parser.Language.load()` API; we reach it through
  * `createRequire` so this ESM module stays portable under the repo's tsx
  * runner.
  */
+import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { EXPECTED_GRAMMAR_ABI, GRAMMAR_WASM, type Lang } from './types.js';
 
@@ -53,22 +63,35 @@ interface ParserStatic {
 }
 
 /**
- * The parser pair is a devDependency, not a runtime one: this repo's tests still
- * exercise the loader, while a consumer install resolves neither. The engine is
- * permanently `enabled: false` (measured recall 0.365 vs grep 0.797), so
- * shipping ~51 MB of WASM to every consumer for a path none of them can reach
- * was pure install cost. A consumer re-enabling the engine installs the
- * ABI-locked pair themselves — this message carries the pin, because
- * `check_dependency_floors` only scans the `dependencies` block.
+ * Reached only when BOTH grammar sources are missing — the vendored set that
+ * ships in the tarball and the devDependency pack. That is a broken or
+ * partially-extracted install, not the ordinary consumer state, so the message
+ * says how to repair rather than how to opt in.
+ *
+ * It still carries the exact pin because the pair is ABI-coupled and
+ * `check_dependency_floors` reads only version ranges, never this string.
  */
 const INSTALL_HINT =
-    'the code-graph engine needs its parser pair, which this package no longer ships to consumers ' +
-    '(the engine is disabled by a recorded null result). Install the ABI-locked pair:\n' +
+    'the code-graph engine could not find its grammars. They ship with this package at ' +
+    '`src/vendor/grammars/`, so this usually means an incomplete install — reinstall the ' +
+    'package first. To supply them manually, install the ABI-locked pack:\n' +
     '  npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13\n' +
     'Both versions are exact on purpose — the pair is ABI-coupled (grammar ABI 14) ' +
     'and must move together.';
 
+/**
+ * Directory holding the grammars that ship inside the package.
+ *
+ * `../../..` from `src/scripts/code_graph/` is the package root — the same
+ * walk `_lib/agent_settings.ts` uses from `src/scripts/_lib/`. A wrong answer
+ * here is not a failure: `grammarWasmPath` only uses this path when the file is
+ * actually present, and otherwise falls through to the devDependency pack,
+ * which is exactly today's behaviour.
+ */
+const VENDORED_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'vendor', 'grammars');
+
 let _wasmDir: string | null = null;
+/** The devDependency grammar pack — the fallback source, and this repo's own. */
 function wasmDir(): string {
     if (_wasmDir === null) {
         let pkgJson: string;
@@ -86,7 +109,18 @@ let _initialized = false;
 const _langCache = new Map<Lang, TsLanguage>();
 const _parserCache = new Map<Lang, TsParser>();
 
+/**
+ * Absolute path to a grammar, vendored set first.
+ *
+ * Order is load-bearing: the vendored set is what a consumer actually has, and
+ * it is ABI-pinned by the same change that wrote it. The devDependency pack is
+ * second so this repo keeps working when `src/vendor/grammars/` has not been
+ * refreshed, and so a consumer holding the full 36-grammar pack can reach a
+ * grammar the vendored three do not cover.
+ */
 export function grammarWasmPath(lang: Lang): string {
+    const vendored = path.join(VENDORED_DIR, GRAMMAR_WASM[lang]);
+    if (fs.existsSync(vendored)) return vendored;
     return path.join(wasmDir(), GRAMMAR_WASM[lang]);
 }
 

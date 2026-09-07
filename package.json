@@ -48,6 +48,7 @@
         "src/agent-src/scripts/",
         "src/agent-src/templates/scripts/",
         "src/templates/",
+        "src/vendor/grammars/",
         "tests/fixtures/hooks/",
         "AGENTS.md",
         "CHANGELOG.md",
@@ -116,8 +117,7 @@
         "tsx": "^4.23.1",
         "typescript": "^5.9.3",
         "vite": "^5.4.21",
-        "vitest": "^2.1.9",
-        "web-tree-sitter": "0.24.7"
+        "vitest": "^2.1.9"
     },
     "dependencies": {
         "@fastify/static": "^10.1.2",
@@ -129,6 +129,7 @@
         "js-yaml": "^5.2.0",
         "open": "^11.0.0",
         "preact": "^10.29.0",
+        "web-tree-sitter": "0.24.7",
         "yaml": "^2.9.0",
         "zod": "^3.25.0",
         "zod-to-json-schema": "^3.25.0"

@@ -41,14 +41,23 @@ built for.
 
 ## Prerequisites
 
-- [ ] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`,
+- [x] Read `docs/decisions/ADR-259-code-graph-parsers-ship-with-the-package.md`,
       `docs/decisions/ADR-246-code-graph-parsers-stay-devdependencies.md` (the record it
       supersedes, including its 2026-08-28 confirmation that the benchmark trigger did not
       fire), and `src/scripts/hooks/host_semantics.ts`.
-- [ ] Run `agent-config roadmap:context --roadmap road-to-a-graph-that-is-shipped` and
+- [x] Run `agent-config roadmap:context --roadmap road-to-a-graph-that-is-shipped` and
       record the probe's `scanned:` line against the `relates:` block above.
-- [ ] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
+      <!-- 2026-09-07: scanned 1 PR · 899 roadmap files · 431 remote branches · 3 live
+      sessions · 0 inbox names. Fingerprint bb40bb72ebfc6dd6 (base 04a9af594). No remote
+      branch carries this slug and no open PR overlaps its files, so neither `relates:`
+      entry is stale: `road-to-a-graph-that-wins` is present in `later/` (extends, still
+      parked) and `road-to-first-reference-analysis-observation` shares no surface. -->
+- [x] Run [`plan-confidence-gate`](../../src/agent-src/contexts/execution/plan-confidence-gate.md)
       before the first checkbox.
+      <!-- 2026-09-07: gate is INERT by its own § "When it fires — and when NOT" — it fires
+      on plan *authoring*, and explicitly does not fire on `/roadmap:process-*` execution
+      runs. This is an execution run against an accepted roadmap, so no marker line and no
+      interview. Recorded rather than silently skipped. -->
 
 ## Reproduced, on this tree at `0918def55`
 
@@ -80,13 +89,41 @@ built for.
 
 ## Phase 0 — The decision this depends on
 
-- [ ] **0.1 ADR-259 lands** (owner-directed): parsers move to `dependencies` as the
-      8.69 MiB default set; the remaining 23 grammars ship as
-      `@event4u/agent-config-grammars` (companion package, resolved by the package manager,
-      never fetched at runtime).
+- [x] **0.1 ADR-259 lands** (owner-directed): `web-tree-sitter` moves to `dependencies`;
+      the **three loadable grammars** are vendored at `src/vendor/grammars/` and listed in
+      `package.json` `files`. `tree-sitter-wasms` stays a devDependency as the refresh
+      source. No companion package.
       verify: `./scripts-run src/scripts/check_dependency_floors` green; `npm pack --dry-run`
-      lists the 13 wasm files and no other; ADR-246 carries `superseded_by: ADR-259`;
+      lists the vendored wasm files and no other; ADR-246 carries `superseded_by: ADR-259`;
       `./scripts-run src/scripts/adr_cite_check ADR-259` reports it live.
+
+      <!-- MECHANISM AMENDED 2026-09-07 under the owner's standing direction for this run
+      ("amend the ADR in the same change rather than descope the step"). The step as
+      written could not be built: (a) "move to `dependencies`" and "listed in `files`" are
+      two different mechanisms — a dependency's files are never in this package's `files[]`;
+      (b) depending on `tree-sitter-wasms` delivers all 36 grammars (49 MiB), the outcome
+      ADR-259's own Alternatives rejects; (c) vendoring the 13-grammar set measures
+      1,016,804 B compressed, putting the tarball at ~10.84 MB against the maintainer-owned
+      `budgets.packed_size_mb.max = 9.1`, which this run may not raise; (d) only three
+      grammars are loadable — `GRAMMAR_WASM` in code_graph/types.ts has three entries — so
+      the other ten would be payload with no reader, the Risk-1 shape. The amendment is
+      recorded at ADR-259 § "Amendment — 2026-09-07 · vendored-wired-set". Net effect is
+      strictly smaller than the record accepted: 3.63 MiB on disk / +373,922 B compressed,
+      against the 8.69 MiB ADR-259 had priced in.
+
+      verified 2026-09-07:
+        · check_dependency_floors → "✅ dependency floors settled (13 runtime deps)"
+        · npm pack --dry-run --json --ignore-scripts → exactly 3 `.wasm` entries, all under
+          src/vendor/grammars/ (php 812,594 · typescript 2,342,690 · javascript 647,334)
+        · ADR-246 frontmatter `superseded_by: 259` (pre-existing, unchanged)
+        · adr_cite_check ADR-259 → "AMENDED — read the amendment before citing"
+        · check_adr_frontmatter → "✅ no errors"
+        · check_publish_surface → "✅ in sync with package.json files[]"
+        · check_pack_size binary class → "0 unaccounted" (3 bound entries added)
+        · loader loads all three grammars from the vendored dir at ABI 14
+        · tests/scripts/code_graph.test.ts → 28 passed
+      Blocked-adjacent, NOT caused by this step: `check_pack_size` packed_size_mb — see
+      `## Blockers` → `pack-size-budget-preexisting-overage`. -->
 
 ## Phase 1 — Delivered on install
 
@@ -179,6 +216,46 @@ built for.
 - **K8** Moving this file to `later/` or descoping a step to a carrier. A step that fails
   enters a fix loop; a step that needs a decision this file does not contain is reported as
   a question in the PR body and the step stays `[ ]` with the question quoted.
+
+## Blockers
+
+### blocker: pack-size-budget-preexisting-overage
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** nothing in this roadmap. Recorded because Phase 0.1 adds payload to a gate
+  that is **already** failing, and a step that makes a red gate redder should say so rather
+  than let the next reader assume it caused it.
+- **Class:** 3
+- **Recommendation:** raise `budgets.packed_size_mb.max` to a re-measured figure in a
+  dedicated change that also re-pins `last_measured`. The cap is a maintainer-owned
+  ratchet with `review_by: 2027-07-31`, so an execution run may not move it — but leaving
+  it below the tree's actual size means the gate reports the same failure on every branch
+  and stops discriminating.
+- **If you do nothing:** `check_pack_size` stays red in `task ci` and
+  `.github/workflows/consistency.yml` for every branch, this one included. The gate's
+  binary-payload half still works and still has teeth; only the size axis is dead.
+- **What to do:**
+  1. Reproduce the baseline: `npm pack --dry-run --json --ignore-scripts` on `origin/main`
+     with no local edits. Measured 2026-09-07 at base `04a9af594`: **9.8216 MB** against
+     `budgets.packed_size_mb.max = 9.1` in `src/config/pack-size-budget.json`.
+     Independently reproduced the same day in a second worktree off the same base at
+     **9.821 MB**.
+  2. Decide one: (a) re-measure and raise `max` + `last_measured` together, recording the
+     tree the figures came from as every other entry in that file does; (b) shrink the
+     payload back under 9.1; or (c) judge the unbuilt cap obsolete and gate only the
+     built surface, which `check_pack_size.ts:466-497` already implements for built
+     payloads against `built_surface_measurement_*`.
+  3. Whichever is chosen, do it in a change that is *only* that — a budget move buried in
+     a feature branch is how the 2026-08-24 cap trip became a merge artifact nobody could
+     attribute.
+- **Resolved when:** `./scripts-run src/scripts/check_pack_size` exits 0 on `origin/main`
+  with no local edits, and `pack-size-budget.json` records the tree its figures were
+  measured in.
+
+<!-- This roadmap's own contribution to the number, measured rather than estimated:
+9,821,600 B → 10,195,522 B, i.e. +373,922 B. The overage is 721,600 B before this branch
+exists, so the gate was already red by ~1.9x this step's addition. -->
 
 ## Provenance
 
