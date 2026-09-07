@@ -34,7 +34,7 @@ source: package
 |---|---|---|
 | `{concern}` | Behavioral constraint | `scope-control`, `ask-when-uncertain` |
 | `{domain}-{concern}` | Domain-specific rule | `php-coding`, `e2e-testing` |
-| `{action}-{target}` | Trigger-based auto rule | `capture-learnings`, `downstream-changes` |
+| `{action}-{target}` | Trigger-based auto rule | `invite-challenge`, `downstream-changes` |
 
 ### Commands
 

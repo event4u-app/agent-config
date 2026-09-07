@@ -114,9 +114,50 @@ Roadmap: {roadmap file if active, or "none"}
 ## Key decisions
 - {important decisions made during this conversation}
 
+## Least confident
+- {the claim in this handoff you are least sure of} — verify: {command or
+  observable state that would confirm or kill it}
+
+## Biggest thing missed
+- {what a reviewer would most likely find that you did not} — verify: {command}
+
+## Breaks in three months because
+- {the assumption most likely to expire, and what expires it} — verify: {command}
+
+## Not done
+- {work inside the stated scope that did not land} — verify: {command}
+
 ## Relevant files
 - {list of files that were edited or are important for context}
 ```
+
+### The four self-critique sections — why every line carries a `verify:`
+
+Every other section states what HAPPENED. None of them says what the outgoing
+session is **least sure of**, which is the one thing the incoming session cannot
+reconstruct and the one thing that decides where it should look first.
+
+Each line in those four sections MUST name the command or observable state that
+would confirm or kill it. An unverifiable line of self-doubt is filler: it reads
+as diligence, costs the next session a read, and cannot be acted on. `none` is
+accepted as the whole body of a section — an honest "nothing here" is an answer
+— and blankness is not, exactly as `## Open questions` already treats the same
+distinction. Nothing enforces either direction: the handoff artifact validator
+that would have was retired with `HANDOFF.md`, so the contract is model-carried
+here.
+
+### Capture, do not chase
+
+A finding surfaced **while writing the handoff** is written down, never fixed in
+the handoff turn. The handoff exists because the session is ending, so a fix
+started there is the least-verified change in the whole run — it lands after the
+verification budget is spent, with no room to prove it.
+
+The destination is a `model-noticed` self-repair record: `upsertFinding` in
+`src/scripts/_lib/self_repair_store.ts`, carrying a `target` from the closed
+`rule: | skill: | command: | hook:` vocabulary so the finding is joined to the
+asset it is about. Put the same finding in `## Not done` with its `verify:`, so
+the next session sees it without having to query the store.
 
 The CLI generator emits the same section set (minus the live-only
 *Repeatable workflow* / *Feedback history* refinements) — the template above

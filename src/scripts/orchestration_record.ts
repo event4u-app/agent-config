@@ -10,7 +10,7 @@
  *   ./scripts-run src/scripts/orchestration_record \
  *     --spawn-count 1 --token-delta -72000 --provenance measured \
  *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
- *     [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
+ *     [--rules-applied a,b] [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
  *     [--route-taken primitive|subagent|ask] [--budget-hit true|false] [--correctness-match true|false] \
@@ -141,6 +141,17 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             if (raw === undefined) return undefined;
             return raw.split(',').map((v) => v.trim()).filter(Boolean);
         })(),
+        // `--rules-applied=a,b` records the rules the run actually carried.
+        // Unlike `--skills-applied`, an OMITTED flag and an empty value mean
+        // the same thing here: audit-log-v1 makes `rules_applied` mandatory on
+        // every line, so `[]` is how "nothing observed" is spelled, and there
+        // is no absent-key slot to distinguish it from. What this flag replaced
+        // is the fabricated `['delegation-policy']` this producer wrote on
+        // every line until 2026-09-07.
+        rules_applied: str(flags, 'rules-applied')
+            ?.split(',')
+            .map((v) => v.trim())
+            .filter(Boolean),
         task_size_estimate: int(flags, 'task-size-estimate'),
         wall_clock_ms: int(flags, 'wall-clock-ms'),
         dispatch_tokens: int(flags, 'dispatch-tokens'),
