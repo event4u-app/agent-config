@@ -16,7 +16,7 @@ execution:
 > in this tree, which is itself the vocabulary defect the successor repairs.
 > Written on the most recent ARCHIVED epoch of this subject because there is no
 > active owner: twelve archived roadmaps built these layers and none retired its
-> predecessor. The successor is `agents/roadmaps/road-to-one-continuity-record.md`,
+> predecessor. The successor is `agents/roadmaps/archive/road-to-one-continuity-record.md`,
 > and it is subtractive by construction.
 
 > The envelope that crosses every session boundary — worker CHECKPOINT,
