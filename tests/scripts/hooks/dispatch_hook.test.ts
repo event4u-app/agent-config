@@ -244,7 +244,7 @@ describe('_concern_matches_tool — the per-concern `tools:` filter', () => {
     });
 
     it('filters exactly on the declared names', () => {
-        const c = { name: 'code-graph-nudge', tools: ['Grep', 'Glob', 'Read'] };
+        const c = { name: 'code-graph-context', tools: ['Grep', 'Glob', 'Read'] };
         expect(_concern_matches_tool(c, 'Grep')).toBe(true);
         expect(_concern_matches_tool(c, 'Read')).toBe(true);
         expect(_concern_matches_tool(c, 'Bash')).toBe(false);
@@ -273,16 +273,16 @@ describe('_payload_tool_name', () => {
 });
 
 describe('the shipped manifest filter matches its concern source', () => {
-    it("code-graph-nudge's tools: list is exactly the set the hook branches on", () => {
+    it("code-graph-context's tools: list is exactly the set the hook branches on", () => {
         // A manifest list that drifts from the hook's own branches is a silently
         // disabled concern. Pinned against the source, not against a copy of it.
         const manifest = _load_yaml(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'));
         const concerns = (manifest as Record<string, Record<string, Record<string, unknown>>>)['concerns'];
-        const declared = concerns?.['code-graph-nudge']?.['tools'];
+        const declared = concerns?.['code-graph-context']?.['tools'];
         expect(declared).toEqual(['Grep', 'Glob', 'Read']);
 
         const src = fs.readFileSync(
-            path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'code_graph_nudge_hook.ts'),
+            path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'code_graph_context_hook.ts'),
             'utf-8',
         );
         const branched = new Set(

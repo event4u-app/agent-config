@@ -30,7 +30,17 @@ describe('with the graph gated OFF — the default, and this repository', () => 
     });
 
     it('says WHY in the reason, so a reader is not left inferring it', () => {
-        expect(classifyLookup(DEFINITION).reason).toContain('hooks.code_graph.enabled');
+        // The reason used to name `hooks.code_graph.enabled`. That flag was
+        // retired 2026-09-07 (road-to-a-graph-that-is-shipped 1.2) along with
+        // the nudge it gated, so citing it would send a reader looking for a
+        // key that exists nowhere. The obligation is unchanged — the reason
+        // must still state the cause, not merely the outcome — and the cause
+        // is now the one this function can actually see: no caller supplied a
+        // usable graph.
+        const reason = classifyLookup(DEFINITION).reason;
+        expect(reason).toContain('code-graph accelerant');
+        expect(reason).toContain('the caller passed none');
+        expect(reason).not.toContain('hooks.code_graph.enabled');
     });
 
     it('treats an ABSENT flag as off, not as unknown', () => {

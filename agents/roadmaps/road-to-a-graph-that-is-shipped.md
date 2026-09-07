@@ -127,11 +127,39 @@ built for.
 
 ## Phase 1 — Delivered on install
 
-- [ ] **1.1 Consumer install builds.** A throwaway directory, `npm install` of the packed
+- [x] **1.1 Consumer install builds.** A throwaway directory, `npm install` of the packed
       tarball, `agent-config code-graph build --root .` on a PHP+TS fixture.
       verify: exit 0, node/edge counts printed, no manual step; the size delta is re-measured
       and recorded in `docs/MIGRATION.md` in bytes.
-- [ ] **1.2 Retire the nudge.** Delete `src/scripts/hooks/code_graph_nudge_hook.ts` and the
+
+      <!-- verified 2026-09-07 against the real tarball (`npm pack` WITH prepack, 3,059
+      files), installed into a throwaway `/tmp/ac-consumer-rig` holding two PHP classes
+      (Controller -> Service->handle -> $this->format) and two TS modules (index -> util,
+      titleize -> slugify):
+        · npm install exit 0
+        · the consumer received src/vendor/grammars/ — 3 wasm, byte-identical sizes
+        · `tree-sitter-wasms` ABSENT from the consumer's node_modules (so the 49 MiB pack
+          is genuinely not delivered), `web-tree-sitter` PRESENT
+        · `agent-config code-graph build --root .` exit 0, NO manual parser step:
+          "✅ code-graph built — 4 files · 12 nodes · 15 edges
+           languages: php, typescript · grammar ABI 14
+           edges: EXTRACTED 12 · INFERRED 2 · AMBIGUOUS 1"
+      Size delta recorded in docs/MIGRATION.md § "14.21.x — the code-graph engine ships to
+      consumers" in bytes, per the step.
+
+      OBSERVED, pre-existing, NOT introduced here and NOT in this step's verify: the CLI
+      printed "package-local tsx not found — falling back to `npx tsx`" before succeeding.
+      `code-graph` dispatches to a tsx script while `tsx` is a devDependency, so a cold
+      consumer without a cached tsx would resolve it through npx at first use. The build
+      still exits 0 and the graph is correct. Flagged rather than fixed: it is a packaging
+      property of every tsx-dispatched verb in this CLI, not of the grammar delivery, and
+      repairing it is a change to the CLI entry surface with its own blast radius. -->
+
+      <!-- OPEN QUESTION for the PR body, per K8 — the `npx tsx` fallback above means the
+      literal claim "no network at first use" is unproven for a cold consumer, even though
+      "no manual parser install" (what this step asserts) is proven. Whether that fallback
+      is acceptable for the shipped engine is a decision this roadmap does not contain. -->
+- [x] **1.2 Retire the nudge.** Delete `src/scripts/hooks/code_graph_nudge_hook.ts` and the
       `hooks.code_graph.enabled` row; add a `hook_manifest` entry `code_graph_context`: on
       PreToolUse-capable hosts (per the `VERIFIED_PLATFORMS` table in
       `src/scripts/hooks/host_semantics.ts:61`) emit the host's structured
@@ -141,6 +169,50 @@ built for.
       verify: fixture asserts the JSON envelope; `enforced_by` per host resolved from the
       table, not from a host name; `grep -c code_graph_nudge src/scripts/hook_manifest.yaml`
       is 0; `./scripts-run src/scripts/check_enforcement_coverage` green.
+
+      <!-- verified 2026-09-07:
+        · tests/scripts/code_graph_context_hook.test.ts → 12 passed, incl. the envelope
+          fixture: emitFor('claude','pre_tool_use','warn',[line],2) yields exit 0 and
+          {"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":<line>}}
+          — never exit 2, never a plain echo. A companion case pins the unverified-host
+          branch (windsurf: stdout empty, legacy exit returned verbatim), which is WHY
+          the same line is carried as a rule there.
+        · grep -c code_graph_nudge src/scripts/hook_manifest.yaml → 0 (and the compiled
+          hook_manifest.json → 0)
+        · check_enforcement_coverage --check → "✅ enforcement-coverage ratchet holds"
+        · hooks.code_graph.enabled → 0 hits in src/ and dist/ settings templates
+        · tests/hooks/ → 544 passed; concern_severity + dispatch_hook + the
+          pre_tool_use guard roster all green after the concern rename
+        · npm run typecheck → clean
+
+      DESIGN NOTES, because two parts of the step needed a reading:
+
+      1. "Remove the D9 import in concern_registry.ts:61" is read as removing the NUDGE's
+         import — the file is deleted, so it must go — and registering the replacement in
+         its place. Removing the line outright would leave the new concern unregistered
+         in-process, which contradicts the same step's requirement that it emit at all.
+         D9's count of engine importers is unchanged either way: concern_registry imports
+         a HOOK, never the engine.
+      2. The replacement is default-ON with no settings flag, where the nudge was
+         default-OFF behind `hooks.code_graph.enabled`. That is safe because the new hook
+         is SILENT on ABSENT — it speaks only on `fresh` / `behind:N`. A consumer who
+         never builds a graph never hears from it, so there is nothing for a flag to
+         protect. The nudge's default-OFF existed because it fired on ABSENT, i.e.
+         advertised a capability the consumer could not then install; Phase 0.1 removed
+         that premise.
+
+      DOWNSTREAM, swept and repaired in the same change (the flag had readers beyond the
+      hook): auto_dispatch.ts's reason string and its test, regression_neighbourhood.ts's
+      rationale, auto-dispatch-classification.md, settings-reference.md,
+      settings-classes.md, hook-architecture-v1.md, and the pre_tool_use guard roster.
+      Historical surfaces — evidence artefacts, archived roadmaps, review inputs, ADR-246
+      — keep their original wording, which was true when written.
+
+      FOUND, not fixed, and it belongs to Phase 3/4: every production caller of
+      `classifyLookup` (`routing_doctor.ts:392`, `judgment_ladder.ts:354,515`) passes no
+      opts, so `codeGraphEnabled` is always undefined and the `code-graph-query` primitive
+      is unreachable regardless of any flag. Retiring the flag did not cause this and
+      wiring it here would be scope creep — 3.4 is where a real graph reader lands. -->
 - [ ] **1.3 Freshness from git, no daemon.** post-commit and post-checkout run
       `code-graph refresh --budget-seconds` in the background, single-flight, honouring
       `core.hooksPath`; a union merge driver for the index; staleness exported to the runtime

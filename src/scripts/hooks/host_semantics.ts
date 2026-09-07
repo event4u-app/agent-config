@@ -95,7 +95,7 @@ function _joinReasons(reasons: readonly string[]): string {
  *
  * Exit 0 + this JSON is the documented way to surface advisory feedback
  * WITHOUT blocking — the mapping the four advisory PreToolUse concerns
- * (design-slop, code-graph-nudge, rtk-wrap, block-config-weakening's
+ * (design-slop, code-graph-context, rtk-wrap, block-config-weakening's
  * advisory path) always intended.
  */
 export function claudeAdditionalContext(event: string, text: string): string {

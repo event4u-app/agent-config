@@ -28,8 +28,9 @@ artifact or a SCIP index (`index.scip`, `*.scip`). One that exists is already
 built and structured, so it is the cheap first question for "who calls X",
 "where is Y used", "what does this import". This suite is an **orchestrator
 first, owner where it wins** (ADR-124): query a consumer-shipped index when it
-is present and fresh; where none is shipped, the native engine (default-off,
-benchmark-gated) covers the gap.
+is present and fresh; where none is shipped, the native engine covers the gap —
+and since ADR-259 it ships with the package, so building one takes no manual
+parser install.
 
 ## The rule
 
@@ -40,6 +41,29 @@ NOT THE FIRST MOVE. NEVER REBUILD A FRESH CONSUMER-SHIPPED INDEX.
 NO FRESH INDEX SHIPPED → THE NATIVE ENGINE MAY BUILD ONE (ADR-124); STILL
 GREP-FALLBACK FOR WHAT THE GRAPH DOES NOT ANSWER, AND SAY WHICH SOURCE ANSWERED.
 ```
+
+## Staleness is part of the answer — check it, or the hook tells you
+
+```
+AN ANSWER FROM AN INDEX N COMMITS BEHIND IS WORTH LESS THAN THE SAME ANSWER
+FROM A FRESH ONE. NEVER REPORT A GRAPH ANSWER WITHOUT KNOWING WHICH IT WAS.
+```
+
+On a host with a verified `pre_tool_use` contract, the `code-graph-context`
+concern supplies this for free: once per session, on the first search or
+code read, it delivers the graph's state as structured `additionalContext` —
+`code-graph: fresh` or `code-graph: N commit(s) behind`. It is silent when no
+graph exists, so hearing nothing is not evidence that the graph is fresh.
+
+**On every other host that carrier does not exist**, and this section is the
+delivery: run `agent-config code-graph detect --format json` before trusting a
+relationship answer, and say which state you got. Which hosts those are is
+`agent-config hooks:status` — resolved from the platform table, never guessed
+from the host's name.
+
+Either way the disposition is the same: `behind:N` → `agent-config code-graph
+refresh` first, or use grep and say so. This is a freshness obligation, not an
+ordering claim; the rule below still governs which source to reach for.
 
 ## When it fires
 
