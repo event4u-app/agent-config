@@ -75,14 +75,14 @@ describe('dispatch_hook — _fallback_yaml', () => {
             '    fallback_only: true',
             '',
         ].join('\n');
-        const parsed = _fallback_yaml(body) as Record<string, any>;
+        const parsed = _fallback_yaml(body) as Record<string, Record<string, Record<string, unknown>>>;
         expect(parsed['schema_version']).toBe(1);
-        expect(parsed['concerns']['chat-history']['script']).toBe('src/scripts/chat_history.py');
-        expect(parsed['concerns']['chat-history']['args']).toEqual(['hook-dispatch']);
-        expect(parsed['concerns']['chat-history']['fail_closed']).toBe(false);
-        expect(parsed['platforms']['augment']['session_start']).toEqual(['chat-history']);
-        expect(parsed['platforms']['augment']['stop']).toEqual([]);
-        expect(parsed['platforms']['copilot']['fallback_only']).toBe(true);
+        expect(parsed['concerns']?.['chat-history']?.['script']).toBe('src/scripts/chat_history.py');
+        expect(parsed['concerns']?.['chat-history']?.['args']).toEqual(['hook-dispatch']);
+        expect(parsed['concerns']?.['chat-history']?.['fail_closed']).toBe(false);
+        expect(parsed['platforms']?.['augment']?.['session_start']).toEqual(['chat-history']);
+        expect(parsed['platforms']?.['augment']?.['stop']).toEqual([]);
+        expect(parsed['platforms']?.['copilot']?.['fallback_only']).toBe(true);
     });
 
     it('strips quoted scalars', () => {
@@ -105,23 +105,23 @@ const MANIFEST_OBJ = {
 
 describe('dispatch_hook — _resolve_concerns', () => {
     it('returns an ordered list', () => {
-        const out = _resolve_concerns(MANIFEST_OBJ as any, 'augment', 'stop');
+        const out = _resolve_concerns(MANIFEST_OBJ as Parameters<typeof _resolve_concerns>[0], 'augment', 'stop');
         expect(out.map((c) => c['name'])).toEqual(['chat-history', 'roadmap-progress']);
         expect(out[0]!['script']).toBe('src/scripts/chat_history.py');
     });
     it('unknown platform yields empty', () => {
-        expect(_resolve_concerns(MANIFEST_OBJ as any, 'ghost', 'stop')).toEqual([]);
+        expect(_resolve_concerns(MANIFEST_OBJ as Parameters<typeof _resolve_concerns>[0], 'ghost', 'stop')).toEqual([]);
     });
     it('unknown event yields empty', () => {
-        expect(_resolve_concerns(MANIFEST_OBJ as any, 'augment', 'ghost')).toEqual([]);
+        expect(_resolve_concerns(MANIFEST_OBJ as Parameters<typeof _resolve_concerns>[0], 'augment', 'ghost')).toEqual([]);
     });
     it('fallback_only platform yields empty', () => {
-        expect(_resolve_concerns(MANIFEST_OBJ as any, 'copilot', 'stop')).toEqual([]);
+        expect(_resolve_concerns(MANIFEST_OBJ as Parameters<typeof _resolve_concerns>[0], 'copilot', 'stop')).toEqual([]);
     });
     it('skips an unknown concern name and warns', () => {
         const errSpy = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
         const bad = { concerns: {}, platforms: { augment: { stop: ['missing'] } } };
-        expect(_resolve_concerns(bad as any, 'augment', 'stop')).toEqual([]);
+        expect(_resolve_concerns(bad as Parameters<typeof _resolve_concerns>[0], 'augment', 'stop')).toEqual([]);
         expect(errSpy.mock.calls.map((c) => String(c[0])).join('')).toContain('unknown concern');
     });
 });
