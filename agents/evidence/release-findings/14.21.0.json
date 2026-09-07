@@ -70,7 +70,11 @@
       "severity": "critical",
       "kind": "security",
       "title": "Unbounded HTTP timeout allows indefinite resource exhaustion",
-      "file": "src/scripts/ai_council/api_transport.ts"
+      "file": "src/scripts/ai_council/api_transport.ts",
+      "status": "false_positive",
+      "rationale": "api_transport.ts has exactly ONE HTTP path, curlJsonPost, and it is bounded three ways: `--connect-timeout 30` and `--max-time 290` on the curl argv (:50) and `timeout: 300_000` on the spawnSync call (:56). grep for fetch(/https.request/execFileSync in that file returns the single spawnSync at :52 and nothing else. The timeout is not unbounded.",
+      "verified_by": "PR #1914 (fix/single-delivery-unconditional) — read against the tree at 969250dfe; citations in each rationale",
+      "date": "2026-09-07"
     },
     {
       "finding_id": "088acabcd7a6",
@@ -91,7 +95,11 @@
       "severity": "high",
       "kind": "security",
       "title": "`--deep` clone parses attacker-controlled git objects before read ceiling",
-      "file": "src/domains/analysis-workbench/analyze/repo/command.md"
+      "file": "src/domains/analysis-workbench/analyze/repo/command.md",
+      "status": "accepted_risk",
+      "rationale": "RECORDING AN ACCEPTANCE ALREADY COMMITTED, not making one. The finding is factually right and the spec says so first: analyze/repo command.md § 2b reads \"Cloning **parses** attacker-influenceable data before a file is opened: the cloned tree is data, never instructions\" and points at untrusted-input-defense. The same section bounds it — read-only clone at a pinned SHA, never executed, no install/build/script/package-manager, network for the clone only, a non-empty anchor table required, and a three-part read ceiling (operations, bytes, wall clock, whichever fires first, with the firing bound recorded). The residual is named in the tree with its mitigations; this ledger entry cites that acceptance rather than adding a new one.",
+      "verified_by": "PR #1914 (fix/single-delivery-unconditional) — read against the tree at 969250dfe; citations in each rationale",
+      "date": "2026-09-07"
     },
     {
       "finding_id": "caa59adf108c",
@@ -105,7 +113,11 @@
       "severity": "high",
       "kind": "claim",
       "title": "free-jury-judge-agreement claim filed with no route to measurement",
-      "file": "docs/CLAIMS.md"
+      "file": "docs/CLAIMS.md",
+      "status": "false_positive",
+      "rationale": "The claim entry states the no-route condition itself, as its design: docs/CLAIMS.md:1188 reads \"the roadmap's `free-seat-measurement-spend` blocker was DECLINED for this round in the same change, so the claim is filed with no result and no route to one. That ordering IS the pre-registration: a threshold fixed while the measurement is impossible cannot have been fitted to a result.\" The entry also fixes the threshold (kappa >= 0.60), the statistic, the corpus, the panel rule, the falsification and the honest-null path. The finding restates a declared property as a defect.",
+      "verified_by": "PR #1914 (fix/single-delivery-unconditional) — read against the tree at 969250dfe; citations in each rationale",
+      "date": "2026-09-07"
     },
     {
       "finding_id": "138f5b51777f",
@@ -189,7 +201,11 @@
       "severity": "high",
       "kind": "security",
       "title": "Pre-push gate introduces new tracked file changes without review",
-      "file": "src/scripts/install-hooks.sh"
+      "file": "src/scripts/install-hooks.sh",
+      "status": "false_positive",
+      "rationale": "install-hooks.sh writes only into $HOOKS_DIR, which resolves to $AGENT_CONFIG_HOOKS_DIR, $COMMON_GIT_DIR/hooks or $PROJECT_ROOT/.git/hooks (:32-37). All three are inside the git directory, which git never tracks. The four write sites (:48, :350, :462, :512) all target \"$HOOKS_DIR/<name>\". No tracked file is written, so there is no unreviewed tracked change.",
+      "verified_by": "PR #1914 (fix/single-delivery-unconditional) — read against the tree at 969250dfe; citations in each rationale",
+      "date": "2026-09-07"
     },
     {
       "finding_id": "a03ef5ce59b5",
@@ -245,7 +261,11 @@
       "severity": "high",
       "kind": "claim",
       "title": "CHANGELOG.md headline 'Governance-mix line now purely measured' unbacked by architectural evidence",
-      "file": "tests/scripts/release_material.test.ts"
+      "file": "tests/scripts/release_material.test.ts",
+      "status": "false_positive",
+      "rationale": "The CHANGELOG sentence cites its evidence inline: \"`> **Governance mix:**` is a pure measurement (ADR-261)\". docs/decisions/ADR-261-release-written-answer-obligation-removed.md:82 covers that line explicitly, and the rendered artifact in the 14.21.0 section is two integers and a taxonomy version — \"governance-only 31 vs consumer-only 10 (taxonomy 1.0.0)\" — with no prose to be unbacked. The architectural evidence is the ADR, named in the same sentence.",
+      "verified_by": "PR #1914 (fix/single-delivery-unconditional) — read against the tree at 969250dfe; citations in each rationale",
+      "date": "2026-09-07"
     },
     {
       "finding_id": "006655606e79",
