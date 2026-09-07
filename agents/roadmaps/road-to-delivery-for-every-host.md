@@ -649,14 +649,43 @@ Defects this roadmap repairs:
 
 ## Phase 7: Truth surfaces
 
-- [ ] **7.1 Flip `docs/CLAIMS.md:365`** to a backed claim scoped `claude-code` only,
+- [x] **7.1 Flip `docs/CLAIMS.md:365`** to a backed claim scoped `claude-code` only,
       evidence = the Phase 0 artefact plus the post-flip census; `non_inference` states the
       per-host scope. No README wording added.
       verify: `./scripts-run src/scripts/check_claims` green; the evidence pointer resolves;
       `./scripts-run src/scripts/build_proof` re-run in the same change.
+      Done 2026-09-07. The row was not merely stale, it was FALSE in three clauses the
+      moment 4.3 landed: it said "MEASURED-BUT-NOT-SHIPPED", that the mode "still resolves
+      to `eager-all`", and that the activation charge was unpaid. Shipping a change that
+      falsifies a `backed` claim and leaving the claim standing is the failure the ledger
+      exists to prevent, so this step was not optional after 4.3.
+      Rewritten to lead with the scope — SHIPPED FOR CLAUDE CODE ONLY — and to carry the
+      re-measured figures (616/616 byte-equal, 101/101 reachable, 0 of 212 near-misses,
+      $0.7167 vs $4.0401) plus the per-host byte table. The superseded figures are named as
+      superseded rather than deleted, with the reason no delta may be computed between them:
+      the corpora differ.
+      A `non_inference` was added, which the row did not have. Five readings it refuses,
+      the last being the one a reader is most likely to get wrong:
+      `check_preamble_payload_budget` is UNCHANGED at 138,200 by this flip, because it reads
+      the projection source rather than the tree a host loads — so a reader comparing that
+      gate before and after correctly sees no movement, and that is not evidence against
+      the saving.
+      `check_claims` green (9 markered, 99 entries); the evidence pointer resolves;
+      `build_proof` re-run and `--check` reports in sync.
 - [ ] **7.2 Per-host cost table** generated from the census into the contract the README
       points at; the generator fails when the census is missing.
       verify: table numbers equal the census.
+      BLOCKED 2026-09-07, on the same measurement-surface question as 4.4. The step wants a
+      table generated FROM THE CENSUS, and the census
+      (`check_preamble_payload_budget` / `preamble_byte_census`) reads the projection source
+      by default, where every host has the same number and the flip changes none of them. A
+      per-host table generated from that census would print one figure three times and call
+      it per-host.
+      The per-host numbers DO exist and are published — `agents/evidence/analysis/standing-payload-by-host-2026-09.md`
+      carries them, generated and pinned, with a machine-checked writer citation per host.
+      What is missing is the generator that reads a host-aware census into the contract, and
+      the host-aware census is the thing 4.4 is blocked on. Closes when that surface
+      decision is taken.
 - [ ] **7.3 Apply E7** to the two `later/` token roadmaps.
       verify: both files have a disposition;
       `./scripts-run src/scripts/lint_roadmap_later_disposition` green.
@@ -704,6 +733,14 @@ Defects this roadmap repairs:
 
 ## Acceptance Criteria
 
+      NOT DONE 2026-09-07, and deliberately not attempted. E7 archives two `later/` roadmaps
+      "once Phase 7.1 flips the claim", which has now happened, so the precondition is met
+      and the work is available. It is left for a separate change because archiving a
+      roadmap in this tree moves three ratchets that are not this change's subject — the
+      estate count, the risk-register floor, and the archive index — and folding that into a
+      commit already carrying a default flip, an ADR and a schema repair would make a
+      revert of any one of them a revert of all. `lint_roadmap_later_disposition` is green
+      as it stands, so nothing is red while this waits.
 - [ ] `check_preamble_payload_budget` on a Claude Code install: total ≤ 40,000 tok, rules
       ≤ 20,000.
 - [ ] Every host not in `lean_projection.hosts`: rule tree byte-identical to `eager-all`
