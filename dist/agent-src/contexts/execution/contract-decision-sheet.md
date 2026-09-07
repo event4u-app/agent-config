@@ -49,9 +49,30 @@ Decision sheet — <N> question(s), all answerable now
    alt:     <option>
 
 A. Accept all defaults
-B. Change some (name them: "1=x, 2=y")
+B. Change one — reply with that row's NUMBER instead of a letter; it is put
+   on its own, then the sheet returns with the rest unchanged
 C. Ask me these one at a time instead
 ```
+
+**Why `B` takes a number and not a list.** It used to read
+`Change some (name them: "1=x, 2=y")`, and that is a **structured reply** —
+exactly what [`user-interaction`](../../rules/user-interaction.md)'s Pre-Send
+Self-Check names as a violation ("User would need a structured reply (`1a, 2b`)
+instead of a single number"). One block whose answer needs a structured reply is
+not one decision point; it is N questions wearing a table, which is the reading
+this whole page exists to defeat.
+
+So the answer domain is `A`, `C`, or a single row number — **one token,
+whichever it is**. Overriding two rows is two turns, and that is the correct
+cost: each override is a decision the default did not carry.
+
+The contradiction was resolved on **the sheet's** side deliberately, and the
+asymmetry is durable rather than incidental: `user-interaction` is one of the
+locked nine ([`kernel-membership § 4`](../../../docs/contracts/kernel-membership.md)),
+so amending its clause is an owner-reserved edit that `block-kernel-rule-writes`
+refuses at tool-call time, while the answer SHAPE is this page's own. When a
+page and a kernel rule contradict each other, the page is both the cheaper half
+to change and the only half an autonomous run may touch at all.
 
 The sheet is rendered **inside** the contract screen, above its Accept line —
 never as a second block and never as a second turn. Accepting the contract with

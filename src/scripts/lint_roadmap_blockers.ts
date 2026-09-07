@@ -14,6 +14,19 @@
  *      (`- **Run:**`). A gate that claims to be executable without naming the
  *      command is the same defect as a decision with no option set: it reads
  *      as actionable and is not.
+ *   4. An annotation pointing at a USER-DECISION blocker (one whose `Owner:`
+ *      is the maintainer, the user, or the owner) carries an `asked:` field
+ *      recording whether the question was put and, when it was not, why —
+ *      `<!-- blocked-by: <id> | asked: no — <reason> -->`. A decision only the
+ *      user can make, filed in a roadmap without ever being put, is the defect
+ *      road-to-asked-not-parked exists to stop; without this field a marker
+ *      cannot distinguish a declined decision from an unoffered one.
+ *
+ *      HARD, not ratcheted, and it can be: no active roadmap carries a real
+ *      checkbox annotation today, so on the day it ships the rule fires on
+ *      nothing — the same "no backlog to grandfather" argument the `Class:`
+ *      contract above makes. `later/` and `archive/` are outside this gate's
+ *      glob and are untouched by it.
  *
  * Fenced code blocks are stripped before scanning so a roadmap that shows
  * the `## Blockers` shape as a documentation example is not flagged.
@@ -42,7 +55,19 @@ const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/gim;
 // wrapped continuation line or inline-code documentation example of the
 // syntax (as this very lint script's own roadmap step describes it) must
 // not be mistaken for a live cross-reference.
-const BLOCKED_BY_LINE_RE = /^-[ \t]*\[[ xX~-]\].*<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+)[ \t]*-->/i;
+const BLOCKED_BY_LINE_RE =
+    /^-[ \t]*\[[ xX~-]\].*<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+)[ \t]*(?:\|[ \t]*asked:[ \t]*(yes|no)[ \t]*(?:[\u2014-][ \t]*([^>]*?))?[ \t]*)?-->/i;
+
+/**
+ * The owners whose blockers are the USER-DECISION class.
+ *
+ * Read off `Owner:` rather than guessed from prose: `terminal-states.md`
+ * defines `blocked` to include "a decision only the user can make", and the
+ * owner field is the only place a roadmap says which blockers those are.
+ * `council`, `implementer` and `agent` are deliberately outside the class —
+ * those are not decisions the user is waiting to be asked.
+ */
+const USER_DECISION_OWNER_RE = /^-[ \t]*\*\*Owner:\*\*[ \t]*(maintainer|user|owner)\b/im;
 
 const REQUIRED_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
     ['Status', /^-[ \t]*\*\*Status:\*\*/im],
@@ -154,6 +179,7 @@ function _scanBoth(rawText: string): ScanResult {
     const decidability: Violation[] = [];
     const text = _stripFencedCode(rawText);
     const declaredIds = new Set<string>();
+    const userDecisionIds = new Set<string>();
 
     const sectionMatch = BLOCKERS_SECTION_RE.exec(text);
     if (sectionMatch) {
@@ -181,6 +207,9 @@ function _scanBoth(rawText: string): ScanResult {
             declaredIds.add(cur.id);
             const bodyEnd = i + 1 < heads.length ? (heads[i + 1] as { start: number }).start : section.length;
             const body = section.slice(cur.end, bodyEnd);
+            if (USER_DECISION_OWNER_RE.test(body)) {
+                userDecisionIds.add(cur.id);
+            }
             const missing = REQUIRED_FIELDS.filter(([, re]) => !re.test(body)).map(([name]) => name);
             if (missing.length) {
                 violations.push({
@@ -255,6 +284,27 @@ function _scanBoth(rawText: string): ScanResult {
                     `blocked-by references unknown blocker id '${id}' ` +
                     `(no matching '### blocker: ${id}' in this file)`,
             });
+        }
+        if (userDecisionIds.has(id)) {
+            const asked = m[2] === undefined ? null : (m[2] as string).toLowerCase();
+            const reason = ((m[3] as string | undefined) ?? '').trim();
+            if (asked === null) {
+                violations.push({
+                    line: i + 1,
+                    message:
+                        `blocked-by '${id}' is a user-decision blocker and carries no ` +
+                        'asked: field — write `| asked: yes` when the question was put, ' +
+                        'or `| asked: no — <reason>` when it was not',
+                });
+            } else if (asked === 'no' && reason === '') {
+                violations.push({
+                    line: i + 1,
+                    message:
+                        `blocked-by '${id}' says asked: no with no reason — a marker that ` +
+                        'does not say why the question was never put is the parking lot ' +
+                        'this field exists to end',
+                });
+            }
         }
     }
     violations.sort((a, b) => a.line - b.line);

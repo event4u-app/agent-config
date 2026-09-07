@@ -187,6 +187,36 @@ concerns:
     fail_closed: true
     severity: blocking
     needs_payload_bodies: [input]
+  # road-to-asked-not-parked Phase 5.1 — one question per structured-ask call.
+  # PreToolUse guard: DENIES a call to a host's native question picker whose
+  # payload carries more than one question. `ask-when-uncertain`'s Iron Law is
+  # one question per turn and `user-interaction` narrows "one" to one decision
+  # point; a picker makes N-in-one cheap, and the user then answers a form
+  # instead of a question. Denies with a reason rather than truncating to the
+  # first question — a truncation hides the decisions that were dropped.
+  #
+  # fail_closed: false, DELIBERATELY, and the direction is the opposite of
+  # block-no-verify's. There the guard must not become the bypass. Here a
+  # parse failure means an unrecognised picker shape, and blocking what it
+  # cannot read would turn an unknown payload into a wedged session for a
+  # SHAPE defect, not a safety one. The hook allows what it cannot parse and
+  # says so in its own header.
+  #
+  # It fires on nothing today, and that is the honest state rather than a
+  # defect: `_lib/structured_ask.ts` carries no OBSERVED per-host picker, so
+  # the `tools:` filter below lists the candidate NAMES that library matches —
+  # it is a narrowing filter, never a claim that any host emits one of them.
+  # Bound on `claude` only: it is the one platform that both binds
+  # pre_tool_use and honours a deny (hook-architecture-v1.md § Which hosts
+  # carry pre_tool_use), and a deny bound where the verdict is discarded would
+  # be dead weight wearing a guard's name.
+  one-question-per-ask:
+    script: src/scripts/hooks/one_question_per_ask_hook.ts
+    args: []
+    fail_closed: false
+    severity: blocking
+    tools: [AskUserQuestion, AskQuestion, UserQuestion, ask_user_question, ask_question, user_question]
+    needs_payload_bodies: [input]
   # road-to-source-silence Phase 4.2 — the write-time half of source
   # confidentiality. Every other gate in that programme catches the QUOTE of a
   # speaking inbox directory name; this catches the NAME, at the only moment
@@ -1189,7 +1219,7 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
