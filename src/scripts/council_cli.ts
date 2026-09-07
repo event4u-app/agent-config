@@ -78,8 +78,12 @@ import {
 } from './ai_council/config.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
-import { resolveMemberTransport } from './ai_council/transport_resolver.js';
-import { classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
+import {
+    NO_DISABLED_REASON,
+    disabledSeats as _disabledSeats,
+    resolvedTransportFor as _resolvedTransportFor,
+} from './ai_council/status_surface.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
@@ -2163,31 +2167,6 @@ function _emit_shadow_slo_banner(): void {
  * leaves nothing to infer. Exit is always 0 — this reports a state, it does not
  * gate — and the verdict line is machine-greppable in both directions.
  */
-/**
- * Resolve the concrete transport a member would use on THIS machine right now.
- *
- * `cmd_status` exists to answer "is the council reachable, and will it bill me".
- * Since the transport-mode setting was removed, the second half is not a value
- * anyone can look up in the config — it is a per-machine resolution. Printing a
- * configured mode would be the same class of stale answer the removed setting
- * produced. `mode` is pinned to `auto` because the loader no longer emits
- * anything else.
- */
-function _resolvedTransportFor(
-    name: string,
-    member: { readonly binary: string | null; readonly api_key_ref: string | null },
-    report?: EnvironmentReport,
-): ReturnType<typeof resolveMemberTransport> {
-    return resolveMemberTransport({
-        provider: name,
-        report: report ?? detectEnvironment(),
-        invocationMode: null,
-        memberSettings: null,
-        globalMode: 'auto',
-        binaryOverride: member.binary,
-    });
-}
-
 /** Gather what `fallbackPostureFor` needs; the decision itself is pure. */
 function _posture(
     name: string,
@@ -2263,6 +2242,9 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                                 transport: t.available ? t.transport : null,
                                 billing: t.available ? t.billing : null,
                                 reason: t.reason,
+                                absent_reason: t.absentReason,
+                                policy_exclusion: m.policy_exclusion,
+                                content_ceiling: m.content_ceiling,
                             },
                         ];
                     }),
@@ -2273,6 +2255,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                         enabledMembers.map(([n, m]) => [n, _posture(n, m)]),
                     ),
                 },
+                disabled_seats: _disabledSeats(cfg),
                 ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
                 qualification: qualificationJson(qualifications),
                 qualified_members: countableSeats(qualifications),
@@ -2310,6 +2293,15 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             const billing = t.available ? ` · ${t.billing}` : '';
             const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
             _stdout(`  transport        ${name}: ${detail}${billing}\n`);
+            // 2.1: the machine-readable half of the refusal.
+            if (!t.available && t.absentReason !== null && t.absentReason.startsWith('policy_')) {
+                _stdout(`  policy           ${name}: ${t.absentReason}\n`);
+            }
+            _stdout(`  content ceiling  ${name}: ${member.content_ceiling}\n`);
+        }
+        // 1.2: a disabled seat was invisible here — `enabled` members only.
+        for (const [name, reason] of Object.entries(_disabledSeats(cfg))) {
+            _stdout(`  disabled seat    ${name}: ${reason}\n`);
         }
         for (const line of renderPostureLines(
             enabledMembers.map(([n, m]) => [n, _posture(n, m)] as const),

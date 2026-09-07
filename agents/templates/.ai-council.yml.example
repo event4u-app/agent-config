@@ -393,6 +393,16 @@ members:
 
   gemini:
     enabled: false
+    # HONEST NULL, not a probe result (road-to-admissible-council-seats 1.2).
+    # `council:status` prints this line, so the seat is no longer silently off.
+    disabled_reason: >-
+      honest null 2026-09-07 — the CLI headless contract could not be
+      established: the free tier on the probing machine fails with
+      IneligibleTierError before the run reaches the point where a piped stdin
+      alone would decide it, so whether the gemini CLI stays non-interactive
+      without -p/--prompt is UNKNOWN, not false. The api transport for this
+      provider became live in the same change; this seat stays off until the
+      contract is observed on a machine that can reach it.
     # not-listed: gemini — the `gemini` CLI is installed here and its `--help` exposes only `-m, --model <string>` — no listing subcommand and no documented "latest" alias, so no sentinel could be substituted. An honest null for this provider, not a guess.
     # The pin is therefore stamped as-of the drain date with NO refresh claimed;
     # `verified_at` records when a human last looked, which is the only thing it
