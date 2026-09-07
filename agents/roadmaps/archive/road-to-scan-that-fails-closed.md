@@ -250,7 +250,7 @@ and `magic` return zero. The plumbing exists; only the classification is missing
 | 3 | Rooted scanning silently narrows the default scan | implementation | Adding `--root` to five linters risks a refactor in which the default root is computed differently, shrinking the real corpus while every test still passes. | 4.1's verify pins that a flagless run scans the same corpus as today; Phase 3's floor, landed first, turns any silent narrowing into a gate failure rather than a green run. **THIS RISK FIRED, 2026-09-07, in the inverse direction — recorded rather than closed.** The first `--root` wiring patched a COMMENT mentioning `sl.iter_corpus()` in `lint_confusables.ts` and left the real call site alone, so that child silently IGNORED the flag and reported 1655 files against an empty directory. The default corpus was never narrowed; the bounded mode simply did not apply, which no test asserting the default would have caught. What caught it was the empty-root probe built for 3.3's negative control — a scan reporting 1655 against a directory with no files. The exact construct was then swept across all five children: 1 of 5 affected, now 0, and every flagless count re-measured identical to before the change (10899 / 1655 / 1655 / 2060 / 720). | Phase 4 — The scout's security gate actually reads content |
 | 4 | Fingerprint migration mis-binds a pragma and hides a real finding | implementation | Hashing the wrong unit — whole file instead of the matched evidence — would preserve today's over-broad suppression under a new name and be harder to audit. | 5.1 fixes the hashed unit as the normalized match plus location identity and requires a mutation fixture that proves the binding is content-sensitive; the population is 8 instances, small enough to read by hand as 5.2 requires. **THIS RISK FIRED IN ITS OTHER DIRECTION, 2026-09-07.** The hashed unit was correct; the APPLICATION was not. The first wiring wrapped only each `_scan`'s terminal return, and `lint_skill_frontmatter_safety._scan` has an early return for an artifact with no `execution:` block — so a bound pragma silently failed to apply to exactly that population, which is the whole `src/subagents/` surface. It surfaced as the tree going red rather than as a hidden finding, i.e. in the safe direction, and the fix removes the class: every `_scan` now routes every exit through one `finish` helper. Two further things the hand audit found that no mechanical migration would: this rule's own pragma in `untrusted-input-defense.md` suppressed nothing but its own reason string and was deleted; and the fingerprint had to become stable under the act of recording it, because two pragmas here ARE their own evidence. Population re-measured: 9 pragma-shaped lines in 8 files, of which 7 were live (now 6), not the 8 instances this row assumed. | Phase 5 — Suppressions bound to the evidence they accept |
 | 5 | The prose corrections land and the mechanism does not | product | Phase 1 is cheap and Phase 2 is not; a plausible outcome is that the honest hedges ship, the claim is downgraded, and the repair stalls — leaving the package with a documented weakness instead of a fixed one. | 1.3's registry entry carries a `revisit_if` naming Phase 2.2, and 2.4 makes removing the hedges a step of the mechanism phase rather than an optional tidy-up, so `state: degraded` stays visible in a generated surface until the defect is actually closed. **Re-reviewed 2026-09-07: did not fire.** Phase 2 landed and 2.4 rode in the SAME commit as 2.2 rather than a later one, so the hedge was never absent while the defect was present and `degraded` was never a state anyone could read as settled. It survives in the registry entry's own history. | Phase 1 — Truth surfaces before any mechanism |
-| 6 | Publish-surface classification blocks a legitimate release | product | A magic-byte classifier that mislabels a legitimate packed file as `binary` fails the publish path at the worst moment. | 6.2 routes exceptional entries through the Phase 5 bound-pragma grammar rather than a generic allowlist, so an accepted entry is recorded with a reason and a content binding and a later change to that entry re-fires the check. **Re-reviewed 2026-09-07: did not fire, and the adjacent surprise is the one worth recording.** No legitimate entry was mislabelled: 15 non-text entries, all 15 bound, 0 unaccounted, and the magic-byte classifier put three 69-byte PNGs in `binary` correctly. What the measurement refuted was this phase's own premise that `binary` would be zero — those three PNGs are part of the shipped media-adapter dry-run surface, so AC-6 is NOT met and stays open rather than being reinterpreted. A different mitigation than this row's also earned its place: an entry the check cannot OPEN is classified `unreadable` and refused, because a class it did not classify must not fall through to the one needing no exception. | Phase 6 — The published surface is classified, not just measured |
+| 6 | Publish-surface classification blocks a legitimate release | product | A magic-byte classifier that mislabels a legitimate packed file as `binary` fails the publish path at the worst moment. | 6.2 routes exceptional entries through the Phase 5 bound-pragma grammar rather than a generic allowlist, so an accepted entry is recorded with a reason and a content binding and a later change to that entry re-fires the check. **Re-reviewed 2026-09-07: did not fire, and the adjacent surprise is the one worth recording.** No legitimate entry was mislabelled: 15 non-text entries, all 15 bound, 0 unaccounted, and the magic-byte classifier put three 69-byte PNGs in `binary` correctly. What the measurement refuted was this phase's own premise that `binary` would be zero with no work — those three PNGs were part of the shipped media-adapter dry-run surface, so AC-6 stayed open rather than being reinterpreted. **Closed 2026-09-07 on the conservative reading:** a two-round AI council chose textual placeholders, the convention 12 of the 15 sibling fixtures already carried, and `binary` and `archive` became closed classes that consult no exception at all — see the AC-6 disposition note. A different mitigation than this row's also earned its place: an entry the check cannot OPEN is classified `unreadable` and refused, because a class it did not classify must not fall through to the one needing no exception. | Phase 6 — The published surface is classified, not just measured |
 
 ## Acceptance Criteria
 
@@ -259,59 +259,73 @@ and `magic` return zero. The plumbing exists; only the classification is missing
 - [x] AC-3 — `src/config/assurance-capability-registry.json` carries a `self-security-scan` entry whose `state` is `available`, and it reached `available` only after the fail-closed repair merged.
 - [x] AC-4 — A quarantined candidate carrying a zero-width injection, a disclosure-suppression imperative, or a dangerous frontmatter key is refused by the scout with the flagging linter named, and a clean candidate is still accepted.
 - [x] AC-5 — Every `security-lint: allow` pragma under `src/` and `docs/` carries a content fingerprint, altering the matched content stops the suppression from applying, and no allowlist file was added.
-- [ ] AC-6 — The packed tarball is classified by type with `binary` and `archive` at zero, and any dotfile or extensionless entry is carried by a path-and-size-bound pragma rather than a generic allowlist.
+- [x] AC-6 — The packed tarball is classified by type with `binary` and `archive` at zero, and any dotfile or extensionless entry is carried by a path-and-size-bound pragma rather than a generic allowlist.
 
-  **AC-6 disposition, 2026-09-07 — NOT MET, and the criterion is deliberately
-  left unchanged.** Both AI-council seats refused to rewrite this sentence
-  inside the roadmap it governs, on the ruling this run had already applied to
-  the `mcp-fingerprint-slot` blocker: relaxing a criterion so the roadmap may be
-  called complete has the shape of goalpost movement. Evidence is appended here;
-  the sentence above is verbatim as authored.
+  **AC-6 disposition, 2026-09-07 — MET, on the conservative reading, after the
+  split that kept it open was resolved by a two-round AI council.**
 
-  **The mechanism is built and proven; the raw count is not zero.** Measured on
-  the built payload at `d08656dfe` (3033 entries): `archive 0` · **`binary 3`** ·
-  `dotfile 4` · `no-extension 8` · `text 3018` · **unaccounted 0**. Every entry
-  outside `text` carries a path-and-size-bound exception —
-  `sha256(path + "\n" + size)`, a written reason each, no allowlist file tracked
-  or untracked. Step 6.2's own `verify` passes literally: an ELF header written
-  to `src/scripts/zz-probe-binary.ts` made the check fail and NAME the file, the
-  `.ts` extension buying it nothing; removing the file restored green.
+  **What was open.** The criterion says `binary` and `archive` "at zero". A
+  previous round SPLIT on whether that means zero UNACCOUNTED entries (the
+  ratchet reading, under which the criterion was already met) or zero OBSERVED
+  entries (the plain reading, under which three 69-byte PNGs shipped in
+  `binary`). The split escalated and the box stayed open, because adopting the
+  relaxing reading is the accepting direction on a governance control.
 
-  **The three binaries**, each with its bound digest recorded in
-  `src/scripts/check_pack_size.ts`, are 69-byte placeholder PNGs at
-  `src/scripts/media/lib/fixtures/{flux,gemini-image,ideogram}/asset-0001.png`.
-  They are part of a shipped consumer surface, not stray artifacts:
-  `src/scripts/media/lib/adapter-contract.md:7,355` declares
-  `scripts/media/lib/fixtures/<adapter-id>/` as the location media adapters emit
-  dry-run output into, and each directory's `result.json` names its PNG by that
-  path.
+  **Round 1 (AI council, 2026-09-07, 2 seats, unanimous)** took the plain
+  reading and chose disposition 2 — generate the PNG fixtures at dry-run time.
+  Both seats reasoned that an acceptance criterion constrains the build, never
+  the reverse, and that amending AC-6 after the fact to match what was built is
+  governance erosion made more dangerous, not less, by the build being
+  technically sound.
 
-  **The council split, and the split is recorded rather than resolved by the
-  agent.** Seat 1 read "at zero" as the RATCHET ("zero unaccounted", which is
-  how this file's pre-existing `CONTENT_CLASSES` already uses `limit: 0`
-  alongside `measured_in` provenance) and would tick the box with this note.
-  Seat 2 read it as the observed COUNT, noting that the exception clause names
-  only dotfile and extensionless entries and that step 6.2 calls binary and
-  archive "classes that should be empty" — so inserting the absent word
-  "unaccounted" materially relaxes an observable requirement. A split escalates;
-  and adopting the relaxing reading is the ACCEPTING direction on a governance
-  control, which the run's own framework puts out of the agent's reach. **So the
-  conservative reading stands and this box stays open.**
+  **Round 2 (same council, 2 seats, unanimous)** was called because a
+  measurement taken after round 1 refuted its premise, and it moved the verdict
+  to disposition 3 — ship a textual representation. `file` and `wc -c` over
+  `src/scripts/media/lib/fixtures/` show that **12 of the 15 asset-bearing
+  adapters already ship an ASCII placeholder at their documented media path**
+  (`FIXTURE-<adapter-id>-<ext>`, 15-22 bytes), including one `.png`
+  (`openai-images/scene-0001.png`, 29 bytes, not decodable). The three real
+  PNGs were the outliers, not the norm. A second grep over `src/`, `docs/` and
+  `tests/`, excluding the fixture tree, returns **exactly three references to
+  them and all three are the gate's own exception rows** — nothing decodes them,
+  so the round-1 exception string claiming "the flux adapter test decodes" it
+  was unsupported by any grep. Disposition 2 would have added a
+  `generateFixture()` path, a writable-directory question outside a possibly
+  read-only `node_modules`, atomic PNG+JSON emission and a packed-tarball
+  integration test — and would have left the corpus in two conventions at once.
 
-  **What closes it — an owner decision among four, none of them this agent's to
-  take:** (1) remove the PNG fixtures from `package.json` `files[]`; (2)
-  generate equivalent fixtures during tests or dry runs instead of shipping
-  them; (3) ship a textual representation and materialize the PNG where needed,
-  if the adapter contract permits; or (4) formally amend the requirement to
-  permit individually bound binary exceptions — outside this roadmap's own
-  self-certification. Options 1-3 are changes to a shipped consumer-facing
-  surface owned by whoever owns the media adapters.
+  **What landed.** The three PNGs now carry the sibling literal
+  (`src/scripts/media/lib/fixtures/{flux,gemini-image,ideogram}/asset-0001.png`,
+  16/24/20 bytes). `src/scripts/media/lib/adapter-contract.md:359` states that
+  committed media assets are non-decodable ASCII placeholders whose paths, not
+  encoded-media validity, form the fixture contract. The three binary
+  exceptions are DELETED from `src/scripts/check_pack_size.ts`, and — stronger
+  than the council asked — `classifyPayloadTypes` no longer consults the
+  exception table for `binary` or `archive` at all, so both are **closed
+  classes**: each is the observed count and cannot be excepted to zero by any
+  future entry. Neither seat guessed the placeholder literal correctly (both
+  proposed `<placeholder-image>`); the convention was read off the tree rather
+  than adopted from the verdict, and that is the one place this implementation
+  departs from the recorded text.
 
-  *This roadmap keeps responsibility.* The work is NOT transferred to a stub:
-  seat 2's condition for `[~]` is a real follow-on roadmap that explicitly
-  accepts the work and its estate cost, and manufacturing one for archival
-  convenience is the same shape as widening a ratchet for bookkeeping. The
-  roadmap therefore does not archive, and that visible open state is the
-  accountability mechanism.
+  **Evidence.** `./scripts-run src/scripts/check_pack_size` reports
+  `payload types: archive 0 · binary 0 · dotfile 4 · no-extension 8 ·
+  text 2856 — 0 unaccounted`. The closed class carries its own sensitivity
+  proof: the `--self-test` row *"an entry with a VALID bound exception is still
+  refused once it reads binary"* feeds `LICENSE` — a genuinely exceptable entry
+  at its recorded size — binary head bytes and asserts refusal, paired with an
+  accepting negative control at the same path with text content. 18/18 cases
+  behave.
+
+  *Reopening condition (both seats, converged):* a documented repository or
+  supported downstream consumer must decode fixture media, or validate its
+  magic bytes, as part of the fixture contract. If that appears, the next step
+  is a formal prospective amendment of AC-6, recorded as a governance
+  deviation — never a re-reading of the current wording.
+
+  Council records: `2026-09-07-ac6-binary-class-at-zero.md` and
+  `2026-09-07-ac6-round2-sibling-convention.md` under
+  `agents/runtime/council/responses/` — local-only, since `agents/runtime/` is
+  gitignored, so the substance is transcribed here rather than linked.
 - [x] AC-7 — `docs/CLAIMS.md` and `docs/threat-model.md` assert nothing about dependency auditing, Python pinning, or runtime posture that a grep of `.github/` and the repo root contradicts.
 - [x] AC-8 — No new gate script, no new hook concern, no new CLI verb, and no second suppression system exists in the tree as a result of this roadmap.
