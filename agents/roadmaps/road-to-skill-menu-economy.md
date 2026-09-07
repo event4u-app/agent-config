@@ -68,10 +68,16 @@ pre-registered comparison shows equal-or-better hit rate at equal-or-lower stand
       probe reports no open PR, no remote branch carrying either declared slug, and no
       sibling roadmap on the topic — so nothing contradicts `depends` on
       `road-to-delivery-for-every-host` or `disjoint` on
-      `road-to-the-skill-surface-framing-choice`, and both files exist. Note the probe
-      resolved its base against a **stale** `origin/main`: this checkout's base is
-      `04a9af594`, which is ahead of the fetched ref, so ratchets reading
-      `origin/main` in this worktree overstate what is new.
+      `road-to-the-skill-surface-framing-choice`, and both files exist. The probe
+      resolved its base against `origin/main` at `5776a659e`, which is CURRENT: the
+      branch started from `04a9af594` and PR #1914 then moved `origin/main` forward, so
+      a ratchet reading `origin/main` in this worktree is reading the right base.
+      Corrected 2026-09-07 — this line first said the opposite, that `origin/main` was
+      stale and the ratchets overstated what is new. That was a wrong inference from a
+      single `git merge-base --is-ancestor` result: a base ref that is not an ancestor of
+      HEAD means the two have diverged, and says nothing about which side moved. The
+      practical consequence is the reverse of what was written: an inherited-red count
+      read against `origin/main` here is real, not inflated.
 
 ## Context
 
