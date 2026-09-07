@@ -102,6 +102,26 @@ Two properties of the boundary, stated because both were argued:
   the same honesty stance `evaluator-independence` takes for its own items 2
   and 4.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| The metered park was narrowed to a PROPOSER only, on a different axis from this one | `agents/roadmaps/later/road-to-governed-evidence-production.md` § Phase 2 — "A metered call may **generate** candidate text. It may not score, rank, filter, select between, or supply any input to the verdict for the arms being compared", NARROWED 2026-09-01 |
+| No unpaid seat exists in this tree today, so the boundary is authored against no concrete candidate | `_VALID_PROVIDERS` is closed at five names in `src/scripts/ai_council/config.ts`, and `grep -c base_url src/scripts/ai_council/config.ts` returns 0 |
+| A refusal can now be SAID per seat, which is what makes the boundary actionable | `src/scripts/ai_council/seat_policy.ts` — six `PolicyExclusion` values on `AbsentReason`, printed by `council:status` |
+| Scoring becomes deciding at CONSUMPTION, and nothing consumes a jury score today | `tests/scripts/ai_council/jury_aggregate.test.ts` § AC-9 greps `src/` and asserts no importer of `jury_aggregate` outside its own module |
+| The claim this bounds is filed and unresolved | `docs/CLAIMS.md` → `free-jury-judge-agreement`, `status: unbacked`, pre-registered 2026-09-07 |
+| Both seats were present under a standing delegation | AI council 2026-09-06, anthropic/claude-sonnet-4-5 + openai/codex-default, quorum 2/2, CLI subscription transport, `$0.0000`, under the maintainer's standing delegation |
+
+**Evidence this record does NOT have, and the shape of the gap is the point.**
+There is **no measurement** that an unpaid panel scores well — that question is
+`free-jury-judge-agreement`, which is filed `unbacked` and whose measurement was
+declined for this round, so this record deliberately does not rest on it. There
+is **no owner statement**: it is a council decision under delegation, and a
+future owner ruling is neither anticipated nor prejudged here. And there is **no
+enforcement** — the § Consequences honesty note says so plainly: no gate reads
+which seat carried a verdict, so the boundary is model-carried.
+
 ## Alternatives
 
 - **Say nothing until such a seat exists.** Rejected: the boundary would then
