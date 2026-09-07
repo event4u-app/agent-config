@@ -205,7 +205,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   tool surface at session start; that surface carried no structured-ask tool
  *   under any name `_lib/structured_ask.ts` matches, and no per-host shape is
  *   recorded for it in `STRUCTURED_ASK_SHAPES`. Artefact:
- *   `agents/evidence/analysis/structured-ask-host-observation-2026-09.md`.
+ *   `agents/evidence/analysis/structured-ask-host-observation-2026-09.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artefact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
  *   The observation is about the delivered surface of one session on one
  *   version; it is not a claim that the vendor ships no such tool anywhere,
  *   and a later session observing one writes the `true` row over it.
