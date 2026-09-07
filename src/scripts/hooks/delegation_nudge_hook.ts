@@ -375,6 +375,33 @@ export function buildNudgeLine(
       `${classification.reason}.</delegation-nudge>`
     );
   }
+  // Rung 4 (1.3): a contested-judgment verdict names the council's own entry
+  // point. The carrier NEVER runs it — `council_cli run` spends a metered or
+  // subscription seat, which is Hard-Floor reserved and is never inferred from
+  // a hook line.
+  if (rung === 4) {
+    return (
+      `<delegation-nudge>rung-4: council. This is contested judgment, not a ` +
+      `slice to dispatch — route it to the council yourself via ` +
+      "`./scripts-run src/scripts/council_cli run --input <file>` " +
+      "(check reachability first with `agent-config council:status`; the file " +
+      `path is the input, never an inline question). Not a spawn, and not run ` +
+      `for you — ${classification.reason}.</delegation-nudge>`
+    );
+  }
+  // Rung 3 (1.3): slices that must communicate DURING the run. The pointer
+  // names the host teams primitive; the fallback when the host has none is the
+  // same one-completion path rung 0.5 cites.
+  if (rung === 3) {
+    return (
+      `<delegation-nudge>rung-3: team. These slices must see each other's state ` +
+      `during the run, so a set of independent subagent spawns cannot express ` +
+      `it — use the host teams primitive, or fall back to ` +
+      "`./scripts-run src/scripts/ask_transport \"<question>\"` for a bounded " +
+      `sub-question. Not a spawn, and not run for you — ` +
+      `${classification.reason}.</delegation-nudge>`
+    );
+  }
   // Rung 1 (single bounded slice) carries no do-in-steps/do-in-parallel
   // mode of its own — `classification.mode` is `null` for that shape.
   const modeLabel = classification.mode ?? "single-slice";
@@ -437,8 +464,40 @@ export function classifyPrompt(
     // surfaces. Silence here also guarantees a question-shaped prompt can
     // never produce a spawn nudge ("the carrier stops nudging full spawns
     // for question-shaped slices").
+    // Rung 3/4 (road-to-admissible-council-seats 1.3). These used to be
+    // discarded by the same `verdict !== "subagent"` return as rung 0/0.5, so a
+    // RESOLVED council verdict produced no output on the only runtime carrier —
+    // recorded independently at
+    // `agents/evidence/analysis/council-intelligence-baseline.md:103-111`.
+    //
+    // What they emit is a POINTER, and every field here is chosen so it cannot
+    // read as a spawn authorisation: `delegable` stays false, the action stays
+    // `ask` (the existing token for "a verdict, never a speculative spawn"),
+    // the slice count is 0, and buildNudgeLine's rung-3/4 branch names an
+    // entry point rather than a dispatch. Risk 2 of this roadmap is exactly
+    // the misreading this paragraph exists to foreclose.
+    // Rung 3/4 (road-to-admissible-council-seats 1.3). These used to be
+    // discarded by the same `verdict !== "subagent"` return as rung 0/0.5, so a
+    // RESOLVED council verdict produced no output on the only runtime carrier —
+    // recorded independently at
+    // `agents/evidence/analysis/council-intelligence-baseline.md:103-111`.
+    //
+    // What they emit is a POINTER, and every field here is chosen so it cannot
+    // read as a spawn authorisation: `delegable` stays false, the action stays
+    // `ask` (the existing token for "a verdict, never a speculative spawn"),
+    // the slice count is 0, and buildNudgeLine's rung-3/4 branch names an
+    // entry point rather than a dispatch. Risk 2 of this roadmap is exactly
+    // the misreading this paragraph exists to foreclose.
+    if (ladder.verdict === "team" || ladder.verdict === "council") {
+      return {
+        classification: { delegable: false, action: "ask", mode: null, reason: ladder.reason },
+        sliceCount: 0,
+        tier: recommendSliceTier(downshift, separate_quota_pool),
+        rung: ladder.rung,
+      };
+    }
     if (ladder.verdict !== "subagent") {
-      return null; // rung-0 script, rung-0.5 ask-transport, rung-3/4 team/council, or ∅ user-ask/in-session
+      return null; // rung-0 script, rung-0.5 ask-transport, or ∅ user-ask/in-session
     }
     const tier = recommendSliceTier(downshift, separate_quota_pool);
     // Rung 1 (single bounded slice) has no explicit slice count of its own —
