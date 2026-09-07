@@ -63,6 +63,12 @@ export function loadSplits(file: string = SPLITS_FILE): Record<Split, string[]> 
 interface PairResult {
   name: string;
   split: Split;
+  /**
+   * Per rule id, how many occurrences the humanize pass removed (before minus
+   * after, positive only). Without this the judge returns one bit per pair and
+   * a family landed in Phase 2 cannot be tied to any effect at all.
+   */
+  families_removed: Record<string, number>;
   language: "en" | "de";
   words_before: number;
   words_after: number;
@@ -71,6 +77,23 @@ interface PairResult {
   before: Pick<TellReport, "hard_total" | "cluster_score_per_500" | "dash_density_per_500">;
   after: Pick<TellReport, "hard_total" | "cluster_score_per_500" | "dash_density_per_500">;
   judge?: { preferred: "after" | "before"; order: "after-first" | "before-first" };
+}
+
+/** before minus after, per rule, keeping only what the pass actually removed. */
+export function familyDelta(before: TellReport, after: TellReport): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, n] of Object.entries(before.per_pattern)) {
+    const removed = n - (after.per_pattern[id] ?? 0);
+    if (removed > 0) out[id] = removed;
+  }
+  return out;
+}
+
+interface JudgedAggregate {
+  judge_model?: string;
+  judged_pairs: number;
+  prefers_after: number;
+  prefers_before: number;
 }
 
 function slim(r: TellReport) {
@@ -156,6 +179,18 @@ async function judgePair(
 async function main(): Promise<void> {
   const runJudge = process.argv.includes("--judge");
   const confirmSpend = process.argv.includes("--confirm-spend");
+  const excluded = new Set<string>();
+  for (let i = 0; i < process.argv.length; i += 1) {
+    if (process.argv[i] === "--disable-family") {
+      const id = process.argv[i + 1];
+      if (id === undefined || id.startsWith("--")) {
+        console.error("--disable-family needs a rule id");
+        process.exit(2);
+      }
+      excluded.add(id);
+    }
+  }
+  const opts = { exclude: excluded };
   const pairs = loadPairs();
   if (pairs.length < 20) {
     console.error(`corpus too small: ${pairs.length} pairs (< 20)`);
@@ -168,8 +203,8 @@ async function main(): Promise<void> {
   // never an interactive prompt. The objective-only default path is free.
   if (runJudge && !confirmSpend) {
     const controlledCount = pairs.filter((p) => {
-      const b = analyzeText(p.before, p.language).words;
-      const a = analyzeText(p.after, p.language).words;
+      const b = analyzeText(p.before, p.language, opts).words;
+      const a = analyzeText(p.after, p.language, opts).words;
       return Math.abs(1 - a / b) <= LENGTH_TOLERANCE;
     }).length;
     process.stderr.write(
@@ -183,13 +218,14 @@ async function main(): Promise<void> {
   const results: PairResult[] = [];
   for (let i = 0; i < pairs.length; i++) {
     const p = pairs[i]!;
-    const before = analyzeText(p.before, p.language);
-    const after = analyzeText(p.after, p.language);
+    const before = analyzeText(p.before, p.language, opts);
+    const after = analyzeText(p.after, p.language, opts);
     const ratio = after.words / before.words;
     const controlled = Math.abs(1 - ratio) <= LENGTH_TOLERANCE;
     const row: PairResult = {
       name: p.name,
       split: p.split,
+      families_removed: familyDelta(before, after),
       language: p.language,
       words_before: before.words,
       words_after: after.words,
@@ -236,7 +272,66 @@ async function main(): Promise<void> {
       judge_model: undefined as string | undefined,
     };
   };
+  /**
+   * The last recorded judged run, when this one is objective-only.
+   *
+   * An objective-only re-run used to overwrite the canonical report with a
+   * "Not run" placeholder, which deleted the only evidence backing
+   * `claim:humanizer-tell-reduction` — a free re-run silently unbacking a
+   * claim is a worse failure than a stale number, because nothing announces it.
+   * The carried-forward block is labelled with its own date and is never
+   * presented as a measurement of the current register.
+   */
+  const priorJudged = ((): { generated: string; agg: JudgedAggregate } | null => {
+    let best: { generated: string; agg: JudgedAggregate } | null = null;
+    let names: string[] = [];
+    try {
+      names = readdirSync(REPORT_DIR).filter((n) => n.endsWith("-humanizer-v1.json"));
+    } catch {
+      return null;
+    }
+    for (const n of names.sort()) {
+      try {
+        const doc = JSON.parse(readFileSync(join(REPORT_DIR, n), "utf8")) as {
+          generated?: string;
+          aggregate?: JudgedAggregate;
+        };
+        if ((doc.aggregate?.judged_pairs ?? 0) > 0 && doc.generated !== undefined) {
+          best = { generated: doc.generated, agg: doc.aggregate as JudgedAggregate };
+        }
+      } catch {
+        continue;
+      }
+    }
+    return best;
+  })();
+
   const agg = aggregateOver(results);
+
+  /**
+   * Attribution — which families the preference could have tracked.
+   *
+   * `pairs_removed` is deterministic and free. `pairs_removed_and_preferred`
+   * is the crossing with the blind judge and exists only on a `--judge` run;
+   * it is a CO-OCCURRENCE, never an isolated effect, because the pass removes
+   * several families at once from the same pair. What it rules out is the
+   * opposite: a family that appears in no preferred pair did not carry the
+   * preference, and that is the half a binary verdict could not say at all.
+   */
+  const attribution = (() => {
+    const rows = new Map<string, { pairs_removed: number; pairs_removed_and_preferred: number }>();
+    for (const r of results) {
+      for (const id of Object.keys(r.families_removed)) {
+        const row = rows.get(id) ?? { pairs_removed: 0, pairs_removed_and_preferred: 0 };
+        row.pairs_removed += 1;
+        if (r.judge?.preferred === "after") row.pairs_removed_and_preferred += 1;
+        rows.set(id, row);
+      }
+    }
+    return [...rows.entries()]
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.pairs_removed - a.pairs_removed || a.id.localeCompare(b.id));
+  })();
   const bySplit = {
     tune: aggregateOver(results.filter((r) => r.split === "tune")),
     holdout: aggregateOver(results.filter((r) => r.split === "holdout")),
@@ -254,6 +349,8 @@ async function main(): Promise<void> {
     corpus: "tests/fixtures/ai-tells",
     aggregate: agg,
     by_split: bySplit,
+    disabled_families: [...excluded].sort(),
+    attribution,
     results,
   };
 
@@ -290,7 +387,34 @@ async function main(): Promise<void> {
         `**${bySplit.holdout.prefers_after}/${bySplit.holdout.judged_pairs}** on holdout — ` +
         `(randomized A/B order, deterministic seed). An honest null here keeps the detector as a ` +
         `hygiene gate; the claim ledger only carries what this table shows.`
-      : "_Not run (objective-only invocation)._",
+      : priorJudged !== null
+        ? `_Not re-run — this invocation is objective-only._ Carried forward from the judged run of ` +
+          `**${priorJudged.generated}**: judge ${priorJudged.agg.judge_model ?? "unrecorded"} ` +
+          `prefers the humanized text in **${priorJudged.agg.prefers_after}/${priorJudged.agg.judged_pairs}** ` +
+          `length-controlled pairs (randomized A/B order, deterministic seed). That figure was measured ` +
+          `against the register and the length-controlled set as they stood on that date; the objective ` +
+          `table above is newer. It is reproduced so a free re-run cannot silently unback the claim it ` +
+          `supports, and it is NOT a measurement of the current register.`
+        : "_Not run (objective-only invocation, and no earlier judged run on record)._",
+    "",
+    "## Attribution — which families the preference tracked",
+    "",
+    excluded.size > 0
+      ? `Families disabled for this run: ${[...excluded].sort().map((x) => `\`${x}\``).join(", ")}. ` +
+        "They were excluded from the scan, not merely from this table, so every figure above moved with them."
+      : "No family disabled. Re-run with `--disable-family <rule-id>` to see what a family was carrying.",
+    "",
+    "| Family | Pairs it was removed from | …and the judge preferred the humanized text |",
+    "|---|---|---|",
+    ...attribution.map(
+      (a) => `| \`${a.id}\` | ${a.pairs_removed} | ${agg.judged_pairs > 0 ? a.pairs_removed_and_preferred : "not judged"} |`,
+    ),
+    "",
+    "The right-hand column is a **co-occurrence, never an isolated effect**: the",
+    "pass removes several families from the same pair, so a high number does not",
+    "attribute the preference to that family. What the table does establish is the",
+    "negative — a family removed in no preferred pair did not carry the preference —",
+    "and that is what a binary verdict could not say at all.",
     "",
     "## Scope note",
     "",
@@ -298,14 +422,20 @@ async function main(): Promise<void> {
     'It never measures third-party "AI detector" outcomes — that claim class is banned',
     "(unfalsifiable from our side; see roadmap non-goals).",
     "",
-    "## Open question — real-draft lift is unmeasured",
+    "## Open question — real-draft lift is unmeasured, and stays that way this round",
     "",
     "The `before` fixtures were **deliberately tell-seeded**, so a perfect score",
     "measures seeded-tell removal on a self-constructed corpus — NOT that real",
-    "ghostwriter drafts get better. Real-world lift stays **unmeasured** until",
-    "write-engine step 4b has processed real `/ghostwriter:write` drafts and those",
-    "have been paired-evaluated (the `road-to-humanizer-hardening` live-usage",
-    "blocker). The claim ledger is scoped to \"on the fixture corpus\" accordingly.",
+    "ghostwriter drafts get better. Real-world lift is **unmeasured**.",
+    "",
+    "Collecting it was declined for this round. Retaining real drafts, and",
+    "retaining metrics derived from real drafts, both create a new retention",
+    "practice beyond the fixture-only data-handling floor this package records,",
+    "and neither was authorized. That is a decision about this round: **future",
+    "authorization is neither granted nor refused**, and the owner-facing question",
+    "is unchanged. The claim ledger stays scoped to \"on the fixture corpus\"",
+    "accordingly, and widening it needs an authorization AND a measurement, not",
+    "either one alone.",
     "",
   ].join("\n");
 

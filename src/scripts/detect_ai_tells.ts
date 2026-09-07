@@ -255,9 +255,20 @@ function countMatches(text: string, patterns: RegExp[]): { count: number; sample
   return { count, samples };
 }
 
+export interface AnalyzeOptions {
+  /**
+   * Rule ids to leave out of the scan entirely — not merely out of the
+   * reported vector. Used by the paired bench to ask what a family was
+   * contributing: a metric that changes when the rule is removed is one the
+   * rule was carrying, and a metric that does not is one it was not.
+   */
+  exclude?: ReadonlySet<string>;
+}
+
 export function analyzeText(
   text: string,
   languageOpt: "en" | "de" | "auto" = "auto",
+  options: AnalyzeOptions = {},
 ): TellReport {
   // Scan the RAW text for hidden-instruction vectors before any stripping —
   // the smuggling layer is invisible and must be reported (untrusted-input).
@@ -276,6 +287,7 @@ export function analyzeText(
 
   for (const rule of ALL_TELL_RULES) {
     if (rule.language !== "any" && rule.language !== language) continue;
+    if (options.exclude?.has(rule.id)) continue;
     const scanText = rule.id === "tell-curly-quotes" ? forQuotes : base;
     const { count, samples } = rule.match
       ? rule.match(scanText, language)
