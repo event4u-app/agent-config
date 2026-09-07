@@ -206,6 +206,101 @@ output is read voids the observation under step 1.2's own verify.
   `FIRST_WIN.md:39` (a memory-record field list), and the rest are ordinary
   prose. One instance, not a population.
 
+## Run-specific fetch authorization — AI council, 2026-09-07, GRANTED
+
+Step 1.6 names the opener for this roadmap's one blocker: "the fetch boundary
+was resolved by a **run-specific council authorization**, never structurally by
+Phases 3-4". This section is that authorization, recorded before any arm runs.
+
+**Verdict: (c) — rungs 1.1, 1.3 and 1.4 are authorized.** Two seats (anthropic,
+openai), subscription transport, $0.0000, deep tier, unanimous on the rung and
+convergent on the conditions.
+
+**Why the earlier split does not stand.** The first round split because the
+readiness protocol was not in place; that gap is closed. Step 1.2's three
+counting rules are frozen and dated **before any arm ran**, which is verifiable
+rather than asserted — no artefact directory exists under
+`agents/.harvest-local/`, no reference is pinned, and 1.4 is unstarted. The
+second round was also given a fact the first did not have: the bound-claim gate
+instructed matching against a `docs/CLAIMS.md` `consequence` field that **does
+not exist** (schema at `:56-66`; `grep -c '^- consequence:'` returns 0), so the
+pre-registered bar's "≥ 1 bound-claim routing" half would have failed for a
+reason unrelated to what it measures. Deferring again would have deferred on a
+premise that no longer holds.
+
+### The conditions — all of them, in the order they gate
+
+Each is checkable before acting. None is caution.
+
+1. **Freeze this protocol as a dated version before 1.1 pins anything.** The
+   frozen set is complete only when all six elements are present: the counting
+   rules (§ Frozen counting rules), the size envelope (2), the validity
+   criteria (5), the confidentiality rules (4), the ceiling mechanism (3), and
+   an amendment record. Missing any one = the freeze is incomplete and 1.1 does
+   not start. **This section plus the two Frozen sections above ARE that
+   version; its amendment record is the `consequence`-field repair recorded in
+   1.2, landed in the pre-arm window and nowhere else.**
+2. **Size is workload, never storage.** The reference must be under **2,000
+   files and 10 MiB of analyzable text**. Both seats rejected a storage-based
+   envelope (`< 5,000 files / < 100 MB`) as measuring the wrong thing: the
+   constraint exists so the upgraded arm's `--deep` tier and the shadow arm's
+   40-fetch ceiling both complete **without an extension request**, and an
+   extension request is what makes the arms incomparable.
+3. **The fetch ceiling is instrumented BEFORE 1.4, never retrofitted after.**
+   Wrap the shadow command in a counted fetch proxy or a `GIT_TRACE` monitor
+   that aborts at fetch 41. "Enforce mechanically" is not satisfied by counting
+   afterwards — the mechanism must exist before the arm is invoked.
+4. **Confidentiality, and a concrete test rather than a principle.** The tracked
+   tree carries **no repository name, no URL, no commit SHA, no distinctive
+   path, and not the opaque-ID mapping**. Before 1.4 runs, execute the test:
+   *given the opaque id and the recorded aggregate counts, can a motivated
+   reader derive the repository?* If yes → abort, record the diagnostic, return
+   to 1.1. Note this is **stricter than the shadow pin above**, which records
+   an in-tree commit of this repository and is not a third-party coordinate.
+5. **Invalid ≠ failed, and this is the correction that matters most.** One seat
+   named survivorship bias as the live risk in both prior drafts: treating every
+   crash, non-zero exit, budget exhaustion or ceiling hit as "invalid, no slot
+   consumed" allows unlimited zero-cost retries until both arms happen to
+   complete, so the comparison would report only favourable executions. The
+   split is therefore binding:
+   - **Administrative invalidity → consumes NO slot.** Wrong snapshot, harness
+     defect, unavailable infrastructure, confidentiality breach, corrupted
+     capture, protocol deviation.
+   - **Measured failure → a VALID completed observation, and that arm scores
+     accordingly.** A correctly invoked arm that crashes, times out, exhausts
+     its budget, or reaches its enforced fetch ceiling is telling you something
+     about that arm — it is a result, not an accident.
+6. **Isolation baseline.** Confirm `agents/.harvest-local/` is empty before 1.1.
+   Neither prior draft required it, and without it a stale artefact from an
+   earlier attempt is indistinguishable from this run's output.
+7. **Snapshot identity is verified bidirectionally.** Not "both arms receive the
+   same snapshot" but: `git rev-parse HEAD` matches the pinned SHA **on both
+   sides, before analysis begins**. A shallow clone or partial checkout can
+   diverge silently.
+8. **1.3 inspects structure, never findings.** It verifies invocation, capture,
+   evidence isolation and output *parseability*. It does not read the arms'
+   substantive findings and does not use them to tune anything.
+9. **Reference unavailable mid-run** — network transient, repo deleted, access
+   revoked — is **administrative invalidity** under (5): no slot consumed,
+   recorded outside the claim, return to 1.1. Named here because both prior
+   drafts left it open and it is the one failure mode that looks like a measured
+   failure and is not.
+
+### What is unchanged
+
+Round 1's unanimous rules still bind and this authorization does not touch them:
+both arms are one atomic observation; an upgraded-only run is inadmissible;
+until a valid run completes the claim row keeps `status: unbacked` with an
+**empty** `last_verified`. The bar at `docs/CLAIMS.md:488` is untouched.
+
+*Reopening condition:* the authorization is spent on **one** observation. A
+second slot needs its own round. If the confidentiality test in (4) fails twice
+on two different references, the boundary is reopened rather than worked around.
+
+Council records: `2026-09-07-outbound-fetch-run-authorization.md` under
+`agents/runtime/council/responses/` — local-only, since `agents/runtime/` is
+gitignored, so the substance is transcribed here rather than linked.
+
 ## Phase 1 — Readiness, then the atomic pair
 
 - [ ] **1.1 Pin the reference.** Name one small public repository and one
@@ -214,12 +309,15 @@ output is read voids the observation under step 1.2's own verify.
       both complete without an extension request, or the arms are not comparable.
       verify: the reference and its commit are recorded in this roadmap, and a
       read-only fetch of that commit succeeds.
-      BLOCKED 2026-09-07 — the verify requires an outbound third-party fetch,
-      which is the boundary this roadmap's own § Why this is carried, point 1,
-      records as untouched by the parent's Phases 3 and 4: "A fetch is still a
-      fetch." Step 1.6 names what would clear it — a **run-specific council
-      authorization** — and no such authorization exists. An autonomous lane
-      cannot grant itself one. Closes when that authorization is recorded.
+      UNBLOCKED 2026-09-07 — an autonomous lane correctly recorded that it
+      cannot grant itself the run-specific council authorization step 1.6 names.
+      That authorization has since been convened and **GRANTED**: see
+      § Run-specific fetch authorization above — verdict (c), 2 seats, unanimous
+      on the rung. This step is now executable, subject to conditions 1, 2, 4, 6
+      and 7 there. In particular the reference must be under **2,000 files and
+      10 MiB of analyzable text** (workload, never storage), `agents/.harvest-local/`
+      is confirmed empty first, and the tracked tree records **no repository
+      name, URL, commit SHA or distinctive path** for it.
 - [x] **1.2 Freeze the counting rules before either arm is inspected.** What
       counts as an interop-probe finding at `file:line` precision, what counts
       as a bound-claim routing, and how a `consumer not locatable` probe is
@@ -241,20 +339,34 @@ output is read voids the observation under step 1.2's own verify.
       verify: both arms produce an artefact directory under
       `agents/.harvest-local/` and `git status --porcelain` shows nothing new
       tracked; neither arm's analysis content has been read.
-      BLOCKED 2026-09-07 — same boundary as 1.1. Both arms are analyses of a
-      third-party reference; invoking either harness end-to-end performs the
-      fetch. The half that needs no network **was** run and is recorded in
-      § Frozen protocol: the shadow pin reproduces on all four of its fields.
-      Closes with 1.1.
+      UNBLOCKED 2026-09-07 — same boundary as 1.1, cleared by the same
+      authorization: § Run-specific fetch authorization above, verdict (c). The
+      half that needs no network **was** already run and stands — the shadow pin
+      in § Frozen protocol reproduces on all four of its fields. Condition 8
+      scopes what this step may look at: it verifies invocation, capture,
+      evidence isolation and output PARSEABILITY, and it does not read either
+      arm's substantive findings or use them to tune anything. Condition 6 runs
+      first — `agents/.harvest-local/` is confirmed empty, so a stale artefact
+      from an earlier attempt cannot be mistaken for this run's output.
+      Executable once 1.1 is done.
 - [ ] **1.4 Run both arms as one observation.** Upgraded and shadow, identical
       reference snapshot and identical inputs.
       verify: two artefact sets exist under the gitignored area, the upgraded
       arm's iteration record shows three named-lens delta blocks and one
       repeated revision, and neither arm was abandoned part-way.
-      BLOCKED 2026-09-07 — depends on 1.1 and 1.3, and consumes one of only two
-      pre-registered observation slots. Risk 1 below is the reason not to force
-      it: an invalid pair cannot be withdrawn from a pre-registered measurement.
-      Closes when 1.1 and 1.3 close.
+      UNBLOCKED 2026-09-07 — the boundary is cleared by § Run-specific fetch
+      authorization above, verdict (c). Risk 1 is not dismissed, it is bound:
+      condition 5 makes ADMINISTRATIVE invalidity (wrong snapshot, harness
+      defect, unavailable reference, confidentiality breach, corrupted capture,
+      protocol deviation) consume NO slot, while a MEASURED failure — a
+      correctly invoked arm that crashes, times out, exhausts its budget or hits
+      its enforced ceiling — is a valid completed observation that scores
+      accordingly. That split is what stops unlimited zero-cost retries from
+      reporting only the favourable executions. Conditions 3 and 7 gate this
+      step specifically: the fetch ceiling is instrumented BEFORE the shadow arm
+      is invoked, never counted afterwards, and `git rev-parse HEAD` is
+      confirmed against the pinned SHA on BOTH sides before analysis begins.
+      Executable once 1.1 and 1.3 are done.
 - [ ] **1.5 Write the outcome into `docs/CLAIMS.md`.** Pass → keep
       `status: unbacked`, record "observation 1/2 passed" with opaque
       provenance, leave `last_verified` empty. Fail → record the pre-registered
@@ -275,11 +387,14 @@ output is read voids the observation under step 1.2's own verify.
       authorization**, never structurally by Phases 3-4.
       verify: the stub is archived, the archive index is regenerated, and the
       disposal note names the run-specific authorization.
-      BLOCKED 2026-09-07 — the disposal note must name a run-specific
-      authorization that does not exist, and point 2 of § Why this is carried
-      forbids disposing of the stub on the ground that Phases 3-4 resolved its
-      boundaries, because one survives. Archiving it now would be exactly the
-      forbidden disposal wearing a different reason. Closes with 1.1.
+      UNBLOCKED 2026-09-07 — the run-specific authorization this step's disposal
+      note must name now EXISTS: § Run-specific fetch authorization above,
+      verdict (c), 2 seats. Point 2 of § Why this is carried is satisfied rather
+      than circumvented — the stub is disposed of on the ground that the
+      surviving boundary was cleared by a named authorization, never on the
+      false ground that Phases 3-4 cleared it, and the disposal note must say
+      exactly that. Still gated on 1.4 having actually run: an authorization to
+      fetch is not an observation.
 
 ## Reopening trigger — observation-based, not calendar-based
 
