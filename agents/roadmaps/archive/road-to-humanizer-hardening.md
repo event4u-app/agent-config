@@ -12,10 +12,14 @@ parent_roadmap: road-to-humanized-writing
 > under `agents/tmp.old/` (measured 2026-09-06, `grep -rli humanizer`, distinct
 > round directories); the narrower tell phrasing in 5. Latest `inbox-2026-09-s`.
 > A floor on the recurrence, not a count of asks for this roadmap. Written on an
-> ARCHIVED file on purpose: the blocker `real-draft-lift-unmeasured` below is
-> still open — 2026-07-11 — and this is where a later round looks for it.
-> The feeder for it is carried by `agents/roadmaps/road-to-measured-prose-tells.md`,
-> which also holds the four detector defects that round reproduced.
+> ARCHIVED file on purpose: the blocker `real-draft-lift-unmeasured` below was
+> opened 2026-07-11 and this is where a later round looks for it. **It is no
+> longer open** — resolved 2026-09-07 by declining collection for this round,
+> which is a scoped refusal and not a measurement; the outcome state and the
+> reasoning are on the blocker itself. Its feeder was carried by
+> `agents/roadmaps/archive/road-to-measured-prose-tells.md`, now also archived,
+> which holds the four detector defects that round reproduced and the same
+> disposition.
 
 > Address the four adversarial-review findings that survived
 > `road-to-humanized-writing` as advisory-only (the fix commits there were

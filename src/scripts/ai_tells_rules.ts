@@ -562,7 +562,7 @@ export const TELL_RULES: TellRule[] = [
   ),
 
   // ── cluster: typography / structure (language-agnostic) ──────────────────
-  // ── cluster: the 2.2 recall families, one epoch each ─────────────────────
+  // Cluster rules for the six recall families, one epoch each.
   //
   // Every pattern below is AUTHORED HERE. The external analysis that exposed
   // these gaps is a corpus, never a rule list: importing its word lists would
@@ -763,7 +763,7 @@ export const TELL_RULES_DE: TellRule[] = [
     ],
   ),
 
-  // ── the 2.2 families, German half (step 2.3) — authored, not translated ───
+  // The same six families, German half: authored in German, never translated.
   w(
     "tell-de-throat-clearing",
     "filler",

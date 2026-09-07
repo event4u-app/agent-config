@@ -247,7 +247,7 @@ describe("scan-what-you-ingest invariant (Phase 1 regression lock)", () => {
   });
 });
 
-// ── step 1.2 — tell-rule-of-three is disarmed over ordinary lists ────────────
+// tell-rule-of-three counts an abstract triplet, never an ordinary list.
 
 const FILLER =
   "The import job runs at four in the morning and writes its summary to the " +
@@ -304,7 +304,7 @@ describe("tell-rule-of-three (disarmed)", () => {
   });
 });
 
-// ── step 1.3 — a density is not extrapolated from a tiny denominator ─────────
+// A per-500-words density is not extrapolated from a tiny denominator.
 
 describe("density floor", () => {
   it("reports both densities as null below the floor and applies neither", () => {
