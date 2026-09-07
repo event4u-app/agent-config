@@ -228,7 +228,16 @@ export function stripExempt(text: string): { base: string; forQuotes: string } {
   const base = t
     .replace(/"[^"\n]{1,300}"/g, " ")
     .replace(/“[^”\n]{1,300}”/g, " ")
-    .replace(/'[^'\n]{1,120}'/g, (m) => (m.includes(" ") ? " " : m));
+    // A single-quoted SPAN, never a pair of contractions. The previous form
+    // matched any two apostrophes on a line with a space between them, so
+    // "In today's fast-paced world, let's be honest" was read as a quotation
+    // and stripped whole — which silently removed two tell families from the
+    // scan. An opening quote must start a token and a closing quote must end
+    // one; an apostrophe inside a word is never either.
+    .replace(
+      /(^|[\s([{"“])'([^'\n]{1,120})'(?=[\s)\]},.!?;:"”]|$)/g,
+      (m, lead: string, inner: string) => (inner.includes(" ") ? `${lead} ` : m),
+    );
   return { base, forQuotes };
 }
 

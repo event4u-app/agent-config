@@ -524,6 +524,100 @@ export const TELL_RULES: TellRule[] = [
   ),
 
   // ── cluster: typography / structure (language-agnostic) ──────────────────
+  // ── cluster: the 2.2 recall families, one epoch each ─────────────────────
+  //
+  // Every pattern below is AUTHORED HERE. The external analysis that exposed
+  // these gaps is a corpus, never a rule list: importing its word lists would
+  // carry a licence obligation and a plaintext source pin into a tracked file.
+  // Each family was promoted only at a zero clean-corpus false-positive count —
+  // ledger: internal/bench/corpora/prose-tells-epochs.md.
+  w(
+    "tell-throat-clearing",
+    "filler",
+    "cluster",
+    "en",
+    1,
+    "Openers that announce before they say anything (in today's fast-paced …, here's the thing)",
+    [
+      /\bin (?:today'?s|this) (?:fast-paced|fast paced|digital|modern|ever-changing|rapidly changing) [\w-]+\b/i,
+      /\bin an era (?:of|where|when)\b/i,
+      /\blet'?s be (?:honest|clear|real)\b/i,
+      /^\s*(?:Honestly[,?]|Look,|Here'?s the thing[,.:])/im,
+      /\bbefore we (?:dive|get|jump) into\b/i,
+    ],
+  ),
+  w(
+    "tell-emphasis-crutch",
+    "style",
+    "cluster",
+    "en",
+    1,
+    "Intensifier stacks standing in for a reason (cannot be overstated, truly remarkable)",
+    [
+      /\b(?:truly|really|absolutely|incredibly|extremely) (?:remarkable|powerful|essential|critical|important|unique|transformative)\b/i,
+      /\bcannot be overstated\b/i,
+      /\bgame[- ]chang(?:er|ing)\b/i,
+      /\bnothing short of\b/i,
+      /\bmore important than ever\b/i,
+    ],
+  ),
+  w(
+    "tell-false-agency",
+    "content",
+    "cluster",
+    "en",
+    1,
+    "Abstractions given volition (the data tells a story, technology is reshaping how we …)",
+    [
+      /\bthe data (?:tells|tell) (?:a|the) story\b/i,
+      /\b(?:the )?numbers (?:speak for themselves|don'?t lie)\b/i,
+      /\b(?:technology|innovation|AI|the market|this shift) (?:is )?(?:reshaping|redefining|transforming) (?:how|the way)\b/i,
+      /\bthis (?:approach|framework|mindset|moment) (?:invites|asks|challenges) us to\b/i,
+    ],
+  ),
+  w(
+    "tell-narrator-distance",
+    "language",
+    "cluster",
+    "en",
+    1,
+    "An impersonal narrator hedging at a distance (one might argue, for many teams …)",
+    [
+      /\bone might (?:argue|say|wonder|ask|note)\b/i,
+      /\bit(?:'s| is) worth (?:asking|considering|remembering) (?:whether|that|how|why)\b/i,
+      /\bfor many (?:teams|organizations|organisations|companies|people|leaders),/i,
+      /\bthere is something (?:to be said for|deeply)\b/i,
+    ],
+  ),
+  w(
+    "tell-vague-declarative",
+    "content",
+    "cluster",
+    "en",
+    1,
+    "A declaration that names nothing (one thing is clear, it all comes down to)",
+    [
+      /\b(?:one|two|a few) things? (?:is|are) clear\b/i,
+      /\bthe answer (?:is|isn'?t) simple\b/i,
+      /\bit all comes down to\b/i,
+      /\bthat'?s the (?:whole|real) point\b/i,
+    ],
+  ),
+  w(
+    "tell-binary-contrast",
+    "language",
+    "cluster",
+    "en",
+    1,
+    "Binary inversions beyond 'not just' (less about X than about Y, it's not that X — it's that Y)",
+    [
+      /\bless about\b[^.!?\n]{1,60}\bthan about\b/i,
+      /\bthis (?:is|isn'?t) about\b[^.!?\n]{1,60}\bit'?s about\b/i,
+      /\bnot (?:a|an) [\w-]+ (?:problem|question|issue)[,.]?\s+(?:but|it'?s)\b/i,
+      /\b(?:it'?s )?not (?:that|so much)\b[^.!?\n]{1,60}\bit'?s that\b/i,
+    ],
+  ),
+
   w(
     "tell-curly-quotes",
     "style",
@@ -624,8 +718,108 @@ export const TELL_RULES_DE: TellRule[] = [
     "cluster",
     "de",
     1,
-    "Nicht nur X, sondern Y",
-    [/\bnicht nur\b[^.!?\n]{3,80}\bsondern( auch)?\b/i],
+    "Nicht nur X, sondern Y — und die Form 'es geht nicht um X, sondern um Y'",
+    [
+      /\bnicht nur\b[^.!?\n]{3,80}\bsondern( auch)?\b/i,
+      /\bnicht um\b[^.!?\n]{3,80}\bsondern( um)?\b/i,
+    ],
+  ),
+
+  // ── the 2.2 families, German half (step 2.3) — authored, not translated ───
+  w(
+    "tell-de-throat-clearing",
+    "filler",
+    "cluster",
+    "de",
+    1,
+    "Räuspern vor dem ersten Satz (ehrlich gesagt, mal ehrlich, eins vorweg)",
+    [
+      /\behrlich gesagt\b/i,
+      /\bmal ehrlich\b/i,
+      /\beins vorweg\b/i,
+      /\bbevor wir (?:eintauchen|loslegen|einsteigen)\b/i,
+    ],
+  ),
+  w(
+    "tell-de-signposting",
+    "filler",
+    "cluster",
+    "de",
+    1,
+    "Ankündigungen statt Aussagen (lass uns eintauchen, das musst du wissen)",
+    [
+      /\blass(?:t)? uns eintauchen\b/i,
+      /\btauchen wir ein\b/i,
+      /\bohne (?:lange )?Vorrede\b/i,
+      /\bdas musst du wissen\b/i,
+    ],
+  ),
+  w(
+    "tell-de-vague-declarative",
+    "content",
+    "cluster",
+    "de",
+    1,
+    "Feststellungen, die nichts benennen (eines ist klar, letztlich geht es darum)",
+    [
+      /\beines ist klar\b/i,
+      /\bdie Wahrheit ist\b/i,
+      /\bletztlich geht es (?:darum|um)\b/i,
+      /\bam Ende des Tages\b/i,
+    ],
+  ),
+  w(
+    "tell-de-generic-conclusion",
+    "filler",
+    "cluster",
+    "de",
+    1,
+    "Aufgesetzt positive Schlüsse (die Zukunft sieht rosig aus, spannende Zeiten)",
+    [
+      /\bdie Zukunft sieht rosig aus\b/i,
+      /\bspannende Zeiten\b/i,
+      /\bein Schritt in die richtige Richtung\b/i,
+      /\bdie Reise geht weiter\b/i,
+    ],
+  ),
+  w(
+    "tell-de-emphasis-crutch",
+    "style",
+    "cluster",
+    "de",
+    1,
+    "Verstärker statt Begründung (nicht hoch genug einschätzen, absolut entscheidend)",
+    [
+      /\bnicht hoch genug (?:einschätzen|einzuschätzen)\b/i,
+      /\b(?:absolut|wirklich|wahrhaft) (?:entscheidend|beeindruckend|einzigartig|unverzichtbar)\b/i,
+      /\bwichtiger denn je\b/i,
+    ],
+  ),
+  w(
+    "tell-de-false-agency",
+    "content",
+    "cluster",
+    "de",
+    1,
+    "Abstrakta mit Willen (die Zahlen sprechen für sich, die Daten erzählen)",
+    [
+      /\bdie Zahlen sprechen für sich\b/i,
+      /\bdie Daten erzählen\b/i,
+      /\b(?:Technologie|Innovation|KI|der Markt) (?:verändert|prägt|definiert) (?:die Art|neu)\b/i,
+    ],
+  ),
+  w(
+    "tell-de-narrator-distance",
+    "language",
+    "cluster",
+    "de",
+    1,
+    "Unpersönlicher Erzähler auf Distanz (man könnte argumentieren, für viele Unternehmen)",
+    [
+      /\bman (?:könnte|kann) (?:argumentieren|sagen|fragen)\b/i,
+      /\bes lohnt sich zu fragen\b/i,
+      /\bfür viele (?:Unternehmen|Teams|Menschen),/i,
+    ],
   ),
 ];
 
