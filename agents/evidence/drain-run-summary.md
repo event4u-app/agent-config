@@ -1,5 +1,217 @@
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-09-06 -->
 
+# Autonomous roadmap drain — run 21, 2026-09-08
+
+Owner-delegated drain run under a standing autonomy mandate: token spend, paid AI-council
+calls, commits, pushes and PR creation pre-authorised; zero user round-trips; every
+decision routed to the AI council rather than back to the maintainer. One orchestrator lane
+plus two subagent lanes, each in its own git worktree.
+
+**This file lives on `drain/delivery-hook-hosts-p2` (PR #1929) rather than on the
+highest-numbered PR of the run.** PR #1930 is a subagent lane's branch; pushing a run-level
+record onto a finished lane's branch would mean an orchestrator writing into a branch it
+did not own, and would restart that PR's 34-check matrix. It is recorded here, on a branch
+this lane owns, and the run it describes is complete either way.
+
+## Machine-readable record
+
+```json
+{
+  "run": "roadmap-drain-2026-09-08",
+  "base_at_start": "e010b1c2f26a57d5dabea63607e57e78a5cd3a1f",
+  "lanes": 3,
+  "prs": [
+    {"pr": 1927, "roadmap": "road-to-skill-menu-economy",                  "lane": "orchestrator", "progress_before": "4/12",  "progress_after": "4/12",  "delta": 0,  "blockers_before": 0, "blockers_after": 1, "ci": "settled-green", "checks": 6,  "archived": false},
+    {"pr": 1928, "roadmap": "road-to-first-reference-analysis-observation", "lane": "subagent-b",    "progress_before": "1/9",   "progress_after": "1/9",   "delta": 0,  "blockers_before": 0, "blockers_after": 2, "ci": "settled-green", "checks": 6,  "archived": false},
+    {"pr": 1929, "roadmap": "road-to-delivery-on-hook-hosts",              "lane": "orchestrator", "progress_before": "9/16",  "progress_after": "9/16",  "delta": 0,  "blockers_before": 0, "blockers_after": 2, "ci": "settled-green", "checks": 6,  "archived": false},
+    {"pr": 1930, "roadmap": "road-to-candidate-moves-floor",               "lane": "subagent-a",    "progress_before": "4/20",  "progress_after": "16/20", "delta": 12, "blockers_before": 0, "blockers_after": 2, "ci": "settled-green", "checks": 34, "archived": false}
+  ],
+  "council": {"seats": 2, "members": ["anthropic", "openai"], "questions": 6, "rounds": 6, "cost_usd": 0.0, "transport": "subscription", "splits": 1},
+  "paid_measurement_usd": 0.7933,
+  "descopes": [
+    {"to": "agents/roadmaps/stubs/road-to-adr-number-uniqueness.md", "from": "pr-1929", "reason": "council-deferred durable fix for the ADR-number collision"}
+  ],
+  "roadmaps_active_at_end": 10,
+  "roadmaps_archived_this_run": 0,
+  "estate": {"active_roadmaps": 9, "open_blockers_floor": 29, "open_blockers_after_pr1929": 31, "claimed": true}
+}
+```
+
+## The four PRs
+
+| PR | Roadmap | Progress | Blockers | CI |
+|---|---|---|---|---|
+| #1927 | `road-to-skill-menu-economy` | 4/12 → **4/12** | 0 → 1 | green, 6 checks |
+| #1928 | `road-to-first-reference-analysis-observation` | 1/9 → **1/9** | 0 → 2 | green, 6 checks |
+| #1929 | `road-to-delivery-on-hook-hosts` | 9/16 → **9/16** | 0 → 2 | green, 6 checks |
+| #1930 | `road-to-candidate-moves-floor` | 4/20 → **16/20** | 0 → 2 | green, 34 checks |
+
+**Three of four moved no checkbox, and that is the run's main result rather than its
+shortfall.** In each of those three, every open step was blocked on something no execution
+in the lane could satisfy, and in two of them the roadmap's own named mechanism turned out
+not to exist. Ticking a box whose `verify:` names an observation that did not happen was
+available in all three cases and was not taken.
+
+## Findings that were not in any roadmap when the run started
+
+**1. `road-to-skill-menu-economy`'s Phase 1 lever does not exist** (PR #1927,
+`agents/evidence/analysis/skill-menu-exclusion-lever-2026-09-08.md`). Step 1.2 said marking
+skills `user-invocable: false` makes "the projector drop them from the model menu" and asked
+the catalog bucket to drop by the marked bytes. Refuted on three surfaces:
+`censusSkillsCatalog` (`src/scripts/preamble_byte_census.ts:290-310`) filters on nothing, so
+a measured marking of all 105 candidates moved 104 of them by **exactly 0** chars;
+`lint_agent_skill_names.ts:104,198-207` documents the field as opting out of *slash*
+registration while *preserving* model loadability; and all three skills already carrying one
+of the two fields were present in the model-visible catalog delivered to the session. The
+artifact refuses the general claim it could have made — proving *no* shipped field removes a
+skill from the delivered menu needs a delivered-menu census, which does not exist.
+
+**2. `road-to-delivery-on-hook-hosts` had three self-declared-blocked steps and no
+`## Blockers` section** (PR #1929). So `update_roadmap_progress` parsed **0** blockers, the
+dashboard printed `0`, and `check_estate_count` — where `open_blockers` is a **ratcheted**
+metric — was ratcheting on an undercount, while `lint_roadmap_blockers` passed the file
+**vacuously** (it validates the blockers it parses; a file with none is clean by
+construction).
+
+**3. ADR-262 is claimed by two open PRs, silently** (PR #1929). #1923 ships
+`ADR-262-delivery-default-for-claude-code.md`, #1926 ships
+`ADR-262-carrier-status-deleted-no-repo-authored-human-gate.md`. Both natural assumptions
+are wrong: the filenames differ so git produces **no conflict**, and
+`check_adr_frontmatter` **exits 0** with both files present and both declaring `adr: 262`
+(measured; probe files removed, neither lane's ADR committed). A third roadmap already
+cites the number and would have retargeted silently.
+
+**4. A detector that could not see what it counted confirmed its own null** (PR #1930,
+subagent A, self-reported). Its first null read "population 0" because the counter imported
+the shipped `INTENT_RE`, which matches no markdown emphasis — and the one compliant line in
+the paid run was `**Candidates:**`. Widening with an `i` flag then over-corrected to 172
+lowercase YAML keys. Both patterns are now emphasis-tolerant and case-sensitive with the
+real line pinned as a fixture, and Risk 6 was added for the class.
+
+## Council decisions
+
+Six questions, six rounds, 2 seats (anthropic + openai), subscription transport,
+**$0.0000 total**. One split. Every artefact is gitignored and auto-pruned, so none is
+cited by path — convergence is inlined at each decision site per `check_council_references`.
+
+| # | Question | Verdict | Rationale, compressed |
+|---|---|---|---|
+| 1 | Disposition of `skill-menu-economy`, whose Phase 1 lever is unbuilt: A blocker-only · B build the lever · C re-scope the goal · D delete | **A, unanimous** | B crosses the owner-reserved surface decision; C rejected twice over — one seat read the narrowing as the carrier move K5 forbids, the other showed the narrowed goal would itself be a false claim; D an unauthorised retirement |
+| 2 | Two open PRs both ship an ADR-262: A record · B record + tie-break · C renumber one · D out of scope | **B, unanimous** | Tie-break: **earlier-opened PR keeps the number** — readable from GitHub metadata and does not leave the citation unstable until merge. #1923 keeps 262, #1926 → **263** (verified free across `main` and all five open-PR branches). C foreclosed: an autonomous lane must not rewrite an ADR it does not own |
+| 3 | Does verdict (c) survive replacing one frozen coordinate? | **(b), unanimous** | No — the comparator is experimental design, not metadata. Pin stays frozen and marked invalid in place |
+| 4 | What is verdict (c) authority for? | **(b), unanimous** | Readiness clearance only; the outbound third-party fetch stays owner-reserved under the Hard Floor |
+| 5 | `first-reference-analysis-observation` disposition | **SPLIT → intersection (a)** | A split is an escalation condition, not a verdict. Adopted the branch neither seat calls unauthorised: draft, open, nothing archived, two blockers — the same resolution shape as that roadmap's own precedent |
+| 6 | `candidate-moves-floor`: permit the paid spend · close 2.0 · carrier-null scope · blocked-step handling, then the results verdict | **convergent, 3 rounds** | Spend permitted (different causal link); 2.0 closed by amendment with the original text kept legible; carrier null out of scope but shipment-gating; blocked steps left open with blockers. Round 2 produced a **fourth verdict** — *treatment signal observed, line validation failed; keep the evidence, not the line* — promoting neither the line nor prose |
+
+**Dissent, recorded rather than smoothed.** Q1: the seats disagreed on which findings are
+load-bearing (one treated all four as such; the other held the two code-level surfaces
+decisive and the unmet predecessor as separable) and on whether K5 literally reaches an
+in-place narrowing; they converged on A regardless, so neither disagreement changed an
+outcome. Q2: both seats asked for a comment on the two PRs. Q6: dissent on both axes, and
+the executing lane **adjudicated one on evidence** — a seat dismissed a historical-control
+confound on the ground that both arms shared a date; the JSONs are 78 days apart, so the
+dismissal fails.
+
+**One knowing departure from a verdict.** Q2's seats wanted the two PR owners notified by
+comment. `agent-config settings:get personal.pr_progress_comments` reports *not set in any
+settings file, default false*, and `no-pr-progress-comments` requires an author unsure
+whether a comment qualifies to treat it as gated; an ADR numbering collision does not clear
+that rule's safety carve-out. The council stated this fallback itself — record B as the
+recommended owner action — and that is what PR #1929 carries. **The owners of #1923 and
+#1926 have not been notified by this run.**
+
+**One self-disclosed defect in a lane's own council round.** Subagent B framed its round as
+DEGRADED 1/2 from a stale probe record; the post-run quorum was 2/2 and both seats leaned
+on the wrong figure. It deliberately did **not** re-run — that would be verdict shopping
+toward a preferred answer — and recorded why the verdict holds anyway. The same stale-probe
+artefact appeared in the orchestrator's rounds and is the reason
+`agents/runtime/state/council-probes.json` was copied into each fresh worktree before any
+call.
+
+## Spend
+
+| Item | Amount |
+|---|---|
+| AI council, 6 questions across 6 rounds | **$0.0000** (all seats subscription-authed, `billable=0`) |
+| Paid A/B measurement, `rdp_quality_eval --mode l6` (PR #1930) | **$0.7933** actual, against a $1.2068 dry-run estimate — 32 capture + 32 rater calls |
+
+The paid run was pre-authorised by the maintainer and permitted by council Q6. Result: dim 5
+rose **+9.4 pp** (0.875 → 1.156) and output tokens *fell* 8%, but compliance was **1/32** and
+6 of the 9 rubric points came from transcripts carrying no line at all — which is why the
+verdict keeps the evidence and not the line.
+
+## Pre-existing reds, separated from the run's own
+
+Recorded so a reader does not attribute them to this run, and so they are not lost either:
+
+- **`check_gate_completeness`** reds identically on clean `origin/main` (229/214) and is
+  local-only. Found by subagent A, recorded, deliberately unfixed — it is not this run's
+  breakage and fixing it drive-by would be the scope creep `minimal-safe-diff` forbids.
+- **`reach_doctor` depth-≥8** fails on a full checkout by its own documented premise and is
+  proven green on a shallow one. One failure against 22,010 passing in subagent A's clean
+  re-run; its first suite run showed four further reds that were artefacts of its own
+  concurrent paid capture and did not reproduce.
+- **`check_references`** flagged a path in PR #1929 that deliberately does not resolve —
+  `docs/decisions/ADR-262-delivery-default-for-claude-code.md` <!-- ref-ignore -->, which exists only on the
+  unmerged predecessor branch. The gate was right; the reference is marked
+  `<!-- ref-ignore -->` with its reason, and that red is the ADR-262 collision arriving from
+  a third direction.
+
+## Descopes
+
+| Stub | From | Why |
+|---|---|---|
+| `agents/roadmaps/stubs/road-to-adr-number-uniqueness.md` | PR #1929 | The durable fix both council seats asked for and both called out of immediate scope. Its hard half is named rather than hand-waved: a single-tree uniqueness check would not have caught this collision *before* merge, because both claims lived on unmerged branches, so the cross-branch half needs a real design decision |
+
+No other lane descoped anything. No `[~]` deferral and no `[-]` cancellation was written in
+this run — `[-]` is owner-reserved, and a `[~]` needs a receiver roadmap none of this work
+justified.
+
+## What was not executed, and why
+
+Seven of the ten active roadmaps were already covered by another lane's open PR when the run
+started, so working them would have duplicated or conflicted with live work:
+
+| Roadmap | Held by |
+|---|---|
+| `road-to-a-graph-that-is-shipped` | PR #1920 |
+| `road-to-continuity-retirement-sequencing` | PR #1926 |
+| `road-to-council-topology-evidence-followups` | PR #1926 |
+| `road-to-delivery-for-every-host` | PR #1923 |
+| `road-to-limited-commitment-horizon` | PR #1921 |
+| `road-to-the-skill-surface-framing-choice` | PR #1926 — and separately 3/3 complete, `status: carrier`, holding an explicitly **owner-reserved** surface decision no council may take |
+
+`road-to-delivery-on-hook-hosts` entered the queue mid-run: PR #1924 merged at 03:13 and
+left it active at 9/16 with no open PR.
+
+**A methodology error in this run, recorded because it changed the queue.** The first
+inventory was computed from the main checkout's **working tree**, which was stale, and read
+`road-to-delivery-on-hook-hosts` as 0/16 instead of 9/16 — putting the highest-progress
+unclaimed roadmap last instead of first. Recomputed from `origin/main` directly and the
+queue was rebuilt. A roadmap inventory is a live-state fact and must be read from the ref,
+not from a checkout.
+
+**The seed queue supplied with the run instruction was entirely stale** — 36 roadmaps, none
+of which matched any of the 10 live files. It was recomputed rather than followed, as the
+instruction required.
+
+**That is now three consecutive runs, and this ledger is where it becomes visible.** Run 19
+recorded the queue stale "in full"; run 20 recorded it stale "again, in the same way", with
+the same claimed pin `c536dbd` and the same 36 roadmaps; run 21 received the identical
+36-roadmap table, again pinned to `c536dbd`. The recomputation instruction is doing its job
+every time, so nothing has broken — but a queue that has never once matched the tree is not
+a stale artefact, it is a fixed one, and the cheapest fix is to delete the table from the
+instruction and keep only the rule that computes it. Recorded here rather than acted on:
+the run instruction is the maintainer's text, not this run's to edit.
+
+## Terminal state
+
+Zero roadmaps archived. Ten active roadmaps remain, all under an open PR, so the drain queue
+holds no unclaimed work. Nothing was blocked on a credential or a physical external action;
+the two irreducible blockers this run recorded are an **owner-reserved outbound third-party
+fetch** (PR #1928) and an **owner-reserved public-commitment surface decision** (PR #1927),
+both of which are decisions rather than executions and neither of which a council may take.
+
 # Autonomous roadmap drain — run 20, 2026-09-07
 
 Autonomous drain under a written owner instruction: drive every active roadmap
