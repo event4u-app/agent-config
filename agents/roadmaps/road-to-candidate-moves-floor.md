@@ -13,7 +13,7 @@ relates:
       can commit narrowly to a form it never compared. Neither failure implies
       the other, and neither fix moves the other's measurement.
 estate_offset_exempt: "Offsets nothing, and the two nearest candidates were checked. `road-to-frontier-grade-reasoning` is archived with its Phase 7 eval `[~]`-deferred as billable; reopening an archived roadmap to carry a new obligation would hide this work inside a closed record and re-open a risk register that was signed off. `road-to-the-reasoning-surface-that-is-wired` owns four wiring defects on one skill and its corpus — this owns one missing step in the Plan chain, measured on the same corpus, which is adjacency of substrate and not of question."
-estate_growth_exempt: "Growth is one active roadmap for a defect reproduced at HEAD 2c75232fe in six files, none of which any active roadmap, later roadmap or stub names. The measurement that decides whether the obligation survives costs 32 API calls (~$0.84, dry-run measured) and its baseline half costs nothing, so the roadmap is sized to end in a keep-or-delete verdict rather than to accumulate."
+estate_growth_exempt: "Growth is one active roadmap for a defect reproduced at HEAD 2c75232fe in six files, none of which any active roadmap, later roadmap or stub names. The measurement that decides whether the obligation survives costs 32 API calls (~$0.84, dry-run measured) and its baseline half costs nothing, so the roadmap is sized to end in a keep-or-delete verdict rather than to accumulate. Re-stated 2026-09-08 to cover open_blockers +2, which is the honest cost of executing this roadmap rather than an accumulation: `sixth-line-shipping-blocked` records that two councils independently shut the shipping gate (2026-09-07 split, and 2026-09-08 after step 2.0 measured zero qualifying emissions of all five existing mandated lines), and `prohibition-step-has-no-closing-glyph` records that step 3.4's content is a prohibition, which no `verify:` command can close. Both are owner-reserved dispositions this autonomous run may not take, and suppressing either to keep the metric flat would launder an unfinished decision — the failure the ratchet exists to catch."
 ---
 # Road to the candidate-moves floor
 
@@ -244,6 +244,8 @@ played.
       roadmap but **shipment-gating** by the same council (D3) — no efficacy
       reading may authorise a sixth line while the first five reach nothing.
 - [ ] **2.1 Add the sixth mandated line.**
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+
       `src/agent-src/contexts/execution/mandated-lines.md` carries five lines
       and the argument for why a line beats a clause. Add `Candidates:` on the
       same terms — emitted at the decision point, before the form-changing
@@ -266,7 +268,7 @@ played.
       is correct before any reasoning starts.
       verify: a fixture whose correct answer is "leave it" produces `K0` as the
       drawn candidate rather than as an unchosen first row.
-- [ ] **2.3 Bind the line to semantic decision classes.**
+- [x] **2.3 Bind the line to semantic decision classes.**
       A file count is the wrong trigger — a controller plus its test is two
       files and no architectural choice; a rename touches four and offers none.
       The line is owed at: a new ownership boundary · a new abstraction · a
@@ -278,7 +280,25 @@ played.
       generated-code refresh · a one-line deterministic config change.
       verify: fixtures for two owed classes and two not-owed classes score
       correctly, and the not-owed pair stays silent.
+      Done 2026-09-08 — `src/scripts/check_candidate_lines.ts`
+      (`OWED_CLASS_TRIGGERS`, nine classes; `NOT_OWED_TRIGGERS`, seven),
+      fixtures in `tests/scripts/check_candidate_lines.test.ts` § 2.3. Owed
+      pair: a new ownership boundary and a contract change both report
+      `missing-candidates`. Not-owed pair: a pure rename and a generated-code
+      refresh both return `owed: false` with zero findings. The asymmetry is
+      recorded in the source: an exemption suppresses **only** when no owed
+      trigger fired, so a rename that also changes a signature is a contract
+      change — fixture `an exemption never overrules a positive owed match`.
+      The residual is stated there too: a report describing an abstraction
+      change in pure-rename vocabulary owes nothing, and no lexical check
+      fixes that.
+      The checker is a **separate script and `lint_mandated_lines` is
+      untouched** — `git diff origin/main` over that file and over
+      `mandated-lines.md` is empty, which is the evidence that the 2026-09-07
+      council's item 3 was honoured rather than merely promised.
 - [ ] **2.4 Change the Plan step from a decision into a generation.**
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+
       `think-before-action-mechanics.md:18` becomes: generate the forms
       (`K0` plus at least one material alternative), choose on a stated
       discriminator, then decide what not to change and how to verify. Bind
@@ -288,7 +308,7 @@ played.
       case.
       verify: `./scripts-run src/scripts/check_condensed_paths` and the
       projection regeneration both stay green after the edit.
-- [ ] **2.5 Require an axis, not a count.**
+- [x] **2.5 Require an axis, not a count.**
       Three candidates that differ only in where a helper lives are one
       candidate. Each non-`K0` candidate carries the axis it differs on, the
       tree fact it stands on, the observation that would decide it, and the
@@ -297,7 +317,15 @@ played.
       preceded it.
       verify: a fixture whose three candidates share an axis is reported as one
       material candidate.
-- [ ] **2.6 Do not generate a second form where there is only one.**
+      Done 2026-09-08 — `shared-axis` finding, whose message says "they count
+      as ONE material candidate". Fixture: two candidates both carrying
+      `[where the helper lives]` report `shared-axis` at content-word overlap
+      1.0; the distinct pair (`[ownership boundary]` / `[call-site coupling]`)
+      passes. A non-`K0` candidate with no bracket at all reports
+      `missing-axis`. Threshold `AXIS_OVERLAP = 0.6` is a **stated default,
+      not a measured optimum**, and the overlap is printed in the finding so a
+      reader can recompute at another value.
+- [x] **2.6 Do not generate a second form where there is only one.**
       After grounding, some requirements admit exactly one form — the
       framework fixes the extension point, an existing contract fixes the
       location. The obligation is to *check* whether a material alternative
@@ -306,6 +334,20 @@ played.
       alternatives satisfies the obligation.
       verify: a fixture with a genuinely forced form produces a one-candidate
       line naming the constraint, and is not reported as a violation.
+      Done 2026-09-08 — a `[forced: <constraint>]` bracket makes a
+      one-candidate line legal: `Candidates: K0 register in `register()`
+      [forced: the base class fixes the extension point] → K0; no other
+      location is admissible.` returns zero findings. The paired rejecting
+      fixture is what gives the carve-out teeth: a bare single candidate with
+      no constraint reports `single-candidate-unforced`, because otherwise
+      "I only thought of one" and "exactly one is admissible" are the same
+      line and the obligation to *check* evaporates.
+      Step 2.1's `K0`-drawability half also lands here, since it is a property
+      of the shape rather than of the shipped obligation: a fixture whose
+      correct answer is "leave it" draws `→ K0` and passes with zero findings,
+      and `--corpus` reports `K0 actually drawn` separately from `K0 present`
+      so K0-as-an-unchosen-first-row is visible across a whole run rather than
+      only per line. 2.1's shipping half stays blocked — see `## Blockers`.
 
 ## Phase 3 — Measure it, then keep it or delete it
 
@@ -334,11 +376,63 @@ played.
       verify: the roadmap closes with one of the three verdicts written into
       the results file, naming the readings it rests on.
 - [ ] **3.4 Do not build the enforcement.** <!-- deferred: gated on 3.3 and on a capture bar this tree has not met -->
+      <!-- blocked-by: prohibition-step-has-no-closing-glyph | asked: no — autonomous drain lane, no interactive user reachable this run -->
       No blocking hook, in either direction of the verdict. A hook that decides
       candidates are missing while the host handled them internally is the
       stop-and-ask behaviour this floor exists to avoid, and the last
       trajectory-capture measurement in this tree came in under its own bar. An
       observation-only counter is the most this may become, and only after 3.3.
+
+## Blockers
+
+### blocker: sixth-line-shipping-blocked
+- **Status:** open            <!-- open | resolved -->
+- **Owner:** user             <!-- user | maintainer | external -->
+- **Blocks:** Phase 2 — The one artifact, owed by decision class and not by file count
+- **Question:** may the sixth mandated line ship into the contract and gain a
+  linter obligation, given that the first five lines reach nothing?
+- **Recommendation:** no, not yet. Two independent gates are shut. The
+  2026-09-07 split council blocked shipping in this phase and named Phase 3.3's
+  KEEP branch as the only thing that authorises it, *as a further decision and
+  not automatically*. The 2026-09-08 council then added a second, harder gate:
+  step 2.0 measured zero qualifying emissions of **all five** existing lines, so
+  no efficacy result may authorise a sixth while the carrier reaches nothing.
+  Both councils are recorded; neither can be discharged by this run.
+- **If you do nothing:** steps 2.1 and 2.4 stay open and AC-4 stays
+  unsatisfiable, so the roadmap cannot archive. Nothing degrades — the shape,
+  the baseline and the treatment reading are all landed and independently
+  useful. The cost of the non-decision is that the measurement sits unapplied.
+- **What to do:**
+  1. Read `agents/evidence/analysis/mandated-line-emission-2026-09-08.md` — the
+     carrier null and its surface map.
+  2. Read Phase 3's verdict in
+     `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`.
+  3. Decide one of: authorise a scoped carrier-reach investigation (the gate
+     that must clear first either way); authorise shipping 2.1 and 2.4 and
+     amend AC-4; or record the sixth line as abandoned and close AC-4 by
+     amendment.
+- **Resolved when:** the owner records one of those three dispositions, and
+  either 2.1/2.4 land or AC-4 is amended to match the chosen outcome.
+
+### blocker: prohibition-step-has-no-closing-glyph
+- **Status:** open            <!-- open | resolved -->
+- **Owner:** user             <!-- user | maintainer | external -->
+- **Blocks:** Phase 3 — Measure it, then keep it or delete it
+- **Question:** how does a step whose content is a **prohibition** close, when
+  no `verify:` command can go green on a non-action?
+- **Recommendation:** leave 3.4 `[ ]` and decide the semantics once, for every
+  roadmap. `[~]` would oblige a receiver roadmap that this work does not
+  justify, and `[-]` is cancellation and owner-reserved — neither describes
+  "the prohibition was honoured".
+- **If you do nothing:** 3.4 stays open and the roadmap does not archive. The
+  prohibition itself is honoured either way: no hook, counter or gate was built
+  in this run, in either direction of the verdict.
+- **What to do:**
+  1. Confirm the prohibition held — `git diff origin/main --stat` shows no hook
+     under `src/scripts/hooks/` and no new entry in `hook_manifest.yaml`.
+  2. Either close 3.4 by fiat with a one-line note, or record a general
+     convention for prohibition-shaped steps in the roadmap template.
+- **Resolved when:** 3.4 carries a disposition the archival sweep accepts.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
