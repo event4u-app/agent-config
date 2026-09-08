@@ -195,6 +195,86 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         );
     });
 
+    it('every dist/agent-src/scripts delegate target is covered by the bundle', () => {
+        const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
+        // ADR-204 closed the `npx tsx` exposure for `src/scripts/_cli/` and left
+        // the roadmap command family on it: those targets resolve under
+        // `dist/agent-src/scripts/`, which `cli_delegate_bundle` did not map.
+        expect(dispatch).toContain('"$PACKAGE_ROOT/dist/agent-src/scripts/"*');
+
+        const scripts = pkg.scripts ?? {};
+        const build = scripts['build:agent-src-delegate'] ?? '';
+        expect(build, 'package.json needs a build:agent-src-delegate script').not.toBe('');
+        expect(build).toContain('--outdir=dist/cli-delegate');
+        expect(scripts.build ?? '').toContain('build:agent-src-delegate');
+
+        const ENTRY_GLOB = 'src/agent-src/scripts/*.ts';
+        expect(build).toContain(ENTRY_GLOB);
+
+        const globbed = new Set(
+            fs
+                .readdirSync(path.join(REPO_ROOT, 'src', 'agent-src', 'scripts'))
+                .filter((f) => f.endsWith('.ts'))
+                .map((f) => path.basename(f, '.ts')),
+        );
+
+        const targets = [
+            ...dispatch.matchAll(
+                /resolve_script "dist\/agent-src\/scripts\/([A-Za-z0-9_]+)\.ts"/g,
+            ),
+        ].map((m) => m[1] as string);
+        // Sanity: the regex actually found the surface (5 distinct today).
+        expect(new Set(targets).size).toBeGreaterThan(3);
+
+        const uncovered = targets.filter((t) => !globbed.has(t));
+        expect(
+            uncovered,
+            `dispatcher agent-src targets the build glob does not emit: ${uncovered.join(', ')}`,
+        ).toEqual([]);
+
+        // One flat outdir serves both roots, so a basename shared with `_cli/`
+        // would make one bundle overwrite the other.
+        const cliNames = fs
+            .readdirSync(path.join(REPO_ROOT, 'src', 'scripts', '_cli'))
+            .filter((f) => f.startsWith('cmd_') && f.endsWith('.ts'))
+            .map((f) => path.basename(f, '.ts'));
+        const collisions = [...globbed].filter((n) => cliNames.includes(n));
+        expect(collisions, `basename collides across delegate roots: ${collisions.join(', ')}`).toEqual(
+            [],
+        );
+    });
+
+    it('the two per-invocation probes never fall back to npx', () => {
+        const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
+        const scripts = pkg.scripts ?? {};
+
+        const aux = scripts['build:delegate-aux'] ?? '';
+        expect(aux, 'package.json needs a build:delegate-aux script').not.toBe('');
+        expect(aux).toContain('src/scripts/_lib/pin_resolver.ts');
+        expect(aux).toContain('src/scripts/check_update_banner.ts');
+        expect(aux).toContain('--outdir=dist/cli-delegate');
+        expect(scripts.build ?? '').toContain('build:delegate-aux');
+
+        // The pin resolver and the update banner run before/after EVERY command.
+        // While they carried an `npx tsx` last resort, a consumer whose npm
+        // config rejected the local runtime (an `engines`/`devEngines` pin) saw
+        // npm's own failure on stderr for every single invocation — even for
+        // commands that themselves resolved a bundle. Pin the absence.
+        for (const fn of ['maybe_pin_reexec', 'run_update_check_banner']) {
+            const start = dispatch.indexOf(`${fn}() {`);
+            expect(start, `${fn} not found in the dispatcher`).toBeGreaterThan(-1);
+            const body = dispatch.slice(start, dispatch.indexOf('\n}\n', start));
+            // Comments in both functions NAME the removed fallback; strip them
+            // so the assertion reads code, not the note explaining the code.
+            const code = body
+                .split('\n')
+                .filter((l) => !/^\s*#/.test(l))
+                .join('\n');
+            expect(code, `${fn} must not reach npx`).not.toContain('npx');
+            expect(body, `${fn} must prefer the delegate bundle`).toContain('delegate_aux_bundle');
+        }
+    });
+
     it('every dispatcher-referenced script resolves and imports only runtime deps', () => {
         const roots = dispatcherScriptRoots();
         expect(roots.length).toBeGreaterThan(5); // sanity: the regex found the surface

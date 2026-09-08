@@ -62,7 +62,7 @@ import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { run_archival_sweep } from './archival_sweep.js';
 import {
     evaluateDashboardOnDisk,
@@ -72,6 +72,8 @@ import {
 } from './dashboard_mode.js';
 import type * as YamlModule from 'yaml';
 import { headerFragment as stubHeaderFragment } from './stubs_due.js';
+
+import { isCliEntry } from './_cli_entry.js';
 import { reportGuardedBaselines } from './guarded_baseline.js'; // third step state; contract lives there
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1440,28 +1442,7 @@ function main(argv?: readonly string[]): number {
     return guarded.problems > 0 ? 1 : 0;
 }
 
-function _isCliEntry(): boolean {
-    if (process.argv[1] === undefined) {
-        return false;
-    }
-    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
-    if (import.meta.url === argvUrl) {
-        return true;
-    }
-    // A symlinked invocation (e.g. via `.augment/scripts` → `dist/agent-src/scripts`,
-    // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
-    // import.meta.url is the resolved real path while argv[1] keeps the symlink
-    // path. Compare realpaths so the entry guard still fires (without this the
-    // dashboard regen silently no-ops when run through the symlink).
-    try {
-        const here = fs.realpathSync(fileURLToPath(import.meta.url));
-        const argv = fs.realpathSync(path.resolve(process.argv[1]));
-        return here === argv;
-    } catch {
-        return false;
-    }
-}
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (isCliEntry(import.meta.url, 'update_roadmap_progress')) {
     try {
         process.exitCode = main();
     } catch (exc) {
