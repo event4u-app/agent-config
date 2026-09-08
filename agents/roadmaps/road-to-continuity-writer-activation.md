@@ -112,7 +112,7 @@ councils required puts them there on purpose:
       `tests/scripts/continuity_writer.test.ts`, all green; sensitivity shown by
       forcing the switch hard-on (3 red), hard-off (3 red), and by neutralising
       the substantive gate (2 red) and the claim gate (1 red) in turn.
-- [ ] **1.3 Parity, in the two halves the 2026-09-08 council separated.**
+- [x] **1.3 Parity, in the two halves the 2026-09-08 council separated.**
       Transformation parity is a fixture suite — recorded transcripts and
       roadmap states in, field-by-field comparison out, written to a scratch
       directory that is neither the authoritative filename nor the authoritative
@@ -127,6 +127,27 @@ councils required puts them there on purpose:
       integration tests show at-most-one authoritative publication, no
       overwrite, no partial file, retry-safe convergence, correct source
       routing, and one handler's failure not suppressing another's.
+      landed: transformation parity in
+      `tests/scripts/continuity_parity_fixtures.test.ts` — 12 fixtures over all
+      eight named cases, each carried through the REAL consumer
+      (`consume_recycle_envelope`) rather than only through the writer, because
+      a writer whose own consumer refuses its shape has parity with nothing.
+      Every built record is parked in `<scratch>/parity-out/`, and a closing
+      fixture walks the whole scratch tree to prove the suite created no
+      authoritative record anywhere. Runtime parity in
+      `tests/hooks/continuity_writer_dispatch.test.ts` — 8 fixtures driving the
+      real `dispatch_hook` over the real manifest with a real `stop` and
+      `session_start` envelope: at-most-one publication, no overwrite of a peer
+      session's record, no temp litter, retry-safe convergence across repeated
+      Stops, `source=resume` not consuming while `source=startup` does, and both
+      directions of failure isolation. No wall-clock soak, per the 2026-09-08
+      council. One fixture was CORRECTED before landing: planting a directory at
+      the record name does not refuse a publish — the slot policy quarantines it
+      by rename and then succeeds — so the test asserted isolation without ever
+      failing; it now blocks the quarantine DESTINATION, which is the one branch
+      that returns a refusal before any write. Sensitivity: removing the handler
+      call from the hook reds 4 of the 8 runtime fixtures, and neutralising the
+      foreign-refusal reds the no-overwrite fixture.
 - [ ] **1.4 Independent kill switches, and a rollback note that distinguishes
       the two kinds of undo.** The continuity writer, `run_checkpoint`
       production and the session-index restore each get their own switch, and
