@@ -45,8 +45,15 @@ import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
  * fields existed — which reads back as a valid edge carrying a fabricated
  * mechanism. Refusing it costs nothing, because the twin is derived and the
  * next build re-emits it.
+ *
+ * 3 → 4 (3.2): the `Relation` union gained `tests`, so a v3 twin carries no
+ * `tests` rows for a graph whose JSON has them. No COLUMN changed, which is
+ * precisely why the bump is needed rather than optional: a v3 twin would read
+ * back cleanly, answer `tests-for` with the empty set, and the caller could not
+ * tell "nothing tests this" from "this twin predates the relation". An index
+ * that answers a question it cannot answer is worse than one that refuses.
  */
-export const GRAPH_STORE_VERSION = 3;
+export const GRAPH_STORE_VERSION = 4;
 
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
@@ -227,6 +234,9 @@ export interface GraphIndex {
     idsByLabel(label: string, limit: number): string[];
     /** Non-file nodes declared in any of `files` — the changed-seed lookup. */
     idsInFiles(files: readonly string[]): string[];
+    /** Every node id, sorted. A whole-table read, for `dead` only — see
+     * `LoadedGraph.allNodeIds`. */
+    allNodeIds(): string[];
     /** Every node's id + searchable text. The ONLY whole-table read, and it
      * exists because a BM25 fallback genuinely needs the corpus. Callers reach
      * it only after an exact id AND an exact label both missed. */
@@ -372,6 +382,11 @@ export function openGraphIndex(jsonPath: string): GraphIndex | null {
                         for (const r of stmt.all(...slice) as { id: string }[]) out.push(r.id);
                     }
                     return out;
+                },
+                allNodeIds() {
+                    return (db.prepare('SELECT id FROM nodes ORDER BY id').all() as { id: string }[]).map(
+                        (r) => r.id,
+                    );
                 },
                 lexicalCorpus() {
                     return (db.prepare('SELECT id, label FROM nodes').all() as { id: string; label: string }[]).map(

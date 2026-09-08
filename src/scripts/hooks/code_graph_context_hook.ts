@@ -39,7 +39,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { detectSources, pickSource } from '../code_graph/detect.js';
+import { type GraphState, graphState } from '../code_graph/detect.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const EXIT_ALLOW = 0;
@@ -114,26 +114,15 @@ function latch(root: string, session: string): void {
     }
 }
 
-const NATIVE_CACHE = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
-
-/** The three-state staleness token this hook reports. */
-export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
-
 /**
- * Resolve the graph's state for `root`.
+ * The three-state staleness token this hook reports.
  *
- * `absent` means no source at all — the silent case. A picked source whose
- * staleness is UNKNOWN reads as `fresh`, mirroring `computeVerdict`'s own
- * `picked.stale ? STALE : FRESH`: unknown is not treated as stale, because
- * inventing a commit count would be worse than reporting none.
+ * Re-exported, not defined here: Phase 3's verbs must print the same token, and
+ * an engine module importing this hook to learn it would invert the dependency
+ * direction D9 measures. The definition lives in `code_graph/detect.ts`; this
+ * re-export keeps every existing importer of the hook working unchanged.
  */
-export function graphState(root: string): GraphState {
-    const picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE)));
-    if (!picked) return 'absent';
-    if (picked.stale !== true) return 'fresh';
-    const behind = picked.commits_behind;
-    return `behind:${typeof behind === 'number' ? behind : 0}`;
-}
+export { type GraphState, graphState };
 
 /**
  * The one line, ≤ ~45 tokens.
