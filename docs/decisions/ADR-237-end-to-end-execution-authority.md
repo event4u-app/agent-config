@@ -4,7 +4,7 @@ status: accepted
 date: 2026-08-20
 decision: end-to-end-execution-authority
 supersedes: ADR-235
-superseded_by: —
+superseded_by: ADR-266 (§ 4 merge clause · /pr:merge only)
 phase: —
 type: structural
 review_trigger: >-

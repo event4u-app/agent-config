@@ -561,8 +561,8 @@ Defects this roadmap repairs:
       `adr/regenerate_index --dir docs/decisions` and `adr/evidence_census`.
       verify: ADR exists; `DEFAULT_LEAN_PROJECTION_MODE` and the hosts default match it;
       `Rule backstops` CI job green on census freshness.
-      Done 2026-09-07. `docs/decisions/ADR-266-delivery-default-for-claude-code.md`,
-      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-266`
+      Done 2026-09-07. `docs/decisions/ADR-267-delivery-default-for-claude-code.md`,
+      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-267`
       reports **LIVE** with all seven basis paths `[found]`. `check_adr_frontmatter`: no
       errors.
       **Renumbered a SECOND time, 2026-09-08, 263 → 265.** While this branch sat open,
@@ -575,6 +575,20 @@ Defects this roadmap repairs:
       measured rather than restated — the index and census were regenerated on the
       merged tree, and their post-merge counts are the ones the committed artifacts carry. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
       (`E0=75 E1=69 E2=44 E3=21 · human=13 agentic=122 mixed=21 unknown=53`).
+      **Renumbered a THIRD and a FOURTH time, 2026-09-08, 265 → 266 → 267, both inside one
+      merge session.** `main` landed its own `ADR-265`
+      (`ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md`), and this record moved
+      to 266; a push-freshness fetch minutes later brought `main`'s fresh `ADR-266`
+      (`ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md`), so it moved
+      again to **267**, which is the live number. Both of `main`'s records are merged and
+      therefore immovable, so the direction was forced rather than chosen. 267 was verified
+      free on `origin/main` and across every open PR head at renumber time — and that check is
+      NOT a guarantee, because collision four came from an already-merged lane rather than a
+      competing PR. Eleven files carried delivery-meaning references and moved with the record;
+      four cite `main`'s two records and were deliberately left alone, so a bare-string sweep
+      would have re-pointed them at the wrong decision. The full four-collision record, and
+      why open-PR-head checking is insufficient, is in
+      `agents/roadmaps/stubs/road-to-adr-number-uniqueness.md`.
       **The verify's middle limb needed a decision, and the ADR now carries it as § Decision
       point 4.** `DEFAULT_LEAN_PROJECTION_MODE` is deliberately NOT flipped to `delivery`.
       The template and the constant answer different questions — what a consumer is GIVEN

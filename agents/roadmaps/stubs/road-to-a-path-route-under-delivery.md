@@ -66,7 +66,7 @@ not make:
 
 | Closure | Cost, measured | Why owner-reserved |
 |---|---|---|
-| Widen the exemption to `some` (keep every path-bearing rule full-bodied) | thin rule layer **23,592 → 39,921 GPT tok** (+16,329, +69 %) | erases most of the saving ADR-266 is licensed on, and needs `thin_rule_load` re-anchored by that magnitude |
+| Widen the exemption to `some` (keep every path-bearing rule full-bodied) | thin rule layer **23,592 → 39,921 GPT tok** (+16,329, +69 %) | erases most of the saving ADR-267 is licensed on, and needs `thin_rule_load` re-anchored by that magnitude |
 | Re-bind `rule-inject` on `pre_tool_use` | that slot's measured gate-open p90 for the concern is **19,649 B** against a **2,048 B** slot sum | owner ruling E2 fixes `pre_tool_use` at 2,048 and removed the binding; raising it is the charge E2 declined to pay |
 
 A third option was designed and rejected on the branch rather than left implied:
@@ -100,13 +100,13 @@ One of:
 - `loadCorpus` parses the corpus `command:` field, which it had dropped — two
   `command`-triggered positives were scoring as unmatched plain prompts.
 - `project_thin_rules.path_only_ids`, `hook_manifest.yaml`'s binding comment and
-  ADR-266's Consequences all name the mixed class and what it loses. The manifest
+  ADR-267's Consequences all name the mixed class and what it loses. The manifest
   comment's "lose nothing" was accurate for the three path-only rules and silent
   about the 18 next to them; the silence read as coverage.
 
 ## Provenance
 
 - Finding: `agents/evidence/reviews/drain-delivery-for-every-host.findings.md` row 1.
-- Record: ADR-266, whose `review_trigger` this finding evaluates against.
+- Record: ADR-267, whose `review_trigger` this finding evaluates against.
 - Council: NOT consulted — both enabled seats read 50/50 exhausted on 2026-09-08,
   so the disposition above is an agent decision and is recorded as one.
