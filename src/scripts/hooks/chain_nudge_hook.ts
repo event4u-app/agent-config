@@ -238,16 +238,22 @@ export function main(): number {
     }
     if (!isObject(envelope)) return EXIT_ALLOW;
 
-    const cwd = envelope['cwd'];
-    const pr = envelope['workspace_root'] ?? envelope['project_root'];
-    const root = typeof cwd === 'string' && cwd ? cwd : typeof pr === 'string' && pr ? pr : '.';
-    if (!enabled(root)) return EXIT_ALLOW;
-
+    // ORDER IS LOAD-BEARING, and getting it wrong cost 26 ms at p95. Every
+    // predicate below that touches the filesystem runs AFTER the in-memory
+    // ones, so the overwhelming majority of tool calls — every non-shell
+    // call, and every unchained shell call — exit having read no file at all.
+    // The first draft called `enabled()` first, which put a settings read in
+    // front of every single pre_tool_use event on the host.
     const command = bashCommand(envelope);
     if (!command) return EXIT_ALLOW;
 
     const seen = detectChaining(command);
     if (!seen) return EXIT_ALLOW;
+
+    const cwd = envelope['cwd'];
+    const pr = envelope['workspace_root'] ?? envelope['project_root'];
+    const root = typeof cwd === 'string' && cwd ? cwd : typeof pr === 'string' && pr ? pr : '.';
+    if (!enabled(root)) return EXIT_ALLOW;
 
     const session = sessionId(envelope);
     if (alreadyNudged(root, session)) return EXIT_ALLOW;
