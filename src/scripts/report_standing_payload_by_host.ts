@@ -77,6 +77,20 @@ export interface HostSurface {
     /** `true` when `surface` is a directory receiving one file per projected rule. */
     readonly perRuleTree: boolean;
     readonly writer: string;
+    /**
+     * A literal substring the cited LINE must contain (R2 finding 8).
+     *
+     * Without it `assertWritersResolve` was a bounds test wearing a provenance
+     * test's name: it checked that the line NUMBER was inside the file and
+     * never read the line, so a citation that drifted by one commit — the
+     * exact failure this table's docstring says the check replaces prose
+     * assertion to prevent — passed unchanged, and so would a wholesale
+     * renumbering as long as the file stayed long enough.
+     *
+     * Kept short and structural (a call, a path literal, a const name) so it
+     * survives reformatting but not a move.
+     */
+    readonly anchor: string;
     readonly note: string;
 }
 
@@ -88,46 +102,55 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
         writer: 'src/scripts/condense.ts:2499',
+        anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
     {
         host: 'claude-code', surface: '.claude/rules', perRuleTree: true,
         writer: 'src/scripts/condense.ts:1192',
+        anchor: '_emit_claude_rule(',
         note: '`_emit_claude_rule` rewrites frontmatter to the host\'s own `paths:` key',
     },
     {
         host: 'cline', surface: '.clinerules', perRuleTree: true,
         writer: 'src/scripts/condense.ts:1194',
+        anchor: 'fs.symlinkSync(',
         note: 'symlink per rule into the projection',
     },
     {
         host: 'copilot', surface: '.github/copilot-instructions.md', perRuleTree: false,
         writer: 'src/scripts/generate_capability_matrix.ts:138',
+        anchor: '_INSTALL_TIME_CELLS',
         note: 'NOT written by `condense`: the installer aggregates it from `src/agent-src/templates/copilot-instructions.md`, which is why the capability matrix marks this cell `adapter` and footnotes it as install-time',
     },
     {
         host: 'cowork', surface: null, perRuleTree: false,
         writer: '—',
+        anchor: '',
         note: 'no rule-tree writer in this tree; carries hook bindings only',
     },
     {
         host: 'cursor', surface: '.cursor/rules', perRuleTree: true,
         writer: 'src/scripts/condense.ts:1194',
+        anchor: 'fs.symlinkSync(',
         note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1422`',
     },
     {
         host: 'gemini', surface: 'GEMINI.md', perRuleTree: false,
         writer: 'src/scripts/condense.ts:1498',
+        anchor: '\'GEMINI.md\'',
         note: 'single file',
     },
     {
         host: 'windsurf', surface: '.windsurfrules', perRuleTree: false,
         writer: 'src/scripts/condense.ts:1242',
+        anchor: '\'.windsurfrules\'',
         note: 'single concatenated file',
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
         writer: 'src/scripts/install.ts:1541',
+        anchor: '\'agent-config.md\'',
         note: 'written by the installer, not by `condense`; absent in this checkout',
     },
 ];
@@ -209,9 +232,71 @@ export function assertWritersResolve(root: string): string[] {
         const n = Number(lineRaw);
         if (!Number.isInteger(n) || n < 1 || n > lines.length) {
             problems.push(`${h.host}: writer ${h.writer} is outside the file (${String(lines.length)} lines)`);
+            continue;
+        }
+        // The line itself, not merely its existence (R2 finding 8).
+        const line = lines[n - 1] as string;
+        if (h.anchor === '') {
+            problems.push(`${h.host}: writer ${h.writer} carries no anchor to check the line against`);
+            continue;
+        }
+        if (!line.includes(h.anchor)) {
+            problems.push(
+                `${h.host}: writer ${h.writer} no longer carries its anchor ` +
+                    `${JSON.stringify(h.anchor)} — the line now reads ${JSON.stringify(line.trim())}`,
+            );
         }
     }
     return problems;
+}
+
+/** How many surfaces carry a citation at all — counted, never `length - 1` (R2 finding 14). */
+export function citedWriterCount(): number {
+    return HOST_SURFACES.filter((h) => h.writer !== '—').length;
+}
+
+/**
+ * Why `pin` is not usable, or `null` (R2 finding 9).
+ *
+ * `--pin` was free text with no comparison against HEAD, while the artifact it
+ * stamps opens with "Pinned to commit <sha> … a re-run at the same pin is
+ * byte-identical". Every figure in it is read from the WORKING TREE, so a pin
+ * that is not the current commit documents nothing — and the committed artifact
+ * carried a pin from an earlier commit while the branch had since edited
+ * `condense.ts`, whose line numbers the artifact cites. The pin is now an
+ * ASSERTION about HEAD rather than a label, and a dirty tree is reported for
+ * the same reason: the byte-identity sentence is false the moment the tree the
+ * figures were read from is not the commit they are stamped with.
+ */
+export function pinProblem(root: string, pin: string): string | null {
+    let head: string;
+    try {
+        head = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+    } catch {
+        return 'git rev-parse HEAD failed — the pin cannot be asserted';
+    }
+    if (pin !== head) {
+        return (
+            `--pin ${pin} is not HEAD (${head}). Every figure in the artifact is read from the ` +
+            'working tree, so a pin that is not the current commit stamps the report with a ' +
+            'commit its numbers were never taken at.'
+        );
+    }
+    return null;
+}
+
+/** `true` when the working tree carries uncommitted changes to a path the report reads. */
+export function treeIsDirty(root: string): boolean {
+    try {
+        const out = execFileSync(
+            'git',
+            ['-C', root, 'status', '--porcelain', '--', RULES_DIST_REL, 'src/scripts', 'tests/eval/routing-matrix'],
+            { encoding: 'utf-8' },
+        );
+        return out.trim() !== '';
+    } catch {
+        return false;
+    }
 }
 
 export function renderArtifact(root: string, pin: string): string {
@@ -339,6 +424,62 @@ interface CorpusPrompt {
     openFiles: string[] | null;
 }
 
+/**
+ * Every YAML shape inside `positives:` this hand parser cannot read (R2 finding 10).
+ *
+ * `readCorpusPositives` accepts only `- prompt: "…"` with a double-quoted
+ * same-line scalar and an inline `open_files: [...]`. Any other legal shape —
+ * single quotes, an unquoted scalar, a folded block, a block sequence for
+ * `open_files` — was SILENTLY SKIPPED, which drops fires out of the
+ * distribution the 16,384-byte `user_prompt_submit` row is derived from. A
+ * measurement that governs a budget must fail loudly on a shape it cannot read
+ * rather than under-count, so the CLI refuses on a non-empty result here.
+ *
+ * Reported as a shape problem rather than fixed by widening the parser: this
+ * script must not grow a second YAML implementation, and the corpus is frozen,
+ * so the honest answer to an unreadable shape is to say which file carries it.
+ */
+export function corpusShapeProblems(root: string): string[] {
+    const dir = path.join(root, 'tests', 'eval', 'routing-matrix');
+    const problems: string[] = [];
+    if (!fs.existsSync(dir)) return problems;
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.yaml')).sort()) {
+        let inPositives = false;
+        let lineNo = 0;
+        for (const raw of fs.readFileSync(path.join(dir, f), 'utf-8').split('\n')) {
+            lineNo += 1;
+            if (/^positives:/u.test(raw)) { inPositives = true; continue; }
+            if (/^near_misses:/u.test(raw)) { inPositives = false; continue; }
+            if (!inPositives) continue;
+            if (/^\s*-\s*prompt:/u.test(raw) && !/^\s*-\s*prompt:\s*"(.*)"\s*$/u.test(raw)) {
+                problems.push(
+                    `${f}:${String(lineNo)}: a \`- prompt:\` this parser cannot read — only a ` +
+                        `double-quoted same-line scalar is accepted: ${JSON.stringify(raw.trim())}`,
+                );
+                continue;
+            }
+            if (/^\s*-\s*/u.test(raw) && !/^\s*-\s*(prompt|command|open_files):/u.test(raw)
+                && raw.trim() !== '-' && raw.trim() !== '') {
+                // A bare sequence item under `positives:` is a shape with no
+                // `prompt:` key on its first line — folded or nested.
+                if (!/^\s{4,}/u.test(raw)) {
+                    problems.push(
+                        `${f}:${String(lineNo)}: a positives entry whose first line carries no ` +
+                            `\`prompt:\` key: ${JSON.stringify(raw.trim())}`,
+                    );
+                }
+            }
+            if (/^\s*open_files:\s*$/u.test(raw)) {
+                problems.push(
+                    `${f}:${String(lineNo)}: a BLOCK-sequence \`open_files:\` — only the inline ` +
+                        '`[...]` form is read, so this entry\'s files would be dropped',
+                );
+            }
+        }
+    }
+    return problems;
+}
+
 /** Every positive prompt in the frozen routing-matrix corpus. Near-misses are not fires. */
 export function readCorpusPositives(root: string): CorpusPrompt[] {
     const dir = path.join(root, 'tests', 'eval', 'routing-matrix');
@@ -440,8 +581,34 @@ export function main(argv: readonly string[]): number {
         for (const p of problems) process.stderr.write(`  · ${p}\n`);
         return 1;
     }
+    // R2 finding 10: an unreadable corpus shape is a refusal, never a silent
+    // under-count of the distribution a budget row is derived from.
+    const shape = corpusShapeProblems(root);
+    if (shape.length > 0) {
+        process.stderr.write(
+            `❌  ${String(shape.length)} corpus entry/entries in a shape this reader cannot parse ` +
+                '— the fire distribution would be under-counted:\n',
+        );
+        for (const p of shape) process.stderr.write(`  · ${p}\n`);
+        return 1;
+    }
     const pinIdx = argv.indexOf('--pin');
     const pin = pinIdx !== -1 && pinIdx + 1 < argv.length ? (argv[pinIdx + 1] as string) : headSha(root);
+    // R2 finding 9: the pin is an assertion about HEAD, not a label.
+    const badPin = pinProblem(root, pin);
+    if (badPin !== null) {
+        process.stderr.write(`❌  ${badPin}\n`);
+        return 1;
+    }
+    if (argv.includes('--emit') && treeIsDirty(root) && !argv.includes('--allow-dirty')) {
+        process.stderr.write(
+            '❌  the working tree carries uncommitted changes under dist/agent-src/rules, ' +
+                'src/scripts or tests/eval/routing-matrix, so the figures would not be reproducible ' +
+                `at pin ${pin}. Commit first, or pass --allow-dirty to stamp the artifact as ` +
+                'provisional.\n',
+        );
+        return 1;
+    }
     if (argv.includes('--emit')) {
         const out = path.join(root, ARTIFACT_REL);
         fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -455,7 +622,13 @@ export function main(argv: readonly string[]): number {
             `${String(corpus.projected)} projected · ${String(corpus.projectedChars)} bytes · ` +
             `${String(tokensChars4(corpus.projectedChars))} chars/4 tok\n`,
     );
-    process.stdout.write(`  writer citations resolved: ${String(HOST_SURFACES.length - 1)}/${String(HOST_SURFACES.length - 1)}\n`);
+    // R2 finding 14: counted, not `length - 1`. The old form derived the `-1`
+    // from the single current `writer: '—'` row, so a second surface-less host
+    // reported a wrong count, and the ratio could never read anything but N/N.
+    const cited = citedWriterCount();
+    process.stdout.write(
+        `  writer citations resolved: ${String(cited - problems.length)}/${String(cited)}\n`,
+    );
     return 0;
 }
 
