@@ -12,15 +12,14 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { compare, flatten, REPO_ROOT } from '../../src/scripts/rdp_candidates_delta.js';
+import { compare, flatten, REPO_ROOT, type Run } from '../../src/scripts/rdp_candidates_delta.js';
 
-interface Score { dim1: number; dim5: number }
+// The index signature is what makes this assignable to the script's
+// `Record<string, unknown>` score field — a rater reply carries whatever
+// dimensions it carries, and the two named here are the ones under test.
+interface Score { dim1: number; dim5: number; [k: string]: unknown }
 
-function run(rows: Array<{ slot: string; slug: string; mechanism: string; arms: Record<string, { score: Score; out: number; text?: string }> }>): {
-    mode: string;
-    scorer_model: string;
-    results: Array<Record<string, unknown>>;
-} {
+function run(rows: Array<{ slot: string; slug: string; mechanism: string; arms: Record<string, { score: Score; out: number; text?: string }> }>): Run {
     return {
         mode: 'test',
         scorer_model: 'test-rater',

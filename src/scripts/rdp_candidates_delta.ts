@@ -47,19 +47,20 @@ interface Variant {
     score?: Record<string, unknown>;
 }
 
-interface Record_ {
+export interface SlotRecord {
     slot: string;
     slug?: string;
     mechanism?: string;
     variants?: Record<string, Variant>;
 }
 
-interface Run {
+/** Exported so a test can build a synthetic run without widening to `unknown`. */
+export interface Run {
     date?: string;
     mode?: string;
     scorer_model?: string | null;
     actual_cost_usd?: number;
-    results?: Record_[];
+    results?: SlotRecord[];
 }
 
 export interface Cell {
@@ -74,7 +75,7 @@ export interface Cell {
     complied: boolean;
 }
 
-function familyOf(r: Record_): 'ms' | 'ss' {
+function familyOf(r: SlotRecord): 'ms' | 'ss' {
     if (r.mechanism === 'stateless') return 'ss';
     if (r.mechanism === 'multi-stage') return 'ms';
     return (r.slug ?? '').startsWith('ss-') ? 'ss' : 'ms';
