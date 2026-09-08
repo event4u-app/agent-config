@@ -9,10 +9,10 @@
  *
  * Corpus: ready (non-draft) roadmap files directly under `agents/roadmaps/`  code-comment-allow provenance-comment -- the path is this script's operand, not where the code came from
  * (top level only — `archive/`, `skipped/`, `later/`, `stubs/` excluded, as
- * are `template.md` and `dashboard*`). `status: draft` and `status: carrier`
- * frontmatter exempt a file, each reported under its own name (`draft-exempt`
- * / `carrier-exempt`) and still counted as scanned — one label for two states
- * made the gate's own output name a state it had not acted on.
+ * are `template.md` and `dashboard*`). `status: draft` frontmatter exempts a
+ * file, reported as `draft-exempt` and still counted as scanned. A second
+ * exempting status, `carrier`, was deleted by ADR-262: a receiver of deferred
+ * work is an ordinary plan and carries a real risk register like any other.
  *
  * Checks per ready file:
  *   1. `## Risk Register` section exists — missing = fail unless the
@@ -329,20 +329,16 @@ export function validateTable(
 }
 
 /** A frontmatter status that exempts the file, or `null` when none does. */
-export type ExemptingStatus = 'draft' | 'carrier';
+export type ExemptingStatus = 'draft';
 
 /**
  * Which frontmatter status exempts this file, per contract § 1.
  *
- * `draft` and `carrier` both exempt, and WHICH one is returned rather than a
- * bare boolean: the previous predicate answered "is this exempt" and the gate
- * then printed `draft-exempt` for a carrier, so its own output named a state it
- * had not acted on.
- *
- * A carrier is not a plan. It holds obligations deferred out of an archived
- * parent, each with an unmet resumption trigger, so a plan risk register for it
- * would be manufactured rather than reported. Same category reason that exempts
- * it from `check_roadmap_trackable`'s `## Phase` requirement.
+ * The status is returned rather than a bare boolean so the gate's own output
+ * names the state it acted on. That mattered while `carrier` was a second
+ * exempting value and the predicate printed `draft-exempt` for it; ADR-262
+ * deleted that value, and the shape is kept so a future exemption is one enum
+ * member rather than a re-argued boolean.
  */
 export function exemptingStatus(text: string): ExemptingStatus | null {
     const lines = _splitLines(text);
@@ -350,7 +346,7 @@ export function exemptingStatus(text: string): ExemptingStatus | null {
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i] as string;
         if (line.trim() === '---') return null;
-        const m = /^status:\s*(draft|carrier)\s*$/.exec(line);
+        const m = /^status:\s*(draft)\s*$/.exec(line);
         if (m !== null) return m[1] as ExemptingStatus;
     }
     return null;
@@ -592,7 +588,7 @@ function _blobAt(absPath: string, sha: string): string | null {
     return _git(root, ['show', `${sha}:${rel}`]);
 }
 
-export type FileStatus = 'ok' | 'draft-exempt' | 'carrier-exempt' | 'grandfathered' | 'fail';
+export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
     file: string;
@@ -879,7 +875,7 @@ export function main(argv?: readonly string[]): number {
         for (const p of targets) {
             const result = checkFile(p);
             scanned += 1;
-            if (result.status === 'draft-exempt' || result.status === 'carrier-exempt') {
+            if (result.status === 'draft-exempt') {
                 statusLines.push(`  ${result.status}: ${p}`);
             } else if (result.status === 'grandfathered') {
                 statusLines.push(`  grandfathered: ${p}`);

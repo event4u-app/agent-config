@@ -19,6 +19,16 @@
  * `skipped/`, template/README/open-questions) MUST:
  *   1. Be parseable by the dashboard's `PHASE_RE` (>= one `## Phase <id>`).
  *   2. Have at least one trackable checkbox under every parsed phase.
+ *   3. Not declare a RETIRED `status:` value.
+ *
+ * `status: draft` is the one exemption. It used to have a second, `carrier`,
+ * which ADR-262 deleted: a `status:` value never again decides whether an
+ * autonomous run may act on a roadmap, so a receiver of deferred work is now
+ * ordinary estate and passes normal trackability. A surviving `status: carrier`
+ * is REJECTED here with the migration diagnostic rather than silently ignored —
+ * deleting a vocabulary term quietly would leave old files wearing a value
+ * nothing reads, and the next author would infer a meaning from its presence.
+ * The retired set and its diagnostic live in `_lib/retired_status.ts`.
  *
  * Exit codes:
  *   0 — every active roadmap has parseable phases with >= 1 checkbox per phase.
@@ -31,6 +41,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { declaresRetiredStatus, retiredStatusDiagnostic } from './_lib/retired_status.js';
 
 const QUIET = process.argv.slice(2).includes('--quiet');
 
@@ -49,15 +60,6 @@ const PHASE_RE =
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\s*\n/;
 const DRAFT_VALUES: ReadonlySet<string> = new Set(['draft']);
-/**
- * A carrier holds obligations deferred out of an archived parent. It is not
- * schedulable work — every item in it has an unmet resumption trigger — and it
- * has no `## Phase` headings by construction, so it is skipped exactly where a
- * draft is. It differs from a draft in what protects it: a draft may be deleted
- * freely, a carrier may not, and `lint_carrier_integrity` reds when one loses
- * its receiver.
- */
-const CARRIER_VALUES: ReadonlySet<string> = new Set(['carrier']);
 
 const EXCLUDE_NAMES: ReadonlySet<string> = new Set([
     'template.md',
@@ -99,11 +101,6 @@ function _stripQuotes(value: string): string {
 /** Mirror update_roadmap_progress.is_draft. */
 function is_draft(fm: Map<string, string>): boolean {
     return DRAFT_VALUES.has((fm.get('status') ?? '').toLowerCase());
-}
-
-/** True for a `status: carrier` roadmap — see CARRIER_VALUES. */
-function is_carrier(fm: Map<string, string>): boolean {
-    return CARRIER_VALUES.has((fm.get('status') ?? '').toLowerCase());
 }
 
 /** Mirror update_roadmap_progress.is_roadmap_candidate (POSIX path parts). */
@@ -182,7 +179,7 @@ function find_active_roadmaps(root: string): string[] {
             continue;
         }
         const text = fs.readFileSync(p, 'utf-8');
-        if (is_draft(parse_frontmatter(text)) || is_carrier(parse_frontmatter(text))) {
+        if (is_draft(parse_frontmatter(text))) {
             continue;
         }
         out.push(p);
@@ -193,6 +190,13 @@ function find_active_roadmaps(root: string): string[] {
 /** Return human-readable violation strings for a single roadmap. */
 function violations_for(p: string): string[] {
     const text = fs.readFileSync(p, 'utf-8');
+    const retired = declaresRetiredStatus(text);
+    if (retired !== null) {
+        // Returned alone: a file wearing a deleted status has a migration to do
+        // before its phase structure is worth reporting on, and stacking phase
+        // findings on top would bury the one finding that has to be read first.
+        return [`${p}: ${retiredStatusDiagnostic(retired)}`];
+    }
     PHASE_RE.lastIndex = 0;
     const matches: Array<{ start: number; end: number; id: string; name: string | undefined }> =
         [];
@@ -359,7 +363,6 @@ export {
     CHECKBOX_RE,
     PHASE_RE,
     is_draft,
-    is_carrier,
     is_roadmap_candidate,
     parse_frontmatter,
     find_active_roadmaps,

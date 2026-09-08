@@ -79,16 +79,16 @@ describe('lint_plan_risk_register — checkContent', () => {
         expect(res.violations).toEqual([]);
     });
 
-    it('status: carrier is exempt too, and is NOT reported as draft', () => {
+    it('status: carrier is no longer exempt — ADR-262 deleted that exemption', () => {
         const carrier = `---\ncomplexity: simple\nstatus: carrier\n---\n\n${BASE_PLAN}`;
         const res = mod.checkContent('plan.md', carrier);
-        expect(res.exempt).toBe('carrier');
-        expect(res.violations).toEqual([]);
+        expect(res.exempt).toBeNull();
+        expect(res.registerMissing).toBe(true);
     });
 
     it('reads the exempting status from the frontmatter only', () => {
-        expect(mod.exemptingStatus(`---\nstatus: ready\n---\nstatus: carrier\n`)).toBeNull();
-        expect(mod.exemptingStatus(`---\nstatus: carrier\n---\n`)).toBe('carrier');
+        expect(mod.exemptingStatus(`---\nstatus: ready\n---\nstatus: draft\n`)).toBeNull();
+        expect(mod.exemptingStatus(`---\nstatus: draft\n---\n`)).toBe('draft');
         expect(mod.exemptingStatus(BASE_PLAN)).toBeNull();
     });
 

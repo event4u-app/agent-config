@@ -96,7 +96,9 @@ const EXCLUDE_DIRS: ReadonlySet<string> = new Set(['archive', 'skipped', 'stubs'
 
 // FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\s*\n", re.DOTALL)
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---[ \t\n\r\f\v]*\n/;
-const UNSCHEDULED_VALUES: ReadonlySet<string> = new Set(['draft', 'carrier']);
+// A set of one since ADR-262 deleted `status: carrier`; the shape stays so a
+// future unscheduled value is one entry rather than a control-flow change.
+const UNSCHEDULED_VALUES: ReadonlySet<string> = new Set(['draft']);
 
 const MERGE_GATED_RE = /merge-gated/i;
 // PR_NUM_RE = re.compile(r"pr\s*[=#:]?\s*#?\s*(\d+)", re.IGNORECASE)

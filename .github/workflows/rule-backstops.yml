@@ -146,8 +146,8 @@ jobs:
       # archived, by a sweep that then never sees the pair again — so the
       # receiver could be deleted afterwards with nothing going red. This walks
       # from the archived side, where the record survives.
-      - name: carrier-integrity (deferral carries out of archived roadmaps)
-        run: ./scripts-run src/scripts/lint_carrier_integrity
+      - name: deferral-integrity (deferral carries out of archived roadmaps)
+        run: ./scripts-run src/scripts/lint_deferral_integrity
 
       # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
       # correction is always visible. Shipped guidance directing a silent

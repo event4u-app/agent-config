@@ -1179,9 +1179,10 @@ describe('extractAcceptanceCriteria — over the REAL active tree, not a fixture
         // "declares ⇒ extracts", which holds at any population size.
         // WIDENED 2026-09-02 to include `later/`, and the reason is the same rot
         // the floor history below records, arriving one step further on: the
-        // active top level is now a SINGLE roadmap and it is a `status: carrier`
-        // that declares no criteria, so `declaring > 0` failed against a real
-        // tree with nothing wrong in it. Parked roadmaps are real roadmaps with
+        // active top level is now a SINGLE roadmap that declares no criteria,
+        // so `declaring > 0` failed against a real tree with nothing wrong in
+        // it. (That roadmap wore `status: carrier`, a value ADR-262 has since
+        // deleted; the starvation the widening fixes is independent of it.) Parked roadmaps are real roadmaps with
         // real criteria shapes, and they were invisible here. Measured at this
         // commit: top level 1 scanned / 0 declaring; `later/` 79 scanned / 55
         // declaring / 0 blind. So this widens the corpus from at most two files
