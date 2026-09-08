@@ -1,0 +1,73 @@
+{
+  "_comment": "Per-host observations of whether a rule body delivered by the `rule-inject` concern on `user_prompt_submit` reaches the model's context. road-to-delivery-on-hook-hosts 1.1-1.3, owner ruling E3. Loader, states and the citation requirement: src/scripts/_lib/injection_effect.ts. An `observed-*` row needs host_version, transcript and date; `unobserved` needs only a reason. NOTHING here may be derived from a host binding the slot: Cowork binds eight slots and discards dispatcher output, which is why the binding and the effect are separate axes.",
+  "claude": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "The delivery mechanism is measured for EQUIVALENCE (579/579 then 616/616 byte-equal deliveries, docs/CLAIMS.md) and for cost, and neither is what E3 asks for. E3 wants one transcript in which the model VISIBLY ACTS on a delivered body, and no such transcript exists: `lean_projection.mode` resolved to `eager-all` for the whole recorded history, so the concern emitted zero bytes in every session on record. Recording `observed-true` from the byte-equality measurement would be exactly the documentation-is-not-admission move K1 forbids, one layer in."
+  },
+  "_cursor_md_tree_loaded": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "road-to-delivery-on-hook-hosts 1.3. Does Cursor load `.cursor/rules/*.md` ALONGSIDE the `.mdc` files, i.e. does it carry every auto rule twice? Both trees are written today (condense.ts writes the symlink tree in the TOOL_DIRS loop and `_emit_cursor_mdc` writes the .mdc companions), so a double carry is possible by construction and unobserved in fact. It cannot be observed from a Claude Code session, and K4 forbids removing the .md bodies before it is. Carried under an underscore key because it is a property of a TREE rather than a host verdict, and putting it in the host namespace would make `cursor` answer two different questions."
+  },
+  "cursor": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "Binds `beforeSubmitPrompt` onto `user_prompt_submit` (hook_manifest.yaml:1300, alias :1407) and carries a `.md` rule tree, which makes it the strongest candidate — and the binding is not the question. Whether Cursor adds hook stdout to the model's context is unmeasured, and cannot be measured from a Claude Code session. `rule-inject` is absent from its concern list, so nothing would be emitted there today in any case."
+  },
+  "cline": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "Binds `user_prompt_submit` (hook_manifest.yaml:1315) with a `.md` rule tree, same shape as Cursor and the same unmeasured question. `rule-inject` is absent from its concern list."
+  },
+  "cowork": {
+    "state": "observed-false",
+    "host_version": "unrecorded at the time of the original observation",
+    "transcript": "docs/enforcement-by-host.md:21",
+    "date": "2026-09-07",
+    "reason": "The one host E3 excludes by an existing measurement rather than by absence of one: its trampoline discards dispatcher output and exits 0, so a delivered body cannot reach the model however many slots are bound. Eight slots bound and zero effect is precisely why `emits` and `injection_effect` are separate axes in this record. CITATION LIMIT, stated rather than smoothed over: the host version was not captured when that observation was made, so this row does not meet the four-part protocol in full and its `host_version` says so instead of inventing one."
+  },
+  "windsurf": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "Three slots bound and no tool-lifecycle surface at all (docs/enforcement-by-host.md). Not observed, and not reachable from a Claude Code session."
+  },
+  "gemini": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "Five slots bound, no `pre_tool_use` binding, and no session available to observe from. Recorded as unobserved rather than assumed either way."
+  },
+  "augment": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "Binds five slots and does not honour a deny (docs/enforcement-by-host.md). It also has no `user_prompt_submit` slot, which is a DECLARED gap in the manifest rather than an oversight, so the delivery path this record measures does not exist there today."
+  },
+  "copilot": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "`fallback_only` with zero slots bound: this package binds nothing there, so there is no hook stdout to reach anything. Recorded as unobserved rather than `observed-false`, because nobody has looked — a structural argument that it cannot work is still not an observation that it does not."
+  },
+  "codex": {
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "reason": "No platform key in hook_manifest.yaml at all, so no slot is bound and no concern can fire. Same distinction as copilot: the absence of a binding is a computable fact and is not the observation E3 asks for."
+  }
+}

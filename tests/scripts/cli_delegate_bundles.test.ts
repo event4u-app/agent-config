@@ -127,3 +127,78 @@ describe('cli-delegate bundles', () => {
         expect(broken).toEqual([]);
     }, 120_000);
 });
+
+/**
+ * The same net, one source root over.
+ *
+ * ADR-204 scoped the bundle to `src/scripts/_cli/`; the roadmap command family
+ * lives in `src/agent-src/scripts/` and stayed on `npx tsx`, which resolves
+ * against the CONSUMER's cwd — a project pinning `devEngines.runtime` away from
+ * the local Node could run none of these commands. Bundling them re-opened the
+ * `--splitting` hazard above verbatim: `update_roadmap_progress` shipped a
+ * hoisted body in the first probe, its entry guard never fired, and
+ * `roadmap:progress-check` returned zero bytes and exit 0. Only executing the
+ * bundle distinguishes that from a healthy one.
+ *
+ * The command list is read from the dispatcher rather than hardcoded, so a new
+ * `resolve_script "dist/agent-src/scripts/<n>.ts"` is probed without touching
+ * this file.
+ */
+describe('agent-src + aux delegate bundles', () => {
+    let names: string[] = [];
+
+    beforeAll(() => {
+        for (const target of ['build:agent-src-delegate', 'build:delegate-aux']) {
+            try {
+                execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm',
+                    ['run', '--silent', target],
+                    { cwd: REPO, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', timeout: 120_000 });
+            } catch (err) {
+                const e = err as { stdout?: string; stderr?: string };
+                throw new Error(`${target} failed\n${e.stdout ?? ''}\n${e.stderr ?? ''}`.trim());
+            }
+        }
+        const dispatch = fs.readFileSync(
+            path.join(REPO, 'src', 'scripts', '_dispatch.bash'), 'utf-8');
+        names = [
+            ...new Set(
+                [...dispatch.matchAll(/resolve_script "dist\/agent-src\/scripts\/([A-Za-z0-9_]+)\.ts"/g)]
+                    .map((m) => m[1] as string),
+            ),
+        ].sort();
+    }, 130_000);
+
+    it('the build emits a bundle for every dispatcher-referenced agent-src script', () => {
+        // Guards the guard: an empty list would make the probe below vacuous.
+        expect(names.length).toBeGreaterThan(3);
+        const missing = names.filter((n) => !fs.existsSync(path.join(OUT_DIR, `${n}.js`)));
+        expect(missing, `no bundle emitted for: ${missing.join(', ')}`).toEqual([]);
+    });
+
+    it('no agent-src bundle is a silent no-op', () => {
+        const broken: string[] = [];
+        for (const n of names) {
+            const { code, bytes, died } = probe(path.join(OUT_DIR, `${n}.js`));
+            if (died !== null) {
+                broken.push(`${n} (${died})`);
+            } else if (bytes === 0) {
+                broken.push(`${n} (no output, exit ${String(code)})`);
+            }
+        }
+        expect(broken).toEqual([]);
+    }, 120_000);
+
+    it('the update banner bundle runs', () => {
+        // `check_update_banner` and `_lib/pin_resolver` run before/after EVERY
+        // command and carry the same hoisting hazard. Only the banner is probed:
+        // the pin resolver's healthy output IS zero bytes (it acts only on a
+        // version-pin mismatch, and provoking one makes it re-exec through the
+        // network), so an execution probe cannot tell it apart from a dead
+        // guard. Its coverage is structural — see
+        // tests/scripts/runtime_dependencies.test.ts.
+        expect(fs.existsSync(path.join(OUT_DIR, '_lib', 'pin_resolver.js'))).toBe(true);
+        const { bytes, died } = probe(path.join(OUT_DIR, 'check_update_banner.js'));
+        expect(died).toBeNull();
+        expect(bytes, 'check_update_banner bundle produced no output').toBeGreaterThan(0);
+    }, 60_000);
+});

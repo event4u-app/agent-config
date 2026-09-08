@@ -50,6 +50,85 @@ export function derive_trigger_globs(meta) {
     return [...new Set(globs)];
 }
 /**
+ * The ceiling for a description a native lazy form routes on.
+ *
+ * NOT a host-published limit, and saying so is the point: nothing in this tree
+ * records what Cursor or Windsurf actually truncate at, so a number claiming to
+ * be theirs would be invented. This is a PACKAGE cap, chosen against the corpus
+ * it applies to — the 119 projected rule descriptions measure max 187 and mean
+ * 115 characters, so 400 leaves every existing description intact and gives the
+ * appended trigger terms roughly twice the mean to work in.
+ *
+ * Lower it if a host publishes a real limit below 400, or if a rule's emitted
+ * description is ever observed truncated by one.
+ */
+export const APPLIES_WHEN_CAP = 400;
+/** How the appended clause opens. Exported so a detector cannot re-spell it. */
+export const APPLIES_WHEN_PREFIX = ' Applies when: ';
+/**
+ * Keyword and phrase trigger terms, in declaration order, de-duplicated.
+ *
+ * Path-shaped triggers are deliberately excluded: they already activate the
+ * host natively through `globs`, so repeating them in prose spends description
+ * budget to say something the host is already acting on.
+ */
+export function trigger_terms(meta) {
+    const triggers = meta['triggers'];
+    if (!Array.isArray(triggers))
+        return [];
+    const out = [];
+    for (const t of triggers) {
+        if (t === null || typeof t !== 'object' || Array.isArray(t))
+            continue;
+        const obj = t;
+        for (const key of ['keyword', 'phrase']) {
+            const v = obj[key];
+            if (typeof v === 'string' && v.trim() !== '')
+                out.push(v.trim());
+        }
+    }
+    return [...new Set(out)];
+}
+/**
+ * Lower a rule's keyword and phrase triggers into the description a native lazy
+ * form routes on (road-to-delivery-on-hook-hosts 3.1).
+ *
+ * Cursor and Windsurf have no delivery mechanism: an `auto` rule with no
+ * path-shaped trigger reaches them as `alwaysApply: false` / `model_decision`
+ * with nothing but the description to route on. The rule's own trigger terms
+ * are the most routing-relevant text that exists for it, and they were going
+ * nowhere.
+ *
+ * Three properties, each of which is a way this could go wrong:
+ *
+ *   · **Never truncates the original description.** Terms are appended and the
+ *     clause is dropped WHOLE when it will not fit, so a description can only
+ *     gain. A cap that ate the sentence would trade routing for readability
+ *     without saying so.
+ *   · **Whole terms only.** Terms are added one at a time while they fit; a
+ *     half term is never emitted, because a truncated phrase routes on nothing
+ *     and reads as a typo.
+ *   · **Idempotent.** A description that already carries the clause is returned
+ *     unchanged, so a re-run of the emitter cannot stack clauses.
+ */
+export function applies_when(description, meta, cap = APPLIES_WHEN_CAP) {
+    if (description.includes(APPLIES_WHEN_PREFIX.trim()))
+        return description;
+    const terms = trigger_terms(meta);
+    if (terms.length === 0)
+        return description;
+    const kept = [];
+    for (const term of terms) {
+        const candidate = `${description}${APPLIES_WHEN_PREFIX}${[...kept, term].join(', ')}.`;
+        if (candidate.length > cap)
+            break;
+        kept.push(term);
+    }
+    if (kept.length === 0)
+        return description;
+    return `${description}${APPLIES_WHEN_PREFIX}${kept.join(', ')}.`;
+}
+/**
  * A brace group the host expands, versus an agent-config placeholder that only
  * LOOKS like one.
  *
