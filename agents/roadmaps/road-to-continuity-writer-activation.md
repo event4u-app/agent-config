@@ -106,8 +106,8 @@ councils required puts them there on purpose:
 
 ## Phase 2 — the split the concern ratchet currently forbids
 
-- [ ] **2.1 Three concern ids with three kill switches, paid for by a
-      retirement.** `hook_manifest.yaml` declares the continuity-record writer,
+- [ ] **2.1 Three concern ids with three kill switches, paid for by a retirement.** <!-- blocked-by: three-concern-split-is-unpaid-under-the-concern-ratchet | asked: yes -->
+      `hook_manifest.yaml` declares the continuity-record writer,
       the run-checkpoint writer and the session-index restorer separately, with
       a fault-injection test over every handler combination showing no
       cross-suppression. **This step cannot be attempted before a concern is
@@ -141,8 +141,8 @@ councils required puts them there on purpose:
       verify: `check_continuity_surface` shows `public_continuity_commands` and
       `normal_path_manual_actions` both one lower; no reader of the retired verb
       remains in the tree.
-- [ ] **3.3 `context-fill.json` — retire it, or record that its parked consumer
-      keeps it.** Authorised by the 2026-09-08 council on producer/no-consumer
+- [ ] **3.3 `context-fill.json` — retire it, or record that its parked consumer keeps it.** <!-- blocked-by: context-fill-retirement-has-a-parked-consumer | asked: yes -->
+      Authorised by the 2026-09-08 council on producer/no-consumer
       evidence that turned out incomplete: there is no consumer in code, but
       `agents/roadmaps/later/road-to-cost-parity-2-state-aware-dispatch.md` has
       open steps 1.1 and 1.4c that read it as a planned input, and 1.4c is
@@ -151,8 +151,8 @@ councils required puts them there on purpose:
       verify: either the file and its producer are gone and that roadmap's steps
       are re-anchored in the same change, or its inventory row records the
       owner's decision to keep it.
-- [ ] **3.4 `/chat-history` and `/chat-history import` — retire the two
-      commands.** Named in the owner's 2026-09-06 authorisation and blocked in
+- [ ] **3.4 `/chat-history` and `/chat-history import` — retire the two commands.** <!-- blocked-by: chat-history-command-retirement-authorization | asked: yes -->
+      Named in the owner's 2026-09-06 authorisation and blocked in
       the predecessor only because the 2026-09-08 council required a non-use
       audit and the audit found dependencies rather than none: the surviving
       `/agent-handoff` command points users at `/chat-history import` as a
@@ -167,6 +167,78 @@ councils required puts them there on purpose:
       updated in the same change; `check_continuity_surface` shows
       `session_resume_pickers` one lower; the generated command projections are
       regenerated rather than hand-edited.
+
+## Disposition, 2026-09-08 — the record changed, the progress did not
+
+A drain lane took this roadmap, verified every blocker against the tree rather
+than against its own prose, and put the disposition to a full-strength AI
+council (`anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2/2 present,
+2 rounds, depth deep, peer review on, quorum 2/2, $0 — subscription transport,
+**no degradation: 4 calls made, 4 scorable**). Transcribed verbatim in
+[`council-2026-09-08-continuity-writer-disposition`](../evidence/analysis/council-2026-09-08-continuity-writer-disposition.md).
+
+**What the verification found, and it corrected the lane's own brief.** The lane
+was told to expect the roadmap to be mostly or entirely blocked. It is not:
+Phase 1 is real, available work that no blocker gates. Both seats then corrected
+the lane's evidence for that in the other direction, and the correction is
+recorded because it went against the reading the lane brought them — openai:
+*"'No step carries a `blocked-by` annotation' is evidence of deficient
+dependency modelling, not independently proof that nothing is blocked. Prose
+constraints can still be normative."* Both readings are now true at once: the
+blockers below gate what they say they gate, and the steps say so.
+
+**Both seats chose option C**, in four ordered parts. Three of the four are done
+in this change; the fourth is not, and the reason is stated rather than implied:
+
+1. **Discharge the telemetry blocker durably** — done, and as a file-level
+   banner rather than the one-line header the entry offered, because the
+   collector's source is **absent** and a regeneration could otherwise recreate
+   the defect.
+2. **Repair the dependency model** — done. Every blocker that gates a step now
+   carries a `blocked-by` annotation on that step's own checkbox line, so the
+   roadmap's checkboxes enforce what its prose asserted. anthropic named the
+   free-floating list *"a deliverable flaw"*.
+3. **Split authorization from execution on the command retirement** — done. The
+   governance record was read rather than assumed: the 2026-09-08 council made
+   the retirements *conditional on a proven non-use audit*, that condition
+   explicitly names documentation, and the audit found documentation. The
+   condition is unmet, so the maintainer's decision is genuinely outstanding.
+4. **A bounded, default-off Phase 1 vertical slice** — **NOT attempted.** This is
+   a descope, not an oversight.
+
+### Why Phase 1 was not attempted, and what would falsify that
+
+openai named the falsifier for reverting to a disposition-only deliverable:
+*"conflict handling, failure tests, and safe rollback cannot fit into one atomic
+review unit."* Applied honestly to this lane, it fires. Both seats also agree
+Phase 1 is one architectural unit — openai: *"'Execute Phase 1 — or as much as
+one lane can carry' permits unsafe partial completion. The state machine,
+persistence protocol, controlled-failure tests, and rollback behavior form one
+architectural unit."*
+
+The measured surface, so the next lane can re-decide rather than re-derive:
+1.1 needs a contract document plus storage-adapter tests that interrupt on both
+sides of an atomic rename; 1.2 a new writer concern in `hook_manifest.yaml`, a
+settings switch, and field computation against
+`src/scripts/_lib/subagent_capsule.ts` (1,014 lines, and the
+`continuity_record` variant plus its required-key set already exist at `:147`
+and `:195`); 1.3 an eight-case fixture suite **and** runtime integration against
+the real dispatcher and storage adapter with controlled failures; 1.4 three
+switches, a rollback note, and a test per switch. It must land without growing
+`concern_count`, whose allowance is `0`.
+
+**What would falsify this descope:** a lane that can carry the state machine,
+the writer, the failure tests and the rollback in one reviewable change. That is
+a capacity question about the lane, not a property of the work — anthropic's
+bounded-slice alternative (conflict policy plus state machine, the writer with
+input validation, a minimal fixture-plus-one integration test, **one** kill
+switch, and the remainder documented) is the shape to try first, and it is
+recorded here rather than discarded because the two seats did not agree on it.
+
+**What this change does NOT do.** It closes no step, moves no axis, and writes no
+code on the continuity path. `check_continuity_surface` reads `1 / 2 / 5 / 1 / 1`
+before and after — verified, not assumed. The one behavioural artefact it
+touches is a metrics report that was never evidence.
 
 ## Blockers
 
@@ -191,20 +263,33 @@ councils required puts them there on purpose:
 - **If you do nothing:** the artefact axis stays at 5 instead of 4 and a producer with no code consumer keeps writing a file on every Stop. The cost is one small write per session and one row in the inventory; nothing breaks, and the row states the reason so the next reader does not re-derive it.
 - **What to do:** either (1) the owner of that parked roadmap re-anchors steps 1.1 and 1.4c onto another source, after which this file and `writeContextFill` in `src/scripts/hooks/session_eol_hook.ts:269` are deleted in one change; or (2) the owner decides the parked roadmap keeps it, and the inventory row at `src/config/continuity-surface.json` records that decision and stays `counted`. Step 3.3 of `road-to-continuity-writer-activation` carries whichever is chosen.
 - **Resolved when:** one of the two options above is taken and recorded, either by the file being gone or by its inventory row naming the owner's keep decision.
-### blocker: chat-history-command-retirement-has-documented-dependencies
+### blocker: chat-history-command-retirement-authorization
 
 - **Status:** open
 - **Owner:** maintainer
 - **Asked:** 2026-09-08. The AI council made these two retirements conditional — anthropic: *"Do they appear in any shipped examples, docs, or error messages? … Retiring them requires proving non-use, not just proving they're marked internal. If that proof doesn't exist, they're not 'reachable in this session.'"* A full tracked-source audit ran on 2026-09-08 against `drain/continuity-retirement`. It answers every other class in the negative and this one in the affirmative.
-- **Blocks:** the only movement available on the `session_resume_pickers` axis. `check_continuity_surface` reads `1 / 2 / 5 / 1 / 1`; this retirement alone takes position 2 to `1`.
+- **Blocks:** the AUTHORIZATION half only — whether the removal may proceed at all. The enumerated edits are split out into `chat-history-command-retirement-execution` below, on a 2/2 AI-council ruling of 2026-09-08 that this entry conflated a governance question with a work item. openai: *"A completed checklist resolves the discovery work. It does not itself resolve governance precedence or prove that the accepted evidentiary standard was met."*
+- **Why it is still open, checked against the governance record rather than assumed.** The 2026-09-08 council did not supersede the owner's 2026-09-06 authorisation; it made the two retirements *conditional on a proven non-use audit* (`agents/evidence/analysis/council-2026-09-08-continuity-retirement-scope.md:41`). That condition **explicitly names documentation**: *"Do they appear in any shipped examples, docs, or error messages?"* (`:357-362`). The audit answered that question in the affirmative. So the condition is **unmet**, not satisfied-pending-execution — and whether updating the documentation satisfies it, or whether removing a recovery affordance that the PRESERVED command advertises needs the owner's word again, is the maintainer's call and nobody else's. Recorded this way rather than reassigned to the implementer because openai warned against the opposite error too: *"If the governance record clearly establishes continuing authorization, remove the first item entirely. Do not retain a fictional maintainer blocker merely for historical attribution."* It is retained because the record does NOT clearly establish it.
+- **Blocks (residual):** the only movement available on the `session_resume_pickers` axis. `check_continuity_surface` reads `1 / 2 / 5 / 1 / 1`; this retirement alone takes position 2 to `1`.
 - **Recommendation:** retire them, in a change whose subject is the removal. The audit clears every mechanical class — no CLI verb, no dispatcher case, no MCP tool, no hook, no runtime loader, no error path, and no test that reads the real tree (the one test naming the slug writes a synthetic fixture into a `mkdtemp` sandbox). What it does NOT clear is the documentation class the council named, and the two instances that matter are not incidental: `docs/getting-started.md:177` advertises `/chat-history import` in the user-facing quick-start table, and `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` — the command the owner's authorisation explicitly PRESERVES — instructs its use after a crash or a fresh-chat reopen and links to the file. Removing a recovery affordance that the surviving command advertises is a deliberate act.
 - **If you do nothing:** two internal commands stay listed, `session_resume_pickers` stays at 2, and `/agent-handoff` keeps pointing at a path that still works. Nothing degrades and nothing rots — the cost is that the surface stays one wider than the owner asked for on 2026-09-06, indefinitely.
 - **What to do:** the audit enumerated the whole change, so this is a checklist rather than an investigation. **Delete** `src/domains/meta/chat-history/command.md` and `src/domains/meta/chat-history/import/command.md`. **Hand-edit the four surfaces no generator owns**, each of which reddens a named gate: `src/config/continuity-surface.json` — delete the rows `command:chat-history` and `picker:chat-history-import` (gate `check_continuity_surface`, dead-locus); `src/flows/surface-map.yaml:168-169` (gate `lint_command_flow_coverage`, phantom ref); `docs/contracts/command-clusters.md:34` plus the worked example at `:92` (gate `check_cluster_patterns`, dispatcher-missing); `docs/getting-started.md:177` (no gate — it is the user-facing row). **Fix the links no gate catches**, because `check_references` does not match parenthesised markdown targets: `src/domains/meta/agent-handoff/command.md:254`, `:259`, `:267` and `src/skills/learning-to-rule-or-skill/SKILL.md:383-384` both go dangling. **Then regenerate rather than hand-edit** — `task sync`, `task generate-tools`, `update_counts`, `generate_index`, `generate_command_flows`, `generate_capabilities_index`, `generate_pack_manifests`, `build_proof` — which moves the command count 204 → 202 across `README.md:7`, `docs/CLAIMS.md:393`, `docs/architecture.md:158`, `docs/command-flows.md:10`, `docs/featured-skills.md:96`, `docs/getting-started-by-role.md:5`, `docs/proof.md:55`, `CAPABILITIES.yaml:15`, and the memory pack's `artefact_count` and token passport. **Verify** with `check_continuity_surface` (expect `session_resume_pickers` 2 → 1), `lint_command_flow_coverage`, `check_cluster_patterns` (expect 25 dispatchers, down from 26), `check_command_count_messaging`, `check_artefact_count_messaging`, `check_public_catalog_links` and the four `--check` generators.
 - **Resolved when:** the two command documents are gone, every surface above is updated or regenerated in the same change, and `check_continuity_surface` reports `session_resume_pickers` at 1.
 
-### blocker: the-command-usage-telemetry-cannot-prove-non-use
+### blocker: chat-history-command-retirement-execution
 
 - **Status:** open
+- **Owner:** implementer
+- **Blocks:** step 3.4 only, and only once its sibling authorization blocker resolves. Split out of `chat-history-command-retirement-authorization` on the 2026-09-08 AI-council ruling that authorization and execution are different obligations with different owners, and that filing them as one hides a ready work item behind a pending decision.
+- **Recommendation:** hold until the authorization resolves, then execute the enumerated checklist in the sibling entry without re-investigating. The audit already ran and cleared every mechanical class; nothing in this entry is discovery work. Executing it early is the failure the split exists to prevent — the edits are irreversible in the sense that matters (a removed documented affordance), and the decision that licenses them is not this owner's.
+- **If you do nothing:** nothing degrades. This entry holds no work that is currently permitted; it exists so that when the maintainer's decision arrives, the next reader sees a ready checklist with a named owner rather than re-deriving it from a blocker that reads as a governance question.
+- **What to do:** on resolution of the authorization half, run its `What to do` checklist verbatim — the two command documents, the four hand-edited surfaces, the two link classes `check_references` cannot see, then regenerate rather than hand-edit, then verify with the seven named gates.
+- **Resolved when:** the authorization half reads `resolved`, its checklist has been executed, and `check_continuity_surface` reports `session_resume_pickers` at 1.
+
+### blocker: the-command-usage-telemetry-cannot-prove-non-use
+
+- **Status:** resolved 2026-09-08. `agents/evidence/metrics/skill-usage-report.md` now opens with a NON-EVIDENTIARY banner naming the absent source, the `Active: 0`-over-337 header, and the `agent-handoff` discriminator — a preserved command reading `dead / 0 / 0` identically to every retirement candidate, which is what proves the instrument distinguishes nothing. Taken as the durable form of the two options this entry offered, on a 2/2 AI-council ruling of 2026-09-08 that the one-line header edit was insufficient: with the source **absent** rather than empty, the provenance of the existing table is unknown and a regeneration could recreate the defect, so the label belongs on the file and states its own removal condition.
+- **Correction to this entry's own text, recorded rather than silently fixed:** it said the source `is empty`. It is **absent from the tree** — verified 2026-09-08. The distinction is the reason the fix is a file-level banner and not a header line.
 - **Owner:** implementer
 - **Blocks:** nothing directly. It is recorded here because it nearly caused a wrong disposition on the blocker above, and the next reader will reach for the same file.
 - **Recommendation:** do not cite `agents/evidence/metrics/skill-usage-report.md` as evidence that any command is unused. It reports `chat-history` and `chat-history-import` as `dead` with `0` exposures and `0` mentions in every window, which reads as exactly the proof the council asked for — and it is not. Its own header says **`Active: 0`** across all 337 tracked artefacts, and `agent-handoff`, the command the owner's authorisation explicitly preserves, is `dead / 0 / 0` on the same page. The collector recorded nothing for anything, so the report distinguishes nothing. An all-zero instrument produces a number for every question and an answer to none.
