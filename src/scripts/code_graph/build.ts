@@ -612,7 +612,7 @@ export function buildGraph(
         });
     }
 
-    // ── DERIVED `tests` edges (3.2) ────────────────────────────────────────
+    // DERIVED `tests` edges (3.2).
     //
     // A test file that imports an in-repo symbol from a NON-test file is
     // asserted to test it. Derived here rather than extracted because the

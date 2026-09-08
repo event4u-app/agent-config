@@ -337,7 +337,7 @@ describe('the discriminator: describeImpact appears in exactly one verb', () => 
     });
 });
 
-// ── the CLI contract ────────────────────────────────────────────────────────
+// The CLI contract.
 //
 // The module-level goldens above pin the ANSWERS. These pin the exit codes and
 // the printed envelope, which is the half a gate consumes: a gate reads an exit

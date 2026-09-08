@@ -179,7 +179,7 @@ describe('4.6 — selects, never authors (K9)', () => {
     });
 });
 
-// ── 3.4 — the same fixture, on the NATIVE code graph ────────────────────────
+// 3.4 — the same fixture, on the NATIVE code graph.
 //
 // `road-to-a-graph-that-is-shipped` 3.4: *"`regression_neighbourhood` reads
 // this graph via `impact --diff`; the selected regressions and the producing

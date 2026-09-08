@@ -12,7 +12,7 @@
  * > neighbourhood names, and a fixture proves a neighbour regression is
  * > caught.**
  *
- * ## Two graphs, both deliberate — the substitution is retired
+ * TWO GRAPHS, BOTH DELIBERATE — the substitution is retired.
  *
  * The step says "the code graph". Until 2026-09-08 this module could not read
  * it: `agent-config code-graph detect` answered `no code-graph source detected`

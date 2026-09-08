@@ -8,7 +8,7 @@
  * rank 1 is precisely "the install grows and the graph is still unread"; these
  * are the readers.
  *
- * ## Registered here, not in `tools.ts`
+ * REGISTERED HERE, NOT IN `tools.ts`.
  *
  * `tools.ts` sits ~500 lines past the 1500-line ceiling
  * `check_source_size_budget` enforces as a shrink-only ratchet, so five tool
@@ -17,14 +17,14 @@
  * lines — paid for by moving `_strip` / `_resolvePath` out to `path_util.ts` in
  * the same change.
  *
- * ## Telemetry needs no per-tool work
+ * TELEMETRY NEEDS NO PER-TOOL WORK.
  *
  * `ToolCache.dispatch` records every `tools/call` centrally, so these five emit
  * the identical line the other 31 do by being in `ALLOWLIST` at all — which is
  * what the step's "same telemetry line as the other 31" asks for, and is
  * stronger than a per-tool emit because it cannot be forgotten.
  *
- * ## Read-only, with one honest exception
+ * READ-ONLY, WITH ONE HONEST EXCEPTION.
  *
  * Four are `side_effect: 'ro'`. `graph_impact` is `'shell'`, because it resolves
  * its `diff` argument by running `git diff --name-only`. That subprocess is

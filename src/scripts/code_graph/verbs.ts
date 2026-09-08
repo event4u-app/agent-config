@@ -7,7 +7,7 @@
  * has to say what it filtered out, because a gate that acts on a set nobody can
  * audit is a gate nobody should trust.
  *
- * ## The accepted-edge filter, and why it is `resolved_via` and not `confidence`
+ * THE ACCEPTED-EDGE FILTER, and why it is `resolved_via` and not `confidence`.
  *
  * An edge is ACCEPTED when its `resolved_via` is not in
  * {@link NON_ACCEPTED_VIA} — `name-lookup` and `dynamic`. Both are guesses:
@@ -21,7 +21,7 @@
  * specifier the file itself states. Filtering on `confidence` would drop the
  * second and keep the first — exactly backwards.
  *
- * ## Every verb reports its own filtering
+ * EVERY VERB REPORTS ITS OWN FILTERING.
  *
  * Each result carries a `resolved_via` histogram over the edges it CONSIDERED
  * (accepted and rejected, separately) plus the graph's staleness state. A
@@ -118,7 +118,7 @@ function dedupeReads(reads: readonly (RecommendedRead | null)[]): RecommendedRea
     return [...m.values()];
 }
 
-// ── 3.1 impact ──────────────────────────────────────────────────────────────
+// 3.1 impact.
 
 /** One reverse-reachable node, with how far away it is and what reached it. */
 export interface ReachedNode {
@@ -243,7 +243,7 @@ function renderEdge(e: CodeEdge): string {
     return `${e.confidence} ${sanitizeLabel(e.source)} --${e.relation}/${e.resolved_via}--> ${sanitizeLabel(e.target)}`;
 }
 
-// ── 3.2 tests-for / untested ────────────────────────────────────────────────
+// 3.2 tests-for / untested.
 
 export interface TestsForResult extends VerbReport {
     seeds: string[];
@@ -338,7 +338,7 @@ export function untested(g: LoadedGraph, files: readonly string[], state: GraphS
     };
 }
 
-// ── 3.3 dead ────────────────────────────────────────────────────────────────
+// 3.3 dead.
 
 /** One declared entry-point source, and whether it could be read. */
 export interface EntryPointSource {
@@ -364,7 +364,7 @@ export interface DeadResult extends VerbReport {
 /**
  * Symbols with zero accepted in-edges, minus declared entry points.
  *
- * ## Why this verb can refuse
+ * WHY THIS VERB CAN REFUSE.
  *
  * AI council 2026-09-08 (2/2 convergent, round 2 Fork 4, option 2). Step 3.3
  * names four entry-point sources — routes, exports, the CLI registry, the hook
@@ -383,7 +383,7 @@ export interface DeadResult extends VerbReport {
  * (`--accept-missing-exports`). Both are visible in a command line and in a
  * diff; a boolean buried in an options bag is not.
  *
- * ## What it does NOT claim
+ * WHAT IT DOES NOT CLAIM.
  *
  * Nothing here says an unreferenced symbol should be deleted. `dead` reports
  * "no accepted in-edge, and no declared entry point names it", which is a
@@ -456,7 +456,7 @@ export function dead(
     };
 }
 
-// ── entry-point providers ───────────────────────────────────────────────────
+// Entry-point providers.
 
 /** Identifier-shaped tokens in `text` — the crude, deterministic reading a
  * registry / manifest scan needs. Never a parse: a provider that half-parses a

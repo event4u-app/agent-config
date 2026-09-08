@@ -361,7 +361,7 @@ function isFlagValue(argv: string[], token: string): boolean {
     return i > 0 && (argv[i - 1] as string).startsWith('--');
 }
 
-// ── Phase-3 gate verbs (3.1–3.3) ────────────────────────────────────────────
+// Phase-3 gate verbs (3.1-3.3).
 
 /** The staleness token every gate verb prints, per step 3.1–3.3's shared
  * verify: "each prints `resolved_via` counts and the staleness state". */
