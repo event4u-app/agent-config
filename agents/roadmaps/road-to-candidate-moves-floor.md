@@ -470,10 +470,14 @@ played.
 - **Recommendation:** no, not yet. Two independent gates are shut. The
   2026-09-07 split council blocked shipping in this phase and named Phase 3.3's
   KEEP branch as the only thing that authorises it, *as a further decision and
-  not automatically*. The 2026-09-08 council then added a second, harder gate:
-  step 2.0 measured zero qualifying emissions of **all five** existing lines, so
-  no efficacy result may authorise a sixth while the carrier reaches nothing.
-  Both councils are recorded; neither can be discharged by this run.
+  not automatically*. **That branch did not fire** — 3.3 returned a fourth
+  verdict, not KEEP, so the condition that would have authorised shipping never
+  arose. The 2026-09-08 councils added two further gates: step 2.0 measured
+  **zero well-formed emissions of all five** existing mandated lines, so no
+  efficacy result may authorise a sixth while the carrier reaches nothing; and
+  the verdict council attributed the dim-5 movement away from the line itself
+  (6 of its 9 rubric points came from transcripts carrying no line at all).
+  Three independent reasons, none dischargeable by this run.
 - **If you do nothing:** steps 2.1 and 2.4 stay open and AC-4 stays
   unsatisfiable, so the roadmap cannot archive. Nothing degrades — the shape,
   the baseline and the treatment reading are all landed and independently
@@ -483,10 +487,11 @@ played.
      carrier null and its surface map.
   2. Read Phase 3's verdict in
      `tests/reasoning-layer-eval/RESULTS-candidates-treatment-2026-09-08.md`.
-  3. Decide one of: authorise a scoped carrier-reach investigation (the gate
-     that must clear first either way); authorise shipping 2.1 and 2.4 and
-     amend AC-4; or record the sixth line as abandoned and close AC-4 by
-     amendment.
+  3. Decide one of: record the sixth line as abandoned and close AC-4 by
+     amendment (what the measurement points at); authorise a scoped
+     carrier-reach investigation first, which is the gate that must clear
+     before shipping could ever be reconsidered; or authorise shipping 2.1 and
+     2.4 anyway and amend AC-4 to match.
 - **Resolved when:** the owner records one of those three dispositions, and
   either 2.1/2.4 land or AC-4 is amended to match the chosen outcome.
 
