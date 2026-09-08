@@ -199,6 +199,31 @@ export function resolveContinuityRecord(
 }
 
 /**
+ * Which session this one continues — read, never composed.
+ *
+ * The chain is derivable without any new artifact: when this session started,
+ * its reader consumed the predecessor's record and MOVED it to this session's
+ * consumed path (`recycle_consumed_rel`). So the file sitting there is, by
+ * construction, the record this session resumed from, and its `session_id` is
+ * the predecessor.
+ *
+ * Returns the explicit string `none` when there is nothing there. `none` is a
+ * CLAIM — "this session starts a chain" — and is deliberately not an empty
+ * value: a reader must be able to tell "no predecessor" from "nobody wrote the
+ * field", because only the second one is a reason to go looking.
+ */
+export function resolvePredecessor(projectRoot: string, sessionId: string | null): string {
+    try {
+        const consumed = path.join(projectRoot, recycle_consumed_rel(sessionId));
+        const raw = JSON.parse(fs.readFileSync(consumed, 'utf-8')) as { session_id?: unknown };
+        const prior = String(raw.session_id ?? '').trim();
+        return prior === '' ? 'none' : prior;
+    } catch {
+        return 'none';
+    }
+}
+
+/**
  * Is there any trace in this workspace of the session a record names as its
  * predecessor?
  *
