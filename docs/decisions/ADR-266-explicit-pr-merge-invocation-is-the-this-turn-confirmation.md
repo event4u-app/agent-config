@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-08
 decision: explicit-pr-merge-invocation-is-the-this-turn-confirmation
 supersedes: ADR-237 (§ 4 merge clause · /pr:merge only)
-superseded_by: —
+superseded_by: 268 (§ Not reopened · the roadmap-grant non-transfer bullet only)
 type: structural
 reopen_policy: owner
 protected_dimensions: security_floor
@@ -171,6 +171,18 @@ still in force:
   it. Citing this record as evidence *against* mission-scoped merge authority
   misreads a scope note as a verdict, and the answer is written here rather than
   left to a session's memory.
+
+  > **That later record now exists — lineage, added 2026-09-08, this bullet only.** The
+  > separate owner decision was taken the same day and is recorded as
+  > [`ADR-268 § 12`](ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md),
+  > which accepts `granted_by: roadmap:<slug>` as an object-bound grant source and resolves
+  > ADR-239 § 3. It supersedes this bullet on exactly the terms the paragraph above sets out,
+  > and it does not overturn this record's argument: the *invocation-is-the-confirmation*
+  > reasoning still does not transfer to a roadmap invocation, and § 12's grant does not rest
+  > on it — it reads a typed object the owner wrote into the roadmap rather than inferring
+  > authority from an invocation. **Every other bullet in this section stands unchanged**,
+  > including the per-object confirmation for closing a PR the owner did not open. A pointer,
+  > not a rewrite.
 
 ## Consequences
 
