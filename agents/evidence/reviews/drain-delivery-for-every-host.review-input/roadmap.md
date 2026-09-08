@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -31,7 +33,7 @@ estate_offset_exempt: "Offsets nothing at promotion. Phase 7 dispositions `later
 
 # Road to delivery for every host
 
-> **Source.** Owner instruction 2026-09-07 out of analysis round `inbox-2026-09-u`,
+> **Source[REDACTED:src-conf]
 > consumed to `agents/tmp.old/inbox-2026-09-u/`. Every number below was **re-measured at
 > `0918def55` (v14.20.0)** with the repo's own instruments before this file was authored;
 > where re-measurement contradicted the draft, the corrected figure carries
@@ -512,20 +514,6 @@ Defects this roadmap repairs:
       is the 3.1 distribution, not this probe.
       `block_config_weakening` behaved as E2 predicts — `*-budget.json` is `advisory`
       (`:96-98`), so its path returns `warn`, never a block.
-      **AMENDED 2026-09-08 by the R2 completion review, finding 3.** The clause above —
-      "the `rule-inject` row at 20,480" — was honoured literally and was wrong to honour:
-      it left ONE concern licensed 25 % above the whole slot's registered sum on a slot
-      carrying 12 other concerns, because the two numbers were the same statistic in two
-      units (p90 matched-body TOKENS at ~4 B/tok vs p90 gate-open FIRE SIZE in bytes).
-      The row and `hooks/rule_inject_hook.ts::CAP_BYTES` are now **16,384**, reconciled
-      DOWNWARD onto E2's own charge rather than by raising any cap. Measured cost over the
-      same corpus, with the command path included (330 fires): p90 16,865 → 14,507 B,
-      max 20,406 → 16,348 B, fires truncated 33 → 45, bodies withheld to fit the cap
-      63 → 88. A tripwire in `tests/scripts/rule_inject_hook.test.ts` now holds the cap
-      equal to the concern row and at or below the slot sum, so the two units cannot drift
-      apart again unnoticed. The residue is NOT closed: the cross-concern slot sum is an
-      authoring-time control only — the runtime enforces
-      `per_turn_aggregate_bytes.ceiling_bytes` and reads no per-slot row.
 - [x] **3.3 Latency gate green:** `pre_tool_use` p95 ≤ 175 ms, `user_prompt_submit`
       gate-open measured and recorded.
       verify: CI latency gate green on the flipped repo.
@@ -561,8 +549,8 @@ Defects this roadmap repairs:
       `adr/regenerate_index --dir docs/decisions` and `adr/evidence_census`.
       verify: ADR exists; `DEFAULT_LEAN_PROJECTION_MODE` and the hosts default match it;
       `Rule backstops` CI job green on census freshness.
-      Done 2026-09-07. `docs/decisions/ADR-267-delivery-default-for-claude-code.md`,
-      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-267`
+      Done 2026-09-07. `docs/decisions/ADR-265-delivery-default-for-claude-code.md`,
+      `status: accepted`, `reopen_policy: owner`, evidence `E1`. `adr_cite_check ADR-265`
       reports **LIVE** with all seven basis paths `[found]`. `check_adr_frontmatter`: no
       errors.
       **Renumbered a SECOND time, 2026-09-08, 263 → 265.** While this branch sat open,
@@ -575,20 +563,6 @@ Defects this roadmap repairs:
       measured rather than restated — the index and census were regenerated on the
       merged tree, and their post-merge counts are the ones the committed artifacts carry. Index regenerated (`201 numbered, 1 legacy`) and the evidence census re-run
       (`E0=75 E1=69 E2=44 E3=21 · human=13 agentic=122 mixed=21 unknown=53`).
-      **Renumbered a THIRD and a FOURTH time, 2026-09-08, 265 → 266 → 267, both inside one
-      merge session.** `main` landed its own `ADR-265`
-      (`ADR-265-iron-law-reserve-refused-verifier-inside-the-change.md`), and this record moved
-      to 266; a push-freshness fetch minutes later brought `main`'s fresh `ADR-266`
-      (`ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md`), so it moved
-      again to **267**, which is the live number. Both of `main`'s records are merged and
-      therefore immovable, so the direction was forced rather than chosen. 267 was verified
-      free on `origin/main` and across every open PR head at renumber time — and that check is
-      NOT a guarantee, because collision four came from an already-merged lane rather than a
-      competing PR. Eleven files carried delivery-meaning references and moved with the record;
-      four cite `main`'s two records and were deliberately left alone, so a bare-string sweep
-      would have re-pointed them at the wrong decision. The full four-collision record, and
-      why open-PR-head checking is insufficient, is in
-      `agents/roadmaps/stubs/road-to-adr-number-uniqueness.md`.
       **The verify's middle limb needed a decision, and the ADR now carries it as § Decision
       point 4.** `DEFAULT_LEAN_PROJECTION_MODE` is deliberately NOT flipped to `delivery`.
       The template and the constant answer different questions — what a consumer is GIVEN

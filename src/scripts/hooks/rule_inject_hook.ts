@@ -11,12 +11,23 @@
  * the 36.2 %-against-48 % run at `docs/CLAIMS.md:188-189`. Whatever that
  * instrument's flaws — and ADR-202 closed it — it points one way.
  *
- * DEFAULT OFF, AND OFF MEANS ZERO BYTES. The concern registers on two slots but
- * returns before reading the router unless `lean_projection.mode: delivery` is
- * set. Under every shipped default it emits nothing, costs no injection budget,
- * and leaves the standing corpus exactly as it is today. That is why its
- * `hook-token-budget.json` row is registered against the per-prompt cap rather
- * than a measured emission: there is no measured emission to register yet.
+ * SHIPPED ON FOR CLAUDE CODE SINCE ADR-265 — corrected 2026-09-08 (R2 finding
+ * 4), because this paragraph read "DEFAULT OFF, AND OFF MEANS ZERO BYTES …
+ * under every shipped default it emits nothing … there is no measured emission
+ * to register yet" and all four clauses became false in the same change that
+ * edited the paragraph below it. The shipped template carries
+ * `lean_projection.mode: delivery` with `hosts: [claude-code]`
+ * (`src/config/agent-settings.template.yml`), `gateOpen` returns true on that
+ * pair, and the emission IS measured: p50 6,674 B, p90 16,188 B, max 20,406 B
+ * over 318 gate-open fires on the frozen corpus, which is the distribution the
+ * `user_prompt_submit` slot raise in `src/config/hook-token-budget.json` is
+ * derived from.
+ *
+ * OFF STILL MEANS ZERO BYTES, and that half is unchanged: the concern returns
+ * before reading the router unless the resolved (mode, hosts) pair actually
+ * thins THIS host — see `gateOpen`, which checks both, because the projector
+ * does. On any other host, and on a `lean_projection.mode: eager-all` rollback,
+ * it emits nothing.
  *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
@@ -30,6 +41,29 @@
  * `pre_compact` clears the seen-set — the same pin-lost shape `language-mirror`
  * uses. State lives under `agents/runtime/state/`, the class
  * `context-hygiene.json` already occupies; no new state convention is created.
+ *
+ * WHAT IS RE-DELIVERED AFTER A COMPACTION, EXACTLY
+ * (road-to-delivery-for-every-host 2.4 — stated because a rule lost at a
+ * compaction boundary is lost for the rest of the session, and "re-armed" alone
+ * does not say what a reader may rely on):
+ *
+ *   · `pre_compact` clears the WHOLE seen-set for that session, not the rules
+ *     matched on the compacted turn. There is no per-rule bookkeeping to be
+ *     partially wrong about.
+ *   · Nothing is delivered BY the compaction itself. The slot emits zero bytes
+ *     and exits allow; re-arming is silent.
+ *   · A rule's body returns on the NEXT turn whose trigger matches it — which
+ *     means a rule whose trigger does not fire again is NOT restored. Delivery
+ *     is trigger-driven on both sides of the boundary; compaction resets the
+ *     de-duplication, it does not replay a transcript.
+ *   · The seen-set is per session, so a compaction in one session re-arms only
+ *     that session.
+ *
+ * Held by three fixtures in `tests/scripts/rule_inject_hook.test.ts` under
+ * "once per session per rule, re-armed on compaction": the dedup case, the
+ * matched-rule → compaction → matching-turn → body-present case, and the
+ * per-session case. All three predate this roadmap; 2.4 adds the contract
+ * above, not the coverage, and says so rather than claiming new tests.
  *
  * NEVER BLOCKS. Every failure path returns 0: unreadable stdin, malformed JSON,
  * missing router, unreadable body, unwritable state. The one non-zero exit is
@@ -54,8 +88,12 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { hookSectionEnabled, leanProjectionModeRaw } from '../_lib/hook_settings.js';
-import { deliversBodies, normalizeLeanProjectionMode } from '../_lib/lean_projection_mode.js';
+import { hookSectionEnabled, leanProjectionHostsRaw, leanProjectionModeRaw } from '../_lib/hook_settings.js';
+import {
+    deliversBodies,
+    normalizeLeanProjectionMode,
+    resolveLeanProjectionHosts,
+} from '../_lib/lean_projection_mode.js';
 import {
     loadRuleBody,
     loadRouter,
@@ -81,15 +119,38 @@ const EXIT_WARN = 2;
  * slot, for a concern that is default-OFF and emits nothing. Measured: 202 ms
  * -> 196 ms on the `pre_tool_use` p95 when the concern is unbound entirely, and
  * the CI latency gate went red on the branch that introduced it while passing
- * on main. So the runtime cap is the same bound in the unit
+ * on main. So the runtime cap is stated in the unit
  * `hook-token-budget.json` already enforces — 5,000 tok at the ~4 bytes/token
- * this corpus measures is 20,480 B, which is exactly this concern's registered
- * row. Cap and budget row are now one number instead of two units.
+ * this corpus measures was 20,480 B, and that WAS this concern's registered
+ * row until 2026-09-08. It matched the concern row and not the slot row; see
+ * the correction below.
+ *
+ * LOWERED 20480 -> 16384 on 2026-09-08 (R2 finding 3), and the paragraphs above
+ * are kept because they record how the retired number was derived. The defect
+ * was that the derivation above and the one behind the
+ * `user_prompt_submit` slot row were TWO STATISTICS IN TWO UNITS: this cap was
+ * the p90 of the matched-body TOKEN distribution, converted at ~4 B/tok; the
+ * slot row is the p90 gate-open FIRE SIZE in bytes, which is the activation
+ * charge owner ruling E2 specifies. They disagreed by 25 %, in the direction
+ * that licensed ONE concern to emit more than the whole slot — carrying 12
+ * other concerns — is registered for. Reconciled downward onto the slot row,
+ * because that is the owner-specified charge; the cost is measured and recorded
+ * in `hook-token-budget.json`'s own `rule-inject_reason` (33 -> 45 fires
+ * truncated, 63 -> 88 bodies withheld over 330 corpus fires).
+ *
+ * WHAT THIS CAP DOES, precisely: `selectForInjection` drops whole bodies to
+ * stay under it, so a fire is TRUNCATED and never over-emitted. It is the only
+ * number that acts on a single fire — the per-slot sums are an authoring-time
+ * control read by `bench_hook_injection`, and the runtime dispatcher enforces
+ * only `per_turn_aggregate_bytes.ceiling_bytes`.
  *
  * Re-run that command if the corpus or the bodies move; a cap copied from a
- * stale measurement is worse than no cap, because it looks derived.
+ * stale measurement is worse than no cap, because it looks derived. The
+ * tripwire in `tests/scripts/rule_inject_hook.test.ts` holds this equal to the
+ * registered concern row and at or below the slot sum, so the two units cannot
+ * drift apart again unnoticed.
  */
-export const CAP_BYTES = 20480;
+export const CAP_BYTES = 16384;
 
 /** Tools whose input names a file this concern can match path triggers against. */
 export const FILE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit', 'Read', 'MultiEdit']);
@@ -217,17 +278,43 @@ export function buildInjection(
 // ── main ─────────────────────────────────────────────────────────────────
 
 /**
+ * The one host this concern is bound on.
+ *
+ * The manifest binds `rule-inject` under `claude` alone, so the host axis
+ * `gateOpen` has to consult is a constant here rather than something read off
+ * the envelope — the envelope carries no host id, and inventing one from the
+ * process environment would be a guess where the manifest is a fact.
+ */
+export const DELIVERY_HOST = 'claude-code';
+
+/**
  * Whether the settings gate applies.
  *
- * Through the dispatcher the gate is absolute: no `lean_projection.mode:
- * delivery`, no bytes. A DIRECT CLI invocation is a probe by definition — an
- * operator piping an envelope into this file is asking to see what it would
- * deliver — so there the mode defaults to on. `AGENT_CONFIG_REPLAY` re-imposes
- * the gate, which is what keeps `bench_hook_injection` measuring the shipped
- * default (zero bytes) rather than the probe.
+ * BOTH AXES, because the projector reads both. Until 2026-09-08 this keyed on
+ * `lean_projection.mode` alone while `condense` gates stub-writing on
+ * `thinsHost(mode, hosts, host)` (R2 finding 5). The two disagreed in exactly
+ * the states the host axis exists for: `mode: delivery` with a `hosts:` list
+ * that does not resolve to `claude-code` — the documented "thin no host"
+ * state, which a fully typo'd list also produces — left this host with a
+ * FULL-BODIED tree while the hook kept injecting on a match, so every matched
+ * rule was delivered twice. `hosts: [cursor]` was the same defect with a
+ * second half: cursor received stubs with no bound slot to deliver them back.
+ *
+ * `deliversBodies` is checked separately from the host list rather than via
+ * `thinsHost`, which is true for `thin` as well: `thin` writes the same stubs
+ * and binds NO delivery concern, so it must never open this gate.
+ *
+ * An explicit `hooks.rule_inject` opt-in still opens it — that is an operator
+ * asking for the concern by name, independent of the projection mode. A DIRECT
+ * CLI invocation is a probe by definition — an operator piping an envelope into
+ * this file is asking to see what it would deliver — so there the gate defaults
+ * to open. `AGENT_CONFIG_REPLAY` re-imposes it, which is what keeps
+ * `bench_hook_injection` measuring the configured tree rather than the probe.
  */
 export function gateOpen(root: string, cliEntry: boolean): boolean {
-    if (deliversBodies(normalizeLeanProjectionMode(leanProjectionModeRaw(root)))) return true;
+    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
+    const hosts = resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts;
+    if (deliversBodies(mode) && hosts.includes(DELIVERY_HOST)) return true;
     if (hookSectionEnabled(root, 'rule_inject')) return true;
     return cliEntry && process.env['AGENT_CONFIG_REPLAY'] !== '1';
 }

@@ -9,11 +9,11 @@
         "skills": "src/skills/*/evals/triggers.json over src/skills/*/SKILL.md."
     },
     "seed": {
-        "rules": 0.8952,
+        "rules": 0.9619,
         "skills": 0.3344
     },
     "seed_provenance": {
-        "rules": "94 covered of 105 routed rules (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
+        "rules": "101 covered of 105 routed rules on 2026-09-08; was 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
         "skills": "100 of 299 skills carry evals/triggers.json on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
     },
@@ -38,6 +38,13 @@
             "from": 0.3144,
             "to": 0.3344,
             "reason": "road-to-governed-harness-evolution Phase 2.4 authored six wave-1 corpus files (94 -> 100 of 299), chosen by 2.2's inbound-confusion-edge ordering rather than picked. The seed rises so the gain cannot be given back silently; it may never be LOWERED. Surfaced by check_routing_coverage.test.ts, which asserts seed == live measurement in BOTH directions -- a seed left below the tree is a red test, not slack, which is the same asymmetry check_source_size_budget uses and for the same reason: nothing else would force the ratchet to follow a gain."
+        },
+        {
+            "date": "2026-09-08",
+            "scope": "rules",
+            "from": 0.8952,
+            "to": 0.9619,
+            "reason": "road-to-delivery-for-every-host authored seven routing-matrix fixtures -- council-availability, evaluator-independence, fix-what-you-see, missing-skill-recovery, playbook-precedence, recurring-criticism, self-repair-loop (94 -> 101 of 105 routed rules). First entry on the RULES scope; the three above are all skills. The seed rises because this file's own test asserts seed == live measurement in both directions, so the gain would otherwise red the suite for doing what the ratchet encourages. It may never be LOWERED."
         }
     ]
 }

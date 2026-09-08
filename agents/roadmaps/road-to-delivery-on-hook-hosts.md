@@ -321,6 +321,17 @@ admission. Cowork is excluded by the existing measurement.
       would add this sentence to the wrong decision. Match on the **filename and the
       subject**, never on the number, until one of the two is renumbered. This lane owns
       neither PR and renumbered nothing.
+      **RESOLVED 2026-09-08, in the direction this block anticipated.** #1926 merged first,
+      so the carrier-status record keeps 262 on `main` and the delivery-default record was
+      renumbered to `docs/decisions/ADR-267-delivery-default-for-claude-code.md` on
+      `drain/delivery-for-every-host` — by the PR-drain run that hit the collision when
+      `regenerate_index` refused the duplicate. **It renumbered FOUR times, all on
+      2026-09-08: 262 → 263 → 265 → 266 → 267, because `main` took 263, 264, then its own
+      265 and its own 266 while the branch sat open — the last two inside one merge session,
+      minutes apart. The number below reads 263 because that is what the council was told;
+      the record's live number is 267.** The match-on-filename instruction above is
+      no longer needed for these two, and is kept because the reasoning generalises: the
+      number is a lane's first free pick, not an identity.
       **Nothing in the repository catches this, measured rather than assumed.** The two
       filenames differ, so git produces no conflict and both files would simply coexist on
       `main`. Both were materialised into one tree and `./scripts-run
@@ -368,7 +379,7 @@ admission. Cowork is excluded by the existing measurement.
 - **If you do nothing:** three steps stay blocked and the two verify limbs that name gates living on the predecessor branch (`check_host_tree_parity`, the 1.4 gate) keep asserting nothing here, as steps 2.2 and 4.2 already say in their own bodies.
 - **What to do:**
   1. Resolve PR #1923 (`drain/delivery-for-every-host`), which carries 4 of 6 of its own Phase 4 while at `origin/main` that Phase is 0 of 6, so nothing it provides is available here yet. Its mergeability is volatile and is therefore dated rather than asserted: `mergeable: CONFLICTING` / `mergeStateStatus: DIRTY` when this blocker was written, and `MERGEABLE` / `BLOCKED` about ninety minutes later in the same run — someone resolved the conflicts while this change was in flight. Read it live with `gh pr view 1923 --json mergeable,mergeStateStatus` rather than from this line; the durable half of the claim is the 0-of-6 on `main`, which a `grep` of the predecessor's Phase 4 checkboxes re-derives.
-  2. Then add the missing sentence to `docs/decisions/ADR-262-delivery-default-for-claude-code.md` <!-- ref-ignore --> § Consequences, which closes step 4.2 with one edit — but read the ADR-262 collision note under step 4.2 first, because that filename may not survive the merge. The marker is there because the path deliberately does not resolve here: the file lives on the unmerged predecessor branch, and `check_references` flagged it as broken on the first run, which is the collision finding arriving from a third direction.
+  2. Then add the missing sentence to `docs/decisions/ADR-267-delivery-default-for-claude-code.md` <!-- ref-ignore --> § Consequences, which closes step 4.2 with one edit — but read the ADR-262 collision note under step 4.2 first, because that filename may not survive the merge. The marker is there because the path deliberately does not resolve here: the file lives on the unmerged predecessor branch, and `check_references` flagged it as broken on the first run, which is the collision finding arriving from a third direction.
   3. Or, if the predecessor is being abandoned rather than merged, say so, and this roadmap needs re-scoping rather than unblocking: `lean_projection.hosts` is the axis step 2.1 adds a host to, and it exists on no merged ref.
 - **Resolved when:** `road-to-delivery-for-every-host` Phase 4 is merged to `main`, so `lean_projection.hosts` exists on a merged ref and the predecessor ADR is a file this repository has.
 - **Review trigger:** re-read when PR #1923 closes in either direction, merged or abandoned. Its being abandoned is the case that changes this roadmap most and is the one nobody is watching for.

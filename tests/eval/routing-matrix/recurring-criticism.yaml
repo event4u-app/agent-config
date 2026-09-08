@@ -1,0 +1,8 @@
+rule: recurring-criticism
+positives:
+  - prompt: "I already told you the summary must not restate the question."
+  - prompt: "How many times do I have to say the language must mirror mine?"
+  - prompt: "Das ist schon wieder derselbe Fehler wie beim letzten Mal."
+near_misses:
+  - prompt: "Tell me again how the router resolves a tier-2 rule."
+  - prompt: "Repeat the last command you ran so I can copy it."

@@ -1,0 +1,8 @@
+rule: evaluator-independence
+positives:
+  - prompt: "Run a blind review over the diff I just wrote and tell me what it finds."
+  - prompt: "I want an adversarial review of my own change before it goes out."
+  - prompt: "Commission a review of this branch and record the verdict as evidence."
+near_misses:
+  - prompt: "Rename the reviewer field in the pull request template."
+  - prompt: "Show me who reviewed the last three merges into main."

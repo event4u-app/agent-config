@@ -1,0 +1,8 @@
+rule: missing-skill-recovery
+positives:
+  - prompt: "Which skill covers writing a migration for this table?"
+  - prompt: "You said skill not found - is there really nothing for this?"
+  - prompt: "The catalogue shows no such skill for threat modelling, right?"
+near_misses:
+  - prompt: "Add a new skill directory for the payments domain."
+  - prompt: "List the files under the skills source tree."

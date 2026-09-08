@@ -1,0 +1,8 @@
+rule: self-repair-loop
+positives:
+  - prompt: "You ignored the rule about committing without permission - that was wrong."
+  - prompt: "Check the self-repair queue and tell me what is open."
+  - prompt: "Du hast das falsch gemacht, die Sprache stimmt wieder nicht."
+near_misses:
+  - prompt: "Repair the broken symlink in the projection directory."
+  - prompt: "What does the self-hosted runner do in this workflow?"

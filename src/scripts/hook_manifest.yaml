@@ -1271,7 +1271,30 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, rule-inject]
+    # `rule-inject` was bound here and is not any more
+    # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
+    # `user_prompt_submit` + `pre_compact`; this slot is the hottest one in the
+    # manifest and its measured gate-open p90 for the concern is 19,649 B against
+    # a 2,048-byte slot sum cap E2 keeps unchanged. The three rules that were
+    # reachable ONLY from this slot — design-review-after-ui-write,
+    # source-of-truth, ui-audit-gate — lose nothing: `project_thin_rules.path_only_ids`
+    # keeps a path-only rule full-bodied, the same exemption a trigger-less rule
+    # already had, so they are projected eagerly instead of delivered.
+    #
+    # WHAT "LOSE NOTHING" DOES NOT COVER, added 2026-09-08 after R2 finding 1 read
+    # the sentence above as covering more than those three. It is accurate for the
+    # three and silent about the class next to them: 18 rules carry BOTH path and
+    # non-path triggers, `path_only_ids` uses `every`, so all 18 are THINNED and
+    # their path-shaped half has no carrier once this binding is gone. They keep
+    # every keyword / phrase / command route through the concern, and on this host
+    # they never had a separate host-native path route — `_claude_paths_plan` emits
+    # no `paths:` for a mixed-trigger rule on purpose — so what is lost is the
+    # difference between loading unconditionally and being delivered on a prompt
+    # match. The names, the measurement and the reason the exemption is not widened
+    # (+16,329 GPT tok, +69 % on the thin rule layer) are in
+    # `project_thin_rules.path_only_ids`; the receiver is
+    # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-config-weakening, block-speaking-inbox-dir, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that
