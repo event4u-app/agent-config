@@ -137,6 +137,27 @@ That is why the host axis exists and why its default has exactly one member.
 - **Raise `design_ceiling`.** Rejected as K4. A ceiling that moves up when the
   payload does is not a ceiling.
 
+## Evidence
+
+| Claim | Basis |
+|---|---|
+| Delivery is byte-equal to eager projection on a trigger match | `internal/bench/reports/thin-inject-2026-08-23.md` — 616/616 byte-equal deliveries over the frozen `tests/eval/routing-matrix` corpus |
+| Every labelled rule stays reachable under delivery | Same report — 101/101 labelled rules reachable; 0 of 212 near-misses fired |
+| The per-slot activation charge is measured, not chosen | `src/config/hook-token-budget.json` — `user_prompt_submit` raised to the p90 gate-open fire size rounded up to 512 B; distribution p50 6,674 B, p90 16,188 B, max 20,406 B over 318 gate-open fires |
+| Hosts outside `lean_projection.hosts` receive what `eager-all` writes | `src/scripts/check_host_tree_parity.ts` asserts it byte-for-byte in CI |
+| `delivery` was accepted by the resolver long before the schema admitted it | `src/scripts/_lib/lean_projection_mode.ts` accepted the value while `agent-settings.schema.json` did not, so a consumer setting the documented value failed validation |
+| The saving is per-host and not a behavioural claim | `docs/CLAIMS.md` — `thin-inject-delivery-equivalence`, whose `non_inference` field scopes it to one host and states delivery equivalence is a byte claim, never a session-behavior claim |
+
+**The grade is E1 — single-source and directed.** Every row above is a
+measurement or a file read in this tree, but the **authority** for shipping the
+flip as the default is not: `road-to-delivery-for-every-host` states plainly
+that "the authorization for E1/E2 rests on the owner instruction of 2026-09-07
+alone", and `docs/CLAIMS.md:365` does not carry the `owner-reserved` label a
+reader might expect to find there. So the measurements are reproducible and the
+mandate is not reconstructible from the tree — recorded here rather than
+implied, because `authority_basis: owner_intent` governs authority and never
+disclosure.
+
 ## References
 
 - `agents/evidence/analysis/standing-payload-by-host-2026-09.md` — the per-host
