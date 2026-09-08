@@ -174,7 +174,7 @@ another form of premature closure.
       verify: the emitter exists and is reachable from the live path; one
       recorded run yields a per-correction stage attribution — BOTH EXERCISED
       2026-09-08. `measureDeliberation` runs unconditionally in `cmd_run`
-      (`src/scripts/council_cli.ts:2790`) over `runCallsFrom`'s six labelled
+      (`src/scripts/council_cli.ts:2792`) over `runCallsFrom`'s six labelled
       stages, so the emitter is on the live path by construction, not by a caller
       remembering. One recorded run yielded **28** attributions, each carrying
       `firstStage`, `firstMember` and `firstCallIndex`, across two stages
@@ -184,7 +184,7 @@ another form of premature closure.
       [`topology-c1-closure-and-park-2026-09-08`](../evidence/analysis/topology-c1-closure-and-park-2026-09-08.md).
 - [x] **C10.3** Emit `zero_marginal_value_call_rate`. The metric existed in no
       form; it is defined at
-      `src/scripts/ai_council/deliberation_metrics.ts:212` as the share of
+      `src/scripts/ai_council/deliberation_metrics.ts:221` as the share of
       scorable calls whose text near-duplicates something the run had ALREADY
       received, judged by the shipped `is_near_duplicate` bar rather than by a
       second similarity notion.
