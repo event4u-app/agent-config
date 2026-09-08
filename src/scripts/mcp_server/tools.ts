@@ -54,6 +54,8 @@ import {
     load_catalog,
     not_implemented_envelope,
 } from './catalog.js';
+import { GRAPH_TOOLS } from './graph_tools.js';
+import { resolvePath as _resolvePath, strip as _strip } from './path_util.js';
 import { type Outcome, record_call } from './telemetry.js';
 import type { PromptCache } from './prompts.js';
 import type { ResourceCache } from './resources.js';
@@ -111,19 +113,6 @@ export interface BuiltinTool {
     readonly handler: ToolHandler;
 }
 
-/** Mirror Python `str.strip()` (also strips the same Unicode whitespace set we care about here). */
-function _strip(s: string): string {
-    return s.replace(/^\s+/, '').replace(/\s+$/, '');
-}
-
-/** Mirror Python `Path(...).resolve()` — absolutize + realpath, tolerating a missing tail. */
-function _resolvePath(p: string): string {
-    try {
-        return fs.realpathSync(p);
-    } catch {
-        return path.resolve(p);
-    }
-}
 
 /**
  * Pick the consumer-project root.
@@ -1212,6 +1201,7 @@ async function _readResourceBodyHandler(
 // ---------------------------------------------------------------------
 
 export const ALLOWLIST: Record<string, BuiltinTool> = {
+    ...GRAPH_TOOLS,
     suggest_skill_for_task: {
         name: 'suggest_skill_for_task',
         side_effect: 'ro',

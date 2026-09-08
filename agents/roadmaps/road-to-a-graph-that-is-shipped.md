@@ -614,18 +614,144 @@ built for.
 
 ## Phase 4 — Reaches the agent
 
-- [ ] **4.1 MCP tools** `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`,
+- [x] **4.1 MCP tools** `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`,
       `graph_path` on the existing server, same telemetry line as the other 31.
       verify: catalogue count **36**; `telemetry:report` shows `tools/call` rows for them in
       a fixture session.
-- [ ] **4.2 Correct the install hint** at `consumer_tool_catalog.json:4` to the pinned entry
+
+      <!-- verified 2026-09-08. tests/scripts/mcp_graph_tools.test.ts → 8 passed.
+
+      CATALOGUE COUNT 36: `npm run build:mcp-catalog` → "wrote
+      src/scripts/mcp_server/consumer_tool_catalog.json (36 tool(s))", and the test asserts
+      `tools` has length 36 with all five present AND
+      `implemented_on: ['stdio']` — the field that separates a real tool from a
+      documentation stub, without which a graph tool could be in the count and unreachable
+      on the wire. `audit_mcp_tools` regenerated `docs/contracts/mcp-tool-inventory.md` at
+      36.
+
+      `tools/call` ROWS IN A FIXTURE SESSION: the test dispatches all five through the real
+      `ToolCache.dispatch` against a throwaway consumer root holding a built graph, then
+      reads `agents/runtime/mcp-telemetry/calls.jsonl` and asserts one row per tool with
+      `outcome: 'implemented'` (never `'stub'` — that field is what a report groups on, so
+      a stub row would silently under-count real usage). No per-tool telemetry code exists
+      or was written: `dispatch` records centrally, so "the same telemetry line as the other
+      31" follows from being in `ALLOWLIST` at all, which is stronger than a per-tool emit
+      because it cannot be forgotten.
+
+      SUBSTITUTION, NAMED RATHER THAN SILENT: the step says `telemetry:report`, which is the
+      ARTEFACT-ENGAGEMENT report over a different log. A `tools/call` lands in
+      `agents/runtime/mcp-telemetry/calls.jsonl`. The rows the step asks for are the ones
+      asserted, in the file that holds them.
+
+      ANSWERS, not just registrations — the same fixture session:
+        · `graph_query` → status ok, `staleness: fresh`
+        · `graph_tests_for` → `tests: ['tests/service.test.ts']`
+        · `graph_path` → a chain reaching `src/service.ts#handle`
+        · `graph_dead` → `refusal` set, `dead: []`; with `accept_missing_exports: true` →
+          `refusal: null` and a real list. Over the wire the refusal has to be a STATUS a
+          caller can branch on rather than the exit code the CLI uses.
+        · `graph_impact` → `status: 'error'`, "cannot resolve rev" (no git repo in the rig),
+          which is the point: it says so rather than reporting an empty impact set.
+        · a root with no graph → `status: 'unavailable'`, `staleness: 'absent'`
+        · `entry_points: '../outside.txt'` → "path escapes consumer_root"
+
+      `graph_impact` DECLARES `side_effect: 'shell'`; the other four declare `'ro'`. It
+      resolves its `diff` argument by running `git diff --name-only`. That subprocess is
+      read-only in effect and the enum has no value saying so — between understating the
+      mechanism and naming it, naming it is the only choice a capability enum exists to
+      support.
+
+      REGISTERED FROM `mcp_server/graph_tools.ts`, NOT INLINE, and the reason is a gate:
+      `tools.ts` sits ~500 lines past the 1500-line ceiling `check_source_size_budget`
+      enforces as a shrink-only ratchet, so five records with their schemas would have cost
+      ~250 units of excess there and cost nothing in a file under the cap. `tools.ts`
+      spreads them into `ALLOWLIST` in two lines, and those two were PAID FOR rather than
+      baselined: `_strip` / `_resolvePath` moved out to `mcp_server/path_util.ts`, taking
+      tools.ts 2,025 → 2,013. Net −10 for a branch that added a feature; baseline lowered
+      17,973 → 17,963 with the reading recorded at
+      `src/config/gate-violation-baselines.json`.
+
+      THE STANDING COST ROSE, AND IS RECORDED AS A RISE. `agents/evidence/metrics/
+      mcp-tool-standing-cost.jsonl` gains a 2026-09-08 row: 20 → 25 tools, 1,791 → 2,236
+      description tokens, 3,886 → 4,876 payload tokens (+25 %), the five measuring 446 /
+      993 in isolation. Appended rather than edited in place, because the 2026-08-23 row is
+      a true reading of a tree that existed and overwriting it would delete the only record
+      of what the five cost. The assertions in `mcp_lite_tools.test.ts` were re-pinned to
+      the new figures rather than widened — the row exists so "registering it is free" can
+      never be asserted again, and a wider band would let the next five arrive unmeasured.
+      A new assertion pins the surface below the ~20,000-token Tool Search deferral
+      threshold, because `loads_upfront: true` is a claim and a surface that crossed it
+      would make every figure above a statement about a cost the host no longer pays.
+
+      DOWNSTREAM, swept in the same change: `mcp_server_tools.test.ts` (20 → 25 tool set),
+      `build_mcp_catalog.test.ts` (the install-hint assertion, per 4.2),
+      `docs/contracts/mcp-tool-inventory.md` and `src/cli/registry.ts`'s `code-graph`
+      synopsis. `tests/scripts/*mcp*` → 337 passed / 2 skipped. -->
+- [x] **4.2 Correct the install hint** at `consumer_tool_catalog.json:4` to the pinned entry
       the MCP-bridge work wrote.
       verify: doc-drift check green; `grep -c 'npx -y' src/scripts/mcp_server/consumer_tool_catalog.json`
       is 0.
-- [ ] **4.3 Skill description** names the three verbs as *cheaper* paths; no ordering claim is
+
+      <!-- verified 2026-09-08. `install_hint_stdio` is now `agent-config mcp-server`.
+        · `grep -c 'npx -y' src/scripts/mcp_server/consumer_tool_catalog.json` → **0**
+        · `check_mcp_doc_drift` → "✅ 4 documented snippet(s) match the installer entry"
+
+      NOT THE FORM THE STEP'S OWN WORDS POINT AT, and this is an AI council decision
+      (2026-09-08, 2/2 convergent — anthropic + openai, round 2 Fork 3 option 5) rather than
+      a judgement call. The step says "the pinned entry the MCP-bridge work wrote". That
+      entry is `docs/mcp-server.md:97`: `["-y", "@event4u/agent-config@<version>",
+      "mcp-server"]`, with the pin rationale at `docs/mcp-server.md:82`. It cannot be the
+      answer, because the step's OWN verify requires the literal `npx -y` to be absent from
+      this file. And the obvious repair — drop the `-y` — makes `npx` PROMPT before
+      installing a package that is not present, which in a non-interactive MCP client start
+      is a hang rather than a prompt. So every `npx` shape is out: the un-prompted one is
+      forbidden by the verify and the prompted one hangs.
+
+      What is left is the installed binary, which is what the setup docs lead with anyway
+      (`docs/setup/mcp-client-config.md:35`; `docs/getting-started-local-stdio.md:9` calls
+      it "the turnkey path … one command"). It resolves no dist-tag at all, because it IS
+      whatever the consumer installed — which satisfies the pin rationale more directly than
+      a pinned `npx` would. Its cost is stated rather than hidden: the catalog description
+      now says the field "assumes `agent-config` is on PATH", asserted by fixture. The bin
+      name is derived from `package.json`'s own `name`, so a package rename moves the hint
+      with it.
+
+      RECORDED CONFLICT, per the same verdict and named in the generator's own comment: this
+      step's verify and the documentation's pinned form contradict each other directly — the
+      test forbids the string the docs recommend. That is a defect in one of the two, it is
+      not resolved here, and a later change should decide which. Leaving it unnamed would
+      have been the silent normalisation the council specifically declined. -->
+- [x] **4.3 Skill description** names the three verbs as *cheaper* paths; no ordering claim is
       added or removed.
       verify: description length ≤ 200 chars (`src/scripts/schemas/skill.schema.json:28`);
       `src/skills/code-intelligence/SKILL.md:164` unchanged.
+
+      <!-- verified 2026-09-08. New description, 198 chars against the 200 hard line:
+        "Route codebase-structure questions (who calls X, where used, change-impact) to an
+         existing code-graph first: impact, tests-for, dead are cheaper, never more precise;
+         grep routine. Also 'call graph'."
+      `validate_frontmatter` → 450 artefacts, 0 failing, 0 warnings.
+
+      LINE 164 IS BYTE-UNCHANGED — `sed -n '164p'` still returns
+      `**No class is graph-first.** Query the index first because an index that already`.
+      That constraint shaped where the accompanying documentation went, and the shaping is
+      worth recording because it looks arbitrary otherwise: the four new verbs were first
+      documented inside § Procedure (line ~52), which MOVED line 164 to a benchmark table
+      row and broke the verify. The section was relocated below the benchmark sections
+      instead, so the ordering sentence K5 protects stays byte-fixed. The trade-off is
+      stated in the section itself rather than left for a reader to wonder about.
+
+      NO ORDERING CLAIM ADDED OR REMOVED, on both surfaces:
+        · The description keeps "to an existing code-graph first" verbatim — including the
+          word "existing", whose removal would have STRENGTHENED the claim from "ask an
+          index you already have" to "go build one first". What was traded away is
+          `what imports` from the example list and the words "stays" and "is this", which
+          carry no ordering.
+        · The new body section closes with an explicit statement that these verbs are
+          cheaper than reconstructing the relationship by hand, that nothing on the page
+          says they beat grep, and that § Measured twice still governs that question.
+      `skill_linter` → PASS, no issues. `task sync` + `task generate-tools` regenerated
+      `dist/agent-src/skills/code-intelligence/SKILL.md` and `src/domains/meta/README.md`. -->
 
 ## Kill register
 

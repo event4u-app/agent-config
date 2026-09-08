@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: code-intelligence
-description: "Route codebase-structure questions (who calls X, where is this used, what imports, change-impact) to an existing code-graph first: cheaper, never more precise; grep stays routine. Also 'call graph'."
+description: "Route codebase-structure questions (who calls X, where used, change-impact) to an existing code-graph first: impact, tests-for, dead are cheaper, never more precise; grep routine. Also 'call graph'."
 domain: engineering
 workspaces:
   - engineering
@@ -203,6 +203,45 @@ Either way the disposition is the same: `behind:N` → `agent-config code-graph
 refresh` first, or use grep and say so. This is a freshness obligation, not an
 ordering claim; the rule's query-first ordering still governs which source to
 reach for.
+
+## The four gate verbs — a diff, not a symbol (2026-09-08)
+
+`query` / `affected` / `path` / `explain` answer a question about a SYMBOL.
+Four more answer a question about a DIFF, and they are documented here rather
+than in § Procedure for a mechanical reason worth stating: step 4.3 of
+`road-to-a-graph-that-is-shipped` verifies that this file's line 164 — the
+**No class is graph-first** sentence — is unchanged, and inserting anything
+above it moves that line. So the ordering claim K5 protects stays byte-fixed
+and the new material sits below it.
+
+Each of the four walks only edges whose resolution mechanism is a stated fact
+(never a repo-wide same-name guess, never an untyped receiver), and each prints
+the mechanisms it accepted, the mechanisms it refused, and the graph's
+staleness — so a narrow answer is distinguishable from a decoupled one:
+
+- `agent-config code-graph impact --diff <rev>` — callers, dependents and test
+  files reachable from the changed symbols, plus the producing edges and a
+  minimal read set.
+- `agent-config code-graph tests-for <symbol>` — the test files that import it.
+  An empty list is a finding, not an error.
+- `agent-config code-graph untested --diff <rev>` — changed symbols that no test
+  file imports.
+- `agent-config code-graph dead [--entry-points F | --accept-missing-exports]` —
+  symbols with no accepted reference that no declared entry point names. It
+  **refuses** rather than answering while an entry-point source cannot be read:
+  this engine records no exportedness, so without a supplied list an
+  exported-but-unimported symbol is indistinguishable from a dead one, and a
+  confident false "dead" invites a deletion the graph cannot justify. Nothing it
+  lists is a deletion recommendation.
+
+The same five answers reach an agent over MCP without shelling out —
+`graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`.
+`graph_impact` is the only one that is not read-only, because it runs
+`git diff --name-only` to resolve its rev.
+
+**No ordering claim is added here.** These verbs are cheaper than reconstructing
+the same relationship by hand; nothing on this page says they beat grep, and
+§ Measured twice still governs that question.
 
 ## Do NOT
 
