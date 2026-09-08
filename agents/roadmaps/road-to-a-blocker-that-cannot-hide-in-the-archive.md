@@ -13,7 +13,7 @@ relates:
       blocker and nothing else, so a second subject would contradict it.
 estate_growth_exempt: "Orchestrator-instructed 2026-09-08, after the run found the gap with `git status` rather than with a gate and the orchestrator ruled that a real coverage gap in a ratcheted metric deserves a receiver rather than a sentence in a report. +1 active with no offset in the same change, and that is the honest shape: the alternative was a stub, which is where this repository files decision-shaped work — but `stubs/` is explicitly out of the active estate, and a gap that lets a RATCHETED metric under-report is the one class that must not be parked somewhere no ratchet reads. Measured rather than argued: 23 archived roadmaps carry `- **Status:** open` today and no gate reads any of them."
 estate_offset_exempt: "Offsets nothing, and the reason is arithmetic rather than argument: this change adds TWO active roadmaps and archives ONE, so one addition is genuinely unoffset and it is this one. The archival of `road-to-a-graph-that-is-shipped` pairs with `road-to-the-packed-payload-cap`, which exists only because that roadmap archived — the blocker had to land somewhere for the sweep to release it. This file is the opposite shape: work DISCOVERED during that archival, with nothing to trade against it. Closing, parking or folding it each cost more than the charge — closing means choosing among three assertions the run measured but was not asked to decide, parking means `later/` or `stubs/`, both of which no ratchet reads, and the gap it records is precisely one that lets a ratcheted metric under-report."
-design_validated: "gap measured 2026-09-08 — 192 archived roadmaps carry a blocker section, 23 of them `Status: open`, and both gates that would report them exclude the directory. The FIX is not validated; see § The fix is a decision, not wiring."
+design_validated: "gap measured 2026-09-08 — 193 archived roadmaps carry a blocker section, 23 of them `Status: open`, and both gates that would report them exclude the directory. The FIX is not validated; see § The fix is a decision, not wiring."
 capability_gap: none
 ---
 # Road to a blocker that cannot hide in the archive
@@ -43,14 +43,23 @@ Two gates read roadmap blockers, and both skip the archive:
 Consequence, measured on this tree at 2026-09-08:
 
 ```
-grep -rl '^### blocker:'                  agents/roadmaps/archive/*.md | wc -l   → 192
+grep -rl '^### blocker:'                  agents/roadmaps/archive/*.md | wc -l   → 193
 grep -rlE '^- \*\*Status:\*\* *open'      agents/roadmaps/archive/*.md | wc -l   →  23
 ```
 
-**192** archived roadmaps carry a blocker section and **23** of them carry
+**193** archived roadmaps carry a blocker section and **23** of them carry
 `Status: open`. Whether all 23 are genuine historical records or some are stale
 duplicates like the one this run created is exactly what nobody can currently
 answer, because nothing reads them.
+
+**That first figure was 192 when this file was written hours earlier, and the
+drift is evidence rather than an erratum.** One base merge — another lane
+archiving `road-to-a-standing-budget-with-headroom` — moved it to 193, and the
+only reason anyone noticed is that this run re-ran its own `grep` before
+reporting. A corpus that grows by one per archival, with no gate reading it, is
+the shape of the problem this roadmap holds. Whoever picks an assertion in
+Phase 1 should re-measure rather than trust either number: both were true, on
+different trees, hours apart.
 
 And the ratchet consequence is the one that matters: `open_blockers` is a
 **shrink-only ratchet**, and a blocker that moves from an active roadmap into an
