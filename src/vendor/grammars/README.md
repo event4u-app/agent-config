@@ -55,7 +55,11 @@ shasum -a 256 src/vendor/grammars/*.wasm   # update the table above
 
 Then update, in the same change:
 
-- the three `BINARY_PAYLOAD_EXCEPTIONS` entries in `src/scripts/check_pack_size.ts`
-  (they are path-and-size-bound, so any size change invalidates them by design);
+- the three entries in `src/config/packed-binary-manifest.json` (they are
+  path-, sha256- and size-bound, so any refresh invalidates them by design).
+  This used to name `BINARY_PAYLOAD_EXCEPTIONS` in `src/scripts/check_pack_size.ts`,
+  a constant that no longer exists — `grep -rn BINARY_PAYLOAD_EXCEPTIONS` returned
+  this line and nothing else, so a refresher following it would have skipped the
+  manifest and reddened the pack-size gate with no pointer to why;
 - `EXPECTED_GRAMMAR_ABI` in `src/scripts/code_graph/types.ts` if the ABI moved;
 - the install-size line in `MIGRATION.md`.
