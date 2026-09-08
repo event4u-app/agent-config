@@ -905,101 +905,30 @@ built for.
 
 ## Blockers
 
-### blocker: pack-size-budget-preexisting-overage
+**None. The one blocker this roadmap carried was RELOCATED, not resolved** —
+`pack-size-budget-preexisting-overage` now lives at
+[`road-to-the-packed-payload-cap.md`](../road-to-the-packed-payload-cap.md),
+`Status: open`, `Owner: maintainer`, all three options unchosen, `review_by:
+2027-07-31` intact. It moved on 2026-09-08 so this completed 25/25 roadmap could
+archive; its own `Blocks:` field said "nothing in this roadmap", which is what
+made a relocation available and a resolution unnecessary.
 
-- **Status:** open
-- **Owner:** maintainer
-- **Blocks:** nothing in this roadmap. Recorded because Phase 0.1 adds payload to a gate
-  that is **already** failing, and a step that makes a red gate redder should say so rather
-  than let the next reader assume it caused it.
-- **Class:** 3
-- **Recommendation:** raise `budgets.packed_size_mb.max` to a re-measured figure in a
-  dedicated change that also re-pins `last_measured`. The cap is a maintainer-owned
-  ratchet with `review_by: 2027-07-31`, so an execution run may not move it — but leaving
-  it below the tree's actual size means the gate reports the same failure on every branch
-  and stops discriminating.
-- **If you do nothing:** `check_pack_size` stays red in `task ci` and
-  `.github/workflows/consistency.yml` for every branch, this one included. The gate's
-  binary-payload half still works and still has teeth; only the size axis is dead.
-- **What to do:**
-  1. Reproduce the baseline: `npm pack --dry-run --json --ignore-scripts` on `origin/main`
-     with no local edits. Measured 2026-09-07 at base `04a9af594`: **9.8216 MB** against
-     `budgets.packed_size_mb.max = 9.1` in `src/config/pack-size-budget.json`.
-     Independently reproduced the same day in a second worktree off the same base at
-     **9.821 MB**.
-  2. Decide one: (a) re-measure and raise `max` + `last_measured` together, recording the
-     tree the figures came from as every other entry in that file does; (b) shrink the
-     payload back under 9.1; or (c) judge the unbuilt cap obsolete and gate only the
-     built surface, which `check_pack_size.ts:466-497` already implements for built
-     payloads against `built_surface_measurement_*`.
-  3. Whichever is chosen, do it in a change that is *only* that — a budget move buried in
-     a feature branch is how the 2026-08-24 cap trip became a merge artifact nobody could
-     attribute.
-- **Resolved when:** `./scripts-run src/scripts/check_pack_size` exits 0 on `origin/main`
-  with no local edits, and `pack-size-budget.json` records the tree its figures were
-  measured in.
+Two of its statements were measurably wrong and are corrected in the receiver
+rather than carried forward: it claimed `check_pack_size` reds
+`.github/workflows/consistency.yml` (it is wired only at
+`taskfiles/ci-fast.yml:846` — `grep -rn 'check_pack_size' .github/` returns
+nothing, so it reds no PR check), and its option (c) did not know that
+`built_surface_enforcement_2026_08_30` already routes built payloads to a
+regression line. The freshest measurement — **10.3087 MB against `max: 9.1`** on
+a clean `git archive origin/main` export at `3969c8b96`, the +0.49 MB since the
+previous reading being the `release/14.22.0` merge rather than any feature
+branch — went with it.
 
-<!-- This roadmap's own contribution to the number, measured rather than estimated:
-9,821,600 B → 10,195,522 B, i.e. +373,922 B. The overage is 721,600 B before this branch
-exists, so the gate was already red by ~1.9x this step's addition. -->
-
-<!-- RE-MEASURED 2026-09-08 by the run that closed this roadmap. Step 1 of "What to do"
-above says "reproduce the baseline"; this is that, and the answer is WORSE than the record.
-
-Method is the gate's own (`pack-size-budget.json` → `method`): `npm pack --dry-run --json
---ignore-scripts`, clean checkout, unbuilt. Taken on a `git archive origin/main` export into
-a throwaway directory, so there are no local edits of any kind — the condition "Resolved
-when" names.
-
-  | tree                                     | packed      | cap | over by  |
-  |------------------------------------------|-------------|-----|----------|
-  | origin/main @ 04a9af594 (rec. 2026-09-07)|  9.8216 MB  | 9.1 | 0.72 MB  |
-  | origin/main @ 3969c8b96 (2026-09-08)     | 10.3087 MB  | 9.1 | 1.21 MB  |
-
-2,881 pack entries · 37.0116 MB unpacked. The +0.49 MB between the two readings is the
-`release/14.22.0` merge, NOT this branch — this branch's own contribution is the +373,922 B
-recorded above and landed with Phase 0.1, which is already on main at both pins.
-
-So `Resolved when` is UNMET, and further from met than when it was written. Recorded rather
-than left to a future reader, because an unrecorded worsening is how a stale baseline turns
-into evidence: the next person to read "9.8216" would take it for the current figure.
-
-NOTE ON READING THE GATE, because two arms disagree and the difference is not a discrepancy:
-`check_pack_size` run in a BUILT worktree takes its built-surface arm and exits **0**
-("11.271 MB packed, vs the recorded built figure"). On a clean UNBUILT checkout it takes the
-`packed_size_mb` arm and compares against `max: 9.1`, which is the arm this blocker is about
-and the one `task ci` and `.github/workflows/consistency.yml` exercise. Quoting the built
-arm's exit 0 as evidence the blocker is resolved would be reading the wrong number.
-
-DISPOSITION OF THIS ROADMAP, since the blocker outlives its steps: the roadmap reached
-**25/25** on 2026-09-08 and the archival sweep correctly refuses it —
-"all steps closed but 1 blocker(s) still open … not archived". It stays in the active estate
-at 100 %, which is the visible anomaly a maintainer sees, and the run reports
-`approval-required` rather than `complete`.
-
-The three alternatives were considered and rejected, and the reasons are recorded so nobody
-re-derives them:
-  · RAISE THE CAP in this PR. Contradicts this blocker's own Recommendation verbatim, writes
-    a `owner: maintainer` ratchet with `review_by: 2027-07-31` from an execution run, and
-    lowers a recorded floor — which `decision-revisit-gate`'s owner-reserved table reserves
-    to the owner. That file's own history records the `block-config-weakening` guard
-    refusing four agent attempts at it, and its last raise being performed by the maintainer
-    personally for exactly this reason.
-  · MARK IT `resolved` because it "blocks nothing in this roadmap". `Status:` is the field
-    the archival sweep reads (`blocker_is_resolved`, `update_roadmap_progress.ts:429`), so
-    this would make the sweep report a state that does not hold. Silent-green.
-  · SPLIT IT OUT into a stub or a new roadmap so this file archives clean. `stubs/` is
-    explicitly not active work per its own README, a new active roadmap charges the
-    estate-growth ratchet, and the debt is pre-existing — moving it re-homes a problem
-    rather than resolving it.
-
-COUNCIL DEGRADATION, recorded because the routing was attempted and did not complete: this
-disposition was put to the AI council on 2026-09-08 with the measurement above and the four
-options. BOTH seats returned `cli_quota_exhausted` (anthropic and openai; the same seats had
-answered three earlier passes this run at 43/50 each, and `api_on_quota: off` forbids the
-metered rung). Quorum `inconclusive`, 0/2 present. So the disposition above is the RUN'S
-reading, on the conservative branch, and not a council verdict — the honest label, since
-the alternative was to present a pass nobody attended as convergence. -->
+Decided by the orchestrating run under the owner delegation covering this drain,
+**not by a council**: both configured seats measured `50/50 · exhausted`
+(`council_cli quota`, 2026-09-08) and an earlier pass in the same run received
+`cli_quota_exhausted` from both with `quorum: inconclusive, 0/2`. The receiver
+records that degradation in its own § How this relocation was decided.
 
 ## Provenance
 
