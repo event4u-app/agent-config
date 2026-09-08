@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-12-08
+keep-beta-until: 2026-12-07
 ---
 
 # Continuity-record slot — capacity policy and state machine

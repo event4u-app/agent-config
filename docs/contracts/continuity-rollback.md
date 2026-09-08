@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-12-08
+keep-beta-until: 2026-12-07
 ---
 
 # Continuity rollback — which switch undoes what, and what no switch can undo
