@@ -83,9 +83,17 @@ describe('build_mcp_catalog — deterministic content', () => {
         expect(_computeFreshContent()).toBe(_computeFreshContent());
     });
 
-    it('install_hint_stdio names the actual package + mcp-server command', () => {
+    it('install_hint_stdio is the installed-binary command, not an npx form', () => {
+        // Changed by road-to-a-graph-that-is-shipped 4.2 (AI council 2026-09-08,
+        // 2/2). Both npx shapes are unusable: the pinned `npx -y …@<version>`
+        // form the docs carry is the one string the step's verify forbids in
+        // this file, and dropping `-y` to satisfy that makes npx PROMPT for a
+        // package that is not present — a hang, in a non-interactive MCP client
+        // start. The bin name is derived from `package.json`'s own `name`, so a
+        // package rename moves the hint with it.
         const catalog = _buildCatalog() as { install_hint_stdio: string };
-        expect(catalog.install_hint_stdio).toBe('npx -y @event4u/agent-config mcp-server');
+        expect(catalog.install_hint_stdio).toBe('agent-config mcp-server');
+        expect(catalog.install_hint_stdio).not.toContain('npx');
     });
 });
 

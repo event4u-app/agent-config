@@ -47,7 +47,7 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 20 implemented tools', () => {
+    it('allowlist holds the 25 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
@@ -76,9 +76,19 @@ describe('tools — allowlist + registry', () => {
                 // road-to-inbox-harvest-2026-08-d-runtime-skill-routing 4.1 —
                 // promoted from a discovery stub. Read-only, shell-free.
                 'suggest_skill_for_task',
+                // road-to-a-graph-that-is-shipped 4.1 — the agent-facing half
+                // of Phase 3. Registered from `graph_tools.ts` rather than
+                // inline: `tools.ts` sits past the source-size ceiling, where
+                // five schemas would cost ~150 units of excess and nothing in
+                // a file under it.
+                'graph_impact',
+                'graph_tests_for',
+                'graph_dead',
+                'graph_query',
+                'graph_path',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(20);
+        expect(Object.keys(ALLOWLIST).length).toBe(25);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
