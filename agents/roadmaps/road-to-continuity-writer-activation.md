@@ -57,7 +57,7 @@ councils required puts them there on purpose:
 
 ## Phase 1 — the writer, behind its own switch
 
-- [ ] **1.1 Settle the authoritative record slot before anything writes to it.**
+- [x] **1.1 Settle the authoritative record slot before anything writes to it.**
       The producer, the single consume-by-rename record and the
       validating-and-destructive consumer form a one-slot queue with no
       documented conflict ownership. Automatic production changes contention
@@ -69,6 +69,20 @@ councils required puts them there on purpose:
       storage-adapter test interrupts before and after the atomic rename and
       shows no partial authoritative record in either case; a retry over an
       occupied slot neither overwrites nor destroys the unconsumed record.
+      landed: policy `supersede-own · refuse-foreign · quarantine-unusable ·
+      never-go-backwards`, written in `docs/contracts/continuity-record-slot.md`
+      and implemented by `src/scripts/_lib/continuity_slot.ts`. Both rejected
+      alternatives are rejected on tree evidence: create-if-absent IS Risk 2 of
+      this roadmap, and a bounded multi-record queue needs the recency
+      resolution `src/scripts/_lib/recycle_envelope_paths.ts:61-66` locks out
+      and `resolveContinuityRecord` refuses. `consuming` is a transition and not
+      a disk state, because both publication
+      (`src/scripts/hooks/state_io.ts:495-499`) and consumption
+      (`src/scripts/handoff_context_hook.ts:199`) are one `renameSync` inside
+      one directory. 15 fixtures in
+      `tests/scripts/_lib_continuity_slot.test.ts`, all green; sensitivity shown
+      by neutralising the foreign-refusal, the monotonic guard and
+      quarantine-not-delete in turn and watching the matching fixture go red.
 - [ ] **1.2 A deterministic writer that runs without model spend, default-off.**
       It emits the `continuity_record` variant, computes every field from
       on-disk state, and is gated by its own settings switch defaulting to

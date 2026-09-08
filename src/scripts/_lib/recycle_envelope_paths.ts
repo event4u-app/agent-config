@@ -79,6 +79,33 @@ export function recycle_consumed_rel(session_id: string | null | undefined): str
 }
 
 /**
+ * Where an UNUSABLE resident record is moved aside so the slot can be
+ * published into — never deleted.
+ *
+ * `road-to-continuity-writer-activation` step 1.1. The reader already discards
+ * a malformed, schema-invalid or expired record loudly
+ * ({@link resolveContinuityRecord}'s callers), so nothing is lost by taking it
+ * out of the authoritative name. What WOULD be lost by `unlink` is the evidence
+ * of why a resume did not happen, and that is the only artefact anyone
+ * debugging a missed resume has. Quarantine is one file per session and is
+ * pruned by the same janitor as the rest of `agents/runtime/state/`.
+ *
+ * Deliberately NOT the consumed name: `.consumed.json` is a claim that a
+ * successor read the record, and `predecessorTracePresent` reads exactly that
+ * file to corroborate a lineage. Writing a never-consumed record there would
+ * manufacture a predecessor trace, which is the one thing that check exists to
+ * refuse.
+ */
+export function recycle_quarantine_rel(session_id: string | null | undefined): string {
+    return _sessionKeyed(
+        session_id,
+        path.join(_STATE_REL, 'recycle-envelope.quarantined.json'),
+        'recycle-envelope',
+        '.quarantined.json',
+    );
+}
+
+/**
  * Shared builder. Containment is asserted locally rather than trusted from
  * `safe_stem`: a guarantee living in another module's implementation is one
  * refactor away from being untrue here, and the failure mode of being wrong is
