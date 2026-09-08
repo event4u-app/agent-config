@@ -553,47 +553,47 @@ original prediction stays legible; row 6 is new. **Outcomes, per row:**
 - [x] AC-1 — `docs/contracts/reasoning-discipline-protocol.md` no longer
       appears in `check_beta_review_markers`' upcoming-fresh-lapse list, and
       the edit that removed it names a reason.
-      Verified 2026-09-08 — the gate's upcoming-fresh list names
-      `release-sizing`, `harness-expectations`, `install-layout`,
-      `install-scopes` and `surface-tiers`, and not this contract.
-      `docs/contracts/reasoning-discipline-protocol.md:3` reads
-      `keep-beta-until: 2026-12-06` and `:6` carries the reason inline.
+      Verified 2026-09-08 — the gate's upcoming-fresh list names five other
+      contracts and not this one. `reasoning-discipline-protocol.md:3` reads
+      `keep-beta-until: 2026-12-06`, with the reason inline at `:6`.
 - [x] AC-2 — `tests/reasoning-layer-eval/rubric.md` carries a fifth dimension
       that scores form-alternative surfacing, with anchors that a run
       generating one form cannot score above 0 on.
       Verified 2026-09-08 — five numbered dimensions; `rubric.md:39-63` is
       `Form-alternative surfacing` with all four anchors, `0` reading "one form
-      only … no amount of good execution raises it"; the scoring sheet at `:80`
-      carries the `dim5 form-alt` column.
+      only … no amount of good execution raises it"; `:80` carries the
+      `dim5 form-alt` column.
 - [x] AC-3 — A baseline results file reports a dim-5 rate over the 32 stored
       transcripts, names its rater, and states that the strong-reasoning band
       is absent from the corpus.
-      Verified 2026-09-08 — `RESULTS-candidates-baseline-2026-09-07.md`:
-      rater `claude-sonnet-4-5` (`:22`), dim5 mean 0.875/3 = 29.2 % over 32
-      transcripts (`:33`), and § What this corpus cannot answer (`:72-83`)
-      states in bold that all 32 carry `band: standard` so the strong-host half
-      of the bar is unmeasured.
+      Verified 2026-09-08 — `RESULTS-candidates-baseline-2026-09-07.md`: rater
+      `claude-sonnet-4-5` (`:22`), dim5 mean 0.875/3 = 29.2 % over 32
+      transcripts (`:33`), and `:72-83` states in bold that all 32 carry
+      `band: standard`, so the strong-host half of the bar is unmeasured.
 - [ ] AC-4 — `lint_mandated_lines` reports a third obligation, and a report
       owing `Candidates:` without one exits non-zero while a not-owed report
       stays silent.
+      <!-- blocked-by: sixth-line-shipping-blocked | asked: no — autonomous drain lane, no interactive user reachable this run -->
+      Unsatisfiable under the current disposition and left open rather than
+      amended: a third linter obligation IS the shipped form both councils
+      blocked. Amending it is one of the blocker's three owner dispositions.
 - [x] AC-5 — A treatment results file reports the three deterministic counts,
       the dim-5 delta against AC-3's baseline, and the token-overhead delta on
       the single-step slots.
       Verified 2026-09-08 — `RESULTS-candidates-treatment-2026-09-08.md` § 3.1
       carries the three counts with a baseline control column, § 3.2 the dim-5
-      ITT delta (+0.281 / +9.4 pp) against AC-3's file, and the `ss`
-      token-overhead delta (-8.0 % token-weighted). All three are recomputed
-      from the two stored JSON runs by `rdp_candidates_delta`, not asserted.
+      ITT delta (+0.281 / +9.4 pp) against AC-3's file and the `ss`
+      token-overhead delta (-8.0 %) — all recomputed from the two stored runs
+      by `rdp_candidates_delta`, not asserted.
 - [x] AC-6 — One of the three verdicts in 3.3 is written into the results
       file, citing the readings it rests on — and if the verdict is delete,
       Phase 2's edits are gone from the tree.
-      Verified 2026-09-08 — a **fourth** verdict is written into
-      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3, citing the
-      dim-5 ITT delta, the compliance count, the 9-point attribution split and
-      the dim-1 tripwire. The AC's own wording asked for one of three, and the
-      criterion is met in the way that keeps the record honest: all three are
-      named and shown not to describe the data, with the reason each fails.
-      The delete clause is satisfied vacuously and worth stating rather than
-      passing over: Phase 2 shipped **no** edit to `mandated-lines.md` or
-      `lint_mandated_lines.ts` — the council blocked that half up front — so
-      there is nothing to revert. `git diff origin/main` over both is empty.
+      Verified 2026-09-08 — a **fourth** verdict is in
+      `RESULTS-candidates-treatment-2026-09-08.md` § Step 3.3, citing the dim-5
+      ITT delta, the compliance count, the 9-point attribution split and the
+      dim-1 tripwire. The AC asked for one of three; the criterion is met the
+      way that keeps the record honest — all three are named and shown not to
+      describe the data, with the reason each fails. The delete clause is
+      satisfied vacuously, stated rather than passed over: Phase 2 shipped
+      **no** edit to `mandated-lines.md` or `lint_mandated_lines.ts`, so there
+      is nothing to revert. `git diff origin/main` over both is empty.
