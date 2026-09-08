@@ -873,8 +873,14 @@ name.
 (b) create a parked receiver, mark the five steps `[~] carried-to=`, record
 outcome `transferred` and archive this roadmap; (c) fold the steps into the
 existing stub `stubs/road-to-first-reference-analysis-run.md`; (d) something else.
-**Verdict (a)**, in both rounds and endorsed by both peer-review passes.
-Rationale, in the seat's own order:
+**Verdict (a)**, in both rounds. The two blind peer-review passes did **not**
+endorse it identically, and the difference is recorded rather than smoothed over:
+one greenlit `Q1(a)` and `Q2(b)` outright; the other endorsed parking only *as a
+provisional disposition, contingent on verifying the premises and schema claims
+against the repository's own rules*. That verification was then performed by this
+lane and is what the `file:line` citations below are — including the one it
+changed, § blocked_by, where the check came back negative and the recommendation
+was dropped. Rationale, in the seat's own order:
 
 1. The standing user directive of 2026-06-16, recorded in the module docstring of
    `src/scripts/lint_roadmap_later_disposition.ts:69-71` — *"roadmaps with open
@@ -928,10 +934,22 @@ frontmatter key to satisfy a recommendation would be the schema fabrication that
 flag exists to catch, so the dependency chain is recorded as the table below
 instead — the same information, in a form this repository already reads.
 
-The second peer-review pass reached the same disposition from the other side:
-lifecycle controls belong on a **reactivation** checklist, not on parking
-prerequisites. They are recorded in § On the review_by date rather than imposed
-as conditions of the park.
+The *other* peer-review pass — the one that greenlit the verdict — reached the
+same place from the opposite direction: the seat's five proposed lifecycle
+controls belong on a **reactivation** checklist, not on parking prerequisites,
+because none of them makes parking invalid *now*. They are recorded in § On the
+`review_by` date rather than imposed as conditions of the park.
+
+**One peer-review point is recorded and NOT acted on here, because it is not
+about this roadmap.** The same pass asked for a parked-roadmap observability
+mechanism — an index or review queue surfacing parked items, their blockers and
+their `review_by` dates — on the ground that without one, "park it" decays into
+"forget it" as `later/` grows. Partial coverage exists already:
+`lint_roadmap_later_disposition` enforces a wake condition and a `review_by:` on
+every parked roadmap, and `agent-config stubs:due` does the overdue query for the
+sibling `stubs/` directory. What has no reader is the parked-**roadmap** date, and
+building one is an estate-wide change with no owner in this lane. Noted here
+rather than written anywhere it would take effect.
 
 ### The dependency chain, once, in full
 
