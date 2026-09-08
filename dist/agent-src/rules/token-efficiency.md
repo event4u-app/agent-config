@@ -41,7 +41,6 @@ discriminator is the dependency, never the count. `instruction-only` — nothing
 can observe a call that was not batched. Evidence + the absent-cause finding:
 [`token-efficiency-mechanics`](../contexts/communication/rules-auto/token-efficiency-mechanics.md).
 
-
 ## One command per Bash call
 
 ```
