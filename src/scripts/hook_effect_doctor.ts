@@ -63,6 +63,14 @@ import {
     type ConcernProbe,
     type HostReport,
 } from './_lib/hook_effect_probe.js';
+import {
+    INJECTION_STATES,
+    concernBound,
+    loadRecord,
+    recordProblems,
+    stateFor,
+    type InjectionState,
+} from './_lib/injection_effect.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const REPO_ROOT = path.resolve(HERE, '..', '..');
@@ -216,6 +224,45 @@ function pct(v: number): string {
     return `${(v * 100).toFixed(1)}%`;
 }
 
+/**
+ * The `injection_effect` dimension (road-to-delivery-on-hook-hosts 1.1).
+ *
+ * TWO AXES, AND KEEPING THEM APART IS THE DELIVERABLE. `bound` is computed from
+ * the manifest and answers "could a body be emitted here". `effect` is READ
+ * from the committed observation record and answers "did one reach the model".
+ * There is no code path from the first to the second, because Cowork binds
+ * eight slots and discards the output — the two look identical from every
+ * artefact in this tree, and inferring one from the other is what owner ruling
+ * E3 and the roadmap's K1 forbid.
+ */
+export interface InjectionDimension {
+    readonly host: string;
+    readonly bound: boolean;
+    readonly effect: InjectionState;
+    readonly reason: string;
+    readonly citation: string | null;
+}
+
+export function injectionDimension(
+    root: string,
+    host: string,
+    platforms: Readonly<Record<string, Readonly<Record<string, string[]>>>>,
+): InjectionDimension {
+    const rec = loadRecord(root);
+    const obs = rec[host];
+    const cite =
+        obs !== undefined && obs.transcript !== null && obs.date !== null
+            ? `${obs.transcript} (${obs.date})`
+            : null;
+    return {
+        host,
+        bound: concernBound(platforms, host, 'user_prompt_submit', 'rule-inject'),
+        effect: stateFor(rec, host),
+        reason: obs?.reason ?? 'no row in the observation record — nobody has looked',
+        citation: cite,
+    };
+}
+
 export function renderText(r: HostReport): string {
     const out: string[] = [];
     out.push(`hook-effect doctor — does this configuration take effect on '${r.host}'?`);
@@ -241,6 +288,22 @@ export function renderText(r: HostReport): string {
     return out.join('\n') + '\n';
 }
 
+/** The injection dimension, rendered under the same never-promote discipline. */
+export function renderInjection(d: InjectionDimension): string {
+    const out: string[] = [];
+    out.push('');
+    out.push(`  injection_effect (${d.host})`);
+    out.push(`    rule-inject bound on user_prompt_submit   ${d.bound ? 'yes' : 'no'}   [computed]`);
+    out.push(`    body observed reaching the model          ${d.effect}   [observed]`);
+    out.push(`    citation                                  ${d.citation ?? '—'}`);
+    out.push(`    ${d.reason}`);
+    out.push('');
+    out.push('  The two lines are different axes on purpose. A bound slot is not a delivered');
+    out.push('  body: cowork binds eight slots and discards dispatcher output. Nothing here');
+    out.push('  derives the observed line from the computed one.');
+    return out.join('\n') + '\n';
+}
+
 /**
  * The synopsis, both closed vocabularies, and the scope line.
  *
@@ -260,6 +323,8 @@ export function renderHelp(): string {
         '',
         `per-concern states:  ${PROBE_STATES.join(' · ')}`,
         `host verdicts:       ${HOST_VERDICTS.join(' · ')}`,
+        `injection effect:    ${INJECTION_STATES.join(' · ')}  (READ from src/config/host-injection-effect.json,`,
+        '                      never derived from a binding — see _lib/injection_effect.ts)',
         '',
         '`unknown` is never rendered as `effective`: a concern that wrote in the sandbox,',
         'or that could not be dispatched at all, is reported as unestablished — never as a',
@@ -292,7 +357,23 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(`❌  hooks:effect: ${(err as Error).message}\n`);
         return 2;
     }
-    process.stdout.write(format === 'json' ? JSON.stringify(report, null, 2) + '\n' : renderText(report));
+    let dim;
+    try {
+        dim = injectionDimension(root, host, loadManifest(root).platforms);
+    } catch (err) {
+        process.stderr.write(`❌  hooks:effect: ${(err as Error).message}
+`);
+        return 2;
+    }
+    if (format === 'json') {
+        process.stdout.write(JSON.stringify({ ...report, injection_effect: dim }, null, 2) + '\n');
+    } else {
+        process.stdout.write(renderText(report));
+        process.stdout.write(renderInjection(dim));
+    }
+    for (const problem of recordProblems(loadRecord(root))) {
+        process.stderr.write(`\u26a0\ufe0f  host-injection-effect.json ${problem.host}: ${problem.message}\n`);
+    }
     // An `inert` or `unknown` verdict is information, not a build failure: this
     // is a diagnostic a consumer runs, and a host that legitimately binds
     // nothing is not a defect in this repository.
