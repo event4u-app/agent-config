@@ -213,7 +213,7 @@ matcher and holds in every consumer.
 
 **It never blocks, and it fires once.** So it changes what the agent knows,
 not what the agent may do: compliance stays model-carried, and the concern's
-tests establish detector behaviour, not adherence. On a host with no
+tests establish detector behavior, not adherence. On a host with no
 `pre_tool_use` slot nothing fires at all and the rule is model-carried end to
 end — `agent-config hooks:status` reports which slots are bound where you are.
 
